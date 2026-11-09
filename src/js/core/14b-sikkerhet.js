@@ -168,7 +168,7 @@ function mobStart(q, on, o){
     'Man overboard! ' + c.name + ' went over ' + sd[1] + ' at ' + mobHm(H) + '. The sea is ' + T.toFixed(1) + ' °C. The life jacket keeps ' + mobHim(M, true) + ' up.', 'nav');
   // a hand on deck who saw it throws the lifebuoy at once (it lands by the person, who swims to it while she can)
   const mate = on.find(x => x.p.c && x.p.c !== c);
-  if (mate){ const bo = 0.008 * gridScale(b.pos); M.buoy = {x:px + Math.cos(hd + 2) * bo, y:py + Math.sin(hd + 2) * bo, t:S.t, by:mate.p.c.name, held:false, light:true, smoke:!!(BOAT.lsa && BOAT.lsa.smoke)};
+  if (mate && mobHasBuoy()){ const bo = 0.008 * gridScale(b.pos); M.buoy = {x:px + Math.cos(hd + 2) * bo, y:py + Math.sin(hd + 2) * bo, t:S.t, by:mate.p.c.name, held:false, light:true, smoke:!!(BOAT.lsa && BOAT.lsa.smoke)};
     log(mate.p.c.name + ' kastet livbøya etter ' + mobHim(M) + (M.buoy.smoke ? ', og MOB-lyset røyker.' : '.'), mate.p.c.name + ' threw the lifebuoy after ' + mobHim(M, true) + (M.buoy.smoke ? ', and the MOB light is smoking.' : '.'), 'nav'); }
   b.windArm = false;
   mobVhf(M);
@@ -211,8 +211,10 @@ function mobMark(pos){
   log('MOB-merket satt i plotteren kl. ' + mobHm(S.t / 60) + ', ' + d + ' m fra ' + M.name + '.', 'The MOB mark set in the plotter at ' + mobHm(S.t / 60) + ', ' + d + ' m from ' + M.name + '.', 'nav');
   return M.mark;
 }
+// (a bare boat has no lifebuoy to throw: core/02-species-gear.js lsaOf)
+const mobHasBuoy = () => !BOAT.lsa || BOAT.lsa.buoys > 0;
 function mobThrow(pos){
-  const M = S.mob; if (!M || M.buoy || M.st !== 'water') return null; const p = mobAt(0), d = kmTrue(pos, p);
+  const M = S.mob; if (!M || M.buoy || M.st !== 'water' || !mobHasBuoy()) return null; const p = mobAt(0), d = kmTrue(pos, p);
   M.buoy = {x:pos.x, y:pos.y, t:S.t, by:'me', held:d < MOBK.hold && S.t - M.t0 < M.able, light:true, smoke:!!(BOAT.lsa && BOAT.lsa.smoke)};
   log('Du kastet livbøya' + (M.buoy.held ? ', og ' + M.name + ' fikk tak i den.' : ', ' + Math.round(d * 1000) + ' m fra ' + M.name + '.') + (M.buoy.smoke ? ' MOB-lyset røyker.' : ''),
     'You threw the lifebuoy' + (M.buoy.held ? ', and ' + M.name + ' got hold of it.' : ', ' + Math.round(d * 1000) + ' m from ' + M.name + '.') + (M.buoy.smoke ? ' The MOB light is smoking.' : ''), 'nav');
@@ -248,13 +250,15 @@ function mobRoute(){
 }
 // the ways to get her up from where the boat is (km, knots): the ladder aft (§ 63, under 15 m, while she can climb), the lifting sling
 // (under 45 m), the rescue boat (from 45 m); each with what stands in the way
+const mobLadder = () => !BOAT.lsa || BOAT.lsa.ladder !== false;
 function mobLiftOpts(pos, kn){
   const M = S.mob; if (!M || M.st !== 'water' || M.lift) return [];
   const L = BOAT.len || 0, d = kmTrue(pos || S.boat.pos, mobAt(0)), v = Math.abs(kn == null ? S.boat.v || 0 : kn), tIn = S.t - M.t0, out = [];
   const far = (r, sl) => d > r ? ['For langt unna, ' + Math.round(d * 1000) + ' m.', 'Too far off, ' + Math.round(d * 1000) + ' m.'] : v > sl ? ['Stopp båten først, ' + v.toFixed(1).replace('.', ',') + ' knop.', 'Stop the boat first, ' + v.toFixed(1) + ' knots.'] : null;
   if (BOAT.lsa && BOAT.lsa.mob) out.push({how:'boat', why:far(MOBK.boatReach, MOBK.boatSlow)});
   else {
-    if (L < 15) out.push({how:'ladder', why:tIn >= M.able ? [M.name + ' orker ikke å klatre lenger.', M.name + ' cannot climb any more.'] : far(MOBK.reach, MOBK.slow)});
+    // (a bare boat has no ladder: she is hauled in over the low gunwale, which wants her help as the ladder does)
+    if (L < 15) out.push({how:mobLadder() ? 'ladder' : 'rail', why:tIn >= M.able ? [M.name + ' orker ikke å klatre lenger.', M.name + ' cannot climb any more.'] : far(MOBK.reach, MOBK.slow)});
     out.push({how:'sling', why:far(MOBK.reach, MOBK.slow)});
   }
   return out;
@@ -264,10 +268,11 @@ function mobLift(how, pos, kn){
   const t0 = S.t; let tp, t1, ph = null;
   if (how === 'boat'){ const d = kmTrue(pos || S.boat.pos, mobAt(0)), go = d / (MOBK.mb.kn * NM) * 60, low = MOBK.mb.lowerH / (0.4 + 0.02 * MOBK.mb.lowerH) / 60;
     ph = {swing:t0 + MOBK.mb.swing, low:t0 + MOBK.mb.swing + low, there:t0 + MOBK.mb.swing + low + go}; tp = ph.there + MOBK.mb.pick; ph.back = tp + go; t1 = ph.back + MOBK.mb.hoist; }
-  else tp = t1 = t0 + (how === 'ladder' ? MOBK.ladder : MOBK.sling);
+  else tp = t1 = t0 + (how === 'ladder' || how === 'rail' ? MOBK.ladder : MOBK.sling);
   M.lift = {how, t0, tp:Math.ceil(tp), t1:Math.ceil(t1), ph, d:Math.round(kmTrue(pos || S.boat.pos, mobAt(0)) * 1000)};
   if (how !== 'boat'){ const q = mobAlong(); M.x = q.x; M.y = q.y; M.vx = M.vy = 0; }   // (the line on her, and in to the quarter)
   const T = {ladder:['Opp med leideren akter: ' + M.name + ' blir halt inntil og klatrer opp (§ 63).', 'Up the ladder aft: ' + M.name + ' is pulled alongside and climbs up (§ 63).'],
+    rail:['Over ripa: ' + M.name + ' blir halt inntil og dratt om bord over ripa.', 'Over the gunwale: ' + M.name + ' is pulled alongside and hauled aboard over the gunwale.'],
     sling:['Løftestroppen ut: ' + M.name + ' får den rundt seg og blir heist om bord.', 'The lifting sling out: ' + M.name + ' gets it round and is hoisted aboard.'],
     boat:['MOB-båten svinges ut med davitet og fires på sjøen.', 'The rescue boat is swung out on the davit and lowered to the sea.']}[how];
   log(T[0], T[1], 'nav'); return null;
@@ -306,7 +311,7 @@ function mobAway(){
   const M = S.mob; if (!M) return;
   if (M.st === 'up' && M.lift){ mobEnd(M.tUp - M.t0 > M.lim ? 'late' : 'own', M.lift.how); return; }   // (she was up already: the rescue boat finishes coming back)
   const up = Math.max(S.t, M.t0 + 12);
-  if (up - M.t0 <= M.lim){ M.st = 'up'; M.tUp = up; mobEnd('crew', (BOAT.lsa && BOAT.lsa.mob) ? 'boat' : (BOAT.len || 0) < 15 ? 'ladder' : 'sling'); }
+  if (up - M.t0 <= M.lim){ M.st = 'up'; M.tUp = up; mobEnd('crew', (BOAT.lsa && BOAT.lsa.mob) ? 'boat' : (BOAT.len || 0) < 15 ? (mobLadder() ? 'ladder' : 'rail') : 'sling'); }
   else mobEnd('rescue');
 }
 
@@ -315,7 +320,7 @@ function mobEnd(out, how){
   const M = S.mob, b = S.boat; if (!M) return; if (M.other){ sosMobEnd(M, out, how); return; } S.mob = null;
   const tUp = out === 'rescue' ? Math.max(S.t, M.resc.eta) : M.tUp || S.t, tIn = Math.max(1, Math.round(tUp - M.t0)), late = tIn > M.lim, R = M.resc;
   const days = (out === 'own' || out === 'crew') && !late ? 0 : late ? 3 + Math.floor(mobRnd('sick') * 3) : 1 + Math.floor(mobRnd('sick') * 2);
-  const he = mobHe(M), heE = mobHe(M, true), N = M.name, HOW = {ladder:['med leideren akter', 'up the ladder aft'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''];
+  const he = mobHe(M), heE = mobHe(M, true), N = M.name, HOW = {ladder:['med leideren akter', 'up the ladder aft'], rail:['over ripa', 'over the gunwale'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''];
   let no, en;
   if (out === 'own' && !late){ no = N + ' er oppe etter ' + tIn + ' minutter i sjøen, ' + HOW[0] + '. Kald og våt, men i orden. ' + mobCap(he) + ' skifter og varmer seg.';
     en = N + ' is up after ' + tIn + ' minutes in the water, ' + HOW[1] + '. Cold and wet, but all right. ' + mobCap(heE) + ' changes and warms up.'; }
@@ -553,7 +558,7 @@ function sosMobStart(Q, eta){
 function sosMobEnd(M, out, how){
   S.mob = null; if (S.sos && S.sos.id === M.other.sos) S.sos = null;
   const tUp = out === 'rescue' ? Math.max(S.t, M.resc.eta) : M.tUp || S.t, tIn = Math.max(1, Math.round(tUp - M.t0)), late = tIn > M.lim, R = M.resc, N = M.name, bt = '«' + M.other.boat + '»', nm = '«' + (S.boatName || 'Havbris') + '»';
-  const HOW = {ladder:['med leideren akter', 'up the ladder aft'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''], him = mobHim(M), himE = mobHim(M, true);
+  const HOW = {ladder:['med leideren akter', 'up the ladder aft'], rail:['over ripa', 'over the gunwale'], sling:['med løftestroppen', 'with the lifting sling'], boat:['med MOB-båten', 'with the rescue boat']}[how] || ['', ''], him = mobHim(M), himE = mobHim(M, true);
   let no, en; const honour = out === 'own' || out === 'late';   // (mobStep ends it 'late' when she was up after the limit)
   if (honour && !late){ no = N + ' er oppe etter ' + tIn + ' minutter i sjøen, ' + HOW[0] + '. Kald og våt, men i orden. ' + bt + ' kommer inntil og tar ' + him + ' om bord igjen.';
     en = N + ' is up after ' + tIn + ' minutes in the water, ' + HOW[1] + '. Cold and wet, but all right. The ' + bt + ' comes alongside and takes ' + himE + ' back aboard.'; }

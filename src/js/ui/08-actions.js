@@ -211,6 +211,8 @@ function sell(){
   // since (c.trip, set by addCatch). The common costs were paid when bought; they only come off before the sharing.
   const fk = tripCost(b), LS = lottSplit(net - fk.sum), lott = LS.crew;
   for (const p of LS.per){ const c = p.c; if (c.lag) continue; c.earn = (c.earn || []).filter(e => e[0] > S.t - 7 * 1440).concat([[S.t, p.kr]]); if (typeof lifeEarn === 'function') lifeEarn(c, p.kr); }
+  // the trip's line (Ø8b S2, core/04-crew.js tripSum, tripWhy): on the note and in the deck log, and what it said to the cloud (slip_why)
+  const tw = tripSum(b.trip), why = tripWhy(tw);
   b.trip = null;   // the next trip's common costs start now
   b.tankFull = null;   // (the snow crab's tanks are empty again, H3b)
   // back aboard after the trip they sat out; not at a landing that was still going when they were given time off, which put them
@@ -255,11 +257,14 @@ function sell(){
   const crabFine = 0;
   if (crabDead > 0.05) msg(port.name, vt + fmt(crabDead, 1) + ' kg av kongekrabben var død og er vraket. Død krabbe betales ikke. Et krabbekar med sjøvann holder den levende i flere døgn.', vt + fmt(crabDead, 1) + ' kg of the king crab was dead and has been discarded. Dead crab is not paid for. A live crab tank keeps it alive for days.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null, why}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
   log('Leverte ' + Math.round(kg) + ' kg i ' + port.name + ' for ' + kr(total) + '.', 'Landed ' + Math.round(kg) + ' kg at ' + port.name + ' for ' + kr(total) + '.');
+  if (why){ log(why[0], why[1]);
+    // (nothing of who: the jig's kilos an hour, a fair hour for the rig and the share the weather, the cold, the wear and the fishing down took; the hauls against fair ones)
+    if (typeof cloudEv === 'function') cloudEv('slip_why', {kgph:tw.j ? Math.round(tw.j.kgph) : null, fair:tw.j ? Math.round(tw.j.fair) : null, pen:tw.j ? Math.round(tw.j.pen * 100) / 100 : null, gq:tw.g ? Math.round(tw.g.kg / tw.g.fair * 100) / 100 : null}); }
   { const ls = S.lastSale, pt = port; setTimeout(() => { try { plantSay(pt, ls); } catch (e){ console.error(e); } }, 900); }   // the plant's hands comment (core/09d-folk.js)
   cashFx(S.cash - cashBefore);   // the register rings and the sum counts into the account (ui/02-format-state.js)
   setTimeout(pushAsk, 3000);   // notifications, if the player has not been asked (10g-push.js)

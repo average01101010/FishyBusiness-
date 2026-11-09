@@ -364,6 +364,35 @@ Blender-modeller. Bare utsiden; kjøpbart utstyr som egne deler på ankrene (CLA
 - **Test:** `tests/h3dshot.py` (3D, alene): modellen og ankrene, ute, broa, draget, natt fra begge sider og akterfra, i havna og
   havflåtens fartøy nær og fjernt; skjermbilder i begge formater (`TAG=for` og `TAG=etter`).
 
+## 5.71 Snøkrabbefartøyet i arbeid: setting, trekking og lossing (H3d2 av `docs/planer/havsteget-h3-snokrabbe.md`, 08.11.2026)
+
+Bygd i Jonas' økt (steg 25 i `docs/planer/koen.md`) etter planens H3d2. Alt som flyttes, er redskapets deler satt på fartøyets plasser
+(`anchors.snok`, `kit.pots`); ingenting er modellert inn i båten. Koden er `snoWork` og `snoSort` i `view3d/10-gear.js` (kalt fra
+`drawPots` når typen har `snok`) og lossingen i `landScene` i `view3d/09-landing-deck.js`.
+
+- **Syklusen** er `POTA` sin (én teine i den tida arbeidet tar, startet på nytt når simuleringen teller en teine), så animasjonen
+  aldri løper foran fangsten. Teinene på båndet er syklusene før: en trukket teine rir `SNOB` = 2,1 sykluser fra bordet til stabelen
+  (eller over hekken), en satt teine `SNOS` = 3 fra stabelen over hekken. Stablene endrer seg derfor med én teine per syklus.
+- **Trekkingen** (u er syklusens del): 0–0,3 lina inn fra sjøen over blokka (`snok.block`) og rundt haleren (skiva går), teina opp
+  under blokka; 0,3–0,4 teina på kroken (`snok.hook`) og svingt inn over rekka; 0,4–0,5 ned på bordet (`kit.pots.spot`); 0,5–0,56
+  bunnen løst og krabbene tippet ut; 0,58–0,83 folkene sorterer én og én: de små og hunnene (andelen i lenkas egen sortering,
+  `g.snoS`, `landSno`) over bordet til utkastrenna og over bord, hannene ned i hullet til fabrikken, eller på en levendetur (andelen
+  som gikk i tankene) i karet (`kar_levende`) foran bordet, som går til RSW-tankene; 0,8–0,86 agnboksen fylles; så går teina akterover
+  på båndet til stabelen (`stackTop`), eller videre ned renna og ut igjen når lenka settes ut igjen (`g.reset`). Lina går av haleren
+  til en kveil på dekket foran bordet. Hullet og utkastrenna står der `krabbe50.py` har dem (regnet ut fra bordets mål; ikke egne ankre).
+- **Settingen:** teinene løftes fra toppen av stablene over på båndet, går akterover, ned renna (vippet etter rennas fall) og over
+  hekken, og driver akterut med farten hennes (minst 1 m/s) mens de synker. Lina går mellom dem og ut akter. Blåsa ligger i sjøen akter
+  mens de tre første teinene går; bøyestanga med dreggen følger etter siste teine på båndet (§ 66).
+- **Folkene:** uten de gående folkene (`CREW3D` av) står én ved haleren og to ved bordets innside når hun trekker, og én ved båndet og én
+  ved renna når hun setter. Med de gående folkene på er det `deckcrew.js` som plasserer dem (ikke endret i H3d2).
+- **Lossingen med egen kran** (H2d2s steg, `shipQuay`, `shipAim`): pallene med klør fra rommet under luka på pallgaffelen, og karene med
+  levende krabbe fra plassen ved RSW-lukene (1,5 m styrbord for dem, der pumpa fyller dem) i firbeinsstroppen, hektet på på dekket og av
+  på kaia. En lossing av bare levende krabbe går også med skipets kran (før: mottakets kran og generiske plasser på teinedekket). Kranen
+  på babord rekke når ikke 1,6 m inn på kaia på styrbord side; lasten settes så langt inn som bommen når, men aldri nærmere kanten enn
+  0,8 m (`KST.shipReach`, 0,95 av bommens lengde). Luka lukkes når siste pall er i land. Kranføreren står med fjernkontrollen ved søyla.
+- **Test:** `tests/h3dshot.py` del 2 (trekkingens fire faser), 6 (settingen, ny) og 4 (lossingen: blandet og bare levende), med
+  `kitStat.sno`, `kitStat.shipReach`, `shipSling`, `shipFork` og `liveDeck`; sett røde mot koden før H3d2.
+
 ## Snøkrabbe på havbåten (H3 av `docs/planer/havsteget-h3-snokrabbe.md`, valgene 06.11.2026)
 
 Planlagt 06.11.2026; H3a bygd samme dag (5.68). Jonas' valg samme dag: «V1: A», «V2: C», «V3: B», «V4: Gjør det som blir mest riktig, og passer spillet i et fremtidsperspektiv.», «V5: A», «V6: B».

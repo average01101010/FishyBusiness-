@@ -7,6 +7,11 @@ and the snow crab gear (tools/gear/snoteine.py) in the game, with the whole coas
     - to starboard; the red and the green side light tell them apart in the pictures, 07.11.2026)
   4 at the plant nearest Båtsfjord, alongside: her size against the quay
   5 one of the ocean fleet's snow crab vessels (05d-hav.js, the same model) at 120 m and at 700 m (the far model)
+  6 (H3d2) the setting: the pots from the stacks along the conveyor, down the chute and over the stern with the line between them,
+    the buoy at the string's end in the sea astern
+H3d2 (08.11.2026) adds to 2 the hauling's phases (the pot up under the block, on the hook, emptied and sorted on the table, aft on the
+conveyor) and to 4 the landing with her own crane: a pallet of clusters from the hold and a tub of live crab from beside the RSW hatches
+in the sling, and a landing of live crab only (the game's kitStat.sno and kitStat.shipReach say what the frame drew).
 and asks the game whether it draws the Blender model with the anchors the work needs (sulebas-bygging.md kap. 12): the hauler, the
 pot chute, the sorting table, the stacks, the hatch with its lid as a part, the crane with its hook (H3d2 animates them).
 Pictures in tests/out/h3d_<TAG>_<what>_<format>.png. 3D: run alone.
@@ -47,6 +52,7 @@ HAUL = """async () => { const b = S.boat, pg = S.pgear, R = {};
   R.ll = LL(p0); const a = {...p0}, e = {x:a.x, y:a.y + 5};
   S.sets = [{id:'k0', vid:S.cur, kind:'teine', pot:'sno', n:200, a, b:e, tSet:S.t - 7 * 1440, acc:{snokrabbe:{kg:1200, n:2200}}, dead:0, bait:'blekksprut', cond:1, heavy:true, depth:Math.round(depthF(a)), warn:0}];
   b.pos = {...a}; b.status = 'idle'; b.v = 0; b.heading = 0; S.plan = null; b.fuel = BOAT.fuelCap;
+  pg.pots.sno = 600;   // (H3d2: room in the stacks, 70 places of 12, for the 200 hauled; with 1200 aboard they all went to the last stack)
   R.why = startHaul('k0', false, 0); const g = b.gop; if (g){ g.done = 40; g.hooksPer = 5e7; } R.gop = !!g; R.n = g && g.n; return R; }"""
 
 # alongside at the plant nearest Båtsfjord that takes her
@@ -54,6 +60,21 @@ PORT = """async () => { const b = S.boat, R = {}, T = P(70.633, 29.72); b.gop = 
   const pt = PORTS.filter(q => (q.mottak || q.havOnly) && !portWhy(q, 'snokrabbe')).sort((a, c) => dist(a.p, T) - dist(c.p, T))[0];
   await mapNeed(pt.p, 6); R.port = pt.name; b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; b.berth = 'main'; S.me = null; G3.vesselChanged();
   S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4); return R; }"""
+
+# (H3d2) the simulation held while a phase is looked at (the work would go on, and a string being set is done in a minute or two):
+# step() is what the game's tick calls each game minute
+FREEZE = """(on) => { if (on && !window.__step0){ window.__step0 = step; step = () => {}; } else if (!on && window.__step0){ step = window.__step0; window.__step0 = null; } }"""
+
+# (H3d2) setting a string of 200 conical pots where the last was hauled (HAUL first), heading east
+SETT = """async () => { const b = S.boat, R = {}; b.gop = null; S.sets = []; b.status = 'idle'; b.v = 0; S.pgear.pots.sno = 800; S.pgear.kits.n = 40; S.pgear.kits.heavy = 40;
+  R.why = startSet('teine', {pot:'sno', n:200}, 0, Math.PI / 2); const g = b.gop; R.gop = !!g; R.n = g && g.n; R.sno = g && g.sno; return R; }"""
+
+# (H3d2) a landing at the plant (PORT first): frozen clusters and live crab in the tanks ('blandet'), or live crab only ('levende')
+LAND = """async (kind) => { const b = S.boat, R = {}; b.land = null; S.hold = []; b.snoMode = 'lev';
+  if (kind === 'blandet'){ const x = addCatch('snokrabbe', 9000, null, false, {}); if (x){ x.frozen = true; x.iced = true; x.gut = true; } }
+  addCatch('snokrabbe', 1700, 3, false, {tank:true});
+  R.hold = S.hold.map(x => [x.sp, Math.round(x.kg), !!x.frozen, !!x.tank]);
+  R.started = startLanding(false); const L = b.land; R.kind = L && L.kind; R.n = L && L.n; R.np = L && L.np; R.kar = L && L.kar; R.lv = L && L.lv; return R; }"""
 
 # one of the ocean fleet's snow crab vessels at sea now (havState), the player off her at d km, looking at her
 NPC = """async ([dkm]) => { const D = havData(), b = S.boat, R = {}; let best = null;
@@ -109,14 +130,46 @@ async def main():
             await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(4000); await shots(pg, 'bro'); await pg.evaluate("G3.setHelm(false)")
             await pg.evaluate(CAM, [70, 0.95, 1.9]); await pg.wait_for_timeout(4000); await shots(pg, 'ovenfra')
         if want('2'):
-            r = await pg.evaluate(HAUL); print('  draget:', r, flush=True)
-            await pg.evaluate("G3._debug.pota.fix = 0.75")
-            await pg.evaluate(CAM, [26, 0.45, -2.2]); await pg.wait_for_timeout(5000)
+            r = await pg.evaluate(HAUL); print('  draget:', r, flush=True); await pg.evaluate(FREEZE, True)
+            # (H3d2) the hauling's phases held: up under the block, on the hook, sorted on the table, aft on the conveyor
+            ph = {}
+            for nm, u in (('opp', 0.25), ('krok', 0.36), ('sort', 0.7), ('band', 0.95)):
+                await pg.evaluate("u => { G3._debug.pota.fix = u; }", u); await frames(pg, 4)
+                ph[nm] = await pg.evaluate("(() => { const k = G3._debug.kitStat.sno; return k ? JSON.parse(JSON.stringify(k)) : null; })()")
+            print('  fasene:', json.dumps(ph, ensure_ascii=False), flush=True)
+            g = lambda nm, k, d=None: (ph.get(nm) or {}).get(k, d)
+            check(g('opp', 'phase') == 'opp' and g('opp', 'line') and g('opp', 'block'), 'trekkingen: lina over blokka i portalen til haleren, teina opp under blokka', ph.get('opp'))
+            check(g('krok', 'phase') == 'krok', 'teina på kroken, svingt inn over rekka', ph.get('krok'))
+            check(g('sort', 'phase') == 'sort' and (g('sort', 'rel', 0) or 0) + (g('sort', 'keep', 0) or 0) > 0, 'teina tømt på bordet, folkene sorterer: små og bløte over bord, hannene ned til fabrikken eller tankene', ph.get('sort'))
+            check((g('band', 'belt', 0) or 0) >= 1 and (g('band', 'belt', 0) or 0) + (g('band', 'lift', 0) or 0) >= 2, 'teinene akterover på transportbåndet til stablene (på båndet, og løftet på og av det)', ph.get('band'))
+            await pg.evaluate("G3._debug.pota.fix = 0.36"); await pg.evaluate(CAM, [10, 0.4, -1.9, [4.5, 5, 1.5]]); await pg.wait_for_timeout(4000); await shots(pg, 'drag_krok')
+            # (H3d2: close over the sorting table, and the conveyor from aft; H3d1's wide shots from abeam showed the hull more than the work)
+            await pg.evaluate("G3._debug.pota.fix = 0.65")
+            await pg.evaluate(CAM, [5, 0.9, -1.6, [3.9, 4.3, 2.8]]); await pg.wait_for_timeout(5000)
             await shots(pg, 'drag')
-            await pg.evaluate(CAM, [36, 0.75, 0.6]); await pg.wait_for_timeout(3000); await shots(pg, 'teinedekk')
+            await pg.evaluate("G3._debug.pota.fix = 0.5")
+            await pg.evaluate(CAM, [16, 0.55, -0.6, [3.5, 4.3, 9]]); await pg.wait_for_timeout(3000); await shots(pg, 'teinedekk')
             st = await pg.evaluate("({hands:G3._debug.gopHands(), kit:G3._debug.kitStat})")
             check(r.get('why') is None and r.get('gop'), 'en lenke på 200 teiner trekkes på Sentralbanken', {'r': r, 'hender': st['hands']})
+            await pg.evaluate(FREEZE, False)
             await pg.evaluate("G3._debug.pota.fix = null")
+            await pg.evaluate(SET, [11, 70.78, 30.1])
+        if want('6'):
+            r = await pg.evaluate(HAUL); r2 = await pg.evaluate(SETT); print('  settingen:', r2, flush=True); await pg.evaluate(FREEZE, True)
+            ph = {}
+            for nm, u, dn in (('start', 0.5, 1), ('midt', 0.5, 60), ('slutt', 0.5, 198)):
+                await pg.evaluate("([u, dn]) => { G3._debug.pota.fix = u; S.boat.gop.done = dn; }", [u, dn]); await frames(pg, 4)
+                ph[nm] = await pg.evaluate("(() => { const k = G3._debug.kitStat.sno; return k ? JSON.parse(JSON.stringify(k)) : null; })()")
+            print('  fasene:', json.dumps(ph, ensure_ascii=False), flush=True)
+            g = lambda nm, k, d=None: (ph.get(nm) or {}).get(k, d)
+            check(r2.get('why') is None and g('midt', 'op') == 'set' and (g('midt', 'belt', 0) or 0) >= 2 and (g('midt', 'chute', 0) or 0) + (g('midt', 'sea', 0) or 0) >= 1 and g('midt', 'line'),
+                  'settingen: teinene fra stablene langs båndet til renna og over hekken, med lina mellom', {'r': r2, 'midt': ph.get('midt')})
+            check(g('start', 'buoyA') and g('slutt', 'buoyB'), 'blåsa og dreggen i endene: den første i sjøen akter, den siste etter siste teine på båndet', {'start': ph.get('start'), 'slutt': ph.get('slutt')})
+            await pg.evaluate("G3._debug.pota.fix = 0.5; S.boat.gop.done = 60")
+            await pg.evaluate(CAM, [22, 0.35, -0.5, [3.5, 3, 22]]); await pg.wait_for_timeout(5000); await shots(pg, 'setting')
+            await pg.evaluate("G3._debug.pota.fix = 0.5; S.boat.gop.done = 0")
+            await pg.evaluate(CAM, [30, 0.25, -0.3, [3.5, 1, 28]]); await pg.wait_for_timeout(3000); await shots(pg, 'setting_blase')
+            await pg.evaluate("G3._debug.pota.fix = null"); await pg.evaluate(FREEZE, False)
             await pg.evaluate(SET, [11, 70.78, 30.1])
         if want('3'):
             for nm, yaw in (('natt_sb', -2.5), ('natt_bb', 2.5), ('natt_akter', 0.0)):
@@ -126,6 +179,25 @@ async def main():
         if want('4'):
             r = await pg.evaluate(PORT); print('  havna:', r, flush=True); await pg.wait_for_timeout(6000)
             await pg.evaluate(CAM, [70, 0.3, 2.3]); await pg.wait_for_timeout(4000); await shots(pg, 'havn', None, 300000)
+            # (H3d2) the landing with her own crane: pallets of clusters, then tubs of live crab; then live crab only
+            for kind in ('blandet', 'levende'):
+                lr = await pg.evaluate(LAND, kind); print('  lossingen', kind + ':', lr, flush=True); await pg.wait_for_timeout(3000)
+                ls = {}
+                for nm, j, u in ((('pall', 0, 0.62), ('kar', lr.get('np') or 0, 0.62), ('kar_ned', lr.get('np') or 0, 0.85)) if kind == 'blandet' else (('kar', 0, 0.62), ('kar_dekk', 0, 0.3))):
+                    await pg.evaluate("([j, u]) => G3._debug.landFix(j, u)", [j, u]); await frames(pg, 6)
+                    ls[nm] = await pg.evaluate("(() => { const c = G3._debug.shipCr, k = G3._debug.kitStat; return {fresh:c.fresh, reach:k.shipReach, sling:k.shipSling, fork:k.shipFork, live:k.liveDeck}; })()")
+                print('  kranen:', json.dumps(ls, ensure_ascii=False), flush=True)
+                if kind == 'blandet':
+                    check(lr.get('kind') == 'pall' and lr.get('np') and lr.get('kar') and ls['pall']['fresh'] and ls['pall']['fork'] and (ls['pall']['reach'] or 9) <= 0.97,
+                          'lossingen: pallene med klør fra rommet med skipets kran og pallgaffelen, og bommen når kaia', {'r': lr, 'pall': ls['pall']})
+                    check(ls['kar']['fresh'] and ls['kar']['sling'] and not ls['kar']['fork'] and (ls['kar']['reach'] or 9) <= 0.97, 'karene med levende krabbe i stroppene med skipets kran (ikke pallgaffelen)', ls['kar'])
+                    # (from her starboard quarter over the quay: the load on its way down to the quay beside her)
+                    await pg.evaluate("G3._debug.landFix(0, 0.8)"); await pg.evaluate(CAM, [30, 0.4, -2.2, [2, 4, -1]]); await pg.wait_for_timeout(4000); await shots(pg, 'loss_pall', None, 300000)
+                    await pg.evaluate("j => G3._debug.landFix(j, 0.8)", lr.get('np') or 0); await pg.wait_for_timeout(2500); await shots(pg, 'loss_kar', None, 300000)
+                else:
+                    check(lr.get('kind') == 'tub' and ls['kar']['fresh'] and ls['kar']['sling'] and ls['kar_dekk']['live'], 'en lossing av bare levende krabbe: karet fylles ved RSW-lukene og løftes med skipets kran', {'r': lr, 'kran': ls})
+                    await pg.evaluate("G3._debug.landFix(0, 0.3)"); await pg.evaluate(CAM, [12, 1.1, -1.6, [0.5, 4, -1]]); await pg.wait_for_timeout(4000); await shots(pg, 'loss_dekk', None, 300000)
+                await pg.evaluate("G3._debug.landFix(null)"); await pg.evaluate("S.boat.land = null")
             await pg.evaluate(SET, [11, 70.78, 30.1])
         if want('5'):
             r = await pg.evaluate(NPC, [0.12]); print('  havflåten:', r, flush=True); await pg.wait_for_timeout(6000)

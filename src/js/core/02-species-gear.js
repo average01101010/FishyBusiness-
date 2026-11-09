@@ -119,7 +119,9 @@ const VESSELS = {
   trebat:{name:{no:'Trebåt 23 fot (7,0 m), 8 hk semidiesel', en:'23 ft wooden boat (7.0 m), 8 hp semi-diesel'}, len:7.0, beam:2.26, draft:0.62, disp:1.9, holdCap:500, iceCap:150, fuelCap:60, hp:8, engine:{no:'8 hk semidiesel, én sylinder', en:'8 hp semi-diesel, single cylinder'},
     vmax:7, vcruise:6, accel:2, turnR:28, planing:false, outboard:false, diesel:true, semi:true, rpm:[340, 850], risk:[1.2, 2.0, 11, 14.5], sea:0.3, crewMax:1, berths:0, tubCap:60, land:'tub', std:[],
     rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:6, stamp:4, teine:6}, svcH:120, svcCost:2000, svcJobH:4, cls:'open', price:45000, year:1956,
-    hullMat:'tre', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
+    // bare: she carries only what she was built with (Jonas 09.11.2026: «Det finnes ikke en gammel trebåt i verden med badestige
+    // hengende på siden»): no ladder aft and no lifebuoy (lsaOf), and no fishing lights, she jigs and draws her gear by hand (vessel3d.js lanterns)
+    bare:true, hullMat:'tre', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Gammel, klinkbygd og spissgattet trebåt med motorkasse midtskips og rorkult. Treverket er grått og slitt, men skroget er tett. Hun går i 7 knop og bruker nesten ikke diesel.', en:'An old clinker-built double-ended wooden boat with the engine box amidships and a tiller. The wood is grey and worn, but the hull is tight. She makes 7 knots and hardly uses any diesel.'}},
   snekke:{name:{no:'Plastsnekke 26 fot, 30 hk diesel', en:'26 ft fibreglass snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:1000, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
     vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'tub', std:['plotter', 'vhf'],
@@ -390,10 +392,12 @@ function reqFill(eq, type){ const V = VESSELS[type]; if (!eq || !V) return []; c
 // light as well, so smoke <= lights. A rescue boat (MOB boat, tools/deck/mob.py) from 45 m (§ 7-5; 24-45 m only from bankfiske II,
 // which no boat here has). The raft's size is the smallest common one for the most aboard (skipper and crew).
 const RAFT_CAP = [4, 6, 8, 10, 12, 16, 20, 25];
+// A bare boat (V.bare: Father's old wooden boat, Jonas 09.11.2026) carries no lifebuoy and no ladder: the one in the water is hauled
+// in over her low gunwale (ladder false: 14b-sikkerhet.js mobLiftOpts 'rail').
 function lsaOf(V){
   const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, L = V.len, big = L >= 15;
-  const buoys = big ? (L < 24 ? 3 : L < 45 ? 4 : L < 75 ? 6 : 8) : Math.max(L >= 10.67 ? 2 : 1, Math.ceil(n / 3));
-  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && L > 6 ? 1 : 0, cap, buoys, lines:big || L >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2),
-    smoke:!big ? 0 : L < 24 ? 1 : 2, mob:L >= 45 ? 1 : 0};
+  const buoys = V.bare ? 0 : big ? (L < 24 ? 3 : L < 45 ? 4 : L < 75 ? 6 : 8) : Math.max(L >= 10.67 ? 2 : 1, Math.ceil(n / 3));
+  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && L > 6 ? 1 : 0, cap, buoys, lines:!buoys ? 0 : big || L >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2),
+    smoke:!big ? 0 : L < 24 ? 1 : 2, mob:L >= 45 ? 1 : 0, ladder:L < 15 && !V.bare};
 }
 for (const k in VESSELS){ VESSELS[k].key = k; vesselDerive(VESSELS[k]); }

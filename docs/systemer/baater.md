@@ -280,7 +280,7 @@ Jonas 04.11.2026: «båter som ikke har lasterom oppbevarer fisken i de hvite 50
 
 ## Revisjonen om bord og teinene på trebåten (OB0, 09.11.2026)
 
-Revisjonen av kystflåten båt for båt og operasjon for operasjon står i `docs/planer/om-bord.md` (opptakene fra `tests/ombord.py`, funnene F1–F24 og S1–S5, karakterene, fasene OB1–OB15 og valgene 16–22). Ingen av de ti kystbåtene er over 75/100 etter klippene; kyst15 falt fra 76 til 71.
+Revisjonen av kystflåten båt for båt og operasjon for operasjon står i `docs/planer/om-bord.md` (opptakene fra `tests/ombord.py`, funnene F1–F24 og S1–S5, karakterene, fasene OB1–OB15 og valgene 17–23). Ingen av de ti kystbåtene er over 75/100 etter klippene; kyst15 falt fra 76 til 71.
 
-**Jonas 09.11.2026, etter bildene av kongekrabbeteinene gjennom skroget:** «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til. Det må i så fall oppdateres i databladet til båten og gjøres slik at spillere ikke kan kjøpe det til den båten heller.» Ikke bygd ennå: `teiner` ut av `VESSELS.trebat.rigs`, og teinehaleren, krabbekaret og teinene ikke kjøpbare til trebåten (`equipFits` og `buyGate`, så kjøpet og knappene følger), med lagringene som alt har dem (OB1, steg 70 i køen). Skiffen har samme problem (valg 22).
+**Jonas 09.11.2026, etter bildene av kongekrabbeteinene gjennom skroget:** «Jeg tror ikke den trebåten skal kunne holde på med krabbeteiner. Det har den åpenbart ikke plass til. Det må i så fall oppdateres i databladet til båten og gjøres slik at spillere ikke kan kjøpe det til den båten heller.» Ikke bygd ennå: `teiner` ut av `VESSELS.trebat.rigs`, og teinehaleren, krabbekaret og teinene ikke kjøpbare til trebåten (`equipFits` og `buyGate`, så kjøpet og knappene følger), med lagringene som alt har dem (OB1, steg 70 i køen). Skiffen har samme problem (valg 23).
 

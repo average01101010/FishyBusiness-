@@ -424,11 +424,10 @@
     PMK('obj'); glChk('boat'); wildSpawn(t); if (!SKP.boats) drawNPC(eye, t, H, VPn); glChk('npc'); drawAir(eye, t, H, VPn); drawGearSea(eye, t, VPn, H); glChk('gear'); drawDocks(eye, t, VPn); drawFloats(eye, t, VPn); glChk('docks'); drawFits(eye, VPn); drawMarinas(eye, t, VPn); glChk('marina'); drawWild(eye, t, dt); glChk('wild'); drawLife(eye, t, VPn); glChk('life'); lifePts(VPn, eye, t, false); glChk('lifePts');
 
     PMK('nearSea');
-    // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on); the pennant flies day and night
+    // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on). No pennant at the masthead (Jonas 09.11.2026)
     gl.disableVertexAttribArray(2);
     if (PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
       drawTexQuad(FLAGM, FLAGM.tex, fl.shape === 'vimpel' ? chain(FM, new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])) : FM, VPn, true, [0, 0.6, 0]); }
-    { const pen = S.ach && S.ach.pen ? Math.min(3, S.ach.pen | 0) : 0, mt = pen && mastTop(VG); if (mt){ const P = xf(BMrel, mt); drawTexQuad(FLAGM, penTex(), chain(model(P[0], P[1], P[2], Math.PI / 2 - appB, 0, 0), PEN_S[pen - 1]), VPn, true, [0, 0.6, 0]); } }
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
     { const cap = VG.hand ? (SK ? SK.cap : CAPM) : VG.open ? pvm(VT, hullLiv(S.boat)).cap : null; if (cap){ gl.colorMask(false, false, false, false); drawLit(cap, BMrel); gl.colorMask(true, true, true, true); } }
@@ -486,12 +485,35 @@
     drawPts(n, gl.LINES, VP, [0.88, 0.25, 0.62], 1, false);
     gl.disable(gl.BLEND);
   }
-  // spindrift: from a gale (Beaufort 8) the wind tears spray off the crests and drives it low along the sea, more and more into a storm
-  const SDN = 400, SD = {x:new Float64Array(SDN), y:new Float32Array(SDN), z:new Float64Array(SDN), vx:new Float32Array(SDN), vy:new Float32Array(SDN), vz:new Float32Array(SDN), age:new Float32Array(SDN).fill(99), life:new Float32Array(SDN).fill(1), n:0, acc:0};
+  // spindrift (sjørokk): from a near gale (Beaufort 7, 13.9 m/s; before F3b evenly round the camera from Beaufort 8) the wind tears spray
+  // off the crests that break and drives it low along the sea, more and more into a storm. Candidate points round the eye as before
+  // (8-118 m, even in distance, so denser near), each tried with FOAM.capAt (14-sea.js: a crest that breaks, fv > th, the same crests
+  // the sea shader breaks and lays its spindrift on the water from, 5.20g), and spray is thrown only where one breaks, so the drops in
+  // the air and the veil on the water come off the same crests. The candidates come at a rate set so a storm (28.5 m/s, where the
+  // breaking crests are WCAP.k of Monahan's cover) throws as many as before (260 a second), and are let in over Beaufort 7
+  // (13.9-17.2 m/s; from there Monahan's cube law, which the crests follow, ramps it: about 45 a second at 17 m/s, 100 at 22). At most
+  // SDC a frame, and a slow frame lets each crest that breaks throw its share of the frame (fewer crests, not fewer drops).
+  // SD.b*: where and when each drop was born (sea3d checks capAt there); SD.ms: the candidates' time, ms a frame.
+  const SDN = 400, SDC = 48, SDR = 260 / (WCAP.k * 3.84e-6 * Math.pow(28.5, 3.41));
+  const SD = {x:new Float64Array(SDN), y:new Float32Array(SDN), z:new Float64Array(SDN), vx:new Float32Array(SDN), vy:new Float32Array(SDN), vz:new Float32Array(SDN), age:new Float32Array(SDN).fill(99), life:new Float32Array(SDN).fill(1),
+    bx:new Float64Array(SDN), bz:new Float64Array(SDN), bt:new Float64Array(SDN), n:0, acc:0, cand:0, tried:0, hit:0, ms:0};
+  FOAM.sd = SD;
   function driftSpray(VP, eye, dt, t, col){
-    const U = env.wind || 0, wd = env.windDir; SD.acc = Math.min(SD.acc + dt * 260 * sstep(17.2, 28.5, U), 60);
-    while (SD.acc >= 1){ SD.acc -= 1; const a = Math.random() * 6.2832, r = 8 + Math.random() * 110, x = eye[0] + Math.sin(a) * r, z = eye[2] + Math.cos(a) * r, i = SD.n = (SD.n + 1) % SDN, sp = U * (0.45 + Math.random() * 0.35);
-      SD.x[i] = x; SD.z[i] = z; SD.y[i] = seaHFast(x, z, t) + 0.2; SD.vx[i] = wd[0] * sp; SD.vz[i] = wd[1] * sp; SD.vy[i] = 0.6 + Math.random() * 1.6; SD.age[i] = 0; SD.life[i] = 0.8 + Math.random() * 1.2; }
+    const U = env.wind || 0, wd = env.windDir, ramp = sstep(13.9, 17.2, U);
+    if (ramp > 0 && dt > 0){
+      const t1 = performance.now(); SD.cand = Math.min(SD.cand + dt * SDR * ramp, 1e4);
+      const nc = Math.min(SDC, Math.floor(SD.cand)), w = SD.cand > SDC ? SD.cand / SDC : 1; SD.cand = SD.cand > SDC ? 0 : SD.cand - nc;
+      let made = 0;
+      for (let c = 0; c < nc; c++){
+        const a = Math.random() * 6.2832, r = 8 + Math.random() * 110, x0 = eye[0] + Math.sin(a) * r, z0 = eye[2] + Math.cos(a) * r, F = FOAM.capAt(x0, z0, t, 1, U); SD.tried++;
+        if (!(F.fv > F.th)) continue; SD.hit++; SD.acc += w;
+        while (SD.acc >= 1 && made < 60){ SD.acc -= 1; made++;
+          const i = SD.n = (SD.n + 1) % SDN, j = (Math.random() - 0.5) * 1.6, x = x0 + wd[1] * j, z = z0 - wd[0] * j, sp = U * (0.45 + Math.random() * 0.35);   // (along the crest, across the wind)
+          SD.x[i] = x; SD.z[i] = z; SD.y[i] = seaHFast(x, z, t) + 0.2; SD.vx[i] = wd[0] * sp; SD.vz[i] = wd[1] * sp; SD.vy[i] = 0.6 + Math.random() * 1.6; SD.age[i] = 0; SD.life[i] = 0.8 + Math.random() * 1.2;
+          SD.bx[i] = x0; SD.bz[i] = z0; SD.bt[i] = t; }
+        SD.acc = Math.min(SD.acc, 60); }
+      SD.ms = SD.ms * 0.95 + (performance.now() - t1) * 0.05;
+    }
     let n = 0;
     for (let i = 0; i < SDN; i++){ if (SD.age[i] >= SD.life[i]) continue; SD.age[i] += dt; SD.vy[i] -= 2.5 * dt; SD.x[i] += SD.vx[i] * dt; SD.y[i] += SD.vy[i] * dt; SD.z[i] += SD.vz[i] * dt;
       PB[n * 3] = SD.x[i] - eye[0]; PB[n * 3 + 1] = SD.y[i] - eye[1]; PB[n * 3 + 2] = SD.z[i] - eye[2]; PA[n] = Math.sin(Math.PI * Math.min(1, SD.age[i] / SD.life[i])) * 0.45; n++; }
@@ -570,6 +592,15 @@
     if (n) drawPts(n, gl.POINTS, VP, col, 46, 1);
     SCW.drawn = n;
   }
+  // Foam where the slam and the spray land (Fysikk 4 F3b, from F2): the slam's beaten water round the forefoot, and each drop of the
+  // slam's sheet and of the bow spray that falls back into the sea, queued here (world metres, a radius and an amount) for the next
+  // foamStep (14-sea.js), which gathers them into four patches the foam map's pass lays in the wake's channels (r and g), so they lie
+  // in the water as the wash does and age with its tau (14 s). Only while the map is on; at most 64 a frame. WKS: which of the spray's
+  // particles (wk, 16-motion.js) are the bow spray that lands (the planing sheet's are the wings the map lays itself, the rooster tail's
+  // the band astern); they land on the sea as it stands at the bow this frame (wk.bowSea: the spray falls within a few metres of the
+  // stem, where the waves of tens of metres hardly differ, so no sea height is looked up per drop)
+  const WKS = new Uint8Array(WN);
+  function splashFoam(x, z, r, a){ if (!foamLive() || FOAM.spc >= 64) return; const Q = FOAM.spq, i = FOAM.spc++ * 4; Q[i] = x; Q[i + 1] = z; Q[i + 2] = r; Q[i + 3] = a; }
   const SLN = 420, SLP = {x:new Float64Array(SLN), y:new Float64Array(SLN), z:new Float64Array(SLN), vx:new Float64Array(SLN), vy:new Float64Array(SLN), vz:new Float64Array(SLN), age:new Float64Array(SLN).fill(99), life:new Float64Array(SLN).fill(1), n:0};
   function drawEffects(VP, eye, BM, dt, t){
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
@@ -586,7 +617,7 @@
       // the waterline a little aft of the stem, as a fine mist, and keeps most of the boat's way: it fans out beside the bow and falls
       // astern of it (Jonas 21.10.2026, #90: the spray did not look real. Thrown from a point at the stem with no way on, it hung in the
       // air as a trail of round blobs behind the boat)
-      const bowP = xf(BM, [0, 0.15, VG.bow]), imm = bowP[1] - seaH(bowP[0], bowP[2], t), sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
+      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
       const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, Lb = VG.stern - VG.bow, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9;
       if (v > 3 && sink < -0.5 && imm < 0.6) wk.sacc += Math.min(100, -sink * v * 1.25);
       if (WK.Fr > 0.9) wk.sacc += dt * v * WV.hs * 2;
@@ -596,13 +627,13 @@
       // and lies as the white wings in the foam map. A displacement hull has none at any speed (WK.pf 0)
       if ((WK.pf || 0) > 0.05 && v > 3){ const vr = (WK.kn || 0) * 0.5144; wk.pacc = (wk.pacc || 0) + dt * 90 * WK.pf * sstep(3, 10, vr);
         while (wk.pacc >= 1){ wk.pacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, rf = 0.06 + 0.34 * WK.pf + Math.random() * 0.1, p = xf(BM, [side * VG.side * 1.05, 0.05, VG.bow + rf * Lb]), out = Math.min(7, vr * (0.2 + Math.random() * 0.15));
-          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); } }
+          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); WKS[wk.n] = 0; } }
       while (wk.sacc >= 1){ wk.sacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.08 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.45 + a * 1.6), 0.1, VG.bow + a * Lb]), up = 0.9 + Math.random() * (1.4 + Math.min(4, -sink)), out = 1.6 + Math.random() * 2.6;
-        spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); }
+        spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); WKS[wk.n] = 1; }
       // the rooster tail: a planing outboard throws a plume of water up behind the leg
       if (BOAT.outboard && WK.Fr > 1){ wk.racc = (wk.racc || 0) + dt * 70 * sstep(1, 1.6, WK.Fr);
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;
-          spawn(p[0], p[1], p[2], -Math.sin(bv.head) * bk + wx, 2.2 + Math.random() * 2.2, Math.cos(bv.head) * bk + wz, 0.6 + Math.random() * 0.4, 9.8); } }
+          spawn(p[0], p[1], p[2], -Math.sin(bv.head) * bk + wx, 2.2 + Math.random() * 2.2, Math.cos(bv.head) * bk + wz, 0.6 + Math.random() * 0.4, 9.8); WKS[wk.n] = 0; } }
     }
     // a slam (16-motion.js hullMove, Fysikk 4 F2): the bow comes down on the sea faster than her threshold and throws a sheet of white
     // water up and out to both sides from the forefoot, more the harder she hits, carried off with her way and the wind. Its own
@@ -614,6 +645,8 @@
       for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.02 + Math.random() * 0.25, p = xf(BM, [side * VG.side * (0.3 + a * 1.5), -0.1 + Math.random() * 0.3, VG.bow + a * Lb]);
         const up = (2 + Math.random() * 4) * Math.sqrt(s), out = (1.5 + Math.random() * 3.5) * Math.sqrt(s), k = SLP.n = (SLP.n + 1) % SLN;
         SLP.x[k] = p[0]; SLP.y[k] = p[1]; SLP.z[k] = p[2]; SLP.vx[k] = Math.cos(bv.head) * side * out + fx * way + wx; SLP.vy[k] = up; SLP.vz[k] = Math.sin(bv.head) * side * out + fz * way + wz; SLP.age[k] = 0; SLP.life[k] = 1 + Math.random() * 0.9; }
+      // and the white water it beats up round the forefoot, in the foam map (F3b; the sheet adds where it lands, below)
+      { const p = xf(BM, [0, 0, VG.bow + 0.12 * Lb]); splashFoam(p[0], p[2], VG.side * (1.3 + 0.5 * Math.sqrt(s)), Math.min(1, 0.55 + 0.2 * s)); }
       // and the thud of it (ui/10e-sound.js), from the forefoot
       try { if (typeof SND !== 'undefined' && SND.slam) SND.slam(HSEA.slam.s, xf(BM, [0, 0, VG.bow + 0.15 * Lb])); } catch (e){} }
     // wake: the prop wash's bubbles behind the stern (gone in 6 s; the pale band under them went, Jonas 04.10.2026: «kun vise
@@ -658,6 +691,7 @@
     for (let i = 0; i < WN; i++){
       if (wk.age[i] >= wk.life[i]) continue;
       wk.age[i] += dt; wk.vy[i] -= wk.g[i] * dt; wk.x[i] += wk.vx[i] * dt; wk.y[i] += wk.vy[i] * dt; wk.z[i] += wk.vz[i] * dt;
+      if (WKS[i] && wk.vy[i] < 0 && wk.y[i] < (wk.bowSea == null ? -1e9 : wk.bowSea)){ WKS[i] = 0; wk.age[i] = 99; splashFoam(wk.x[i], wk.z[i], 0.45, 0.5); continue; }   // (the bow spray is gone where it lands, and leaves foam)
       PB[n * 3] = wk.x[i] - eye[0]; PB[n * 3 + 1] = wk.y[i] - eye[1]; PB[n * 3 + 2] = wk.z[i] - eye[2]; PA[n] = Math.pow(Math.max(0, 1 - wk.age[i] / wk.life[i]), 1.5) * 0.75; n++;
     }
     if (QUAL.lvl) drawPts(n, gl.POINTS, VP, foamCol, 95, 2);   // (soft, as mist: round discs read as blobs)
@@ -666,7 +700,7 @@
       for (let i = 0; i < SLN; i++){
         if (SLP.age[i] >= SLP.life[i]) continue;
         const dr = Math.exp(-dt * 1.2); SLP.age[i] += dt; SLP.vx[i] *= dr; SLP.vz[i] *= dr; SLP.vy[i] -= 9.8 * dt; SLP.x[i] += SLP.vx[i] * dt; SLP.y[i] += SLP.vy[i] * dt; SLP.z[i] += SLP.vz[i] * dt;
-        if (SLP.vy[i] < 0 && SLP.y[i] < seaHFast(SLP.x[i], SLP.z[i], t)){ SLP.age[i] = 99; continue; }
+        if (SLP.vy[i] < 0 && SLP.y[i] < seaHFast(SLP.x[i], SLP.z[i], t)){ SLP.age[i] = 99; splashFoam(SLP.x[i], SLP.z[i], 0.7, 0.85); continue; }
         PB[m * 3] = SLP.x[i] - eye[0]; PB[m * 3 + 1] = SLP.y[i] - eye[1]; PB[m * 3 + 2] = SLP.z[i] - eye[2]; PA[m] = 0.95 * Math.pow(Math.max(0, 1 - SLP.age[i] / SLP.life[i]), 0.6); m++; }
       if (m) drawPts(m, gl.POINTS, VP, foamCol, 450, 2, null, 64); }   // (size / distance in pixels: some 0.35 m a blob, a sheet together)
     scupperWater(VP, eye, BM, dt, t, [foamCol[0] * 0.88, foamCol[1] * 0.95, foamCol[2]]);

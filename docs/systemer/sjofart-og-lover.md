@@ -138,6 +138,8 @@ Det spillet bruker, regel for regel:
 
 Ikke funnet i forskriften: plikt til å bære vest på dekk, nødstopp på haler, utstyr for mann over bord utover leideren og livbøya, PLB og AIS-MOB, risikovurdering.
 
+**Fars trebåt er «bare» (Jonas 09.11.2026: «Hvorfor har trebåten badestige og livbøye? Den skal ikke ha dette. Det finnes ikke en gammel trebåt i verden med badestige hengende på siden som det der.»):** `VESSELS.trebat.bare` gir ingen livbøye (`lsaOf`: `buoys`, `lights` og `lines` 0) og ingen leider (`lsa.ladder` false, `LADDERS` uten trebåten), og ingen fiskelanterner (`lanterns` i `vessel3d.js`: den hvite rundtlysende og sidelysene i alle tilstander unntatt til ankers og ved kaia). I en mann over bord-hendelse kaster ingen livbøya (`mobHasBuoy`), knappen «Kast livbøya» vises ikke, og opptaket heter «Over ripa» (`rail`, samme tid som leideren). Dette er Jonas' valg for en gammel åpen båt, ikke en lesning av § 43 og § 63; for lanternene står det på regel 3 d (juksa og håndtrekking hindrer ikke manøvreringen) og regel 27 g (under 12 m slipper to røde). Sidelysene står, fordi regel 23 d i bare slipper båter under 7 m (hun er 7,0 m); å ta dem bort krever en ny eksport av modellen.
+
 ### 2.6 Fiskefartøy fra 15 m, FOR-2000-06-13-660
 
 <https://lovdata.no/dokument/SF/forskrift/2000-06-13-660>, sist endret FOR-2025-06-26-1372. § 7-5 redningsfarkoster til 200 % og MOB-båt fra 45 m (ordrett); § 7-10 livbøyer 3 / 4 / 6 / 8 etter lengden, lys og røyk [sammendrag]; § 9-6 VHF-DSC og SART (ordrett); § 10-3 radar fra 24 m; § 10-4a AIS fra 15 m; § 10-7 brovaktalarm [sammendrag]. **Avvik i spillet:** `lsaOf` gir kyst21 fire livbøyer (§ 7-10: tre) og pelagisk seks (åtte). Rettes i Ø11.5.

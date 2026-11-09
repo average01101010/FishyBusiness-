@@ -169,7 +169,8 @@
   // 8 bits hold it), rolls the birth windows, and FOAM_FS adds the foam made this frame; the sea shader reads it (foamBind, unit 7) and
   // ages it as exp(-age / tau). «#foam0» in the address turns it off (the sea as before, for the comparison); it is off too on the lite
   // and the basic sea, on the low quality (the far shader draws the near sea there), and when no framebuffer can be made.
-  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[14, 6], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9, Cw:[0, 0], CwT:[0, 0], cs:[0, 0]};
+  const FOAM = {on:!/foam0/.test(location.hash), ok:false, N:0, M:600, tex:[null, null], fb:[null, null], r:0, ox:0, oz:0, t0:[0, 0], win:[160, 32], tau:[14, 6], now:[0, 0], prog:null, pB:null, fresh:true, why:'', ms:0, sh:[0, 0], n:0, G:[0, 0], C:[0, 0], gs:[0, 0], cur:{x:0, y:0}, curT:-1e9, Cw:[0, 0], CwT:[0, 0], cs:[0, 0], spq:new Float32Array(256), spc:0, spl:new Float32Array(16), spv:null, spn:0};
+  FOAM.spv = [0, 1, 2, 3].map(k => FOAM.spl.subarray(k * 4, k * 4 + 4));   // (the four patches' views, made once)
   const foamLive = () => FOAM.on && FOAM.ok;
   const foamSize = () => QUAL.lvl >= 2 ? 1024 : 512;
   function foamFree(){ for (let k = 0; k < 2; k++){ if (FOAM.fb[k]) gl.deleteFramebuffer(FOAM.fb[k]); if (FOAM.tex[k]) gl.deleteTexture(FOAM.tex[k]); FOAM.fb[k] = FOAM.tex[k] = null; } FOAM.ok = false; }
@@ -197,7 +198,7 @@
   }
   // one frame of the map: the window after the boat, the birth windows rolled, the old map shifted in and this frame's foam added
   function foamStep(dt, t){
-    if (!FOAM.on) return; if (FOAM.ok && foamSize() !== FOAM.N) foamInit(); if (!FOAM.ok || !WV.list.length) return;
+    if (!FOAM.on) return; if (FOAM.ok && foamSize() !== FOAM.N) foamInit(); if (!FOAM.ok || !WV.list.length){ FOAM.spc = 0; return; }   // (no landings kept for later)
     const t1 = performance.now(), N = FOAM.N, M = FOAM.M, px = M / N, Dx = NF.D[0], Dz = NF.D[1];
     // the window: the boat's place in the water's frame, the map's origin snapped to whole texels round it (a jump or the first frame clears it)
     const qx = bv.x - Dx, qz = bv.z - Dz, tx = qx - M / 2, tz = qz - M / 2;
@@ -246,6 +247,7 @@
     const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
+    foamSplash(Dx, Dz); if (u.uSp0 != null){ const V = FOAM.spv; gl.uniform4fv(u.uSp0, V[0]); gl.uniform4fv(u.uSp1, V[1]); gl.uniform4fv(u.uSp2, V[2]); gl.uniform4fv(u.uSp3, V[3]); }
     gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     foamNPC(qx, qz, Dx, Dz, Dx - FOAM.G[0], Dz - FOAM.G[1]);
@@ -255,6 +257,25 @@
       gl.bindFramebuffer(gl.FRAMEBUFFER, FOAM.fb[FOAM.r]); gl.readPixels(i, j, 64, 64, gl.RGBA, gl.UNSIGNED_BYTE, b4); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
       let cnt = 0; const g = new Set(); for (let k = 0; k < 64 * 64; k++) if (b4[k * 4] > 64){ cnt++; g.add(Math.round(b4[k * 4 + 1] / b4[k * 4] * 255)); }
       FOAM.log.push([+t.toFixed(2), sx, sz, +reb[0].toFixed(3), +FOAM.now[0].toFixed(3), cnt, g.size, Math.min(...g), Math.max(...g)]); }
+  }
+  // The foam where the slam and the spray land (F3b): what drawEffects queued last frame (FOAM.spq, a ring of FOAM.spc landings of
+  // four numbers: world metres x and z, radius, amount; 24-cinema.js splashFoam) gathered into four patches (FOAM.spl: x, z in the
+  // map's metres in the wake's frame as hullFoam has them, radius, amount; amount 0 is none), which FOAM_FS lays as four uniforms with
+  // fixed names (no loop over a uniform array, Adreno 642L, 5.20). Each drop goes into the nearest patch it lies in or beside (the
+  // patch grows round it, to 6 m at most), else into a new one while there are four; one that would grow a patch past 6 m takes a free
+  // slot, and only when none is free is it let go (the next frame has room again, and a slam's sheet falls over a second).
+  function foamSplash(Dx, Dz){
+    const SP = FOAM.spl, Q = FOAM.spq, nq = FOAM.spc; SP.fill(0); let n = 0;
+    const put = (x, z, r, a) => { SP[n * 4] = x; SP[n * 4 + 1] = z; SP[n * 4 + 2] = r; SP[n * 4 + 3] = a; n++; };
+    for (let i = 0; i < nq; i++){
+      const x = Q[i * 4] - Dx - FOAM.ox, z = Q[i * 4 + 1] - Dz - FOAM.oz, r = Q[i * 4 + 2], a = Q[i * 4 + 3]; let bi = -1, bd = 1e9;
+      for (let k = 0; k < n; k++){ const d = Math.hypot(x - SP[k * 4], z - SP[k * 4 + 1]) - SP[k * 4 + 2]; if (d < bd){ bd = d; bi = k; } }
+      if (bi < 0 || (bd > 1 && n < 4)){ put(x, z, r, a); continue; }
+      const o = bi * 4, d = Math.hypot(x - SP[o], z - SP[o + 1]), r1 = SP[o + 2];
+      if (d + r <= r1){ SP[o + 3] = Math.max(SP[o + 3], a); continue; }
+      const R = (d + r1 + r) / 2; if (R > 6){ if (n < 4) put(x, z, r, a); continue; }
+      const f = (R - r1) / Math.max(d, 1e-6); SP[o] += (x - SP[o]) * f; SP[o + 1] += (z - SP[o + 1]) * f; SP[o + 2] = R; SP[o + 3] = Math.max(SP[o + 3], a); }
+    FOAM.spn += nq; FOAM.spc = 0;
   }
   // The other boats' foam (04.11.2026: the fleet sailed with no wake at all): the six nearest with way on within the map, each swept
   // from where she was last frame as your own hull is (HULLFOAM), by her length, beam and speed through the water (n.v, knots) and
