@@ -1628,3 +1628,6 @@
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	boottest	OK	22	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	turlinjetest	OK	5	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	tutfull	OK	5	lite	samtidig	
+2026-11-09 02:21	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	boottest	OK	28	lite	samtidig	
+2026-11-09 02:22	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	docktest	OK	61	lite	samtidig	
+2026-11-09 02:23	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	landtest	OK	89	3d	alene	
