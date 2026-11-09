@@ -191,11 +191,13 @@ Dekkskartet (`tools/boats/qa/deckgrid.py snekke`) gir en dørk på 1,8 m mellom 
 ### 9.2 Det som er endret
 
 - **Juksaplassene** (4.3 i `om-bord.md`, alvor A, F15, F21): spillet lette dem opp i skroget (`jigRail`), og plass 2 havnet i hjørnet ved dashbordet med hardtopstolpen gjennom den som sto der (`me:jig:2` i klippesjekken), den tredje ute på sidedekket ved lugaren, og alle tre på styrbord. Modellen gir nå plassene selv (`anchors.jigZ`, i den rekkefølgen maskinene skrus på): **styrbord akter for haleren** (modellens x 1,60, forut for hekkrekkas første stolpe), der fiskeren står fritt ved ripa mellom haleren og fangstkaret, og **babord i åpningen mellom hardtopstolpene** (x 2,55), forut for sløyebordet. Én maskin står på styrbord, to står én på hver side.
-- **Bare to plasser.** En tredje plass ved ripa finnes ikke på denne dørken uten at fiskeren står i styrestolen (styrbord forut for haleren), i iskassa eller fangstkaret (babord akter for bordet) eller i fangstkaret (styrbord akter). En spiller med tre maskiner får to tegnet, og den tredje i mannskapet står ved (`jigSpot` gir ingen plass til den som er over; før sto nummer tre inni nummer én på alle båtene som hadde færre plasser enn folk).
-- **Livbøyene** henger på hekkrekkas akterste løp ved fangstkarene (x 0,25–0,75), der ingen arbeider ved ripa; før hang de på løpet der den akterste maskinen sto, og maskinen sto i livbøya.
+- **Bare to plasser.** En tredje plass ved ripa finnes ikke på denne dørken uten at fiskeren står i styrestolen (styrbord forut for haleren), i iskassa eller fangstkaret (babord akter for bordet) eller i fangstkaret (styrbord akter); Jonas satte samme dag høyst to maskiner (under). Den som er over antallet plasser, står ved (`jigSpot` gir ingen plass til den som er over; før sto nummer tre inni nummer én på alle båtene som hadde færre plasser enn folk).
+- **Livbøyene** henger på hekkrekkas akterste løp ved fangstkarene (x 0,25–0,75), der ingen arbeider ved ripa; før hang de på løpet der den akterste maskinen sto, og maskinen sto i livbøya. (Plassen står i modellen, men bøyene tegnes ikke lenger etter Jonas' regel under.)
 - **Vekta** (valg 18 A, `disp` er den tomme båten): tegningens vannlinje 1,20 m ga 3,57 t, en lastet vannlinje (0,6 t om bord). **Formen er ikke endret**: den tomme båten flyter 4 cm lavere, på 1,16 m (3,00 t), og `check()` feiler nå over 10 %. Dypgangen er 1,16 m tom og 1,20 m lastet. Bunnstoffet og vannlinjestripa står der tegningen har dem, så de synes over vannet når hun er tom. Fordi skroget ikke er formet om, er valg 22 B (bildene før skroget endres) ikke utløst, som på skiffen; `commons.wikimedia.org` og `digitaltmuseum.no` er fortsatt stengt i øktas nettverk.
 - **Stabiliteten** (`STAB_AT.snekke` i `core/03c-stability.js`): dekket 0,42 m over vannlinja (var 0,38); plassene ellers som før. Fysikken i sjøen regnes av kjernen fra `VESSELS` (3,0 t) og ikke fra modellens vannlinje, så `hull3d` er ikke kjørt.
 - **Klippesjekken** (`tests/crewclip.py`, F15): den gir nå juksaplassene slik visningen gjør (`CREW3D.setJig(jigRail)`) og alle maskinene i bruk. Sett rød på bygget fra før (`snekke jig:2[0.5]`), grønn etter.
+
+- **Jonas 09.11.2026 (etter de første endringene):** «Jeg tenker denne båten maks skal kunne ha 2 juksamaskiner og 2 mann ombord, den har tross alt ikke mye mer plass enn trebåten. Fjern livbøyen, og redningsflåten, bare båter med kapasitet for 4 mann eller mer skal ha slikt utstyr.» Snekka har nå deg og én til (`crewMax` 1, som trebåten og skiffen, så driftsplanen går bare når du er om bord) og høyst to juksamaskiner (`jukseMax` 2), som passer de to juksaplassene. En lagring med flere om bord eller flere maskiner får dem mønstret av og tatt i land og betalt tilbake ved oppstart (`ui/11-boot.js`). Redningsflåten og livbøyene tegnes ikke (`lsaOf`, `LSA_MIN` 4); plassene står i modellen (`kit.raft`, `kit.buoys`) om regelen endres.
 
 ### 9.3 Det som står igjen
 
@@ -213,13 +215,13 @@ Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 67 etter 
 | Detaljer | 20 | 15 | Ekte hull med lysning og glass, beslag fra `fittings.py`, slitasje, 68 000 trekanter. Trekk: materialene er ikke PBR (F2) |
 | Lanterner | 5 | 4 | Lovlige plasser etter `check()`, K6 sett 01.11.2026; ikke sett om natta i denne økta |
 | Styrhus | 10 | 8 | Konsollen med levende plotter, ratt, enspak og kompass; `brotest` grønn 01.11.2026 (ankrene er flyttet likt med vannlinja, så høydene mot taket og vindskjermen er de samme) |
-| Arbeidsflyt | 25 | 16 | Juksa på to frie plasser, én på hver side, ingen gjennom noe (`crewclip`); sløyingen og garntrekket som før (riktige i OB0); fortøyningen med folk (OB2). Trekk: teinene settes ned gjennom karene og folkene (alvor A, valg 24), ingen akter ved settingen (F4) |
-| Utforming av dekk | 20 | 13 | Maskinene og livbøyene på logiske plasser. Trekk: teinestabelen har ingen plass, stampene og garnet står forut mens redskapet settes akter, døra til lugaren er trang når garnkaret står der |
-| **Sum** | **100** | **71** | Under grensen. Det som løfter mest: teinene (valg 24) og settingen akter fra stampene |
+| Arbeidsflyt | 25 | 17 | Juksa på to frie plasser, én på hver side, ingen gjennom noe (`crewclip`), to om bord og to maskiner, som plassen gir; sløyingen og garntrekket som før (riktige i OB0); fortøyningen med folk (OB2). Trekk: teinene settes ned gjennom karene og folkene (alvor A, valg 24), ingen akter ved settingen (F4) |
+| Utforming av dekk | 20 | 14 | Maskinene på logiske plasser, ingen livbøye eller flåte i veien. Trekk: teinestabelen har ingen plass, stampene og garnet står forut mens redskapet settes akter, døra til lugaren er trang når garnkaret står der |
+| **Sum** | **100** | **73** | Under grensen. Det som løfter mest: teinene (valg 24) og settingen akter fra stampene |
 
 Jonas setter karakteren.
 
 ## Endringslogg
 
 - 01.11.2026: første versjon, gjennomgangen før endring og de første rundene.
-- 09.11.2026: OB6 (kap. 9): juksaplassene fra modellen, livbøyene akter, vannlinja for den tomme båten; teinene og settingen står (valg 24).
+- 09.11.2026: OB6 (kap. 9): juksaplassene fra modellen, livbøyene akter, vannlinja for den tomme båten; Jonas: deg og én til, to maskiner, ingen flåte eller livbøye; teinene og settingen står (valg 24).

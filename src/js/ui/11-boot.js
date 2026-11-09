@@ -307,6 +307,14 @@ for (const s of S.sets || []) if (s.kind === 'teine') s.pot = 'big';
 // boat and the skiff have no pots in their datasheet any more; what a save has of them goes ashore and is paid back (core/10-gear.js
 // potsUnfit: the pots in port once none are in the sea, the pot hauler and the crab tank at the next yard; every game hour after this too)
 for (const v of S.fleet) withVessel(v, potsUnfit);
+// 09.11.2026 (OB6, Jonas: «Jeg tenker denne båten maks skal kunne ha 2 juksamaskiner og 2 mann ombord»): a boat whose datasheet now
+// takes fewer jigging machines or hands than a save has aboard (the snekke: two machines, you and one more): the machines over go ashore
+// and are paid back at what they cost, and the hands over sign off, as when changing boats (phone/13-mannskap-bank-meld.js)
+for (const v of S.fleet) withVessel(v, () => { const V = S.boat && VESSELS[S.boat.type]; if (!V) return;
+  const over = (S.equip.jukse || 0) - (V.jukseMax || 0);
+  if (over > 0){ const kr0 = equipKr('jukse') * over; S.equip.jukse -= over; book('redskap', kr0, 'Juksamaskiner tatt i land', 'Jigging reels taken ashore');
+    log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. ' + over + ' er tatt i land og kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. ' + over + ' were taken ashore and bought back for ' + kr(kr0) + '.'); }
+  while (S.crew && S.crew.length > (V.crewMax || 0)){ const c = S.crew.pop(); log(c.name + ' har mønstret av «' + S.boatName + '»: båten har plass til ' + (V.crewMax || 0) + ' i mannskapet.', c.name + ' has signed off the «' + S.boatName + '»: the boat has room for ' + (V.crewMax || 0) + ' crew.'); } });
 // «Kaffe på kaia» was replaced by the daily login bonus on 01.10.2026: unused free pub rounds are paid out, borrowed deck tubs
 // and the clean-hull bonus are gone, and the bonus starts at zero
 if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ book('annet', v * PUB_COST, 'Ubrukte pubrunder', 'Unused pub rounds'); log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }

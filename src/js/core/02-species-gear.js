@@ -128,8 +128,8 @@ const VESSELS = {
     bare:true, hullMat:'tre', kar:{n:1, max:1}, hold:{kind:'dekk', m3:0.8}, deckCargo:200, iceMaker:0, gutMachine:0, lph:1.0, cabins:0, fac:{house:'open', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Gammel, klinkbygd og spissgattet trebåt med motorkasse midtskips og rorkult. Treverket er grått og slitt, men skroget er tett. Hun går i 7 knop og bruker nesten ikke diesel. Garna trekkes for hånd over ripa, og det er ikke plass til teiner.', en:'An old clinker-built double-ended wooden boat with the engine box amidships and a tiller. The wood is grey and worn, but the hull is tight. She makes 7 knots and hardly uses any diesel. The nets are drawn by hand over the rail, and there is no room for pots.'}},
   snekke:{name:{no:'Plastsnekke 26 fot, 30 hk diesel', en:'26 ft fibreglass snekke, 30 hp diesel'}, len:7.9, beam:2.7, draft:1.2, disp:3.0, holdCap:1000, iceCap:400, fuelCap:220, hp:30, engine:{no:'30 hk innenbords diesel', en:'30 hp inboard diesel'},
-    vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:2, berths:0, tubCap:150, land:'tub', std:['plotter', 'vhf'],
-    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:3, gearMax:{garn:15, stamp:10, teine:9}, svcH:250, svcCost:6000, svcJobH:5, cls:'open', price:245000, year:1994,
+    vmax:8, vcruise:7, accel:3, turnR:45, planing:false, outboard:false, diesel:true, risk:[1.5, 2.5, 12.5, 16], sea:0.22, crewMax:1, berths:0, tubCap:150, land:'tub', std:['plotter', 'vhf'],
+    rigs:['juksa', 'line', 'garn', 'teiner'], jukseMax:2, gearMax:{garn:15, stamp:10, teine:9}, svcH:250, svcCost:6000, svcJobH:5, cls:'open', price:245000, year:1994,
     hullMat:'glassfiber', kar:{n:2, max:2}, hold:{kind:'dekk', m3:1.8}, deckCargo:300, iceMaker:0, gutMachine:0, lph:3.0, cabins:0, fac:{house:'hardtop', shelter:false, galley:'none', wc:false, dry:false, mess:false}, stations:{table:1, hauler:1}, crane:0,
     desc:{no:'Plastsnekke med klinkmønster i skroget, ruff forut, vindskjerm med hardtopp over styreplassen og åpen cockpit akter til redskapen. Sparsommelig og sjøsterk for størrelsen.', en:'Fibreglass snekke with a clinker-look hull, a cabin forward, a windscreen with a hard top over the helm and an open cockpit aft for the gear. Economical and seaworthy for her size.'}},
   // the 31 ft fibreglass sjark that became the standard Norwegian sjark from the late 1970s (the Viksund 31 Sjark; the make is only named
@@ -400,10 +400,14 @@ function reqFill(eq, type){ const V = VESSELS[type]; if (!eq || !V) return []; c
 const RAFT_CAP = [4, 6, 8, 10, 12, 16, 20, 25];
 // A bare boat (V.bare: Father's old wooden boat, Jonas 09.11.2026) carries no lifebuoy and no ladder: the one in the water is hauled
 // in over her low gunwale (ladder false: 14b-sikkerhet.js mobLiftOpts 'rail').
+// Jonas 09.11.2026 (OB6): «Fjern livbøyen, og redningsflåten, bare båter med kapasitet for 4 mann eller mer skal ha slikt utstyr»: a boat
+// for fewer than four (skipper and crew) carries no raft and no lifebuoy (nor the buoy's light and line). A game rule, stricter than the
+// regulation above (§ 38 and § 43 ask a raft of a decked boat over 6 m and a buoy of every boat); it is Jonas' choice.
+const LSA_MIN = 4;
 function lsaOf(V){
-  const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, L = V.len, big = L >= 15;
-  const buoys = V.bare ? 0 : big ? (L < 24 ? 3 : L < 45 ? 4 : L < 75 ? 6 : 8) : Math.max(L >= 10.67 ? 2 : 1, Math.ceil(n / 3));
-  return {persons:n, rafts:big ? 2 : V.fac.house !== 'open' && L > 6 ? 1 : 0, cap, buoys, lines:!buoys ? 0 : big || L >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2),
+  const n = 1 + V.crewMax, cap = RAFT_CAP.find(c => c >= n) || 25, L = V.len, big = L >= 15, few = n < LSA_MIN;
+  const buoys = V.bare || few ? 0 : big ? (L < 24 ? 3 : L < 45 ? 4 : L < 75 ? 6 : 8) : Math.max(L >= 10.67 ? 2 : 1, Math.ceil(n / 3));
+  return {persons:n, rafts:few ? 0 : big ? 2 : V.fac.house !== 'open' && L > 6 ? 1 : 0, cap, buoys, lines:!buoys ? 0 : big || L >= 10.67 ? 2 : 1, lights:Math.ceil(buoys / 2),
     smoke:!big ? 0 : L < 24 ? 1 : 2, mob:L >= 45 ? 1 : 0, ladder:L < 15 && !V.bare};
 }
 for (const k in VESSELS){ VESSELS[k].key = k; vesselDerive(VESSELS[k]); }
