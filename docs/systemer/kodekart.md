@@ -762,7 +762,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1347 linjer)
+## `src/js/core/05-vessels.js` (1371 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -821,48 +821,50 @@ crew: people with skills, habits and moods
   - 669 `nearestYard(p)`
   - 671 `step()`
   - 689 `vesselStep(H)`
-  - 788 `plantFuel(b)`
-  - 791 `sailV(H, hs)`
-  - 803 `sail(H, W, hs)`
-  - 833 `sailWaiting()`
-  - 834 `sailReplan(pl, b, gp)`
-  - 862 `iceWhy(p, tried)`
-  - 864 `sailStop(pl, b, why)`
-  - 872 `haltPlan(need)`
-  - 882 `arrive(w)`
-  - 900 `unstuckWhy()`
-  - 906 `unstuckSpot()`
-  - 913 `unstuck()`
-  - 927 `dock(pid, berth)`
-  - 954 `catchFactors(H, W, hs)`
-  - 967 `stockDev(p, sp)`
-  - 973 `fish(H, W, hs)`
-  - 1066 `endFishing(why)`
-  - 1082 `addCatch(sp, kg, cls, hook, opt)`
-- **1103** work on deck: gutting and icing take hands and time
-  - 1119 `deckHands()`
-  - 1122 `deckPending()`
-  - 1123 `deckEta(hands)`
-  - 1128 `moveKg(x, kg, patch)`
-  - 1136 `iceMinute()`
-  - 1138 `deckMinute()`
-- **1162** lying to in a storm (H1b R8, 05.11.2026)
-  - 1179 `quayFar(b)`
-  - 1183 `lieTo(W, hs)`
-  - 1190 `lieToStep(W, hs)`
-  - 1200 `risk(W, hs)`
-  - 1228 `hullRepair()`
-  - 1231 `svcOverdue()`
-- **1232** the rescue boat (plan E3, 05.10.2026)
-  - 1258 `rescueBases()`
-  - 1267 `rescueBase(p)`
-  - 1274 `rescueAis(H)`
-  - 1278 `rescue(keepCatch)`
-  - 1302 `towSea(p)`
-  - 1307 `towRoutes(b)`
-  - 1318 `towStep(H)`
-  - 1330 `towDone(t)`
-  - 1336 `towPose(frac)`
+  - 789 `plantFuel(b)`
+  - 792 `sailV(H, hs)`
+  - 804 `sail(H, W, hs)`
+  - 834 `sailWaiting()`
+  - 835 `sailReplan(pl, b, gp)`
+  - 863 `iceWhy(p, tried)`
+  - 865 `sailStop(pl, b, why)`
+  - 873 `haltPlan(need)`
+  - 883 `arrive(w)`
+  - 901 `unstuckWhy()`
+  - 907 `unstuckSpot()`
+  - 914 `unstuck()`
+- **928** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 936 `moorPhase(b)`
+  - 951 `dock(pid, berth)`
+  - 978 `catchFactors(H, W, hs)`
+  - 991 `stockDev(p, sp)`
+  - 997 `fish(H, W, hs)`
+  - 1090 `endFishing(why)`
+  - 1106 `addCatch(sp, kg, cls, hook, opt)`
+- **1127** work on deck: gutting and icing take hands and time
+  - 1143 `deckHands()`
+  - 1146 `deckPending()`
+  - 1147 `deckEta(hands)`
+  - 1152 `moveKg(x, kg, patch)`
+  - 1160 `iceMinute()`
+  - 1162 `deckMinute()`
+- **1186** lying to in a storm (H1b R8, 05.11.2026)
+  - 1203 `quayFar(b)`
+  - 1207 `lieTo(W, hs)`
+  - 1214 `lieToStep(W, hs)`
+  - 1224 `risk(W, hs)`
+  - 1252 `hullRepair()`
+  - 1255 `svcOverdue()`
+- **1256** the rescue boat (plan E3, 05.10.2026)
+  - 1282 `rescueBases()`
+  - 1291 `rescueBase(p)`
+  - 1298 `rescueAis(H)`
+  - 1302 `rescue(keepCatch)`
+  - 1326 `towSea(p)`
+  - 1331 `towRoutes(b)`
+  - 1342 `towStep(H)`
+  - 1354 `towDone(t)`
+  - 1360 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -1951,45 +1953,45 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (357 linjer)
+## `src/js/core/13-work.js` (370 linjer)
 
 work aboard: stations, and how the crew share them
 
 - **1** work aboard: stations, and how the crew share them
-  - 49 `catchGut()`
-  - 50 `catchIce()`
-- **51** the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
-  - 54 `setMate(id)`
-- **57** the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
-  - 60 `setSkipper(id)`
-- **63** what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
-  - 66 `crewRole(c)`
-  - 68 `habSeed(c)`
-- **69** how good a person is at a station's work (1-5): you are a skipper who knows every job on deck
-  - 70 `stSkill(c, k, ctx, sk)`
-  - 87 `workScore(p, k, ctx, need, sk)`
-  - 99 `restScore(p)`
-  - 110 `workWhy(p, k, ctx, sk)`
-  - 121 `stPlaces(st, ctx)`
-  - 131 `workCtx(as)`
-- **142** the crew's own jobs as stations: where they may be worked (in port, or at sea while she goes or lies still: seaWork), how many can
-  - 144 `jobsOpen(as)`
-  - 145 `jobPlaces(j)`
-  - 156 `jobCoop(j, n)`
-  - 160 `jobW(j)`
-  - 166 `jobRate(j, A)`
-  - 173 `jobMinute(j, A)`
-  - 183 `jobWait(j)`
-  - 188 `workAssign(as)`
-- **263** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 279 `crewVice(c)`
-  - 281 `idleEnv()`
-  - 289 `idleWeights(p, ctx, E, mates)`
-  - 311 `idleAssign(P, ctx)`
-  - 325 `idleText(p)`
-  - 331 `workDoing(p)`
-  - 337 `workTeam(st, g, as)`
-  - 343 `workMinute()`
+  - 51 `catchGut()`
+  - 52 `catchIce()`
+- **53** the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
+  - 56 `setMate(id)`
+- **59** the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
+  - 62 `setSkipper(id)`
+- **65** what a person is used to: minutes at each station (c.hab), fading by a fifth a month. The station with most of them, once it is
+  - 68 `crewRole(c)`
+  - 70 `habSeed(c)`
+- **71** how good a person is at a station's work (1-5): you are a skipper who knows every job on deck
+  - 72 `stSkill(c, k, ctx, sk)`
+  - 89 `workScore(p, k, ctx, need, sk)`
+  - 101 `restScore(p)`
+  - 112 `workWhy(p, k, ctx, sk)`
+  - 123 `stPlaces(st, ctx)`
+  - 134 `workCtx(as)`
+- **147** the crew's own jobs as stations: where they may be worked (in port, or at sea while she goes or lies still: seaWork), how many can
+  - 149 `jobsOpen(as)`
+  - 150 `jobPlaces(j)`
+  - 161 `jobCoop(j, n)`
+  - 165 `jobW(j)`
+  - 171 `jobRate(j, A)`
+  - 178 `jobMinute(j, A)`
+  - 188 `jobWait(j)`
+  - 193 `workAssign(as)`
+- **272** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 288 `crewVice(c)`
+  - 290 `idleEnv()`
+  - 298 `idleWeights(p, ctx, E, mates)`
+  - 321 `idleAssign(P, ctx)`
+  - 335 `idleText(p)`
+  - 343 `workDoing(p)`
+  - 350 `workTeam(st, g, as)`
+  - 356 `workMinute()`
 
 ## `src/js/core/14-crewlife.js` (466 linjer)
 
@@ -2585,12 +2587,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1378 linjer)
+## `src/js/ui/phone/07-patch.js` (1381 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1371 `patch()`
+  - 1374 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3568,21 +3570,23 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 1576 `lanterns(G, V, st)`
   - 1615 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (504 linjer)
+## `src/js/deckcrew.js` (569 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
-- **37** the kit on the deck, out of the walking map
-- **88** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
-- **139** what the game says: everyone's station this minute, and the boat's state
-- **207** a free person: something to do for a while, by the weather, the hour and their nature
-- **213** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **304** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **319** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **331** the agents follow the people aboard
-- **448** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **468** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-  - 498 `npcCrewCtx(n, G)`
+- **41** the kit on the deck, out of the walking map
+- **92** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
+- **143** what the game says: everyone's station this minute, and the boat's state
+- **166** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
+- **264** a free person: something to do for a while, by the weather, the hour and their nature
+- **270** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
+- **361** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **376** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **388** the agents follow the people aboard
+- **505** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **525** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+  - 555 `moorSpots(G, sd)`
+  - 563 `npcCrewCtx(n, G)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -4033,7 +4037,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 426 `seaH(x, z, t)`
   - 432 `seaHFast(x, z, t)`
 
-## `src/js/view3d/15-env-mooring.js` (158 linjer)
+## `src/js/view3d/15-env-mooring.js` (224 linjer)
 
 ---------- environment ----------
 
@@ -4042,14 +4046,18 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 12 `wetSet(H)`
   - 25 `computeEnv(H)`
 - **71** mooring: in along the quay, then the lines: aft spring first, bow line, stern line, fore spring (and in reverse when casting off)
-  - 75 `buildMooring()`
-  - 77 `berthNow()`
-  - 83 `approach(F, bp, u0, du0)`
-  - 94 `pathM(pts)`
-  - 99 `pathAt(M, s)`
-  - 100 `lieAlongside(dt, bp)`
-  - 103 `moorStep(dt, bp, at = dt)`
-  - 135 `drawMooring(BMrel, eye, VP, t)`
+  - 81 `buildMooring()`
+  - 83 `berthNow()`
+  - 89 `approach(F, bp, u0, du0)`
+  - 100 `pathM(pts)`
+  - 105 `pathAt(M, s)`
+  - 106 `lieAlongside(dt, bp)`
+  - 109 `moorStep(dt, bp, at = dt)`
+- **149** where the work with the lines and the fenders is in the view, every frame (OB2): the spell as the view has it ('prep' and 'in' the
+  - 152 `moorView(bp)`
+  - 162 `moorTick(bp)`
+  - 188 `drawCoil(BMrel, P, sd)`
+  - 193 `drawMooring(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/16-motion.js` (322 linjer)
 
