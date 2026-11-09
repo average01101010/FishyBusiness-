@@ -18,20 +18,22 @@ Kapitlene: 1 hvordan det er målt, 2 skalaen og karakterene, 3 funnene som gjeld
 
 Godkjenningsgrensen er Jonas' (01.11.2026): ingenting under 75/100. Grunnlagene setter karakteren i fritekst («holder» og «trekk»), og ingen vekter er skrevet ned. Planlistens benchmark (kap. 30 i `planliste-fiskefartoy.md`) er aldri regnet ut, og den kan ikke gi 75 før materialene (F2 i `grafikk-batmodeller.md`) er bygd: 3 poeng krever ferdige PBR-materialer, så en modell der alt er riktig, får 66,7 %.
 
-For å sette trebåten, skiffen og snekka på samme skala som de andre er punktene satt sammen til åtte, med vekter som gir de seks karakterene som er satt, igjen (valg 17):
+**Jonas' skala (valg 17, 09.11.2026):** «Skrogutforming 20, Detaljer, 15, lanterner 5, Styrhus, 10, Arbeidsflyt 20, utforming av dekk 20.», og da summen ble 90: «Da blir det detaljer 20 og arbeidsflyt 25.» Grensen 75 står.
 
 | Punkt | Vekt | Hva |
 |---|---|---|
-| K1 Kilder og overlegg | 15 | Mål fra tegning eller foto i kjent skala, lagt over hver runde |
-| K2 Skroget og vekta | 20 | Én flate, jevne linjer, kjøl og undervann, volumet mot `disp` |
-| K3 Detalj og utseende | 15 | Hull, beslag, slitasje |
-| K4 Lanternene | 5 | Etter loven, sett i spillet om natta |
-| K5 Broa | 10 | Fra skipperens øye |
-| K6 Arbeidsflyten og plassene | 15 | Haler, juksa, kar, bord, dekkskartet; utstyret der fiskeren arbeider |
-| K7 Kontroller og tester | 10 | `check()`, klasjsjekk, testene, bilder i begge formater |
-| K8 Prosessen | 10 | Fant Jonas noe selv? Regler brutt? |
+| Skrogutforming | 20 | Skroget som én flate, jevne linjer, kjøl og undervann, vekta mot `disp` (den tomme båten, valg 18) |
+| Detaljer | 20 | Hull, beslag, slitasje, det som gjør båten troverdig på nært hold |
+| Lanterner | 5 | Etter loven, sett i spillet om natta |
+| Styrhus | 10 | Styrhuset og broa, også fra skipperens øye |
+| Arbeidsflyt | 25 | Arbeidet om bord: operasjonene i kapittel 4 (rekkefølgen, grepene, mannskapet, ingen gjennom noe) |
+| Utforming av dekk | 20 | Dekket og plassene: utstyret der fiskeren arbeider, gangveiene, garnbinger, stamper, teiner, kar og luker |
 
-**Nytt fra denne revisjonen:** K6 måler i dag bare plassene i modellen. Jonas' ønske gjelder arbeidet, så forslaget er at K6 også tar med operasjonene i kapittel 4 (rekkefølgen, grepene, mannskapet), og at en båt ikke kan få mer enn 9 av 15 på K6 så lenge et funn med alvor A står åpent for henne.
+Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne punkter; de er det som gjør at punktene over kan settes. Hver fase setter karakteren etter denne skalaen med begrunnelse per punkt, og Jonas setter den endelige.
+
+**Karakterene under er satt før Jonas valgte skala**, etter en rekonstruksjon av grunnlagenes fritekst med åtte punkter (kilder 15, skrog og vekt 20, detalj 15, lanterner 5, broa 10, arbeidsflyt og plasser 15, kontroller og tester 10, prosessen 10). De viser rekkefølgen og hvor langt unna båtene er; fasene setter dem på nytt etter Jonas' skala.
+
+**Fra revisjonen:** arbeidsflyten (25) settes etter operasjonene i kapittel 4, og en båt bør ikke få mer enn rundt 60 % på den så lenge et funn med alvor A står åpent for henne (forslag; Jonas avgjør).
 
 **Karakterene** (satt i grunnlagene; trebåten, skiffen og snekka er forslag fra denne revisjonen, med punktene i kapittel 4). Jonas setter karakteren før en båt regnes som ferdig.
 
@@ -476,18 +478,18 @@ Ikke målt: trim, rull og slag med last i sjø i 3D (F2 måler bare tom sjark og
 
 | Fase | Hva | Funnene | Filene | Testene |
 |---|---|---|---|---|
-| **OB1** | **Trebåten til 75:** først Jonas' avgjørelse 09.11.2026 (ingen teiner på trebåten: `rigs`, databladet, `equipFits`/`buyGate`, og teinene og haleren spillere alt har); så skroget og vekta (`disp` etter valg 18), utstyret der fiskeren arbeider: liten haler og juksavinde som modeller (U4), teinene om bord (F7), plassene for garn, stamper og last på dørken i stedet for 0,74 m over den, settingen for hånd (F5), krabben fra teinene sortert levende i kar (F6), fortøyningen ved naustet med skipperen selv (F1 for håndbåtene), og det klippene viser i 4.1 | 4.1, F1, F5, F6, F7 | `core/02-species-gear.js` (`VESSELS.trebat.rigs`, `EQUIP` `fit`), `core/10-gear.js` (`buyGate`), `ui/11-boot.js` (lagringene med teiner på trebåten), `tools/boats/snekke23.py`, `tools/gear/` (haleren), `src/data/*.b64` (trebat), malen, `view3d/12-skiff.js`, `13-instruments.js` (`drawSkiff`), `10-gear.js` (`drawPotsAboard`, `drawPots`), `docs/skipsmodeller/trebat-grunnlag.md` | `ombord.py trebat`, `node tests/unit/run.mjs` (en ny sjekk for regelen), `geartest`, `shoptest`, `itemcardtest`, `vesseltest`, `deckshot` (`KYST_DECK=trebat`), `brotest`, `jigshot`, `animshot`, `hull3d` |
+| **OB1** | **Trebåten til 75:** først Jonas' avgjørelse 09.11.2026 (ingen teiner på trebåten, og skiffen likt, valg 23 A: `rigs`, databladet, `equipFits`/`buyGate`, og teinene og haleren spillere alt har); så skroget og vekta (`disp` etter valg 18), utstyret der fiskeren arbeider: liten haler og juksavinde som modeller (U4), garn trukket for hånd over ripa (valg 21 B), plassene for garn, stamper og last på dørken i stedet for 0,74 m over den, settingen for hånd (F5), fortøyningen ved naustet med skipperen selv (F1 for håndbåtene), og det klippene viser i 4.1 | 4.1, F1, F5, F6, F7 | `core/02-species-gear.js` (`VESSELS.trebat.rigs`, `EQUIP` `fit`), `core/10-gear.js` (`buyGate`), `ui/11-boot.js` (lagringene med teiner på trebåten), `tools/boats/snekke23.py`, `tools/gear/` (haleren), `src/data/*.b64` (trebat), malen, `view3d/12-skiff.js`, `13-instruments.js` (`drawSkiff`), `10-gear.js` (`drawPotsAboard`, `drawPots`), `docs/skipsmodeller/trebat-grunnlag.md` | `ombord.py trebat`, `node tests/unit/run.mjs` (en ny sjekk for regelen), `geartest`, `shoptest`, `itemcardtest`, `vesseltest`, `deckshot` (`KYST_DECK=trebat`), `brotest`, `jigshot`, `animshot`, `hull3d` |
 | **OB2** | **Fortøye og kaste loss med folk** (alle båtene med mannskap): fenderne ut før kaia, springen og tauene tatt av én på dekk og én som går i land eller kaster til kaia, inn igjen og kveilet ved kasting; skipperen ved roret til hun ligger (F3); ingen inn døra før tauene er inne (F2); siden mot kaia etter kaia og arbeidet, kranen mot kaia (F22) | F1, F2, F3, F22 | `view3d/15-env-mooring.js`, `deckcrew.js`, `core/13-work.js` (stasjonene `fort`, `ror` i havn), `core/05-vessels.js` (`dock` venter på 3D) | `ombord.py <tre båter> --ops kast,inn`, `docktest`, `berth3d`, `crewwalk`, `crewclip`, `walktest` |
 | **OB3** | **Setting og redskapet om bord** (alle): én akter ved stampen eller binga under setting, ankeret og blåsa kastet, de andre ikke i trekkestilling (F4); stampene og garnet i det antallet som er om bord (D3, D4, F8); teinestablene og teina som settes ned på en ledig flate, ikke oppå karene og folkene (F7, `potDeck`); juksaplassene og maskinene der fiskeren står fritt ved ripa, ikke i stolper, tak eller livbøya; `crewclip` utvidet til alle plassene i alle stillingene, sett rød på snekka først (F15); den andre ved bordet og karet på sin egen plass (F19); redskapet ut der dekket er åpent, ikke gjennom huset (F20); juksaplassene fordelt på begge sider (F21); den som haler og den som bløgger blir stående ved haleren også når den står høyt over dekket (F24, grensen på 1,2 m i `deckcrew.js:190`) | F4, F7, F8, F15, F19–F21, F24 | `view3d/10-gear.js` (`drawSetting`, `potDeck`), `09-landing-deck.js` (stampene, garnet), `13-instruments.js` (`jigRail`), `core/13-work.js` (stasjonen `sett`), `deckcrew.js`, `tests/crewclip.py` | `ombord.py <tre båter> --ops sett,jig,maskin,trekk`, `deckshot`, `workshot`, `crewclip`, `jigshot` |
 | **OB4** | **Lossing og is:** én i rommet eller ved karene, én ved luka som gir tegn, båtens egen kran der hun har en, med én som kjører den og lasten i kroken; is om bord tatt imot (F10, F11, F23) | F10, F11, F23 | `view3d/09-landing-deck.js` (`landScene`, `deckActivity`), `deckcrew.js`, `core/07-harbours.js` (bare stasjonene) | `ombord.py <tre båter> --ops loss`, `landtest`, `deckshot` |
-| **OB5** | **Skiffen til 75:** vekta (+60 %), 90 hk-motoren (D6), det klippene viser i 4.2 | 4.2 | `tools/boats/skiff59.py`, `src/data/*.b64`, `view3d/12-skiff.js` | som OB1 for `skiff` |
+| **OB5** | **Skiffen til 75:** vekta (+60 %, `disp` tom båt), 90 hk-motoren (D6), garn trukket for hånd (valg 21 B), det klippene viser i 4.2 | 4.2 | `tools/boats/skiff59.py`, `src/data/*.b64`, `view3d/12-skiff.js` | som OB1 for `skiff` |
 | **OB6** | **Snekka til 75** | 4.3 | `tools/boats/snekke26.py`, `src/data/*.b64` | som OB1 for `snekke` |
-| **OB7** | **Plastsjarken til 75** (styrhuset etter valg 20) | 4.4 | `tools/boats/plast31.py` | som OB1 |
+| **OB7** | **Plastsjarken til 75, ny arbeidsplan** (Jonas, valg 20: «Dette er kanskje den svakeste båten vi har. Du får frie tøyler til å lage en realistisk fiskebåt.» Styrhusets plass og arbeidsdekket etter ekte plastsjarker av typen, med bildene vist Jonas før modellen endres) | 4.4 | `tools/boats/plast31.py` | som OB1 |
 | **OB8** | **Havsjarken til 75** | 4.5 | `tools/boats/havsjark35.py` | som OB1 |
 | **OB9** | **Hurtigsjarken til 75** | 4.6 | `tools/boats/hurtig11.py` | som OB1 |
 | **OB10** | **Den nye hurtigsjarken til 75** | 4.7 | `tools/boats/hs11.py` | som OB1 |
 | **OB11** | **Breisjarken til 75** (eksporteres på nytt, pchip; folk ved haleren, F24; teinestabelen ut av rommet under lyet) | 4.8, F24 | `tools/boats/malo36.py` | som OB1 |
-| **OB12** | **Kyst15 over 75 igjen** (eksporteres på nytt, pchip; garnet og stampene ned til halestasjonen etter valg 19; arbeidet under shelterdekket synlig, F18; folk ved haleren, F24; haler nr. 2; halerens fot innenfor skroget) | 4.9, F18, F24 | `tools/boats/kyst15.py`, `deckcrew.js` (`goalOf`), `view3d/09` | som OB1 |
+| **OB12** | **Kyst15 over 75 igjen** (eksporteres på nytt, pchip; Jonas, valg 19: «Lag en åpning i hekken for setting av garn, liner. Lag også en garn-binge for oppbevaring av garn ombord»; arbeidet under shelterdekket synlig, F18; folk ved haleren, F24; haler nr. 2; halerens fot innenfor skroget) | 4.9, F18, F24 | `tools/boats/kyst15.py`, `deckcrew.js` (`goalOf`), `view3d/09` | som OB1 |
 | **OB13** | **Kyst21 revidert** etter pilotens arbeidsmåte (grunnlag og byggefil som de andre; kranen som passer båten og står mot kaia, F22, M16) | 4.10 | `tools/boats/kyst21.py`, ny `docs/skipsmodeller/kyst21-grunnlag.md` | som OB1 |
 | **OB14** | **Rydde, spyle, mat og kulde:** spyling som jobb etter trekket på alle (slange på de åpne båtene også), matpakke og kaffe på dekk på de åpne båtene, kulde og vått synlig (F12–F14) | F12, F13, F14 | `core/13-work.js`, `deckcrew.js`, `view3d/09` (`DKWATER`) | `ombord.py <tre båter> --ops rydd,hvile`, `crewclip`, `worktest` |
 | **OB15** | **Båten i sjøen med last:** trim etter hvor lasten står, slagside fra haleren og karene, mannskapets vekt (S1–S3) | S1–S3 | `core/03c-stability.js`, `view3d/16-motion.js` | `node tests/unit/run.mjs`, `hull3d`, `dyntest` |
@@ -496,16 +498,15 @@ Rekkefølgen etter OB1 kan byttes; OB2–OB4 gir mest for alle båtene samtidig.
 
 ## 7. Valgene
 
-Står også under «Valg som venter på Jonas» i `docs/planer/koen.md` (valg 17–23).
+Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `docs/planer/koen.md`, valg 17–23):
 
-- **17. Skalaen for karakteren.** A (anbefalt): de åtte punktene i kapittel 2 med vektene der, for alle ti, og «Jonas finner ingenting nytt i bildene og klippene» som krav for 75, slik tre grunnlag alt skriver; K6 tar med arbeidet om bord (høyst 9 av 15 med et funn med alvor A åpent). B: planlistens benchmark (kap. 30), men da kan ingen båt nå 75 før materialene (F2) er bygd. C: fritekst som før.
-- **18. `disp`: tom eller lastet båt?** Avgjort bare for kyst15 (75 t er den tomme båten). Modellenes volum ved vannlinja mot `disp`: skiff +60 %, kyst21 +31 % (grovt), snekke +19 %, hurtigsjark +14 %, trebåt og plastsjark +11 %, breisjark +9,5 %, sjarkny +7 %, havsjark −6 %. A (anbefalt): `disp` er den tomme båten for alle, som kyst15; modellens vannlinje er den tomme, og formen rettes der den gir mer enn 10 %. B: `disp` er lastet båt, og modellene beholder vannlinja de har. C: la det stå.
-- **19. Kyst15: garnet, stampene og lasten står på shelterdekket**, mens redskapet hales inn i halestasjonen under det. A (anbefalt): flytt garnet og stampene ned til halestasjonen ved haleren, og la lasten (frakten) stå på shelterdekket der kranen når den. B: la alt stå.
-- **20. Plastsjarkens styrhus:** akter (som nå) eller midtskips (som annonseutdragene for forbildet tyder på: «glass skyvedør ut til bakdekk», «stort lasterom akter»). A (anbefalt): vent på et bilde fra Jonas før OB7. B: akter. C: midtskips.
-- **21. Garn på skiffen og trebåten:** `VESSELS` sier at begge kan rigges for garn, men garnhaleren krever 7,5 m. A (anbefalt): ta `garn` ut av rigglista for de to før lansering, så spillet ikke lover noe det ikke gjør, og legg trekking for hånd eller en liten haler til etter lansering. B: bygg trekking for hånd i OB1 og OB5. C: la det stå.
-- **22. Bilder til grunnlagene:** alle ni grunnlagene ber om bilder rett fra siden med kjent lengde, akterfra og ovenfra, og breisjarken, kyst15 og havsjarken om tegningene som ble vist én gang og ikke ligger i repoet. Uten dem kan K1 ikke komme over 6 av 15. A (anbefalt): Jonas legger de bildene han har, i `docs/skipsmodeller/bilder/<båt>/` (eller sender dem i økta), og fasen for båten venter på dem der de finnes. B: fasene bruker offentlige bilder av samme type de finner selv, og sier hvilke. C: ingen bilder; K1 står.
-
-- **23. Teiner på skiffen:** skiffen (5,9 m) har det samme problemet som trebåten: kongekrabbeteina er større enn båten. Jonas avgjorde 09.11.2026 at trebåten ikke skal kunne holde på med krabbeteiner. A (anbefalt): det samme for skiffen (`teiner` ut av rigglista, ikke kjøpbart), i OB1 sammen med trebåten. B: skiffen beholder teinene, og OB5 gir henne en mindre teine (taskekrabbe og hummer) som får plass. C: la stå til OB5.
+- **17. Skalaen:** Jonas' egen, skrogutforming 20, detaljer 20, lanterner 5, styrhus 10, arbeidsflyt 25, utforming av dekk 20 (kapittel 2).
+- **18. `disp`:** A, den tomme båten for alle; formen rettes der modellen gir over 10 % mer.
+- **19. Kyst15:** «Lag en åpning i hekken for setting av garn, liner. Lag også en garn-binge for oppbevaring av garn ombord» (OB12).
+- **20. Plastsjarken:** «Dette er kanskje den svakeste båten vi har. Du får frie tøyler til å lage en realistisk fiskebåt.» (OB7).
+- **21. Garn på skiffen og trebåten:** B, garn trukket for hånd (OB1 og OB5).
+- **22. Bildene:** B, «Fasene bruker offentlige bilder av samme type som de finner selv, og sier hvilke slik at jonas har kontroll under prosessen.» Hver fase oppgir bildene med lenke og hva de viser, i grunnlaget og i meldingen til Jonas, før modellen endres.
+- **23. Teiner på skiffen:** A, ut som på trebåten (OB1).
 
 ## 8. Det usikre
 
