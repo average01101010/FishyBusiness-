@@ -1583,3 +1583,10 @@
 2026-11-09 00:05	claude/o8b-s2-turens-linje-c70okw	ddce6ea	docktest	FEIL	61	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-09 00:05	claude/o8b-s2-turens-linje-c70okw	ddce6ea	geartest	OK	28	lite	alene	
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	c199ab8	geartest	OK	28	lite	samtidig	
+2026-11-09 00:23	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	10	lite	samtidig	
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	FEIL	36	lite	samtidig	FEIL the landing note says how the three hauls fished against usual ones for the soak, in words (Ø8b S2) ['Turen ga 56 kg i timen med håndjuksa. Det sto godt me
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	booktest	OK	27	lite	samtidig	
+2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	boottest	OK	22	lite	samtidig	
+2026-11-09 00:25	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	31	lite	alene	
+2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	6	lite	samtidig	
+2026-11-09 00:26	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	OK	29	lite	samtidig	

@@ -1,6 +1,6 @@
 // The trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md): core/04-crew.js
-// tripSum makes the trip's sums (fish() in 05-vessels.js, finishHaul in 10-gear.js) into shares that add up, and tripWhy says only what
-// took or gave at least 10 %, in both languages.
+// tripSum makes the trip's sums (fish() in 05-vessels.js, finishHaul in 10-gear.js) into shares that add up, and tripWhy says in plain
+// words, in both languages, what took the most (at least 10 %), with the kilos an hour as the only number (Jonas 09.11.2026).
 export default function (t){
   const {newState, tripSum, tripWhy, tripOf, stockDev, HEATG} = t.K;
   t.K.set('S', newState()); const S = t.K.get('S');
@@ -16,36 +16,51 @@ export default function (t){
   t.near(W.j.pen, 0.32, 1e-12, '… som er 32 %');
   t.near(W.j.sh.sea, 0.2, 1e-12, 'sjøen tok 20 % av det fisken sto til');
   t.near(W.j.luck, 0, 1e-12, 'uten haill gir lykken ingenting');
+  // the words (Jonas 09.11.2026): the kilos an hour are the only number, then at most two of the things that took the most, in plain
+  // words; never what the place could have given, never a share
+  const rest = x => x.replace(/^Turen ga [^.]*\.|^The trip gave [^.]*\./, '');
+  const plain = (L, what) => { t.ok(!/\d|%/.test(rest(L[0])) && !/\d|%/.test(rest(L[1])), 'ingen tall utover kiloene: ' + what + ' («' + L[0] + '»)'); };
   const [no, en] = tripWhy(W);
-  t.eq(no, 'Turen ga 38 kg i timen med håndjuksa. Fisken sto til rundt 50: sjøen (1,4 m) tok 20 %.', 'linja på norsk, bare sjøen er over 10 %, og 50 mot vanlig 20 er ikke «tett»');
-  t.eq(en, 'The trip gave 38 kg an hour with a hand jig. The fish stood for about 50: the sea (1.4 m) took 20 %.', '… og på engelsk');
-  // more steps over 10 %, sorted by size, the wind named when it blew, and the luck
+  t.eq(no, 'Turen ga 38 kg i timen med håndjuksa. Det var litt mye sjø.', 'litt sjø (20 %), og 50 mot vanlig 20 er ikke «godt med fisk»');
+  t.eq(en, 'The trip gave 38 kg an hour with a hand jig. There was a bit too much sea.', '… og på engelsk');
+  plain([no, en], 'litt sjø');
+  // more steps over 10 %: the two biggest (equal in a fixed order), the wind named when it blew, plenty of fish, and the luck
   const J2 = {m:60, kg:90, top:0, fe:60 * 2, mk:2, hs:60 * 2.1, w:60 * 12, p0:200, pS:170, pW:110, pC:80, pJ:78, pL:156};
-  const W2 = tripSum({j:J2}), [no2, en2] = tripWhy(W2);
+  const W2 = tripSum({j:J2}), L2 = tripWhy(W2);
   t.near(W2.j.sh.stock + W2.j.sh.sea + W2.j.sh.cold + W2.j.sh.pilk, W2.j.pen, 1e-12, 'andelene summerer også med vind og haill');
   t.near(W2.j.luck, 1, 1e-12, 'haillen doblet det som var igjen');
-  t.eq(no2, 'Turen ga 90 kg i timen med juksamaskiner. Fisken sto tett, til rundt 200: sjøen og vinden (2,1 m, 12 m/s) tok 30 %, kulda 15 %, nedfisket felt 15 %. Haillen ga det dobbelte.', 'flere trinn, størst først (likt i fast rekkefølge), tett fisk (over 3 × vanlig) og haillen');
-  t.ok(/^The trip gave 90 kg an hour with jigging machines\. The fish stood dense, for about 200: the sea and the wind \(2\.1 m, 12 m\/s\) took 30 %, the cold 15 %, fished-down grounds 15 %\. The luck gave double\.$/.test(en2), 'og på engelsk: ' + en2);
-  // nothing over 10 %: only the two numbers
+  t.eq(L2[0], 'Turen ga 90 kg i timen med juksamaskiner. Det sto godt med fisk, men det blåste en del, og det var kaldt på fingrene. Haillen hjalp godt.', 'de to største, godt med fisk (over 3 × vanlig), og haillen');
+  t.eq(L2[1], 'The trip gave 90 kg an hour with jigging machines. There was plenty of fish, but it blew a fair bit, and it was cold on the fingers. The luck helped a good deal.', '… og på engelsk');
+  plain(L2, 'vind, kulde og haill');
+  // the rough trip from turlinjetest: the strong words
+  const W5 = {j:{...W2.j, mk:0, w:13, luck:0, sh:{sea:0.68, cold:0.11, stock:0.03, pilk:0}}};
+  t.eq(tripWhy(W5)[0], 'Turen ga 90 kg i timen med håndjuksa. Det sto godt med fisk, men vinden og sjøen gjorde det for tungt å fiske skikkelig, og det var kaldt på fingrene.', 'grov sjø og kuling: de sterke ordene');
+  t.eq(tripWhy({j:{...W5.j, w:5, sh:{sea:0.5, cold:0.25, stock:0.45, pilk:0.12}}})[0], 'Turen ga 90 kg i timen med håndjuksa. Sjøen var for grov til å fiske skikkelig, og feltet var hardt fisket den siste tida.', 'høyst to ting, de største: kulda og pilken faller bort; og «godt med fisk» står ikke ved et hardt fisket felt');
+  t.eq(tripWhy({j:{...W5.j, sh:{sea:0, cold:0, stock:0.8, pilk:0}}})[0], 'Turen ga 90 kg i timen med håndjuksa. Feltet var hardt fisket den siste tida.', 'et hardt fisket felt har ikke «godt med fisk», selv om det hadde det før');
+  t.ok(/kulda gjorde fingrene stive/.test(tripWhy({j:{...W5.j, sh:{sea:0, cold:0.25, stock:0, pilk:0.11}}})[0]), 'mye kulde: «kulda gjorde fingrene stive»');
+  t.ok(/pilken og krokene var slitt/.test(tripWhy({j:{...W5.j, sh:{sea:0, cold:0, stock:0, pilk:0.11}}})[0]), 'slitt pilk');
+  // nothing over 10 %: fine weather, or steady fishing; little fish
+  t.eq(tripWhy({j:{...W.j, sh:{sea:0, cold:0.02, stock:0.04, pilk:0}}})[0], 'Turen ga 38 kg i timen med håndjuksa. Fint vær og jevnt fiske.', 'ingenting tok noe: fint vær og jevnt fiske');
+  t.eq(tripWhy({j:{...W.j, sh:{sea:0.06, cold:0.07, stock:0, pilk:0}}})[0], 'Turen ga 38 kg i timen med håndjuksa. Jevnt fiske.', 'litt av alt, ingenting over 10 %: jevnt fiske');
   const W3 = tripSum({j:{m:60, kg:5, top:0, fe:60, mk:0, hs:30, w:120, p0:6, pS:5.9, pW:5.7, pC:5.5, pJ:5.45, pL:5.45}});
-  t.eq(tripWhy(W3)[0], 'Turen ga 5 kg i timen med håndjuksa. Fisken sto tynt, til rundt 6.', 'ingen trinn over 10 %, og tynt med fisk (under 0,4 × vanlig)');
+  t.eq(tripWhy(W3)[0], 'Turen ga 5 kg i timen med håndjuksa. Det var lite fisk å finne.', 'lite fisk (under 0,4 × vanlig)');
+  t.eq(tripWhy({j:{...W3.j, sh:{sea:0.3, cold:0.2, stock:0, pilk:0}}})[0], 'Turen ga 5 kg i timen med håndjuksa. Det var lite fisk å finne, og det var litt mye sjø.', 'lite fisk og én ting til');
+  t.eq(tripWhy({j:{...W3.j, kgph:0.4, pot:0.4}})[0], 'Turen ga under 1 kg i timen med håndjuksa. Det var lite fisk å finne.', 'et nesten tomt felt: «under 1», aldri «0»');
   // the first trip has its own line (tutNormKg), and a short stop says nothing
   t.eq(tripSum({j:J, tut:1}), null, 'første tur: ingen turlinje');
   t.eq(tripSum({j:{...J, m:10}}), null, 'under et kvarter med jukse: ingen linje');
   t.eq(tripWhy(null), null, 'ingen sum, ingen linje');
-  // the hauls: kilos against fair hauls for the soak, the fishing down and the luck while they stood
+  // the hauls: against usual ones for the soak, in words; the fishing down and the luck while they stood
   const G = {n:3, kg:640, fair:900, r:600, rL:400, r0:500, k:{garn:1}};
   const W4 = tripSum({g:G});
   t.near(W4.g.stock, 0.2, 1e-12, 'trekkene: nedfisket felt tok 20 %');
   t.near(W4.g.luck, 0.5, 1e-12, 'trekkene: haillen ga 50 % mer');
-  t.eq(tripWhy(W4)[0], 'De 3 trekkene ga 640 kg, mot rundt 900 i vanlige trekk med samme ståtid; nedfisket felt tok 20 %; haillen ga 50 % mer.', 'linja for trekkene');
-  t.eq(tripWhy({j:null, g:{n:1, kg:10, fair:10, stock:0, luck:2}})[0], 'Trekket ga 10 kg, mot rundt 10 i et vanlig trekk med samme ståtid; haillen ga det tredobbelte.', 'luksushaillen (+200 %): det tredobbelte');
-  t.eq(tripWhy(tripSum({g:{n:1, kg:31, fair:38, r:1, rL:1, r0:1.02, k:{line:1}}}))[1], 'The haul gave 31 kg, against about 40 in an ordinary haul with the same soak.', 'ett trekk, på engelsk');
-  // the luck goes with the part it was in: jigged with the haill on, the nets soaked without it
-  t.eq(tripWhy({j:{...W2.j}, g:{n:1, kg:30, fair:38, stock:0, luck:0}})[0].match(/[Hh]aillen/g).length, 1, 'haillen nevnes bare én gang, for juksa');
-  t.ok(/sjøen og vinden.*\. Haillen ga det dobbelte\. Trekket ga 30 kg[^;]*\.$/.test(tripWhy({j:{...W2.j}, g:{n:1, kg:30, fair:38, stock:0, luck:0}})[0]), '… rett etter juksas linje, ikke etter trekket');
-  // a ground with next to no fish: no «rundt 0»
-  t.eq(tripWhy({j:{...W3.j, kgph:0.4, pot:0.4}})[0], 'Turen ga under 1 kg i timen med håndjuksa. Fisken sto tynt, til under 1.', 'et nesten tomt felt sier «under 1», aldri «rundt 0»');
+  t.eq(tripWhy(W4)[0], 'Garna fisket omtrent som vanlig. Haillen hjalp godt.', 'garna omtrent som vanlig, med haill');
+  t.eq(tripWhy({g:{n:1, kg:10, fair:38, stock:0.5, luck:0, kinds:['line']}})[0], 'Lina ga lite denne gangen: feltet var hardt fisket.', 'lina ga lite, og hvorfor');
+  t.eq(tripWhy({g:{n:2, kg:100, fair:50, stock:0, luck:0, kinds:['garn', 'teine']}})[1], 'The gear fished better than usual.', 'flere slags redskap, på engelsk');
+  plain(tripWhy(W4), 'trekkene');
+  // the luck said once, whichever part had it
+  t.eq(tripWhy({j:{...W2.j}, g:{n:1, kg:30, fair:38, stock:0, luck:0, kinds:['garn']}})[0].match(/[Hh]aillen/g).length, 1, 'haillen nevnes bare én gang');
   // the halibut gear by hand: named as such, whatever machines are aboard
   t.ok(tripWhy({j:{...W.j, kv:true, mk:2}})[0].startsWith('Turen ga 38 kg i timen med kveiteutstyr.'), 'kveiteutstyret heter kveiteutstyr, ikke juksamaskiner');
   // the stock's share where the boat stands: S.stock, not the fleet's baseline

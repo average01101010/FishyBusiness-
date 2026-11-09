@@ -6,7 +6,7 @@ the luck on, and where the stock is fished down, and lands each trip. `--kyst` (
 tools/map/game.py) does a calm trip near Bergen, Bodø and Hammerfest, the stikkprøve along the coast. `--shots` takes the landing note in
 both formats into tests/out/ (_env.py works there). Prints OK/FEIL lines."""
 from _env import GAME, boot
-import asyncio, json, sys, os
+import asyncio, json, sys, os, re
 from playwright.async_api import async_playwright
 
 def check(ok, what, extra=''):
@@ -40,7 +40,7 @@ async def main():
         calm = json.loads(await run(None, 4, 4, 0.4, False, 1))
         print('stille', calm['pt'], calm['kg'], 'kg:', calm['why'][0] if calm['why'] else None)
         j = (calm['W'] or {}).get('j') or {}
-        check(bool(calm['why']) and calm['why'][0].startswith('Turen ga ') and 'Fisken sto' in calm['why'][0], 'en vanlig tur med håndjuksa gir turens linje', calm['why'])
+        check(bool(calm['why']) and calm['why'][0].startswith('Turen ga ') and not re.search(r'\d|%', re.sub(r'^Turen ga [^.]*\.', '', calm['why'][0])), 'en vanlig tur med håndjuksa gir turens linje, med kiloene som eneste tall (Jonas 09.11.2026)', calm['why'])
         check(calm['slip'] == (calm['why'] or [None])[0], 'linja står på sluttseddelen (portSlip, .tripwhy)', calm['slip'])
         check(calm['inLog'], 'og den samme linja står i dekksdagboka (Drift) etter «Leverte …»', calm['logs'])
         check(calm['trip'] is None, 'turen er null etter salget, så neste tur teller fra null')
@@ -51,14 +51,14 @@ async def main():
         check(j and 0.6 * exp <= j['kgph'] <= 1.4 * exp, 'det som kom om bord, er innen 40 % av det modellen ventet (potensialet ganger trinnene; resten er tilfeldig)', {'kgph': round(j.get('kgph', 0), 1), 'ventet': round(exp or 0, 1)})
         rough = json.loads(await run(None, 4, 13, 2.2, False, 1)); jr = (rough['W'] or {}).get('j') or {}
         print('grov sjø:', rough['why'][0] if rough['why'] else None, rough['mins'], rough['st'], rough['fishLog'])
-        check(jr and jr['sh']['sea'] >= 0.1 and 'sjøen og vinden (2,2 m, 13 m/s) tok' in (rough['why'] or [''])[0], 'i grov sjø og kuling sier linja hva sjøen og vinden tok', rough['why'])
+        check(jr and jr['sh']['sea'] >= 0.1 and 'vinden og sjøen gjorde det for tungt å fiske skikkelig' in (rough['why'] or [''])[0], 'i grov sjø og kuling sier linja at vinden og sjøen gjorde det for tungt', rough['why'])
         check(jr and jr['kgph'] < j['kgph'], 'og turen ga mindre enn i stille vær', {'grov': round(jr.get('kgph', 0), 1), 'stille': round(j['kgph'], 1)})
         luck = json.loads(await run(None, 4, 4, 0.4, True, 1)); jl = (luck['W'] or {}).get('j') or {}
         print('haill:', luck['why'][0] if luck['why'] else None)
-        check(jl and jl['luck'] > 0.9 and 'Haillen ga' in (luck['why'] or [''])[0], 'med luksushaillen sier linja hva haillen ga', {'luck': jl.get('luck'), 'why': luck['why']})
+        check(jl and jl['luck'] > 0.9 and 'Haillen hjalp godt' in (luck['why'] or [''])[0], 'med luksushaillen sier linja at haillen hjalp', {'luck': jl.get('luck'), 'why': luck['why']})
         down = json.loads(await run(None, 4, 4, 0.4, False, 0.5)); jd = (down['W'] or {}).get('j') or {}
         print('nedfisket:', down['why'][0] if down['why'] else None)
-        check(jd and 0.4 <= jd['sh']['stock'] <= 0.6 and 'nedfisket felt tok' in (down['why'] or [''])[0], 'der bestanden er fisket ned til halvparten, tar nedfisket felt rundt 50 %', {'stock': jd.get('sh', {}).get('stock'), 'why': down['why']})
+        check(jd and 0.4 <= jd['sh']['stock'] <= 0.6 and 'feltet var hardt fisket' in (down['why'] or [''])[0].lower(), 'der bestanden er fisket ned til halvparten, tar det rundt 50 %, og linja sier at feltet var hardt fisket', {'stock': jd.get('sh', {}).get('stock'), 'why': down['why']})
         check(jd and abs(jd['pot'] - j['pot']) <= 0.25 * j['pot'], 'det fisken sto til, er det samme som på urørt felt (bestanden er et trinn, ikke potensialet)', {'ned': round(jd.get('pot', 0), 1), 'urørt': round(j['pot'], 1)})
         en = await pg.evaluate("(() => { S.lang = 'en'; const b = document.createElement('div'); b.innerHTML = portSlip(); const el = b.querySelector('.tripwhy'); S.lang = 'no'; return el ? el.textContent : null; })()")
         check(bool(en) and en == down['why'][1] and en.startswith('The trip gave '), 'på engelsk står den engelske linja', en)
