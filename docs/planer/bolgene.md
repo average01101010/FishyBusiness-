@@ -74,6 +74,15 @@ Hver fase er én økt og står for seg selv; sjøen er brukbar etter hver av dem
 
    **Anbefalt A.** Det er det Jonas ba om, og flisa med fast frø og felles klokke gir det nesten gratis.
 
+**Valgt 09.11.2026 (Jonas):** «V1: A, V2: A, V3: A, men det kan ikke være et markant tydelig skille som oppleves når man går fra "privat" sjø til felles.»
+
+**Overgangen fra privat til felles sjø (krav fra V3), slik B4 bygger den:**
+- **Ingen bryter og ingen terskel.** Hvor fort forskyvningen glir tilbake, er en jevn funksjon av farten: null i full fart, full ved stillstand, og glatt imellom. Det finnes altså ikke noe øyeblikk der sjøen «bytter».
+- **Glidningen er langsommere enn noe en ser som bevegelse:** høyst rundt 0,3 m/s, som en svak strøm, og aldri mer enn en tidel av bølgenes egen fart. Ved siden av bølgene, kjølvannet og båtens egen drift i vinden kan den ikke skilles fra ekte strøm.
+- **Hver bølge og hver flis glir bare den korteste veien,** høyst en halv bølgelengde eller en halv flis: for den korte flisa noen meter, for de lange bølgene og den store flisa opptil et par minutter.
+- **Skummet og kjølvannet glir ikke,** fordi de alt ligger i verden.
+- **Prøves med en test** som kjører båten i fart, stopper og måler hvor fort sjøen rundt henne flytter seg mens hun glir tilbake, og som ser at den ender på den felles sjøen (`seaH` lik en annen side på samme sted). Jonas ser overgangen på nettbrettet.
+
 ## 5. Antatt og usikkert
 
 - **Gjentakelsen:** en FFT-flis gjentar seg. Med to fliser i et forhold som ikke går opp, og de lange Gerstner-bølgene og dønningen oppå, skal det ikke kunne ses fra 450 m. Dette er antatt og må ses i bildene i B1, før noe annet bygges. Ser det ut som et mønster, stopper fasen der.
@@ -93,4 +102,4 @@ Hver fase er én økt og står for seg selv; sjøen er brukbar etter hver av dem
 
 ## Status
 
-- 09.11.2026: planen skrevet, venter på valgene og «kjør på».
+- 09.11.2026: planen skrevet. Valgene tatt samme dag (V1 A, V2 A, V3 A med kravet om ingen synlig overgang); venter på «kjør på» for B1.
