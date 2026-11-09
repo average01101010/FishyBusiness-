@@ -633,10 +633,12 @@ function peerStates(){
 }
 const hooks = {};
 let S;
+const START_KR = 2000;   // what a new game starts with in the account (Jonas 09.11.2026, down from 15 000)
 function newState(){
   const home = PORTS[0];
-  // a new game begins at the world's minute (core/01-world.js), on the seed everyone shares
-  return {v:2, frame:'utm33', t:WCLOCK.on ? worldT() : 0, lastReal:Date.now(), mult:1, lang:'no', cash:15000,
+  // a new game begins at the world's minute (core/01-world.js), on the seed everyone shares; with 2 000 kr (Jonas 09.11.2026, down from
+  // 15 000): a tank of diesel and the ice before the first landing, so nobody starts on the overdraft, and the first landing is the money
+  return {v:2, frame:'utm33', t:WCLOCK.on ? worldT() : 0, lastReal:Date.now(), mult:1, lang:'no', cash:START_KR,
     boat:{type:'trebat', pos:{x:home.p.x, y:home.p.y}, heading:0, v:0, fuel:60, ice:0, gear:true, status:'port', port:home.id, prev:null, engineUntil:0, fishUntil:null, engH:0, svcAt:0},
     equip:{vhf:false, ais:false, plotter:false, chirp:false, sonar:false, jukse:0, motor90:false}, crew:[], loan:null, member:false, msgs:[], sales:[], order:null, owned:['trebat'], lic:null, qseed:WCLOCK.on ? WORLD_SEED : Math.floor(Math.random() * 1e9), fm:{n:0, last:-1, kr:0, b:false}, haill:null, haillInv:{haill:0, luksus:0}, pubE:-1e9, target:'mix', streak:null, clothes:{olje:0, varme:0}, orders:null, rep:{}, bors:null, cevt:null, workLog:[], stock:initStock(), marks:[], navrows:[], incidents:[], lore:{}, tattoos:{}, tat:{}, pgear:newPGear(), sets:[], gseq:0, ops:null, company:'', boatName:'', tut:0, jobs:[], prep:{}, tripBuff:null, draftDep:null,
     plan:null, draft:[], draftSpeed:16, draftFull:true, trail:[{x:home.p.x, y:home.p.y, port:home.id}],

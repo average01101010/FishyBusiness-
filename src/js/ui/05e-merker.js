@@ -36,11 +36,11 @@ function achCard(title, lead, items){
     document.getElementById('achOpen').addEventListener('click', () => { PHONE.show(true); PHONE.open('merker'); }); });
 }
 function achChapterCard(ch){
-  const rew = [AL('Vimpelen er din. Den henger i masta på båter med mast, og andre spillere ser den.', 'The pennant is yours. It flies from the mast of a boat with a mast, and other players see it.'),
-    AL('Vimpelen blir lengre, og en haill ligger om bord.', 'The pennant grows longer, and a luck is aboard.'),
-    AL('Vimpelen blir enda lengre, og skrogfargen «Kystfisker» er din i Malerverkstedet. Merkene går videre, uten slutt.', 'The pennant grows longer still, and the hull colour «Kystfisker» is yours in the paint shop. The badges go on, without end.')][ch];
+  const rew = [AL(kr(ACH_CH1_KR) + ' er satt inn på kontoen din.', kr(ACH_CH1_KR) + ' has been paid into your account.'),
+    AL('En haill ligger om bord.', 'A luck is aboard.'),
+    AL('Skrogfargen «Kystfisker» er din i Malerverkstedet. Merkene går videre, uten slutt.', 'The hull colour «Kystfisker» is yours in the paint shop. The badges go on, without end.')][ch];
   const next = ch + 1 < ACH_CH.length ? '<p class="ph-note">' + AL('Neste kapittel: «' + ACH_CH[ch + 1][0] + '».', 'Next chapter: «' + ACH_CH[ch + 1][1] + '».') + '</p>' : '';
-  achWhenFree(() => { modal('<div class="ob achc"><p class="reg-from">' + AL('Kapittel ' + (ch + 1) + ' fullført', 'Chapter ' + (ch + 1) + ' complete') + '</p><h2>' + AL(ACH_CH[ch][0], ACH_CH[ch][1]) + '</h2><div class="ach-pen p' + (ch + 1) + '"></div><p>' + rew + '</p>' + next +
+  achWhenFree(() => { modal('<div class="ob achc"><p class="reg-from">' + AL('Kapittel ' + (ch + 1) + ' fullført', 'Chapter ' + (ch + 1) + ' complete') + '</p><h2>' + AL(ACH_CH[ch][0], ACH_CH[ch][1]) + '</h2><p>' + rew + '</p>' + next +
     '<div class="btns"><button class="btn primary" data-close id="achOpen">' + AL('Åpne Merker', 'Open Badges') + '</button></div></div>');
     document.getElementById('achOpen').addEventListener('click', () => { PHONE.show(true); PHONE.open('merker'); }); });
 }
@@ -51,7 +51,7 @@ function achWeek(){
     AL('Tre kapitler med sju milepæler. Hver gir en gave, og hvert kapittel sin egen belønning. Fem av sju åpner neste kapittel. Ingenting går ut på dato.', 'Three chapters of seven milestones. Each gives a gift, and each chapter its own reward. Five of seven open the next chapter. Nothing runs out.') + '</p></div>');
   for (let ch = 0; ch < ACH_CH.length; ch++){
     const list = achInCh(ch), n = achNDone(ch), open = achOpen(ch), done = !!(S.ach && S.ach.ch[ch]);
-    const rew = [AL('Vimpel i masta', 'A pennant at the mast'), AL('Lengre vimpel og en haill', 'A longer pennant and a luck'), AL('Enda lengre vimpel og skrogfargen «Kystfisker»', 'A longer pennant still and the hull colour «Kystfisker»')][ch];
+    const rew = [kr(ACH_CH1_KR), AL('En haill', 'A luck'), AL('Skrogfargen «Kystfisker»', 'The hull colour «Kystfisker»')][ch];
     h.push('<div class="ph-card ach-ch' + (open ? '' : ' locked') + '"><h4>' + AL('Kapittel ', 'Chapter ') + (ch + 1) + ' · ' + AL(ACH_CH[ch][0], ACH_CH[ch][1]) + (done ? ' ✓' : '') + '</h4>' +
       (open ? '<span class="gb fsbar"><i style="width:' + Math.round(n / list.length * 100) + '%"></i></span><p class="ph-note">' + n + ' / ' + list.length + ' · ' + AL('Belønning: ', 'Reward: ') + rew + '</p>'
         : '<p class="ph-note">' + AL('Åpnes når fem av sju i kapittelet før er tatt.', 'Opens when five of seven in the chapter before are taken.') + '</p>'));

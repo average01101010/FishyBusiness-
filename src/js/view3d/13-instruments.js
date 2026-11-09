@@ -180,7 +180,6 @@
       drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n));
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
       const lg = n.player && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
-      const pn = n.player && livPen(n.liv), mt = pn && mastTop(geoOf(t)); if (mt){ gl.disableVertexAttribArray(2); drawTexQuad(FLAGM, penTex(), chain(M, chain(model(mt[0], mt[1], mt[2], Math.PI / 2, 0, 0), PEN_S[Math.min(3, pn) - 1])), VP, true, [0, 0.6, 0]); }   // the week's pennants
     }
   }
   // the hand-steered boat's paint (vessel3d.js hullLiv): the hull's colours uploaded again when it changes
@@ -476,25 +475,10 @@
       flagCanvas(FLAGM.cv, f.code, f.shape, lc); upTex(FLAGM.tex, FLAGM.cv); }
     return f;
   }
-  // the week's pennants (core/09f-merker.js; Jonas 07.10.2026): the Norwegian pennant at the masthead, longer for each chapter finished,
-  // on your own boat and on other players' (their paint code's p:N, vessel3d.js livPen). It flies on the ensign's own waving cloth
-  // (FLAGM), drawn long and thin; the cloth's picture is the red tapering pennant with the cross's white and blue running lengthwise
-  // to the tip (what is outside is clear and not drawn)
-  const PEN_S = [2.8, 3.4, 4].map(sx => new Float32Array([sx, 0, 0, 0, 0, 0.65, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]));   // about 1.7, 2 and 2.4 m by 0.3 m
-  let PENT = null;
-  function penTex(){
-    if (PENT) return PENT;
-    const W = 512, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
-    // a band of k times the pennant's height, tapering with it from the hoist to a blunt tip
-    const band = (k, col) => { g.fillStyle = col; g.beginPath(); g.moveTo(0, H / 2 * (1 - k)); g.lineTo(W, H / 2 - 12 * k); g.lineTo(W, H / 2 + 12 * k); g.lineTo(0, H / 2 * (1 + k)); g.closePath(); g.fill(); };
-    band(1, '#ba0c2f'); band(0.32, '#f4f4f0'); band(0.16, '#00205b');
-    // mipmapped, so the thin stripes stay whole at a distance; the clear texels take the red, so the smaller levels get no dark rim
-    const im = g.getImageData(0, 0, W, H), d = im.data; for (let i = 0; i < d.length; i += 4) if (!d[i + 3]){ d[i] = 186; d[i + 1] = 12; d[i + 2] = 47; }
-    PENT = mkTex(); upTex(PENT, im); gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); return PENT;
-  }
   // the masthead: the highest of the boat's lights (a detailed model's and a kit model's alike) when it is above the ensign's pole.
-  // A boat with no mast flies no pennant, only the ensign (Jonas 07.10.2026): the open boats, whose highest light is the stern lantern or
-  // the all-round light on a stake by the ensign's pole (within a metre of it); the snekke's all-round light sits on her mast amidships
+  // A boat with no mast: the open boats, whose highest light is the stern lantern or the all-round light on a stake by the ensign's pole
+  // (within a metre of it); the snekke's all-round light sits on her mast amidships. (It carried the week's pennants until Jonas took
+  // them off 09.11.2026; the model tests still read it through G3._debug.)
   function mastTop(G){ if (!G) return null; let top = null;
     for (const L of G.lights || []) if (L && L[0] && L[2] !== 'stern' && L[2] !== 'work' && (!top || L[0][1] > top[1])) top = L[0];
     if (!top || (G.pole && (top[1] <= G.pole[1] || Math.hypot(top[0] - G.pole[0], top[2] - G.pole[2]) < 1.0))) return null;

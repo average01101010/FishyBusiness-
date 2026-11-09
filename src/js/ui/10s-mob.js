@@ -91,7 +91,7 @@ const MOBUI = (() => {
       if (a === 'mark') mark(); else if (a === 'buoy') buoy(); else if (a === 'auto') auto(); else if (a === 'x'){ U.done = null; draw(true); } else if (a === 'sosyes') sosYes(); else if (a === 'sosno') sosNo(); else lift(a); });
     document.body.appendChild(d); return U.el = d;
   }
-  const HOWN = {ladder:['Opp leideren akter', 'Up the ladder aft'], sling:['Løftestroppen', 'The lifting sling'], boat:['Sett ut MOB-båten', 'Launch the rescue boat']};
+  const HOWN = {ladder:['Opp leideren akter', 'Up the ladder aft'], rail:['Over ripa', 'Over the gunwale'], sling:['Løftestroppen', 'The lifting sling'], boat:['Sett ut MOB-båten', 'Launch the rescue boat']};
   function body(){
     const M = S.mob, b = S.boat, P = here().p, f = frac(), tIn = S.t + f - M.t0, s = mobSeen(P), pp = mobAt(f), R = M.resc, cold = tIn >= M.lim;
     const h = [];
@@ -107,7 +107,7 @@ const MOBUI = (() => {
     h.push('<div class="mb-k">' + K.map(esc).map((x, i) => '<span>' + x + '</span>').join('') + '</div>');
     const B = [], W = [];
     if (!M.mark) B.push('<button data-mb="mark">' + L('MOB', 'MOB') + '</button>');
-    if (!M.buoy && M.st === 'water') B.push('<button data-mb="buoy">' + L('Kast livbøya', 'Throw the lifebuoy') + '</button>');
+    if (!M.buoy && M.st === 'water' && mobHasBuoy()) B.push('<button data-mb="buoy">' + L('Kast livbøya', 'Throw the lifebuoy') + '</button>');
     if (M.st === 'water' && !M.lift) B.push('<button data-mb="auto" class="go"' + (U.busy ? ' disabled' : '') + '>' + (U.busy ? L('Finner veien …', 'Finding the way …') : (S.plan && S.plan.mob ? L('Autonav: MOB på nytt', 'Autonav: MOB again') : L('Autonav: MOB', 'Autonav: MOB'))) + '</button>');
     for (const o of mobLiftOpts(P, Math.abs(b.v || 0))){ B.push('<button data-mb="' + o.how + '" class="alt"' + (o.why ? ' disabled' : '') + '>' + L(...HOWN[o.how]) + '</button>'); if (o.why && !W.length) W.push(L(o.why[0], o.why[1])); }
     if (W.length) B.push('<div class="mb-why">' + esc(W[0]) + '</div>');

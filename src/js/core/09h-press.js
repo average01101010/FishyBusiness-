@@ -93,8 +93,8 @@ function pressStory(it){
     s.body.push(P2('Fartstid er tida en sjømann har vært om bord. Det er ikke mange forunt å nå ' + fmt(d.y, 0) + ' år.', 'Sea time is the time a seaman has spent aboard. Not many reach ' + fmt(d.y, 0) + ' years.')); }
   else if (it.kind === 'ach'){ const ch = typeof ACH_CH !== 'undefined' && ACH_CH[d.ch]; if (!ch) return null;
     s.h = P2(w[0] + ' fullførte «' + ch[0] + '»', w[1] + ' completed «' + ch[1] + '»');
-    s.ing = P2(w[0] + ' har fullført kapittelet «' + ch[0] + '» og fører den norske vimpelen.', w[1] + ' has completed the chapter «' + ch[1] + '» and flies the Norwegian pennant.');
-    s.body.push(P2('Vimpelen blir lengre for hvert kapittel. Se etter den i masta.', 'The pennant grows longer with each chapter. Look for it at the mast.')); }
+    s.ing = P2(w[0] + ' har fullført kapittelet «' + ch[0] + '» i «Første uke på sjøen».', w[1] + ' has completed the chapter «' + ch[1] + '» of «The first week at sea».');
+    s.body.push(P2('Uka har tre kapitler med sju milepæler i hvert.', 'The week has three chapters of seven milestones each.')); }
   else if (it.kind === 'as'){ if (!it.company) return null;
     s.h = P2('Nytt aksjeselskap: ' + it.company, 'New limited company: ' + it.company);
     s.ing = P2(it.company + ' er registrert som aksjeselskap' + (it.boat ? ' og driver «' + it.boat + '»' : '') + '.', it.company + ' is registered as a limited company' + (it.boat ? ' and runs the «' + it.boat + '»' : '') + '.');

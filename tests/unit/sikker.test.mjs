@@ -16,7 +16,17 @@ export default function (t){
   t.ok(L('pelagisk').buoys === 8 && L('pelagisk').smoke === 2 && L('pelagisk').mob === 1, '§ 7-10: pelagisk (75 m) har 8 livbøyer, røyk på to, MOB-båt (§ 7-5)', L('pelagisk'));
   t.ok(['autoliner', 'snokrabbe', 'bunntral'].every(k => L(k).buoys === 6 && L(k).smoke === 2 && L(k).mob === 1), '§ 7-10: 45–75 m har 6 livbøyer, røyk på to og MOB-båt (autolineren, snøkrabbebåten, tråleren)');
   t.ok(L('ringnot38').buoys === 4 && L('ringnot38').smoke === 2 && L('ringnot38').mob === 0, '24–45 m: 4 livbøyer, røyk på to, ingen MOB-båt (ringnot38, 38,55 m)', L('ringnot38'));
-  const small = Object.keys(VESSELS).filter(k => VESSELS[k].len < 15);
+  const small = Object.keys(VESSELS).filter(k => VESSELS[k].len < 15 && !VESSELS[k].bare);
+  // a bare boat (Father's old wooden boat, Jonas 09.11.2026) carries no lifebuoy and no ladder, and her lanterns no fishing lights
+  const bare = Object.keys(VESSELS).filter(k => VESSELS[k].bare);
+  t.ok(bare.includes('trebat') && bare.every(k => L(k).buoys === 0 && L(k).lights === 0 && L(k).lines === 0 && L(k).ladder === false && !(KITADD[k] || {}).ladder),
+    'trebåten (bare) har ingen livbøye og ingen leider', bare.map(k => [k, L(k)]));
+  t.ok(L('sjark').ladder === true && L('kyst21').ladder === false, 'leideren akter: under 15 m ellers (§ 63)');
+  { const G = {lights:[[[-0.9, 0.9, -1.5], [1, 0.12, 0.1], 'port'], [[0.9, 0.9, -1.5], [0.1, 1, 0.35], 'stbd'], [[0, 2.2, 2.4], [1, 0.95, 0.85], 'allround']]};
+    const kinds = (V, st) => K.lanterns(G, V, st).map(l => l[2]).join(' ');
+    t.eq([kinds(VESSELS.trebat, {fishing:true, v:0}), kinds(VESSELS.trebat, {fishing:true, v:3}), kinds(VESSELS.trebat, {nuc:true, v:0}), kinds(VESSELS.trebat, {v:5})],
+      ['allround side side', 'allround side side', 'allround side side', 'allround side side'], 'trebåten: ingen fiskelanterner og ikke to røde (27 g), bare den hvite rundtlysende og sidelysene');
+    t.eq(kinds(VESSELS.snekke, {fishing:true, v:0}), 'fishW fishR', 'plastsnekka viser fortsatt rødt over hvitt når hun fisker'); }
   t.ok(small.every(k => L(k).smoke === 0 && L(k).mob === 0 && L(k).buoys >= Math.ceil(L(k).persons / 3) && L(k).buoys >= (VESSELS[k].len >= 10.67 ? 2 : 1) && L(k).lights >= L(k).buoys / 2),
     '§ 43 under 15 m: én bøye per tre om bord, to fra 10,67 m, halvparten med lys, ingen røyk og ingen MOB-båt', small.map(k => k + ':' + L(k).buoys));
   t.ok(Object.keys(VESSELS).every(k => L(k).smoke <= L(k).lights && L(k).lights <= L(k).buoys && L(k).lines <= L(k).buoys), 'røyk ≤ lys ≤ bøyer, og linene på bøyer som finnes, for alle typene');
@@ -71,7 +81,7 @@ export default function (t){
   }
   // the ladder aft (§ 63) on every boat under 15 m: from the model where it meets it (snekke), else from the code, with a rung at least
   // 0.30 m under the waterline and the stiles up over the place where one comes aboard
-  for (const k of small){
+  for (const k of small){   // (not the bare boats: above)
     const lad = (KITADD[k] || {}).ladder;
     if (!lad){ t.ok(k === 'snekke', k + ': leideren i modellen holder § 63 (plastsnekka: nederste trinn 0,32 m under vannlinja)'); continue; }
     const low = Math.min(...lad.flatMap(q => q.r || [])), top = Math.max(...lad.flatMap(q => q.c.map(p => p[1])));

@@ -1600,6 +1600,23 @@
 2026-11-08 23:55	claude/o14-f2-fiske-flate-nv6aqz	c199ab8	geartest	OK	28	lite	samtidig	
 2026-11-09 01:06	claude/h3d2-snokrabbe-animasjoner-zn39n5	04c7acb+	boottest	OK	22	lite	samtidig	
 2026-11-09 01:07	claude/h3d2-snokrabbe-animasjoner-zn39n5	04c7acb+	docktest	OK	58	lite	samtidig	
+2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	merketest	OK	18	lite	samtidig	
+2026-11-09 00:47	ccr-9e76566c-k1gw2d	64137cf+	posttest	OK	27	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	mobtest	OK	202	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	lanterntest	OK	11	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	vesseltest	OK	16	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	maletest	OK	15	lite	samtidig	
+2026-11-09 00:50	ccr-9e76566c-k1gw2d	6560a62	trip2	OK	33	lite	samtidig	
+2026-11-09 00:51	ccr-9e76566c-k1gw2d	6560a62	dbg23o	OK	37	3d	alene	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	merketest	OK	18	lite	samtidig	
+2026-11-09 01:07	ccr-9e76566c-k1gw2d	7c6de62+	kotest	FEIL	17	lite	samtidig	avsluttet med kode 1
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	trip2	OK	36	lite	samtidig	
+2026-11-09 01:08	ccr-9e76566c-k1gw2d	3a693e5	bunktest	OK	14	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	kjoptest	OK	381	lite	samtidig	
+2026-11-09 01:14	ccr-9e76566c-k1gw2d	3a693e5	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 01:26	ccr-9e76566c-k1gw2d	3a693e5	yardtest	OK	710	3d	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5	tut	OK	905	lite	alene	
+2026-11-09 01:41	ccr-9e76566c-k1gw2d	3a693e5+	kotest	OK	12	lite	alene	
 2026-11-09 00:23	claude/o8b-s2-turens-linje-c70okw	36c7591+	turlinjetest	OK	10	lite	samtidig	
 2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	geartest	FEIL	36	lite	samtidig	FEIL the landing note says how the three hauls fished against usual ones for the soak, in words (Ø8b S2) ['Turen ga 56 kg i timen med håndjuksa. Det sto godt me
 2026-11-09 00:24	claude/o8b-s2-turens-linje-c70okw	36c7591+	booktest	OK	27	lite	samtidig	
@@ -1625,9 +1642,16 @@
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	sponsortest	OK	10	lite	samtidig	
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	admintest	OK	7	lite	samtidig	
 2026-11-09 00:39	ccr-5c931049-sj9wgt	50711ff+	trip2	OK	26	lite	samtidig	
+2026-11-09 01:43	ccr-9e76566c-k1gw2d	9e7cbd9	trip2	OK	36	lite	samtidig	
+2026-11-09 01:43	ccr-9e76566c-k1gw2d	9e7cbd9	merketest	OK	16	lite	samtidig	
+2026-11-09 01:44	ccr-9e76566c-k1gw2d	9e7cbd9	dbg23o	OK	39	3d	alene	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	boottest	OK	22	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	turlinjetest	OK	5	lite	samtidig	
 2026-11-09 01:15	claude/o8b-s2-turens-linje-c70okw	01c5d1e	tutfull	OK	5	lite	samtidig	
 2026-11-09 02:21	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	boottest	OK	28	lite	samtidig	
 2026-11-09 02:22	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	docktest	OK	61	lite	samtidig	
 2026-11-09 02:23	claude/h3d2-snokrabbe-animasjoner-zn39n5	bc2de6a	landtest	OK	89	3d	alene	
+2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	trip2	OK	34	lite	samtidig	
+2026-11-09 01:46	ccr-9e76566c-k1gw2d	cb536b2	merketest	OK	16	lite	samtidig	
+2026-11-09 01:47	ccr-9e76566c-k1gw2d	cb536b2	dbg23o	OK	48	3d	alene	
+2026-11-09 02:16	ccr-9e76566c-k1gw2d	cb536b2	tut	OK	1695	lite	alene	
