@@ -122,11 +122,12 @@ function miniPaint(){
   if (G){
     L.push([G.kn + '  ' + G.crs, fmt(2 * R / NM, 1) + ' nm']);
     const pos = G.ll[0] + ' ' + G.ll[1]; if (ctx.measureText(pos).width <= W - 2 * pad) L.push([pos]); else L.push([G.ll[0]], [G.ll[1]]);
+    if (G.ukc != null) L.push([(S.lang === 'en' ? 'Under the keel ' : 'Under kjølen ') + fmt(G.ukc, 1) + ' m', '', G.ukc < 1]);   // (shallow water, Ø9 F5: the depth with the tide less her draught and squat)
     if (G.nv){ const a = 'WPT ' + G.nv.n + ' ' + G.nv.wpt, b = 'ETA ' + G.nv.eta; if (ctx.measureText(a + '  ' + b).width <= W - 2 * pad) L.push([a, b]); else L.push([a], [b]); }
   } else L.push(['', fmt(2 * R / NM, 1) + ' nm']);
   const h = L.length * lh + pad; ctx.fillStyle = 'rgba(6,16,24,.66)'; ctx.fillRect(0, H - h, W, h);
   ctx.fillStyle = '#eef4f7';
-  L.forEach((r, i) => { const y = H - h + pad * 0.6 + (i + 0.78) * lh; ctx.textAlign = 'left'; ctx.fillText(r[0], pad, y); if (r[1]){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(230,240,245,.7)'; ctx.fillText(r[1], W - pad, y); ctx.fillStyle = '#eef4f7'; } });
+  L.forEach((r, i) => { const y = H - h + pad * 0.6 + (i + 0.78) * lh; ctx.textAlign = 'left'; if (r[2]) ctx.fillStyle = '#ff8a80'; ctx.fillText(r[0], pad, y); ctx.fillStyle = '#eef4f7'; if (r[1]){ ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(230,240,245,.7)'; ctx.fillText(r[1], W - pad, y); ctx.fillStyle = '#eef4f7'; } });
 }
 // the warning of the rules of the road (Ø11.1, core/05e-sjovei.js), as the big chart has it (03-map.js sjvChartSvg): a ring round the other
 // vessel, her vector and yours on to the CPA and the line between them there, red when you give way and yellow when you hold on; the ring

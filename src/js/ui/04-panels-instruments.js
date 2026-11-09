@@ -267,17 +267,19 @@ const INSTR = (() => {
     return {n:S.plan.idx + 1, wpt:fmt(dw / NM, 2) + ' nm ' + deg3(brg), at:hm(H0 + dw / v),
       dest:last.port ? portById(last.port).name : 'WPT ' + S.plan.wps.length, eta:hm(H0 + tot / v + fishH)};
   }
+  // the water under the keel (m) when it is under 10 m (Ø9 F5: the depth with the tide, less her draught and her squat), else null
+  function keelUi(){ try { const k = keelClear(); return k < 10 ? Math.max(0, k) : null; } catch (e){ return null; } }
   // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
   function render3d(pose, H, sog, ll, nv){
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
-    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv};   // the little chart's foot (03e-miniplot.js)
+    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
       setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b><span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
     { const pm = $('plotMin'); if (pm.textContent !== '–'){ pm.textContent = '–'; pm.setAttribute('aria-label', no ? 'Minimer kartplotteren' : 'Minimise the chart plotter'); } }
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
-    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + row('POS', ll[0]) + row('', ll[1]) +
+    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
       (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
   }
   const GPSC = {k:'', nx:null, st:null};
@@ -291,7 +293,9 @@ const INSTR = (() => {
       $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt;
       $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
-    $('ecHdg').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH'; $('ecDep').textContent = b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m';
+    $('ecHdg').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH';
+    // (and the water under her keel in shallow water, with her squat at the way she has: Ø9 F5, 16b-dyn.js keelClear)
+    { const ukc = b.status === 'port' ? null : keelUi(); setHtml($('ecDep'), b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m' + (ukc == null ? '' : '<br><small' + (ukc < 1 ? ' class="warn"' : '') + '>' + fmt(ukc, 1) + (no ? ' m u. kjølen' : ' m under keel') + '</small>')); }
     // the next tide and the sun's day change slowly: worked out again every 10 game minutes or km
     const tk = Math.floor(S.t / 10) + ':' + Math.round(pose.p.x) + ':' + Math.round(pose.p.y);
     if (GPSC.k !== tk){ GPSC.k = tk; GPSC.nx = tideEvents(H, 14)[0]; GPSC.st = sunTimes(H); }

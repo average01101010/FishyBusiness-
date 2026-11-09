@@ -194,7 +194,9 @@ function nearestPlace(p){
   let best = null; for (const q of PORTS.map(pt => ({n:pt.name, e:pt.name, p:pt.p})).concat(GROUNDS.map(g => ({n:g.name.no, e:g.name.en, p:g.p})))){ const d = dist(p, q.p); if (!best || d < best.d) best = {d, q}; }
   const nm = best.d / NM; return nm < 1.5 ? {no:'ved ' + best.q.n, en:'near ' + best.q.e} : {no:fmt(nm, 1) + ' nm fra ' + best.q.n, en:fmt(nm, 1) + ' nm from ' + best.q.e};
 }
-function groundCheck(a, c){
+// sq: her squat (m) at the way she has (16b-dyn.js dynSquat, Ø9 F5): under way she draws that much more; 0 for a plan or a leg checked
+// ahead of time
+function groundCheck(a, c, sq = 0){
   // (every 5 m: land as thin as an islet is caught; the depth every 20 m as before)
   const L = dist(a, c), n = Math.max(1, Math.ceil(L / 0.005));
   const tl = tideCD(S.t / 60);
@@ -205,7 +207,7 @@ function groundCheck(a, c){
   // thinner ice, so she can get out and never deeper in
   // (an ice class goes up to the limit of her class, seaIceLim, H3c)
   const iceOn = typeof SEA_ICE !== 'undefined' && !!SEA_ICE, iceL = iceOn ? seaIceLim() : 0; let ic0 = iceOn ? seaIceAt(a) : 0;
-  for (let i = 1; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p)) continue; if (isLand(p) || ((i & 3) === 0 || i === n) && depthF(p) + tl < BOAT.draft) return p;
+  for (let i = 1; i <= n; i++){ const p = {x:a.x + (c.x - a.x) * i / n, y:a.y + (c.y - a.y) * i / n}; if (inHarbour(p)) continue; if (isLand(p) || ((i & 3) === 0 || i === n) && depthF(p) + tl < BOAT.draft + sq) return p;
     if (iceOn && (i % 10 === 0 || i === n)){ const ic = seaIceAt(p); if (ic >= iceL && ic > ic0 + 0.01) return {x:p.x, y:p.y, ice:true}; ic0 = ic; } }
   if (!inHarbour(c) && coastSegHit(a, c)) return c;   // a breakwater or a skerry thinner than the 20 m steps (01d-coast.js)
   if (!inHarbour(c)){ const dx = c.x - a.x, dy = c.y - a.y, L2 = dx * dx + dy * dy || 1e-9; for (const q of rocksIn(c.x - L - 0.02, c.y - L - 0.02, c.x + L + 0.02, c.y + L + 0.02)){ if (Math.abs(q[0] - c.x) > L + 0.02 || Math.abs(q[1] - c.y) > L + 0.02) continue; const u = clamp(((q[0] - a.x) * dx + (q[1] - a.y) * dy) / L2, 0, 1); if (Math.hypot(a.x + dx * u - q[0], a.y + dy * u - q[1]) < 0.012 && Math.random() < 0.5) return {x:q[0], y:q[1]}; } }

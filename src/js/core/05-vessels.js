@@ -812,10 +812,12 @@ function sail(H, W, hs){
   fuelUse(b, fuelLph(v, W) / 60);
   obsSail(pl, b);   // round a bridge's pier, a pier or a mark on the leg ahead (11b-obstacles.js)
   if (sjvSail(pl, b, left)) return;   // giving way for a vessel she must (Ø11.1, 05e-sjovei.js): the minute is the manoeuvre's
+  // (her squat at the minute's speed, in open water: the manoeuvring model has the narrow sounds when the game is open, Ø9 F5)
+  let sq = 0; try { sq = dynSquat(dynCalOf(b).P, v * KN_MS, false); } catch (e){}
   while (left > 1e-9 && pl.idx < pl.wps.length){
     const w = pl.wps[pl.idx], d = dist(b.pos, w);
     if (d > 1e-6) b.heading = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y));
-    const to = d <= left ? {x:w.x, y:w.y} : {x:b.pos.x + (w.x - b.pos.x) / d * left, y:b.pos.y + (w.y - b.pos.y) / d * left}, gp = groundCheck(b.pos, to);
+    const to = d <= left ? {x:w.x, y:w.y} : {x:b.pos.x + (w.x - b.pos.x) / d * left, y:b.pos.y + (w.y - b.pos.y) / d * left}, gp = groundCheck(b.pos, to, sq);
     if (gp){ if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; }
     if (d <= left){ b.pos = to; left -= d; if (arrive(w)) return; }
     else { b.pos = to; left = 0; }

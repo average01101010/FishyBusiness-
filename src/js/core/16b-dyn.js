@@ -22,6 +22,17 @@
 // and is written back to b.pos, b.heading and b.v every tick, which is what the rest of the game reads.
 const DYN = {on:false, b:null, cal:{}, line:null, dep:null, nm:0, hold:false, holdAt:0, debt:0, dbg:null};   // hold: the map round her is not in, she waits (as the minute step does) from holdAt; debt: the real seconds she waited, made up at double pace once it is in
 const DYN_RUD = 35 * Math.PI / 180, DYN_H = 0.2, KN_MS = NM * 1000 / 3600, DYN_AIR = 1.25;   // hard over; the integration step (game s); m/s a knot; the air's density
+// the wave-making hump (Ø9 F5, docs/planer/fysikk-4-sjo-og-skrog.md): the resistance has a wave part on top of the quadratic one,
+// C_w(Fr) growing as Fr^4 up to a top at Fr 0.45 (hull speed: the bow wave's length is the hull's) and falling off as 1 / Fr^4 above it,
+// cw times the quadratic part at its top. A displacement hull meets it at her top speed (Fr 0.4-0.5) and hangs there: most of the
+// last knot is wave; a planing hull goes over it and on to the plane, where the wave part is gone. The resistance at top speed is the
+// same as before (dynPar solves k2 with the hump in), so full ahead still holds the vessel's own top speed; only the road there and
+// the throttle each speed needs change (dynThrEq, dynAuto's feed-forward). The fuel is the economy's (fuelLph) and is not touched.
+const DYN_HUMP = {Fr:0.45, cw:1.5};
+// the hump's shape: x^4 low, 1 at Fr 0.45, 1 / x^4 high (2 x^4 / (1 + x^8), x = Fr / 0.45)
+function dynHumpG(Fr){ const x = (Math.abs(Fr) / DYN_HUMP.Fr) ** 4; return 2 * x / (1 + x * x); }
+// the hull's resistance (N) at u m/s through the water, the quadratic and wave parts scaled by the sea's capF
+function dynRes(P, u, capF = 1){ const a = Math.abs(u); return P.k1 * u + P.k2 * capF * u * a * (1 + P.cw * dynHumpG(a / P.sgL)); }
 const dynAng = (from, to) => { let d = (to - from) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
 // the hull's numbers, from the vessel's own (02-species-gear.js)
 function dynPar(V){
@@ -38,13 +49,15 @@ function dynPar(V){
   // product (a fishing hull is steady on her course, if only just)
   const prod = Yv * Nr, X = Nv * (Yr - mx), kNr = Math.max(1, X / (0.5 * prod)), NrS = Nr * kNr;
   // the engine: thrust from the power at top speed, falling with speed; resistance quadratic with a little linear
-  const umax = Math.max(1, V.vmax * KN_MS), Tmax = 0.55 * V.hp * 745.7 / umax, k2 = 0.65 * Tmax / (umax * umax), k1 = 0.03 * k2 * umax;
+  // (with the wave hump, F5: k1 as before, k2 solved so the resistance at top speed is what it was, 1.03 of the thrust there)
+  const umax = Math.max(1, V.vmax * KN_MS), Tmax = 0.55 * V.hp * 745.7 / umax, sgL = Math.sqrt(9.81 * L), cw = DYN_HUMP.cw;
+  const k1 = 0.03 * 0.65 * Tmax / umax, k2 = 0.65 * Tmax / (umax * umax * (1 + cw * dynHumpG(umax / sgL)));
   // the rudder: area 2.5 % of L x T (fishing boats carry big rudders), lift slope of a low aspect ratio, 0.45 L abaft the pivot;
   // rs is the calibration's scale on it. Hard over at 35 degrees in 1.2 s + L/8 (a tiller flicks, a steering gear takes its time)
   const AR = 0.025 * L * T, Ydc = 0.5 * rho * AR * 1.8, xR = -0.45 * L, drate = DYN_RUD / (1.2 + L / 8);   // (lift slope 1.8 a radian: 1.1 at hard over, where a low rudder stalls)
   // a little nonlinear yaw damping, and the lateral acceleration a hull can take in a turn (planing boats more)
   const Nrr = -0.003 * q5, alat = (V.planing ? 0.45 : 0.25) * 9.81;
-  return {L, B, T, m, mx, my, Iz, Yv, Yr, Nv, Nr:NrS, kNr, Nrr, umax, Tmax, k2, k1, Ydc, xR, drate, rs:1, alat};
+  return {L, B, T, Cb, m, mx, my, Iz, Yv, Yr, Nv, Nr:NrS, kNr, Nrr, umax, Tmax, k2, k1, cw, sgL, race:0.35 * umax * umax / Tmax, planing:!!V.planing, Ydc, xR, drate, rs:1, alat};
 }
 // one step of h game seconds of the hull's own motion (u, v, r, the rudder dl), with the commands thr (-1..1) and rud (-1..1);
 // capF scales the resistance up when the sea caps the speed; E is the wind and the sea on her (dynEnv; none in the calibration, which
@@ -54,9 +67,11 @@ function dynInt(P, s, thr, rud, h, capF, E){
   thr = clamp(thr, -1, 1);
   const u = s.u, U = Math.max(Math.abs(u), 0.12 * P.umax), kT = E ? E.kT : 1, kR = E ? E.kR : 1;
   const Tx = kT * (thr >= 0 ? P.Tmax * thr * (1 - 0.35 * Math.max(0, u) / P.umax) : 0.6 * P.Tmax * thr * (1 - 0.35 * Math.max(0, -u) / P.umax));
-  const R = P.k1 * u + P.k2 * capF * u * Math.abs(u);
+  const R = dynRes(P, u, capF);
   // the water over the rudder: the way she has and the screw's race (sign with the direction; less when the screw is in the air)
-  const uR2 = u * Math.abs(u) + 0.35 * kT * thr * P.umax * P.umax * (thr > 0 ? 1 : 0.5);
+  // (the race goes with the thrust the screw gives, P.race = 0.35 umax^2 / Tmax of the type's own engine, so a bigger engine at the same
+  // thrust puts the same race over the rudder, F5: with the wave hump a Trim's thrust no longer goes as sx^2)
+  const uR2 = u * Math.abs(u) + P.race * kT * thr * P.Tmax * (thr > 0 ? 1 : 0.5);
   const Yd = -P.Ydc * P.rs * kR * (s.dl + (E ? E.dq * (E.side == null ? 1 : E.side) : 0)) * uR2, Nd = P.xR * Yd;   // the lift on a rudder put to starboard is to port: the stern goes to port, the bow to starboard (E.dq: the sea setting her off, as a rudder angle)
   let Ye = 0, Ne = 0, Nvu = U, Uv = U;
   if (E){
@@ -69,6 +84,9 @@ function dynInt(P, s, thr, rud, h, capF, E){
     // (and the water across her at low speed: the cross-flow drag on her side, 0.5 of L x her mean draught, which the linear hull has not got)
     const Ycf = -0.5 * 1025 * 0.5 * P.L * P.Tm * s.v * Math.abs(s.v) * Math.exp(-Math.abs(u) / (0.2 * P.umax));
     Ye = Yw + sd * (E.fe * c - E.fn * sn) + Ypw + Ycf; Ne = P.xw * Yw + P.xR * Ypw;
+    // the bank (F5, dynBank): the water between her and a wall close abeam runs faster, its pressure drops, and her stern is drawn in
+    // to the wall while the bow is pushed off (Norrbin's bank suction), as the square of her way
+    if (E.bY){ Ye += E.bY * u * u; Ne += E.bN * u * u; }
     // with no way on she falls off across the wind and lies there, as a drifting boat does (the moment of the wind on her ends,
     // 0.08 of the side's pressure times the length, towards beam-on, gone by a sixth of her top speed); the hull's own sway-yaw
     // coupling comes of her way (Munk's moment goes as u v), so drifting she does not spin
@@ -91,7 +109,9 @@ function dynMove(s, h){
 }
 const dynZero = () => ({u:0, v:0, r:0, dl:0, psi:0, X:0, Y:0});
 // the throttle that holds the speed u
-function dynThrEq(P, u, capF){ return u <= 0 ? 0 : clamp((P.k1 * u + P.k2 * capF * u * u) / (P.Tmax * (1 - 0.35 * u / P.umax)), 0, 1); }
+function dynThrEq(P, u, capF){ return u <= 0 ? 0 : clamp(dynRes(P, u, capF) / (P.Tmax * (1 - 0.35 * u / P.umax)), 0, 1); }
+// the speed full ahead holds in calm water (the thrust meets the resistance; the hump makes it no closed form)
+function dynUeq(P){ let lo = 0, hi = 2 * P.umax; for (let i = 0; i < 50; i++){ const m = (lo + hi) / 2; if (P.Tmax * (1 - 0.35 * m / P.umax) > dynRes(P, m)) lo = m; else hi = m; } return (lo + hi) / 2; }
 // ---- the calibration: measured on the model itself, once a vessel ----
 function dynTurn(P, V, u0 = V.vcruise * KN_MS){
   const s = dynZero(); s.u = u0; const thr = dynThrEq(P, s.u, 1), h = 0.1, rs = [];
@@ -105,7 +125,7 @@ function dynTurn(P, V, u0 = V.vcruise * KN_MS){
   return {R:uss / Math.max(1e-6, rss), adv, tr, td, rss, uss, T, K:rss / DYN_RUD, Uc:u0, t};
 }
 function dynAccel(P){
-  const b = P.k1 + 0.35 * P.Tmax / P.umax, ueq = (-b + Math.sqrt(b * b + 4 * P.k2 * P.Tmax)) / (2 * P.k2), s = dynZero(); let t = 0;
+  const ueq = dynUeq(P), s = dynZero(); let t = 0;
   while (s.u < 0.9 * ueq && t < 900){ dynInt(P, s, 1, 0, 0.1, 1); t += 0.1; }
   return {t90:t, ueq};
 }
@@ -135,7 +155,9 @@ function dynCal(key, sx = 1){
 // and the areas are the type's, and the screw pushes sx^2 as hard, so full ahead holds sx times her top speed against the same
 // resistance; the stops, the acceleration and the autopilot's gains are measured again with that engine
 function dynCalEng(base, sx, ck){
-  const P = Object.assign({}, base.P, {umax:base.P.umax * sx, Tmax:base.P.Tmax * sx * sx});
+  // (the screw pushes as much harder as the resistance is at sx times the speed, so full ahead holds sx times it also where the wave
+  // hump lies between, F5: before the hump it was sx^2)
+  const P0 = base.P, P = Object.assign({}, P0, {umax:P0.umax * sx, Tmax:P0.Tmax * dynRes(P0, P0.umax * sx) / dynRes(P0, P0.umax)});
   return dynCalRun(ck, base.V, P, sx);
 }
 // the calibration for the player's own boat with the engine she has now (BOAT), which the helm, Autonav and the rules of the road use
@@ -199,9 +221,78 @@ function dynEnv(b, d, cal, H, dtG = 0){
     E.tau = clamp(ws ? te / ws : 6, 2, 20);
     d.yph = ((d.yph || 0) + dtG / E.tau) % 1e6; E.dq = Math.sqrt(dq2) * 2.2 * (vn(d.yph, 991) - 0.5);
   }
-  const c = E.cap; E.capF = Math.max(1, (E.kT * P.Tmax * (1 - 0.35 * c / P.umax) - P.k1 * c) / (P.k2 * c * c));
+  // the shallow water under her (F5): the depth with the tide, a narrow sound, and the cap on her speed where it is under two draughts
+  { let h = NaN; try { h = depthF(p) + tideCD(H); } catch (e){}   // (the tide as groundCheck reads it)
+    E.h = h; E.narrow = false; E.bY = E.bN = 0; E.bk = null;
+    if (h > 0) E.cap = Math.max(0.3, E.cap * dynShallowF(P, h, E.cap));
+    try { dynBank(E, d, P, true); } catch (e){ E.bY = E.bN = 0; } }
+  const c = E.cap; E.capF = Math.max(1, (E.kT * P.Tmax * (1 - 0.35 * c / P.umax) - P.k1 * c) / (P.k2 * c * c * (1 + P.cw * dynHumpG(c / P.sgL))));
   const U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; E.wE = U * Math.sin(a); E.wN = U * Math.cos(a);
   DYN.env = E; return E;
+}
+// ---- squat, the bank and the shallow water (Ø9 F5, docs/planer/fysikk-4-sjo-og-skrog.md; Barrass, Norrbin, Schlichting) ----
+// Squat after Barrass (2004): under way the water under and round her runs faster, its level drops, and she sinks with it, Cb V^2 / 100 m
+// (V in knots) in open water and twice that in a narrow channel (here a sound narrower than eight of her beams). The formula is for
+// displacement speeds: the knots are held at Fr 0.6, and a planing hull comes up out of it from Fr 0.5 to 1 (she rises on to the
+// plane). Cb is the hull's (dynPar, held to 0.35-0.75): 0.22 m for the sjark at 8 knots in open water, 0.45 m in a sound.
+// 3D: the trim at speed is the hull's own wave in hullStep (03c-stability.js), which is not touched here (another session has the file).
+function dynSquat(P, u, narrow){
+  const a = Math.abs(u || 0), Fr = a / P.sgL, vk = Math.min(a, 0.6 * P.sgL) / KN_MS;
+  return P.Cb * vk * vk / 100 * (narrow ? 2 : 1) * (P.planing ? 1 - sstep(0.5, 1, Fr) : 1);
+}
+// The speed she keeps in water shallower than two of her draughts, as a share of her speed in deep water (Schlichting, in Lackenby's
+// form, 1963: dV/V = 0.1242 (Ax / h^2 - 0.05) + 1 - sqrt(tanh(g h / V^2)); Ax the midship section, 0.9 B and the mean draught), full
+// from 1.5 draughts and faded in from two, so nothing changes where she has the water she needs
+function dynShallowF(P, h, v){
+  const w = clamp((2 * P.T - h) / (0.5 * P.T), 0, 1); if (!(w > 0) || !(v > 0.1)) return 1;
+  const Ax = 0.9 * P.B * (P.Tm || P.T), hh = Math.max(0.3, h), dv = 0.1242 * (Ax / (hh * hh) - 0.05) + 1 - Math.sqrt(Math.tanh(9.81 * hh / (v * v)));
+  return 1 - w * clamp(dv, 0, 0.6);
+}
+// the distance (m) from x, z (metres, east and south) to a wall: the fine coast, a quay's deck, a breakwater, a harbour unit's block or
+// fill (not the open piers on piles, which the water runs under); cap when none is within it
+function dynWall(O, x, z, cap){
+  let d = cap; const cm = coastDistM({x:x / 1000, y:z / 1000}, cap); if (cm >= 0) d = Math.min(d, cm);
+  if (O){ for (const q of O.boxes){ if (!(q.made || q.bw)) continue;
+      const ax = Math.sin(q.ang), az = Math.cos(q.ang), nx = Math.cos(q.ang), nz = -Math.sin(q.ang), dx = x - q.x, dz = z - q.z;
+      d = Math.min(d, Math.hypot(Math.max(0, Math.abs(dx * ax + dz * az) - q.l / 2), Math.max(0, Math.abs(dx * nx + dz * nz) - q.w / 2))); }
+    for (const U of O.units){ const [lx, lz] = unitL(U, x, z); d = Math.min(d, groundOut(U, lx, lz)); } }
+  return d;
+}
+// The bank effect and the narrow sound, worked out where she is (once a tick in dynEnv, and again in the sub-steps when she has moved
+// a quarter of her beam or turned 3 degrees): the wall's distance from her middle and the side it is on (from the distance a half-beam
+// to each side), and the width of the water across her (marched out to each side on the distance to the nearest wall, up to eight
+// beams). The force towards the wall and the moment that turns the bow off it, per (m/s)^2 of her way (dynInt), when the wall is within
+// three beams of her side: 0.5 rho L T (B / d)^2 cY, at 0.2 L abaft the middle, faded out over the last beam, and stronger the
+// shallower the water (a quarter of it at three draughts and deeper, all of it at one).
+const DYN_BANK = {cY:0.03, xb:0.2};
+function dynBankF(P, d0, gl, h){
+  const gap = d0 - P.B / 2; if (!(gap < 3 * P.B) || !gl) return {Y:0, N:0};
+  const dd = Math.max(d0, 0.6 * P.B), fh = 0.25 + 0.75 * clamp((3 - (h > 0 ? h : 99) / P.T) / 2, 0, 1);
+  const Y = DYN_BANK.cY * 0.5 * 1025 * P.L * P.T * (P.B / dd) ** 2 * clamp(gl, -1, 1) * fh * (1 - sstep(2 * P.B, 3 * P.B, gap));
+  return {Y, N:-DYN_BANK.xb * P.L * Y};
+}
+function dynBank(E, d, P, force){
+  if (!E || !Number.isFinite(d.X)) return;
+  const k = E.bk; if (!force && (!k || (Math.hypot(d.X - k.X, d.Y - k.Y) < 0.25 * P.B && Math.abs(dynAng(k.psi, d.psi)) < 0.05))) return;
+  try { dynBankAt(E, d, P, k, force); } catch (e){ E.bY = E.bN = 0; }   // (a tile not in yet: no bank, as in open water)
+}
+// (the width across her, for the squat, once a tick (force); the force and the moment on every sub-step she has moved)
+function dynBankAt(E, d, P, k, force){
+  const B = P.B, cap = 8 * B + 5, c = Math.cos(d.psi), sn = Math.sin(d.psi), sx = c, sz = sn;   // (starboard, east and south: her heading turned a quarter clockwise)
+  const O = k && Math.hypot(d.X - k.oX, d.Y - k.oY) < 50 ? k.O : dynObsNear(d.X, d.Y, cap + 60), d0 = dynWall(O, d.X, d.Y, cap);
+  E.bk = {X:d.X, Y:d.Y, psi:d.psi, O, oX:k && k.O === O ? k.oX : d.X, oY:k && k.O === O ? k.oY : d.Y};
+  if (d0 >= cap){ E.bY = E.bN = 0; if (force) E.narrow = false; return; }
+  const dS = dynWall(O, d.X + sx * B / 2, d.Y + sz * B / 2, cap), dP = dynWall(O, d.X - sx * B / 2, d.Y - sz * B / 2, cap), gl = (dP - dS) / B;
+  const F = dynBankF(P, d0, gl, E.h); E.bY = F.Y; E.bN = F.N;
+  // the width of the water across her
+  if (!force) return;
+  let w = 0; for (const sg of [1, -1]){ let t = 0; for (let i = 0; i < 24 && t < 8 * B; i++){ const r = dynWall(O, d.X + sg * sx * t, d.Y + sg * sz * t, cap); if (r < 0.5) break; t += Math.max(r, 0.5); } w += t; }
+  E.narrow = w < 8 * B;
+}
+// the water under her keel now (m): the depth with the tide, less her draught and her squat at the way she has (the chart plotter)
+function keelClear(b = S.boat, H = S.t / 60){
+  const h = depthF(b.pos) + tideCD(H), cal = dynCalOf(b), E = DYN.env, live = dynLive && dynLive();
+  return h - BOAT.draft - dynSquat(cal.P, live && b.dyn ? b.dyn.u : (b.v || 0) * KN_MS, !!(live && E && E.narrow));
 }
 // ---- contact: the hull against the piers, the breakwaters and the harbour units' quays (Fysikk 2) ----
 // Seven points round her waterline (the stem, the shoulders, the middle and the quarters, both sides) are tested against the boxes
@@ -400,7 +491,7 @@ function dynHelm(d, dtG){
   const b = S.boat, h = S.helm, cal = dynCalOf(b), P = cal.P, H = S.t / 60;
   if (Math.abs(h.v * KN_MS - d.u) > 0.6) d.u = h.v * KN_MS;   // set from outside (a test, «Fortøy» undone): the model takes it
   const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y, O = dynObsNear(d.X, d.Y, P.L + Math.abs(d.u) * dtG + 20);
-  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); dynContact(b, d, P, O); }
+  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynBank(E, d, P); dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); dynContact(b, d, P, O); }
   if (!h.thr && Math.abs(d.u) < 0.04){ d.u = 0; }
   // land: over 3 knots she runs aground on it, slower she comes to a stop against it (every 10 m, then the thin breakwaters, then
   // the depth under her)
@@ -409,7 +500,7 @@ function dynHelm(d, dtG){
     for (let i = 1; i <= n; i++){ const q = {x:a.x + (to.x - a.x) * i / n, y:a.y + (to.y - a.y) * i / n};
       if (isLand(q)){ if (Math.abs(d.u) > 3 * KN_MS){ dynWrite(b, d); runAground(last); helmOff(); } else { d.X = last.x * 1000; d.Y = last.y * 1000; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; } return; } last = q; }
     if (coastSegHit(a, to)){ if (Math.abs(d.u) > 3 * KN_MS){ dynWrite(b, d); runAground(a); helmOff(); } else { d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; } return; }
-    const gp = groundCheck(a, to);
+    const gp = groundCheck(a, to, dynSquat(P, d.u, E.narrow));   // (her squat at the way she has, F5)
     // the sea ice (H1b R5): she stops at the edge, she does not run aground on it; said once a minute at most
     if (gp && gp.ice){ d.X = X0; d.Y = Y0; d.u = 0; d.v = 0; dynWrite(b, d); h.v = 0; if (!(HELM.iceT > S.t - 1)){ HELM.iceT = S.t; const w = seaIceWords(gp); log(w.no, w.en, 'nav'); if (typeof toast === 'function') toast(S.lang === 'en' ? w.en : w.no); } return; }
     if (gp){ dynWrite(b, d); runAground(gp); helmOff(); return; } }
@@ -554,7 +645,7 @@ function dynAuto(d, dtG){
     // (the lever goes over gradually, a quarter of its travel a game second, as a hand moves it)
     // the throttle for the acceleration that brings her to the commanded speed in three game seconds, and along the easing curve
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
-    const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + P.k1 * d.u + P.k2 * capF * d.u * Math.abs(d.u);
+    const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + dynRes(P, d.u, capF);
     const thrT = vCmd < 0.05 && d.u < 0.3 ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
     const thrB = T.bow && T.bow.astern ? (d.u > -0.6 ? -0.35 : 0) : thrT;   // (backing out from the shore: slow astern, the wheel amidships)
     const thr = d.thr = d.thr == null ? thrB : d.thr + clamp(thrB - d.thr, -0.25 * h, 0.25 * h);
@@ -573,7 +664,7 @@ function dynAuto(d, dtG){
     const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP) - (sj ? sj.off : 0);
     const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
     const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
-    dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
+    dynBank(E, d, P); dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
     // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
     // quay's lines take, 3D moorStep)
     if (!(stopW && stopW.port && ds < 4 * L)){ if (!T.obs || T.obsAt !== Math.round(T.s / 50)){ T.obs = dynObsNear(d.X, d.Y, 80 + P.L); T.obsAt = Math.round(T.s / 50); } dynContact(b, d, P, T.obs); }
@@ -584,7 +675,7 @@ function dynAuto(d, dtG){
   // (on a leg the route called safe she is held back where she was and the net under Autonav finds a way round from there, as for
   // the shallows seen on the line ahead (sailReplan, 05-vessels.js); only the player's own unsafe leg puts her aground. Before, a
   // corner cut on her radius or a drift off the line at speed ran her aground on an Autonav route, tilbakemelding #96, 26.10.2026)
-  const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to) : null; } catch (e){}
+  const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to, dynSquat(P, d.u, E.narrow)) : null; } catch (e){}
   if (gp){ if (pl.unsafe && pl.unsafe[pl.idx] && !gp.ice){ dynWrite(b, d); runAground(gp); return; }
     const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
     if ((fast || gp.ice) && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
