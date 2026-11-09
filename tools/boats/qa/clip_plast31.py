@@ -30,8 +30,9 @@ for o in solids:
             if mn in OUTSIDE: continue
             if o.name == 'under' and abs(y) > B.y_at(x, z) - 0.02: continue                    # bolted to the bottom, a little into it
             if any(abs(x - xo) < 0.05 and abs(z - B.WL - ho) < 0.05 for xo, _, ho in (B.EXH_W, B.BILGE)): continue    # the outlets' own linings
-            if any(x0 - 0.04 < x < x0 + l + 0.04 for x0, l in B.FREE) and B.z_deck(x) < z < B.z_deck(x) + 0.22 and abs(y) > B.ybw(x): continue   # the freeing ports' flaps and hinge rods, outside
-            if abs(x - 4.30) < 0.04 and abs(z - B.zs(4.30) + 0.10) < 0.04: continue           # the tank's vent hood, screwed on the side
+            if any(x0 - 0.04 < x < x0 + l + 0.04 for x0, l in B.FREE) and B.z_deck(x) < z < B.z_deck(x) + 0.22 and abs(y) > B.ybw(x): continue   # the freeing ports (open since OB7: no flaps)
+            vx = B.FIL + 0.35                                                                   # the tank's vent hood, screwed on the side (OB7: moved aft)
+            if abs(x - vx) < 0.04 and abs(z - B.zs(vx) + 0.22) < 0.04: continue
             # through the hull's side or the bulwark between the keel's root and the sheer
             if zr + 0.02 < z < zs - 0.02 and B.y_at(x, z) - 0.004 < abs(y) < B.y_at(x, z) + 0.08 and mn not in ('inner',): report(o, 'through the side', mn, p)
             # inside the bulwark (between its inside and the outside)

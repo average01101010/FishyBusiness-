@@ -1,7 +1,14 @@
 """The 31 ft fibreglass sjark (plastsjark): a 9.45 m displacement coastal fishing boat of the kind that became the standard Norwegian
 sjark from the late 1970s on (the Viksund 31 Sjark, «den første moderne sjarkmodellen»; the make is only named here and in the docs,
-CLAUDE.md): the wheelhouse aft, a clear working deck amidships with the hold's hatch and the hauler's place at the starboard rail, a low
-cabin trunk forward with two berths, a full keel with the propeller in an aperture forward of the rudder, a slow diesel.
+CLAUDE.md): the wheelhouse forward against a low cabin trunk with two berths under the bow, a clear working deck aft with the hold's
+hatch, the hauler's place at the starboard rail just aft of the house and the boat's own gutting table across the port rail abreast of
+it, a full keel with the propeller in an aperture forward of the rudder, a slow diesel.
+
+OB7 (09.11.2026, steg 85, docs/skipsmodeller/plastsjark-grunnlag.md kap. 10): the wheelhouse moved forward, Jonas' choice after the
+public pictures of the type (valg 22 B: «Forut»); the listings of the model the type is drawn after say «glass skyvedør ut til bakdekk»
+and «stort lasterom akter». With the house aft, the nets and the line went out through it when set, and the pots stood in its front
+(om-bord.md 4.4, F20, F7). The roof has a sloping navy brim (Jonas, with a picture: «med en slags brem på kanten av taket som skrår»),
+and the freeing ports are open («Fjern gummiklaffer på spygatt»).
 
 Rebuilt 01.11.2026 after the pilot boat's way of working (docs/skipsmodeller/plastsjark-grunnlag.md, sulebas-bygging.md; Jonas: «Løft
 den til samme nivå og arbeidsmåte som pilotbåten ringnot38 og de reviderte båtene trebat, skiff og snekke»). The first script
@@ -289,7 +296,9 @@ class Mesh:
 
 
 # ---------- the plan of the decks: the wheelhouse aft, the working deck amidships, the cabin trunk forward (the first script) ----------
-WX0, WX1, WY = 0.95, 3.75, 1.28     # the wheelhouse: its aft and forward walls, its half width
+WX0, WX1, WY = 4.40, 6.40, 1.28     # the wheelhouse forward (OB7, 09.11.2026, Jonas: «Forut»): its aft and forward walls, its half width
+WM = (WX0 + WX1) / 2         # its middle (the sunk sole's level is taken there)
+OFF = WX1 - 3.75             # how far the helm moved forward with the house (its measures were drawn for the house aft)
 CX0, CX1 = 6.40, 8.55        # the cabin trunk: its aft face, and where its front has sloped down to the foredeck
 CAP = 0.085                  # the bulwark's cap, its width
 TT = 0.06                    # the transom's thickness: the deck and the transom's inside start this far forward of its outside
@@ -300,9 +309,9 @@ def cabin_w(x):
     """the trunk's half width at its foot: full aft, narrowing with the hull forward and rounding in to nothing at CX1"""
     return min(1.05, ybw(x) - 0.38) * (1.0 if x < 8.1 else max(0.0, 1 - ((x - 8.1) / (CX1 - 8.1)) ** 2) ** 0.5)
 def z_trunk(x):
-    """the trunk's top at its side: 0.78 over the deck, sloping down over the last 0.9 m to the foredeck"""
-    zt = z_deck(x) + 0.78
-    return zt if x < CX1 - 0.9 else zt - 0.78 * min(1.0, (x - (CX1 - 0.9)) / 0.9) ** 1.6
+    """the trunk's top at its side: 0.70 over the deck (under the wheelhouse's front windows), sloping down over the last 0.9 m to the foredeck"""
+    zt = z_deck(x) + 0.70
+    return zt if x < CX1 - 0.9 else zt - 0.70 * min(1.0, (x - (CX1 - 0.9)) / 0.9) ** 1.6
 def trunk_y(x, z):
     """the trunk's side at x and height z (it leans in 5 cm over its height)"""
     zd = z_deck(x); h = max(1e-3, z_trunk(x) - zd); return max(0.0, cabin_w(x) - 0.05 * max(0.0, min(1.0, (z - zd) / h)))
@@ -380,18 +389,16 @@ def hull_shell(M, fine=True):
     port = [(S[x][-1][0], S[x][-1][1], S[x][-1][2]) for x in tops]
     M.f(list(reversed(port)) + [(p_[0], -p_[1], p_[2]) for p_ in port] + [r0[n - 1], r0[n - 2], r0[1], r0[0]], C['cap'], (0, 0, 1))
     M.f([r0[2]] + r0[3:n - 3] + [r0[n - 3]] if False else [r0[1], r0[2], r0[3], r0[n - 4], r0[n - 3], r0[n - 2]], C['inner'], (1, 0, 0))
-    # the trunk's aft face, from the deck up to its cambered top
-    c = Tr[0]
-    M.f(c[3:nt - 4], C['white'], (-1, 0, 0))
+    # (the trunk's aft face is the wheelhouse's front wall, OB7: the house stands against the trunk, so no face of its own here)
     return S
 
 
 # ---------- the openings: real holes, cut with a boolean and lined (ringnot38.py, snekke26.py) ----------
 PORTS = [7.00, 7.70]                                           # the portholes on each side of the trunk
 def port_z(x): return z_deck(x) + 0.42
-COMP = (-0.30, 0.32, 0.06, 0.72)                              # the companionway in the trunk's aft face: y from, to; z over the deck from, to
 HATCH_F = (7.02, 7.52, -0.25, 0.25)                           # the forward hatch on the trunk's top
-HOLD = (4.62, 5.72, -0.62, 0.62)                              # the hold's hatch in the working deck
+HOLD = (2.35, 3.30, -0.55, 0.55)                              # the hold's hatch in the working deck aft («stort lasterom akter»)
+HC = (HOLD[0] + HOLD[1]) / 2
 FREE = [(4.25, 0.40), (5.45, 0.40), (1.55, 0.36)]             # the freeing ports in the bulwarks at the deck (x from, length)
 EXH_R = 0.035; BILGE_R = 0.016
 
@@ -406,11 +413,9 @@ def cutters():
             z = port_z(x); out.append(((x, sg * trunk_y(x, z), z), (1, 0, 0), (0, 0, 1), circle(0.105, 20), 0.10))
         for x0, l in FREE:                                     # through the bulwark: outside and inside
             zd = z_deck(x0 + l / 2); out.append(((x0 + l / 2, sg * (ybw(x0 + l / 2) + 0.03), zd + 0.10), (1, 0, 0), (0, 0, 1), rr_pts(0, 0, l, 0.15, 0.03), 0.16))
-    y0, y1, z0, z1 = COMP; zd = z_deck(CX0)
-    out.append(((CX0, (y0 + y1) / 2, zd + (z0 + z1) / 2), (0, 1, 0), (0, 0, 1), rr_pts(0, 0, y1 - y0, z1 - z0, 0.05), 0.06))
     x0, x1, y0, y1 = HATCH_F; out.append((((x0 + x1) / 2, 0, ttop((x0 + x1) / 2, 0)), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.05), 0.12))
-    x0, x1, y0, y1 = HOLD; out.append((((x0 + x1) / 2, 0, z_deck(5.17) + 0.02), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.04), 0.10))
-    out.append(((0, 0, z_deck(2.3)), (1, 0, 0), (0, 1, 0), wh_inner(), 0.12))                 # the deck inside the wheelhouse (its sole is sunk)
+    x0, x1, y0, y1 = HOLD; out.append((((x0 + x1) / 2, 0, z_deck(HC) + 0.02), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.04), 0.10))
+    out.append(((0, 0, z_deck(WM)), (1, 0, 0), (0, 1, 0), wh_inner(), 0.14))                 # the deck inside the wheelhouse (its sole is sunk)
     for x, sg, h, r in ((EXH_W[0], EXH_W[1], EXH_W[2], EXH_R), (BILGE[0], BILGE[1], BILGE[2], BILGE_R)):
         out.append(((x, sg * y_at(x, WL + h), WL + h), (1, 0, 0), (0, 0, 1), circle(r, 16), 0.05))
     return out
@@ -463,26 +468,12 @@ def linings(A, G, fine=True):
             if fine:
                 for k in range(3):                                                             # the dogs
                     a = 2 * math.pi * k / 3 + 0.5; acyl(A, (x + 0.15 * math.cos(a), sg * (trunk_y(x, z) - 0.002), z + 0.15 * math.sin(a)), (x + 0.15 * math.cos(a), sg * (trunk_y(x, z) + 0.022), z + 0.15 * math.sin(a)), 0.012, s, seg=8)
-    # the freeing ports: the hole through the bulwark lined, a rubber flap hung outside on its hinge rod
+    # the freeing ports: the hole through the bulwark lined and open (Jonas 09.11.2026: «Fjern gummiklaffer på spygatt»)
     for sg in (1, -1):
         for x0, l in FREE:
             xc = x0 + l / 2; zd = z_deck(xc); o = rr_pts(xc, zd + 0.10, l, 0.15, 0.03, 3)
             ring = [V((p, sg * (y_at(p, q) + 0.001), q)) for p, q in o]
             tube(A, ring, (0, -sg, 0), max(0.03, y_at(xc, zd + 0.1) - ybw(xc) + 0.002), C['inner'])
-            if fine:
-                yo = sg * (y_at(xc, zd + 0.19) + 0.012)
-                acyl(A, (x0 - 0.02, yo, zd + 0.19), (x0 + l + 0.02, yo, zd + 0.19), 0.008, s, seg=6)
-                obox(A, (xc, yo + sg * 0.004 - sg * 0.004, zd + 0.10), (l / 2 + 0.01, 0, 0), (0, 0.004, 0), (0, 0, 0.085), C['rubber'])
-    # the companionway: its reveal, the teak door a little in with its louvres and handle, a sill
-    y0, y1, z0, z1 = COMP; zd = z_deck(CX0); o = rr_pts((y0 + y1) / 2, zd + (z0 + z1) / 2, y1 - y0, z1 - z0, 0.05, 5)
-    tube(A, [(CX0, y, z) for y, z in o], (1, 0, 0), 0.05, C['white'])
-    A.poly([(CX0 + 0.05, y, z) for y, z in o], C['wood'], (-1, 0, 0))
-    if fine:
-        for k in range(5):
-            z = zd + z0 + 0.10 + 0.04 * k; abox(A, CX0 + 0.044, CX0 + 0.049, y0 + 0.12, y1 - 0.12, z, z + 0.014, C['dark'])
-        acyl(A, (CX0 + 0.05, y0 + 0.07, zd + (z0 + z1) / 2), (CX0 + 0.02, y0 + 0.07, zd + (z0 + z1) / 2), 0.012, s, seg=8)
-        for z in (zd + z0 + 0.12, zd + z1 - 0.12): acyl(A, (CX0 + 0.046, y1 - 0.02, z - 0.04), (CX0 + 0.046, y1 - 0.02, z + 0.04), 0.008, s, seg=8)
-        abox(A, CX0 - 0.035, CX0 + 0.005, y0 - 0.01, y1 + 0.01, zd + z0 - 0.02, zd + z0, C['wood'])
     # the forward hatch: its reveal down into the cabin, an aluminium frame proud of the trunk's top, the smoked acrylic lid on it
     x0, x1, y0, y1 = HATCH_F; o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.05, 4)
     ring = [(x, y, ttop(x, y)) for x, y in o]
@@ -498,7 +489,7 @@ def linings(A, G, fine=True):
     if fine:
         for yy in (-0.11, 0.11): acyl(A, (x1 + 0.03, yy - 0.03, zf + 0.012), (x1 + 0.03, yy + 0.03, zf + 0.012), 0.009, s, seg=8)
     # the hold: a coaming round the hole up from the deck, dark down into the hold, the lid on the coaming with its lip and dogs
-    x0, x1, y0, y1 = HOLD; zd0 = z_deck(5.17); o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.04, 3)
+    x0, x1, y0, y1 = HOLD; zd0 = z_deck(HC); o = rr_pts((x0 + x1) / 2, 0, x1 - x0, y1 - y0, 0.04, 3)
     ring = [(x, y, z_deck(x) + camber(x, y) - 0.03) for x, y in o]
     tube(A, ring, (0, 0, -1), 0.45, C['inner'], C['cabin'])
     F.loft(A, [[(x, y, z_deck(x) + camber(x, y) - 0.03) for x, y in o], [(x, y, zd0 + 0.18) for x, y in o]], lambda i: C['white'], cap0=False, cap1=False,
@@ -527,42 +518,49 @@ def linings(A, G, fine=True):
 # ---------- the wheelhouse aft: the walls on the deck with real window openings, the door forward to port, the roof ----------
 SINK = 0.30                  # the wheelhouse's sole lies this far under the deck (a step down inside the door), so the house stands low
 DOOR_H = 1.55                # the door's opening over the deck (1.85 from the sole inside)
-def z_wh(): return z_deck(2.3) - SINK                         # the wheelhouse's sole
+def z_wh(): return z_deck(WM) - SINK                          # the wheelhouse's sole
 def wh_z():
-    z0 = z_wh(); return z0, z0 + 0.95, z0 + 1.72, z0 + 1.96     # the sole, the sill, the window head, the roof's underside
+    z0 = z_wh(); return z0, z0 + 1.20, z0 + 1.80, z0 + 2.00     # the sole, the sill (over the trunk's top before it), the window head, the roof's underside
 LEAN = 0.14                  # the front leans forward from the sill up
-DY0, DY1 = 0.30, 1.03        # the front's door section (port); the leaf at 0.34–0.98
-SIDE_WIN = [(WX1 - 1.30, WX1 - 0.40), (WX1 - 2.30, WX1 - 1.42)]
-WH_PLAN = [(WX0, -WY), (WX1 - 0.25, -WY), (WX1, -1.03), (WX1, -0.37), (WX1, DY0), (WX1, DY1), (WX1 - 0.25, WY), (WX0, WY)]
+BRIM_O, BRIM_H = 0.17, 0.20  # the roof's brim: how far its lower edge stands out from the walls, and how high its sloping face rises over their top
+DY0, DY1 = -0.32, 0.32       # the sliding glass door in the aft wall (the listings: «glass skyvedør ut til bakdekk»)
+SIDE_WIN = [(WX1 - 0.85, WX1 - 0.40), (WX1 - 1.62, WX1 - 0.95)]
+WH_PLAN = [(WX0, -WY), (WX1 - 0.25, -WY), (WX1, -1.06), (WX1, -0.36), (WX1, 0.36), (WX1, 1.06), (WX1 - 0.25, WY), (WX0, WY)]
 def wh_inner(): return [(x + (0.06 if x == WX0 else -0.06), y * 0.955) for x, y in WH_PLAN]   # the lining inside the walls
 def wheelhouse(A, G, fine=True):
-    """the wheelhouse: cream walls with a black band round the whole row of windows (planliste OVB-03, the small boats' way), the panes in
-    real openings with a rubber frame and a reveal, the front leaning forward, the door forward to port, a thin roof with its drip edge and a
-    visor over the front"""
-    w = C['white']; z0, zs_, zh_, zr_ = wh_z(); zd_ = z_deck(2.3); zf = zd_ - 0.02
+    """the wheelhouse forward against the cabin trunk (OB7): cream walls with a black band round the whole row of windows (planliste
+    OVB-03, the small boats' way), the panes in real openings with a rubber frame and a reveal, the front of three panes leaning forward
+    over the trunk's top, the sliding glass door in the aft wall out to the working deck with a window either side of it, a thin roof
+    with its drip edge and a visor over the front"""
+    w = C['white']; z0, zs_, zh_, zr_ = wh_z(); zd_ = z_deck(WX0); zf = zd_ - 0.02
     def fx(z): return WX1 + LEAN * max(0.0, z - zs_) / (zr_ - zs_)
     oc = WH_PLAN
-    KIND = ['side', 'glass', 'glass', 'glass', 'door', 'door', 'side', 'aft']
+    KIND = ['side', 'glass', 'glass', 'glass', 'glass', 'glass', 'side', 'aft']
     def pt(p, z, k='glass'): return (p[0] + (LEAN * max(0.0, z - zs_) / (zr_ - zs_) if k == 'glass' and p[0] > WX1 - 0.26 else 0.0), p[1], z)
+    zt = zd_ + DOOR_H                                                # the door's head
+    AW = [(-WY, -1.10, None), (-1.10, -0.55, 'win'), (-0.55, DY0, None), (DY0, DY1, 'door'), (DY1, 0.55, None), (0.55, 1.10, 'win'), (1.10, WY, None)]
     for i in range(len(oc)):
         a, b = oc[i], oc[(i + 1) % len(oc)]; k = KIND[i]; nrm = (b[1] - a[1], -(b[0] - a[0]), 0)
-        if k == 'door':
-            if i == 4:                                                   # the door section: solid round the door's opening, the frame and leaf below
-                A.poly([(WX1, DY0, zf), (WX1, 0.34, zf), (WX1, 0.34, zr_), (WX1, DY0, zr_)], w, nrm)
-                A.poly([(WX1, 0.34, zd_ + DOOR_H), (WX1, 0.98, zd_ + DOOR_H), (WX1, 0.98, zr_), (WX1, 0.34, zr_)], w, nrm)
-                A.poly([(WX1, 0.98, zf), (WX1, DY1, zf), (WX1, DY1, zr_), (WX1, 0.98, zr_)], w, nrm)
-            continue
         if k == 'aft':
-            A.poly([(WX0, -WY, zf), (WX0, WY, zf), (WX0, WY, zs_), (WX0, -WY, zs_)], w, nrm); A.poly([(WX0, -WY, zh_), (WX0, WY, zh_), (WX0, WY, zr_), (WX0, -WY, zr_)], w, nrm)
-            A.poly([(WX0, -WY, zs_), (WX0, -0.5, zs_), (WX0, -0.5, zh_), (WX0, -WY, zh_)], C['frame'], nrm); A.poly([(WX0, 0.5, zs_), (WX0, WY, zs_), (WX0, WY, zh_), (WX0, 0.5, zh_)], C['frame'], nrm)
-            G.poly([(WX0 + 0.02, -0.5, zs_), (WX0 + 0.02, 0.5, zs_), (WX0 + 0.02, 0.5, zh_), (WX0 + 0.02, -0.5, zh_)], C['glass'], (-1, 0, 0))
-            for yy in (-0.5, 0.5): abox(A, WX0 - 0.012, WX0 + 0.04, yy - 0.025, yy + 0.025, zs_, zh_, C['frame'])
-            for zz in (zs_, zh_): abox(A, WX0 - 0.012, WX0 + 0.04, -0.525, 0.525, zz - 0.02, zz + 0.02, C['frame'])
+            # the aft wall, in bays across: solid, a window, solid, the door, solid, a window, solid
+            for ya, yb, kk in AW:
+                if kk is None: A.poly([(WX0, ya, zf), (WX0, yb, zf), (WX0, yb, zr_), (WX0, ya, zr_)], w, nrm); continue
+                if kk == 'door': A.poly([(WX0, ya, zt), (WX0, yb, zt), (WX0, yb, zr_), (WX0, ya, zr_)], w, nrm); continue
+                A.poly([(WX0, ya, zf), (WX0, yb, zf), (WX0, yb, zs_), (WX0, ya, zs_)], w, nrm); A.poly([(WX0, ya, zh_), (WX0, yb, zh_), (WX0, yb, zr_), (WX0, ya, zr_)], w, nrm)
+                A.poly([(WX0, ya, zs_), (WX0, yb, zs_), (WX0 + 0.05, yb, zs_), (WX0 + 0.05, ya, zs_)], C['inner'], (0, 0, 1))
+                A.poly([(WX0, ya, zh_), (WX0, yb, zh_), (WX0 + 0.05, yb, zh_), (WX0 + 0.05, ya, zh_)], C['inner'], (0, 0, -1))
+                for ye, ny in ((ya, 1), (yb, -1)): A.poly([(WX0, ye, zs_), (WX0 + 0.05, ye, zs_), (WX0 + 0.05, ye, zh_), (WX0, ye, zh_)], C['inner'], (0, ny, 0))
+                G.poly([(WX0 + 0.02, ya, zs_), (WX0 + 0.02, yb, zs_), (WX0 + 0.02, yb, zh_), (WX0 + 0.02, ya, zh_)], C['glass'], (-1, 0, 0))
+                if fine:
+                    for ye in (ya, yb): abox(A, WX0 - 0.012, WX0 + 0.004, ye - 0.025, ye + 0.025, zs_ - 0.025, zh_ + 0.025, C['frame'])
+                    for zz in (zs_, zh_): abox(A, WX0 - 0.012, WX0 + 0.004, ya - 0.025, yb + 0.025, zz - 0.025, zz + 0.025, C['frame'])
+            for ya, yb in ((-WY, -1.10), (-0.55, DY0), (DY1, 0.55), (1.10, WY)):                   # the black window band carried round aft
+                A.poly([(WX0 - 0.001, ya, zs_), (WX0 - 0.001, yb, zs_), (WX0 - 0.001, yb, zh_), (WX0 - 0.001, ya, zh_)], C['frame'], nrm)
             continue
         A.poly([pt(a, zf, k), pt(b, zf, k), pt(b, zs_, k), pt(a, zs_, k)], w, nrm); A.poly([pt(a, zh_, k), pt(b, zh_, k), pt(b, zr_, k), pt(a, zr_, k)], w, nrm)
         if k == 'side':
             sg = 1 if i == 6 else -1; y = sg * WY
-            for xa, xb in ((WX0, WX1 - 2.3), (WX1 - 1.42, WX1 - 1.3), (WX1 - 0.4, WX1 - 0.25)): A.poly([(xa, y, zs_), (xb, y, zs_), (xb, y, zh_), (xa, y, zh_)], C['frame'], (0, sg, 0))   # the black window band
+            for xa, xb in ((WX0, WX1 - 1.62), (WX1 - 0.95, WX1 - 0.85), (WX1 - 0.4, WX1 - 0.25)): A.poly([(xa, y, zs_), (xb, y, zs_), (xb, y, zh_), (xa, y, zh_)], C['frame'], (0, sg, 0))   # the black window band
             for xb_, xa_ in SIDE_WIN:
                 G.poly([(xb_, y - sg * 0.02, zs_), (xa_, y - sg * 0.02, zs_), (xa_, y - sg * 0.02, zh_), (xb_, y - sg * 0.02, zh_)], C['glass'], (0, sg, 0))
                 # the black rubber frame round the pane, proud of the wall; the reveal to the glass
@@ -576,51 +574,62 @@ def wheelhouse(A, G, fine=True):
         G.poly([pt(a, zs_ + 0.03), pt(b, zs_ + 0.03), pt(b, zh_ - 0.03), pt(a, zh_ - 0.03)], C['glass'], nrm)
         beam(A, pt(a, zs_), pt(a, zh_), 0.06, 0.06, C['frame']); beam(A, pt(b, zs_), pt(b, zh_), 0.06, 0.06, C['frame'])
         beam(A, pt(a, zs_ + 0.03), pt(b, zs_ + 0.03), 0.06, 0.05, C['frame']); beam(A, pt(a, zh_ - 0.03), pt(b, zh_ - 0.03), 0.06, 0.05, C['frame'])
-    abox(A, WX1 - 0.02, WX1 + LEAN + 0.02, DY0 - 0.03, DY0 + 0.03, zs_, zr_, w)          # the post between the leaning panes and the door section
     io = wh_inner()
-    lining(A, oc, io, z0 + 0.005, zs_, zh_, zr_ - 0.005, lambda p, z, i: pt(p, z, KIND[i]), C['inner'], lambda i: KIND[i] not in ('door',))
+    lining(A, oc, io, z0 + 0.005, zs_, zh_, zr_ - 0.005, lambda p, z, i: pt(p, z, KIND[i]), C['inner'], lambda i: KIND[i] != 'aft')
+    # the aft wall's lining: inside the solid bays, round the windows and the door (its own, as the lining's band would close them)
+    xi = WX0 + 0.06
+    for ya, yb, kk in AW:
+        ya_, yb_ = max(ya, -WY * 0.955), min(yb, WY * 0.955)
+        if kk is None: A.poly([(xi, yb_, z0 + 0.005), (xi, ya_, z0 + 0.005), (xi, ya_, zr_ - 0.005), (xi, yb_, zr_ - 0.005)], C['inner'], (1, 0, 0))
+        elif kk == 'door': A.poly([(xi, yb_, zt), (xi, ya_, zt), (xi, ya_, zr_ - 0.005), (xi, yb_, zr_ - 0.005)], C['inner'], (1, 0, 0))
+        else:
+            A.poly([(xi, yb_, z0 + 0.005), (xi, ya_, z0 + 0.005), (xi, ya_, zs_), (xi, yb_, zs_)], C['inner'], (1, 0, 0))
+            A.poly([(xi, yb_, zh_), (xi, ya_, zh_), (xi, ya_, zr_ - 0.005), (xi, yb_, zr_ - 0.005)], C['inner'], (1, 0, 0))
     A.poly([(x, y, z0 + 0.005) for x, y in io], C['nonslip'], (0, 0, 1))                     # the sole, sunk under the deck (the deck is cut away here)
-    # the lining's band from the deck's cut down to the sole is the lining itself; the door's step down inside, a teak tread on a box
-    abox(A, WX1 - 0.40, WX1 - 0.065, 0.36, 0.96, z0 + 0.005, z0 + SINK / 2, C['inner'], skip=('-z',)); abox(A, WX1 - 0.42, WX1 - 0.065, 0.35, 0.97, z0 + SINK / 2, z0 + SINK / 2 + 0.03, C['wood'])
-    # the door: its frame in the opening, the steel sill, the leaf open a hand's breadth inward? (shut, a little in), its window and handle
-    zt = zd_ + DOOR_H
-    for y_ in (0.34, 0.98): abox(A, WX1 - 0.06, WX1 + 0.025, y_ - 0.025 if y_ < 0.5 else y_, y_ if y_ < 0.5 else y_ + 0.025, zd_, zt, C['white'])
-    abox(A, WX1 - 0.06, WX1 + 0.025, 0.315, 1.005, zt, zt + 0.04, C['white']); abox(A, WX1 - 0.06, WX1 + 0.03, 0.34, 0.98, zd_, zd_ + 0.10, C['steel'])
-    abox(A, WX1 - 0.045, WX1 - 0.01, 0.345, 0.975, zd_ + 0.10, zt - 0.005, C['white'])
-    G.poly([(WX1 - 0.008, 0.45, zd_ + 0.72), (WX1 - 0.008, 0.87, zd_ + 0.72), (WX1 - 0.008, 0.87, zd_ + 1.32), (WX1 - 0.008, 0.45, zd_ + 1.32)], C['glass'], (1, 0, 0))
-    for zz in (zd_ + 0.70, zd_ + 1.34): abox(A, WX1 - 0.012, WX1 + 0.004, 0.43, 0.89, zz - 0.02, zz + 0.02, C['frame'])
-    for yy in (0.45, 0.87): abox(A, WX1 - 0.012, WX1 + 0.004, yy - 0.02, yy + 0.02, zd_ + 0.70, zd_ + 1.34, C['frame'])
-    abox(A, WX1 - 0.045, WX1 - 0.012, 0.45, 0.87, zd_ + 0.74, zd_ + 1.30, C['cabin'])    # (the leaf's back, so the glass shows the dark inside)
-    if fine:
-        acyl(A, (WX1 - 0.01, 0.90, zd_ + 0.70), (WX1 + 0.04, 0.90, zd_ + 0.70), 0.012, lambda q: C['steel'], seg=8)
-        abox(A, WX1 + 0.03, WX1 + 0.045, 0.83, 0.92, zd_ + 0.69, zd_ + 0.71, C['steel'])
-        for zz in (zd_ + 0.30, zd_ + 1.25): acyl(A, (WX1 + 0.01, 0.355, zz - 0.05), (WX1 + 0.01, 0.355, zz + 0.05), 0.012, lambda q: C['steel'], seg=8)
-    # the roof: its underside, a thin lip with a drip edge all round, the visor over the front, the crown cambered 6 cm
-    ro = [(WX0 - 0.10, -WY - 0.08), (WX1 - 0.2, -WY - 0.08), (WX1 + LEAN + 0.04, -1.08), (WX1 + LEAN + 0.04, 1.08), (WX1 - 0.2, WY + 0.08), (WX0 - 0.10, WY + 0.08)]
-    # (the visor stands only 4 cm past the front: the game's deck map takes a roof within 0.6 m and 1.6 m of a part it can step onto,
-    # the hold's lid, for deck; vessel3d.js deckMap)
-    A.poly([(x, y, zr_) for x, y in ro], C['inner'], (0, 0, -1))
-    crown = lambda x, y: zr_ + 0.07 + 0.05 * (1 - min(1.0, (y / (WY + 0.08)) ** 2))
-    ri = [(x + (0.16 if x < WX0 else -0.16 if x > WX1 else 0.0), y * 0.88) for x, y in ro]
+    # the step down inside the door, a teak tread on a box; the door's reveal from the deck down to the sole
+    abox(A, WX0 + 0.065, WX0 + 0.40, DY0 + 0.02, DY1 - 0.02, z0 + 0.005, z0 + SINK / 2, C['inner'], skip=('-z',)); abox(A, WX0 + 0.065, WX0 + 0.42, DY0 + 0.01, DY1 - 0.01, z0 + SINK / 2, z0 + SINK / 2 + 0.03, C['wood'])
+    for ye, ny in ((DY0, 1), (DY1, -1)): A.poly([(WX0, ye, z0 + 0.005), (xi, ye, z0 + 0.005), (xi, ye, zt), (WX0, ye, zt)], C['inner'], (0, ny, 0))
+    A.poly([(WX0, DY0, zt), (WX0, DY1, zt), (xi, DY1, zt), (xi, DY0, zt)], C['inner'], (0, 0, -1))
+    # the sliding door: its frame round the opening, the steel sill, the glazed leaf shut in its track a little in from the wall
+    for y_ in (DY0, DY1): abox(A, WX0 - 0.025, WX0 + 0.06, y_ - 0.025 if y_ < 0 else y_, y_ if y_ < 0 else y_ + 0.025, zd_, zt, C['white'])
+    abox(A, WX0 - 0.025, WX0 + 0.06, DY0 - 0.025, DY1 + 0.025, zt, zt + 0.04, C['white']); abox(A, WX0 - 0.03, WX0 + 0.06, DY0, DY1, zd_, zd_ + 0.10, C['steel'])
+    xl = WX0 + 0.025
+    for zz in (zd_ + 0.10, zt - 0.03): abox(A, xl - 0.012, xl + 0.012, DY0, DY1, zz, zz + 0.03, C['alu'])
+    for yy in (DY0, DY1 - 0.03): abox(A, xl - 0.012, xl + 0.012, yy, yy + 0.03, zd_ + 0.10, zt - 0.03, C['alu'])
+    G.poly([(xl, DY0 + 0.03, zd_ + 0.13), (xl, DY1 - 0.03, zd_ + 0.13), (xl, DY1 - 0.03, zt - 0.03), (xl, DY0 + 0.03, zt - 0.03)], C['glass'], (-1, 0, 0))
+    if fine: abox(A, xl - 0.03, xl - 0.012, DY1 - 0.09, DY1 - 0.06, zd_ + 0.85, zd_ + 1.05, C['steel'])          # the handle
+    # the roof (Jonas 09.11.2026, with a picture of a fishing vessel's wheelhouse: «Gjør styrhustak mer realistisk som dette, med en slags
+    # brem på kanten av taket som skrår», and then «Bremen på styrhuset skrår feil vei i forhold til bildet»): a navy brim all round whose
+    # lower edge stands BRIM_O out from the walls, a flat soffit under it back to the walls, its face sloping in from that edge up to the
+    # roof's edge BRIM_H higher over the walls, and the crown inside cambered 5 cm. Colour: Jonas «så lenge den harmonerer», navy as the
+    # stripe under the sheer
+    o_ = BRIM_O; zb_ = zr_ - 0.03; zt_ = zr_ + BRIM_H
+    rb = [(WX0 - 0.004, -WY - 0.004), (WX1 - 0.25, -WY - 0.004), (WX1 + LEAN + 0.004, -1.06), (WX1 + LEAN + 0.004, 1.06), (WX1 - 0.25, WY + 0.004), (WX0 - 0.004, WY + 0.004)]
+    def out(d): return [(WX0 - d, -WY - d), (WX1 - 0.25 + d * 0.41, -WY - d), (WX1 + LEAN + d, -1.06 - d * 0.41), (WX1 + LEAN + d, 1.06 + d * 0.41), (WX1 - 0.25 + d * 0.41, WY + d), (WX0 - d, WY + d)]
+    ro = out(o_); rt = out(0.02)                                                             # the lower edge, the roof's edge
+    ri = [(WX0 + 0.02, -WY + 0.02), (WX1 - 0.27, -WY + 0.02), (WX1 + LEAN - 0.02, -1.04), (WX1 + LEAN - 0.02, 1.04), (WX1 - 0.27, WY - 0.02), (WX0 + 0.02, WY - 0.02)]
+    crown = lambda x, y: zt_ + 0.05 * (1 - min(1.0, (y / (WY + 0.02)) ** 2))
+    A.poly([(x, y, zr_ - 0.003) for x, y in ri], C['inner'], (0, 0, -1))                    # the ceiling inside
     for i in range(len(ro)):
-        a, b = ro[i], ro[(i + 1) % len(ro)]; c, d = ri[(i + 1) % len(ri)], ri[i]; nrm = (b[1] - a[1], -(b[0] - a[0]), 0)
-        A.poly([(a[0], a[1], zr_), (b[0], b[1], zr_), (b[0], b[1], zr_ + 0.07), (a[0], a[1], zr_ + 0.07)], C['stripe'], nrm)   # the roof's lip navy, as the stripe
-        A.poly([(a[0], a[1], zr_ + 0.07), (b[0], b[1], zr_ + 0.07), (c[0], c[1], crown(*c)), (d[0], d[1], crown(*d))], C['roof'], (0, 0, 1))
+        a, b = rb[i], rb[(i + 1) % len(rb)]; c, d = ro[(i + 1) % len(ro)], ro[i]; n2 = (b[1] - a[1], -(b[0] - a[0]))
+        A.poly([(d[0], d[1], zb_), (c[0], c[1], zb_), (b[0], b[1], zb_), (a[0], a[1], zb_)], C['stripe'], (0, 0, -1))               # the soffit
+        A.poly([(d[0], d[1], zb_), (c[0], c[1], zb_), (c[0], c[1], zb_ + 0.03), (d[0], d[1], zb_ + 0.03)], C['stripe'], (n2[0], n2[1], 0))   # the lower edge
+        e, f = rt[(i + 1) % len(rt)], rt[i]
+        A.poly([(d[0], d[1], zb_ + 0.03), (c[0], c[1], zb_ + 0.03), (e[0], e[1], zt_), (f[0], f[1], zt_)], C['stripe'], (n2[0], n2[1], 1.2))  # the face, sloping in
+        g, h = ri[(i + 1) % len(ri)], ri[i]
+        A.poly([(f[0], f[1], zt_), (e[0], e[1], zt_), (g[0], g[1], crown(*g)), (h[0], h[1], crown(*h))], C['roof'], (0, 0, 1))
     A.poly([(x, y, crown(x, y)) for x, y in ri], C['roof'], (0, 0, 1))
-    for i in range(len(ro)):                                                                 # the drip edge under the lip
-        a, b = ro[i], ro[(i + 1) % len(ro)]; e = 0.02 / max(1e-6, math.hypot(b[0] - a[0], b[1] - a[1]))
-        A.poly([(a[0], a[1], zr_ - 0.001), (b[0], b[1], zr_ - 0.001), (b[0], b[1], zr_ - 0.025), (a[0], a[1], zr_ - 0.025)], C['frame'], (b[1] - a[1], -(b[0] - a[0]), 0))
     if fine:
         # the roof rail aft round the mast on stanchions on bases; a grab rail along the roof's edge each side
-        for x, y in ((WX0 - 0.02, -WY + 0.02), (WX0 - 0.02, WY - 0.02), (WX0 + 1.1, -WY + 0.02), (WX0 + 1.1, WY - 0.02)):
+        for x, y in ((WX0 + 0.06, -WY + 0.08), (WX0 + 0.06, WY - 0.08), (WX0 + 1.1, -WY + 0.08), (WX0 + 1.1, WY - 0.08)):
             zc = crown(x, y); acyl(A, (x, y, zc - 0.004), (x, y, zc + 0.012), 0.025, lambda q: C['steel'], seg=10); acyl(A, (x, y, zc), (x, y, zc + 0.45), 0.014, lambda q: C['steel'], seg=8)
-        for y in (-WY + 0.02, WY - 0.02): acyl(A, (WX0 - 0.02, y, crown(WX0, y) + 0.45), (WX0 + 1.1, y, crown(WX0 + 1.1, y) + 0.45), 0.016, lambda q: C['steel'], seg=8, cap=False)
-        acyl(A, (WX0 - 0.02, -WY + 0.02, crown(WX0, WY) + 0.45), (WX0 - 0.02, WY - 0.02, crown(WX0, WY) + 0.45), 0.016, lambda q: C['steel'], seg=8, cap=False)
+        for y in (-WY + 0.08, WY - 0.08): acyl(A, (WX0 + 0.06, y, crown(WX0, y) + 0.45), (WX0 + 1.1, y, crown(WX0 + 1.1, y) + 0.45), 0.016, lambda q: C['steel'], seg=8, cap=False)
+        acyl(A, (WX0 + 0.06, -WY + 0.08, crown(WX0, WY) + 0.45), (WX0 + 0.06, WY - 0.08, crown(WX0, WY) + 0.45), 0.016, lambda q: C['steel'], seg=8, cap=False)
         for sg in (1, -1):
             for x in (WX0 + 1.5, WX1 - 0.5): acyl(A, (x, sg * (WY - 0.06), crown(x, WY - 0.06) - 0.004), (x, sg * (WY - 0.06), crown(x, WY - 0.06) + 0.07), 0.01, lambda q: C['steel'], seg=6)
             acyl(A, (WX0 + 1.5, sg * (WY - 0.06), crown(WX0 + 1.5, WY) + 0.07), (WX1 - 0.5, sg * (WY - 0.06), crown(WX1 - 0.5, WY) + 0.07), 0.012, lambda q: C['steel'], seg=6)
         # the wipers on the two front panes to starboard and midships (pendulum: the motor over the pane, the arm and the blade on it)
-        for ya, yb in ((-1.03, -0.37), (-0.37, DY0)):
+        for ya, yb in ((-1.06, -0.36), (-0.36, 0.36)):
             yc = (ya + yb) / 2; hp_ = V((fx(zh_) + 0.035, yc, zh_ + 0.03))
             acyl(A, hp_ - V((0.04, 0, 0)), hp_ + V((0.01, 0, 0)), 0.02, lambda q: C['frame'], seg=8)
             zb2 = zh_ - 0.55; bp = V((fx(zb2) + 0.03, yc + 0.08, zb2))
@@ -632,11 +641,11 @@ def wheelhouse(A, G, fine=True):
 # the helm on the starboard side under the front windows: the console with the dash sloping up forward, the wheel, the lever, the
 # plotter, the sounder and the engine's panel facing the skipper (up and aft), the compass on top, the VHF overhead, the seat; the
 # bench to port (plastsjark-grunnlag kap. 6.2)
-HX0, HY0, HY1 = 3.28, -1.18, -0.06                          # the console's after face and its sides
+HX0, HY0, HY1 = 3.28 + OFF, -1.18, -0.06                          # the console's after face and its sides
 def dash():
-    z0, zs_, _, _ = wh_z(); return (3.30, z0 + 0.86), (3.62, z0 + 1.02)    # the dash's after foot and its fore top (x, z)
-WHEEL = (3.22, -0.62); WHEEL_AX = (-1.0, 0.0, 0.55)          # the wheel's centre (x, y; z from the sole) and its axis toward the skipper
-SKIP = (2.80, -0.62); SEAT = (2.38, -0.62)
+    z0, zs_, _, _ = wh_z(); return (3.30 + OFF, z0 + 0.86), (3.62 + OFF, z0 + 1.02)    # the dash's after foot and its fore top (x, z)
+WHEEL = (3.22 + OFF, -0.62); WHEEL_AX = (-1.0, 0.0, 0.55)          # the wheel's centre (x, y; z from the sole) and its axis toward the skipper
+SKIP = (2.80 + OFF, -0.62); SEAT = (2.38 + OFF, -0.62)
 def dash_pt(t, y):
     (x0, z0), (x1, z1) = dash(); return V((x0 + (x1 - x0) * t, y, z0 + (z1 - z0) * t))
 def dash_n():
@@ -672,16 +681,22 @@ def helm(A, G, fine=True):
     acyl(A, wc - V(WHEEL_AX).normalized() * 0.14, (HX0 + 0.004, WHEEL[1], z0 + 1.0), 0.03, lambda q: C['dark'], seg=10)
     F.single_lever(A, (HX0 + 0.12, HY1, z0 + 0.74), (0, 1, 0), (1, 0, 0), C['dark'], C['steel'], C['black'])
     # the VHF under the roof over the skipper, its face aft and down; its microphone on a clip
-    vc = V((3.05, -0.85, zr_ - 0.06))
+    vc = V((3.05 + OFF, -0.85, zr_ - 0.06))
     obox(A, vc, V((0.09, 0, 0)), V((0, 0.10, 0)), V((0, 0, 0.05)), C['dark'])
     A.poly([vc + V((-0.091, -0.08, -0.03)), vc + V((-0.091, 0.08, -0.03)), vc + V((-0.091, 0.08, 0.03)), vc + V((-0.091, -0.08, 0.03))], C['screen'], (-1, 0, 0))
     obox(A, vc + V((-0.05, 0.13, -0.02)), V((0.02, 0, 0)), V((0, 0.015, 0)), V((0, 0, 0.04)), C['black'])
     F.helm_seat(A, (SEAT[0], SEAT[1], z0), (1, 0, 0), 0.76, C['steel'], C['cush'])
     # the bench to port along the side, the chart shelf over it, a small stove's top at its forward end (the galley: a plate, VESSELS.fac)
-    abox(A, WX0 + 0.10, 2.70, 0.72, WY - 0.06, z0, z0 + 0.42, C['inner']); abox(A, WX0 + 0.12, 2.68, 0.74, WY - 0.08, z0 + 0.42, z0 + 0.50, C['cush'])
-    abox(A, WX0 + 0.12, 2.68, WY - 0.16, WY - 0.08, z0 + 0.50, z0 + 0.92, C['cush'])
-    abox(A, 2.75, 3.25, 0.70, WY - 0.06, z0, z0 + 0.86, C['inner']); abox(A, 2.80, 3.20, 0.78, 1.15, z0 + 0.86, z0 + 0.88, C['dark'])
-    for xx in (2.9, 3.1): F.atorus(A, (xx, 0.96, z0 + 0.885), (0, 0, 1), 0.07, 0.006, lambda a: C['steel'], seg=16, rseg=4)
+    # (OB7: the house is 2.0 m long now; the bench from the aft wall's window to the galley, the galley against the front)
+    abox(A, WX0 + 0.10, 5.30, 0.72, WY - 0.06, z0, z0 + 0.42, C['inner']); abox(A, WX0 + 0.12, 5.28, 0.74, WY - 0.08, z0 + 0.42, z0 + 0.50, C['cush'])
+    abox(A, WX0 + 0.12, 5.28, WY - 0.16, WY - 0.08, z0 + 0.50, z0 + 0.92, C['cush'])
+    abox(A, 5.36, 5.82, 0.70, WY - 0.06, z0, z0 + 0.86, C['inner']); abox(A, 5.40, 5.78, 0.78, 1.15, z0 + 0.86, z0 + 0.88, C['dark'])
+    for xx in (5.5, 5.68): F.atorus(A, (xx, 0.96, z0 + 0.885), (0, 0, 1), 0.07, 0.006, lambda a: C['steel'], seg=16, rseg=4)
+    # the way down to the cabin in the trunk forward: a teak door in the front bulkhead under the windows, between the console and the galley
+    xd = WX1 - 0.075; abox(A, xd, xd + 0.012, -0.02, 0.62, z0 + 0.02, z0 + 1.12, C['wood'])
+    if fine:
+        for k in range(5): abox(A, xd - 0.005, xd, 0.08, 0.52, z0 + 0.25 + 0.05 * k, z0 + 0.264 + 0.05 * k, C['dark'])
+        acyl(A, (xd, 0.52, z0 + 0.62), (xd - 0.04, 0.52, z0 + 0.62), 0.012, lambda q: C['steel'], seg=8)
 HELM_EXTRA = []
 
 
@@ -720,7 +735,7 @@ def mast(A, crown, fine=True):
         # the work lights under the roof's lip aft and forward, over the decks
         for xx, ax in ((WX0 - 0.06, -1), (WX1 + LEAN + 0.0, 1)):
             for yy in (-0.6, 0.6):
-                c = V((xx, yy, zr_ - 0.06)); obox(A, c, V((0.03, 0, 0)), V((0, 0.07, 0)), V((0, 0, 0.035)), C['dark'])
+                c = V((xx, yy, zr_ - 0.09)); obox(A, c, V((0.03, 0, 0)), V((0, 0.07, 0)), V((0, 0, 0.035)), C['dark'])
                 A.poly([c + V((ax * 0.031, -0.055, -0.025)), c + V((ax * 0.031, 0.055, -0.025)), c + V((ax * 0.031, 0.055, 0.025)), c + V((ax * 0.031, -0.055, 0.025))], C['lens'], (ax, 0, -0.3))
 
 def lanterns(A, fine=True):
@@ -735,6 +750,7 @@ def lanterns(A, fine=True):
 # ---------- on deck: the cleats, the pulpit, the windlass and the bow roller, the grab rails, the flag staff and the stern light, the
 # filler, the boat's own gutting table, the fenders and the hose ----------
 POLE = (0.20, -0.62)
+FIL = 2.05                   # the diesel filler on the port side deck aft of the jigging place (its vent on the straight side)
 def gunwale_y(x): return ycap(x) + CAP * 0.5
 def deck_fittings(A, fine=True):
     s = lambda q: C['steel']
@@ -777,19 +793,21 @@ def deck_fittings(A, fine=True):
     acyl(A, (px, yb, zp + 0.02), (px - 0.08, yb, zp + 1.15), 0.014, lambda q: C['wood'], seg=8)
     F.stern_lantern(A, (px - 0.085, yb, zp + 1.20), (-1, 0, 0), C['lampW'], C['frame'])
     # the diesel filler on the port side deck by the wheelhouse, its vent a hood on the side
-    fx = 3.95; fy = ybw(fx) - 0.12; fz = z_deck(fx) + camber(fx, fy)
+    fx = FIL; fy = ybw(fx) - 0.12; fz = z_deck(fx) + camber(fx, fy)
     acyl(A, (fx, fy, fz - 0.002), (fx, fy, fz + 0.012), 0.045, s, seg=16); acyl(A, (fx, fy, fz + 0.012), (fx, fy, fz + 0.018), 0.032, s, seg=16)
-    vx, vz = fx + 0.35, zs(fx + 0.35) - 0.10; vy = y_at(vx, vz)
-    acyl(A, (vx, vy - 0.002, vz), (vx, vy + 0.014, vz), 0.016, s, seg=10); obox(A, (vx, vy + 0.020, vz + 0.004), V((0.022, 0, 0)), V((0, 0.006, 0)), V((0, 0, 0.022)), C['steel'])
-    # the fenders stowed on the aft deck along the bulwark's foot beside the wheelhouse, a hose coiled on the working deck
-    for x in (1.6, 3.0):
+    vx, vz = fx + 0.35, zs(fx + 0.35) - 0.22; vy = y_at(vx, vz)                 # (under the rubbing strake, in the stripe)
+    acyl(A, (vx, vy + 0.006, vz), (vx, vy + 0.019, vz), 0.016, s, seg=10); obox(A, (vx, vy + 0.025, vz + 0.004), V((0.022, 0, 0)), V((0, 0.006, 0)), V((0, 0, 0.022)), C['steel'])
+    # the fenders stowed along the bulwark's foot in the narrow gap beside the wheelhouse (no one works there), the hose coiled in the
+    # starboard quarter aft of the jigging places
+    for x in (5.15,):
         for sg in (1, -1):
-            zd = z_deck(x) + 0.1; y = sg * (ybw(x) - 0.13); acyl(A, (x - 0.25, y, zd), (x + 0.25, y, zd), 0.1, lambda q: C['rubber'], seg=12)
-    hx_, hy_ = 4.05, 1.12; hz = z_deck(hx_) + camber(hx_, hy_)
+            zd = z_deck(x) + 0.1; y = sg * (ybw(x) - 0.125); acyl(A, (x - 0.25, y, zd), (x + 0.25, y, zd), 0.095, lambda q: C['rubber'], seg=12)
+    hx_, hy_ = 0.62, -0.86; hz = z_deck(hx_) + camber(hx_, hy_)
     for k in range(3): F.atorus(A, (hx_, hy_, hz + 0.022 + 0.04 * k), (0, 0, 1), 0.20 - 0.015 * k, 0.02, lambda a: C['hose'], seg=18, rseg=6)
 
-GUT = (4.95, 5.75)           # the boat's own gutting table over the port bulwark (x from, to)
-def gut_top(): return z_deck(5.35) + 0.90
+GUT = (3.55, 4.30)           # the boat's own gutting table over the port bulwark (x from, to), abreast of the hauler
+GX = (GUT[0] + GUT[1]) / 2
+def gut_top(): return z_deck(GX) + 0.90
 def gutting_table(A):
     """a stainless table across the port bulwark at working height, its outer edge a little over the side so the offal goes into the sea,
     a lip along its inboard edge and its ends; two brackets from the cap up under it, two legs down to the deck"""
@@ -855,7 +873,11 @@ def build(fine=True):
     return [o for o in out if o], [g] if g else [box('noglass', 0, 0.01, 0, 0.01, -50, -49.99, C['glass'])]
 
 
-def to_game(p): return (-p[1], p[2] - WL, -(p[0] - XM))
+# the waterline of the empty boat (OB7, valg 18 A in docs/planer/om-bord.md: disp is the empty boat): the form is drawn to WL 1.35 (6.63 t,
+# a loaded line, 0.6 t aboard), the empty boat floats 3 cm lower (check(): 6.0 t), and the game's frame is hers, as on the skiff and the
+# snekke; the paint stays where the form has it
+WLE = WL - 0.03
+def to_game(p): return (-p[1], p[2] - WLE, -(p[0] - XM))
 def to_game_n(n): return (-n[1], n[2], -n[0])
 
 def name_strips(G):
@@ -877,18 +899,24 @@ def kit_places(G):
     in its cradle on the wheelhouse roof forward of the mast to port, the ring buoys on the wheelhouse's aft wall to port (the first, with
     its light and line) and on the trunk's aft face to starboard of the companionway; the radome on the mast's platform; the net tub, the
     line tubs and the first freight on the hold's cover, the second pallet on the aft deck"""
-    r = lambda a: round(a, 3); z0, _, _, zr_ = wh_z(); zl = z_deck(5.17) + 0.225
-    return {'raft': [G(WX0 + 1.75, 0.60, zr_ + 0.12) + [r(math.pi / 2)]],
-            'buoys': [G(WX0 - 0.03, 0.80, z0 + 0.90) + [0.0], G(CX0 - 0.03, -0.72, z_deck(CX0) + 0.62) + [0.0]],
+    r = lambda a: round(a, 3); z0, _, _, zr_ = wh_z(); zl = z_deck(HC) + 0.225
+    # OB7: the gear stands aft on the open deck where it is set from, over the stern (F4, F20: before, with the house aft, it went out
+    # through the house); the net to port and the tubs to starboard of the line it runs out on
+    return {'raft': [G(WX0 + 1.45, 0.62, zr_ + BRIM_H + 0.12) + [r(math.pi / 2)]],
+            'buoys': [G(WX0 - 0.03, 0.83, z0 + 0.90) + [0.0], G(WX0 - 0.03, -0.83, z0 + 0.90) + [0.0]],
             'radar': G(RX, 0.0, zr_ + 0.99),
-            'garn': {'at': G(5.17, 0.0, zl), 'ry': 0.0},
-            'stamps': {'at': G(4.80, -0.26, zl), 'ry': r(math.pi)},
-            'cargo': [G(5.17, 0.0, zl) + [0.0], G(0.55, 0.62, z_deck(0.55)) + [r(math.pi / 2)]]}
+            'garn': {'at': G(1.20, 0.50, z_deck(1.2)), 'ry': 0.0},
+            'stamps': {'at': G(1.20, -0.50, z_deck(1.2)), 'ry': r(math.pi)},
+            'cargo': [G(HC, 0.0, zl) + [0.0], G(1.10, 0.0, z_deck(1.1)) + [r(math.pi / 2)]]}
 
 def bower(G):
     return {'kind': 'plog', 'kg': 14, 'fair': G(XF + 0.06, 0, zs(XF - 0.05) + 0.085), 'gypsy': G(8.72, -0.19, z_deck(8.72) + 0.24), 'side': 0, 'deck': True}
 
-HX = 5.95                    # the hauler's station on the starboard cap
+HX = 3.75                    # the hauler's station on the starboard cap, just aft of the wheelhouse
+TUB = (3.10, -1.20)          # the bleeding tub on the deck just aft of the fisher at the hauler
+# the jigging places on the rails, in the order the machines are bolted on (anchors.jigZ, F21): starboard aft of the tub, port aft of
+# the gutting table, then one more on each side aft, a good metre apart so the lines keep clear
+JIG = [(1, 2.25), (-1, 2.75), (1, 1.15), (-1, 1.65)]
 HP, FOV = -0.30, 60          # the bridge view's pitch (rad) and field: the dash inside it (check())
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
@@ -896,24 +924,32 @@ def anchors():
     return {'bower': bower(G), 'eye': G(SKIP[0], SKIP[1], z0 + 1.65), 'skipperAt': G(SKIP[0], SKIP[1], z0), 'hp': HP, 'fov': FOV,
             # the hands: the fisher at the hauler on the starboard rail, the one who guts at the table to port, one aft of the hold's hatch, one by
             # the wheelhouse door to port (the aft deck behind the house is too narrow to walk to)
-            'crewSpots': [G(5.85, -1.02, z_deck(5.85)) + [1.57], G(5.30, 0.84, z_deck(5.3)) + [-1.57], G(4.20, -0.30, z_deck(4.2)) + [3.14], G(4.30, 1.12, z_deck(4.30)) + [0.0]],
+            # (OB7: the house forward, the working deck aft of it: the fisher at the hauler, the one who guts at the table to port, one aft
+            # of the hatch, one by the wheelhouse's door)
+            'crewSpots': [G(HX - 0.10, -1.02, z_deck(HX)) + [1.57], G(GX, 0.84, z_deck(GX)) + [-1.57], G(1.90, 0.0, z_deck(1.9)) + [3.14], G(WX0 - 0.35, -0.20, z_deck(WX0 - 0.35)) + [0.0]],
             # typed lights (B8; rule 23 (d)(i), under 12 m: an all-round white and the side lights; the game also lights the stern light)
             'lights': [[G(MX, 0, white_z()), [1, 0.95, 0.85], 'allround'],
                        [G(LAMP_X + 0.012, WY + 0.068, lamp_z()), [1, 0.12, 0.1], 'port'],
                        [G(LAMP_X + 0.012, -(WY + 0.068), lamp_z()), [0.1, 1, 0.35], 'stbd'],
                        [G(px - 0.085, -gunwale_y(px), zs(px) + 1.212), [1, 0.95, 0.85], 'stern'],
-                       [G(WX1 + LEAN + 0.03, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work'], [G(WX0 - 0.06, 0.0, zr_ - 0.08), [1, 0.95, 0.85], 'work']],
-            'doors': [{'at': G(WX1 + 0.03, 0.66, z_deck(2.3)), 'w': 0.64, 'h': DOOR_H, 'in': G(WX1 - 0.8, 0.66, z0), 'to': 'helm', 'hinge': 'port'},
-                      {'at': G(CX0 - 0.03, 0.01, z_deck(CX0)), 'w': round(COMP[1] - COMP[0], 2), 'h': round(COMP[3], 2), 'in': G(CX0 + 0.8, 0.0, z_deck(CX0) - 0.5), 'to': 'cabin', 'hinge': 'port'}],
+                       [G(WX1 + LEAN + 0.03, 0.0, zr_ - 0.11), [1, 0.95, 0.85], 'work'], [G(WX0 - 0.06, 0.0, zr_ - 0.11), [1, 0.95, 0.85], 'work']],
+            'doors': [{'at': G(WX0 - 0.03, (DY0 + DY1) / 2, z_deck(WX0)), 'w': round(DY1 - DY0, 2), 'h': DOOR_H, 'in': G(WX0 + 0.8, 0.0, z0), 'to': 'helm', 'hinge': 'slide'},
+                      {'at': G(WX1 - 0.09, 0.30, z0), 'w': 0.64, 'h': 1.10, 'in': G(WX1 + 0.8, 0.30, z_deck(WX1) - 0.5), 'to': 'cabin', 'hinge': 'port'}],
+            # the step down through the sliding door: a stair from the deck aft of the door to the sunk sole inside (the map's own link
+            # does not take the 0.3 m step within the door's width; walktest: the sole was a part of its own, OB7)
+            'stairs': [{'from': G(WX0 - 0.30, 0.0, z_deck(WX0 - 0.30)), 'to': G(WX0 + 0.55, 0.0, z0)}],
             'names': name_strips(G),
             # the work at sea, in its order (plastsjark-grunnlag kap. 6.2): the fisher at the starboard rail by the hauler; the bleeding tub
             # on the deck just aft of him; the gutting table is the boat's own, across the port bulwark abreast of him (own; top: where the fish
             # lie), the one who guts on the deck inboard of it; the gutted fish go down the hold's hatch between them, on ice
-            'work': {'table': G(sum(GUT) / 2, 1.45, z_deck(5.35)), 'tub': G(5.30, -1.26, z_deck(5.30)), 'own': True, 'top': round(gut_top() - WL, 3)},
-            'hatch': G(5.17, 0.0, z_deck(5.17) + 0.225), 'bunk': G(7.5, 0.5, z_deck(7.5) - 0.1), 'exhaust': G(MX - 0.37, 0.55, zr_ + 1.56),
-            'deck': {'y': round(z_deck(5.0) - WL, 3), 'z': round(-(5.0 - XM), 3)}, 'gw': round(zs(5.0) - WL, 3),
+            'work': {'table': G(GX, 1.45, z_deck(GX)), 'tub': G(TUB[0], TUB[1], z_deck(TUB[0])), 'own': True, 'top': round(gut_top() - WLE, 3),
+                     # the one who ices and packs: aft of the hatch, facing it (deckcrew turns a hold boat's packer about: pack[3] pi faces forward)
+                     'pack': G(2.05, -0.45, z_deck(2.05)) + [round(math.pi, 3)]},
+            'jigZ': [[sd, round(XM - x, 3)] for sd, x in JIG],
+            'hatch': G(HC, 0.0, z_deck(HC) + 0.225), 'bunk': G(7.5, 0.5, z_deck(7.5) - 0.1), 'exhaust': G(MX - 0.37, 0.55, zr_ + 1.56),
+            'deck': {'y': round(z_deck(HC) - WLE, 3), 'z': round(-(HC - XM), 3)}, 'gw': round(zs(HC) - WLE, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': HB, 'beam': BEAM, 'pl': 3.3, 'rl': 1.4, 'open': False, 'hand': False,
-            'pole': G(px - 0.08, -gunwale_y(px), zs(px) + 1.16), 'hauler': G(HX, hy, zs(HX) + 0.42), 'filler': G(3.95, ybw(3.95) - 0.12, z_deck(3.95) + 0.06),
+            'pole': G(px - 0.08, -gunwale_y(px), zs(px) + 1.16), 'hauler': G(HX, hy, zs(HX) + 0.42), 'filler': G(FIL, ybw(FIL) - 0.12, z_deck(FIL) + 0.06),
             'kit': kit_places(G)}
 
 
@@ -931,6 +967,8 @@ def displacement(wl):
 
 def check():
     out = []
+    ve, _ = displacement(WLE)
+    out.append(('den tomme båten (spillets vannlinje WLE, %.2f m over kjølen): %.2f t mot %.1f t i VESSELS (valg 18 A: disp er den tomme båten); dypgang %.2f tom, %.2f lastet' % (WLE, ve, DISP, WLE, WL), abs(ve - DISP) / DISP < 0.05))
     v, amax = displacement(WL); wl1 = WL
     for _ in range(80):
         if displacement(wl1)[0] > DISP: wl1 -= 0.005
@@ -956,21 +994,24 @@ def check():
     z0, zs_, zh_, zr_ = wh_z()
     out.append(('styrehuset: %.2f m under taket over dørken der skipperen står (brotest: 1.8 for den som står)' % (zr_ - z0), zr_ - z0 >= 1.8))
     ey = z0 + 1.65
+    tt = ttop(WX1 + 0.02, 0.0)
+    out.append(('frontrutenes karm %.2f m over ruffens tak foran fronten (fronten lener over ruffen: ingen rute gjennom taket)' % (zs_ - tt), zs_ - tt > 0.02))
     out.append(('øyet %.2f m over vinduskarmen, %.2f under vinduets overkant' % (ey - zs_, zh_ - ey), ey - zs_ > 0.4 and zh_ - ey > 0.05))
     (dx0, dz0), (dx1, dz1) = dash(); dd = math.hypot(dx1 - SKIP[0], ey - dz1)
     ang = math.degrees(math.atan2(ey - (dz0 + dz1) / 2, (dx0 + dx1) / 2 - SKIP[0]))
     out.append(('dashbordet %.0f grader under øyet (hp %.2f rad og fov %d: synsfeltet går ned til %.0f grader)' % (ang, HP, FOV, math.degrees(-HP) + FOV / 2), ang <= math.degrees(-HP) + FOV / 2))
     out.append(('rattet %.2f m forut for øyet (skipperen står bak det, ikke i det)' % (WHEEL[0] - SKIP[0]), 0.3 <= WHEEL[0] - SKIP[0] <= 0.55))
-    out.append(('sløyebordet %.2f m over dekket, ytterkanten %.2f m utenfor ripa (vessel3d: bredden ±5 %%)' % (gut_top() - z_deck(5.35), 0.03), 0.8 <= gut_top() - z_deck(5.35) <= 0.95))
+    out.append(('sløyebordet %.2f m over dekket, ytterkanten %.2f m utenfor ripa (vessel3d: bredden ±5 %%)' % (gut_top() - z_deck(GX), 0.03), 0.8 <= gut_top() - z_deck(GX) <= 0.95))
     # the game's deck map (vessel3d.js deckMap: a floor needs DM_HEAD 1.85 m free over it; a surface within 0.6 m and 1.6 m of a part one can
     # step onto is joined to the deck): the roof must not overhang the deck lower than that, nor lie near the hold's lid (round 10: the
     # crew and the door ended up on the wheelhouse roof)
-    over = (WX1 + LEAN + 0.04) - WX1; head = zr_ - z_deck(WX1); lid = HOLD[0] - 0.03 - (WX1 + LEAN + 0.04); dh = (zr_ + 0.07) - (z_deck(5.17) + 0.225)
-    out.append(('taket henger %.2f m forut for frontens fot med %.2f m fri høyde over dekket (dekkskartet: 1.85, ellers høyst en celle, 0.2); %.2f m og %.2f m opp fra taket til lukelokket (knyttes til dekket under 0.6 m og 1.6 m)' % (over, head, lid, dh),
+    # (OB7: the house forward, so the roof overhangs the working deck aft of it; the trunk's top under the visor forward is a roof's own)
+    over = BRIM_O; head = zr_ - 0.03 - z_deck(WX0); lid = (WX0 - BRIM_O) - (HOLD[1] + 0.03); dh = (zr_ + BRIM_H) - (z_deck(HC) + 0.225)
+    out.append(('taket henger %.2f m akter for akterveggen med %.2f m fri høyde over dekket (dekkskartet: 1.85, ellers høyst en celle, 0.2); %.2f m og %.2f m opp fra taket til lukelokket (knyttes til dekket under 0.6 m og 1.6 m)' % (over, head, lid, dh),
                 (head >= 1.85 or over <= 0.2) and (lid > 0.6 or dh > 1.6)))
     # the game's registration mark on a 9-15 m boat lies about 0.7-1.3 m over the water forward (markStrips, regmarktest); the name strips
     # on the bows must stay under it (maletest: they never lie on each other)
-    ntop = max(zs(x) - 0.70 for x in (6.60, 7.75)) - WL
+    ntop = max(zs(x) - 0.70 for x in (6.60, 7.75)) - WLE
     out.append(('navnefeltet på baugen går til %.2f m over vannet (registreringsmerket fra rundt 0.71 m; maletest feiler ved mer enn 5 cm overlapp)' % ntop, ntop <= 0.71 + 0.045))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
     return all(o for _, o in out)
@@ -979,11 +1020,11 @@ def check():
 SHOTS = [('bow3q', (17.5, -9.5, 3.6), (4.7, 0, 2.2), 38), ('stern3q', (-7.5, 8.0, 4.2), (4.0, 0, 2.2), 35), ('side', (4.7, 19, 2.4), (4.7, 0, 2.3), 35),
          ('above', (11.0, -7.0, 9.5), (4.5, 0, 2.0), 35), ('deck', (8.5, -4.0, 5.0), (4.8, 0, 2.0), 38)]
 def _eye(): return (SKIP[0], SKIP[1], z_wh() + 1.65)
-EYE = (SKIP[0], SKIP[1], 1.87 + 1.65)
+EYE = _eye()
 ZC = 1.87                    # the working deck's height (for shots.py K5)
-CLOSE = [('c_helm', (2.45, -0.25, 3.55), (3.45, -0.75, 2.9), 30, False, False), ('c_wh', (6.8, -3.4, 3.6), (2.5, -0.4, 3.0), 30, True, False),
+CLOSE = [('c_helm', (2.45 + OFF, -0.25, 3.55), (3.45 + OFF, -0.75, 2.9), 30, False, False), ('c_wh', (0.4, -3.2, 3.9), (5.2, 0.0, 2.8), 30, True, False),
          ('c_stern', (-2.6, -2.0, 2.4), (0.2, 0, 1.8), 32, True, False), ('c_bow', (11.0, -1.8, 3.4), (9.0, 0, 2.8), 30, False, False),
-         ('c_aperture', (0.9, -3.0, 0.5), (0.8, 0, 0.55), 30, False, False), ('c_work', (5.3, -0.2, 4.6), (5.2, 0.1, 1.9), 28, False, False),
+         ('c_aperture', (0.9, -3.0, 0.5), (0.8, 0, 0.55), 30, False, False), ('c_work', (2.6, -0.2, 5.2), (2.6, 0.1, 1.9), 32, False, False),
          ('c_trunk', (9.6, -2.6, 3.6), (7.0, 0, 2.6), 30, False, False),
          ('K6p', (29.3, 19.2, 4.35), (4.725, 0, 2.25), 100, True, True)]      # K6 from the port bow: the red and the white only
 

@@ -26,6 +26,10 @@ export default function (t){
   { const a = K.stabOf('sjark', {hold:2000, deck:0, gear:0}).trim, b = K.stabOf('sjark', full('sjark')).trim;
     t.ok(a > 0 && b > a, 'sjark: mer i rommet gir mer trim akter (' + (a * DEG).toFixed(2) + '° → ' + (b * DEG).toFixed(2) + '°)'); }
 
+  // ---- the plastsjark's hold is aft of the wheelhouse (OB7, 09.11.2026: the house forward, «stort lasterom akter»): a full hold trims her by the stern ----
+  { const St = K.stabOf('plastsjark', {hold:3000, deck:0, gear:0});
+    t.ok(St.trim > 0.1 / DEG, 'plastsjark med 3 t i rommet akter: hekken ned (' + (St.trim * DEG).toFixed(2) + '°)'); }
+
   // ---- 30 nets on the stern press the stern down (the den nye hurtigsjarken's net place is on the stern) ----
   { const St = K.stabOf('hurtigsjark', {hold:0, deck:0, gear:30 * 9, gp:{net:30 * 9}});
     t.ok(St.trim > 0.1 / DEG, 'hurtigsjark med 30 garn på hekken: hekken ned (' + (St.trim * DEG).toFixed(2) + '°)'); }

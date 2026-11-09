@@ -12,7 +12,7 @@
 
 | Hva | Verdi | Kilde | Følger for modellen |
 |---|---|---|---|
-| Type | Plastsjark med styrhus akter, åpent arbeidsdekk med lasterom midtskips, ruff forut med to køyer, full kjøl | R (`VESSELS.plastsjark.desc`, `docs/batplan.md` del 3) | Låst |
+| Type | Plastsjark med styrhus forut over ruffen med to køyer, åpent arbeidsdekk akter med lasterom, full kjøl (OB7, 09.11.2026: før styrhus akter) | J (valg 22 B, kap. 10), R (`VESSELS.plastsjark.desc`) | Låst |
 | Forbilde | Viksund 31 Sjark, bygd fra rundt 1978 (navnet står bare i skriptets kommentar og her, ikke i spillet) | R | – |
 | Lengde o.a. | 9,45 m (registrene og annonsene: 9,26–9,45) | R, S | `vessel3d`: −6 % til +3 % i båndet −0,3–1,5 m over vannlinja |
 | Bredde | 3,30 m (annonsene oftest 3,05, ellers 3,10–3,20) | R, S | ±5 %. Se kap. 7: kildene sier heller 3,05–3,20 |
@@ -41,7 +41,7 @@
 | B1 | Ombygging eller nytt skript? | **Nytt skript etter `snekke26.py`/`ringnot38.py`.** Snittene er en superellipse fra kjølens underkant til ripa (en kasse ned til 1,35 m under vannlinja: 21,9 t mot 6 t), kjølen en egen kropp inni skroget, propellen inne i skroget og skroget, speilet, dekket og ruffen løse stykker. Det kan ikke rettes uten å skrives om. Ripa, bredden ved ripa, stevnen og planen for dekket (styrhus, arbeidsdekk, ruff) beholdes. |
 | B2 | Skala uten bilder | Tabellene i meter er målestokken; `check()` regner modellen mot `VESSELS` og lanternereglene, `tools/boats/qa/lines.py` tegner spantrisset og profilen fra tabellene. Det er ikke et foto. |
 | B3 | Vannlinjebredden | 2,80 m (85 % av største bredde, vanlig for en rundbunnet sjark med utfall); den kan ikke leses av noe bilde (kap. 7). |
-| B4 | Planen for dekket | Beholdes som i spillet og batplanen: styrhus akter, arbeidsdekk midtskips, ruff forut. Søket 01.11.2026 fant annonser som tyder på styrhus midtskips og arbeidsdekk akter på noen Viksund 31 («glass skyvedør ut til bakdekk», «stort lasterom akter»), men utdragene er usikre, så det er ikke endret (kap. 8, spørsmål til Jonas). |
+| B4 | Planen for dekket | **Endret i OB7 (09.11.2026, Jonas: «Forut», kap. 10): styrhuset forut, arbeidsdekket akter.** Før: beholdes som i spillet og batplanen: styrhus akter, arbeidsdekk midtskips, ruff forut. Søket 01.11.2026 fant annonser som tyder på styrhus midtskips og arbeidsdekk akter på noen Viksund 31 («glass skyvedør ut til bakdekk», «stort lasterom akter»), men utdragene er usikre, så det er ikke endret (kap. 8, spørsmål til Jonas). |
 | B5 | Styreplassen | Skipperen står på dørken til styrbord bak rattet (0,42 m), konsollen under frontvinduene med dashbordet som skrår opp forover og skjermene vendt opp og akterover mot ham, stolen bak ham, benken og kokeplata til babord. |
 | B6 | Arbeidsflyten | Fiskeren ved haleren på styrbord ripe, blødekaret rett akter for ham, båtens eget sløyebord over babord ripe tvers av ham (`work.own`), lasteromsluka mellom dem (fisken sløyes og ises i rommet). |
 
@@ -182,7 +182,7 @@ på arbeidsdekket, og ser fiskeren gjennom frontrutene.
 
 ## 8. Spørsmål til Jonas og bilder som ville gjort resultatet bedre
 
-- **Hvor står styrhuset?** Spillet og batplanen har styrhus akter og arbeidsdekk midtskips. Utdrag av annonser for Viksund 31 nevner «glass
+- **Hvor står styrhuset?** Besvart 09.11.2026 (OB7, kap. 10): forut. Før: spillet og batplanen har styrhus akter og arbeidsdekk midtskips. Utdrag av annonser for Viksund 31 nevner «glass
   skyvedør ut til bakdekk» og «stort lasterom akter», som tyder på styrhus midtskips og arbeidsdekket akter på noen av dem. Modellen følger
   spillet til et bilde avgjør det.
 - **Bilder:** et rett fra siden av en Viksund 31 Sjark med kjent lengde (annonse eller brosjyre), helst på land så kjølen, roret og propellen
@@ -212,6 +212,58 @@ revisjonene, og båten er klart penere enn før. Det som trekker ned:
 - **Lesingen:** dokumentene i bestillingen er lest, men `ringnot38.py` bare i utdrag (hullene, utskjæringen, ankrene, eksporten), og
   `fittings.py` og `bpyutil.py` i grensesnittene; `docs/systemer/3d-baater-og-animasjon.md` 5.13, `testing.md` og `vessel3d.js`' `deckMap`,
   `markStrips` og `deckPoints` ble lest først da de feilet.
+
+## 10. OB7: styrhuset forut, arbeidet om bord og karakteren etter Jonas' skala (09.11.2026)
+
+Steg 85 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-61bc7d42-bfsaz0`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting», og om plastsjarken (valg 20): «Dette er kanskje den svakeste båten vi har. Du får frie tøyler til å lage en realistisk fiskebåt.» Før- og etter-bildene er tatt med `tests/ombord.py plastsjark`, bare bilder; arkene ligger i `docs/okter/2026-11-09-ob7/`.
+
+### 10.1 Bildene av typen (valg 22 B) og Jonas' valg
+
+`commons.wikimedia.org`, `upload.wikimedia.org`, `digitaltmuseum.no`, `mm.dimu.org` og `api.dimu.org` ble sluppet til i miljøet ved øktas start (de var stengt for OB1, OB5 og OB6). DigitaltMuseum svarte bare med en robotsperre (Cloudflare), og det gamle søke-API-et (`api.dimu.org/api/solr`) er lagt ned; Wikimedia Commons ga 429 (for mange forespørsler) på de fleste søk, så bare et lite utvalg kom gjennom. Bildene ligger ikke i repoet, bare lenkene. Lisensene er ikke lest (metadata-API-et svarte 429); bildene er brukt som referanse for planen, ikke lagt inn i spillet.
+
+| # | Bilde (Wikimedia Commons) | Hva det viser |
+|---|---|---|
+| 1 | [Sjark after being lifted off With Frohavet.jpg](https://commons.wikimedia.org/wiki/File:Sjark_after_being_lifted_off_With_Frohavet.jpg) | En plastsjark i Austevoll: styrhuset forut, åpent arbeidsdekk akter med en mann og en mast eller davit akter |
+| 2 | [IMG 7027-sjark abelvær.jpg](https://commons.wikimedia.org/wiki/File:IMG_7027-sjark_abelv%C3%A6r.jpg) | Sjark på Abelvær fra siden: styrhuset forut, arbeidsdekket akter med mast og bom |
+| 3 | [Nybygget sjark.jpg](https://commons.wikimedia.org/wiki/File:Nybygget_sjark.jpg) | En nybygd sjark (tre) uten innredning: styrhuset forut for midten, åpent dekk akter med luke |
+| 4 | [IMG 7024 Fiskebåt på Abelvær - sjark.jpg](https://commons.wikimedia.org/wiki/File:IMG_7024_Fiskeb%C3%A5t_p%C3%A5_Abelv%C3%A6r_-_sjark.jpg) | Samme type forfra: styrhuset framme med koøyer og vinduer, rekke rundt dekket |
+| 5 | [IMG 6855-Edit-fiskebåt Fosnes.jpg](https://commons.wikimedia.org/wiki/File:IMG_6855-Edit-fiskeb%C3%A5t_Fosnes.jpg) | Tresjark ved Fosnes: ruff med koøyer forut, styrhuset midt |
+| 6 | [Sjark.jpg](https://commons.wikimedia.org/wiki/File:Sjark.jpg) | ST-54-T (tre) ved kai: styrhuset trolig akter (uklart fra bildet) |
+| 7 | [Sjark01.jpg](https://commons.wikimedia.org/wiki/File:Sjark01.jpg) | KA 175 (plast) ved kai forfra, med flere sjarker bak |
+
+Jonas fikk arket med de sju (og to før-bilder fra spillet) og spørsmålet om styrhuset med to valg. **Jonas 09.11.2026: «Forut».** Det passer med utdragene av annonsene for forbildet («glass skyvedør ut til bakdekk», «stort lasterom akter», kap. 8). Underveis, med et bilde av styrhuset på et fiskefartøy: «Gjør styrhustak mer realistisk som dette, med en slags brem på kanten av taket som skrår», så «Bremen på styrhuset skrår feil vei i forhold til bildet jeg sendte deg» (den sto først med overkanten ute; nå står underkanten ute og flaten skrår innover opp til taket), og «Fargen kan du bestemme selv så lenge den harmonerer med resten av designet» (marineblå som stripa under ripa). Og: «Fjern gummiklaffer på spygatt» (spygattene er åpne hull nå).
+
+### 10.2 Dekket målt og plassene
+
+Arbeidsdekket akter er 4,34 m langt (fra speilets innside til styrhusets aktervegg ved x 4,40) og 2,7–2,9 m bredt mellom skansekledningene (2,22 m ved x 0,3 der hekken runder). Plassene ble lagt før veggene og vinduene, og dekkskartet (`qa/deckpoints.py`) har dem alle på dekkets høyde (0,56–0,60 m i spillets ramme; skipperen 0,31 på den nedsenkede dørken):
+
+| Plass | Modellens x (fra speilet), y (babord +) | Hvorfor |
+|---|---|---|
+| Styrhuset | x 4,40–6,40, inntil ruffen (6,40–8,55), dørken senket 0,30 m | Forut som på bildene; frontrutene står over ruffens tak (`check()`: karmen 6 cm over taket) |
+| Skyvedøra | akterveggen midt (y −0,32–0,32), et trinn ned inne | «glass skyvedør ut til bakdekk»; `doors[0]` |
+| Døra til ruffen | i frontveggen innvendig, mellom konsollen og bysse | Ruffen nås fra styrhuset |
+| Haleren | styrbord ripe x 3,75 | Like akter for huset, der fiskeren ser skipperen gjennom akterruta |
+| Blødekaret (`work.tub`) | x 3,10, styrbord | Rett akter for fiskeren, fisken fra ripa i karet |
+| Sløyebordet (båtens eget) | over babord ripe x 3,55–4,30 | Tvers av haleren; den som sløyer står innenfor |
+| Lasteromsluka | x 2,35–3,30, midt | Mellom karet og bordet og akter for dem: «stort lasterom akter» |
+| Isepakkeren (`work.pack`, ny) | x 2,05, y −0,45, vendt mot luka | Spillets plass ved karet havnet oppå lukelokket |
+| Garnet (`kit.garn`) og stampene (`kit.stamps`) | x 1,20, babord og styrbord | Akter, der de settes fra over hekken (F4, F20) |
+| Juksaplassene (`anchors.jigZ`, ny) | styrbord x 2,25 og 1,15, babord x 2,75 og 1,65 | Fordelt på begge sider, godt en meter mellom hver på samme side (F21); `crewclip` gir 4 av 4 uten klipp |
+| Mannskapsplassene | ved haleren, ved bordet, akter for luka, ved døra | |
+| Dieselpåfyllingen | babord x 2,05 | Lufteren på den rette sida |
+
+**Teinene** (F7): ei teine på 1,4 m (og den koniske på 1,30 m, steg 94) får plass flatt på dørken akter for luka (x 0,6–2,3), to i bredden. Men tegningen av teinene eies av OB16 (`view3d/10-gear.js` `potDeck`): den setter teina som tømmes, 0,6 m akter for haleren på styrbord halvdel (x 2,45–3,85), der blødekaret og lukas styrbord hjørne står, og stablene akter for den. OB16 legger stablenes plasser med `kit.pots.at`; plastsjarkens forslag er stablene akter for luka (x 0,7–2,2) og teina som tømmes, på dørken tvers av haleren innenfor karet. `kit.pots` er ikke lagt i modellen nå, fordi spillet da tegner snøkrabbeteinene på den (`drawPotStacks`).
+
+### 10.3 Det som er endret
+
+- **Styrhuset forut** (`WX0`, `WX1` 4,40–6,40; før 0,95–3,75): tre lente frontruter over ruffens tak, sidevinduer i ekte åpninger, akterveggen med skyvedør av glass i aluminiumsramme, et vindu på hver side av den og det svarte vindusbåndet rundt. Karmen hevet til 1,20 m over dørken (frontrutene står over ruffens tak), vinduets overkant 1,80, taket 2,00. Ruffens akterflate er husets frontvegg (de ville ligget i samme plan), og nedgangen i ruffen er en dør inne i huset. Ruffens tak er senket fra 0,78 til 0,70 m over dekket.
+- **Styreplassen** flyttet med huset (`OFF`): konsollen, rattet, skjermene, stolen, benken og bysse er de samme. `check()`: 2,00 m under taket, øyet 0,45 over karmen og 0,15 under overkanten, dashbordet innenfor synsfeltet.
+- **Taket med skrå brem** (Jonas): underkanten 17 cm ut fra veggene med et flatt underslag, flaten skrår innover 20 cm opp til takkanten, marineblå som stripa. Masta, radarplattformen, eksosen, lyskasteren, rekka og flåtens plass står på taket som før.
+- **Spygattene åpne** (Jonas): klaffene og hengselstengene er tatt bort.
+- **Vekta** (valg 18 A): formen er tegnet til vannlinja 1,35 (6,63 t, 11 % over). Den er ikke formet om; den tomme båten flyter 3 cm lavere (`WLE` 1,32, 6,01 t), og spillets ramme er hennes, som på skiffen og snekka. Dypgangen er 1,32 m tom og 1,35 lastet. Bunnstoffet og vannlinjestripa står der formen har dem.
+- **Stabiliteten** (`STAB_AT.plastsjark` i `core/03c-stability.js`): luka, garnet, stampene, karet, bordet, haleren, roret og teinene lest på nytt fra ankrene. Med rommet akter gir full last trim akter (før forover). Ny sjekk i `tests/unit/trim.test.mjs`, sett rød med den gamle tabellen (−1,28°) og grønn med den nye.
+- **`VESSELS.plastsjark.desc`**: «styrhus forut med to køyer i ruffen under baugen, og åpent arbeidsdekk akter med lasterom og skyvedør inn til styrhuset».
+- **Klasjsjekken** (`qa/clip_plast31.py`): 0; unntaket for lufterens hatt flyttet med den.
 
 ## Endringslogg
 
