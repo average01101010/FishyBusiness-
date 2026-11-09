@@ -18,12 +18,17 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
   for (const vt of Object.keys(VESSELS)){ b.type = vt; applyVessel(); CREW3D.reset(); if (!CREW3D.on()){ R[vt] = null; continue; }
     S.crew = [0, 1, 2].map(i => Object.assign(genCrew(), {bi:false, off:false, fatigue:10, morale:62, age:[30, 66, 45][i]}));
     const r = R[vt] = {idle:[], work:{}, given:{}};
+    // the jigging places on her rails, as the view gives them every frame (cinema: CREW3D.setJig(jigRail)); without them the hands jigged
+    // at the crew spots, and the snekke's place 2 with the hard top's post through it was never tried (OB6 09.11.2026, F15)
+    CREW3D.setJig(G3._debug.jigRail(vt)); r.jigs = (G3._debug.jigRail(vt) || []).length;
     // the breaks, lying still at sea, three at a time
     b.status = 'idle'; b.port = null; b.pos = {...g}; b.gop = null; S.plan = null; S.hold = []; b.deckStop = false;
     for (let i = 0; i < breaks.length; i += 3){ FORCE = breaks.slice(i, i + 3); S.t += 13; settle(); r.idle.push(...bad()); for (const a of CREW3D.agents()) if (a.goal && a.c) r.given[a.goal.task] = (r.given[a.goal.task] || 0) + 1; }
     FORCE = null;
     // the work: jigging, the tub stopped to gut, the line coming in
-    b.status = 'fishing'; b.fishUntil = S.t + 600; S.t += 1; settle(); r.work.jig = bad();
+    // (every jigging place taken: as many machines as she may carry and everyone aboard at them)
+    S.equip.jukse = Math.max(1, VESSELS[vt].jukseMax || 3); b.status = 'fishing'; b.fishUntil = S.t + 600; S.t += 1; settle(); r.work.jig = bad();
+    r.jigAt = CREW3D.agents().filter(a => a.goal && a.goal.task === 'jig').length;
     addCatch('torsk', tubCap(), null, true); b.deckStop = true; S.t += 1; settle(); r.work.deck = bad();
     S.hold = []; b.deckStop = false; S.equip.linehaler = true; b.gop = {op:'haul', kind:'line', n:10, done:0, prog:0, a:{...g}, b:{x:g.x + 0.2, y:g.y}}; addCatch('torsk', 20, null, true); S.t += 1; settle(); r.work.haul = bad(); b.gop = null;
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
@@ -44,7 +49,7 @@ async def main():
         for vt, r in R.items():
             if not r: continue
             boats.append(vt)
-            print('%-11s idle %s  work %s  fits %s' % (vt, r['idle'] or '-', {k: v for k, v in r['work'].items() if v} or '-', ' '.join('%s %d/%d' % (k, v[0], v[1]) for k, v in r['scan'].items())))
+            print('%-11s idle %s  work %s  jig %d/%d  fits %s' % (vt, r['idle'] or '-', {k: v for k, v in r['work'].items() if v} or '-', r['jigAt'], r['jigs'], ' '.join('%s %d/%d' % (k, v[0], v[1]) for k, v in r['scan'].items())))
             if r['idle']: idleBad[vt] = r['idle']
             if any(r['work'].values()): workBad[vt] = r['work']
         print(ok(len(boats) >= 10), 'every boat with a deck has its crew on it', len(boats))

@@ -130,7 +130,8 @@ function crewSim(src){
   }
   const near = (x, z, r) => ST.M.near(x, z, r || 1.5);
   const at = (q, r) => { if (!q) return null; const c = near(q[0], q[1], r || 1.2); return c >= 0 ? {k:c, h:q[2], task:q[3]} : null; };
-  function jigSpot(k){ const J = ST.jig; if (J && J.length){ const P = J[k % J.length], sg = P[0] >= 0 ? 1 : -1, c = near(P[0] - sg * 0.45, P[2], 1.2); if (c >= 0) return {k:c, h:sg * Math.PI / 2, task:'jig', jig:k % J.length}; }
+  // (more jigging than there are places, OB6 09.11.2026: the one over stands by rather than inside the other, F19)
+  function jigSpot(k){ const J = ST.jig; if (J && J.length){ if (k >= J.length) return null; const P = J[k], sg = P[0] >= 0 ? 1 : -1, c = near(P[0] - sg * 0.45, P[2], 1.2); if (c >= 0) return {k:c, h:sg * Math.PI / 2, task:'jig', jig:k % J.length}; }
     const sp = ST.PT['spot' + k] || ST.PT.spot0; return sp ? {k:sp.k, h:sp.h || 0, task:'jig'} : null; }
   // the n-th at the gutting table or the tub: the place from the anchors, the next along the table's side
   // (the side of the first that is a short walk from it: a place across a bar or a step would be a detour round the deck)

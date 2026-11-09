@@ -36,7 +36,11 @@ from mathutils import noise
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 L = 7.9; BEAM = 2.7; DRAFT = 1.2; DISP = 3.0                 # VESSELS.snekke
-WL = 1.2; XA = 0.0; XF = 7.9; XM = (XA + XF) / 2; HB = BEAM / 2
+WLD = 1.2; XA = 0.0; XF = 7.9; XM = (XA + XF) / 2; HB = BEAM / 2
+# the waterline of the empty boat (OB6 09.11.2026, valg 18 A in docs/planer/om-bord.md: disp is the empty boat): the drawing's 1.20 (WLD,
+# what the form, the paint and the fittings are drawn from) gave 3.57 t, a laden waterline (about 0.6 t aboard); the form is not changed,
+# the empty boat floats 4 cm lower (check(): 3.0 t), and the game's frame is hers, so the boot top and the bottom paint show over the water
+WL = 1.16
 ZC = 1.58                    # the cockpit sole, self-draining, 0.38 m over the water
 X_BH = 3.75                  # the bulkhead at the cockpit's forward end: the cabin trunk's aft face with the companionway
 X_KA = 1.05                  # the keel's after edge, the forward side of the propeller's aperture
@@ -45,7 +49,7 @@ LAPS = 7                     # the moulded clinker laps between the boot top and
 LAP = 0.022                  # how far each lap's lower edge stands out
 BAND = (0.20, 0.045)         # the dark band: from this far under the sheer to this far under it
 SLB = 0.012                  # the paint lines rise 12 mm a metre forward of midships (planliste kap. 29: they follow the sheer)
-Z_AF = WL + 0.05; Z_BT = WL + 0.13                           # the antifouling to 5 cm over the water, the boot top over it (amidships)
+Z_AF = WLD + 0.05; Z_BT = WLD + 0.13                           # the antifouling to 5 cm over the water, the boot top over it (amidships)
 GW = 0.14                    # the gunwale's width over the cockpit
 
 
@@ -101,12 +105,12 @@ def body(x):
     k = round(x, 5)
     if k in _CV: return _CV[k]
     z0, s, Bs, Bw = zr(x), zs(x), hbs(x), hbw(x); w0 = wk(x) + (0.018 if x >= X_KA + 0.14 else 0.018 * max(0.0, x - X_KA) / 0.14)
-    if z0 >= WL - 0.03 or Bw < w0 + 0.02:
+    if z0 >= WLD - 0.03 or Bw < w0 + 0.02:
         P = [(w0, z0), (w0 + (Bs - w0) * 0.50, z0 + (s - z0) * 0.56), (Bs, s)]
     else:
-        D = WL - z0; b = Bw - w0
-        P = [(w0, z0), (w0 + b * 0.06, z0 + D * 0.14), (w0 + b * 0.45, z0 + D * 0.36), (w0 + b * 0.80, z0 + D * 0.62), (w0 + b * 0.96, z0 + D * 0.86), (Bw, WL),
-             (Bw + (Bs - Bw) * 0.45, WL + (s - WL) * 0.50), (Bs, s)]
+        D = WLD - z0; b = Bw - w0
+        P = [(w0, z0), (w0 + b * 0.06, z0 + D * 0.14), (w0 + b * 0.45, z0 + D * 0.36), (w0 + b * 0.80, z0 + D * 0.62), (w0 + b * 0.96, z0 + D * 0.86), (Bw, WLD),
+             (Bw + (Bs - Bw) * 0.45, WLD + (s - WLD) * 0.50), (Bs, s)]
     c = catmull(P, 14); mono = [c[0]]
     for p in c[1:]:
         if p[1] > mono[-1][1] + 1e-5: mono.append((max(w0, p[0]), p[1]))
@@ -140,7 +144,7 @@ def arc_pts(x, z1, n):
 
 def lap_z(x, k):
     """the height of the k-th lap's lower edge (k = 0 the boot top's, LAPS the band's foot), following the sheer"""
-    z0 = WL + 0.15; z1 = zs(x) - BAND[0] - 0.03; return z0 + (z1 - z0) * k / LAPS
+    z0 = WLD + 0.15; z1 = zs(x) - BAND[0] - 0.03; return z0 + (z1 - z0) * k / LAPS
 
 NKB = 4                      # rows up the keel's side
 NBOT = 18                    # rows from the root to the boot top's foot
@@ -158,14 +162,14 @@ def section(x, fine=True):
     else:
         out += [(0.0, z0, 'k')] * (4 + NKB)
     nb = NBOT if fine else 4
-    out += [(y, z, 'b') for y, z in arc_pts(x, min(zs(x), max(z0, WL + 0.15)), nb)[1:]]
+    out += [(y, z, 'b') for y, z in arc_pts(x, min(zs(x), max(z0, WLD + 0.15)), nb)[1:]]
     s = zs(x); fade = 1.0 - max(0.0, min(1.0, (x - 6.5) / 1.15)) ** 1.5
     cl = lambda z: min(s, max(z0, z))
     for k in range(LAPS if fine else 0):
         za, zz = cl(lap_z(x, k)), cl(lap_z(x, k + 1))
         for zq, off in ((za, LAP), (za + (zz - za) * 0.35, LAP * 0.45), (zz - 0.004, 0.0)):
             zq = cl(zq); y = y_at(x, zq); out.append((y + off * fade * min(1.0, y / max(hbs(x), 1e-3) * 2), zq, 'l' if off == LAP else 't'))
-    if not fine: out.append((y_at(x, cl(WL + 0.6)), cl(WL + 0.6), 't'))
+    if not fine: out.append((y_at(x, cl(WLD + 0.6)), cl(WLD + 0.6), 't'))
     for zq, off, kd in ((cl(s - BAND[0] - 0.03), 0.0, 't'), (cl(s - BAND[0]), 0.012, 'n'), (cl(s - BAND[1]), 0.012, 't'), (s, 0.0, 's')):
         out.append((y_at(x, zq) + off * fade, zq, kd))
     return out
@@ -206,19 +210,19 @@ def wear(p, m, n):
     if nm == 'hull':
         g = 0.97 + 0.04 * n3(x * 3.0, z * 6.0, side)                                            # the gelcoat not quite even
         g *= 1 - 0.09 * ss(0.14, 0.0, z - paint_line(x, Z_BT))                                 # grime over the boot top
-        g *= 1 - 0.07 * ss(0.3, 0.75, n3(x * 5.0, z * 2.0, side * 3.3)) * ss(0.30, 0.0, abs(z - (WL + 0.55)))   # scuffs from quays and fenders
+        g *= 1 - 0.07 * ss(0.3, 0.75, n3(x * 5.0, z * 2.0, side * 3.3)) * ss(0.30, 0.0, abs(z - (WLD + 0.55)))   # scuffs from quays and fenders
         if x < 0.15 and n.x < -0.5:                                                           # the transom: soot and water under the exhaust
-            g *= 1 - 0.30 * ss(0.10, 0.0, abs(y - EXH[0]) - 0.06 * max(0.0, WL + EXH[1] - z)) * ss(WL + EXH[1] + 0.05, WL, z)
-        if side == BILGE[1] and z < WL + BILGE[2]:
-            g *= 1 - 0.20 * ss(0.016 + (WL + BILGE[2] - z) * 0.03, 0.004, abs(x - BILGE[0])) * ss(WL, WL + 0.12, z)
+            g *= 1 - 0.30 * ss(0.10, 0.0, abs(y - EXH[0]) - 0.06 * max(0.0, WLD + EXH[1] - z)) * ss(WLD + EXH[1] + 0.05, WLD, z)
+        if side == BILGE[1] and z < WLD + BILGE[2]:
+            g *= 1 - 0.20 * ss(0.016 + (WLD + BILGE[2] - z) * 0.03, 0.004, abs(x - BILGE[0])) * ss(WLD, WLD + 0.12, z)
         c = toward(m, (0.80, 0.79, 0.72), 0.30 * ss(0.2, 0.7, n3(x * 1.2, z * 3.0, side * 7.1)))   # yellowed a little in patches (32 years)
         return [c[i] * g for i in range(3)]
     if nm in ('band', 'boot'):
-        v = 0.93 + 0.08 * n3(x * 4.0, z * 9.0, side) - 0.08 * ss(WL + 0.06, WL - 0.02, z)
+        v = 0.93 + 0.08 * n3(x * 4.0, z * 9.0, side) - 0.08 * ss(WLD + 0.06, WLD - 0.02, z)
         return [v, v, v]
     if nm == 'af':
         v = 0.86 + 0.14 * n3(x * 2.5, z * 6.0, y * 2.0)
-        g = ss(WL - 0.08, WL + 0.02, z) * (0.5 + 0.5 * ss(-0.3, 0.4, n3(x * 3.0, side * 1.3, 4.1)))   # slime and weed at the waterline
+        g = ss(WLD - 0.08, WLD + 0.02, z) * (0.5 + 0.5 * ss(-0.3, 0.4, n3(x * 3.0, side * 1.3, 4.1)))   # slime and weed at the waterline
         return [v * (1 - 0.30 * g), v * (1 + 0.15 * g), v * (1 - 0.25 * g)]
     if nm in ('deck', 'nonslip', 'white', 'inner'):
         v = 0.95 + 0.05 * n3(x * 5.0, y * 5.0, z * 5.0)
@@ -302,7 +306,7 @@ def stations(fine=True):
     if fine:
         xs = [0.03, 0.06, 0.09] + [0.16 + 0.035 * i for i in range(210)] + [7.5 + 0.025 * i for i in range(16)] + [X_KA + 0.035, X_KA + 0.07, X_KA + 0.105, X_KA + 0.14]
         laps = [lambda x, k=k: lap_z(x, k) for k in range(1, LAPS + 1)]
-        sp += stem_stations(lambda x: kb(x) if x >= X_KA else 0.0, [WL + 0.15] + laps + [lambda x: zs(x) - BAND[0], lambda x: zs(x) - BAND[1]], 5.0, XF - 0.015)
+        sp += stem_stations(lambda x: kb(x) if x >= X_KA else 0.0, [WLD + 0.15] + laps + [lambda x: zs(x) - BAND[0], lambda x: zs(x) - BAND[1]], 5.0, XF - 0.015)
     else:
         xs = [0.4, 0.8, 1.5, 2.2, 3.0, 4.6, 5.4, 7.0, 7.4, 7.7]
     xs = [x for x in xs if all(abs(x - s) > 0.008 for s in sp)] + sp + [XF - 0.008, XF]
@@ -406,8 +410,8 @@ def cutters():
     x0, x1, y0, y1 = HATCH_E
     out.append((((x0 + x1) / 2, 0, ZC), (1, 0, 0), (0, 1, 0), rr_pts(0, 0, x1 - x0, y1 - y0, 0.03), 0.04))
     for y, z in SCUP: out.append(((0.06, y, z), (0, 1, 0), (0, 0, 1), circle(0.03), 0.16))
-    out.append(((x_of(0.0, WL + EXH[1]), EXH[0], WL + EXH[1]), (0, 1, 0), (0, 0, 1), circle(EXH_R, 20), 0.05))
-    xb, sb, hb_ = BILGE; out.append(((xb, sb * y_at(xb, WL + hb_), WL + hb_), (1, 0, 0), (0, 0, 1), circle(BILGE_R, 12), 0.04))
+    out.append(((x_of(0.0, WLD + EXH[1]), EXH[0], WLD + EXH[1]), (0, 1, 0), (0, 0, 1), circle(EXH_R, 20), 0.05))
+    xb, sb, hb_ = BILGE; out.append(((xb, sb * y_at(xb, WLD + hb_), WLD + hb_), (1, 0, 0), (0, 0, 1), circle(BILGE_R, 12), 0.04))
     return out
 
 def cut_holes(target):
@@ -502,11 +506,11 @@ def linings(A, G, fine=True):
         ring = [(x_of(0.0, z + q) - 0.002, y + p, z + q) for p, q in circle(0.03, 12)]
         tube(A, ring, (1, 0, 0), 0.15, C['dark'])
         obox(A, (x_of(0.0, z + 0.045) - 0.012, y, z), (0.004, 0, 0), (0, 0.042, 0), (0, 0, 0.045), C['rubber'])
-    ey, ez = EXH[0], WL + EXH[1]
+    ey, ez = EXH[0], WLD + EXH[1]
     ring = [(x_of(0.0, ez + q) - 0.002, ey + p, ez + q) for p, q in circle(EXH_R, 20)]
     tube(A, ring, (1, 0, 0), 0.14, C['black'], C['black'])
     F.atorus(A, (x_of(0.0, ez) - 0.008, ey, ez), (1, 0, 0), EXH_R + 0.012, 0.010, lambda a: C['steel'], seg=20, rseg=5)
-    xb, sb, hb_ = BILGE; zb_ = WL + hb_
+    xb, sb, hb_ = BILGE; zb_ = WLD + hb_
     ring = [(xb + p, sb * (y_at(xb + p, zb_ + q) + 0.001), zb_ + q) for p, q in circle(BILGE_R, 12)]
     tube(A, ring, (0, -sb, 0), 0.05, C['dark'], C['black'])
     F.atorus(A, (xb, sb * (y_at(xb, zb_) + 0.006), zb_), (0, sb, 0), BILGE_R + 0.008, 0.006, lambda a: C['steel'], seg=14, rseg=4)
@@ -535,7 +539,7 @@ def underwater(fine=True):
         # engine's water intake (a slotted grille)
         for sg in (1, -1):
             F.anode(U, (1.55, sg * (wk(1.55) + 0.003), 0.30), (0, sg, 0), (1, 0, 0), C['anode'], L=0.22, w=0.07, t=0.028, m_strap=C['steel'])
-            F.anode(U, (x_of(0.0, WL - 0.035) - 0.003, sg * 0.22, WL - 0.035), (-1, 0, 0.09), (0, 1, 0), C['anode'], L=0.16, w=0.06, t=0.025, m_strap=C['steel'])
+            F.anode(U, (x_of(0.0, WLD - 0.035) - 0.003, sg * 0.22, WLD - 0.035), (-1, 0, 0.09), (0, 1, 0), C['anode'], L=0.16, w=0.06, t=0.025, m_strap=C['steel'])
         xt, yt = 2.75, -0.30; zt = 0.0
         for z in [zr(xt) + 0.15 * k / 40 for k in range(60)]:
             if y_at(xt, z) >= abs(yt): zt = z; break
@@ -592,10 +596,10 @@ def deck_fittings(A, fine=True):
     yl = 0.55; zt0 = zs(XA)
     for y in (yl - 0.12, yl + 0.12):
         F.pipe(A, [(0.07, y, zt0 - 0.002), (0.07, y, zt0 + 0.05), (-0.03, y, zt0 + 0.05), (-0.03, y, zt0 - 0.10)], 0.0125, C['steel'], 8)
-        F.pipe(A, [(-0.03, y, zt0 - 0.10), (x_of(0.0, WL - 0.40) - 0.05, y, WL - 0.40)], 0.0125, C['steel'], 8)
+        F.pipe(A, [(-0.03, y, zt0 - 0.10), (x_of(0.0, WLD - 0.40) - 0.05, y, WLD - 0.40)], 0.0125, C['steel'], 8)
         acyl(A, (x_of(0.0, 1.85) - 0.002, y, 1.85), (x_of(0.0, 1.85) - 0.04, y, 1.85), 0.016, s, seg=8)    # its stand-off on the transom
     for k in range(5):
-        z = WL - 0.32 + 0.24 * k; x = x_of(0.0, z) - 0.04 - 0.01 * (1 - k / 4)
+        z = WLD - 0.32 + 0.24 * k; x = x_of(0.0, z) - 0.04 - 0.01 * (1 - k / 4)
         acyl(A, (x, yl - 0.12, z), (x, yl + 0.12, z), 0.011, s, seg=6)
     # the flag staff in its socket on the transom's top to starboard, raked aft, with the stern light on its head
     px, py = POLE; ztop = zt0 + 0.92
@@ -858,9 +862,11 @@ def kit_places(G):
     skipper, the seat and the bleeding tub to starboard"""
     r = lambda a: round(a, 3); zt = zh(2.75, 0.55)
     yr = lambda x: gunwale_y(x)
-    zb = (zs(1.40) + zs(0.75)) / 2 + 0.60; yb_ = (yr(1.40) + yr(0.75)) / 2 + 0.02; a = math.atan2(yr(1.40) - yr(0.75), 0.65)
+    # (OB6 09.11.2026: the buoys on the stern rail's after run, x 0.25-0.75 by the catch tubs, where nobody works at the rail; on the run
+    # from 0.75 to 1.40 the aftmost jigging machine stood in the starboard one, om-bord.md 4.3)
+    ya, yb2 = yr(0.75), yr(0.25) - 0.04; zb = (zs(0.75) + zs(0.25)) / 2 + 0.60; yb_ = (ya + yb2) / 2 + 0.02; a = math.atan2(ya - yb2, 0.50)
     return {'raft': [G(2.72, -0.55, zt) + [r(math.pi / 2)]],
-            'buoys': [G(1.07, -yb_, zb) + [r(math.pi / 2 - a)], G(1.07, yb_, zb) + [r(-(math.pi / 2 - a))]],
+            'buoys': [G(0.50, -yb_, zb) + [r(math.pi / 2 - a)], G(0.50, yb_, zb) + [r(-(math.pi / 2 - a))]],
             'radar': G(2.72, 0.60, zt),
             'tubs': [G(0.72, 0.58, ZC) + [0.0, 460, -1], G(0.62, -0.60, ZC) + [r(math.pi / 2), 460, -1]],
             'iskasse': G(1.70, 0.95, ZC) + [0.0, 0.6],
@@ -887,7 +893,7 @@ def anchors():
                        [G(HT0 + 0.08, 0.0, HTZ - 0.06), [1, 0.95, 0.85], 'work']],
             # the companionway in the bulkhead (the real door into the cabin), its sill on the sole; the crew go in here
             'doors': [{'at': G(X_BH - 0.03, (DOOR[0] + DOOR[1]) / 2, ZC), 'w': round(DOOR[1] - DOOR[0], 2), 'h': round(DOOR[3] - ZC, 2),
-                       'in': G(4.4, (DOOR[0] + DOOR[1]) / 2, WL + 0.15), 'to': 'cabin', 'hinge': 'stbd'}],
+                       'in': G(4.4, (DOOR[0] + DOOR[1]) / 2, WLD + 0.15), 'to': 'cabin', 'hinge': 'stbd'}],
             'names': name_strips(G),
             # the open cockpit aft: the hauler on the starboard gunwale abreast of the board, the gear in the cockpit
             'deck': {'y': round(ZC - WL, 3), 'z': round(-(1.4 - XM), 3)}, 'gw': round(zs(1.5) - WL, 3),
@@ -897,6 +903,13 @@ def anchors():
             # on the sole just aft of him; the gutting board is the boat's own, over the port gunwale abreast of him (own: the game draws
             # no table; top: where the fish lie), the one who guts on the sole inboard of it; the iced catch in the 300 l tub aft (kit.tubs)
             'work': {'table': G(sum(GUT) / 2, 1.08, ZC), 'tub': G(1.75, 0.0, ZC), 's': 0.75, 'pack': G(1.35, -0.45, ZC) + [3.14], 'own': True, 'top': round(gut_top() - WL, 3)},
+            # the jigging places (OB6 09.11.2026, om-bord.md 4.3, F15, F21): the search along her rails (view3d jigRail) put place 2 in the
+            # corner by the dashboard with the hard top's post through the one standing there, and the third out on the side deck by the
+            # cabin. The places in the order the machines are bolted on, [side (1 starboard, -1 port), z in the game's frame]: starboard
+            # aft of the hauler and forward of the stern rail's first post (model x 1.60), the fisher free at the cockpit's rail between
+            # the hauler and the catch tub; port in the open side between the hard top's posts (x 2.55), forward of the gutting board.
+            # Only two: the third side place on a 1.8 m sole has the helm seat, the board, the ice box or a catch tub in it
+            'jigZ': [[1, round(XM - 1.60, 3)], [-1, round(XM - 2.55, 3)]],
             'kit': kit_places(G)}
 
 
@@ -911,17 +924,16 @@ def check():
             if z1 > z0 and za < wl: a += (y0 + y1) / 2 * (zb - za)
         return 2 * a
     vol = lambda wl: sum((area(xs[i], wl) + area(xs[i + 1], wl)) / 2 * (xs[i + 1] - xs[i]) for i in range(400))
-    v = vol(WL); wl1 = WL
-    for _ in range(60):
-        if vol(wl1) * 1.025 > DISP: wl1 -= 0.005
-        else: break
-    out.append(('deplasement %.2f t ved vannlinja (%.2f m over kjølen) mot %.1f t i VESSELS; %.1f t gir vannlinja %.2f m lavere' % (v * 1.025, WL, DISP, DISP, WL - wl1), True))
+    v, vd = vol(WL) * 1.025, vol(WLD) * 1.025
+    # (valg 18 A: disp is the empty boat; over 10 % off is a form to be drawn again, not a waterline to be moved)
+    out.append(('deplasement %.2f t ved den tomme båtens vannlinje (%.2f m over kjølen) mot %.1f t i VESSELS; tegningens lastede vannlinje %.2f gir %.2f t (%.1f t om bord)' % (v, WL, DISP, WLD, vd, vd - v), abs(v - DISP) / DISP < 0.10))
     loa = XF - x_of(XA, zs(XA))
     out.append(('lengde over alt %.2f m (speilets topp til stevnens topp; baugrulla til %.2f) mot %.1f' % (loa, 7.96 + 0.035, L), abs(loa - L) / L < 0.01))
     mb = max(ysh(x) for x in xs[::4]) + 0.012
     out.append(('største bredde %.2f m (over det mørke båndet) mot %.1f' % (2 * mb, BEAM), abs(2 * mb - BEAM) / BEAM < 0.03))
-    out.append(('dypgang %.2f m med kjølen (skoen %.3f under) mot %.1f' % (WL - min(kb(x) for x in xs if x >= X_KA), 0.006, DRAFT), abs(WL - min(kb(x) for x in xs if x >= X_KA) - DRAFT) < 0.02))
-    out.append(('fribord midtskips %.2f m, ved stevnen %.2f, ved speilet %.2f; cockpitdørken %.2f over vannet' % (zs(XM) - WL, zs(XF) - WL, zs(XA) - WL, ZC - WL), ZC - WL > 0.3))
+    kz = min(kb(x) for x in xs if x >= X_KA)
+    out.append(('dypgang %.2f m med kjølen tom, %.2f lastet (tegningens vannlinje; skoen %.3f under) mot %.1f' % (WL - kz, WLD - kz, 0.006, DRAFT), abs(WLD - kz - DRAFT) < 0.02 and abs(WL - kz - DRAFT) / DRAFT < 0.05))
+    out.append(('fribord midtskips %.2f m, ved stevnen %.2f, ved speilet %.2f; cockpitdørken %.2f over vannet (tom)' % (zs(XM) - WL, zs(XF) - WL, zs(XA) - WL, ZC - WL), ZC - WL > 0.3))
     wz, lz = white_z(), lamp_z()
     out.append(('den hvite rundtlysende %.2f m over sidelanternene (vedlegg I 2(d): minst 1 m)' % (wz - lz), wz - lz >= 1.0))
     hs, hw = lz - zs(LAMP_X), wz - zs(MASTX)
