@@ -40,12 +40,12 @@ For å sette trebåten, skiffen og snekka på samme skala som de andre er punkte
 | `kyst15` | 76 (godkjent) | `kyst15-grunnlag.md` 121–141; må eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen, `BACKLOG.md`), og kan falle |
 | `breisjark` | 72 | `breisjark-grunnlag.md` 127–154 |
 | `sjarkny` | 70 | `sjarkny-grunnlag.md` 109–120 |
-| `snekke` | **69 (forslag)** | kapittel 4.3 |
+| `snekke` | **67 (forslag)** | kapittel 4.3 |
 | `plastsjark` | 66 | `plastsjark-grunnlag.md` 192–214 |
 | `sjark` | 64 | `havsjark-grunnlag.md` 115–123 |
 | `trebat` | **63 (forslag)** | kapittel 4.1 |
 | `hurtigsjark` | 62 | `hurtigsjark-grunnlag.md` 123–132 |
-| `skiff` | **58 (forslag)** | kapittel 4.2 |
+| `skiff` | **57 (forslag)** | kapittel 4.2 |
 | `kyst21` | ingen (ikke revidert, anslag rundt 50) | kapittel 4.10 |
 
 ## 3. Funnene som gjelder alle båtene
@@ -100,24 +100,66 @@ Data: 7,0 m, 1,9 t, én i mannskapet og deg, ingen køyer, ett fangstkar på 500
 
 Karakteren (forslag, skalaen i kap. 2): K1 3, K2 15, K3 13, K4 4, K5 8, K6 6 (teinene gjennom skroget, de to inni hverandre ved karet, settingen uten folk), K7 8, K8 6 = **63**. Det som løfter mest: bilder med kjent lengde (K1), teinene og haleren der fiskeren arbeider (K6), og Jonas' gjennomgang uten nye funn (K8).
 
-### 4.2 Skiffen (`skiff`, `skiff59.py`): forslag 58/100
+### 4.2 Skiffen (`skiff`, `skiff59.py`): forslag 57/100
 
-Data: 5,9 m, 1,0 t, én og deg, aluminium, 60 hk påhengs, ett kar på dørken. Håndbåt som trebåten.
+Data: 5,9 m, 1,0 t, én og deg, aluminium, 60 hk påhengs, ett kar på dørken, eget sløyebord over babord ripe ved konsollen (`work.own`), rigges i spillet for juksa, line og teiner (garn går ikke, F16). Håndbåt som trebåten: ingen agenter; `drawSkiff` tegner faste figurer (`view3d/13-instruments.js:199`), så json-en har ingen stasjoner, ingen hendelser og ingen klippesjekk for skiffen (`before`/`after` tomme, `clipcheck` null). Alt under er sett i bildene, ikke målt.
+
+Opptakene: kjøringen 03:42–04:06 UTC, liggende, 2,3–3,1 bilder i sekundet. Garn og rydding ble hoppet over (`SKIP`: garnhaleren passer ikke; ingen agenter), kranen likeså (ingen kran).
 
 | Operasjonen | Hva som er galt | Hvorfor det ikke er ekte | Kilde | Alvor |
 |---|---|---|---|---|
-| Teiner, trekk | **Kongekrabbeteinene er større enn båten og står gjennom konsollen og skroget**, som på trebåten. | Som 4.1. | `view3d/10-gear.js:357–400` | **A** |
-| Teiner, sett | Ingen teiner om bord eller ut over ripa (F7). | Som 4.1. | `10-gear.js:326` | **A** |
-| Kaste loss | Hun rygger ut og svinger riktig, men tauene går av seg selv (F1). | Som 4.1. | `15-env-mooring.js` | **A** |
-| Line, sett | Skipperen står ved konsollen, mannskapet sitter; lina synes ikke gå ut (F4, F5). | Som 4.1. | `13-instruments.js:245` | B |
-| Line, trekk | Skipperen haler ved trommelen på styrbord ripe, lina kommer opp. Mannskapet sitter akter ved motoren. | Som 4.1. | `drawSkiff` | B |
-| Fullt kar | Den som sløyer, står akter ved flagget; flaggstanga ser ut til å gå gjennom ham (sett i to bilder, ikke målt). | Sløyebordet er båtens eget om babord ved konsollen (`work.own`). | `skiff59.py:765–817` | B (sjekkes) |
-| Juksa og maskinene | Skipperen ved snella og maskinene på styrbord ripe forut for konsollen. Ser riktig ut. | | | – |
-| Modellen | 1,60 t ved vannlinja mot 1,0 (+60 %); 90 hk-motoren vises ikke (D6); Jonas fant tre ting selv i revisjonen. Stiv som en flåte i fysikken (S5). | | `skiff-grunnlag.md` | K2, K8 |
+| Fullt kar, sløying | **Den som sløyer, står utenfor båten**, på utsiden av babord ripe over sjøen, og sløyer inn over bordet mot fiskeren, som står på innsiden. Flaggstanga står foran ham, ikke gjennom ham (retter 4.2 slik den sto). Samme stilling henger igjen i første bilde av linesettingen. | Sløyebordet henger over ripa så avfallet går i sjøen; den som sløyer, står på dørken innenfor og ser utover. | Arbeideren fra `drawDeck` på håndbåtene (`view3d/09-landing-deck.js:792–796`) mot `work.own` (`skiff59.py:765–817`); sett i `juksa_sloy_liggende_2.jpg`, `_3.jpg`, `line_sett_liggende_1.jpg` | **A** |
+| Teiner, trekk | **Kongekrabbeteina er like bred som båten.** Den kommer inn over konsollen og fiskeren, løftes og settes akter, der den står gjennom mannskapet som sitter, påhengsmotoren, flaggstanga og styrbord ripe. Krabben ligger i teina. | En teine løftes inn over ripa og settes på dørken eller et teinebord; den får plass, eller båten passer ikke for den teina. | `view3d/10-gear.js:357–400` (`drawPots`, `X.pot.half` 0,7 m, `potDeck`); sett i `teiner_trekk_liggende_1.jpg`–`_3.jpg` | **A** |
+| Teiner, sett | Teinene tegnes (retter 4.2, som sa at ingen teiner synes): to teiner i stabel står halvt utenfor styrbord side, gjennom ripa, livbøya, konsollen og skipperen. Stabelen står der fortsatt i første bilde av neste klipp (`line_trekk_liggende_1.jpg`), etter at teinene skulle vært satt. Ingen går med teina til ripa; skipperen står ved haleren. | Som 4.1: teinene står stablet og surret på dørken og går ut én og én med tauet imellom. | `10-gear.js:326` og `:357–400`; sett i `teiner_sett_liggende_2.jpg`, `_3.jpg` | **A** |
+| Teinene på skiffen (valg 22) | Ser like galt ut som på trebåten, eller verre: teina er omtrent så bred som skiffen (2,45 m) og har ingen plass mellom konsollen og motoren. | Jonas' avgjørelse for trebåten (09.11.2026) passer like godt her. Anbefaling: valg 22 A. | Sett i alle tre teinebildene | **A** |
+| Krabben ved rekka (F6) | Kan ikke avgjøres: med 2,3 bilder i sekundet og ingen hendelsesteller for håndbåtene sees ingen kniv mot krabben, men heller ikke at den sorteres. | Krabbe bløgges ikke. | `13-instruments.js:249` | B (ikke sett) |
+| Line, sett | Fiskeren står ved haletrommelen i trekkestilling (F5), mannskapet sitter akter. Lina og stampen sees ikke gå ut. | Som 4.1. | `13-instruments.js:245–248`; sett i `line_sett_liggende_2.jpg` | B |
+| Line, trekk | Riktig grep: fiskeren haler ved trommelen på styrbord ripe, lina kommer opp. Mannskapet sitter akter foran motoren med armene rett fram uten noe å holde i, gjennom hele klippet. | Én haler og tar av fisken, den andre bløgger og legger lina i stampen. | `drawSkiff`; sett i `line_trekk_liggende_2.jpg` | B |
+| Mannskapet i alt fisket | Den andre om bord sitter på akterbenken i alle fiskeklippene (juksa, maskin, line, teiner) og gjør ingenting. | På en 1+1-båt bløgger, tar av og rydder den andre. | `drawSkiff` | B |
+| Juksa | Fiskeren ved håndsnella på styrbord ripe, fisken opp. Ser riktig ut. | | sett i `juksa_jig_liggende_2.jpg` | – |
+| Juksamaskinene | To maskiner på styrbord ripe forut for konsollen, fiskeren mellom dem og fisken opp. Ser riktig ut. | | sett i `juksa_maskin_liggende_2.jpg` | – |
+| Kaste loss, til feltet | Skipperen ved rattet i konsollen, mannskapet sitter akter: riktig. Tauene kan ikke ses (for langt unna i første bilde); F1 står etter koden. | | `15-env-mooring.js`; F1 | **A** (F1 som felles) |
+| Inn til kai | Kan ikke vurderes: kameraet står inne i bygningene og snøen på kaia i det meste av klippet, båten synes ikke. Første bilde har ennå teina fra trekket gjennom konsollen. | | `24-cinema.js:316–335` (`camLift`, `camPull`); sett i `felles_inn_liggende_2.jpg`, `_3.jpg` | C (opptaket) |
+| Lossing | Kan ikke vurderes: lasten var 0 i klippet (json `hold` 0). Båten ser ut til å ligge et par meter ut fra fenderpålene (ikke målt; perspektivet kan lure). Ingen om bord gjør noe (F10). | | sett i `felles_loss_liggende_2.jpg` | C |
+| Hvile | Skipperen står ved konsollen, mannskapet sitter akter; ingen spiser (F13 som felles). | | | C |
+| Hvite flekker | Sprutpartiklene som store hvite flekker rundt båten i de fleste klippene, som felles. | | `24-cinema.js:497` | B (felles) |
+| Modellen | 1,60 t ved vannlinja mot 1,0 (+60 %); 90 hk-motoren vises ikke (D6); Jonas fant tre ting selv i revisjonen. | | `skiff-grunnlag.md` | K2, K8 |
 
-Karakteren (forslag): K1 5, K2 12, K3 12, K4 4, K5 7, K6 7, K7 8, K8 3 = **58**.
+**Karakteren:** satt 58 i planen (rapport-modeller.md 3.2 sa 59 med K6 8). Klippene viser tre funn med alvor A i arbeidet som er skiffens egne (den som sløyer, står utenfor båten; teinene gjennom folk, konsoll og motor ved setting og trekk), i tillegg til F1. K6 går fra 7 til **6**, som trebåten. K1 5, K2 12, K3 12, K4 4, K5 7, **K6 6**, K7 8, K8 3 = **57**.
 
-Skiffen har det samme problemet som trebåten med kongekrabbeteinene; valg 22 spør om den skal gjøres lik.
+Merk: klippesjekken (`crewclip`, `clipNow`) prøver bare agentene, så ingen av skiffens funn kan fanges av den; de må ses.
+
+**Til Jonas:** På skiffen står den som sløyer, ute i lufta på utsiden av ripa, og krabbeteina er like bred som båten; teinene bør ut av skiffen som av trebåten (valg 22 A).
+
+### 4.3 Snekka (`snekke`, `snekke26.py`): forslag 67/100
+
+Data: 7,9 m, 3,0 t, to og deg, plast, 30 hk diesel, hardtop og lugar forut, ingen køyer, fangstkar med is akter og blødekar ved fiskeren, eget sløyebord over babord ripe tvers av haleren, rigges for alle fire (garnhaleren passer, `minLen` 7,5), `jukseMax` 3. Ikke håndbåt: tre agenter med stasjoner og klippesjekk.
+
+Opptakene: kjøringen 03:45–04:23 UTC, liggende, 2,8–3,9 bilder i sekundet. Kranen ble hoppet over (ingen kran). Livbøya henger på styrbord rekke akter (spillets `kit.buoys`), midt i arbeidsplassene der.
+
+| Operasjonen | Hva som er galt | Hvorfor det ikke er ekte | Kilde | Alvor |
+|---|---|---|---|---|
+| Juksa | **Juksaplass 2 ligger i hjørnet ved dashbordet under hardtoppen**: hardtopstolpen går gjennom ansiktet og kroppen til den som står der, og sidepanelet står opp til brystet, så han jukser over det. Klippesjekken fant det samme: `me:jig:2[0.5]` i begge sjekkene i juksa- og maskinklippet. Plass 1 akter står bak livbøya. | Den som jukser, står fritt ved ripa i cockpiten med lina rett ned langs siden. | `jigRail` (søk i skroget, `kartlegging-spillet.md:350`), `deckcrew.js:414`; sett i `juksa_jig_liggende_2.jpg`, `_3.jpg`, `juksa_maskin_liggende_1.jpg` | **A** |
+| Juksamaskinene | Alle tre på styrbord: **den akterste står i livbøya**, og fiskeren ved den ser ut til å stå inne i maskinen (trommelen ved brystet, armene rundt). **Den forreste står ute på sidedekket forut for hardtoppen**, ved lugaren, der ingen når den fra cockpiten. Maskinene er trolig ikke med i klippesjekken. | Maskinene står langs cockpitripa med plass til fiskeren ved siden; livbøya henger der ingen arbeider. | `jigRail`; `kit.buoys`; sett i `juksa_maskin_liggende_2.jpg`, `_3.jpg` | B |
+| Teiner, trekk | **Teina settes ned akter gjennom fangstkaret, styrbord ripe og den som sorterer** (han står inni teina). Teinedaviten står tett inntil eller gjennom kanten av hardtoppen (kan ikke avgjøres i bildene). Ingen hendelser `bleed` i klippet; stasjonen `sort:at:tend` er riktig tenkt (F6 rammer ikke snekka). | Teina settes på en ledig plass på dørken eller et teinebord, ikke oppå karene og folkene. | `view3d/10-gear.js:357–400` (`potDeck`); sett i `teiner_trekk_liggende_2.jpg`, `_3.jpg` | **A** |
+| Teiner, sett | To teiner i stabel står halvt utenfor styrbord side akter, gjennom ripa, livbøya, karet og den som står ved haleren. Han står ledig; de to andre har matpause (`pause:at:lunch`) mens teinene går ut av seg selv. Stabelen henger igjen i første bilde av linetrekket. | Teinene står surret på dørken og går ut én og én; to arbeider. | `10-gear.js:326`, `:357–400`; `core/13-work.js:270` (`IDLE_ACTS`); sett i `teiner_sett_liggende_2.jpg`, `_3.jpg` | **A** |
+| Teinene på snekka | Teina (1,4 m) kunne fått plass på dørken på en 7,9 m snekke, men plasseringen finner ingen ledig flate. Ikke samme sak som trebåten og skiffen. | | `potDeck` | (over) |
+| Line, sett | Haleren står ledig ved haleren, de to andre har pause (`sit`, `knife`); ingen akter ved stampene (F4 som felles). Lina sees ikke gå ut. | | sett i `line_sett_liggende_2.jpg` | B |
+| Line, trekk | Haleren ved den røde haleren på styrbord, bløggeren akter bak livbøya, den tredje har pause (`knife`). Lina kom opp uten fisk (json: ingen hendelser, `hold` 0), så fiskegrepene kan ikke vurderes. Ingen kveiler lina i stampen. | Som 4.1. | sett i `line_trekk_liggende_2.jpg` | B |
+| Garn, sett | Bedre enn F4: én (`haling:at:pick`) står akter der garnet går ut over styrbord hjørne. Han som haler, står ledig. Garnhalerens renne ligger på skrå inn i cockpiten i brysthøyde over gangen; om den går inn i ham ved hofta, kan ikke avgjøres. | | `tools/gear/haler.py` (`haul-garn`); sett i `garn_sett_liggende_3.jpg` | C |
+| Garn, trekk | Ser stort sett riktig ut: garnet kommer inn over valsen med fisk (`pick` 2, `bleed` 2), haleren ved haleren, plukkeren og bløggeren akter. De tre står tett i styrbord hjørne bak livbøya. Garnet tegnes som ei line med dupper, ikke som et garn. | | sett i `garn_trekk_liggende_2.jpg` | C |
+| Fullt kar, sløying | Riktig: én sløyer ved bordet over babord ripe og ser utover, én iser og pakker ved karet. Den tredje har matpause og står midt i cockpiten uten mat i hendene. Karet viser én–to fisker med 150 kg om bord. | Med fullt kar hjelper alle til; lasten synes i karet. | `13-work.js:270–301`; sett i `juksa_sloy_liggende_3.jpg` | B |
+| Rydde | Slangen synes på den åpne snekka (`pause:at:hose`, retter F12 for snekka), men bare som pause, ikke som jobb (F12). | | sett i `felles_rydd_liggende_2.jpg` | B (F12) |
+| Kaste loss | Json: de to går inn (`pause:in`) mens tauene tas inn (F2). Skipperen ved rattet. Tauene sees ikke (for langt unna); F1 etter koden. | | F1, F2 | **A** (felles) |
+| Til feltet | Skipperen ved rattet under hardtoppen, de to i lugaren. Riktig. | | | – |
+| Inn til kai | Kan ikke vurderes i bildene: kameraet står i snøen og bygningene på kaia. Json: ingen ved roret (`back`, `lean`, `look`), F3 bekreftet. | | `24-cinema.js:316–335`; sett i `felles_inn_liggende_2.jpg` | **A** (F3) |
+| Lossing | Lasten var 0 (`hold` 0), så lossingen synes ikke; mottakets kran svinger uten kar. Båten ser ut til å ligge et par meter fra fenderpålene (ikke målt). | | sett i `felles_loss_liggende_2.jpg` | C |
+| Hvile | Pauser på dekk, ingen spiser (F13). | | | C |
+| Hvite flekker | Som felles. | | `24-cinema.js:497` | B (felles) |
+
+**Karakteren:** forslaget i rapport-modeller.md 3.3 var 69 (K6 10). Klippene viser to funn med alvor A som er snekkas egne (juksaplass 2 gjennom hardtopstolpen; teinene gjennom karet og folkene), i tillegg til F1–F3. K6 kan da ikke over 9, og med livbøya og maskinene på ulogiske plasser i tillegg settes den til **8**. K1 4, K2 14, K3 13, K4 5, K5 8, **K6 8**, K7 9, K8 6 = **67**. Merk at `crewclip` sies å være grønn for snekka, mens `ombord.py` fant `me:jig:2`; det bør sjekkes før K7 står.
+
+**Til Jonas:** Snekka er den båten der arbeidet ser mest ekte ut (sløyingen og garntrekket er riktige), men den tredje juksaplassen står inne i hardtopstolpen og teina settes ned oppå karet og folkene.
 
 ## 5. Båten i sjøen
 

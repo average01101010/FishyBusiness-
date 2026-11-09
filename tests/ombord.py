@@ -111,7 +111,7 @@ OPS = {
   # in to the plant and mooring: 300 m out, then dock; the path in along the quay, the lines one by one
   'inn': ['*', 'inn til mottaket og fortøye: hun glir inn langs kaia, tauene på', """const q = portById('husoy'); b.status = 'idle'; b.port = null; b.pos = {x:q.p.x + 0.3, y:q.p.y}; G3.vesselChanged();
       if (S.crew.length) CREW3D.reset(); await new Promise(r => setTimeout(r, 2500));
-      /* (on the slow clock: the glide in and the lines fall inside the clip) */ setTimeout(() => dock('husoy', 'main'), 2500);""", (0.9, 0.5, 2.2), 16],
+      /* (on the slow clock: the glide in and the lines fall inside the clip) */ setTimeout(() => dock('husoy', 'main'), 2500);""", (-0.6, 1.0, 2.0), 16],
   # landing at the plant: the plant's crane lifts the tubs, the truck, the people on the quay
   'loss': ['*', 'losse ved mottaket: karene opp med mottakets kran, trucken, folkene på kaia', """let why = null;
       for (const pid of ['husoy', 'torsken']){ const q = portById(pid); if (!q) continue; b.status = 'port'; b.port = pid; b.pos = {...q.p}; b.berth = 'main'; b.land = null; S.plan = null; G3.vesselChanged();
@@ -119,7 +119,7 @@ OPS = {
         why = startLanding(false); if (!why && b.land) break; }
       if (!b.land) return 'SKIP: ' + JSON.stringify(why); if (S.crew.length) CREW3D.reset();
       /* (the plant waits a minute before the first lift and takes 2.5 game minutes a lift: the clip starts in the first lift, at twice the pace) */
-      S.mult = 2; b.land.t0 -= LANDING.prep * 0.95; b.land.until -= LANDING.prep * 0.95;""", (1.2, 0.45, 1.8), 14],
+      S.mult = 2; b.land.t0 -= LANDING.prep * 0.95; b.land.until -= LANDING.prep * 0.95;""", (-0.6, 1.0, 1.8), 14],
   # the boat's own crane at the quay with freight
   'kran': ['*', 'båtens egen kran ved kaia: frakt om bord', """if (!(V.crane > 0)) return 'SKIP: ingen kran'; QUAY('husoy');
       S.cargo = [{tur:'t1', kg:Math.min(1500, V.deckCargo || 0), no:'proviant', en:'provisions'}];
