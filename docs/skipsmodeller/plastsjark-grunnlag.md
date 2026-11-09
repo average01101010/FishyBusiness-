@@ -265,8 +265,29 @@ Arbeidsdekket akter er 4,34 m langt (fra speilets innside til styrhusets akterve
 - **`VESSELS.plastsjark.desc`**: «styrhus forut med to køyer i ruffen under baugen, og åpent arbeidsdekk akter med lasterom og skyvedør inn til styrhuset».
 - **Klasjsjekken** (`qa/clip_plast31.py`): 0; unntaket for lufterens hatt flyttet med den.
 
+### 10.4 Etter-bildene og det som står igjen
+
+Etter-opptaket (`tests/ombord.py plastsjark`, begge formater, alle operasjonene: huset og alle plassene er flyttet, så ingen ble droppet) og arkene i `docs/okter/2026-11-09-ob7/`: garnet og lina settes fra binga og stampene akter over hekken uten å gå gjennom noe (F20 rettet); de som jukser, står fritt ved ripa, to på styrbord og én på babord med tre maskiner (F21 rettet; `crewclip` 4 av 4 plasser uten klipp); sløyingen ved bordet på babord og pakkingen ved karet; skipperen bak rattet med utsikt over ruffen. **Står igjen:** (1) **Teina i folkene** (F7, alvor A): i teinetrekket settes teina ned akter på styrbord, og de to som sorterer står inni den; plassen for teina (`potDeck`) og for den som sorterer (`deckcrew.js` `places().pot`) regnes ut fra haleren og eies av OB16 nå; dørken har plass (10.2). (2) Ingen akter ved stampene når det settes (F4, OB3). (3) De hvite flekkene ved sjøen (sprutpartiklene, felles B).
+
+### 10.5 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 63 etter en annen skala, 64 etter OB2.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med kjølen, brønnen, roret og propellen, og vekta stemmer for den tomme båten (6,01 t). Trekk: ingen tegning; bildene av typen viser planen, ikke linjene; formen er ikke målt mot noe bilde |
+| Detaljer | 20 | 15 | Ekte hull med lysning og glass, skyvedør i aluminiumsramme, bremmen, spygattene åpne, 76 600 trekanter, klasjsjekken 0. Trekk: materialene er ikke PBR (F2) |
+| Lanterner | 5 | 4 | Lovlige plasser etter `check()`, `lanterntest` grønn; ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Forut som på bildene, frontrutene over ruffen, konsollen med plotter, ratt og enspak, døra til ruffen inne; `brotest` grønn (2,00 m under taket, øyet 1,65) |
+| Arbeidsflyt | 25 | 15 | Settingen akter uten å gå gjennom huset, juksa fordelt, sløyingen og pakkingen ved hver sin plass, døra akter rett ut på arbeidsdekket. Holdt på rundt 60 % fordi F7 (teina i folkene, alvor A) står for denne båten |
+| Utforming av dekk | 20 | 16 | Haleren, karet, bordet og luka samlet like akter for huset, redskapet akter der det settes fra, plass til teiner på dørken. Trekk: teina tegnes der karet står |
+| **Sum** | **100** | **72** | Under grensen. Når OB16 legger teina og stablene på dørken akter for luka (10.2) og den som sorterer ved siden av, er forslaget 20 på arbeidsflyten og 17 på dekket, **78** |
+
+Jonas setter karakteren.
+
 ## Endringslogg
 
+- 09.11.2026: OB7 (kap. 10): styrhuset forut etter bildene av typen (Jonas: «Forut»), arbeidsdekket akter, bremmen på taket, spygattene åpne, den tomme vannlinja; forslag 72.
 - 01.11.2026: kap. 9, selvvurderingen; `check()` regner nå også takets høyde over dekket og navnefeltet mot registreringsmerket.
 
 - 01.11.2026: første versjon, gjennomgangen før endring og de første rundene.
