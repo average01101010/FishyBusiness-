@@ -34,7 +34,11 @@ from mathutils import noise
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); OUT = os.path.join(HERE, 'out')
 L = 5.9; BEAM = 2.45; DISP = 1.0                     # VESSELS.skiff
-WL = 0.30; XT = 0.60; XF = 5.80; XM = 3.0            # the waterline, the transom, the stem's top, the game's origin
+# the waterline of the empty boat (OB5 09.11.2026, valg 18 A in docs/planer/om-bord.md: disp is the empty boat): the drawing's 0.30 gave
+# 1.60 t, a loaded line (hull, motor, fuel, two men, 350 kg of fish and ice); 1.0 t floats her at 0.23. The form is the drawing's and is
+# not changed; the bottom paint and the boot stripe stay where the drawing has them (Z_BOT, Z_BT), so the paint shows above the water
+# when she is light, as on a real boat
+WL = 0.23; XT = 0.60; XF = 5.80; XM = 3.0            # the waterline, the transom, the stem's top, the game's origin
 Z_SOLE = 0.45; Z_CAST = 0.82; X_CAST = 4.08; X_BOW = 5.35; GW = 0.19; ZP = 0.62
 YP = 0.34                                            # the pods' inner sides, the notch's half width
 ZN = 0.70                                            # the notch's top, where the outboard clamps (25 in shaft)
@@ -693,13 +697,17 @@ def lanterns(A, fine=True):
 # ---------- the outboard and its propeller (parts of their own; they turn in the game) ----------
 PIVOT = (XT, 0.0, ZN)
 OBM = {}
-def outboard(fine=True):
-    A = Acc('outboard'); P = Acc('prop')
+def outboard(fine=True, hp=60, nm='outboard', pn='prop'):
+    A = Acc(nm); P = Acc(pn)
     M_ = {'cowl': C['motor'], 'band': C['motor2'], 'leg': C['leg'], 'steel': C['steel'], 'chrome': C['chrome'], 'dark': C['dark'], 'rubber': C['rubber'], 'anode': C['anode'], 'prop': C['prop']}
-    pc = F.outboard(A, P, (XT, 0.0, ZN), 60, M_, shaft=0.635, fine=fine)
-    OBM['prop'] = tuple(round(v, 4) for v in pc)
+    pc = F.outboard(A, P, (XT, 0.0, ZN), hp, M_, shaft=0.635, fine=fine)
+    OBM[pn] = tuple(round(v, 4) for v in pc)
     return A.done(35, tint=wear), P.done(60)
 PROPC = (XT - 0.66, 0.0, ZN - 0.635 - 0.165)
+# the 90 hp outboard (D6, EQUIP.motor90): the same motor at 90 hp (the powerhead and the gearcase grow with hp ** 0.3), its own parts
+# outboard90 and prop90, which the game draws when the player has bought it (view3d/12-skiff.js, 13-instruments.js drawSkiff)
+S90 = (90 / 60.0) ** 0.3
+PROPC90 = (XT - 0.66 * S90, 0.0, ZN - 0.635 - 0.165 * S90)
 
 
 # ---------- the wheel and the throttle, only for the renders (the game draws its own, turning) ----------
@@ -758,14 +766,18 @@ def kit_places(G):
     on the port side); the fish tubs (Jonas 04.11.2026: the boat has no hold, so the catch lies in white 500 kg tubs on deck, as many
     as her capacity; docs/planer/fiskekar-dekk.md): the first on the sole forward of the console to port (TUB), clear of the casting
     deck forward and of the gutting board aft; there is no room for a second ([x, y, z, ry, litres, the place it stands on, -1: the deck]);
-    the ice box under the gutting board (ICEBOX: [x, y, z, ry, scale]); the net tub and the freight on the casting deck, the line tubs
-    on the sole forward of the fisher's place, by the hauler"""
+    the ice box under the gutting board (ICEBOX: [x, y, z, ry, scale]); the freight on the casting deck.
+    The line tubs and the net tub on the sole aft, to starboard of the skipper and abaft the console, where the gear goes out over the
+    starboard quarter clear of the outboard (OB5 09.11.2026, om-bord.md 4.2; Jonas: «at utstyr står plassert på rasjonelle og logiske
+    plasser»): they stood forward of the fisher and on the casting deck, so the gear set over the stern ran through the console and the
+    skipper (F20). The line tubs two along the boat (ry: the pair forward, n: two to a layer, the rest stacked on them; two across do
+    not fit between the skipper and the liner), the net tub at 0.62 of the 460 l tub (s), between the bench and the console"""
     r = lambda a: round(a, 3)
     return {'buoys': [G(1.63, -(yi(1.63) + 0.004), zs(1.63) - 0.04) + [r(-math.pi / 2)], G(2.42, yi(2.42) + 0.004, zs(2.42) - 0.04) + [r(math.pi / 2)]],
             'tubs': [G(TUB[0], TUB[1], Z_SOLE) + [0.0, 460, -1]],
             'iskasse': G(ICEBOX[0], ICEBOX[1], Z_SOLE) + [0.0, 0.5],
-            'garn': {'at': G(4.58, 0.0, Z_CAST), 'ry': r(math.pi / 2)},
-            'stamps': {'at': G(3.78, -0.20, Z_SOLE), 'ry': 0.0},
+            'garn': {'at': G(1.50, -0.58, Z_SOLE), 'ry': 0.0, 's': 0.62},
+            'stamps': {'at': G(1.40, -0.58, Z_SOLE), 'ry': r(math.pi / 2), 'n': 2},
             'cargo': [G(4.70, 0.0, Z_CAST) + [0.0]]}
 
 # the boat's own anchor (tools/deck/anker.py, drawn and let go by the game): its kind and mass, the fairlead (the bow roller's top)
@@ -796,8 +808,25 @@ def anchors():
     gw_ = lambda x, up: [rgy(x), round(gwz(x) + up, 3), round(-(x - XM), 3)]
     sk = {'sole': sole, 'wheel': G(*WHEEL), 'wheelTilt': TILT, 'lever': G(LEVER[0], -0.38, LEVER[2]), 'motor': G(*PIVOT),
           'prop': [round(a - b, 3) for a, b in zip(to_game(PROPC), to_game(PIVOT))],
-          'tub': G(TUB[0], TUB[1], Z_SOLE), 'fisher': G(2.90, -0.45, Z_SOLE), 'reel': gw_(2.95, 0.215), 'haul': gw_(3.15, 0.25),
-          'mach': [gw_(x, 0.13) for x in (2.70, 3.30, 3.85)], 'stack': G(3.95, -0.15, Z_SOLE), 'charm': G(2.16, -0.20, 1.69),
+          'prop90': [round(a - b, 3) for a, b in zip(to_game(PROPC90), to_game(PIVOT))],
+          'tub': G(TUB[0], TUB[1], Z_SOLE), 'fisher': G(2.90, -0.45, Z_SOLE), 'reel': gw_(2.95, 0.215),
+          # the work aboard (OB5 09.11.2026, om-bord.md 4.2, as OB1 on the wooden boat): the line hauler on its post (tools/gear/haler.py)
+          # just forward of the fisher, its foot on the sole inside the starboard liner (haulFoot) and the sheave at a man's chest (haul,
+          # as snekke23.py); the jigging machines either side of it on the starboard gunwale, clear of its arm (they stood at 2.70, 3.30
+          # and 3.85, the middle one where the post stands)
+          'haul': G(3.32, -0.86, Z_SOLE + 1.125), 'haulFoot': G(3.32, -0.86, Z_SOLE),
+          'mach': [gw_(x, 0.13) for x in (2.62, 3.80, 2.10)], 'stack': G(1.40, -0.58, Z_SOLE), 'charm': G(2.16, -0.20, 1.69),
+          # the nets come in by hand over the starboard rail abreast the fisher (valg 21 B: no net hauler under 7.5 m)
+          'rail': gw_(3.00, 0.04),
+          # setting: the gear goes out over the starboard quarter (set) between the rod holders, clear of the outboard in its well; the
+          # hand sits on the starboard bench beside it (setter, his body turned to it) and feeds it out from the tubs on the sole in front
+          # of him, while the skipper steers at the console. Hauling: the hand stands forward of the fisher on the starboard side of the
+          # sole (coil), clear of the catch tub to port, with the tub he coils the line into at his feet against the liner (coilTub).
+          # At the quay the skipper takes the lines himself, inboard of each cleat (moor: forward of the console amidships, on the
+          # casting deck at the bow, abaft the starboard bench at the stern)
+          'set': gw_(1.32, 0.02), 'setter': G(0.95, -0.55, 0.96 - 0.46) + [0.95],
+          'coil': G(3.66, -0.24, Z_SOLE), 'coilTub': G(3.70, -0.70, Z_SOLE),
+          'moor': {'mid': G(2.62, -0.55, Z_SOLE), 'bow': G(4.50, -0.28, Z_CAST), 'stern': G(1.22, -0.62, Z_SOLE)},
           'skipper': G(1.55, 0.0, Z_SOLE), 'seat': G(0.95, 0.55, 0.96 - 0.46), 'filler': G(0.95, -(hbs(0.95) - 0.10), zs(0.95) + 0.02), 'names': names,
           'scr': screens(G)}
     x, y = POLE
@@ -814,7 +843,11 @@ def anchors():
             # gutting board is the boat's own, across the port gunwale abreast the console (own:
             # the game draws no table; top: where the fish lie), the one who guts on the sole between it and the console; the iced
             # catch in the 460 l tubs forward of the board (kit.tubs, TUB)
-            'work': {'table': G(sum(GUT) / 2, 0.92, Z_SOLE), 'tub': G(BLEED[0], BLEED[1], Z_SOLE), 's': 0.75, 'own': True, 'top': round(gut_top() - WL, 3)}, 'kit': kit_places(G)}
+            # (mate: the second at the deck work, OB5: with no place of his own the game put him 0.62 m outboard of the bleeding tub,
+            # outside the port side over the sea; he stands on the starboard side of the sole by the catch tub, facing it to port (the
+            # fourth number, his heading in the boat), and ices the gutted fish in it, clear of the one at the board)
+            'work': {'table': G(sum(GUT) / 2, 0.92, Z_SOLE), 'tub': G(BLEED[0], BLEED[1], Z_SOLE), 's': 0.75, 'own': True, 'top': round(gut_top() - WL, 3),
+                     'mate': G(3.30, -0.30, Z_SOLE) + [round(-math.pi / 2, 3)]}, 'kit': kit_places(G)}
 
 
 # ---------- the checks against the tables, the data and the rules ----------
@@ -838,7 +871,7 @@ def check():
     for _ in range(40):
         if vol(wl1) * 1.025 > DISP: wl1 -= 0.005
         else: break
-    out.append(('deplasement %.2f t ved vannlinja %.2f (tegningen) mot %.1f t i VESSELS; %.1f t gir vannlinja %.2f' % (v * 1.025, WL, DISP, DISP, wl1), True))
+    out.append(('deplasement %.2f t ved vannlinja %.2f mot %.1f t i VESSELS (den tomme båten, valg 18 A: høyst 10 %% over); %.1f t gir vannlinja %.2f' % (v * 1.025, WL, DISP, DISP, wl1), abs(v * 1.025 - DISP) / DISP <= 0.10))
     out.append(('lengde %.2f m (podene til stevnen; baugrulla til %.2f) mot %.1f' % (XF, 5.95 + 0.035 * 1.1, L), abs(XF - L) / L < 0.03))
     mb = max(hbs(x) for x in xs)
     out.append(('største bredde ved ripa %.3f m, over fenderlista %.3f, mot %.2f' % (2 * mb, 2 * mb + 0.056, BEAM), abs(2 * mb - BEAM) / BEAM < 0.05))
@@ -866,13 +899,16 @@ def main():
     reset(); colours()
     solids, glass = build(True)
     join(solids, 'BOAT0'); join(glass, 'GLASS0')
-    ob, pr = outboard(True); ro = join(render_only(), 'RENDER_ONLY'); wh = wheel_part(); wh.hide_render = True
+    ob, pr = outboard(True); ob9, pr9 = outboard(True, 90, 'outboard90', 'prop90'); ob9.hide_render = pr9.hide_render = True; ro = join(render_only(), 'RENDER_ONLY'); wh = wheel_part(); wh.hide_render = True
     if 'fast' not in sys.argv and 'dry' not in sys.argv: beauty(OUT, 'sk', WL, SHOTS)
     ro.hide_render = True
     ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': 'skiff', 'name': 'Aluminiumsbåt 19 fot med midtkonsoll (5,9 m)', 'len': L, 'beam': BEAM, 'draft': 0.6,
           'anchors': anchors()}
     more = [{'name': 'cap', 'obj': cap_obj}, {'name': 'outboard', 'obj': ob, 'xf_p': rel_game(PIVOT), 'ao': True, 'show': True},
             {'name': 'prop', 'obj': pr, 'xf_p': rel_game(PROPC), 'ao': False, 'show': True},
+            # (the 90 hp baked with the 60 hp hidden: they stand in the same place)
+            {'name': 'outboard90', 'obj': lambda: (setattr(ob, 'hide_render', True), setattr(ob9, 'hide_render', False), ob9)[2], 'xf_p': rel_game(PIVOT), 'ao': True, 'show': False},
+            {'name': 'prop90', 'obj': pr9, 'xf_p': rel_game(PROPC90), 'ao': False, 'show': False},
             {'name': 'wheel', 'obj': wh, 'xf_p': lambda p: (-p[1], p[2], -p[0]), 'ao': False, 'show': False}]
     ro.hide_render = False
     export_boat(build, to_game, to_game_n, OUT, 'skiff59.glb', os.path.join(ROOT, 'src', 'data', 'boat-skiff59.b64'), ex,

@@ -412,6 +412,8 @@
       const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
       SK.hull = up(glbPart('skiff', 'lod0')) || SK.hull; SK.hullT = 'skiff'; SK.glass = up(glbPart('skiff', 'glass')) || SK.glass;
       SK.motor = up(glbPart('skiff', 'outboard')) || SK.motor; SK.prop = up(glbPart('skiff', 'prop')) || SK.prop; SK.propAt = A.prop;
+      // (D6, OB5: the 90 hp outboard the player can buy, EQUIP.motor90, as its own parts in the model; drawSkiff swaps it in)
+      SK.motor90 = up(glbPart('skiff', 'outboard90')); SK.prop90 = up(glbPart('skiff', 'prop90')); SK.prop90At = A.prop90 || A.prop;
       const cp = glbPart('skiff', 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); SK.cap = c.mesh(); }
       SK.wheelAt = A.wheel; SK.wheelTilt = A.wheelTilt; SK.leverAt = A.lever; SK.motorAt = A.motor; SK.live = false;
       // the places with it: the eye at the wheel, the lights, the pole (VGEO.skiff was settled when the page loaded, before the models
@@ -425,6 +427,8 @@
       const pc = NB(); person(pc, A.seat[0], A.seat[1], A.seat[2], true, null, lookCrew(0) || 'crew'); SK.crew = pc.mesh();
       SK.pp = {skipper:[A.skipper[0], A.skipper[1], A.skipper[2], false, [[w[0] - 0.14, w[1] + 0.14, w[2] + 0.05], [w[0] + 0.14, w[1] + 0.12, w[2] + 0.05]]], crew:[A.seat[0], A.seat[1], A.seat[2], true, null], fisher:[0, 0, 0, false, false]};
       for (const k of HANDA) if (A[k]) SKA[k] = A[k];
+      // (OB5) the hand at the gear where the model has his places (skiff59.py set, setter, coil), as on the wooden boat (handKit)
+      SK.mates = !!(A.coil && A.setter); SK.fisherC = SK.setterC = SK.wkC = null;
       CHARM_AT = A.charm || CHARM_AT;
     }
   }

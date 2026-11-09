@@ -379,7 +379,8 @@
       drawN(SK.wheel, chain(BMrel, M4.T(...SK.wheelAt), M4.RX(-SK.wheelTilt), M4.RZ(SK.wheelA)));
       drawN(SK.lever, chain(BMrel, M4.T(...SK.leverAt), M4.RX(-(0.1 + frac * 0.9))));
       const MM = chain(BMrel, M4.T(...SK.motorAt), M4.RY(-SK.wheelA * 0.1), M4.RX(on ? 0.05 : 0));
-      drawN(SK.motor, MM); drawN(SK.prop, chain(MM, M4.T(...(SK.propAt || [0, -1.0, 0.54])), M4.RZ(SK.propA)));
+      const m90 = !!(S.equip && S.equip.motor90 && SK.motor90);   // (D6, OB5: the 90 hp outboard once it is bought)
+      drawN(m90 ? SK.motor90 : SK.motor, MM); drawN(m90 && SK.prop90 ? SK.prop90 : SK.prop, chain(MM, M4.T(...((m90 ? SK.prop90At : SK.propAt) || [0, -1.0, 0.54])), M4.RZ(SK.propA)));
     } else {
       // an inboard boat with a tiller: the tiller swings about the rudder head as she turns, the propeller turns under the stern
       if (SK.tiller && SK.tillerAt) drawN(SK.tiller, chain(BMrel, M4.T(...SK.tillerAt), M4.RY(SK.wheelA * 0.3)));

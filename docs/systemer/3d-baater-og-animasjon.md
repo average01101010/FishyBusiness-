@@ -379,3 +379,13 @@ Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig,
 - **Sløying** (F19): nummer to står på `work.mate`, akter for bløggekaret og vendt mot det, ikke i den som sløyer (`drawDeck`, `09-landing-deck.js`).
 - **Juksahjulet** (U4, `tools/gear/vinde.py`, `src/data/gear-vinde.b64`): etter Jonas' bilde 09.11.2026 (blå spole på svart brakett over ripa, knott på spolen, ståltrådarm med øye ut over siden). Spillet henter øyet og knotten fra modellens extras (`SK.reelX`: `eye`, `crank`). Jonas sendte også en jukse på treramme, men sa at én av dem holder.
 - **`armTo`** er armen fra skulder til hånd som egen funksjon (før en lukning inne i `drawSkiff`), med armene i lookens farge som parameter (`SK.wk` skipperen, `SK.wkC` den første i mannskapet, `refreshPeople`).
+
+## Arbeidet om bord i skiffen (OB5, 09.11.2026, `docs/planer/om-bord.md` 4.2)
+
+Samme arbeid som trebåten (over), på skiffens egne plasser (`skiff59.py` `anchors().skiff`, lest inn i `SKA` av `buildSkiff` i `12-skiff.js`, som nå også setter `SK.mates`, så den andre om bord får figurene sine som på trebåten).
+
+- **Nummer to ved sløyingen sto utenfor båten** (funnet i 4.2): uten `work.mate` legger `drawDeck` ham 0,62 m fra bløggekaret bort fra bordet, og på skiffen er det utenfor babord side. Han står nå på styrbord side av dørken ved fangstkaret og ser mot det (`work.mate` med en fjerde verdi, retningen i båten; `09-landing-deck.js` leser den, uten den ser han mot bløggekaret som før). Den som sløyer, står der han sto, på dørken mellom konsollen og sløyebordet.
+- **Plassene:** linehaleren på stolpen sin (`haulFoot`) rett forut for fiskeren, juksamaskinene på hver side av den (2,62, 3,80 og 2,10 m), garnet for hånd over ripa ved fiskeren (`rail`), setting over styrbord låring mellom stangholderne (`set`) med den andre sittende på styrbord benk (`setter`), ved trekket den andre forut for fiskeren med stampen ved føttene (`coil`, `coilTub`), skipperen ved klampene ved kaia (`moor`).
+- **Stampene og garnbinga** står på dørken akter, styrbord for skipperen og akter for konsollen, der redskapet går ut. Før sto de forut for fiskeren og på kastedekket, så settingen over hekken gikk gjennom konsollen og skipperen (F20). Det er plass til to stamper etter hverandre, ikke to i bredden; `kit.stamps.n` sier hvor mange som står på dørken, og resten stables oppå (`drawLineTubs`).
+- **Vannlinja** er den tomme båtens (0,23 m over kjølen ved speilet, 0,96 t mot `disp` 1,0, valg 18 A); tegningens 0,30 ga 1,60 t. Formen er ikke endret.
+- **90 hk-motoren** (D6) er egne deler i modellen (`outboard90`, `prop90`, ankeret `prop90`), og `drawSkiff` tegner den når `S.equip.motor90` er kjøpt.
