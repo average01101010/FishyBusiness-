@@ -29,7 +29,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
-- Ingen (09.11.2026).
+- `ccr-4660a71b-kidfna`: 93 OB15 (Jonas' økt, 09.11.2026 09:10 UTC), eier `core/03c-stability.js`, `view3d/16-motion.js`, `tests/unit/` (ny `trim.test.mjs`).
 
 ## Valg som venter på Jonas
 
@@ -111,7 +111,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 90 | **OB12** Kyst15 over 75 igjen (eksport på nytt, åpning i hekken for setting og garnbinge om bord, arbeidet under ly synlig, folk ved haleren) | Om bord | venter på OB11 (valg 19: åpning i hekken og garnbinge) | steg 89 | `tools/boats/kyst15.py`, `src/data/*.b64`, `deckcrew.js` (`goalOf`) | `om-bord.md` OB12, 4.9, F18 |
 | 91 | **OB13** Kyst21 revidert etter pilotens arbeidsmåte | Om bord | venter på OB12 | steg 90 | `tools/boats/kyst21.py`, `src/data/*.b64`, ny `docs/skipsmodeller/kyst21-grunnlag.md` | `om-bord.md` OB13, 4.10 |
 | 92 | **OB14** Rydde og spyle, mat og kulde synlig | Om bord | venter på OB4 (samme filer) | steg 82 | `core/13-work.js`, `deckcrew.js`, `view3d/09-landing-deck.js` | `om-bord.md` OB14, F12–F14 |
-| 93 | **OB15** Båten i sjøen med last: trim, slagside og mannskapets vekt | Om bord | klar (rører ingen fil en annen OB-fase eier; hel startmelding i `start/`, skrevet av koordinatoren 09.11.2026) | steg 69 (ferdig) | `core/03c-stability.js`, `view3d/16-motion.js`, `tests/unit/` | `om-bord.md` OB15, kap. 5 |
+| 93 | **OB15** Båten i sjøen med last: trim, slagside og mannskapets vekt | Om bord | pågår (Jonas' økt, gren `ccr-4660a71b-kidfna`, 09.11.2026 09:10 UTC) | steg 69 (ferdig) | `core/03c-stability.js`, `view3d/16-motion.js`, `tests/unit/` | `om-bord.md` OB15, kap. 5 |
 | 72 | **L2** Betalingen i ekte modus (Stripe live, Stripe Tax) | Lansering | venter på Jonas (`lansering-plan.md` kap. 5 punkt 5–7: Stripe-kontoen, MVA og non-Union OSS; butikken er alt i ekte modus, valg 16 V5) | steg 71 (ferdig) | `supabase/functions/shop-checkout/`, `stripe-webhook/`, `src/admin/index.html` (pengefanen); ekte penger: PR-en venter på Jonas | `lansering-plan.md` L2, `lansering.md` A3 |
 | 73 | **L3** Sluttsjekken før lansering: full regresjon, lasttesten og Jonas spiller kystflåten på nettbrettet | Lansering | venter på alt over lanseringslinja | | ingen | `lansering-plan.md` L3 |
 | 74 | **L1a** Testutgaven: `test.detstorebla.no`, `KYST_CHANNEL=test`, arbeidsgrenen til test og `main` til produksjonen | Lansering | venter på valg (valg 16 V1 og V3) og på Jonas (`lansering-plan.md` kap. 5 punkt 1–4: DNS, testprosjektet, WorkOS Staging, Stripe-sandkassen); hel startmelding i `start/` | steg 71 (ferdig) | `tools/server/Caddyfile`, `setup.sh`, `build.mjs`, `src/data/cloud.json`, `ui/10f-cloud.js`, `ui/10p-install.js`, `.github/workflows/deploy.yml`, ny `tests/kanaltest.py` | `lansering-plan.md` L1a |
