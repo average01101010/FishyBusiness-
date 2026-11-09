@@ -109,7 +109,12 @@ OPS = {
       window.idleAssign = (P, ctx) => { orig(P, ctx); let i = 0; for (const p of P) if (p.st === 'pause' && p.c){ p.idle = ['hose', 'sweep'][i++ % 2]; p.with = null; } };
       CREW3D.reset(); CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null;""", (0.3, 0.6, 0.9), 10],
   # in to the plant and mooring: 300 m out, then dock; the path in along the quay, the lines one by one
-  'inn': ['*', 'inn til mottaket og fortøye: hun glir inn langs kaia, tauene på', """const q = portById('husoy'); b.status = 'idle'; b.port = null; b.pos = {x:q.p.x + 0.3, y:q.p.y}; G3.vesselChanged();
+  'inn': ['*', 'inn til mottaket og fortøye: hun glir inn langs kaia, tauene på', """const q = portById('husoy'); b.status = 'idle'; b.port = null;
+      /* (300 m out along the fairway in from the ground, not a fixed offset: east of the plant is land for some berths) */
+      const r = await leiaRoute({x:g.x, y:g.y}, {x:q.p.x, y:q.p.y}, null, 'husoy'); let P = {x:q.p.x + 0.3, y:q.p.y};
+      if (r && r.wps && r.wps.length){ const W = [{x:g.x, y:g.y}, ...r.wps.map(w => ({x:w.x, y:w.y})), {x:q.p.x, y:q.p.y}]; let left = 0.3;
+        for (let i = W.length - 1; i > 0; i--){ const d = Math.hypot(W[i].x - W[i - 1].x, W[i].y - W[i - 1].y); if (d >= left){ const k = left / d; P = {x:W[i].x + (W[i - 1].x - W[i].x) * k, y:W[i].y + (W[i - 1].y - W[i].y) * k}; break; } left -= d; } }
+      b.pos = P; b.heading = Math.atan2(q.p.x - P.x, -(q.p.y - P.y)); G3.vesselChanged();
       if (S.crew.length) CREW3D.reset(); await new Promise(r => setTimeout(r, 2500));
       /* (on the slow clock: the glide in and the lines fall inside the clip) */ setTimeout(() => dock('husoy', 'main'), 2500);""", (-0.6, 1.0, 2.0), 16],
   # landing at the plant: the plant's crane lifts the tubs, the truck, the people on the quay
