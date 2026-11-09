@@ -70,7 +70,7 @@
       if (J.j < S2 && performance.now() > end) return;
     }
     // the travel time from the shore, a pass at a time (shoalSweep), then into R and G
-    while (!shoalSweep(J)) if (performance.now() > end) return;
+    if (!shoalSweep(J, end)) return;
     shoalPut(J);
     GJOB = null; TJN.ground++;
     STEX = STEX || gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, STEX);

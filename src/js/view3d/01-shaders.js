@@ -127,10 +127,13 @@
   // shore bends the waves into are the lines of equal travel time (Fermat; the rays meet the beach square on). shoalAt gives the water's
   // depth with the tide (uSurf.w), the travel time and the way to the shore n (-grad T, scaled by how sure it is: none far off, where
   // the time is not known, and at the texture's edge); deep water (78 m and over, or off the texture, or #shoal0) is vec4(200, 0, 0, 0),
-  // where nothing below changes. No texture in the vertex shader under NOSST (the phones that cannot, 18-setup.js): deep there.
+  // where nothing below changes. No texture in the vertex shader under NOSST (the phones that cannot, 18-setup.js) or NOSHT (a GPU
+  // with two texture units there, which keeps the sea state's two): deep there, and the CPU's seaH likewise (14-sea.js shoalVS).
+  // The foam map's pass is NOSHT too: its whitecaps are the open sea's (shoaled there with no McCowan cap, they laid foam over the
+  // shallows that the sea shader, which caps, did not draw; code review 09.11.2026).
   const SHT_TMAX = 1200;
   const SHOAL = 'uniform vec4 uSHR;uniform vec4 uSurf;' +
-    '\n#ifdef NOSST\nvec4 shoalAt(vec2 P){return vec4(200.0,0.0,0.0,0.0);}\n#else\nuniform sampler2D uSHT;' +
+    '\n#if defined(NOSST) || defined(NOSHT)\nvec4 shoalAt(vec2 P){return vec4(200.0,0.0,0.0,0.0);}\n#else\nuniform sampler2D uSHT;' +
     '\nfloat shT(vec2 u){vec4 c=texture2D(uSHT,u);return (c.r*65280.0+c.g*255.0)*' + (SHT_TMAX / 65535).toFixed(8) + ';}' +
     '\nvec4 shoalAt(vec2 P){vec4 D=vec4(200.0,0.0,0.0,0.0);if(uSurf.z<0.5)return D;vec2 u=(P-uSHR.xy)*uSHR.z;float ef=smoothstep(0.0,0.06,min(min(u.x,u.y),min(1.0-u.x,1.0-u.y)));if(ef<=0.0)return D;' +
     'vec4 c=texture2D(uSHT,u);if(c.b>0.995)return D;float h=mix(200.0,max(c.b*c.b*80.0+uSurf.w,0.05),ef);if(h>=78.0)return D;' +
@@ -303,7 +306,7 @@
     'float rst=tv*exp(-hfSq((back-lc)/(0.8+0.3*hb)))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
-  const FOAM_FS = 'precision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
+  const FOAM_FS = '#define NOSHT\nprecision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
     'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
     // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
     // edge ragged and its inside clumped as the wash's (nothing beyond 1.25 radii, where the ragged edge never reaches: no noise there)
@@ -378,7 +381,7 @@
     // by the shore (F4): the surf wave's slopes, and everything capped where it would pass McCowan's limit (as the vertex shader)
     '\n#ifndef FAR\n{float cap=min(1.0,0.78*SH.x/max(2.83*sqrt(Et+Eu),1e-4));if(Es>1e-8&&uSurf.y>0.0){float As=sqrt(Es);float ks=surfK(SH.x);float f=surfF(SH);vec2 n=SH.zw/length(SH.zw);float att=smoothstep(2.0,7.0,6.2832/(ks*px));float wa=ks*As;float Qs=min(0.6,0.6/(wa+1e-4));' +
     'N.x-=n.x*wa*cos(f)*att;N.z-=n.y*wa*cos(f)*att;N.y-=Qs*wa*sin(f)*att;lost+=wa*wa*(1.0-att);}' +
-    'N.xz*=cap;N.y=1.0-(1.0-N.y)*cap;y*=cap;jxx*=cap;jxz*=cap;jtr*=cap;jv*=cap*cap;jsc*=cap;jsv*=cap*cap;}\n#endif\n' +
+    'N.xz*=cap;N.y=1.0-(1.0-N.y)*cap;y*=cap;lost*=cap*cap;jxx*=cap;jxz*=cap;jtr*=cap;jv*=cap*cap;jsc*=cap;jsv*=cap*cap;}\n#endif\n' +
     // ripples: eight short waves spread around the wind, analytic slopes (no grid), scaled by wind and gusts; in light air (Beaufort 0-1)
     // only in patches, the cat's paws, and glassy between them; near calm they are a third as steep as they were, since a mirror-like
     // sea shows every slope in its reflections and the sub-second ripples looked like the water shivering (the user, 03.10.2026)
