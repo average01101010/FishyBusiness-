@@ -73,13 +73,13 @@ async def main():
           let dmax = 0; for (let k = 0; k < 40; k++){ const x = bx + (k % 7 - 3) * 40, z = bz + (Math.floor(k / 7) - 3) * 40, t = 50 + k * 0.37;
             SU.on = true; const a = D.seaH(x, z, t); SU.on = false; const b = D.seaH(x, z, t); SU.on = true; dmax = Math.max(dmax, Math.abs(a - b)); }
           out.deep = dmax; out.at = sh.shoalAt(bx, bz).slice();
-          const hs = h => { SU.fix = [h, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(bx, bz, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; return 4 * Math.sqrt(Math.max(q / n - m * m, 0)); };
-          out.h3 = hs(3); out.h20 = hs(20); out.h200 = hs(200);
+          const hs = (h, sn = -1) => { SU.fix = [h, 0, 0.7071 * sn, 0.7071 * sn]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(bx, bz, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; return 4 * Math.sqrt(Math.max(q / n - m * m, 0)); };
+          out.h3 = hs(3); out.h20 = hs(20); out.h200 = hs(200); out.i3 = hs(3, 1); out.i20 = hs(20, 1);   // (sn 1: the shore to the SE, the waves running in: their energy goes into the surf, which keeps it)
           const cell = 600 / D.seaNP, S = D.ssAt(bx, bz), ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - D.WV.dot), 0.05));
           out.waves = D.WV.list.map(c => ({k:c.k, a:c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, att:sstep(2.5, 5, 2 * Math.PI / (c.k * cell))}));
           return out; })()""")
         if F4 is None:
-            for t in ['the open sea is as before with the sea by the shore (Husøy ground, 70 m: within 1 cm)', 'the waves grow over the shallows as linear theory has them (3 m against 20 m)', 'over 1 m in a stiff breeze the height stays under McCowan\'s limit (0.78 h)']: print('FEIL', t, '(no WV.shoal)')
+            for t in ['the open sea is as before with the sea by the shore (Husøy ground, 70 m: within 1 cm)', 'the waves grow over the shallows as linear theory has them (3 m against 20 m)', 'running in towards the shore, the energy that goes into the surf keeps the height (3 m against 20 m)', 'over 1 m in a stiff breeze the height stays under McCowan\'s limit (0.78 h)']: print('FEIL', t, '(no WV.shoal)')
         else:
             import math
             def ks(k0, h):   # the exact dispersion w^2 = g k tanh(k h) by Newton, then sqrt(cg0 / cg)
@@ -91,6 +91,8 @@ async def main():
             print(json.dumps({'F4': {k: (round(v, 4) if isinstance(v, float) else v) for k, v in F4.items() if k != 'waves'}, 'want': round(want, 3), 'got': round(got, 3)}))
             print(ok(F4['deep'] < 0.01), 'the open sea is as before with the sea by the shore (Husøy ground, 70 m: within 1 cm)', round(F4['deep'] * 100, 2), 'cm')
             print(ok(got > 1.08 and abs(got / want - 1) < 0.08 and F4['h3'] < 0.78 * 3), 'the waves grow over the shallows as linear theory has them (3 m against 20 m)', round(got, 3), 'want', round(want, 3))
+            gin = F4['i3'] / F4['i20']
+            print(ok(abs(gin / want - 1) < 0.15), 'running in towards the shore, the energy that goes into the surf keeps the height (3 m against 20 m)', round(gin, 3), 'want', round(want, 3))
             await pg.evaluate("WX_FORCE = {w:13, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
             h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
             print(ok(h1[0] <= 0.78 * 1.0 * 1.1 and h1[1] > 1.5), "over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h)", [round(v, 2) for v in h1])
