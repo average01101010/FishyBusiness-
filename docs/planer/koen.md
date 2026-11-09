@@ -30,6 +30,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - `ccr-e474ac41-zlir5x` (Jonas' økt, 09.11.2026 09:09 UTC): steg 70 OB1 trebåten; eier `core/02-species-gear.js`, `core/10-gear.js`, `ui/11-boot.js`, `tools/boats/snekke23.py`, `tools/gear/`, `src/data/*.b64` (trebat), malen, `view3d/12-skiff.js`, `13-instruments.js`, `10-gear.js`, `docs/skipsmodeller/trebat-grunnlag.md`.
+- `ccr-1a880149-108s1u` (Jonas' økt, 09.11.2026 09:10 UTC): steg 22 Ø9 F4 kystnær sjø, med «Sjøen ved Bleik»; eier `view3d/01-shaders.js`, `14-sea.js`, `17-draw.js` (bare om en ny uniform må bindes i `drawSea`), `tests/sea3d.py` (`seaH`/`seaDisp` står i `14-sea.js`).
 
 ## Valg som venter på Jonas
 
@@ -64,7 +65,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 19 | **Ø11.8** Farvannet: fartsgrensene og sjømerkene | Lover og sikkerhet | klar (H3b og Ø12 C er ute; hel startmelding i `start/`) | steg 18 (ferdig) | ny `tools/fart/`, `src/data/fart.json`; `core/05e-sjovei.js`, `05-vessels.js`, `16b-dyn.js`, `ui/03-map.js`, `03a-chart.js` | `lover-regler-sikkerhet.md` kap. 6 |
 | 20 | **Ø9 F5** Motstand, grunt vann og bankeffekt | Fysikk 4 | klar (Ø8b S2 rullet ut i 1a7f95dd 09.11.2026; startmeldingen i `start/`); før lanseringslinja, foran Ø11.8 | steg 7 (ferdig) | `core/16b-dyn.js`, `05-vessels.js` (`groundCheck`), `ui/` (dybden under kjølen) | `fysikk-4-sjo-og-skrog.md` F5 |
 | 21b | **Ø3c** Ytelse: skyggeleggerne parallelt og 3D forberedt under brevet, terrengnettene, NPC-typene i tidsbiter, `GLBM` som typede tabeller, regellaget over hele landet | Ytelse | klar (F2, F3 og H3d1 er ute; ikke samtidig med F3b eller F4, som rører `01-shaders.js`) |  | `view3d/01-shaders.js`, `03-berths-naust.js`, `18-setup.js`, `19-wildlife-npc.js`, `vessel3d.js`, delene som leser `GLBM`, `ui/03-map.js` (`chartVectors`), `core/03e-rules.js` (`ruLayerBlock`) | `3d-verden.md` 4.11o, backloggen «Førstegangsstarten, resten» |
-| 22 | **Ø9 F4** Kystnær sjø, med «Sjøen ved Bleik» | Fysikk 4 | klar (F3 rullet ut 07.11.2026, F3b i 6e4a60e 09.11.2026) | steg 15 | `view3d/01-shaders.js`, `14-sea.js`, `17-draw.js` | `fysikk-4-sjo-og-skrog.md` F4 |
+| 22 | **Ø9 F4** Kystnær sjø, med «Sjøen ved Bleik» | Fysikk 4 | pågår (Jonas' økt, gren `ccr-1a880149-108s1u`, 09.11.2026 09:10 UTC; F3 rullet ut 07.11.2026, F3b i 6e4a60e 09.11.2026) | steg 15 | `view3d/01-shaders.js`, `14-sea.js`, `17-draw.js` | `fysikk-4-sjo-og-skrog.md` F4 |
 | 26 | **H3e** Kystvakta, hele turen og stikkprøvene | Havsteget | klar (H3d2 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 25 (ferdig) | `core/09j-kystvakt.js`, `tests/havtur.py`, `phone/07-patch.js` | `havsteget-h3-snokrabbe.md` H3e |
 | 27 | **Ø11.9** Arbeidsavtalen | Lover og sikkerhet | klar (startmeldingen mangler; Ø8b M er ute, rutinen eller koordinatoren skriver den fra planen) | steg 8 (ferdig) | `core/04-crew.js`, `14-crewlife.js`, `phone/13-mannskap-bank-meld.js` | `lover-regler-sikkerhet.md` kap. 6 (fristene i ekte tid kan bli et valg) |
 | 28 | **Ø5 rest a** M5-resten (navnet og flagget i modellen; innbyttebåten ved kaia er tatt ut av B) og M9-resten | Butikkene | klar (startmeldingen mangler) | | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js`; admin, `build.mjs` | `butikker-og-sponsorer.md`, backloggen 10.7 |
