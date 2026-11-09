@@ -411,7 +411,7 @@
     if (SH[0] >= 78){ out[0] = out[1] = 1; out[2] = 0; return out; }
     const kh = Math.max(c.k * SH[0], 1e-3), w = Math.hypot(SH[2], SH[3]), r = 1 / Math.sqrt(Math.max(tanhG(kh), 0.02)), x = kh * r, e = Math.exp(2 * Math.min(x, 8));
     out[0] = Math.max(Math.min(1 / Math.sqrt(Math.max(tanhG(x) * (1 + 4 * x / Math.max(e - 1 / e, 1e-4)), 1e-3)), 2.5), 1); out[1] = 1 + (r - 1) * (1 - sstep(55, 78, SH[0]));
-    out[2] = w > 1e-4 ? (1 - sstep(0.08, 0.3, kh * 0.15915)) * clamp((c.Dx * SH[2] + c.Dz * SH[3]) / w * 1.4 + 0.42, 0, 1) * Math.min(w, 1) : 0; return out;
+    out[2] = w > 1e-4 ? (1 - sstep(0.08, 0.22, kh * 0.15915)) * (1 - sstep(40, 70, SH[0])) * clamp((c.Dx * SH[2] + c.Dz * SH[3]) / w * 1.4 + 0.42, 0, 1) * Math.min(w, 1) : 0; return out;
   }
   function surfK(h){ const k0 = SURF.w * SURF.w / 9.81; return k0 / Math.sqrt(Math.max(tanhG(k0 * h), 0.02)); }
   // the surf's frequency for this frame (once per frame time)

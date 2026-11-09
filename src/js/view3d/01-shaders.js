@@ -141,14 +141,16 @@
     // which is Green's law (h^-1/4) in shallow water, taken where it raises the wave (the few per cent it dips by at middle depths
     // left out, so the open sea is as before), 2.5 at most (the breaking below caps it long before). The plan had Green's law from a
     // quarter of the length in, (L / 4h)^(1/4): that gave a 9 s swell 1.8 times its height over 3 m, where linear theory gives 1.19.
-    // tr: the share of its energy that has turned into the surf: none until the depth is under 0.3 L, all of it under 0.08 L, as far
+    // tr: the share of its energy that has turned into the surf: none until the depth is under 0.22 L (where the wave has lost some
+    // 4 % of its speed; and none deeper than 70 m, so it is gone well before the shoal's 78 m: the open sea stands, sea3d), all of it
+    // under 0.08 L, as far
     // as it runs in towards the shore (refraction turns a wave running along the shore in as well; one running out stays as it is).
     // (tr held to 1 and its root to 0 or more: |n| comes out at 1.0000001 now and then, and sqrt(1 - tr) was NaN in single pixels,
     // white dots all over the near sea, seen in the first pictures at Bleik 09.11.2026)
     '\nfloat thG(float x){return 1.0-2.0/(exp(2.0*min(x,8.0))+1.0);}' +
     '\nvec3 shW(vec4 a,vec4 SH){if(SH.x>=78.0)return vec3(1.0,1.0,0.0);float kh=max(a.z*SH.x,1e-3);float r=inversesqrt(max(thG(kh),0.02));float x=kh*r;float e=exp(2.0*min(x,8.0));' +
     'float G=min(inversesqrt(max(thG(x)*(1.0+4.0*x/max(e-1.0/e,1e-4)),1e-3)),2.5);' +
-    'float w=length(SH.zw);float tr=w>1e-4?(1.0-smoothstep(0.08,0.3,kh*0.15915))*clamp(dot(a.xy,SH.zw)/w*1.4+0.42,0.0,1.0)*w:0.0;' +
+    'float w=length(SH.zw);float tr=w>1e-4?(1.0-smoothstep(0.08,0.22,kh*0.15915))*(1.0-smoothstep(40.0,70.0,SH.x))*clamp(dot(a.xy,SH.zw)/w*1.4+0.42,0.0,1.0)*w:0.0;' +
     'return vec3(max(G,1.0),1.0+(r-1.0)*(1.0-smoothstep(55.0,78.0,SH.x)),min(tr,1.0));}' +
     // The surf: the energy the waves bring in, as one wave at the surf's frequency (uSurf.y, the swell's peak where there is swell,
     // else the wind sea's at the boat; 14-sea.js surfStep) whose crests are the lines of equal travel time, so it rolls in square to
