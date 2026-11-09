@@ -144,11 +144,22 @@ function panelFish(){
   } else h.push('<p class="note">' + t('fish_where') + '</p>');
   h.push('<h3>' + t('handling') + '</h3>');
   h.push('<p class="note">' + (S.lang === 'no' ? 'Fisken blør du idet den kommer over ripa, og så ligger den i bløggekaret til den blir sløyd og iset.' : 'The fish is bled as it comes over the rail and lies in the bleeding tub until it is gutted and iced.') + '</p>');
+  h.push(gutToggle(b));
   if (holdTotal() > 0.5) h.push('<p class="note"><b>' + deckText(false) + '</b></p>');
   // who guts and who ices is set in the crew menu (Mannskap), not here (the user's wish 03.10.2026)
   h.push('<p class="note">' + (S.lang === 'no' ? 'Hvem som sløyer og iser, setter du under «Mannskap».' : 'Who guts and who ices is set under «Crew».') + '</p>');
   h.push(gearPanel());
   return h.join('');
+}
+// round or gutted, the boat's own choice (R1, core/13-work.js catchGut; docs/planer/etter-tonys-test.md 1.3): here and on the boat's page
+// in the operations plan (ui/05d-plan2.js). Not on the snow crab vessel or an ocean vessel (their factory sees to it), nor in the first
+// trip, which lands round whatever is chosen
+const GUT_WHY = ['Rund: mottaket sløyer, −0,30 kr/kg på hyse og sei, ingen lever og rogn. Sløyd: lever og rogn på seddelen (torsk 5 % lever, rogn 4 % i januar–april).',
+  'Round: the buyer guts, −0.30 kr/kg on haddock and saithe, no liver or roe. Gutted: liver and roe on the slip (cod 5 % liver, roe 4 % in January–April).'];
+const gutChoice = () => !snoVessel() && BOAT.cls !== 'hav' && !tutRound();
+function gutToggle(b){
+  if (!gutChoice()) return '';
+  return '<label class="tog"><input type="checkbox" id="setGut"' + (b.gutAboard !== false ? ' checked' : '') + '><span>' + GL('Sløy om bord', 'Gut aboard') + '<small>' + GL(GUT_WHY[0], GUT_WHY[1]) + '</small></span></label>';
 }
 // (a wreck lot, V, is paid 1 kr/kg for meal as in sell(), not 0)
 function valueEst(sp, g){ if (g === 'V') return 1; const H = S.t / 60, ps = plantsNear(S.boat.pos, 8).map(x => price(x.pt, sp, H)); return ps.reduce((a, c) => a + c, 0) / ps.length * GM[g]; }
@@ -159,6 +170,7 @@ function panelHold(){
   if (snoTanks()) h.push('<div class="kv"><span>' + L('Tankene', 'The tanks') + '</span><span>' + fmt(tankLoad() / 1000, 1) + ' / ' + fmt(tankCap() / 1000, 0) + ' t ' + L('levende', 'live') + (snoLive() ? '' : ' · ' + L('frysetur', 'frozen trip')) + '</span></div><div class="bar"><i style="width:' + (100 * tankLoad() / Math.max(1, tankCap())).toFixed(1) + '%"></i></div>');   // (H3b)
   if (BOAT.iceCap > 0) h.push('<div class="kv"><span>' + t('ice') + '</span><span>' + fmt(b.ice, 0) + ' / ' + BOAT.iceCap + ' kg</span></div>');
   h.push('<div class="kv"><span>' + t('fuel') + '</span><span>' + fmt(b.fuel, 0) + ' / ' + BOAT.fuelCap + ' L</span></div>');
+  h.push(gutToggle(b));   // (R1: Om bord, Lasterom, where UI 2 shows the hold; the Fishing tab of the side panel has it too)
   if (!tot){ h.push('<p class="note">' + t('hold_empty') + '</p>'); return h.join(''); }
   const agg = {};
   // (the snow crab by what it is: the clusters done and waiting, the live crab, the dead crab for meal; H3b)
@@ -239,7 +251,7 @@ function deckText(short){
   // (Adrian 05.10.2026: «han begynne bare å sløye plutselig … Burde vært en timing på sløying og fiskinga så æ vet om det skjer nokka»)
   const eta = deckEta(hands), when = hands && eta < Infinity ? realDur(eta) : null;
   // what of it is still round and what is gutted and waits for the ice (Tony 06.11.2026: «hvor mye som må sløyes, hvor mye som er sløyd»)
-  const gutting = catchGut(), raw = gutting ? S.hold.reduce((a, x) => a + (!x.gut && !x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0) : 0, done = Math.max(0, kg - raw);
+  const gutting = catchGut(b), raw = gutting ? S.hold.reduce((a, x) => a + (!x.gut && !x.iced && !(SPECIES[x.sp] || {}).live ? x.kg : 0), 0) : 0, done = Math.max(0, kg - raw);
   const split = gutting && kg >= 0.5 ? L(fmt(raw, 0) + ' kg å sløye, ' + fmt(done, 0) + ' kg sløyd' + (done >= 0.5 ? ' og venter på is' : ''), fmt(raw, 0) + ' kg to gut, ' + fmt(done, 0) + ' kg gutted' + (done >= 0.5 ? ' and waiting for ice' : '')) : '';
   if (short){
     // [the card's line, the strip's short word]: the strip has 47 vw on a phone upright, so the short one is a few words
@@ -306,7 +318,8 @@ function portSlip(){
     // every row is whole kilos and kroner, and the sums are the sums of the rows as shown
     const pkOf = r => Math.round(r.gut ? r.kg / SPECIES[r.sp].uh : r.kg), row = (a, kgc, sum, cls) => '<tr' + (cls ? ' class="' + cls + '"' : '') + '><td colspan="3">' + a + '</td><td>' + kgc + '</td><td></td><td>' + sum + '</td></tr>';
     ls.lines.forEach(r => { const sd = SPECIES[r.sp], cl = sd && sd.cls[r.c], pk = pkOf(r);
-      h.push('<tr><td>' + spName(r.sp) + (r.gut ? ' <small>' + LN('sløyd u/h', 'gutted') + '</small>' : '') + '</td><td>' + (cl ? cl[2] : '') + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(pk, 0) + '</td><td>' + fmt(r.sum / Math.max(r.gut ? r.kg / sd.uh : r.kg, 0.01), 2) + '</td><td>' + fmt(r.sum, 0) + '</td></tr>'); });
+      // each line round or gutted (R2): the fish that can be gutted, not the crab
+      h.push('<tr><td>' + spName(r.sp) + (r.gut ? ' <small>' + LN('sløyd u/h', 'gutted') + '</small>' : sd && sd.uh > 1 ? ' <small>' + LN('rund', 'round') + '</small>' : '') + '</td><td>' + (cl ? cl[2] : '') + '</td><td>' + t('grade_' + r.g) + '</td><td>' + fmt(pk, 0) + '</td><td>' + fmt(r.sum / Math.max(r.gut ? r.kg / sd.uh : r.kg, 0.01), 2) + '</td><td>' + fmt(r.sum, 0) + '</td></tr>'); });
     for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
     const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
     // one row per species with the reason (spilltest 3, F1); notes from before have only the sum
@@ -314,6 +327,7 @@ function portSlip(){
       bk7:['over 7 % bifangst (direktefisket er stengt)', 'over 7 % bycatch (the direct fishery is closed)'], bkmax:['over maksimalkvoten', 'over the maximum quota']};
     if (ls.confRows) for (const [sp, k, v, w] of ls.confRows) h.push(row(LN('Inndratt: ', 'Confiscated: ') + spName(sp).toLowerCase() + ' ' + LN(WHY[w][0], WHY[w][1]), fmt(k, 0), '−' + fmt(v, 0)));
     else if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt over kvote eller bifangstgrense', 'Over quota or bycatch limit, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
+    if (ls.gutKr > 0.5) h.push(row(LN('Sløyd på mottaket: rund hyse og sei, 0,30 kr/kg', 'Gutted by the buyer: round haddock and saithe, 0.30 kr/kg'), fmt(ls.gutKg || 0, 0), '−' + fmt(ls.gutKr, 0)));   // (R2)
     if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
     if (ls.crabDead > 0.05) h.push(row(LN('Død kongekrabbe, vraket', 'Dead king crab, discarded'), fmt(ls.crabDead, 1), '0'));
     if (ls.roeCut > 0.5) h.push(row(LN('Trekk for rognkrabbe (dårlig sortering)', 'Deduction for berried crab (poor sorting)'), '', '−' + fmt(ls.roeCut, 0)));

@@ -42,13 +42,21 @@ const JOB_SKILL = {egn:'line', strip:'line', hk:'line', lr:'line', mend:'garn', 
 const WORK_ALL = WORK_ST.concat(['egn', 'strip', 'mend', 'stell', 'last']);   // (the minutes of work that tire and teach, workMinute)
 // the stations whose work is heavy, and how heavy: a tired person leaves them to the others first
 const HEAVY_ST = {haling:1, last:1, fort:0.5, sloy:0.5, is:0.6, fiske:0.4, sort:0.3, blogg:0.3, egn:0.2, strip:0.2, mend:0.2, stell:0.2};
-// the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests)
+// the catch is bled, gutted and iced, the trade's way; S.settings.gut and .ice set to false leave it round or uniced (the tests; the
+// player's own choice is per boat, b.gutAboard below)
 // (H3b) the snow crab vessel's factory always splits its crab into clusters (10e-krabbefabrikk.js), whatever the setting for the fish.
 // The first trip lands round (Jonas 08.11.2026: «Hva om nye brukere som åpner spillet ikke sløyer fisken første turen, men heller leverer
 // fisken rund?»): alone, gutting stopped the jigging some three times and added about 35 game minutes (6 real) to it. The plant guts it;
 // the price per round kilo is the same, and the liver, the roe and the gutting charge are what gutting aboard gives (ui/08-actions.js sell)
 const tutRound = () => !!(S.tut && S.tut.v === 2);   // (tutOn in ui/07b-first-trip.js, read here so the core can be tested alone)
-function catchGut(){ return (S.settings.gut !== false && !tutRound()) || snoVessel(); }
+// Round or gutted is the boat's own choice (R1, docs/planer/etter-tonys-test.md 1.3; Jonas 07.11.2026 V1 A): b.gutAboard false lands the
+// catch round, bled and iced, and the plant guts it; undefined guts aboard, so old saves and the fleet keep on as before. The rest is
+// the vessel bound now (withVessel binds S.boat to the one the fleet loop works on), which is what every caller passes without a boat.
+function catchGut(b){ b = b || S.boat; return ((!b || b.gutAboard !== false) && S.settings.gut !== false && !tutRound()) || snoVessel(); }
+// the plant's charge for gutting round haddock and saithe, per round kilo (Råfisklaget: «30 øre pr. kg rund vekt» as the buyer's pay for
+// the gutting; no charge for cod, the plant takes the liver and roe instead: R3). Gutted aboard, there is none (ui/08-actions.js sell)
+const GUT_FEE = 0.30;
+const gutFeeKg = x => !x.gut && !x.frozen && (x.sp === 'hyse' || x.sp === 'sei') ? GUT_FEE : 0;
 function catchIce(){ return S.settings.ice !== false; }
 // ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
 // who with the skipper runs the boat on the operations plan when you are not aboard (06d-drift.js); at the helm and in charge on deck when you sleep or are not aboard
@@ -133,7 +141,7 @@ function stPlaces(st, ctx){
 // what has work now (the hauler waits while the boat is stopped to gut, so those on it go on deck: tilbakemelding #29). as = 'fishing': as if the boat were jigging where it lies (for the fishing effort outside the fishing minute)
 function workCtx(as){
   const b = S.boat, st = S.settings, s = as === 'fishing' ? 'fishing' : b.status, g = as === 'fishing' ? null : b.gop, stop = as === 'fishing' ? false : !!b.deckStop;
-  const icing = iceReady(), cg = catchGut(); let gut = 0, ice = 0, pend = 0;
+  const icing = iceReady(), cg = catchGut(b); let gut = 0, ice = 0, pend = 0;
   for (const x of S.hold){ if (liveLot(x) || x.iced) continue; if (cg && !x.gut) gut += x.kg; else if (icing) ice += x.kg; if ((cg && !x.gut) || icing) pend += x.kg; }
   const deck = s !== 'aground' && pend > 0.5, gk = g ? g.kind : null;
   // the icing station packs what is gutted into the crate or the tub and ices it as it comes from the table, so it has work while anything is

@@ -82,7 +82,8 @@ function panelInput(e){
 function panelChange(e){
   const id = e.target.id;
   if (id === 'setDeckFirst') S.settings.deckFirst = e.target.checked;
-  if (id === 'setGut') S.settings.gut = e.target.checked;
+  // round or gutted, per boat (R1, core/13-work.js catchGut): undefined guts aboard, as old saves and the fleet do
+  if (id === 'setGut'){ if (e.target.checked) delete S.boat.gutAboard; else S.boat.gutAboard = false; }
   if (id === 'setIce') S.settings.ice = e.target.checked;
   if (id === 'setAuto') S.settings.autoOn = e.target.checked;
   if (id === 'autoTo') S.settings.autoTo = e.target.value === 'home' ? 'home' : 'near';
@@ -149,7 +150,7 @@ function sell(){
   const {saleKg, codKg, confBy, codFF, codQ, codConf, byCod, bkOk} = landConf(H, q, acc);
   // The landing note lists each lot at its full value and takes what is confiscated off in rows of its own; every row is whole
   // kroner and the total is the sum of the rows, so the note adds up and the cash gets exactly the total less the crew's share.
-  let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabDead = 0;
+  let confKr = 0, confKg = 0, crabKr = 0, ordKr = 0, crabSmall = 0, crabDead = 0, gutKr = 0, gutKg = 0;
   const confSp = {};   // what is confiscated per species, so the note says which and why (spilltest 3, F1)
   for (const x of S.hold){
     const sp = x.sp, sd = SPECIES[sp], c = x.cls != null ? x.cls : sd.ref, g = grade(x.fresh);
@@ -157,8 +158,11 @@ function sell(){
     const deadKC = sp === 'krabbe' && (x.fresh || 0) < KC.dead;
     // (the snow crab, H3b: the clusters, the live crab by its size and the dead crab for meal at their own prices, 10e-krabbefabrikk.js)
     let ppk = sp === 'krabbe' ? (deadKC ? 0 : clsPrice(port, sp, c, H, false)) : sp === 'snokrabbe' ? snoPrice(port, x, H) : g === 'V' ? 1 : clsPrice(port, sp, c, H, x.hook, x.frozen) * GM[g];   // (a frozen lot at the price of fish frozen at sea, pmF)
-    if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += 0.30;           // no gutting fee deducted
-    let v = x.kg * ppk, gross = v;
+    if (x.gut && (sp === 'hyse' || sp === 'sei')) ppk += GUT_FEE;           // no gutting fee deducted
+    // round haddock and saithe (R2): the line at the plant's price and the gutting charge in a row of its own, so the note says what
+    // landing round cost (core/13-work.js gutFeeKg); the cash gets what it got before. What is confiscated goes off v, without the charge
+    const gf = gutFeeKg(x); if (gf){ gutKr += x.kg * gf; gutKg += x.kg; }
+    let v = x.kg * ppk, gross = v + x.kg * gf;
     if (deadKC) crabDead += x.kg;
     const cs = confBy[sp] || 0; if (cs > 0){ confKr += v * cs; confKg += x.kg * cs; const z = confSp[sp] = confSp[sp] || {kg:0, kr:0}; z.kg += x.kg * cs; z.kr += v * cs; v *= 1 - cs; }
     // orders for this harbour take matching fish first, at their premium (confiscated fish does not count)
@@ -174,9 +178,9 @@ function sell(){
     S.market[port.id] = S.market[port.id] || {}; S.market[port.id][sp] = (S.market[port.id][sp] || 0) + x.kg;
   }
   for (const r of Object.values(lines)) r.sum = Math.round(r.sum);
-  const roeCut = 0; confKr = Math.round(confKr); crabKr = Math.round(crabKr);
+  const roeCut = 0; confKr = Math.round(confKr); crabKr = Math.round(crabKr); gutKr = Math.round(gutKr);
   // the daily login bonus: a share on top of the fish itself (not on order premiums, liver or roe); the crew shares in it
-  const stPct = streakPct(), fishKr = Object.values(lines).reduce((a, r) => a + r.sum, 0) - confKr - crabKr - roeCut, stKr = stPct > 0 ? Math.round(fishKr * stPct / 100) : 0;
+  const stPct = streakPct(), fishKr = Object.values(lines).reduce((a, r) => a + r.sum, 0) - confKr - crabKr - roeCut - gutKr, stKr = stPct > 0 ? Math.round(fishKr * stPct / 100) : 0;
   // finished orders pay their bonus; the customer remembers
   const ordLines = []; { const O = ordState();
     for (const o of O.active.slice()){ if (!o.saleKg) continue; const c = CUSTOMERS.find(z => z.id === o.cust), done = o.left <= 0.5; let bonus = 0;
@@ -232,7 +236,7 @@ function sell(){
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
   const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)].concat(r.fz ? [1] : [])), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
-    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, crew:LS.per.map(p => [p.c.name, p.lots, p.kr].concat(p.sk ? [1, p.x] : [])), lott, fk:[Math.round(fk.fuelL), fk.fuelKr, Math.round(fk.iceKg), fk.iceKr, fk.baitKr, fk.havnKr, fk.gearKr], dl:[LS.D, LS.M, LS.n, LS.own, LS.f], fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
+    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, gf:gutKr, crew:LS.per.map(p => [p.c.name, p.lots, p.kr].concat(p.sk ? [1, p.x] : [])), lott, fk:[Math.round(fk.fuelL), fk.fuelKr, Math.round(fk.iceKg), fk.iceKr, fk.baitKr, fk.havnKr, fk.gearKr], dl:[LS.D, LS.M, LS.n, LS.own, LS.f], fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
   if (snoQ) det.sno = [Math.round(snoQ.tq), Math.round(snoQ.ord), Math.round(snoQ.live)];   // (the extra quota, the ordinary, the live crab; H3b)
   folkSold(port.id, kg);   // the plant's manager keeps count (09d-folk.js)
   S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0), d:det}); if (S.sales.length > 200) S.sales.shift();
@@ -257,7 +261,7 @@ function sell(){
   const crabFine = 0;
   if (crabDead > 0.05) msg(port.name, vt + fmt(crabDead, 1) + ' kg av kongekrabben var død og er vraket. Død krabbe betales ikke. Et krabbekar med sjøvann holder den levende i flere døgn.', vt + fmt(crabDead, 1) + ' kg of the king crab was dead and has been discarded. Dead crab is not paid for. A live crab tank keeps it alive for days.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null, why}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, gutKr, gutKg:Math.round(gutKg), ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null, why}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
