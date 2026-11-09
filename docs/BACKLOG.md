@@ -4,6 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Skummet på sjøen, Jonas' video 09.11.2026** (`vaer-og-hav.md` 5.20h): blinkingen (halen vises fra den legges) og firkanten rundt båten (skumkartet tones ut mot kanten) rettet 09.11.2026, ikke sett på nettbrettet. **Venter på valg:** kjølvannet ligger i verdens tempo (6×), skumtoppene og den korte sjøen i båtens ekte fart (1×, nærfeltet 5.20b), så ovenfra strømmer kjølvannet seks ganger fortere bakover enn skummet rundt båten. A: nærfeltet tones bort når kameraet er høyt over båten, så alt i vannet går i verdens tempo ovenfra og som nå fra broa og dekket (anbefalt); B: alt i verdens tempo (nærfeltet bort, den korte sjøen slår 6× mot skroget); C: kjølvannet også i båtens ekte fart (kortere spor, glir mot kaiene som før 5.20d).
 - **Lanseringsplanen L1 skrevet 09.11.2026** (Jonas' økt, grenen `ccr-41bf0bd0-c7ywb9`; `docs/planer/lansering-plan.md`): fasene L1a–L1f er steg 74–79 i køen og venter på valg 16 (V1–V7). Funnet underveis, og ikke rettet:
   - **Butikken er alt i ekte modus** på detstorebla.no (`shop-checkout` svarer `ready:true`; 5 betalte kjøp på 155 kr, det siste 06.11.2026), uten Stripe Tax og uten registrering for MVA eller non-Union OSS. Valg 16 V5.
   - **Valg 6 og steg 50 ventet på `auth.detstorebla.no`**, som Jonas valgte bort 11.10.2026 (99 USD i måneden). Tatt opp igjen som valg 16 V6.

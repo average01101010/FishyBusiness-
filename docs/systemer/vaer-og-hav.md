@@ -309,6 +309,15 @@ Jonas' valg 27.10.2026 (1A, `docs/planer/fysikk-4-sjo-og-skrog.md`): Gerstner-su
 
 **Ikke gjort i F3:** to komponenter til mellom 6 og 20 m (bildene krevde det ikke: JONSWAP-halen ga båndet 10–40 m energien det manglet); sjørokkpartiklene fra kammene som bryter (`24-cinema.js`); målingen på nettbrettet (Jonas, `#fps` mot nullpunktet).
 
+## 5.20h Skumtoppene som blinket og firkanten rundt båten (Jonas 09.11.2026, video og skjermbilde fra nettbrettet)
+
+Jonas sendte en video ovenfra ved Brensholmen (sjarken i 6,7 knop, 0,3 m sjø, 10 m/s fra nordøst etter `windAt`, Høy, 44 bilder/s) og et skjermbilde langt ovenfra: «mye glitching», «hastigheten ser ikke ut til å samsvare med båten», og «man klarer å se kantene på nærfeltet når man zoomer ut … en megasvær kvadrat rundt båten». Funnene:
+
+- **Skumtoppene blinket:** en kam står over terskelen i bare 0,1–0,3 s (målt med `FOAM.capAt` i 43 bilder/s på 40 × 40 punkter: median 11 bilder), og halen i skumkartet ble først vist fra 0,1–0,6 s gammel (`acv = ac·smoothstep(0.1, 0.6, alder)` i `SEA_FS`). På nettbrettet kom det hvite i noen bilder og forsvant før halen kom (videoen: et flak på 3–5 m i tre bilder, så ingenting). Nå vises halen fra den legges, så flaket blir liggende og tynnes ut til tråder over τ (3–7 s).
+- **Firkanten** var skumkartet (600 m rundt båten, 5.20c): innenfor la kammene haler, utenfor ikke, og kanten var skarp. Nå tones kartets skum (kjølvannet, halene, sjørokket og det turkise) ut over den ytterste femdelen (`fe` i `SEA_FS`), og kammene utenfor kartet tar hele Monahans dekning i stedet for andelen `WCAP.k` (0,7), så dekningen er den samme på begge sider.
+- **Farten:** kjølvannet ligger fast i vannet i verdens tempo (6×, `uShiftG`, 5.20d), mens kammene og halene deres ligger i nærfeltets ramme (5.20b) og glir forbi båten i hennes ekte fart (1×). Ovenfra strømmer kjølvannet derfor seks ganger fortere bakover enn skummet rundt. Ikke endret: valget er Jonas' (backloggen).
+- **Testene:** SwiftShader tegner ett bilde på 2–13 s, så halene bygges ikke opp, og verken blinkingen eller firkanten kan ses i testbildene. `FOAM.tauC` (bare for tester) gir halene en lang levetid, så firkanten kan ses; `FOAM.log` teller nå også texlene med skumtoppenes skum (siste tall). Blinkingen er regnet, ikke sett: Jonas ser den på nettbrettet.
+
 ## 5.61 Skyene i ekte tid (#352, 19.10.2026)
 
 Skyene på himmelen (`cp` i himmelskyggeleggeren) driver med vinden i skyhøyden, i ekte tid som bølgene: 1,5 ganger vinden ved sjøen (overflatevinden over sjø er rundt to tredjedeler av vinden over friksjonslaget), dreid 15° med klokka (overflatevinden krysser isobarene inn mot lavtrykket), minst 2 m/s, over et skydekke i 1 500 m (`CLD`, `cloudStep` i `view3d.js`). Forskyvningen samles opp bilde for bilde på tiden som virkelig har gått (`uCloudOff`). Før gikk skyene mot vinden i fast fart (forskyvningen var vindretningen ganger tiden siden start, lagt til prøvepunktet), og når vinden dreide noen grader, hoppet hele himmelen. Test: `tests/skytest.py` (3D, rundt 1 min): retning og fart i vind fra vest, og ingen hopp når vinden dreier 30°.

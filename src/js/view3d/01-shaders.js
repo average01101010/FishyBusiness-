@@ -331,7 +331,9 @@
     // F3: where the waves break (WCAPS): the compression of the surface over the threshold for the breaking crests' share of the
     // cover (WCAP.k); the foam they leave is the map's (below). The grain's finest octave (0.3 m) fades out where a pixel passes 0.1 m,
     // the middle one (1.1 m) where it passes half a metre (else fwidth of fv grew so wide that the edge went grey 150 m off)
-    '\n#else\nfloat RIM=0.05;float fine=1.0-smoothstep(0.04,0.12,px);float mid=1.0-smoothstep(0.3,0.7,px);float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,mid,fine));float th=capTh(Wc*' + wc5(WCAP.k) + ');\n#endif\n' +
+    // fe: how far inside the foam map (0 at its edge, 1 from a fifth of it in, 09.11.2026). Outside the map no tail is left, so the crests
+    // there take all of Monahan's cover; inside, the share WCAP.k, the tail the rest. Before, the map's square showed from above (Jonas)
+    '\n#else\nfloat RIM=0.05;float fine=1.0-smoothstep(0.04,0.12,px);float mid=1.0-smoothstep(0.3,0.7,px);float fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capGrain(cq,uTime,mid,fine));float fe=0.0;if(uFoamOn>0.5){vec2 fe2=(Pb-uFoamRect.xy)*uFoamRect.z;fe2=min(fe2,1.0-fe2);fe=smoothstep(0.0,0.2,min(fe2.x,fe2.y));}float th=capTh(Wc*mix(1.0,' + wc5(WCAP.k) + ',fe));\n#endif\n' +
     // The edge is as wide as the pixel (fwidth), so it never steps or crawls, with a thin soft rim of older foam outside it; the mottle
     // inside fades to its mean before it gets smaller than a couple of pixels.
     'float aa=max(0.03,1.2*fwidth(fv));float core=smoothstep(th-aa,th+aa,fv);' +
@@ -352,21 +354,23 @@
     // the whitecaps' foam (F3): what the breaking crests laid, left behind as the crest runs on (so the front, where the crest breaks
     // now, is sharp and the back a tail), thinning with its age into a lace of 0.3-3 m that streaks along the wind and drifts with it
     // (the grain in the frame the foam drifts in, uFoamCw); the crest itself the lines above draw
-    'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac*smoothstep(0.1,0.6,agc);vec2 Pc=Pb-uFoamCw;' +
+    // The tail shows from the moment it is laid (09.11.2026; before, only from 0.1-0.6 s): a crest is over the threshold for only
+    // 0.1-0.3 s, so on the tablet the white came for a few frames and went before its tail came, and the whitecaps blinked (Jonas' video)
+    'float agc=max(uFoamTc.x-c0,0.0)*uFoamTc.y;float acv=ac;vec2 Pc=Pb-uFoamCw;' +
     'float lace=ns(vec2(dot(Pc,w)*0.25,dot(Pc,wp)*0.9)+vec2(5.0,2.0))*0.5+mix(0.5,ns(Pc*1.2+vec2(2.2,6.1)),mid)*0.3+mix(0.5,ns(Pc*3.1+vec2(7.3,0.4)),fine)*0.2;' +
     // (strands, not a grey sheet: fresh, most of it is white with holes; as it ages, fewer strands stay over the edge, not greyer ones)
     'float fcp=smoothstep(0.42,0.55,acv*(0.6+0.8*(lace-0.5)))*lod*0.85;' +
-    'foam=max(foam,max(fw,fcp));' +
+    'fw*=fe;fcp*=fe;foam=max(foam,max(fw,fcp));' +
     // spindrift (sjørokk) from the crests that break, from a near gale (Beaufort 7, F3; before, only the spray in the air from Beaufort 8,
     // driftSpray in 24-cinema.js): the wind tears the spray off the breaking crest and lays it as a thin, fast streaking veil a few metres
     // downwind of it (the map's caps born in the last second or so, 2 and 4.5 m upwind)
     'if(uWind>13.0){vec4 q1=texture2D(uFoam,fu-w*2.0*uFoamRect.z);vec4 q2=texture2D(uFoam,fu-w*4.5*uFoamRect.z);' +
     'float r1=q1.b*(1.0-smoothstep(0.4,1.6,max(uFoamTc.x-(q1.b>0.002?q1.a/q1.b:0.0),0.0)*uFoamTc.y));float r2=q2.b*(1.0-smoothstep(0.4,1.6,max(uFoamTc.x-(q2.b>0.002?q2.a/q2.b:0.0),0.0)*uFoamTc.y));' +
-    'float sv=ns(vec2(dot(Pb,w)*0.4-uTime*4.0,dot(Pb,wp)*1.5));foam=max(foam,smoothstep(13.9,24.5,uWind)*max(r1,r2*0.65)*smoothstep(0.3,0.75,sv)*lod*0.55);}' +
+    'float sv=ns(vec2(dot(Pb,w)*0.4-uTime*4.0,dot(Pb,wp)*1.5));foam=max(foam,smoothstep(13.9,24.5,uWind)*max(r1,r2*0.65)*smoothstep(0.3,0.75,sv)*lod*0.55*fe);}' +
     // the bubbles the wake drives down glow turquoise under the surface once the white on top has thinned (sunlight scattered by the
     // bubbles through a few decimetres of water that takes the red), then the milky water as before
-    'float agw=max(uFoamT.x-b0,0.0)*uFoamT.y;vec3 tq=min(vec3(0.16,0.62,0.6)*(uAmb*1.4+uSunCol*0.7),vec3(0.8));col=mix(col,tq,clamp(aw*1.4,0.0,0.6)*smoothstep(0.5,4.0,agw)*(1.0-fw)*lod);' +
-    'col=mix(col,fc*0.6+col*0.4,clamp(aw*0.25,0.0,0.3)*lod);}}\n#endif\n' +
+    'float agw=max(uFoamT.x-b0,0.0)*uFoamT.y;vec3 tq=min(vec3(0.16,0.62,0.6)*(uAmb*1.4+uSunCol*0.7),vec3(0.8));col=mix(col,tq,clamp(aw*1.4,0.0,0.6)*smoothstep(0.5,4.0,agw)*(1.0-fw)*lod*fe);' +
+    'col=mix(col,fc*0.6+col*0.4,clamp(aw*0.25,0.0,0.3)*lod*fe);}}\n#endif\n' +
     // shallows and surf, the surf from the sea that reaches this shore
     'if(uSOn>0.5&&uHOn>0.5){vec2 su=(vW.xz-uSRect.xy)*uSRect.zw;if(su.x>0.0&&su.y>0.0&&su.x<1.0&&su.y<1.0){float ef=smoothstep(0.0,0.06,min(min(su.x,su.y),min(1.0-su.x,1.0-su.y)));' +
     'float hb=texture2D(uHgt,su*(255.0/256.0)+0.5/256.0).r*16.0-8.0;float dep=uTideL-hb;float hl=length(S.xy);' +
