@@ -2532,12 +2532,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1344 linjer)
+## `src/js/ui/phone/07-patch.js` (1347 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1337 `patch()`
+  - 1340 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3552,24 +3552,25 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (649 linjer)
+## `src/js/view3d/01-shaders.js` (654 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **183** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **253** the boat's own foam, when she has way on
-- **261** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 559 `cloudStep(dt)`
-  - 566 `skyFrame(u, Hh, tn, bv)`
-  - 581 `glsl3(src, fs)`
-  - 589 `compile(type, src, nm)`
-  - 596 `program(vs, fs, attrs, nm = '?')`
-  - 604 `buf(data, target, usage)`
-  - 609 `airSet(u, terr)`
-  - 624 `sunT0()`
-  - 631 `attr(loc, b, size)`
-  - 647 `upload(pos, col, idx)`
+- **256** the boat's own foam, when she has way on
+- **264** where a slam and the spray land (F3b): four patches, fixed names
+- **266** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 564 `cloudStep(dt)`
+  - 571 `skyFrame(u, Hh, tn, bv)`
+  - 586 `glsl3(src, fs)`
+  - 594 `compile(type, src, nm)`
+  - 601 `program(vs, fs, attrs, nm = '?')`
+  - 609 `buf(data, target, usage)`
+  - 614 `airSet(u, terr)`
+  - 629 `sunT0()`
+  - 636 `attr(loc, b, size)`
+  - 652 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -3935,7 +3936,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 498 `mastTop(G)`
   - 502 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (413 linjer)
+## `src/js/view3d/14-sea.js` (434 linjer)
 
 ---------- sea ----------
 
@@ -3954,25 +3955,26 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 123 `updateWake()`
   - 149 `wakeHFast(x, z)`
 - **162** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 175 `foamFree()`
-  - 176 `foamInit()`
-  - 192 `wavePh()`
-  - 199 `foamStep(dt, t)`
-  - 267 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 307 `foamBind(u)`
-- **338** the sea state over the near terrain and the whole map
-  - 345 `ssLevel(n, unit)`
-  - 347 `ssRect(L)`
-  - 348 `ssWork(L, until)`
-  - 371 `ssStep(rdt)`
-  - 373 `ssBlend(L)`
-  - 375 `ssTex(L, x, z, out)`
-  - 382 `ssAt(x, z)`
-  - 392 `seaQ(S, ren)`
-  - 393 `seaDisp(x, z, t, S, fade)`
-  - 404 `seaFade(x, z)`
-  - 405 `seaH(x, z, t)`
-  - 411 `seaHFast(x, z, t)`
+  - 176 `foamFree()`
+  - 177 `foamInit()`
+  - 193 `wavePh()`
+  - 200 `foamStep(dt, t)`
+  - 267 `foamSplash(Dx, Dz)`
+  - 288 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 328 `foamBind(u)`
+- **359** the sea state over the near terrain and the whole map
+  - 366 `ssLevel(n, unit)`
+  - 368 `ssRect(L)`
+  - 369 `ssWork(L, until)`
+  - 392 `ssStep(rdt)`
+  - 394 `ssBlend(L)`
+  - 396 `ssTex(L, x, z, out)`
+  - 403 `ssAt(x, z)`
+  - 413 `seaQ(S, ren)`
+  - 414 `seaDisp(x, z, t, S, fade)`
+  - 425 `seaFade(x, z)`
+  - 426 `seaH(x, z, t)`
+  - 432 `seaHFast(x, z, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (158 linjer)
 
@@ -4248,7 +4250,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (722 linjer)
+## `src/js/view3d/24-cinema.js` (757 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4275,11 +4277,12 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 282 `frame0()`
   - 474 `snapTake()`
   - 479 `drawRoute(VP, eye)`
-  - 491 `driftSpray(VP, eye, dt, t, col)`
-  - 506 `drawSmoke(VP, eye, BM, dt)`
-  - 547 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 574 `drawEffects(VP, eye, BM, dt, t)`
-  - 704 `updateLabels(VP, eye, W, Hh)`
+  - 502 `driftSpray(VP, eye, dt, t, col)`
+  - 529 `drawSmoke(VP, eye, BM, dt)`
+  - 570 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 604 `splashFoam(x, z, r, a)`
+  - 606 `drawEffects(VP, eye, BM, dt, t)`
+  - 739 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (224 linjer)
 
