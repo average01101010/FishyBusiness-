@@ -112,6 +112,8 @@ Data: 7,0 m, 1,9 t, én i mannskapet og deg, ingen køyer, ett fangstkar på 500
 
 Karakteren (forslag, skalaen i kap. 2): K1 3, K2 15, K3 13, K4 4, K5 8, K6 6 (teinene gjennom skroget, de to inni hverandre ved karet, settingen uten folk), K7 8, K8 6 = **63**. Det som løfter mest: bilder med kjent lengde (K1), teinene og haleren der fiskeren arbeider (K6), og Jonas' gjennomgang uten nye funn (K8).
 
+**OB1 (09.11.2026, Jonas' økt, grenen `ccr-e474ac41-zlir5x`):** teinene er ute (`rigs`, `fit.rig`, `potsUnfit`; skiffen likt), garnet trekkes for hånd (`handGear`); stampene, garnbinga og frakten står på dørken akter; linehaleren står på stolpen rett forut for fiskeren (`haulFoot`); juksahjulet er en modell etter Jonas' bilde (`tools/gear/vinde.py`); settingen går over styrbord låring med skipperen ved rorkulten og den andre ved stampene; ved trekket legger den andre lina i stampen; skipperen tar tauene selv ved kaia og naustet; de to ved karet står ikke i hverandre (`work.mate`). Funnene i tabellen over med alvor A er rettet, så nær som fenderne og tauene selv (`15-env-mooring.js`, OB2) og skroget (+11 %, venter på bildene etter valg 22 B). Bildene før og etter i `docs/okter/2026-11-09-ob1/`; karakteren etter Jonas' skala som forslag i `trebat-grunnlag.md` kap. 8.3. Jonas setter karakteren.
+
 ### 4.2 Skiffen (`skiff`, `skiff59.py`): forslag 57/100
 
 Data: 5,9 m, 1,0 t, én og deg, aluminium, 60 hk påhengs, ett kar på dørken, eget sløyebord over babord ripe ved konsollen (`work.own`), rigges i spillet for juksa, line og teiner (garn går ikke, F16). Håndbåt som trebåten: ingen agenter; `drawSkiff` tegner faste figurer (`view3d/13-instruments.js:199`), så json-en har ingen stasjoner, ingen hendelser og ingen klippesjekk for skiffen (`before`/`after` tomme, `clipcheck` null). Alt under er sett i bildene, ikke målt.
@@ -523,4 +525,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 ## 9. Status
 
 - 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, (H3d2 og Ø8b S2 ble rullet ut samme natt); OB2 og OB15 er klare.
-
+- 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).
