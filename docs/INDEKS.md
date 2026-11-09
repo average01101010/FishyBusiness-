@@ -53,7 +53,10 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 
 | Dokument | Hva det er |
 |---|---|
-| `docs/planer/koen.md` | **Køen (07.11.2026): det som skal bygges, i rekkefølge**, med status, hva hvert steg venter på, filene det eier, hele startmeldinger, valgene som venter på Jonas, øktene som kjører og rutinens utrullinger. Arbeidsrutinen (`tools/plan/RUTINE.md`) leser den hver time; en økt Jonas starter selv, merker steget sitt der først. |
+| `docs/planer/koen.md` | **Køen: det som skal bygges, i rekkefølge** (fra 07.11.2026, slanket 09.11.2026): bare det som er åpent: lanseringslinja, øktene som kjører, valgene som venter på Jonas, og stegene med status, hva de venter på og filene de eier. Kort nok til å leses hel. |
+| `docs/planer/start/` | **Startmeldingene**, én fil per åpent steg (`<steg>.md`), hele; `README.md` har halen og formen. |
+| `docs/planer/koen-arkiv.md` | Køens arkiv: ferdige steg, besvarte valg, utrullingene, startmeldingene for ferdige steg og historikken. |
+| `docs/spill-dette/` | Det Jonas bør prøve på nettbrettet etter hver bølge, én fil per steg; `sett.md` er det han har prøvd. |
 | `docs/planer/okter-etter-backloggen.md` | Øktene etter backloggen (plan 05.11.2026): backloggen og planene delt i økter Ø1–Ø17 i fire bølger, med hvilke punkter hver økt tar, filene den holder seg unna mens andre økter kjører, startmeldingene, spørsmålene til Jonas og status per økt. Les din egen økt der. |
 | `docs/planer/sikkerhet-skyen.md` | Sikkerhetsgjennomgangen av skyen (Ø6, 05.11.2026): hva serveren stoler på fra klienten, hva gjester og kall uten innlogging kan gjøre, 15 funn med fil, linje og retting, og rekkefølgen for rettingene. |
 | `docs/planer/flaateplanen.md` | Flåteplanen fase 1–5 og veikartene (PWA og hele kysten), slik de ble vedtatt. |
@@ -126,3 +129,4 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/push-plan.md` | Push-varslene. |
 | `tools/feedback/RUTINE.md` | Det tilbakemeldingsrutinen gjør hver kjøring. |
 | `tools/plan/RUTINE.md` | Det arbeidsrutinen gjør hver kjøring (07.11.2026): låsen `plan/kjorer`, valget av steg fra køen, porten før utrulling, migreringene, utrullingen, «Når Jonas svarer», av-bryteren. `tools/plan/tester.py` finner testene for alt en gren endret. |
+| `tools/plan/KOORDINATOR.md` | Den korte koordinatorøkta (09.11.2026): rydder køen, samler «spill dette» og gir Jonas neste runde med prompter. Jonas skriver bare «Les tools/plan/KOORDINATOR.md og gjør det den sier.» |
