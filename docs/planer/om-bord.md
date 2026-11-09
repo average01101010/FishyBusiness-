@@ -514,11 +514,12 @@ Står også under «Valg som venter på Jonas» i `docs/planer/koen.md` (valg 17
 - **Hva en fisker gjør:** beskrevet etter planlisten, referansebåtene og det som er alminnelig kjent om kystfisket, ikke etter et filmet arbeidsdøgn om bord. Der spillet og ekte båter kan gjøre det forskjellig (for eksempel om fisken sløyes om bord eller leveres rund på en dagsbåt), er spillets valg tatt som gitt.
 - **Teina på skiffen ser større ut enn båten** i klippet. Målene skal være rettet (D1 i kartleggingen); det kan være perspektivet nær kameraet. OB1 og OB5 måler den.
 - **Fysikken med last** er regnet, ikke sett i sjø (kapittel 5).
+- **Trebåten er endret etter opptakene:** 6560a62 på arbeidsgrenen (09.11.2026) tok bort badestigen, livbøya og fiskelanternene på trebåten og vimplene på båtene. Bildene her er av bygget fra før (211fb53). Funnene i arbeidet står; OB1 tar før-bildene på nytt.
 - **Kyst21 er ikke revidert,** og anslaget for karakteren er grovt.
 - **Opptakene har høyst tre i mannskapet pluss skipperen** (`BASE` i `tests/ombord.py`), også på breisjarken (`crewMax` 4), kyst15 (5) og kyst21 (6). Med fullt mannskap kan det bli trangere enn klippene viser; OB-fasene for de store båtene tar opp med fullt mannskap.
 - **Innseilingen og lossingen** ble tatt opp på nytt med kameraet høyere og innseilingen fra leia; for kyst15, breisjarken og kyst21 er de fra første runde der kameraet sto i bygningene.
 
 ## 9. Status
 
-- 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, og på at H3d2 og Ø8b S2 er ute; OB15 er klar.
+- 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, (H3d2 og Ø8b S2 ble rullet ut samme natt); OB2 og OB15 er klare.
 
