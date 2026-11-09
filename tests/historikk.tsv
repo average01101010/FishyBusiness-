@@ -1702,3 +1702,9 @@
 2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	docktest	OK	74	lite	samtidig	
 2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	berth3d	OK	22	lite	samtidig	
 2026-11-09 09:35	ccr-a9ccd5ec-it307t	86d4026	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 57
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	mobtest	OK	227	lite	samtidig	
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	crewclip	FEIL	23	lite	samtidig	FEIL nor does the work at its places (jigging, gutting, icing, hauling) {'bunntral': {'jig': ['jig:1[0]null'], 'deck': [], 'haul': []}}
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 56
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	worktest	FEIL	36	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-09 09:39	ccr-a9ccd5ec-it307t	9f67116	autonavtest	FEIL	12	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 229, 'cell': 0.2, 'maxSlice': 12.7, 'mended': 0, '
+2026-11-09 09:43	ccr-a9ccd5ec-it307t	9f67116	mobtest	OK	205	lite	alene	
