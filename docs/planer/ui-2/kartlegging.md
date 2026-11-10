@@ -167,7 +167,7 @@ Fire skjermer uten 3D (havn, sjø, skuffen Beholdning, telefonens hjem):
 | Radier | 15 | 17 | høyst 6 |
 | Knappestiler | 18 | 17 | 3–4 |
 
-Hele tellingen over alle flatene (`uiplay.py`, 3D) føres inn her når kjøringene er ferdige.
+Hele tellingen over alle flatene (`uiplay.py`, 3D) føres inn her når kjøringene er ferdige. (Ble ikke ført inn i U2-0; tellingen etter UI 2 står i kap. 7.)
 
 ### 3.8 Første tur i stående nettbrett (uiplay med 3D)
 
