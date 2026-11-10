@@ -1930,6 +1930,24 @@
 2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	jukseboot	OK	10	lite	samtidig	
 2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	boottest	OK	21	lite	samtidig	
 2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	kystvakttest	OK	10	lite	samtidig	
+2026-11-10 14:31	ccr-09c0a3db-nj4fwz	136e5b1+	trip2	OK	39	lite	samtidig	
+2026-11-10 14:32	ccr-09c0a3db-nj4fwz	136e5b1+	docktest	OK	68	lite	samtidig	
+2026-11-10 14:32	ccr-09c0a3db-nj4fwz	136e5b1+	posttest	OK	26	lite	samtidig	
+2026-11-10 14:32	ccr-09c0a3db-nj4fwz	136e5b1+	turtest	OK	20	lite	samtidig	
+2026-11-10 14:32	ccr-09c0a3db-nj4fwz	136e5b1+	fixtest	OK	51	lite	samtidig	
+2026-11-10 14:32	ccr-09c0a3db-nj4fwz	136e5b1+	fleet3test	OK	19	lite	samtidig	
+2026-11-10 14:33	ccr-09c0a3db-nj4fwz	136e5b1+	opsowntest	OK	47	lite	samtidig	
+2026-11-10 14:33	ccr-09c0a3db-nj4fwz	136e5b1+	seasontest	OK	7	lite	samtidig	
+2026-11-10 14:33	ccr-09c0a3db-nj4fwz	136e5b1+	markettest	OK	33	lite	samtidig	
+2026-11-10 14:33	ccr-09c0a3db-nj4fwz	136e5b1+	megletest	OK	16	lite	samtidig	
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	fleet2test	FEIL	32	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	kvotemarkedtest	OK	29	lite	samtidig	
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	quotatest	OK	16	lite	samtidig	
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	kystvakttest	FEIL	9	lite	samtidig	FEIL havsjekken trenger hele kysten i tools/map/out/game (release.py og game.py)
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	sponsor2test	OK	16	lite	samtidig	
+2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	adminbuytest	OK	11	lite	samtidig	
+2026-11-10 14:35	ccr-09c0a3db-nj4fwz	136e5b1+	opptest	FEIL	63	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 14:47	ccr-09c0a3db-nj4fwz	136e5b1+	teleport3d	OK	740	3d	alene	
 2026-11-10 14:18	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	77	lite	alene	
 2026-11-10 14:19	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	80	lite	alene	
 2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	tabtest	OK	133	lite	samtidig	
@@ -1949,3 +1967,9 @@
 2026-11-10 14:44	claude/hs5-kronene-landingene-niqy2q	2e64ca6	boottest	OK	30	lite	samtidig	
 2026-11-10 14:45	claude/hs5-kronene-landingene-niqy2q	2e64ca6	sqltest	OK	45	lite	samtidig	
 2026-11-10 14:45	claude/hs5-kronene-landingene-niqy2q	2e64ca6	admintest	OK	9	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	boottest	OK	34	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	kvotemarkedtest	OK	27	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	megletest	OK	16	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	megletest	OK	16	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	quotatest	OK	19	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	boottest	OK	27	lite	samtidig	

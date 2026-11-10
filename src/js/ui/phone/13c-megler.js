@@ -48,6 +48,7 @@
   function mgOwnRow(v, quick){
     const s = mbSale(v), b = vget(v, 'boat'), D = (mktState().del || []).find(d => d.vid === v.id), H = S.t / 60, h = [];
     if (D) return '<p class="ph-note">' + L('Seiles til ' + portById(D.to).name + ', framme om ' + Math.max(1, Math.round(D.H1 - H)) + ' timer.', 'Being sailed to ' + portById(D.to).name + ', there in ' + Math.max(1, Math.round(D.H1 - H)) + ' hours.') + '</p>';
+    if (s && s.km) return kxBoatRow(v);   // (KM3: it is her right or a structure quota that is out, in the quota market; phone/04b-kvotemarked.js)
     if (s){ const m = MBC.mineOf(v.id) || {}, pt = portById(s.port);
       h.push('<p class="ph-note mb-own">' + L('Til salgs hos Kystmegleren: ', 'For sale at Kystmegleren: ') + (m.top ? L('høyeste bud ' + kr(m.top) + ' (' + m.bids + ' bud)', 'highest bid ' + kr(m.top) + ' (' + m.bids + (m.bids === 1 ? ' bid)' : ' bids)')) : L('ingen bud ennå, fra ' + kr(s.start), 'no bids yet, from ' + kr(s.start))) +
         (s.buynow ? L(', «Kjøp nå» ' + kr(s.buynow), ', buy now ' + kr(s.buynow)) : '') + '. ' + L('Slutter om ', 'Ends in ') + mbLeftTxt(MBC.left(s.until)) + '. ' + L('Hun ligger ved verftet i ' + (pt ? mbPlace(pt) : '') + ' til salget er over.', 'She lies at the yard in ' + (pt ? mbPlace(pt) : '') + ' until the sale is over.') + '</p>');
