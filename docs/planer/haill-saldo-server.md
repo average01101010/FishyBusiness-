@@ -128,6 +128,8 @@ Planen for funn 6 i `docs/planer/sikkerhet-skyen.md`: haillen og velkomstgaven l
 
 ## 5. Valgene
 
+**Besvart 10.11.2026 (Jonas):** «V1: A, V2: A, V3: A, V4: A». Fasene bygges etter A på alle fire.
+
 - **V1. Hvem får velkomstgaven (49a)?**
   - **A (anbefalt):** hver ny konto én gang, enten den kommer fra en gjest (`guest_merge`) eller lages rett fra innloggingen. «Gave ved registrering» gjelder begge veiene, og i dag får den som lager konto direkte, ingenting, noe som ser ut som en glipp.
   - B: bare gjester som registrerer seg, som i dag.
@@ -161,4 +163,5 @@ Planen for funn 6 i `docs/planer/sikkerhet-skyen.md`: haillen og velkomstgaven l
 
 ## Status
 
-- 10.11.2026: planen skrevet (steg 49, Jonas' økt, grenen `ccr-c1a6f716-vlr7nu`). Fasene er steg 49a, 49b og 49c i køen med `venter på valg`. Valgene V1–V4 står under «Valg som venter på Jonas» som valg 29. Ingenting er bygd.
+- 10.11.2026: planen skrevet (steg 49, Jonas' økt, grenen `ccr-c1a6f716-vlr7nu`). Fasene er steg 49a, 49b og 49c i køen med `venter på valg`. Valgene V1–V4 var valg 29 i køen.
+- 10.11.2026: valg 29 besvart av Jonas, «V1: A, V2: A, V3: A, V4: A». 49a er `klar`; 49b venter på 49a og lanseringen, 49c på 49b. Ingenting er bygd.

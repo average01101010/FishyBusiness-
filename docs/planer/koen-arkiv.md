@@ -93,6 +93,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 6. ~~**Ø6 funn 7, innloggingsdomenet**~~ **besvart 10.11.2026, A (via valg 16 V6):** domenet kjøpes ikke nå; CSP i steg 78.
 15. ~~**Driftskravet i kvotemarkedet**~~ **besvart 10.11.2026, A.** Jonas: «Valg 15: A». Driftskravet står av, som i virkeligheten.
 16. ~~**Lanseringen, L1**~~ **besvart 10.11.2026:** V1 A, V2 A, V3 A, V4 **B** (bare push, med nede og heng; ingen e-post), V5 A, V6 A, V7 A (Jonas: «V7, A … V4, B»). Skrevet inn i `lansering-plan.md` kap. 4.
+29. ~~**Haillen på serveren**~~ (steg 49, `docs/planer/haill-saldo-server.md` kap. 5): **besvart 10.11.2026, A A A A.** Jonas: «V1: A, V2: A, V3: A, V4: A». V1 A: hver ny konto får velkomstgaven én gang, fra gjest eller rett fra innloggingen. V2 A: haill i lagringene fra før blir startsaldoen, ingen mister noe, over 10 merkes i admin. V3 A: serveren trekker pubhjulet én gang per pubkveld og gir kapittelgaven én gang. V4 A: «Aktiver» krever nett. 49a er klar; 49b og 49c etter lanseringen.
 
 ## Øktene som kjørte (historikk)
 
