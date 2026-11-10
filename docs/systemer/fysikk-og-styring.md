@@ -215,7 +215,7 @@ Alt i kjernen og i spilltid (`core/16b-dyn.js`), likt for alle spillere; ingenti
 - **Ikke gjort:** squaten i 3D gjennom skrogets egen bølge (`ws` i `hullStep`, `core/03c-stability.js`), fordi OB7 eier fila mens F5 går; står i backloggen. Stikkprøvene langs kysten ble ikke tatt (bygget har bare Senja): koden leser bare nasjonale lag (`coastDistM`, `depthF`, `PIERBOX`, `UNITA`) og gir ingen virkning der et lag mangler (kysten −1, dybden kaster), så den virker likt langs hele kysten.
 - **Tester:** `tests/unit/motstand.test.mjs` (kneika, toppfartene, squaten, gruntvannet, bankeffekten; sett rød med kneika, bankeffekten og ×2 i sund slått av), `dyntest` del 6 (bankeffekten ved kaia i Senjahopen, squaten på roret i et sund på Senja ved 863,32/357,88 km og i åpent farvann vest av Senja, med dybden satt under henne for ett steg).
 
-### F8a: strømfeltet for hele kysten (10.11.2026, Jonas' økt, grenen `claude/o9-f8a-strommen-ylbhmg`, steg 41)
+### F8a: strømfeltet for hele kysten (10.11.2026, Jonas' økt, grenen `claude/o9-f8a-strommen-ylbhmg`, steg 41; rullet ut i 249e21c, versjon 84ac2416bce9)
 
 Første av to økter for strømmen (Jonas 27.10.2026: «5a», strøm som egen fase, mot anbefalingen). Uten måledata: Kartverkets strømtabeller er ikke åpne, så feltet regnes av vårt eget kart og tidevann. Strømmen rører ikke båten ennå; bare ankeret (`anchorForce`) og skummets drift (`view3d/14-sea.js`) leser den, som før. F8b (steg 42) legger den i manøvreringen, driften, ankeret og bølgene.
 

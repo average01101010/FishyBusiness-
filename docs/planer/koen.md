@@ -30,7 +30,6 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - Steg 87 OB9 hurtigsjarken (Jonas' økt, grenen `claude/ob9-hurtigsjarken-75-jtun77`, 10.11.2026): eier `tools/boats/hurtig11.py`, `src/data/*.b64`, `tools/boats/qa/clip_hurtig11.py`, `docs/skipsmodeller/hurtigsjark-grunnlag.md`.
-- `claude/o9-f8a-strommen-ylbhmg`: steg 41 Ø9 F8a strømmen (Jonas' økt, 10.11.2026); eier ny `tools/strom/`, `src/data/strom.json`, `core/06e-anchor.js` (`curAt`), `ui/03-map.js`.
 
 ## Valg som venter på Jonas
 
@@ -92,8 +91,8 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 37 | **Ø15 N5** Skipsfarten (HAIS) | NPC-flåten | venter på N7, Ø13 | steg 36, 33 | ny `tools/npc/ais.py`, workflow, vec-pakkene (`lanes`), `core/05-vessels.js` | `npc-flaaten.md` N5 |
 | 38 | **Ø15 N6** Fritidsbåter om sommeren | NPC-flåten | venter på N5 | steg 37 | `core/05-vessels.js`, `tools/map/npc.py` | `npc-flaaten.md` N6 |
 | 40 | **U2-9** Måling etter og regresjon | UI 2 | klar (U2-8 rullet ut i b0f7599a; hel startmelding i `start/`) | steg 39 | ingen | `ui-2-staaende.md` kap. 5 |
-| 41 | **Ø9 F8a** Strømmen: `tools/strom/`, `strom.json`, `curAt`, pilene | Fysikk 4 | pågår (Jonas' økt, `claude/o9-f8a-strommen-ylbhmg`, 10.11.2026) | steg 20, 18 | ny `tools/strom/`, `src/data/strom.json`, `core/06e-anchor.js` (`curAt`), `ui/03-map.js` | `fysikk-4-sjo-og-skrog.md` F8 |
-| 42 | **Ø9 F8b** Strømmen i manøvreringen, ankeret og bølgene | Fysikk 4 | venter på F8a | steg 41 | `core/16b-dyn.js`, `06e-anchor.js`, `view3d/14-sea.js`, `01-shaders.js` | `fysikk-4-sjo-og-skrog.md` F8 |
+| 41 | **Ø9 F8a** Strømmen: `tools/strom/`, `strom.json`, `curAt`, pilene | Fysikk 4 | ferdig (249e21c, 10.11.2026, versjon 84ac2416bce9 på detstorebla.no, Hetzner og Pages grønne; Jonas' økt, `claude/o9-f8a-strommen-ylbhmg`; 388 sund, Saltstraumen 7,4 kn, Rystraumen 3,7 kn for svak, sund åpne i begge ender uten strøm: backloggen; bildene i `docs/okter/2026-11-10-41/`; neste: 42, startmeldingen i `start/42.md`) | steg 20, 18 | ny `tools/strom/`, `src/data/strom.json`, `core/06e-anchor.js` (`curAt`), `ui/03-map.js` | `fysikk-4-sjo-og-skrog.md` F8 |
+| 42 | **Ø9 F8b** Strømmen i manøvreringen, ankeret og bølgene | Fysikk 4 | klar (F8a rullet ut 10.11.2026; hel startmelding i `start/42.md`) | steg 41 | `core/16b-dyn.js`, `06e-anchor.js`, `view3d/14-sea.js`, `01-shaders.js` | `fysikk-4-sjo-og-skrog.md` F8 |
 | 43 | **Ø9 F6, F7** FFT-sjø (måles først) og brottsjø med konsekvens | Fysikk 4 | venter på F8b | steg 42 | `core/03b-sea.js`, `view3d/14-sea.js`, `core/16c-hull.js`, `14-crewlife.js` | `fysikk-4-sjo-og-skrog.md` F6, F7 |
 | 44 | **Ø5 rest c** M7/M8-resten (sponsede design, flagget som vaier, CSV-importen, `anchors.sign` med `python3.11`) | Butikkene | klar (steg 66 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 66 (ferdig) | | `tools/harbour/butikk.py`, `steder.py`, `view3d/06`, `17`, `ui/10j-paint.js`, `core/09k-market.js`, `tools/broker/` | `butikker-og-sponsorer.md`, backloggen 10.7 |
 | 45 | **Oppdrag 2, resten** Mannskapets ærender og lærlingen | Oppdrag | klar (startmeldingen mangler; Ø8b M er ute, rutinen eller koordinatoren skriver den fra planen) | steg 8 (ferdig) | se `oppdrag-2.md` | `oppdrag-2.md` |
