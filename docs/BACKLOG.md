@@ -4,6 +4,14 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Steg 100, kystvaktskipene (10.11.2026, Jonas' økt, grenen `ccr-5e1ba2f4-pusvyd`; `docs/skipsmodeller/kystvakt-grunnlag.md`, 5.30d i `docs/systemer/kvoter-og-regler.md`):** to skip fra `tools/boats/kv.py` (47 m ved kai og langs kysten, 93 m til havs med helikopterdekk og lettbåten som går til fartøyet). Det som er antatt eller står igjen:
+  - **Ingen bilder:** bare lengde, bredde, dypgang og deplasement har kilde. Overbyggets plass og høyder, masta, fargen, stripenes vinkel og bredde, «KYSTVAKT»s farge og størrelse og lettbåtene er antatt etter typen. Et sidebilde av hver klasse ville låst dem.
+  - **Det store skipets helikopterdekk** er valg 30, ikke lest for forbildet (VS 794-typen); 105 m-klassen har det. Bulb er ikke modellert på noen av dem.
+  - **Kildene ble lest gjennom søk:** Wikipedia, snl.no og navypedia kunne ikke hentes fra skyøkta (nettet er stengt for dem). Deplasementet til det store er 3 250 t i de engelske kildene og «4 000 tonn» i norske (trolig bruttotonnasje).
+  - **Ved kai** ligger hun på fendere om babord for spillerens båt; et 47 m skip langs en liten båt ved en kai med andre båter for og akter kan stå over naboenes ytre del. Bare land, pirer og havneenheter flyttes hun bort fra (`berthBlocked`), ikke de andre båtene.
+  - **Lettbåten** følger spillerens båt slik 3D-visningen har den (`bv`); i havkontrollen ligger skipet etter spillets minutt og 3D-båten mellom dem, så RIB-en kan ligge litt foran eller bak der båten er i fart. Tidene (2, 6, 74, 6, 2 min) er antatt.
+  - **Slepet ved Svalbard** viser fortsatt redningsskøyta (backloggen «Kystvakten sleper ved Svalbard»); modellen `kv90` kan brukes der når det bygges.
+  - **`kystvakttest`** krever hele kysten for havsjekken (`tools/map/out/game`), som skyøkta ikke har; kontrollen ved kai og enhetstestene er kjørt.
 - **Havsteget H3e, Kystvakta for snøkrabbe, hele turen og stikkprøvene (10.11.2026, Jonas' økt, grenen `ccr-c070e597-njia44`, steg 26; 5.30c i `docs/systemer/kvoter-og-regler.md`, status i `docs/planer/havsteget-h3-snokrabbe.md`):** havsjekken om bord i snøkrabbefartøyet (`kvSnoCheck`) og `havtur.py krabbe`. Stikkprøvene grønne fra Båtsfjord (også levendetur), Kjøllefjord, Tromsdalen og Selje (60 OK, sidefeil `[]`). Det som er antatt, funnet eller står igjen:
   - **«Per art» er tom for snøkrabbe** i Salgslaget › Mine landinger (sett på alle fire stedene: kortet har overskriften og ingen linjer; snøkrabben er `npc` i `SPECIES` og tas trolig ut der). Hører til `ui/phone/` (salg), ikke H3e.
   - **Verftet nærmest Båtsfjord heter «Verft verft»:** raden (1305,146, 156,5) i `src/data/steder.json` er den eneste av 194 uten stedsnavn, og `06c-steder.js` setter da «Verft» + «verft». Rettes i rørledningen for stedene (`docs/systemer/datarorledninger.md`), ikke for hånd.

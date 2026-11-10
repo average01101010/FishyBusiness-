@@ -1910,3 +1910,7 @@
 2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	routetest	OK	46	lite	alene	
 2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	charttest	OK	50	lite	alene	
 2026-11-10 12:35	claude/ob9-hurtigsjarken-75-jtun77	5e27322	boottest	OK	24	lite	alene	
+2026-11-10 13:23	ccr-5e1ba2f4-pusvyd	833cfa4+	kystvakttest	OK	11	lite	samtidig	
+2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	docktest	OK	65	lite	samtidig	
+2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	trip2	OK	32	lite	samtidig	
+2026-11-10 13:28	ccr-5e1ba2f4-pusvyd	16f9056+	anchorlight3d	OK	249	3d	alene	

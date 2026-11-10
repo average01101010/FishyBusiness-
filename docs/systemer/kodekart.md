@@ -1595,34 +1595,37 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (291 linjer)
+## `src/js/core/09j-kystvakt.js` (336 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
 - **1** Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
-- **11** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
-  - 26 `kvSampleFish(g, sp, w, p)`
-  - 30 `kvHaulKeep(g, s)`
-  - 39 `kvMix(ms, p, gear, most)`
-  - 56 `kvAlong(a, b)`
-  - 62 `kvMarks(s)`
-  - 63 `kvHavCheck(b, sets, H, len, add, most)`
-- **102** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
-  - 116 `kvSnoCheck(b, ss, H, add)`
-  - 153 `kvState()`
-  - 156 `kvReady()`
-  - 166 `kvHour()`
-  - 174 `kvArrive()`
-  - 183 `kvSide(b)`
-  - 184 `kvMinute()`
-  - 190 `kvNpcs()`
-  - 193 `kvSums(sets, inside)`
-  - 195 `kvMostSp(sets)`
-  - 200 `kvCheck(b)`
-  - 227 `kvWhat(r)`
-  - 239 `kvWhatHav(r)`
-  - 253 `kvWhatSno(r)`
-  - 272 `kvFinish()`
+- **18** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
+  - 27 `kvRib(min)`
+  - 36 `kvSampleFish(g, sp, w, p)`
+  - 40 `kvHaulKeep(g, s)`
+  - 49 `kvMix(ms, p, gear, most)`
+  - 66 `kvAlong(a, b)`
+  - 72 `kvMarks(s)`
+  - 73 `kvHavCheck(b, sets, H, len, add, most)`
+- **112** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
+  - 126 `kvSnoCheck(b, ss, H, add)`
+  - 163 `kvState()`
+  - 166 `kvReady()`
+  - 176 `kvHour()`
+  - 184 `kvArrive()`
+  - 197 `kvOff(bB, sh, where)`
+  - 205 `kvPose(b)`
+  - 224 `kvSide(b)`
+  - 225 `kvMinute()`
+  - 234 `kvNpcs()`
+  - 238 `kvSums(sets, inside)`
+  - 240 `kvMostSp(sets)`
+  - 245 `kvCheck(b)`
+  - 272 `kvWhat(r)`
+  - 284 `kvWhatHav(r)`
+  - 298 `kvWhatSno(r)`
+  - 317 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -2616,12 +2619,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1436 linjer)
+## `src/js/ui/phone/07-patch.js` (1439 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1429 `patch()`
+  - 1432 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4270,7 +4273,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (417 linjer)
+## `src/js/view3d/20-trawl-seine.js` (454 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4294,16 +4297,18 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 265 `npcKB(t, lod, liv)`
-  - 268 `npcMesh(n, lod)`
-  - 282 `npcWarm(eye)`
-  - 297 `seineAnch(G)`
-  - 307 `npcClock(Hf)`
-  - 315 `npcHead(n, t)`
-  - 330 `npcFollow(n, t)`
-  - 344 `npcPhase(id)`
-  - 345 `drawNPC(eye, t, H, VP)`
-  - 396 `npcCrewDraw(n, K, eye, t)`
+  - 268 `npcKB(t, lod, liv)`
+  - 271 `npcMesh(n, lod)`
+  - 285 `npcWarm(eye)`
+  - 300 `seineAnch(G)`
+  - 310 `npcClock(Hf)`
+  - 318 `npcHead(n, t)`
+  - 333 `npcFollow(n, t)`
+  - 347 `npcPhase(id)`
+  - 352 `kvDraw(n, eye, t)`
+  - 360 `kvRibDraw(n, R, G, M, eye, t)`
+  - 381 `drawNPC(eye, t, H, VP)`
+  - 433 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
