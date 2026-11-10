@@ -8,6 +8,7 @@
 
 Jonas' valg: gratis å spille med kjøp via Stripe, påkrevd innlogging med WorkOS, Supabase, samtykke til statistikk og bare han som admin. Hele lista står i `docs/lansering.md`.
 
+- **Testutgaven (L1a, 10.11.2026):** `cloud.json` har en blokk `test` (testprosjektet i Supabase, WorkOS Staging, verten `test.detstorebla.no`), og `cloudCfg()` legger den over resten når siden er bygd med kanalen test eller ligger på testverten; `CLOUD_CFG` er resultatet. Se «Testutgave og produksjon» i `docs/systemer/publisering.md`.
 - **Konfigurasjon:** `src/data/cloud.json` har bare offentlige verdier: vertene (`hosts`), Supabase-adressen og `anon`-nøkkelen, WorkOS-klient-ID-en, et eventuelt eget innloggingsdomene og den publiserbare Stripe-nøkkelen. Skyen er av når en verdi mangler eller siden ikke ligger på en av vertene. Derfor er den av i artifacten, i testene og lokalt. Hemmelige nøkler skal aldri inn her.
 - **Databasen** (`supabase/migrations/20261004120000_cloud.sql`):
   - Tabellene er spillere, lagringer, økter, hendelser, feil, bildetakt, produkter, kjøp og rettigheter.

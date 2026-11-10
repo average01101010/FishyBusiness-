@@ -1,14 +1,9 @@
 # Det Store Blå on the Hetzner server (tools/server/setup.sh puts the domain in for @DOMAIN@). Caddy fetches and renews the HTTPS
 # certificate itself. The map packs and the data files (the models, 29.10.2026) have their hash in the name, so they are cached for a
 # year; the page, the service worker and the manifests are always checked; the admin page is never cached or indexed.
-@DOMAIN@ {
-	root * /srv/detstorebla/current
-	# the real-time relay (tools/server/rt/server.mjs, docs/planer/sanntid-posisjoner.md S2, 05.11.2026): the WebSocket at /rt goes to the
-	# Node service on this machine (dsb-rt, setup.sh), which listens only on 127.0.0.1; nothing else goes there, and it is not compressed
-	@rt path /rt
-	reverse_proxy @rt 127.0.0.1:8787
-	@notrt not path /rt
-	encode @notrt zstd gzip
+# What the production and the test edition share (L1a, 10.11.2026): the pages without .html, the compressed data files, the headers
+# and the cache rules.
+(dsb) {
 	# /personvern and /vilkar (the links on Google's sign-in screen) are personvern.html and vilkar.html
 	try_files {path} {path}.html
 	# the data files have their compressed copies beside them (build.mjs, 04.11.2026): X.bin.br or X.bin.gz for X.bin, as the
@@ -36,6 +31,25 @@
 		X-Frame-Options "DENY"
 	}
 }
+@DOMAIN@ {
+	root * /srv/detstorebla/current
+	# the real-time relay (tools/server/rt/server.mjs, docs/planer/sanntid-posisjoner.md S2, 05.11.2026): the WebSocket at /rt goes to the
+	# Node service on this machine (dsb-rt, setup.sh), which listens only on 127.0.0.1; nothing else goes there, and it is not compressed
+	@rt path /rt
+	reverse_proxy @rt 127.0.0.1:8787
+	@notrt not path /rt
+	encode @notrt zstd gzip
+	import dsb
+}
 www.@DOMAIN@ {
 	redir https://@DOMAIN@{uri} permanent
+}
+# The test edition (L1a, 10.11.2026, docs/planer/lansering-plan.md): the working branch built with KYST_CHANNEL=test, uploaded to
+# /srv/detstorebla/test by deploy.yml. Its own origin, so its own saves and service worker; never indexed. The real-time relay is the
+# production's and is not reached from here (the test edition's boats go by the 15 s reports).
+test.@DOMAIN@ {
+	root * /srv/detstorebla/test
+	encode zstd gzip
+	header X-Robots-Tag "noindex, nofollow"
+	import dsb
 }
