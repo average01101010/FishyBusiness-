@@ -1948,3 +1948,19 @@
 2026-11-10 14:34	ccr-09c0a3db-nj4fwz	136e5b1+	adminbuytest	OK	11	lite	samtidig	
 2026-11-10 14:35	ccr-09c0a3db-nj4fwz	136e5b1+	opptest	FEIL	63	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
 2026-11-10 14:47	ccr-09c0a3db-nj4fwz	136e5b1+	teleport3d	OK	740	3d	alene	
+2026-11-10 14:18	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	77	lite	alene	
+2026-11-10 14:19	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	80	lite	alene	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	tabtest	OK	133	lite	samtidig	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	synctest	OK	86	lite	samtidig	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	cloudtest	FEIL	56	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-10 14:24	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	errtest	OK	42	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	95	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	pwatest	OK	31	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	boottest	OK	33	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	pushtest	OK	24	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	starttest	OK	460	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	bootgtest	OK	184	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	boostklokke	OK	42	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	skiptest	OK	17	lite	samtidig	
+2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	kjoptest	OK	440	lite	samtidig	
+2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	sqltest	OK	35	lite	samtidig	

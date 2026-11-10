@@ -362,6 +362,18 @@ def main():
         R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
         R['wAnon'] = sql("select public.world_get(0, 2027, 1)", {}, 'anon', expect_err=True)
         R['wAdmPl'] = sql("select public.admin_world()", A, 'authenticated', expect_err=True)
+        # the welcome gift (HS1, 20261110150000_reg_gift.sql): tm_hello makes one grant per account however often it is called, the game
+        # takes it from shop_pending and says done, and it never comes again; it is no product to buy (the guest and the merge further down)
+        RG = {'rowsA': sql("select count(*) from public.grants where player_id = 'user_01AAA' and product_id = 'reg_luksus'")}
+        RG['pendA'] = [g for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['pendB'] = [g for g in json.loads(sql("select public.shop_pending()", B, 'authenticated')) if g['product'] == 'reg_luksus']
+        for who, pend in ((A, RG['pendA']), (B, RG['pendB'])):
+            if pend: sql("select public.shop_done(array[%d]::bigint[])" % pend[0]['id'], who, 'authenticated')
+        RG['helloAfter'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')); sql("select public.tm_hello('{}')", B, 'authenticated')
+        RG['rowsAfter'] = sql("select count(*) || '/' || count(done_at) from public.grants where player_id in ('user_01AAA', 'user_01BBB') and product_id = 'reg_luksus'")
+        RG['pendAfter'] = [g for who in (A, B) for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['quote'] = sql("select public.shop_quote('reg_luksus')", A, 'authenticated', expect_err=True)
+        RG['two'] = sql("insert into public.grants (player_id, product_id) values ('user_01AAA', 'reg_luksus')", expect_err=True)
         # the shop (20261006040000_shop.sql): a quote only for a signed-in player and a real product; a paid purchase books one grant
         # however often Stripe tells it; the game takes it and says done; a refund takes back what is not given yet; no player books a payment
         R['sQuote'] = json.loads(sql("select public.shop_quote('trim_turbo')", A, 'authenticated'))
@@ -374,7 +386,7 @@ def main():
         R['sPlRead'] = sql("select count(*) from public.grants", A, 'authenticated', expect_err=True)
         if R['sPend']: sql("select public.shop_done(array[%d]::bigint[])" % R['sPend'][0]['id'], A, 'authenticated')
         sql("select public.shop_paid('cs_s2', 'pi_2')"); sql("select public.shop_refund('pi_2')"); sql("select public.shop_ended('cs_s9', 'expired')")
-        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id <> 'fb_haill') || '/' || (select count(*) from public.grants where done_at is not null and product_id <> 'fb_haill')")
+        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id not in ('fb_haill', 'reg_luksus')) || '/' || (select count(*) from public.grants where done_at is not null and product_id not in ('fb_haill', 'reg_luksus'))")
         R['sEnd'] = json.loads(sql("select public.shop_pending()", A, 'authenticated'))
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
@@ -607,7 +619,18 @@ def main():
         gNotGuest = sql("select public.guest_claim()", A, 'authenticated', expect_err=True)
         code = sql("select public.guest_claim()", G, 'authenticated')
         gSelf = sql("select public.guest_merge('%s')" % code, G, 'authenticated', expect_err=True)
+        RG['guest'] = sql("select count(*) from public.grants where player_id = '%s' and product_id = 'reg_luksus'" % G['sub'])
         gMerge = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
+        RG['merged'] = sql("select count(*) from public.grants where player_id = 'user_01GGG' and product_id = 'reg_luksus'")
+        sql("select public.tm_hello('{}')", C, 'authenticated'); sql("select public.tm_hello('{}')", C, 'authenticated')
+        RG['account'] = sql("select count(*) || '/' || count(done_at) || '/' || min(data::text) from public.grants where player_id = 'user_01GGG' and product_id = 'reg_luksus'")
+        # the accounts that are there when the migration runs count as given (run once more here, with an account and a guest it has not seen)
+        sql("insert into public.players (id) values ('user_01OLD'), ('9a1c2a3e-0000-4000-8000-0000000000cc')")
+        rgRun = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261110150000_reg_gift.sql'))
+        RG['again'] = rgRun.returncode
+        RG['old'] = sql("select string_agg(player_id || '=' || (done_at is not null), ',' order by player_id) from public.grants where product_id = 'reg_luksus' and player_id in ('user_01OLD', '9a1c2a3e-0000-4000-8000-0000000000cc', 'user_01GGG')")
+        sql("select public.tm_hello('{}')", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')
+        RG['oldPend'] = [g for g in json.loads(sql("select public.shop_pending()", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')) if g['product'] == 'reg_luksus']
         gAfter = sql("select (select count(*) from public.players where id = '%s') || '/' || (select data from public.saves where player_id = 'user_01GGG') || '/' || (select consent from public.players where id = 'user_01GGG')" % G['sub'])
         gAgain = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
         # with the account the guest's landings count (guest_merge), and for everyone: no landing ahead of the shared clock, the year from
@@ -622,6 +645,12 @@ def main():
                  and gAgain.get('merged') is False and gRead[0]),
               'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
+        gift = {'gift': True, 'give': 'haill', 'type': 'luksus'}
+        print(ok(RG['rowsA'] == '1' and len(RG['pendA']) == 1 and RG['pendA'][0]['data'] == gift and len(RG['pendB']) == 1 and RG['rowsAfter'] == '2/2' and RG['pendAfter'] == []
+                 and set(RG['helloAfter']) == {'consent', 'created', 'birth_year', 'admin', 'owned'} and RG['quote'][0] and 'no such product' in RG['quote'][1] and RG['two'][0]
+                 and RG['guest'] == '0' and RG['merged'] == '0' and RG['account'] == '1/0/' + json.dumps(gift, sort_keys=True).replace('true', 'true')
+                 and RG['again'] == 0 and RG['old'] == 'user_01GGG=false,user_01OLD=true' and RG['oldPend'] == []),
+              'the welcome gift: tm_hello makes one grant per account however often it is called and answers as before, given and done once and never again, not for sale, never two rows; a guest gets none and the merge adds none, the account one at its first hello; the accounts there when the migration runs count as given, the guests do not (HS1)', RG)
         print(ok(abs(GW['open']) < 0.01 and GW['boats'] == 0 and GW['mkt'] and GW['cells'] == [] and GW['wy'] == '0' and 'Gjest' not in GW['evA'] and GW['evG'] == ['Gjest']
                  and GW['wyC'] == '700' and abs(GW['openAfter'] - 700) < 0.01 and GW['ahead'][0] and 'ahead' in GW['ahead'][1] and GW['clean'] == '2027/bmØF50b/itorsk'),
               "a guest's landings and catch are the guest's alone (not in the open group's quota, the boats, the market, the cells or the event list) until the account is made, and then they count; no landing ahead of the shared clock, the year from the game hour, the plant and species cleaned (Ø6 funn 2 og 3)",
