@@ -378,10 +378,16 @@
       // the two inspectors on the jockey seats going over and back; alongside they are aboard the vessel
       if (st.ph !== 'side') for (const [i, dx] of [[0, -0.45], [1, 0.45]]) drawN(npcPerson('crew', {id:'kvi' + i}, i), chain(Mr, M4.T(dx, c[1], c[2] + 0.9))); }
   }
+  // the other boats of this frame, worked out once (Ø3b, 10.11.2026): the far pass (24-cinema.js) and drawNPC each asked npcStates,
+  // the dearest of the frame's own JavaScript in a harbour (1.5 of 9.8 ms a frame on a PC at Tromsø, each time), the far pass by the
+  // frame's clock and drawNPC by the boats' own (npcClock), so a boat both passes drew stood in two places while the minute was held.
+  // Now both draw her where the boats' clock has her.
+  const NPCFR = {f:-1, H:0, v:[]};
+  function npcFrame(H){ if (NPCFR.f !== FRAMEN){ NPCFR.f = FRAMEN; NPCFR.H = npcClock(H); NPCFR.v = npcStates(NPCFR.H); } return NPCFR; }
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
-    H = npcClock(H);
-    npcNow = npcStates(H).filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);   // the rescue boat has her own model (RB)
+    { const F = npcFrame(H); H = F.H;
+    npcNow = F.v.filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000); }   // the rescue boat has her own model (RB)
     const kit = [], kvl = [];
     // (a test camera following a boat of the fleet, G3.npcLook: aimed at her and from astern of her as she goes)
     if (SIGNV.npc){ const f = npcNow.find(q => q.id === SIGNV.npc.id); if (f){ SIGNV.look = [f.p.x * 1000, (env.tide || 0) + 3, f.p.y * 1000]; cam.yaw = f.hd + SIGNV.npc.off - bv.head; } }

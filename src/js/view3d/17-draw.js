@@ -20,6 +20,42 @@
     catch (e){ console.warn('3D ' + 'terreng' + q + ' faller bort · ' + GPU, e); PTS[q] = terProg(q - 1); }
     return PTS[q];
   }
+  // The sea bed is not drawn where the sea hides it (Ø3b, 10.11.2026; Jonas' #prof from an Adreno 642L: without the terrain 14 frames a
+  // second against 9 at open sea, with no land near). The terrain's grids reach over the whole window, sea bed and all, and every
+  // pixel of it was shaded (the dearest terrain shader on the near grids) before the sea, drawn last and opaque, covered it: about
+  // half of the triangles of the near grids by a shore, nearly all of them at sea. A grid gets an index buffer of its own with the
+  // triangles that reach over a height thr (dryIdx, in the shared buffer's order), made again when thr moves a step:
+  //   the far pass (TERR, MIDM) under the flat far sea: thr a quarter to half a metre under the tide;
+  //   the near pass (NEARM, FINEM) under the flat sea and the wave patch: lower by the deepest trough the waves can dig and a margin
+  //   (three times the significant height of the wind sea, at the most the wind can raise, and of the swell, and 2.75 to 3.75 m),
+  //   in whole metres.
+  // The picture is the same: the sea covers every pixel a ray from an eye over it meets its plane in (the far ring, the near ring and
+  // the patch, 17-draw.js drawSea), so what lies wholly under it is never seen. All of it is drawn as before when the eye is not well
+  // over the tide (a camera in a trough), when the profile leaves the sea out, and with #seabed1 in the address.
+  const DRYS = {off:/seabed1/.test(location.hash), a16:null, a32:null, n:0, cut:0};
+  function dryIdx(m, thr){
+    const d = m.dry; if (d && d.thr === thr) return d;
+    const n = m.gn, h = m.h, N6 = (n - 1) * (n - 1) * 6, key = m.i32 ? 'a32' : 'a16';
+    if (!DRYS[key] || DRYS[key].length < N6) DRYS[key] = m.i32 ? new Uint32Array(N6) : new Uint16Array(N6);
+    const I = DRYS[key]; let q = 0;
+    // (a height that is not a number keeps its triangles)
+    for (let j = 0; j < n - 1; j++){ let a = j * n, c = a + n, wa = h[a] < thr, wc = h[c] < thr;
+      for (let i = 0; i < n - 1; i++, a++, c++){ const wb = h[a + 1] < thr, wd = h[c + 1] < thr;
+        if (!(wa && wc && wb)){ I[q++] = a; I[q++] = c; I[q++] = a + 1; }
+        if (!(wb && wc && wd)){ I[q++] = a + 1; I[q++] = c; I[q++] = c + 1; }
+        wa = wb; wc = wd; } }
+    if (d) gl.deleteBuffer(d.ib);
+    DRYS.n++; DRYS.cut = 1 - q / N6;
+    return (m.dry = {ib:buf(I.subarray(0, q), gl.ELEMENT_ARRAY_BUFFER), n:q, thr});
+  }
+  // the height the grids are cut at now: null draws all of them
+  function dryThr(eye, near){
+    const tide = env.tide || 0; if (DRYS.off || PROF.skip.sea || !(eye[1] > tide + 1)) return null;
+    if (!near) return Math.floor((tide - 0.25) * 4) / 4;
+    // (the wind sea at its highest anywhere in the patch: the boat's own may be a harbour's, with open water 300 m off; WV.cap is what
+    // the wind can raise at all)
+    return Math.floor(tide - 0.75) - Math.ceil(3 * (Math.max(WV.hs || 0, WV.cap || 0) + (WV.swHs || 0)) + 2);
+  }
   const MATQ_FIX = (location.hash.match(/mat(\d)/) || [])[1];
   const MATP = {p:[0.5, 0.4, 0.65, 0.6], q:[0.4, 0.6, 2, 0]};   // chosen from the variant sheets 18.10.2026 (matvar.py in the session)   // the material shader's tuning (terFS uMP, uMQ)
   function drawTerrain(TM, eye, VP, near){
@@ -28,12 +64,14 @@
     if (u.uMP){ gl.uniform4fv(u.uMP, MATP.p); gl.uniform4fv(u.uMQ, MATP.q); }
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.uniform3fv(u.uSand, snowNow == null || snowNow < 5 ? [0.84, 0.86, 0.88] : [0.74, 0.71, 0.6]); if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0); if (u.uExpo){ let e = 0.5; try { e = expoFar({x:bv.x / 1000, y:bv.z / 1000}) / 255; } catch (er){} gl.uniform1f(u.uExpo, e); } gl.uniformMatrix4fv(u.uM, false, TM);
+    const thr = dryThr(eye, near || !NEARM);   // (with no near grid yet the far one is drawn in both passes: one height for it, the lower)
     const one = (m, hole, ground) => {
+      const D = thr !== null && m.gn && m.h ? dryIdx(m, thr) : null; if (D && !D.n) return;
       gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, Math.min(env.tide || 0, COAST3.top - 0.15)); gl.uniform1f(u.uSwash, clamp(0.5 * (WV.hs + WV.swHs), 0, COAST3.swash));
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
       if (LRECT) gl.uniform4fv(u.uGRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]);
       if (ground && GTEX){ gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, GTEX); gl.uniform1i(u.uGround, 0); gl.uniform4fv(u.uGRect, [GRECT[0] - eye[0], GRECT[1] - eye[2], GRECT[2], GRECT[3]]); }
-      attr(0, m.pb, 3); attr(1, m.cb, 3); attr(2, m.nb, 3); attr(3, m.sb, 1); attr(4, m.mb, 4); if (m.vb) attr(5, m.vb, 4); else { gl.disableVertexAttribArray(5); gl.vertexAttrib4f(5, 0, 0, 0, 0); } gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib); gl.drawElements(gl.TRIANGLES, m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
+      attr(0, m.pb, 3); attr(1, m.cb, 3); attr(2, m.nb, 3); attr(3, m.sb, 1); attr(4, m.mb, 4); if (m.vb) attr(5, m.vb, 4); else { gl.disableVertexAttribArray(5); gl.vertexAttrib4f(5, 0, 0, 0, 0); } gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, D ? D.ib : m.ib); gl.drawElements(gl.TRIANGLES, D ? D.n : m.n, m.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
     };
     const holeOf = (M, g) => new Float32Array([M.x0 + g - eye[0], M.z0 + g - eye[2], M.x0 + M.sx - g - eye[0], M.z0 + M.sz - g - eye[2]]);
     if (!NEARM) one(TERR);
@@ -156,6 +194,27 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); gl.activeTexture(gl.TEXTURE0);
     LMON = true; LMTEXEL = sx / J.size; LRECT = [x0, z0, 1 / sx, 1 / sx]; LMJOB = null; LMMS = J.ms + performance.now() - t0;
+  }
+  // The sky is not shaded behind the sea (Ø3b, 10.11.2026): the sky is the first thing drawn, over the whole picture, and on a phone
+  // held upright the sea then covers most of it. Before the sky, the far sea's whole rectangle at the tide (no hole: the near pass
+  // covers its own square with sea) goes into the depth buffer alone, with a near plane of 1 m so it reaches in under the camera
+  // (the far pass's own is 25 m), and the sky is drawn with the depth test on: it stands behind that plane out to 20 km. What the far
+  // pass draws after it is in front of the plane wherever it is over the water (its depth with a near plane of 25 m is the nearer of
+  // the two for anything less than 25 times as far off as the plane), and the sea itself is drawn over every pixel of the plane, in
+  // the far pass or the near one. So the picture is the same, and only the sky's pixels behind the sea are saved. Not when the eye is
+  // not well over the tide, when the profile leaves the sea out, or with #skymask0 in the address; a driver that will not compile
+  // the little program draws the sky as before.
+  const MASK_VS = 'attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uScale;uniform vec3 uOriginRel;void main(){gl_Position=uVP*vec4(uOriginRel+vec3(aXZ.x*uScale.x,0.0,aXZ.y*uScale.y),1.0);}';
+  const MASK_FS = 'precision mediump float;void main(){gl_FragColor=vec4(0.0);}';
+  const SKYMASK = {off:/skymask0/.test(location.hash), P:null, n:0};
+  function skyMask(eye, Vm, fov, asp, farZ){
+    const tide = env.tide || 0; if (SKYMASK.off || SKYMASK.P === false || PROF.skip.sea || !FARQ || !(eye[1] > tide + 1)) return false;
+    if (!SKYMASK.P){ try { SKYMASK.P = program(MASK_VS, MASK_FS, ['aXZ'], 'sjømaske'); } catch (e){ if (gl.isContextLost()) throw e; console.warn('3D ' + 'sjømaske' + ' faller bort · ' + GPU, e); SKYMASK.P = false; return false; } }
+    const u = SKYMASK.P.u, ox = TERR ? TERR.cx : bv.x, oz = TERR ? TERR.cz : bv.z, sc = TERRW.span / 2 + 40000;
+    gl.useProgram(SKYMASK.P.p); gl.uniformMatrix4fv(u.uVP, false, mul(persp(fov, asp, 1, farZ), Vm)); gl.uniform2f(u.uScale, sc, sc); gl.uniform3f(u.uOriginRel, ox - eye[0], tide - eye[1], oz - eye[2]);
+    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.colorMask(false, false, false, false);
+    gl.disableVertexAttribArray(1); attr(0, FARQ.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FARQ.ib); gl.drawElements(gl.TRIANGLES, FARQ.n, gl.UNSIGNED_SHORT, 0);
+    gl.colorMask(true, true, true, true); SKYMASK.n++; return true;
   }
   // the flat sea as a ring: the rectangle R [x0, z0, x1, z1] less the hole Hl where something nearer is drawn, as up to four strips,
   // so no water is shaded twice and the shader never discards (which costs the early depth test on phone and tablet GPUs)

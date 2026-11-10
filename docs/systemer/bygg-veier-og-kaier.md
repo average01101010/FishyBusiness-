@@ -43,7 +43,7 @@ Jonas sto i Tromsø og så ingen hus. Før dette fantes bygg, veier, bruer og br
   - Uten worker gjøres det på hovedtråden.
   - Bygg og veier kommer sortert per km-rute, så hovedtråden lager oppslagene uten å gå gjennom dem.
   - `VEC.came` og `VEC.drop` får beskjed når en flis kommer og går.
-  - En flis mer enn 60 km fra båten og øyet slippes (`vecPrune`), men ikke en som er lest det siste minuttet (`t.at`, `VEC_KEEP`, 05.11.2026). Hurtigruta og ferja på Senja, hjemmenaustet og en rutes etapper leser fliser langt fra båten, så 3D-visningen slapp dem og de ble pakket ut igjen 0,3 s senere, hvert 40.–50. sekund. Hver runde økte `VEC.ver` to ganger, og alt som er nøklet på den ble regnet om: fortøyningene i havnene, hinderindeksen og havflåten.
+  - En flis mer enn 60 km fra båten og øyet slippes (`vecPrune`), men ikke en som er lest det siste minuttet (`t.at`, `VEC_KEEP`, 05.11.2026). Hurtigruta og ferja på Senja, hjemmenaustet og en rutes etapper leser fliser langt fra båten, så 3D-visningen slapp dem og de ble pakket ut igjen 0,3 s senere, hvert 40.–50. sekund. Hver runde økte `VEC.ver` to ganger, og alt som er nøklet på den ble regnet om: fortøyningene i havnene, hinderindeksen og havflåten. Leseren var Senja-flåten (`fleetState` → `fleetBerth` og `fleetPacks`, i hvert bilde), og fra Ø3b 10.11.2026 regnes den ikke ut når den er utenfor rekkevidde (`fleetOff`, `docs/systemer/npc-trafikk.md`), så Senjas fliser slippes for godt når båten er langt unna.
 - **Oppslag:**
   - `roadsIn(boks)` gir Senjas veier og pakkenes. En veibit hører til flisa der midten ligger, så ingenting dobles ved flisgrensa.
   - `bridgesIn(boks)`.

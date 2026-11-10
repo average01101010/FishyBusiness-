@@ -768,7 +768,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1385 linjer)
+## `src/js/core/05-vessels.js` (1399 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -779,99 +779,100 @@ crew: people with skills, habits and moods
   - 26 `berthSlot(q, key, big)`
   - 39 `berthShift(p, key, big)`
   - 47 `fleetBerth(i)`
-  - 52 `fleetState(i, H)`
-  - 61 `fleetState0(i, H)`
-- **89** the NPC traffic along the coast (part 5 of the coast-wide plan, 03.10.2026; the user: full traffic along the coast, but only
-  - 105 `coastWay(b, moored, m0)`
-  - 129 `coastCells(a, z)`
-  - 145 `coastWayAt(w, u, back)`
-- **152** One national coastal fleet (L2/N1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
-  - 161 `flaateData()`
-  - 167 `flaateApply(t)`
-  - 188 `openDone(day0)`
-  - 193 `heldShare(lg)`
-  - 199 `coastGround(G, dI, i, H)`
-  - 204 `coastState(b, H, hod = hodOf(H)`
-- **250** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
-  - 262 `unitHit(x, z, r)`
-  - 270 `dockInHarbour(x, z)`
-  - 276 `moorBlocked(x, z, r)`
-  - 285 `moorFree(p, hd, L, B, others)`
-  - 304 `docksIn(x0, z0, x1, z1)`
-  - 305 `dockFree(d, others, placed)`
-  - 322 `moorAround(h, p)`
-  - 328 `moorHarbour(h)`
-  - 411 `moorKey(h)`
-  - 414 `moorStill(h)`
-  - 415 `coastMoor(b)`
-  - 427 `seaward(p, c)`
-  - 429 `coastSpot(gr, dI, i)`
-  - 432 `coastCast(b, gr, dI, i, kc, Hc, spot)`
-- **446** The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»)
-  - 455 `coastGearKind(b)`
-  - 461 `coastSet(b, k, pI, i, H)`
-  - 470 `coastNear(H, only)`
-  - 494 `npcStates(H, only)`
-  - 546 `peerName(s)`
-  - 561 `peerRouteStr(p, wps, idx)`
-  - 571 `peerRoute(s)`
-  - 577 `routeWalk(p, R, d, hd0)`
-  - 584 `ptPred(q, w, t)`
-  - 599 `ptPose(T, now)`
-  - 607 `ptTake(q, now)`
-  - 621 `peerStates()`
-  - 637 `newState()`
-  - 649 `log(no, en, k)`
-  - 651 `navHour()`
-  - 667 `nearestPort(p)`
-  - 669 `nearestYard(p)`
-  - 671 `step()`
-  - 689 `vesselStep(H)`
-  - 789 `plantFuel(b)`
-  - 792 `sailV(H, hs)`
-  - 804 `sail(H, W, hs)`
-  - 836 `sailWaiting()`
-  - 837 `sailReplan(pl, b, gp)`
-  - 865 `iceWhy(p, tried)`
-  - 867 `sailStop(pl, b, why)`
-  - 875 `haltPlan(need)`
-  - 885 `arrive(w)`
-  - 903 `unstuckWhy()`
-  - 909 `unstuckSpot()`
-  - 916 `unstuck()`
-- **930** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 938 `moorPhase(b)`
-  - 953 `dock(pid, berth)`
-  - 980 `catchFactors(H, W, hs)`
-  - 993 `stockDev(p, sp)`
-  - 999 `fish(H, W, hs)`
-  - 1092 `endFishing(why)`
-  - 1108 `addCatch(sp, kg, cls, hook, opt)`
-- **1129** work on deck: gutting and icing take hands and time
-  - 1145 `deckHands()`
-  - 1148 `deckPending()`
-  - 1149 `deckEta(hands)`
-  - 1154 `moveKg(x, kg, patch)`
-  - 1162 `iceMinute()`
-  - 1169 `iceOut(out)`
-  - 1175 `deckMinute()`
-- **1200** lying to in a storm (H1b R8, 05.11.2026)
-  - 1217 `quayFar(b)`
-  - 1221 `lieTo(W, hs)`
-  - 1228 `lieToStep(W, hs)`
-  - 1238 `risk(W, hs)`
-  - 1266 `hullRepair()`
-  - 1269 `svcOverdue()`
-- **1270** the rescue boat (plan E3, 05.10.2026)
-  - 1296 `rescueBases()`
-  - 1305 `rescueBase(p)`
-  - 1312 `rescueAis(H)`
-  - 1316 `rescue(keepCatch)`
-  - 1340 `towSea(p)`
-  - 1345 `towRoutes(b)`
-  - 1356 `towStep(H)`
-  - 1368 `towDone(t)`
-  - 1374 `towPose(frac)`
+  - 60 `fleetOff(f, p)`
+  - 64 `fleetState(i, H)`
+  - 73 `fleetState0(i, H)`
+- **101** the NPC traffic along the coast (part 5 of the coast-wide plan, 03.10.2026; the user: full traffic along the coast, but only
+  - 117 `coastWay(b, moored, m0)`
+  - 141 `coastCells(a, z)`
+  - 157 `coastWayAt(w, u, back)`
+- **164** One national coastal fleet (L2/N1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
+  - 173 `flaateData()`
+  - 179 `flaateApply(t)`
+  - 200 `openDone(day0)`
+  - 205 `heldShare(lg)`
+  - 211 `coastGround(G, dI, i, H)`
+  - 216 `coastState(b, H, hod = hodOf(H)`
+- **262** where a coast boat lies at home (Jonas 18.10.2026: «npc-båter mange plasser er plassert i landmassen når de ligger ved kai»;
+  - 274 `unitHit(x, z, r)`
+  - 282 `dockInHarbour(x, z)`
+  - 288 `moorBlocked(x, z, r)`
+  - 297 `moorFree(p, hd, L, B, others)`
+  - 316 `docksIn(x0, z0, x1, z1)`
+  - 317 `dockFree(d, others, placed)`
+  - 334 `moorAround(h, p)`
+  - 340 `moorHarbour(h)`
+  - 423 `moorKey(h)`
+  - 426 `moorStill(h)`
+  - 427 `coastMoor(b)`
+  - 439 `seaward(p, c)`
+  - 441 `coastSpot(gr, dI, i)`
+  - 444 `coastCast(b, gr, dI, i, kc, Hc, spot)`
+- **458** The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»)
+  - 467 `coastGearKind(b)`
+  - 473 `coastSet(b, k, pI, i, H)`
+  - 482 `coastNear(H, only)`
+  - 506 `npcStates(H, only)`
+  - 560 `peerName(s)`
+  - 575 `peerRouteStr(p, wps, idx)`
+  - 585 `peerRoute(s)`
+  - 591 `routeWalk(p, R, d, hd0)`
+  - 598 `ptPred(q, w, t)`
+  - 613 `ptPose(T, now)`
+  - 621 `ptTake(q, now)`
+  - 635 `peerStates()`
+  - 651 `newState()`
+  - 663 `log(no, en, k)`
+  - 665 `navHour()`
+  - 681 `nearestPort(p)`
+  - 683 `nearestYard(p)`
+  - 685 `step()`
+  - 703 `vesselStep(H)`
+  - 803 `plantFuel(b)`
+  - 806 `sailV(H, hs)`
+  - 818 `sail(H, W, hs)`
+  - 850 `sailWaiting()`
+  - 851 `sailReplan(pl, b, gp)`
+  - 879 `iceWhy(p, tried)`
+  - 881 `sailStop(pl, b, why)`
+  - 889 `haltPlan(need)`
+  - 899 `arrive(w)`
+  - 917 `unstuckWhy()`
+  - 923 `unstuckSpot()`
+  - 930 `unstuck()`
+- **944** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 952 `moorPhase(b)`
+  - 967 `dock(pid, berth)`
+  - 994 `catchFactors(H, W, hs)`
+  - 1007 `stockDev(p, sp)`
+  - 1013 `fish(H, W, hs)`
+  - 1106 `endFishing(why)`
+  - 1122 `addCatch(sp, kg, cls, hook, opt)`
+- **1143** work on deck: gutting and icing take hands and time
+  - 1159 `deckHands()`
+  - 1162 `deckPending()`
+  - 1163 `deckEta(hands)`
+  - 1168 `moveKg(x, kg, patch)`
+  - 1176 `iceMinute()`
+  - 1183 `iceOut(out)`
+  - 1189 `deckMinute()`
+- **1214** lying to in a storm (H1b R8, 05.11.2026)
+  - 1231 `quayFar(b)`
+  - 1235 `lieTo(W, hs)`
+  - 1242 `lieToStep(W, hs)`
+  - 1252 `risk(W, hs)`
+  - 1280 `hullRepair()`
+  - 1283 `svcOverdue()`
+- **1284** the rescue boat (plan E3, 05.10.2026)
+  - 1310 `rescueBases()`
+  - 1319 `rescueBase(p)`
+  - 1326 `rescueAis(H)`
+  - 1330 `rescue(keepCatch)`
+  - 1354 `towSea(p)`
+  - 1359 `towRoutes(b)`
+  - 1370 `towStep(H)`
+  - 1382 `towDone(t)`
+  - 1388 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -2649,12 +2650,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1448 linjer)
+## `src/js/ui/phone/07-patch.js` (1452 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1441 `patch()`
+  - 1445 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4174,7 +4175,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (211 linjer)
+## `src/js/view3d/17-draw.js` (270 linjer)
 
 ---------- drawing ----------
 
@@ -4182,14 +4183,17 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 2 `litSetup(VP)`
   - 8 `drawLit(m, M, hole)`
   - 17 `terProg(q)`
-  - 25 `drawTerrain(TM, eye, VP, near)`
-  - 50 `buildGround()`
-  - 61 `maskOr(J, x, z)`
-  - 62 `groundStep()`
-  - 102 `buildLandMask()`
-  - 125 `lmStep()`
-  - 162 `seaRing(u, eye, y, R, Hl)`
-  - 172 `drawSea(VP, eye, t, far, drop)`
+  - 36 `dryIdx(m, thr)`
+  - 52 `dryThr(eye, near)`
+  - 61 `drawTerrain(TM, eye, VP, near)`
+  - 88 `buildGround()`
+  - 99 `maskOr(J, x, z)`
+  - 100 `groundStep()`
+  - 140 `buildLandMask()`
+  - 163 `lmStep()`
+  - 210 `skyMask(eye, Vm, fov, asp, farZ)`
+  - 221 `seaRing(u, eye, y, R, Hl)`
+  - 231 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/17b-inland-water.js` (152 linjer)
 
@@ -4309,7 +4313,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (454 linjer)
+## `src/js/view3d/20-trawl-seine.js` (460 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4343,8 +4347,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 347 `npcPhase(id)`
   - 352 `kvDraw(n, eye, t)`
   - 360 `kvRibDraw(n, R, G, M, eye, t)`
-  - 381 `drawNPC(eye, t, H, VP)`
-  - 433 `npcCrewDraw(n, K, eye, t)`
+  - 386 `npcFrame(H)`
+  - 387 `drawNPC(eye, t, H, VP)`
+  - 439 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
@@ -4411,7 +4416,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (762 linjer)
+## `src/js/view3d/24-cinema.js` (763 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4436,14 +4441,14 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 268 `frameClock(raw)`
   - 280 `frame()`
   - 285 `frame0()`
-  - 479 `snapTake()`
-  - 484 `drawRoute(VP, eye)`
-  - 507 `driftSpray(VP, eye, dt, t, col)`
-  - 534 `drawSmoke(VP, eye, BM, dt)`
-  - 575 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 609 `splashFoam(x, z, r, a)`
-  - 611 `drawEffects(VP, eye, BM, dt, t)`
-  - 744 `updateLabels(VP, eye, W, Hh)`
+  - 480 `snapTake()`
+  - 485 `drawRoute(VP, eye)`
+  - 508 `driftSpray(VP, eye, dt, t, col)`
+  - 535 `drawSmoke(VP, eye, BM, dt)`
+  - 576 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 610 `splashFoam(x, z, r, a)`
+  - 612 `drawEffects(VP, eye, BM, dt, t)`
+  - 745 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (229 linjer)
 

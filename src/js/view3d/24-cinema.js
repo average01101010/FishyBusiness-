@@ -361,17 +361,18 @@
     PMK('sky'); gl.viewport(0, 0, W, Hh); gl.clearColor(env.fog[0], env.fog[1], env.fog[2], 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     const SKP = PROF.skip; if (SKP.all){ profEnd(); return; }   // the profile's empty frame: what the browser and the screen give with nothing drawn
     gl.disable(gl.CULL_FACE); gl.disable(gl.BLEND); gl.depthMask(true);
-    // sky
-    gl.disable(gl.DEPTH_TEST); gl.useProgram(PK.p);
+    // sky (behind the sea's plane where that is in the picture: skyMask, 17-draw.js)
+    const farZ = QUAL.lvl === 3 ? 260000 : 170000, masked = skyMask(eye, V.m, fov, asp, farZ);
+    if (masked) gl.depthMask(false); else gl.disable(gl.DEPTH_TEST); gl.useProgram(PK.p);
     const u = PK.u, tn = Math.tan(fov / 2);
     gl.uniform3fv(u.uF, V.F); gl.uniform3fv(u.uR, V.R); gl.uniform3fv(u.uU, V.U); gl.uniform2fv(u.uTan, [tn * asp, tn]);
     gl.uniform3fv(u.uZen, env.zen); airSet(u); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uSunD, env.sunDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uMoonD, env.moonDir || [0, -1, 0]); gl.uniform1f(u.uMoonA, env.moonA || 0);
     skyFrame(u, Hh, tn, bv); cloudStep(Math.min(30, rdt)); gl.uniform2fv(u.uCloudOff, CLD.off); gl.uniform1f(u.uCloud, env.cloud); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uStars, env.stars); gl.uniform1f(u.uAur, env.aur); gl.uniform1f(u.uDay, env.day); gl.uniform2fv(u.uWindDir, env.windDir);
     gl.disableVertexAttribArray(1); attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+    gl.depthMask(true); gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
     // far pass
     PMK('farT'); glChk('frame'); pickLights(eye, t);
-    if (!SKP.terr) drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM && !SKP.boats) for (const n of npcStates(H)){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
+    if (!SKP.terr) drawTerrain(TM, eye, VPf, false); drawWater(VPf, eye); litSetup(VPf); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); drawUnits(eye, VPf, false, 15000); drawSites(eye, VPf, false, 15000); if (NPCM && !SKP.boats) for (const n of npcFrame(H).v){ const x = n.p.x * 1000, z = n.p.y * 1000, d = Math.hypot(x - eye[0], z - eye[2]); if (d < 30000 && !((n.fleet || n.coast) && d < 1500)) drawLit(NPCM[n.type], model(x - eye[0], (env.tide || 0) - eye[1], z - eye[2], -n.hd, 0, 0)); }
     PMK('farSea'); glChk('far'); drawVind(VPf, eye, dt, true); glChk('vindF');
     if (!SKP.sea) drawSea(VPf, eye, t, 1); glChk('seaF');
     drawSeaLights(VPf, eye, t, false);
