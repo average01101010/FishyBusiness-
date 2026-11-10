@@ -1591,7 +1591,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (285 linjer)
+## `src/js/core/09j-kystvakt.js` (291 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
@@ -1601,24 +1601,24 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 30 `kvHaulKeep(g, s)`
   - 39 `kvMix(ms, p, gear, most)`
   - 56 `kvAlong(a, b)`
-  - 61 `kvMarks(s)`
-  - 62 `kvHavCheck(b, sets, H, len, add, most)`
-- **99** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
-  - 113 `kvSnoCheck(b, ss, H, add)`
-  - 145 `kvState()`
-  - 148 `kvReady()`
-  - 158 `kvHour()`
-  - 166 `kvArrive()`
-  - 175 `kvSide(b)`
-  - 176 `kvMinute()`
-  - 182 `kvNpcs()`
-  - 185 `kvSums(sets, inside)`
-  - 187 `kvMostSp(sets)`
-  - 192 `kvCheck(b)`
-  - 219 `kvWhat(r)`
-  - 231 `kvWhatHav(r)`
-  - 246 `kvWhatSno(r)`
-  - 266 `kvFinish()`
+  - 62 `kvMarks(s)`
+  - 63 `kvHavCheck(b, sets, H, len, add, most)`
+- **102** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
+  - 116 `kvSnoCheck(b, ss, H, add)`
+  - 153 `kvState()`
+  - 156 `kvReady()`
+  - 166 `kvHour()`
+  - 174 `kvArrive()`
+  - 183 `kvSide(b)`
+  - 184 `kvMinute()`
+  - 190 `kvNpcs()`
+  - 193 `kvSums(sets, inside)`
+  - 195 `kvMostSp(sets)`
+  - 200 `kvCheck(b)`
+  - 227 `kvWhat(r)`
+  - 239 `kvWhatHav(r)`
+  - 253 `kvWhatSno(r)`
+  - 272 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -4364,7 +4364,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (756 linjer)
+## `src/js/view3d/24-cinema.js` (762 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4387,16 +4387,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 216 `gfxNaN(eye, VPn)`
   - 226 `gfxEnd(now, eye, VPn, W, Hh)`
   - 268 `frameClock(raw)`
-  - 277 `frame()`
-  - 282 `frame0()`
-  - 473 `snapTake()`
-  - 478 `drawRoute(VP, eye)`
-  - 501 `driftSpray(VP, eye, dt, t, col)`
-  - 528 `drawSmoke(VP, eye, BM, dt)`
-  - 569 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 603 `splashFoam(x, z, r, a)`
-  - 605 `drawEffects(VP, eye, BM, dt, t)`
-  - 738 `updateLabels(VP, eye, W, Hh)`
+  - 280 `frame()`
+  - 285 `frame0()`
+  - 479 `snapTake()`
+  - 484 `drawRoute(VP, eye)`
+  - 507 `driftSpray(VP, eye, dt, t, col)`
+  - 534 `drawSmoke(VP, eye, BM, dt)`
+  - 575 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 609 `splashFoam(x, z, r, a)`
+  - 611 `drawEffects(VP, eye, BM, dt, t)`
+  - 744 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (229 linjer)
 
