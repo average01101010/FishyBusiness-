@@ -49,6 +49,18 @@ function fleetBerth(i){
   return npcBerths('fleet:' + f.home, {x:f.hp[0], y:f.hp[1]}, mates)['f' + i] || null;
 }
 const fleetPacks = f => { if (!MAPD.man) return false; const T = MAPD.man.tile; return !!vecTile(Math.floor(f.hp[0] / T), Math.floor(f.hp[1] / T)); };
+// A boat of the fleet that cannot be within FLEET_SEEN km of the boat you follow, wherever on her day she is, is left out of the
+// list of all the boats (npcStates without a name; Ø3b, 10.11.2026). Nobody sees her there: the AIS shows the fleet within AIS_KM
+// (15 km), the 3D view draws it within 30 km of a camera at most 8 km from the boat, and the rules of the road take the boats near
+// by. Her state asked her harbour's quays of the vec tiles (fleetBerth, fleetPacks) in every frame, from Bodø as from Husøy: those
+// were the readers that kept Senja's tiles coming back every minute far from Senja (the lag of 04.11.2026, point 4: each time
+// VEC.ver moved twice, and all that is keyed on it was worked out again). Asked for by name (the chart's track of one boat, the
+// rules' look back) she answers as before. Her reach: the longest of her routes and 5 km for the drift on the bank.
+const FLEET_SEEN = 45;
+function fleetOff(f, p){
+  if (f.reach === undefined){ if (!f.R || !f.RR) return false; let r = 0; for (const R of f.R.concat(f.RR)) if (R && R.len > r) r = R.len; f.reach = r + 5; }
+  const d = FLEET_SEEN + f.reach; return Math.abs(p.x - f.hp[0]) > d || Math.abs(p.y - f.hp[1]) > d;
+}
 function fleetState(i, H){
   const s = fleetState0(i, H), f = FLEET[i], home = {x:f.hp[0], y:f.hp[1]}, bp = fleetBerth(i);
   if (!bp){ if (!fleetPacks(f)){ s.p = berthShift(s.p, 'f' + i, false); return s; } return s.st === 'port' ? {p:home, hd:s.hd, st:'port', hidden:true} : s; }
@@ -510,8 +522,10 @@ function npcStates(H, only){
     out.push({id:'ferje', name:'MF Senjasund', type:'ferry', p:berthShift(a.p, 'ferje', true), hd:a.hd, v:sp});
   }
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
+  const fb = !only && S && S.boat && S.boat.pos;
   FLEET.forEach((f, i) => {
     if (only && only !== 'f' + i) return;
+    if (fb && fleetOff(f, fb)) return;
     const A = fleetState(i, H); if (A.hidden) return; const B = fleetState(i, H - 1 / 60), dx = A.p.x - B.p.x, dy = A.p.y - B.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
     out.push({id:'f' + i, name:f.n, type:f.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, fleet:true, fi:i, L:f.L, B:f.B, liv:i % 4});
   });

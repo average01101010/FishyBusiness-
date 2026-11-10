@@ -285,6 +285,53 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
 - **Hva som ble gjort:** `glbParse` (`vessel3d.js`) gir `Float32Array` for posisjonene, normalene og fargene, `Uint8Array` for malingssonen og `Float64Array` for skyggen (`ao`); ett hjørne per trekant som før (indekserte tabeller ville spart mer, men alle leserne går hjørne for hjørne, og trekantene skulle ikke endres). `f32cat` og `f32moved` setter deler sammen der koden før brukte `concat` og `push` (`glbModel`, `view3d/07-harbour-unit.js`). Detaljene og hva som er likt står i `3d-baater-og-animasjon.md` («Delene er typede tabeller»).
 - **Likt:** `tests/unit/glbm.test.mjs` (hver type, nivå 0,3, 1 og 2, bar, lakkert, med design, med stripe og som egen båt): 207 av 300 modeller er like float32 for float32 med den gamle leseren; i de 93 der koden regner nye hjørner av posisjonene, er avviket høyst 0,066 mm (designlinjene) og 0,24 µm (påhengsmotoren og rorkulten på plass), med samme antall hjørner. Skjermbildene før og etter av egen båt (trebåten med rorkulten) og havna i Finnsnes i begge formater ligger i `docs/okter/2026-11-10-21c/`.
 
+## 4.11r Ytelsen på Galaxy A52s (Adreno 642L): havbunnen, himmelen bak sjøen og flåten (Ø3b, 10.11.2026)
+
+Ø3b i `docs/planer/koen.md` (steg 46), Jonas' økt på grenen `ccr-da624f01-5lbjel`. Grunnlaget er Jonas' tre målinger fra telefonen 10.11.2026 (valg 8 i køen): `#prof` ved åpen sjø, `#prof` ved Tromsdalen fiskemottak med to båter ved siden av, og `first3d` fra en første start. Utseendet er ikke endret (`CLAUDE.md`: grafikken er nesten det viktigste): det samme bildet er tegnet med og uten endringene med klokkene frosset og sammenlignet piksel for piksel (under).
+
+**Det målingene sier** (trebåten, natt, 617 × 1372 piksler på Høy):
+
+| | Åpen sjø | Tromsdalen, i havn |
+|---|---|---|
+| «som nå» | 9 b/s, 106 ms, JS 23,1 ms | 8 b/s, 118 ms, JS 40,3 ms |
+| tetthet 0,75 | 26 b/s | 20 b/s |
+| full tetthet | 3 b/s (JS 83 ms) | 3 b/s (JS 105 ms) |
+| uten sjø | 21 b/s | 12 b/s |
+| uten terreng | 14 b/s | 13 b/s |
+| uten båter | | 9 b/s |
+| dyrest i «synk per del» | nær sjø 69,7 ms, nært land 32,3, fjernt land 23,1 | nært land og trær 51,4, nær sjø 38,3, fjernt land 24,3 |
+| lange oppgaver i 4 s | 2 (296 ms) | 9 (886 ms) |
+
+- **Telefonen er bundet av pikslene, ikke av trekantene eller JS-en.** Bildetida følger antall piksler nesten rett fram (0,75 × tettheten gir en fjerdedel så mange piksler og 106 → 38 ms). Det som koster, er altså hvor mange piksler som skyggelegges, og hvor dyr skyggeleggeren er for hver.
+- **Terrenget kostet 35 ms av 106 ved åpen sjø, der det nesten ikke er land i bildet.** Terrengnettene dekker hele vinduet, også havbunnen, og hver piksel av den ble skyggelagt (med den dyreste terrengskyggeleggeren på nærnettene) før sjøen, som tegnes sist og er ugjennomsiktig, dekket den. Det samme i fjernpasset, og himmelen ble tegnet over hele bildet først. Under horisonten ble hver piksel dermed skyggelagt opptil fem ganger: himmel, fjern havbunn, fjern sjø (utenfor nærnettet), nær havbunn og nær sjø.
+- **Sjøen selv er den største enkeltposten** (58 ms av 106 ved åpen sjø): bølgefeltet rundt båten (600 m) dekker nesten alt under horisonten fra jaktkameraet, med den fulle havskyggeleggeren. Den er ikke rørt her (se «Ikke gjort»).
+- **JS-en** er 23 ms ved åpen sjø og 40 ms i havn, og vokser med bildetida (83–105 ms på full tetthet): mye av den er GL-kall som venter på grafikkortet, og jobbene som får en andel av bildet (terrengnettene inntil 30 %, bølgekartet). Av bildets egen JS i havn er de andre båtenes tilstand størst (under).
+- **Auto-kvaliteten** går ned til Lav på denne telefonen (under 28 b/s i 4 s), der tettheten er 1: det er trolig derfor skjermen viste 23 b/s i spillet mens profilen, som holder nivået den startet på, viste 9. Alt under gjelder alle nivåene.
+
+**Det som er gjort:**
+
+- **Havbunnen tegnes ikke der sjøen dekker den** (`dryIdx`, `dryThr` i `view3d/17-draw.js`). Hvert av de fire rutenettene (`TERR`, `MIDM`, `NEARM`, `FINEM`) får sin egen indeksbuffer med bare trekantene som når over en høyde `thr`, i samme rekkefølge som den delte bufferen (`gridIdx`), og tegnes med den:
+  - fjernpasset (`TERR`, `MIDM`), under den flate fjernsjøen: `thr` er 0,25–0,5 m under tidevannet (trinn på 0,25 m);
+  - nærpasset (`NEARM`, `FINEM`), under den flate nærsjøen og bølgefeltet: lavere med det dypeste bølgedalene kan grave og en margin: `floor(tidevannet − 0,75) − ceil(3 × (Hs vindsjø + Hs dønning) + 2)`, i hele meter, der vindsjøen er den høyeste vinden kan reise i det hele tatt (`WV.cap`), ikke bare den ved båten, som kan ligge i ly 300 m fra åpent vann (funnet i gjennomgangen) (McCowans grense i havskyggeleggeren holder dessuten bølgene over bunnen på grunt vann);
+  - bufferen lages på nytt når `thr` flytter seg et trinn (tidevannet rundt hvert femte minutt, været sjelden) og slettes med nettet (`freeMesh`); en høyde som ikke er et tall, beholder trekantene sine; med nærnettet ikke bygd ennå tegnes fjernnettet i begge pass med nærpassets høyde.
+  - Bildet er det samme fordi sjøen tegnes over hver piksel der en stråle fra et øye over sjøen treffer sjøens plan: fjernringen (hele vinduet og 40 km, med hull for nærnettet), nærringen (nærnettet og 20 m, med hull for bølgefeltet) og bølgefeltet. Det som ligger helt under planet, synes aldri.
+  - Alt tegnes som før når øyet ikke er minst 1 m over tidevannet (et kamera i en bølgedal), når profilen tar sjøen bort («uten sjø»), og med `#seabed1` i adressen. `G3._debug.dry` viser høydene og trekantene; `G3._debug.dryOff(bunn, himmel)` slår av og på mens spillet går (testen).
+- **Himmelen skyggelegges ikke bak sjøen** (`skyMask` i `17-draw.js`, kalt fra `frame0` i `24-cinema.js`). Før himmelen tegnes hele fjernsjøens rektangel ved tidevannet (uten hull) bare til dybdebufferen, med et lite program (`sjømaske`) og en nærgrense på 1 m, så planet når inn under kameraet (fjernpassets egen nærgrense er 25 m), og himmelen tegnes med dybdetesten på. Den står bak planet ut til 20 km. Det fjernpasset tegner etterpå, står foran planet overalt der det er over vannet (dybden med nærgrense 25 m er den nærmeste av de to for alt som er under 25 ganger så langt unna som planet), og sjøen tegnes over hver piksel av planet, i fjernpasset eller nærpasset. Ikke når øyet ikke er over tidevannet, uten sjø i profilen, eller med `#skymask0`; en driver som ikke vil kompilere det lille programmet, får himmelen som før (`SKYMASK.P = false`).
+- **De andre båtenes tilstand regnes én gang per bilde** (`npcFrame` i `view3d/20-trawl-seine.js`). Fjernpasset og `drawNPC` spurte `npcStates` hver for seg, den dyreste delen av bildets egen JS i havn (1,5 av 9,8 ms per bilde på en PC ved Tromsdalen, hver gang; tallet for telefonen er rundt fem ganger så høyt). Fjernpasset brukte bildets klokke og `drawNPC` båtenes egen (`npcClock`), så en båt begge passene tegnet (1,5–3 km unna), sto to steder mens minuttet ble holdt. Nå tegner begge henne der båtenes klokke har henne.
+- **Senja-flåten regnes ikke ut langt fra Senja** (`fleetOff` i `core/05-vessels.js`, `docs/systemer/npc-trafikk.md`): det var den som leste Senja-flisene langt unna (punkt 4 i «Laggen 04.11.2026»).
+
+**Målt her** (Playwright med SwiftShader, hele kysten, kart-31; «før» og «etter» er samme bygg med `dryOff`, så alt annet er likt):
+
+MAALT
+
+**Første start** (`first3d` fra telefonen, inkognito, Wi-Fi, `warm:false`): brevet etter 13,7 s, 5,0 s fra «Start her» til første 3D-bilde (`models_s` 0). Ø3a målte 11,2 s og 29,4 s med CPU-en strupet 4× i SwiftShader, og Ø3c 10,9 s etter sine endringer; på telefonen er ventetiden altså halvparten av det testmiljøet viste, og modellene er inne når det spørres etter dem. Tiden til brevet er nedlastingen og tolkingen av siden på et første besøk (9,6 MB før komprimering) og er ikke rørt her.
+
+**Ikke gjort, og hvorfor:**
+
+- **Havskyggeleggeren** er det som koster mest på 642L (58 av 106 ms ved åpen sjø, 35 av 118 i havn). Den kan gjøres billigere uten å endre bildet ved å hoppe over ledd som er slått av (ingen kjølvann, ingen punktlys, ingen skumtopper i stille vær) med en gren på en uniform, men 642L har før nektet å lenke havskyggeleggeren etter mindre endringer enn det (5.20, «kjølvannet borte» 05.11.2026), og en feil der gir en enklere sjø for alle med den driveren. Det kan ikke prøves i SwiftShader. Det står i backloggen som neste steg, med måten det bør prøves på.
+- **Rekkefølgen i nærpasset** (båten før terrenget, nærnettet før fjernnettet): lite å hente etter at havbunnen er borte, og terrengskyggeleggeren forkaster piksler (hullet for det finere nettet og vannlinja), så den tidlige dybdetesten er uansett avhengig av driveren.
+- **Hvilken commit i havsteget som gjorde laggen verre** (et bygg med kart-28): leseren av Senja-flisene er funnet og tatt bort, så spørsmålet har ikke lenger noe å si, og klonen i økta har ikke historikken (grunn klone).
+
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
 - **Lyskildene:** opptil 8 punktlys lyser opp terreng, bygg, havneenheter, båter og sjø (`PLG`, `pLit` i skyggeleggerne, `pickLights` hvert bilde). På «Lav» brukes 2, på «Middels» 4.

@@ -360,7 +360,7 @@
   }
   function meshEnd(B){ return runAll(meshEndG(B)); }
   function makeMesh(x0, z0, sx, sz, n, hf){ const B = meshBegin(x0, z0, sx, sz, n, hf); meshRows(B, Infinity); return meshEnd(B); }
-  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } m.freed = true; gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); if (!m.ibs) gl.deleteBuffer(m.ib); if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); if (m.vb) gl.deleteBuffer(m.vb); }
+  function freeMesh(m){ if (m.parts){ m.parts.forEach(freeMesh); return; } m.freed = true; gl.deleteBuffer(m.pb); gl.deleteBuffer(m.cb); if (!m.ibs) gl.deleteBuffer(m.ib); if (m.dry){ gl.deleteBuffer(m.dry.ib); m.dry = null; } if (m.nb) gl.deleteBuffer(m.nb); if (m.sb) gl.deleteBuffer(m.sb); if (m.mb) gl.deleteBuffer(m.mb); if (m.vb) gl.deleteBuffer(m.vb); }
   // the near terrain's own surface at x, z (its triangles over the ground without the units), so a fine patch meets it exactly
   function nearSurf(M, x, z){
     const n = M.gn, d = M.sx / (n - 1), gx = clamp((x - M.x0) / d, 0, n - 1.001), gz = clamp((z - M.z0) / d, 0, n - 1.001), i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
