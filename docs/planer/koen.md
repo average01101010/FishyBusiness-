@@ -30,6 +30,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - `ccr-869710d8-bo5iwu` (Jonas' økt, 10.11.2026 06:09): steg 86 OB8 havsjarken; eier `tools/boats/havsjark35.py`, `src/data/*.b64` (havsjarken), `tools/boats/qa/clip_havsjark35.py`, `docs/skipsmodeller/havsjark-grunnlag.md`.
+- `ccr-a14b7b70-vfrww1` (Jonas' økt, 10.11.2026 07:20): steg 47 Ø16 S3 lasttesten; eier `tests/` (lasttesten), `tools/server/rt/` (bare rettinger); admin-delen venter til etter OPP4.
 
 ## Valg som venter på Jonas
 
@@ -87,7 +88,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 44 | **Ø5 rest c** M7/M8-resten (sponsede design, flagget som vaier, CSV-importen, `anchors.sign` med `python3.11`) | Butikkene | klar (steg 66 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 66 (ferdig) | | `tools/harbour/butikk.py`, `steder.py`, `view3d/06`, `17`, `ui/10j-paint.js`, `core/09k-market.js`, `tools/broker/` | `butikker-og-sponsorer.md`, backloggen 10.7 |
 | 45 | **Oppdrag 2, resten** Mannskapets ærender og lærlingen | Oppdrag | klar (startmeldingen mangler; Ø8b M er ute, rutinen eller koordinatoren skriver den fra planen) | steg 8 (ferdig) | se `oppdrag-2.md` | `oppdrag-2.md` |
 | 46 | **Ø3b** Ytelse på Galaxy A52s/642L | Ytelse | venter på Jonas: `#prof` og `first3d` fra 642L (valg 8; startmeldingen i `start/` sier hvor) | | etter det profilen viser; `view3d/02`, `04`, `06`, `17`, `18`, `19`, `ui/11-boot.js`, `core/01b-mapdata.js`, `01c-vec.js`, `05-vessels.js` (`npcStates`) | øktplanen Ø3, `3d-verden.md` 4.11o |
-| 47 | **Ø16 S3** Lasttesten, 500 først (reléet og Supabase), og tallene i admin | Sanntid | klar (Jonas 07.11.2026: 500 brukere først; admin-delen etter OPP4; kjøres om natta norsk tid) | | `tests/`, `tools/server/rt/` (bare rettinger), `src/admin/index.html` (etter OPP4) | `sanntid-posisjoner.md` S3, `bestand-og-flaate.md` 5b |
+| 47 | **Ø16 S3** Lasttesten, 500 først (reléet og Supabase), og tallene i admin | Sanntid | pågår (Jonas' økt, `ccr-a14b7b70-vfrww1`, 10.11.2026 07:20) (Jonas 07.11.2026: 500 brukere først; admin-delen etter OPP4; kjøres om natta norsk tid) | | `tests/`, `tools/server/rt/` (bare rettinger), `src/admin/index.html` (etter OPP4) | `sanntid-posisjoner.md` S3, `bestand-og-flaate.md` 5b |
 | 49 | **Ø6 funn 6, planen** Haill og penger som saldo på serveren (`/planlegg`; ekte penger: PR-en venter på Jonas) | Skyen | klar (startmeldingen mangler; rekkefølgen for byggingen etter valg 16 V7: anbefalt velkomstgaven og kjøpt haill før lansering, saldoen etter) | | bare `docs/planer/` | `sikkerhet-skyen.md` funn 6, `lansering-plan.md` L1e |
 | 50 | **Ø6 funn 7** Innloggingsdomenet | Skyen | venter på valg (valg 16 V6: Jonas valgte bort `auth.detstorebla.no` 11.10.2026; anbefalt A er CSP for spillet i steg 78, og domenet når inntektene dekker det) | | `src/data/cloud.json`, `ui/10f-cloud.js`, `tools/server/Caddyfile` | `sikkerhet-skyen.md` funn 7 |
 | 52 | **H5–H9** Not, snurrevad, skift, stigen, spilltesten | Havsteget | venter på H4 | steg 32 | se `havsteget.md` | `havsteget.md` |
