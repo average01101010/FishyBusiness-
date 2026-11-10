@@ -13,7 +13,7 @@
     if (typeof glbHas === 'function' && glbHas('gull')){
       const G = glbLoad('gull'), ex = (G && G.ex) || {}, mk = (nm, zc) => { const o = glbPart('gull', nm); if (!o) return null; const n = o.p.length / 3, c = new Float32Array(n * 3);
         for (let i = 0; i < n; i++){ const z = zc && o.zone[i] === 1; for (let k = 0; k < 3; k++) c[i * 3 + k] = z ? zc[k] * (o.ao[i] || 1) : o.c[i * 4 + k]; }
-        return {pb:buf(new Float32Array(o.p)), cb:buf(c), n}; };
+        return {pb:buf(asF32(o.p)), cb:buf(c), n}; };
       if (ex.shoulder && ex.wrist){
         W.G = {sh:ex.shoulder, wr:ex.wrist};
         for (const [k, zc] of [['gullG', null], ['gullB', [0.16, 0.17, 0.19]]]) W[k] = {body:mk('body', zc), armR:mk('armR', zc), handR:mk('handR', zc), armL:mk('armL', zc), handL:mk('handL', zc)};
@@ -153,7 +153,7 @@
     // a design that cuts the hull (vessel3d.js livGeo) is a new shape: the own buffers are built again
     if (E && liv && E.geoK !== livGeo(liv)){ for (const H of [E.hull, E.h1, E.h0]) if (H) for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); E = PVM[key] = null; }
     if (!E){ const m = buildVesselModel(t, 2, liv, true); if (!m) return null;
-      const up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3});
+      const up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3});
       let cap = null; if (m.cap){ const c = MB(); for (const tr of m.cap) c.tri(tr[0], tr[1], tr[2], [0, 0, 0]); cap = c.mesh(); }
       E = PVM[key] = {hull:up(m.o), glass:up(m.glass), cap, livK:livKey(liv), geoK:livGeo(liv)}; }
     if (liv){ const k = livKey(liv); if (E.livK !== k){ E.livK = k; const m = buildVesselModel(t, 2, liv, true);
@@ -166,7 +166,7 @@
     const E = pvm(t, liv); if (!E) return null; if (tier >= 2 || !glbPart(t, tier ? 'lodm' : 'lod1')) return E.hull;
     const k = 'h' + tier, want = E.livK + '|' + E.geoK; let H = E[k];
     if (H && H.key !== want){ for (const b of [H.pb, H.nb, H.cb]) gl.deleteBuffer(b); H = E[k] = null; }
-    if (!H){ const m = buildVesselModel(t, tier ? 1 : 0.3, liv, true); if (!m) return E.hull; H = E[k] = {pb:buf(new Float32Array(m.o.p)), nb:buf(new Float32Array(m.o.n)), cb:buf(new Float32Array(m.o.c)), n:m.o.p.length / 3, key:want}; }
+    if (!H){ const m = buildVesselModel(t, tier ? 1 : 0.3, liv, true); if (!m) return E.hull; H = E[k] = {pb:buf(asF32(m.o.p)), nb:buf(asF32(m.o.n)), cb:buf(asF32(m.o.c)), n:m.o.p.length / 3, key:want}; }
     return H;
   }
   // which version of your boat is drawn: by how long she looks in the drawing, in its pixels (her length over the distance, times the
@@ -185,7 +185,7 @@
     if (PV[key]) return PV[key];
     const ks = Object.keys(PV); if (ks.length > 160){ for (const q of ks){ const m = PV[q]; gl.deleteBuffer(m.pb); gl.deleteBuffer(m.nb); gl.deleteBuffer(m.cb); delete PV[q]; } }
     const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, kind === 'skip' ? [[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]] : null, null, look);
-    return PV[key] = {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3};
+    return PV[key] = {pb:buf(asF32(b.p)), nb:buf(asF32(b.n)), cb:buf(asF32(b.c)), n:b.p.length / 3};
   }
   const ownPerson = (kind, i) => { const l = seaLook(kind === 'crew' ? lookCrew(i) : lookMe(), kind === 'skip'); if (!l) return null; const key = 'o|' + kind + '|' + lookSig(l); return PV[key] || personMesh(kind, l, key); };
   // a boat of another player: her skipper's and crew's looks as she sent them (lk, ck); the local boats' from a look made from the id
@@ -194,6 +194,6 @@
     const h = lookHash(String(n.id)) % 12, key = 'n|' + kind + '|' + h; return PV[key] || personMesh(kind, lookFromSeed('npc' + kind + h, kind === 'crew' && h % 5 === 0 ? 'f' : 'm', 24 + (h * 5) % 40, 'sea'), key);
   };
   function people(){
-    if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(new Float32Array(b.p)), nb:buf(new Float32Array(b.n)), cb:buf(new Float32Array(b.c)), n:b.p.length / 3}; };
+    if (PERS) return PERS; const mk = (hands, suit, kit) => { const b = VB(); b.lod = 0.6; personVB(b, 0, 0, 0, false, hands, suit, kit); return {pb:buf(asF32(b.p)), nb:buf(asF32(b.n)), cb:buf(asF32(b.c)), n:b.p.length / 3}; };
     return PERS = {skip:mk([[-0.16, 1.08, -0.42], [0.16, 1.08, -0.42]], [0.93, 0.4, 0.1, 0.3], 'skipper'), skipDeck:mk(null, [0.93, 0.4, 0.1, 0.3], 'skipper'), crew:mk(null, [0.95, 0.75, 0.15, 0.3], 'crew')};
   }

@@ -397,8 +397,8 @@ function glbParse(b64){
     return o;
   };
   // Each part is read out the first time it is asked for (05.11.2026, the lag on 04.11: the JS heap was 390 MB after the start against
-  // 240 MB on 30.10 and grew towards 650-820 MB, when Android ended the page). A part read out is plain arrays of 8 bytes a number, a
-  // corner per triangle: a revised boat is 27-47 MB so, its near model (lod0) the most, 17-33 MB. The fleet and the other players' boats
+  // 240 MB on 30.10 and grew towards 650-820 MB, when Android ended the page). A part read out was then plain arrays of 8 bytes a number, a
+  // corner per triangle: a revised boat was 27-47 MB so, its near model (lod0) the most, 17-33 MB (typed arrays since Ø3d, about half). The fleet and the other players' boats
   // wear only the middle (lodm) and far (lod1) versions, so their lod0 is now never read out; the GLB's own bytes (4-6 MB) are kept until
   // every part has been read, and then let go. Unread parts are still keys of parts (Object.keys, in), and a part that fails to read is null.
   // parts.peek(name) (not enumerable) reads a part without keeping it, for what only measures the near model once a type (glbPeek).
@@ -426,9 +426,14 @@ function glbPart(type, name){ const G = glbLoad(type); return (G && G.parts[name
 function glbPeek(G, name){ return !G ? null : G.parts.peek ? G.parts.peek(name) : G.parts[name]; }
 // arrays of numbers (plain or typed) one after the other in a new Float32Array: a typed array has no concat or push, and a plain array's
 // concat would take a typed one as a single element (view3d's harbour unit and sites, glbModel)
-function f32cat(...A){ let n = 0; for (const a of A) n += a.length; const o = new Float32Array(n); let k = 0; for (const a of A){ o.set(a, k); k += a.length; } return o; }
-// a part's positions moved by at (the outboard, the tiller and the propeller carried to their places), as a Float32Array
-function f32moved(p, at){ const o = new Float32Array(p.length); for (let i = 0; i < p.length; i += 3){ o[i] = p[i] + at[0]; o[i + 1] = p[i + 1] + at[1]; o[i + 2] = p[i + 2] + at[2]; } return o; }
+// (an argument that is null is left out)
+function f32cat(...A){ let n = 0; for (const a of A) if (a) n += a.length; const o = new Float32Array(n); let k = 0; for (const a of A) if (a){ o.set(a, k); k += a.length; } return o; }
+// positions after positions (the boat's), each further part moved by its own at (the outboard, the tiller and the propeller carried to
+// their places), into one Float32Array; [part, at] pairs, a null pair left out
+function f32moved(p0, ...M){ let n = p0.length; for (const m of M) if (m) n += m[0].length; const o = new Float32Array(n); o.set(p0); let k = p0.length;
+  for (const m of M){ if (!m) continue; const [p, at] = m; for (let i = 0; i < p.length; i += 3, k += 3){ o[k] = p[i] + at[0]; o[k + 1] = p[i + 1] + at[1]; o[k + 2] = p[i + 2] + at[2]; } } return o; }
+// a Float32Array for the GPU: the part's own when it is one (the GLB's parts are, Ø3d), else a copy (gl.bufferData copies it anyway)
+const asF32 = a => a instanceof Float32Array ? a : new Float32Array(a);
 // a detailed model's part painted: paint zone 1 (the hull) takes liv.hull, zone 3 (the superstructure) liv.house and zone 4 (the decks)
 // liv.deck, with the shade baked into them (ao) kept
 function glbPaint(part, liv){
@@ -454,14 +459,12 @@ function glbModel(type, lod, liv, own){
   const sk = G.ex.anchors && G.ex.anchors.skiff;
   if (lod >= 1 && sk && G.parts.outboard){
     const M = G.parts.outboard, Pr = G.parts.prop, pa = Pr ? sk.motor.map((v, i) => v + sk.prop[i]) : null;
-    o = Pr ? {p:f32cat(o.p, f32moved(M.p, sk.motor), f32moved(Pr.p, pa)), n:f32cat(o.n, M.n, Pr.n), c:f32cat(o.c, M.c, Pr.c)}
-      : {p:f32cat(o.p, f32moved(M.p, sk.motor)), n:f32cat(o.n, M.n), c:f32cat(o.c, M.c)};
+    o = {p:f32moved(o.p, [M.p, sk.motor], Pr && [Pr.p, pa]), n:f32cat(o.n, M.n, Pr && Pr.n), c:f32cat(o.c, M.c, Pr && Pr.c)};
   }
   // an inboard boat steered by a tiller: the tiller with its rudder (they swing about the rudder head) and the propeller, in place
   else if (lod >= 1 && sk && sk.tiller && G.parts.tiller){
     const T = G.parts.tiller, Pr = G.parts.prop && sk.prop ? G.parts.prop : null;
-    o = Pr ? {p:f32cat(o.p, f32moved(T.p, sk.tiller.post), f32moved(Pr.p, sk.prop)), n:f32cat(o.n, T.n, Pr.n), c:f32cat(o.c, T.c, Pr.c)}
-      : {p:f32cat(o.p, f32moved(T.p, sk.tiller.post)), n:f32cat(o.n, T.n), c:f32cat(o.c, T.c)};
+    o = {p:f32moved(o.p, [T.p, sk.tiller.post], Pr && [Pr.p, sk.prop]), n:f32cat(o.n, T.n, Pr && Pr.n), c:f32cat(o.c, T.c, Pr && Pr.c)};
   }
   // the lid inside an open boat's gunwales, as triangles (drawn into depth only, so the sea does not show inside)
   let cap = null; const L = G.parts.cap;
@@ -861,7 +864,7 @@ function hullTris(type){
   const P = G ? glbPeek(G, 'lod0') : m ? m.o : null, n = G ? (P && P.p.length) : m && m.hullN; if (!P || !n || (G && !P.zone)) return out;
   for (let v = 0; v * 3 + 9 <= n; v += 3){
     if (G && !(P.zone[v] === 1 && P.zone[v + 1] === 1 && P.zone[v + 2] === 1)) continue;
-    const t = Array.from(P.p.subarray ? P.p.subarray(v * 3, v * 3 + 9) : P.p.slice(v * 3, v * 3 + 9)); if (t[0] + t[3] + t[6] <= 0) continue;   // (plain: HULLT keeps them)
+    const t = Array.prototype.slice.call(P.p, v * 3, v * 3 + 9); if (t[0] + t[3] + t[6] <= 0) continue;   // (plain: HULLT keeps them)
     const nx = (P.n[v * 3] + P.n[v * 3 + 3] + P.n[v * 3 + 6]) / 3, nl = Math.hypot(nx, (P.n[v * 3 + 1] + P.n[v * 3 + 4] + P.n[v * 3 + 7]) / 3, (P.n[v * 3 + 2] + P.n[v * 3 + 5] + P.n[v * 3 + 8]) / 3) || 1;
     if (nx / nl > 0.35) out.push(t);
   }
@@ -1072,7 +1075,7 @@ function facingTris(P, dir, keep){
     const q = v * 3, nz = (P.n[q + 2] + P.n[q + 5] + P.n[q + 8]) / 3; if (nz * dir < 0.45) continue;
     if (keep && !keep(v, q)) continue;
     const ao = P.ao && P.ao.length ? Math.max(0.05, P.ao[v]) : 1, c = P.c ? [0, 1, 2].map(k => P.c[v * 4 + k] / ao) : [0.5, 0.5, 0.5];
-    const t = {p:Array.from(P.p.subarray ? P.p.subarray(q, q + 9) : P.p.slice(q, q + 9)), zone:P.zone && P.zone.length ? P.zone[v] : 1, c}; T.push(t);
+    const t = {p:Array.prototype.slice.call(P.p, q, q + 9), zone:P.zone && P.zone.length ? P.zone[v] : 1, c}; T.push(t);
     // (in a grid over x and y, so a ray asks only the triangles in its cell)
     const p = t.p, i0 = Math.floor(Math.min(p[0], p[3], p[6]) / C), i1 = Math.floor(Math.max(p[0], p[3], p[6]) / C), j0 = Math.floor(Math.min(p[1], p[4], p[7]) / C), j1 = Math.floor(Math.max(p[1], p[4], p[7]) / C);
     for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){ const k = i * 4096 + j; let a = grid.get(k); if (!a) grid.set(k, a = []); a.push(t); }

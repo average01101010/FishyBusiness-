@@ -263,7 +263,7 @@
   const NKB = {};
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
   function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
-    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
+    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
     return NKB[k]; }
   function npcMesh(n, lod){
     const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key

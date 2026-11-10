@@ -96,6 +96,18 @@ export default function (t){
     const za = JSON.stringify(K.glbZones(k)), zb = JSON.stringify(R.glbZones(k)); out['zones|' + k] = za; ref['zones|' + k] = zb; if (za !== zb) bad.push('glbZones ' + k); }
   t.ok(!bad.length, `${exact + near} modeller like med typede tabeller og med de gamle: ${exact} float32 for float32, ${near} med nye hjørner regnet av posisjonene (motoren på plass, designlinjene) innen ${(worst * 1000).toFixed(4)} mm; skrogene for fysikken, malingssonene og profilen langs skroget like (endestasjonen akter skiller på ${tops.length}: ${tops.join(', ') || 'ingen'})`
     + (bad.length ? '; ulike: ' + bad.slice(0, 8).join('; ') + (bad.length > 8 ? ` … (${bad.length})` : '') : ''));
+  // f32cat and f32moved as concat and push did (plain and typed in, a null left out), asF32 without a copy for a Float32Array
+  const fa = new Float32Array([1.5, 2.25, 3]), cat = K.f32cat([0.1, 0.2], fa, null, [7]), mv = K.f32moved(fa, [[1, 2, 3, 4, 5, 6], [10, 20, 30]], null);
+  t.ok(cat instanceof Float32Array && cat.join() === Array.from(new Float32Array([0.1, 0.2, 1.5, 2.25, 3, 7])).join() && mv.join() === '1.5,2.25,3,11,22,33,14,25,36' && K.asF32(fa) === fa && K.asF32([1, 2]) instanceof Float32Array,
+    'f32cat og f32moved setter tabeller etter hverandre som concat og push, asF32 kopierer ikke en Float32Array');
+  // the people (wkPart: painted by zone like a boat) and the harbour works' near meshes (the glass after the model, view3d/07-harbour-unit.js)
+  const W = K.glbLoad('worker'), wn = W ? Object.keys(W.parts) : [], wbad = [];
+  for (const kit of ['crew', 'skipper']) for (const nm of wn){ const a = K.wkPart(nm, kit), b = R.wkPart(nm, kit); if (!a !== !b){ wbad.push(nm); continue; } if (!a) continue;
+    let h1 = 2166136261, h2 = 2166136261; for (const k of ['p', 'n', 'c']){ h1 = hashNums(h1, a[k]); h2 = hashNums(h2, b[k]); } if (h1 !== h2) wbad.push(kit + ':' + nm); }
+  const hb = [], hn = []; for (const u of ['harbour', 'harbour-y', 'harbour-s', 'harbour-naust', 'harbour-shop', 'harbour-rorbu']){ const A = K.glbLoad(u), B = R.glbLoad(u); if (!A || !B || !A.parts.lod0) continue; hn.push(u);
+    const ga = A.parts.glass || {p:[], n:[], c:[]}, gb = B.parts.glass || {p:[], n:[], c:[]};
+    for (const k of ['p', 'n', 'c']) if (hashNums(2166136261, K.f32cat(A.parts.lod0[k], ga[k])) !== hashNums(2166136261, B.parts.lod0[k].concat(gb[k]))) hb.push(u + '.' + k); }
+  t.ok(wn.length > 20 && !wbad.length && hn.length >= 1 && !hb.length, `folka (${wn.length} deler, to drakter) og havneanleggenes nære nett med glasset (${hn.join(', ')}) like float32 for float32` + (wbad.length || hb.length ? ': ulike ' + wbad.concat(hb).slice(0, 8).join(', ') : ''));
   // the parts are typed, and a part read twice is the same object (kept in GLBM)
   const P = K.glbPart(types[0], 'lod0');
   t.ok(P && P.p instanceof Float32Array && P.n instanceof Float32Array && P.c instanceof Float32Array && P.zone instanceof Uint8Array && P.ao instanceof Float64Array && K.glbPart(types[0], 'lod0') === P,
