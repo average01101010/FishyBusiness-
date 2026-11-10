@@ -164,3 +164,25 @@ Målt i spillet før endringen (`qa/deckpoints.py sjark`, `qa/deckgrid.py sjark`
 - **Vekta** (valg 18 A): skroget gir 11,30 t ved tegningens vannlinje mot 12 t (6 % under, innenfor 10 %): formen og vannlinja står.
 - **Klasjsjekken** (`qa/clip_havsjark35.py`): 12 punkter, de samme 12 som før endringen (ankerspillets fot 3 mm i bakkedekket ved x 9,25), ikke nye.
 - **`crewclip`**: ny sjekk for F19 (to ved samme bord eller kar minst 0,55 m imellom) for de reviderte båtene, sett rød mot bygget før (sjark 0,45) og grønn etter (0,60). Kyst15, kyst21, snøkrabbebåten og bunntråleren står 0,40–0,45 og hører til sine faser (backloggen).
+- **Livbøya på styrhusets aktervegg** (Jonas 10.11.2026: «Flytt ned den redningsbøya som henger på veggen på styrhuset slik at den ikke dekker vinduet på bakveggen»): festet 0,35 m under vinduets underkant (før 2,35 m, toppen av bøya i vinduet).
+- **Fenderne** (Jonas 10.11.2026: «Fjern pyntefenderne fra båt-modellen»): de to som lå løse på dørken akter, er tatt bort; fenderne som mannskapet henger ut ved kaia, er nå en felles modell for alle båtene (`tools/deck/anker.py` `fender`), og blåsa er laget for redskapet (backloggen).
+
+### 9.4 Etter-bildene og det som står igjen
+
+Etter-bildene (`tests/ombord.py sjark`, begge formater, alle operasjonene: plassene, iskassa, bøya og fenderne er endret, så ingen ble droppet) og arkene i `docs/okter/2026-11-10-ob8/`: garnet går fra binga i styrbord gang akter ut over hekken gjennom setteporten, med én ved binga (F20 rettet); de to som sløyer, står side om side ved bordet, pakkeren ved karet og iskassa forut for luka (F19 rettet); de som jukser, står fritt på begge sider (F21 rettet); dekket akter er uten løse fendere. To runder etter-bilder ble kastet: den første viste iskassa hengende utenfor skansen (pakkerens første plass), den andre hadde bøya over vinduet og pyntefenderne. **Står igjen:** (1) Ingen akter ved stampene når det settes (F4, OB3). (2) Med fire om bord brukes fire av de fem juksaplassene. (3) De to ved bordet står 0,60 m fra hverandre: side om side, men tett (spillets `deckAt` gir 0,7 m og runder til dekkskartets ruter). (4) Ankerspillets fot 3 mm i bakkedekket (fra før). (5) Blåsa er laget, men ikke tatt i bruk (`view3d/10-gear.js` eies av steg 21c).
+
+### 9.5 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 61 etter en annen skala, 62 etter OB2.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med kjølen etter verftets tegning, jevne vannlinjer (`check()`), vekta 11,3 t mot 12 (6 % under, innenfor 10 %). Trekk: tegningene ligger ikke i repoet, og bildene av typen viser planen, ikke linjene; stripene knekker der de går rundt stevnen |
+| Detaljer | 20 | 15 | Ekte hull med lysning, setteporten med rull, bremmen, plane vegger uten striper, spygattene åpne, klasjsjekken uten nye punkter. Trekk: materialene er ikke PBR (F2); ankerspillets fot i dekket |
+| Lanterner | 5 | 4 | Lovlige plasser etter `check()`, sidelanternene under bremmens underslag; ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Konsollen, rattet, stolen og utsikten fra skipperens øye som før (`check()`), taket med bremmen, bøya under vinduet |
+| Arbeidsflyt | 25 | 19 | Settingen gjennom setteporten fra binga og stampene akter, to side om side ved bordet, pakkeren ved karet, juksa fordelt. Trekk: ingen akter ved stampene når det settes (F4, OB3); de to ved bordet står tett |
+| Utforming av dekk | 20 | 16 | Haleren, karet, bordet og luka samlet i midja, redskapet akter der det settes fra, iskassa ved luka, juksaplassene fri av alt. Trekk: styrbord gang akter deles av redskapet og en juksaplass på hekken; gangen der pakkeren står er 1,1 m |
+| **Sum** | **100** | **76** | Over grensen, uten funn med alvor A igjen som er havsjarkens egne |
+
+Jonas setter karakteren.
