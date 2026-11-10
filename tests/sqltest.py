@@ -1190,7 +1190,7 @@ def main():
         # kind, and with the switch on the marked account out of every leaderboard, the fiskarlag's goal, the week's push and the open
         # group's sum, while it still sees itself; «Fjern merket» takes it in again; only the admin with aal2 reads and clears
         import hashlib
-        HS = {}; H = {k: {'sub': 'user_01HS' + k, 'role': 'authenticated'} for k in ('1', '2', '3', '4', '5', '6', '7')}
+        HS = {}; H = {k: {'sub': 'user_01HS' + k, 'role': 'authenticated'} for k in ('1', '2', '3', '4', '5', '6', '7', '8')}
         hid = lambda k: 'user_01HS' + k
         for k in H: sql("select public.tm_hello('{}')", H[k], 'authenticated')
         hsave = lambda k, cash, typ='trebat', fleet=1: json.loads(sql("select public.save_put4('x', now(), 100, null, true, '{\"cash\":%d,\"type\":\"%s\",\"fleet\":%d}', 'devH', 'H', false)" % (cash, typ, fleet), H[k], 'authenticated'))
@@ -1223,9 +1223,22 @@ def main():
         hland('6', 3010, 'hs5ekte', 100, 'Fangst6', 'none', '', ''); hland('7', 3010, 'hs5ekte', 100, 'Fangst7', 'none', '', '')
         HS['catch'] = flags('6'); HS['catchOk'] = flags('7')
         # a guest's mark goes with the landings to the account
-        sql("insert into public.players (id) values ('hs5_g'), ('hs5_acc') on conflict do nothing; insert into public.landings (player_id, gh, y, port, sp, acc, kg, kgq) values ('hs5_g', 1, 2027, 'x', 'torsk', 'none', 1, 0); select public.cheat_flag('hs5_g', 'land', 5, '{}')")
-        sql("update public.landings set player_id = 'hs5_acc' where player_id = 'hs5_g'"); HS['follow'] = sql("select string_agg(player_id, ',') from public.cheat_flags where player_id like 'hs5_%'")
-        sql("delete from public.players where id in ('hs5_g', 'hs5_acc')")
+        # a guest's marks go to the account that takes the guest over (guest_merge deletes the guest's row as the account), also a mark
+        # for the kroner with no landing, and one the account has already does not stop the other
+        sql("insert into public.players (id, guest) values ('hs5_g', true), ('hs5_acc', false) on conflict do nothing; select public.cheat_flag('hs5_g', 'land', 5, '{}'); select public.cheat_flag('hs5_g', 'cash', 7, '{}'); select public.cheat_flag('hs5_acc', 'land', 1, '{}')")
+        sql("delete from public.players where id = 'hs5_g'", {'sub': 'hs5_acc', 'role': 'authenticated'}); HS['follow'] = sql("select string_agg(kind || ':' || over, ',' order by kind) from public.cheat_flags where player_id = 'hs5_acc'")
+        sql("delete from public.players where id = 'hs5_acc'")
+        # the slack is per day, not per save: three saves of 250 000 kr more each are marked at the second; an account's first save
+        # with a thousand million is marked; a save without a cash between two does not hide the rise
+        hsave('8', 15000); hsave('8', 265000); HS['step1'] = flags('8'); hsave('8', 515000); hsave('8', 765000); HS['step'] = flags('8')
+        sql("select public.tm_hello('{}')", {'sub': 'user_01HS9', 'role': 'authenticated'}, 'authenticated'); H['9'] = {'sub': 'user_01HS9', 'role': 'authenticated'}
+        hsave('9', 1000000000); HS['first'] = [f['kind'] for f in flags('9')]
+        hsave('5', 15000); sql("select public.save_put4('x', now(), 100, null, true, '{\"day\":5}', 'devH', 'H', false)", H['5'], 'authenticated'); hsave('5', 2000000); HS['nocash'] = [f['kind'] for f in flags('5')]
+        sql("delete from public.cheat_flags where player_id = '%s'" % hid('5'))
+        # crab is never reported as catch, so crab landed is not held against the catch
+        for i in range(7): sql("""select public.land_put(%d, 2027, 'hs5ekte', 'none', '[{"sp":"krabbe","kg":500,"kgq":0}]', 'Krabbe')""" % (3000 + i), H['8'], 'authenticated')
+        sql("update public.landings set at = now() - interval '2 hours' where player_id = '%s'; update public.cheat_bucket set at = now() - interval '2 hours' where player_id = '%s'" % (hid('8'), hid('8')))
+        sql("""select public.land_put(3010, 2027, 'hs5ekte', 'none', '[{"sp":"krabbe","kg":100,"kgq":0}]', 'Krabbe')""", H['8'], 'authenticated'); HS['crab'] = flags('8', 'land')
         # the switch off: the mark is only written, the marked account is in every list
         sql("select public.lag_join('hs5lag')", H['3'], 'authenticated'); sql("select public.lag_join('hs5lag')", H['4'], 'authenticated')
         sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/hs5', 'BPkeyH', 'authkeyH', 'no')", H['5'], 'authenticated')
@@ -1238,7 +1251,7 @@ def main():
             pw = sql("select coalesce(string_agg(body, ' | '), '') from public.push_queue where tag = 'top-week' and player_id = '%s'" % hid(who))
             return {'top': 'JuksA' in [r['boat'] for r in wt['rows']], 'topMine': (wt.get('mine') or {}).get('kg'), 'bygd': 'hs5juks' in [r['port'] for r in bt.get('rows') or []],
                     'bygdMine': (bt.get('mine') or {}).get('port'), 'ev': 'JuksA' in [r['boat'] for r in et['rows']], 'evMine': (et.get('mine') or {}).get('kg'), 'evKg': et['kg'],
-                    'open': ag['open'], 'push': 'JuksA' in pw, 'pushMe': 'Du leverte 27,0 t' in pw}
+                    'open': ag['open'], 'push': 'JuksA' in pw, 'pushMe': 'Du leverte 27,0 t, plass 1' in pw and 'er «JuksA»' in pw}
         def lag(who):
             g = json.loads(sql("select public.lag_get(20)", H[who], 'authenticated')); return {'kg': g['kg'], 'hit': g['hit'], 'm': sorted(m['kg'] for m in g['members'])}
         HS['off'] = lists('5'); HS['cfgPl'] = sql("select public.admin_cfg_set('cheat_on', 'true')", H['1'], 'authenticated', expect_err=True)[0]
@@ -1259,6 +1272,7 @@ def main():
         HS['keep'] = sql("select public.admin_cheat_keep(%d)" % mine[0]['id'], AD2, 'authenticated') if mine else None; HS['kept'] = lists('5')['top']
         HS['clear'] = sql("select public.admin_cheat_clear(%d)" % mine[0]['id'], AD2, 'authenticated') if mine else None
         HS['cleared'] = lists('5'); HS['lagCleared'] = lag('4')
+        hland('3', 3373, 'hs5juks', 10, 'JuksA', 'none', '', ''); HS['again'] = [f['open'] for f in flags('3')]
         sql("select public.admin_cfg_set('cheat_on', 'false')", AD2, 'authenticated')
         w3 = 27000; ex = {'top': False, 'bygd': False, 'ev': False, 'push': False}
         print(ok(HS['cashPut'] is True and HS['cashKept'] == '1400000' and [(f['kind'], f['open']) for f in HS['cash']] == [('cash', True)] and 1000000 <= HS['cash'][0]['over'] <= 1100000),
@@ -1267,8 +1281,10 @@ def main():
         print(ok([(f['kind'], f['why']) for f in HS['land']] == [('land', 'fleet')] and HS['land'][0]['n'] == 3 and HS['landRows'] == '3/27000'),
               'HS5: landings above what the fleet can have taken get one mark, and the landings are taken', {k: HS[k] for k in ('land', 'landRows')})
         print(ok(HS['landAway'] == []), 'HS5: a landing after days away that the fleet could have taken gets no mark', HS['landAway'])
-        print(ok([(f['kind'], f['why'], f['over']) for f in HS['catch']] == [('land', 'catch', 500)] and HS['catchOk'] == [] and HS['follow'] == 'hs5_acc'),
-              "HS5: landings above the reported catch get a mark, with the catch reported they do not; a guest's mark follows the landings to the account", {k: HS[k] for k in ('catch', 'catchOk', 'follow')})
+        print(ok([(f['kind'], f['why'], f['over']) for f in HS['catch']] == [('land', 'catch', 500)] and HS['catchOk'] == [] and HS['crab'] == [] and HS['follow'] == 'cash:7,land:1'),
+              "HS5: landings above the reported catch get a mark, with the catch reported they do not; a guest's mark follows the landings to the account", {k: HS[k] for k in ('catch', 'catchOk', 'crab', 'follow')})
+        print(ok(HS['step1'] == [] and [f['kind'] for f in HS['step']] == ['cash'] and 449000 <= HS['step'][0]['over'] <= 450000 and HS['step'][0]['n'] == 2 and HS['first'] == ['cash'] and HS['nocash'] == ['cash']),
+              "HS5: the slack is per day and not per save, an account's first save is checked, and a save without a cash between two does not hide the rise", {k: HS[k] for k in ('step1', 'step', 'first', 'nocash')})
         print(ok(all(HS['off'][k] for k in ex) and not any(HS['on'][k] for k in ex) and HS['off']['open'] - HS['on']['open'] >= w3 and HS['off']['evKg'] - HS['on']['evKg'] == w3
                  and HS['cfgPl'] and HS['cfgBad']),
               'HS5: with the switch on a marked account is out of world_top, bygde_top, ev_top, the week\'s push and the open group\'s sum; off, it is in (only the admin turns it)', {k: HS[k] for k in ('off', 'on', 'cfgPl', 'cfgBad')})
@@ -1276,8 +1292,8 @@ def main():
                  and HS['lagOn'] == {'kg': 1000, 'hit': False, 'm': [0, 1000]} and HS['lagSelf'] == {'kg': 28000, 'hit': False, 'm': [1000, 27000]} and HS['lagHit'] == '0'),
               "HS5: the marked account sees itself as before, and the fiskarlag's goal is not reached on its kilos", {k: HS[k] for k in ('onSelf', 'lagOn', 'lagSelf', 'lagHit')})
         print(ok(HS['adm']['on'] is True and HS['adm']['n'] == 1 and HS['adm']['kind'] == ['land'] and not HS['adm']['raw'] and all(HS['admPl']) and HS['admAal1'] and HS['admAnon']
-                 and HS['keep'] == 't' and HS['kept'] is False and HS['clear'] == 't' and all(HS['cleared'][k] for k in ex) and HS['lagCleared'] == {'kg': 28000, 'hit': True, 'm': [1000, 27000]}),
-              'HS5: the admin (aal2) sees the marks by the public id, «La stå» keeps the account out, «Fjern merket» takes it in again; a player, aal1 and anon get nothing', {k: HS[k] for k in ('adm', 'admPl', 'admAal1', 'admAnon', 'keep', 'kept', 'clear', 'cleared', 'lagCleared')})
+                 and HS['keep'] == 't' and HS['kept'] is False and HS['clear'] == 't' and all(HS['cleared'][k] for k in ex) and HS['again'] == [False] and HS['lagCleared'] == {'kg': 28000, 'hit': True, 'm': [1000, 27000]}),
+              'HS5: the admin (aal2) sees the marks by the public id, «La stå» keeps the account out, «Fjern merket» takes it in again; a player, aal1 and anon get nothing', {k: HS[k] for k in ('adm', 'admPl', 'admAal1', 'admAnon', 'keep', 'kept', 'clear', 'cleared', 'again', 'lagCleared')})
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

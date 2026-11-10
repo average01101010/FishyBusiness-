@@ -126,13 +126,16 @@ Migreringen `supabase/migrations/20261110150000_cheat_flags.sql`, fanen «Juks»
 - «Flåtens verdi» står ikke i lagringens `summary` (bare kassa, båttypen og antall båter), og lån og innbytte gjør at verdien ikke kan regnes rett. Sjekken regner derfor på kassa, og lar en flåte som har vokst telle 5 % av prisen.
 - Økningen regnes fra den høyeste kassa i de bevarte lagringene, så en lagring tatt tilbake ikke gir merke.
 - «Mottakets høyeste pris» er artens høyeste pris ganget med to. Serveren har ingen pris per mottak.
+- Slakken på 300 000 kr er per døgn og ikke per lagring (funnet i gjennomgangen av koden: ellers kunne den brukes om igjen for hver lagring), og kontoens første lagring sjekkes også.
+- Sjekken mot meldt fangst teller ikke blåkveite, krabbe og snøkrabbe, som spillet aldri melder fangst for (`takeStock`).
 - Spillets adminkonto sjekkes ikke for kroner (den har penger fra Admin-appen: ti hopp på 0,4 til 88,7 millioner i `cash_flags`).
 
 **Målingen (punkt 3), lesende spørringer mot databasen 10.11.2026:** 38 lagringer og 100 bevarte lagringer; 803 landingsrader i 120 kall fra 10 kontoer (5 registrerte, 5 gjester); 266 fangstrader fra de siste fire døgnene (3 kontoer). Alle kontoene har én båt (trebåt, snekke eller sjark).
 
 | Hva | Største ekte | Grensen | Merker |
 |---|---|---|---|
-| Økning i kassa mellom to bevarte lagringer (90 par, spillere) | 163 959 kr på 4,3 timer (sjark); 155 343 kr over den høyeste kassa før | 300 000 kr + landinger, megler, tak per time | 0 |
+| Økning i kassa mellom to bevarte lagringer (90 par, spillere) | 163 959 kr på 4,3 timer (sjark); 155 343 kr over den høyeste kassa før | forklart av landinger, megler og tak per time; resten under | 0 |
+| Uforklart økning per døgn (det som er igjen etter landingene og taket per time) | 41 048 kr (3 av 90 par hadde noe uforklart) | 300 000 kr per døgn | 0 |
 | Raskeste økning | 43 800 kr på 11 minutter (ny spiller, trebåt); 55 787 kr på 24 minutter (første tur, 500 kg) | som over | 0 |
 | Én landing mot lasten | 1,08 laster (snekke 1 080 kg); sjark 6 500 kg og trebåt 500 kg er 1,0 | 8 laster i bøtta ved start | 0 |
 | Én landing, spillets adminkonto | 3,97 laster (trebåt 1 985 kg) | 8 laster | 0 |
@@ -146,6 +149,8 @@ Migreringen `supabase/migrations/20261110150000_cheat_flags.sql`, fanen «Juks»
 - Ingen i databasen har flere båter, driftsplan over flere døgn med mange landinger eller havbåt. Grensene for dem (én last per ekte time per båt, 21 døgn) er regnet, ikke målt.
 - Bøtta er romslig: en trebåt kan lande 12 t i døgnet uten merke, mot 5 t som det meste en ekte spiller har gjort. Sjekken mot meldt fangst strammer det til seks laster per fire døgn for den som ikke også melder falsk fangst.
 - Båttypen og antall båter er spillets ord.
+- Et salg av en båt som ikke er den spilleren står i, kan gi et feil merke når flåteverdien ikke er meldt (spillere uten samtykke til statistikk). Ingen slike salg finnes i dataene.
+- Kontoens første lagring holdes mot 15 000 kr. En som har spilt lenge uten sky og så får en konto, kan få et feil merke.
 
 ## 4. Valgene
 
