@@ -300,6 +300,14 @@ async def main():
         L, B, D, MH = st['L'], st['B'], st['D'], st['mast']; moored = bool(sh.get('moored') or sh.get('moor'))
         tf = time.time(); clock_ms = 0; saved = []; worst = {}
         frames = keys_at if a.stills else range(-pre, n)
+        # The frozen clock calls requestAnimationFrame every 16 ms of its own time, not once a step: at 60 fps (16.67 ms) every 24th step
+        # held two draws and the picture moved twice as far in it, a jerk every 0.4 s (at 30 fps every 12th step held three draws for
+        # two; seen in the jump check of the first 4K shot 10.11.2026). So the page's draws are taken out of the clock's hands and run
+        # by hand, exactly one a frame, after the clock's step.
+        if not a.stills:
+            await pg.evaluate("""() => { let Q = new Map(), id = 0;
+              window.requestAnimationFrame = f => { Q.set(++id, f); return id; }; window.cancelAnimationFrame = i => { Q.delete(i); };
+              window.__raf = () => { const q = Q; Q = new Map(); const t = performance.now(); for (const f of q.values()) f(t); return q.size; }; }""")
         for i in frames:
             t = max(0, i) / a.fps
             if cam['mode'] == 'orbit': await pg.evaluate(ORBIT, key_at(cam['keys'], t, ('yaw', 'pitch', 'dist', 'fov', 'aim')))
@@ -315,8 +323,8 @@ async def main():
             else:
                 # run_for takes whole milliseconds: step to the nearest ms of the exact frame time, so 30 fps alternates 33 and 34 ms
                 target = int(round((i + pre + 1) * step)); ticks = max(1, target - clock_ms); clock_ms += ticks
-                await pg.clock.run_for(ticks)
-            c = await pg.evaluate(CHECK, [L, B, D, MH, moored])
+                await pg.clock.run_for(ticks); await pg.evaluate('__raf()')
+            c =await pg.evaluate(CHECK, [L, B, D, MH, moored])
             bad = []
             if c['land']: bad.append('skroget på land %s' % c['land'])
             if c['solid']: bad.append('skroget i bru, kai eller bygg %s' % c['solid'])
