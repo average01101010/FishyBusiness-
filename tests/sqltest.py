@@ -647,7 +647,7 @@ def main():
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
         gift = {'gift': True, 'give': 'haill', 'type': 'luksus'}
         print(ok(RG['rowsA'] == '1' and len(RG['pendA']) == 1 and RG['pendA'][0]['data'] == gift and len(RG['pendB']) == 1 and RG['rowsAfter'] == '2/2' and RG['pendAfter'] == []
-                 and set(RG['helloAfter']) == {'consent', 'created', 'birth_year', 'admin', 'owned'} and RG['quote'][0] and 'no such product' in RG['quote'][1] and RG['two'][0]
+                 and set(RG['helloAfter']) == {'consent', 'created', 'birth_year', 'admin', 'owned', 'shop'} and RG['quote'][0] and 'no such product' in RG['quote'][1] and RG['two'][0]
                  and RG['guest'] == '0' and RG['merged'] == '0' and RG['account'] == '1/0/' + json.dumps(gift, sort_keys=True).replace('true', 'true')
                  and RG['again'] == 0 and RG['old'] == 'user_01GGG=false,user_01OLD=true' and RG['oldPend'] == []),
               'the welcome gift: tm_hello makes one grant per account however often it is called and answers as before, given and done once and never again, not for sale, never two rows; a guest gets none and the merge adds none, the account one at its first hello; the accounts there when the migration runs count as given, the guests do not (HS1)', RG)
@@ -1323,6 +1323,25 @@ def main():
         print(ok(HS['adm']['on'] is True and HS['adm']['n'] == 1 and HS['adm']['kind'] == ['land'] and not HS['adm']['raw'] and all(HS['admPl']) and HS['admAal1'] and HS['admAnon']
                  and HS['keep'] == 't' and HS['kept'] is False and HS['clear'] == 't' and all(HS['cleared'][k] for k in ex) and HS['again'] == [False] and HS['lagCleared'] == {'kg': 28000, 'hit': True, 'm': [1000, 27000]}),
               'HS5: the admin (aal2) sees the marks by the public id, «La stå» keeps the account out, «Fjern merket» takes it in again; a player, aal1 and anon get nothing', {k: HS[k] for k in ('adm', 'admPl', 'admAal1', 'admAnon', 'keep', 'kept', 'clear', 'cleared', 'again', 'lagCleared')})
+        # P5 (20261110170000_shop_gate.sql): the shop closed for the accounts made after the admin turned the switch; those that were
+        # there buy as before, only the admin (aal2) turns it, and open again the new account buys too
+        # (the welcome gift's check above ran 20261110150000_reg_gift.sql again, with its older tm_hello: this file again, as in the real order)
+        sgRun = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261110170000_shop_gate.sql'))
+        SG = {'rerun': sgRun.returncode}; OLD = {'sub': 'user_01SGO', 'role': 'authenticated'}; NEW = {'sub': 'user_01SGN', 'role': 'authenticated'}
+        hello = lambda who: json.loads(sql("select public.tm_hello('{}')", who, 'authenticated')).get('shop')
+        quote = lambda who: sql("select public.shop_quote('trim_turbo')", who, 'authenticated', expect_err=True)
+        SG['open0'] = hello(OLD); SG['get0'] = json.loads(sql("select public.admin_shop_gate()", AD2, 'authenticated'))
+        SG['deny'] = [sql(q, c, r, expect_err=True)[0] for q in ("select public.admin_shop_gate_set(true)", "select public.admin_shop_gate()", "select public.shop_closed('user_01SGO')", "select * from public.world_cfg")
+                      for c, r in ((OLD, 'authenticated'), (AD1, 'authenticated'), ({}, 'anon'))]
+        SG['set'] = json.loads(sql("select public.admin_shop_gate_set(true)", AD2, 'authenticated'))
+        SG['new'] = hello(NEW); SG['newQ'] = quote(NEW); SG['old'] = hello(OLD); SG['oldQ'] = quote(OLD)[0]
+        SG['gift'] = sql("select count(*) from public.grants where player_id = 'user_01SGN' and product_id = 'reg_luksus'")
+        SG['n'] = json.loads(sql("select public.admin_shop_gate()", AD2, 'authenticated'))['n']
+        sql("update public.players set game_admin = true where id = 'user_01SGN'"); SG['adm'] = hello(NEW); sql("update public.players set game_admin = false where id = 'user_01SGN'")
+        SG['unset'] = json.loads(sql("select public.admin_shop_gate_set(false)", AD2, 'authenticated')); SG['again'] = hello(NEW); SG['againQ'] = quote(NEW)[0]
+        print(ok(SG['rerun'] == 0 and SG['open0'] is True and SG['get0'] == {'from': None, 'n': 0} and all(SG['deny']) and SG['set']['from'] and SG['new'] is False and SG['newQ'][0] and 'closed' in SG['newQ'][1]
+                 and SG['old'] is True and SG['oldQ'] is False and SG['gift'] == '1' and SG['n'] == 1 and SG['adm'] is True and SG['unset'] == {'from': None, 'n': 0} and SG['again'] is True and SG['againQ'] is False),
+              'P5: with the switch on an account made after it gets shop:false and no quote, an older one buys as before, the welcome gift is still given; only the admin (aal2) turns it, and off, all buy', SG)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

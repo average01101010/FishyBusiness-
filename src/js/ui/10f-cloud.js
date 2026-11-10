@@ -174,7 +174,7 @@ async function cloudGate(){
     try { localStorage.setItem(REG_GIFT, '1'); localStorage.removeItem(GUEST_CODE); localStorage.removeItem(GUEST_KEY); if (gc.gid) localStorage.removeItem('dsb_sync_' + gc.gid); } catch (e){}
   }
   try {
-    const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || []; CLOUD.admin = !!(h && h.admin === true);
+    const h = await cloudRpc('tm_hello', {meta:cloudMeta()}); CLOUD.consent = h ? h.consent : null; CLOUD.owned = (h && h.owned) || []; CLOUD.admin = !!(h && h.admin === true); CLOUD.shopOff = !!(h && h.shop === false);   // (shopOff: the shop closed for accounts made after the switch, P5 10.11.2026, 20261110170000_shop_gate.sql)
     if (typeof bootgReport === 'function') bootgReport();   // a start before that locked: told now, before this one builds the game (11-boot.js BOOTG)
     // the save: which of the game here and the account's goes on (cloudSync)
     if (sessionStorage.getItem('dsb_force')){ sessionStorage.removeItem('dsb_force'); CLOUD.forceNext = true; }   // a game taken back (cloudRestore)

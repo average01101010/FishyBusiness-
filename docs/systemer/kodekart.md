@@ -3372,22 +3372,22 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (145 linjer)
+## `src/js/ui/10i-shop.js` (147 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 17 `shopMode()`
-  - 23 `realKr(nok)`
-  - 25 `shopLabel(nok)`
-  - 30 `shopWhat(k)`
-  - 40 `payBuy(k, give)`
-  - 48 `shopFine()`
-  - 51 `shopGo(k)`
-  - 68 `shopGive(g)`
-  - 91 `shopThanks(rc)`
-  - 104 `shopClaim()`
-  - 132 `shopStart()`
+  - 19 `shopMode()`
+  - 25 `realKr(nok)`
+  - 27 `shopLabel(nok)`
+  - 32 `shopWhat(k)`
+  - 42 `payBuy(k, give)`
+  - 50 `shopFine()`
+  - 53 `shopGo(k)`
+  - 70 `shopGive(g)`
+  - 93 `shopThanks(rc)`
+  - 106 `shopClaim()`
+  - 134 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (215 linjer)
 

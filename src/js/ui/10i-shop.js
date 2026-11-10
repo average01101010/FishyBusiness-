@@ -9,6 +9,8 @@
 // Where there is no cloud (the artifact, the tests) the buttons give it at once, as a test without payment; so does the Admin's game
 // until the shop is set up. Signed in elsewhere, the shop is «on sale soon» until Stripe is set up. On the game's own sites with the
 // cloud off (#nocloud, no network, GitHub Pages) the shop is closed, never free (Ø6 funn 5, 05.11.2026).
+// An account made after the server's switch was turned (P5, 10.11.2026: the first players come before the payment is ready for
+// strangers; tm_hello's shop:false, CLOUD.shopOff) sees «on sale soon» too, and the server gives it no quote.
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
@@ -16,7 +18,7 @@ const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/s
 const shopL = (no, en) => S.lang === 'en' ? en : no;
 function shopMode(){
   if (!CLOUD.on) return pubHost() ? 'off' : 'test';
-  if (CLOUD.user && SHOP.ready) return 'live';
+  if (CLOUD.user && SHOP.ready) return CLOUD.shopOff ? 'off' : 'live';
   return adminOk() ? 'test' : 'off';
 }
 // a price in real money, marked with 💎 so it never looks like the game's kroner (a player could not tell them apart, 06.10.2026)
