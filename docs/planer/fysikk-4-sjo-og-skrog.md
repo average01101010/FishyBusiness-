@@ -100,6 +100,8 @@ Hver fase passer én økt, bygges bak et flagg i adressen der det er mulig (`#fo
 
 ### F6 (valgfri). FFT-sjø: én økt med måling
 
+> **10.11.2026:** F6 er planlagt videre i `docs/planer/bolgene.md` (B1–B5, valgene V1–V3 tatt 09.11.2026); B1 er målingen her.
+
 - **Hva:** en prøve, ikke et bytte: en worker regner JONSWAP med retningsspredning som to FFT-fliser (128², 250 m og 40 m) hvert bilde (CPU, rundt 3–6 ms i en worker), lastet opp som teksturer; hjørneskyggeren leser dem (krever teksturer i hjørneskyggeren, som Adreno 642L ikke har: den beholder Gerstner), `seaH` leser samme tall på CPU, nærfeltet blir en forskyvning av oppslaget i den korte flisa. Måles mot dagens sjø på nettbrettet (bildetakt, minne, opplastingstid) og i bilder.
 - **Så avgjør Jonas** om FFT-en tar over for den fulle sjøen (med Gerstner som reserve) eller legges bort. Først etter F1–F3, fordi skumkartet og Jacobi-skummet virker med begge.
 

@@ -308,7 +308,7 @@ const DOCK = (() => {
     return rows.join('');
   }
   function render(){
-    if (!bar) return;
+    if (!bar || !S || !S.boat) return;   // (!S: the screen turned before the game is built; the start renders the row, refreshAll in ui/11-boot.js)
     items = rowOf(items0());
     { const hero = items.find(x => x.pri && !x.off); items.forEach(x => { x.hero = x === hero; }); if (hero && items[0] !== hero) items = [hero].concat(items.filter(x => x !== hero)); }
     if (menu && !items.some(x => x.menu === ownerOf(menu)) && !more.some(x => x.menu === ownerOf(menu))) menu = null;
