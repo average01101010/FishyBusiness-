@@ -17,7 +17,9 @@
 --
 -- The limits are set from the saves and landings that were in the database 10.11.2026 (38 saves, 100 kept saves, 803 landing rows in
 -- 120 calls), so that none of them gets a mark: the largest real rise between two kept saves was 163 959 kr (the slack is 300 000),
--- the largest real landing 4.0 holds of the boat's type (the bucket starts at 8), the most in six real hours 9.9 holds (8 + 6 = 14).
+-- or 155 343 kr above the highest cash before it (90 pairs of saves, the game's admin account apart); the largest real landing was
+-- 1.08 holds of the boat's type for a player and 4.0 for the game's admin account (the bucket starts at 8), and the most in six real
+-- hours 6.0 holds for a player and 9.9 for the admin account (8 + 6 = 14).
 -- The type and the size of the fleet are the game's word (the save's summary, presence, tm_hello), so the check catches the one who
 -- writes in a million, not the one who cheats a little.
 
@@ -116,7 +118,8 @@ create trigger saves_cheat_check after update of summary on public.saves for eac
 
 -- ---------- the landings: what the fleet can have caught, and what the account has said it caught ----------
 -- cap is one hold of the fleet: the largest hold the server has heard of for the account (presence.vtype, the save's type; never
--- under 500 kg) times the boats in the save, or 17 kg per 1 000 kr of fleet value when that is more. The bucket holds 8 holds at the
+-- under 500 kg) times the boats in the save; with more than one boat (their types are not known here) 8.5 kg per 1 000 kr of the
+-- fleet's value when that is more (the most hold per krone of any type but the wooden boat). The bucket holds 8 holds at the
 -- start and fills with one an hour up to 21 days' worth; a landing above what is in it is marked ('why':'fleet'). And the landings
 -- of the last four days (not the last hour: the catches of a landing come up right after it) may not be more than three times the
 -- catch the account has reported in those days plus six holds ('why':'catch'). Called by land_put before the rows go in.
@@ -127,7 +130,7 @@ begin
   if kg is null or not (kg > 0) then return; end if;
   select greatest(coalesce((select v.hold from cheat_vt v where v.vtype = pr.vtype), 0), coalesce((select v.hold from cheat_vt v where v.vtype = s.summary ->> 'type'), 0), 500)
            * least(greatest(coalesce(nullif(s.summary ->> 'fleet', '')::int, 1), 1), 40),
-         coalesce(pl.fleet_value, 0) * 0.017, pl.created_at
+         case when coalesce(nullif(s.summary ->> 'fleet', '')::int, 1) > 1 then coalesce(pl.fleet_value, 0) * 0.0085 else 0 end, pl.created_at
     into cap, need, born
     from players pl left join presence pr on pr.player_id = pl.id left join saves s on s.player_id = pl.id where pl.id = p;
   cap := greatest(coalesce(cap, 500), coalesce(need, 0), 500);
