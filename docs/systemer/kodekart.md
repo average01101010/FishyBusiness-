@@ -1591,7 +1591,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (285 linjer)
+## `src/js/core/09j-kystvakt.js` (291 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
@@ -1601,24 +1601,24 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 30 `kvHaulKeep(g, s)`
   - 39 `kvMix(ms, p, gear, most)`
   - 56 `kvAlong(a, b)`
-  - 61 `kvMarks(s)`
-  - 62 `kvHavCheck(b, sets, H, len, add, most)`
-- **99** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
-  - 113 `kvSnoCheck(b, ss, H, add)`
-  - 145 `kvState()`
-  - 148 `kvReady()`
-  - 158 `kvHour()`
-  - 166 `kvArrive()`
-  - 175 `kvSide(b)`
-  - 176 `kvMinute()`
-  - 182 `kvNpcs()`
-  - 185 `kvSums(sets, inside)`
-  - 187 `kvMostSp(sets)`
-  - 192 `kvCheck(b)`
-  - 219 `kvWhat(r)`
-  - 231 `kvWhatHav(r)`
-  - 246 `kvWhatSno(r)`
-  - 266 `kvFinish()`
+  - 62 `kvMarks(s)`
+  - 63 `kvHavCheck(b, sets, H, len, add, most)`
+- **102** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
+  - 116 `kvSnoCheck(b, ss, H, add)`
+  - 153 `kvState()`
+  - 156 `kvReady()`
+  - 166 `kvHour()`
+  - 174 `kvArrive()`
+  - 183 `kvSide(b)`
+  - 184 `kvMinute()`
+  - 190 `kvNpcs()`
+  - 193 `kvSums(sets, inside)`
+  - 195 `kvMostSp(sets)`
+  - 200 `kvCheck(b)`
+  - 227 `kvWhat(r)`
+  - 239 `kvWhatHav(r)`
+  - 253 `kvWhatSno(r)`
+  - 272 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -2610,12 +2610,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1427 linjer)
+## `src/js/ui/phone/07-patch.js` (1431 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1420 `patch()`
+  - 1424 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

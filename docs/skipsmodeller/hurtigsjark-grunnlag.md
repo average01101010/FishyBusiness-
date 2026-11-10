@@ -172,3 +172,23 @@ Målt i spillet før endringen med en liten sonde (som OB8: kjernen setter båte
 - **`crewclip`**: hurtigsjarken med i F19-lista (to ved samme bord minst 0,55 m imellom). Ikke sett rød: før-bygget ga 0,61.
 - **Spygattene** var alt åpne uten klaffer (runde 4), og klasjsjekkens unntak nevner ikke klaffer. **Pyntefenderne:** modellen hadde ingen igjen, bare kommentaren, som er rettet.
 - **Klasjsjekken** (`qa/clip_hurtig11.py`): 0 punkter, som før.
+
+### 9.4 Etter-bildene og det som står igjen
+
+Etter-bildene (`tests/ombord.py hurtigsjark`, begge formater, alle operasjonene: taket, vannlinja og plassene er endret, så ingen ble droppet; linesettingen og linetrekket tatt på nytt etter at stampene ble flyttet i gjennomgangen) og arkene i `docs/okter/2026-11-10-ob9/`: bremmen synes rundt hele taket, svart mot det gule; de som jukser, står på begge sider under skjulet og på babord ved takkanten, ingen i haleporten, døra eller ved kranen (F21 rettet); de to som sløyer, står side om side ved benken tvers av luka (F19: 0,61 m, som før, men nå med benken fri av stampene). **Står igjen:** (1) **Ingen akter ved stampene når det settes** (F4, OB3), og lina går fra stampene under skjulet på skrå over dekket til hekken. (2) **Tre i klump ved haleren når teinene trekkes** (de to som sorterer, står skulder i skulder med haleren rundt karet; `deckcrew.js`, ikke modellen). (3) **Ingen kjører kranen** (F23, OB4). (4) **`jukseMax` 6 mot tre juksaplasser:** maskin 4–6 tegnes ikke (valg 30 i køen). (5) De to ved benken står 0,61 m fra hverandre, side om side men tett (spillets `deckAt` gir 0,7 m og runder til rutene). (6) Babords gripelist er tatt bort der benken står; livbøya på babord akter (`kit.buoys`) henger ved flaggmastas stag, ikke på en list.
+
+### 9.5 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 59 etter en annen skala.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med skegen, listene og slaget, jevne vannlinjer og linjer i plan (`check()`), den tomme båten 11,99 t mot 12 ved spillets vannlinje (valg 18 A). Trekk: linjene er lest av bilder uten målestokk, og bildene av typen kunne ikke ses i denne økta |
+| Detaljer | 20 | 15 | Ekte hull med lysning, åpne spygatt uten klaffer, bremmen, plane vegger uten striper (0 skjeve flater), klasjsjekken 0, stigen hel. Trekk: materialene er ikke PBR (F2); ingen setterenne akter (F9) |
+| Lanterner | 5 | 4 | Lovlige plasser og sektorer (`check()`, `lanterntest`), sidelanternene under bremmens underslag; ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Konsollen, rattet, stolen og utsikten fra skipperens øye som før (`check()`, `brotest`), taket med bremmen og plane vegger |
+| Arbeidsflyt | 25 | 18 | Benken tvers av luka med fisken rett ned, to side om side, juksa fordelt fritt for haleporten, døra og kranen, settingen fritt over hekken. Trekk: ingen akter ved stampene (F4), tre i klump ved haleren i teinetrekket, ingen kjører kranen (F23) |
+| Utforming av dekk | 20 | 16 | Haleren, blødekaret, benken og luka samlet midt på dekket, stampene under skjulet fri av benken og juksaplassene, kranen og frakten akter, teinestabelen midt på dørken. Trekk: tre juksaplasser mot `jukseMax` 6, stampene langt fra hekken der lina går ut |
+| **Sum** | **100** | **75** | På grensen. Ingen funn med alvor A igjen som er hurtigsjarkens egne; det som trekker, er felles kode (F4, F23, klumpen ved haleren) og spørsmålet om juksamaskinene |
+
+Jonas setter karakteren.
