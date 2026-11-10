@@ -708,6 +708,10 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
 
+## Strøket 10.11.2026 (PR #53, motorrommet fullt igjen, gren `claude/admiring-cray-vqmpdo`, rullet ut i a21990dc)
+
+- **Motorrommet fullt igjen ga ingen redning** (tilbakemelding #117): **rettet og rullet ut 10.11.2026** (flettet i 9f9ee9c5 med Jonas' ja, ute med a21990dc, Hetzner og Pages grønne): `hullMinute` i `core/16c-hull.js` stopper motoren og ringer etter skøyta hver gang motorrommet er fullt under veis, ikke bare når `d.flood` er nytt (5.x i `fysikk-og-styring.md`). `hulltest` 30 OK (sett rød før rettingen i PR-en), towtest, trip2 og docktest OK.
+
 ## Strøket 09.11.2026 (Ø8b M5, «Tom for is» én gang og så én gang per døgn, gren `ccr-2fe3f16c-xpzvdg`)
 
 - **«Tom for is. Fangsten ises ikke.» hver andre time** (spilltest 4, 06.11.2026; Jonas valgte M5 A samme dag): **rettet 09.11.2026** (steg 8b Ø8b M5, gren `ccr-2fe3f16c-xpzvdg`): én linje når isen tar slutt, så én per døgn så lenge den er tom (`iceOut` i `core/05-vessels.js`); `mannskapsplay.py utenkokk` gir 3 linjer på tre døgn, mot 12–15. Antatt i byggingen (står i `folk-om-bord.md` 5.19b): tom-perioden er over når dekket har iset det det kan og minst 5 % av isrommet (minst 1 kg) står igjen, så ismaskinens drypp på en havbåt ikke starter den på nytt hvert minutt; med fryserom kommer meldingen aldri (før kunne den komme når fryserne var fulle for minuttet).
