@@ -1920,3 +1920,5 @@
 2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	docktest	OK	65	lite	samtidig	
 2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	trip2	OK	32	lite	samtidig	
 2026-11-10 13:28	ccr-5e1ba2f4-pusvyd	16f9056+	anchorlight3d	OK	249	3d	alene	
+2026-11-10 13:56	ccr-5e1ba2f4-pusvyd	b30f3a04+	boottest	OK	27	lite	samtidig	
+2026-11-10 13:57	ccr-5e1ba2f4-pusvyd	b30f3a04+	docktest	OK	61	lite	samtidig	
