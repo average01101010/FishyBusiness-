@@ -21,14 +21,16 @@ Ingen tekst under klipp 1, 2, 9 og 10. Der skal bildet og musikken få stå alen
 
 Valget fra 30.10 (ingen stemme i masteren) er endret: traileren får stemme fra ElevenLabs med vennens modell. Tekstene T1–T10 står likevel, så filmen virker med lyden av.
 
-**Forslag til manus, ikke godkjent av Jonas ennå.** 39 ord på 50 s (0,8 ord i sekundet, under grensen på 0,9). Stille over droppet (27,4–34,9 s), der bildet og musikken står alene. Hele manuset leses i ett opptak og klippes i linjer etterpå. Ingen store bokstaver, taggene styrer tonen.
+**Manus v2 (10.11.2026), etter Jonas' eget utkast: en fisker som forteller i jeg-form, og åpningslinja «Det store blå». Ikke godkjent av Jonas ennå.** 46 ord på 50 s (0,9 ord i sekundet, på grensa). Stille over droppet og fram til siste linje (27,4–41,5 s). Adressen leses ikke, den står i bildet. Hele manuset leses i ett opptak og klippes i linjer etterpå; starttidene er mål og flyttes etter opptaket. v1 står i git-historien.
 
 | # | Starter (s) | Linje | Faller på |
 |---|---|---|---|
-| S1 | 1,0 | `[calm, low]` Ho er fra femtiseks. Grå i treverket, men tett. | naustet og trebåten (1–2) |
-| S2 | 8,0 | `[calm, low]` Alle som har noe på havet i dag, begynte med en sånn. | trebåten under brua (3) |
-| S3 | 15,0 | `[calm]` Lofoten. Varanger. Hele kysten er din. | Lofotfisket og utover (5–7) |
-| S4 | 35,5 | `[calm, low]` Fra trebåt til snurper. | nordlyset, etter droppet (10) |
-| S5 | 45,5 | `[warm]` Det store blå. Spill gratis på detstorebla punktum no. | sluttkortet |
+| S1 | 0,8 | `[calm, low]` Det store blå. | naustet (1) |
+| S2 | 3,0 | `[calm, low]` For noen er det cruise og moro. For meg er det smør på brødskiva. | trebåten nært og mot brua (2–3) |
+| S3 | 9,5 | `[calm]` Tretti år på fjorden, på jakt etter stortorsken. | under brua, så Lofoten (3–4) |
+| S4 | 15,0 | `[tired, low]` Ingen lett jobb. Verken i vær eller lønn. | garnene i Lofoten (5) |
+| S5 | 19,5 | `[calm, low]` Forskerne snakker om svart hav. | hvalen i midnattssola (6) |
+| S6 | 24,9 | `[firm]` Jeg ror ut likevel. | siste takt før droppet (8) |
+| S7 | 41,5 | `[warm]` Nå er det din tur. | trebåten og kystnotbåten ved samme kai (12) |
 
 Innstillinger å begynne med (fra Laksebaronen): stability 50 %, similarity 75 %. Lydfila legges i `trailer/audio/voice/` og føres inn i klippekartet som `voice` (`tools/START-4K-MASTER.md` punkt 9).
