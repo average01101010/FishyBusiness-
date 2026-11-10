@@ -311,6 +311,12 @@ for (const v of S.fleet) withVessel(v, potsUnfit);
 // takes fewer jigging machines or hands than a save has aboard (the snekke: two machines, you and one more): the machines over go ashore
 // and are paid back at what they cost, and the hands over sign off, as when changing boats (phone/13-mannskap-bank-meld.js)
 for (const v of S.fleet) withVessel(v, () => { const V = S.boat && VESSELS[S.boat.type]; if (!V) return;
+  // (valg 31 A, Jonas 10.11.2026: «Valg A»: the used hurtigsjark takes three reels, where the tiers give nothing, EQUIP.jukseLv fit.jig 4:
+  // the tier bought for her reels is paid back at what it cost, before the reels over go ashore at the plain price)
+  const lv = Math.round(+S.equip.jukseLv || 1);
+  if (lv > 1 && !equipFits('jukseLv', S.boat.type)){ let kr0 = 0; for (let i = 1; i < lv; i++) kr0 += EQUIP.jukseLv.tiers[i].kr * Math.max(0, S.equip.jukse || 0);
+    delete S.equip.jukseLv; if (kr0 > 0){ book('redskap', kr0, 'Trinnet på juksamaskinene kjøpt tilbake', 'The reels\' tier bought back');
+      log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner, og én person passer dem uten ' + lc1(EQUIP.jukseLv.tiers[lv - 1].no.replace(/^Juksamaskiner med /, '')) + '. Trinnet er kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' reels, and one person tends them without ' + EQUIP.jukseLv.tiers[lv - 1].en.replace(/^Reels with /, '') + '. The tier was bought back for ' + kr(kr0) + '.'); } }
   const over = (S.equip.jukse || 0) - (V.jukseMax || 0);
   if (over > 0){ const kr0 = equipKr('jukse') * over; S.equip.jukse -= over; book('redskap', kr0, 'Juksamaskiner tatt i land', 'Jigging reels taken ashore');
     log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. ' + over + ' er tatt i land og kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. ' + over + ' were taken ashore and bought back for ' + kr(kr0) + '.'); }

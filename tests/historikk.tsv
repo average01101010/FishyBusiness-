@@ -1910,3 +1910,7 @@
 2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	routetest	OK	46	lite	alene	
 2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	charttest	OK	50	lite	alene	
 2026-11-10 12:35	claude/ob9-hurtigsjarken-75-jtun77	5e27322	boottest	OK	24	lite	alene	
+2026-11-10 13:45	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	jukseboot	OK	9	lite	alene	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	vesseltest	OK	21	lite	samtidig	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	boottest	OK	32	lite	samtidig	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	savestest	OK	0	lite	samtidig	

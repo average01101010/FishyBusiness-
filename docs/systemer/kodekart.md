@@ -3441,7 +3441,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (391 linjer)
+## `src/js/ui/11-boot.js` (397 linjer)
 
 ---------- boot ----------
 
@@ -3475,7 +3475,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 373 `bootFail(e)`
+  - 379 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1664 linjer)
 
