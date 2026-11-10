@@ -1084,6 +1084,7 @@ def kit_places(G):
             # the line tubs two across and three along from the aft outboard one (turned round, ry pi: the rows go forward and inboard),
             # the rest stacked on them (kit.stamps.n); the fourth row would stand on the hatch's coaming
             'stamps': {'at': G(STAMP0[0], STAMP0[1], z_deck(STAMP0[0]) + camber(STAMP0[0], STAMP0[1])), 'ry': r(math.pi), 'n': 6},
+            'iskasse': G(ICEBOX[0], ICEBOX[1], z_deck(ICEBOX[0]) + camber(ICEBOX[0], ICEBOX[1])) + [r(math.pi / 2), 0.75],
             'cargo': [G(3.2, 0.0, z_deck(3.2) + zt) + [r(math.pi / 2)], G(0.95, -0.60, z_deck(0.95) + 0.03) + [0.0]]}
 
 def bower(G):
@@ -1095,8 +1096,10 @@ STAMP0 = (0.75, -1.17)       # the aft outboard line tub (OB8)
 TABLE_X = 3.60               # the gutting table on the port bulwark across the hatch: moved 0.30 forward of where it stood (3.30, G) so the
                              # second who guts has a free place a step aft of the first, clear of the gear room's corner (OB8, F19: the
                              # game puts him 0.7 m fore or aft of the first, and aft he was drawn into him, 0.45 m apart)
-PACK = (3.22, -1.08)         # the one who ices, by the bleeding tub inboard of the gangway, facing forward to it and the hatch (work.pack;
+PACK = (3.80, -0.90)         # the one who ices, between the hatch and the bleeding tub, facing the tub (work.pack, heading pi/2: to starboard;
                              # before, the game stood him on the hatch boards' edge)
+ICEBOX = (4.35, -0.15)       # the 300 l ice box (kit.iskasse, the game's), on the deck forward of the hatch, across her: the game put it 0.62 m to
+                             # the packer's side, which with his own place was outboard of the bulwark (OB8 after-pictures)
 # the jigging places on the rails, in the order the machines are bolted on (anchors.jigZ, F21): starboard in the waist aft of the bleeding
 # tub, port forward of the gutting table, then on each quarter aft of the gear room, and starboard forward of the hauling station; never in
 # the starboard gangway beside the gear room (the gear's), never at the hauler, all of them more than a metre apart on a side
@@ -1122,7 +1125,7 @@ def anchors():
             # the work at sea (havsjark-grunnlag kap. 6.2): the fisher at the hauler on the starboard waist; the bleeding tub on the deck just
             # aft of him; the gutting bench (the game's steel one) across the hatch at the port bulwark, the one who guts inboard of it; the
             # gutted fish go down the hatch between them, on ice
-            'work': {'table': G(TABLE_X, 1.55, z_deck(TABLE_X)), 'tub': G(3.80, -1.38, z_deck(3.8)), 'pack': G(PACK[0], PACK[1], z_deck(PACK[0])) + [round(math.pi, 3)]},
+            'work': {'table': G(TABLE_X, 1.55, z_deck(TABLE_X)), 'tub': G(3.80, -1.38, z_deck(3.8)), 'pack': G(PACK[0], PACK[1], z_deck(PACK[0])) + [round(math.pi / 2, 3)]},
             'jigZ': [[sd, round(XM - x, 3)] for sd, x in JIG],
             'hatch': G(3.2, 0.0, z_deck(3.2) + HOLD_H + 0.04), 'bunk': G(8.0, 0.6, z_bk(8.0) - 0.6), 'exhaust': G(6.0, 0.55, 4.20),
             'deck': {'y': round(zd - WL, 3), 'z': round(-(3.0 - XM), 3)}, 'gw': round(z_cap(4.5, -1) - WL, 3),
