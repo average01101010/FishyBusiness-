@@ -32,7 +32,7 @@ const STAB_AT = {
   snekke:{bow:-3.95, stern:3.95, dy:0.42, hold:[0, 1.23], net:[-0.68, 1.23], tub:[-0.9, 1.45], deck:[0, 2.2], table:[-1.08, 2.12], haul:[1.22, 1.9], helm:[0.68, 1], pots:[0, 2.55]},
   plastsjark:{bow:-4.725, stern:4.725, dy:0.55, hatch:1.9, net:[-0.5, 3.53], tub:[0.5, 3.53], deck:[1.2, 1.63], table:[-1.45, 0.8], haul:[1.59, 0.98], helm:[0.62, -0.73], pots:[0, 2.53]},
   sjark:{bow:-5, stern:5.5, dy:0.59, hatch:2.1, net:[0.92, 4.05], tub:[0.91, 4.05], deck:[1.38, 1.5], table:[-1.55, 1.7], haul:[1.91, 0.8], helm:[0.48, -1.3], pots:[0, 2.3]},   // (OB8: the nets and the tubs in the starboard gangway aft, the table 0.3 m forward)
-  hurtigsjark:{bow:-5.495, stern:5.495, dy:1.16, hatch:3.15, net:[0, 4.8], tub:[-1.3, 0.6], deck:[1.38, 2.44], table:[-1.55, 2.19], haul:[1.84, 1.6], helm:[0.46, -1.68], pots:[0, 3.1]},
+  hurtigsjark:{bow:-5.495, stern:5.495, dy:1.21, hatch:3.15, net:[0, 4.8], tub:[-1.3, 0.4], deck:[1.38, 2.44], table:[-1.55, 3.1], haul:[1.84, 1.6], helm:[0.46, -1.68], pots:[0, 3.1]},   // (OB9: the bench aft abreast the hatch, the line tubs forward under the shelter, the deck 5 cm higher on the empty boat's waterline)
   sjarkny:{bow:-5.495, stern:5.495, dy:0.93, hatch:3.9, net:[1.05, 4.95], tub:[0.95, 2.75], deck:[1.8, 0.65], table:[1.85, 1.9], haul:[2.19, -0.1], helm:[1.12, -1.83], pots:[0, 2.9]},
   breisjark:{bow:-5.12, stern:5.58, dy:0.88, hatch:0.48, net:[-1.38, 0.08], tub:[-1.55, 0.03], deck:[1.45, 0.56], table:[-1.59, 1.53], haul:[1.98, -0.29], helm:[0.55, -1.9], pots:[0, 0.68]},
   kyst15:{bow:-7.495, stern:7.495, dy:0.9, hatch:1.8, net:[2.2, 3.5], tub:[2.1, 4.5], deck:[2.35, 0.95], table:[1.24, 2.22], haul:[2.86, 0.2], helm:[1.05, -3.88], pots:[0, 1.3]},
