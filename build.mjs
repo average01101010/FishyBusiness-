@@ -59,6 +59,10 @@ function srcMarks(page){
 // «Nordlys Utstyr» on from the start (as #sptest), so every format can be shown on the tablet. Never the game's own build; put it in a
 // folder of its own (KYST_DIST=dist-demo)
 const DEMO = process.env.KYST_DEMO === '1';
+// KYST_CHANNEL=test: the test edition on test.detstorebla.no (L1a, 10.11.2026, docs/planer/lansering-plan.md): the page says so in
+// <meta name="dsb-channel"> (the label and the test cloud, ui/10p-install.js and ui/10f-cloud.js cloudCfg), asks not to be indexed,
+// version.json has "ch":"test", and the admin page gets the test project. Without it the build is as it was.
+const CHANNEL = process.env.KYST_CHANNEL === 'test' ? 'test' : '';
 const html = expand('index.html').replace('/*@demo*/false', DEMO ? 'true' : 'false');
 // every script must compile as a whole: the core and UI files share one script, so a name declared twice at the top level
 // (which node --check on each file cannot see) stops the page. Here it stops the build instead.
@@ -112,15 +116,19 @@ writeFileSync(join(MAPOUT, 'manifest.json'), JSON.stringify(mapMan)); mapFiles.p
 // the build's version (29.10.2026): the first 12 hex of the sha256 of the page and the map's manifest, the same the service worker's
 // cache name has (@V@ in src/pwa/sw.js), written into the page as <meta name="dsb-version"> so the telemetry (ui/10f-cloud.js cloudMeta)
 // and the admin's tables tell the builds apart; until now every build reported 'dev'
+if (CHANNEL){
+  if (!page.includes('</head>')){ console.error('build: no </head> for the channel'); process.exit(1); }
+  page = page.replace('</head>', `<meta name="dsb-channel" content="${CHANNEL}"><meta name="robots" content="noindex">\n</head>`);
+}
 const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).digest('hex').slice(0, 12);
 page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
 // and beside the page, for an open game to ask whether a newer build is out (ui/10p-install.js UPDATE; Jonas 06.11.2026)
-writeFileSync(join(DIST, 'version.json'), JSON.stringify({v:ver, at:new Date().toISOString()}));
+writeFileSync(join(DIST, 'version.json'), JSON.stringify({v:ver, at:new Date().toISOString(), ...(CHANNEL ? {ch:CHANNEL} : {})}));
 { const sm = srcMarks(page), b = sm.page.lastIndexOf('</body>');
   if (b < 0){ console.error('build: no </body> for the source map'); process.exit(1); }
   page = sm.page.slice(0, b) + '<script>window.DSB_SRCMAP=' + JSON.stringify(sm.map) + ';</script>' + sm.page.slice(b); }
 writeFileSync(OUT, page);
-console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}`);
+console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}${CHANNEL ? ', channel ' + CHANNEL : ''}`);
 console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);
 if (!ONE) console.log(`${basename(DIST)}/data/: ${dataFiles.length} files, ${(dataBytes / 1e6).toFixed(2)} MB (the models, the pictures and Senja's buildings; KYST_ONE=1 keeps them in the page)`);
 // the app's own files: the manifest, the icons, and the service worker with the build's version (the page and the map's manifest)
@@ -133,7 +141,9 @@ if (PWA){
 // put in; the app and a local build both get it (the dashboard asks for the admin's sign-in with a second factor before any number)
 { const A = join(SRC, 'admin');
   if (existsSync(A)){ mkdirSync(join(DIST, 'admin'), {recursive:true});
-    const cfg = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim();
+    // the test edition's admin page talks to the test project (cloud.json's block «test» over the rest, as cloudCfg does in the game)
+    const cfg = (() => { const raw = readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8').trim(); if (!CHANNEL) return raw;
+      const j = JSON.parse(raw), t = j[CHANNEL] || {}; delete j.test; return JSON.stringify({...j, ...t}); })();
     // the ports' names and parts of the coast for the media card (src/data/port-regions.json, written by tests/unit/regions.test.mjs)
     const reg = existsSync(join(SRC, 'data', 'port-regions.json')) ? readFileSync(join(SRC, 'data', 'port-regions.json'), 'utf8').trim() : 'null';
     let page = readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg);

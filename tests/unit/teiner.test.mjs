@@ -36,6 +36,9 @@ export default function (t){
   t.eq(['hurtigsjark', 'sjarkny', 'breisjark', 'kyst21'].map(v => VESSELS[v].gearMax.teine), [6, 12, 6, 30], 'teinene båtene har plass til: 6, 12, 6 og 30 (stablene på dekk)');
   // (the new hurtigsjark, OB10: as many as her model's stacks hold; two of the four places from OB16 stood inside her houses)
   { const P = anchorsOf('boat-hs11.b64').kit.pots.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.sjarkny.gearMax.teine, 'sjarkny: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabler)'); }
+  // (the breisjark, OB11: one stack on the open aft deck, and the place where a hauled pot is emptied is the model's own)
+  { const KP = anchorsOf('boat-malo36.b64').kit.pots, P = KP.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.breisjark.gearMax.teine, 'breisjark: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabel)');
+    t.ok(Array.isArray(KP.spot) && KP.spot[0] > 0.5 && KP.spot[2] > 1.2, 'breisjark: teina tømmes på modellens egen plass i den åpne sida (kit.pots.spot ' + JSON.stringify(KP.spot) + ')'); }
   t.ok(K.equipFits('krabbekar', 'hurtigsjark'), 'den brukte hurtigsjarken kan fortsatt ha krabbekar');
 
   // ---- buying: the pots, the rig, and the nets by hand

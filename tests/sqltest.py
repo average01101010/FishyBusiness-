@@ -371,7 +371,8 @@ def main():
             if pend: sql("select public.shop_done(array[%d]::bigint[])" % pend[0]['id'], who, 'authenticated')
         RG['helloAfter'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')); sql("select public.tm_hello('{}')", B, 'authenticated')
         RG['rowsAfter'] = sql("select count(*) || '/' || count(done_at) from public.grants where player_id in ('user_01AAA', 'user_01BBB') and product_id = 'reg_luksus'")
-        RG['pendAfter'] = [g for who in (A, B) for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['pendAfter'] = [g for who in (A, B) for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['product'] == 'reg_luksus' and not g.get('held')]
+        RG['heldAfter'] = len([g for who in (A, B) for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['product'] == 'reg_luksus' and g.get('held')])   # (HS2: kept on the server until it is switched on)
         RG['quote'] = sql("select public.shop_quote('reg_luksus')", A, 'authenticated', expect_err=True)
         RG['two'] = sql("insert into public.grants (player_id, product_id) values ('user_01AAA', 'reg_luksus')", expect_err=True)
         # the shop (20261006040000_shop.sql): a quote only for a signed-in player and a real product; a paid purchase books one grant
@@ -381,13 +382,59 @@ def main():
         R['sAnon'] = sql("select public.shop_quote('haill')", {}, 'anon', expect_err=True)
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_s1', 'user_01AAA', 'trim_turbo', 49, 'open', '{\"boat\":\"v1\"}'), ('cs_s2', 'user_01AAA', 'haill', 29, 'open', '{}')")
         R['sPaid1'] = sql("select public.shop_paid('cs_s1', 'pi_1')"); R['sPaid2'] = sql("select public.shop_paid('cs_s1', 'pi_1')")
-        R['sPend'] = json.loads(sql("select public.shop_pending()", A, 'authenticated')); R['sPendB'] = json.loads(sql("select public.shop_pending()", B, 'authenticated'))
+        R['sPend'] = [g for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if not g.get('held')]; R['sPendB'] = [g for g in json.loads(sql("select public.shop_pending()", B, 'authenticated')) if not g.get('held')]   # (not the haill kept on the server, HS2 below)
         R['sPlPaid'] = sql("select public.shop_paid('cs_s2', 'pi_2')", A, 'authenticated', expect_err=True)
         R['sPlRead'] = sql("select count(*) from public.grants", A, 'authenticated', expect_err=True)
         if R['sPend']: sql("select public.shop_done(array[%d]::bigint[])" % R['sPend'][0]['id'], A, 'authenticated')
         sql("select public.shop_paid('cs_s2', 'pi_2')"); sql("select public.shop_refund('pi_2')"); sql("select public.shop_ended('cs_s9', 'expired')")
         R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id not in ('fb_haill', 'reg_luksus')) || '/' || (select count(*) from public.grants where done_at is not null and product_id not in ('fb_haill', 'reg_luksus'))")
-        R['sEnd'] = json.loads(sql("select public.shop_pending()", A, 'authenticated'))
+        R['sEnd'] = [g for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if not g.get('held')]
+        # haill kept on the server until it is switched on (HS2, 20261110180000_haill_use.sql): shop_pending gives the open grants and
+        # the haill that is delivered and not used (held), haill_use takes the player's own haill once and nothing else, a refund takes
+        # back a haill that is not used also after delivery, and the haill delivered before the migration counts as used
+        H = {'sub': 'user_01HS2', 'role': 'authenticated'}; HS = {}
+        sql("select public.tm_hello('{}')", H, 'authenticated')
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_h1', 'user_01HS2', 'haill', 29, 'open', '{}'), ('cs_h2', 'user_01HS2', 'luksus', 59, 'open', '{}'), ('cs_h3', 'user_01HS2', 'trim_turbo', 49, 'open', '{\"boat\":\"v1\"}'), ('cs_h4', 'user_01HS2', 'haill', 29, 'open', '{}')")
+        for i in (1, 2, 3, 4): sql("select public.shop_paid('cs_h%d', 'pi_h%d')" % (i, i))
+        hp = lambda who=H: json.loads(sql("select public.shop_pending()", who, 'authenticated'))
+        hid = {r.split('=')[0]: int(r.split('=')[1]) for r in sql("select string_agg(coalesce(purchase_id, product_id) || '=' || id, ',') from public.grants where player_id = 'user_01HS2'").split(',')}
+        HS['pend0'] = [(g['product'], g.get('held')) for g in hp()]
+        sql("select public.shop_done(array[%d,%d,%d,%d]::bigint[])" % (hid['reg_luksus'], hid['cs_h1'], hid['cs_h2'], hid['cs_h3']), H, 'authenticated')
+        HS['pend1'] = [(g['product'], g.get('held')) for g in hp()]; HS['data1'] = [g['data'] for g in hp() if g['id'] == hid['cs_h1']]
+        HS['other'] = sql("select public.haill_use(%d)" % hid['cs_h1'], B, 'authenticated'); HS['anon'] = sql("select public.haill_use(%d)" % hid['cs_h1'], {}, 'anon', expect_err=True)
+        HS['use'] = [sql("select public.haill_use(%d)" % hid['cs_h1'], H, 'authenticated') for _ in (0, 1)]
+        HS['trim'] = sql("select public.haill_use(%d)" % hid['cs_h3'], H, 'authenticated'); HS['none'] = sql("select public.haill_use(999999)", H, 'authenticated')
+        HS['pend2'] = [(g['product'], g.get('held')) for g in hp()]
+        sql("select public.shop_refund('pi_h2')"); sql("select public.shop_refund('pi_h1')")   # (h2 delivered and not used: taken back. h1 used: stays)
+        HS['refund'] = sql("select string_agg(purchase_id || ':' || (revoked_at is not null) || ':' || (used_at is not null), ',' order by purchase_id) from public.grants where purchase_id in ('cs_h1', 'cs_h2', 'cs_h3')")
+        HS['gone'] = sql("select public.haill_use(%d)" % hid['cs_h2'], H, 'authenticated'); HS['pend3'] = [(g['product'], g.get('held')) for g in hp()]
+        HS['early'] = sql("select public.haill_use(%d)" % hid['cs_h4'], H, 'authenticated') + '/' + sql("select (done_at is not null) || '/' || (used_at is not null) from public.grants where id = %d" % hid['cs_h4'])   # (switched on with no network, before shop_done)
+        HS['pend4'] = [(g['product'], g.get('held')) for g in hp()]
+        HS['who'] = sql("select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosrc ~ 'used_at'")
+        HS['share'] = sql("select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosrc ~ '\\mgrants\\M' and p.proname ~ '^(pos_|land_|lb_|board|top|news|paper|week|season)'")
+        # the migration itself: what is delivered when it runs counts as used, what is open does not, a trim is left alone, and a second run takes nothing
+        sql("drop index if exists public.grants_haill_held; alter table public.grants drop column used_at")
+        sql("insert into public.grants (player_id, product_id, data, done_at) values ('user_01HS2', 'fb_haill', '{\"give\":\"haill\",\"type\":\"takk\",\"reward\":true}', now() - interval '1 day'), ('user_01HS2', 'fb_haill', '{\"give\":\"haill\",\"type\":\"takk\",\"reward\":true,\"open\":1}', null)")
+        hsMig = os.path.join(ROOT, 'supabase', 'migrations', '20261110180000_haill_use.sql')
+        HS['run'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', hsMig).returncode
+        HS['moved'] = sql("select count(*) filter (where data ->> 'give' = 'haill' and done_at is not null and used_at = done_at) || '/' || count(*) filter (where data ->> 'give' = 'haill' and done_at is not null and used_at is distinct from done_at) || '/' || count(*) filter (where used_at is not null and (done_at is null or data ->> 'give' <> 'haill')) from public.grants")
+        HS['pend5'] = [(g['product'], g.get('held'), g['data'].get('open')) for g in hp()]
+        sql("select public.shop_done(array[%d]::bigint[])" % [g['id'] for g in hp()][0], H, 'authenticated')
+        HS['run2'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', hsMig).returncode
+        HS['pend6'] = [(g['product'], g.get('held')) for g in hp()]
+        sql("delete from public.purchases where player_id = 'user_01HS2'"); sql("delete from public.players where id = 'user_01HS2'")   # (out of the way of the checks below)
+        print(ok(HS['pend0'] == [('reg_luksus', None), ('haill', None), ('luksus', None), ('trim_turbo', None), ('haill', None)]),
+              'HS2: the open grants come from shop_pending as before, none marked held', HS['pend0'])
+        print(ok(HS['pend1'] == [('reg_luksus', True), ('haill', True), ('luksus', True), ('haill', None)] and HS['data1'] == [{'give': 'haill', 'type': 'haill'}]),
+              'HS2: after shop_done the haill that is not used still comes, marked held (the welcome gift, haill, luksus); the trim does not', HS['pend1'])
+        print(ok(HS['other'] == 'f' and HS['anon'][0] and HS['use'] == ['t', 'f'] and HS['trim'] == 'f' and HS['none'] == 'f' and HS['pend2'] == [('reg_luksus', True), ('luksus', True), ('haill', None)]),
+              "HS2: haill_use takes the player's own haill once (true, then false), never another player's, a trim or an id that is not there, and not without a sign-in; a used haill is gone from shop_pending", {k: HS[k] for k in ('other', 'anon', 'use', 'trim', 'none', 'pend2')})
+        print(ok(HS['refund'] == 'cs_h1:false:true,cs_h2:true:false,cs_h3:false:false' and HS['gone'] == 'f' and HS['pend3'] == [('reg_luksus', True), ('haill', None)]),
+              'HS2: a refund takes back a haill that is delivered and not used, and it can no longer be switched on; a used haill and a delivered trim stay', {k: HS[k] for k in ('refund', 'gone', 'pend3')})
+        print(ok(HS['early'] == 't/true/true' and HS['pend4'] == [('reg_luksus', True)]), 'HS2: a haill switched on before the game said shop_done (no network) is used and delivered in one', {k: HS[k] for k in ('early', 'pend4')})
+        print(ok(HS['who'] == 'haill_use,shop_pending,shop_refund' and HS['share'] == '0'), 'HS2: only shop_pending, haill_use and shop_refund read used_at, and nothing that shares with other players reads the grants', {k: HS[k] for k in ('who', 'share')})
+        print(ok(HS['run'] == 0 and HS['moved'].split('/')[1:] == ['0', '0'] and int(HS['moved'].split('/')[0]) >= 4 and HS['pend5'] == [('fb_haill', None, 1)] and HS['run2'] == 0 and HS['pend6'] == [('fb_haill', True)]),
+              'HS2, the migration: every haill delivered when it runs counts as used (used_at = done_at), an open one and a trim do not, and a second run takes nothing from a haill delivered after the first', {k: HS[k] for k in ('run', 'moved', 'pend5', 'run2', 'pend6')})
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
         sql("select public.shop_paid('cs_d1', 'pi_d1')"); R['dOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
@@ -630,7 +677,7 @@ def main():
         RG['again'] = rgRun.returncode
         RG['old'] = sql("select string_agg(player_id || '=' || (done_at is not null), ',' order by player_id) from public.grants where product_id = 'reg_luksus' and player_id in ('user_01OLD', '9a1c2a3e-0000-4000-8000-0000000000cc', 'user_01GGG')")
         sql("select public.tm_hello('{}')", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')
-        RG['oldPend'] = [g for g in json.loads(sql("select public.shop_pending()", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['oldPend'] = [g for g in json.loads(sql("select public.shop_pending()", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')) if g['product'] == 'reg_luksus' and not g.get('held')]   # (run here after HS2's migration the delivered row is a haill the server keeps; in the real order HS2's migration came after and counted it as used)
         gAfter = sql("select (select count(*) from public.players where id = '%s') || '/' || (select data from public.saves where player_id = 'user_01GGG') || '/' || (select consent from public.players where id = 'user_01GGG')" % G['sub'])
         gAgain = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
         # with the account the guest's landings count (guest_merge), and for everyone: no landing ahead of the shared clock, the year from
@@ -646,7 +693,7 @@ def main():
               'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
         gift = {'gift': True, 'give': 'haill', 'type': 'luksus'}
-        print(ok(RG['rowsA'] == '1' and len(RG['pendA']) == 1 and RG['pendA'][0]['data'] == gift and len(RG['pendB']) == 1 and RG['rowsAfter'] == '2/2' and RG['pendAfter'] == []
+        print(ok(RG['rowsA'] == '1' and len(RG['pendA']) == 1 and RG['pendA'][0]['data'] == gift and len(RG['pendB']) == 1 and RG['rowsAfter'] == '2/2' and RG['pendAfter'] == [] and RG['heldAfter'] == 2
                  and set(RG['helloAfter']) == {'consent', 'created', 'birth_year', 'admin', 'owned', 'shop'} and RG['quote'][0] and 'no such product' in RG['quote'][1] and RG['two'][0]
                  and RG['guest'] == '0' and RG['merged'] == '0' and RG['account'] == '1/0/' + json.dumps(gift, sort_keys=True).replace('true', 'true')
                  and RG['again'] == 0 and RG['old'] == 'user_01GGG=false,user_01OLD=true' and RG['oldPend'] == []),

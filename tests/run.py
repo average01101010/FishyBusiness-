@@ -169,8 +169,29 @@ COVER['tests/unit/kvotemarked.test.mjs'] = []
 LITE += ['turlinjetest']
 COVER['tests/turlinjetest.py'] = ['turlinjetest']
 COVER['tests/unit/turlinje.test.mjs'] = []
+# HS2 (10.11.2026): the haill from the server as a copy of the grants (S.haillSrv), on lines of their own for the merge. The pure
+# functions (haillStock, haillMirror) in tests/unit/haillsrv.test.mjs, the claim against a stand-in in kjoptest and guesttest, the database in sqltest
+COVER['supabase/migrations/20261110180000_haill_use.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/haillsrv.test.mjs'] = []
+COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-haill-fiske-service.js'] + ['hailltest', 'kjoptest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
+
+# The test edition (L1a, 10.11.2026): KYST_CHANNEL=test in build.mjs, cloud.json's block «test» and cloudCfg (10f-cloud.js), the label
+# (10p-install.js). kanaltest builds dist-kanal/ itself and compares it with dist/. On lines of their own
+LITE += ['kanaltest']
+COVER['tests/kanaltest.py'] = ['kanaltest']
+for _f in ('build.mjs', 'src/data/cloud.json', 'src/js/ui/10f-cloud.js', 'src/js/ui/10p-install.js'):
+    COVER[_f] = COVER.get(_f, []) + ['kanaltest']
+
+
+# OPP5 (10.11.2026): the upgrades one can see on deck (tools/deck/oppgr.py -> deck-upg): oppshot draws the setter, the magazine, the net
+# chute and the gaff on every coastal boat (3D, alone); the places and the parts' measures in tests/unit/oppmodell.test.mjs. On lines of
+# their own, so a merge with the sessions that add to the lists above does not meet them
+D3 += ['oppshot']
+LONG['oppshot'] = 3600; LONG['trytest'] = 1800   # (trytest on the fast sjark, which takes pots: 14 checks in 900 s under SwiftShader, 10.11.2026)
+COVER['tests/oppshot.py'] = ['oppshot']; COVER['tests/unit/oppmodell.test.mjs'] = []; COVER['tools/deck/oppgr.py'] = []; COVER['src/data/deck-upg.b64'] = ['oppshot']
+for _f in ('src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['oppshot', 'trytest']))
+COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/view3d/25-controls.js', []) + ['trytest']))
 
 
 def changed_tests():

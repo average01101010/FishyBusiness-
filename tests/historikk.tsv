@@ -2175,3 +2175,48 @@
 2026-11-10 23:53	ccr-adaac755-n9bghe	145e6401	kjoptest	FEIL	531	lite	alene	avsluttet med kode 1
 2026-11-10 23:54	ccr-adaac755-n9bghe	145e6401	fabrikktest	OK	13	lite	alene	
 2026-11-10 23:55	ccr-adaac755-n9bghe	145e6401	docktest	FEIL	62	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-10 22:16	claude/opp5-modellene-vkbwvw	8d88198+	vesseltest	OK	19	lite	samtidig	
+2026-11-10 22:16	claude/opp5-modellene-vkbwvw	8d88198+	geartest	FEIL	34	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 22:17	claude/opp5-modellene-vkbwvw	8d88198+	opptest	FEIL	54	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 22:17	claude/opp5-modellene-vkbwvw	8d88198+	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-10 22:22	claude/opp5-modellene-vkbwvw	8d88198+	trytest	FEIL	344	3d	alene	avsluttet med kode 1
+2026-11-10 22:23	claude/opp5-modellene-vkbwvw	8d88198+	dbg23o	OK	43	3d	alene	
+2026-11-10 22:39	claude/opp5-modellene-vkbwvw	8d88198+	deckshot	FEIL	935	3d	alene	FEIL kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia  {'kai': {'kyst15': {'sl': 0, 'a1': -0.25580000000003655, 'a2': -3.0718, 'e': 0, 'jo
+2026-11-10 22:54	claude/opp5-modellene-vkbwvw	8d88198+	trytest	FEIL	900	3d	alene	gikk ut på tid
+2026-11-10 21:47	ccr-0d64d46d-7ojp1d	4ff2d2d+	kjoptest	OK	776	lite	alene	
+2026-11-10 21:48	ccr-0d64d46d-7ojp1d	4ff2d2d+	guesttest	OK	87	lite	samtidig	
+2026-11-10 21:48	ccr-0d64d46d-7ojp1d	4ff2d2d+	hailltest	LES	35	lite	samtidig	
+2026-11-10 21:48	ccr-0d64d46d-7ojp1d	4ff2d2d+	haillplass	OK	6	lite	samtidig	
+2026-11-10 21:48	ccr-0d64d46d-7ojp1d	4ff2d2d+	boostklokke	OK	40	lite	samtidig	
+2026-11-10 21:49	ccr-0d64d46d-7ojp1d	4ff2d2d+	shoptest	OK	30	lite	samtidig	
+2026-11-10 21:49	ccr-0d64d46d-7ojp1d	4ff2d2d+	skiptest	OK	17	lite	samtidig	
+2026-11-10 21:49	ccr-0d64d46d-7ojp1d	4ff2d2d+	boottest	OK	29	lite	samtidig	
+2026-11-10 21:49	ccr-0d64d46d-7ojp1d	4ff2d2d+	savestest	OK	0	lite	samtidig	
+2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	bootgtest	OK	133	lite	samtidig	
+2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	jukseboot	OK	10	lite	samtidig	
+2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	vesseltest	OK	20	lite	samtidig	
+2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	merketest	OK	15	lite	samtidig	
+2026-11-10 21:58	ccr-0d64d46d-7ojp1d	4ff2d2d+	kjoptest	OK	302	lite	alene	
+2026-11-10 20:27	ccr-1ddbadbc-g5fj4d	f5b4eb4+	boottest	OK	29	lite	samtidig	
+2026-11-10 20:27	ccr-1ddbadbc-g5fj4d	f5b4eb4+	trip2	OK	35	lite	samtidig	
+2026-11-10 20:28	ccr-1ddbadbc-g5fj4d	f5b4eb4+	pwatest	OK	29	lite	samtidig	
+2026-11-10 20:28	ccr-1ddbadbc-g5fj4d	f5b4eb4+	errtest	OK	39	lite	samtidig	
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	kanaltest	FEIL	76	lite	samtidig	FEIL test build: the test project's address and key, not the production's {"url": "", "anon": ""}
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	cloudtest	FEIL	52	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	admintest	OK	8	lite	samtidig	
+2026-11-10 20:31	ccr-1ddbadbc-g5fj4d	f5b4eb4+	tabtest	OK	135	lite	samtidig	
+2026-11-10 20:31	ccr-1ddbadbc-g5fj4d	f5b4eb4+	synctest	FEIL	76	lite	samtidig	FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": t
+2026-11-10 20:32	ccr-1ddbadbc-g5fj4d	f5b4eb4+	guesttest	OK	97	lite	samtidig	
+2026-11-10 20:32	ccr-1ddbadbc-g5fj4d	f5b4eb4+	pushtest	OK	22	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	starttest	OK	404	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	bootgtest	OK	172	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	installtest	OK	38	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	vectest	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-10 20:39	ccr-1ddbadbc-g5fj4d	f5b4eb4+	boottest	OK	26	lite	alene	
+2026-11-10 20:51	ccr-1ddbadbc-g5fj4d	f5b4eb4+	kjoptest	OK	743	lite	alene	
+2026-11-10 22:04	ccr-0d64d46d-7ojp1d	d9150a0	kjoptest	OK	305	lite	alene	
+2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
+2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
+2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-10 23:58	ccr-adaac755-n9bghe	e61ffe5e+	boottest	OK	22	lite	samtidig	
+2026-11-10 23:59	ccr-adaac755-n9bghe	e61ffe5e+	docktest	OK	61	lite	samtidig	

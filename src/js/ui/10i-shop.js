@@ -11,6 +11,10 @@
 // cloud off (#nocloud, no network, GitHub Pages) the shop is closed, never free (Ø6 funn 5, 05.11.2026).
 // An account made after the server's switch was turned (P5, 10.11.2026: the first players come before the payment is ready for
 // strangers; tm_hello's shop:false, CLOUD.shopOff) sees «on sale soon» too, and the server gives it no quote.
+// Haill from the server is kept there until it is switched on (HS2, 10.11.2026, docs/planer/haill-saldo.md;
+// supabase/migrations/20261110180000_haill_use.sql): shop_pending answers the open grants and the haill that is delivered and not used
+// (held), S.haillSrv is replaced by that at every claim, and switching one on tells the server (haillTell, haill_use), now or when the
+// network is back. A server from before the migration (haill_use answers 404) gets the game as it was: the haill into S.haillInv.
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
@@ -67,9 +71,9 @@ async function shopGo(k){
 }
 // what the server has granted and the game has not given yet: given now, and the server told. Each gift leaves a line for the
 // confirmation (SHOP.rc, shopThanks): what it did, and on which boat
-function shopGive(g){
+function shopGive(g, srv){
   const d = g.data || {}, v = (S.fleet || []).find(x => x.id === d.boat) || curVessel(), rc = SHOP.rc || (SHOP.rc = []), say = (no, en) => rc.push({g, no, en});
-  if (d.give === 'haill' && HAILL[d.type]){ giveHaill(d.type, 'shop'); say('Ligger i Haill-appen. Trykk «Aktiver» når du vil bruke den.', 'It is in the Luck app. Tap «Switch on» when you want it.'); return HAILL[d.type][S.lang === 'en' ? 'en' : 'no']; }
+  if (d.give === 'haill' && HAILL[d.type]){ if (srv) giveHaill(d.type, 'shop', g.id); else giveHaill(d.type, 'shop'); say('Ligger i Haill-appen. Trykk «Aktiver» når du vil bruke den.', 'It is in the Luck app. Tap «Switch on» when you want it.'); return HAILL[d.type][S.lang === 'en' ? 'en' : 'no']; }
   // (the same kind as the one on adds its hours, another kind takes its place: core trimSet)
   if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k], w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); say(w.no, w.en); return B[S.lang === 'en' ? 'en' : 'no']; });
   // (nothing left to finish when it came, the job done during the payment: kept as a credit for the next yard job, YARD_NOW_MIN)
@@ -103,24 +107,67 @@ function shopThanks(rc){
   const show = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(show, 2000); return; } modal(html); };
   setTimeout(show, 300);
 }
+// does the server keep the haill (the migration is run)? Asked once, with an id no grant has: true or false from the new server, 404
+// from the old one. Null when it cannot be known now (no network): then the haill waits on the server
+async function haillProbe(){
+  if (SHOP.hs != null) return SHOP.hs;
+  try { const r = await cloudRpc('haill_use', {id:0}); return SHOP.hs = typeof r === 'boolean'; }
+  catch (e){ return / 404$/.test(String(e && e.message)) ? (SHOP.hs = false) : null; }
+}
+// the server told of the haill switched on here (S.haillQ), one by one and each until it has answered: at once when it is switched on
+// (now: the game is saved first, so the id is never shown again), at every claim and when the network is back. «false» is a haill the
+// server had as used already, on another device with no network: it is not taken from the player (V1 A), only counted (haill_twice)
+async function haillTell(now){
+  if (now){ save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); }
+  if (SHOP.telling || !CLOUD.on || !CLOUD.user) return;
+  SHOP.telling = true;
+  try { while ((S.haillQ || []).length){ const id = S.haillQ[0]; let r;
+      try { r = await cloudRpc('haill_use', {id}); } catch (e){ break; }
+      const q = S.haillQ || [], i = q.indexOf(id); if (i >= 0) q.splice(i, 1);
+      if (r === false && typeof cloudEv === 'function') cloudEv('haill_twice', {id});
+      save(); } }
+  finally { SHOP.telling = false; }
+}
 async function shopClaim(){
   if (!CLOUD.on || !CLOUD.user) return 0;
+  await haillTell();
   let list; try { list = await cloudRpc('shop_pending', {}); } catch (e){ return 0; }
-  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = [], unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0, gifts = 0; const rc = SHOP.rc = [];   // (rc is this call's own: another call may start while this one waits for shop_done)
-  for (const g of list || []){
+  list = list || []; haillInit();
+  const isH = g => (g.data || {}).give === 'haill' && !!HAILL[g.data.type];
+  // (asked only when it matters: a haill to give, or a copy the answer would empty)
+  let srv = SHOP.hs; if (srv == null && list.some(g => g.held)) srv = SHOP.hs = true;
+  if (srv == null && (S.haillSrv.length || list.some(isH))) srv = await haillProbe();
+  haillInit();
+  const given = S.shopGiven || (S.shopGiven = []), old = S.haillOld, ids = [], names = [], mir = [], fresh = new Set(), unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0, gifts = 0; const rc = SHOP.rc = [];   // (rc is this call's own: another call may start while this one waits for shop_done)
+  for (const g of list){
+    // (a haill delivered before and not used, kept on the server: into the copy, with no words. One that went into the game's own
+    // numbers, from a page or a server before HS2, is used on the server now, so it is never counted twice)
+    if (g.held){ if (!isH(g)) continue; if (old.includes(g.id)) cloudRpc('haill_use', {id:g.id}).then(() => { const o = S.haillOld || [], i = o.indexOf(g.id); if (i >= 0) o.splice(i, 1); }).catch(() => {}); else mir.push(g); continue; }
     // (given before and the server not told, a lost connection: told now. One this game does not know, a product newer than the page
     // or a page from before an update, is left on the server and given when the game knows it: never marked done and lost, 06.11.2026)
-    if (given.includes(g.id)){ ids.push(g.id); continue; }
-    if ((g.data || {}).reward && HAILL[g.data.type]){ giveHaill(g.data.type, 'fb'); thanks++; }
-    // (the welcome gift for registering, HS1 10.11.2026: one grant per account, made by the server's tm_hello and never by the game,
-    // supabase/migrations/20261110150000_reg_gift.sql; no purchase, so no confirmation and no price: the directorate's message below)
-    else if ((g.data || {}).gift && g.data.give === 'haill' && HAILL[g.data.type]){ giveHaill(g.data.type, 'gift'); gifts++; }
+    if (given.includes(g.id)){ ids.push(g.id); if (isH(g) && !old.includes(g.id)) mir.push(g); continue; }
+    if (isH(g)){
+      if (srv == null) continue;   // (whether the server keeps it is not known now: it waits there)
+      const d = g.data, how = d.reward ? 'fb' : d.gift ? 'gift' : 'shop';
+      if (srv){ mir.push(g); fresh.add(g.id); } else { old.push(g.id); if (old.length > 200) old.splice(0, old.length - 200); }
+      // (the welcome gift for registering, HS1 10.11.2026: one grant per account, made by the server's tm_hello and never by the game,
+      // supabase/migrations/20261110150000_reg_gift.sql; no purchase, so no confirmation and no price: the directorate's message below)
+      if (d.reward){ if (srv) giveHaill(d.type, how, g.id); else giveHaill(d.type, how); thanks++; }
+      else if (d.gift){ if (srv) giveHaill(d.type, how, g.id); else giveHaill(d.type, how); gifts++; }
+      else names.push(shopGive(g, srv));
+    }
     else { const nm = shopGive(g); if (!nm){ if (!unk.has(g.id)){ unk.add(g.id); console.warn('shop: a grant this game does not know', g.id, g.product); if (typeof cloudEv === 'function') cloudEv('shop_unknown', {id:g.id, product:g.product}); } continue; } names.push(nm); }
     given.push(g.id); ids.push(g.id); }
+  // the copy is what the server says now, never added to: a haill taken back or used on another device is gone. One that comes
+  // back because the save did not have it, is counted (haill_back: how often a purchase would have been lost before HS2)
+  let moved = false;
+  if (srv === true){ const was = S.haillSrv, next = haillMirror(mir, S.haillUsed.concat(old));
+    for (const x of next) if (!fresh.has(x.id) && !was.some(y => y.id === x.id) && typeof cloudEv === 'function') cloudEv('haill_back', {id:x.id, type:x.type});
+    moved = JSON.stringify(was.map(x => x.id).sort((a, b) => a - b)) !== JSON.stringify(next.map(x => x.id)) || fresh.size > 0; S.haillSrv = next; }
   if (given.length > 200) given.splice(0, given.length - 200);
-  if (!ids.length) return 0;
+  if (!ids.length && !moved) return 0;
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
-  try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
+  if (ids.length) try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
   if (rc.length) shopThanks(rc);
   if (gifts){ msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
     toast(shopL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.')); }
@@ -142,5 +189,6 @@ function shopStart(){
   // still nothing after the last try: say so, rather than nothing (it is given at the next start, or when the game is opened again)
   if (SHOP.ret) setTimeout(() => { if (!SHOP.ret) return; SHOP.ret = null; toast(shopL('Betalingen er ikke bekreftet ennå. Det du kjøpte, kommer så snart den er det, også neste gang du åpner spillet.', 'The payment is not confirmed yet. What you bought comes as soon as it is, also the next time you open the game.')); }, 52000);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') shopClaim(); });
+  window.addEventListener('online', () => { haillTell(); });   // a haill switched on with no network: the server told when it is back (HS2)
   setInterval(() => { if (document.visibilityState === 'visible') shopClaim(); }, 10 * 60000);   // a thank-you given while the game is open
 }

@@ -186,7 +186,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 428 `reqFill(eq, type)`
   - 446 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1299 linjer)
+## `src/js/core/03-simulation.js` (1329 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -385,30 +385,33 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1192 `haillF()`
   - 1193 `luck(sp)`
   - 1197 `haillCap()`
-  - 1199 `giveHaill(type, how)`
-  - 1200 `useHaill(type)`
-  - 1206 `pubEvening(H)`
-  - 1207 `pubOpen(H)`
-  - 1210 `capHold()`
-  - 1212 `cargoRoom()`
-  - 1214 `cargoMin(kg)`
-- **1215** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1218 `streakState()`
-  - 1219 `streakPct()`
-  - 1220 `streakTouch()`
-- **1231** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1235 `effTemp(H)`
-  - 1236 `coldPen(H, hs)`
-- **1243** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1258 `gradeOk(g, q)`
-  - 1259 `ordState()`
-  - 1262 `custNear(c)`
-  - 1267 `repOf(id)`
-  - 1269 `bkOrderable(H)`
-  - 1271 `bkPlant(id)`
-  - 1272 `custSp(c)`
-  - 1273 `spCatchable(sp, H)`
-  - 1275 `ordersTick(H)`
+  - 1206 `haillInit()`
+  - 1210 `haillMirror(list, used)`
+  - 1214 `haillStock(inv, srv, used)`
+  - 1219 `giveHaill(type, how, id)`
+  - 1224 `useHaill(type)`
+  - 1236 `pubEvening(H)`
+  - 1237 `pubOpen(H)`
+  - 1240 `capHold()`
+  - 1242 `cargoRoom()`
+  - 1244 `cargoMin(kg)`
+- **1245** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1248 `streakState()`
+  - 1249 `streakPct()`
+  - 1250 `streakTouch()`
+- **1261** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1265 `effTemp(H)`
+  - 1266 `coldPen(H, hs)`
+- **1273** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1288 `gradeOk(g, q)`
+  - 1289 `ordState()`
+  - 1292 `custNear(c)`
+  - 1297 `repOf(id)`
+  - 1299 `bkOrderable(H)`
+  - 1301 `bkPlant(id)`
+  - 1302 `custSp(c)`
+  - 1303 `spCatchable(sp, H)`
+  - 1305 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (162 linjer)
 
@@ -2650,12 +2653,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1452 linjer)
+## `src/js/ui/phone/07-patch.js` (1470 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1445 `patch()`
+  - 1463 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3225,104 +3228,106 @@ SOUND (the user's wish 03.10.2026)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 - **312** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
-## `src/js/ui/10f-cloud.js` (966 linjer)
+## `src/js/ui/10f-cloud.js` (976 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
 - **1** THE CLOUD (04.10.2026; docs/lansering.md E and F)
-  - 10 `cloudOn()`
-  - 18 `adminOk()`
-  - 20 `pubHost()`
-  - 24 `cloudS()`
-  - 30 `cloudGpu()`
-  - 37 `cloudDev()`
-  - 44 `cloudMeta()`
-- **58** talking to Supabase
-  - 59 `cloudToken()`
-- **60** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
-  - 66 `guestGet()`
-  - 67 `guestAuth(path, body)`
-  - 75 `guestToken()`
-  - 83 `guestStart()`
-  - 89 `cloudRpc(fn, args, opt)`
-- **101** the gate: before the game starts
-  - 102 `cloudGateShow(html)`
-  - 110 `cloudGateHide()`
-  - 114 `worldSync()`
-  - 119 `cloudGate()`
-- **189** after the start: hooks, measurements, the save
-  - 190 `cloudStart()`
-  - 215 `cloudAsk()`
-  - 225 `cloudConsent(yes, by)`
-  - 231 `cloudBegin()`
-  - 241 `cloudEv(k, d)`
-  - 242 `cloudFlush(end)`
-- **251** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
-  - 262 `srcMapStr(s)`
-  - 275 `errNoise(msg)`
-  - 280 `cloudErr(msg, src, stack, kind)`
-  - 291 `errSend(e)`
-  - 295 `errQueue()`
-  - 296 `errKeep(list)`
-  - 300 `errFlush()`
-  - 324 `errStart()`
-- **333** a page that stops or stands still while it is on the screen
-  - 340 `aliveRead()`
-  - 341 `aliveBeat(gone)`
-  - 352 `aliveCheck()`
-  - 376 `hangWatch()`
-- **390** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 397 `syncGet()`
-  - 398 `syncSet(rev, at, rv, sq)`
-  - 404 `deviceId()`
-  - 408 `deviceName()`
-  - 413 `cloudStatus(s)`
-  - 414 `cloudStatusText()`
-  - 423 `saveSum(o)`
-  - 427 `sumText(m)`
-  - 434 `cloudChoose(here, cloud, when, box)`
-  - 449 `cloudKeptNote(where)`
-  - 454 `cloudTake(cs)`
-  - 460 `cloudSync(cs)`
-  - 491 `cloudSaveSoon(closing, manual)`
-  - 530 `cloudSoon(ms)`
-- **531** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 541 `cloudFp()`
-  - 542 `cloudClaim(wait)`
-  - 555 `cloudBeat()`
-  - 571 `cloudWake()`
-  - 577 `cloudPassed(h)`
-  - 592 `cloudHeldShow(h)`
-  - 601 `cloudPlayHere()`
-  - 611 `cloudCheckHead()`
-  - 620 `cloudConflict(cl, moved)`
-  - 650 `cloudHist()`
-  - 655 `cloudRestore(id)`
-- **666** what is measured: the game's own functions, wrapped once they are all defined
-  - 667 `cloudHooks()`
-- **690** the account card in Settings
-  - 691 `cloudCard()`
-  - 715 `histRows()`
-  - 727 `cloudAccountDel()`
-  - 738 `cloudMediaDel()`
-  - 744 `cloudAct(a, d)`
-- **778** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 787 `guestHave()`
-  - 793 `guestAsk(why)`
-  - 819 `nameWhy(v)`
-  - 836 `namesKept()`
-  - 837 `namesKeep(o)`
-  - 839 `namesApply()`
-  - 847 `nameTake(n, quiet)`
-  - 857 `nameCheck()`
-  - 872 `nameSuggest()`
-  - 881 `nameAsk(why, reason)`
-  - 906 `guestOpenAsk()`
-  - 914 `nameNudge(force)`
-  - 927 `guestNudge(step)`
-  - 939 `guestLogin(src)`
-  - 945 `guestRegister(signIn)`
-  - 960 `guestGift()`
+  - 11 `cloudChannel()`
+  - 12 `cloudCfg(raw, host, ch)`
+  - 20 `cloudOn()`
+  - 28 `adminOk()`
+  - 30 `pubHost()`
+  - 34 `cloudS()`
+  - 40 `cloudGpu()`
+  - 47 `cloudDev()`
+  - 54 `cloudMeta()`
+- **68** talking to Supabase
+  - 69 `cloudToken()`
+- **70** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
+  - 76 `guestGet()`
+  - 77 `guestAuth(path, body)`
+  - 85 `guestToken()`
+  - 93 `guestStart()`
+  - 99 `cloudRpc(fn, args, opt)`
+- **111** the gate: before the game starts
+  - 112 `cloudGateShow(html)`
+  - 120 `cloudGateHide()`
+  - 124 `worldSync()`
+  - 129 `cloudGate()`
+- **199** after the start: hooks, measurements, the save
+  - 200 `cloudStart()`
+  - 225 `cloudAsk()`
+  - 235 `cloudConsent(yes, by)`
+  - 241 `cloudBegin()`
+  - 251 `cloudEv(k, d)`
+  - 252 `cloudFlush(end)`
+- **261** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 272 `srcMapStr(s)`
+  - 285 `errNoise(msg)`
+  - 290 `cloudErr(msg, src, stack, kind)`
+  - 301 `errSend(e)`
+  - 305 `errQueue()`
+  - 306 `errKeep(list)`
+  - 310 `errFlush()`
+  - 334 `errStart()`
+- **343** a page that stops or stands still while it is on the screen
+  - 350 `aliveRead()`
+  - 351 `aliveBeat(gone)`
+  - 362 `aliveCheck()`
+  - 386 `hangWatch()`
+- **400** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 407 `syncGet()`
+  - 408 `syncSet(rev, at, rv, sq)`
+  - 414 `deviceId()`
+  - 418 `deviceName()`
+  - 423 `cloudStatus(s)`
+  - 424 `cloudStatusText()`
+  - 433 `saveSum(o)`
+  - 437 `sumText(m)`
+  - 444 `cloudChoose(here, cloud, when, box)`
+  - 459 `cloudKeptNote(where)`
+  - 464 `cloudTake(cs)`
+  - 470 `cloudSync(cs)`
+  - 501 `cloudSaveSoon(closing, manual)`
+  - 540 `cloudSoon(ms)`
+- **541** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 551 `cloudFp()`
+  - 552 `cloudClaim(wait)`
+  - 565 `cloudBeat()`
+  - 581 `cloudWake()`
+  - 587 `cloudPassed(h)`
+  - 602 `cloudHeldShow(h)`
+  - 611 `cloudPlayHere()`
+  - 621 `cloudCheckHead()`
+  - 630 `cloudConflict(cl, moved)`
+  - 660 `cloudHist()`
+  - 665 `cloudRestore(id)`
+- **676** what is measured: the game's own functions, wrapped once they are all defined
+  - 677 `cloudHooks()`
+- **700** the account card in Settings
+  - 701 `cloudCard()`
+  - 725 `histRows()`
+  - 737 `cloudAccountDel()`
+  - 748 `cloudMediaDel()`
+  - 754 `cloudAct(a, d)`
+- **788** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 797 `guestHave()`
+  - 803 `guestAsk(why)`
+  - 829 `nameWhy(v)`
+  - 846 `namesKept()`
+  - 847 `namesKeep(o)`
+  - 849 `namesApply()`
+  - 857 `nameTake(n, quiet)`
+  - 867 `nameCheck()`
+  - 882 `nameSuggest()`
+  - 891 `nameAsk(why, reason)`
+  - 916 `guestOpenAsk()`
+  - 924 `nameNudge(force)`
+  - 937 `guestNudge(step)`
+  - 949 `guestLogin(src)`
+  - 955 `guestRegister(signIn)`
+  - 970 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (210 linjer)
 
@@ -3373,22 +3378,24 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (147 linjer)
+## `src/js/ui/10i-shop.js` (195 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 19 `shopMode()`
-  - 25 `realKr(nok)`
-  - 27 `shopLabel(nok)`
-  - 32 `shopWhat(k)`
-  - 42 `payBuy(k, give)`
-  - 50 `shopFine()`
-  - 53 `shopGo(k)`
-  - 70 `shopGive(g)`
-  - 93 `shopThanks(rc)`
-  - 106 `shopClaim()`
-  - 134 `shopStart()`
+  - 23 `shopMode()`
+  - 29 `realKr(nok)`
+  - 31 `shopLabel(nok)`
+  - 36 `shopWhat(k)`
+  - 46 `payBuy(k, give)`
+  - 54 `shopFine()`
+  - 57 `shopGo(k)`
+  - 74 `shopGive(g, srv)`
+  - 97 `shopThanks(rc)`
+  - 112 `haillProbe()`
+  - 120 `haillTell(now)`
+  - 131 `shopClaim()`
+  - 181 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (215 linjer)
 
@@ -3473,15 +3480,16 @@ Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is 
 - **111** the polling
 - **125** the chart: the asks near, and the card
 
-## `src/js/ui/10p-install.js` (134 linjer)
+## `src/js/ui/10p-install.js` (165 linjer)
 
 put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
-- **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
+- **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
+- **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (397 linjer)
+## `src/js/ui/11-boot.js` (398 linjer)
 
 ---------- boot ----------
 
@@ -3515,9 +3523,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 379 `bootFail(e)`
+  - 380 `bootFail(e)`
 
-## `src/js/vessel3d.js` (1664 linjer)
+## `src/js/vessel3d.js` (1681 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3567,80 +3575,81 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 454 `glbModel(type, lod, liv, own)`
 - **478** the life-saving gear's places that the models from 45 m do not have yet (Ø11.5, 06.11.2026; until Ø4 revises them and gives them
 - **501** the ladder aft (FOR-2013-11-22-1404 § 63, read on Lovdata 06.11.2026: «På fartøyets aktre del skal det være montert fast leider med
-  - 527 `mobCut(o, boxes)`
-  - 536 `vesselSpec(type)`
-  - 537 `buildVesselModel(type, lod, liv, own)`
-  - 578 `vesselGeo(type, hs, sp, house, anch)`
-  - 590 `vesselModel(type)`
-  - 591 `geoOf(type)`
-- **595** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
-  - 614 `modelLiv(L)`
-  - 621 `hullLiv(b)`
-  - 622 `livKey(liv)`
-  - 624 `livGeo(liv)`
-  - 629 `livStr(b)`
-  - 640 `livPen(s)`
-  - 642 `livMark(s)`
-  - 643 `livParse(s)`
-- **648** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 652 `topsides(type)`
-  - 670 `designLines(TS, liv)`
-  - 679 `glbDesign(type, part, liv)`
-  - 713 `designFits(type, k)`
-  - 720 `kitLiv(liv)`
-- **722** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **771** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 782 `logoCanvas(cv, L, img)`
-  - 798 `logoStrips(type)`
-  - 819 `stripBare(type, st)`
-  - 834 `logoStr(L)`
-  - 835 `logoParse(s)`
-  - 839 `flagCanvas(cv, code, shape, logo)`
-  - 851 `flagOf(L)`
-- **852** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 861 `hullTris(type)`
-  - 878 `sideStrip(type, frac, hMax, aspect, drop, band)`
-  - 918 `nameStrips(type)`
-  - 954 `stripProud(type, st)`
-  - 977 `stripPaint(type, st)`
-  - 998 `markStrips(type)`
-  - 1006 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1031 `callStrips(type)`
-  - 1037 `callRGB(type, liv)`
-  - 1040 `anchorLen(bw)`
-  - 1043 `markRGB(type, liv)`
-  - 1051 `hullRGB(type, liv)`
-- **1061** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1072 `facingTris(P, dir, keep)`
-  - 1087 `rayZ(T, x, y, dir, za, zb)`
-  - 1098 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1109 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1120 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1131 `houseFront(type, P, Gl, V)`
-  - 1167 `transom(type, P, V)`
-  - 1202 `namePlaces(type)`
-  - 1220 `placeRGB(type, p, liv)`
-  - 1228 `nameInkLight(rgb)`
-  - 1232 `npcKit(L, B)`
-  - 1235 `npcModel(type, lod, liv)`
-  - 1237 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1249** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1268 `vestKit(K)`
-  - 1283 `wkPart(name, kit)`
-  - 1293 `wkPut(B, o, ax, s, at)`
-  - 1303 `wkLimb(B, o, A, E, r)`
-  - 1310 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1332 `vesselSVG(type, w, h)`
-- **1370** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1377 `deckMap(type)`
-  - 1522 `deckPass(M, k, q)`
-  - 1527 `passLine(M, A, B)`
-  - 1529 `linkPass(M, k, q)`
-  - 1533 `deckComp(M)`
-  - 1542 `deckPath(M, a, b)`
-- **1573** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1586 `lanterns(G, V, st)`
-  - 1625 `deckPoints(type)`
+- **521** the place over the stern for the line setter or the net chute (OPP5, 10.11.2026; tools/deck/oppgr.py): [x, y, z, ry, mag], the
+  - 544 `mobCut(o, boxes)`
+  - 553 `vesselSpec(type)`
+  - 554 `buildVesselModel(type, lod, liv, own)`
+  - 595 `vesselGeo(type, hs, sp, house, anch)`
+  - 607 `vesselModel(type)`
+  - 608 `geoOf(type)`
+- **612** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
+  - 631 `modelLiv(L)`
+  - 638 `hullLiv(b)`
+  - 639 `livKey(liv)`
+  - 641 `livGeo(liv)`
+  - 646 `livStr(b)`
+  - 657 `livPen(s)`
+  - 659 `livMark(s)`
+  - 660 `livParse(s)`
+- **665** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 669 `topsides(type)`
+  - 687 `designLines(TS, liv)`
+  - 696 `glbDesign(type, part, liv)`
+  - 730 `designFits(type, k)`
+  - 737 `kitLiv(liv)`
+- **739** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **788** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 799 `logoCanvas(cv, L, img)`
+  - 815 `logoStrips(type)`
+  - 836 `stripBare(type, st)`
+  - 851 `logoStr(L)`
+  - 852 `logoParse(s)`
+  - 856 `flagCanvas(cv, code, shape, logo)`
+  - 868 `flagOf(L)`
+- **869** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 878 `hullTris(type)`
+  - 895 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 935 `nameStrips(type)`
+  - 971 `stripProud(type, st)`
+  - 994 `stripPaint(type, st)`
+  - 1015 `markStrips(type)`
+  - 1023 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1048 `callStrips(type)`
+  - 1054 `callRGB(type, liv)`
+  - 1057 `anchorLen(bw)`
+  - 1060 `markRGB(type, liv)`
+  - 1068 `hullRGB(type, liv)`
+- **1078** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1089 `facingTris(P, dir, keep)`
+  - 1104 `rayZ(T, x, y, dir, za, zb)`
+  - 1115 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1126 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1137 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1148 `houseFront(type, P, Gl, V)`
+  - 1184 `transom(type, P, V)`
+  - 1219 `namePlaces(type)`
+  - 1237 `placeRGB(type, p, liv)`
+  - 1245 `nameInkLight(rgb)`
+  - 1249 `npcKit(L, B)`
+  - 1252 `npcModel(type, lod, liv)`
+  - 1254 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1266** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1285 `vestKit(K)`
+  - 1300 `wkPart(name, kit)`
+  - 1310 `wkPut(B, o, ax, s, at)`
+  - 1320 `wkLimb(B, o, A, E, r)`
+  - 1327 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1349 `vesselSVG(type, w, h)`
+- **1387** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1394 `deckMap(type)`
+  - 1539 `deckPass(M, k, q)`
+  - 1544 `passLine(M, A, B)`
+  - 1546 `linkPass(M, k, q)`
+  - 1550 `deckComp(M)`
+  - 1559 `deckPath(M, a, b)`
+- **1590** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1603 `lanterns(G, V, st)`
+  - 1642 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (570 linjer)
 
@@ -3865,7 +3874,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 233 `signUi(ok, M, F, VP, now)`
   - 247 `signTake()`
 
-## `src/js/view3d/08-plants.js` (469 linjer)
+## `src/js/view3d/08-plants.js` (470 linjer)
 
 ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
 
@@ -3881,9 +3890,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 128 `drawWorker(P, st, eye, T, idx)`
 - **216** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
 - **317** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **419** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+- **420** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (832 linjer)
+## `src/js/view3d/09-landing-deck.js` (843 linjer)
 
 ---------- landing the catch ----------
 
@@ -3909,55 +3918,55 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **315** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
   - 319 `kit(f, nm)`
   - 322 `kitX(f)`
-- **324** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 332 `handMeshes()`
-  - 345 `handFrame(z0, sp, side)`
-  - 354 `handSpecs(st, F, R, hands)`
-  - 400 `toolM(A, dir)`
-  - 408 `dkEvent(kind, at, sp, kg, o)`
-  - 414 `dkFor(who, p, task)`
-  - 422 `dkEv(e, BMrel, G)`
-  - 424 `catchQ()`
-  - 429 `dkTick()`
-  - 442 `dkBloodDraw(VP)`
-  - 451 `rigAt(G, kind, d)`
-  - 456 `drawNetTub(BMrel, at, fill, ry)`
-  - 462 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 475 `jobTubs(j)`
-  - 479 `drawMendNet(BMrel, G, d, R)`
-  - 493 `drawRigRest(BMrel, G, d)`
-- **506** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 512 `boyeCanvas(txt)`
-  - 518 `boyeTex()`
-  - 525 `ladderMesh(L)`
-  - 533 `boyeQ()`
-  - 534 `drawSafety(BMrel, G, VP, t)`
-  - 575 `cargoUnits(G)`
-  - 576 `drawCargo(BMrel, G, hide)`
-  - 591 `crFrames(X, Q, BMrel, p)`
-  - 600 `crLink(X, a2)`
-  - 603 `drawCrane(BMrel, G, VP, t, d)`
-- **658** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 669 `karPlan(key, spec, kg, dims)`
-  - 677 `karSpec()`
-  - 679 `drawKarLoad(M, load, key, washed)`
-  - 698 `karPlaces(vt)`
-  - 702 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 708 `karTop(vt, i)`
-  - 711 `karFilling(vt)`
-- **712** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 715 `iceBoxAt(vt)`
-  - 720 `iceBoxTop(vt)`
-  - 724 `drawIceBox(BMrel, vt, shovelIn)`
-  - 735 `shaftM(A, B)`
-- **739** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 741 `drawSling(H, M, swing, k)`
-- **759** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 763 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 781 `dkTub(G)`
-  - 782 `drawDeck(BMrel, eye, VP, t, DK)`
+- **333** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  - 343 `handMeshes()`
+  - 356 `handFrame(z0, sp, side)`
+  - 365 `handSpecs(st, F, R, hands)`
+  - 411 `toolM(A, dir)`
+  - 419 `dkEvent(kind, at, sp, kg, o)`
+  - 425 `dkFor(who, p, task)`
+  - 433 `dkEv(e, BMrel, G)`
+  - 435 `catchQ()`
+  - 440 `dkTick()`
+  - 453 `dkBloodDraw(VP)`
+  - 462 `rigAt(G, kind, d)`
+  - 467 `drawNetTub(BMrel, at, fill, ry)`
+  - 473 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 486 `jobTubs(j)`
+  - 490 `drawMendNet(BMrel, G, d, R)`
+  - 504 `drawRigRest(BMrel, G, d)`
+- **517** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 523 `boyeCanvas(txt)`
+  - 529 `boyeTex()`
+  - 536 `ladderMesh(L)`
+  - 544 `boyeQ()`
+  - 545 `drawSafety(BMrel, G, VP, t)`
+  - 586 `cargoUnits(G)`
+  - 587 `drawCargo(BMrel, G, hide)`
+  - 602 `crFrames(X, Q, BMrel, p)`
+  - 611 `crLink(X, a2)`
+  - 614 `drawCrane(BMrel, G, VP, t, d)`
+- **669** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 680 `karPlan(key, spec, kg, dims)`
+  - 688 `karSpec()`
+  - 690 `drawKarLoad(M, load, key, washed)`
+  - 709 `karPlaces(vt)`
+  - 713 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 719 `karTop(vt, i)`
+  - 722 `karFilling(vt)`
+- **723** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 726 `iceBoxAt(vt)`
+  - 731 `iceBoxTop(vt)`
+  - 735 `drawIceBox(BMrel, vt, shovelIn)`
+  - 746 `shaftM(A, B)`
+- **750** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 752 `drawSling(H, M, swing, k)`
+- **770** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 774 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 792 `dkTub(G)`
+  - 793 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (713 linjer)
+## `src/js/view3d/10-gear.js` (767 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
@@ -3992,12 +4001,19 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 449 `aCleanS(HM, L)`
   - 451 `drawAutoSlides(BMrel)`
   - 458 `drawHaulRest(BMrel, G, d, VP)`
-  - 483 `snoHauler(BMrel, G, VP, a)`
-- **485** the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
-  - 500 `snoCrabs(BMrel, p, n, pr)`
-  - 502 `snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS)`
-  - 597 `snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k0…)`
-  - 613 `drawGearOp(BMrel, eye, VP, t)`
+- **481** the upgrades one can see on deck (OPP5 of docs/planer/oppgraderinger.md, 10.11.2026; tools/deck/oppgr.py)
+  - 486 `sternPick()`
+  - 491 `magLegs(vt, G, P, X)`
+  - 493 `drawStern(BMrel, G, VP)`
+  - 505 `gaffRail(vt, G)`
+  - 525 `drawGaffRest(BMrel, G, VP)`
+  - 534 `drawUpg(BMrel, G, d, VP)`
+  - 537 `snoHauler(BMrel, G, VP, a)`
+- **539** the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
+  - 554 `snoCrabs(BMrel, p, n, pr)`
+  - 556 `snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS)`
+  - 651 `snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k0…)`
+  - 667 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 

@@ -96,10 +96,11 @@ async def main():
 
         # 6. back from registering: the guest's things move to the account first, then the welcome gift
         GIFT = [{'id': 7, 'product': 'reg_luksus', 'data': {'give': 'haill', 'type': 'luksus', 'gift': True}}]   # what tm_hello made on the server
-        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"', 'shop_pending': GIFT, 'shop_done': ''}
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"', 'shop_pending': GIFT, 'shop_done': '', 'haill_use': 'false'}   # (haill_use answers: the server keeps the haill, HS2)
         ctx, pg, errs = await page(br, calls, replies, "localStorage.setItem('dsb_guest_code', JSON.stringify({code:'code_abc', gid:'g-1'})); localStorage.setItem('dsb_guest', JSON.stringify({at:'gtok', rt:'grt', exp:9e9, id:'g-1'})); if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_names', JSON.stringify({boat:'Havbris', user:'Kystjenta'})); }")
         await boot(pg)
-        await pg.wait_for_function("S.haillInv && S.haillInv.luksus >= 1 && S.user === 'Kystjenta'", timeout=20000)
+        STOCK = "(typeof haillStock === 'function' ? haillStock(S.haillInv, S.haillSrv, S.haillUsed) : Object.assign({haill:0, luksus:0, takk:0}, S.haillInv))"   # (HS2: the gift is a haill the server keeps, S.haillSrv; the Luck app shows this number)
+        await pg.wait_for_function(STOCK + ".luksus >= 1 && S.user === 'Kystjenta'", timeout=20000)
         r = await pg.evaluate("""({code:localStorage.getItem('dsb_guest_code'), guestKey:localStorage.getItem('dsb_guest'), gift:localStorage.getItem('dsb_reg_gift'), guest:!!CLOUD.guest,
           msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no))})""")
         # (the pictures for Jonas: the toast, then the message in Meldinger, standing and lying)
@@ -113,9 +114,9 @@ async def main():
         await pg.evaluate("PHONE.show(false)"); await pg.set_viewport_size({'width': 1100, 'height': 800})
         # the stand-in goes on offering the grant, and the key asks once more after five seconds: still one luck, one message, and the server told
         await pg.wait_for_timeout(6500)
-        one = await pg.evaluate("({luksus:S.haillInv.luksus, msgs:S.msgs.filter(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)).length, given:S.shopGiven, shoprc:!!document.querySelector('.shoprc'), bought:S.msgs.some(m => /Takk for kjøpet|59 kr/.test(m.no))})")
+        one = await pg.evaluate("({luksus:" + STOCK + ".luksus, srv:S.haillSrv, own:S.haillInv.luksus, msgs:S.msgs.filter(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)).length, given:S.shopGiven, shoprc:!!document.querySelector('.shoprc'), bought:S.msgs.some(m => /Takk for kjøpet|59 kr/.test(m.no))})")
         done = [c[1] for c in calls if c[0] == 'shop_done']
-        check(one['luksus'] == 1 and one['msgs'] == 1 and one['given'] == [7] and done and all(d == {'ids': [7]} for d in done) and not one['shoprc'] and not one['bought'],
+        check(one['luksus'] == 1 and one['srv'] == [{'id': 7, 'type': 'luksus'}] and one['own'] == 0 and one['msgs'] == 1 and one['given'] == [7] and done and all(d == {'ids': [7]} for d in done) and not one['shoprc'] and not one['bought'],
               'the welcome gift is the server\'s grant: one luxury luck however often it is asked for, the server told it is given, and no purchase confirmation or price', {'one': one, 'done': done})
         nm = await pg.evaluate("({boat:S.boatName, unnamed:!!S.unnamed, user:S.user, kept:localStorage.getItem('dsb_names')})")
         claim = [c for c in calls if c[0] == 'name_claim']
@@ -127,11 +128,11 @@ async def main():
         check(errs == [], 'sidefeil som ny konto', errs)
         await ctx.close()
         # 6b. the key alone gives nothing (HS1): an account with dsb_reg_gift set by hand and no grant on the server gets no luck and no message
-        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'shop_pending': [], 'shop_done': ''}
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'shop_pending': [], 'shop_done': '', 'haill_use': 'false'}
         ctx, pg, errs = await page(br, calls, replies, "if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_reg_gift', '1'); }")
         await boot(pg)
         await pg.wait_for_function("!localStorage.getItem('dsb_reg_gift')", timeout=20000); await pg.wait_for_timeout(7000)
-        k = await pg.evaluate("({luksus:(S.haillInv || {}).luksus || 0, msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)), key:localStorage.getItem('dsb_reg_gift')})")
+        k = await pg.evaluate("({luksus:" + STOCK + ".luksus, msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)), key:localStorage.getItem('dsb_reg_gift')})")
         asked = len([c for c in calls if c[0] == 'shop_pending'])
         check(k['luksus'] == 0 and not k['msg'] and not k['key'] and asked >= 2, 'the key set by hand with no grant on the server gives no luxury luck and no message; it only asks the server', {'k': k, 'shop_pending': asked})
         check(errs == [], 'sidefeil nøkkelen alene', errs)
