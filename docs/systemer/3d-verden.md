@@ -270,7 +270,20 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
   Nettene er byte for byte like. Det som er det samme langs en rad (raden i dekket og satellittlagene, vektene), regnes fortsatt per punkt; det er neste steg om det trengs.
 - **NPC-typene i tidsbiter** (`view3d/20-trawl-seine.js`, `npcWarm`): fra 4 s etter starten lages modellen for båtene innen 5 km på nivået de først tegnes med (0,3), så for dem innen 1,5 km på nærnivået, ett steg om gangen når nettleseren er ledig (`requestIdleCallback`, innen et sekund der den aldri er det): modellen lest fra bytene (`glbLoad`) i ett steg, bygd og sendt til GPU-en i det neste (`npcKB`, de samme buffrene som `npcMesh` lager). Ingen type bygges lenger i bildet den kommer inn i synsfeltet, så lenge den har vært innen 5 km i noen sekunder. `G3._debug.nwarm.n` teller stegene. Byggetiden per type er den samme (25–171 ms med struping, 4.11o); den er bare flyttet ut av bildene.
 - **Førstegangsstarten** (ny nettleser, CPU 4×, brevet lest i 8 s, Vangshamn, «Start her», til `first3d`, én kjøring hver): `wait_s` 15,9 → 10,9 s stående 800 × 1280 (uten utvidelsen: konteksten laget under brevet, og terrengnettene); 9,9 s liggende med den etterlignede utvidelsen. Skjermbildet i naustet etterpå er det samme før og etter.
-- **Står igjen til Ø3d** (`GLBM` som typede tabeller, punkt 4 i startmeldingen): delene som leser `GLBM` er også `view3d/09-landing-deck.js` og `10-gear.js`, som R og OB6 eier mens Ø3c gikk, så punktet er skilt ut som eget steg (startmeldingen i `docs/planer/start/21c.md`).
+- ~~**Står igjen til Ø3d**~~ (`GLBM` som typede tabeller): gjort 10.11.2026, 4.11q under. `view3d/09` og `10` trengte ingen endring (de leser delene hjørne for hjørne og gjør dem til `Float32Array`).
+
+## 4.11q Ytelsen: `GLBM` som typede tabeller (Ø3d, 10.11.2026)
+
+Ø3d i `docs/planer/koen.md` (steg 21c), Jonas' økt på grenen `ccr-07d61e23-19971d`. «Før» er arbeidsgrenen på `3a81cce` bygd for seg; målt i Playwright (Chromium med `--js-flags=--expose-gc`, 1280 × 800, Senja-bygget uten hele kysten), `performance.memory.usedJSHeapSize` etter tre `gc()`, to kjøringer hver. Måleskriptet ligger ikke i repoet: start med `boot`, vent 15 s, mål; les så alle 51 modellene i `DATAB` med `glbLoad` og hver del i `parts`, og mål igjen.
+
+| | Før | Etter |
+|---|---|---|
+| JS-minnet etter starten (30 typer i `GLBM`, delene starten trenger) | 376,1–376,2 MB | 281,1–281,4 MB |
+| JS-minnet med alle 51 typene og alle 133 delene lest | 664,2–670,5 MB | 408,9–409,0 MB |
+| Tabellene i delene (`p`, `n`, `c`, `zone`, `ao`) med alle delene lest | 327,7 MB | 167,2 MB |
+
+- **Hva som ble gjort:** `glbParse` (`vessel3d.js`) gir `Float32Array` for posisjonene, normalene og fargene, `Uint8Array` for malingssonen og `Float64Array` for skyggen (`ao`); ett hjørne per trekant som før (indekserte tabeller ville spart mer, men alle leserne går hjørne for hjørne, og trekantene skulle ikke endres). `f32cat` og `f32moved` setter deler sammen der koden før brukte `concat` og `push` (`glbModel`, `view3d/07-harbour-unit.js`). Detaljene og hva som er likt står i `3d-baater-og-animasjon.md` («Delene er typede tabeller»).
+- **Likt:** `tests/unit/glbm.test.mjs` (hver type, nivå 0,3, 1 og 2, bar, lakkert, med design, med stripe og som egen båt): 207 av 285 modeller er like float32 for float32 med den gamle leseren; i de 78 der koden regner nye hjørner av posisjonene, er avviket høyst 0,066 mm (designlinjene) og 0,24 µm (påhengsmotoren og rorkulten på plass), med samme antall hjørner. Skjermbildene før og etter av egen båt (trebåten med rorkulten) og havna i Finnsnes i begge formater ligger i `docs/okter/2026-11-10-21c/`.
 
 ## 5.23 Lys om natta og fyrlykter (03.10.2026)
 
