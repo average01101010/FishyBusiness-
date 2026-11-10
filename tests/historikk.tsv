@@ -1868,3 +1868,7 @@
 2026-11-10 11:04	ccr-c070e597-njia44	5c8a90f7	havtur	FEIL	70	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
 2026-11-10 11:10	ccr-c070e597-njia44	5c8a90f7+	kystvakttest	OK	8	lite	alene	
 2026-11-10 11:11	ccr-c070e597-njia44	20e38256	boottest	OK	24	lite	alene	
+2026-11-09 02:43	ccr-73940fc6-9vt5wc	81dfc19	sea3d	OK	3970	3d	alene	
+2026-11-09 02:44	ccr-73940fc6-9vt5wc	81dfc19	dbg23o	OK	36	3d	alene	
+2026-11-09 04:51	ccr-73940fc6-9vt5wc	00b57ac	sea3d	FEIL	3845	3d	alene	FEIL and so does the drawn foam in a strong gale and a storm
+2026-11-09 04:52	ccr-73940fc6-9vt5wc	00b57ac	dbg23o	OK	43	3d	alene	
