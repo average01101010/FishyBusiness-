@@ -317,7 +317,7 @@
   // the page does not have leaves the old block in its place ----------
   const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall', mob:'deck-mob'}, KITM = {}, KITX = {};
   function kit(f, nm){ const k = f + ':' + nm; if (k in KITM) return KITM[k]; let m = null; const t = KITF[f];
-    if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
+    if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}; }
     return KITM[k] = m; }
   function kitX(f){ if (f in KITX) return KITX[f]; const t = KITF[f], G = typeof glbHas === 'function' && glbHas(t) ? glbLoad(t) : null; return KITX[f] = (G && G.ex) || {}; }
   // a rigid tool held at A with its head (the part's -z) along dir

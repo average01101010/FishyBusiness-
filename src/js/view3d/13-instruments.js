@@ -190,7 +190,7 @@
     if (o.p.length === SK.hull.n * 3){ gl.bindBuffer(gl.ARRAY_BUFFER, SK.hull.cb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(o.c), gl.STATIC_DRAW); return; }
     // a design that cuts the hull: new buffers for the shape (the old ones go)
     for (const b of [SK.hull.pb, SK.hull.nb, SK.hull.cb]) gl.deleteBuffer(b);
-    SK.hull = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3};
+    SK.hull = {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3};
   }
   function limbM(A, B, r){ const d = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], L = Math.hypot(d[0], d[1], d[2]) || 1e-6, z = d.map(v => v / L), up = Math.abs(z[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0];
     let x = [up[1] * z[2] - up[2] * z[1], up[2] * z[0] - up[0] * z[2], up[0] * z[1] - up[1] * z[0]]; const xl = Math.hypot(x[0], x[1], x[2]) || 1; x = x.map(v => v / xl); const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];

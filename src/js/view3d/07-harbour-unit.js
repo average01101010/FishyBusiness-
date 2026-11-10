@@ -10,7 +10,7 @@
     if (k in UMOD) return UMOD[k];
     const G = k === 'a' ? (glbHas('harbour') ? glbLoad('harbour') : null) : glbLoad('harbour-' + k); if (!G || !G.parts.lod0){ UMOD[k] = false; return false; }
     const P = G.parts, gl0 = P.glass || {p:[], n:[], c:[]}, up = n => P[n] ? upA(P[n]) : null, AL = G.ex.anchors && G.ex.anchors.lift;   // the shop's and the yard's units have none of the plant's moving parts
-    return UMOD[k] = {near:upA({p:P.lod0.p.concat(gl0.p), n:P.lod0.n.concat(gl0.n), c:P.lod0.c.concat(gl0.c)}), far:upA(P.lod1), house:up('crane_house'), boom1:up('crane_boom1'), boom2:up('crane_boom2'),
+    return UMOD[k] = {near:upA({p:f32cat(P.lod0.p, gl0.p), n:f32cat(P.lod0.n, gl0.n), c:f32cat(P.lod0.c, gl0.c)}), far:upA(P.lod1), house:up('crane_house'), boom1:up('crane_boom1'), boom2:up('crane_boom2'),
       hook:up('crane_hook'), truck:up('truck'), forks:up('truck_forks'), door:up('door'), chute:up('chute'), lifts:AL ? AL.classes.map(c => up(c.part)) : null, cable:up('yard_cable'), A:G.ex.anchors};
   }
   // the unit's frame: a point [x, y, z] in it, in the world; the model's matrix (eye-relative)
@@ -113,7 +113,7 @@
     if (E){ freeMesh(E.M.near); freeMesh(E.M.far); }
     const col = RBCOL[v], paint = P => { P = siteSnow(P, snowNow); if (!col || !P.zone) return P; const c = P.c.slice(); for (let i = 0; i < P.zone.length; i++) if (P.zone[i] === 1){ const a = P.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } return {p:P.p, n:P.n, c}; };
     const P = G.parts, g = P.glass || {p:[], n:[], c:[]}, L0 = paint(P.lod0);
-    const M = {near:upA({p:L0.p.concat(g.p), n:L0.n.concat(g.n), c:L0.c.concat(g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
+    const M = {near:upA({p:f32cat(L0.p, g.p), n:f32cat(L0.n, g.n), c:f32cat(L0.c, g.c)}), far:upA(P.lod1 ? paint(P.lod1) : L0), A:G.ex.anchors || {}};
     SMOD[k] = {key, M}; return M;
   }
   function drawSites(eye, VP, near, far){
