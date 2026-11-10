@@ -120,6 +120,7 @@ Rekkefølgen er satt etter hva som verner spillerne først og hva Jonas må gjø
 - **Funn 6** følger sin egen plan (steg 49) og byggingen den legger inn, i rekkefølgen V7 sier. Etter V7 B må dette være ute før lanseringen:
   - velkomstgaven gitt én gang av serveren (`guest_merge`)
   - kjøpt haill gitt og talt fra `grants`, aldri fra klientens `shop_done` alene
+- **Status 10.11.2026:** Jonas valgte V7 A. Planen for funn 6 er skrevet (`docs/planer/haill-saldo.md`): HS1 velkomstgaven (steg 95, klar) og HS2 kjøpt haill fra `grants` (steg 96, etter valg 29 V1) er over lanseringslinja; HS3–HS5 etter.
 - **Filer:** `build.mjs`, `tools/server/Caddyfile` (CSP-hodet for `/`, eller meta i siden), `ui/11-boot.js` og `ui/` der et inline-skript eller `eval` finnes, `docs/planer/sikkerhet-skyen.md`.
 - **Tester:**
   - ny `tests/csptest.py` (LITE): spillet går en hel førstetur, Kontoen og butikken under CSP-en uten et eneste `securitypolicyviolation`, og et innsatt `<script>` fra en tilbakemelding kjøres ikke. Sett rød uten CSP-en.

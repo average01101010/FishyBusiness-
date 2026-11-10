@@ -20,3 +20,7 @@ dist-full/
 tools/s2/out/
 tools/trees/out/
 tools/vind/out/
+
+# the trailer's frames and clips (trailer/tools/film.py): on the filming machine only
+trailer/out/
+trailer/audio/suno/

@@ -1801,6 +1801,14 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-10 09:16	ccr-869710d8-bo5iwu	450736f	stabtest	OK	17	lite	samtidig	
+2026-11-10 09:16	ccr-869710d8-bo5iwu	450736f	calib	LES	19	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	simday	LES	16	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	progweek	LES	53	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	worktest	FEIL	29	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	trip2	OK	37	lite	samtidig	
+2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	docktest	OK	64	lite	samtidig	
+2026-11-10 09:19	ccr-869710d8-bo5iwu	450736f	worktest	FEIL	22	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-10 05:28	ccr-171f25b0-kdwftj	7020382+	selltest	LES	23	lite	samtidig	
 2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	shoptest	OK	33	lite	samtidig	
 2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	vesseltest	OK	19	lite	samtidig	
@@ -1851,3 +1859,74 @@
 2026-11-10 09:22	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	50	lite	alene	
 2026-11-10 09:32	ccr-a14b7b70-vfrww1	9ca1dcb5+	boottest	OK	19	lite	alene	
 2026-11-10 09:36	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	44	lite	alene	
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	boottest	OK	19	lite	samtidig	
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	crewclip	FEIL	15	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	moortest	OK	36	3d	alene	
+2026-11-10 11:11	claude/ob9-hurtigsjarken-75-jtun77	317b1b4+	vesseltest	OK	30	lite	samtidig	
+2026-11-10 11:11	claude/ob9-hurtigsjarken-75-jtun77	317b1b4+	walktest	FEIL	31	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 15
+2026-11-10 11:12	claude/ob9-hurtigsjarken-75-jtun77	317b1b4+	lanterntest	OK	21	lite	samtidig	
+2026-11-10 11:12	claude/ob9-hurtigsjarken-75-jtun77	317b1b4+	crewclip	FEIL	31	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [48, 5115, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 11:26	claude/o9-f8a-strommen-ylbhmg	de036e5+	tidetest	OK	22	lite	samtidig	
+2026-11-10 11:26	claude/o9-f8a-strommen-ylbhmg	de036e5+	anchortest	OK	8	lite	samtidig	
+2026-11-10 11:26	claude/o9-f8a-strommen-ylbhmg	de036e5+	anchorswing	OK	8	lite	samtidig	
+2026-11-10 11:35	claude/o9-f8a-strommen-ylbhmg	97a2e94+	tidetest	OK	22	lite	samtidig	
+2026-11-10 11:35	claude/o9-f8a-strommen-ylbhmg	97a2e94+	anchortest	OK	8	lite	samtidig	
+2026-11-10 11:35	claude/o9-f8a-strommen-ylbhmg	97a2e94+	anchorswing	OK	7	lite	samtidig	
+2026-11-10 11:00	ccr-c070e597-njia44	24e834ce+	kystvakttest	OK	8	lite	alene	
+2026-11-10 11:03	ccr-c070e597-njia44	5c8a90f7	trip2	OK	37	lite	samtidig	
+2026-11-10 11:03	ccr-c070e597-njia44	5c8a90f7	boottest	OK	31	lite	samtidig	
+2026-11-10 11:04	ccr-c070e597-njia44	5c8a90f7	havtur	FEIL	70	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-10 11:10	ccr-c070e597-njia44	5c8a90f7+	kystvakttest	OK	8	lite	alene	
+2026-11-10 11:26	claude/ob9-hurtigsjarken-75-jtun77	cc3b027	boottest	OK	42	lite	alene	
+2026-11-10 11:11	ccr-c070e597-njia44	20e38256	boottest	OK	24	lite	alene	
+2026-11-09 02:43	ccr-73940fc6-9vt5wc	81dfc19	sea3d	OK	3970	3d	alene	
+2026-11-09 02:44	ccr-73940fc6-9vt5wc	81dfc19	dbg23o	OK	36	3d	alene	
+2026-11-09 04:51	ccr-73940fc6-9vt5wc	00b57ac	sea3d	FEIL	3845	3d	alene	FEIL and so does the drawn foam in a strong gale and a storm
+2026-11-09 04:52	ccr-73940fc6-9vt5wc	00b57ac	dbg23o	OK	43	3d	alene	
+2026-11-10 12:42	claude/merge-foam-caps-branch-wxmu94	b2dce41e	sea3d	FEIL	4340	3d	alene	FEIL and so does the drawn foam in a strong gale and a storm
+2026-11-10 12:43	claude/merge-foam-caps-branch-wxmu94	b2dce41e	dbg23o	OK	43	3d	alene	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	towtest	OK	18	lite	samtidig	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	trip2	OK	38	lite	samtidig	
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	dyntest	FEIL	253	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	docktest	OK	62	lite	samtidig	
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	hulltest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	dyntest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	towtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	trip2	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	docktest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	hulltest	OK	73	lite	samtidig	
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	towtest	OK	19	lite	samtidig	
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	trip2	OK	38	lite	samtidig	
+2026-11-10 11:32	ccr-f1fe6522-gyjgzi	eeac3e4f+	docktest	OK	61	lite	samtidig	
+2026-11-10 11:38	claude/o9-f8a-strommen-ylbhmg	3cab435+	boottest	OK	24	lite	samtidig	
+2026-11-10 11:38	claude/o9-f8a-strommen-ylbhmg	3cab435+	tidetest	OK	23	lite	samtidig	
+2026-11-10 11:38	claude/o9-f8a-strommen-ylbhmg	3cab435+	anchortest	OK	7	lite	samtidig	
+2026-11-10 11:38	claude/o9-f8a-strommen-ylbhmg	3cab435+	anchorswing	OK	7	lite	samtidig	
+2026-11-10 11:38	claude/o9-f8a-strommen-ylbhmg	3cab435+	bunktest	OK	12	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	colregtest	OK	603	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	driftsplan2map	OK	12	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	npctest	OK	7	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	placetest	OK	4	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	sidetab	OK	11	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	etikett	OK	182	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	legmemotest	OK	13	lite	samtidig	
+2026-11-10 11:48	claude/o9-f8a-strommen-ylbhmg	b771e71	mobtest	OK	202	lite	samtidig	
+2026-11-10 11:58	claude/o9-f8a-strommen-ylbhmg	b771e71	vectest	OK	635	3d	alene	
+2026-11-10 12:14	claude/o9-f8a-strommen-ylbhmg	cea9e32	vindshot	OK	933	3d	alene	
+2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	routetest	OK	46	lite	alene	
+2026-11-10 12:15	claude/o9-f8a-strommen-ylbhmg	cea9e32	charttest	OK	50	lite	alene	
+2026-11-10 12:35	claude/ob9-hurtigsjarken-75-jtun77	5e27322	boottest	OK	24	lite	alene	
+2026-11-10 13:23	ccr-5e1ba2f4-pusvyd	833cfa4+	kystvakttest	OK	11	lite	samtidig	
+2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	docktest	OK	65	lite	samtidig	
+2026-11-10 13:24	ccr-5e1ba2f4-pusvyd	16f9056+	trip2	OK	32	lite	samtidig	
+2026-11-10 13:28	ccr-5e1ba2f4-pusvyd	16f9056+	anchorlight3d	OK	249	3d	alene	
+2026-11-10 13:56	ccr-5e1ba2f4-pusvyd	b30f3a04+	boottest	OK	27	lite	samtidig	
+2026-11-10 13:57	ccr-5e1ba2f4-pusvyd	b30f3a04+	docktest	OK	61	lite	samtidig	
+2026-11-10 13:45	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	jukseboot	OK	9	lite	alene	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	vesseltest	OK	21	lite	samtidig	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	boottest	OK	32	lite	samtidig	
+2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	savestest	OK	0	lite	samtidig	
+2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	boottest	OK	24	lite	samtidig	
+2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	jukseboot	OK	10	lite	samtidig	
+2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	boottest	OK	21	lite	samtidig	
+2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	kystvakttest	OK	10	lite	samtidig	

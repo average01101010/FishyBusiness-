@@ -1,43 +1,35 @@
-# Opptaksliste v1, stående 9:16 til TikTok
+# Opptaksliste v2, stående 9:16 til TikTok
 
-*30.10.2026. Hovedformatet er 9:16 (1080×1920), etter Jonas' valg. 16:9 lages senere fra de samme klippene der utsnittet tåler det. Tidene er omtrentlige til musikken er valgt og klippekartet skrevet; da flyttes hvert klipp til nærmeste slag. Ingen klipp med brukergrensesnitt. Alle klipp er data i `shots/<nr>-<navn>.json` og filmes med `tools/film.py`.*
+*10.11.2026. Låta er Jonas' «Fjord at Dawn» (Suno, 50,0 s, 95,7 BPM, takt 2,51 s), og den klippes ikke: filmen følger musikken (Jonas: «Vi må heller tilpasse filmen til musikken»). Tidene står på slagene som `tools/beats.py` fant, og ligger i `audio/music-edit-1.json`. Låta har en rolig del A til 17,4 s, et pust ned 17,4–22,4, oppbygging 22,4–27,4, full styrke fra **27,38 s** (droppet) til 44,86, og utgang til lyden slutter ved 49,4 s. v1 (62 s) er erstattet.*
 
 ## Regler
 
 - Alt som vises er spillbart den dagen traileren publiseres.
-- Hvert hardt klipp ligger på et taktslag. Overtoning bare i to overganger: 9 → 10 og 12 → 13.
-- Båter og dyr kommer inn fra bildekanten eller er med fra første bilde.
-- Lyset endres aldri brått innenfor et klipp. Nordlyset bygger seg opp over hele klippet.
-- Stående format: motivet holdes i midtre tredjedel i bredden, horisonten i øvre eller nedre tredjedel, aldri midt på.
-- Trebåten har flere klipp enn snurperen, med vilje.
+- **Intet grensesnitt i noe bilde** (Jonas 10.11.2026: «Ingen UI, UX eller GUI»): ingen kart, statusbokser, knapper eller stedsnavn fra spillet. Filmoppsettet skjuler alt utenom 3D-lerretet.
+- **Reisen fra trebåt til kystnotbåt** (Jonas 10.11.2026): båtene blir større for hvert klipp, i båtstigens rekkefølge. Trebåten og kystnotbåten går under den samme brua, først og på droppet.
+- **Ekte fart**: båtene seiler i virkelig fart, ikke spillets seksdobbelte.
+- Hvert hardt klipp ligger på et taktslag. Overtoning bare inn i sluttkortet.
+- Båter og dyr kommer inn fra bildekanten eller er med fra første bilde. Lyset endres aldri brått i et klipp.
+- Stående format: motivet i midtre tredjedel i bredden.
+- **Ingen kildehenvisning i bildet** (Jonas 10.11.2026: «Det ser ikke bra ut»). Kartverket (CC BY 4.0), Mapzen (CC BY) og OpenStreetMap (ODbL) krever at kilden oppgis der kartdataene vises, så linja står i teksten under videoen når den publiseres.
 - Ingen stemme i masteren. Teksten på skjermen står i `script.md`.
 
 ## Klippene
 
-| # | Tid | Sted, dato og klokkeslett (UTC) | Båt | Hva som skjer | Kamera | Tekst | Fil |
-|---|---|---|---|---|---|---|---|
-| 1 | 0–3 | Vangshamn, Senja, 12. okt kl. 04:30, grålysning | trebåt | Naustdøra, trebåten ved kaia. Spillets egen intro. | `intro`, ut døra og ned på kaia | – | `01-naust-trebat` |
-| 2 | 3–6 | Samme | trebåt | Nært: grått treverk, rorkult, motorkasse. Røyken puffer. | orbit, lavt, 6–8 m, 40° | – | `02-trebat-naert` |
-| 3 | 6–12 | Gisundet nordover under Gisundbrua, 12. okt kl. 05:30 | trebåt | 7 knop under brua. Finnsnes våkner, røyk fra pipene. | orbit bakfra lavt, så opp | «Finnsnes» | `03-trebat-brua` |
-| 4 | 12–15 | Reine, Lofoten, 25. jan kl. 10:30 | snekke 26 | Lav vintersol på snødekte tinder, ærfugl på sjøen. | orbit, drone sidelengs | «Lofoten» | `04-reine` |
-| 5 | 15–18 | Vestfjorden, 25. jan kl. 11:00 | havsjark 35 | Flere sjarker på feltet, lett sjø. | orbit fra siden, tele (fov 25) | «Lofotfisket» | `05-vestfjorden` |
-| 6 | 18–21 | Honningsvåg, 10. mai kl. 08:00 | kyst 15 | Havørn over fjellet, skarv på bergene, båten passerer. | orbit høyt, tilter ned | «Finnmark» | `06-honningsvag` |
-| 7 | 21–24 | Bleik, Andøya, 20. juni kl. 23:00, midnattssol | kyst 21 | Knølhval blåser, rygg, hale. `spawn humpback` i bilde 0. | orbit lavt mot sola | «Midnattssol» | `07-bleik-hval` |
-| 8 | 24–27 | Vardø, 15. okt kl. 12:00, Beaufort 7 | kyst 21 | Sjø over baugen, skum i striper. | orbit forfra lavt | «Varanger» | `08-vardo-kuling` |
-| 9 | 27–30 | Bergen, 5. april kl. 17:30 | hurtigsjark | Byen, lys i husene, MS Kystpilen går ut. | orbit høyt over havna | «Bergen» | `09-bergen` |
-| 10 | 30–36 | Hekkingen fyr, Senja, 20. des kl. 22:00, klart | havsjark 35 | Lyskjeglene går rundt. Nordlyset bygger seg opp over 6 s. | orbit stille, lav pitch, mot nord | – | `10-hekkingen-nordlys` |
-| 11 | 36–40 | Finnsnes verft, 1. juni kl. 06:00 | kyst 15 → kyst 21 | Større båt ved kaia, navnet på baugen. Siste slag før droppet. | orbit nært baugen | «Fra sjark …» | `11-verft` |
-| 12 | 40–50 | Gisundet, 21. juni kl. 02:00, midnattssol | kystnotbåt 38,55 | Hun legger ut under Gisundbrua. Masten klarer brua. Lang bevegelse. Droppet. | orbit: lavt forfra, stiger, rundt styrbord til akter | – | `13-snurper-brua` |
-| 13 | 50–54 | Finnsnes kai, samme morgen | begge | Trebåten fortøyd ved siden av snurperen. Kameraet trekker ut. | orbit fra kaia, dist øker | «… til snurper» | `14-side-om-side` |
-| 14 | 54–58 | Hvaler, Rørvik, Bodø, Tromsø, Hammerfest, Kirkenes | ulike | Ett slag per sted. Samme høyde og retning i alle. | orbit drone, lik i alle | stedsnavnene | `15a`–`15f` |
-| 15 | 58–62 | Sluttkort | – | Logo på siste store slag. Adressen ett slag etter. Kreditering nederst. | – | «Spill gratis på detstorebla.no» | `assemble` |
+| # | Tid (s) | Sted, dato og klokkeslett (UTC) | Båt | Hva som skjer | Tekst | Fil |
+|---|---|---|---|---|---|---|
+| 1 | 0–4,93 | Fars naust i Vangshamn, 16. okt 06:45, grålysning | trebåt | Spillets egen intro: kameraet glir fra kaia ved naustet ut til trebåten | – | `01-naust-trebat` |
+| 2 | 4,93–7,40 | Gisundet, 16. okt 07:40 | trebåt | Nært: treverket, motorkassa, røyken fra semidieselen | – | `02-trebat-naert` |
+| 3 | 7,40–12,40 | Gisundbrua, 16. okt 07:45 | trebåt | Under brua i 6 knop, kameraet bak og under, ser opp mot brudekket | «Finnsnes» | `03-trebat-brua` |
+| 4 | 12,40–14,93 | Reine, 3. feb 11:00 | snekke | Lav vintersol, snø på Reine og tindene | «Lofoten» | `04-reine` |
+| 5 | 14,93–17,40 | Henningsvær, Vestfjorden, 4. feb 10:45 | havsjark | Langs Lofotveggen under Lofotfisket | «Lofotfisket» | `05-vestfjorden` |
+| 6 | 17,40–22,37 | Bleik, Andøya, 17. juni 23:00, midnattssol | kystbåt 15 | Mot sola; knølhvalen blåser, viser ryggen og halen | «Midnattssol» | `06-bleik-hval` |
+| 7 | 22,37–24,87 | Vardø, 27. okt 12:15, 16,8 m/s | kystbåt 21 | Mot kulingen, sjø og skum | «Varanger» | `07-vardo-kuling` |
+| 8 | 24,87–27,37 | Finnsnes kai, 5. juni 03:30 | kystbåt 21 | Nært baugen ved kaia, siste takt før droppet | «Fra trebåt …» | `08-verft` |
+| 9 | 27,37–34,87 | Gisundbrua, 18. juni 01:00, midnattssol | kystnotbåt 38,55 | Droppet. Hun kommer mot oss gjennom spennet og går under brua; kameraet stiger og svinger mot styrbord baug | – | `13-snurper-brua` |
+| 10 | 34,87–37,37 | Hekkingen fyr, 3. jan 22:00 | kystnotbåt | Nordlyset over fyret | – | `10-hekkingen-nordlys` |
+| 11 | 37,37–41,13 | Hvaler, Rørvik, Bodø, Tromsø, Hammerfest, Kirkenes, 6. juli 09:00 | båtstigen | Ett slag per sted, samme drone i alle | stedsnavnene | `15a`–`15f` |
+| 12 | 41,13–44,87 | Finnsnes kai, 18. juni 02:00 | begge | Trebåten foran kystnotbåten ved samme kai; kameraet trekker seg ut | «… til snurper» | `14-side-om-side` |
+| 13 | 44,87–50,01 | Sluttkort | – | Logoen på slaget ved 44,87, adressen ett slag etter; svart når lyden slutter | «Spill gratis på detstorebla.no» | `assemble` |
 
-## Det som må løses per klipp
-
-- **1:** `G3.intro` krever at båten ligger ved fars naust (`naustSite`). Nytt spill med `#notut` må starte i Vangshamn, eller båten flyttes dit først.
-- **3 og 12:** kamerabanen må gå klar av Gisundbrua (`camFree`), og masten på snurperen må klare brua (`G3.mastTop` mot `G3.bridgeInto`).
-- **4–9, 14:** krever hele kysten i `tools/map/out/game/` før bygget. I skyen finnes bare Senja i dag.
-- **7:** hvalen settes ut med `spawnWild('humpback')` i bilde 0 så blåsten kommer tidlig i klippet.
-- **8:** været velges ved å lete i timene rundt klokkeslettet etter Beaufort 7 (`windAt`), ikke ved å tvinge det.
-- **10:** nordlyset krever klar himmel og nok aktivitet (`auroraAt`); tiden letes fram på samme måte.
-- **13:** to båter ved samme kai krever at trebåten står som NPC eller som båt nummer to i flåten. Må prøves.
+Været er valgt med `tools/weather.py` (spillets eget vær med fast frø) etter `tools/weather-wants.json`. Filmoppsettet kontrollerer hvert bilde for skrog mot land, skrog og mast mot brupilarer, brudekk, kaier og bygg, kameraet mot sjø, terreng og bygg, og hopp mellom bilder (`HARNESS.md`).

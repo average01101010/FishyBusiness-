@@ -1,0 +1,38 @@
+{
+ "name": "Grønland: snøkrabbebåten langs Liverpool Land i mai",
+ "when": "2027-05-15T14:00:00Z",
+ "boat": "snokrabbe",
+ "place": {
+  "lat": 70.75,
+  "lon": -21.62,
+  "clear": 3.0
+ },
+ "heading": 355,
+ "speed": 7,
+ "quality": "ultra",
+ "pre": 2,
+ "dur": 1.6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 262,
+    "pitch": 5,
+    "dist": 150,
+    "fov": 40,
+    "aim": 45
+   },
+   {
+    "t": 1.6,
+    "yaw": 268,
+    "pitch": 5,
+    "dist": 146,
+    "fov": 40,
+    "aim": 45
+   }
+  ]
+ },
+ "notes": "Montasjen. Liverpool Land: fjell på 900-970 m 12 km vest (peaks.py). Langs land med land om babord; kameraet til styrbord ser vestover mot fjellene. Andre forsøk: «coast» pekte inn mot land og grunnene; nå 3 km ut, kurs 355 med land om babord.",
+ "move_max": 1500
+}

@@ -668,7 +668,38 @@ skal fotograferes.
 `until`-løkke i bakgrunnen, så de aldri gikk samtidig. Python 3.11 i økta fant ikke PIL (Debians pakke skygget): `pip install
 --ignore-installed pillow`.
 
+## 22. Lært av kystvaktskipene (10.11.2026)
+
+Kystvaktskipene (`kv.py`, `kystvakt-grunnlag.md`) var de første modellene i middels detalj (Jonas: «trenger ikke å være like detaljert»),
+de første som ikke er båttyper spilleren kan eie, og de første to skrogene fra ett skript. Det som var nytt:
+
+**Merker på et krumt skrog må deles opp.** Stripene og bokstavene ble først lagt som én flat flate per bånd eller strek med hjørnene på
+skroget; mellom hjørnene sank flaten inn i den konvekse baugen, og første rendring viste sagtenner i stripene og halve bokstaver.
+`hull_quad` deler hvert merke i biter på 0,15–0,3 m med hvert hjørne på flaten. Det gjelder alt som males på et skrog som krummer
+(registreringsmerket, stripene, logoer).
+
+**Kildens dypgang kan være den største.** 93 m-skipets 6,0 m ga Cb 0,35 (en jager) mot volumet på 3 250 t; med skrogets egen dypgang
+4,9 m og skegen ned til 6,0 ble det 3 393 t og Cb 0,46. La `check()` skrive Cb, Cm og Cp: et tall utenfor 0,4–0,7 for et skip betyr at
+en kilde eller formen er feil.
+
+**To skip fra ett skript.** `reset()` tømmer Blenders materialer, men `bpyutil.MATS` husker de gamle: tøm den (`MATS.clear()`) før
+`colours()` for skip nummer to, ellers feiler byggingen på et fjernet materiale. Og en `check()` som går gjennom begge skipene, må sette
+tilbake skipet den startet med: første eksport av «47 m» ble 93 m-skipet.
+
+**Kontrollbildenes vannflate må dekke båten.** `qa/shots.py` la et vann på 160 × 160 m rundt origo; 93 m-skipets baug stakk ut av det, og
+kameraene så under vannet (skipet så ut til å flyte 3 m for høyt). Flata er nå 2,5 båtlengder rundt midten. Rett verktøyet når et bilde
+viser noe som ikke kan stemme, før modellen rettes.
+
+**En modell som ikke kan kjøpes, er ingen type i `VESSELS`.** Da ser Båthandelen, flåten, verftet og alle testene som går gjennom
+`VESSELS` den aldri. NPC-en peker på modellen selv (`vtype`), 3D-visningen leser den med `glbModel` og skalerer med GLB-ens `len` og
+`beam`. Det som tegner NPC-er (navnene, livet på skroget, mannskapet) kan spørre `VESSELS[type]` og må holdes unna slike modeller.
+
+**Ved kai er `b.pos` havnas punkt, ikke båtens plass.** Kystvakta lå 28 m om styrbord for havnas punkt, altså ofte på kaia (kaia er alltid
+om styrbord, `berthPose`). Det som skal ligge ved båten i havn, må regnes fra `berthPose`.
+
 ## Endringslogg
+
+- 10.11.2026: kap. 22, det kystvaktskipene lærte (merker på et krumt skrog i biter, kildens dypgang og Cb, to skip fra ett skript, vannflata i kontrollbildene, en modell som ikke kan kjøpes, båtens plass ved kai).
 
 - 07.11.2026: kap. 21, det snøkrabbefartøyet lærte (loddrette bjelker, flate vegger etter kutt, «over skroget» for lanternene, stablene før bjelkene, speilets hjørner, fjernmodellens budsjett, spline-bufferen på id() og GLB-en lest tilbake, bremmen i sone 2, se at spillet tegner ankrene, kameraet i spillet, Blender og SwiftShader etter hverandre).
 

@@ -1,13 +1,34 @@
 {
-  "name": "Fars naust: døra og trebåten ved kaia i grålysning",
-  "when": "2026-10-12T06:00:00Z",
-  "boat": "trebat",
-  "quality": "high",
-  "load_s": 15,
-  "dur": 6,
-  "cam": {
-    "mode": "intro",
-    "sec": 6
-  },
-  "notes": "Grålysning på 69° N i midten av oktober er rundt kl. 08 lokal tid (06 UTC). 04:30 UTC var natt med stjerner."
+ "name": "Fars naust i Vangshamn: trebåten ved pålekaia i grålysning, kameraet trekker seg ut til naustet",
+ "when": "2026-10-16T06:45:00Z",
+ "boat": "trebat",
+ "home": "vangshamn",
+ "moor": {
+  "port": "vangshamn",
+  "kind": "naust"
+ },
+ "dur": 5.9,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 18,
+    "pitch": 7,
+    "dist": 11,
+    "fov": 44,
+    "aim": 1.2
+   },
+   {
+    "t": 5.9,
+    "yaw": 34,
+    "pitch": 15,
+    "dist": 30,
+    "fov": 44,
+    "aim": 2.5
+   }
+  ]
+ },
+ "notes": "Klipp 0-4,92 s. Et nytt spill har fars naust i Vangshamn (HOME0); #notut har Finnsnes, så hjemmet settes. Første forsøk 10.11 med spillets intro (G3.intro): den starter inne i kaidekket og ser rett ned i båten før den finner bildet, så nå en egen bane: lavt ved trebåten, sakte bakover og opp til naustet er med. Grålysning: sola -2,2° (weather.py).",
+ "quality": "ultra"
 }

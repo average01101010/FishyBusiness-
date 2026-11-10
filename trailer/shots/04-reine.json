@@ -1,0 +1,37 @@
+{
+ "name": "Snekka utenfor Reine i lav vintersol",
+ "when": "2027-02-03T11:00:00Z",
+ "boat": "snekke",
+ "place": {
+  "lat": 67.922,
+  "lon": 13.085,
+  "clear": 0.15
+ },
+ "heading": 90,
+ "speed": 5,
+ "pre": 2,
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 285,
+    "pitch": -2,
+    "dist": 55,
+    "fov": 50,
+    "aim": 22
+   },
+   {
+    "t": 3.5,
+    "yaw": 272,
+    "pitch": 0,
+    "dist": 50,
+    "fov": 50,
+    "aim": 20
+   }
+  ]
+ },
+ "notes": "Klipp 12,40-14,93 s. Kameraet sør for båten (styrbord) ser nordover mot Reine og tindene; sola i sør bak kameraet. Været: weather.py (sol 4,2°, vind 5,8, skyer 0,42). Første forsøk 10.11: svingen til 262° tok inn en bratt fjellside fra venstre; stopper ved 272°.",
+ "quality": "ultra"
+}

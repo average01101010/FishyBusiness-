@@ -274,6 +274,9 @@
     if (Math.abs(err) < Math.min(C.p * 0.6, 2.5)){ C.r = pred + err * 0.12; if (k === 1) C.p += (d - C.p) * 0.03; } else { C.r = raw; C.p += (d - C.p) * 0.1; }
     return C.r; }
   let FRAMEP = 0;
+  // the trailer's camera (trailer/tools/film.py, G3.film): null in the game. {fov} alone sets the chase camera's field of view (degrees);
+  // {eye, tgt, fov} puts the eye at a point in the world (metres) looking at tgt, or at the boat's middle when tgt is 'boat' or missing
+  let FILM = null;
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE;
     FRAMEP = /rawclock/.test(location.hash) ? j0 : frameClock(j0); WALLF = /rawclock/.test(location.hash) ? 0 : FRAMEP + FCLK.off;
     try { frame0(); } finally { S.equip = EQ0; WALLF = 0; FRAMEP = 0; }
@@ -295,7 +298,10 @@
     gfxNaN(null);
     // camera
     let eye, V, kfov = 0;
-    if (KINO.on && !SHOW && !PAINTV){
+    if (FILM && FILM.eye && !SHOW && !PAINTV){
+      eye = FILM.eye.slice(); const tg = Array.isArray(FILM.tgt) ? FILM.tgt : [bv.x, bv.y + 1.3, bv.z];
+      V = viewDir([tg[0] - eye[0], tg[1] - eye[1], tg[2] - eye[2]]); camFwd = [tg[0] - eye[0], tg[2] - eye[2]];
+    } else if (KINO.on && !SHOW && !PAINTV){
       const K = kinoCam(t, rdt); eye = K.eye; kfov = K.fov; V = viewDir([K.tgt[0] - eye[0], K.tgt[1] - eye[1], K.tgt[2] - eye[2]]); camFwd = [K.tgt[0] - eye[0], K.tgt[2] - eye[2]];
     } else if (cam.helm && !SHOW && !PAINTV){
       // at the wheel: the eye stands where the helmsman's head is on the hull, and moves with it, so the boat round him stands still
@@ -336,7 +342,7 @@
     }
     lastEye = eye; EYE = eye; earT = performance.now(); compassDraw(Math.atan2(camFwd[0], -camFwd[1]), {x:eye[0] / 1000, y:eye[2] / 1000});
     if (!RO.on || Math.abs(eye[0] - RO.x) > 40000 || Math.abs(eye[2] - RO.z) > 40000){ RO.x = Math.round(eye[0] / 4096) * 4096; RO.z = Math.round(eye[2] / 4096) * 4096; RO.on = true; }
-    const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = kfov ? kfov * DEG : cam.helm ? 2 * Math.atan(Math.tan(cam.fov * DEG / 2) / (cam.zoom || 1)) : 55 * DEG; curFov = fov;
+    const W = canvas.width, Hh = canvas.height, asp = W / Hh, fov = kfov ? kfov * DEG : FILM && FILM.fov ? FILM.fov * DEG : cam.helm ? 2 * Math.atan(Math.tan(cam.fov * DEG / 2) / (cam.zoom || 1)) : 55 * DEG; curFov = fov;
     { const z = !kfov && cam.helm ? cam.zoom || 1 : 1, on = z > 1.5; if (binoc.hidden === on) binoc.hidden = !on; if (on){ const t = Math.round(z) + '×'; if (binoc.firstChild.textContent !== t) binoc.firstChild.textContent = t; } }
     let cornerD = 0; if (NEARM) for (const [qx, qz] of [[0, 0], [1, 0], [0, 1], [1, 1]]) cornerD = Math.max(cornerD, Math.hypot(NEARM.x0 + qx * NEARM.sx - eye[0], NEARM.z0 + qz * NEARM.sz - eye[2], eye[1]));
     const nearFar = Math.max(3000, cam.dist * 3, cornerD + 300); lightNF = nearFar; const VPf = mul(persp(fov, asp, 25, QUAL.lvl === 3 ? 260000 : 170000), V.m);

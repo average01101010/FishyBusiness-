@@ -1,5 +1,11 @@
 // Only a boat rigged for the jig can jig (Jonas 03.11.2026: «En havfiskebåt skal ikke kunne fiske med juksa»): vesselJigs in 10-gear.js
 // reads VESSELS rigs; the ocean vessels have no juksa there.
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const anchorsOf = file => { const b = Buffer.from(readFileSync(join(ROOT, 'src', 'data', file), 'utf8').trim(), 'base64'), n = b.readUInt32LE(12);
+  return JSON.parse(b.subarray(20, 20 + n).toString('utf8')).scenes[0].extras.anchors; };
 export default function (t){
   const K = t.K, V = K.VESSELS, hav = Object.keys(V).filter(k => V[k].cls === 'hav'), kyst = Object.keys(V).filter(k => V[k].cls !== 'hav');
   t.ok(hav.length >= 5 && hav.every(k => !K.vesselJigs(k)), `havfiskefartøyene jukser ikke: ${hav.join(', ')}`);
@@ -17,4 +23,9 @@ export default function (t){
     t.eq(got, want, `${k} (plass til ${V[k].jukseMax} maskiner), alene: maskiner per person og innsats per trinn`); }
   t.note('innsats alene med alle maskinene, trinn 1/2/3: ' + rows.join(', '));
   K.set('workTeam', wt);
+
+  // ---- no more reels than the rails have places for (valg 31 A, Jonas 10.11.2026: «Valg A»): the used hurtigsjark's model has three
+  // jigging places (anchors.jigZ, OB9), so she takes three; reels over that went ashore and were paid back (ui/11-boot.js) ----
+  { const A = anchorsOf('boat-hurtig11.b64'), n = (A.jigZ || []).length;
+    t.ok(n >= 3 && V.hurtigsjark.jukseMax <= n, 'hurtigsjark: plass til ' + V.hurtigsjark.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
 }

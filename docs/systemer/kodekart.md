@@ -1177,7 +1177,7 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06e-anchor.js` (180 linjer)
+## `src/js/core/06e-anchor.js` (225 linjer)
 
 Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker … kai skal være standard … risiko forbundet med å
 
@@ -1187,18 +1187,22 @@ Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker 
   - 25 `anchorForecast(p, H, hours, spot)`
   - 32 `anchorAlarm(kind, n)`
   - 36 `anchorAwake()`
-- **37** the current: the tide's stream and the wind's drift (the first current in the game; so far only the anchored boat feels it)
-  - 45 `curAt(p, H)`
-- **61** the ground tackle and how she lies to it
-  - 67 `anchorGear(type)`
-  - 73 `anchorReach(out, h, a)`
-  - 81 `anchorForce(type, p, H)`
-  - 91 `dropAnchor(auto)`
-  - 106 `weighAnchor(silent)`
-  - 113 `anchorUpIn()`
-  - 118 `anchorSwing(H)`
-  - 142 `anchorTick(H, W, hs)`
-  - 171 `driftAnchorage(pid)`
+- **37** the current (Fysikk 4 F8a, 10.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md F8): the stream through the sounds, the tide's own
+  - 65 `stromNear(p)`
+  - 67 `stromAt(q, p, dh)`
+  - 75 `curCoastWay(p)`
+  - 78 `stromSum(p, dh)`
+  - 83 `curAt(p, H)`
+- **106** the ground tackle and how she lies to it
+  - 112 `anchorGear(type)`
+  - 118 `anchorReach(out, h, a)`
+  - 126 `anchorForce(type, p, H)`
+  - 136 `dropAnchor(auto)`
+  - 151 `weighAnchor(silent)`
+  - 158 `anchorUpIn()`
+  - 163 `anchorSwing(H)`
+  - 187 `anchorTick(H, W, hs)`
+  - 216 `driftAnchorage(pid)`
 
 ## `src/js/core/07f-kar.js` (101 linjer)
 
@@ -1591,31 +1595,37 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (209 linjer)
+## `src/js/core/09j-kystvakt.js` (336 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
 - **1** Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
-- **10** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
-  - 25 `kvSampleFish(g, sp, w, p)`
-  - 28 `kvHaulKeep(g, s)`
-  - 36 `kvMix(ms, p, gear, most)`
-  - 53 `kvAlong(a, b)`
-  - 58 `kvMarks(s)`
-  - 59 `kvHavCheck(b, sets, H, len, add, most)`
-  - 91 `kvState()`
-  - 94 `kvReady()`
-  - 104 `kvHour()`
-  - 112 `kvArrive()`
-  - 121 `kvSide(b)`
-  - 122 `kvMinute()`
-  - 128 `kvNpcs()`
-  - 131 `kvSums(sets, inside)`
-  - 133 `kvMostSp(sets)`
-  - 138 `kvCheck(b)`
-  - 165 `kvWhat(r)`
-  - 177 `kvWhatHav(r)`
-  - 190 `kvFinish()`
+- **18** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
+  - 27 `kvRib(min)`
+  - 36 `kvSampleFish(g, sp, w, p)`
+  - 40 `kvHaulKeep(g, s)`
+  - 49 `kvMix(ms, p, gear, most)`
+  - 66 `kvAlong(a, b)`
+  - 72 `kvMarks(s)`
+  - 73 `kvHavCheck(b, sets, H, len, add, most)`
+- **112** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
+  - 126 `kvSnoCheck(b, ss, H, add)`
+  - 163 `kvState()`
+  - 166 `kvReady()`
+  - 176 `kvHour()`
+  - 184 `kvArrive()`
+  - 197 `kvOff(bB, sh, where)`
+  - 205 `kvPose(b)`
+  - 224 `kvSide(b)`
+  - 225 `kvMinute()`
+  - 234 `kvNpcs()`
+  - 238 `kvSums(sets, inside)`
+  - 240 `kvMostSp(sets)`
+  - 245 `kvCheck(b)`
+  - 272 `kvWhat(r)`
+  - 284 `kvWhatHav(r)`
+  - 298 `kvWhatSno(r)`
+  - 317 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -2232,7 +2242,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 568 `dynAuto(d, dtG)`
   - 686 `dynTrackView()`
 
-## `src/js/core/16c-hull.js` (146 linjer)
+## `src/js/core/16c-hull.js` (149 linjer)
 
 ---- Fysikk 3: what the blows and the groundings do to the hull (Jonas 18.10.2026: «kollisjoner og grunnstøting skal få
 
@@ -2246,15 +2256,15 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 52 `bedRock(p)`
   - 60 `hullGround(p, kn, b = S.boat)`
   - 69 `hullMinute()`
-  - 86 `hullCost(b = S.boat, d = b.dmg || {})`
-- **93** the hull insurance (kasko)
-  - 98 `kaskoSign(b = S.boat)`
-  - 104 `kaskoEnd(b = S.boat)`
-  - 106 `kaskoHour()`
-  - 112 `hullLeft(b = S.boat)`
-  - 119 `hullBill(b = S.boat)`
-  - 125 `hullOrder(auto, b = S.boat)`
-  - 140 `hullMended(j, b = S.boat)`
+  - 89 `hullCost(b = S.boat, d = b.dmg || {})`
+- **96** the hull insurance (kasko)
+  - 101 `kaskoSign(b = S.boat)`
+  - 107 `kaskoEnd(b = S.boat)`
+  - 109 `kaskoHour()`
+  - 115 `hullLeft(b = S.boat)`
+  - 122 `hullBill(b = S.boat)`
+  - 128 `hullOrder(auto, b = S.boat)`
+  - 143 `hullMended(j, b = S.boat)`
 
 ## `src/js/ui/01-i18n.js` (120 linjer)
 
@@ -2325,7 +2335,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (859 linjer)
+## `src/js/ui/03-map.js` (898 linjer)
 
 ---------- map ----------
 
@@ -2368,14 +2378,16 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 603 `aisInfo(n)`
   - 622 `sjvChartSvg(u, bp)`
   - 632 `renderAisCard()`
-  - 633 `renderDyn()`
-  - 721 `pinAdd(mp)`
-  - 726 `pinOpen(id, fresh)`
-  - 746 `pinKb()`
-  - 777 `ptrUp(e)`
-  - 807 `unzoom()`
-  - 814 `portByLabel(pt)`
-  - 819 `addWaypoint(pt)`
+  - 640 `curArrowsOf(q, u, H, lab, halo)`
+  - 653 `curArrowsSvg(u)`
+  - 671 `renderDyn()`
+  - 760 `pinAdd(mp)`
+  - 765 `pinOpen(id, fresh)`
+  - 785 `pinKb()`
+  - 816 `ptrUp(e)`
+  - 846 `unzoom()`
+  - 853 `portByLabel(pt)`
+  - 858 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (281 linjer)
 
@@ -2607,12 +2619,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1419 linjer)
+## `src/js/ui/phone/07-patch.js` (1444 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1412 `patch()`
+  - 1437 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3432,7 +3444,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (391 linjer)
+## `src/js/ui/11-boot.js` (397 linjer)
 
 ---------- boot ----------
 
@@ -3466,7 +3478,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 373 `bootFail(e)`
+  - 379 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1664 linjer)
 
@@ -3632,29 +3644,29 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (758 linjer)
+## `src/js/view3d/01-shaders.js` (779 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **120** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-- **236** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **330** the boat's own foam, when she has way on
-- **338** where a slam and the spray land (F3b): four patches, fixed names
-- **340** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 651 `cloudStep(dt)`
-  - 658 `skyFrame(u, Hh, tn, bv)`
-  - 673 `glsl3(src, fs)`
-  - 686 `progStart(vs, fs, attrs, nm = '?')`
-  - 694 `progEnd(P)`
-  - 704 `program(vs, fs, attrs, nm = '?')`
-  - 706 `progWait(list)`
-  - 712 `programA(vs, fs, attrs, nm)`
-  - 713 `buf(data, target, usage)`
-  - 718 `airSet(u, terr)`
-  - 733 `sunT0()`
-  - 740 `attr(loc, b, size)`
-  - 756 `upload(pos, col, idx)`
+- **131** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+- **248** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **344** the boat's own foam, when she has way on
+- **352** where a slam and the spray land (F3b): four patches, fixed names
+- **354** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 672 `cloudStep(dt)`
+  - 679 `skyFrame(u, Hh, tn, bv)`
+  - 694 `glsl3(src, fs)`
+  - 707 `progStart(vs, fs, attrs, nm = '?')`
+  - 715 `progEnd(P)`
+  - 725 `program(vs, fs, attrs, nm = '?')`
+  - 727 `progWait(list)`
+  - 733 `programA(vs, fs, attrs, nm)`
+  - 734 `buf(data, target, usage)`
+  - 739 `airSet(u, terr)`
+  - 754 `sunT0()`
+  - 761 `attr(loc, b, size)`
+  - 777 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
 
@@ -4027,7 +4039,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 549 `mastTop(G)`
   - 553 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (530 linjer)
+## `src/js/view3d/14-sea.js` (539 linjer)
 
 ---------- sea ----------
 
@@ -4040,46 +4052,46 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 43 `updateWaves(dt, H)`
 - **76** the near field: the short sea rides with the boat
   - 85 `nfStep()`
-- **96** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 103 `wakeTrack(x, z, fx, fz, ds)`
-  - 122 `wakeTU(u, ox, oz)`
-  - 123 `updateWake()`
-  - 149 `wakeHFast(x, z)`
-- **162** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 176 `foamFree()`
-  - 177 `foamInit()`
-  - 193 `wavePh()`
-  - 200 `foamStep(dt, t)`
-  - 267 `foamSplash(Dx, Dz)`
-  - 288 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 328 `foamBind(u, t)`
-- **360** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 375 `shoalPrep(J)`
-  - 376 `shoalCell(J, k, land, dd)`
-  - 380 `shoalSweep(J, end)`
-  - 394 `shoalPut(J)`
-  - 400 `shTex(u, v, out)`
-  - 407 `shoalAt(x, z)`
-  - 421 `shW(c, SH, out)`
-  - 427 `surfK(h)`
-  - 429 `surfStep(t)`
-  - 435 `shoalBind(u, t)`
-- **443** the sea state over the near terrain and the whole map
-  - 450 `ssLevel(n, unit)`
-  - 452 `ssRect(L)`
-  - 453 `ssWork(L, until)`
-  - 476 `ssStep(rdt)`
-  - 478 `ssBlend(L)`
-  - 480 `ssTex(L, x, z, out)`
-  - 487 `ssAt(x, z)`
-  - 497 `seaQ(S, ren)`
-  - 500 `seaDisp(x, z, t, S, fade, SH)`
-  - 519 `seaFade(x, z)`
-  - 520 `seaH(x, z, t)`
-  - 526 `seaHFast(x, z, t)`
-  - 528 `shoalHere(x, z)`
+- **103** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 110 `wakeTrack(x, z, fx, fz, ds)`
+  - 129 `wakeTU(u, ox, oz)`
+  - 130 `updateWake()`
+  - 156 `wakeHFast(x, z)`
+- **169** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 183 `foamFree()`
+  - 184 `foamInit()`
+  - 200 `wavePh()`
+  - 207 `foamStep(dt, t)`
+  - 274 `foamSplash(Dx, Dz)`
+  - 295 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 335 `foamBind(u, t)`
+- **369** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 384 `shoalPrep(J)`
+  - 385 `shoalCell(J, k, land, dd)`
+  - 389 `shoalSweep(J, end)`
+  - 403 `shoalPut(J)`
+  - 409 `shTex(u, v, out)`
+  - 416 `shoalAt(x, z)`
+  - 430 `shW(c, SH, out)`
+  - 436 `surfK(h)`
+  - 438 `surfStep(t)`
+  - 444 `shoalBind(u, t)`
+- **452** the sea state over the near terrain and the whole map
+  - 459 `ssLevel(n, unit)`
+  - 461 `ssRect(L)`
+  - 462 `ssWork(L, until)`
+  - 485 `ssStep(rdt)`
+  - 487 `ssBlend(L)`
+  - 489 `ssTex(L, x, z, out)`
+  - 496 `ssAt(x, z)`
+  - 506 `seaQ(S, ren)`
+  - 509 `seaDisp(x, z, t, S, fade, SH)`
+  - 528 `seaFade(x, z)`
+  - 529 `seaH(x, z, t)`
+  - 535 `seaHFast(x, z, t)`
+  - 537 `shoalHere(x, z)`
 
-## `src/js/view3d/15-env-mooring.js` (224 linjer)
+## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
 ---------- environment ----------
 
@@ -4261,7 +4273,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (417 linjer)
+## `src/js/view3d/20-trawl-seine.js` (454 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4285,16 +4297,18 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 265 `npcKB(t, lod, liv)`
-  - 268 `npcMesh(n, lod)`
-  - 282 `npcWarm(eye)`
-  - 297 `seineAnch(G)`
-  - 307 `npcClock(Hf)`
-  - 315 `npcHead(n, t)`
-  - 330 `npcFollow(n, t)`
-  - 344 `npcPhase(id)`
-  - 345 `drawNPC(eye, t, H, VP)`
-  - 396 `npcCrewDraw(n, K, eye, t)`
+  - 268 `npcKB(t, lod, liv)`
+  - 271 `npcMesh(n, lod)`
+  - 285 `npcWarm(eye)`
+  - 300 `seineAnch(G)`
+  - 310 `npcClock(Hf)`
+  - 318 `npcHead(n, t)`
+  - 333 `npcFollow(n, t)`
+  - 347 `npcPhase(id)`
+  - 352 `kvDraw(n, eye, t)`
+  - 360 `kvRibDraw(n, R, G, M, eye, t)`
+  - 381 `drawNPC(eye, t, H, VP)`
+  - 433 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
@@ -4361,7 +4375,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (756 linjer)
+## `src/js/view3d/24-cinema.js` (762 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4384,16 +4398,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 216 `gfxNaN(eye, VPn)`
   - 226 `gfxEnd(now, eye, VPn, W, Hh)`
   - 268 `frameClock(raw)`
-  - 277 `frame()`
-  - 282 `frame0()`
-  - 473 `snapTake()`
-  - 478 `drawRoute(VP, eye)`
-  - 501 `driftSpray(VP, eye, dt, t, col)`
-  - 528 `drawSmoke(VP, eye, BM, dt)`
-  - 569 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 603 `splashFoam(x, z, r, a)`
-  - 605 `drawEffects(VP, eye, BM, dt, t)`
-  - 738 `updateLabels(VP, eye, W, Hh)`
+  - 280 `frame()`
+  - 285 `frame0()`
+  - 479 `snapTake()`
+  - 484 `drawRoute(VP, eye)`
+  - 507 `driftSpray(VP, eye, dt, t, col)`
+  - 534 `drawSmoke(VP, eye, BM, dt)`
+  - 575 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 609 `splashFoam(x, z, r, a)`
+  - 611 `drawEffects(VP, eye, BM, dt, t)`
+  - 744 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (229 linjer)
 

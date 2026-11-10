@@ -130,3 +130,65 @@ kranprøve som ikke var min, kostet nesten en time før jeg så at den rammet b�
 skriptet (hentet tilbake fra git), og en testrunde startet mot en gammel eksport; (4) ingen overlegg mot bildene (de ligger ikke i repoet),
 og bunnen, skegen og husets inndeling er antatt; (5) 13,7 t mot 12 t; (6) etter-bildene i spillet bare i liggende format (modellen er lik i
 begge, og brukerflaten er ikke endret).
+
+## 9. OB9: arbeidet om bord, bremmen og karakteren etter Jonas' skala (10.11.2026)
+
+Steg 87 i `docs/planer/koen.md`, Jonas' økt på grenen `claude/ob9-hurtigsjarken-75-jtun77`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Før- og etter-bildene er tatt med `tests/ombord.py hurtigsjark`, bare bilder, begge formater; arkene ligger i `docs/okter/2026-11-10-ob9/`.
+
+### 9.1 Bildene av typen (valg 22 B)
+
+**Bildene kunne ikke hentes i denne økta.** Bildeserveren (`upload.wikimedia.org`) svarte 429 med «Your request does not comply with our robot policy» på hver forespørsel, også originalene, og miniatyrene er flyttet til `thumb.wikimedia.org`, som skyøktas nett ikke slipper til. Beskrivelsessidene på `commons.wikimedia.org` svarte, så bildene under er valgt etter beskrivelsen og kategoriene, ikke sett av meg. Bilde 1–3 er de samme som OB8 så på og Jonas sa ja til («Ja, bruk dem»); 4–6 er nye og usette. Lisensene er ikke lest; bildene er referanse for planen, ikke lagt inn i spillet, og ligger ikke i repoet.
+
+| # | Bilde (Wikimedia Commons) | Hva det viser (etter beskrivelsen) | Sett |
+|---|---|---|---|
+| 1 | [SJARK … (SANGIS R-5-S 10,5x4,6m 2000) … Foto fra Jorenholmen P-hus A.jpg](https://commons.wikimedia.org/wiki/File:SJARK_fiskeb%C3%A5t_fiskegarn_Salg_av_fisk_fra_b%C3%A5t_ved_kai_(SANGIS_R-5-S_10,5x4,6m_2000)_%C3%98STERV%C3%85GKAIEN_Stavanger_havn_harbour_NORWAY_2022-03-29_Sale_from_fishing_boat_Garnrulle_Net_drum_winch_Foto_fra_Jorenholmen_P-hus_A.jpg) | En plastsjark fra 2000, 10,5 × 4,6 m, ovenfra ved kaia: styrhuset forut, garnhaleren på styrbord, sorteringen midt, garnrulla akter og garnet ut over hekken. Nærmest hurtigsjarkens dekksplan | av OB8 |
+| 2 | [samme båt, B](https://commons.wikimedia.org/wiki/File:SJARK_fiskeb%C3%A5t_fiskegarn_Salg_av_fisk_fra_b%C3%A5t_ved_kai_(SANGIS_R-5-S_10,5x4,6m_2000)_%C3%98STERV%C3%85GKAIEN_Stavanger_havn_harbour_NORWAY_2022-03-29_Sale_from_fishing_boat_Garnrulle_Net_drum_winch_Foto_fra_Jorenholmen_P-hus_B.jpg) og [C](https://commons.wikimedia.org/wiki/File:SJARK_fiskeb%C3%A5t_fiskegarn_Salg_av_fisk_fra_b%C3%A5t_ved_kai_(SANGIS_R-5-S_10,5x4,6m_2000)_%C3%98STERV%C3%85GKAIEN_Stavanger_havn_harbour_NORWAY_2022-03-29_Sale_from_fishing_boat_Garnrulle_Net_drum_winch_Steinkarkaien_Foto_fra_Jorenholmen_P-hus_C.jpg) | Samme sjark fra andre vinkler (beskrivelsen: «fibreglass … net drum/winch for handling fishing nets»): arbeidsdekket akter og hekken | B og C nei |
+| 3 | [Fishing boat Henningsvær DSC03772.jpg](https://commons.wikimedia.org/wiki/File:Fishing_boat_Henningsv%C3%A6r_DSC03772.jpg) | En sjark fra siden med styrhuset forut og arbeidsdekket akter | av OB8 |
+| 4 | [Sjark.jpg](https://commons.wikimedia.org/wiki/File:Sjark.jpg) | «Sjark i Ravnkloa, Trondheim» (2009) | nei |
+| 5 | [IMG 7024 Fiskebåt på Abelvær - sjark.jpg](https://commons.wikimedia.org/wiki/File:IMG_7024_Fiskeb%C3%A5t_p%C3%A5_Abelv%C3%A6r_-_sjark.jpg) og [IMG 7027-sjark abelvær.jpg](https://commons.wikimedia.org/wiki/File:IMG_7027-sjark_abelv%C3%A6r.jpg) | «Sjark i havna på Abelvær» | nei |
+
+Søkene som ble prøvd (søkesiden med `ns6`): «Nor-Dan», «hurtigsjark», «plastsjark», «sjark fiskebåt», «sjark Lofoten», «sjark Senja», «fishing boat Henningsvær/Svolvær/Ballstad», «Fishing boats in Lofoten», «Selfa», «Viksund fishing», og kategoriene `Sjark` og `Fishing boats of Norway`. Ingen bilder av en planende 10–11 m hurtigsjark med haleport ble funnet med navn eller kategori; bilde 1 er nærmest. Det som avgjør plassene under, er spillets egne mål (`check()`, `deckpoints`, sonden) og arbeidet slik planlisten og havsjarkens grunnlag beskriver det, ikke bildene.
+
+### 9.2 Dekket målt og plassene
+
+Målt i spillet før endringen med en liten sonde (som OB8: kjernen setter båten i juksa, fyller karet og skriver ut hvor folkene står etter 20 s; modellens x fra speilet, y babord +). **Juksa:** jigRail ga seks plasser, alle fire som ble brukt på styrbord: x 5,55 (i trinnene og døra til styrhuset), 4,85 (under taket like forut for haleporten), 2,40 og 1,35 (ved den foldede kranen). **Sløying:** de to ved benken sto 0,61 m fra hverandre (x 3,40 og 2,79), side om side men tett; i før-bildet ser de ut til å stå inni hverandre fordi kameraet ser langs dem. **Benken og stampene:** benken (spillets, 0,62 × 1,6 m) sto x 2,44–4,16, mens stampeblokken med åtte (`deckcrew.js` `kitBoxes`) sto x 3,08–5,22 over den samme dørken på babord: med lina om bord sto benken i stampene. **Kranen:** den foldede kranen ligger langs styrbord skanse fra kista (x 0,25–1,40) og forover til like akter for blødekaret (rundt x 2,1, sett ovenfra i `juksa_sloy_staaende_2.jpg`), så styrbord akter har ingen fri ripe for juksa. **Settingen:** spillet setter over hekken 0,45 m til styrbord i midjehøyden + 0,10 (`drawSetting`), her 3,00 m over kjølen mot hekkens topp 2,88: redskapet går fritt over hekken, så ingen setteport trengs (OB8s valg A gjaldt havsjarkens høye skanse).
+
+| Plass | Modellens x, y | Hvorfor |
+|---|---|---|
+| Sløyebenken (`work.table`, `BENCH`) | x 2,40 (før 3,30), y 1,55 | Langs babord ripe tvers av luka (luka x 1,75–2,95): fisken går rett ned i rommet, og benken står fri av stampene. Nummer to står 0,61 m forut for den første (sonden etter: x 2,39 og 3,00) |
+| Stampene (`kit.stamps`, `STAMP0`) | første rad x 5,30 (før 4,90), y 0,95 (før 1,30) | Under skjulet til babord, innenfor gangen langs babord ripe: blokken med åtte (spillets boks, `stamp_box()`) x 3,48–5,62, y 0,24–1,14, forut for benken med 0,22 m imellom, innenfor trinnene opp til sidedekket (y fra 1,50) og fri for juksaplassene ved ripa (gjennomgangen 10.11.2026: med y 1,30 sto begge babords juksaplasser i blokken) |
+| Juksaplassene (`anchors.jigZ`, ny) | babord 3,70, styrbord 4,95, babord 4,75 | Begge sider, over en meter imellom på samme side, ingen i haleporten (3,52–4,28), ved haleren, i døra og trinnene (fra 5,30), ved kranen eller under flaggmastas stag (til 1,90). Tre plasser for tre om bord; den fjerde i sonden (fire agenter) står ledig |
+| Babords gripelist | fjernet | Benken står langs skansen der den var (1,60–2,90) |
+| Spillets vannlinje (`WLE`) | 5 cm under tegningens | Valg 18 A: 11,99 t mot 12 t (`check()`, `qa/stubcheck.py`: 13,59 t ved tegningens) |
+
+### 9.3 Det som er endret
+
+- **Bremmen på styrhustaket** (valg 26): rundt hele takkanten, også ut over skansen over skjulet og visiret foran, med underkanten der den gamle leppen var (så haleporten og gangen ved huset har samme takhøyde): en kant på 3 cm med dryppkanten under, flaten skrår 0,10 m inn og 0,18 m opp, kronen 4 cm. Svart som stripene og lista, i stripenes malingssone (sone 2), så den følger malingen. `check()`: dryppkanten 1,90 m over sidedekket og 2,44 over arbeidsdekket (dekkskartet 1,85). Masta, stagføttene, rekka, lyskasteren, flåten og radarbrakettene står på kronen (`roof_top`).
+- **Styrhusveggene uten striper:** de skarpe kantene merkes på nytt etter at vinduene og døra er skåret ut (`shade(shell, 5)`). `qa/flatnorm.py`: 82 flater opptil 74° skjevt før, 0 etter.
+- **Plassene** som i tabellen; `check()` har to nye linjer: benken og stampeblokken fra hverandre med fritt dekk for nummer to 0,7 m forut og akter (en kropp 0,25 m bred til hver side), og juksaplassene på begge sider fri for det som står på ripa og for stampeblokken. Begge ble sett røde med stampene der de sto i første utkast (5,10 / 1,30) og grønne etter.
+- **Badestigen i hekken** (`vessel3d.js` `LADDERS.hurtigsjark`): spillets forlengelse under modellens stige er løftet 5 cm med den nye vannlinja, så det ikke blir en glipe (gjennomgangen).
+- **Vekta** (valg 18 A): formen står, spillets vannlinje `WLE = WL − 0,05` (som `plast31.py`), så den tomme båten ligger 5 cm høyere i sjøen; malingen står der formen har den.
+- **`STAB_AT.hurtigsjark`** (`core/03c-stability.js`) lest på nytt: `dy` 1,21, benken z 3,1, stampene x −0,95, z 0,2. Ny sjekk i `tests/unit/trim.test.mjs` som leser modellens eksporterte ankre og sammenligner hele tabellen, sett rød mot den gamle (dy, table og tub) og grønn etter.
+- **`crewclip`**: hurtigsjarken med i F19-lista (to ved samme bord minst 0,55 m imellom). Ikke sett rød: før-bygget ga 0,61.
+- **Spygattene** var alt åpne uten klaffer (runde 4), og klasjsjekkens unntak nevner ikke klaffer. **Pyntefenderne:** modellen hadde ingen igjen, bare kommentaren, som er rettet.
+- **Klasjsjekken** (`qa/clip_hurtig11.py`): 0 punkter, som før.
+
+### 9.4 Etter-bildene og det som står igjen
+
+Etter-bildene (`tests/ombord.py hurtigsjark`, begge formater, alle operasjonene: taket, vannlinja og plassene er endret, så ingen ble droppet; linesettingen og linetrekket tatt på nytt etter at stampene ble flyttet i gjennomgangen) og arkene i `docs/okter/2026-11-10-ob9/`: bremmen synes rundt hele taket, svart mot det gule; de som jukser, står på begge sider under skjulet og på babord ved takkanten, ingen i haleporten, døra eller ved kranen (F21 rettet); de to som sløyer, står side om side ved benken tvers av luka (F19: 0,61 m, som før, men nå med benken fri av stampene). **Står igjen:** (1) **Ingen akter ved stampene når det settes** (F4, OB3), og lina går fra stampene under skjulet på skrå over dekket til hekken. (2) **Tre i klump ved haleren når teinene trekkes** (de to som sorterer, står skulder i skulder med haleren rundt karet; `deckcrew.js`, ikke modellen). (3) **Ingen kjører kranen** (F23, OB4). (4) ~~`jukseMax` 6 mot tre juksaplasser~~: **valg 31 A** (Jonas 10.11.2026: «Valg A»): `jukseMax` 3, de overskytende maskinene og trinnet på dem betalt tilbake ved lasting (`ui/11-boot.js`; `tests/jukseboot.py` sett rød uten tilbakekjøpet av trinnet; `tests/unit/jig.test.mjs` sjekker tallet mot modellens juksaplasser, sett rød med 6). (5) De to ved benken står 0,61 m fra hverandre, side om side men tett (spillets `deckAt` gir 0,7 m og runder til rutene). (6) Babords gripelist er tatt bort der benken står; livbøya på babord akter (`kit.buoys`) henger ved flaggmastas stag, ikke på en list.
+
+### 9.5 Karakteren (forslag; Jonas setter den)
+
+Etter Jonas' skala (valg 17, `om-bord.md` kap. 2). Forslaget i OB0 var 59 etter en annen skala.
+
+| Punkt | Vekt | Forslag | Begrunnelse |
+|---|---|---|---|
+| Skrogutforming | 20 | 14 | Skroget er én flate med skegen, listene og slaget, jevne vannlinjer og linjer i plan (`check()`), den tomme båten 11,99 t mot 12 ved spillets vannlinje (valg 18 A). Trekk: linjene er lest av bilder uten målestokk, og bildene av typen kunne ikke ses i denne økta |
+| Detaljer | 20 | 15 | Ekte hull med lysning, åpne spygatt uten klaffer, bremmen, plane vegger uten striper (0 skjeve flater), klasjsjekken 0, stigen hel. Trekk: materialene er ikke PBR (F2); ingen setterenne akter (F9) |
+| Lanterner | 5 | 4 | Lovlige plasser og sektorer (`check()`, `lanterntest`), sidelanternene under bremmens underslag; ikke sett om natta i denne økta |
+| Styrhus | 10 | 8 | Konsollen, rattet, stolen og utsikten fra skipperens øye som før (`check()`, `brotest`), taket med bremmen og plane vegger |
+| Arbeidsflyt | 25 | 18 | Benken tvers av luka med fisken rett ned, to side om side, juksa fordelt fritt for haleporten, døra og kranen, settingen fritt over hekken. Trekk: ingen akter ved stampene (F4), tre i klump ved haleren i teinetrekket, ingen kjører kranen (F23) |
+| Utforming av dekk | 20 | 16 | Haleren, blødekaret, benken og luka samlet midt på dekket, stampene under skjulet fri av benken og juksaplassene, kranen og frakten akter, teinestabelen midt på dørken. Trekk: tre juksaplasser mot `jukseMax` 6, stampene langt fra hekken der lina går ut |
+| **Sum** | **100** | **75** | På grensen. Ingen funn med alvor A igjen som er hurtigsjarkens egne; det som trekker, er felles kode (F4, F23, klumpen ved haleren) og spørsmålet om juksamaskinene |
+
+Jonas setter karakteren.

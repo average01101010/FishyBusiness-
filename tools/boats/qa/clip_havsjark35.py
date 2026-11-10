@@ -29,7 +29,7 @@ for o in solids:
             if mn in OUTSIDE: continue
             if o.name == 'under' and abs(y) > B.y_at(x, z, sg) - 0.03: continue                   # bolted to the bottom, a little into it
             if any(abs(x - xo) < 0.07 and abs(z - B.WL - ho) < 0.07 for xo, _, ho in (B.EXH_W, B.BILGE)): continue    # the outlets' own linings
-            if any(x0 - 0.04 < x < x0 + l + 0.04 for x0, l in B.FREE) and B.z_deck(x) < z < B.z_deck(x) + 0.24: continue   # the freeing ports' linings and flaps
+            if any(x0 - 0.04 < x < x0 + l + 0.04 for x0, l in B.FREE) and B.z_deck(x) < z < B.z_deck(x) + 0.24: continue   # the freeing ports' linings (open, no flaps: Jonas 01.11.2026, valg 26)
             if any(abs(x - xp) < 0.2 and abs(z - B.PORT_Z) < 0.2 for xp in B.PORTS): continue      # the portholes' reveals, rings and dogs
             ya = B.y_at(x, z, sg)
             # through the hull's side or the bulwark between the body's bottom and the sheer (the strake, the chain plates outside)
