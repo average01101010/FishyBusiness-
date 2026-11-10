@@ -127,3 +127,49 @@ Det som må til for 75: Jonas ser på bildene uten å finne noe nytt, overlegg o
    **Jonas valgte 05.11.2026: 12 kn, som tegningen.** Hun er en deplasementsbåt med dyse: `vmax` 12, `planing` av, og ny butikktekst.
    Det tas i Ø7 (`docs/planer/okter-etter-backloggen.md`), etter H2, fordi `core/02-species-gear.js` og `ui/phone/10-fartoy.js` er H2s.
 2. **Vekta**: `disp` 15 t er tegningens lettvekt (16 t). Skal den være 16?
+
+## 10. OB10: arbeidet om bord, bremmen, vannlinja og karakteren etter Jonas' skala (10.11.2026)
+
+Steg 88 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-e7277295-e9i00p`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Før- og etter-bildene er tatt med `tests/ombord.py sjarkny`, bare bilder, begge formater, alle 16 operasjonene; arkene ligger i `docs/okter/2026-11-10-ob10/`.
+
+### 10.1 Bildene av typen (valg 22 B)
+
+**Ingen bilder kunne hentes i denne økta heller.** Bildeserveren (`upload.wikimedia.org`) svarte 429 på det ene forsøket, og søket (`commons.wikimedia.org/w/api.php`) svarte tomt etter noen få spørringer; sperren er ikke omgått. Kilden for denne båten er uansett **tegningen Jonas selv viste 02.11.2026** (D i kap. 1; «Gjør den mer lik tegningen. Altså hele båten»), som er bedre enn bilder av typen. Arket fra OB9 (`hurtigsjark-grunnlag.md` 9.1, fem bilder fra Wikimedia Commons av sjarker med styrhuset forut og arbeidsdekket akter; nummer 1 og 3 er sett av OB8 og godkjent av Jonas, resten valgt etter beskrivelsen) gjelder samme type og er det nærmeste som finnes; ingen nye bilder er lagt til, og ingen bilder er sett av meg. Det som avgjør plassene under, er tegningen, spillets egne mål (`check()`) og før-bildene.
+
+### 10.2 Det før-bildene viste
+
+- **De to som sløyer, sto i én klump** ved benken om styrbord (F19), og benken (2,80–4,40) sto 9 cm inn i blødekarets plass (4,31) og 20 cm inn i stampeblokken (0,99–3,01 med åtte om bord).
+- **Teinestabelen syntes ikke:** to av de fire plassene OB16 fant, sto inne i det lukkede dekkshuset (x 5,1, y 0,34) og inne i styrhuset (x 7,2), fordi dekkskartet regner gulvet i et lukket hus som dørk; de seks teinene i opptaket sto i dekkshuset. Teina som trekkes, ble lagt og tømt 2 m akter for haleren (`potDeck`), der benken sto.
+- **Juksa:** fire på styrbord, én i haleporten ved døra og én ved benken.
+- **Den forreste takstolpen** (x 4,60 på dørken) sto 5 cm inn i blødekarets kant.
+- **Vekta:** skroget fortrenger 45,0 t ved tegningens største vannlinje (tegningen: 42 t størst, 16 t lett); `VESSELS.sjarkny.disp` er 15 t. Spillets ramme sto på den største vannlinja, så hun lå som fullastet etter tegningen med tre ganger vekta spillet regner med.
+
+### 10.3 Plassene (modellens x fra speilet, y babord +)
+
+Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 6 cm rundt) før eksporten.
+
+| Plass | Før | Nå | Hvorfor |
+|---|---|---|---|
+| Sløyebenken (`work.table`, `TABLE`) | styrbord ripe, x 3,60 | **babord ripe tvers av luka**, x 2,25 (1,39–3,11), y 1,84 | Mellom kista og dekkshuset. Den som sløyer, står innenfor (y 1,20) med luka i ryggen, 0,80 m dørk mellom benken og luka; nummer to 0,7 m akter. Fisken går rett ned i rommet (som den brukte hurtigsjarken etter OB9) |
+| Kista med kranen (`LOCKER`) | babord, x 1,30–2,35 | babord hekk, **x 0,20–1,25** | Gir plass til benken forut for den; fortsatt «kran akter til babord» som tegningen, 1,1 m lenger akter. Babords lensport flyttet fra 0,34 til 1,45 (bak kista før) |
+| Flaggstanga (`pole`) | babord hjørne | **styrbord hjørne** | Sto 0,6 m fra kranens søyle; avvik fra tegningen (babord) |
+| Blødekaret (`work.tub`) | x 4,85 | som før | Rett akter for haleren |
+| Dørken under taket akter for karet | benken | **fri, x 3,15–4,25** | Her legges og tømmes teina (`kit.pots.spot`, ring 1,45 m ved x 3,50, y −1,30), og her går gangen fra haleren til dekket |
+| Stampene (`kit.stamps`, `STAMP0`) | x 2,75, y −0,95 | x 2,00, y −0,80: blokken x 0,18–2,32, y −0,61 til −1,51 | Langs lukas styrbord side akter for taket, ved hekken der lina går ut; 0,68 m gang til ripa |
+| Garnkaret (`kit.garn`) | styrbord hekk | som før | Garnet går ut over hekken 0,45 m til styrbord |
+| Teinestablene (`kit.pots`, `POTS`) | 4 × 6, to av dem inne i husene | **2 × 6**: styrbord hekk på dørken (x 0,85, y −1,41) og på luka (x 1,60) | Lomma i babord hekk mellom speilet, luka og kista er under 1,45 m. `gearMax.teine` 21 → **12** (valg 25 A: det dørken rommer) |
+| Juksaplassene (`anchors.jigZ`, ny) | `jigRail`: 4 av 6, én i haleporten | **styrbord 2,80, 1,70, 3,85, 0,65** | Godt en meter imellom (1,05), fri for flaggstanga, takstolpene, karet, haleporten, haleren og døra. **Ingen om babord:** babord ripe er dekkshuset, benken og kista fra styrhuset til speilet. `jukseMax` 6 → **4** (som valg 31 A for den brukte) |
+| Takstolpene (`POSTS`) | på dørken, x 3,23 og 4,60 | **på styrbord kappe**, x 3,23 og 4,42 | Fri dørk; ingen i karet |
+| Livbøya om styrbord | gripelista ved x 2,60 | x 1,18 | Mellom to juksaplasser, ikke ved en |
+
+### 10.4 Det som ellers er endret
+
+- **Bremmen på styrhustaket** (valg 26): rundt hele takkanten, også ut over skansen over dekkshuset og haleplassen og visiret foran. Underkanten står der den oransje kanten var (3 cm oransje med dryppkanten under), flaten skrår 0,10 m inn og 0,18 m opp **i skrogets petrol** og i skrogets malingssone, kronen 4 cm. `check()`: dryppkanten 2,17 m over arbeidsdekket og haleplassen (dekkskartet 1,85). Masta, flåten og rekka står på kronen (`roof_top`).
+- **Styrhusveggene uten striper:** de skarpe kantene merkes på nytt etter vinduskuttet (`shade(shell, 5)`). `qa/flatnorm.py`: 90 flater opptil 74° skjevt på styrhuset før, 0 etter (igjen: to flater på den skrå mastesøylen 20,6°, rund del, grensen er 20).
+- **Spygattene** var alt åpne uten klaffer. **Pyntefendere:** modellen hadde ingen.
+- **Den tomme båtens vannlinje** (valg 18 A): formen står, spillets vannlinje `WLE = WL − 0,665` gir 14,83 t mot 15 t. Hun ligger **0,67 m høyere** i spillet enn før: fribord midtskips 2,36 m, arbeidsdekket 1,59 m over vannet, dypgang med kjølen 1,40 m, dysas topp 0,47 m under vannet. Det er det tegningens skrog gir for en tom båt på 15–16 t (største deplasement 42 t ved 2,06 m). **Malingen følger spillet:** spillet laster henne med høyst 7 t fisk, 2,4 t is og 2 t olje (26,4 t, 0,26 m dypere), så bunnstoffet og vannlinjestripa er lagt etter den lastede vannlinja `WLL`, ikke tegningens største, som hun aldri når i spillet. Leideren i hekken er forlenget ned til den nye vannlinja. `VESSELS.sjarkny.draft` 2,06 står (tegningens største).
+- **`STAB_AT.sjarkny`** (`core/03c-stability.js`) lest på nytt: `dy` 1,6, benken [−1,84, 3,25], stampene [0,8, 3,5], teinene [0,7, 4,27]. Sjekk i `tests/unit/trim.test.mjs` mot modellens eksporterte ankre.
+- **Enhetssjekkene** (`trim`, `jig`, `teiner`): sett røde mot den gamle modellen og de gamle tallene (4 FEIL av 2 814), grønne etter.
+- **Settingen:** redskapet går ut over hekken i 2,97 m mot hekkens topp 2,87 (`drawSetting`: ripas høyde + 0,10): fritt, ingen setteport trengs.
+- **Klasjsjekken** (`qa/clip_hs11.py`): 0 punkter.
+- **`crewclip`**: sjarkny med i F19-lista. Ikke sett rød: før-bygget ga også over 0,55 m mellom de to (klumpen i før-bildene er to som står tett langs kameraets retning og benken inn i karet og stampene); juksa 4 av 4 plasser etter (4 av 6 før).

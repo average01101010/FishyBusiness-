@@ -3,6 +3,12 @@
 // heller»), the skiff the same (valg 23 A), and the nets drawn by hand on both (valg 21 B). One rule (CLAUDE.md «Én logikk i alle
 // kjøpssystemer»): VESSELS rigs is the datasheet, equipFits (fit.rig) and buyGate follow it, and a save that had pots on her loses nothing
 // (potsUnfit: the pots ashore at the full price in port, the pot hauler and the crab tank off at the next yard at what they cost).
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+const anchorsOf = file => { const b = Buffer.from(readFileSync(join(ROOT, 'src', 'data', file), 'utf8').trim(), 'base64'), n = b.readUInt32LE(12);
+  return JSON.parse(b.subarray(20, 20 + n).toString('utf8')).scenes[0].extras.anchors; };
 export default function (t){
   const K = t.K, {VESSELS, EQUIP, POTS, PORTS} = K;
   const S = K.newState(); K.set('S', S);
@@ -27,7 +33,9 @@ export default function (t){
     t.ok(!VESSELS[v].rigs.includes('teiner') && !K.equipFits('teinehaler', v) && !K.equipFits('krabbekar', v), v + ': ingen teiner, teinehaler eller krabbekar (valg 25 A)');
     t.ok(/ikke plass til kongekrabbeteiner/.test(VESSELS[v].desc.no) && /no room for king crab pots/.test(VESSELS[v].desc.en), v + ': båtbladet sier at det ikke er plass til teinene');
   }
-  t.eq(['hurtigsjark', 'sjarkny', 'breisjark', 'kyst21'].map(v => VESSELS[v].gearMax.teine), [6, 21, 6, 30], 'teinene båtene har plass til: 6, 21, 6 og 30 (stablene på dekk)');
+  t.eq(['hurtigsjark', 'sjarkny', 'breisjark', 'kyst21'].map(v => VESSELS[v].gearMax.teine), [6, 12, 6, 30], 'teinene båtene har plass til: 6, 12, 6 og 30 (stablene på dekk)');
+  // (the new hurtigsjark, OB10: as many as her model's stacks hold; two of the four places from OB16 stood inside her houses)
+  { const P = anchorsOf('boat-hs11.b64').kit.pots.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.sjarkny.gearMax.teine, 'sjarkny: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabler)'); }
   t.ok(K.equipFits('krabbekar', 'hurtigsjark'), 'den brukte hurtigsjarken kan fortsatt ha krabbekar');
 
   // ---- buying: the pots, the rig, and the nets by hand

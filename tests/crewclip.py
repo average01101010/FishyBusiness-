@@ -64,8 +64,8 @@ async def main():
         print(ok(not workBad), 'nor does the work at its places (jigging, gutting, icing, hauling)', workBad)
         # (F19: the boats revised on board so far, OB5-OB9; the others are their phases' to put right, printed so they are seen)
         near = {vt: r['pair'] for vt, r in R.items() if r and r.get('pair') is not None and r['pair'] < 0.55}
-        unm = [vt for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark') if R.get(vt) and R[vt].get('pair') is None]
-        print(ok(not any(vt in near for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark'))), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; the revised boats; no pair to measure: %s)' % (unm or '-'), near)
+        unm = [vt for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny') if R.get(vt) and R[vt].get('pair') is None]
+        print(ok(not any(vt in near for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny'))), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; the revised boats; no pair to measure: %s)' % (unm or '-'), near)
         walk = {vt: [r['walk'], r['walked'], r.get('walkAt')] for vt, r in R.items() if r and r['walk']}
         print(ok(not walk and all(r['walked'] > 50 for r in R.values() if r)), 'nor a body on the way between them (shoulders, chest and back, every tenth of a second)', walk)
         given = {}

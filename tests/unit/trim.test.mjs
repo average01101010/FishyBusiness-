@@ -89,4 +89,13 @@ export default function (t){
       haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern]};
     for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
       t.ok(d < 0.02, 'hurtigsjark: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
+  // ---- the same for the new hurtigsjark (OB10, 10.11.2026): the game's waterline is the empty boat's (WLE, 0.665 m under the drawing's
+  // largest, which carries 45 t), so the deck stands 1.6 m over the water; the bench to port abreast the hatch, the line tubs along the
+  // hatch's starboard side aft, the pots in the starboard quarter and on the hatch ----
+  { const A = anchorsOf('boat-hs11.b64'), T = K.STAB_AT.sjarkny, xz = p => [p[0], p[2]], P = A.kit.pots.at;
+    const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
+      haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern],
+      pots:[T.pots, [P.reduce((a, q) => a + q[0], 0) / P.length, P.reduce((a, q) => a + q[2], 0) / P.length]]};
+    for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
+      t.ok(d < 0.02, 'sjarkny: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
 }

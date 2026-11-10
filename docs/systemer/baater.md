@@ -161,7 +161,7 @@ Tabellene under er hentet fra spillet 19.10.2026 (`VESSELS` etter `vesselDerive`
 | `plastsjark` | styrhus | – | kokeplate | – | – | – | 1 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 30 / 18 / 12 | 250 kg | 4 |
 | `sjark` | styrhus | – | kokeplate | ja | – | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 40 / 24 / 18 | 300 kg | 5 |
 | `hurtigsjark` | styrhus | – | kokeplate | ja | – | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 50 / 26 / 18 | 350 kg | 6 |
-| `sjarkny` | styrhus | – | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 60 / 30 / 21 | 400 kg | 6 |
+| `sjarkny` | styrhus | – | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 60 / 30 / 12 | 400 kg | 4 |
 | `breisjark` | styrhus | ja | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 100 / 33 / 20 | 450 kg | 6 |
 | `kyst15` | styrhus | ja | bysse | ja | ja | ja | 3 / 2 | ja | 1 | – / – | linehaler, garnhaler, teinehaler | 160 / 33 / 30 | 800 kg | 8 |
 | `kyst21` | styrhus | – | bysse | ja | ja | ja | 3 / 2 | ja | 2 | – / – | linehaler, garnhaler, teinehaler | 240 / 33 / 30 | 1200 kg | 8 |

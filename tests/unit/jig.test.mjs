@@ -28,4 +28,7 @@ export default function (t){
   // jigging places (anchors.jigZ, OB9), so she takes three; reels over that went ashore and were paid back (ui/11-boot.js) ----
   { const A = anchorsOf('boat-hurtig11.b64'), n = (A.jigZ || []).length;
     t.ok(n >= 3 && V.hurtigsjark.jukseMax <= n, 'hurtigsjark: plass til ' + V.hurtigsjark.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
+  // (the same for the new hurtigsjark, OB10: four places on her starboard rail; her port side is the deckhouse, the bench and the crane)
+  { const A = anchorsOf('boat-hs11.b64'), n = (A.jigZ || []).length;
+    t.ok(n >= 4 && V.sjarkny.jukseMax <= n, 'sjarkny: plass til ' + V.sjarkny.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
 }
