@@ -30,13 +30,13 @@ Godkjenningsgrensen er Jonas' (01.11.2026): ingenting under 75/100. Grunnlagene 
 | Arbeidsflyt | 25 | Arbeidet om bord: operasjonene i kapittel 4 (rekkefølgen, grepene, mannskapet, ingen gjennom noe) |
 | Utforming av dekk | 20 | Dekket og plassene: utstyret der fiskeren arbeider, gangveiene, garnbinger, stamper, teiner, kar og luker |
 
-Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne punkter; de er det som gjør at punktene over kan settes. Hver fase setter karakteren etter denne skalaen med begrunnelse per punkt, og Jonas setter den endelige.
+Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne punkter; de er det som gjør at punktene over kan settes. Hver fase setter karakteren etter denne skalaen med begrunnelse per punkt, og økta setter den endelige som en egen evaluering (Jonas 10.11.2026).
 
 **Karakterene under er satt før Jonas valgte skala**, etter en rekonstruksjon av grunnlagenes fritekst med åtte punkter (kilder 15, skrog og vekt 20, detalj 15, lanterner 5, broa 10, arbeidsflyt og plasser 15, kontroller og tester 10, prosessen 10). De viser rekkefølgen og hvor langt unna båtene er; fasene setter dem på nytt etter Jonas' skala.
 
 **Fra revisjonen:** arbeidsflyten (25) settes etter operasjonene i kapittel 4, og en båt bør ikke få mer enn rundt 60 % på den så lenge et funn med alvor A står åpent for henne (forslag; Jonas avgjør).
 
-**Karakterene** (satt i grunnlagene; trebåten, skiffen og snekka er forslag fra denne revisjonen, med punktene i kapittel 4). Jonas setter karakteren før en båt regnes som ferdig.
+**Karakterene** (satt i grunnlagene; trebåten, skiffen og snekka er forslag fra denne revisjonen, med punktene i kapittel 4). Karakteren settes av økta som bygger, som en egen evaluering (Jonas 10.11.2026: «Det er ikke jeg som skal sette karakter»), og en båt regnes som ferdig ved 75 eller mer.
 
 | Båt | Satt i grunnlaget | Etter OB0 | Kapittel |
 |---|---|---|---|
@@ -113,7 +113,7 @@ Data: 7,0 m, 1,9 t, én i mannskapet og deg, ingen køyer, ett fangstkar på 500
 
 Karakteren (forslag, skalaen i kap. 2): K1 3, K2 15, K3 13, K4 4, K5 8, K6 6 (teinene gjennom skroget, de to inni hverandre ved karet, settingen uten folk), K7 8, K8 6 = **63**. Det som løfter mest: bilder med kjent lengde (K1), teinene og haleren der fiskeren arbeider (K6), og Jonas' gjennomgang uten nye funn (K8).
 
-**OB1 (09.11.2026, Jonas' økt, grenen `ccr-e474ac41-zlir5x`):** teinene er ute (`rigs`, `fit.rig`, `potsUnfit`; skiffen likt), garnet trekkes for hånd (`handGear`); stampene, garnbinga og frakten står på dørken akter; linehaleren står på stolpen rett forut for fiskeren (`haulFoot`); juksahjulet er en modell etter Jonas' bilde (`tools/gear/vinde.py`); settingen går over styrbord låring med skipperen ved rorkulten og den andre ved stampene; ved trekket legger den andre lina i stampen; skipperen tar tauene selv ved kaia og naustet; de to ved karet står ikke i hverandre (`work.mate`). Funnene i tabellen over med alvor A er rettet, så nær som fenderne og tauene selv (`15-env-mooring.js`, OB2) og skroget (+11 %, venter på bildene etter valg 22 B). Bildene før og etter i `docs/okter/2026-11-09-ob1/`; karakteren etter Jonas' skala som forslag i `trebat-grunnlag.md` kap. 8.3. Jonas setter karakteren.
+**OB1 (09.11.2026, Jonas' økt, grenen `ccr-e474ac41-zlir5x`):** teinene er ute (`rigs`, `fit.rig`, `potsUnfit`; skiffen likt), garnet trekkes for hånd (`handGear`); stampene, garnbinga og frakten står på dørken akter; linehaleren står på stolpen rett forut for fiskeren (`haulFoot`); juksahjulet er en modell etter Jonas' bilde (`tools/gear/vinde.py`); settingen går over styrbord låring med skipperen ved rorkulten og den andre ved stampene; ved trekket legger den andre lina i stampen; skipperen tar tauene selv ved kaia og naustet; de to ved karet står ikke i hverandre (`work.mate`). Funnene i tabellen over med alvor A er rettet, så nær som fenderne og tauene selv (`15-env-mooring.js`, OB2) og skroget (+11 %, venter på bildene etter valg 22 B). Bildene før og etter i `docs/okter/2026-11-09-ob1/`; karakteren etter Jonas' skala som forslag i `trebat-grunnlag.md` kap. 8.3. Karakteren settes av økta som en egen evaluering (Jonas 10.11.2026).
 
 ### 4.2 Skiffen (`skiff`, `skiff59.py`): forslag 57/100
 
@@ -146,7 +146,7 @@ Merk: klippesjekken (`crewclip`, `clipNow`) prøver bare agentene, så ingen av 
 
 **Til Jonas:** På skiffen står den som sløyer, ute i lufta på utsiden av ripa, og krabbeteina er like bred som båten; teinene bør ut av skiffen som av trebåten (valg 23 A).
 
-**OB5 (09.11.2026, Jonas' økt, grenen `ccr-b0ab5771-n45cmj`):** den som sto utenfor ripa, var nummer to ved sløyingen (uten `work.mate` la spillet ham utenfor babord side); han står nå på dørken ved fangstkaret. Skiffen har fått plassene fra OB1 (`set`, `setter`, `coil`, `coilTub`, `moor`, `rail`, `haulFoot`): setting over styrbord låring fra stampene og binga på dørken akter med skipperen ved rattet og den andre på benken, trekket med den andre ved stampen forut for fiskeren, linehaleren på stolpen rett forut for fiskeren, garnet for hånd over ripa. Vannlinja er den tomme båtens (0,96 t mot 1,0; formen er ikke endret), og 90 hk-motoren synes når den er kjøpt (D6). Funnene med alvor A som er skiffens egne, er rettet; teinene var ute fra OB1. Bildene før og etter i `docs/okter/2026-11-09-ob5/`; karakteren som forslag (75) i `skiff-grunnlag.md` kap. 10.3. Jonas setter karakteren.
+**OB5 (09.11.2026, Jonas' økt, grenen `ccr-b0ab5771-n45cmj`):** den som sto utenfor ripa, var nummer to ved sløyingen (uten `work.mate` la spillet ham utenfor babord side); han står nå på dørken ved fangstkaret. Skiffen har fått plassene fra OB1 (`set`, `setter`, `coil`, `coilTub`, `moor`, `rail`, `haulFoot`): setting over styrbord låring fra stampene og binga på dørken akter med skipperen ved rattet og den andre på benken, trekket med den andre ved stampen forut for fiskeren, linehaleren på stolpen rett forut for fiskeren, garnet for hånd over ripa. Vannlinja er den tomme båtens (0,96 t mot 1,0; formen er ikke endret), og 90 hk-motoren synes når den er kjøpt (D6). Funnene med alvor A som er skiffens egne, er rettet; teinene var ute fra OB1. Bildene før og etter i `docs/okter/2026-11-09-ob5/`; karakteren som forslag (75) i `skiff-grunnlag.md` kap. 10.3. Karakteren settes av økta som en egen evaluering (Jonas 10.11.2026).
 
 ### 4.3 Snekka (`snekke`, `snekke26.py`): forslag 67/100
 
@@ -178,7 +178,7 @@ Opptakene: kjøringen 03:45–04:23 UTC, liggende, 2,8–3,9 bilder i sekundet. 
 
 **Til Jonas:** Snekka er den båten der arbeidet ser mest ekte ut (sløyingen og garntrekket er riktige), men den tredje juksaplassen står inne i hardtopstolpen og teina settes ned oppå karet og folkene.
 
-**OB6 (09.11.2026, Jonas' økt, grenen `ccr-9258fc31-wklbu7`):** juksaplassene kommer fra modellen (`anchors.jigZ`): styrbord akter for haleren og babord i åpningen mellom hardtopstolpene, fiskeren fritt ved cockpitripa; plass 2 i hardtopstolpen og maskinen ute på sidedekket er borte, og `crewclip` prøver nå juksaplassene (sett rød på snekka først, `jig:2`). Bare to plasser: en tredje ved ripa står i styrestolen, iskassa eller et fangstkar på den 1,8 m brede dørken. Livbøyene henger akter ved fangstkarene, der ingen arbeider. Vannlinja er den tomme båtens (3,00 t; tegningens 1,20 m ga 3,57 t, formen er ikke endret). Teinene får ikke plass flatt på dørken uten å stå i et kar, stolen eller folkene, så snekka driver ikke med teiner (valg 24 A, Jonas: «Om båten ikke har plass til teiner på en realistisk måte, skal den ikke drive med teiner»). **Står igjen:** settingen akter fra stampene (F4, OB3). Jonas samme dag: snekka har deg og én til og høyst to maskiner, og båter med plass til færre enn fire har ingen redningsflåte og ingen livbøye. Karakteren som forslag (77) i `snekke-grunnlag.md` 9.4; Jonas setter den.
+**OB6 (09.11.2026, Jonas' økt, grenen `ccr-9258fc31-wklbu7`):** juksaplassene kommer fra modellen (`anchors.jigZ`): styrbord akter for haleren og babord i åpningen mellom hardtopstolpene, fiskeren fritt ved cockpitripa; plass 2 i hardtopstolpen og maskinen ute på sidedekket er borte, og `crewclip` prøver nå juksaplassene (sett rød på snekka først, `jig:2`). Bare to plasser: en tredje ved ripa står i styrestolen, iskassa eller et fangstkar på den 1,8 m brede dørken. Livbøyene henger akter ved fangstkarene, der ingen arbeider. Vannlinja er den tomme båtens (3,00 t; tegningens 1,20 m ga 3,57 t, formen er ikke endret). Teinene får ikke plass flatt på dørken uten å stå i et kar, stolen eller folkene, så snekka driver ikke med teiner (valg 24 A, Jonas: «Om båten ikke har plass til teiner på en realistisk måte, skal den ikke drive med teiner»). **Står igjen:** settingen akter fra stampene (F4, OB3). Jonas samme dag: snekka har deg og én til og høyst to maskiner, og båter med plass til færre enn fire har ingen redningsflåte og ingen livbøye. Karakteren som forslag (77) i `snekke-grunnlag.md` 9.4; økta setter den som en egen evaluering.
 
 ### 4.4 Plastsjarken (`plastsjark`, `plast31.py`): forslag 63/100 (satt 66)
 
@@ -447,7 +447,7 @@ Bilder til Jonas:
 
 ### 4.11 Etter OB2 (09.11.2026): arbeidsflyten med fortøyningen, forslag
 
-OB2 (steg 80, grenen `ccr-a9ccd5ec-it307t`) rettet F1, F2 og F3 for alle båtene med mannskap: fenderne henges ut av hendene på vei inn, tauene kastes fra der hånden står, skipperen står ved roret til hun ligger, og ingen går inn før tauene og fenderne er inne og tauene kveilet (5.19c i `docs/systemer/folk-om-bord.md`). F22 (siden mot kaia) er flyttet til OB4. De andre A-funnene står, så K6 holdes under taket på rundt 60 %; forslaget er ett poeng opp på K6 (skalaen fra revisjonen, 15 poeng) for hver av dem. **Jonas setter karakteren.**
+OB2 (steg 80, grenen `ccr-a9ccd5ec-it307t`) rettet F1, F2 og F3 for alle båtene med mannskap: fenderne henges ut av hendene på vei inn, tauene kastes fra der hånden står, skipperen står ved roret til hun ligger, og ingen går inn før tauene og fenderne er inne og tauene kveilet (5.19c i `docs/systemer/folk-om-bord.md`). F22 (siden mot kaia) er flyttet til OB4. De andre A-funnene står, så K6 holdes under taket på rundt 60 %; forslaget er ett poeng opp på K6 (skalaen fra revisjonen, 15 poeng) for hver av dem. **Karakteren settes av økta som en egen evaluering (Jonas 10.11.2026).**
 
 | Båt | K6 før | K6 forslag | Sum før | Sum forslag | Det som fortsatt holder K6 nede |
 |---|---|---|---|---|---|
@@ -549,7 +549,7 @@ Hva tallene gjør med S4 og S5: fullastet trimmer de fleste sjarkene akter, så 
 Én båt per økt, eller én operasjon på tvers av båtene der koden er felles. Trebåten først (startbåten, alle spillerne ser den første uka), så det felles arbeidet som ses hver tur, så båtene i stigens rekkefølge. Hver fase:
 
 - tar opp **før** med `tests/ombord.py <båt>` (eller `--ops` for operasjonen) før den endrer noe, og **etter** når den er ferdig, i begge formater, og sender Jonas bildene (ikke videoene) fra begge;
-- setter karakteren i grunnlaget etter skalaen i kapittel 2 med begrunnelse per punkt, men **Jonas setter karakteren** før båten regnes som ferdig (75 eller mer, og ingen funn med alvor A igjen);
+- setter karakteren i grunnlaget etter skalaen i kapittel 2 med begrunnelse per punkt, men **økta som bygger eller reviderer båten setter karakteren selv, som en egen evaluering mot skalaen i kapittel 2 med begrunnelse per punkt (Jonas 10.11.2026; helst gjort av en egen underagent som bare får bildene og skalaen, så karakteren ikke bare gjentar forslaget)**, og båten regnes som ferdig når den er 75 eller mer (75 eller mer, og ingen funn med alvor A igjen);
 - kjører testene for filene den rører (`/lever`), og `hull3d` for båten med fullt rom der skroget eller vekta endres;
 - følger `/blender` når en modell endres, og regelen om at ingen redskap modelleres inn i båten (Jonas 18.10.2026): det spilleren kjøper, står på ankrene.
 
