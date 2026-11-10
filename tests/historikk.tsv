@@ -1973,3 +1973,5 @@
 2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	megletest	OK	16	lite	samtidig	
 2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	quotatest	OK	19	lite	samtidig	
 2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	boottest	OK	27	lite	samtidig	
+2026-11-10 15:18	claude/hs5-kronene-landingene-niqy2q	7c76d74	boottest	OK	28	lite	samtidig	
+2026-11-10 15:18	claude/hs5-kronene-landingene-niqy2q	7c76d74	admintest	OK	13	lite	samtidig	

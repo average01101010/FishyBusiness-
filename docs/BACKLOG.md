@@ -5,7 +5,6 @@
 ## Spillarbeid som venter (26.10.2026)
 
 - **HS5, kronene og landingene sjekket på serveren (10.11.2026, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`; `docs/planer/haill-saldo.md` HS5, `docs/systemer/skyen-og-felles-verden.md`):** migreringen `20261110160000_cheat_flags.sql`, fanen «Juks» i admin. Står igjen:
-  - **Ikke rullet ut:** migreringen er ikke kjørt (Supabase-verktøyet ba Jonas bekrefte, og fikk ikke svar 10.11.2026). Grenen er testet og flettet med arbeidsgrenen (e8bd9ed); når migreringen er kjørt og sjekket, flettes grenen inn.
   - **Bryteren `cheat_on` er av.** Jonas slår den på i admin → Juks når han har sett tallene i planen. Til da skrives merkene bare.
   - **Grensene er målt mot lite:** 10 kontoer med landinger, alle med én båt (trebåt, snekke, sjark). Flere båter, driftsplan over mange døgn og havbåter er regnet, ikke målt. Se på merkene i admin de første ukene, og juster `cheat_land` (8 laster, én last i timen) og `saves_cheat_check` (300 000 kr uforklart per døgn, 30 kr per kg last og time) etter dem.
   - **Feil merke som kan komme:** salg av en båt spilleren ikke står i når flåteverdien ikke er meldt (uten samtykke), og en første lagring med mye penger fra spill uten sky. Begge fjernes med «Fjern merket».
