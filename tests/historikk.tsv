@@ -1991,3 +1991,23 @@
 2026-11-10 18:05	ccr-da624f01-5lbjel	d661847	vectest	OK	606	3d	alene	
 2026-11-10 18:06	ccr-da624f01-5lbjel	d661847	dbg23o	OK	43	3d	alene	
 2026-11-10 19:42	ccr-e7277295-e9i00p	b4e649a8	boottest	OK	24	lite	alene	
+2026-11-10 21:57	ccr-adaac755-n9bghe	2d4381db	jukseboot	OK	11	lite	samtidig	
+2026-11-10 21:59	ccr-adaac755-n9bghe	2d4381db	jukseboot	OK	14	lite	samtidig	
+2026-11-10 22:00	ccr-adaac755-n9bghe	2d4381db	kotest	OK	25	lite	samtidig	
+2026-11-10 22:03	ccr-adaac755-n9bghe	2d4381db	driftsplan2kyst	OK	220	lite	samtidig	
+2026-11-10 22:03	ccr-adaac755-n9bghe	2d4381db	megletest	OK	23	lite	samtidig	
+2026-11-10 22:03	ccr-adaac755-n9bghe	2d4381db	kvotemarkedtest	OK	34	lite	samtidig	
+2026-11-10 22:03	ccr-adaac755-n9bghe	2d4381db	boostklokke	OK	61	lite	samtidig	
+2026-11-10 22:03	ccr-adaac755-n9bghe	2d4381db	draftlooptest	OK	31	lite	samtidig	
+2026-11-10 22:05	ccr-adaac755-n9bghe	2d4381db	bootgtest	OK	186	lite	samtidig	
+2026-11-10 22:05	ccr-adaac755-n9bghe	2d4381db	skipdrift	OK	33	lite	samtidig	
+2026-11-10 22:05	ccr-adaac755-n9bghe	2d4381db	haillplass	OK	10	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	colregtest	OK	605	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	rttest	OK	49	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	istest	OK	19	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	lybtest	OK	35	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	havtur	FEIL	99	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	snokrabbetest	OK	14	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	krabbefabrikktest	OK	21	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	autolinetest	OK	13	lite	samtidig	
+2026-11-10 22:14	ccr-adaac755-n9bghe	2d4381db	fabrikktest	FEIL	16	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
