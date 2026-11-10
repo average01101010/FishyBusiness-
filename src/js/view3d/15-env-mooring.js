@@ -203,7 +203,9 @@
     for (let k = 0; k < 3; k++){ const f = MO.fend[k]; if (f <= 0.02) continue; const q = at('f' + k), u = f * f * (3 - 2 * f);
       const H = q ? [q[0] + sd * 0.14, q[1] - 0.5, q[2]] : Sp.fend[k], Rl = q ? [q[0], q[1], q[2]] : [sd * sx * 0.9, gw, H[2]], I = [Rl[0] - sd * 0.3, Rl[1] + 0.12, H[2]];
       const P = [I[0] + (H[0] - I[0]) * u, I[1] + (H[1] - I[1]) * u, H[2]];
-      drawN(FENDM, chain(BMrel, M4.T(P[0], P[1], P[2]))); drawN(ROPEM, chain(BMrel, limbM([P[0], P[1] + 0.25, P[2]], Rl, 0.012))); }
+      // (the fender's model, the same on every boat: tools/deck/anker.py 'fender', its line to the top eye; Jonas 10.11.2026)
+      const FK = kit('anchor', 'fender'), ey = FK ? ((kitX('anchor').fender || {}).eye || [0, 0.31, 0])[1] + 0.02 : 0.25;
+      drawN(FK || FENDM, chain(BMrel, M4.T(P[0], P[1], P[2]))); drawN(ROPEM, chain(BMrel, limbM([P[0], P[1] + ey, P[2]], Rl, 0.012))); }
     if (coils) for (let i = 0; i < 4; i++) if (MO.lines - i <= 0){ const C = cleat[LINE_CL[i]]; drawCoil(BMrel, i === 3 ? [C[0], C[1], C[2] - 0.38] : C, sd); }
     if (!bp) return;
     const bl = QB[faceKey(bp.face)]; if (!bl || !bl.length || MO.lines <= 0) return;

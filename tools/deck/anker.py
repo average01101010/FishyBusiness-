@@ -1,5 +1,6 @@
 """The boats' own anchors and their chain, built in Blender (Jonas 21.10.2026: «Lag også en blendermodell av ankeret til båtene, samt
-en animasjon for utsett og opptak av ankeret»). The game scales each anchor to the boat's size and draws the chain or the rope itself
+en animasjon for utsett og opptak av ankeret»), and the fender the hands hang out at the quay and the round buoy (blåse) (Jonas
+10.11.2026, with a picture of each: «en felles blender-modell som brukes av alle båtene»). The game scales each anchor to the boat's size and draws the chain or the rope itself
 (view3d.js drawAnchor); every boat carries one (it is the ship's own, not bought gear, core/06e-anchor.js).
 
     plog    a plough anchor of the Delta kind for the boats up to about 15 m (the usual bower on Norwegian sjarks and coastal boats
@@ -13,6 +14,9 @@ en animasjon for utsett og opptak av ankeret»). The game scales each anchor to 
     stud    a stud-link (with the crossbar) for the large ones, both at a wire size of 1 (the game scales them to the chain's size in
             metres): 6 long and 3.6 wide over all, the pitch (the inner length, the spacing from link to link) 4. The studless galvanised,
             the stud-link black.
+    fender  a cylindrical fender, 0.22 m across and 0.62 m over the eyes: the white body, the navy end caps tapering to a moulded eye at
+            each end, from its middle, upright; the line to the top eye. The same on every boat (view3d/15-env-mooring.js).
+    blaase  a round buoy of the A kind, 0.40 m across: orange, the navy top tapering to its eye, from the ball's middle, the eye up.
 
 Each anchor from the middle of its shackle's bow, where the chain is made fast (the origin), the shank running from there along +z to
 the crown, its upper side +y. The links from their middle, lying along z in the x-z plane.
@@ -46,6 +50,9 @@ def colours():
     C['black'] = mat('black', (0.06, 0.06, 0.065), 0.35)
     C['blk2'] = mat('blk2', (0.10, 0.09, 0.085), 0.25)
     C['chainb'] = mat('chainb', (0.11, 0.10, 0.09), 0.3, metal=0.3)
+    C['fwhite'] = mat('fwhite', (0.90, 0.90, 0.88), 0.45)
+    C['fnavy'] = mat('fnavy', (0.07, 0.09, 0.22), 0.4)
+    C['forange'] = mat('forange', (0.95, 0.33, 0.06), 0.45)
 
 # ---------- helpers ----------
 def extrude(A, poly_zy, x0, x1, m):
@@ -195,16 +202,40 @@ def chainlink(name, stud, m):
     if stud: acyl(A, gb(-Rr + 0.3, 0, 0), gb(Rr - 0.3, 0, 0), 0.30, lambda z: m, seg=8)
     return A.done(40)
 
+# ---------- the fender and the buoy (Jonas 10.11.2026, with a picture of each: «av de funksjonelle fenderne som henges ut kan du få lage en
+# felles blender-modell som brukes av alle båtene. Sendte en blåse også»): the fender the hands hang out over the side when she comes in to
+# the quay (view3d/15-env-mooring.js, OB2), the same on every boat; and the round buoy (blåse) with an eye on top, for the gear's ends ----
+FE_R = 0.11; FE_H = 0.195     # the fender: the white body's radius and half its length (a cylindrical fender of the common 0.22 x 0.6 m size)
+FE_EYE = 0.312                # its eyes' middles over and under its middle (the line is made fast to the top one)
+def eye(A, cy, r, t, m, seg=12):
+    """a moulded eye: a ring in the x-y plane (the game's), its middle at height cy"""
+    atube(A, [gb(r * math.cos(2 * math.pi * k / seg), cy + r * math.sin(2 * math.pi * k / seg), 0) for k in range(seg)], t, lambda i: m, seg=6, closed=True)
+def fender():
+    A = Acc('fender'); W = C['fwhite']; N = C['fnavy']; ax = gb(0, 1, 0)
+    prof = [(0.0, -0.283, N), (0.035, -0.278, N), (0.074, -0.256, N), (0.100, -0.226, N), (FE_R - 0.002, -FE_H - 0.004, W), (FE_R + 0.002, 0.0, W),
+            (FE_R - 0.002, FE_H + 0.004, N), (0.100, 0.226, N), (0.074, 0.256, N), (0.035, 0.278, N), (0.0, 0.283, N)]
+    revolve(A, prof, gb(0, 0, 0), ax, seg=20)
+    for sy in (1, -1): eye(A, sy * FE_EYE, 0.026, 0.011, N)
+    return A.done(40)
+BL_R = 0.20; BL_EYE = 0.335   # the buoy: the ball's radius (an A-type of 0.40 m), its eye's middle over the ball's middle
+def blaase():
+    A = Acc('blaase'); O = C['forange']; N = C['fnavy']; ax = gb(0, 1, 0)
+    prof = [(BL_R * math.cos(math.radians(a)), BL_R * math.sin(math.radians(a)), O) for a in range(-90, 31, 10)]
+    prof += [(0.150, 0.130, N), (0.110, 0.180, N), (0.065, 0.235, N), (0.040, 0.275, N), (0.030, 0.300, N), (0.0, 0.305, N)]
+    revolve(A, prof, gb(0, 0, 0), ax, seg=20)
+    eye(A, BL_EYE, 0.026, 0.012, N)
+    return A.done(40)
+
 # ---------- the export ----------
 def main():
     os.makedirs(OUT, exist_ok=True)
     reset(); colours()
-    objs = {'plog': plog(), 'hall': hall(), 'link': chainlink('link', False, C['galv']), 'stud': chainlink('stud', True, C['chainb'])}
+    objs = {'plog': plog(), 'hall': hall(), 'link': chainlink('link', False, C['galv']), 'stud': chainlink('stud', True, C['chainb']), 'fender': fender(), 'blaase': blaase()}
     setup_render(64, 64, samples=8)
     for nm, o in objs.items():
         for p in bpy.context.scene.objects:
             if p.type == 'MESH': p.hide_render = p is not o
-        bake_ao(o, samples=16, distance=0.08 if nm == 'plog' else 0.15 if nm == 'hall' else 0.6)
+        bake_ao(o, samples=16, distance=0.08 if nm == 'plog' else 0.15 if nm == 'hall' else 0.04 if nm in ('fender', 'blaase') else 0.6)
     for p in bpy.context.scene.objects:
         if p.type == 'MESH': p.hide_render = False
     parts = [(nm, mesh_arrays(o, to_game, to_game_n, ao=True), 1.0) for nm, o in objs.items()]
@@ -218,6 +249,8 @@ def main():
           'plog': {'kg': PL_KG, 'len': PL_L, 'crown': [0, -0.30, 0.66]},
           'hall': {'kg': HA_KG, 'len': r4(sz['hall'][1][2] - sz['hall'][0][2]), 'crown': [0, 0, HA_CZ]},
           'link': {'pitch': 4.0, 'w': 3.6}, 'stud': {'pitch': 4.0, 'w': 3.6},
+          'fender': {'d': 2 * FE_R, 'eye': [0, FE_EYE, 0], 'note': 'from its middle, upright along y; the line to the top eye'},
+          'blaase': {'d': 2 * BL_R, 'eye': [0, BL_EYE, 0], 'note': 'from the ball\'s middle, the eye up along y'},
           'size': {nm: [r4(hi[k] - lo[k]) for k in range(3)] for nm, (lo, hi) in sz.items()}}
     glb = os.path.join(OUT, 'deck-anchor.glb'); nb = write_glb(glb, parts, ex)
     open(os.path.join(ROOT, 'src', 'data', 'deck-anchor.b64'), 'w').write(base64.b64encode(open(glb, 'rb').read()).decode())
@@ -235,6 +268,7 @@ def main():
     show(P); camera(gb(1.25, 0.55, 0.15), gb(0, -0.15, 0.48), lens=40); render(os.path.join(OUT, 'anker_plog.png'))
     camera(gb(0.05, 0.05, 0.5 + 1.6), gb(0, -0.15, 0.48), lens=40); render(os.path.join(OUT, 'anker_plog_side.png'))
     show(H); camera(gb(2.2, 0.9, 0.4), gb(0, -0.2, 0.85), lens=40); render(os.path.join(OUT, 'anker_hall.png'))
+    show(objs['fender'], objs['blaase']); objs['blaase'].location = gb(0.45, 0, 0); camera(gb(0.9, 0.35, 1.6), gb(0.22, 0.02, 0), lens=40); render(os.path.join(OUT, 'anker_fender_blaase.png')); objs['blaase'].location = (0, 0, 0)
     camera(gb(2.6, 0.1, 0.8), gb(0, -0.2, 0.8), lens=40); render(os.path.join(OUT, 'anker_hall_side.png'))
     # a length of chain: links alternating a quarter turn
     keep = []

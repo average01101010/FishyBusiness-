@@ -844,7 +844,7 @@ def aft_deck(A, fine=True):
     F.pipe(A, [(x_of(x, 1.48), gunwale_y(x), 1.75) for x in XS if x > 2.7] + [(3.80, gunwale_y(3.80), z_cap(3.80) + 0.02)], 0.018, C['steel'], 8)
     for y in (-1.1, 0.0, 1.1):
         acyl(A, (xr, y, z_cap(0.0) + 0.012), (xr, y, 1.75), 0.016, s, seg=8); acyl(A, (xr, y, z_cap(0.0) + 0.009), (xr, y, z_cap(0.0) + 0.02), 0.026, s, seg=10)
-    # the bitts on the quarters, the cleats amidships, the diesel filler by the wheelhouse, the fenders stowed, a deck hose coiled
+    # the bitts on the quarters, the cleats amidships, the diesel filler by the wheelhouse, a deck hose coiled
     for y in (1.40, -1.40): bitts(A, 0.48, y, z_deck(0.48) + camber(0.48, y), 0.30)
     for x in (3.2,):
         for sg in (1, -1): F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.24, C['steel'])
@@ -852,8 +852,8 @@ def aft_deck(A, fine=True):
     acyl(A, (fx, fy, fz - 0.002), (fx, fy, fz + 0.012), 0.05, s, seg=16); acyl(A, (fx, fy, fz + 0.012), (fx, fy, fz + 0.02), 0.036, s, seg=16)
     vx, vz = fx + 0.3, z_cap(fx + 0.3) - 0.12; vy = y_at(vx, vz)
     acyl(A, (vx, vy - 0.002, vz), (vx, vy + 0.014, vz), 0.016, s, seg=10); obox(A, (vx, vy + 0.020, vz + 0.004), V((0.022, 0, 0)), V((0, 0.006, 0)), V((0, 0, 0.022)), C['steel'])
-    for x in (0.80,):             # (both to port aft of the gear room: the starboard gangway aft is the gear's, OB8)
-        for yv in (0.30, 0.62): acyl(A, (x - 0.30, yv, z_deck(x) + camber(x, abs(yv) - 0.12) + 0.125), (x + 0.30, yv, z_deck(x) + camber(x, abs(yv) - 0.12) + 0.125), 0.12, lambda q: C['fender'], seg=14)
+    # (no fenders lying on the deck: the hands hang out the game's own when she comes in, view3d/15-env-mooring.js; Jonas 10.11.2026:
+    # «Fjern pyntefenderne fra båt-modellen»)
     hx, hy = 4.70, 0.95; hz = z_deck(hx) + camber(hx, hy)
     for k in range(3): F.atorus(A, (hx, hy, hz + 0.024 + 0.044 * k), (0, 0, 1), 0.24 - 0.02 * k, 0.022, lambda a: C['hose'], seg=20, rseg=6)
     # a mooring rope coiled on the forecastle by the bitts
