@@ -1946,3 +1946,6 @@
 2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	skiptest	OK	17	lite	samtidig	
 2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	kjoptest	OK	440	lite	samtidig	
 2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	sqltest	OK	35	lite	samtidig	
+2026-11-10 14:44	claude/hs5-kronene-landingene-niqy2q	2e64ca6	boottest	OK	30	lite	samtidig	
+2026-11-10 14:45	claude/hs5-kronene-landingene-niqy2q	2e64ca6	sqltest	OK	45	lite	samtidig	
+2026-11-10 14:45	claude/hs5-kronene-landingene-niqy2q	2e64ca6	admintest	OK	9	lite	samtidig	
