@@ -678,6 +678,12 @@ def shelter(A, G, fine=True):
     wy0, wy1 = 0.30, 1.30
     abox(A, x0 - 0.012, x0, wy0 - 0.03, wy1 + 0.03, WS - 0.03, WH + 0.03, C['frame'])
     G.poly([(x0 - 0.013, wy0, WS), (x0 - 0.013, wy1, WS), (x0 - 0.013, wy1, WH), (x0 - 0.013, wy0, WH)], C['glass'], (-1, 0, 0))
+    # (OB10: what a working deck has on its house) the hand rails on the deckhouse's starboard face along the hauling station and under the
+    # after window, the work lights under the roof over the hauling station, the tub and the bench's end
+    hz = ZMD + 1.05
+    F.pipe(A, [(3.40, y0, hz), (3.40, y0 - 0.06, hz), (5.10, y0 - 0.06, hz), (5.10, y0, hz)], 0.014, C['steel'], 6)
+    F.pipe(A, [(x0, 0.34, hz), (x0 - 0.06, 0.34, hz), (x0 - 0.06, 1.26, hz), (x0, 1.26, hz)], 0.014, C['steel'], 6)
+    for lx, ly, aim in ((5.60, -1.20, (0, -0.5, -1)), (4.70, -1.20, (0, -0.5, -1)), (3.40, -1.30, (-0.3, 0, -1))): F.work_light(A, (lx, ly, WR - 0.022), aim, C['dark'], C['lens'])
     # the posts carrying the roof over the starboard side: at its after corner and amidships, on the deck inside the bulwark
     # (on the cap since OB10: on the deck the forward one stood in the bleeding tub's edge, and the rail under the roof is where they jig)
     for x in POSTS:
@@ -738,11 +744,12 @@ def helm(A, G, fine=True):
 # ---------- the decks' fittings: the rails round the foredeck, the windlass and the bow roller, bitts and cleats, vents, the hauling port's
 # roller, the grab rails aft, the locker in the starboard quarter (the crane's pedestal), the flag mast aft ----------
 def gunwale_y(x, sg=1): return ycap(x, sg) + CAP * 0.5
-LOCKER = (0.20, 1.25, 0.60)  # the stainless locker in the port quarter, the crane's pedestal (D: the crane aft to port; 1.1 m further aft since OB10, so the
-                             # gutting bench stands along the port bulwark abreast the hatch forward of it): x0, x1, its depth in from the bulwark
+LOCKER = (0.08, 1.13, 0.60)  # the stainless locker in the port quarter, the crane's pedestal (D: the crane aft to port; 1.1 m further aft since OB10, so the
+                             # gutting bench stands along the port bulwark abreast the hatch forward of it; against the transom, no pocket aft of it): x0, x1, its depth in from the bulwark
 def locker_top(): return ZMD + 1.30                            # (D: the crane's base 3.4-3.6 over the base line)
 RAIL_XS = [8.70, 9.20, 9.70, 10.25]                            # the foredeck rail's posts on the caps (the side decks have the bulwarks, 0.9-1.1 m)
 RAIL_H = (0.72, 0.36)
+LADDER = (-1.55, -1.85)      # the transom's ladder, its sides (y): 1.25 m to starboard of where the gear goes out over the stern (OB10; 0.75 before)
 def decks(A, fine=True):
     s = lambda q: C['steel']
     def base(p, r=0.026): acyl(A, (p[0], p[1], p[2] - 0.003), (p[0], p[1], p[2] + 0.008), r, s, seg=10)
@@ -791,8 +798,8 @@ def decks(A, fine=True):
     for sg in (1, -1):
         p0 = V((WXF - lean(WS - 0.10) + 0.05, sg * 0.30, WS - 0.10)); p1 = V((WXF - lean(WS - 0.10) + 0.05, sg * 0.90, WS - 0.10))
         F.pipe(A, [p0 - V((0.05, 0, 0)), p0, p1, p1 - V((0.05, 0, 0))], 0.014, C['steel'], 6)
-    # the grab rail along the inside of the starboard bulwark aft, clear of the ladder's corner and the roof's post
-    for sg, x0, x1 in ((-1, 0.90, 2.90),):
+    # the grab rail along the inside of the starboard bulwark aft, clear of the pots' stack in the quarter and the roof's post
+    for sg, x0, x1 in ((-1, 1.75, 2.90),):
         xs_ = [x0 + (x1 - x0) * k / max(1, round((x1 - x0) / 0.8)) for k in range(int(max(1, round((x1 - x0) / 0.8))) + 1)]
         pts = [(x, sg * (ybw(x, sg) - 0.13), ZMD + 0.80) for x in xs_]
         for p in pts:
@@ -803,6 +810,12 @@ def decks(A, fine=True):
     abox(A, x0, x1, yi, yo, ZMD + camber((x0 + x1) / 2, yi) - 0.004, zt, C['plate'])
     abox(A, x0 + 0.03, x1 - 0.03, yi - 0.006, yi, zt - 0.10, zt - 0.09, C['dark'])
     obox(A, (x0 + (x1 - x0) * 0.75, yi - 0.012, zt - 0.16), V((0.03, 0, 0)), V((0, 0.006, 0)), V((0, 0, 0.05)), C['steel'])
+    for xx in (x0 + 0.22, x1 - 0.22):                                                                       # the lid's hinges at the bulwark, a handle on its face
+        abox(A, xx - 0.05, xx + 0.05, yo - 0.03, yo + 0.004, zt - 0.012, zt + 0.006, C['steel'])
+    F.pipe(A, [(x0 + 0.38, yi, zt - 0.30), (x0 + 0.38, yi - 0.04, zt - 0.30), (x0 + 0.62, yi - 0.04, zt - 0.30), (x0 + 0.62, yi, zt - 0.30)], 0.008, C['steel'], 6)
+    # lashing eyes in the deck round the hatch (the pots and the freight are lashed to them)
+    for ex_, ey_ in ((HOLD[0] - 0.12, -0.80), (HOLD[0] - 0.12, 0.80), (HOLD[1] + 0.12, -0.80), (HOLD[1] + 0.12, 0.80)):
+        F.atorus(A, (ex_, ey_, ZMD + camber(ex_, ey_) + 0.012), (1, 0, 0), 0.022, 0.006, lambda a_: C['steel'], seg=10, rseg=5)
     # the flagstaff on the transom's starboard corner: its socket on the cap, the staff, the ball; the flag flies from its top (pole)
     qx, qy = aftm(); zq = z_cap(qx, -1) + 0.012
     acyl(A, (qx, qy, zq - 0.004), (qx, qy, zq + 0.18), 0.035, s, seg=10)
@@ -812,13 +825,13 @@ def decks(A, fine=True):
     sx, sz = STERN_L[0], STERN_L[2]
     acyl(A, (0.04, 0, z_cap(0.04) + 0.008), (0.04, 0, sz - 0.04), 0.018, s, seg=8)
     abox(A, 0.0, 0.08, -0.04, 0.04, sz - 0.05, sz - 0.032, C['frame'])
-    for y in (-1.05, -1.35):
+    for y in LADDER:
         acyl(A, (0.03, y, z_cap(0.0) + 0.30), (0.03, y, z_cap(0.0) + 0.012), 0.016, s, seg=6)
         acyl(A, (0.03, y, z_cap(0.0) + 0.012), (-0.05, y, z_cap(0.0) - 0.02), 0.016, s, seg=6)
         acyl(A, (-0.05, y, z_cap(0.0) - 0.02), (-0.05, y, WLE - 0.30), 0.016, s, seg=6)
     nr = int((z_cap(0.0) - 0.10 - (WLE - 0.25)) / 0.30) + 1
-    for k in range(nr): z = WLE - 0.25 + 0.30 * k; acyl(A, (-0.05, -1.05, z), (-0.05, -1.35, z), 0.014, s, seg=5)
-    for k in range(4): z = WLE - 0.25 + 0.30 * k + 0.6; abox(A, -0.004, 0.0, -1.40, -1.00, z - 0.012, z + 0.012, C['steel'])   # the ladder's brackets on the transom
+    for k in range(nr): z = WLE - 0.25 + 0.30 * k; acyl(A, (-0.05, LADDER[0], z), (-0.05, LADDER[1], z), 0.014, s, seg=5)
+    for k in range(4): z = WLE - 0.25 + 0.30 * k + 0.6; abox(A, -0.004, 0.0, LADDER[1] - 0.05, LADDER[0] + 0.05, z - 0.012, z + 0.012, C['steel'])   # the ladder's brackets on the transom
 WINDLASS = 9.56; ROLLER_Z = 3.58; ROLLER_X = 11.04
 HXR = (HP0 + HP1) / 2        # the hauler's station: the middle of the hauling port
 AFTM_X = 0.06; AFTM_TOP = 3.62                                  # the flagstaff on the transom's starboard corner (D: its ball at 3.6, to port)
@@ -965,23 +978,23 @@ def name_strips(G):
     out.append([[G(XA - 0.02, y, z_kn(XA) + 2 * RH + 0.14) for y in ys], [G(XA - 0.02, y, z_kn(XA) + 2 * RH + 0.52) for y in ys]])
     return out
 
+CARGO = (0.51, 0.74)         # the cargo unit (0.8 x 1.2 m, turned athwartships) aft of the hatch to port, inboard of the locker and under the crane
 def kit_places(G):
     """the places where the game sets the deck kit (nothing that can be bought is modelled in, only its place, 19.10.2026): the liferaft
-    on the roof's after part where it floats free; a ring buoy on the deckhouse's after wall to port and one on the starboard grab rail
-    aft; the dome on its bracket forward of the mast, the open array on the platform; the net tub in the starboard quarter, where the
+    on the roof's after part where it floats free; two ring buoys on the deckhouse's after wall, either side of its window; the dome on its bracket forward of the mast, the open array on the platform; the net tub in the starboard quarter, where the
     nets go out over the transom; the line tubs along the hatch's starboard side aft of the roof, by the stern where the line runs out
-    (STAMP0); one cargo place in the port quarter inboard of the locker; the folding crane (Jonas 21.10.2026: «Hurtigsjarken min skal
+    (STAMP0); one cargo place athwartships aft of the hatch to port, inboard of the locker; the folding crane (Jonas 21.10.2026: «Hurtigsjarken min skal
     også ha kran») on the stainless locker in the port quarter, which is its pedestal (D: the crane aft to port): s 0.7 (about 2 t*m),
     slewing on the locker's middle, folded up tight at sea (no rest)"""
     r = lambda v: round(v, 3); h = math.pi / 2
     gr = lambda x: ybw(x, -1) - 0.13 - 0.022       # the starboard grab rail's inboard face
     x0, x1, dpt = LOCKER; yo = min(ybw(x0), ybw(x1)) - 0.01
     return {'raft': [G(4.20, 1.05, roof_top(4.20, 1.05)) + [r(h)]],
-            'buoys': [G(BOX[0] - 0.03, 1.70, ZMD + 1.45) + [0.0], G(1.18, -gr(1.18), ZMD + 0.80) + [r(h)]],      # (between two jigging places, not at one)
+            'buoys': [G(BOX[0] - 0.03, 1.70, ZMD + 1.45) + [0.0], G(BOX[0] - 0.03, -0.14, ZMD + 1.45) + [0.0]],      # (both on the deckhouse's after wall, either side of its window: none on the rail where they jig and walk)
             'radar': G(7.05, 0, 4.88), 'radarA': G(MX + 0.05, 0, PY_Z + 0.06),
             'garn': {'at': G(0.55, -1.05, ZMD + camber(0.55, 1.05)), 'ry': 0.0},
             'stamps': {'at': G(STAMP0[0], STAMP0[1], ZMD + camber(*STAMP0)), 'ry': 0.0},
-            'cargo': [G(0.75, 1.10, ZMD + camber(0.75, 1.1)) + [0.0]],
+            'cargo': [G(CARGO[0], CARGO[1], ZMD + camber(*CARGO)) + [r(h)]],
             'crane': {'at': G((x0 + x1) / 2, yo - dpt / 2, locker_top()), 'ry': 0.0, 's': 0.7, 'rest': None}}
 
 # the conical pots' stacks (OB16; OB10: two of the four places potplaces.json had stood inside the closed deckhouse and the wheelhouse,
@@ -1011,10 +1024,11 @@ def stamp_box(rows=4):
     return cx - hl, cx + hl, cy - hw, cy + hw
 POT_SPOT = (3.50, -1.30)     # where a hauled pot is laid, tipped and emptied (kit.pots.spot): on the free deck under the roof aft of the tub
 # the jigging places on the starboard rail, in the order the machines are bolted on (anchors.jigZ, F21; after havsjark35.py and
-# hurtig11.py): on the open rail aft of the roof, in the quarter, under the roof aft of the bleeding tub, and by the transom; over a
+# hurtig11.py): on the open rail aft of the roof, under the roof aft of the bleeding tub, then the two in the quarter (which stand in the walk
+# beside the line tubs, the net tub or the pots' stack when those are aboard); over a
 # metre apart, never in the hauling port, at the hauler or the tub, in the door or at a post. None to port: the deckhouse, the bench
 # and the crane's locker stand against the port bulwark from the wheelhouse to the transom (the drawing's boat works over starboard)
-JIG = [(1, 2.80), (1, 1.70), (1, 3.85), (1, 0.65)]
+JIG = [(1, 2.80), (1, 3.85), (1, 1.70), (1, 0.65)]
 JIG_CLEAR = {1: [(0.0, 0.40, 'flaggstanga og hjørnet'), (POSTS[0] - 0.25, POSTS[0] + 0.25, 'takstolpen'), (POSTS[1] - 0.25, POSTS[1] + 0.25, 'takstolpen'),
                  (TUB[0] - 0.60 - 0.25, HP1 + 0.45, 'blødekaret, haleporten og haleren'), (WX0 - 0.50, 9.0, 'trinnet og døra')],
              -1: [(0.0, 9.0, 'kista, benken og dekkshuset')]}
@@ -1117,14 +1131,14 @@ def check():
     # tubs' block with eight aboard 0.78 x 2.02, the crane's foot 0.9 x 0.9, the net tub 1.0 x 1.2, a cargo unit 0.8 x 1.2), R a body's half width
     R = 0.25; bx = (TABLE[0] - 0.86, TABLE[0] + 0.86); by = (TABLE[1] - 0.37, TABLE[1] + 0.37); lx0, lx1, ld = LOCKER; lyi = min(ybw(lx0), ybw(lx1)) - 0.01 - ld
     tx = (TUB[0] - 0.60, TUB[0] + 0.60); ty = (TUB[1] - 0.42, TUB[1] + 0.42); sx0, sx1, sy0, sy1 = stamp_box(); gy = by[0] - R - 0.02
-    cgx = (0.75 - 0.66, 0.75 + 0.66); cgy = (1.10 - 0.46, 1.10 + 0.46)
+    cgx = (CARGO[0] - 0.40, CARGO[0] + 0.40); cgy = (CARGO[1] - 0.60, CARGO[1] + 0.60); crf = (lyi + ld / 2) - 0.45      # (the unit itself, and the inboard edge of the crane's foot)
     hatch = lambda x, y: HOLD[0] - 0.05 < x < HOLD[1] + 0.05 and abs(y) < HOLD[3] + 0.05
     two = [x for x in (TABLE[0] - 0.7, TABLE[0] + 0.7) if x - R > lx1 and x + R < BOX[0]]
     out.append(('sløyebenken x %.2f-%.2f ved babord ripe tvers av luka (luka %.2f-%.2f), %.2f m forut for kista og %.2f m akter for dekkshuset, %.2f m fra skansens fot; den som sløyer står y %.2f med %.2f m dørk mellom benken og luka, nummer to 0,7 m %s' % (bx[0], bx[1], HOLD[0], HOLD[1], bx[0] - lx1, BOX[0] - bx[1], ybw(TABLE[0]) - by[1], gy, by[0] - HOLD[3] - 0.05, 'forut eller akter' if len(two) == 2 else 'akter' if two and two[0] < TABLE[0] else 'forut' if two else 'INGEN PLASS'),
                 bx[0] > lx1 and bx[1] < BOX[0] and ybw(TABLE[0]) - by[1] > 0.0 and by[0] - HOLD[3] - 0.05 >= 2 * R + 0.2 and len(two) >= 1))
     out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f langs lukas styrbord side akter for taket: %.2f m fra speilet, %.2f m til ripa (gangen og juksaplassene), ekte kar %.2f m fra lukekarmen; garnkaret og stampene står aldri om bord samtidig' % (sx0, sx1, sy1, sy0, sx0 - TT, ybw(1.2, -1) + sy0, -(sy1 - 0.06) - HOLD[3]),
                 sx0 > TT and sx1 < X_SH and ybw(1.2, -1) + sy0 >= 0.60 and -(sy1 - 0.06) - HOLD[3] > 0.02))
-    out.append(('blødekaret x %.2f-%.2f, %.2f m fra skansens fot; dørken under taket akter for det er fri x %.2f-%.2f (%.2f m) der teina legges og tømmes (ring 1,45 m ved x %.2f, y %.2f: %.2f m til dekkshuset, %.2f til skansen, %.2f til karet)' % (tx[0], tx[1], ybw(TUB[0], -1) + ty[0], X_SH, tx[0], tx[0] - X_SH, POT_SPOT[0], POT_SPOT[1], -BOX[1] + POT_SPOT[1] + 0.725 if False else (-POT_SPOT[1] - 0.725) - (-BOX[1]), ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725, tx[0] - POT_SPOT[0] - 0.725),
+    out.append(('blødekaret x %.2f-%.2f, %.2f m fra skansens fot; dørken akter for det er fri langs styrbord ripe (taket ender ved x %.2f, karet ved %.2f: %.2f m under tak), og der legges og tømmes teina (ring 1,45 m ved x %.2f, y %.2f: %.2f m til dekkshuset, %.2f til skansen, %.2f til karet)' % (tx[0], tx[1], ybw(TUB[0], -1) + ty[0], X_SH, tx[0], tx[0] - X_SH, POT_SPOT[0], POT_SPOT[1], (-POT_SPOT[1] - 0.725) - (-BOX[1]), ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725, tx[0] - POT_SPOT[0] - 0.725),
                 ybw(TUB[0], -1) + ty[0] > 0.0 and (-POT_SPOT[1] - 0.725) - (-BOX[1]) > 0.0 and ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725 > 0.05 and tx[0] - POT_SPOT[0] - 0.725 > 0.0))
     out.append(('takstolpene på styrbord kappe ved x %.2f og %.2f (ingen på dørken): %.2f m fra blødekarets ende' % (POSTS[0], POSTS[1], POSTS[1] - tx[0]), all(not (HP0 - 0.1 < x < HP1 + 0.1) for x in POSTS)))
     # the pots' stacks (kit.pots, a ring of 1.45 m): on one floor, clear of the bench, the tub, the locker, the houses, the bulwarks, each
@@ -1150,10 +1164,10 @@ def check():
                 sum(1 for sd, _ in JIG if sd > 0), sum(1 for sd, _ in JIG if sd < 0), gap, 'flaggstanga, takstolpene, blødekaret, haleporten, haleren og døra' if not bad else bad, len(tight)), not bad and gap > 1.0 and len(JIG) >= 4))
     # the setting (drawSetting: the gear goes out 0.45 m to starboard of the middle over the stern, at the gunwale's height + 0.10)
     gz = z_sh(3.0) + 0.10
-    out.append(('settingen: redskapet går ut over hekken i %.2f m, hekkens topp %.2f (fritt, ingen setteport trengs); 0,45 m til styrbord for midten, hekklysets stolpe i midten og leideren y %.2f til %.2f' % (gz, z_cap(0.0), -1.05, -1.35), gz > z_cap(0.0) + 0.05))
+    out.append(('settingen: redskapet går ut over hekken i %.2f m, hekkens topp %.2f (fritt, ingen setteport trengs); 0,45 m til styrbord for midten, hekklysets stolpe i midten og leideren y %.2f til %.2f (%.2f m fra redskapet)' % (gz, z_cap(0.0), LADDER[0], LADDER[1], -0.45 - (LADDER[0] + LADDER[1]) / 2), gz > z_cap(0.0) + 0.05 and -0.45 - LADDER[0] > 1.0))
     # the cargo and the crane: the cargo unit inboard of the locker, clear of it, the hatch and the bench
-    out.append(('lasten x %.2f-%.2f, y %.2f-%.2f innenfor kista (x %.2f-%.2f, innsida y %.2f): %.2f m til kista, %.2f til luka, %.2f til benken' % (cgx[0], cgx[1], cgy[0], cgy[1], lx0, lx1, lyi, lyi - (cgy[1] - 0.06), cgy[0] + 0.06 - HOLD[3], bx[0] - (cgx[1] - 0.06)),
-                lyi - (cgy[1] - 0.06) > 0.0 and cgy[0] + 0.06 - HOLD[3] > 0.02 and bx[0] - (cgx[1] - 0.06) > 0.0))
+    out.append(('lasten (på tvers) x %.2f-%.2f, y %.2f-%.2f akter for luka og innenfor kista: %.2f m til speilet, %.2f til luka, %.2f til kranens fot, %.2f til nummer to ved benken' % (cgx[0], cgx[1], cgy[0], cgy[1], cgx[0] - TT, HOLD[0] - cgx[1], crf - cgy[1], TABLE[0] - 0.7 - R - cgx[1]),
+                cgx[0] - TT > 0.0 and HOLD[0] - cgx[1] > 0.0 and crf - cgy[1] > 0.0 and TABLE[0] - 0.7 - R - cgx[1] > 0.0))
     # the registration mark: markStrips writes it at 0.11 L from the stem on even zone 1 facing out, nothing proud, 0.25 m letters
     xm_ = XF - 0.11 * L; free = z_kn(xm_) - max(z_ch(xm_) + 0.03, WLE + 0.10)
     out.append(('registreringsmerket ved x %.2f: sida over vannet under lista er %.2f m høy (%.2f-%.2f over vannet; stripa 0.34)' % (xm_, free, max(z_ch(xm_), WLE + 0.10) - WLE, z_kn(xm_) - WLE), free >= 0.45))

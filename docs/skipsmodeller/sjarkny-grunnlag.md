@@ -151,16 +151,19 @@ Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 
 | Plass | Før | Nå | Hvorfor |
 |---|---|---|---|
 | Sløyebenken (`work.table`, `TABLE`) | styrbord ripe, x 3,60 | **babord ripe tvers av luka**, x 2,25 (1,39–3,11), y 1,84 | Mellom kista og dekkshuset. Den som sløyer, står innenfor (y 1,20) med luka i ryggen, 0,80 m dørk mellom benken og luka; nummer to 0,7 m akter. Fisken går rett ned i rommet (som den brukte hurtigsjarken etter OB9) |
-| Kista med kranen (`LOCKER`) | babord, x 1,30–2,35 | babord hekk, **x 0,20–1,25** | Gir plass til benken forut for den; fortsatt «kran akter til babord» som tegningen, 1,1 m lenger akter. Babords lensport flyttet fra 0,34 til 1,45 (bak kista før) |
+| Kista med kranen (`LOCKER`) | babord, x 1,30–2,35 | babord hekk, **x 0,08–1,13**, inntil speilet | Gir plass til benken forut for den; fortsatt «kran akter til babord» som tegningen, 1,2 m lenger akter, og ingen lomme akter for kista der noen kan bli stående. Babords lensport flyttet fra 0,34 til 1,45 (bak kista før) |
 | Flaggstanga (`pole`) | babord hjørne | **styrbord hjørne** | Sto 0,6 m fra kranens søyle; avvik fra tegningen (babord) |
 | Blødekaret (`work.tub`) | x 4,85 | som før | Rett akter for haleren |
 | Dørken under taket akter for karet | benken | **fri, x 3,15–4,25** | Her legges og tømmes teina (`kit.pots.spot`, ring 1,45 m ved x 3,50, y −1,30), og her går gangen fra haleren til dekket |
 | Stampene (`kit.stamps`, `STAMP0`) | x 2,75, y −0,95 | x 2,00, y −0,80: blokken x 0,18–2,32, y −0,61 til −1,51 | Langs lukas styrbord side akter for taket, ved hekken der lina går ut; 0,68 m gang til ripa |
 | Garnkaret (`kit.garn`) | styrbord hekk | som før | Garnet går ut over hekken 0,45 m til styrbord |
 | Teinestablene (`kit.pots`, `POTS`) | 4 × 6, to av dem inne i husene | **2 × 6**: styrbord hekk på dørken (x 0,85, y −1,41) og på luka (x 1,60) | Lomma i babord hekk mellom speilet, luka og kista er under 1,45 m. `gearMax.teine` 21 → **12** (valg 25 A: det dørken rommer) |
-| Juksaplassene (`anchors.jigZ`, ny) | `jigRail`: 4 av 6, én i haleporten | **styrbord 2,80, 1,70, 3,85, 0,65** | Godt en meter imellom (1,05), fri for flaggstanga, takstolpene, karet, haleporten, haleren og døra. **Ingen om babord:** babord ripe er dekkshuset, benken og kista fra styrhuset til speilet. `jukseMax` 6 → **4** (som valg 31 A for den brukte) |
+| Juksaplassene (`anchors.jigZ`, ny) | `jigRail`: 4 av 6, én i haleporten | **styrbord 2,80, 3,85, 1,70, 0,65** (de to første alltid fri; de to i hekken står i gangen ved stampene, garnkaret eller teinestabelen når det er om bord) | Godt en meter imellom (1,05), fri for flaggstanga, takstolpene, karet, haleporten, haleren og døra. **Ingen om babord:** babord ripe er dekkshuset, benken og kista fra styrhuset til speilet. `jukseMax` 6 → **4** (som valg 31 A for den brukte) |
 | Takstolpene (`POSTS`) | på dørken, x 3,23 og 4,60 | **på styrbord kappe**, x 3,23 og 4,42 | Fri dørk; ingen i karet |
-| Livbøya om styrbord | gripelista ved x 2,60 | x 1,18 | Mellom to juksaplasser, ikke ved en |
+| Livbøyene | én på dekkshusets aktervegg, én på styrbord gripelist ved x 2,60 | **begge på dekkshusets aktervegg**, på hver side av vinduet | Ingen på ripa der de jukser og går |
+| Lasten (`kit.cargo`, `CARGO`) | babord hekk, x 0,75, y 1,10, langskips | **på tvers akter for luka til babord**, x 0,51, y 0,74 | Fri for kranens fot, luka og nummer to ved benken |
+| Leideren i hekken (`LADDER`, `LADDERS.sjarkny` i `vessel3d.js`) | y −1,05 til −1,35 | y −1,55 til −1,85 | 1,25 m fra der redskapet går ut over hekken (0,75 før) |
+| Gripelista om styrbord | x 0,90–3,00 | x 1,75–2,90 | Fri for teinestabelen i hekken |
 
 ### 10.4 Det som ellers er endret
 
@@ -168,8 +171,9 @@ Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 
 - **Styrhusveggene uten striper:** de skarpe kantene merkes på nytt etter vinduskuttet (`shade(shell, 5)`). `qa/flatnorm.py`: 90 flater opptil 74° skjevt på styrhuset før, 0 etter (igjen: to flater på den skrå mastesøylen 20,6°, rund del, grensen er 20).
 - **Spygattene** var alt åpne uten klaffer. **Pyntefendere:** modellen hadde ingen.
 - **Den tomme båtens vannlinje** (valg 18 A): formen står, spillets vannlinje `WLE = WL − 0,665` gir 14,83 t mot 15 t. Hun ligger **0,67 m høyere** i spillet enn før: fribord midtskips 2,36 m, arbeidsdekket 1,59 m over vannet, dypgang med kjølen 1,40 m, dysas topp 0,47 m under vannet. Det er det tegningens skrog gir for en tom båt på 15–16 t (største deplasement 42 t ved 2,06 m). **Malingen følger spillet:** spillet laster henne med høyst 7 t fisk, 2,4 t is og 2 t olje (26,4 t, 0,26 m dypere), så bunnstoffet og vannlinjestripa er lagt etter den lastede vannlinja `WLL`, ikke tegningens største, som hun aldri når i spillet. Leideren i hekken er forlenget ned til den nye vannlinja. `VESSELS.sjarkny.draft` 2,06 står (tegningens største).
-- **`STAB_AT.sjarkny`** (`core/03c-stability.js`) lest på nytt: `dy` 1,6, benken [−1,84, 3,25], stampene [0,8, 3,5], teinene [0,7, 4,27]. Sjekk i `tests/unit/trim.test.mjs` mot modellens eksporterte ankre.
+- **`STAB_AT.sjarkny`** (`core/03c-stability.js`) lest på nytt: `dy` 1,6, benken [−1,84, 3,25], stampene [0,8, 3,5], teinene [0,7, 4,27] (midt mellom de to stablene; med seks eller færre står alle i styrbord hekk, så slagsiden er regnet litt for liten da), og `fish` [1,75, 3,25] (midt i juksaplassene). Sjekk i `tests/unit/trim.test.mjs` mot modellens eksporterte ankre.
 - **Enhetssjekkene** (`trim`, `jig`, `teiner`): sett røde mot den gamle modellen og de gamle tallene (4 FEIL av 2 814), grønne etter.
 - **Settingen:** redskapet går ut over hekken i 2,97 m mot hekkens topp 2,87 (`drawSetting`: ripas høyde + 0,10): fritt, ingen setteport trengs.
+- **Småbeslag** (runde 2, etter den første evalueringen): håndlister på dekkshusets styrbord vegg langs haleplassen og under aktre vindu, tre arbeidslys under taket (haleren, karet, takets akterkant), hengsler og håndtak på kista, fire surringsøyer i dørken rundt luka.
 - **Klasjsjekken** (`qa/clip_hs11.py`): 0 punkter.
 - **`crewclip`**: sjarkny med i F19-lista. Ikke sett rød: før-bygget ga også over 0,55 m mellom de to (klumpen i før-bildene er to som står tett langs kameraets retning og benken inn i karet og stampene); juksa 4 av 4 plasser etter (4 av 6 før).

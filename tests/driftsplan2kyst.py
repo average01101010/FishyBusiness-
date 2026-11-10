@@ -138,9 +138,9 @@ REAL_G = r"""async () => { const R = {};
 # ---- T: pots at Bodø, 10 + 10 at 48 h on the new speed sjark, four days closed: the push for the gear while closed, the strings hauled after their soak
 REAL_T = r"""async () => { const R = {};
   const {M} = await KY.town(67.285, 14.38, 81, 'sjarkny', 3); R.M = [M.id, M.name]; S.me = 'nobody'; setSkipper(S.crew[0].id); setMate(S.crew[1].id);
-  D2.gear('teine', 20);
+  D2.gear('teine', 12);
   const F = D2.spots(2, 4, 12, M.p);
-  const o = S.ops = plan2New({home:M.id, rig:'teiner', jig:false, places:[D2.felt('t1', F[0], 10, 48), D2.felt('t2', F[1], 10, 48)], dep:5, land:{mode:'near', port:null, when:'full'}});
+  const o = S.ops = plan2New({home:M.id, rig:'teiner', jig:false, places:[D2.felt('t1', F[0], 6, 48), D2.felt('t2', F[1], 6, 48)], dep:5, land:{mode:'near', port:null, when:'full'}});
   const err = await D2.make(o); if (err) return {err}; o.on = true;
   // the first day open, then the app closed: what push would tell while it is away, then three days as catchUp plays them
   const L1 = await D2.run(1440, 'open', 'T1'); R.sets = mySets().map(s => [s.kind, s.n, gDate(s.tSet / 60).toISOString().slice(5, 16)]);
