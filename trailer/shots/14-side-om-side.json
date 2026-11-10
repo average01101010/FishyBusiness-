@@ -1,0 +1,52 @@
+{
+ "name": "Trebåten og kystnotbåten ved samme kai på Finnsnes",
+ "when": "2027-06-18T02:00:00Z",
+ "boat": "ringnot38",
+ "moor": {
+  "port": "finnsnes",
+  "kind": "main"
+ },
+ "peers": [
+  {
+   "vtype": "trebat",
+   "along": 27,
+   "off": 3.6
+  }
+ ],
+ "dur": 4.7,
+ "cam": {
+  "mode": "fixed",
+  "keys": [
+   {
+    "t": 0,
+    "eye": {
+     "x": 867.7439,
+     "y": 366.1322,
+     "h": 6
+    },
+    "tgt": {
+     "x": 867.7394,
+     "y": 366.182,
+     "h": 4
+    },
+    "fov": 44
+   },
+   {
+    "t": 4.7,
+    "eye": {
+     "x": 867.745,
+     "y": 366.0955,
+     "h": 14
+    },
+    "tgt": {
+     "x": 867.7394,
+     "y": 366.182,
+     "h": 6
+    },
+    "fov": 44
+   }
+  ]
+ },
+ "notes": "Klipp 41,12-44,86 s, tekst «… til snurper». Trebåten ligger som en annen spillers båt (PEERS) 27 m foran kystnotbåtens midte i 3D, inntil kaia. Fast kamera (G3.film) forut på sjøsiden ser bakover langs begge, med trebåten foran og kystnotbåten bak, og trekker seg ut og opp. Første forsøk med jaktkameraet (yaw 150) hadde trebåten 35° utenfor det smale stående bildet.",
+ "quality": "ultra"
+}
