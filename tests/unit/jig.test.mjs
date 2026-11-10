@@ -31,4 +31,8 @@ export default function (t){
   // (the same for the new hurtigsjark, OB10: four places on her starboard rail; her port side is the deckhouse, the bench and the crane)
   { const A = anchorsOf('boat-hs11.b64'), n = (A.jigZ || []).length;
     t.ok(n >= 4 && V.sjarkny.jukseMax <= n, 'sjarkny: plass til ' + V.sjarkny.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
+  // (and the breisjark, OB11: only the open starboard side under her shelter has a rail a man can jig over, and the hauler and the
+  // bleeding tub stand in it: one place; the aft bulwark stands 1.5 m over the deck, where three of her machines stood in the plating)
+  { const A = anchorsOf('boat-malo36.b64'), n = (A.jigZ || []).length;
+    t.ok(n >= 1 && V.breisjark.jukseMax <= n, 'breisjark: plass til ' + V.breisjark.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
 }
