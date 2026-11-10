@@ -33,8 +33,10 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
     // (F19, OB8 10.11.2026: two at the same table or tub stand side by side, not inside each other: the hands at the deck work once they
     // have walked to their places, the two nearest each other's middles)
     for (let i = 0; i < 200; i++) CREW3D.tick(0.1);
-    { const A = CREW3D.agents().filter(a => a.mode === 'at' && a.goal && ['gut', 'pack', 'bleedst'].includes(a.goal.task)); let m = 9;
-      for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) m = Math.min(m, Math.hypot(A[i].x - A[j].x, A[i].z - A[j].z)); r.pair = A.length > 1 ? +m.toFixed(2) : null; }
+    // (pairs at the same task only: two gutting, two packing, two bleeding; null when no two share one, printed as such)
+    { const A = CREW3D.agents().filter(a => a.mode === 'at' && a.goal && ['gut', 'pack', 'bleedst'].includes(a.goal.task)); let m = 9, n = 0;
+      for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) if (A[i].goal.task === A[j].goal.task){ n++; m = Math.min(m, Math.hypot(A[i].x - A[j].x, A[i].z - A[j].z)); }
+      r.pair = n ? +m.toFixed(2) : null; }
     S.hold = []; b.deckStop = false; S.equip.linehaler = true; b.gop = {op:'haul', kind:'line', n:10, done:0, prog:0, a:{...g}, b:{x:g.x + 0.2, y:g.y}}; addCatch('torsk', 20, null, true); S.t += 1; settle(); r.work.haul = bad(); b.gop = null;
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
     b.status = 'idle'; b.gop = null; S.hold = []; b.deckStop = false; r.walk = 0; r.walked = 0; CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null; CREW3D.tick(0.05);
@@ -62,7 +64,8 @@ async def main():
         print(ok(not workBad), 'nor does the work at its places (jigging, gutting, icing, hauling)', workBad)
         # (F19: the boats revised on board so far, OB5-OB8; the others are their phases' to put right, printed so they are seen)
         near = {vt: r['pair'] for vt, r in R.items() if r and r.get('pair') is not None and r['pair'] < 0.55}
-        print(ok(not any(vt in near for vt in ('snekke', 'plastsjark', 'sjark'))), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; the revised boats)', near)
+        unm = [vt for vt in ('snekke', 'plastsjark', 'sjark') if R.get(vt) and R[vt].get('pair') is None]
+        print(ok(not any(vt in near for vt in ('snekke', 'plastsjark', 'sjark'))), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; the revised boats; no pair to measure: %s)' % (unm or '-'), near)
         walk = {vt: [r['walk'], r['walked'], r.get('walkAt')] for vt, r in R.items() if r and r['walk']}
         print(ok(not walk and all(r['walked'] > 50 for r in R.values() if r)), 'nor a body on the way between them (shoulders, chest and back, every tenth of a second)', walk)
         given = {}

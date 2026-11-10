@@ -268,8 +268,8 @@ def main():
     show(P); camera(gb(1.25, 0.55, 0.15), gb(0, -0.15, 0.48), lens=40); render(os.path.join(OUT, 'anker_plog.png'))
     camera(gb(0.05, 0.05, 0.5 + 1.6), gb(0, -0.15, 0.48), lens=40); render(os.path.join(OUT, 'anker_plog_side.png'))
     show(H); camera(gb(2.2, 0.9, 0.4), gb(0, -0.2, 0.85), lens=40); render(os.path.join(OUT, 'anker_hall.png'))
-    show(objs['fender'], objs['blaase']); objs['blaase'].location = gb(0.45, 0, 0); camera(gb(0.9, 0.35, 1.6), gb(0.22, 0.02, 0), lens=40); render(os.path.join(OUT, 'anker_fender_blaase.png')); objs['blaase'].location = (0, 0, 0)
     camera(gb(2.6, 0.1, 0.8), gb(0, -0.2, 0.8), lens=40); render(os.path.join(OUT, 'anker_hall_side.png'))
+    show(objs['fender'], objs['blaase']); objs['blaase'].location = gb(0.45, 0, 0); camera(gb(0.9, 0.35, 1.6), gb(0.22, 0.02, 0), lens=40); render(os.path.join(OUT, 'anker_fender_blaase.png')); objs['blaase'].location = (0, 0, 0)
     # a length of chain: links alternating a quarter turn
     keep = []
     for i, (src, nm) in enumerate(((Lk, 'l'), (St, 's'))):
