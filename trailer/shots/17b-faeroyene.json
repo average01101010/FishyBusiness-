@@ -1,0 +1,37 @@
+{
+ "name": "Prøve: Færøyene (Vestmanna, Streymoy)",
+ "when": "2027-03-20T13:00:00Z",
+ "boat": "kyst21",
+ "place": {
+  "lat": 62.17,
+  "lon": -7.25,
+  "clear": 1.5
+ },
+ "heading": "coast",
+ "speed": 7,
+ "quality": "ultra",
+ "pre": 2,
+ "dur": 1.6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 248,
+    "pitch": 9,
+    "dist": 320,
+    "fov": 44,
+    "aim": 70
+   },
+   {
+    "t": 1.6,
+    "yaw": 253,
+    "pitch": 9.5,
+    "dist": 310,
+    "fov": 44,
+    "aim": 70
+   }
+  ]
+ },
+ "notes": "Prøve 10.11: land langt ute er grovt (200 m, ingen bygg), så det filmes på avstand og i snøtida."
+}

@@ -1591,31 +1591,34 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (209 linjer)
+## `src/js/core/09j-kystvakt.js` (291 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
 - **1** Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
-- **10** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
-  - 25 `kvSampleFish(g, sp, w, p)`
-  - 28 `kvHaulKeep(g, s)`
-  - 36 `kvMix(ms, p, gear, most)`
-  - 53 `kvAlong(a, b)`
-  - 58 `kvMarks(s)`
-  - 59 `kvHavCheck(b, sets, H, len, add, most)`
-  - 91 `kvState()`
-  - 94 `kvReady()`
-  - 104 `kvHour()`
-  - 112 `kvArrive()`
-  - 121 `kvSide(b)`
-  - 122 `kvMinute()`
-  - 128 `kvNpcs()`
-  - 131 `kvSums(sets, inside)`
-  - 133 `kvMostSp(sets)`
-  - 138 `kvCheck(b)`
-  - 165 `kvWhat(r)`
-  - 177 `kvWhatHav(r)`
-  - 190 `kvFinish()`
+- **11** the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
+  - 26 `kvSampleFish(g, sp, w, p)`
+  - 30 `kvHaulKeep(g, s)`
+  - 39 `kvMix(ms, p, gear, most)`
+  - 56 `kvAlong(a, b)`
+  - 62 `kvMarks(s)`
+  - 63 `kvHavCheck(b, sets, H, len, add, most)`
+- **102** (H3e of docs/planer/havsteget-h3-snokrabbe.md, 10.11.2026) the check at sea aboard the snow crab vessel. Beside the position along
+  - 116 `kvSnoCheck(b, ss, H, add)`
+  - 153 `kvState()`
+  - 156 `kvReady()`
+  - 166 `kvHour()`
+  - 174 `kvArrive()`
+  - 183 `kvSide(b)`
+  - 184 `kvMinute()`
+  - 190 `kvNpcs()`
+  - 193 `kvSums(sets, inside)`
+  - 195 `kvMostSp(sets)`
+  - 200 `kvCheck(b)`
+  - 227 `kvWhat(r)`
+  - 239 `kvWhatHav(r)`
+  - 253 `kvWhatSno(r)`
+  - 272 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -2607,12 +2610,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1424 linjer)
+## `src/js/ui/phone/07-patch.js` (1427 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1417 `patch()`
+  - 1420 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4361,7 +4364,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (756 linjer)
+## `src/js/view3d/24-cinema.js` (762 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4384,16 +4387,16 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 216 `gfxNaN(eye, VPn)`
   - 226 `gfxEnd(now, eye, VPn, W, Hh)`
   - 268 `frameClock(raw)`
-  - 277 `frame()`
-  - 282 `frame0()`
-  - 473 `snapTake()`
-  - 478 `drawRoute(VP, eye)`
-  - 501 `driftSpray(VP, eye, dt, t, col)`
-  - 528 `drawSmoke(VP, eye, BM, dt)`
-  - 569 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 603 `splashFoam(x, z, r, a)`
-  - 605 `drawEffects(VP, eye, BM, dt, t)`
-  - 738 `updateLabels(VP, eye, W, Hh)`
+  - 280 `frame()`
+  - 285 `frame0()`
+  - 479 `snapTake()`
+  - 484 `drawRoute(VP, eye)`
+  - 507 `driftSpray(VP, eye, dt, t, col)`
+  - 534 `drawSmoke(VP, eye, BM, dt)`
+  - 575 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 609 `splashFoam(x, z, r, a)`
+  - 611 `drawEffects(VP, eye, BM, dt, t)`
+  - 744 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (229 linjer)
 

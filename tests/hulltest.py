@@ -180,6 +180,22 @@ async def main():
         check(r['st'] == 'port' and r['yard'] and any(j[0] == 'repair' and j[1] == 0 for j in r['jobs']) and r['free'],
               '2c. towed to the yard and mended there, the first repair free', {k: r[k] for k in ('st', 'port', 'yard', 'jobs', 'free')})
         check(r['after']['dmg'] is None and r['after']['damage'] == 0 and r['after']['jobs'] == 0, '2d. the repair done: the hull is whole and the water gone', r['after'])
+        # 2e. the engine room full again under way when it filled before (tilbakemelding #117, 09.11.2026): the flag left from a flooding
+        # (while she lay aground or adrift, or not mended), and a hole so big she fills in the minute she casts off; both stop the engine
+        # and call the rescue boat at the next full engine room, not go on with the alarm at every departure
+        r = await pg.evaluate("""(async () => { const b = S.boat, R = {}; S.free = {}; S.member = false; S.jobs = []; S.cash = 1e6; b.type = 'sjark'; applyVessel();
+          await mapNeed(portById('senjahopen').p, 9);
+          const go = async (flag, A) => { b.tow = null; S.plan = null; dock('senjahopen'); b.fuel = 100; b.dmg = {s:0.3, h:0.6, A, w:0, flood:flag}; hullSync(b);
+            const pt = portById('senjahopen').p, q = {x:pt.x + 1.2, y:pt.y - 1.5}, m0 = S.log.length, o = {Q:Math.round(hullLeak()), P:Math.round(hullPump()), lim:hullFlood(), st:[]};
+            S.plan = {wps:[{x:q.x, y:q.y, port:null, fish:0, leia:false}], idx:0, speed:6, returning:false, depAt:null, unsafe:[false]}; depart();
+            for (let i = 0; i < 8 && b.status !== 'tow'; i++){ step(); o.st.push(b.status); }
+            o.tow = b.status === 'tow' && !!b.tow; o.log = S.log.slice(m0).some(l => /Motorrommet er fullt/.test(l.no));
+            b.tow = null; S.plan = null; dock('senjahopen'); b.dmg = null; hullSync(b); return o; };
+          const k = hullLeak({type:'sjark', dmg:{A:1}});
+          R.flag = await go(true, Math.ceil((hullPump() + hullFlood() / 3) / k)); R.cast = await go(false, Math.ceil((hullFlood() + hullPump()) * 1.3 / k)); return R; })()""")
+        print(json.dumps(r, ensure_ascii=False))
+        check(r['flag']['tow'] and r['flag']['log'], '2e. flooded before and not mended: under way the engine room fills, the engine stops and the rescue boat comes', r['flag'])
+        check(r['cast']['Q'] - r['cast']['P'] > r['cast']['lim'] and r['cast']['tow'] and r['cast']['log'], '2f. a hole that fills her in the minute she casts off: the rescue boat comes, she does not sail on full', r['cast'])
         # 3. running aground on rock and on sand, along the coast
         r = await pg.evaluate("""(async () => { const b = S.boat, R = {}; b.type = 'sjark'; applyVessel();
           const spots = []; for (const c of [P(69.35, 17.3), P(69.6, 18.0), P(68.2, 14.5), P(60.4, 5.2), P(70.66, 23.7)]){ await mapNeed(c, 9);

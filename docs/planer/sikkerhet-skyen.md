@@ -79,6 +79,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 - `saves_cash_check` (`20261017120000_turokonomi.sql:30`) varsler bare, og bare når spilleren har samtykket; den sammenligner klientens `summary.cash` med klientens egne `sale`/`tur_done`-hendelser fra `tm_batch`, så en jukser slipper unna med falske hendelser eller ved å la `summary` være.
 - **Treffer bare spilleren selv** (og kjøpet går ikke tapt for oss: Stripe og `shop_paid` på serveren avgjør hva som er betalt). Det merkes for andre gjennom topplistene (funn 2) og fartstiden (funn 11).
 - **Retting på sikt:** haill som en saldo i databasen (innløst med en funksjon, slik `grants` alt er for kjøp), velkomstgaven gitt én gang av `guest_merge` på serveren. Admin-dashbordets økonomitall skal leses som det klienten melder.
+- **Status 10.11.2026:** planen er `docs/planer/haill-saldo.md` (steg 49). Jonas valgte rekkefølgen 10.11.2026 (L1 V7 A): før lansering velkomstgaven fra serveren (HS1, steg 95, klar; gitt fra `tm_hello` i stedet for `guest_merge`, så også en konto uten gjest får den) og kjøpt haill talt fra `grants` (HS2, steg 96); saldoen og pengene etter lansering (HS3–HS5). Valgene står som valg 29 i køen.
 
 ### 7. MIDDELS: innloggingene ligger i `localStorage`
 

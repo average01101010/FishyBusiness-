@@ -1,0 +1,37 @@
+{
+ "name": "Prøve: Svalbard (Kongsfjorden)",
+ "when": "2027-04-28T13:00:00Z",
+ "boat": "snokrabbe",
+ "place": {
+  "lat": 78.97,
+  "lon": 12.1,
+  "clear": 1.5
+ },
+ "heading": "coast",
+ "speed": 7,
+ "quality": "ultra",
+ "pre": 2,
+ "dur": 1.6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 248,
+    "pitch": 9,
+    "dist": 320,
+    "fov": 44,
+    "aim": 70
+   },
+   {
+    "t": 1.6,
+    "yaw": 253,
+    "pitch": 9.5,
+    "dist": 310,
+    "fov": 44,
+    "aim": 70
+   }
+  ]
+ },
+ "notes": "Prøve 10.11: land langt ute er grovt (200 m, ingen bygg), så det filmes på avstand og i snøtida."
+}

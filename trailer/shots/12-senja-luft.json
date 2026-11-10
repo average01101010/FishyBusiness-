@@ -1,0 +1,49 @@
+{
+ "name": "Fra luften over Senjas nordside: de spisse tindene ved Mefjorden en maikveld",
+ "when": "2027-05-15T19:30:00Z",
+ "boat": "kyst21",
+ "place": {
+  "lat": 69.545,
+  "lon": 17.6,
+  "clear": 0.4
+ },
+ "heading": 200,
+ "speed": 6,
+ "quality": "ultra",
+ "pre": 1,
+ "dur": 3.5,
+ "cam": {
+  "mode": "fixed",
+  "keys": [
+   {
+    "t": 0,
+    "eye": {
+     "lat": 69.562,
+     "lon": 17.63,
+     "h": 380
+    },
+    "tgt": {
+     "lat": 69.515,
+     "lon": 17.6,
+     "h": 330
+    },
+    "fov": 54
+   },
+   {
+    "t": 3.5,
+    "eye": {
+     "lat": 69.558,
+     "lon": 17.62,
+     "h": 365
+    },
+    "tgt": {
+     "lat": 69.515,
+     "lon": 17.6,
+     "h": 320
+    },
+    "fov": 54
+   }
+  ]
+ },
+ "notes": "Klipp 24,87-27,37 s, tekst «Fra trebåt …». Fritt kamera over havet nord for Senja mot de spisse tindene ved Mefjorden og Segla; sola 9° i vest-nordvest. Andre forsøk: nærmere (3-5 km) og lavere."
+}
