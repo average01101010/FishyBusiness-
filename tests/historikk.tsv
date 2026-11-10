@@ -2005,3 +2005,20 @@
 2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	vesseltest	OK	20	lite	samtidig	
 2026-11-10 21:51	ccr-0d64d46d-7ojp1d	4ff2d2d+	merketest	OK	15	lite	samtidig	
 2026-11-10 21:58	ccr-0d64d46d-7ojp1d	4ff2d2d+	kjoptest	OK	302	lite	alene	
+2026-11-10 20:27	ccr-1ddbadbc-g5fj4d	f5b4eb4+	boottest	OK	29	lite	samtidig	
+2026-11-10 20:27	ccr-1ddbadbc-g5fj4d	f5b4eb4+	trip2	OK	35	lite	samtidig	
+2026-11-10 20:28	ccr-1ddbadbc-g5fj4d	f5b4eb4+	pwatest	OK	29	lite	samtidig	
+2026-11-10 20:28	ccr-1ddbadbc-g5fj4d	f5b4eb4+	errtest	OK	39	lite	samtidig	
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	kanaltest	FEIL	76	lite	samtidig	FEIL test build: the test project's address and key, not the production's {"url": "", "anon": ""}
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	cloudtest	FEIL	52	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-10 20:29	ccr-1ddbadbc-g5fj4d	f5b4eb4+	admintest	OK	8	lite	samtidig	
+2026-11-10 20:31	ccr-1ddbadbc-g5fj4d	f5b4eb4+	tabtest	OK	135	lite	samtidig	
+2026-11-10 20:31	ccr-1ddbadbc-g5fj4d	f5b4eb4+	synctest	FEIL	76	lite	samtidig	FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": t
+2026-11-10 20:32	ccr-1ddbadbc-g5fj4d	f5b4eb4+	guesttest	OK	97	lite	samtidig	
+2026-11-10 20:32	ccr-1ddbadbc-g5fj4d	f5b4eb4+	pushtest	OK	22	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	starttest	OK	404	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	bootgtest	OK	172	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	installtest	OK	38	lite	samtidig	
+2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	vectest	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-10 20:39	ccr-1ddbadbc-g5fj4d	f5b4eb4+	boottest	OK	26	lite	alene	
+2026-11-10 20:51	ccr-1ddbadbc-g5fj4d	f5b4eb4+	kjoptest	OK	743	lite	alene	

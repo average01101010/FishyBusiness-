@@ -1,6 +1,9 @@
 # Det Store Blå on the Hetzner server (docs/lansering.md G): the app built as for Pages (pwa.yml) and uploaded with rsync over SSH
-# to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch (as pwa.yml) that changes the game,
+# to the deploy user that tools/server/setup.sh made. Runs on a push to main or the working branch that changes the game,
 # and by hand from the Actions tab once the file is on main; until then a run is started again with «Re-run all jobs».
+# Two editions (L1a, 10.11.2026, docs/planer/lansering-plan.md V1 A): main is the production and goes to current/ (detstorebla.no);
+# every other branch, so the working branch, is built with KYST_CHANNEL=test and goes to test/ (test.detstorebla.no). The real-time
+# relay is the production's and is uploaded from main only.
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
 # the server); without DEPLOY_HOST it builds and stops. The real-time relay (tools/server/rt) goes up beside the site, to /srv/detstorebla/rt.
 name: Appen på Hetzner
@@ -12,12 +15,16 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: hetzner
+  group: hetzner-${{ github.ref_name == 'main' && 'prod' || 'test' }}
   cancel-in-progress: true
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # the channel after the branch (build.mjs takes only «test» as a channel): nothing but main reaches the production
+      KYST_CHANNEL: ${{ github.ref_name == 'main' && 'prod' || 'test' }}
+      DEPLOY_DIR: ${{ github.ref_name == 'main' && 'current' || 'test' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,12 +60,18 @@ jobs:
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          rsync -az --delete-after --delay-updates -e "ssh -i ~/.ssh/deploy" dist-pwa/ "deploy@$DEPLOY_HOST:current/"
+          case "$DEPLOY_DIR" in current|test) ;; *) echo "Unknown edition: $DEPLOY_DIR"; exit 1;; esac
+          grep -q '"ch":"test"' dist-pwa/version.json && CH=test || CH=
+          if [ "$DEPLOY_DIR" = current ] && [ -n "$CH" ]; then echo "A test build must not go to the production."; exit 1; fi
+          if [ "$DEPLOY_DIR" = test ] && [ -z "$CH" ]; then echo "The test edition must be built with KYST_CHANNEL=test."; exit 1; fi
+          echo "Uploading the ${CH:-production} build to $DEPLOY_DIR/"
+          rsync -az --delete-after --delay-updates -e "ssh -i ~/.ssh/deploy" dist-pwa/ "deploy@$DEPLOY_HOST:$DEPLOY_DIR/"
       # the real-time relay (tools/server/rt, docs/planer/sanntid-posisjoner.md S2, 05.11.2026): ws from the lock file, then the files
       # beside the site (rrsync keeps the key in /srv/detstorebla), compared by content and without times, so an unchanged relay is not
       # touched; VERSION (the hash of the files) goes last, and setup.sh's dsb-rt-reload.path restarts the service when it changes.
       # Before setup.sh has made the service on the server, the files just lie there.
       - name: Upload the real-time relay
+        if: github.ref_name == 'main'
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |

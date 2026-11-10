@@ -3228,104 +3228,106 @@ SOUND (the user's wish 03.10.2026)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 - **312** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
-## `src/js/ui/10f-cloud.js` (966 linjer)
+## `src/js/ui/10f-cloud.js` (976 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
 - **1** THE CLOUD (04.10.2026; docs/lansering.md E and F)
-  - 10 `cloudOn()`
-  - 18 `adminOk()`
-  - 20 `pubHost()`
-  - 24 `cloudS()`
-  - 30 `cloudGpu()`
-  - 37 `cloudDev()`
-  - 44 `cloudMeta()`
-- **58** talking to Supabase
-  - 59 `cloudToken()`
-- **60** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
-  - 66 `guestGet()`
-  - 67 `guestAuth(path, body)`
-  - 75 `guestToken()`
-  - 83 `guestStart()`
-  - 89 `cloudRpc(fn, args, opt)`
-- **101** the gate: before the game starts
-  - 102 `cloudGateShow(html)`
-  - 110 `cloudGateHide()`
-  - 114 `worldSync()`
-  - 119 `cloudGate()`
-- **189** after the start: hooks, measurements, the save
-  - 190 `cloudStart()`
-  - 215 `cloudAsk()`
-  - 225 `cloudConsent(yes, by)`
-  - 231 `cloudBegin()`
-  - 241 `cloudEv(k, d)`
-  - 242 `cloudFlush(end)`
-- **251** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
-  - 262 `srcMapStr(s)`
-  - 275 `errNoise(msg)`
-  - 280 `cloudErr(msg, src, stack, kind)`
-  - 291 `errSend(e)`
-  - 295 `errQueue()`
-  - 296 `errKeep(list)`
-  - 300 `errFlush()`
-  - 324 `errStart()`
-- **333** a page that stops or stands still while it is on the screen
-  - 340 `aliveRead()`
-  - 341 `aliveBeat(gone)`
-  - 352 `aliveCheck()`
-  - 376 `hangWatch()`
-- **390** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
-  - 397 `syncGet()`
-  - 398 `syncSet(rev, at, rv, sq)`
-  - 404 `deviceId()`
-  - 408 `deviceName()`
-  - 413 `cloudStatus(s)`
-  - 414 `cloudStatusText()`
-  - 423 `saveSum(o)`
-  - 427 `sumText(m)`
-  - 434 `cloudChoose(here, cloud, when, box)`
-  - 449 `cloudKeptNote(where)`
-  - 454 `cloudTake(cs)`
-  - 460 `cloudSync(cs)`
-  - 491 `cloudSaveSoon(closing, manual)`
-  - 530 `cloudSoon(ms)`
-- **531** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
-  - 541 `cloudFp()`
-  - 542 `cloudClaim(wait)`
-  - 555 `cloudBeat()`
-  - 571 `cloudWake()`
-  - 577 `cloudPassed(h)`
-  - 592 `cloudHeldShow(h)`
-  - 601 `cloudPlayHere()`
-  - 611 `cloudCheckHead()`
-  - 620 `cloudConflict(cl, moved)`
-  - 650 `cloudHist()`
-  - 655 `cloudRestore(id)`
-- **666** what is measured: the game's own functions, wrapped once they are all defined
-  - 667 `cloudHooks()`
-- **690** the account card in Settings
-  - 691 `cloudCard()`
-  - 715 `histRows()`
-  - 727 `cloudAccountDel()`
-  - 738 `cloudMediaDel()`
-  - 744 `cloudAct(a, d)`
-- **778** registering, for a guest: in the game's own words, never a wall before the third landing
-  - 787 `guestHave()`
-  - 793 `guestAsk(why)`
-  - 819 `nameWhy(v)`
-  - 836 `namesKept()`
-  - 837 `namesKeep(o)`
-  - 839 `namesApply()`
-  - 847 `nameTake(n, quiet)`
-  - 857 `nameCheck()`
-  - 872 `nameSuggest()`
-  - 881 `nameAsk(why, reason)`
-  - 906 `guestOpenAsk()`
-  - 914 `nameNudge(force)`
-  - 927 `guestNudge(step)`
-  - 939 `guestLogin(src)`
-  - 945 `guestRegister(signIn)`
-  - 960 `guestGift()`
+  - 11 `cloudChannel()`
+  - 12 `cloudCfg(raw, host, ch)`
+  - 20 `cloudOn()`
+  - 28 `adminOk()`
+  - 30 `pubHost()`
+  - 34 `cloudS()`
+  - 40 `cloudGpu()`
+  - 47 `cloudDev()`
+  - 54 `cloudMeta()`
+- **68** talking to Supabase
+  - 69 `cloudToken()`
+- **70** guests (06.10.2026; Jonas: «nye brukere ikke trenger å logge inn til å starte med», the account after the third landing)
+  - 76 `guestGet()`
+  - 77 `guestAuth(path, body)`
+  - 85 `guestToken()`
+  - 93 `guestStart()`
+  - 99 `cloudRpc(fn, args, opt)`
+- **111** the gate: before the game starts
+  - 112 `cloudGateShow(html)`
+  - 120 `cloudGateHide()`
+  - 124 `worldSync()`
+  - 129 `cloudGate()`
+- **199** after the start: hooks, measurements, the save
+  - 200 `cloudStart()`
+  - 225 `cloudAsk()`
+  - 235 `cloudConsent(yes, by)`
+  - 241 `cloudBegin()`
+  - 251 `cloudEv(k, d)`
+  - 252 `cloudFlush(end)`
+- **261** the errors (04.10.2026; caught everywhere since 02.11.2026, js/errtrap.js)
+  - 272 `srcMapStr(s)`
+  - 285 `errNoise(msg)`
+  - 290 `cloudErr(msg, src, stack, kind)`
+  - 301 `errSend(e)`
+  - 305 `errQueue()`
+  - 306 `errKeep(list)`
+  - 310 `errFlush()`
+  - 334 `errStart()`
+- **343** a page that stops or stands still while it is on the screen
+  - 350 `aliveRead()`
+  - 351 `aliveBeat(gone)`
+  - 362 `aliveCheck()`
+  - 386 `hangWatch()`
+- **400** the save between devices (05.10.2026; supabase/migrations/20261005200000_save_sync.sql)
+  - 407 `syncGet()`
+  - 408 `syncSet(rev, at, rv, sq)`
+  - 414 `deviceId()`
+  - 418 `deviceName()`
+  - 423 `cloudStatus(s)`
+  - 424 `cloudStatusText()`
+  - 433 `saveSum(o)`
+  - 437 `sumText(m)`
+  - 444 `cloudChoose(here, cloud, when, box)`
+  - 459 `cloudKeptNote(where)`
+  - 464 `cloudTake(cs)`
+  - 470 `cloudSync(cs)`
+  - 501 `cloudSaveSoon(closing, manual)`
+  - 540 `cloudSoon(ms)`
+- **541** one device at a time (13.10.2026, supabase/migrations/20261013120000_active.sql)
+  - 551 `cloudFp()`
+  - 552 `cloudClaim(wait)`
+  - 565 `cloudBeat()`
+  - 581 `cloudWake()`
+  - 587 `cloudPassed(h)`
+  - 602 `cloudHeldShow(h)`
+  - 611 `cloudPlayHere()`
+  - 621 `cloudCheckHead()`
+  - 630 `cloudConflict(cl, moved)`
+  - 660 `cloudHist()`
+  - 665 `cloudRestore(id)`
+- **676** what is measured: the game's own functions, wrapped once they are all defined
+  - 677 `cloudHooks()`
+- **700** the account card in Settings
+  - 701 `cloudCard()`
+  - 725 `histRows()`
+  - 737 `cloudAccountDel()`
+  - 748 `cloudMediaDel()`
+  - 754 `cloudAct(a, d)`
+- **788** registering, for a guest: in the game's own words, never a wall before the third landing
+  - 797 `guestHave()`
+  - 803 `guestAsk(why)`
+  - 829 `nameWhy(v)`
+  - 846 `namesKept()`
+  - 847 `namesKeep(o)`
+  - 849 `namesApply()`
+  - 857 `nameTake(n, quiet)`
+  - 867 `nameCheck()`
+  - 882 `nameSuggest()`
+  - 891 `nameAsk(why, reason)`
+  - 916 `guestOpenAsk()`
+  - 924 `nameNudge(force)`
+  - 937 `guestNudge(step)`
+  - 949 `guestLogin(src)`
+  - 955 `guestRegister(signIn)`
+  - 970 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (210 linjer)
 
@@ -3478,13 +3480,14 @@ Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is 
 - **111** the polling
 - **125** the chart: the asks near, and the card
 
-## `src/js/ui/10p-install.js` (134 linjer)
+## `src/js/ui/10p-install.js` (165 linjer)
 
 put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
-- **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
+- **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
+- **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
 ## `src/js/ui/11-boot.js` (398 linjer)
 

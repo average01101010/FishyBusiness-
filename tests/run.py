@@ -176,6 +176,13 @@ COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-h
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 
+# The test edition (L1a, 10.11.2026): KYST_CHANNEL=test in build.mjs, cloud.json's block «test» and cloudCfg (10f-cloud.js), the label
+# (10p-install.js). kanaltest builds dist-kanal/ itself and compares it with dist/. On lines of their own
+LITE += ['kanaltest']
+COVER['tests/kanaltest.py'] = ['kanaltest']
+for _f in ('build.mjs', 'src/data/cloud.json', 'src/js/ui/10f-cloud.js', 'src/js/ui/10p-install.js'):
+    COVER[_f] = COVER.get(_f, []) + ['kanaltest']
+
 
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
