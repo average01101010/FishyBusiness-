@@ -2607,12 +2607,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1419 linjer)
+## `src/js/ui/phone/07-patch.js` (1424 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1412 `patch()`
+  - 1417 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4079,7 +4079,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 526 `seaHFast(x, z, t)`
   - 528 `shoalHere(x, z)`
 
-## `src/js/view3d/15-env-mooring.js` (224 linjer)
+## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
 ---------- environment ----------
 

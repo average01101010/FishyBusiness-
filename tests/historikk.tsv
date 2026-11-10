@@ -1859,3 +1859,6 @@
 2026-11-10 09:22	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	50	lite	alene	
 2026-11-10 09:32	ccr-a14b7b70-vfrww1	9ca1dcb5+	boottest	OK	19	lite	alene	
 2026-11-10 09:36	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	44	lite	alene	
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	boottest	OK	19	lite	samtidig	
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	crewclip	FEIL	15	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	moortest	OK	36	3d	alene	
