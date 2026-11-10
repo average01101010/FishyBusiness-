@@ -108,17 +108,18 @@ Etter V4 A:
 
 Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står igjen:
 
-- **V1. En kjøpt haill aktivert uten nett (HS2).**
+- **V1. En kjøpt haill aktivert uten nett (HS2).** **Besvart 10.11.2026, A** (Jonas: «V1: A»).
   - **A (anbefalt):** den aktiveres med en gang, og serveren får vite det når nettet er tilbake. Spilleren venter aldri på nettet for noe de har betalt for; det verste er at den kan brukes to ganger hvis to enheter er uten nett samtidig, og bare én enhet styrer om gangen.
   - B: knappen sier «Trenger nett» til serveren har svart.
-- **V2. Trim, Skippertak og «Ferdig nå» som går tapt med en lagring (HS3).**
+- **V2. Trim, Skippertak og «Ferdig nå» som går tapt med en lagring (HS3).** **Besvart 10.11.2026, A** (Jonas: «V2: A, det burde rettes asap.»). Lest som: HS3 er det første steget etter lanseringen, rett etter HS2; til da retter admin det med en grant. Mente Jonas før lanseringen, flyttes steg 97 over lanseringslinja (det er B).
   - **A (anbefalt):** etter lansering, slik V7 A sier; til da retter admin det for hånd med en grant (`comp`), som i dag. De varer høyst tre døgn, og det har ikke skjedd ennå.
   - B: før lansering, sammen med HS2.
   - C: aldri.
-- **V3. Haillen fra puben og kapitlene (HS4).**
-  - **A (anbefalt):** også på serveren, så all haill er én saldo og den lokale beholdningen forsvinner. Puben trekkes på serveren, og kapittelhaillen gis én gang per konto.
-  - B: bare haillen fra serveren (kjøpt, gaven, takken) er saldo, slik den er etter HS2; puben og kapitlene blir i lagringen. Det gjør HS4 unødvendig, og jukset med dem rammer bare jukseren selv.
-- **V4. Pengene i spillet (HS5).**
+- **V3. Haillen fra puben og kapitlene (HS4).** Jonas 10.11.2026: «Skjønner ikke helt hva du mener på denne. Gi meg mer kontekst.» Konteksten er gitt i økta samme dag (under), og **anbefalingen er endret til B**: med pengene i spillet (V4 A) og landingene fra spillet (funn 2) kan en jukser alt skaffe seg mer fangst uten haill, så A stenger en dør mens vinduet står åpent, og puben ville trenge nett. Venter på svaret.
+  - Konteksten: haill kommer fra fem steder. Tre gir serveren (kjøpt, velkomstgaven, takken for tilbakemelding); etter HS2 ligger de på serveren og kan ikke gå tapt eller lages. To gir spillet selv: lykkehjulet på puben (1 000 spillkroner, én runde per kveld, trukket i nettleseren) og kapittel 2 i merkene (én haill). De ligger bare i lagringen, så den som redigerer lagringen, kan gi seg selv så mange han vil. Ingen ekte penger og ingen andre spillere rammes av det. For spilleren ser alt likt ut i Haill-appen i begge tilfellene.
+  - A (anbefalt til 10.11.2026): også på serveren, så all haill er én saldo og den lokale beholdningen forsvinner. Puben trekkes på serveren, og kapittelhaillen gis én gang per konto.
+  - **B (anbefalt fra 10.11.2026):** bare haillen fra serveren (kjøpt, gaven, takken) er saldo, slik den er etter HS2; puben og kapitlene blir i lagringen. Det gjør HS4 unødvendig, og jukset med dem rammer bare jukseren selv.
+- **V4. Pengene i spillet (HS5).** **Besvart 10.11.2026, A** (Jonas: «V4: A»).
   - **A (anbefalt):** blir i klienten, med en bedre sjekk og ærlige tall i admin. Hele økonomien regnes i klienten, også når spillet er lukket. Penger på serveren ville kreve at serveren regner økonomien selv, og det er en omskriving av spillet. Der penger går mellom spillere, holder serveren alt regnskapet.
   - B: kontantene som saldo på serveren, med hver krone inn og ut gjennom en funksjon (flere måneders arbeid, og spillet uten nett slutter å virke).
   - C: ingenting, la funn 6 stå for pengene.
@@ -144,4 +145,5 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 
 ## Status
 
+- 10.11.2026: Jonas svarte V1 A, V2 A («det burde rettes asap»: HS3 først etter lanseringen) og V4 A; V3 venter på svaret etter mer kontekst (anbefalingen endret til B). Startmeldingen for HS2 er skrevet (`start/96.md`).
 - 10.11.2026: planen skrevet (steg 49, Jonas' økt, grenen `claude/o6-funn-6-haill-saldo-ume93b`). HS1 er klar (ingen valg; V7 A avgjorde den); HS2 venter på V1, HS3 på V2, HS4 på V3, HS5 på V4. Valgene står som valg 29 i køen. Ingenting er bygd.
