@@ -1177,7 +1177,7 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06e-anchor.js` (180 linjer)
+## `src/js/core/06e-anchor.js` (225 linjer)
 
 Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker … kai skal være standard … risiko forbundet med å
 
@@ -1187,18 +1187,22 @@ Anchor (Jonas 08.10.2026: «alle båter skal ha mulighet til å ligge på anker 
   - 25 `anchorForecast(p, H, hours, spot)`
   - 32 `anchorAlarm(kind, n)`
   - 36 `anchorAwake()`
-- **37** the current: the tide's stream and the wind's drift (the first current in the game; so far only the anchored boat feels it)
-  - 45 `curAt(p, H)`
-- **61** the ground tackle and how she lies to it
-  - 67 `anchorGear(type)`
-  - 73 `anchorReach(out, h, a)`
-  - 81 `anchorForce(type, p, H)`
-  - 91 `dropAnchor(auto)`
-  - 106 `weighAnchor(silent)`
-  - 113 `anchorUpIn()`
-  - 118 `anchorSwing(H)`
-  - 142 `anchorTick(H, W, hs)`
-  - 171 `driftAnchorage(pid)`
+- **37** the current (Fysikk 4 F8a, 10.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md F8): the stream through the sounds, the tide's own
+  - 65 `stromNear(p)`
+  - 67 `stromAt(q, p, dh)`
+  - 75 `curCoastWay(p)`
+  - 78 `stromSum(p, dh)`
+  - 83 `curAt(p, H)`
+- **106** the ground tackle and how she lies to it
+  - 112 `anchorGear(type)`
+  - 118 `anchorReach(out, h, a)`
+  - 126 `anchorForce(type, p, H)`
+  - 136 `dropAnchor(auto)`
+  - 151 `weighAnchor(silent)`
+  - 158 `anchorUpIn()`
+  - 163 `anchorSwing(H)`
+  - 187 `anchorTick(H, W, hs)`
+  - 216 `driftAnchorage(pid)`
 
 ## `src/js/core/07f-kar.js` (101 linjer)
 
@@ -2235,7 +2239,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 568 `dynAuto(d, dtG)`
   - 686 `dynTrackView()`
 
-## `src/js/core/16c-hull.js` (146 linjer)
+## `src/js/core/16c-hull.js` (149 linjer)
 
 ---- Fysikk 3: what the blows and the groundings do to the hull (Jonas 18.10.2026: «kollisjoner og grunnstøting skal få
 
@@ -2249,15 +2253,15 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 52 `bedRock(p)`
   - 60 `hullGround(p, kn, b = S.boat)`
   - 69 `hullMinute()`
-  - 86 `hullCost(b = S.boat, d = b.dmg || {})`
-- **93** the hull insurance (kasko)
-  - 98 `kaskoSign(b = S.boat)`
-  - 104 `kaskoEnd(b = S.boat)`
-  - 106 `kaskoHour()`
-  - 112 `hullLeft(b = S.boat)`
-  - 119 `hullBill(b = S.boat)`
-  - 125 `hullOrder(auto, b = S.boat)`
-  - 140 `hullMended(j, b = S.boat)`
+  - 89 `hullCost(b = S.boat, d = b.dmg || {})`
+- **96** the hull insurance (kasko)
+  - 101 `kaskoSign(b = S.boat)`
+  - 107 `kaskoEnd(b = S.boat)`
+  - 109 `kaskoHour()`
+  - 115 `hullLeft(b = S.boat)`
+  - 122 `hullBill(b = S.boat)`
+  - 128 `hullOrder(auto, b = S.boat)`
+  - 143 `hullMended(j, b = S.boat)`
 
 ## `src/js/ui/01-i18n.js` (120 linjer)
 
@@ -2328,7 +2332,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (859 linjer)
+## `src/js/ui/03-map.js` (898 linjer)
 
 ---------- map ----------
 
@@ -2371,14 +2375,16 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 603 `aisInfo(n)`
   - 622 `sjvChartSvg(u, bp)`
   - 632 `renderAisCard()`
-  - 633 `renderDyn()`
-  - 721 `pinAdd(mp)`
-  - 726 `pinOpen(id, fresh)`
-  - 746 `pinKb()`
-  - 777 `ptrUp(e)`
-  - 807 `unzoom()`
-  - 814 `portByLabel(pt)`
-  - 819 `addWaypoint(pt)`
+  - 640 `curArrowsOf(q, u, H, lab, halo)`
+  - 653 `curArrowsSvg(u)`
+  - 671 `renderDyn()`
+  - 760 `pinAdd(mp)`
+  - 765 `pinOpen(id, fresh)`
+  - 785 `pinKb()`
+  - 816 `ptrUp(e)`
+  - 846 `unzoom()`
+  - 853 `portByLabel(pt)`
+  - 858 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (281 linjer)
 
@@ -2610,12 +2616,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1427 linjer)
+## `src/js/ui/phone/07-patch.js` (1432 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1420 `patch()`
+  - 1425 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
