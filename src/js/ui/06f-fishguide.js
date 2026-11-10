@@ -126,8 +126,8 @@ const GUIDE = (() => {
   function minTxt(sp, s){ const M = MIN47[sp], p = S.boat && S.boat.pos, note = L('Mindre fisk slippes ut igjen (høstingsforskriften § 47).', 'Smaller fish are let go (høstingsforskriften § 47).');
     if (!M) return s.minKg ? '<div class="ph-kv"><span>' + L('Minstemål', 'Minimum size') + '</span><span>' + fmt(s.minKg, 1) + ' kg</span></div>' : '';
     const cm = p ? min47Cm(sp, p) : M.n, kg = p ? minKgAt(sp, p) : s.minKg, z = [];
-    if (M.n4 != null) z.push(L(M.n + ' cm nord for 62° N, ' + M.n4 + ' cm innenfor 4 nm av grunnlinjene', M.n + ' cm north of 62° N, ' + M.n4 + ' cm within 4 nm of the baselines'));
-    else if (M.i12 != null) z.push(L(M.n + ' cm, ' + M.i12 + ' cm innenfor 12 nm av grunnlinjene', M.n + ' cm, ' + M.i12 + ' cm within 12 nm of the baselines'));
+    if (M.n4 != null) z.push(L(M.n + ' cm nord for 62° N (' + M.n4 + ' cm innenfor 4 nm av grunnlinjene)', M.n + ' cm north of 62° N (' + M.n4 + ' cm within 4 nm of the baselines)'));
+    else if (M.i12 != null) z.push(L(M.i12 + ' cm innenfor 12 nm av grunnlinjene, ' + M.n + ' cm utenfor', M.i12 + ' cm within 12 nm of the baselines, ' + M.n + ' cm outside'));
     else if (M.n !== M.s) z.push(L(M.n + ' cm nord for 62° N', M.n + ' cm north of 62° N'));
     if (M.n !== M.s) z.push(L(M.s + ' cm sør for 62° N', M.s + ' cm south of 62° N'));
     if (M.kg != null) z.push(L(M.n + ' cm og ' + fmt(M.kg, 1) + ' kg', M.n + ' cm and ' + fmt(M.kg, 1) + ' kg'));

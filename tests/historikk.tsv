@@ -1801,3 +1801,23 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-10 05:28	ccr-171f25b0-kdwftj	7020382+	selltest	LES	23	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	shoptest	OK	33	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	vesseltest	OK	19	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	fuelcal	OK	15	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	bktest	OK	8	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	selltest	LES	26	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	geartest	FEIL	41	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	kystvakttest	FEIL	9	lite	samtidig	FEIL havsjekken trenger hele kysten i tools/map/out/game (release.py og game.py)
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	guidetest	OK	9	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	trip2	OK	37	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	jigalongtest	OK	16	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	bktest	OK	8	lite	samtidig	
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	opptest	FEIL	68	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	decktest	OK	15	lite	samtidig	
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	simday	LES	17	lite	samtidig	
+2026-11-10 05:32	ccr-171f25b0-kdwftj	7f46ffa	geartest	FEIL	41	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	opptest	FEIL	62	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	kystvakttest	OK	10	lite	samtidig	
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	guidetest	OK	9	lite	samtidig	
+2026-11-10 05:58	ccr-171f25b0-kdwftj	7f46ffa	tut	OK	1377	lite	alene	
