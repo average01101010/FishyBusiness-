@@ -160,6 +160,8 @@ function autoRestock(){
 function depart(){
   const b = S.boat;
   // put out for sale at Kystmegleren (B1, core/09k-market.js): she lies at the yard until the sale is over
+  // (KM3: with her right or a structure quota out in the quota market she lies in port the same way, b.sale.km)
+  if (b.sale && b.sale.km){ if (S.plan) S.plan = null; log('«' + S.boatName + '» har ' + (b.sale.km === 'struct' ? 'en strukturkvote' : 'hjemmelen') + ' til salgs i Kvotemarkedet og kan ikke gå ut før salget er over.', 'The «' + S.boatName + '» has ' + (b.sale.km === 'struct' ? 'a structure quota' : 'her right') + ' for sale in the quota market and cannot go out until the sale is over.'); return false; }
   if (b.sale){ if (S.plan) S.plan = null; log('«' + S.boatName + '» ligger til salgs hos Kystmegleren og kan ikke gå ut før salget er over.', 'The «' + S.boatName + '» is for sale at Kystmegleren and cannot go out until the sale is over.'); return false; }
   b.windArm = false; if (b.anch) weighAnchor(true);
   if (b.landQ && !(S.plan && S.plan.depAt)) landQueueEnd();   // she leaves the queue at the plant (K2); a plan waits for her turn instead (portBusy)   // armed again once the wind is under the turn-back limit (05-vessels.js)

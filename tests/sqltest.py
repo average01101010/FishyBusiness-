@@ -362,6 +362,18 @@ def main():
         R['wRead'] = sql("select count(*) from public.landings", A, 'authenticated', expect_err=True)
         R['wAnon'] = sql("select public.world_get(0, 2027, 1)", {}, 'anon', expect_err=True)
         R['wAdmPl'] = sql("select public.admin_world()", A, 'authenticated', expect_err=True)
+        # the welcome gift (HS1, 20261110150000_reg_gift.sql): tm_hello makes one grant per account however often it is called, the game
+        # takes it from shop_pending and says done, and it never comes again; it is no product to buy (the guest and the merge further down)
+        RG = {'rowsA': sql("select count(*) from public.grants where player_id = 'user_01AAA' and product_id = 'reg_luksus'")}
+        RG['pendA'] = [g for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['pendB'] = [g for g in json.loads(sql("select public.shop_pending()", B, 'authenticated')) if g['product'] == 'reg_luksus']
+        for who, pend in ((A, RG['pendA']), (B, RG['pendB'])):
+            if pend: sql("select public.shop_done(array[%d]::bigint[])" % pend[0]['id'], who, 'authenticated')
+        RG['helloAfter'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')); sql("select public.tm_hello('{}')", B, 'authenticated')
+        RG['rowsAfter'] = sql("select count(*) || '/' || count(done_at) from public.grants where player_id in ('user_01AAA', 'user_01BBB') and product_id = 'reg_luksus'")
+        RG['pendAfter'] = [g for who in (A, B) for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['product'] == 'reg_luksus']
+        RG['quote'] = sql("select public.shop_quote('reg_luksus')", A, 'authenticated', expect_err=True)
+        RG['two'] = sql("insert into public.grants (player_id, product_id) values ('user_01AAA', 'reg_luksus')", expect_err=True)
         # the shop (20261006040000_shop.sql): a quote only for a signed-in player and a real product; a paid purchase books one grant
         # however often Stripe tells it; the game takes it and says done; a refund takes back what is not given yet; no player books a payment
         R['sQuote'] = json.loads(sql("select public.shop_quote('trim_turbo')", A, 'authenticated'))
@@ -374,7 +386,7 @@ def main():
         R['sPlRead'] = sql("select count(*) from public.grants", A, 'authenticated', expect_err=True)
         if R['sPend']: sql("select public.shop_done(array[%d]::bigint[])" % R['sPend'][0]['id'], A, 'authenticated')
         sql("select public.shop_paid('cs_s2', 'pi_2')"); sql("select public.shop_refund('pi_2')"); sql("select public.shop_ended('cs_s9', 'expired')")
-        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id <> 'fb_haill') || '/' || (select count(*) from public.grants where done_at is not null and product_id <> 'fb_haill')")
+        R['sAfter'] = sql("select (select count(*) from public.grants where player_id = 'user_01AAA' and done_at is null and revoked_at is null) || '/' || (select status from public.purchases where id = 'cs_s2') || '/' || (select count(*) from public.grants where revoked_at is not null and product_id not in ('fb_haill', 'reg_luksus')) || '/' || (select count(*) from public.grants where done_at is not null and product_id not in ('fb_haill', 'reg_luksus'))")
         R['sEnd'] = json.loads(sql("select public.shop_pending()", A, 'authenticated'))
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
@@ -607,7 +619,18 @@ def main():
         gNotGuest = sql("select public.guest_claim()", A, 'authenticated', expect_err=True)
         code = sql("select public.guest_claim()", G, 'authenticated')
         gSelf = sql("select public.guest_merge('%s')" % code, G, 'authenticated', expect_err=True)
+        RG['guest'] = sql("select count(*) from public.grants where player_id = '%s' and product_id = 'reg_luksus'" % G['sub'])
         gMerge = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
+        RG['merged'] = sql("select count(*) from public.grants where player_id = 'user_01GGG' and product_id = 'reg_luksus'")
+        sql("select public.tm_hello('{}')", C, 'authenticated'); sql("select public.tm_hello('{}')", C, 'authenticated')
+        RG['account'] = sql("select count(*) || '/' || count(done_at) || '/' || min(data::text) from public.grants where player_id = 'user_01GGG' and product_id = 'reg_luksus'")
+        # the accounts that are there when the migration runs count as given (run once more here, with an account and a guest it has not seen)
+        sql("insert into public.players (id) values ('user_01OLD'), ('9a1c2a3e-0000-4000-8000-0000000000cc')")
+        rgRun = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261110150000_reg_gift.sql'))
+        RG['again'] = rgRun.returncode
+        RG['old'] = sql("select string_agg(player_id || '=' || (done_at is not null), ',' order by player_id) from public.grants where product_id = 'reg_luksus' and player_id in ('user_01OLD', '9a1c2a3e-0000-4000-8000-0000000000cc', 'user_01GGG')")
+        sql("select public.tm_hello('{}')", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')
+        RG['oldPend'] = [g for g in json.loads(sql("select public.shop_pending()", {'sub': 'user_01OLD', 'role': 'authenticated'}, 'authenticated')) if g['product'] == 'reg_luksus']
         gAfter = sql("select (select count(*) from public.players where id = '%s') || '/' || (select data from public.saves where player_id = 'user_01GGG') || '/' || (select consent from public.players where id = 'user_01GGG')" % G['sub'])
         gAgain = json.loads(sql("select public.guest_merge('%s')" % code, C, 'authenticated'))
         # with the account the guest's landings count (guest_merge), and for everyone: no landing ahead of the shared clock, the year from
@@ -622,6 +645,12 @@ def main():
                  and gAgain.get('merged') is False and gRead[0]),
               'guests: an anonymous sign-in plays and saves, cannot buy; registering with its one-time code moves the save and the consent to the account and the guest is gone; the code works once and no player reads the codes',
               {'shop': gNoShop, 'merge': gMerge, 'after': gAfter, 'again': gAgain})
+        gift = {'gift': True, 'give': 'haill', 'type': 'luksus'}
+        print(ok(RG['rowsA'] == '1' and len(RG['pendA']) == 1 and RG['pendA'][0]['data'] == gift and len(RG['pendB']) == 1 and RG['rowsAfter'] == '2/2' and RG['pendAfter'] == []
+                 and set(RG['helloAfter']) == {'consent', 'created', 'birth_year', 'admin', 'owned', 'shop'} and RG['quote'][0] and 'no such product' in RG['quote'][1] and RG['two'][0]
+                 and RG['guest'] == '0' and RG['merged'] == '0' and RG['account'] == '1/0/' + json.dumps(gift, sort_keys=True).replace('true', 'true')
+                 and RG['again'] == 0 and RG['old'] == 'user_01GGG=false,user_01OLD=true' and RG['oldPend'] == []),
+              'the welcome gift: tm_hello makes one grant per account however often it is called and answers as before, given and done once and never again, not for sale, never two rows; a guest gets none and the merge adds none, the account one at its first hello; the accounts there when the migration runs count as given, the guests do not (HS1)', RG)
         print(ok(abs(GW['open']) < 0.01 and GW['boats'] == 0 and GW['mkt'] and GW['cells'] == [] and GW['wy'] == '0' and 'Gjest' not in GW['evA'] and GW['evG'] == ['Gjest']
                  and GW['wyC'] == '700' and abs(GW['openAfter'] - 700) < 0.01 and GW['ahead'][0] and 'ahead' in GW['ahead'][1] and GW['clean'] == '2027/bmØF50b/itorsk'),
               "a guest's landings and catch are the guest's alone (not in the open group's quota, the boats, the market, the cells or the event list) until the account is made, and then they count; no landing ahead of the shared clock, the year from the game hour, the plant and species cleaned (Ø6 funn 2 og 3)",
@@ -1186,6 +1215,133 @@ def main():
         print(ok(RT['off'][0] and 'rt off' in RT['off'][1] and tA['ok'] and tA2['ok'] and tG['ok'] and tA['f'][0] == '1' and tA['f'][2] == '0' and RT['g'] == '1' and RT['id'] and RT['nonce']
                  and 58 <= RT['exp'] <= 62 and len(tA['f'][4]) == 16 and tA['n'] < 160 and RT['anon'] and RT['nobody'] and RT['priv'] == ['f', 't'] and RT['bad'][0] and 'rt off' in RT['bad'][1]),
               "the relay's ticket: refused without the secret, signed with it, the public id, the guest flag, 60 s, once; not for anon or a player who is not there (Ø16)", RT)
+        # HS5 (20261110160000_cheat_flags.sql, docs/planer/haill-saldo.md): the kroner and the landings checked, a mark per account and
+        # kind, and with the switch on the marked account out of every leaderboard, the fiskarlag's goal, the week's push and the open
+        # group's sum, while it still sees itself; «Fjern merket» takes it in again; only the admin with aal2 reads and clears
+        import hashlib
+        HS = {}; H = {k: {'sub': 'user_01HS' + k, 'role': 'authenticated'} for k in ('1', '2', '3', '4', '5', '6', '7', '8')}
+        hid = lambda k: 'user_01HS' + k
+        for k in H: sql("select public.tm_hello('{}')", H[k], 'authenticated')
+        hsave = lambda k, cash, typ='trebat', fleet=1: json.loads(sql("select public.save_put4('x', now(), 100, null, true, '{\"cash\":%d,\"type\":\"%s\",\"fleet\":%d}', 'devH', 'H', false)" % (cash, typ, fleet), H[k], 'authenticated'))
+        hland = lambda k, gh, port, kg, boat, acc='open', ev='', reg='nord': sql("""select public.land_put(%s, 2027, '%s', '%s', '[{"sp":"torsk","kg":%s,"kgq":%s}]', '%s', '', '%s', '%s')""" % (gh, port, acc, kg, kg, boat, ev, reg), H[k], 'authenticated')
+        flags = lambda k, kind=None: json.loads(sql("select coalesce(jsonb_agg(jsonb_build_object('kind', kind, 'over', over, 'n', n, 'why', data ->> 'why', 'open', cleared_at is null) order by id), '[]'::jsonb)::text from public.cheat_flags where player_id = '%s'%s" % (hid(k), " and kind = '%s'" % kind if kind else '')))
+        # the kroner: a million too much between two saves is marked, and the save is taken
+        hsave('1', 15000); HS['cashPut'] = hsave('1', 1400000).get('ok'); HS['cash'] = flags('1')
+        HS['cashKept'] = sql("select summary ->> 'cash' from public.saves where player_id = '%s'" % hid('1'))
+        # a real save after three days away with the boats on a plan: the landings came up, the kroner rose by 900 000, no mark
+        hsave('2', 15000); sql("update public.players set created_at = now() - interval '5 days' where id = '%s'" % hid('2'))
+        sql("update public.saves set updated_at = now() - interval '3 days' where player_id = '%s'" % hid('2'))
+        for i in range(10): hland('2', 3200 + i, 'hs5ekte', 400, 'Plan')
+        hsave('2', 915000); HS['away'] = flags('2')
+        # … and the same rise without the days is marked (the limit is the time, not the account)
+        hsave('2', 2400000); HS['awayThen'] = [f['kind'] for f in flags('2')]
+        sql("delete from public.cheat_flags where player_id = '%s'" % hid('2'))
+        # the landings: 27 t in three landings from a boat that holds 500 kg is marked; all three are taken
+        for i in range(3): hland('3', 3370 + i, 'hs5juks', 9000, 'JuksA', 'open', 'hs5ev')
+        HS['land'] = flags('3'); HS['landRows'] = sql("select count(*) || '/' || round(sum(kg)) from public.landings where player_id = '%s'" % hid('3'))
+        # a landing after days away that the fleet could have taken: 20 holds after three days is not marked
+        hland('4', 3200, 'hs5ekte', 200, 'Ekte'); sql("update public.cheat_bucket set at = now() - interval '3 days' where player_id = '%s'" % hid('4'))
+        for i in range(4): hland('4', 3210 + i, 'hs5ekte', 2500, 'Ekte')
+        hland('4', 3371, 'hs5ekte', 1000, 'Ekte', 'open', 'hs5ev'); HS['landAway'] = flags('4')
+        # the landings of the last days against the catch that was reported: 3 500 kg and no catch is marked, with 1 500 kg reported it is not
+        for k in ('6', '7'):
+            for i in range(7): hland(k, 3000 + i, 'hs5ekte', 500, 'Fangst' + k, 'none', '', '')
+            sql("update public.landings set at = now() - interval '2 hours' where player_id = '%s'" % hid(k))
+            sql("update public.cheat_bucket set at = now() - interval '2 hours' where player_id = '%s'" % hid(k))
+        sql("select public.catch_put(3000, '[[101, 1500]]')", H['7'], 'authenticated')
+        hland('6', 3010, 'hs5ekte', 100, 'Fangst6', 'none', '', ''); hland('7', 3010, 'hs5ekte', 100, 'Fangst7', 'none', '', '')
+        HS['catch'] = flags('6'); HS['catchOk'] = flags('7')
+        # a guest's mark goes with the landings to the account
+        # a guest's marks go to the account that takes the guest over (guest_merge deletes the guest's row as the account), also a mark
+        # for the kroner with no landing, and one the account has already does not stop the other
+        sql("insert into public.players (id, guest) values ('hs5_g', true), ('hs5_acc', false) on conflict do nothing; select public.cheat_flag('hs5_g', 'land', 5, '{}'); select public.cheat_flag('hs5_g', 'cash', 7, '{}'); select public.cheat_flag('hs5_acc', 'land', 1, '{}')")
+        sql("delete from public.players where id = 'hs5_g'", {'sub': 'hs5_acc', 'role': 'authenticated'}); HS['follow'] = sql("select string_agg(kind || ':' || over, ',' order by kind) from public.cheat_flags where player_id = 'hs5_acc'")
+        sql("delete from public.players where id = 'hs5_acc'")
+        # the slack is per day, not per save: three saves of 250 000 kr more each are marked at the second; an account's first save
+        # with a thousand million is marked; a save without a cash between two does not hide the rise
+        hsave('8', 15000); hsave('8', 265000); HS['step1'] = flags('8'); hsave('8', 515000); hsave('8', 765000); HS['step'] = flags('8')
+        sql("select public.tm_hello('{}')", {'sub': 'user_01HS9', 'role': 'authenticated'}, 'authenticated'); H['9'] = {'sub': 'user_01HS9', 'role': 'authenticated'}
+        hsave('9', 1000000000); HS['first'] = [f['kind'] for f in flags('9')]
+        hsave('5', 15000); sql("select public.save_put4('x', now(), 100, null, true, '{\"day\":5}', 'devH', 'H', false)", H['5'], 'authenticated'); hsave('5', 2000000); HS['nocash'] = [f['kind'] for f in flags('5')]
+        sql("delete from public.cheat_flags where player_id = '%s'" % hid('5'))
+        # crab is never reported as catch, so crab landed is not held against the catch
+        for i in range(7): sql("""select public.land_put(%d, 2027, 'hs5ekte', 'none', '[{"sp":"krabbe","kg":500,"kgq":0}]', 'Krabbe')""" % (3000 + i), H['8'], 'authenticated')
+        sql("update public.landings set at = now() - interval '2 hours' where player_id = '%s'; update public.cheat_bucket set at = now() - interval '2 hours' where player_id = '%s'" % (hid('8'), hid('8')))
+        sql("""select public.land_put(3010, 2027, 'hs5ekte', 'none', '[{"sp":"krabbe","kg":100,"kgq":0}]', 'Krabbe')""", H['8'], 'authenticated'); HS['crab'] = flags('8', 'land')
+        # the switch off: the mark is only written, the marked account is in every list
+        sql("select public.lag_join('hs5lag')", H['3'], 'authenticated'); sql("select public.lag_join('hs5lag')", H['4'], 'authenticated')
+        sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/hs5', 'BPkeyH', 'authkeyH', 'no')", H['5'], 'authenticated')
+        sql("select public.push_sub('https://fcm.googleapis.com/fcm/send/hs3', 'BPkeyH3', 'authkeyH3', 'no')", H['3'], 'authenticated')
+        def lists(who):
+            wt = json.loads(sql("select public.world_top(20, 'open')", H[who], 'authenticated')); bt = json.loads(sql("select public.bygde_top(20)", H[who], 'authenticated')).get('nord') or {}
+            et = json.loads(sql("select public.ev_top('hs5ev', 2027)", H[who], 'authenticated'))
+            sql("update public.world_agg set at = now() - interval '2 minutes'"); ag = json.loads(sql("select public.world_agg_get(2027)"))
+            sql("delete from public.push_queue where tag = 'top-week'"); sql("select public.push_week(true)", None, 'service_role')
+            pw = sql("select coalesce(string_agg(body, ' | '), '') from public.push_queue where tag = 'top-week' and player_id = '%s'" % hid(who))
+            return {'top': 'JuksA' in [r['boat'] for r in wt['rows']], 'topMine': (wt.get('mine') or {}).get('kg'), 'bygd': 'hs5juks' in [r['port'] for r in bt.get('rows') or []],
+                    'bygdMine': (bt.get('mine') or {}).get('port'), 'ev': 'JuksA' in [r['boat'] for r in et['rows']], 'evMine': (et.get('mine') or {}).get('kg'), 'evKg': et['kg'],
+                    'open': ag['open'], 'push': 'JuksA' in pw, 'pushMe': 'Du leverte 27,0 t, plass 1' in pw and 'er «JuksA»' in pw}
+        def lag(who):
+            g = json.loads(sql("select public.lag_get(20)", H[who], 'authenticated')); return {'kg': g['kg'], 'hit': g['hit'], 'm': sorted(m['kg'] for m in g['members'])}
+        HS['off'] = lists('5'); HS['cfgPl'] = sql("select public.admin_cfg_set('cheat_on', 'true')", H['1'], 'authenticated', expect_err=True)[0]
+        HS['cfgBad'] = sql("select public.admin_cfg_set('cheat_on', '1')", AD2, 'authenticated', expect_err=True)[0]
+        sql("select public.admin_cfg_set('cheat_on', 'true')", AD2, 'authenticated')
+        # on: out for the others (and the goal is not reached on the marked kilos), in for itself
+        HS['on'] = lists('5'); HS['onSelf'] = lists('3'); HS['lagOn'] = lag('4'); HS['lagSelf'] = lag('3')
+        HS['lagHit'] = sql("select count(*) from public.lag_hits where port = 'hs5lag'")
+        # the admin: the list with the public id, «La stå» keeps it out, «Fjern merket» takes it in again; nobody else reads or clears
+        al = json.loads(sql("select public.admin_cheat_list(500)", AD2, 'authenticated')); who3 = hashlib.md5(('dsb' + hid('3')).encode()).hexdigest()[:10]
+        mine = [r for r in al['rows'] if r['who'] == who3 and not r['cleared']]
+        HS['adm'] = {'on': al['on'], 'n': len(mine), 'kind': [r['kind'] for r in mine], 'raw': 'user_01HS3' in json.dumps(al), 'keys': sorted(mine[0].keys()) if mine else None}
+        HS['admPl'] = [sql(q, H['3'], 'authenticated', expect_err=True)[0] for q in ("select public.admin_cheat_list(10)", "select public.admin_cheat_clear(%d)" % (mine[0]['id'] if mine else 0),
+                       "select public.admin_cheat_keep(%d)" % (mine[0]['id'] if mine else 0), "select count(*) from public.cheat_flags", "select count(*) from public.cheat_bucket", "select public.cheat_out('x')",
+                       "select public.cheat_flag('user_01HS4', 'cash', 1, '{}')", "select public.cheat_land('user_01HS4', 1e9)")]
+        HS['admAal1'] = sql("select public.admin_cheat_list(10)", AD1, 'authenticated', expect_err=True)[0]
+        HS['admAnon'] = sql("select public.admin_cheat_list(10)", {}, 'anon', expect_err=True)[0]
+        HS['keep'] = sql("select public.admin_cheat_keep(%d)" % mine[0]['id'], AD2, 'authenticated') if mine else None; HS['kept'] = lists('5')['top']
+        HS['clear'] = sql("select public.admin_cheat_clear(%d)" % mine[0]['id'], AD2, 'authenticated') if mine else None
+        HS['cleared'] = lists('5'); HS['lagCleared'] = lag('4')
+        hland('3', 3373, 'hs5juks', 10, 'JuksA', 'none', '', ''); HS['again'] = [f['open'] for f in flags('3')]
+        sql("select public.admin_cfg_set('cheat_on', 'false')", AD2, 'authenticated')
+        w3 = 27000; ex = {'top': False, 'bygd': False, 'ev': False, 'push': False}
+        print(ok(HS['cashPut'] is True and HS['cashKept'] == '1400000' and [(f['kind'], f['open']) for f in HS['cash']] == [('cash', True)] and 1000000 <= HS['cash'][0]['over'] <= 1100000),
+              'HS5: a save with a million kroner too much gets a mark, and the save is taken as it is', {k: HS[k] for k in ('cashPut', 'cashKept', 'cash')})
+        print(ok(HS['away'] == [] and HS['awayThen'] == ['cash']), 'HS5: a real save after three days away with the boats on a plan gets no mark (the same rise right after does)', {k: HS[k] for k in ('away', 'awayThen')})
+        print(ok([(f['kind'], f['why']) for f in HS['land']] == [('land', 'fleet')] and HS['land'][0]['n'] == 3 and HS['landRows'] == '3/27000'),
+              'HS5: landings above what the fleet can have taken get one mark, and the landings are taken', {k: HS[k] for k in ('land', 'landRows')})
+        print(ok(HS['landAway'] == []), 'HS5: a landing after days away that the fleet could have taken gets no mark', HS['landAway'])
+        print(ok([(f['kind'], f['why'], f['over']) for f in HS['catch']] == [('land', 'catch', 500)] and HS['catchOk'] == [] and HS['crab'] == [] and HS['follow'] == 'cash:7,land:1'),
+              "HS5: landings above the reported catch get a mark, with the catch reported they do not; a guest's mark follows the landings to the account", {k: HS[k] for k in ('catch', 'catchOk', 'crab', 'follow')})
+        print(ok(HS['step1'] == [] and [f['kind'] for f in HS['step']] == ['cash'] and 449000 <= HS['step'][0]['over'] <= 450000 and HS['step'][0]['n'] == 2 and HS['first'] == ['cash'] and HS['nocash'] == ['cash']),
+              "HS5: the slack is per day and not per save, an account's first save is checked, and a save without a cash between two does not hide the rise", {k: HS[k] for k in ('step1', 'step', 'first', 'nocash')})
+        print(ok(all(HS['off'][k] for k in ex) and not any(HS['on'][k] for k in ex) and HS['off']['open'] - HS['on']['open'] >= w3 and HS['off']['evKg'] - HS['on']['evKg'] == w3
+                 and HS['cfgPl'] and HS['cfgBad']),
+              'HS5: with the switch on a marked account is out of world_top, bygde_top, ev_top, the week\'s push and the open group\'s sum; off, it is in (only the admin turns it)', {k: HS[k] for k in ('off', 'on', 'cfgPl', 'cfgBad')})
+        print(ok(HS['onSelf']['topMine'] == 27000 and HS['onSelf']['top'] and HS['onSelf']['bygdMine'] == 'hs5juks' and HS['onSelf']['evMine'] == 27000 and HS['onSelf']['pushMe']
+                 and HS['lagOn'] == {'kg': 1000, 'hit': False, 'm': [0, 1000]} and HS['lagSelf'] == {'kg': 28000, 'hit': False, 'm': [1000, 27000]} and HS['lagHit'] == '0'),
+              "HS5: the marked account sees itself as before, and the fiskarlag's goal is not reached on its kilos", {k: HS[k] for k in ('onSelf', 'lagOn', 'lagSelf', 'lagHit')})
+        print(ok(HS['adm']['on'] is True and HS['adm']['n'] == 1 and HS['adm']['kind'] == ['land'] and not HS['adm']['raw'] and all(HS['admPl']) and HS['admAal1'] and HS['admAnon']
+                 and HS['keep'] == 't' and HS['kept'] is False and HS['clear'] == 't' and all(HS['cleared'][k] for k in ex) and HS['again'] == [False] and HS['lagCleared'] == {'kg': 28000, 'hit': True, 'm': [1000, 27000]}),
+              'HS5: the admin (aal2) sees the marks by the public id, «La stå» keeps the account out, «Fjern merket» takes it in again; a player, aal1 and anon get nothing', {k: HS[k] for k in ('adm', 'admPl', 'admAal1', 'admAnon', 'keep', 'kept', 'clear', 'cleared', 'again', 'lagCleared')})
+        # P5 (20261110170000_shop_gate.sql): the shop closed for the accounts made after the admin turned the switch; those that were
+        # there buy as before, only the admin (aal2) turns it, and open again the new account buys too
+        # (the welcome gift's check above ran 20261110150000_reg_gift.sql again, with its older tm_hello: this file again, as in the real order)
+        sgRun = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261110170000_shop_gate.sql'))
+        SG = {'rerun': sgRun.returncode}; OLD = {'sub': 'user_01SGO', 'role': 'authenticated'}; NEW = {'sub': 'user_01SGN', 'role': 'authenticated'}
+        hello = lambda who: json.loads(sql("select public.tm_hello('{}')", who, 'authenticated')).get('shop')
+        quote = lambda who: sql("select public.shop_quote('trim_turbo')", who, 'authenticated', expect_err=True)
+        SG['open0'] = hello(OLD); SG['get0'] = json.loads(sql("select public.admin_shop_gate()", AD2, 'authenticated'))
+        SG['deny'] = [sql(q, c, r, expect_err=True)[0] for q in ("select public.admin_shop_gate_set(true)", "select public.admin_shop_gate()", "select public.shop_closed('user_01SGO')", "select * from public.world_cfg")
+                      for c, r in ((OLD, 'authenticated'), (AD1, 'authenticated'), ({}, 'anon'))]
+        SG['set'] = json.loads(sql("select public.admin_shop_gate_set(true)", AD2, 'authenticated'))
+        SG['new'] = hello(NEW); SG['newQ'] = quote(NEW); SG['old'] = hello(OLD); SG['oldQ'] = quote(OLD)[0]
+        SG['gift'] = sql("select count(*) from public.grants where player_id = 'user_01SGN' and product_id = 'reg_luksus'")
+        SG['n'] = json.loads(sql("select public.admin_shop_gate()", AD2, 'authenticated'))['n']
+        sql("update public.players set game_admin = true where id = 'user_01SGN'"); SG['adm'] = hello(NEW); sql("update public.players set game_admin = false where id = 'user_01SGN'")
+        SG['unset'] = json.loads(sql("select public.admin_shop_gate_set(false)", AD2, 'authenticated')); SG['again'] = hello(NEW); SG['againQ'] = quote(NEW)[0]
+        print(ok(SG['rerun'] == 0 and SG['open0'] is True and SG['get0'] == {'from': None, 'n': 0} and all(SG['deny']) and SG['set']['from'] and SG['new'] is False and SG['newQ'][0] and 'closed' in SG['newQ'][1]
+                 and SG['old'] is True and SG['oldQ'] is False and SG['gift'] == '1' and SG['n'] == 1 and SG['adm'] is True and SG['unset'] == {'from': None, 'n': 0} and SG['again'] is True and SG['againQ'] is False),
+              'P5: with the switch on an account made after it gets shop:false and no quote, an older one buys as before, the welcome gift is still given; only the admin (aal2) turns it, and off, all buy', SG)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

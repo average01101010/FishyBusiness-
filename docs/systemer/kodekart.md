@@ -668,7 +668,7 @@ The fish on the fishing grounds as the good spots stand in the sea (Ø14 F2 of d
   - 60 `seaIceShut(p, H, V)`
   - 62 `seaIceOnLeg(a, b, H, V)`
 
-## `src/js/core/03i-kvotemarked.js` (168 linjer)
+## `src/js/core/03i-kvotemarked.js` (171 linjer)
 
 Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: V1 A, V2 A, V3 A, V4 B, V5 A)
 
@@ -678,20 +678,20 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 42 `kmTakst(item, H)`
 - **54** the free right (V2 A, § 7): a right in the company without a boat, at most two game years, then back to the register
   - 58 `kmFree(H)`
-  - 67 `kmFreeAdd(item, H)`
-- **69** why it cannot be put out (a word), or null. src = {v, kind:'right'|'struct'|'two', i} for a boat's, {free:i} for a free right
-  - 73 `kmWhy(src, H)`
-- **87** the good as it travels (to the server and the buyer): nothing about who. A right takes its structure quotas and this year's catch on
-  - 90 `kmPack(src, H)`
-  - 99 `kmShare(u, l, s)`
-- **100** the seller's side: the right or the structure quota leaves the boat (or the free right the company). The boat stays in the company
-  - 102 `kmOut(src, H)`
-- **115** the buyer's side. to = {v, how}: put (the right on a boat without one: she joins the closed group), struct (structured onto a boat
-  - 119 `kmApply(item, to, H)`
-  - 148 `kmStructWhy(l, item)`
-  - 155 `kmLenWhy(item, len)`
-- **156** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
-  - 159 `kmBuyWhy(item, to, kr0)`
+  - 69 `kmFreeAdd(item, H)`
+- **72** why it cannot be put out (a word), or null. src = {v, kind:'right'|'struct'|'two', i} for a boat's, {free:i} for a free right
+  - 76 `kmWhy(src, H)`
+- **90** the good as it travels (to the server and the buyer): nothing about who. A right takes its structure quotas and this year's catch on
+  - 93 `kmPack(src, H)`
+  - 102 `kmShare(u, l, s)`
+- **103** the seller's side: the right or the structure quota leaves the boat (or the free right the company). The boat stays in the company
+  - 105 `kmOut(src, H)`
+- **118** the buyer's side. to = {v, how}: put (the right on a boat without one: she joins the closed group), struct (structured onto a boat
+  - 122 `kmApply(item, to, H)`
+  - 151 `kmStructWhy(l, item)`
+  - 158 `kmLenWhy(item, len)`
+- **159** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
+  - 162 `kmBuyWhy(item, to, kr0)`
 
 ## `src/js/core/04-crew.js` (631 linjer)
 
@@ -993,7 +993,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **986** the look's sweep (sjvEval), when the model does not have her
   - 989 `sjvSweep(n, A, H, gs, on)`
 
-## `src/js/core/06-services.js` (280 linjer)
+## `src/js/core/06-services.js` (282 linjer)
 
 ---------- services behind the phone ----------
 
@@ -1012,14 +1012,14 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **149** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
   - 151 `autoRestock()`
   - 160 `depart()`
-  - 187 `finishJob(j)`
-  - 215 `fitHours(k)`
-  - 218 `jobOk(j)`
-  - 223 `queueJob(j)`
-  - 226 `jobsDone()`
-  - 232 `shelterReturn(W, hsOver)`
-  - 258 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **278** CORE END
+  - 189 `finishJob(j)`
+  - 217 `fitHours(k)`
+  - 220 `jobOk(j)`
+  - 225 `queueJob(j)`
+  - 228 `jobsDone()`
+  - 234 `shelterReturn(W, hsOver)`
+  - 260 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **280** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1817,7 +1817,7 @@ the snow crab aboard: the factory for the clusters and the live crab in the tank
 - **114** the trip of a snow crab vessel (tripLeft, 04-crew.js): the bait for the pots at the trip's pace (a pot baited at each setting, half
   - 117 `snoTrip(R, b, d)`
 
-## `src/js/core/09k-market.js` (194 linjer)
+## `src/js/core/09k-market.js` (294 linjer)
 
 Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
 
@@ -1838,12 +1838,20 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 104 `mbQuickWhy(v)`
   - 108 `mbDrop(v)`
   - 115 `mbQuickSell(vid)`
-- **125** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
-  - 129 `mbApply(rows)`
-- **174** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 178 `mktDelWhy(v, to)`
-  - 179 `mktDeliver(vid, to)`
-  - 185 `mktHour(H)`
+- **125** the quota market in the save (KM3 of docs/planer/kvotemarkedet.md; the goods and the rules are core/03i-kvotemarked.js, the server
+  - 129 `kmState()`
+  - 134 `kmKey(src)`
+  - 140 `kmSrcOf(key, item)`
+  - 150 `kmPutWhy(src, H)`
+  - 162 `kmLock(src, r, o, key)`
+  - 169 `kmUnlock(key, lid)`
+  - 179 `mbKm(r, d, k, M)`
+- **223** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
+  - 227 `mbApply(rows)`
+- **274** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 278 `mktDelWhy(v, to)`
+  - 279 `mktDeliver(vid, to)`
+  - 285 `mktHour(H)`
 
 ## `src/js/core/09l-sponsor.js` (31 linjer)
 
@@ -2585,14 +2593,36 @@ the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can 
   - 46 `ruLearn()`
   - 57 `regler()`
 
-## `src/js/ui/phone/04-kvote.js` (71 linjer)
+## `src/js/ui/phone/04-kvote.js` (72 linjer)
 
 the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
 
-  - 2 `kvote()`
-  - 8 `kvOpen(H)`
-  - 25 `kvStock(H)`
-  - 43 `kvMkt(H)`
+  - 3 `kvote()`
+  - 9 `kvOpen(H)`
+  - 26 `kvStock(H)`
+  - 44 `kvReg(H)`
+
+## `src/js/ui/phone/04b-kvotemarked.js` (213 linjer)
+
+Kvotemarkedet: Kvote → Marked (KM3 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026 V1 A–V5 A, valg 15 A 10.11.2026)
+
+- **1** Kvotemarkedet: Kvote → Marked (KM3 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026 V1 A–V5 A, valg 15 A 10.11.2026)
+  - 29 `kxQ(it, H)`
+  - 32 `kxCommon(H)`
+  - 39 `kxCard(Q)`
+  - 49 `kxBoats(it)`
+  - 53 `kxChoice(key, it, pa)`
+  - 62 `kxFacts(it, H)`
+  - 71 `kxSheet(Q)`
+  - 93 `kxForm(src)`
+  - 112 `kxOwn(src, H)`
+  - 121 `kxMine(H)`
+  - 141 `kxWishCard()`
+  - 151 `kxList(kind)`
+  - 159 `kxSold(H)`
+  - 165 `kvMkt(H)`
+  - 176 `kxBoatRow(v)`
+  - 183 `kmAct(a, d)`
 
 ## `src/js/ui/phone/05-rigg-innst-admin.js` (91 linjer)
 
@@ -2619,12 +2649,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1444 linjer)
+## `src/js/ui/phone/07-patch.js` (1448 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1437 `patch()`
+  - 1441 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2743,7 +2773,7 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 105 `nett()`
   - 117 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (181 linjer)
+## `src/js/ui/phone/13c-megler.js` (182 linjer)
 
 Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
 
@@ -2752,15 +2782,15 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 27 `mgNear(Q)`
   - 29 `mgCard(Q)`
   - 48 `mgOwnRow(v, quick)`
-  - 66 `mbForm(v)`
-  - 81 `megler()`
-  - 104 `mgWishCard()`
-  - 113 `mgSheet(Q)`
-  - 147 `mgHere()`
-  - 155 `mgAfter(key, okNo, okEn)`
-  - 157 `mgAct(a, d)`
+  - 67 `mbForm(v)`
+  - 82 `megler()`
+  - 105 `mgWishCard()`
+  - 114 `mgSheet(Q)`
+  - 148 `mgHere()`
+  - 156 `mgAfter(key, okNo, okEn)`
+  - 158 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (319 linjer)
+## `src/js/ui/phone/14-act.js` (325 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3194,7 +3224,7 @@ SOUND (the user's wish 03.10.2026)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 - **312** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
-## `src/js/ui/10f-cloud.js` (964 linjer)
+## `src/js/ui/10f-cloud.js` (966 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -3291,7 +3321,7 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 927 `guestNudge(step)`
   - 939 `guestLogin(src)`
   - 945 `guestRegister(signIn)`
-  - 957 `guestGift()`
+  - 960 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (210 linjer)
 
@@ -3342,22 +3372,22 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (140 linjer)
+## `src/js/ui/10i-shop.js` (147 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 17 `shopMode()`
-  - 23 `realKr(nok)`
-  - 25 `shopLabel(nok)`
-  - 30 `shopWhat(k)`
-  - 40 `payBuy(k, give)`
-  - 48 `shopFine()`
-  - 51 `shopGo(k)`
-  - 68 `shopGive(g)`
-  - 91 `shopThanks(rc)`
-  - 104 `shopClaim()`
-  - 127 `shopStart()`
+  - 19 `shopMode()`
+  - 25 `realKr(nok)`
+  - 27 `shopLabel(nok)`
+  - 32 `shopWhat(k)`
+  - 42 `payBuy(k, give)`
+  - 50 `shopFine()`
+  - 53 `shopGo(k)`
+  - 70 `shopGive(g)`
+  - 93 `shopThanks(rc)`
+  - 106 `shopClaim()`
+  - 134 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (215 linjer)
 
@@ -3382,11 +3412,17 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 - **57** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
 
-## `src/js/ui/10s-broker.js` (108 linjer)
+## `src/js/ui/10s-broker.js` (115 linjer)
 
 Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
 
 - **1** Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
+
+## `src/js/ui/10t-kvotemarked.js` (147 linjer)
+
+Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is KM2, supabase/migrations/20261108230000_kvotemarked.sql)
+
+- **1** Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is KM2, supabase/migrations/20261108230000_kvotemarked.sql)
 
 ## `src/js/ui/10s-mob.js` (176 linjer)
 

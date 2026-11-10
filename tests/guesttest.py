@@ -2,10 +2,12 @@
 registering after the third landing) with stand-ins for WorkOS and Supabase: the game starts at once with an anonymous sign-in and
 talks to the cloud with the guest's token; a card says one landing is left; after the third landing casting off waits for the letter
 from Fiskeridirektoratet, which shows what is the player's and closes with «Ikke nå»; a guest cannot buy; «Registrer meg» puts the
-game up, takes a one-time code and goes to WorkOS; back as an account the guest's things move over first, and a luxury luck is aboard.
+game up, takes a one-time code and goes to WorkOS; back as an account the guest's things move over first, and a luxury luck is aboard:
+the server's grant (HS1, supabase/migrations/20261110150000_reg_gift.sql; the stand-in gives it from shop_pending), given once, and the
+key on the device alone gives nothing.
 Prints OK or FEIL per check."""
-from _env import GAME, boot
-import asyncio, json
+from _env import GAME, boot, OUT
+import asyncio, json, os
 from playwright.async_api import async_playwright
 
 
@@ -93,12 +95,28 @@ async def main():
         await ctx.close()
 
         # 6. back from registering: the guest's things move to the account first, then the welcome gift
-        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"'}
+        GIFT = [{'id': 7, 'product': 'reg_luksus', 'data': {'give': 'haill', 'type': 'luksus', 'gift': True}}]   # what tm_hello made on the server
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'guest_merge': {'merged': True, 'save': True}, 'name_claim': '"ok"', 'shop_pending': GIFT, 'shop_done': ''}
         ctx, pg, errs = await page(br, calls, replies, "localStorage.setItem('dsb_guest_code', JSON.stringify({code:'code_abc', gid:'g-1'})); localStorage.setItem('dsb_guest', JSON.stringify({at:'gtok', rt:'grt', exp:9e9, id:'g-1'})); if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_names', JSON.stringify({boat:'Havbris', user:'Kystjenta'})); }")
         await boot(pg)
         await pg.wait_for_function("S.haillInv && S.haillInv.luksus >= 1 && S.user === 'Kystjenta'", timeout=20000)
         r = await pg.evaluate("""({code:localStorage.getItem('dsb_guest_code'), guestKey:localStorage.getItem('dsb_guest'), gift:localStorage.getItem('dsb_reg_gift'), guest:!!CLOUD.guest,
           msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no))})""")
+        # (the pictures for Jonas: the toast, then the message in Meldinger, standing and lying)
+        try: await pg.wait_for_function("(t => t && t.classList.contains('on') && /Registrert|fiskermanntallet/.test(t.textContent))(document.getElementById('toast'))", timeout=20000)   # (the toasts wait for the start to end)
+        except Exception: pass
+        for nm_, w, h in (('staaende', 800, 1280), ('liggende', 1280, 800)):
+            await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(250); await pg.screenshot(path=os.path.join(OUT, 'guest-gave-toast-%s.png' % nm_))
+        for nm_, w, h in (('staaende', 800, 1280), ('liggende', 1280, 800)):
+            await pg.set_viewport_size({'width': w, 'height': h}); await pg.evaluate("document.getElementById('modal').hidden = true; PHONE.show(true); PHONE.open('meld'); PHONE.render()")
+            await pg.wait_for_timeout(300); await pg.screenshot(path=os.path.join(OUT, 'guest-gave-meld-%s.png' % nm_))
+        await pg.evaluate("PHONE.show(false)"); await pg.set_viewport_size({'width': 1100, 'height': 800})
+        # the stand-in goes on offering the grant, and the key asks once more after five seconds: still one luck, one message, and the server told
+        await pg.wait_for_timeout(6500)
+        one = await pg.evaluate("({luksus:S.haillInv.luksus, msgs:S.msgs.filter(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)).length, given:S.shopGiven, shoprc:!!document.querySelector('.shoprc'), bought:S.msgs.some(m => /Takk for kjøpet|59 kr/.test(m.no))})")
+        done = [c[1] for c in calls if c[0] == 'shop_done']
+        check(one['luksus'] == 1 and one['msgs'] == 1 and one['given'] == [7] and done and all(d == {'ids': [7]} for d in done) and not one['shoprc'] and not one['bought'],
+              'the welcome gift is the server\'s grant: one luxury luck however often it is asked for, the server told it is given, and no purchase confirmation or price', {'one': one, 'done': done})
         nm = await pg.evaluate("({boat:S.boatName, unnamed:!!S.unnamed, user:S.user, kept:localStorage.getItem('dsb_names')})")
         claim = [c for c in calls if c[0] == 'name_claim']
         check(nm['boat'] == 'Havbris' and not nm['unnamed'] and nm['user'] == 'Kystjenta' and not nm['kept'] and claim and claim[0][1] == {'name': 'Kystjenta'} and claim[0][2] == 'Bearer tok_test',
@@ -107,6 +125,16 @@ async def main():
         check(order[:3] == ['guest_merge', 'tm_hello', 'save_get'] and mg[0][1] == {'code': 'code_abc'} and mg[0][2] == 'Bearer tok_test' and not r['code'] and not r['guestKey'] and not r['gift'] and not r['guest'] and r['msg'],
               'back as an account: the guest\'s things move over first (with the code, as the account), the guest is forgotten on the device, and a luxury luck and a message from Fiskeridirektoratet are aboard', {'order': order, 'r': r})
         check(errs == [], 'sidefeil som ny konto', errs)
+        await ctx.close()
+        # 6b. the key alone gives nothing (HS1): an account with dsb_reg_gift set by hand and no grant on the server gets no luck and no message
+        calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'shop_pending': [], 'shop_done': ''}
+        ctx, pg, errs = await page(br, calls, replies, "if (!sessionStorage.getItem('n')){ sessionStorage.setItem('n', 1); localStorage.setItem('dsb_reg_gift', '1'); }")
+        await boot(pg)
+        await pg.wait_for_function("!localStorage.getItem('dsb_reg_gift')", timeout=20000); await pg.wait_for_timeout(7000)
+        k = await pg.evaluate("({luksus:(S.haillInv || {}).luksus || 0, msg:S.msgs.some(m => m.from === 'Fiskeridirektoratet' && /fiskermanntallet/.test(m.no)), key:localStorage.getItem('dsb_reg_gift')})")
+        asked = len([c for c in calls if c[0] == 'shop_pending'])
+        check(k['luksus'] == 0 and not k['msg'] and not k['key'] and asked >= 2, 'the key set by hand with no grant on the server gives no luxury luck and no message; it only asks the server', {'k': k, 'shop_pending': asked})
+        check(errs == [], 'sidefeil nøkkelen alene', errs)
         await ctx.close()
         # 7. back as an account with no name and an unnamed boat: one card with a name suggested and the boat to name, one tap to save
         calls = []; replies = {'tm_hello': {'consent': True, 'owned': []}, 'save_get': 'null', 'name_mine': 'null', 'name_free': 'true', 'name_claim': '"ok"', 'save_put2': {'ok': True, 'saved_at': '2026-10-11T10:00:00Z'}}
