@@ -1801,3 +1801,11 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-10 09:16	ccr-869710d8-bo5iwu	450736f	stabtest	OK	17	lite	samtidig	
+2026-11-10 09:16	ccr-869710d8-bo5iwu	450736f	calib	LES	19	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	simday	LES	16	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	progweek	LES	53	lite	samtidig	
+2026-11-10 09:17	ccr-869710d8-bo5iwu	450736f	worktest	FEIL	29	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	trip2	OK	37	lite	samtidig	
+2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	docktest	OK	64	lite	samtidig	
+2026-11-10 09:19	ccr-869710d8-bo5iwu	450736f	worktest	FEIL	22	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
