@@ -34,29 +34,62 @@ function anchorAlarm(kind, n){
   if (typeof hooks !== 'undefined' && hooks.onAnchorAlarm) hooks.onAnchorAlarm(kind, n);
 }
 function anchorAwake(){ return (meAboard() && !(typeof asleep === 'function' && asleep())) || crewAboard().some(c => !c.sleepW && !c.rest); }
-// ---- the current: the tide's stream and the wind's drift (the first current in the game; so far only the anchored boat feels it) ----
-// The tidal stream runs north along the coast and in the fjords on the flood, south and out on the ebb (the tide comes up the coast from
-// the south); in toward where the land shelters (EXPO falls), and along the shore near land. Its strength follows how fast the water
-// rises or falls here (tideH) and grows in shallow water (the same water through a smaller section): 0.1-0.5 m/s in the fjords and on
-// the banks, a knot where it is shallow and the tide large. The wind drifts the top of the sea at 2 % of the wind, 20 degrees to the right
-// of downwind (Ekman). Not modelled: the eddies, the jets in the narrow sounds (Saltstraumen) and the coastal current. m/s in the grid,
-// x east and y south.
-const CUR = {k:0.15, ref:0.4, wind:0.02, ekman:20, d:0.2, shore:0.6};
+// ---- the current (Fysikk 4 F8a, 10.11.2026; docs/planer/fysikk-4-sjo-og-skrog.md F8): the stream through the sounds, the tide's own
+// stream along the coast, the coastal current and the wind's drift. So far only the anchored boat and the foam feel it (F8b, steg 42,
+// gives it to the boat under way and adrift, and to the waves). m/s in the grid, x east and y south; made of the game's own map and
+// tide, no measurements (Kartverket's current tables are not open).
+//   The sounds (src/data/strom.json, tools/strom/strom.py): a sound with a basin inside it fills and empties through its narrowest
+//   section, so the stream there is the basin's surface times the rate the tide rises or falls over the section, U = A dH/dt / (w d),
+//   along its axis, in on the flood and out on the ebb, slack at high and low water. It slows as the channel widens away from the
+//   narrowest point (the same water through a wider section) and is spent where the channel is three times as wide (ro out to sea, ri
+//   in to the basin), and it is held under CUR.max (8 knots; Saltstraumen reaches 20, which the game does not take: the plan's own cap).
+//   The tide's stream along the coast: small (under 0.2 knots), north along the coast and in toward where the land shelters on the
+//   flood (the tide comes up the coast from the south), south and out on the ebb, along the shore near land.
+//   The coastal current (Den norske kyststrømmen): 0.35 knots along the coast with the land on its right (west along the south coast,
+//   north up the west coast, east along Finnmark), from half a kilometre off the shore, where the sea is open, out to about 20 km.
+//   The wind drifts the top of the sea at 2 % of the wind, 20 degrees to the right of downwind (Ekman).
+// Only the national core is read (the openness and the distance to land of what looks far), never the tiles' detail, so the current is
+// the same whatever is loaded, and the chart can draw it far from the boat.
+const CUR = {k:0.09, ref:0.76, wind:0.02, ekman:20, d:0.4, shore:0.6, max:8 * 1852 / 3600, coast:0.18, spread:0.3, cell:10};
+const STROM = (() => {
+  const D = /*@include(data/strom.json)*/null, idx = new Map(); if (!D || !D.s) return {s:[], idx};
+  const c = D.cols, at = n => c.indexOf(n), s = D.s.map(r => ({x:r[at('x')], y:r[at('y')], ax:r[at('ax')], ay:r[at('ay')], w:r[at('w')], d:r[at('d')], A:r[at('A')], ro:r[at('ro')], ri:r[at('ri')]}));
+  // a grid of CUR.cell km: each sound in every cell its reach touches
+  for (const q of s){ const R = 1.5 * Math.max(q.ro, q.ri) + 0.2 + q.w / 1000, k = CUR.cell;
+    for (let i = Math.floor((q.x - R) / k); i <= Math.floor((q.x + R) / k); i++) for (let j = Math.floor((q.y - R) / k); j <= Math.floor((q.y + R) / k); j++){ const key = i * 100000 + j; if (!idx.has(key)) idx.set(key, []); idx.get(key).push(q); } }
+  return {s, idx};
+})();
+// the sounds whose reach may touch p
+function stromNear(p){ return STROM.idx.get(Math.floor(p.x / CUR.cell) * 100000 + Math.floor(p.y / CUR.cell)) || []; }
+// the stream of one sound at p with the tide rising dh m an hour: m/s along its axis (+ into the basin), 0 outside its reach
+function stromAt(q, p, dh){
+  const dx = p.x - q.x, dy = p.y - q.y, s = dx * q.ax + dy * q.ay, n = -dx * q.ay + dy * q.ax, r = s >= 0 ? q.ri : q.ro, as = Math.abs(s);
+  if (as > 1.5 * r + 0.2) return 0;
+  const hw = q.w / 2000 + CUR.spread * as, g = 1 - sstep(0.8 * hw, 1.2 * hw + 0.03, Math.abs(n)); if (g <= 0) return 0;
+  const U0 = q.A * 1e6 * dh / 3600 / (q.w * q.d), U = CUR.max * Math.tanh(U0 / CUR.max);
+  return U * (q.w / 2000) / hw * (1 - sstep(r, 1.5 * r + 0.2, as)) * g;
+}
 function curAt(p, H){
-  const dh = (tideH(H + 0.25, p) - tideH(H - 0.25, p)) / 0.5, g = gridGamma(p) * RAD;
+  const dh = (tideH(H + 0.25, p) - tideH(H - 0.25, p)) / 0.5, g = gridGamma(p) * RAD, d = CUR.d;
   // the way the flood runs: true north, turned in toward the shelter where the land gives it, along the shore near land
-  let fx = Math.sin(-g), fy = -Math.cos(-g), depth = 20;
-  try {
-    const d = CUR.d, e = q => expoFar(q) / 255, ex = (e({x:p.x + d, y:p.y}) - e({x:p.x - d, y:p.y})) / (2 * d), ey = (e({x:p.x, y:p.y + d}) - e({x:p.x, y:p.y - d})) / (2 * d), eg = Math.hypot(ex, ey);
-    if (eg > 1e-3){ const w = Math.min(2, eg / 0.2) / eg; fx -= ex * w; fy -= ey * w; }
-    let n = Math.hypot(fx, fy); fx /= n; fy /= n;
-    const cd = coastDist(p), cx = (coastDist({x:p.x + d, y:p.y}) - coastDist({x:p.x - d, y:p.y})) / (2 * d), cy = (coastDist({x:p.x, y:p.y + d}) - coastDist({x:p.x, y:p.y - d})) / (2 * d), cg = Math.hypot(cx, cy);
-    if (cg > 1e-3){ let tx = -cy / cg, ty = cx / cg; if (tx * fx + ty * fy < 0){ tx = -tx; ty = -ty; } const w = clamp(1 - cd / CUR.shore, 0, 1); fx = fx * (1 - w) + tx * w; fy = fy * (1 - w) + ty * w; n = Math.hypot(fx, fy) || 1; fx /= n; fy /= n; }
-    depth = Math.max(2, depthF(p));
-  } catch (e){}
-  const u = Math.min(1.2, CUR.k * Math.abs(dh) / CUR.ref * clamp(20 / depth, 0.6, 2)) * Math.sign(dh);
+  let fx = Math.sin(-g), fy = -Math.cos(-g);
+  const e = q => expoFar(q) / 255, ex = (e({x:p.x + d, y:p.y}) - e({x:p.x - d, y:p.y})) / (2 * d), ey = (e({x:p.x, y:p.y + d}) - e({x:p.x, y:p.y - d})) / (2 * d), eg = Math.hypot(ex, ey);
+  if (eg > 1e-3){ const w = Math.min(2, eg / 0.2) / eg; fx -= ex * w; fy -= ey * w; }
+  let n = Math.hypot(fx, fy) || 1; fx /= n; fy /= n;
+  const cd = coastDistFar(p), cx = (coastDistFar({x:p.x + d, y:p.y}) - coastDistFar({x:p.x - d, y:p.y})) / (2 * d), cy = (coastDistFar({x:p.x, y:p.y + d}) - coastDistFar({x:p.x, y:p.y - d})) / (2 * d), cg = Math.hypot(cx, cy);
+  let kx = 0, ky = 0;
+  if (cg > 1e-3){ let tx = -cy / cg, ty = cx / cg;
+    // the coastal current: along the coast with the land on its right (the seaward normal turned a quarter left, x east and y south)
+    kx = tx; ky = ty;
+    if (tx * fx + ty * fy < 0){ tx = -tx; ty = -ty; } const w = clamp(1 - cd / CUR.shore, 0, 1); fx = fx * (1 - w) + tx * w; fy = fy * (1 - w) + ty * w; n = Math.hypot(fx, fy) || 1; fx /= n; fy /= n; }
+  const u = Math.min(CUR.k, CUR.k * Math.abs(dh) / CUR.ref) * Math.sign(dh);
+  const uk = cg > 1e-3 ? CUR.coast * sstep(0.2, 1, cd) * (1 - sstep(15, 22, cd)) * sstep(0.25, 0.6, expoFar(p) / 255) : 0;
+  // the sounds
+  let sx = 0, sy = 0, snd = 0;
+  for (const q of stromNear(p)){ const v = stromAt(q, p, dh); if (v){ sx += v * q.ax; sy += v * q.ay; if (Math.abs(v) > Math.abs(snd)) snd = v; } }
   const U = windAt(H, p), a = (windDir(H, p) - gridGamma(p) + 180 + CUR.ekman) * RAD, uw = CUR.wind * U;
-  return {x:u * fx + uw * Math.sin(a), y:u * fy - uw * Math.cos(a), tide:u, dh};
+  const X = u * fx + uk * kx + sx, Y = u * fy + uk * ky + sy;
+  return {x:X + uw * Math.sin(a), y:Y - uw * Math.cos(a), sx:X, sy:Y, tide:u + snd, snd, coast:uk, dh};
 }
 // ---- the ground tackle and how she lies to it ----
 // Chain from 10 m (its size about 2.6 + 0.6 mm a metre of length, 0.022 d^2 kg a metre), on the smaller boats a rope with a few metres of
