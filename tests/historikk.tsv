@@ -2022,3 +2022,5 @@
 2026-11-10 20:38	ccr-1ddbadbc-g5fj4d	f5b4eb4+	vectest	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
 2026-11-10 20:39	ccr-1ddbadbc-g5fj4d	f5b4eb4+	boottest	OK	26	lite	alene	
 2026-11-10 20:51	ccr-1ddbadbc-g5fj4d	f5b4eb4+	kjoptest	OK	743	lite	alene	
+2026-11-10 22:04	ccr-0d64d46d-7ojp1d	d9150a0	kjoptest	OK	305	lite	alene	
+2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
