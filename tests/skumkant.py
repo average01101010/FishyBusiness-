@@ -35,7 +35,7 @@ async def main():
         pg = await b.new_page(viewport={'width': 320, 'height': 200})
         errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg); await pg.evaluate(SETUP)
-        await pg.wait_for_function("G3._debug.SSL.n.on && !G3._debug.SSL.n.job && !G3._debug.SSL.w.job", timeout=900000)
+        await pg.wait_for_function("G3.isActive() && G3._debug.SSL.w.on && G3._debug.SSL.n.on", timeout=900000)
         await pg.set_viewport_size({'width': 1280, 'height': 800})
         await pg.evaluate("(() => { const D = G3._debug; D.foam.tauC = 60; const c = D.cam; c.helm = false; c.dist = 520; c.pitch = 1.45; c.yaw = 0; c.zoom = 1; D.seaDbg = true; })()")
         # (the tails build up frame by frame: a frame takes seconds in SwiftShader)
