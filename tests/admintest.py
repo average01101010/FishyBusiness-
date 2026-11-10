@@ -23,7 +23,7 @@ async def main():
             seen[t] = await pg.evaluate("document.querySelector('main').innerText.length")
             if t in ('oversikt', 'tid', 'penger', 'mediekort'): await pg.wait_for_timeout(300 if t == 'mediekort' else 0); await pg.screenshot(path='admin_%s.png' % t, full_page=True)
         demo = await pg.evaluate("!!document.querySelector('.demo') && !document.getElementById('login')")
-        check(len(tabs) == 18 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        check(len(tabs) == 19 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
         # the feedback agent: its report in the Agent tab, and under a feedback its suggestion, which «Bruk forslaget» only fills in
         await pg.click('nav button[data-t="agent"]'); await pg.wait_for_timeout(150); ag = await pg.evaluate("document.querySelector('main').innerText")
         await pg.click('nav button[data-t="tilbake"]'); await pg.wait_for_selector('[data-fbai]', timeout=5000)
@@ -58,6 +58,26 @@ async def main():
         check(all(n in sp['th'] for n in need) and sp['bars'] == 2 and any('Målt andel' in x for x in sp['k']) and any('Synlig andel' in x for x in sp['k'])
               and all(c in head for c in ('rendered', 'imp', 'nonview', 'undet', 'measured', 'viewable', 're', 'med', 'mean')) and not sp['wide'] and not sp2['wide'],
               'Sponsorer-fanen viser de tre bøttene, målt og synlig andel, fordelingen og median og snitt synlig tid, og CSV-en har kolonnene (IAB 3.2.10.2)', {'th': sp['th'], 'csv': head, 'wide': [sp['wide'], sp2['wide']]})
+        # the marks (HS5, 20261110160000_cheat_flags.sql): the tab with the public id, what, how much over and when; a boat's name with
+        # markup is shown as text; «La stå» and «Fjern merket» change the row, the switch turns; and the economy's numbers say whose they are
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.click('nav button[data-t="juks"]'); await pg.wait_for_selector('.jkrow', timeout=5000)
+        jk = lambda: pg.evaluate("""(() => { const m = document.querySelector('main'), rows = [...m.querySelectorAll('.jkrow')].map(r => r.innerText.replace(/\\s+/g, ' '));
+          return {rows, th:[...m.querySelectorAll('th')].map(e => e.textContent), tag:!!m.querySelector('.jkrow i'), keep:m.querySelectorAll('[data-jkkeep]').length, clr:m.querySelectorAll('[data-jkclr]').length,
+                  sw:document.getElementById('jkSw').textContent, kpi:[...m.querySelectorAll('.kpi')].map(e => e.innerText.replace(/\\s+/g, ' ')), wide:document.documentElement.scrollWidth > innerWidth}; })()""")
+        j0 = await jk(); await pg.screenshot(path='admin_juks_liggende.png', full_page=True)
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(200); j0s = await jk(); await pg.screenshot(path='admin_juks_staaende.png', full_page=True)
+        await pg.click('[data-jkkeep]'); await pg.wait_for_timeout(150); j1 = await jk()
+        await pg.click('[data-jkclr]'); await pg.wait_for_timeout(150); j2 = await jk()
+        pg.once('dialog', lambda d: asyncio.ensure_future(d.accept())); await pg.click('#jkSw'); await pg.wait_for_timeout(200); j3 = await jk()
+        await pg.screenshot(path='admin_juks_paa.png', full_page=True)
+        await pg.click('nav button[data-t="okonomi"]'); await pg.wait_for_timeout(200); ok_ = await pg.evaluate("document.querySelector('main').innerText")
+        await pg.set_viewport_size({'width': 1100, 'height': 900})
+        check(len(j0['rows']) == 3 and all(h in j0['th'] for h in ('Konto', 'Hva', 'Over', 'Sist')) and 'a1b2c3d4e5' in j0['rows'][0] and '1 085 000 kr' in j0['rows'][0].replace(' ', ' ') and 'Kronene' in j0['rows'][0]
+              and not j0['tag'] and '<i>Storfangst</i>' in j0['rows'][1] and j0['keep'] == 1 and j0['clr'] == 2 and 'Slå på' in j0['sw'] and not j0['wide'] and not j0s['wide'],
+              'the Juks tab lists the marks by the public id with what, how much over and when, a name with markup is text, and it fits both formats', {'rows': j0['rows'], 'keep': j0['keep'], 'clr': j0['clr'], 'wide': [j0['wide'], j0s['wide']]})
+        check(j1['keep'] == 0 and 'Står, sett' in j1['rows'][0] and j1['clr'] == 2 and j2['clr'] == 1 and 'Fjernet' in j2['rows'][0] and 'Slå av' in j3['sw'] and any('På' in k for k in j3['kpi']),
+              '«La stå» marks the row as seen, «Fjern merket» takes the mark away, and the switch turns after a question', {'keep': j1['keep'], 'clr': [j1['clr'], j2['clr']], 'sw': j3['sw'], 'kpi': j3['kpi']})
+        check('Meldt av spillet' in ok_ and ok_.count('meldt av spillet') >= 2, "the economy's numbers are marked as reported by the game")
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")
         raw = await (await pg.request.get(BASE + 'admin/')).text()

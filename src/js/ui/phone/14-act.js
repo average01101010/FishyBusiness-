@@ -170,6 +170,7 @@
     else if (a === 'trimbuy'){ const b = S.boat, B = BOOSTS[d.k], on = trimOn(b); if (!B || !canBoost(VESSELS[b.type])) return; if (on && on !== B && trimPend !== d.k){ trimPend = d.k; return true; } trimPend = null;
       payBuy(d.k, () => { const w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); toast(L(B.no + ': ', B.en + ': ') + fmt(BOAT.vmax, 1) + ' kn'); }); }
     else if (a === 'trim0'){ trimPend = null; return true; }
+    else if (/^km/.test(a)){ if (!kmAct(a, d)) return; }   // Kvotemarkedet (phone/04b-kvotemarked.js, KM3)
     else if (/^m[gb]/.test(a)){ if (!mgAct(a, d)) return; }   // Kystmegleren (phone/13c-megler.js, M4; the sales between players, B)
     else if (a === 'eqtry'){ equipTry(d.k); return true; }   // try it on the boat in 3D (M3)
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;
@@ -193,6 +194,8 @@
     else if (a === 'buy'){
       // data-ti="1": trade in the vessel you follow; data-ti="0": add a vessel to the fleet (not an open-group boat before the company has a closed-group one)
       const V2 = VESSELS[d.k], ti = d.ti === '0' ? 0 : tradeIn(); if (!V2 || V2.lock || !atKind('verft') || S.order || (ti && S.boat.type === d.k)) return;
+      // (KM3: her right or a structure quota on her lies out in the quota market, so she cannot be traded in until that sale is over)
+      if (ti && S.boat.sale){ toast(L('Hun har hjemmel eller strukturkvote til salgs i Kvotemarkedet. Vent til salget er over.', 'She has a right or a structure quota for sale in the quota market. Wait until the sale is over.')); return; }
       if (!ti && V2.len < 11 && !hasLic()){ toast(L('Et rederi kan bare ha én båt i åpen gruppe.', 'A company can only have one boat in the open group.')); return; }
       // an ocean vessel comes with her permit from an NPC owner in the register (H1 of the ocean step, 03d-quota.js havLicTake)
       const hw = V2.cls === 'hav' ? havLicWhy(d.k) : null; if (hw){ toast(L(hw[0], hw[1])); return; }
@@ -219,6 +222,7 @@
     else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
     else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
     else if (a === 'vboard'){ const v = vesselById(d.id), mv = vesselById(S.me); if (!v || v.id === S.me || vget(v, 'boat').status !== 'port' || (mv && vget(mv, 'boat').status !== 'port')) return;
+      if (mbSale(v) && mbSale(v).km){ toast(L('«' + vget(v, 'boatName') + '» ligger til kai mens hjemmelen eller strukturkvoten hennes er til salgs i Kvotemarkedet.', 'The «' + vget(v, 'boatName') + '» lies at the quay while her right or structure quota is for sale in the quota market.')); return; }   // (KM3)
       if (mbSale(v)){ toast(L('«' + vget(v, 'boatName') + '» ligger til salgs hos Kystmegleren.', 'The «' + vget(v, 'boatName') + '» is for sale at Kystmegleren.')); return; }   // (B1: locked at the yard until the sale is over)
       S.me = v.id; log('Du gikk om bord på «' + vget(v, 'boatName') + '».', 'You went aboard the «' + vget(v, 'boatName') + '».');
       if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } }
@@ -273,12 +277,13 @@
     else if (a === 'jobRush'){ const j = (S.jobs || [])[+d.i]; if (!j || j.until == null || !adminOk()) return; j.until = S.t; log('Admin: jobben ble gjort ferdig med én gang.', 'Admin: the job was finished straight away.'); }
     else if (a === 'struct'){
       // a structure quota: buy a right in the same group, scrap the boat, and add its quota factor less 10 % (03d-quota.js)
-      const l = S.lic; if (!l || !structRoom(l, d.id) || !atTrade()) return; const pr = structPrice(d.id, S.t / 60), x = deal(pr, 0); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180);
-      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60); regTake(d.id);   // the boat structured away leaves the register too pressPut('kvote', {kf:Math.round(k * 10000), type:S.boat.type});
+      const l = S.lic; if (!l || !structRoom(l, d.id) || !atTrade() || S.boat.sale) return; const pr = structPrice(d.id, S.t / 60), x = deal(pr, 0); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 180);
+      const sl = regSeller(d.id, S.t / 60), k = structIn(l, d.id, S.t / 60); regTake(d.id);   // the boat structured away leaves the register too
+      pressPut('kvote', {kf:Math.round(k * 10000), type:S.boat.type});   // Kystposten (it stood behind the comment above and never ran until KM3)
       msg('Fiskeridirektoratet', 'Strukturkvoten er tildelt «' + S.boatName + '»: kvotefaktor ' + fmt(k, 4) + ' fra båten til ' + sl.name + ' (' + HJ[d.id].hl + '), som er tatt ut av registeret. Den gjelder i 20 år.', 'The structure quota is granted to the «' + S.boatName + '»: quota factor ' + fmt(k, 4) + ' from ' + sl.name + '\'s boat (' + HJ[d.id].hl + '), which is struck off the register. It runs for 20 years.'); }
     else if (a === 'two'){
       // the special scheme under 11 m: one boat fishes both quotas, the other right is given up and the boat sold
-      const va = vesselById(d.a), vb = vesselById(d.b); if (!va || !vb || vb.id === S.me || !twoOK(vget(va, 'lic'), vget(vb, 'lic'), yearH(S.t / 60)) || vget(vb, 'boat').status !== 'port') return;
+      const va = vesselById(d.a), vb = vesselById(d.b); if (!va || !vb || vb.id === S.me || mbSale(va) || mbSale(vb) || !twoOK(vget(va, 'lic'), vget(vb, 'lic'), yearH(S.t / 60)) || vget(vb, 'boat').status !== 'port') return;
       const la = vget(va, 'lic'), lb = vget(vb, 'lic'), nb = vget(vb, 'boatName'), val = Math.round(VESSELS[vget(vb, 'boat').type].price * 0.7);
       if (!confirm(L('«' + nb + '» oppgir hjemmelen og selges for ' + kr(val) + '. «' + vget(va, 'boatName') + '» fisker begge kvotene. Fortsette?', '«' + nb + '» gives up its right and is sold for ' + kr(val) + '. «' + vget(va, 'boatName') + '» fishes both quotas. Go on?'))) return;
       la.two = lb.id; licExtra(la); if (vb.id === S.cur){ bindVessel(va); if (typeof G3 !== 'undefined') G3.vesselChanged(); }
@@ -286,13 +291,14 @@
       msg('Fiskeridirektoratet', '«' + vget(va, 'boatName') + '» fisker nå to kvoter etter den særlige kvoteordningen. «' + nb + '» er slettet fra merkeregisteret.', 'The «' + vget(va, 'boatName') + '» now fishes two quotas under the special scheme. The «' + nb + '» is struck off the register.'); }
     else if (a === 'coop'){
       // quota cooperation (§ 31): the NPC owner signs on, and his quota comes aboard for the year
-      const y = yearH(S.t / 60), o = coopOffer(S.t / 60); if (!coopOK(S.lic, y) || S.crew.length + 1 >= BOAT.crewMax || !atTrade()) return;
+      const y = yearH(S.t / 60), o = coopOffer(S.t / 60); if (!coopOK(S.lic, y) || S.crew.length + 1 >= BOAT.crewMax || !atTrade() || S.boat.sale) return;
       const c = Object.assign(genCrew(), {name:o.name, home:o.home, share:0, ask:0, morale:70, fatigue:10, traits:[], known:[true, true], coop:true});
       S.crew.push(c); S.lic.coop = {y, id:o.id, name:o.name, crew:c.id};
       msg('Fiskeridirektoratet', 'Kvotesamarbeidet med ' + o.name + ' (hjemmel ' + HJ[o.id].hl + ') er registrert for ' + y + '. Han er om bord, og båten hans ligger til kai.', 'The quota cooperation with ' + o.name + ' (quota length ' + HJ[o.id].hl + ') is registered for ' + y + '. He is aboard, and his boat lies at the quay.'); }
     else if (a === 'buylic'){
       const O = LIC_OFFERS.find(x => x.k === d.id); if (!O || !atTrade() || S.order) return;
       const price = VESSELS[O.ves].price + licValue(O), ti = d.ti === '0' ? 0 : tradeIn(); if (ti && S.lic && S.lic.id === O.id && S.boat.type === O.ves) return;
+      if (ti && S.boat.sale) return;   // (KM3: her right lies out in the quota market; the button is grey too, tiLocked)
       if (!bladB()){ toast(L('Du må stå på blad B i fiskermanntallet for å kjøpe en båt med hjemmel. Se Papirer.', 'You must be on blad B of the fishermen\'s register to buy a boat with a right. See Papers.')); return; }
       const inn = innOK(), x = deal(price, ti, inn); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; }
       if (!S.company){ const el = document.getElementById('coName'); S.company = String((el && el.value) || coDraft || '').trim().slice(0, 28) || coDefault(); coDraft = null; log('Rederiet ' + S.company + ' er opprettet.', 'The company ' + S.company + ' is founded.'); }

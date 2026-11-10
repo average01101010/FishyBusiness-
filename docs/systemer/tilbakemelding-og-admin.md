@@ -89,6 +89,15 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 - **CSP i admin** (05.11.2026, Ø6 funn 15): `build.mjs` legger en `Content-Security-Policy` inn i admin-siden, med bare sidens eget skript etter hash, bilder som `data:`, og video og kall bare til Supabase. Siden må derfor ha nøyaktig ett `<script>` og ingen `onclick=` eller andre hendelser i HTML-en; ellers bygges den uten CSP og med en advarsel. `admintest` sjekker det.
 - **Automatisk retting bare fra feillista** (05.11.2026, Ø6 funn 8): en autofix-PR som viser til `tilbakemelding #N`, flettes ikke inn av seg selv, men venter på Jonas (`autofix.yml`, steget «Opphavet»). `RUTINE.md` sier det samme.
 
+## Admin: fanen «Juks» (HS5, 10.11.2026)
+
+- Fanen viser merkene fra `cheat_flags` (`admin_cheat_list`): kontoens offentlige ID (den samme som under Brukernavn), brukernavnet og båtnavnet når de finnes, hva (kronene eller landingene), hvor mye over, hvor mange ganger, når sist, og tallene bak på en egen linje under raden.
+- «La stå» (`admin_cheat_keep`) sier at merket er sett, og kontoen blir ute. «Fjern merket» (`admin_cheat_clear`) tar kontoen inn igjen.
+- Bryteren «Slå på: hold kontoer med merke ute av topplistene» setter `cheat_on` med `admin_cfg_set` og spør først. Av skrives merkene bare.
+- Alt fra spillerne går gjennom `esc()`. Tabellen har seks kolonner og tallene på egen linje, så den får plass i 800×1280 uten å rulle sidelengs.
+- Under «Økonomi i spillet» står det øverst at tallene er meldt av spillet, og median og 90-persentil kasse er merket «meldt av spillet».
+- Hva et merke er, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Testen er `tests/admintest.py`.
+
 ## 5.25c Admin: åpningen på nytt (05.10.2026)
 
 Admin-appen (bare Jonas' konto) har kortet «Åpningen»: «Vis brevet» spiller brevscenen igjen uten å endre noe, og «Start nytt spill» spør først og begynner så helt på nytt (lagringen i skyen også), med brevet, båtnavnet og «Første tur».

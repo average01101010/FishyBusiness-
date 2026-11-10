@@ -34,7 +34,7 @@ async def main():
             try: body = json.loads(req.post_data or '{}')
             except Exception: body = {}
             calls.append((fn, body, None))
-            r = {'tm_hello': {'consent': False, 'owned': []}, 'save_get': None, 'shop_pending': st['pending']}.get(fn, '')
+            r = {'tm_hello': dict({'consent': False, 'owned': []}, **st.get('hello', {})), 'save_get': None, 'shop_pending': st['pending']}.get(fn, '')
             await route.fulfill(status=200, content_type='application/json', body=r if isinstance(r, str) else json.dumps(r))
         await ctx.route('https://sb.test/**', handle)
         await ctx.route('https://checkout.stripe.test/**', lambda r: r.fulfill(status=200, content_type='text/html', body='<title>Stripe</title><p>Stripe Checkout</p>'))
@@ -108,6 +108,22 @@ async def main():
         check(not r5['on'] and r5['pub'] and r5['mode'] == 'off' and r5['lab'] == 'Snart i salg' and r5['given'] == 0,
               "#nocloud on the game's own site: the shop is closed («Snart i salg») and a tap gives nothing (Ø6 funn 5)", r5)
         await ctx2.close()
+        # 6. the shop closed for new accounts (P5, 10.11.2026, 20261110170000_shop_gate.sql): the server's hello says shop:false, and
+        # with Stripe set up the button still says «Snart i salg», a tap asks for no payment and gives nothing; without it, the price
+        st['ready'] = True; st['pending'] = []; st['hello'] = {'shop': False}; n0 = len([c for c in calls if c[0] == 'checkout'])
+        ask = """(async () => { S.tut = 0; const n0 = (S.haillInv || {}).haill || 0; PHONE.open('haill'); await new Promise(r => setTimeout(r, 300));
+          const b = document.querySelector('#phone [data-pa=haillbuy][data-k=haill]'), lab = b && b.textContent, fine = !!document.querySelector('#phone .shop-fine'); if (TAP) b.click(); await new Promise(r => setTimeout(r, 600));
+          const n1 = (S.haillInv || {}).haill || 0; PHONE.show(false); return {off:CLOUD.shopOff, mode:shopMode(), lab, given:n1 - n0, fine}; })()"""
+        ctx3 = await br.new_context(viewport={'width': 1100, 'height': 800}); await ctx3.add_init_script(STUB); await ctx3.route('https://sb.test/**', handle)
+        pg6 = await ctx3.new_page(); pg6.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg6, url()); await pg6.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true", timeout=120000)
+        r6 = await pg6.evaluate(ask.replace('TAP', 'true')); r6['asked'] = len([c for c in calls if c[0] == 'checkout']) - n0
+        st['hello'] = {'shop': True}; await pg6.reload(); await pg6.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true", timeout=120000)
+        r6b = await pg6.evaluate(ask.replace('TAP', 'false'))
+        check(r6['off'] is True and r6['mode'] == 'off' and r6['lab'] == 'Snart i salg' and r6['given'] == 0 and not r6['fine'] and r6['asked'] == 0 and 'stripe' not in pg6.url
+              and r6b['off'] is False and r6b['mode'] == 'live' and '29 kr' in (r6b['lab'] or ''),
+              'the shop closed for new accounts: «Snart i salg», no payment asked and nothing given; with shop:true the price is back', {'closed': r6, 'open': r6b})
+        await ctx3.close()
         print('errors:', errs[:3]); await ctx.close(); await br.close()
 
 asyncio.run(main())

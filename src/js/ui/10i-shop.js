@@ -9,6 +9,8 @@
 // Where there is no cloud (the artifact, the tests) the buttons give it at once, as a test without payment; so does the Admin's game
 // until the shop is set up. Signed in elsewhere, the shop is «on sale soon» until Stripe is set up. On the game's own sites with the
 // cloud off (#nocloud, no network, GitHub Pages) the shop is closed, never free (Ø6 funn 5, 05.11.2026).
+// An account made after the server's switch was turned (P5, 10.11.2026: the first players come before the payment is ready for
+// strangers; tm_hello's shop:false, CLOUD.shopOff) sees «on sale soon» too, and the server gives it no quote.
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
@@ -16,7 +18,7 @@ const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/s
 const shopL = (no, en) => S.lang === 'en' ? en : no;
 function shopMode(){
   if (!CLOUD.on) return pubHost() ? 'off' : 'test';
-  if (CLOUD.user && SHOP.ready) return 'live';
+  if (CLOUD.user && SHOP.ready) return CLOUD.shopOff ? 'off' : 'live';
   return adminOk() ? 'test' : 'off';
 }
 // a price in real money, marked with 💎 so it never looks like the game's kroner (a player could not tell them apart, 06.10.2026)
@@ -104,19 +106,24 @@ function shopThanks(rc){
 async function shopClaim(){
   if (!CLOUD.on || !CLOUD.user) return 0;
   let list; try { list = await cloudRpc('shop_pending', {}); } catch (e){ return 0; }
-  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = [], unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0; SHOP.rc = [];
+  const given = S.shopGiven || (S.shopGiven = []), ids = [], names = [], unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0, gifts = 0; const rc = SHOP.rc = [];   // (rc is this call's own: another call may start while this one waits for shop_done)
   for (const g of list || []){
     // (given before and the server not told, a lost connection: told now. One this game does not know, a product newer than the page
     // or a page from before an update, is left on the server and given when the game knows it: never marked done and lost, 06.11.2026)
     if (given.includes(g.id)){ ids.push(g.id); continue; }
     if ((g.data || {}).reward && HAILL[g.data.type]){ giveHaill(g.data.type, 'fb'); thanks++; }
+    // (the welcome gift for registering, HS1 10.11.2026: one grant per account, made by the server's tm_hello and never by the game,
+    // supabase/migrations/20261110150000_reg_gift.sql; no purchase, so no confirmation and no price: the directorate's message below)
+    else if ((g.data || {}).gift && g.data.give === 'haill' && HAILL[g.data.type]){ giveHaill(g.data.type, 'gift'); gifts++; }
     else { const nm = shopGive(g); if (!nm){ if (!unk.has(g.id)){ unk.add(g.id); console.warn('shop: a grant this game does not know', g.id, g.product); if (typeof cloudEv === 'function') cloudEv('shop_unknown', {id:g.id, product:g.product}); } continue; } names.push(nm); }
     given.push(g.id); ids.push(g.id); }
   if (given.length > 200) given.splice(0, given.length - 200);
   if (!ids.length) return 0;
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
   try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
-  if (SHOP.rc.length) shopThanks(SHOP.rc);
+  if (rc.length) shopThanks(rc);
+  if (gifts){ msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
+    toast(shopL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.')); }
   if (thanks){ const no = 'Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. ' + (thanks > 1 ? thanks + ' takk-haill' : 'Takk-haill') + ' med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.',
       en = 'Thank you for your feedback! It helped us make the game better. ' + (thanks > 1 ? thanks + ' thank-you lucks' : 'Thank-you luck') + ' with 12 hours of full luck ' + (thanks > 1 ? 'are' : 'is') + ' in the Luck app. Switch it on when you like.';
     msg('Det Store Blå', no, en); toast(shopL(no, en)); }

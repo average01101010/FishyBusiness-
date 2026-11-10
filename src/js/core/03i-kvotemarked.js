@@ -58,13 +58,16 @@ const kmFreeList = () => S.licFree || (S.licFree = []);
 function kmFree(H){
   H = H == null ? S.t / 60 : H; const F = kmFreeList();
   for (const f of F.slice()) if (!(H < f.until)){
+    if (typeof kmState === 'function' && kmState().out[kmFreeKey(f)]) continue;   // (KM3: out in the quota market: it goes when that sale is over, or to the buyer)
     F.splice(F.indexOf(f), 1); if (!HJ[f.id]) continue; regFree(f.id);
     msg('Fiskeridirektoratet', 'Tilsagnet om hjemmelen ' + HJ[f.id].hl + ' har gått ut etter to år uten båt. Hjemmelen er tilbake i registeret' + ((f.st || []).length ? ', og strukturkvotene som fulgte den, er fordelt tilbake til gruppen.' : '.'),
       'The promise of the ' + HJ[f.id].hl + ' quota length right has run out after two years without a boat. The right is back in the register' + ((f.st || []).length ? ', and its structure quotas have gone back to the group.' : '.'));
   }
   return F;
 }
-function kmFreeAdd(item, H){ const F = kmFreeList(); F.push({id:item.id, flen:item.flen || 0, st:(item.st || []).map(s => ({...s})), landY:item.landY, used:item.used || null, y:item.y, H0:H, until:H + KM.freeY * 8760}); return F[F.length - 1]; }
+// (H0 is part of the seller's key for a free right, kmFreeKey in 09k-market.js: two of the same quota length never share an hour; KM3)
+function kmFreeAdd(item, H){ const F = kmFreeList(); let h0 = H; while (F.some(f => f.id === item.id && Math.round(f.H0 || 0) === Math.round(h0))) h0 += 1;
+  F.push({id:item.id, flen:item.flen || 0, st:(item.st || []).map(s => ({...s})), landY:item.landY, used:item.used || null, y:item.y, H0:h0, until:H + KM.freeY * 8760}); return F[F.length - 1]; }
 
 // ---- why it cannot be put out (a word), or null. src = {v, kind:'right'|'struct'|'two', i} for a boat's, {free:i} for a free right ----
 //   gone, none (no right), hav (the ocean permits are sold with the vessel at the yard), two (the second quota from the special scheme

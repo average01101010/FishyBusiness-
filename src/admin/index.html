@@ -24,6 +24,7 @@ main{padding:16px;max-width:1280px;margin:0 auto}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--dim);font-weight:600}
 .bar{display:flex;align-items:center;gap:8px;font-size:13px;margin:3px 0}.bar i{display:block;height:10px;background:var(--blue);border-radius:3px}.bar em{color:var(--dim);font-style:normal;margin-left:auto}
 .note{color:var(--dim);font-size:13px}.warn{color:var(--acc)}
+.jkrow td{border-bottom:0;padding-bottom:0}.jkd td{padding-top:2px}.jkoff{opacity:.55}.jkrow button{margin:0 4px 4px 0}
 tr.worst td{background:rgba(224,120,60,.14)}
 #login{max-width:380px;margin:12vh auto;padding:0 16px}#login .card{padding:20px}#login label{display:block;margin:10px 0 4px;color:var(--dim)}#login input{width:100%}
 svg text{fill:var(--dim);font-size:10px}
@@ -85,7 +86,7 @@ async function load(){
   catch (e){ if (SES){ $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button id="reLogin">Logg inn på nytt</button></main>';
     $('#reLogin').onclick = () => { SES = null; sessionStorage.clear(); render(); }; } }   // (no onclick in the HTML: the page's CSP allows only its own script)
 }
-const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
+const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['juks', 'Juks'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -102,6 +103,8 @@ function render(){
   if (TAB === 'sponsorer') spWire();
   if (TAB === 'mediekort' && $('#mkPrint')) $('#mkPrint').onclick = () => window.print();
   if (TAB === 'navn') nmWire();
+  if (TAB === 'juks') jkWire();
+  if (TAB === 'penger') sgWire();
   if (TAB === 'avis') nwWire();
   if (TAB === 'merker' && $('#acR')) $('#acR').onclick = () => { AC = null; render(); };
   if (TAB === 'okonomi') havWire();
@@ -135,8 +138,8 @@ const VIEW = {
   bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
-  okonomi: D => '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr') + '</div>' + turCards() + havCards(),
-  penger: D => { const m = D.money; return '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
+  okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards(),
+  penger: D => { const m = D.money; return sgCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
   teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
@@ -147,6 +150,22 @@ const VIEW = {
 // ---------- the missions' economy (supabase/migrations/20261017120000_turokonomi.sql): each player's income from missions against
 // landings (the brake in the game aims at about 30 %), and saves where the cash rose more than the logged landings and missions ----------
 let TURE = null;
+// ---- the shop closed for new accounts (P5, 10.11.2026, supabase/migrations/20261110170000_shop_gate.sql): the accounts made after
+// the switch was turned see «on sale soon» and get no quote; those that were there keep the shop ----------
+let SG = null;
+async function sgLoad(){ await null; try { SG = DEMO ? {from:null, n:0} : await rpc('admin_shop_gate', {}); } catch (e){ SG = {err:e.message}; } if (TAB === 'penger') render(); }
+function sgCard(){
+  if (!SG){ sgLoad(); return card('Butikken for nye spillere', '<p class="note">Henter …</p>'); }
+  if (SG.err) return card('Butikken for nye spillere', '<p class="note">' + esc(SG.err) + '</p>');
+  return card('Butikken for nye spillere', '<p>' + (SG.from ? 'Stengt for kontoer laget etter <b>' + esc(new Date(SG.from).toLocaleString('nb-NO')) + '</b>. Kontoer som holdes ute: <b>' + nf(SG.n, 0) + '</b>. De ser «Snart i salg».'
+    : 'Åpen for alle kontoer.') + '</p><button id="sgSw"' + (SG.from ? ' class="p"' : '') + '>' + (SG.from ? 'Åpne butikken for alle' : 'Steng butikken for nye kontoer fra nå') + '</button>',
+    'Kontoene som fantes da bryteren ble slått på, beholder butikken og alt de har kjøpt. Velkomstgaven gis som før.');
+}
+function sgWire(){
+  const sw = $('#sgSw'); if (sw) sw.onclick = async () => { const close = !SG.from;
+    if (!confirm(close ? 'Stenge butikken for alle kontoer som lages fra nå?' : 'Åpne butikken for alle kontoer, også de som har vært holdt ute?')) return;
+    sw.disabled = true; try { SG = DEMO ? {from:close ? new Date().toISOString() : null, n:0} : await rpc('admin_shop_gate_set', {closed:close}); } catch (e){ alert(e.message); } render(); };
+}
 async function turLoad(){ await null; try { TURE = DEMO ? {share:[], flags:[]} : {share:await rpc('admin_tur_share', {days:Math.min(90, DAYS)}), flags:await rpc('admin_cash_flags', {lim:100})}; } catch (e){ TURE = {err:e.message}; } TURE.days = Math.min(90, DAYS); if (TAB === 'okonomi') render(); }
 function turCards(){
   if (!TURE || (TURE.days !== Math.min(90, DAYS) && !TURE.err)){ if (!TURE || !TURE.loading){ TURE = {loading:true, days:-1}; turLoad(); } return card('Oppdrag og fangst', '<p class="note">Henter …</p>'); }
@@ -415,6 +434,47 @@ VIEW.navn = () => {
       (r.removed ? '<span class="warn">Tatt bort' + (r.reason ? ': ' + esc(r.reason) : '') + '</span>' : '<input data-nmre maxlength="300" placeholder="Hvorfor (spilleren ser dette)"> <button data-nmdel="' + esc(r.who) + '">Ta bort</button>') + '</td></tr>').join('') + '</table>')
       : '<p class="note">Ingen brukernavn ennå.</p>');
 };
+// ---------- the marks (HS5, supabase/migrations/20261110160000_cheat_flags.sql, docs/planer/haill-saldo.md) ----------
+// A save whose kroner rose more than the server's own numbers explain, or landings above what the fleet can have caught or the
+// account has reported as catch. Nothing is refused or deleted and the player is told nothing. With the switch on, an open mark
+// keeps the account out of the leaderboards, the fiskarlag's goal, the week's push and the open group's sum, while it sees itself.
+// «Fjern merket» takes it in again; «La stå» says it is seen and stays. Everything from the players goes through esc().
+let JK = null;
+function jkDemo(){ const t = h => new Date(Date.now() - h * 36e5).toISOString();
+  return {on:false, open:2, rows:[
+    {id:3, who:'a1b2c3d4e5', name:'Havfisker88', boat:'Havbris', guest:false, kind:'cash', over:1085000, n:1, at:t(5), last:t(5), cleared:null, kept:null, data:{cash0:15000, cash1:1400000, hours:0.02, land:0, ledger:0, cap:300, sale:0, equity:0, unexplained:1384700, day:1385000, first:false, type0:'trebat', type1:'trebat', fleet0:1, fleet1:1}},
+    {id:2, who:'f6e7d8c9b0', name:'', boat:'<i>Storfangst</i>', guest:false, kind:'land', over:23000, n:3, at:t(30), last:t(26), cleared:null, kept:t(20), data:{why:'fleet', kg:9000, hold:500, had:0}},
+    {id:1, who:'0a9b8c7d6e', name:'Nordavind', boat:'Nordlys', guest:false, kind:'land', over:500, n:1, at:t(90), last:t(90), cleared:t(80), kept:null, data:{why:'catch', landed4d:3500, caught4d:0, hold:500}}]}; }
+async function jkLoad(){ await null; try { JK = DEMO ? (JK || jkDemo()) : await rpc('admin_cheat_list', {lim:300}); } catch (e){ JK = {err:e.message}; } if (TAB === 'juks') render(); }
+function jkWhy(r){ const d = r.data || {}, kr = v => nf(+v || 0, 0) + ' kr', kg = v => nf(+v || 0, 0) + ' kg';
+  if (r.kind === 'cash') return 'Kassa ' + kr(d.cash0) + ' → ' + kr(d.cash1) + ' på ' + nf(+d.hours || 0, 1) + ' t. Forklart: landinger ' + kr(d.land) + ', megler og kvotemarked ' + kr(d.ledger) + ', tak etter flåten ' + kr(d.cap) +
+    (+d.sale ? ', solgt båt ' + kr(d.sale) : '') + (+d.equity ? '. Større flåte teller ' + kr(d.equity) : '') + (d.unexplained != null ? '. Uforklart ' + kr(d.unexplained) + ', siste døgn ' + kr(d.day) : '') + (d.first ? '. Kontoens første lagring' : '') + '. ' + esc(d.type0 || '') + (d.type1 !== d.type0 ? ' → ' + esc(d.type1 || '') : '') + ', ' + (+d.fleet1 || 1) + ' båt' + ((+d.fleet1 || 1) > 1 ? 'er' : '');
+  if (d.why === 'catch') return 'Landet ' + kg(d.landed4d) + ' på fire døgn, meldt fangst ' + kg(d.caught4d) + ' (lasten ' + kg(d.hold) + ')';
+  return 'Landet ' + kg(d.kg) + ', lasten er ' + kg(d.hold) + ', og flåten kunne ha tatt ' + nf(+d.had || 0, 1) + ' laster siden sist'; }
+VIEW.juks = () => {
+  if (!JK){ jkLoad(); return '<p class="note">Henter …</p>'; }
+  if (JK.err) return card('Juks', '<p class="warn">' + esc(JK.err) + '</p>', 'Er migreringen supabase/migrations/20261110160000_cheat_flags.sql kjørt?');
+  const rows = JK.rows || [], open = rows.filter(r => !r.cleared), when = v => v ? esc(new Date(v).toLocaleString('nb-NO')) : '';
+  return '<div class="grid">' + kpi('Kontoer med merke', nf(JK.open == null ? new Set(open.map(r => r.who)).size : JK.open, 0), nf(open.filter(r => !r.kept).length, 0) + ' ikke sett på') +
+      kpi('Ute av topplistene', JK.on ? 'På' : 'Av', JK.on ? 'en konto med merke er ute' : 'merkene skrives bare') + '</div>' +
+    '<div class="card"><button id="jkR">Oppdater</button> <button id="jkSw"' + (JK.on ? '' : ' class="p"') + '>' + (JK.on ? 'Slå av: la kontoer med merke stå i topplistene' : 'Slå på: hold kontoer med merke ute av topplistene') + '</button>' +
+      '<p class="note">Et merke skrives når kassa stiger mer enn serverens egne tall forklarer (landingene, megleren, kvotemarkedet og et tak per time etter flåten) med over 300 000 kr på et døgn, eller når en konto lander mer enn flåten kan ha tatt eller har meldt som fangst. Lagringen og landingen tas imot som før, ingenting slettes, og spilleren får ingen beskjed. Med bryteren på er en konto med merke ute av topplistene, fiskarlagets mål, «Ukas beste fisker» og summen for åpen gruppe, men ser seg selv som før. «Fjern merket» tar kontoen inn igjen. «La stå» betyr at du har sett på det, og kontoen blir ute.</p></div>' +
+    (rows.length ? card('Merkene', '<table><tr><th>Konto</th><th>Hva</th><th>Over</th><th>Ganger</th><th>Sist</th><th></th></tr>' + rows.map(r => '<tr class="jkrow' + (r.cleared ? ' jkoff' : '') + '"><td>' + esc(r.who) +
+        (r.name || r.boat ? '<br><span class="note">' + esc(r.name || '') + (r.name && r.boat ? ' · ' : '') + (r.boat ? '«' + esc(r.boat) + '»' : '') + (r.guest ? ' (gjest)' : '') + '</span>' : '') + '</td><td>' + (r.kind === 'cash' ? 'Kronene' : 'Landingene') + '</td><td>' +
+        nf(+r.over || 0, 0) + (r.kind === 'cash' ? ' kr' : ' kg') + '</td><td>' + nf(+r.n || 1, 0) + '</td><td class="note">' + when(r.last) + '</td><td>' +
+        (r.cleared ? '<span class="note">Fjernet ' + when(r.cleared) + '</span>' : (r.kept ? '<span class="warn">Står, sett ' + when(r.kept) + '</span> ' : '<button data-jkkeep="' + (+r.id) + '">La stå</button> ') + '<button data-jkclr="' + (+r.id) + '">Fjern merket</button>') + '</td></tr><tr class="jkd' + (r.cleared ? ' jkoff' : '') + '"><td colspan="6" class="note">' + jkWhy(r) + '</td></tr>').join('') + '</table>',
+        'Kontoen vises med den offentlige ID-en (den samme som under Brukernavn). «Over» er det største som er sett mens merket har stått, og «Ganger» hvor mange lagringer eller landinger som gikk over.')
+      : '<p class="note">Ingen merker.</p>');
+};
+function jkWire(){
+  if ($('#jkR')) $('#jkR').onclick = () => { JK = null; render(); };
+  const sw = $('#jkSw'); if (sw) sw.onclick = async () => { if (!JK.on && !confirm('Slå på? Kontoer med et merke som ikke er fjernet, blir da borte fra topplistene for alle andre.')) return;
+    sw.disabled = true; try { if (!DEMO) await rpc('admin_cfg_set', {ck:'cheat_on', cv:!JK.on}); else JK.on = !JK.on; JK = DEMO ? JK : null; } catch (e){ alert(e.message); } render(); };
+  const act = (sel, key, fn, demo) => document.querySelectorAll(sel).forEach(b => b.onclick = async () => { b.disabled = true;
+    try { if (!DEMO) await rpc(fn, {fid:+b.dataset[key]}); else demo(JK.rows.find(r => r.id === +b.dataset[key])); JK = DEMO ? JK : null; render(); } catch (e){ b.disabled = false; alert(e.message); } });
+  act('[data-jkkeep]', 'jkkeep', 'admin_cheat_keep', r => { r.kept = new Date().toISOString(); });
+  act('[data-jkclr]', 'jkclr', 'admin_cheat_clear', r => { r.cleared = new Date().toISOString(); JK.open = new Set(JK.rows.filter(x => !x.cleared).map(x => x.who)).size; });
+}
 // ---------- Kystposten's stories (supabase/migrations/20261007170000_news.sql; the game's core/09h-press.js) ----------
 // What the players' games have put in the shared paper: the kind, the boat's and the company's names and the numbers. The words are
 // written in each reader's game. One that should not be there is taken away for everyone.

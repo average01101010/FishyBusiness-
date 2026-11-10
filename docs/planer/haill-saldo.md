@@ -117,6 +117,41 @@ V5 A, avgjort i økta 10.11.2026 etter at Jonas overlot det (Jonas: «Du vet sik
 - **Filer:** migrering (`save_put4`, `land_put`, `cheat_flags`, topplistene, `lag_get`, `push_week`, `world_year`), `src/admin/index.html`, `tests/sqltest.py`, `tests/admintest.py`. Ingen ting i `src/js/`.
 - **Tester:** `sqltest` (en lagring med en million kroner for mye får merke; en ekte lagring etter tre døgn borte med driftsplan gjør det ikke; en landing over det flåten kan ta, får merke; en konto med merke er ute av hver topplisteliste og summen for åpen gruppe, men ser seg selv; «Fjern merket» tar den inn igjen; bare admin med aal2 kan se og fjerne), sett rød mot de gamle funksjonene først; `admintest` med fanen; skjermbilder av fanen i 800×1280 og 1280×800.
 
+#### HS5 bygd 10.11.2026 (steg 99, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`)
+
+Migreringen `supabase/migrations/20261110160000_cheat_flags.sql`, fanen «Juks» i admin og testene. Slik det virker, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Bryteren `cheat_on` står av til Jonas har sett tallene under.
+
+**Avvik fra planen, med grunn:**
+- Kronene sjekkes av en trigger på `saves`, ikke inne i `save_put4`. Da dekkes også `save_put`, `save_put2` og `save_put3`, som fortsatt kan kalles (funn 6), og `save_put4` er urørt.
+- «Flåtens verdi» står ikke i lagringens `summary` (bare kassa, båttypen og antall båter), og lån og innbytte gjør at verdien ikke kan regnes rett. Sjekken regner derfor på kassa, og lar en flåte som har vokst telle 5 % av prisen.
+- Økningen regnes fra den høyeste kassa i de bevarte lagringene, så en lagring tatt tilbake ikke gir merke.
+- «Mottakets høyeste pris» er artens høyeste pris ganget med to. Serveren har ingen pris per mottak.
+- Slakken på 300 000 kr er per døgn og ikke per lagring (funnet i gjennomgangen av koden: ellers kunne den brukes om igjen for hver lagring), og kontoens første lagring sjekkes også.
+- Sjekken mot meldt fangst teller ikke blåkveite, krabbe og snøkrabbe, som spillet aldri melder fangst for (`takeStock`).
+- Spillets adminkonto sjekkes ikke for kroner (den har penger fra Admin-appen: ti hopp på 0,4 til 88,7 millioner i `cash_flags`).
+
+**Målingen (punkt 3), lesende spørringer mot databasen 10.11.2026:** 38 lagringer og 100 bevarte lagringer; 803 landingsrader i 120 kall fra 10 kontoer (5 registrerte, 5 gjester); 266 fangstrader fra de siste fire døgnene (3 kontoer). Alle kontoene har én båt (trebåt, snekke eller sjark).
+
+| Hva | Største ekte | Grensen | Merker |
+|---|---|---|---|
+| Økning i kassa mellom to bevarte lagringer (90 par, spillere) | 163 959 kr på 4,3 timer (sjark); 155 343 kr over den høyeste kassa før | forklart av landinger, megler og tak per time; resten under | 0 |
+| Uforklart økning per døgn (det som er igjen etter landingene og taket per time) | 41 048 kr (3 av 90 par hadde noe uforklart) | 300 000 kr per døgn | 0 |
+| Raskeste økning | 43 800 kr på 11 minutter (ny spiller, trebåt); 55 787 kr på 24 minutter (første tur, 500 kg) | som over | 0 |
+| Én landing mot lasten | 1,08 laster (snekke 1 080 kg); sjark 6 500 kg og trebåt 500 kg er 1,0 | 8 laster i bøtta ved start | 0 |
+| Én landing, spillets adminkonto | 3,97 laster (trebåt 1 985 kg) | 8 laster | 0 |
+| Landet på 6 ekte timer | 6,0 laster (trebåt 3 000 kg); sjark 2,1; adminkontoen 9,9 | 8 + 6 = 14 laster | 0 |
+| Landet på 24 ekte timer | 10,1 laster (trebåt 5 032 kg); sjark 3,5 | 8 + 24 = 32 laster | 0 |
+| Landet på 7 døgn | 19,5 laster (trebåt 9 763 kg); sjark 9,7 (62 996 kg) | 8 + 168 = 176 laster | 0 |
+| Landet mot meldt fangst, fire døgn | 1,28 ganger (6 032 kg landet, 4 730 kg meldt); en gjest på første tur 500 kg landet og 0 meldt | 3 ganger + 6 laster | 0 |
+
+**Svakt eller antatt:**
+- Sjekken mot meldt fangst kunne bare prøves mot fire døgn og tre kontoer, fordi `catches` slettes etter fire døgn.
+- Ingen i databasen har flere båter, driftsplan over flere døgn med mange landinger eller havbåt. Grensene for dem (én last per ekte time per båt, 21 døgn) er regnet, ikke målt.
+- Bøtta er romslig: en trebåt kan lande 12 t i døgnet uten merke, mot 5 t som det meste en ekte spiller har gjort. Sjekken mot meldt fangst strammer det til seks laster per fire døgn for den som ikke også melder falsk fangst.
+- Båttypen og antall båter er spillets ord.
+- Et salg av en båt som ikke er den spilleren står i, kan gi et feil merke når flåteverdien ikke er meldt (spillere uten samtykke til statistikk). Ingen slike salg finnes i dataene.
+- Kontoens første lagring holdes mot 15 000 kr. En som har spilt lenge uten sky og så får en konto, kan få et feil merke.
+
 ## 4. Valgene
 
 Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står igjen:
@@ -162,6 +197,14 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 
 ## Status
 
+- 10.11.2026: **HS5 bygd** (steg 99, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`): migreringen `20261110160000_cheat_flags.sql`, fanen «Juks» i admin, `sqltest` og `admintest`. Tallene fra målingen står under HS5. Bryteren `cheat_on` er av og slås på når Jonas har sett tallene (admin → Juks → «Slå på»). **Migreringen `20261110160000_cheat_flags.sql` kjørt av Jonas i SQL Editor 10.11.2026** (Supabase-verktøyet i økta ba om en bekreftelse som ikke kom fram, to ganger). Sjekket etterpå med en lesende spørring: de 19 funksjonene er like fila (`md5(prosrc)` mot en lokal PostgreSQL bygd fra migreringene), de to triggerne finnes, `cheat_vt` har 15 rader og `cheat_sp` 13, bryteren er av, og en spiller har ingen rettigheter til tabellene eller sjekkene. Grenen flettet til arbeidsgrenen samme dag.
+- 10.11.2026: **HS1 rullet ut** (daee2c71, versjon 614ea0f825ec; Jonas: «Rull ut på det store blå når du mener du er klar»). Migreringen ble kjørt først (`reg_gift`), spillet pushet rett etter. Lesende spørring etterpå: 13 `reg_luksus`-rader, alle levert, 13 kontoer, ingen hos gjester, varen ikke aktiv. `tm_hello` i databasen var lik den i repoet før migreringen.
+- 10.11.2026: **HS1 bygd** (steg 95, Jonas' økt, grenen `claude/hs1-velkomstgave-u3rnfm`); rullet ut samme dag, se linja over. Migreringen `20261110150000_reg_gift.sql` (varen `reg_luksus`, delindeksen `grants_reg_gift`, `tm_hello` med granten, de leverte radene for kontoene som finnes), `shopClaim` med grenen `data.gift`, `guestGift` som bare ber om `shopClaim`. Det som avviker fra planen eller er verdt å vite:
+  - **Kontoene er 13, ikke 19.** Planen talte `players` uten `guest`-merket, men merket settes først når en gjest lander eller seiler; 7 av de 19 er anonyme innlogginger (gjester) som ikke har gjort det ennå (lesende spørring mot `auth.users` 10.11.2026: 107 anonyme, 13 WorkOS-ID-er, 120 spillere). Migreringen gir derfor den leverte raden til ID-ene som ikke er en uuid (WorkOS, `user_…`). Hadde gjestene fått en levert rad, ville `guest_merge` flyttet den til den nye kontoen, og den som registrerte seg, hadde aldri fått gaven.
+  - **Rekkefølgen ved utrullingen:** migreringen først, spillet rett etter. En side fra før HS1 mot en server med `reg_luksus` gir den som registrerer seg i mellomtida, to luksushaill (nøkkelen og granten) og kjøpsbekreftelsen «Takk for kjøpet!» med varenavnet `reg_luksus` uten pris (sett i `guesttest` mot den gamle koden). Det gjelder bare nye registreringer på en gammel side, og går over når siden er oppdatert.
+  - **Et nytt spill etter at gaven er levert,** har den ikke (granten er `done`), som for kjøpt haill i dag. HS2 retter det (gaven blir en ubrukt enhet på serveren).
+  - `shopClaim` holder nå bekreftelseslista (`rc`) for sitt eget kall, fordi `guestGift` kan starte et kall mens et annet venter på `shop_done`.
+  - Etter utrullingen: `select count(*) from grants where product_id = 'reg_luksus'` skal være lik antall kontoer (WorkOS-ID-er i `players`).
 - 10.11.2026: V5 avgjort i økta etter at Jonas overlot det («Du vet sikkert bedre enn meg hvordan vi forhindrer juksing i spillet. Du har tross alt skrevet koden»): A og mer; HS5 skrevet om (kronene og landingene sjekket på serveren, et merke holder kontoen ute av topplistene og summen for åpen gruppe til Jonas har sett på det) og flyttet over lanseringslinja; startmeldingen i `start/99.md`. Alle valgene i planen er tatt; steg 49 er ferdig.
 - 10.11.2026: V3 besvart av Jonas («Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil. Det må fikses.»): HS4 skrevet om (serveren er fasiten for haill og alt som er kjøpt, også det som er aktivert) og flyttet over lanseringslinja. Om «andre varer» også gjelder spillkronene og det de kjøper, er valg 30 (V5).
 - 10.11.2026: V2 presisert av Jonas: før lanseringen og så snart som mulig (early access); HS3 flyttet over lanseringslinja, startmeldingen skrevet (`start/97.md`).
