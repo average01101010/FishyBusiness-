@@ -79,10 +79,15 @@ KEEL = [(X_KA, -0.545), (2.0, -0.469), (3.0, -0.394), (4.0, -0.318), (5.0, -0.24
 def kb(x): return pchip(KEEL, x) if x <= X_KF else z_low(x)
 def keel_t(x): return pchip([(X_KA, 0.22), (1.6, 0.26), (5.0, 0.26), (X_KF, 0.20)], x)
 # the top of the bulwark: the high aft bulwark, the step down to the waist under the shelter, the step up to the forecastle (G)
+# the step from the waist's rail up to the high aft bulwark: at x 3.0-2.3 on the drawing, both sides. To starboard it stands a metre further
+# aft (valg 32, Jonas 10.11.2026: «den burde ha 2 maskiner»): the low rail then runs from x 2.0 to the wheelhouse, and a second jigging
+# machine has a rail a man can jig over, aft of the shelter's corner. The port side (the casing against the bulwark) is the drawing's
+STEP_S = (2.0, 1.3)
 def z_bakkcap(x): return 3.86 + 0.09 * max(0.0, min(1.0, (x - 6.66) / 4.12))
 def z_cap(x, sg=1):
     aft = 3.76 - 0.027 * (x - XA)
-    return 2.965 + (aft - 2.965) * ss(3.0, 2.3, x) + (z_bakkcap(x) - 2.965) * ss(6.40, 6.68, x)
+    st = ss(3.0, 2.3, x) if sg > 0 else ss(STEP_S[0], STEP_S[1], x)
+    return 2.965 + (aft - 2.965) * st + (z_bakkcap(x) - 2.965) * ss(6.40, 6.68, x)
 # the half-breadth at the bulwark top, moulded (the plan's outline less the strake) (G)
 HB = [(XA, 1.90), (0.0, 1.98), (0.5, 2.0), (1.0, 2.01), (2.0, 2.03), (3.0, 2.04), (6.0, 2.04), (7.0, 2.035), (7.5, 2.01), (8.0, 1.97),
       (8.5, 1.90), (9.0, 1.75), (9.5, 1.55), (10.0, 1.22), (10.3, 0.96), (10.5, 0.70), (10.6, 0.50), (10.7, 0.24), (XF, 0.0)]
@@ -236,6 +241,7 @@ def y_at(x, z, sg=1):
 def stations(fine=True):
     sp = [XA, X_KA - 0.002, X_KA, X_KA + 0.05, X_KA + 0.10, X_BAKK, X_KF, 2.30, 3.0, 6.40, 6.68, SH_X0, SH_X1]
     if fine:
+        sp += [STEP_S[0], STEP_S[1]]   # (the starboard step's ends; the far model reads it at its own stations, vessel3d's 12 000 points)
         xs = [XA + 0.03, XA + 0.07, XA + 0.12, XA + 0.18] + [XA + 0.25 + 0.06 * i for i in range(170)] + [10.45 + 0.025 * i for i in range(13)]
         sp += stem_stations(lambda x: z_low(x) if x > X_KF else kb(x), [Z_AF, Z_BT, lambda x: z_rub(x) - RUBH, lambda x: z_rub(x) + RUBH], 9.5, XF - 0.012)
     else:
@@ -593,9 +599,9 @@ def shelter(fine=True):
     abox(A, SH_RX0 - 0.012, SH_RX0 + 0.012, -yr, yr, zr0 - 0.02, zr1 + 0.01, C['cap'])
     # the posts under the roof's after edge (it does not hang free: two stainless posts to the high aft bulwark's caps)
     for sg in (1, -1):
-        px = SH_RX0 + 0.10; py = sg * (ycap(px) + CAP * 0.5)
-        acyl(A, (px, py, z_cap(px) + 0.005), (px, py, zr0 + 0.02), 0.03, lambda q: C['steel'], seg=10)
-        acyl(A, (px, py, z_cap(px) - 0.002), (px, py, z_cap(px) + 0.012), 0.045, lambda q: C['steel'], seg=12)
+        px = SH_RX0 + 0.10; py = sg * (ycap(px, sg) + CAP * 0.5)
+        acyl(A, (px, py, z_cap(px, sg) + 0.005), (px, py, zr0 + 0.02), 0.03, lambda q: C['steel'], seg=10)
+        acyl(A, (px, py, z_cap(px, sg) - 0.002), (px, py, z_cap(px, sg) + 0.012), 0.045, lambda q: C['steel'], seg=12)
     if fine:
         # the rail round the roof (the raft is the game's kit on it), the ladder up from the aft deck to starboard
         posts = [(x, sy * (yr - 0.06)) for x in (2.32, 3.0, 3.7, 4.4, 5.1, 5.8) for sy in (1, -1)] + [(2.32, y) for y in (-0.88, 0.0, 1.0)] + [(2.32, -1.52)]
@@ -1058,7 +1064,7 @@ def kit_places(G):
         return G(x, sg * (y_at(x, z - 0.62) - 0.065 - 0.01), z) + [r(sg * h)]
     zc = lambda x, ys: z_deck(x) + sum(camber(x, y) for y in ys) / len(ys)
     return {'raft': [G(3.40, 0.90, ROOF_SH) + [0.0]],
-            'buoys': [wall(2.05, -1), wall(0.55, 1)],
+            'buoys': [wall(1.00, -1), wall(0.55, 1)],
             'radar': G(RDM[0], RDM[1], crown_(RDM[0], RDM[1]) + 0.20), 'radarA': G(7.42, WH_YC, 7.29),
             'garn': {'at': G(GARN[0], GARN[1], z_deck(GARN[0]) + camber(*GARN)), 'ry': 0.0},
             'stamps': {'at': G(STAMP0[0], STAMP0[1], z_deck(STAMP0[0]) + camber(*STAMP0)), 'ry': 0.0},
@@ -1086,10 +1092,10 @@ def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, z_deck(x) + camber(x, y) + dz) + [0.0, 6] for x, y, dz in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_deck(POT_SPOT[0]) + camber(*POT_SPOT))}}
 # the jigging places (anchors.jigZ, F21): [side, x], side 1 starboard. Only the open starboard side under the shelter has a rail a man
 # can jig over (0.70 m; the aft bulwark stands 1.5 m over the deck, the port side is the shelter's wall, the forecastle's cap has its
-# rails), and the hauler and the bleeding tub stand in its forward two thirds: ONE place, aft in the opening. The game's table (JIG_Z in
+# rails), and the hauler and the bleeding tub stand in its forward two thirds: one place, aft in the opening; and since valg 32 (STEP_S) a second on the low rail aft of the shelter's corner, under the roof's after end. The game's table (JIG_Z in
 # view3d/13-instruments.js) had four to starboard, three of them at the high aft bulwark, where the machine stood in the plating
-JIG = [(1, 3.55)]
-JIG_CLEAR = {1: [(XA, HAUL[0] + 0.25, 'den høye akterskansen og lyets hjørne'), (TUB[0] - 0.60 - 0.25, TUB[0] + 0.60 + 0.25, 'blødekaret'),
+JIG = [(1, 3.66), (1, 2.64)]
+JIG_CLEAR = {1: [(XA, SH_RX0 + 0.10 + 0.25, 'den høye akterskansen og takstolpen'), (SH_X0 - 0.25, HAUL[0] + 0.25, 'lyets hjørne'), (TUB[0] - 0.60 - 0.25, TUB[0] + 0.60 + 0.25, 'blødekaret'),
                  (5.47 - 0.60, 5.47 + 0.60, 'haleren'), (HAUL[1] - 0.25, XF, 'åpningens forkant, styrhuset og bakken')],
              -1: [(XA, XF, 'babord: den høye akterskansen, lyets vegg og bakken')]}
 
@@ -1155,8 +1161,8 @@ def check():
     ve, _ = displacement(WLE)
     out.append(('den tomme båten (spillets vannlinje WLE, %.2f m under tegningens): %.2f t mot %.1f t i VESSELS (valg 18 A: disp er den tomme båten); malingen står ved tegningens vannlinje' % (WL - WLE, ve, DISP), abs(ve - DISP) / DISP < 0.03))
     # (the pchip fault from H3d1: a table cached by id() gave stations the wrong curve, and the two sides differed; by content now)
-    dsy = max(abs(a[0] - b[0]) + abs(a[1] - b[1]) for x in [XA + (XF - XA) * i / 120 for i in range(121)] for a, b in zip(section(x, 1), section(x, -1)))
-    out.append(('sidene er like: største forskjell mellom styrbord og babord snitt %.4f m (pchip-feilen ga 0,1 m ved stevnen på kyst15)' % dsy, dsy < 1e-6))
+    dsy = max(abs(y_at(x, z, 1) - y_at(x, z, -1)) for x in [XA + (XF - XA) * i / 120 for i in range(121)] for z in (0.6, 1.0, 1.38, 1.8, 2.2, 2.6, 2.9) if z_low(x) < z - 0.05)
+    out.append(('sidene er like under ripa: største forskjell mellom styrbord og babord halvbredde %.4f m (pchip-feilen ga 0,1 m ved stevnen på kyst15; ripa om styrbord er lav en meter lenger akter, valg 32)' % dsy, dsy < 1e-6))
     xs = [XA + (XF - XA) * i / 400 for i in range(401)]
     loa = XF - (x_t(z_rub(XA)) - 0.02 - RUBH)
     out.append(('AVVIK lengde over alt %.2f m (fenderlista over speilet til stevnens topp; baugrulla til %.2f) mot %.2f (registerlengden; tegningens skrog er målt slik)' % (loa, 10.96 + 0.07, L), True))
@@ -1259,9 +1265,9 @@ def check():
     # the jigging places (F21): clear of what stands at the rail, over a metre apart
     bad = [(sd, x, nm) for sd, x in JIG for x0, x1, nm in JIG_CLEAR[sd] if x0 <= x <= x1]
     gap = min([abs(a_[1] - b_[1]) for a_ in JIG for b_ in JIG if a_ is not b_ and a_[0] == b_[0]] or [9])
-    rail = z_cap(JIG[0][1], -1) - z_deck(JIG[0][1])
-    out.append(('juksaplassene %s: %d (jukseMax i VESSELS settes til det, valg 31 A); ripa der %.2f m over dekket (akterskansen %.2f: for høy å jukse over), fri for %s' % (', '.join('%s %.2f' % ('sb' if sd > 0 else 'bb', x) for sd, x in JIG), len(JIG), rail, z_cap(1.0) - z_deck(1.0),
-                'akterskansen, lyets hjørne, blødekaret og haleren' if not bad else bad), not bad and gap > 1.0 and 0.5 <= rail <= 0.9))
+    rail = max(z_cap(x, -1) - z_deck(x) for _, x in JIG)
+    out.append(('juksaplassene %s: %d (jukseMax i VESSELS er det, valg 32: to); ripa der %.2f m over dekket (akterskansen %.2f: for høy å jukse over), fri for %s' % (', '.join('%s %.2f' % ('sb' if sd > 0 else 'bb', x) for sd, x in JIG), len(JIG), rail, z_cap(1.0) - z_deck(1.0),
+                'akterskansen, takstolpen, lyets hjørne, blødekaret og haleren' if not bad else bad), not bad and gap > 1.0 and 0.5 <= rail <= 0.9 and len(JIG) == 2))
     # the roof's brim over the walkway beside the wheelhouse (deckMap: 1.85 m free over a floor)
     out.append(('taket med bremmen: dryppkanten %.2f m over gangen på bakken, bremmen %.2f m ut fra veggene og %.2f inn opp til takkanten' % (WH_TOP - 0.025 - z_bk(7.0), BRIM_O, BRIM_I), WH_TOP - 0.025 - z_bk(7.0) >= 1.85))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
