@@ -582,6 +582,11 @@ def wheelhouse(fine=True):
         x0, x1, z0, z1 = DOOR
         cuts.append(plate_cutter('wc_door', (0, -WH_W, 0), (1, 0, 0), (0, 0, 1), rrect((x0 + x1) / 2, (z0 + z1) / 2, x1 - x0, z1 - z0, 0.06, 3), 0.35))
         cut(shell, cuts)
+        # (Jonas 10.11.2026: «Den ser liksom ut som den huler litt innover mot vinduene pga de stripene»: the shell was shaded smooth with its
+        # sharp edges marked before the windows and the door were cut, so the edges the boolean made round each opening were smooth, the
+        # flat walls' corner normals bent up to 135 degrees toward the reveals, and the long triangles from the openings' corners shaded in
+        # streaks: the sharp edges marked again after the cut)
+        shade(shell, 5)
     objs.append(shell)
     if not fine:
         for nm, o, u, v, wins in wh_faces():
