@@ -26,7 +26,7 @@ const HAIL = (() => {
   }
   // what came in: a horn from where she lies, a line over her boat in 3D, and a message
   function fetch(){
-    if (!cloudOn() || H.busy || H.off || (typeof document !== 'undefined' && document.hidden)) return;
+    if (!S || !S.boat || !cloudOn() || H.busy || H.off || (typeof document !== 'undefined' && document.hidden)) return;   // (!S: signed in, the map still loading, ui/11-boot.js)
     H.busy = true;
     cloudRpc('hails_get', {since:S.hailId || 0}).then(list => {
       for (const h of Array.isArray(list) ? list : []){
