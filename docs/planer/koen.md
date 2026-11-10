@@ -29,6 +29,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
+- `ccr-c070e597-njia44`: steg 26 H3e (Jonas' økt, 10.11.2026 kl. 10:41 UTC), eier `core/09j-kystvakt.js`, `tests/havtur.py`, `tests/unit/kystvakt.test.mjs` (+ pNN i `phone/07-patch.js`).
 
 ## Valg som venter på Jonas
 
@@ -68,7 +69,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 19 | **Ø11.8** Farvannet: fartsgrensene og sjømerkene | Lover og sikkerhet | klar (H3b og Ø12 C er ute; hel startmelding i `start/`) | steg 18 (ferdig) | ny `tools/fart/`, `src/data/fart.json`; `core/05e-sjovei.js`, `05-vessels.js`, `16b-dyn.js`, `ui/03-map.js`, `03a-chart.js` | `lover-regler-sikkerhet.md` kap. 6 |
 | 20 | **Ø9 F5** Motstand, grunt vann og bankeffekt | Fysikk 4 | ferdig (c3b21e6, 09.11.2026, versjon c06ffdeaf955; Jonas' økt, `ccr-aa5c8b75-dif283`; squaten i 3D venter til OB7 er ute, backloggen) | steg 7 (ferdig) | `core/16b-dyn.js`, `05-vessels.js` (`groundCheck`), `ui/` (dybden under kjølen) | `fysikk-4-sjo-og-skrog.md` F5 |
 | 21c | **Ø3d** Ytelse: `GLBM` som typede tabeller (skilt ut av Ø3c 09.11.2026) | Ytelse | ferdig (b414f86, 10.11.2026, versjon 6b56a587a16f på detstorebla.no, `version.json` 07:19 UTC; lokalt Senja-bygg b90089b8f134; Jonas' økt, `ccr-07d61e23-19971d`; JS-minnet etter starten 376 → 281 MB, `3d-verden.md` 4.11q; bildene i `docs/okter/2026-11-10-21c/`) | steg 21b | `vessel3d.js`, delene i `view3d/` som leser `GLBM` (`09`, `10`, `16` m.fl.), `tests/unit/` | `3d-verden.md` 4.11p, backloggen «Førstegangsstarten, resten» (c) |
-| 26 | **H3e** Kystvakta, hele turen og stikkprøvene | Havsteget | klar (H3d2 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 25 (ferdig) | `core/09j-kystvakt.js`, `tests/havtur.py`, `phone/07-patch.js` | `havsteget-h3-snokrabbe.md` H3e |
+| 26 | **H3e** Kystvakta, hele turen og stikkprøvene | Havsteget | pågår (Jonas' økt, `ccr-c070e597-njia44`, 10.11.2026 kl. 10:41 UTC) | steg 25 (ferdig) | `core/09j-kystvakt.js`, `tests/havtur.py`, `phone/07-patch.js` | `havsteget-h3-snokrabbe.md` H3e |
 | 27 | **Ø11.9** Arbeidsavtalen | Lover og sikkerhet | klar (startmeldingen mangler; Ø8b M er ute, rutinen eller koordinatoren skriver den fra planen) | steg 8 (ferdig) | `core/04-crew.js`, `14-crewlife.js`, `phone/13-mannskap-bank-meld.js` | `lover-regler-sikkerhet.md` kap. 6 (fristene i ekte tid kan bli et valg) |
 | 28 | **Ø5 rest a** M5-resten (navnet og flagget i modellen; innbyttebåten ved kaia er tatt ut av B) og M9-resten | Butikkene | klar (startmeldingen mangler) | | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js`; admin, `build.mjs` | `butikker-og-sponsorer.md`, backloggen 10.7 |
 | 62 | **KM3** Kvotemarkedet i Kvote-appen | Kvotemarkedet | klar (KM1 og KM2 ferdig 08.11.2026; hel startmelding i `start/`) | steg 60, 61 | ny `ui/phone/04b-kvotemarked.js`, ny `ui/10t-kvotemarked.js`, `phone/04-kvote.js`, `ui/10s-broker.js`, `phone/14-act.js`, `01-i18n.js`, `phone/07-patch.js`, malen, `tests/run.py`, ny `tests/kvotemarkedtest.py` | `kvotemarkedet.md` KM3 |
