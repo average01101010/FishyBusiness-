@@ -35,6 +35,7 @@
 | 31.10 | Hvorfor introen ikke syntes i klipp 1 | `G3.intro` ble kalt før klokka ble pauset. Den falske klokka tar igjen sanntiden idet den pauses, og med SwiftShaders trege bilder hadde flere sekunder gått, så introen på 6 s var over før første bilde. Nå startes den etter pausen. |
 | 31.10 | Klipp 13 etter rettingene | **Virker.** Snurperen ligger i sundet og går under Gisundbrua ved 7,5 og 10 s, med Finnsnes bak. Ingen landvarsler. Kontaktark: `control-m1/13-snurper-brua-540x960/kontaktark.jpg`. Sjøen er hvite striper i motlys på SwiftShader (programvarerenderen), ikke slik den ser ut på GPU. |
 | 31.10 | Klipp 1 etter rettingene | **Introen virker:** øyet starter ved kaia foran naustet (pålene i første bilde) og glir bakover og opp til jaktkameraet over 6 s. Men i et nytt spill med `#notut` ligger trebåten ved butikkaia i Finnsnes, ikke ved et naust i 3D, så naustdøra må settes opp slik veiledningen gjør det (Vangshamn, `NAUST3D`). Kl. 06:00 UTC 12. oktober tegnes fortsatt som blå time, mørkere enn ventet for 08:00 lokal tid; tidspunktet må prøves fram (07–08 UTC), og tolkningen av `S.t` mot `EPOCH` sjekkes. |
+| 10.11 | Chrome på den leide Windows-maskinen (NVIDIA RTX PRO 6000 Blackwell Server Edition), detstorebla.no | «3D-visning støttes ikke på denne enheten (shadere: sjø middels VS: konteksten er mistet)». WebGL-konteksten mistes ved kompilering av sjøskyggeren. Årsaken er ikke funnet. Playwrights Chromium med andre ANGLE-valg testes av økta på maskinen. |
 
 ## Gjenstår
 
