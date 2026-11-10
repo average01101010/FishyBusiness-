@@ -1,0 +1,27 @@
+-- liggende 1280 x 800
+OK   en line er satt og trukket med spillets egne steg  {'setWhy': None, 'haulWhy': None}
+OK   redskapsloggen har tid satt, tid trukket og fangst  {'id': 's1', 'tSet': 324125, 'tHaul': 325013, 'kg': 0}
+FEIL sluttseddelen i salget summerer seg: fisk + bonus − inndratt = total  [17292, 17280]
+OK   kassa fikk netto: total − trekk − lott − gebyr  [11618, 17280, [74, 69, 275, 232, 72, 0], 4940]
+OK   linjene har antall fisk  [['torsk', 1, 'E', 1, 182.4, 9354, 40], ['torsk', 2, 'A', 0, 61.2, 2862, 22], ['hyse', 1, 'E', 0, 41.1, 1127, 30], ['sei', 1, 'B', 1, 57.7, 1122, 20]]
+OK   et levert oppdrag står i Drift
+OK   boka har fanene Dagbok, Sesonger, Hendelser, Utstyr og Salg, og åpner i Dagbok  ['dag', 'ses', 'hen', 'uts', 'salg']
+OK   Sesonger: kveitefredningen og skreisesongen er krysset ut i oktober, og prissesongene står der  {'tab': 'ses', 'n': 25, 'kveiteX': True, 'skreiX': True, 'price': 20}
+OK   Hendelser: én hendelse per uke og art som flyttet seg 8 % eller mer, med samme prosent som prismodellen  {'tab': 'hen', 'want': 2, 'got': 2, 'ex': {'sp': 'sei', 'pct': '+14 %'}, 'shown': True}
+OK   Utstyr: lina står med ståtid som tellestreker, tid trukket og fangst i kg  {'tab': 'uts', 'tally': True, 'kg': True, 'hauled': True}
+OK   Salg: fanen åpner på nyeste sluttseddel med fisketegning, lott per mann og netto; den gamle landingen vises uten linjer  {'tab': 'salg', 'idx': 0, 'pages': 1, 'net': True, 'crew': True, 'fish': True, 'old': True}
+OK   blaing holder seg innenfor fanen  {'tab': 'salg', 'idx': 0, 'pages': 1}
+OK   Dagbok: linja om det leverte oppdraget står i Drift
+OK   et oppdrag tatt i Bygd står i oppdragslista på telefonen med frist, og de tidligere under  {'active': 1, 'name': True, 'deadline': True, 'earlier': True}
+OK   papirene står i Kvote; med rederiet stiftet står foretaket som AS i Rederi og ikke lenger i Kvote, og de oppdiktede sertifikatene er borte  [True, True, True, True, True, True, False]
+OK   sluttseddelen i Salgslaget åpner samme sluttseddel i dekksdagboka  {'tab': 'salg', 'idx': 0, 'want': 0, 'phone': False}
+OK   ingen sidefeil
+-- staende 800 x 1280
+OK   boka har fanene Dagbok, Sesonger, Hendelser, Utstyr og Salg, og åpner i Dagbok  ['dag', 'ses', 'hen', 'uts', 'salg']
+OK   Sesonger: kveitefredningen og skreisesongen er krysset ut i oktober, og prissesongene står der  {'tab': 'ses', 'n': 25, 'kveiteX': True, 'skreiX': True, 'price': 20}
+OK   Hendelser: én hendelse per uke og art som flyttet seg 8 % eller mer, med samme prosent som prismodellen  {'tab': 'hen', 'want': 2, 'got': 2, 'ex': {'sp': 'sei', 'pct': '+14 %'}, 'shown': True}
+OK   Utstyr: lina står med ståtid som tellestreker, tid trukket og fangst i kg  {'tab': 'uts', 'tally': True, 'kg': True, 'hauled': True}
+OK   Salg: fanen åpner på nyeste sluttseddel med fisketegning, lott per mann og netto; den gamle landingen vises uten linjer  {'tab': 'salg', 'idx': 0, 'pages': 1, 'net': True, 'crew': True, 'fish': True, 'old': True}
+OK   blaing holder seg innenfor fanen  {'tab': 'salg', 'idx': 0, 'pages': 1}
+OK   Dagbok: linja om det leverte oppdraget står i Drift
+OK   ingen sidefeil

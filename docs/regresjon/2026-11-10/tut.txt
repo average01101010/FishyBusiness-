@@ -1,0 +1,71 @@
+OK   liggende: the start lists the coast's plants, and «Start her» is on the screen  {'go': True, 'list': True, 'n': 174}
+OK   liggende: the envelope opens with a tap, the letter unfolds whole and readable  {'flat': True, 'fits': True, 'w': 493, 'h': 697, 'font': 21.3591}
+OK   liggende: then the boat is taken over without a name, the mark not mentioned (Jonas 10.10.2026), no company  {'co': False, 'boat': False, 'letter': False, 'mark': False}
+    liggende n1 · Fars naust, nå ditt. Torsken på veggen er hans, 24,6 kg. Den største d
+    liggende nout · Gå ut og se båten.
+    liggende intro · Der ligger hun, fars gamle båt. Sliten, men hun flyter, og juksa ligge
+    liggende gps · Trykk på det lille kartet for å åpne kartplotteren.
+    liggende route1 · Fisken står utenfor Vangshamn. Trykk «Autonav», og så i ringen der, så
+    liggende cast1 · Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått e
+    liggende sail · Båten går selv ut til feltet utenfor Vangshamn. «Neste» viser når hun 
+    liggende fish · Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.
+    liggende deck · Fisken blør i bløggekaret idet den kommer over ripa, og legges rund i 
+    liggende route2 · God fangst! Åpne kartplotteren. Vangshamn har ikke fiskemottak, så fis
+    liggende cast2 · Trykk «Kast loss».
+    liggende land · Båten er på vei til Botnhamn.
+     liggende still land {"ring": {"x": 1006.5625, "y": 175.9375, "w": 171.125}, "ok": false, "okText": "Skj\u00f8nner", "st": "port", "hold": 500, "rod": false} {"open":false,"app":"home","tip":"<button class=\"btn primary\" data-act=\"sell\">Lever fangst (500 kg)</button>","plan":false}
+    liggende slip · Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er fe
+     liggende still slip {"ring": null, "ok": false, "okText": "Skj\u00f8nner", "st": "port", "hold": 500, "rod": false} {"open":false,"app":"home","tip":"<div class=\"st nx\"><span class=\"l3\">⏱ Sluttseddelen 10:00 <small>· om under 1 mi","plan":false}
+     liggende still slip {"ring": null, "ok": false, "okText": "Skj\u00f8nner", "st": "port", "hold": 500, "rod": false} {"open":false,"app":"home","tip":"<div class=\"st nx\"><span class=\"l3\">⏱ Sluttseddelen 10:00 <small>· om under 1 mi","plan":false}
+    liggende goal · Godt levert! Nå er du din egen skipper. Før tur 2: fyll iskassa på mot
+    liggende None · Utstyrsbutikken: line, garn og teiner trenger hver sin haler, og kroke
+OK   liggende: alle stegene kom i rekkefølge  ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'route2', 'cast2', 'land', 'slip', 'goal']
+OK   liggende: veiledningen er fullført  ['WP5 passert. Ny kurs 223°.', 'WP6 passert. Ny kurs 159°.', 'Fortøyd i Botnhamn.', 'Losser 500 kg, 1 kar i Botnhamn. Sluttseddelen kommer ca. kl. 10:00.', 'Du har nå 2 år fartstid.', 'Leverte 500 kg i Botnhamn for 27\xa0737 kr.', 'Liv på mottaket: «Rund fesk, ja. Den sløye vi. Sløye du sjøl om bord, får du betalt for lever og rogn òg. Ein mann te om bord, så går det fort.»', 'Første tur er fullført. Nå er du din egen skipper.']
+OK   liggende: juksa satt på fra start, og ingen is før første fiske  {'cash': 2000, 'gear': True, 'ice': 0}
+OK   liggende: isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)  {'ice': 0, 'iceFree': True, 'freeIce': True, 'gear': True}
+OK   liggende: verken sluttseddelen eller dekksdagboka sier hva fisket her vanligvis gir  {'seddelen': '', 'dagboka': []}
+OK   liggende: ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)
+OK   liggende: full last (karet på dekk, 500 kg i trebåten) ved levering etter en time på feltet (Ø8b S0, V3 C)  500
+OK   liggende: levert på første turs mottak med bonuslinje på sluttseddelen  {'port': 'botnhamn', 'total': 27737, 'streak': {'pct': 1, 'kr': 275}}
+OK   liggende: første tur leveres rund, og fisket stoppet aldri for sløying (Jonas 08.11.2026)  {'gutKg': 0, 'roundKg': 499.99999999999994, 'knife': 0}
+OK   liggende: kaia sier hva sløying om bord gir ved første levering  ['round']
+OK   liggende: tre omlastinger underveis  3
+OK   liggende: ingen mannskap i første tur; det kommer som drypp (O4)
+OK   liggende: naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia  ['n1', 'nout']
+    liggende tid 1932 s, iterasjoner 131
+{"tut": 0, "tag": "liggende"}
+OK   staaende: the start lists the coast's plants, and «Start her» is on the screen  {'go': True, 'list': True, 'n': 174}
+OK   staaende: the envelope opens with a tap, the letter unfolds whole and readable  {'flat': True, 'fits': True, 'w': 718, 'h': 1015, 'font': 31.0864}
+OK   staaende: then the boat is taken over without a name, the mark not mentioned (Jonas 10.10.2026), no company  {'co': False, 'boat': False, 'letter': False, 'mark': False}
+    staaende n1 · Fars naust, nå ditt. Torsken på veggen er hans, 24,6 kg. Den største d
+    staaende nout · Gå ut og se båten.
+    staaende intro · Der ligger hun, fars gamle båt. Sliten, men hun flyter, og juksa ligge
+    staaende gps · Trykk på det lille kartet for å åpne kartplotteren.
+    staaende route1 · Fisken står utenfor Vangshamn. Trykk «Autonav», og så i ringen der, så
+    staaende cast1 · Trykk «Kast loss». Båten kjører selv ut til feltet. Punktet har fått e
+    staaende sail · Båten går selv ut til feltet utenfor Vangshamn. «Neste» viser når hun 
+    staaende fish · Nå fisker juksa. Trykk «Lukk» for å se fisket i 3D.
+    staaende deck · Fisken blør i bløggekaret idet den kommer over ripa, og legges rund i 
+    staaende route2 · God fangst! Åpne kartplotteren. Vangshamn har ikke fiskemottak, så fis
+    staaende cast2 · Trykk «Kast loss».
+    staaende land · Båten er på vei til Botnhamn.
+     staaende still land {"ring": {"x": 345.5, "y": 1082.1796875, "w": 96}, "ok": false, "okText": "Skj\u00f8nner", "st": "port", "hold": 500, "rod": false} {"open":false,"app":"home","tip":"<button type=\"button\" class=\"dk-b sm pri\" data-dk=\"lever\"><span class=\"dk-i\"><sv","plan":false}
+    staaende slip · Kranen løfter fisken på land. Sluttseddelen kommer når lossingen er fe
+    staaende goal · Godt levert! Nå er du din egen skipper. Før tur 2: fyll iskassa på mot
+    staaende None · Utstyrsbutikken: line, garn og teiner trenger hver sin haler, og kroke
+OK   staaende: alle stegene kom i rekkefølge  ['n1', 'nout', 'intro', 'gps', 'route1', 'cast1', 'sail', 'fish', 'deck', 'route2', 'cast2', 'land', 'slip', 'goal']
+OK   staaende: veiledningen er fullført  ['WP4 passert. Ny kurs 234°.', 'WP5 passert. Ny kurs 223°.', 'WP6 passert. Ny kurs 159°.', 'Fortøyd i Botnhamn.', 'Losser 500 kg, 1 kar i Botnhamn. Sluttseddelen kommer ca. kl. 10:25.', 'Du har nå 3 år fartstid.', 'Leverte 500 kg i Botnhamn for 27\xa0285 kr.', 'Første tur er fullført. Nå er du din egen skipper.']
+OK   staaende: juksa satt på fra start, og ingen is før første fiske  {'cash': 2000, 'gear': True, 'ice': 0}
+OK   staaende: isen er den åpne oppgaven etter første tur: første fylling venter gratis på mottaket (Onboarding 2, O4, V5 A)  {'ice': 0, 'iceFree': True, 'freeIce': True, 'gear': True}
+OK   staaende: verken sluttseddelen eller dekksdagboka sier hva fisket her vanligvis gir  {'seddelen': '', 'dagboka': []}
+OK   staaende: ingen gratis luksushaill i første tur (Onboarding 2, V1 A: den er gaven ved registrering)
+OK   staaende: full last (karet på dekk, 500 kg i trebåten) ved levering etter en time på feltet (Ø8b S0, V3 C)  500
+OK   staaende: levert på første turs mottak med bonuslinje på sluttseddelen  {'port': 'botnhamn', 'total': 27285, 'streak': {'pct': 1, 'kr': 270}}
+OK   staaende: første tur leveres rund, og fisket stoppet aldri for sløying (Jonas 08.11.2026)  {'gutKg': 0, 'roundKg': 500, 'knife': 0}
+FEIL staaende: kaia sier hva sløying om bord gir ved første levering
+OK   staaende: tre omlastinger underveis  3
+OK   staaende: ingen mannskap i første tur; det kommer som drypp (O4)
+OK   staaende: naustet åpnet seg ved start, og «Gå ut» tok spilleren ned på kaia  ['n1', 'nout']
+    staaende tid 541 s, iterasjoner 57
+{"tut": 0, "tag": "staaende"}
+[]

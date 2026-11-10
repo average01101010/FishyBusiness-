@@ -1,0 +1,42 @@
+OK   before Stripe is set up a signed-in player sees «Snart i salg» and gets nothing free  {"mode": "off", "lab": "Snart i salg", "given": 0, "fine": false}
+OK   set up: the button shows the price, with a small quiet line on the right of withdrawal under it  {"mode": "live", "lab": "Kjøp · 💎 29 kr", "fine": "💎 betyr ekte penger, betalt med kort. Leveres i spillet med én gang. Når du kjøper, ber du om det, og angreretten faller da bort.", "size": 10, "op": 0.5, "cur": "v1"}
+OK   a tap asks shop-checkout for the haill with the player's token and boat, and goes straight to Stripe  {"call": {"product": "haill", "boat": "v1", "lang": "no", "back": "http://127.0.0.1:33997/index.html"}, "url": "https://checkout.stripe.test/c/pay/cs_test_1"}
+OK   back from Stripe the game gives the haill and the trim on the boat, tells the server, and clears ?kjop from the address  {"r": {"inv": 1, "trim": "turbo", "vmax": 14, "spec": 7, "diesel": true, "given": [7, 8, 9], "qs": "", "toast": ""}, "done": [[7, 8, 9]]}
+OK   the same grants asked for again are not given twice  {"before": 1, "after": 1}
+OK   a thank-you for feedback goes into the store as takk-haill with its own message (no «Takk for kjøpet»), +100 % all through 12 hours and then gone; the Luck app tells of it  {"got": 1, "msg": "Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. Takk-haill med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.", "newMsg": 1, "boost": [1, 1, 1, 0], "stage": "Takk-haill", "card": true, "haill": 1}
+OK   a cancelled payment says the purchase was cancelled and nothing was charged  "Kjøpet ble avbrutt. Ingenting er trukket."
+Traceback (most recent call last):
+  File "/home/user/FishyBusiness-/tests/kjoptest.py", line 113, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/user/FishyBusiness-/tests/kjoptest.py", line 104, in main
+    await boot(pg4, BASE + '#notut,nocloud,ro0'); await pg4.wait_for_timeout(800)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/user/FishyBusiness-/tests/_env.py", line 54, in boot
+    await pg.wait_for_selector('#obGo', state='visible', timeout=90000)
+  File "/usr/local/lib/python3.11/dist-packages/playwright/async_api/_generated.py", line 9085, in wait_for_selector
+    await self._impl_obj.wait_for_selector(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_page.py", line 429, in wait_for_selector
+    return await self._main_frame.wait_for_selector(**locals_to_params(locals()))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_frame.py", line 395, in wait_for_selector
+    await self._channel.send(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.TimeoutError: Page.wait_for_selector: Timeout 90000ms exceeded.
+Call log:
+  - waiting for locator("#obGo") to be visible
+    3 × locator resolved to hidden <button id="obGo" data-close="" class="btn primary">Ta over båten</button>
+    - locator resolved to visible <button id="obGo" data-close="" class="btn primary">Ta over båten</button>
+

@@ -1,0 +1,48 @@
+  båt            L     t90  ueq/vmax   R/L  adv/L  td/L    T      K  stopp/L   Kp    Kd   ror
+  skiff          5.9    11s  23.7/24.0   2.00    6.0   6.5   1.3  0.580    10.1  0.81   1.0  0.56
+  trebat         7.0    11s   6.9/7.0    2.00    4.0   4.6   2.3  0.248     4.8  2.53   5.7  0.81
+  snekke         7.9     6s   7.9/8.0    2.00    3.7   4.3   2.5  0.290     2.7  1.99   4.8  0.92
+  plastsjark     9.4     4s   8.4/8.5    2.00    3.7   4.3   2.9  0.285     1.6  1.74   4.9  1.11
+  sjark         10.6     7s   9.8/10.0   2.00    3.9   4.3   2.8  0.270     2.4  1.90   5.2  1.53
+  hurtigsjark   11.0    15s  21.7/22.0   2.00    5.8   6.0   2.3  0.314     5.7  1.99   4.5  0.75
+  sjarkny       11.0    18s  24.7/25.0   2.00    6.3   7.1   2.0  0.332     8.7  2.17   4.2  1.11
+  breisjark     11.0     8s  10.3/10.5   2.00    4.2   4.4   2.9  0.276     2.8  1.80   5.1  1.90
+  kyst15        15.0    14s  11.3/11.5   2.00    4.2   4.4   3.1  0.205     4.1  2.27   6.8  2.92
+  kyst21        21.0    24s  10.9/11.0   2.00    5.0   5.1   5.5  0.117     5.9  2.23  11.9  1.83
+  snokrabbe     50.0    88s  13.4/13.5   2.00    5.8   6.4  13.1  0.041     9.2  2.66  33.9  0.91
+  autoliner     45.4    57s  12.9/13.0   2.00    5.6   5.8  11.2  0.051     6.6  2.54  27.6  1.10
+  bunntral      60.3    60s  14.9/15.0   2.00    5.4   5.6  13.4  0.043     5.6  2.50  32.6  1.01
+  pelagisk      75.0   155s  16.9/17.0   2.00    6.6   7.4  16.5  0.030    13.9  2.90  46.6  0.72
+  ringnot38     38.5   126s  12.9/13.0   2.00    7.3   8.4  10.6  0.042    18.0  3.27  33.7  0.79
+OK   every vessel turns at full rudder on a radius between 1.0 and 2.7 lengths  []
+FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide into the turn)  ["ringnot38"]
+OK   full throttle settles at the vessel's top speed  []
+OK   she is up to 90 % of top speed within two minutes (six for the big ones)  []
+FEIL she stops gently from cruising speed within 12 lengths (15 from 30 m)  ["ringnot38"]
+OK   she sails the route and stands exactly on the last waypoint  {"st": "idle", "d": 0.0, "samples": 340, "gmin": 9}
+OK   the model has her all the way, on the shared clock  {"live": 339, "n": 340, "rate": 6}
+OK   she comes up to the route's speed (the sea's cap) and not over it  {"vmax": 6.0, "cap": 6}
+OK   she keeps to the line: within 0.6 radius + 2 m in the corners, 2.5 m on the straights  {"off": 8.64, "straight": 1.67, "R": 14}
+OK   she never runs past the end and comes back  {"rise": -0.15}
+OK   she slacks off gradually into the corner and the stop (at most 1.5 knots a real second, 0.13 m/s2 in game time)  {"worst kn/s": 1.28}
+OK   the distance she went matches her speed over the game minutes (no second move by the minute step)  {"m": 1392, "expected": 1452, "gmin": 9}
+OK   the waypoints are passed and logged  " 002°. | Synkronrulling: sjøen treffer i båtens egen rulleperiode (3,0 s), og hun ruller 18°. Endre kurs eller fart. | Fremme ved siste veipunkt. Ligger stille."
+OK   no NaN in the state  0
+OK   the new 11 m sjark (planing) at 6 knots keeps to the line within a radius and 4 m through the corners, and stands on the end  {"off": 9.3, "R": 22.0, "st": "idle", "end": 0.0}
+OK   2c. ground under her own way at speed on a safe Autonav leg: held back, a way round is found, she goes on to the end, never aground  {"st": "idle", "hit": true, "aground": false, "round": true, "on": true, "end": 0}
+OK   by hand: full ahead gathers way on the model  {"kn": 6.9, "live": true}
+OK   the rudder hard over turns her to starboard with a drift angle  {"deg": 165.1, "sway": -0.54, "r": 0.186}
+OK   neutral: she loses way  {"kn": [6.9, 2.0]}
+OK   the sea slows her most into it and least before it (Kwon's direction factors); into it the cap is the old one  {"kn into/across/before": [1.41, 1.97, 4.18], "speedCap": 1.41}
+OK   with no way on she drifts downwind at 1.5-7 % of the wind (a 15 m fishing vessel drifted at 4.0 % in the US Coast Guard's field test) and lies across it, within 40 degrees  {"trebat": {"pct": 4.7, "off": 19, "hd": 0.94}, "sjark": {"pct": 4.6, "off": 6, "hd": 0.68}, "bunntral": {"pct": 3.7, "off": 0, "hd": 1}}
+OK   half astern the screw walks the stern to port: the bow goes to starboard  {"deg in 20 s": 2.4}
+OK   in a gale's sea the small boat's propeller comes out of the water now and then (less thrust); the trawler's does not  [{"type": "trebat", "out": 66.4, "kT": 0.6, "hs": 6.2}, {"type": "bunntral", "out": 0, "kT": 1, "hs": 6.2}]
+OK   lying still (the sjark, 12 m/s) she falls off across the wind and drifts downwind at 1.5-7 % of it  {"kn": 1.13, "pct": 4.8, "off": 0, "across": 1}
+OK   jigging she is run back up over the ground when she has drifted 400 m off it, and it is said  {"far": 437, "ups": 10, "said": true}
+OK   drifting onto the land the engine holds her off it (60 m), and it is said  {"start": 0.182, "min": 0.092, "land": false, "said": true}
+OK   by hand into the quay at about 6 knots: the blow is kept with its energy, she does not go into the quay, and it is said  {"hits": [{"t": 196344, "E": 73531, "kn": 6.6, "k": "kai"}], "minZ": 5.1, "half": 5.3, "backed": 63, "said": true}
+OK   astern she backs off the quay again  {"from": 5.1, "to": 63}
+OK   6. the sjark along the quay of Senjahopen at 6 knots, 2 m off, the wheel amidships: the bank effect sheers her off 3-8 degrees in three lengths (none without it)  {"deg": 5.8, "h": 8.6, "bY": -67, "kn": 5.9, "uten": -0.0}
+OK   6. squat in a narrow sound: at 8 knots she takes the bottom over 1.9 m and not over 2.3 m  {"sound": {"at": {"x": 863.3156, "y": 357.8806}, "d19": {"ground": true, "narrow": true, "kn": 0}, "d23": {"ground": false, "narrow": true, "kn": 7.9}}, "squat": {"open": 0.22, "sound": 0.45}}
+OK   6. squat in open water: at 8 knots over 1.75 m she takes the bottom, over 1.9 m not; at rest over 1.75 m not  {"open": {"d175": {"ground": true, "narrow": false, "kn": 0}, "d19": {"ground": false, "narrow": false, "kn": 7.9}, "rest": {"ground": false, "narrow": false, "kn": 0}}, "squat": {"open": 0.22, "sound": 0.45}}
+errors: []

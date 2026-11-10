@@ -1,0 +1,270 @@
+OK   unit            71 s  Node      2691 OK, 0 FEIL i 67 filer, på 70375 ms (kjernen 4.92 MB, 2660 navn)
+Bygg først: node build.mjs. 82 tester: 82 uten 3D to om gangen, så 0 med 3D alene etter hverandre, og 0 som måler tid, alene til slutt. Logger: tests/out/logs/
+dist-vec/ bygd én gang for driftsplan2kyst, lybtest, havtur, havflaate, etikett: OK
+OK   kotest          16 s  uten 3D  · 12 OK
+OK   driftsplan2kyst    98 s  uten 3D  · 49 OK
+OK   megletest       14 s  uten 3D  · 21 OK
+OK   boostklokke     38 s  uten 3D  · 4 OK
+OK   draftlooptest    17 s  uten 3D  · 5 OK
+OK   bootgtest      128 s  uten 3D  · 15 OK
+OK   skipdrift       18 s  uten 3D  · 5 OK
+OK   haillplass       6 s  uten 3D  · 13 OK
+OK   colregtest     602 s  uten 3D  · 32 OK
+OK   rttest          42 s  uten 3D  · 12 OK
+OK   istest          12 s  uten 3D  · 6 OK
+OK   lybtest         18 s  uten 3D  · 13 OK
+FEIL havtur          61 s  uten 3D  · 116 OK
+       FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du sovnet av utmattelse. Vakta på broa tar over, og lagene arbeider videre.'], 'Båten ligger og driver med vinden.']
+OK   snokrabbetest     9 s  uten 3D  · 23 OK
+OK   krabbefabrikktest    15 s  uten 3D  · 35 OK
+OK   autolinetest     8 s  uten 3D  · 15 OK
+FEIL fabrikktest     11 s  uten 3D  · 25 OK
+       FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined | 
+FEIL havplantest    698 s  uten 3D  · 34 OK
+       FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 584721, [0, 1]]
+OK   sonetest         7 s  uten 3D  · 7 OK
+OK   uketest          6 s  uten 3D  · 5 OK
+OK   kystkarttest    12 s  uten 3D  · 5 OK
+OK   havflaate        9 s  uten 3D  · 9 OK
+OK   etikett        157 s  uten 3D  · 80 OK
+OK   sponsor2test    12 s  uten 3D  · 14 OK
+OK   sponsortest      9 s  uten 3D  · 8 OK
+OK   markettest      30 s  uten 3D  · 12 OK
+FEIL nettest         22 s  uten 3D  · 25 OK
+       FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbekar med sjøvann']
+FEIL itemcardtest    17 s  uten 3D  · 12 OK
+       FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'radar', 'chirp', 'olje', 'varme']
+       avsluttet med kode 1
+       Python-feil:     at UtilityScript.<anonymous> (<anonymous>:1:44)
+OK   kystvakttest     9 s  uten 3D  · 21 OK
+OK   lagtest          9 s  uten 3D  · 12 OK
+OK   eventtest        6 s  uten 3D  · 3 OK
+OK   boktest          9 s  uten 3D  · 9 OK
+OK   lotttest         8 s  uten 3D  · 12 OK
+OK   skattetest       6 s  uten 3D  · 20 OK
+OK   driftsplan2ui    33 s  uten 3D  · 22 OK
+OK   driftsplan2map    13 s  uten 3D  · 10 OK
+FEIL driftsplan2gui   371 s  uten 3D  · 94 OK
+       FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannsk", "skuffen viser": "beholdning", "DOCK.open kalt med": ["arbeid"]}
+       FEIL s02-ikke-klar: fant ikke Mannskap i dokka
+       FEIL s15-stor-bat: scenarioet stoppet: Error("Page.evaluate: TypeError: Cannot read properties of undefined (reading 'x')\n    at eval (eval at evaluate (:311:30), <anonymous>:27:63)\n    at async <anonymous>:337:30")
+       FEIL s17b-hent: Pause slår planen av; redskap i sjøen gir «Hent redskapet»  {"i sjøen": 0, "knapp": null}
+       FEIL s19-rederi: prikken på Mannskap-knappen når planen har stoppet
+       FEIL s19-rederi: fant ikke Mannskap i dokka
+       FEIL s19-rederi: fant ikke Åpne (Driftsplan-linja)
+       FEIL s19-rederi: Mannskap-siden: linja sier «Stoppet» og «Åpne» går til planen  null
+       FEIL s20-engelsk: engelsk: ingen norske ord på siden, i lista og på kortet  ["8 t"]
+OK   slidertest      13 s  uten 3D  · 6 OK
+OK   anchorswing      5 s  uten 3D  · 28 OK
+OK   selfcrew         5 s  uten 3D  · 18 OK
+FEIL crewclip        14 s  uten 3D  · 4 OK
+       FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:walk', 'r:0.61:walk', 'r:0.57:walk', 'rb:0.51:walk', 'f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:walk', 'f:3.25:walk', 'rfb:2.89:walk', 'f:0.66:walk
+OK   regmarktest      6 s  uten 3D  · 15 OK
+OK   dockrow         37 s  uten 3D  · 16 OK
+OK   hulltest        69 s  uten 3D  · 28 OK
+FEIL dyntest        253 s  uten 3D  · 29 OK
+       FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide into the turn)  ["ringnot38"]
+       FEIL she stops gently from cruising speed within 12 lengths (15 from 30 m)  ["ringnot38"]
+OK   crewlifetest     4 s  uten 3D  · 10 OK
+OK   crewwalk         6 s  uten 3D  · 13 OK
+FEIL walktest        11 s  uten 3D  · 15 OK
+       FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 40 ms {"fail": 0}
+       FEIL: autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 40 ms
+FEIL tabtest         91 s  uten 3D  · 16 OK
+       FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"]
+       FEIL: no page errors (app)
+OK   navbarshot      29 s  uten 3D  · 5 OK
+OK   skiptest        16 s  uten 3D  · 11 OK
+OK   synctest        61 s  uten 3D  · 13 OK
+OK   installtest     38 s  uten 3D  · 6 OK
+OK   looktest        12 s  uten 3D  · 17 OK
+OK   hbtest          14 s  uten 3D  · 16 OK
+OK   naustclear      15 s  uten 3D  · 2 OK
+OK   rectest          4 s  uten 3D  · 6 OK
+OK   ptowtest         6 s  uten 3D  · 8 OK
+OK   seaworktest      4 s  uten 3D  · 10 OK
+OK   hailtest         5 s  uten 3D  · 4 OK
+OK   gbtest           6 s  uten 3D  · 6 OK
+OK   sharetest        5 s  uten 3D  · 6 OK
+OK   friendtest       6 s  uten 3D  · 9 OK
+OK   searchtest      14 s  uten 3D  · 5 OK
+OK   savestest        0 s  uten 3D
+OK   caretest        15 s  uten 3D  · 22 OK
+OK   yardupgtest     14 s  uten 3D  · 12 OK
+OK   jigalongtest    12 s  uten 3D  · 5 OK
+OK   heatgeartest     5 s  uten 3D  · 4 OK
+OK   anchortest       6 s  uten 3D  · 7 OK
+OK   plantsaytest     4 s  uten 3D  · 6 OK
+OK   cashfxtest       7 s  uten 3D  · 4 OK
+OK   autonavtest     20 s  uten 3D  · 25 OK
+OK   placetest        5 s  uten 3D  · 7 OK
+OK   sidetab         11 s  uten 3D  · 6 OK
+OK   guidetest        8 s  uten 3D  · 13 OK
+OK   stedertest       5 s  uten 3D  · 9 OK
+OK   icestep          6 s  uten 3D  · 6 OK
+OK   heatpick         5 s  uten 3D  · 3 OK
+OK   peergear         4 s  uten 3D  · 6 OK
+OK   turtest         17 s  uten 3D  · 27 OK
+OK   posttest        26 s  uten 3D  · 8 OK
+
+72 OK, 10 FEIL, 0 å lese, på 1744 s. Feil i: havtur, fabrikktest, havplantest, nettest, itemcardtest, driftsplan2gui, crewclip, dyntest, walktest, tabtest.
+Bygg først: node build.mjs. 82 tester: 81 uten 3D to om gangen, så 1 med 3D alene etter hverandre, og 0 som måler tid, alene til slutt. Logger: tests/out/logs/
+dist-vec/ bygd én gang for npctest, havntest, utfrakai: OK
+OK   merketest       13 s  uten 3D  · 12 OK
+FEIL fartstidtest    16 s  uten 3D  · 6 OK
+       FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:03\nman 1. mar\nNØ 5 m/s · −1 °C\n2 000 kr\nNeste mål: Første juksamaskin\n2 000 kr / 34 000 kr\nFørste uke: 1 / 21\nNeste: Første fisk over ripa\nBEST BETALT TORSK\n61,17 kr/kg · Husøy\nDRIFT\nDr
+OK   maletest        16 s  uten 3D  · 17 OK
+OK   climtest        13 s  uten 3D  · 5 OK
+OK   sqltest         28 s  uten 3D  · 148 OK
+FEIL cloudtest       42 s  uten 3D  · 32 OK
+       FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes on a free one; one the admin took away is gone with the reason  {"mine": "Kystjenta", "ask": {"t": "Velg et brukernavn\n\nAlle registrerte sp
+OK   errtest         34 s  uten 3D  · 13 OK
+OK   guesttest       52 s  uten 3D  · 13 OK
+FEIL kjoptest       341 s  uten 3D  · 7 OK
+       avsluttet med kode 1
+       Python-feil:     - locator resolved to visible <button id="obGo" data-close="" class="btn primary">Ta over båten</button>
+OK   regnrtest       12 s  uten 3D  · 4 OK
+OK   r4test          15 s  uten 3D  · 7 OK
+OK   tutdrift         7 s  uten 3D  · 5 OK
+OK   tutfull          6 s  uten 3D  · 8 OK
+FEIL worldtest       19 s  uten 3D  · 6 OK
+       FEIL a new game begins at the world's date and hour, on the seed everyone shares  {"on": true, "t": 306317, "w": 306318, "seed": true, "rate": 6, "off": -447, "date": "ons 29. sep 23:17", "wdate": "ons 29. sep 23:18"}
+OK   pushtest        22 s  uten 3D  · 18 OK
+OK   feedbacktest    15 s  uten 3D  · 11 OK
+OK   hudtest         91 s  uten 3D  · 61 OK
+FEIL obstest          7 s  uten 3D  · 7 OK
+       FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "dp": 3, "clr": 7.13}
+OK   marktest         8 s  uten 3D  · 6 OK
+OK   rorbutest       13 s  uten 3D  · 13 OK
+OK   admintest        7 s  uten 3D  · 7 OK
+OK   starttest      128 s  uten 3D  · 14 OK
+OK   seasontest       5 s  uten 3D  · 8 OK
+OK   uishots         79 s  uten 3D  · 45 OK
+OK   quotatest       13 s  uten 3D  · 18 OK
+OK   rulestest       11 s  uten 3D  · 21 OK
+OK   npctest          7 s  uten 3D  · 19 OK
+OK   havntest        14 s  uten 3D  · 21 OK
+OK   keeptest        13 s  uten 3D  · 6 OK
+OK   tidetest         5 s  uten 3D  · 10 OK
+OK   trip2           31 s  uten 3D
+OK   docktest        60 s  uten 3D  · 116 OK
+FEIL booktest        24 s  uten 3D  · 24 OK
+       FEIL sluttseddelen i salget summerer seg: fisk + bonus − inndratt = total  [17292, 17280]
+OK   decktest        11 s  uten 3D  · 10 OK
+FEIL geartest        38 s  uten 3D  · 49 OK
+       FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
+       FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+OK   loretest        13 s  uten 3D  · 8 OK
+OK   tattest         16 s  uten 3D  · 8 OK
+OK   towtest         13 s  uten 3D  · 11 OK
+OK   airtest         13 s  uten 3D  · 4 OK
+FEIL fleet2test      26 s  uten 3D  · 14 OK
+       FEIL both vessels went out, at the same time
+       FEIL quotas kept apart: the first boat has no access (the closed-group vessel in the fleet takes the open group), the snekke lands on its own quota
+OK   fleet3test      15 s  uten 3D  · 8 OK
+OK   opsowntest      37 s  uten 3D  · 6 OK
+OK   naustleia        7 s  uten 3D  · 4 OK
+OK   shoptest        29 s  uten 3D  · 21 OK
+LES  selltest        19 s  uten 3D
+       | "torsk 54.78",
+       | "hyse 23.63",
+       | "sei 22.32",
+       | "lyr 20.04",
+       | "lange 13.71",
+       | "brosme 12.23",
+       | "uer 16.50",
+       | "kveite 72.60",
+       | "blakveite 55.35"
+       | ]
+       | }
+       | errors: []
+FEIL timetest        15 s  uten 3D  · 6 OK
+       FEIL planlagt avgang: klokkeslettet først, så om 20 min i ekte tid  ⏱ Avgang 08:00 · om 20 min i ekte tid
+       FEIL fisket: klokkeslett og nedtelling i ekte tid i HUD og over knappene  ['⏱ Fisket er ferdig 07:44 · om 15 min i ekte tid', '']
+       FEIL lossing: seddelen med nedtelling  ['⏱ Sluttseddelen 06:25 · om 2 min i ekte tidKranen svinger inn', 'mer ca. kl. 06:25 · om 2 min i ekte tid.']
+FEIL worktest        19 s  uten 3D  · 45 OK
+       FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+OK   vesseltest      19 s  uten 3D  · 37 OK
+OK   adminbuytest     9 s  uten 3D  · 4 OK
+OK   fuelcal         12 s  uten 3D  · 1 OK
+OK   bunktest        12 s  uten 3D  · 5 OK
+OK   lanterntest     14 s  uten 3D  · 12 OK
+OK   streaktest      61 s  uten 3D  · 13 OK
+OK   fixtest         38 s  uten 3D  · 13 OK
+LES  hailltest       31 s  uten 3D
+       | luck: {"none": {"torsk": 668, "all": 741}, "haill": {"torsk": 1177, "all": 1309}, "luksus": {"torsk": 1523, "all": 1710}, "haillSteps": [1, 1, 0.5, 0.5, 0.25, 0.25, 0], "luksusSteps": [2, 2, 1, 1, 0.5
+       | after buy (in store, not on): {"h":null,"inv":{"haill":0,"luksus":1},"btn":true}
+       | after switch-on: {"h":"luksus","boost":2,"inv":{"haill":0,"luksus":0},"hud":null}
+       | pub button: True
+       | pub: {"cash":49000,"pubE":371,"ev":371,"msg":"Noen plystret en slager. – Ikke gjør det på sjøen, sa bartenderen. Da plystrer du opp storm.","spinDisabled":true,"haill":"luksus"}
+       | pub button after round: True
+       | workshop: minutes left 180 -> 90 paid 1430 ; after rush jobs left: 0
+       | errors: []
+OK   harbourtest     13 s  uten 3D  · 11 OK
+LES  simday          12 s  uten 3D
+       | {"date": "2028-3-10", "ground": "Havet nord for Husøy", "gear": "juksa", "jk": 0, "total": 500, "released": 1, "st": "idle", "by": {"torsk": {"kg": 447, "n": 104, "cls": {"3,7–6 kg": 30.99999999999999
+       | {"date": "2028-3-10", "ground": "Vest av Gryllefjord", "gear": "juksa", "jk": 0, "total": 500, "released": 2, "st": "idle", "by": {"torsk": {"kg": 405, "n": 99, "cls": {"Under 1,5 kg": 11, "1,5–3,7 kg
+       | {"date": "2028-7-12", "ground": "Havet nord for Husøy", "gear": "juksa", "jk": 0, "total": 335, "released": 2, "st": "fishing", "by": {"sei": {"kg": 99, "n": 48, "cls": {"0,7–1,6 kg": 18, "1,6–3,1 kg"
+       | {"date": "2028-5-15", "ground": "Malangsgapet", "gear": "juksa", "jk": 0, "total": 203, "released": 1, "st": "fishing", "by": {"torsk": {"kg": 49, "n": 23, "cls": {"Under 1,5 kg": 8, "1,5–3,7 kg": 13,
+       | {"date": "2028-3-10", "ground": "Havet nord for Husøy", "gear": "stang", "jk": 0, "total": 0, "released": 0, "st": "idle", "by": {}}
+       | {"date": "2028-3-10", "ground": "Havet nord for Husøy", "gear": "juksa", "jk": 2, "total": 500, "released": 2, "st": "idle", "by": {"torsk": {"kg": 446, "n": 98.99999999999999, "cls": {"1,5–3,7 kg": 3
+       | {"effort": [0, 2, 4, 8]}
+       | errors: []
+LES  calib           12 s  uten 3D
+       |         top-10% sea kg/h: [1.5, 0.5, 0.3, 0.9, 0.8, 0.6, 0.3, 0.2, 0.2, 0.2, 0.3, 0.8]
+       | lange   best-ground kg/h: [0.4, 0.3, 0.5, 0.6, 1, 1.7, 1, 1.4, 1, 1.4, 2.1, 0.6]
+       |         top-10% sea kg/h: [0.9, 0.7, 0.9, 2.2, 3, 2.8, 2.3, 2.4, 2, 2.8, 3.2, 1.4]
+       | brosme  best-ground kg/h: [0.7, 0.3, 0.4, 0.6, 1, 0.7, 1, 1, 1.9, 1, 1.1, 0.7]
+       |         top-10% sea kg/h: [1.2, 1.2, 0.9, 1.8, 2.4, 1.7, 1.8, 2.2, 2.4, 2.4, 3.2, 2.8]
+       | uer     best-ground kg/h: [0.1, 0, 0, 0.1, 0.2, 0.5, 0.7, 2.1, 0.1, 0.1, 0.1, 0.1]
+       |         top-10% sea kg/h: [0.1, 0.1, 0.1, 0.1, 0.3, 1.8, 2.2, 2.7, 0.3, 0.2, 0.2, 0.2]
+       | kveite  best-ground kg/h: [0.6, 0.1, 0.1, 0.3, 0.8, 1.2, 1.7, 1.4, 1.3, 0.8, 1.1, 1.1]
+       |         top-10% sea kg/h: [0.6, 0.2, 0.1, 0.3, 0.7, 0.9, 1.4, 1.4, 1.6, 1.4, 1.9, 1.6]
+       | blakveite best-ground kg/h: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+       |         top-10% sea kg/h: [0.3, 0.3, 0.3, 0.5, 0.7, 0.7, 0.5, 0.6, 0.6, 0.4, 0.2, 0.3]
+       | errors: []
+LES  kvtest          12 s  uten 3D
+       | sep_kveite {"kg": {"sei": 90, "hyse": 12, "torsk": 2, "kveite": 11}, "kveiteN": 1, "krPerDay": 417, "released": 1}
+       | sep_kveite_haill {"kg": {"sei": 78, "kveite": 26, "hyse": 11, "torsk": 3}, "kveiteN": 2, "krPerDay": 542, "released": 1}
+       | oct_kveite_g0 {"kg": {"sei": 75, "hyse": 11, "torsk": 12, "kveite": 36}, "kveiteN": 3, "krPerDay": 740, "released": 1}
+       | errors: []
+LES  progweek        40 s  uten 3D
+       |   dag  7:  5 turer, kasse     21343, netto     87843, torsk   627 /  5100 kg, blad B [5, 44911], juksamaskiner 1, egenkapital som trengs 567280
+       |   dag 14: 10 turer, kasse     76106, netto    142606, torsk  1955 /  5100 kg, blad B [10, 138672], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 21: 12 turer, kasse    100655, netto    167155, torsk  2514 /  5100 kg, blad B [12, 178553], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 28: 17 turer, kasse    174374, netto    240874, torsk  3887 /  3400 kg, blad B [17, 271651], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 35: 23 turer, kasse    181069, netto    247569, torsk  3887 /  3400 kg, blad B [23, 282989], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 42: 28 turer, kasse    190949, netto    257449, torsk  3887 /  3400 kg, blad B [28, 298801], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 49: 33 turer, kasse    198700, netto    265200, torsk  3887 /  3400 kg, blad B [33, 311391], juksamaskiner 2, egenkapital som trengs 91945
+       |   dag 56: 39 turer, kasse    216887, netto    283387, torsk  3887 /  3400 kg, blad B [39, 339783], juksamaskiner 2, egenkapital som trengs 91945
+       |   per tur: 335 kg, 8712 kr; inngangen koster 3168900 kr
+       |   blad B: {'day': 14, 'trips': 10} · inngangen innen rekkevidde: {'day': 18, 'trips': 12, 'cash': 100655}
+       |   til kalibreringen, når egenkapitalen ville holdt med 5 / 10 / 15 % av prisen: {'day': 18, 'trips': 12} / None / None
+       | errors: []
+OK   seatest         16 s  uten 3D  · 14 OK
+OK   stabtest        13 s  uten 3D  · 7 OK
+OK   projtest        12 s  uten 3D  · 5 OK
+OK   boottest        24 s  uten 3D  · 4 OK
+OK   maptest         22 s  uten 3D  · 5 OK
+OK   mig2test        18 s  uten 3D  · 4 OK
+OK   helmtest        25 s  uten 3D  · 12 OK
+OK   soundtest        5 s  uten 3D  · 25 OK
+OK   sleeptest        9 s  uten 3D  · 9 OK
+OK   pwatest         23 s  uten 3D  · 6 OK
+OK   bktest           5 s  uten 3D  · 14 OK
+OK   ordtest         13 s  uten 3D  · 7 OK
+OK   kartlegging     46 s  uten 3D  · 57 OK
+OK   roetest        116 s  uten 3D  · 23 OK
+OK   mannskapshot    12 s  uten 3D  · 14 OK
+OK   hooktest         1 s  uten 3D  · 55 OK
+FEIL opptest         50 s  uten 3D  · 51 OK
+       FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnhaler', 'linesetter', 'garnrenne', 'olje', 'varme']
+       FEIL havsjarken: halerne på trinn 1, 2 og 3, juksamaskinene «Kjøp trinn 3 · 120 000 kr» for fem, linesetteren og juksasettene på øverste trinn  {'linehalerLv': {'name': 'Linehaler trinn 1 / 3', 'fx': 'Trinn 2: trekker en stamp hyseline på 19,3 min mot 21,4 (−10 %)', 'price': '34 000 kr', 'have': 'Om
+OK   mobtest        201 s  uten 3D  · 45 OK
+OK   rundshot        21 s  uten 3D  · 2 OK
+OK   utfrakai        86 s  uten 3D  · 44 OK
+OK   turlinjetest     5 s  uten 3D  · 13 OK
+FEIL tut           2627 s  uten 3D  · 31 OK
+       FEIL staaende: kaia sier hva sløying om bord gir ved første levering
+
+64 OK, 12 FEIL, 6 å lese, på 3889 s. Feil i: fartstidtest, cloudtest, kjoptest, worldtest, obstest, booktest, geartest, fleet2test, timetest, worktest, opptest, tut. Les: selltest, hailltest, simday, calib, kvtest, progweek.

@@ -1,0 +1,18 @@
+OK   the page opened last reads the game as the first one left it 
+OK   the older page saves nothing over the newer game, and says it is paused 
+OK   the «Spill her» button is on the screen (liggende) 
+OK   the «Spill her» button is on the screen (stående) 
+OK   a page that wakes after a newer one has opened stops before it plays 
+OK   «Spill her» loads the page again with the game as it is now 
+OK   and the page that had it before is passed by in its turn 
+OK   no page errors (two pages) 
+OK   the game goes up, and the device keeps the save count it sent 
+OK   a page passed by sends nothing to the account 
+OK   a game on the device older than the one the device sent gives way to the account's at the start 
+OK   a device never in step with the account takes the account's game, and keeps its own as the one before 
+OK   no page errors (cloud) 
+OK   the app with nothing on it asks «Har du spilt før?» with «Logg inn» first 
+OK   «Logg inn» opens the sign-in 
+OK   «Start et nytt spill» goes on as a guest, to Father's letter 
+FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"]
+FEIL: no page errors (app)

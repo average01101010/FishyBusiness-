@@ -1,0 +1,8 @@
+FEIL a new game begins at the world's date and hour, on the seed everyone shares  {"on": true, "t": 306317, "w": 306318, "seed": true, "rate": 6, "off": -447, "date": "ons 29. sep 23:17", "wdate": "ons 29. sep 23:18"}
+OK   the admin's pace does nothing (6×), and the clock is set from the server's Date  {"rate": 6, "off": -447}
+OK   ten game hours behind the world: the time away is played up to it, and «Mens du var borte» shows  {"t": 306318, "w": 306318, "away": true}
+OK   two game hours ahead of the world: not put back, and it goes at half pace  {"t": 306438, "t0": 306438, "w": 306318}
+OK   an hour on the world's clock (six game hours) is caught up  {"t": 306678, "w": 306678}
+OK   a save five game hours behind is on the world's clock after a reload  {"t": 306319, "w": 306319, "seed": true}
+OK   the Admin app shows the shared clock, and no pace buttons  {"clock": true, "pace": false}
+errors: []

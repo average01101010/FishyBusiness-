@@ -1801,3 +1801,167 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-10 01:21	regresjon/2026-11-10	3a81cce	kotest	OK	16	lite	samtidig	
+2026-11-10 01:22	regresjon/2026-11-10	3a81cce	driftsplan2kyst	OK	98	lite	samtidig	
+2026-11-10 01:22	regresjon/2026-11-10	3a81cce	megletest	OK	14	lite	samtidig	
+2026-11-10 01:22	regresjon/2026-11-10	3a81cce	boostklokke	OK	38	lite	samtidig	
+2026-11-10 01:22	regresjon/2026-11-10	3a81cce	draftlooptest	OK	17	lite	samtidig	
+2026-11-10 01:24	regresjon/2026-11-10	3a81cce	bootgtest	OK	128	lite	samtidig	
+2026-11-10 01:24	regresjon/2026-11-10	3a81cce	skipdrift	OK	18	lite	samtidig	
+2026-11-10 01:24	regresjon/2026-11-10	3a81cce	haillplass	OK	6	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	colregtest	OK	602	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	rttest	OK	42	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	istest	OK	12	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	lybtest	OK	18	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	havtur	FEIL	61	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	snokrabbetest	OK	9	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	krabbefabrikktest	OK	15	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	autolinetest	OK	8	lite	samtidig	
+2026-11-10 01:33	regresjon/2026-11-10	3a81cce	fabrikktest	FEIL	11	lite	samtidig	FEIL status: lasten i tonn produkt og rund vekt (staaende): undefined |
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	havplantest	FEIL	698	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 584721, [0, 1]]
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	sonetest	OK	7	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	uketest	OK	6	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	kystkarttest	OK	12	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	havflaate	OK	9	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	etikett	OK	157	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	sponsor2test	OK	12	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	sponsortest	OK	9	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	markettest	OK	30	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	nettest	FEIL	22	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbek
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	itemcardtest	FEIL	17	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	kystvakttest	OK	9	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	lagtest	OK	9	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	eventtest	OK	6	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	boktest	OK	9	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	lotttest	OK	8	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	skattetest	OK	6	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	driftsplan2ui	OK	33	lite	samtidig	
+2026-11-10 01:39	regresjon/2026-11-10	3a81cce	driftsplan2map	OK	13	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	driftsplan2gui	FEIL	371	lite	samtidig	FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og 
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	slidertest	OK	13	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	anchorswing	OK	5	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	selfcrew	OK	5	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	crewclip	FEIL	14	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	regmarktest	OK	6	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	dockrow	OK	37	lite	samtidig	
+2026-11-10 01:45	regresjon/2026-11-10	3a81cce	hulltest	OK	69	lite	samtidig	
+2026-11-10 01:46	regresjon/2026-11-10	3a81cce	dyntest	FEIL	253	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-10 01:46	regresjon/2026-11-10	3a81cce	crewlifetest	OK	4	lite	samtidig	
+2026-11-10 01:46	regresjon/2026-11-10	3a81cce	crewwalk	OK	6	lite	samtidig	
+2026-11-10 01:46	regresjon/2026-11-10	3a81cce	walktest	FEIL	11	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 40
+2026-11-10 01:47	regresjon/2026-11-10	3a81cce	tabtest	FEIL	91	lite	samtidig	FEIL no page errors (app) ["Cannot read properties of undefined (reading 'boat')"]
+2026-11-10 01:47	regresjon/2026-11-10	3a81cce	navbarshot	OK	29	lite	samtidig	
+2026-11-10 01:47	regresjon/2026-11-10	3a81cce	skiptest	OK	16	lite	samtidig	
+2026-11-10 01:47	regresjon/2026-11-10	3a81cce	synctest	OK	61	lite	samtidig	
+2026-11-10 01:47	regresjon/2026-11-10	3a81cce	installtest	OK	38	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	looktest	OK	12	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	hbtest	OK	14	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	naustclear	OK	15	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	rectest	OK	4	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	ptowtest	OK	6	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	seaworktest	OK	4	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	hailtest	OK	5	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	gbtest	OK	6	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	sharetest	OK	5	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	friendtest	OK	6	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	searchtest	OK	14	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	savestest	OK	0	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	caretest	OK	15	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	yardupgtest	OK	14	lite	samtidig	
+2026-11-10 01:48	regresjon/2026-11-10	3a81cce	jigalongtest	OK	12	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	heatgeartest	OK	5	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	anchortest	OK	6	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	plantsaytest	OK	4	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	cashfxtest	OK	7	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	autonavtest	OK	20	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	placetest	OK	5	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	sidetab	OK	11	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	guidetest	OK	8	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	stedertest	OK	5	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	icestep	OK	6	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	heatpick	OK	5	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	peergear	OK	4	lite	samtidig	
+2026-11-10 01:49	regresjon/2026-11-10	3a81cce	turtest	OK	17	lite	samtidig	
+2026-11-10 01:50	regresjon/2026-11-10	3a81cce	posttest	OK	26	lite	samtidig	
+2026-11-10 01:50	regresjon/2026-11-10	3a81cce	merketest	OK	13	lite	samtidig	
+2026-11-10 01:50	regresjon/2026-11-10	3a81cce	fartstidtest	FEIL	16	lite	samtidig	FEIL the phone's home shows the years and days, and the Merker app explains how sea time is earned  "06:03\nman 1. mar\nNØ 5 m/s · −1 °C\n2 000 kr\nNeste mål: F
+2026-11-10 01:50	regresjon/2026-11-10	3a81cce	maletest	OK	16	lite	samtidig	
+2026-11-10 01:50	regresjon/2026-11-10	3a81cce	climtest	OK	13	lite	samtidig	
+2026-11-10 01:51	regresjon/2026-11-10	3a81cce	sqltest	OK	28	lite	samtidig	
+2026-11-10 01:51	regresjon/2026-11-10	3a81cce	cloudtest	FEIL	42	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-10 01:51	regresjon/2026-11-10	3a81cce	errtest	OK	34	lite	samtidig	
+2026-11-10 01:52	regresjon/2026-11-10	3a81cce	guesttest	OK	52	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	kjoptest	FEIL	341	lite	samtidig	avsluttet med kode 1
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	regnrtest	OK	12	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	r4test	OK	15	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	tutdrift	OK	7	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	tutfull	OK	6	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	worldtest	FEIL	19	lite	samtidig	FEIL a new game begins at the world's date and hour, on the seed everyone shares  {"on": true, "t": 306317, "w": 306318, "seed": true, "rate": 6, "off": -447, "
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	pushtest	OK	22	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	feedbacktest	OK	15	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	hudtest	OK	91	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	obstest	FEIL	7	lite	samtidig	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "d
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	marktest	OK	8	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	rorbutest	OK	13	lite	samtidig	
+2026-11-10 01:57	regresjon/2026-11-10	3a81cce	admintest	OK	7	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	starttest	OK	128	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	seasontest	OK	5	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	uishots	OK	79	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	quotatest	OK	13	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	rulestest	OK	11	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	npctest	OK	7	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	havntest	OK	14	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	keeptest	OK	13	lite	samtidig	
+2026-11-10 01:58	regresjon/2026-11-10	3a81cce	tidetest	OK	5	lite	samtidig	
+2026-11-10 01:59	regresjon/2026-11-10	3a81cce	trip2	OK	31	lite	samtidig	
+2026-11-10 01:59	regresjon/2026-11-10	3a81cce	docktest	OK	60	lite	samtidig	
+2026-11-10 01:59	regresjon/2026-11-10	3a81cce	booktest	FEIL	24	lite	samtidig	FEIL sluttseddelen i salget summerer seg: fisk + bonus − inndratt = total  [17292, 17280]
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	decktest	OK	11	lite	samtidig	
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	geartest	FEIL	38	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	loretest	OK	13	lite	samtidig	
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	tattest	OK	16	lite	samtidig	
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	towtest	OK	13	lite	samtidig	
+2026-11-10 02:00	regresjon/2026-11-10	3a81cce	airtest	OK	13	lite	samtidig	
+2026-11-10 02:01	regresjon/2026-11-10	3a81cce	fleet2test	FEIL	26	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-10 02:01	regresjon/2026-11-10	3a81cce	fleet3test	OK	15	lite	samtidig	
+2026-11-10 02:01	regresjon/2026-11-10	3a81cce	opsowntest	OK	37	lite	samtidig	
+2026-11-10 02:01	regresjon/2026-11-10	3a81cce	naustleia	OK	7	lite	samtidig	
+2026-11-10 02:01	regresjon/2026-11-10	3a81cce	shoptest	OK	29	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	selltest	LES	19	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	timetest	FEIL	15	lite	samtidig	FEIL planlagt avgang: klokkeslettet først, så om 20 min i ekte tid  ⏱ Avgang 08:00 · om 20 min i ekte tid
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	worktest	FEIL	19	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	vesseltest	OK	19	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	adminbuytest	OK	9	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	fuelcal	OK	12	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	bunktest	OK	12	lite	samtidig	
+2026-11-10 02:02	regresjon/2026-11-10	3a81cce	lanterntest	OK	14	lite	samtidig	
+2026-11-10 02:03	regresjon/2026-11-10	3a81cce	streaktest	OK	61	lite	samtidig	
+2026-11-10 02:03	regresjon/2026-11-10	3a81cce	fixtest	OK	38	lite	samtidig	
+2026-11-10 02:03	regresjon/2026-11-10	3a81cce	hailltest	LES	31	lite	samtidig	
+2026-11-10 02:03	regresjon/2026-11-10	3a81cce	harbourtest	OK	13	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	simday	LES	12	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	calib	LES	12	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	kvtest	LES	12	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	progweek	LES	40	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	seatest	OK	16	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	stabtest	OK	13	lite	samtidig	
+2026-11-10 02:04	regresjon/2026-11-10	3a81cce	projtest	OK	12	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	boottest	OK	24	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	maptest	OK	22	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	mig2test	OK	18	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	helmtest	OK	25	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	soundtest	OK	5	lite	samtidig	
+2026-11-10 02:05	regresjon/2026-11-10	3a81cce	sleeptest	OK	9	lite	samtidig	
+2026-11-10 02:06	regresjon/2026-11-10	3a81cce	pwatest	OK	23	lite	samtidig	
+2026-11-10 02:06	regresjon/2026-11-10	3a81cce	bktest	OK	5	lite	samtidig	
+2026-11-10 02:06	regresjon/2026-11-10	3a81cce	ordtest	OK	13	lite	samtidig	
+2026-11-10 02:06	regresjon/2026-11-10	3a81cce	kartlegging	OK	46	lite	samtidig	
+2026-11-10 02:08	regresjon/2026-11-10	3a81cce	roetest	OK	116	lite	samtidig	
+2026-11-10 02:08	regresjon/2026-11-10	3a81cce	mannskapshot	OK	12	lite	samtidig	
+2026-11-10 02:08	regresjon/2026-11-10	3a81cce	hooktest	OK	1	lite	samtidig	
+2026-11-10 02:08	regresjon/2026-11-10	3a81cce	opptest	FEIL	50	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 02:11	regresjon/2026-11-10	3a81cce	mobtest	OK	201	lite	samtidig	
+2026-11-10 02:11	regresjon/2026-11-10	3a81cce	rundshot	OK	21	lite	samtidig	
+2026-11-10 02:11	regresjon/2026-11-10	3a81cce	utfrakai	OK	86	lite	samtidig	
+2026-11-10 02:11	regresjon/2026-11-10	3a81cce	turlinjetest	OK	5	lite	samtidig	
+2026-11-10 02:55	regresjon/2026-11-10	3a81cce	tut	FEIL	2627	lite	alene	FEIL staaende: kaia sier hva sløying om bord gir ved første levering

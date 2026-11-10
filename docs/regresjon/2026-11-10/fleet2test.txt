@@ -1,0 +1,23 @@
+landing: {"openOwner": {"acc": "open", "confKg": 0, "torsk": 100, "byCod": 0, "hyse": 50}, "openOps": {"acc": "none", "confKg": 150, "torsk": 100, "byCod": 25, "hyse": 62.5}, "second": {"acc": "none", "confKg": 150, "torsk": 0, "byCod": 25, "hyse": 12.5}, "secondCap": {"acc": "none", "confKg": 165, "torsk": 0, "byCod": 2000, "hyse": 25}, "openBefore": "v1", "openAfterLic": null, "firstAfterLic": {"acc": "none", "confKg": 150, "torsk": 100, "byCod": 50, "hyse": 75}, "licensed": {"acc": "lukket", "confKg": 0, "torsk": 100, "byCod": 0, "hyse": 50}, "names": ["T-658-LK", "Kystværing", "Nordlys"]}
+OK   open-group vessel, owner aboard: cod on the quota, nothing confiscated
+OK   open-group vessel without the owner: 10 % bycatch, 150 kg confiscated, 25 kg cod as bycatch
+OK   second vessel: no access
+OK   bycatch cod capped at 2 t a year
+OK   a closed-group vessel in the fleet takes away the open group
+OK   closed-group vessel lands on its own quota
+week: {"e1": null, "e2": null, "v2log": [], "per": [{"id": "v1", "name": "T-658-LK", "type": "trebat", "status": "port", "hold": 0, "torsk": 0, "byCod": 13, "conf": 269, "trips": 1, "landed": 1, "stop": null}, {"id": "v2", "name": "Kystværing", "type": "snekke", "status": "port", "hold": 0, "torsk": 0, "byCod": 0, "conf": 0, "trips": 0, "landed": 0, "stop": null}], "onLand": 0, "maxAtSea": 1, "sample": ["T-658-LK: Kastet loss fra Husøy.", "T-658-LK: Leverte 336 kg i Husøy for 1 786 kr."]}
+OK   no vessel on land during the week
+FEIL both vessels went out, at the same time
+FEIL quotas kept apart: the first boat has no access (the closed-group vessel in the fleet takes the open group), the snekke lands on its own quota
+buttons: [{"follow": "v2", "hudRow": true, "board": "v2", "hudAnchor": true}, "Testbåt", {"fleet": 1, "cashUp": true, "got": 28350, "val": 28350, "openNow": null, "me": "v2", "cur": "v2", "buyEnabled": true, "after": ["Testbåt:snekke:finnsnes", "Kystværing:skiff:finnsnes"], "depart": false}]
+OK   follow: the HUD shows the followed vessel, no anchor
+OK   go aboard: the anchor shows
+OK   rename via prompt
+OK   sell the other vessel now to Kystmegleren for 90 % of its value (B4)
+OK   buy for the fleet, and a crewless vessel without you cannot leave
+after reload: {"fleet":["Testbåt","Kystværing"],"me":"v2","cur":"v2","bound":true}
+OK   two vessels, the one you are aboard and the bound aliases survive a reload
+new build: {"n0": 2, "n1": 3, "vid": null, "order": null, "type": "sjarkny", "port": "finnsnes", "msg": "Vi la en mynt under masta på «Kystværing», som skikken er. God vind."}
+OK   the new build joins the fleet at once, at the yard (no building time)
+dialogs: ['prompt', 'confirm']
+errors: []

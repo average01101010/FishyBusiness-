@@ -1,0 +1,10 @@
+OK   introen sier seks ganger så fort  Tiden går seks ganger så fort som i virkeligheten,
+OK   tempovalgene viser hva de gir  ['6× (normalt)', '180×', '1\xa0800×', '10\xa0800×']
+OK   ekte tid regnes med 6×, og ekte tid er merket (U1)  ['under 1 min', '1 min', '10 min', '1 t 40 min', '1 d 2 t', 'om 15 min i ekte tid']
+OK   og med testtempo 180×  6 min
+OK   ruteanslaget viser riktig ekte tid  {'h': 1.6227527669747108, 'want': '16 min', 'txt': 'Seilingstid1 t 37 min ca. 16 min i ekte tid'}
+FEIL planlagt avgang: klokkeslettet først, så om 20 min i ekte tid  ⏱ Avgang 08:00 · om 20 min i ekte tid
+OK   underveis: når båten er fremme  ⏱ Fremme på feltet 06:53 · om 7 min i ekte tid
+FEIL fisket: klokkeslett og nedtelling i ekte tid i HUD og over knappene  ['⏱ Fisket er ferdig 07:44 · om 15 min i ekte tid', '']
+FEIL lossing: seddelen med nedtelling  ['⏱ Sluttseddelen 06:25 · om 2 min i ekte tidKranen svinger inn', 'mer ca. kl. 06:25 · om 2 min i ekte tid.']
+sidefeil []
