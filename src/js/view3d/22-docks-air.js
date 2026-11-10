@@ -4,7 +4,7 @@
   let DKM = null;
   function buildDocks(){
     DKM = false; if (typeof glbHas !== 'function' || !glbHas('brygge')) return;
-    const up = nm => { const o = glbPart('brygge', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+    const up = nm => { const o = glbPart('brygge', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; };
     DKM = {kar:up('landkar'), gang:up('landgang'), pon:up('ponton'), end:up('ponton_end'), fin:up('finger'), boye:up('boye'), kaib:up('kai_betong'), ktre:up('kai_tre')};
     if (!DKM.pon || !DKM.gang) DKM = false; else DKM.fill = quayFill();
   }
@@ -164,7 +164,7 @@
   let AIRM = null, airNow = [];
   function buildAir(){
     if (typeof glbHas !== 'function' || !glbHas('air')) return;
-    const G = glbLoad('air'), up = nm => { const o = glbPart('air', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+    const G = glbLoad('air'), up = nm => { const o = glbPart('air', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; };
     AIRM = {plane:up('plane'), prop:up('prop'), heli:up('heli'), rotor:up('rotor'), trotor:up('trotor'), ex:(G && G.ex) || {}};
   }
   function drawAir(eye, t, H, VP){

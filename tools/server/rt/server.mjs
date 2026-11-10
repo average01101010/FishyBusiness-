@@ -1,7 +1,9 @@
 // The real-time relay of Det Store Blå (Ø16, docs/planer/sanntid-posisjoner.md S2; Jonas «kjør på» 03.11.2026: «like smooth som når
 // man spiller call of duty»). The game sends its boat's position here over a WebSocket 5 times a second under way and once a second
 // lying still (ui/10h-world.js rtSend), and the relay passes each report on, at once, to the players whose boats are in the same 10 km
-// square or one of the eight round it. Nothing is kept: no database, no file, no log of who or where. pos_put every 15 s stays as it
+// square or one of the eight round it; a boat more than 5 km off hears a boat under way once a second, not five times
+// (valg 28 A, Jonas 10.11.2026, after the load test with 2 000: docs/planer/sanntid-posisjoner.md status 10.11.2026).
+// Nothing is kept: no database, no file, no log of who or where. pos_put every 15 s stays as it
 // was for the AIS far away, the leaderboards and the games that cannot reach this.
 //
 // It runs behind Caddy on the same server (tools/server/Caddyfile: wss://detstorebla.no/rt -> 127.0.0.1:8787), started by systemd
@@ -25,7 +27,8 @@
 // The time of a report is the relay's clock: the sender's own steady clock (performance.now) laid onto it by the smallest gap seen,
 // so the network's jitter on the way up does not shake the boat; the receivers draw her half a second behind (snapshot interpolation).
 //
-// GET /stats (only straight on 127.0.0.1, not through Caddy) gives the counts for S3: connections, guests, squares, reports in and out.
+// GET /stats (only straight on 127.0.0.1, not through Caddy) gives the counts for S3: connections, guests, squares, reports in and out,
+// and the reports held back from the boats far off (thin).
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { WebSocketServer } from 'ws';
@@ -40,10 +43,15 @@ const FLUSH_MS = 100;        // the reports to one receiver go together, ten tim
 const PING_MS = 20000, IDLE_MS = 30000, AGE_MS = 12 * 3600e3;   // a quiet connection goes; every connection asks for a new ticket in 12 h
 const RATE = 12, BURST = 24; // reports a second one connection may send (it sends 5 under way), and the burst
 const QMAX = 512, BUFMAX = 256 * 1024;   // a receiver that cannot keep up misses reports; it never holds up the others
+// the far ones (valg 28 A): beyond 5 km (in 1e-4 km) a boat gets a report of hers only when a second has gone since the last that went
+// to all, or when she lies still (no speed) and sends that seldom anyway; in a tight cluster this takes the traffic down to some 45 %.
+// The far boats are drawn as before (ui/10h-world.js rtPose): half a second behind, and for the half second past the newest report she
+// goes on along her course (under 1 m off at the sharpest turn); one far report lost lets her glide onto the 15 s track and back.
+const FAR2 = 5e4 * 5e4, FAR_MS = 900, SELDOM_MS = 500;
 if (!KEYS.length){ console.error('rt: RT_SECRET is missing or not 64 hex characters (/etc/dsb-rt.env)'); process.exit(78); }   // 78: systemd does not restart it
 
 const CONNS = new Set(), BYID = new Map(), CELLS = new Map(), IPS = new Map(), DIRTY = new Set(), USED = new Map();
-const ST = {in:0, out:0, bytes:0, drop:0, rej:0, slow:0, t0:Date.now()};
+const ST = {in:0, out:0, bytes:0, drop:0, rej:0, slow:0, thin:0, t0:Date.now()};
 // a connection that breaks the rules is told why and let go within a second, whether it answers or not (ws waits 30 s by itself)
 function kick(c, code, why){ try { c.ws.close(code, why); } catch (e){} setTimeout(() => { try { c.ws.terminate(); } catch (e){} }, 1000).unref(); }
 const cellKey = (cx, cy) => (cx + 1024) * 4096 + (cy + 1024);
@@ -90,10 +98,15 @@ function onMsg(c, d, bin){
   c.oAt = now;
   let at = Math.max(now - 1000, Math.min(now, ts + c.o)); if (at <= c.at) at = Math.min(now, c.at + 1); c.at = at;
   const key = cellOf(xr, yr); if (key !== c.cell) move(c, key);
+  c.xr = xr; c.yr = yr;
   ST.in++;
+  const seldom = v === 0 && now - c.inAt >= SELDOM_MS; c.inAt = now;   // only a boat lying still: a bunch of late frames under way is not
   if (c.guest) return;   // a guest's boat goes to no one (as pos_world)
-  const e = {id:c.idb, at, st, v, xr, yr, hd};
-  near(key, r => { if (r !== c && r.id !== c.id && r.q.length < QMAX){ r.q.push(e); DIRTY.add(r); } });
+  const e = {id:c.idb, at, st, v, xr, yr, hd}, all = seldom || now - c.farAt >= FAR_MS;
+  if (all) c.farAt = now;
+  near(key, r => { if (r !== c && r.id !== c.id && r.q.length < QMAX){
+    if (!all){ const dx = r.xr - xr, dy = r.yr - yr; if (!(dx * dx + dy * dy <= FAR2)){ ST.thin++; return; } }
+    r.q.push(e); DIRTY.add(r); } });
 }
 
 function flush(){
@@ -116,7 +129,7 @@ function flush(){
 function open(ws, who, ip){
   const old = BYID.get(who.id); if (old) kick(old, 4001, 'replaced');   // one page has the game at a time; the newest wins
   const now = Date.now();
-  const c = {ws, id:who.id, idb:Buffer.from(who.id, 'hex'), guest:who.guest, ip, cell:null, q:[], gone:[], tok:BURST, tokAt:now, over:0, bad:0, o:null, oAt:now, at:0, seen:now, born:now, alive:true};
+  const c = {ws, id:who.id, idb:Buffer.from(who.id, 'hex'), guest:who.guest, ip, cell:null, q:[], gone:[], tok:BURST, tokAt:now, over:0, bad:0, o:null, oAt:now, at:0, xr:0, yr:0, inAt:0, farAt:0, seen:now, born:now, alive:true};
   CONNS.add(c); BYID.set(c.id, c); IPS.set(ip, (IPS.get(ip) || 0) + 1);
   ws.on('message', (d, bin) => { c.seen = Date.now(); onMsg(c, d, bin); });
   ws.on('pong', () => { c.alive = true; });
@@ -137,7 +150,7 @@ const server = http.createServer((req, res) => {
   if (req.url === '/stats' && !req.headers['x-forwarded-for'] && /^(127\.|::1$|::ffff:127\.)/.test(req.socket.remoteAddress || '')){
     let guests = 0; for (const c of CONNS) if (c.guest) guests++;
     res.writeHead(200, {'Content-Type':'application/json', 'Cache-Control':'no-store'});
-    return res.end(JSON.stringify({conns:CONNS.size, guests, cells:CELLS.size, in:ST.in, out:ST.out, bytes:ST.bytes, drop:ST.drop, rej:ST.rej, slow:ST.slow, up_s:Math.round((Date.now() - ST.t0) / 1000)}));
+    return res.end(JSON.stringify({conns:CONNS.size, guests, cells:CELLS.size, in:ST.in, out:ST.out, bytes:ST.bytes, drop:ST.drop, rej:ST.rej, slow:ST.slow, thin:ST.thin, up_s:Math.round((Date.now() - ST.t0) / 1000)}));
   }
   res.writeHead(404, {'Content-Type':'text/plain'}); res.end('');
 });
@@ -165,7 +178,7 @@ setInterval(() => {
   const s = now / 1000; for (const [n, e] of USED) if (e < s) USED.delete(n);
 }, PING_MS);
 // a line in the journal every ten minutes: counts only, never who or where
-setInterval(() => console.log('rt: ' + CONNS.size + ' connections, ' + CELLS.size + ' squares, ' + ST.in + ' in, ' + ST.out + ' out, ' + ST.drop + ' dropped, ' + ST.rej + ' refused'), 600000);
+setInterval(() => console.log('rt: ' + CONNS.size + ' connections, ' + CELLS.size + ' squares, ' + ST.in + ' in, ' + ST.out + ' out, ' + ST.drop + ' dropped, ' + ST.thin + ' thinned, ' + ST.rej + ' refused'), 600000);
 const stop = () => { for (const c of CONNS) c.ws.close(1012, 'restart'); server.close(); setTimeout(() => process.exit(0), 500); };
 process.on('SIGTERM', stop); process.on('SIGINT', stop);
 server.listen(PORT, HOST, () => console.log('rt: listening on ' + HOST + ':' + PORT + ', origins ' + ORIGINS.join(' ') + ', ' + KEYS.length + ' key(s)'));

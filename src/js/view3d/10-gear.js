@@ -19,22 +19,22 @@
     const bt = NB(); bt.box(0, 0, 0, 0.035, 0.03, 0.05, k(0.62, 0.42, 0.36, 0.5));
     GB = {buoy:b.mesh(), haul:h.mesh(), pot:pt.mesh(), bin:bin.mesh(), tub:tub.mesh(), float:fl.mesh(), net:net.mesh(), bait:bt.mesh(), dregg:null};
     // the blåse and the grapnel from tools/gear/blaase.py, in place of the drawn float above
-    if (typeof glbHas === 'function' && glbHas('gear-marks')){ const up = nm => { const o = glbPart('gear-marks', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+    if (typeof glbHas === 'function' && glbHas('gear-marks')){ const up = nm => { const o = glbPart('gear-marks', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; };
       GB.buoy = up('blaase') || GB.buoy; GB.dregg = up('dregg');
       // the ocean marker poles of § 68 at the ends of an autoline set (H2d, 05.11.2026): two flags and two yellow lamps at the west end,
       // one of each at the east end; the lamps' places from the extras (havlys), flashing at night
       GB.havV = up('havstang_v'); GB.havO = up('havstang_o'); const X = (glbLoad('gear-marks') || {}).ex || {}; GB.havL = X.havlys || null; GB.blink = X.blink || 22; }
     // the autoline's snood with its hook, empty and baited (tools/gear/autoline.py), drawn along the line as it comes in
-    if (typeof glbHas === 'function' && glbHas('gear-autoline')){ const up = nm => { const o = glbPart('gear-autoline', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; };
+    if (typeof glbHas === 'function' && glbHas('gear-autoline')){ const up = nm => { const o = glbPart('gear-autoline', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; };
       GB.aTom = up('tom'); GB.aEgB = up('egnet_b'); GB.aEgS = up('egnet_s'); }
     // the conical king crab pot (OB16, 09.11.2026: the square one is out of the game), the pot hauler on its davit and the live crab tank
     // from tools/gear/teine.py: the whole pot, the one on top of a stack, one nested under it and the nine under the top one of a full stack
-    if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
+    if (typeof glbHas === 'function' && glbHas('gear-pot')){ const up = nm => { const o = glbPart('gear-pot', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; }, pg = glbLoad('gear-pot');
       GB.davit = up('davit'); GB.davitSh = up('davitskive'); GB.tank = up('krabbekar'); GB.px = Object.assign({}, (pg && pg.ex) || {}, GB.px && GB.px.kon ? {kon:GB.px.kon} : {});
       GB.kk = up('kong'); GB.kktopp = up('kongtopp'); GB.kklag = up('konglag'); GB.kkfull = up('konglagfull'); }
     // the snow crab's gear from tools/gear/snoteine.py (H3d1, 07.11.2026): the conical pot with its escape opening, bait box and mark in
     // place of gear-pot's, the pot hauler and its sheave under the portal, the buoy and the marker buoy at a string's ends
-    if (typeof glbHas === 'function' && glbHas('gear-snoteine')){ const up = nm => { const o = glbPart('gear-snoteine', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, sg = glbLoad('gear-snoteine');
+    if (typeof glbHas === 'function' && glbHas('gear-snoteine')){ const up = nm => { const o = glbPart('gear-snoteine', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; }, sg = glbLoad('gear-snoteine');
       const k = up('kon'); if (k){ GB.kon = k; GB.kontopp = up('kontopp'); GB.konlag = up('konlag'); GB.konlag11 = up('konlag11'); GB.px = Object.assign({}, GB.px || {}, {kon:Object.assign({}, (GB.px || {}).kon || {}, (sg && sg.ex && sg.ex.kon) || {})}); }
       GB.snoHaul = up('haler'); GB.snoSheave = up('haler_skive'); GB.blase = up('blase'); GB.boye = up('boye'); GB.snx = (sg && sg.ex) || {}; }
   }
@@ -283,7 +283,7 @@
     if (kind in HAULM) return HAULM[kind]; HAULM[kind] = null; const type = kind === 'auto' ? 'gear-autoline' : 'haul-' + kind;
     if (typeof glbHas !== 'function' || !glbHas(type)) return null;
     const G = glbLoad(type), ex = (G && G.ex) || {}, mk = nm => { const o = glbPart(type, nm); if (!o) return null; const n = o.p.length / 3, c = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) c[i * 3 + k] = o.c[i * 4 + k]; return {pb:buf(new Float32Array(o.p)), cb:buf(c), n}; };
+      for (let i = 0; i < n; i++) for (let k = 0; k < 3; k++) c[i * 3 + k] = o.c[i * 4 + k]; return {pb:buf(asF32(o.p)), cb:buf(c), n}; };
     if (ex.axle && ex.path) HAULM[kind] = {frame:mk('frame'), sheave:mk('sheave'), stripper:mk('stripper'), ax:ex.axle, st:ex.stripper, r:ex.r, rg:ex.rg || ex.r, path:ex.path};
     return HAULM[kind];
   }

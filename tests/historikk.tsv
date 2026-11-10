@@ -1809,3 +1809,53 @@
 2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	trip2	OK	37	lite	samtidig	
 2026-11-10 09:18	ccr-869710d8-bo5iwu	450736f	docktest	OK	64	lite	samtidig	
 2026-11-10 09:19	ccr-869710d8-bo5iwu	450736f	worktest	FEIL	22	lite	alene	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-10 05:28	ccr-171f25b0-kdwftj	7020382+	selltest	LES	23	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	shoptest	OK	33	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	vesseltest	OK	19	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	fuelcal	OK	15	lite	samtidig	
+2026-11-10 05:29	ccr-171f25b0-kdwftj	7020382+	bktest	OK	8	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	selltest	LES	26	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	geartest	FEIL	41	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	kystvakttest	FEIL	9	lite	samtidig	FEIL havsjekken trenger hele kysten i tools/map/out/game (release.py og game.py)
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	guidetest	OK	9	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	trip2	OK	37	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	jigalongtest	OK	16	lite	samtidig	
+2026-11-10 05:30	ccr-171f25b0-kdwftj	7020382+	bktest	OK	8	lite	samtidig	
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	opptest	FEIL	68	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	decktest	OK	15	lite	samtidig	
+2026-11-10 05:31	ccr-171f25b0-kdwftj	7020382+	simday	LES	17	lite	samtidig	
+2026-11-10 05:32	ccr-171f25b0-kdwftj	7f46ffa	geartest	FEIL	41	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	opptest	FEIL	62	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	kystvakttest	OK	10	lite	samtidig	
+2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	guidetest	OK	9	lite	samtidig	
+2026-11-10 05:58	ccr-171f25b0-kdwftj	7f46ffa	tut	OK	1377	lite	alene	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	rulestest	OK	14	lite	samtidig	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	sonetest	OK	10	lite	samtidig	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	kystvakttest	OK	10	lite	samtidig	
+2026-11-10 06:09	ccr-171f25b0-kdwftj	0270a73	boottest	OK	31	lite	alene	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	docktest	OK	63	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	vesseltest	OK	17	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	walktest	FEIL	14	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 84
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	crewclip	FEIL	17	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	lanterntest	OK	14	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	maletest	OK	18	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	regmarktest	OK	7	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	boottest	OK	27	lite	samtidig	
+2026-11-10 06:30	ccr-07d61e23-19971d	48c325b	dbg23o	OK	52	3d	alene	
+2026-11-10 06:38	ccr-07d61e23-19971d	48c325b	unittest	FEIL	436	3d	alene	avsluttet med kode 1
+2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	yardtest	OK	738	3d	alene	
+2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	signtest	FEIL	0	3d	alene	avsluttet med kode -15
+2026-11-10 06:56	ccr-07d61e23-19971d	48c325b	f1test	OK	395	3d	alene	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	boottest	OK	33	lite	samtidig	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	vesseltest	OK	21	lite	samtidig	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	maletest	OK	18	lite	samtidig	
+2026-11-10 07:04	ccr-07d61e23-19971d	9dc7b51	dbg23o	OK	44	3d	alene	
+2026-11-10 07:11	ccr-07d61e23-19971d	9dc7b51	f1test	OK	444	3d	alene	
+2026-11-10 07:17	ccr-07d61e23-19971d	8fa561d	boottest	OK	27	lite	alene	
+2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	boottest	OK	52	lite	samtidig	
+2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	trip2	OK	53	lite	samtidig	
+2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	guidetest	OK	11	lite	samtidig	
+2026-11-10 09:21	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	FEIL	49	lite	alene	FEIL a boat hears the boats in her own 10 km square and the eight round it, not two squares on; also north of the frame (y below 0)  {"a1": ["a2a2a2a2a2"], "a2"
+2026-11-10 09:22	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	50	lite	alene	
+2026-11-10 09:32	ccr-a14b7b70-vfrww1	9ca1dcb5+	boottest	OK	19	lite	alene	
+2026-11-10 09:36	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	44	lite	alene	

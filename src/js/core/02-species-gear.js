@@ -3,7 +3,9 @@
 // from 2025 fresh landings (Troms for cod/haddock/saithe, national for the rest; cod scaled to the 2026 price level);
 // cls: size classes by round weight [from kg, minimum price NOK/kg round, label, hook premium] from Råfisklaget's minimum prices;
 // uh: kg round weight per kg gutted without head (the official conversion factors, docs/planer/havsteget-h2-autoline.md 2b: the
-// Norwegian-Russian table for 2023 for cod, haddock and Greenland halibut, the Norwegian one with J-128-2018 for the rest; H2b 05.11.2026); size: [median kg, log-spread]; minKg: minimum legal size (released below).
+// Norwegian-Russian table for 2023 for cod, haddock and Greenland halibut, the Norwegian one with J-128-2018 for the rest; H2b 05.11.2026); size: [median kg, log-spread]; minKg: minimum legal size (released below;
+// set from MIN47 below where høstingsforskriften § 47 has one, and where the rule differs by place it is the number north of 62° N outside
+// 4 nm, and minKgAt(sp, p) is the one for the place); lw: [a, b] of the length–weight curve W = a L^b g (lwKg; LW0 when not given).
 const SPECIES = {
   torsk:{no:'Torsk', en:'Cod', k:0.376, base:1.0, prod:0.6, dep:[70, 1.0], av:[1,1,1,1,1,1,1,1,1,1.1,1.1,1], skrei:[0.6,2.0,2.5,0.8,0,0,0,0,0,0,0,0.1],
     pmF:[54.3,54.5,53.8,53.5,52.4,52.8,52.9,55.3,58.9,64.1,66.5,60.4], pm:[52.6,55.0,54.5,52.9,43.7,42.4,39.9,42.0,43.3,51.5,51.7,50.9], sig:0.04, size:[2.0, 0.55], skreiSize:[5.0, 0.4], minKg:0.8, uh:1.5, liver:6.5, roe:10,
@@ -15,13 +17,13 @@ const SPECIES = {
     pmF:[21.8,22.8,22.2,21.5,22.5,23.2,24.2,23.9,24.9,25.2,23.1,22.5], pm:[21.2,22.4,21.9,20.7,17.6,18.0,17.0,19.1,22.7,24.4,26.2,26.9], sig:0.07, size:[2.0, 0.55], minKg:0.35, uh:1.35, liver:3.5, roe:7,
     cls:[[3.1, 20.51, 'Over 3,1 kg'], [1.6, 19.77, '1,6–3,1 kg'], [0.7, 18.22, '0,7–1,6 kg'], [0, 11.00, 'Under 0,7 kg']], ref:1},
   lyr:{no:'Lyr', en:'Pollack', k:0.136, base:0.12, prod:0.35, dep:[40, 0.9], av:[1.4,1.2,1.6,2.0,1.1,0.6,0.5,0.6,0.9,0.7,0.7,0.7],
-    pm:[21.4,21.4,20.7,21.4,23.6,24.3,25.0,25.0,25.0,27.9,27.9,27.1], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
+    pm:[21.4,21.4,20.7,21.4,23.6,24.3,25.0,25.0,25.0,27.9,27.9,27.1], sig:0.03, size:[2.2, 0.4], minKg:0, uh:1.4,
     cls:[[2.8, 21.43, 'Over 2,8 kg'], [1.4, 17.14, '1,4–2,8 kg'], [0, 7.14, 'Under 1,4 kg']], ref:1},
   lange:{no:'Lange', en:'Ling', k:0.342, base:0.18, prod:0.65, dep:[250, 0.7], av:[1.0,1.0,1.3,1.6,2.0,1.0,0.5,0.6,0.9,0.7,0.8,0.6],
-    pm:[12.9,12.9,13.6,13.6,15.0,14.3,13.6,12.9,13.6,14.3,15.7,15.7], sig:0.03, size:[4.0, 0.5], minKg:0.8, uh:1.4,
+    pm:[12.9,12.9,13.6,13.6,15.0,14.3,13.6,12.9,13.6,14.3,15.7,15.7], sig:0.03, size:[4.0, 0.5], minKg:0, uh:1.4,
     cls:[[2.8, 13.57, 'Over 2,8 kg'], [1.0, 8.57, '1–2,8 kg'], [0, 4.30, 'Under 1 kg']], ref:0},
   brosme:{no:'Brosme', en:'Tusk', k:0.306, base:0.2, prod:0.65, dep:[220, 0.7], av:[1.1,1.1,1.0,0.9,0.8,0.9,0.6,0.7,1.1,1.1,1.5,1.2],
-    pm:[12,12,13,12,13,12,11,12,12,12,13,14], sig:0.03, size:[2.2, 0.4], minKg:0.5, uh:1.4,
+    pm:[12,12,13,12,13,12,11,12,12,12,13,14], sig:0.03, size:[2.2, 0.4], minKg:0, uh:1.4,
     cls:[[1.4, 8.57, 'Over 1,4 kg'], [0, 2.86, 'Under 1,4 kg']], ref:0},
   uer:{no:'Uer', en:'Redfish', k:0.337, base:0.1, prod:0.7, dep:[200, 0.7], av:[0.8,0.7,1.0,0.8,0.9,1.1,0.7,1.1,1.4,1.6,1.1,0.7],
     pm:[15,14,16,18,19,15,14,17,16,17,18,17], sig:0.03, size:[1.0, 0.35], minKg:0.3, uh:1.7,
@@ -33,12 +35,12 @@ const SPECIES = {
   // docs/blakveite.md and docs/plan-blakveite.md). A fish of the shelf edge at 500-1000 m (HI): area 'egga' gives where it is along
   // the coast and its depth window (eggaArea in 03-simulation.js), stk its own stock layer, so cod fishing on the banks does not thin
   // it. Size from the coastal catch of 2026 (Råfisklaget: 4 % under 1 kg, 46 % 1-2 kg, 50 % over 2 kg: median 2 kg, spread 0.4);
-  // minKg 0.9 kg is the minimum size of 45 cm (W = 4.06e-6 L^3.245, an East Greenland curve). cls: Råfisklaget's minimum prices for
+  // minKg is the minimum size of 45 cm (lw: W = 4.06e-3 L^3.245 g, an East Greenland curve; MIN47 below). cls: Råfisklaget's minimum prices for
   // fresh round A, week 27 2026 (46/47/48 kr under 1.2, 1.2-2.4 and over 2.4 kg); pm: 61 kr/kg was the season's mean in 2026, the
   // months around it an estimate. 98 % is landed round; uh 1.3 (round per gutted kg without head) is an estimate. late: its seeds come
   // after the crab's, so no other species' hotspots, day noise and prices move
   blakveite:{no:'Blåkveite', en:'Greenland halibut', late:true, area:'egga', stk:'bstk', jig:0.03, k:0.6, base:0.5, prod:0.6, dep:[700, 0.3],
-    av:[0.8,0.8,0.8,0.9,1.1,1.25,1.25,1.15,1.0,0.9,0.85,0.8], pm:[58,58,58,58,60,61,61,62,62,60,58,58], sig:0.04, size:[2.0, 0.4], minKg:0.9, uh:1.32,
+    av:[0.8,0.8,0.8,0.9,1.1,1.25,1.25,1.15,1.0,0.9,0.85,0.8], pm:[58,58,58,58,60,61,61,62,62,60,58,58], sig:0.04, size:[2.0, 0.4], minKg:0.9, lw:[4.06e-3, 3.245], uh:1.32,
     cls:[[2.4, 48, 'Over 2,4 kg'], [1.2, 47, '1,2–2,4 kg'], [0, 46, 'Under 1,2 kg']], ref:1},
   // king crab (kongekrabbe, Paralithodes camtschaticus; the key stays 'krabbe' so saves carry over), the user 04.10.2026: «Det er
   // kongekrabbe som gjelder innen fiskerinæringen». Caught in pots and landed alive: Råfisklaget's minimum prices are for live crab
@@ -90,6 +92,34 @@ const SPECIES = {
 const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].npc), SHELL = Object.keys(SPECIES).filter(sp => SPECIES[sp].shell && !SPECIES[sp].npc),
   ALLSP = SP.filter(sp => !SPECIES[sp].late).concat(SHELL, SP.filter(sp => SPECIES[sp].late), Object.keys(SPECIES).filter(sp => SPECIES[sp].npc)),
   PLAYSP = ALLSP.filter(sp => !SPECIES[sp].npc);
+// ---- the minimum sizes (steg 59, 10.11.2026; Jonas 07.11.2026, valg 3 A: «etter § 47 med sonene»). Høstingsforskriften § 47 as read
+// on Lovdata 10.11.2026 (FOR-2021-12-23-3910, last amended FOR-2026-10-02-1999; «Det er forbudt å fiske fisk mindre enn:»), in cm: n north
+// of 62° N, s south of it, n4 north of 62° N within 4 nm of the baselines (cod, nr. 31 a ii: 55 cm; outside 44, nr. 31 a i), i12 within
+// 12 nm of the baselines anywhere (redfish, nr. 32: 32 cm within, 30 outside), kg a weight the rule names itself (halibut, nr. 9: «84 cm
+// og 7,2 kg»; 84 cm is about 6-7 kg, so the weight is the one that binds). Pollack, ling and tusk are not in the list, so they have
+// none. Saithe with purse seine (nr. 20 c) is not the player's gear. King crab (13 cm in the quota area east of 26° E) is fished in the
+// game only west of it (03e-rules.js kc2), where there is none; the snow crab has SNOC.minCW (10d-snokrabbe.js); the ocean fleet's
+// herring and mackerel (npc) keep their minKg. Inside the baselines is within 4 nm (blNm is 0 there).
+const MIN47 = {torsk:{n:44, s:40, n4:55}, hyse:{n:40, s:32}, sei:{n:45, s:40}, uer:{n:30, s:30, i12:32}, kveite:{n:84, s:84, kg:7.2}, blakveite:{n:45, s:45}};
+// length to weight, W in kg for L in cm: W = a L^b g with the species' lw, or LW0, the model's curve for the rest (0.0068 L^3.1 g, Fulton's
+// condition about 0.9-1.0 at 40-55 cm). netLen in 10-gear.js is LW0's inverse, so for every species without an lw of its own the length
+// the nets select by and the length the rule measures are the same (the Greenland halibut's nets still go by LW0, as before). The species' own curves from HI or FishBase were not reachable from the session that set this (backloggen)
+const LW0 = [0.0068, 3.1];
+function lwKg(sp, cm){ const c = (SPECIES[sp] && SPECIES[sp].lw) || LW0; return c[0] * Math.pow(cm, c[1]) / 1000; }
+// the place's zone for § 47, kept for the last position asked (the jig asks for every fish, at the same spot for a minute)
+let MZ = null;
+// (the distance to the baseline, a walk along the whole of it, only for the species whose rule asks for it: cod and redfish)
+function minZone(p){ if (!(MZ && MZ.x === p.x && MZ.y === p.y)) MZ = {x:p.x, y:p.y, n62:LL(p).lat >= 62, nm:null}; return MZ; }
+const minNm = z => z.nm != null ? z.nm : (z.nm = blNm(z));
+// the minimum size in cm for a species at a place (without one: north of 62° N outside 4 and 12 nm), 0 for none
+function min47Cm(sp, p){ const M = MIN47[sp]; if (!M) return 0; if (!p) return M.n; const z = minZone(p);
+  if (M.i12 != null && minNm(z) < 12) return M.i12; if (M.n4 != null && z.n62 && minNm(z) < 4) return M.n4; return z.n62 ? M.n : M.s; }
+// … and in kg: what weighs less is under the minimum size and goes back (the ones § 47 does not list keep SPECIES.minKg: 0, or the npc's)
+function minKgAt(sp, p){ const M = MIN47[sp]; if (!M) return SPECIES[sp].minKg || 0; return M.kg != null ? M.kg : lwKg(sp, min47Cm(sp, p)); }
+for (const sp in MIN47) SPECIES[sp].minKg = minKgAt(sp);
+// a fish that goes over the side as it comes up: under the minimum size where it was caught, a halibut over maxKg (100 kg, about 200 cm)
+// or in its closed season (§ 39, kveiteClosed in 03-simulation.js). The jig, the jig game, the gear in the sea and the first trip ask this
+function letGo(sp, w, p, H){ const s = SPECIES[sp]; return w < minKgAt(sp, p) || !!(s.maxKg && w > s.maxKg) || (sp === 'kveite' && kveiteClosed(H)); }
 // ---------- vessels, equipment, crew ----------
 // The vessels, from the open starter boat to the ocean fleet. Every rule reads these fields, never the key:
 //  len, beam, draft (m), disp (displacement loaded, tonnes; an estimate), holdCap, iceCap (kg), fuelCap (L), hp, vmax, vcruise (kn),
