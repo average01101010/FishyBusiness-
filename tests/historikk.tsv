@@ -1821,3 +1821,6 @@
 2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	kystvakttest	OK	10	lite	samtidig	
 2026-11-10 05:33	ccr-171f25b0-kdwftj	7f46ffa	guidetest	OK	9	lite	samtidig	
 2026-11-10 05:58	ccr-171f25b0-kdwftj	7f46ffa	tut	OK	1377	lite	alene	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	rulestest	OK	14	lite	samtidig	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	sonetest	OK	10	lite	samtidig	
+2026-11-10 06:06	ccr-171f25b0-kdwftj	5505aeb+	kystvakttest	OK	10	lite	samtidig	

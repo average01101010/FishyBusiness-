@@ -15,8 +15,9 @@ const KV_REF = {kvoteh:'J-187-2026 § 14', seiby:'J-187-2026 § 14', lby:'J-128-
 // 49, 50, 51, 66 and 68 were read on Lovdata 06.11.2026 (last amended FOR-2026-10-02-1999); § 14 in J-187-2026 on fiskeridir.no.
 const KVH = {visitMin:90, side:0.18, step:1.0, minFish:20, minHaul:100, keep:3};
 // § 47 and the length–weight curve are the fishing's own (MIN47, min47Cm, lwKg and minKgAt in 02-species-gear.js, steg 59, 10.11.2026), so
-// the sample measures by the same minimum sizes the catch is sorted by. The species sampled are the ones § 47 lists; ling and tusk have none
-const KV47 = MIN47;
+// the sample measures by the same minimum sizes the catch is sorted by. The species sampled are the ones § 49 counts (kvMix); ling and
+// tusk have none, and the halibut and the redfish are not in the admixture rules the sample is for
+const KV47 = {torsk:MIN47.torsk, hyse:MIN47.hyse, sei:MIN47.sei, blakveite:MIN47.blakveite};
 const kvCmKg = lwKg;
 const kvMinCm = min47Cm;
 // one fish as it comes up, counted in the haul's sample (10-gear.js landFish): [measured, under the minimum size] per species, with the
@@ -29,7 +30,8 @@ function kvHaulKeep(g, s){ if (!g || !(g.spKg || g.ms)) return; const L = S.kvHa
 // § 49: the share under the minimum size allowed in number in each catch. North of 62° N: 15 % of cod, haddock and saithe together with
 // trawl and conventional gear (fourth paragraph), 20 % when fishing haddock by line in statistics area 03 (fifth), 20 % cod when fishing
 // cod with jig and line within 4 nm of the baseline (seventh: «er det tillat å ha til sammen 20 % torsk under minstemål i antall i de
-// enkelte fangster»; read on Lovdata 10.11.2026; the haddock and saithe then by the fourth), 15 % Greenland halibut (ninth); elsewhere
+// enkelte fangster»; read on Lovdata 10.11.2026; the haddock and saithe then by the fourth on their own, an interpretation: the text does
+// not say whether the cod under the seventh still counts in the fourth's 15 % of the three together), 15 % Greenland halibut (ninth); elsewhere
 // 10 % of each species (first). Returns the worst against its limit, or null with too few fish to say
 function kvMix(ms, p, gear, most){
   const n62 = LL(p).lat >= 62, c3 = ['torsk', 'hyse', 'sei'], out = [], cnt = sp => (ms[sp] || [0, 0]);

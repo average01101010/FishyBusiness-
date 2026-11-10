@@ -102,16 +102,18 @@ const SP = Object.keys(SPECIES).filter(sp => !SPECIES[sp].shell && !SPECIES[sp].
 // herring and mackerel (npc) keep their minKg. Inside the baselines is within 4 nm (blNm is 0 there).
 const MIN47 = {torsk:{n:44, s:40, n4:55}, hyse:{n:40, s:32}, sei:{n:45, s:40}, uer:{n:30, s:30, i12:32}, kveite:{n:84, s:84, kg:7.2}, blakveite:{n:45, s:45}};
 // length to weight, W in kg for L in cm: W = a L^b g with the species' lw, or LW0, the model's curve for the rest (0.0068 L^3.1 g, Fulton's
-// condition about 0.9-1.0 at 40-55 cm). netLen in 10-gear.js is its inverse, so the length the nets select by and the length the rule
-// measures are the same. The species' own curves from HI or FishBase were not reachable from the session that set this (backloggen)
+// condition about 0.9-1.0 at 40-55 cm). netLen in 10-gear.js is LW0's inverse, so for every species without an lw of its own the length
+// the nets select by and the length the rule measures are the same (the Greenland halibut's nets still go by LW0, as before). The species' own curves from HI or FishBase were not reachable from the session that set this (backloggen)
 const LW0 = [0.0068, 3.1];
 function lwKg(sp, cm){ const c = (SPECIES[sp] && SPECIES[sp].lw) || LW0; return c[0] * Math.pow(cm, c[1]) / 1000; }
 // the place's zone for § 47, kept for the last position asked (the jig asks for every fish, at the same spot for a minute)
 let MZ = null;
-function minZone(p){ if (MZ && MZ.x === p.x && MZ.y === p.y) return MZ; return (MZ = {x:p.x, y:p.y, n62:LL(p).lat >= 62, nm:blNm(p)}); }
+// (the distance to the baseline, a walk along the whole of it, only for the species whose rule asks for it: cod and redfish)
+function minZone(p){ if (!(MZ && MZ.x === p.x && MZ.y === p.y)) MZ = {x:p.x, y:p.y, n62:LL(p).lat >= 62, nm:null}; return MZ; }
+const minNm = z => z.nm != null ? z.nm : (z.nm = blNm(z));
 // the minimum size in cm for a species at a place (without one: north of 62° N outside 4 and 12 nm), 0 for none
 function min47Cm(sp, p){ const M = MIN47[sp]; if (!M) return 0; if (!p) return M.n; const z = minZone(p);
-  if (M.i12 != null && z.nm < 12) return M.i12; if (M.n4 != null && z.n62 && z.nm < 4) return M.n4; return z.n62 ? M.n : M.s; }
+  if (M.i12 != null && minNm(z) < 12) return M.i12; if (M.n4 != null && z.n62 && minNm(z) < 4) return M.n4; return z.n62 ? M.n : M.s; }
 // … and in kg: what weighs less is under the minimum size and goes back (the ones § 47 does not list keep SPECIES.minKg: 0, or the npc's)
 function minKgAt(sp, p){ const M = MIN47[sp]; if (!M) return SPECIES[sp].minKg || 0; return M.kg != null ? M.kg : lwKg(sp, min47Cm(sp, p)); }
 for (const sp in MIN47) SPECIES[sp].minKg = minKgAt(sp);
