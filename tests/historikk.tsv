@@ -1920,3 +1920,5 @@
 2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	vesseltest	OK	21	lite	samtidig	
 2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	boottest	OK	32	lite	samtidig	
 2026-11-10 13:47	claude/ob9-hurtigsjarken-75-jtun77	8b2ca86+	savestest	OK	0	lite	samtidig	
+2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	boottest	OK	24	lite	samtidig	
+2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	jukseboot	OK	10	lite	samtidig	
