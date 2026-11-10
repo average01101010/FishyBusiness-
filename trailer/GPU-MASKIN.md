@@ -1,14 +1,20 @@
-# GPU-maskinen: slik kobler du den til
+# GPU-maskinen: steg for steg
 
-*10.11.2026. Jonas har leid en GPU-maskin (Xesktop). Claude gjør alt arbeidet på den gjennom Remote Control. Det eneste Jonas gjør, er å koble maskinen til.*
+*10.11.2026. Jonas har leid en GPU-maskin (Xesktop). Her står hva som må gjøres, i rekkefølge. Kommandoene for Windows er ikke sjekket mot Claude Codes dokumentasjon (code.claude.com/docs), så følg dokumentasjonen der hvis noe avviker.*
 
-## Krav
+## Steg 0: finn ut hva maskinen er
 
-- **Linux (Ubuntu) eller Mac.** Remote Control virker ikke fra Windows. Velg et Ubuntu-skrivebord hos Xesktop hvis det går. Er det bare Windows, si fra, så lages et eget skript for det.
-- NVIDIA-driver installert (det følger normalt med GPU-maskinen).
-- Samme Claude-konto som denne økta.
+Åpne maskinen og finn svar på tre ting:
 
-## Steg 1: lim inn dette i en terminal på maskinen
+1. **Operativsystem:** Ubuntu/Linux, Mac eller Windows.
+2. **Grafikkort:** Windows: Oppgavebehandling, fanen Ytelse, GPU. Ubuntu: skriv `nvidia-smi` i en terminal.
+3. **Kan du laste ned filer fra maskinen til nettbrettet eller mobilen?** (Xesktop har normalt en filoverføring eller du kan bruke en delt lenke.)
+
+Send svarene til Claude i chatten. Så vet vi hvilken vei under som gjelder.
+
+## Vei A: Ubuntu, Linux eller Mac (enklest, Claude jobber selv fra den gamle økta)
+
+1. Åpne en terminal og lim inn:
 
 ```bash
 sudo apt-get update && sudo apt-get install -y git curl ffmpeg python3-pip python3-venv nodejs npm
@@ -18,29 +24,60 @@ curl -fsSL https://claude.ai/install.sh | bash
 mkdir -p ~/trailer && cd ~/trailer
 ```
 
-Hvis `pip3` klager på `--break-system-packages`, kjør linja uten den.
+På Mac: bytt første linje med `brew install git ffmpeg node` og hopp over `sudo` og `--with-deps`.
 
-## Steg 2: logg inn og start Remote Control
-
-```bash
-claude
-```
-
-Følg innloggingen (samme konto). Avslutt med `/exit`. Så:
+2. Skriv `claude`, logg inn med samme konto som her, skriv `/exit`.
+3. Skriv:
 
 ```bash
 cd ~/trailer && claude remote-control
 ```
 
-La terminalen stå åpen. Skriv i chatten at maskinen er klar.
+4. La terminalen stå åpen og skriv «klar» i chatten.
 
-## Steg 3: ingenting
+Resten gjør Claude.
 
-Resten gjør Claude fra denne økta: kloner repoet til `~/trailer`, henter kartet for hele kysten, bygger spillet, filmer alle klippene i 1080×1920 med GPU, klipper musikken, setter sammen og mikser. Filene havner i `~/trailer/FishyBusiness-/trailer/rough/` og til slutt i `levering/`.
+## Vei B: Windows (egen økt på maskinen)
 
-## Musikken
+Remote Control kobler ikke Windows til den gamle økta. Da kjører Claude Code direkte på maskinen, og Jonas snakker med den økta i stedet.
 
-Låta er det eneste Claude ikke kan lage selv uten en konto. To veier, Jonas velger:
+1. Installer **Git for Windows** fra git-scm.com (alle standardvalg).
+2. Åpne PowerShell og installer Claude Code. Slik jeg kjenner det, er kommandoen under, men sjekk den mot installasjonssiden i dokumentasjonen:
 
-1. **Suno:** lag versjonene etter `audio/SUNO-PROMPT.md` (5–10 minutter) og legg filene i `trailer/audio/suno/` på GPU-maskinen, eller send dem i chatten.
-2. **ElevenLabs:** har Jonas en betalt ElevenLabs-konto, kan Claude lage musikken selv gjennom Eleven Music med en API-nøkkel som legges inn i det sikre skjemaet (aldri i chatten). Da gjør Jonas ingenting.
+```powershell
+irm https://claude.ai/install.ps1 | iex
+```
+
+3. Installer **Node.js** (LTS, nodejs.org) og **Python 3.12 eller nyere** (python.org, huk av «Add to PATH»). Installer **ffmpeg**:
+
+```powershell
+winget install --id Gyan.FFmpeg -e
+```
+
+4. Hent spillet og start:
+
+```powershell
+mkdir C:\trailer; cd C:\trailer
+git clone https://github.com/average01101010/FishyBusiness-.git
+cd FishyBusiness-
+git checkout ccr-d0173bf9-nbjlos
+claude
+```
+
+Nettleseren åpnes for innlogging til både Claude og GitHub. Bruk samme kontoer som ellers.
+
+5. Lim inn startmeldingen fra `trailer/tools/START-PA-GPU-MASKINEN.md` som første melding i den økta.
+
+## Musikken (begge veier)
+
+Låta må lages i en konto. Velg én:
+
+1. **Suno:** lag versjonene etter `trailer/audio/SUNO-PROMPT.md` og legg filene i `trailer/audio/suno/` på maskinen.
+2. **ElevenLabs:** har du en betalt konto, kan Claude lage musikken selv. Nøkkelen legges i et sikkert skjema, aldri i chatten.
+
+Uten musikk filmer vi likevel alle klippene, og klipper til musikken når den kommer.
+
+## Hva som skjer etterpå
+
+- Claude filmer klippene i 1080×1920, tar stillbilder og kontaktark, og skyver de små kontaktarkene til repoet så du ser dem.
+- Selve videofilene blir liggende på maskinen. Du henter dem derfra for å se dem på nettbrettet og skriver notater med tidskode.
