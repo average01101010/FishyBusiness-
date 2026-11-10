@@ -100,7 +100,7 @@ export default function (t){
       t.ok(d < 0.02, 'sjarkny: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
   // ---- and for the breisjark (OB11, 10.11.2026): the game's waterline is the empty boat's (WLE, 6 cm under the drawing's, which carries
   // 21.8 t), so the deck stands 0.94 m over the water; the net tub and the line tubs aft of the hatch under the roof's after end (they
-  // stood under the shelter to port), the pots' stack on the open aft deck to port of the middle ----
+  // stood under the shelter to port), the pots' stack on the open aft deck (OB16's place) by the middle ----
   { const A = anchorsOf('boat-malo36.b64'), T = K.STAB_AT.breisjark, xz = p => [p[0], p[2]], P = A.kit.pots.at;
     const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
       haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern],

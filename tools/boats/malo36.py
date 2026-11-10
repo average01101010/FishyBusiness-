@@ -1080,7 +1080,7 @@ def stamp_box(rows=4):
 # the stack of conical pots (kit.pots, OB16: a ring of 1.45 m, six high): on the open aft deck to port of the middle, aft of the casing
 # and the aft mast, clear of the transom, the bitts and the setting port's way; a hauled pot is laid, tipped and emptied on the free deck
 # in the open side aft of the bleeding tub (POT_SPOT; the game laid it 2 m aft of the hauler, on the hatch's corner)
-POTS = [(0.55, 0.35, 0.0)]   # (x, y, over the deck)
+POTS = [(0.67, -0.40, 0.0)]   # (x, y, over the deck: the place OB16 found on the deck map; potshot: to port of the middle the cells within 0.6 m of the casing are no floor, the map joins the casing to the deck)
 POT_SPOT = (3.20, -1.12)
 def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, z_deck(x) + camber(x, y) + dz) + [0.0, 6] for x, y, dz in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_deck(POT_SPOT[0]) + camber(*POT_SPOT))}}
