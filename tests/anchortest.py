@@ -22,6 +22,12 @@ JS = """(async () => {
   // (she swings round it now, core/06e-anchor.js anchorSwing: the anchor holds where it went down, and she lies within the rode's reach of it)
   R.calmHeld = b.anch && b.anch.drags === 0 && dist({x:b.anch.x, y:b.anch.y}, A0) < 1e-9 && dist(b.pos, A0) * 1000 < b.anch.rode + VESSELS[b.type].len;
   R.load = Math.round(anchorLoad(BOAT.risk[2] * 1.5, 0.3, 0.5) * 100) / 100;
+  // the anchor reads the current (curAt, F8a): the push on her has the stream of the place in it, and in the narrows of Saltstraumen at the
+  // flood it is many times what it is at the anchorage off Husøy
+  { const H = S.t / 60, F = anchorForce(b.type, spot, H), c = curAt(spot, H); R.curRead = F.cur.x === c.x && F.cur.y === c.y;
+    const c0 = P(67.2335, 14.623); let q = null, bd = 1e9; for (const s of STROM.s){ const d = Math.hypot(s.x - c0.x, s.y - c0.y); if (d < bd){ bd = d; q = s; } }
+    let Hs = H; for (let h = 0; h < 13; h += 0.1) if (curAt({x:q.x, y:q.y}, H + h).dh > curAt({x:q.x, y:q.y}, Hs).dh) Hs = H + h;
+    const Fs = anchorForce(b.type, {x:q.x, y:q.y}, Hs); R.curSalt = {husoy:Math.round(F.Fc), salt:Math.round(Fs.Fc)}; R.curSaltOk = Fs.Fc > 20 * Math.max(1, F.Fc); }
   window.windAt = () => BOAT.risk[2] * 1.25; window.hsAt = () => BOAT.risk[0] * 1.1; S.settings.autoOn = false; b.windArm = false;
   S.crew = [Object.assign(genCrew(), {bi:false, off:false})];
   let drags = 0; for (let i = 0; i < 40 * 60 && b.anch; i++){ step(); drags = b.anch ? b.anch.drags : drags; } R.dragged = drags > 0;
@@ -49,6 +55,7 @@ async def main():
         print(ok(r.get('spot') and r.get('spotOk') and r.get('spotNear')), 'ankerplass nær havna: riktig dyp og svingrom')
         print(ok(r.get('landNo')), 'ikke ankring på land')
         print(ok(r.get('dropped') and r.get('calmHeld')), 'i stille vær holder ankeret i 12 timer')
+        print(ok(r.get('curRead') and r.get('curSaltOk')), 'ankeret leser strømmen (curAt): i Saltstraumen på flo er strømmens trykk mange ganger det ved Husøy', r.get('curSalt'))
         print(ok(r.get('dragged')), 'i vær over båtens grenser slepper ankeret')
         print(ok(r.get('gale')), 'i kuling hiver båten og går til kai')
         print(ok(r.get('alarmRang')), 'ankeralarmen ringer ved slep')
