@@ -315,11 +315,20 @@
   // ---------- the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
   // bench, the line tubs and the net in its tub, the crates, each a part of its own GLB (src/data/deck-*.b64) drawn like the fish; a part
   // the page does not have leaves the old block in its place ----------
-  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall', mob:'deck-mob'}, KITM = {}, KITX = {};
+  const KITF = {fish:'deck-fish', rig:'deck-rig', crane:'deck-crane', safe:'deck-safety', anchor:'deck-anchor', pause:'deck-pause', pall:'deck-pall', mob:'deck-mob', upg:'deck-upg'}, KITM = {}, KITX = {};
   function kit(f, nm){ const k = f + ':' + nm; if (k in KITM) return KITM[k]; let m = null; const t = KITF[f];
     if (typeof glbHas === 'function' && glbHas(t)){ const o = glbPart(t, nm); if (o) m = {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}; }
     return KITM[k] = m; }
   function kitX(f){ if (f in KITX) return KITX[f]; const t = KITF[f], G = typeof glbHas === 'function' && glbHas(t) ? glbLoad(t) : null; return KITX[f] = (G && G.ex) || {}; }
+  // the knife and the gaff of the tier the boat has (OPP5 of docs/planer/oppgraderinger.md; tools/deck/oppgr.py kniv2, kniv3, hott2, hott3;
+  // tier 1 is fisk.py's kniv and hott, and that is what everyone has where the upgrades are not in the page). own: a hand on your own
+  // boat (drawWorker's P.bare); the plants' workers keep the plain ones
+  const tierKit = (k, nm, own) => { const lv = own && typeof equipLv === 'function' && S.boat ? equipLv(k) : 1; return (lv > 1 && kit('upg', nm + lv)) || kit('fish', nm); };
+  const knifeKit = own => tierKit('kniv', 'kniv', own), gaffKit = own => tierKit('hott', 'hott', own);
+  // the steel glove of the knife's third tier («sløyekniver i ett stykke og stålhansker»): on the hand that holds the fish while the other
+  // cuts (bleeding and gutting), on your own boat
+  const GLOVE_T = {gut:1, gutw:1, bleed:1, bleedst:1, cut:1};   // (gutw: the crew's gutting at the table, 20-trawl-seine.js)
+  const steelGlove = (st, own) => !!(own && GLOVE_T[st.task] && typeof equipLv === 'function' && S.boat && equipLv('kniv') >= 3);
   // a rigid tool held at A with its head (the part's -z) along dir
   // ---- the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
   // and where each grip holds its thing (the worker GLB's extras 'hands': per grip and side, the point and the axis in the hand's frame) ----
@@ -329,11 +338,13 @@
   // mirrored onto the new left (hR_))
   let HANDM = null;
   const mirX = o => { if (!o) return o; const p = o.p.slice(), n = o.n.slice(); for (let i = 0; i < p.length; i += 3){ p[i] = -p[i]; n[i] = -n[i]; } return {p, n, c:o.c}; };
+  // (the left hand's own mesh in steel, drawn a little larger over the hand: the mesh glove, steelGlove above)
+  const steelOf = o => { if (!o) return null; const c = Float32Array.from(asF32(o.c)); for (let i = 0; i < c.length; i += 3){ const l = 0.62 + 0.5 * (0.3 * c[i] + 0.6 * c[i + 1] + 0.1 * c[i + 2]); c[i] = 0.60 * l; c[i + 1] = 0.63 * l; c[i + 2] = 0.66 * l; } return upA({p:o.p, n:o.n, c}); };
   function handMeshes(){
     if (HANDM !== null) return HANDM; const raw = n => wkPart(n, 'crew'), g = n => { const o = raw(n); return o ? upA(o) : null; }, GR = ['relax', 'flat', 'grip', 'hold', 'pinch', 'hook'];
-    const Rm = {}, Lm = {}; for (const k of GR){ Rm[k] = g('hL_' + k); Lm[k] = g('hR_' + k); }
+    const Rm = {}, Lm = {}, St = {}; for (const k of GR){ Rm[k] = g('hL_' + k); Lm[k] = g('hR_' + k); St[k] = steelOf(raw('hR_' + k)); }
     const ex = (glbLoad('worker') || {}).ex || {}, grip = {}; for (const k in ex.hands || {}){ const s = ex.hands[k]; grip[k] = {R:s.L, L:s.R}; }
-    return HANDM = Rm.relax && Lm.relax && ex.hands ? {R:Rm, L:Lm, lo:g('hand_lo') || g('hand'), tape:upA(mirX(raw('tape_L'))), grip} : false;
+    return HANDM = Rm.relax && Lm.relax && ex.hands ? {R:Rm, L:Lm, lo:g('hand_lo') || g('hand'), tape:upA(mirX(raw('tape_L'))), steel:St, grip} : false;
   }
   const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], mul3 = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
   const dot3 = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], crs3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
@@ -507,7 +518,7 @@
   // 02-species-gear.js lsaOf), the radar that is bought, the freight on deck in crates and the crane. Nothing is drawn where the
   // model has no places or the kit is not in the page.
   const RAFTSZ = c => c <= 4 ? 4 : c <= 6 ? 6 : 12, RADS = {a:0, t:0}, BOYEQ = {}, BOYET = {k:'', top:null, bot:null, cv:null};
-  const KST = {raft:0, buoys:0, text:0, smoke:0, mob:0, ladder:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, pots:0, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
+  const KST = {raft:0, buoys:0, text:0, smoke:0, mob:0, ladder:0, radar:0, cargo:0, crane:null, tubs:0, htub:0, pots:0, stern:null, gaff:null, vt:null, n:0};   // what the last frame drew of the kit, for which boat, and how many frames (the tests read it)
   // the buoy's lettering: the boat's name over the ring and her home port under it, in black block capitals (§ 43)
   function boyeCanvas(txt){
     // (1024 × 116: the strip's own shape on the ring, 0.57 m of arc by 0.065 m, so the letters are not stretched)
@@ -792,7 +803,7 @@
     const tSide = tx < 0 ? 1 : -1, kTop = XF[big ? 'benk_top' : 'bord_top'], topY = own && W.top != null ? W.top + 0.02 : KB && kTop != null ? d.y + kTop + 0.02 : d.y + 0.885;
     const potRig = b.rig === 'teiner' && !(typeof deckPending === 'function' && deckPending() > 0.5);
     KST.tank = null; if (!G.hand){ if (!GB) buildGear(); drawCrabTank(BMrel, G, d, Bm / 2, G.hauler || [Bm / 2 * 0.92, d.y + 1, d.z - 1.3]); nSetup(VP); }
-    drawRigRest(BMrel, G, d); drawHaulRest(BMrel, G, d, VP); nSetup(VP);
+    drawRigRest(BMrel, G, d); drawHaulRest(BMrel, G, d, VP); drawUpg(BMrel, G, d, VP); nSetup(VP);
     KST.raft = KST.buoys = KST.text = KST.smoke = KST.mob = KST.ladder = KST.radar = KST.cargo = 0; KST.crane = null; KST.vt = vt; KST.n++;
     drawSafety(BMrel, G, VP, t); const lifted = drawCrane(BMrel, G, VP, t, d); drawCargo(BMrel, G, lifted ? 1 : 0);
     if (!potRig){

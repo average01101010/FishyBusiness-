@@ -374,6 +374,7 @@
         Fr = handFrame(nrm3(sub3(wr, el)), sp, i ? -1 : 1);
         drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS[sd][sp.g] || HMS[sd].relax, handMtx(Fr, wr));
         if (i && st.tape && HMS.tape) drawN(HMS.tape, handMtx(Fr, wr));   // (a cut hand taped, the four hours it is slow)
+        if (i && HMS.steel && steelGlove(st, !!P.bare)){ const sm = HMS.steel[sp.g] || HMS.steel.relax; if (sm){ drawN(sm, chain(handMtx(Fr, wr), M4.S(1.07))); DKN.glove = (DKN.glove || 0) + 1; } }   // (the steel glove, OPP5)
         GP[i] = add3(wr, inFrame(Fr, gd.at)); GA[i] = inFrame(Fr, gd.ax); return; }
       const hd2 = hands[i], el = elOf(hd2);
       if (K){ const f = [hd2[0] - el[0], hd2[1] - el[1], hd2[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1;
@@ -394,7 +395,7 @@
     if (st.task === 'sit'){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
     if (st.task === 'snus' && st.can && !st.gone){ const C = pz('snus'); if (C) drawN(C, atH([GP[1][0], GP[1][1] + 0.01, GP[1][2]])); }
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
-    const kn = kit('fish', 'kniv'), fishAt = (P, sp, kg, rz) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(rz || 0), M4.S(sc))); };
+    const kn = knifeKit(!!P.bare), fishAt = (P, sp, kg, rz) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(rz || 0), M4.S(sc))); };
     if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
     // (sharpening: the knife in the right hand, its blade drawn across the steel)
     if (kn && st.task === 'knife') drawN(kn, toolM(GP[0], st.kd || [-R[0], 0.15, -R[1]]));
@@ -405,8 +406,8 @@
       else if (u < 0.6){ const v = (u - 0.2) / 0.4, hz = Math.hypot(E[0] - A0[0], E[2] - A0[2]) || 1, vr = clamp(Math.hypot(st.Rl[0] - A0[0], st.Rl[2] - A0[2]) / hz, 0.15, 0.85);
         const arc = Math.max(0.3, (st.Rl[1] + 0.3 - (A0[1] + (E[1] - A0[1]) * vr)) / (4 * vr * (1 - vr)));
         fishAt([A0[0] + (E[0] - A0[0]) * v, A0[1] + (E[1] - A0[1]) * v + arc * 4 * v * (1 - v), A0[2] + (E[2] - A0[2]) * v], f.sp, f.kg, v * 9); }
-      else if (!f.splashed){ f.splashed = true; ancSplash(E[0] + eye[0], E[1] + eye[1], E[2] + eye[2], 22, false); } }
-    if (st.task === 'gaff' && st.gaff){ const hm = kit('fish', 'hott'); if (hm) drawN(hm, toolM(st.gaff.g, st.gaff.n)); else drawN(PM.broom, limbM(hands[1], st.gaff.tip, 0.018));
+      else if (!f.splashed){ f.splashed = true; ancSplash(E[0] + eye[0], E[1] + eye[1], E[2] + eye[2], 22, false); DKN.splash = (DKN.splash || 0) + 1; } }   // (the splash where it meets the sea; counted for the tests, oppshot)
+    if (st.task === 'gaff' && st.gaff){ const hm = gaffKit(!!P.bare); if (hm) drawN(hm, toolM(st.gaff.g, st.gaff.n)); else drawN(PM.broom, limbM(hands[1], st.gaff.tip, 0.018));
       const e = st.ev; if (e && st.gaffFish) fishAt(st.gaff.tip, e.sp, e.kg, Math.sin(T * 9) * 0.4);
       if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2); } }
     if (st.task === 'bleed' && st.ev){ const e = st.ev; if (st.held) fishAt(st.held, e.sp, e.kg, Math.sin(T * 7) * 0.15 * (st.knife ? 0.3 : 1));

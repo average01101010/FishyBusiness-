@@ -12,7 +12,7 @@ def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False, default=str)[:400]) if extra != '' else ''))
 
 
-ST = "(() => { const k = G3._debug.kitStat; return {trying:G3.trying, hoist:G3.hoisting, painting:G3.painting, haul:k.haul || null, tank:!!k.tank, radar:k.radar, n:k.n, eq:JSON.parse(JSON.stringify(S.equip)), cash:S.cash}; })()"
+ST = "(() => { const k = G3._debug.kitStat; return {trying:G3.trying, hoist:G3.hoisting, painting:G3.painting, haul:k.haul || null, stern:k.stern ? k.stern.k : null, tank:!!k.tank, radar:k.radar, n:k.n, eq:JSON.parse(JSON.stringify(S.equip)), cash:S.cash}; })()"
 
 
 async def frames(pg, n=3):
@@ -29,8 +29,8 @@ async def main():
         pg = await br.new_page(viewport={'width': 1280, 'height': 800}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
-        # a snekke at the quay in Finnsnes, where the tackle shop is; rigged for jigging, no hauler aboard
-        await pg.evaluate("""(() => { S.cash = 400000; S.boat.type = 'snekke'; applyVessel(); S.boat.status = 'port'; const q = portById('finnsnes'); S.boat.port = 'finnsnes'; S.boat.pos = {x:q.p.x, y:q.p.y}; S.boat.berth = 'main';
+        # a fast sjark at the quay in Finnsnes, where the tackle shop is; rigged for jigging, no hauler aboard
+        await pg.evaluate("""(() => { S.cash = 400000; S.boat.type = 'hurtigsjark'; applyVessel();   /* (a boat that takes pots, so the crab tank can be tried: the snekke has not since OB1, 09.11.2026) */ S.boat.status = 'port'; const q = portById('finnsnes'); S.boat.port = 'finnsnes'; S.boat.pos = {x:q.p.x, y:q.p.y}; S.boat.berth = 'main';
           for (const k in EQUIP) if (/haler$|krabbekar/.test(k)) S.equip[k] = EQUIP[k].multi ? 0 : false; S.jobs = []; S.boat.rig = 'juksa'; renderActs(); })()""")
         check(await pg.evaluate("!!portServices(portById(S.boat.port), berthKind(S.boat)).butikk"), 'båten ligger ved utstyrsbutikken i Finnsnes')
         await pg.evaluate("G3.show(true)"); await frames(pg)
@@ -38,7 +38,8 @@ async def main():
         check(s0['haul'] is None and not s0['tank'], 'uten haler og krabbekar står ingen av dem på dekk', s0)
         await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_selector('#drawerBody #ic-garnhaler')
         btns = await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=eqtry]')].map(b => b.dataset.k)")
-        check({'garnhaler', 'linehaler', 'teinehaler', 'jukse', 'krabbekar'} <= set(btns), 'kortene for halerne, juksamaskinen og krabbekaret har «Prøv på båten»', btns)
+        check({'garnhaler', 'linehaler', 'jukse'} <= set(btns), 'kortene for halerne og juksamaskinen har «Prøv på båten»', btns)
+        check({'linesetter', 'garnrenne'} <= set(btns) and s0['stern'] is None, 'kortene for linesetteren og garnrenna har «Prøv på båten» (OPP5), og ingenting står over hekken', [btns, s0['stern']])
 
         # trying the net hauler: drawn on the boat, the camera round her, nothing paid, the equipment untouched
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=garnhaler]').click()"); await frames(pg)
@@ -63,6 +64,19 @@ async def main():
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=krabbekar]').click()"); await frames(pg)
         o = await pg.evaluate(ST)
         check(o['trying'] is None and not o['painting'] and not o['tank'], '«Ta av igjen» tar det av og kameraet tilbake', o)
+        # the line setter and the net chute over the stern (OPP5): tried one at a time, nothing paid, off again
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=linesetter]').click()"); await frames(pg)
+        ls = await pg.evaluate(ST)
+        check(ls['trying'] == 'linesetter' and ls['painting'] and ls['stern'] == 'linesetter' and not ls['eq'].get('linesetter') and ls['cash'] == s0['cash'], 'linesetteren prøves: den står over hekken, ingenting er betalt', ls)
+        await pg.wait_for_timeout(1500); await pg.screenshot(path='try_linesetter_liggende.png')
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=garnrenne]').click()"); await frames(pg)
+        gr = await pg.evaluate(ST)
+        check(gr['trying'] == 'garnrenne' and gr['stern'] == 'garnrenne' and not gr['eq'].get('garnrenne') and gr['cash'] == s0['cash'], 'garnrenna prøves i stedet (én om gangen) og står over hekken', gr)
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await frames(pg); await pg.wait_for_timeout(1500)
+        await pg.screenshot(path='try_garnrenne_staaende.png'); await pg.set_viewport_size({'width': 1280, 'height': 800})
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=garnrenne]').click()"); await frames(pg)
+        g0 = await pg.evaluate(ST)
+        check(g0['trying'] is None and g0['stern'] is None, '«Ta av igjen» tar renna av hekken', g0)
         # leaving the page takes it off too
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=linehaler]').click()"); await frames(pg)
         a = await pg.evaluate("G3.trying")

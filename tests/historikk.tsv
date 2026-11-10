@@ -1991,3 +1991,11 @@
 2026-11-10 18:05	ccr-da624f01-5lbjel	d661847	vectest	OK	606	3d	alene	
 2026-11-10 18:06	ccr-da624f01-5lbjel	d661847	dbg23o	OK	43	3d	alene	
 2026-11-10 19:42	ccr-e7277295-e9i00p	b4e649a8	boottest	OK	24	lite	alene	
+2026-11-10 22:16	claude/opp5-modellene-vkbwvw	8d88198+	vesseltest	OK	19	lite	samtidig	
+2026-11-10 22:16	claude/opp5-modellene-vkbwvw	8d88198+	geartest	FEIL	34	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-10 22:17	claude/opp5-modellene-vkbwvw	8d88198+	opptest	FEIL	54	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-10 22:17	claude/opp5-modellene-vkbwvw	8d88198+	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-10 22:22	claude/opp5-modellene-vkbwvw	8d88198+	trytest	FEIL	344	3d	alene	avsluttet med kode 1
+2026-11-10 22:23	claude/opp5-modellene-vkbwvw	8d88198+	dbg23o	OK	43	3d	alene	
+2026-11-10 22:39	claude/opp5-modellene-vkbwvw	8d88198+	deckshot	FEIL	935	3d	alene	FEIL kranen er foldet sammen på sjøen og folder seg ut for å laste ved kaia  {'kai': {'kyst15': {'sl': 0, 'a1': -0.25580000000003655, 'a2': -3.0718, 'e': 0, 'jo
+2026-11-10 22:54	claude/opp5-modellene-vkbwvw	8d88198+	trytest	FEIL	900	3d	alene	gikk ut på tid

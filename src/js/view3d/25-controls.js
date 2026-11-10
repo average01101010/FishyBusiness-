@@ -31,7 +31,7 @@
   // (HOIST, 10 s) and those waiting to be fitted are drawn on your own boat as if they were hers, the camera turning round her as in the
   // paint shop. Drawing only: frame() (24-cinema.js) swaps S.equip for the frame and puts it back before anything else runs
   let TRYK = null, HOIST = null, HOISTTM = 0;
-  const TRY3D = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar', 'radar', 'radarA'];
+  const TRY3D = ['linehaler', 'garnhaler', 'teinehaler', 'jukse', 'krabbekar', 'radar', 'radarA', 'linesetter', 'garnrenne'];
   function tryView(k){ k = TRY3D.includes(k) ? k : null; if (k === TRYK) return; TRYK = k; if (k) paintView(true); else if (!HOIST) paintView(false); }
   function hoist(k){ if (!TRY3D.includes(k) || !S.boat || S.boat.status !== 'port') return; HOIST = {k, t0:performance.now()}; paintView(true); clearTimeout(HOISTTM);
     HOISTTM = setTimeout(() => { HOIST = null; if (!TRYK) paintView(false); }, 10000); }

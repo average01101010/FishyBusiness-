@@ -478,6 +478,60 @@
     const at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
     litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick;
   }
+  // ---- the upgrades one can see on deck (OPP5 of docs/planer/oppgraderinger.md, 10.11.2026; tools/deck/oppgr.py) ----
+  // Over the stern, at the model's place kit.setter [x, y, z, ry, mag] (the middle of the rail's top at its outer edge, the part's +z out
+  // over the sea; mag 0: no room on her deck for the magazine; vessel3d.js KITADD until the models carry the place themselves): the line
+  // setter, with its tub magazine from the second tier, or the net chute. One place, so one of them: the one tried on or being lifted
+  // aboard, else the one for her rig, else the one she has. Nothing changes what they do (10-gear.js setterX)
+  function sternPick(){ const eq = S.equip || {}, vt = vtype(), own = k => !!eq[k] && equipFits(k, vt), rig = typeof rigOf === 'function' ? rigOf() : S.boat.rig;
+    const hot = [TRYK, HOIST && HOIST.k].find(k => k === 'linesetter' || k === 'garnrenne');
+    return hot || (rig === 'garn' && own('garnrenne') ? 'garnrenne' : rig === 'line' && own('linesetter') ? 'linesetter' : own('linesetter') ? 'linesetter' : own('garnrenne') ? 'garnrenne' : null); }
+  const UPGC = {};
+  // the deck under the magazine's legs (a ray down the model, vessel3d.js deckMap): how long the legs are, their top at ly over the place
+  function magLegs(vt, G, P, X){ const key = vt + ':leg'; if (key in UPGC) return UPGC[key]; const a = P[3] || 0, lz = X.leg[2], x = P[0] + Math.sin(a) * lz, z = P[2] + Math.cos(a) * lz, y = P[1] + X.leg[1];
+    const M = typeof deckMap === 'function' ? deckMap(vt) : null, u = M ? M.hit([x, y - 0.05, z], [x, y - 2.05, z]) : -1; return UPGC[key] = u >= 0 ? 0.05 + u * 2 : Math.max(0.2, y - (G.deck || {y:G.gw}).y); }
+  function drawStern(BMrel, G, VP){ KST.stern = null; const P = G.kit && G.kit.setter, k = P ? sternPick() : null; if (!k) return;
+    const vt = vtype(), M = chain(BMrel, M4.T(P[0], P[1] + liftY(k), P[2]), M4.RY(P[3] || 0));
+    if (k === 'garnrenne'){ const m = kit('upg', 'renne'); if (!m) return; nSetup(VP); drawN(m, M); KST.stern = {k}; return; }
+    const m = kit('upg', 'setter'); if (!m) return; nSetup(VP); drawN(m, M); let mag = false;
+    if (equipLv('linesetterLv') >= 2 && P[4] !== 0 && !/^(garn|teiner)$/.test((typeof rigOf === 'function' ? rigOf() : S.boat.rig) || '')){   // (the magazine is stowed while she is rigged for nets or pots: their gear stands where it does)
+      const mm = kit('upg', 'setter_mag'), ml = kit('upg', 'setter_ben'), X = kitX('upg').mag;
+      if (mm && X){ drawN(mm, M); mag = true; if (ml) drawN(ml, chain(M, M4.T(0, X.leg[1], 0), new Float32Array([1,0,0,0, 0,magLegs(vt, G, P, X),0,0, 0,0,1,0, 0,0,0,1]), M4.T(0, -X.leg[1], 0))); } }
+    KST.stern = {k, mag}; }
+  // The gaff of the tier she has, leaning at the rail by the hauling place while nobody holds it (the gaffer has it in his hands while the
+  // gear is hauled): its butt on the deck a step in from the bulwark, its shaft against the rail's inner edge and the hook out over the
+  // rail. The rail is read off the model with rays (deckMap): from outside the hauler's side in, the first thing 0.4 to 1.5 m over the
+  // deck and where its top ends inboard, 0.45 to 2.4 m aft or forward of the hauler, where the deck inside it is clear
+  function gaffRail(vt, G){ const key = vt + ':gaff'; if (key in UPGC) return UPGC[key]; let out = null; const M = typeof deckMap === 'function' ? deckMap(vt) : null, H = G.hauler || (SKA && SKA.haul);
+    if (M && H){ const s = H[0] < 0 ? -1 : 1, dy = (G.deck || {y:G.gw}).y, top = dy + 1.6, yAt = (x, z) => { const u = M.hit([x, top, z], [x, top - 2.4, z]); return u < 0 ? null : top - u * 2.4; };
+      // (what the kit stands on deck and the model does not have: the bleeding tub, the gutting table, the ice box, the fish tubs and the
+      // rig's place; the gaff stands clear of them)
+      const W = G.work || null, d0 = G.deck || {y:G.gw, z:2}, ib = typeof iceBoxAt === 'function' ? iceBoxAt(vt) : null, K = G.kit || {};
+      const obs = [[W ? W.tub[0] : G.beam / 2 - 0.62, W ? W.tub[2] : d0.z + 0.35], [W ? W.table[0] : -(G.beam / 2 - 0.42), W ? W.table[2] : d0.z]];
+      if (ib && ib.at) obs.push([ib.at[0], ib.at[2]]); for (const q of K.tubs || []) obs.push([q[0], q[2]]); for (const q of [K.garn, K.stamps]) if (q && q.at) obs.push([q.at[0], q.at[2]]);
+      for (const dz of [0.75, -0.75, 1.15, -1.15, 1.55, -1.55, 1.95, -1.95, 2.4, -2.4, 0.45, -0.45]){ const z = H[2] + dz; let x0 = null, x1 = null, ty = 0;   // (x1: the rail's outer edge found, x0: its inner)
+        for (let x = Math.abs(H[0]) + 0.6; x > 0.15; x -= 0.02){ const y = yAt(s * x, z);
+          if (x1 == null){ if (y != null && y > dy + 0.4){ x1 = x; ty = y; } continue; }
+          if (y == null || y < ty - 0.12){ x0 = x + 0.02; break; } ty = Math.max(ty, y); }
+        if (x0 == null || ty > dy + 1.5) continue;
+        // (the deck where the butt stands, 0.26 m inside the rail, and nothing standing on it there or between it and the rail)
+        const yd = yAt(s * (x0 - 0.26), z), ym = yAt(s * (x0 - 0.13), z); if (yd == null || Math.abs(yd - dy) > 0.25 || ym == null || ym > yd + 0.12) continue;
+        if (ty - yd < 0.3) continue;
+        // (clear of the kit: 0.9 m along the rail or 1 m across from each thing; on the small open boats nothing is that clear, and the
+        // gaff stands where it is clearest)
+        const cl = Math.min(...obs.map(q => Math.max(Math.abs(q[1] - z) / 0.9, Math.abs(q[0] - s * (x0 - 0.2)) / 1.0)));
+        if (!out || cl > out.cl) out = {s, x:x0, top:ty, deck:yd, z, cl}; if (cl >= 1) break; } }
+    return UPGC[key] = out; }
+  function drawGaffRest(BMrel, G, VP){ KST.gaff = null; const b = S.boat, vt = vtype(); if (!equipFits('hott', vt) || (b.gop && b.status === 'fishing')) return;
+    const lv = equipLv('hott'), nm = lv > 1 ? 'hott' + lv : 'hott', m = gaffKit(true), R = m ? gaffRail(vt, G) : null; if (!R) return;
+    const X = kitX('upg'), bl = (X.hott_butt || {})[nm] || 0.25, B = [R.s * (R.x - 0.21), R.deck + 0.02, R.z], T = [R.s * (R.x - 0.018), R.top + 0.018, R.z];
+    let n = [T[0] - B[0], T[1] - B[1], T[2] - B[2]]; const nl = Math.hypot(n[0], n[1], n[2]) || 1; n = [n[0] / nl, n[1] / nl, n[2] / nl];
+    // (the part's head is its -z and the hook drops to its -y: the head along the shaft, the hook's drop outboard, square to the shaft)
+    const k = R.s * n[0]; let o = [R.s - n[0] * k, -n[1] * k, -n[2] * k]; const ol = Math.hypot(o[0], o[1], o[2]) || 1; o = [o[0] / ol, o[1] / ol, o[2] / ol];
+    const zc = [-n[0], -n[1], -n[2]], yc = [-o[0], -o[1], -o[2]], xc = [yc[1] * zc[2] - yc[2] * zc[1], yc[2] * zc[0] - yc[0] * zc[2], yc[0] * zc[1] - yc[1] * zc[0]];
+    const O = [B[0] + n[0] * bl, B[1] + n[1] * bl, B[2] + n[2] * bl];
+    nSetup(VP); drawN(m, chain(BMrel, new Float32Array([xc[0], xc[1], xc[2], 0, yc[0], yc[1], yc[2], 0, zc[0], zc[1], zc[2], 0, O[0], O[1], O[2], 1]))); KST.gaff = {lv, at:[Math.round(O[0] * 100) / 100, Math.round(O[1] * 100) / 100, Math.round(O[2] * 100) / 100]}; }
+  function drawUpg(BMrel, G, d, VP){ drawStern(BMrel, G, VP); drawGaffRest(BMrel, G, VP); }
   // the snow crab vessel's pot hauler (tools/gear/snoteine.py haler) on its pedestal at anchors.hauler, its sheave at its axle turned a
   // the line runs (a: the sheave's angle); it is hers from the yard, so it stands whether she is rigged or not (H3d1)
   function snoHauler(BMrel, G, VP, a){ const H = G.hauler, X = (GB.snx || {}).haler || {}, ax = X.axle || [0.1, 0.95, 0];

@@ -518,6 +518,23 @@ const LADDERS = {
   kyst15:[{c:[[1.55, -0.45, 7.555], [1.55, -0.52, 7.555]], a:[1, 0, 0], w:0.4, r:[-0.45], ext:1},
     {c:[[1.55, 3.21, 7.555], [1.55, 3.75, 7.555], [1.55, 3.75, 7.47], [1.55, 3.37, 7.47]], a:[1, 0, 0], w:0.4, r:[]}]};
 for (const k in LADDERS){ (KITADD[k] = KITADD[k] || {}).ladder = LADDERS[k]; }
+// ---- the place over the stern for the line setter or the net chute (OPP5, 10.11.2026; tools/deck/oppgr.py): [x, y, z, ry, mag], the
+// middle of the stern rail's top at its outer edge, the part's +z turned ry from dead aft (to starboard positive), and mag 0 where the
+// deck inside it has no room for the setter's tub magazine (the open boats, whose fish tubs stand there). Measured on each model with
+// rays down the stern (the rail's top and where it ends aft), clear of the ladder, the outboard and what stands on the rail; until the
+// models carry kit.setter themselves. Only the place: the setter and the chute are the gear's own models
+const SETTERS = {
+  skiff:[0.62, 0.84, 2.40, 0, 0],            // (the transom to starboard of the outboard, out over the pod)
+  trebat:[0.48, 0.91, 3.00, Math.PI / 4, 0], // (double-ended: over the starboard quarter)
+  snekke:[0.01, 1.04, 3.95, 0, 0],           // (between the pulpit rail to port and the flagstaff to starboard: the net chute just fits)
+  plastsjark:[0, 1.18, 4.72, 0, 1],
+  sjark:[-0.85, 1.78, 5.10, 0, 1],          // (on the guard rail over the low bulwark: its panels lean in from the bulwark's top)
+  hurtigsjark:[-0.75, 1.93, 5.50, 0, 1],
+  sjarkny:[-0.75, 2.36, 5.50, 0, 1],
+  breisjark:[-0.9, 2.38, 5.60, 0, 0],        // (the port corner of her high stern, outside the net drum; the drum's frame stands where the magazine would)
+  // (the 15 m boat has none: her stern is the shelter deck's closed wall. She gets the place with the opening in the stern, OB12)
+  kyst21:[0.86, 2.27, 10.30, 0.4, 1]};      // (the round stern, to starboard of the staff)
+for (const k in SETTERS){ (KITADD[k] = KITADD[k] || {}).setter = SETTERS[k]; }
 // the old rescue boat in each hull (the game's frame: [x0, x1, y0, y1, z0, z1]): the triangles wholly inside are left out of your own
 // boat (the boat, her cradle or platform and the old davit; tests/unit/vessel3d.test.mjs counts them and checks that no deck goes)
 const MOBCUT = {autoliner:[[-4.4, -2.7, 6.24, 7.9, 12.95, 17.85], [-4.8, -3.6, 6.24, 9.8, 12.2, 15.25]],

@@ -341,7 +341,7 @@
         else { A.fly.push({sp:f.sp, kg:f.kg, a:ch, u:0}); A.bl = null; A.nb = (A.nb || 0) + 1; } }   // (nb: bled, for the tests)
       const arm = (Sw, Hw, sd, sp) => armTo(BMrel, SK.wk, Sw, Hw, sd, sp);
       const gR = arm(shR, hR, 1, kDir ? {g:'grip', a:kDir, tool:true} : null); arm(shL, hL, -1);
-      if (kDir && gR){ const kn = kit('fish', 'kniv'); if (kn) drawN(kn, chain(BMrel, toolM(gR, kDir))); }
+      if (kDir && gR){ const kn = knifeKit(true); if (kn) drawN(kn, chain(BMrel, toolM(gR, kDir))); }
       if (DKBLOOD.length) dkBloodDraw(VP);
     }
     // the hand aboard at the gear (above): seated by the tubs feeding the gear out over the quarter while she sets; standing by the tub at

@@ -173,6 +173,16 @@ for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/1
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 
 
+# OPP5 (10.11.2026): the upgrades one can see on deck (tools/deck/oppgr.py -> deck-upg): oppshot draws the setter, the magazine, the net
+# chute and the gaff on every coastal boat (3D, alone); the places and the parts' measures in tests/unit/oppmodell.test.mjs. On lines of
+# their own, so a merge with the sessions that add to the lists above does not meet them
+D3 += ['oppshot']
+LONG['oppshot'] = 3600; LONG['trytest'] = 1800   # (trytest on the fast sjark, which takes pots: 14 checks in 900 s under SwiftShader, 10.11.2026)
+COVER['tests/oppshot.py'] = ['oppshot']; COVER['tests/unit/oppmodell.test.mjs'] = []; COVER['tools/deck/oppgr.py'] = []; COVER['src/data/deck-upg.b64'] = ['oppshot']
+for _f in ('src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['oppshot', 'trytest']))
+COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/view3d/25-controls.js', []) + ['trytest']))
+
+
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
     files = sorted(set(git('diff', '--name-only', 'HEAD') + git('ls-files', '--others', '--exclude-standard')))
