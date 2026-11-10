@@ -51,6 +51,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 ## Øktene som kjører
 
 - `ccr-1ddbadbc-g5fj4d`: steg 74 L1a testutgaven (Jonas' økt, 10.11.2026 21:06). Eier `tools/server/Caddyfile`, `tools/server/setup.sh`, `build.mjs`, `src/data/cloud.json`, `ui/10f-cloud.js`, `ui/10p-install.js`, `.github/workflows/deploy.yml`, `pwa.yml`, ny `tests/kanaltest.py`, `tests/run.py` (`LITE`, `COVER`). `.github/` røres ikke av andre økter mens den går.
+- `ccr-adaac755-n9bghe`: steg 40 U2-9 måling etter og regresjon (Jonas' økt, 10.11.2026 20:13). Eier `docs/planer/ui-2/kartlegging.md` og `docs/planer/ui-2-staaende.md`; én oppføring i `ui/phone/07-patch.js` (deles og flettes), ingen annen kode. Kjører full regresjon på arbeidsgrenen slik den sto ved a349ef21.
 
 ## Valg som venter på Jonas
 
@@ -81,7 +82,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 36 | **Ø15 N7** Modellene (ferjer, kystrute, hurtigbåt, lasteskip, tankskip, cruise, Kystvakt, fiskebåter etter redskap, fritidsbåt, seilbåt) | NPC-flåten | venter på N4 | steg 35 | ny `tools/ships/`, `src/data/*.b64`, `vessel3d.js`, `view3d/20-trawl-seine.js` (ikke `tools/boats/`, Ø4) | `npc-flaaten.md` N7 |
 | 37 | **Ø15 N5** Skipsfarten (HAIS) | NPC-flåten | venter på N7, Ø13 | steg 36, 33 | ny `tools/npc/ais.py`, workflow, vec-pakkene (`lanes`), `core/05-vessels.js` | `npc-flaaten.md` N5 |
 | 38 | **Ø15 N6** Fritidsbåter om sommeren | NPC-flåten | venter på N5 | steg 37 | `core/05-vessels.js`, `tools/map/npc.py` | `npc-flaaten.md` N6 |
-| 40 | **U2-9** Måling etter og regresjon | UI 2 | klar (U2-8 rullet ut i b0f7599a; hel startmelding i `start/`) | steg 39 | ingen | `ui-2-staaende.md` kap. 5 |
+| 40 | **U2-9** Måling etter og regresjon | UI 2 | pågår (Jonas' økt, gren `ccr-adaac755-n9bghe`, 10.11.2026 20:13; U2-8 rullet ut i b0f7599a; hel startmelding i `start/`) | steg 39 | `ui/phone/07-patch.js` (én oppføring, deles og flettes), `docs/planer/ui-2/kartlegging.md`, `docs/planer/ui-2-staaende.md` | `ui-2-staaende.md` kap. 5 |
 | 42 | **Ø9 F8b** Strømmen i manøvreringen, ankeret og bølgene | Fysikk 4 | klar (F8a rullet ut 10.11.2026; hel startmelding i `start/42.md`) | steg 41 | `core/16b-dyn.js`, `06e-anchor.js`, `view3d/14-sea.js`, `01-shaders.js` | `fysikk-4-sjo-og-skrog.md` F8 |
 | 43 | **Ø9 F6, F7** FFT-sjø (måles først) og brottsjø med konsekvens. F6 er planlagt i `bolgene.md` som B1–B5 (FFT-fliser i en worker, skumtoppene fra flisa, den samme sjøen for alle; Jonas' valg 09.11.2026 V1 A, V2 A, V3 A uten synlig overgang mellom privat og felles sjø): B1 er F6s måling, og B5 avgjør om flisa blir standard | Fysikk 4 | venter på F8b (og «kjør på» for B1) | steg 42 | `core/03b-sea.js`, `view3d/14-sea.js`, `view3d/01-shaders.js`, ny `view3d/14b-fft.js`, `core/16c-hull.js`, `14-crewlife.js` | `fysikk-4-sjo-og-skrog.md` F6, F7; `bolgene.md` |
 | 44 | **Ø5 rest c** M7/M8-resten (sponsede design, flagget som vaier, CSV-importen, `anchors.sign` med `python3.11`) | Butikkene | klar (steg 66 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 66 (ferdig) | | `tools/harbour/butikk.py`, `steder.py`, `view3d/06`, `17`, `ui/10j-paint.js`, `core/09k-market.js`, `tools/broker/` | `butikker-og-sponsorer.md`, backloggen 10.7 |
