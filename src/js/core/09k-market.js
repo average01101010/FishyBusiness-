@@ -122,6 +122,101 @@ function mbQuickSell(vid){
     'Sold the «' + nm + '» to Kystmegleren for ' + mktKr(val) + '.' + (paid ? ' ' + mktKr(paid) + ' went to pay off loans.' : '') + (hands ? ' Her crew went ashore.' : ''));
   return null;
 }
+// ---- the quota market in the save (KM3 of docs/planer/kvotemarkedet.md; the goods and the rules are core/03i-kvotemarked.js, the server
+// supabase/migrations/20261108230000_kvotemarked.sql, the calls ui/10t-kvotemarked.js, the pages ui/phone/04b-kvotemarked.js) ----
+// S.mkt.km = {to:{listing:{vid, how, t}} the boat the buyer chose when he bid, out:{key:{lid, until, kind, id, start, buynow, hours, value}}
+//   what this company has out, wait:{row:{listing, item, price}} a structure quota won that no boat can take yet, wish, told}
+function kmState(){ const K = mktState().km || (mktState().km = {}); K.to = K.to || {}; K.out = K.out || {}; K.wait = K.wait || {}; return K; }
+// the seller's key for a good (km_put's vid, at most 16 characters, the same for as long as the good lies out): the boat's id for her
+// right, the boat's id, «/» and the structure quota's quota length and first year (never its index in l.st, which moves when one runs
+// out), and «f», the quota length and the hour it became free for a right without a boat
+const kmFreeKey = f => 'f' + f.id + '.' + Math.round(f.H0 || 0).toString(36);
+function kmKey(src){
+  if (!src) return null; if (src.free != null){ const f = kmFreeList()[src.free]; return f ? kmFreeKey(f) : null; }
+  const v = src.v, l = v && vget(v, 'lic'); if (!l) return null; if (src.kind === 'right') return v.id;
+  const s = src.kind === 'struct' && (l.st || [])[src.i]; return s ? v.id + '/' + s.id + '.' + s.from : null;
+}
+// the good behind a key (item: what the server holds, to tell two structure quotas of the same length and year apart), or null
+function kmSrcOf(key, item){
+  key = String(key || ''); if (!key) return null;
+  if (key[0] === 'f'){ const i = kmFreeList().findIndex(f => kmFreeKey(f) === key); return i < 0 ? null : {free:i}; }
+  const [vid, sk] = key.split('/'), v = vesselById(vid), l = v && vget(v, 'lic'); if (!l || !HJ[l.id]) return null;
+  if (sk == null) return {v, kind:'right'};
+  const st = l.st || [], hit = (s, exact) => s.id + '.' + s.from === sk && (!exact || !item || (Math.abs(s.kf - item.kf) < 1e-6 && s.until === item.until));
+  let i = st.findIndex(s => hit(s, true)); if (i < 0) i = st.findIndex(s => hit(s, false)); return i < 0 ? null : {v, kind:'struct', i};
+}
+// why it cannot be put out: what lies out already is locked, a boat with her plan running would only try to leave, then kmWhy's reasons
+function kmPutWhy(src, H){
+  const key = kmKey(src); if (key && kmState().out[key]) return 'listed';
+  const w = kmWhy(src, H); if (w) return w;
+  if (src.v && mbOpsOn(src.v)) return 'ops';
+  if (S.fleet.filter(mbSale).length + Object.keys(kmState().out).filter(k => k[0] === 'f').length >= MB.max) return 'many';
+  return null;
+}
+// the lock while a good lies out (the server said yes, r = {id, until}): the boat lies in port with b.sale, as a boat at Kystmegleren does
+// (kmWhy and the yard read it), so nothing more is fished on the right after it was packed; a free right is locked by its key alone
+function kmLock(src, r, o){
+  const key = kmKey(src), K = kmState(); if (!key) return null;
+  const until = Date.parse(r.until) || Date.now() + o.hours * 3600e3, it = o.item || {};
+  K.out[key] = {lid:r.id, until, kind:it.kind, id:it.id, start:o.start, buynow:o.buynow || null, hours:o.hours, value:o.value};
+  if (src.v){ const b = vget(src.v, 'boat'); b.sale = {lid:r.id, until, start:o.start, buynow:o.buynow || null, hours:o.hours, port:b.port, value:o.value, km:it.kind, key}; }
+  return key;
+}
+function kmUnlock(key, lid){
+  const K = kmState(); key = String(key || ''); if (K.out[key] && (lid == null || K.out[key].lid === lid || K.out[key].lid == null)) delete K.out[key];
+  const v = key[0] === 'f' ? null : vesselById(key.split('/')[0]), b = v && vget(v, 'boat');
+  if (b && b.sale && b.sale.km && (b.sale.key === key || !b.sale.key) && (lid == null || b.sale.lid === lid || b.sale.lid == null)) delete b.sale;
+}
+// a quota row of the ledger (lk right or struct). The buyer: bid and buy bind the money, release gives it back; the good itself (kind right
+// or struct, kr 0) goes to kmApply with the boat he chose when he bid. A right that can no longer be put where it was to go becomes a
+// free right in the company (two years); a structure quota no boat can take is held, not marked done, until he chooses one that can
+// ('wait'). The seller: paid is the price less 5 % and the good leaves (kmOut), back unlocks it. The game calls neither regTake nor
+// regFree: the server moves the place in the register (broker_reg_move). The loans are not paid down: the boat is still the company's
+function mbKm(r, d, k, M){
+  const K = kmState(), nm = String(d.name || '').replace(/[<>&"]/g, '').slice(0, 40), item = d.item && HJ[d.item.id] ? d.item : null;
+  if (r.kind === 'bid'){ book('baat', k, 'Bud i Kvotemarkedet: ' + nm, 'Bid in the quota market: ' + nm); M.mb.held[r.listing] = {kr:-k, name:d.name || '', km:1}; }
+  else if (r.kind === 'buy') book('baat', k, 'Kjøpt i Kvotemarkedet: ' + nm, 'Bought in the quota market: ' + nm);
+  else if (r.kind === 'release'){
+    book('baat', k, 'Bud tilbake fra Kvotemarkedet: ' + nm, 'Bid back from the quota market: ' + nm); delete M.mb.held[r.listing];
+    if (d.why === 'outbid') msg('Kvotemarkedet', 'Du er overbydd på ' + nm + ' med ' + mktKr(d.by) + '. Budet ditt på ' + mktKr(k) + ' er tilbake på konto.', 'You have been outbid on ' + nm + ' with ' + mktKr(d.by) + '. Your bid of ' + mktKr(k) + ' is back in your account.');
+    else if (d.why === 'bought') msg('Kvotemarkedet', nm + ' ble kjøpt for «Kjøp nå». Budet ditt på ' + mktKr(k) + ' er tilbake på konto.', nm + ' was bought at the buy-now price. Your bid of ' + mktKr(k) + ' is back in your account.');
+    else msg('Kvotemarkedet', 'Salget av ' + nm + ' er avlyst. Budet ditt på ' + mktKr(k) + ' er tilbake på konto.', 'The sale of ' + nm + ' is called off. Your bid of ' + mktKr(k) + ' is back in your account.');
+  }
+  else if (r.kind === 'right' || r.kind === 'struct'){
+    delete M.mb.held[r.listing]; if (!item) return null;
+    const to = K.to[r.listing], v = to && vesselById(to.vid), fits = !!v && !kmBuyWhy(item, {v, how:to.how}, null);
+    let got = fits ? kmApply(item, {v, how:to.how}) : null, how = fits && got != null ? to.how : null;
+    if (got == null && item.kind === 'right'){
+      got = kmApply(item, {how:'free'}); how = 'free';
+      msg('Fiskeridirektoratet', 'Hjemmelen ' + HJ[item.id].hl + ' kunne ikke settes på båten du valgte. Den står som ledig hjemmel i rederiet i to år: sett den på en båt, legg den ut eller selg den til registeret, i Kvote → Marked → Dine.',
+        'The ' + HJ[item.id].hl + ' quota length right could not be put on the boat you chose. It stands as a free right in the company for two years: put it on a boat, put it out or sell it to the register, in Quota → Market → Yours.');
+    }
+    if (got == null){
+      if (!K.wait[r.id]) msg('Kvotemarkedet', 'Du kjøpte ' + nm + ' for ' + mktKr(d.price) + ', men båten du valgte, kan ikke ta strukturkvoten nå. Velg en båt i samme gruppe med plass under kvotetaket, i Kvote → Marked → Dine.',
+        'You bought ' + nm + ' for ' + mktKr(d.price) + ', but the boat you chose cannot take the structure quota now. Choose a boat in the same group with room under the quota cap, in Quota → Market → Yours.');
+      K.wait[r.id] = {listing:r.listing, item, price:d.price || 0}; return 'wait';
+    }
+    delete K.to[r.listing]; delete K.wait[r.id];
+    const nb = how === 'free' ? '' : '«' + vget(v, 'boatName') + '»';
+    log('Kjøpte ' + nm + ' i Kvotemarkedet for ' + mktKr(d.price) + (how === 'put' ? ', satt på ' + nb + '.' : how === 'struct' ? ', strukturert inn på ' + nb + '.' : ', ledig hjemmel i rederiet.'),
+      'Bought ' + nm + ' in the quota market for ' + mktKr(d.price) + (how === 'put' ? ', put on the ' + nb + '.' : how === 'struct' ? ', structured onto the ' + nb + '.' : ', a free right in the company.'));
+    M.km.got = {listing:r.listing, how, vid:how === 'free' ? null : v.id, t:S.t};
+  }
+  else if (r.kind === 'paid'){
+    const src = kmSrcOf(d.vid, item), o = src ? kmOut(src) : null; kmUnlock(d.vid, r.listing);
+    book('baat', k, 'Solgt i Kvotemarkedet: ' + nm, 'Sold in the quota market: ' + nm);
+    msg('Kvotemarkedet', nm + ' er solgt for ' + mktKr(d.price) + '. Du fikk ' + mktKr(k) + ' etter 5 % til markedet. Fiskeridirektoratet har godkjent overføringen.' + (o && o.two ? ' Den andre kvoten fra den særlige ordningen falt bort.' : ''),
+      nm + ' is sold for ' + mktKr(d.price) + '. You got ' + mktKr(k) + ' after 5 % to the market. The Directorate of Fisheries has approved the transfer.' + (o && o.two ? ' The second quota from the special scheme fell away.' : ''));
+    log('Solgte ' + nm + ' i Kvotemarkedet for ' + mktKr(d.price) + '.' + (o ? '' : ' Varen fantes ikke i denne lagringen.'), 'Sold ' + nm + ' in the quota market for ' + mktKr(d.price) + '.' + (o ? '' : ' The good was not in this save.'));
+  }
+  else if (r.kind === 'back'){
+    kmUnlock(d.vid, r.listing);
+    if (d.why !== 'cancelled') msg('Kvotemarkedet', nm + ' ble ikke solgt, og er din igjen.', nm + ' was not sold, and is yours again.');
+  }
+  // (the choices of boat for sales long over are forgotten)
+  const T = Object.keys(K.to); if (T.length > 40) for (const q of T.slice(0, T.length - 40)) delete K.to[q];
+  return null;
+}
 // ---- the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
 // the ids also when broker_done did not reach the server). Returns the ids applied. Rows: bid and buy (kr < 0, money bound), release
 // (a bid back: outbid, bought by another, or the sale called off), boat (the boat won, at the yard where she lay, or sailed to the yard
@@ -132,6 +227,8 @@ function mbApply(rows){
     if (!r || r.id == null) continue;
     if (D.includes(r.id)){ out.push(r.id); continue; }
     const d = r.data || {}, nm = '«' + String(d.name || '').replace(/[<>&"]/g, '').slice(0, 30) + '»', k = Math.round(+r.kr || 0);
+    // the quota market's rows (KM3): looked at before the boats' logic, so a paid or a back for a right never touches the boat with the same id
+    if (r.lk === 'right' || r.lk === 'struct'){ if (mbKm(r, d, k, M) === 'wait') continue; D.push(r.id); out.push(r.id); continue; }
     if (r.kind === 'bid'){ book('baat', k, 'Bud hos Kystmegleren på ' + nm, 'Bid at Kystmegleren on ' + nm); M.mb.held[r.listing] = {kr:-k, name:d.name || ''}; }
     else if (r.kind === 'buy') book('baat', k, 'Kjøpt hos Kystmegleren: ' + nm, 'Bought at Kystmegleren: ' + nm);
     else if (r.kind === 'release'){

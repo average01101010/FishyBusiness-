@@ -4,6 +4,9 @@
 // core/09k-market.js mbApply and marked done (broker_done): at the start, each minute while the company has a boat out or a bid held,
 // every five minutes else, and right after each call that binds or frees money. Without the cloud (the tests, the artifact, offline) the
 // broker has no boats, and the page says the yard sells new ones at full price (B6). Guests may look; the server lets only accounts trade.
+// KM3 (docs/planer/kvotemarkedet.md): the ledger is asked for with {km:true}, so the rows for rights and structure quotas come too (the
+// server holds them back from a page that does not ask, an old one in the cache, which would mark them done unused); mbApply sends them
+// to the quota market's side (mbKm). The quota market's own calls are ui/10t-kvotemarked.js (KMC).
 var MBC = (() => {
   const L = (no, en) => typeof S !== 'undefined' && S && S.lang === 'en' ? en : no;
   const st = {data:null, at:0, skew:0, busy:false, sync:false, off:false, err:null, tm:0, last:0, wish:0};
@@ -43,10 +46,11 @@ var MBC = (() => {
   async function sync(){
     if (!on() || st.sync) return 0; st.sync = true; st.last = Date.now();
     try {
-      const rows = await cloudRpc('broker_pending', {}); if (!Array.isArray(rows) || !rows.length) return 0;
+      const rows = await cloudRpc('broker_pending', {km:true}); if (!Array.isArray(rows) || !rows.length) return 0;
       const before = S.fleet.length, ids = mbApply(rows), got = mktState().mb.got;
       if (ids.length){ save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); try { await cloudRpc('broker_done', {ids}); } catch (e){ console.error(e); } }
       if (got && S.fleet.length > before && typeof BUYM !== 'undefined'){ const v = vesselById(got.vid); mktState().mb.got = null; if (v) setTimeout(() => BUYM.show(v), 60); }
+      if (typeof KMC !== 'undefined') KMC.after();   // (KM3: the quota market's list follows what was settled)
       if (typeof refreshAll === 'function') refreshAll();
       return ids.length;
     } catch (e){ if (/ 404$/.test(String(e && e.message))) st.off = true; return 0; }
@@ -58,7 +62,7 @@ var MBC = (() => {
     for (const x of hits.slice(0, 3)){ seen.push(x.id); msg('Kystmegleren', 'En båt som passer ønsket ditt, er til salgs: «' + x.name + '» ved verftet i ' + mbPlace(portById(x.port)) + '.', 'A boat that suits your wish is for sale: «' + x.name + '» at the yard in ' + mbPlace(portById(x.port)) + '.'); }
     if (seen.length > 60) seen.splice(0, seen.length - 60);
   }
-  const busy = () => S.fleet.some(v => mbSale(v)) || Object.keys(mktState().mb.held).length > 0;
+  const busy = () => S.fleet.some(v => mbSale(v)) || Object.keys(mktState().mb.held).length > 0 || Object.keys(kmState().out).length > 0 || Object.keys(kmState().wait).length > 0;
   function tick(){
     if (typeof document !== 'undefined' && document.hidden) return;
     if (on() && Date.now() - st.last > (busy() ? 60000 : 300000)) sync();
@@ -102,6 +106,6 @@ var MBC = (() => {
   const byId = id => list().find(x => String(x.id) === String(id)) || null;
   const mine = () => (st.data && st.data.mine) || [];
   const mineOf = vid => mine().find(m => m.vid === vid && m.state === 'open') || null;
-  const bids = () => (st.data && st.data.bids) || [];
+  const bids = () => ((st.data && st.data.bids) || []).filter(b => !b.kind || b.kind === 'boat');   // (the server gives the bids of every kind; the quota market shows its own)
   return {on, guest, list, byId, mine, mineOf, bids, sold:() => (st.data && st.data.sold) || [], load, sync, put, bid, buy, cancel, wish, start, left, why, redraw, get loaded(){ return !!st.data; }, get err(){ return st.err; }, _st:st};
 })();
