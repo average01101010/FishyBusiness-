@@ -1,0 +1,43 @@
+{
+ "name": "Den nye hurtigsjarken drar line i frisk bris utenfor Vardø",
+ "when": "2026-10-01T10:00:00Z",
+ "boat": "sjarkny",
+ "place": {
+  "lat": 70.395,
+  "lon": 31.1,
+  "clear": 0.8
+ },
+ "heading": "upwind",
+ "speed": 0,
+ "quality": "ultra",
+ "pre": 1,
+ "dur": 3.5,
+ "op": {
+  "do": "trekk",
+  "fish": "line",
+  "crew": 3,
+  "wait": 10
+ },
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": -78,
+    "pitch": 20,
+    "dist": 12.5,
+    "fov": 46,
+    "aim": 1.0
+   },
+   {
+    "t": 3.5,
+    "yaw": -66,
+    "pitch": 19,
+    "dist": 12,
+    "fov": 46,
+    "aim": 1.0
+   }
+  ]
+ },
+ "notes": "Klipp 22,36-24,87 s, tekst «Varanger». Line dras med startHaul. 12 m/s (weather.py); kulingen på 16,8 m/s ga flate skumflak. Andre forsøk: ingen folk å se fra 22° (styrhuset dekket dem); nå 40° ovenfra. Tredje forsøk: ingen ved haleren på kyst21 (kjent feil i backloggen, haleren står over 1,2 m-grensen i deckcrew.js); nå den nye hurtigsjarken (sjarkny)."
+}

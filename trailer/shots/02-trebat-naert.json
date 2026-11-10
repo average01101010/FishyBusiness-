@@ -1,0 +1,36 @@
+{
+ "name": "Trebåten nært: det grå treverket, motorkassa og røyken fra semidieselen",
+ "when": "2026-10-16T07:40:00Z",
+ "boat": "trebat",
+ "pos": {
+  "x": 867.0337,
+  "y": 365.8022
+ },
+ "heading": 34,
+ "speed": 3,
+ "quality": "ultra",
+ "pre": 2,
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 122,
+    "pitch": 11,
+    "dist": 12,
+    "fov": 42,
+    "aim": 0.9
+   },
+   {
+    "t": 3.5,
+    "yaw": 86,
+    "pitch": 9,
+    "dist": 11.5,
+    "fov": 42,
+    "aim": 0.9
+   }
+  ]
+ },
+ "notes": "Klipp 4,92-7,41 s. Samme morgen og samme løp som klipp 3, 150 m før spennet under Gisundbrua. Første forsøk 10.11 (8-9 m, 9-14° ned) kuttet båten i begge ender, og sjøen nærmest ble en blek flate; nå lavere og 13-14 m ut, med soloppgangen bak Finnsnes. Tredje forsøk: i 6 knop lå en glatt, lys flate i vannet langs skroget (bølgen og skumkragen rundt skroget, sett lavt fra siden); nå 3 knop, litt høyere kamera."
+}

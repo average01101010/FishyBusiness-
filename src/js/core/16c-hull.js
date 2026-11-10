@@ -77,8 +77,11 @@ function hullMinute(){
     if (!d.rise){ d.rise = true; log(vt + 'Vann i båten! Lensepumpa klarer ikke å holde unna (' + Math.round(Q) + ' liter i minuttet inn, ' + Math.round(P) + ' ut). Motorrommet er fullt om rundt ' + left + ' min. Gå til nærmeste verft eller ring etter redningsskøyta.', vt + 'Water in the boat! The bilge pump cannot keep up (' + Math.round(Q) + ' litres a minute in, ' + Math.round(P) + ' out). The engine room is full in about ' + left + ' min. Make for the nearest yard or call the rescue boat.', 'nav'); }
     if (hooks.onBilge && (S.t - (d.alarmT || -1e9)) >= 3) { d.alarmT = S.t; hooks.onBilge('rise', b, left); }
   } else if (d.rise && d.w < w0) d.rise = false;
-  if (d.w >= lim && !d.flood){
-    d.flood = true; hullSync(b);
+  // the engine room full under way stops the engine and calls the rescue boat also when it filled before: while she cast off (a hole the
+  // pump is far behind fills her in that minute), lay aground or adrift, or after a flooding not mended. The flag alone let her go on
+  // with the engine room full and the alarm at every departure (tilbakemelding #117)
+  if (d.w >= lim){
+    if (!d.flood){ d.flood = true; hullSync(b); }
     if (['sailing', 'fishing', 'idle', 'engine'].includes(b.status)){ if (S.plan) S.plan = null; log(vt + 'Motorrommet er fullt av vann, og motoren stoppet. Mannskapet ringte etter redningsskøyta.', vt + 'The engine room is full of water, and the engine stopped. The crew called the rescue boat.', 'nav'); if (hooks.onBilge) hooks.onBilge('flood', b); rescue(true); }
   }
 }

@@ -1,0 +1,37 @@
+{
+ "name": "Havsjarken på feltet i Vestfjorden under Lofotfisket",
+ "when": "2027-02-04T10:45:00Z",
+ "boat": "sjark",
+ "place": {
+  "lat": 68.135,
+  "lon": 14.23,
+  "clear": 0.4
+ },
+ "heading": "coast",
+ "speed": 6,
+ "pre": 2,
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 276,
+    "pitch": 3,
+    "dist": 70,
+    "fov": 40,
+    "aim": 10
+   },
+   {
+    "t": 3.5,
+    "yaw": 286,
+    "pitch": 4,
+    "dist": 66,
+    "fov": 40,
+    "aim": 10
+   }
+  ]
+ },
+ "notes": "Klipp 14,93-17,41 s. Første forsøk 10.11 midt i Vestfjorden med tele: Lofotveggen 10 km unna ble uskarpe hvite klumper, og 1,3 m dønning ble jevne striper. Nå nær land ved Henningsvær, vind 3,5 m/s, vanlig brennvidde.",
+ "quality": "ultra"
+}

@@ -630,12 +630,51 @@ function sjvChartSvg(u, bp){
     txt({x:w.p.x + 20 * u, y:w.p.y + 16 * u}, 'CPA ' + w.cpa + ' m · ' + sjvWhen(w), 'lbl-ais pl', 10.5 * u, 'stroke-width="' + (3 * u) + '" style="fill:' + c + '"') + '</g>';
 }
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
+// the stream through the sounds (Fysikk 4 F8a, 10.11.2026; core/06e-anchor.js stromSum, src/data/strom.json): an arrow where a sound's own
+// stream runs at half a knot or more, along each sound in the view (the coastal current and the tide's stream along the coast, together
+// about half a knot at most, get none), longer and warmer the stronger it runs (blue under 2 knots, orange to 4, red over), the knots
+// by the middle one when near. Only when the chart is under 60 km tall. Each sound's arrows are made once for the zoom, five game
+// minutes and the chart's colours, and kept: a pan or the view following the boat only joins what is made (renderDyn runs five times a
+// second)
+const CURARR = {k:'', made:new Map(), kn:0.5, px:46, maxKm:60, near:15, boxes:[]};
+function curArrowsOf(q, u, H, lab, halo){
+  const KN = 3600 / 1852, at = {x:q.x, y:q.y}, dh = (tideH(H + 0.25, at) - tideH(H - 0.25, at)) / 0.5, g = []; let L0 = null;
+  const step = Math.max(0.8 * q.w / 1000, CURARR.px * u), n = Math.ceil(1.3 * Math.max(q.ro, q.ri) / step);
+  for (let k = -n; k <= n; k++){
+    const sAl = k * step; if (sAl < -1.3 * q.ro || sAl > 1.3 * q.ri) continue;
+    const p = {x:q.x + q.ax * sAl, y:q.y + q.ay * sAl}, c = stromSum(p, dh), v = Math.hypot(c.x, c.y) * KN; if (v < CURARR.kn) continue;
+    const L = (12 + 4 * Math.min(v, 8)) * u, hd = 4.2 * u, col = v < 2 ? '#2f7fd0' : v < 4 ? '#e8891c' : '#d23b2e', dg = Math.atan2(c.x, -c.y) * 180 / Math.PI;
+    const d = 'M0,' + (L / 2).toFixed(4) + 'V' + (-L / 2 + hd).toFixed(4) + 'M' + (-hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4) + 'L0,' + (-L / 2).toFixed(4) + 'L' + (hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4);
+    g.push('<g transform="translate(' + p.x.toFixed(3) + ' ' + p.y.toFixed(3) + ') rotate(' + dg.toFixed(1) + ')"><path d="' + d + '" fill="none" stroke="' + halo + '" stroke-opacity=".85" stroke-width="' + (3.6 * u) + '" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (1.8 * u) + '" stroke-linecap="round" stroke-linejoin="round"/></g>');
+    if (lab && k === 0){ const t = fmt(v, 1) + ' kn', sz = 10.5 * u, x = p.x + 9 * u, y = p.y + 4 * u; L0 = {svg:txt({x, y}, t, 'lbl-ground', sz, 'stroke-width="' + (2.5 * u) + '"'), box:[x - 2 * u, y - sz * 0.8, x + t.length * sz * 0.56, y + sz * 0.3]}; }
+  }
+  return {svg:g.join(''), lab:L0};
+}
+function curArrowsSvg(u){
+  CURARR.boxes = []; if (typeof STROM === 'undefined' || !STROM.s.length) return '';
+  const vr = svg.getBoundingClientRect(), hh = MAP_H / view.z / 2, ww = hh * (vr.width / (vr.height || 1)); if (2 * hh > CURARR.maxKm) return '';
+  const plot = svg.classList.contains('plot'), key = view.z.toFixed(4) + ':' + Math.floor(S.t / 5) + ':' + S.lang + ':' + plot;
+  if (CURARR.k !== key){ CURARR.k = key; CURARR.made.clear(); }
+  const vx0 = view.cx - ww, vx1 = view.cx + ww, vy0 = view.cy - hh, vy1 = view.cy + hh, H = Math.floor(S.t / 5) * 5 / 60, lab = 2 * hh < CURARR.near, C = CUR.cell, out = [], seen = new Set();
+  // (the knots only where they cover no name of the static layer; the AIS names keep clear of them, renderDyn)
+  const over = b => LBLBOX.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  const halo = plot ? '#0b1a2a' : '#fff';   // (the dark plotter: a dark edge, as its other marks)
+  for (let i = Math.floor(vx0 / C); i <= Math.floor(vx1 / C); i++) for (let j = Math.floor(vy0 / C); j <= Math.floor(vy1 / C); j++) for (const q of STROM.idx.get(i * 100000 + j) || []){
+    if (seen.has(q)) continue; seen.add(q);
+    const R = 1.3 * Math.max(q.ro, q.ri) + 0.1; if (q.x + R < vx0 || q.x - R > vx1 || q.y + R < vy0 || q.y - R > vy1) continue;
+    let m = CURARR.made.get(q); if (m === undefined){ m = curArrowsOf(q, u, H, lab, halo); CURARR.made.set(q, m); }
+    if (m.svg) out.push(m.svg);
+    if (m.lab && !over(m.lab.box) && !CURARR.boxes.some(t => m.lab.box[0] < t[2] && m.lab.box[2] > t[0] && m.lab.box[1] < t[3] && m.lab.box[3] > t[1])){ out.push(m.lab.svg); CURARR.boxes.push(m.lab.box); }
+  }
+  return out.join('');
+}
 function renderDyn(){
   // the boat where she is between the simulation's minutes (livePose), so she moves on the chart at every redraw (5 a second), not
   // every game minute (Jonas 06.10.2026: «posisjonen til eget fartøy oppdateres oftere i kartplotteren»)
   const u = 1 / view.px, b = S.boat, g = [], lp = b.status === 'port' ? {p:quayPos(b), hd:b.heading} : livePose(), bp = lp.p;
   if (S.t >= markEnd){ markEnd = Infinity; scheduleStatic(); }
   renderRouteTools();
+  g.push(curArrowsSvg(u));   // the stream through the sounds, under everything else that moves
   // trail
   if (b.status !== 'port' && S.trail.length){
     const pts = S.trail.concat([bp]);
@@ -673,7 +712,7 @@ function renderDyn(){
   if (AISSEL){ const tr = aisTrack(AISSEL, Hn); if (tr.length > 1) g.push('<polyline points="' + tr.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="aistrack" stroke-width="' + (1.6 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>'); }
   // names (Jonas 02.11.2026, choice 1A): the fishing boats' only while they are out, not in port, and only when the chart is under 4 km
   // tall; the other players' always; none on top of another or of the static layer's labels (LBLBOX), the players' first
-  const lblBox = [], coastLbl = MAP_H / view.z < 4, lblOver = b => LBLBOX.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]) || lblBox.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  const lblBox = CURARR.boxes.slice(), coastLbl = MAP_H / view.z < 4, lblOver = b => LBLBOX.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]) || lblBox.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
   // the other players last, on top, with a ring, a larger mark and their names from further out (they come first among the names)
   const aisOrd = AISNOW.filter(n => !n.player).concat(AISNOW.filter(n => n.player)), plLbl = [], aisLbl = [];
   for (const n of aisOrd){

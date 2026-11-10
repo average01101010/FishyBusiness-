@@ -1,0 +1,16 @@
+{
+ "name": "Sluttbildet: kystnotbåten ut mot midnattssola, logoen over",
+ "when": "2027-06-17T23:10:00Z",
+ "boat": "ringnot38",
+ "place": {"lat": 69.31, "lon": 15.86, "clear": 0.8},
+ "heading": 347,
+ "speed": 8,
+ "quality": "ultra",
+ "pre": 3,
+ "dur": 6.2,
+ "cam": {"mode": "orbit", "keys": [
+  {"t": 0, "yaw": 6, "pitch": 4, "dist": 70, "fov": 46, "aim": 18},
+  {"t": 6.2, "yaw": 0, "pitch": 9, "dist": 165, "fov": 44, "aim": 34}
+ ]},
+ "notes": "Klipp 13 (44,87-50,01 s), under sluttkortet (Jonas 10.11: «Det må se proft, gjennomført og cinematisk ut» om det flate blå kortet). Mot midnattssola (asimut 347°, 3° over havet) med glitteret; kameraet bak båten trekker seg ut og opp, og siktepunktet høyt over båten legger henne i den nedre tredjedelen, så logoen står på himmelen."
+}
