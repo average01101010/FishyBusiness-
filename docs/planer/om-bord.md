@@ -43,7 +43,7 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 | `kyst15` | 76 (godkjent) | **71**, under grensen; må også eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen) | 4.9 |
 | `breisjark` | 72 | **68** | 4.8 |
 | `snekke` | ingen | **67** (forslag) | 4.3 |
-| `sjarkny` | 70 | **66** | 4.7 |
+| `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala) | 4.7 |
 | `plastsjark` | 66 | **63** | 4.4 |
 | `trebat` | ingen | **63** (forslag) | 4.1 |
 | `sjark` | 64 | **61** | 4.5 |
@@ -324,6 +324,8 @@ Bilder til Jonas:
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/sjarkny/teiner_trekk_liggende_2.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/sjarkny/felles_hvile_liggende_1.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/sjarkny/juksa_maskin_liggende_3.jpg
+
+**Etter OB10 (10.11.2026, grenen `ccr-e7277295-e9i00p`):** benken står langs babord ripe tvers av luka (F19 rettet), kista med kranen 1,2 m lenger akter, redskapet om styrbord akter der det går ut, teinestablene ut av husene (to av OB16s fire plasser sto inne i dekkshuset og styrhuset) og nå to på seks med `gearMax.teine` 12, stedet teina tømmes på fri dørk under taket, fire juksaplasser om styrbord med `jukseMax` 4, bremmen (valg 26), styrhusveggene uten striper, og den tomme båtens vannlinje (`WLE`, 0,665 m under tegningens største: hun ligger 0,67 m høyere). Karakteren satt som egen evaluering: **71** (`sjarkny-grunnlag.md` 10.6), under 75; det som mangler, er mest felles kode i arbeidsflyten (OB3, OB4), så hun tar en runde til etter dem.
 
 ### 4.8 Breisjarken (`breisjark`, `malo36.py`): forslag 68/100 (satt 72)
 
@@ -610,3 +612,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 09.11.2026: **Valg 25 A bygd** (samme økt): `gearMax.teine` etter stablene, havsjarken og kyst15 uten teiner, `potsOver`.
 - 09.11.2026: **OB7 bygd** (Jonas' økt, gren `ccr-61bc7d42-bfsaz0`): 4.4 over. Styrhuset forut etter bildene av typen (valg 22 B, Jonas: «Forut»), arbeidsdekket akter; F20 og F21 rettet for plastsjarken; ingen teiner (Jonas: «Ingen teiner», stabelen og tømmeplassen får ikke begge plass). Forslag 78 i `plastsjark-grunnlag.md` 10.5. Neste på sporet: OB8 (havsjarken, `docs/planer/start/86.md`).
 - 10.11.2026: **OB9 bygd** (Jonas' økt, gren `claude/ob9-hurtigsjarken-75-jtun77`): den brukte hurtigsjarken med benken tvers av luka og stampene fri av den (F19), juksa fordelt på begge sider fritt for haleporten, døra og kranen (F21), bremmen (valg 26), styrhusveggene uten striper, den tomme båtens vannlinje (valg 18 A, `WLE`), `STAB_AT` sjekket mot modellens ankre. Settingen går fritt over hekken (ingen setteport). Teinestabelen fra OB16 står fri av blødekaret, stagene og kranen. Forslag 75 etter Jonas' skala (`hurtigsjark-grunnlag.md` 9.5); valg 31 (juksamaskinene) venter på Jonas. Bildene av typen kunne ikke hentes (Wikimedia sperret bildefilene for skyøkta); de er valgt etter beskrivelsen. Neste på sporet: OB10 (den nye hurtigsjarken, `docs/planer/start/88.md`).
+- 10.11.2026: **OB10 bygd** (Jonas' økt, gren `ccr-e7277295-e9i00p`): den nye hurtigsjarken, se avsnittet sist i 4.7 og `sjarkny-grunnlag.md` kap. 10. Egen evaluering 71 etter Jonas' skala (69 etter første runde); ikke ferdig etter grensen på 75. Startmeldingen for OB11 i `docs/planer/start/89.md`.

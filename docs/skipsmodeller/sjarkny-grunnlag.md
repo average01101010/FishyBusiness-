@@ -177,3 +177,33 @@ Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 
 - **Småbeslag** (runde 2, etter den første evalueringen): håndlister på dekkshusets styrbord vegg langs haleplassen og under aktre vindu, tre arbeidslys under taket (haleren, karet, takets akterkant), hengsler og håndtak på kista, fire surringsøyer i dørken rundt luka.
 - **Klasjsjekken** (`qa/clip_hs11.py`): 0 punkter.
 - **`crewclip`**: sjarkny med i F19-lista. Ikke sett rød: før-bygget ga også over 0,55 m mellom de to (klumpen i før-bildene er to som står tett langs kameraets retning og benken inn i karet og stampene); juksa 4 av 4 plasser etter (4 av 6 før).
+
+### 10.5 Etter-bildene og det som står igjen
+
+Etter-bildene (`tests/ombord.py sjarkny`, begge formater, alle 16 operasjonene, tatt på nytt etter runde 2; ingen droppet, fordi vannlinja, taket og plassene er endret) og arkene i `docs/okter/2026-11-10-ob10/`. Sett: de to som sløyer, står side om side ved benken om babord med luka bak seg (F19 rettet); fire jukser langs styrbord ripe med en meter imellom, ingen i haleporten eller døra (F21; babord har ingen plass); stampene og garnkaret står ved hekken der redskapet går ut, og to står ved stampene når lina settes; teinestabelen står synlig i styrbord hekk, og teina tømmes på fri dørk under taket; bremmen synes rundt hele taket; hun ligger høyere, med dekket omtrent i kaihøyde ved mottaket.
+
+**Står igjen** (det meste er felles kode, ikke modellen):
+1. **En som har pause, setter seg der teinestabelen står** (`teiner_sett`): `deckcrew.js` vet ikke om stablene (OB3, `om-bord.md` 4.12).
+2. **Ledige folk mens redskapet går** (ingen ved garnkaret når garnet settes, F4; den fjerde uten maskin når tre maskiner er om bord; ingen kjører kranen, F23): OB3 og OB4.
+3. **Den foldede kranbommen** ligger over benkens aktre ende i hodehøyde ved nummer to som sløyer; ingen klipp sett, men tett.
+4. **Garnhaleren og teinedaviten** (spillets modeller) henger utenbords forut for haleporten og over takkanten; ikke undersøkt nærmere.
+5. **Nakne flater**: dekkshusveggene, speilet og dørken har lite som bærer på nært hold; dashbordet er tre svarte skjermer (F2, materialene).
+6. **Lanternene er ikke vist tent om natta** i denne økta (bare `lanterntest` og `check()`), og undervannsskroget er ikke vist i bildene.
+7. **Juksaplassene i hekken** (1,70 og 0,65) står i gangen ved stampene, garnkaret eller teinestabelen når det er om bord.
+8. Fra kodegjennomgangen, ikke rettet: teineplassene står to steder (`hs11.py` og `potplaces.json`, holdt like av `check()`); teinestablene prøves ikke mot stampene og garnkaret (bare om bord sammen under egning og bøting).
+
+### 10.6 Karakteren: 71/100, ikke ferdig
+
+Satt som en egen evaluering av en uavhengig underagent som bare fikk arkene, rendringene, bildet fra roret, `check()`-utskriften og skalaen (Jonas 10.11.2026). Første evaluering, etter runde 1, ga **69**; etter runde 2 (livbøyene, leideren, kista, lasten, småbeslagene) ga en ny underagent **71**. Forslaget i OB0 var 66 etter en annen skala.
+
+| Punkt | Vekt | Runde 1 | Runde 2 | Begrunnelse (runde 2) |
+|---|---|---|---|---|
+| Skrogutforming | 20 | 15 | 15 | Loddrett stevn, rette sider, skarpt slag, mål og vekt etter `check()` (14,83 t mot 15). Trekk: kasseformet med store flate felt i sida og speilet; undervannsskroget ikke vist |
+| Detaljer | 20 | 14 | 14 | Bakken med rekke, spill og pullerter, spygatt uten klaffer, håndlister, lys under taket, kistas håndtak. Trekk: nakne vegger, speil og dørk; vinduene uten dybde |
+| Lanterner | 5 | 4 | 4 | Lovlige etter `check()` og synlige i bildene. Trekk: ikke vist tent om natta |
+| Styrhus | 10 | 7 | 7 | Frontrutene forover, bremmen, utsynet fra roret. Trekk: svarte skjermer uten instrumenter, brede stolper |
+| Arbeidsflyt | 25 | 15 | 16 | Hver operasjon på et logisk sted: haling under taket, bløgging ved karet, sløying ved benken, juksa spredt, setting over hekken. Trekk: en mann i teinestabelen, ingen ved garnkaret, den fjerde uten maskin, ledige folk |
+| Utforming av dekk | 20 | 14 | 15 | Følger tegningen, alt fritt for hverandre i `check()`, fri gang langs styrbord ripe. Trekk: trangt i styrbord hekk og ved karet, klaringer på noen centimeter, alt arbeid om styrbord |
+| **Sum** | **100** | **69** | **71** | Under grensen på 75 |
+
+**Min egen vurdering:** jeg er enig i tallet. Det som skiller 71 fra 75, er mest arbeidsflyten (16 av 25), og der er de fleste trekkene felles kode som OB3 og OB4 eier (`deckcrew.js`, `core/13-work.js`, `view3d/09` og `10`), ikke plassene. Modellen selv kan hente et par poeng på detaljer (dørken, veggene, speilet) og på bilder som viser lanternene om natta og undervannsskroget. Den nye hurtigsjarken trenger altså en runde til etter OB3 og OB4, som trebåten (OB1, 73).
