@@ -1,16 +1,19 @@
-# The app for the home screen (P1 of the PWA plan, 03.10.2026) on GitHub Pages: https://average01101010.github.io/FishyBusiness-/
-# The map release (kart-N that tools/map/kart-release.json names, else the newest; tools/map/release.py) joined with Senja's packs (tools/map/game.py), the page built with KYST_PWA=1
-# (build.mjs: dist-pwa/ with the manifest, the service worker and the icons), and dist-pwa/ deployed to Pages.
-# Started by a push to main that changes the game, the build or the map release, or by hand from the Actions tab once this file is
-# on main. The working branch no longer rolls out here (L1a, 10.11.2026): it goes to the test edition on test.detstorebla.no
-# (deploy.yml), and Pages keeps what it had until L1b moves it. Pages' source must be «GitHub Actions», and the github-pages
-# environment must let the branch deploy.
-name: Appen på GitHub Pages
+# GitHub Pages after the game moved (L1b, 10.11.2026, docs/planer/lansering-plan.md): https://average01101010.github.io/FishyBusiness-/
+# no longer gets the game, but the small page tools/release/pages/index.html, «Spillet har flyttet til detstorebla.no», with «Kopier
+# lagringen» (the save of that address as the code Innstillinger → Lagret spill makes, read from its localStorage) and a link to
+# detstorebla.no. Pages may not be used for commercial software (docs/lansering.md G), and the game is on detstorebla.no (deploy.yml).
+# It runs ONLY by hand (Actions → «GitHub Pages: spillet har flyttet» → Run workflow, with «flytt» typed in), and only when Jonas has
+# said Pages can be moved: players who played there have their save in the browser at that address, and from then on they get this
+# page instead of the game. Until it is run, Pages keeps the game it had on 10.11.2026. No push starts it.
+# Pages' source must be «GitHub Actions», and the github-pages environment must let the branch deploy.
+name: "GitHub Pages: spillet har flyttet"
 on:
-  push:
-    branches: [main]
-    paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/kart-release.json', 'tools/map/game.py', '.github/workflows/pwa.yml']
   workflow_dispatch:
+    inputs:
+      bekreft:
+        description: 'Skriv «flytt» for å bytte spillet på Pages med siden «Spillet har flyttet til detstorebla.no»'
+        required: true
+        default: ''
 permissions:
   contents: read
   pages: write
@@ -20,38 +23,19 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
-    # only main goes to Pages, also when the workflow is started by hand on another branch (L1a, 10.11.2026)
-    if: github.ref_name == 'main'
+    if: inputs.bekreft == 'flytt' && (github.ref_name == 'main' || github.ref_name == 'ccr-5e1ba2f4-pusvyd')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-      # the unit tests of the core (tests/unit/run.mjs, 29.10.2026): seconds, no browser; a red one stops the roll-out before the map is fetched
-      - name: Unit tests of the core
-        run: node tests/unit/run.mjs
-      - name: The whole coast's map packs (the kart- release tools/map/kart-release.json names, else the newest, joined with src/data/map)
+      - name: The page
         run: |
-          pip install requests
-          python3 tools/map/game.py
-      - name: The app
-        run: KYST_PWA=1 node build.mjs
-      # the boot test on the build that goes out (tests/boottest.py, 29.10.2026): the game must start, read a save and step its clock
-      # with the whole coast's packs and no page error, or nothing is uploaded. KYST_SEED=1 is the tests' default; run.py judges the
-      # output as it does locally (FEIL lines, page errors, Python errors)
-      - name: Boot test of the app
-        run: |
-          pip install playwright==1.63.0
-          python -m playwright install --with-deps chromium
-          KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
+          test -s tools/release/pages/index.html
+          grep -q "kystfiske_v2" tools/release/pages/index.html
+          touch tools/release/pages/.nojekyll
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist-pwa
+          path: tools/release/pages
   deploy:
     needs: build
     runs-on: ubuntu-latest
