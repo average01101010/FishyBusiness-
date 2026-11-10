@@ -7,7 +7,7 @@
 const KV = {p:0.5, pAfterOk:0.25, okFor:14 * 1440, gale:13.9, visitMin:30, minLand:3, nets:80, hooks:5000, keep:10, side:0.028};
 // the source each code cites, for Kystposten's story (the story carries the codes only, 09h-press.js; the texts stay in rulesAt)
 const KV_REF = {kvoteh:'J-187-2026 § 14', seiby:'J-187-2026 § 14', lby:'J-128-2026', bby:'J-128-2026', f49:'Høstingsforskriften § 49', f26:'Høstingsforskriften § 26', f26b:'Høstingsforskriften § 26', f31:'Høstingsforskriften § 31', f33:'Høstingsforskriften § 33', f33a:'Høstingsforskriften § 33a', f18:'Høstingsforskriften § 18', kv40:'Høstingsforskriften § 40', j32b:'J-187-2026 § 32', j32c:'J-187-2026 § 32', henn:'J-187-2026 § 32', borg:'J-187-2026 § 32', kvote:'J-187-2026', byc:'Deltakerforskriften', stengt:'J-melding om stengt felt', gyte:'Forskrift om fredningsområder for kysttorsk', null:'Oslofjordforskriften', oslo:'Oslofjordforskriften', oslog:'Oslofjordforskriften', lopp:'Verneforskriften for Lopphavet', bk1000:'Forskrift om bunnredskap', kc2:'J-136-2026', kc10:'J-138-2026', skag:'Torskeforskriften for Nordsjøen og Skagerrak § 1',
-  sk0:'J-237-2025 § 2', sk1:'J-237-2025 § 1', sk2:'J-237-2025 § 1', sk3:'J-237-2025 § 5', sk5:'J-237-2025 § 5', skq:'J-237-2025 §§ 3 og 4', sk7:'Høstingsforskriften § 28', f28:'Høstingsforskriften § 28', f66:'Høstingsforskriften § 66', f29:'Høstingsforskriften § 29 og vedlegg 3f', f18s:'Høstingsforskriften § 18', f25:'Høstingsforskriften § 25', f47s:'Høstingsforskriften §§ 46 og 47', f51s:'Høstingsforskriften § 51', sv58:'Høstingsforskriften § 58', vme:'Forskrift om sårbare marine økosystemer'};
+  sk0:'J-237-2025 § 2', sk1:'J-237-2025 § 1', sk2:'J-237-2025 § 1', sk3:'J-237-2025 § 5', sk5:'J-237-2025 § 5', skq:'J-237-2025 §§ 3 og 4', sk7:'Høstingsforskriften § 28', f28:'Høstingsforskriften § 28', f66:'Høstingsforskriften § 66', f29:'Høstingsforskriften § 29 og vedlegg 3f', f18s:'Høstingsforskriften § 18', f25:'Høstingsforskriften § 25', f47s:'Høstingsforskriften §§ 46 og 47', f51s:'Høstingsforskriften § 51', sv58:'Høstingsforskriften § 58', vme:'Forskrift om sårbare marine økosystemer', vmen:'Forskrift om sårbare marine økosystemer'};
 // ---- the check at sea aboard an ocean vessel (H2e of docs/planer/havsteget-h2-autoline.md, 06.11.2026): the inspectors come over by the
 // ship's boat while she lies off, and look at the position of the gear against høstingsforskriften § 26 and J-187-2026 § 32 along the whole
 // line, the marking (§§ 66 and 68), the catch against the vessel quota (J-187-2026 § 14: no bycatch of cod or haddock beyond it), the
@@ -54,6 +54,7 @@ const kvHav = () => !!(S.lic && S.lic.hav);
 // the points along a string the inspectors check the position at: both ends and about every kilometre between (a 6.5 km lenke may have
 // one end inside a line its middle is outside)
 function kvAlong(a, b){ const d = dist(a, b), n = Math.max(1, Math.ceil(d / KVH.step)), out = []; for (let i = 0; i <= n; i++) out.push({x:a.x + (b.x - a.x) * i / n, y:a.y + (b.y - a.y) * i / n}); return out; }
+const kvJoin = (a, and) => a.length > 1 ? a.slice(0, -1).join(', ') + ' ' + and + ' ' + a[a.length - 1] : a[0];
 const kvAt = p => typeof coordStr === 'function' ? coordStr(p) : (q => q.lat.toFixed(3) + '° N ' + q.lon.toFixed(3) + '° Ø')(LL(p));
 // § 68 for one string outside the baselines: an end buoy with a pole at each end (two flags and two lights in the west, one of each in
 // the east), the buoys at most one nautical mile apart, so a string longer than that has buoys between; all of them carry the
@@ -67,9 +68,11 @@ function kvHavCheck(b, sets, H, len, add, most){
   // § 58 and the vulnerable ecosystems at Svalbard), the pots in the sea counted for the close season
   const lines = sets.map(s => ({a:s.a, b:s.b, gear:s.kind === 'teine' ? 'teiner' : s.kind, egn:s.kind === 'line' && isAuto(s.lk), sno:isSno(s)}));
   if (b.gop && b.gop.op === 'set' && b.gop.a) lines.push({a:b.gop.a, b:{...b.pos}, gear:b.gop.kind === 'teine' ? 'teiner' : b.gop.kind, egn:!!b.gop.auto, sno:!!b.gop.sno});
-  const WH = /^(f26|f26b|j32c|j32b|sk1|sk2|sv58|vme|vmen)$/;
+  // the remark says where: with the distance from the baseline for the rules that are distances from it, the place alone for the areas
+  const WD = /^(f26|f26b|j32c|j32b|sk1)$/, WP = /^(sk2|sv58|vme|vmen)$/;
   for (const L of lines) for (const p of kvAlong(L.a, L.b)){ R.pts++; let r = null; try { r = rulesAt({p, H, len, gear:L.gear, sp:L.sno ? 'snokrabbe' : most, egn:L.egn}); } catch (e){}
-    if (r) for (const it of r.items) if (it.block && it.v === 'no'){ const w = WH.test(it.k), where = (L.sno ? ' Lenka ved ' : ' Lina ved ') + kvAt(p) + ' står ' + nm(p) + ' nm fra grunnlinja.', whereEn = (L.sno ? ' The string at ' : ' The line at ') + kvAt(p) + ' is ' + nm(p) + ' nm from the baseline.';
+    if (r) for (const it of r.items) if (it.block && it.v === 'no'){ const d = WD.test(it.k), w = d || WP.test(it.k), at = (L.sno ? ' Lenka ved ' : ' Lina ved ') + kvAt(p), atEn = (L.sno ? ' The string at ' : ' The line at ') + kvAt(p);
+      const where = at + (d ? ' står ' + nm(p) + ' nm fra grunnlinja.' : '.'), whereEn = atEn + (d ? ' is ' + nm(p) + ' nm from the baseline.' : '.');
       add(it.k, it.no + (w ? where : ''), it.en + (w ? whereEn : ''), it.ref, it.url); } }
   // the marking: counted for what is said (the poles and buoys come with the system, and every buoy carries the mark)
   for (const s of sets){ const m = kvMarks(s); R.ends += m.ends; R.mid += m.mid; }
@@ -117,29 +120,34 @@ function kvSnoCheck(b, ss, H, add){
   // § 28: the cap (the setting refuses to go over it, 10-gear.js gearRules; asked here all the same)
   if (R.pots > SNOC.max) add('f28', 'Fartøyet har ' + f(R.pots, 0) + ' snøkrabbeteiner i sjøen; høyst ' + f(SNOC.max, 0) + ' er lov per fartøy.', 'The vessel has ' + f(R.pots, 0) + ' snow crab pots in the sea; at most ' + f(SNOC.max, 0) + ' are allowed a vessel.', 'Høstingsforskriften § 28', RU_HF);
   // § 66 and § 29 with vedlegg 3f: every pot marked with the registration mark, and the escape hole closed with cotton thread
-  for (const s of ss){ const P = POTS[s.pot] || {}; if (P.mark) R.mark += s.n || 0; if (P.hole) R.hole += s.n || 0; }
-  if (R.mark < R.pots - (g && g.op === 'set' ? g.done || 0 : 0)) add('f66', 'Ikke alle snøkrabbeteinene er merket med fartøyets registreringsmerke.', 'Not all the snow crab pots carry the vessel\'s registration mark.', 'Høstingsforskriften § 66', RU_HF);
-  if (R.hole < R.pots - (g && g.op === 'set' ? g.done || 0 : 0)) add('f29', 'Ikke alle snøkrabbeteinene har rømmingshull lukket med bomullstråd.', 'Not all the snow crab pots have an escape hole closed with cotton thread.', 'Høstingsforskriften § 29 og vedlegg 3f', RU_HF);
+  const cnt = (pot, n) => { const P = POTS[pot] || {}; if (P.mark) R.mark += n; if (P.hole) R.hole += n; };
+  for (const s of ss) cnt(s.pot, s.n || 0);
+  if (g && g.op === 'set' && g.s && !ss.includes(g.s)) cnt(g.s.pot, g.done || 0);
+  if (R.mark < R.pots) add('f66', 'Ikke alle snøkrabbeteinene er merket med fartøyets registreringsmerke.', 'Not all the snow crab pots carry the vessel\'s registration mark.', 'Høstingsforskriften § 66', RU_HF);
+  if (R.hole < R.pots) add('f29', 'Ikke alle snøkrabbeteinene har rømmingshull lukket med bomullstråd.', 'Not all the snow crab pots have an escape hole closed with cotton thread.', 'Høstingsforskriften § 29 og vedlegg 3f', RU_HF);
   // §§ 18 and 25: the string that has stood longest untended, and the oldest position report (the catch log reports it, snoTend)
-  for (const s of ss){ const a = (S.t - s.tSet) / 1440, r = (S.t - (s.posRep || s.tSet)) / 1440;
-    if (a > R.oldD){ R.oldD = a; if (a * 24 > SNOC.tendH) add('f18s', 'Lenka ved ' + kvAt(setMid(s)) + ' har stått i ' + f(a, 0) + ' døgn uten røkting; snøkrabbeteiner skal røktes minst én gang hver tredje uke, av fartøyet selv.', 'The string at ' + kvAt(setMid(s)) + ' has stood for ' + f(a, 0) + ' days untended; snow crab pots must be tended at least once every third week, by the vessel itself.', 'Høstingsforskriften § 18', RU_HF); }
-    if (r > R.posD){ R.posD = r; if (r * 24 > SNOC.posH) add('f25', 'Posisjonen for lenka ved ' + kvAt(setMid(s)) + ' er ikke rapportert på ' + f(r, 0) + ' døgn; den skal rapporteres minst hver tredje uke etter setting.', 'The position of the string at ' + kvAt(setMid(s)) + ' has not been reported for ' + f(r, 0) + ' days; it must be reported at least every third week after setting.', 'Høstingsforskriften § 25', RU_HF); } }
+  let sa = null, sr = null;
+  for (const s of ss){ const a = (S.t - s.tSet) / 1440, r = (S.t - (s.posRep || s.tSet)) / 1440; if (a > R.oldD){ R.oldD = a; sa = s; } if (r > R.posD){ R.posD = r; sr = s; } }
+  if (sa && R.oldD * 24 > SNOC.tendH) add('f18s', 'Lenka ved ' + kvAt(setMid(sa)) + ' har stått i ' + f(R.oldD, 0) + ' døgn uten røkting; snøkrabbeteiner skal røktes minst én gang hver tredje uke, av fartøyet selv.', 'The string at ' + kvAt(setMid(sa)) + ' has stood for ' + f(R.oldD, 0) + ' days untended; snow crab pots must be tended at least once every third week, by the vessel itself.', 'Høstingsforskriften § 18', RU_HF);
+  if (sr && R.posD * 24 > SNOC.posH) add('f25', 'Posisjonen for lenka ved ' + kvAt(setMid(sr)) + ' er ikke rapportert på ' + f(R.posD, 0) + ' døgn; den skal rapporteres minst hver tredje uke etter setting.', 'The position of the string at ' + kvAt(setMid(sr)) + ' has not been reported for ' + f(R.posD, 0) + ' days; it must be reported at least every third week after setting.', 'Høstingsforskriften § 25', RU_HF);
   // the vessel quota and the extra quota: the crab aboard against what is left (the live crab first on the extra quota, J-237-2025 § 4)
   try { const q = quotaState(), Q = snoQuota(H), L = snoLandQ(H, q), Y = snoYear(yearH(H)), ref = Y.y <= 2026 ? 'J-237-2025 §§ 3 og 4' : Y.known ? Y.src : 'Spillets bestand etter ' + Math.max(...Object.keys(SNOREG).map(Number));
     if (Q){ R.q = {aboard:L.all, live:L.live, used:q.snokrabbe || 0, base:Q.base + Q.flex, max:Q.max, usedT:q.snoTq || 0, extra:Q.extra, conf:L.conf, ref};
       if (L.conf > 0.5) add('skq', 'Snøkrabben om bord fyller mer enn det som er igjen av fartøykvoten og tilleggskvoten, ' + f(L.conf, 0) + ' kg over. Kvantumet kan ikke overføres til et annet fartøy; det overskytende blir inndratt ved levering.', 'The snow crab aboard fills more than what is left of the vessel quota and the extra quota, ' + f(L.conf, 0) + ' kg over. The quantity cannot be transferred to another vessel; the excess is confiscated at the landing.', ref, KVS_U); } } catch (e){}
   // the sample of the last haul (or the one being hauled): the sorting against §§ 46, 47 and 51, and the soft crab against § 5
   const K0 = (S.kvHaul || []).find(h => h.vid === S.cur && h.sno && S.t - h.t < 48 * 60), now = g && g.op === 'haul' && g.snoS && g.snoS.n ? kvSnoTally(g.snoS) : null;
-  const so = now || (K0 && K0.sno), hp = now ? b.pos : K0 ? {x:K0.x, y:K0.y} : null, th = now ? 'trekket som pågår' : 'siste trekk', te = now ? 'the haul under way' : 'the last haul';
+  const so = now || (K0 && K0.sno), th = now ? 'trekket som pågår' : 'siste trekk', te = now ? 'the haul under way' : 'the last haul';
   if (so && so.n){ R.sample = {...so, now:!!now, pct:so.kept ? so.soft / so.kept : 0};
     if (so.uk > 0) add('f47s', 'I stikkprøven av ' + th + ' var ' + f(so.uk, 0) + ' av ' + f(so.kept, 0) + ' beholdte krabber levende og under minstemålet (9,5 cm over skallets største bredde). Snøkrabbe under minstemålet settes ut levende.', 'In the sample of ' + te + ' ' + f(so.uk, 0) + ' of ' + f(so.kept, 0) + ' crabs kept were alive and under the minimum size (9.5 cm over the widest part of the shell). Snow crab under the minimum size is put back alive.', 'Høstingsforskriften §§ 46 og 47', RU_HF);
     if (so.ro > 0 || so.rd > 0) add('f51s', 'Av ' + th + ' er ' + (so.ro ? f(so.ro, 0) + ' krabber over minstemålet' : '') + (so.ro && so.rd ? ' og ' : '') + (so.rd ? f(so.rd, 0) + ' døde krabber' : '') + ' satt ut. All snøkrabbe over minstemålet og død krabbe skal føres i land.', 'Of ' + te + ' ' + (so.ro ? f(so.ro, 0) + ' crabs over the minimum size' : '') + (so.ro && so.rd ? ' and ' : '') + (so.rd ? f(so.rd, 0) + ' dead crabs' : '') + ' were put back. All snow crab over the minimum size and dead crab must be landed.', 'Høstingsforskriften § 51', RU_HF);
-    // over 20 % soft crab: a string set on the same field (the same location of the landing notes, lokOfCell) after that haul is the remark
-    if (!now && so.kept >= 50 && so.soft / so.kept > SNOC.softMax && hp){ let l = -1; try { l = lokOfCell(hp).l; } catch (e){}
-      const after = l < 0 ? [] : ss.filter(s => s.tSet > K0.t && (() => { try { return lokOfCell(setMid(s)).l === l; } catch (e){ return false; } })());
-      if (g && g.op === 'set' && g.a && l >= 0 && !after.includes(g.s)){ try { if (lokOfCell(g.a).l === l) after.push(g.s || {}); } catch (e){} }
-      const pc = Math.round(so.soft / so.kept * 100);
-      if (after.length) add('sk5', 'Siste trekk på feltet hadde ' + pc + ' % bløtkrabbe. Over 20 % skal fangstingen stoppes og fartøyet skifte fangstfelt, men ' + (after.length === 1 ? 'én lenke' : after.length + ' lenker') + ' er satt på samme felt etterpå.', 'The last haul on the field had ' + pc + '% soft crab. Over 20% the fishing stops and the vessel changes field, but ' + (after.length === 1 ? 'one string has' : after.length + ' strings have') + ' been set on the same field since.', 'J-237-2025 § 5', KVS_U); } }
+  }
+  // over 20 % soft crab in a haul (snoHaulDone keeps the field and the time, S.snoSoft, for softDays): a string set on that field (the same
+  // location of the landing notes, lokOfCell) after that haul, or being set there now, is the remark
+  const q5 = S.snoSoft;
+  if (q5 && q5.l >= 0 && S.t - q5.t <= SNOC.softDays * 1440){ const lok = p => { try { return lokOfCell(p).l; } catch (e){ return -1; } };
+    const after = ss.filter(s => s.tSet > q5.t && lok(setMid(s)) === q5.l);
+    if (g && g.op === 'set' && g.a && !after.includes(g.s) && lok(g.a) === q5.l) after.push(g.s || {});
+    if (after.length) add('sk5', 'Et trekk på feltet hadde ' + q5.pct + ' % bløtkrabbe. Over 20 % skal fangstingen stoppes og fartøyet skifte fangstfelt, men ' + (after.length === 1 ? 'én lenke' : after.length + ' lenker') + ' er satt på samme felt etterpå.', 'A haul on the field had ' + q5.pct + '% soft crab. Over 20% the fishing stops and the vessel changes field, but ' + (after.length === 1 ? 'one string has' : after.length + ' strings have') + ' been set on the same field since.', 'J-237-2025 § 5', KVS_U); }
   return R;
 }
 function kvState(){ const K = S.kv || (S.kv = {n:0, nOk:0, last:0, ok:null, wk:-1, at:null, visit:null, log:[]}); K.log = K.log || []; return K; }
@@ -239,12 +247,11 @@ function kvWhatHav(r){
   const m = V.sample;
   if (m && !m.few){ no.push('en stikkprøve av siste fangst (' + m.n + ' fisk målt, ' + f(m.pct * 100, 0) + ' % under minstemålet)'); en.push('a sample of the last catch (' + m.n + ' fish measured, ' + f(m.pct * 100, 0) + ' % under the minimum size)'); }
   no.push('reglene for stedet'); en.push('the rules of the place');
-  const join = (a, and) => a.length > 1 ? a.slice(0, -1).join(', ') + ' ' + and + ' ' + a[a.length - 1] : a[0];
-  return [join(no, 'og'), join(en, 'and')];
+  return [kvJoin(no, 'og'), kvJoin(en, 'and')];
 }
 // (H3e) what the inspectors looked at aboard the snow crab vessel
 function kvWhatSno(r){
-  const V = r.hav, Z = V.sno, f = fmtC, t = kg => f(kg / 1000, 0), no = [], en = [];
+  const V = r.hav, Z = V.sno, f = fmtC, t = kg => f(kg / 1000, kg > 0 && kg < 1e5 ? 1 : 0), no = [], en = [];
   if (Z.lenker){ no.push('posisjonen til ' + (Z.lenker === 1 ? 'lenka' : 'de ' + Z.lenker + ' lenkene') + ' (' + f(Z.pots, 0) + ' teiner) mot sokkelen, 12 nm, § 58 og de sårbare områdene på ' + V.pts + ' punkter langs lenkene');
     en.push('the position of the ' + (Z.lenker === 1 ? 'string' : Z.lenker + ' strings') + ' (' + f(Z.pots, 0) + ' pots) against the shelf, 12 nm, § 58 and the vulnerable areas at ' + V.pts + ' points along the strings');
     no.push('taket på ' + f(Z.max, 0) + ' teiner'); en.push('the cap of ' + f(Z.max, 0) + ' pots');
@@ -260,8 +267,7 @@ function kvWhatSno(r){
     no.push('en stikkprøve av ' + (m.now ? 'trekket som pågår' : 'siste trekk') + ' (' + f(m.kept, 0) + ' krabber beholdt, ' + ok47 + ', ' + f(m.rel, 0) + ' satt ut levende, ' + f(m.dead, 0) + ' døde beholdt, ' + f(m.pct * 100, 0) + ' % bløte)');
     en.push('a sample of ' + (m.now ? 'the haul under way' : 'the last haul') + ' (' + f(m.kept, 0) + ' crabs kept, ' + ok47e + ', ' + f(m.rel, 0) + ' put back alive, ' + f(m.dead, 0) + ' dead kept, ' + f(m.pct * 100, 0) + '% soft)'); }
   no.push('reglene for stedet'); en.push('the rules of the place');
-  const join = (a, and) => a.length > 1 ? a.slice(0, -1).join(', ') + ' ' + and + ' ' + a[a.length - 1] : a[0];
-  return [join(no, 'og'), join(en, 'and')];
+  return [kvJoin(no, 'og'), kvJoin(en, 'and')];
 }
 function kvFinish(){
   const b = S.boat, K = kvState(), r = kvCheck(b), ok = !r.items.length, np = nearestPort(b.pos), at = np ? np.name : '', wh = kvWhat(r), sea = !!(K.visit && K.visit.hav);

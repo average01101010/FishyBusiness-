@@ -133,12 +133,15 @@ function sno(t){
   t.ok(!r.items.some(i => i.k === 'f28'), '40 lenker (8 000) er innenfor');
   // §§ 66 and 29: a pot without the mark and the hole (made for the test)
   POTS.snoT = Object.assign({}, POTS.sno, {mark:false, hole:false});
-  S.sets = [lenke(p0), lenke({x:p0.x, y:p0.y + 1}, {pot:'snoT'})]; r = kvCheck(b);
-  t.ok(r.items.some(i => i.k === 'f66' && /§ 66/.test(i.ref)) && r.items.some(i => i.k === 'f29' && /vedlegg 3f/.test(i.ref)), 'teiner uten registreringsmerke og rømmingshull er merknader (§ 66, § 29 og vedlegg 3f)');
-  delete POTS.snoT;
+  try { S.sets = [lenke(p0), lenke({x:p0.x, y:p0.y + 1}, {pot:'snoT'})]; r = kvCheck(b);
+    t.ok(r.items.some(i => i.k === 'f66' && /§ 66/.test(i.ref)) && r.items.some(i => i.k === 'f29' && /vedlegg 3f/.test(i.ref)), 'teiner uten registreringsmerke og rømmingshull er merknader (§ 66, § 29 og vedlegg 3f)');
+    // the string going out now counts by its own pots (100 of them over the side)
+    S.sets = [lenke(p0)]; const gs = lenke({x:p0.x, y:p0.y + 1}, {pot:'snoT'}); b.gop = {op:'set', sno:true, kind:'teine', s:gs, done:100, a:{...gs.a}}; r = kvCheck(b);
+    t.ok(r.hav.sno.pots === 300 && r.items.some(i => i.k === 'f66'), 'og teinene som settes nå, telles med sine egne (100 umerkede av 300)'); }
+  finally { delete POTS.snoT; b.gop = null; }
   // §§ 18 and 25: 22 days untended, the position unreported; reported 2 days ago is fine for § 25
-  S.sets = [lenke(p0, {tSet:S.t - 22 * 1440})]; r = kvCheck(b);
-  t.ok(r.items.some(i => i.k === 'f18s' && /22 døgn/.test(i.no)) && r.items.some(i => i.k === 'f25'), '22 døgn uten røkting og uten posisjonsmelding er merknader (§§ 18 og 25)');
+  S.sets = [lenke(p0, {tSet:S.t - 22 * 1440}), lenke({x:p0.x, y:p0.y + 1.5}, {tSet:S.t - 30 * 1440})]; r = kvCheck(b);
+  t.ok(r.items.some(i => i.k === 'f18s' && /30 døgn/.test(i.no)) && r.items.some(i => i.k === 'f25' && /30 døgn/.test(i.no)) && r.hav.sno.oldD === 30, 'uten røkting og posisjonsmelding i 22 og 30 døgn: merknadene (§§ 18 og 25) nevner den eldste lenka, 30 døgn');
   S.sets = [lenke(p0, {tSet:S.t - 20 * 1440, posRep:S.t - 2 * 1440})]; r = kvCheck(b);
   t.ok(!r.items.some(i => i.k === 'f18s' || i.k === 'f25'), '20 døgn med posisjonen meldt for to døgn siden er i orden');
   // the quotas: 3 t aboard with 1 t left of the vessel quota and the extra quota used up is 2 t over
@@ -154,12 +157,16 @@ function sno(t){
   t.ok(S.kvHaul[0] && S.kvHaul[0].sno && S.kvHaul[0].sno.kept === 400 && S.kvHaul[0].kg.snokrabbe === 220, 'et trekk med snøkrabbe gjemmes med sorteringen (kvHaulKeep)');
   S.sets = [lenke(p0, {tSet:S.t - 9 * 1440})]; r = kvCheck(b);
   t.ok(!r.items.some(i => i.k === 'sk5') && r.hav.sno.sample && Math.abs(r.hav.sno.sample.pct - 0.25) < 1e-9 && /25 % bløte/.test(kvWhat(r)[0]), '25 % bløtkrabbe i siste trekk, og ingen lenke satt på feltet etterpå: ingen merknad, men stikkprøven står i det hun så på');
-  const near = {x:setMid(sset).x + 0.5, y:setMid(sset).y}; const same = lokOfCell(near).l === lokOfCell(setMid(sset)).l;
-  S.sets.push(lenke({x:near.x - 2.5, y:near.y}, {tSet:S.t - 30})); r = kvCheck(b);
-  t.ok(same && r.items.some(i => i.k === 'sk5' && /25 %/.test(i.no) && /skifte fangstfelt/.test(i.no)), 'en lenke satt på samme felt etter et trekk med 25 % bløtkrabbe er en merknad (J-237-2025 § 5)');
-  S.kvHaul[0].sno.soft = 60; r = kvCheck(b); t.ok(!r.items.some(i => i.k === 'sk5'), '15 % bløtkrabbe er innenfor');
+  // over 20 % soft crab in a haul (snoHaulDone: S.snoSoft, the field and the time): a string set on that field after it is a remark,
+  // one set before it is not (it is hauled to be moved), and a haul on another field since does not hide it
+  const near = {x:setMid(sset).x + 0.5, y:setMid(sset).y}, l5 = lokOfCell(setMid(sset)).l; S.snoSoft = {l:l5, t:S.t - 600, pct:25};
+  S.sets = [lenke({x:near.x - 2.5, y:near.y}, {tSet:S.t - 700})]; r = kvCheck(b);
+  t.ok(l5 >= 0 && lokOfCell(near).l === l5 && !r.items.some(i => i.k === 'sk5'), 'en lenke satt på feltet før trekket med 25 % bløtkrabbe er ingen merknad');
+  S.sets.push(lenke({x:near.x - 2.5, y:near.y + 0.3}, {tSet:S.t - 30})); S.kvHaul.unshift({t:S.t - 60, vid:S.cur, x:p0.x + 300, y:p0.y, kind:'teine', ms:{}, kg:{snokrabbe:200}, sno:{n:400, kept:380, rel:20, soft:10}}); r = kvCheck(b);
+  t.ok(r.items.some(i => i.k === 'sk5' && /25 %/.test(i.no) && /skifte fangstfelt/.test(i.no) && /én lenke/.test(i.no)), 'én lenke satt på samme felt etterpå er en merknad (J-237-2025 § 5), også med et trekk på et annet felt siden');
+  S.t += (SNOC.softDays + 1) * 1440; S.sets.forEach(x => { x.tSet = S.t - 1440; }); r = kvCheck(b); S.t -= (SNOC.softDays + 1) * 1440;
+  t.ok(!r.items.some(i => i.k === 'sk5'), 'etter en uke er feltet åpent igjen'); S.snoSoft = null; S.kvHaul.shift();
   S.kvHaul[0].sno.uk = 3; S.kvHaul[0].sno.ro = 2; r = kvCheck(b);
   t.ok(r.items.some(i => i.k === 'f47s' && /3 av 400/.test(i.no)) && r.items.some(i => i.k === 'f51s' && /§ 51/.test(i.ref)), 'levende krabbe under 9,5 cm beholdt (§ 47) og krabbe over minstemålet satt ut (§ 51) er merknader');
-  void SNOC;
   for (const k in B) delete B[k]; Object.assign(B, B0);
 }

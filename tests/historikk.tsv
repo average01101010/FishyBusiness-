@@ -1862,3 +1862,8 @@
 2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	boottest	OK	19	lite	samtidig	
 2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	crewclip	FEIL	15	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
 2026-11-10 10:15	ccr-869710d8-bo5iwu	d75377a	moortest	OK	36	3d	alene	
+2026-11-10 11:00	ccr-c070e597-njia44	24e834ce+	kystvakttest	OK	8	lite	alene	
+2026-11-10 11:03	ccr-c070e597-njia44	5c8a90f7	trip2	OK	37	lite	samtidig	
+2026-11-10 11:03	ccr-c070e597-njia44	5c8a90f7	boottest	OK	31	lite	samtidig	
+2026-11-10 11:04	ccr-c070e597-njia44	5c8a90f7	havtur	FEIL	70	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-10 11:10	ccr-c070e597-njia44	5c8a90f7+	kystvakttest	OK	8	lite	alene	
