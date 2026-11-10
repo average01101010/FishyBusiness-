@@ -338,6 +338,22 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
 - **JS:** bildets egen JS i havn ved Tromsdalen var 9,8 ms per bilde på PC-en her (CDP-profil), av det `npcStates` 1,5 ms i fjernpasset og 0,8 av `drawNPC`s 1,2 ms; nå ett kall.
 - **Testen** `tests/seabedtest.py` (3D): samme sammenligning ved naustet og på åpen sjø vest for Senja, hvor mye som kuttes, at alt tegnes igjen med øyet nede ved tidevannet, og at de andre båtene regnes én gang per bilde.
 
+**Målt på telefonen etter utrullingen** (Jonas' `#prof` fra A52s ved Tromsdalen fiskemottak 10.11.2026 kveld, Wi-Fi, versjon `916257ea9a9b`; spilltid 4. okt 11:58, altså dag, mens målingen før var natt, så lysene og himmelen er ikke de samme; nivået står ikke i bildet):
+
+| Tromsdalen, i havn | Før (natt) | Etter (dag) |
+|---|---|---|
+| «som nå» | 8 b/s, 118 ms, JS 40,3 ms | 12 b/s, 83,7 ms, JS 17,7 ms |
+| tomt bilde | | 60 b/s, 16,6 ms, JS 6,9 ms |
+| tetthet 0,75 / 1 / full | 20 / – / 3 b/s | 25 / 19 / 5 b/s |
+| uten terreng | 13 b/s (terrenget 41 ms) | 14 b/s, 70,5 ms (terrenget 13 ms) |
+| uten sjø | 12 b/s (sjøen 35 ms) | 18 b/s, 54,4 ms (sjøen 29 ms) |
+| uten båter | 9 b/s | 12 b/s, 84,0 ms (båtene ingenting) |
+| lange oppgaver i 4 s | 9 (886 ms) | 0 |
+| «synk per del»: nært land og trær / nær sjø / fjernt land | 51,4 / 38,3 / 24,3 ms | 42,9 / 47,8 / 36,8 ms (hele bildet 201 ms med synk, så delene er blåst opp) |
+
+- Bildet går fra 118 til 84 ms, terrengets andel fra 41 til 13 ms, JS-en fra 40 til 18 ms, og de lange oppgavene er borte. Hvor mye av det som er natt mot dag, kan ikke skilles ut av ett bilde.
+- Sjøen er nå klart størst (29 av 84 ms), og bildet er fortsatt bundet av pikslene (0,75 × tettheten gir 39 ms). Det tomme bildet går i 60 b/s, så det er det som tegnes, ikke nettleseren. Neste steg er havskyggeleggeren (backloggen).
+
 **Første start** (`first3d` fra telefonen, inkognito, Wi-Fi, `warm:false`): brevet etter 13,7 s, 5,0 s fra «Start her» til første 3D-bilde (`models_s` 0). Ø3a målte 11,2 s og 29,4 s med CPU-en strupet 4× i SwiftShader, og Ø3c 10,9 s etter sine endringer; på telefonen er ventetiden altså halvparten av det testmiljøet viste, og modellene er inne når det spørres etter dem. Tiden til brevet er nedlastingen og tolkingen av siden på et første besøk (9,6 MB før komprimering) og er ikke rørt her.
 
 **Ikke gjort, og hvorfor:**
