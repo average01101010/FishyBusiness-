@@ -532,6 +532,7 @@ def linings(A, G, fine=True):
 # aft deck and the forecastle, the roof (G: its plan, height, lean and windows) ----------
 WH_X0 = 5.25; WH_XC = 7.20; WH_XF = 7.45; WH_W = 1.20; WH_WF = 0.95; WH_SILL = 1.90; WH_TOP = 3.00; LEAN = 0.23; WH_FLOOR = 1.00; WT = 0.06
 WIN_Z = (2.30, 2.90)
+AFTWIN_Z0 = 2.58 - 0.25          # the aft wall's windows' sill (wh_faces: centred at 2.58, 0.50 high)
 DOOR = (5.34, 5.90, 0.79, 2.62)                                # the door aft on the starboard side, from the aft deck (G): x, sill, head
 def wh_ring(z):
     d = LEAN * max(0.0, z - WH_SILL)
@@ -1077,7 +1078,10 @@ def kit_places(G):
     r = lambda a: round(a, 3); zt = HOLD_H + 0.04
     gx, gy = 2.60, 1.50; gn = math.atan2(GR[3][0] - GR[2][0], GR[3][1] - GR[2][1])
     return {'raft': [G(6.45, -0.05, roof_z(6.45) + 0.05) + [0.0]],
-            'buoys': [G(WH_X0 - 0.03, -0.62, 2.35) + [0.0], G(gx, gy, 2.45) + [r(math.pi - gn)]],
+            # (the first on the wheelhouse's aft wall under the starboard window: its bracket 0.35 m under the window's sill, the 0.61 m buoy
+            # hanging 0.30 m under the bracket; Jonas 10.11.2026: «Flytt ned den redningsbøya som henger på veggen på styrhuset slik at den
+            # ikke dekker vinduet på bakveggen», it stood at 2.35 with its top at the sill)
+            'buoys': [G(WH_X0 - 0.03, -0.62, AFTWIN_Z0 - 0.35) + [0.0], G(gx, gy, 2.45) + [r(math.pi - gn)]],
             'radar': G(6.12, FM[1] - 0.18, 4.47), 'radarA': G(RA[0], RA[1], 4.47),
             # the 460 l net tub (1.00 x 1.20 m) along her, clear of the gear room (y -0.15), the quarter's bitts and the bulwark
             'garn': {'at': G(GARN[0], GARN[1], z_deck(GARN[0]) + camber(GARN[0], GARN[1])), 'ry': 0.0},
