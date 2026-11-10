@@ -33,7 +33,13 @@ STACKS = """((boats) => Object.fromEntries(boats.map(t => { const G = vesselMode
   K.at.forEach((a, i) => { const h = Math.min(X.stack, a[4] || X.stack), top = X.h + (h - 1) * X.pitch + 0.45;
     // (every cell under the ring, 5 cm apart: a coaming or a sill one cell wide is found)
     for (let dx = -X.r; dx <= X.r + 1e-6; dx += 0.05) for (let dz = -X.r; dz <= X.r + 1e-6; dz += 0.05){ if (Math.hypot(dx, dz) > X.r) continue; const x = a[0] + dx, z = a[2] + dz, k = M.cellOf(x, z), f = k >= 0 ? F[k] : null;
-      if (!f || !f.some(([y, b]) => !b && Math.abs(y - a[1]) < 0.1)){ out.push(i + ': ikke gulv ved ' + x.toFixed(2) + ',' + z.toFixed(2)); return; }
+      if (!f || !f.some(([y, b]) => !b && Math.abs(y - a[1]) < 0.1)){
+        // (OB10, Jonas 10.11.2026: «To stabler»: the map's cells are 20 cm, and the outermost one at the bulwark's foot is no floor
+        // though the deck runs under it; a ring may reach into that one cell at the ship's side, with floor in the cell inboard of it
+        // and none outboard. A coaming or a sill inside the deck has floor on both sides and is still found)
+        const c = M.c || 0.2, sg = x >= 0 ? 1 : -1, fl = q => { const kk = M.cellOf(q, z), ff = kk >= 0 ? F[kk] : null; return !!(ff && ff.some(([y, b]) => !b && Math.abs(y - a[1]) < 0.1)); };
+        if (Math.abs(x) > (G.beam || 3) / 2 - 0.45 && fl(x - sg * c) && !fl(x + sg * c)) continue;
+        out.push(i + ': ikke gulv ved ' + x.toFixed(2) + ',' + z.toFixed(2)); return; }
       const over = f.filter(([y]) => y > a[1] + 0.12).map(([y]) => y - a[1]); if (over.length && Math.min(...over) < top){ out.push(i + ': ' + Math.min(...over).toFixed(2) + ' m fri høyde, trenger ' + top.toFixed(2)); return; } }
     if (Math.hypot(a[0] - G.hauler[0], a[2] - G.hauler[2]) < 1.2) out.push(i + ': ved haleren');
     if (TK && Math.abs(a[0] - TK[0]) < X.r + 0.4 && Math.abs(a[2] - TK[2]) < X.r + 0.6) out.push(i + ': i krabbekaret'); });

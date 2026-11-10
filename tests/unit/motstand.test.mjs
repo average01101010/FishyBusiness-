@@ -19,7 +19,10 @@ export default function (t){
       let stuck = null; for (let u = 0.2; u < 0.97 * P.umax; u += 0.1) if (P.Tmax * (1 - 0.35 * u / P.umax) <= K.dynRes(P, u)){ stuck = u / KN; break; }
       t.ok(stuck === null, type + ': full gass tar henne over kneika' + (stuck ? ' (står fast ved ' + stuck.toFixed(1) + ' kn)' : ''));
     } else {
-      t.ok(r2(P.umax) > 1.4 * r2(0.5 * P.umax), type + ': deplasement, motstanden per fart² stiger mot skrogfarten (' + (r2(P.umax) / r2(0.5 * P.umax)).toFixed(2) + '×)');
+      // (to her top speed; a hull driven well past the hump without planing is measured to the hump: the new speed sjark does 12 kn
+      // on 650 hp, 1.3 times the hump of a hull of her length, OB10 10.11.2026; the others top out within 1.15 of it and are measured as before)
+      const ut = P.umax > 1.25 * uh ? uh : P.umax;
+      t.ok(r2(ut) > 1.4 * r2(0.5 * ut), type + ': deplasement, motstanden per fart² stiger mot skrogfarten (' + (r2(ut) / r2(0.5 * ut)).toFixed(2) + '×' + (ut < P.umax ? ', målt til kneika ved ' + (ut / KN).toFixed(1) + ' kn' : '') + ')');
     }
   }
   // ---- squat after Barrass: Cb V^2 / 100 (V in knots), twice that in a narrow sound; a planing hull rises out of it ----

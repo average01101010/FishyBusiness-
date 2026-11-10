@@ -178,6 +178,14 @@ Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 
 - **Klasjsjekken** (`qa/clip_hs11.py`): 0 punkter.
 - **`crewclip`**: sjarkny med i F19-lista. Ikke sett rød: før-bygget ga også over 0,55 m mellom de to (klumpen i før-bildene er to som står tett langs kameraets retning og benken inn i karet og stampene); juksa 4 av 4 plasser etter (4 av 6 før).
 
+### 10.4b Jonas' svar 10.11.2026
+
+Spurt om de tre tingene som ventet: «1. Hun skal ligge riktig i sjøen i henhold til estimert ekte vekt, med farten deretter. 2. Ja, juster ned 3. To stabler».
+
+- **Vannlinja står** (`WLE`, 15 t tom). **Farten** (også valgt 05.11.2026, kap. 9: «12 kn, som tegningen»): `VESSELS.sjarkny` `vmax` 25 → 12, `vcruise` 20 → 10, `planing` av, ny tekst på båtbladet. `lph` 75 → 55 ved marsjfart er **antatt** (rekkevidde 364 nm mot 533 før), ikke målt mot kilde. Navnet «Ny hurtigsjark» står. `tests/unit/motstand.test.mjs`: et skrog som drives mer enn 1,25 ganger kneika uten å plane (hun: 12 kn mot 9,1), måles til kneika; sett rød med den gamle regelen (1,17× mot 1,4). `hull.test.mjs`: hun er ute av de planende.
+- **Teinene 12 og juksamaskinene 4** står.
+- **To stabler:** `tests/potshot.py` godtar at ringen når inn i den ene ruta på 20 cm ved skansens fot (gulv i ruta innenfor, ingen utenfor); en karm inne på dekket har gulv på begge sider og blir fortsatt funnet. Linja var rød på stabelen i styrbord hekk før («ikke gulv ved 2.04,4.32»).
+
 ### 10.5 Etter-bildene og det som står igjen
 
 Etter-bildene (`tests/ombord.py sjarkny`, begge formater, alle 16 operasjonene, tatt på nytt etter runde 2; ingen droppet, fordi vannlinja, taket og plassene er endret) og arkene i `docs/okter/2026-11-10-ob10/`. Sett: de to som sløyer, står side om side ved benken om babord med luka bak seg (F19 rettet); fire jukser langs styrbord ripe med en meter imellom, ingen i haleporten eller døra (F21; babord har ingen plass); stampene og garnkaret står ved hekken der redskapet går ut, og to står ved stampene når lina settes; teinestabelen står synlig i styrbord hekk, og teina tømmes på fri dørk under taket; bremmen synes rundt hele taket; hun ligger høyere, med dekket omtrent i kaihøyde ved mottaket.

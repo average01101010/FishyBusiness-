@@ -65,7 +65,7 @@ export default function (t){
     t.ok(soft === 0, 'baugen ned i 0,8 m/s gir ikke slag'); }
 
   // ---- planing: the dynamic lift from the speed (simplified Savitsky) instead of the fixed trim; she rises and trims a few degrees ----
-  for (const [type, kn] of [['skiff', 24], ['hurtigsjark', 22], ['sjarkny', 25]]){
+  for (const [type, kn] of [['skiff', 24], ['hurtigsjark', 22]]){   // (the new speed sjark is a displacement hull at 12 kn since OB10)
     const H = K.hullSections(type), R = K.hullRest(H, K.stabOf(type, empty).D), X = K.hullX(R), eta = new Float64Array(H.n), V = kn * 0.5144, Fr = V / Math.sqrt(g * K.VESSELS[type].len);
     for (let i = 0; i < 120 * 20; i++) K.hullStep(H, R, X, eta, null, 1 / 120, {V, Fr, planing:true});
     const deg = (X.th - R.th0) * 180 / Math.PI, rise = X.y - R.y0;
