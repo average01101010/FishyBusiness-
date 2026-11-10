@@ -19,7 +19,7 @@ Den erstatter én lang chat som koordinerer alt (09.11.2026: den chatten som sat
    - Et steg som er `klar` uten `docs/planer/start/<steg>.md`, får fila skrevet fra planen, med formen i `start/README.md`. Klarer du ikke å skrive den hel, står steget som `klar (startmeldingen mangler)` og er ikke med i runden.
 3. **Velg neste runde.** Høyst fem steg som er `klar`, portstegene først (P1–P6 i «Porten for de første brukerne»), så over lanseringslinja (rekkefølgen i køen), og som ikke eier de samme filene som hverandre eller som en økt under «Øktene som kjører» (kolonnen «Filer steget eier»; `src/index.html`, `tests/run.py`, `ui/phone/07-patch.js` og `ui/01-i18n.js` deles og flettes). Er det færre enn fem uten konflikt, gi færre. Et steg som venter på Jonas eller på et valg, er ikke med.
 4. **Gi Jonas** i økta, kort og på norsk:
-   - **Siden sist:** det som er rullet ut (stegene, med én linje hver), og det som ikke gikk (røde kjøringer på Hetzner og Pages, steg som stoppet).
+   - **Siden sist:** det som er rullet ut (stegene, med én linje hver), og det som ikke gikk (røde kjøringer på Hetzner; fra L1a 10.11.2026 går de til testadressen, og Pages kjører bare på `main`, steg som stoppet).
    - **Spill dette:** filene i `docs/spill-dette/` fra stegene siden sist, samlet som en kort liste over hva han bør prøve på nettbrettet og hvor. Det han har bekreftet eller sagt noe om, flyttes til `docs/spill-dette/sett.md` med datoen og ordene hans; det han fant, blir steg i køen.
    - **Valg som venter** (bare de åpne, med A/B og anbefaling, som i køen).
    - **Promptene** for runden, én per steg, i denne formen:
