@@ -35,12 +35,34 @@
 | 31.10 | Hvorfor introen ikke syntes i klipp 1 | `G3.intro` ble kalt før klokka ble pauset. Den falske klokka tar igjen sanntiden idet den pauses, og med SwiftShaders trege bilder hadde flere sekunder gått, så introen på 6 s var over før første bilde. Nå startes den etter pausen. |
 | 31.10 | Klipp 13 etter rettingene | **Virker.** Snurperen ligger i sundet og går under Gisundbrua ved 7,5 og 10 s, med Finnsnes bak. Ingen landvarsler. Kontaktark: `control-m1/13-snurper-brua-540x960/kontaktark.jpg`. Sjøen er hvite striper i motlys på SwiftShader (programvarerenderen), ikke slik den ser ut på GPU. |
 | 31.10 | Klipp 1 etter rettingene | **Introen virker:** øyet starter ved kaia foran naustet (pålene i første bilde) og glir bakover og opp til jaktkameraet over 6 s. Men i et nytt spill med `#notut` ligger trebåten ved butikkaia i Finnsnes, ikke ved et naust i 3D, så naustdøra må settes opp slik veiledningen gjør det (Vangshamn, `NAUST3D`). Kl. 06:00 UTC 12. oktober tegnes fortsatt som blå time, mørkere enn ventet for 08:00 lokal tid; tidspunktet må prøves fram (07–08 UTC), og tolkningen av `S.t` mot `EPOCH` sjekkes. |
+| 10.11 | Chrome på den leide Windows-maskinen (NVIDIA RTX PRO 6000 Blackwell Server Edition), detstorebla.no | «3D-visning støttes ikke på denne enheten (shadere: sjø middels VS: konteksten er mistet)». WebGL-konteksten mistes ved kompilering av sjøskyggeren. Årsaken er ikke funnet. Playwrights Chromium med andre ANGLE-valg testes av økta på maskinen. |
+
+| 10.11 | Leid GPU-maskin (Windows 10, NVIDIA RTX PRO 6000 Blackwell, 96 GB, 16 kjerner) | Hodeløs Chromium tegner på kortet med `--use-angle=gl` (OpenGL 4.5) eller `vulkan`. Med `d3d11` mister 3D-visningen konteksten mens sjø-shaderen kompileres («sjø VS: konteksten er mistet»), også uten GPU-vakthund; det kan ramme Windows-spillere og bør undersøkes i spillet. `film.py --gpu` bruker `gl`. |
+| 10.11 | Windows-oppsett | Git for Windows sjekker ut med CRLF (`core.autocrlf=true`), og bygget legger `.b64`-filene inn i strenger, så `\r` stoppet bygget. Repoet er satt til `core.autocrlf=false` lokalt og sjekket ut på nytt. Python må kjøre med `PYTHONUTF8=1` (ellers leser `tools/map/game.py` filene som cp1252). |
+| 10.11 | Filmklokka hoppet til år 58 000 | `page.clock.pause_at(ms)` i Python tolker et tall som **sekunder**. Klokka hoppet tusen ganger fram, `performance.now()` ble 1,8·10¹⁵, og sjøen ble flat, skyene endret seg og bølgene sto stille (trolig også de hvite stripene i skyens bilder). Nå gis en `datetime`. Sjøen med frossen klokke er nå lik sanntid. |
+| 10.11 | Tempoet | Spillet seiler seks ganger fortere enn livet (`GAME_RATE`). Filmen setter `S.mult = 1/6`, så båtene, trafikken og sola går i ekte fart («pace»: «game» gir spillets). 9 knop er 4,6 m/s på skjermen. |
+| 10.11 | Hastighet på GPU | 0,15 s per bilde i 1080×1920 med PNG og alle kontrollene: et klipp på 10 s (300 bilder) på under ett minutt. Lasting 10–15 s per klipp. |
+| 10.11 | `G3.film` | Lagt inn i spillet (egen commit, `24-cinema.js` og `25-controls.js`): `{fov}` setter jaktkameraets brennvidde (ellers låst til 55° utenfor roret), `{eye, tgt, fov}` et fritt kamera. Uten virkning når den ikke brukes. |
+| 10.11 | Kontrollene i hvert bilde | Skrogets omriss mot det fine terrenget (land, grunt), skroget i vannlinja og masten opp langs høyden mot spillets faste flater for kameraet (`camInside`: brupilarer, brudekk, kaier, bygg), øyet mot sjø, terreng og flater, og fri sikt. Etter filmingen hvert bilde mot det forrige (hopp). Første forsøk på klipp 13 i ekte fart: kameraet på siden mens båten var under brua fikk en pilar mellom seg og båten, spillets kamera trakk seg brått inn (hopp ved bilde 160). Banen går nå nord for brua. |
+| 10.11 | Intet grensesnitt | Jonas: «Ingen UI, UX eller GUI». Alt på siden utenom 3D-lerretet `#gl` og elementene som holder det, gjøres usynlig (opacity 0) før hvert bilde, også stedsnavn-laget `#labels` og det som dukker opp underveis. |
+
+| 10.11 | Løpet før filmingen | Hele løpet (forspill og klipp, skrogets lengde og bredde og 2 m ved siden) sjekkes mot det fine terrenget, og startpunktet flyttes til nærmeste sted der det er dypere enn dypgangen overalt. Kjernens kart er 200 m-ruter og sier sjø der havna er grunn: Hvaler, Hammerfest og Kirkenes ble flyttet 15–60 m. |
+| 10.11 | Båt ved kai | 3D-visningen legger ikke båten rett ved kaia, den seiler henne inn langs sitt eget spor, over et minutt i ekte fart. Filmoppsettet kjører spillets tempo til hun ligger stille, og legger så andre båter ved siden av der 3D-båten ligger (`bv`). Andre båter legges inn som andre spilleres båter (`PEERS`); spillet tømmer den lista hvert tiende sekund uten server, så de legges inn igjen før hvert bilde. |
+| 10.11 | Jaktkameraet ved brua | Når siktepunktet ligger høyt (mot brudekket), løfter og trekker spillets kamera seg, og båten ble en prikk. Klipp 3 og 13-side om side bruker fritt kamera (`"mode": "fixed"`, `G3.film`). Det stående bildet er bare rundt 27° bredt, så to båter side om side må ses langs linja, ikke fra siden. |
+| 10.11 | Hvalen | En knølhval dukker opp fire ganger med 14 s mellomrom, og bare den siste viser halen. `spawn` med `age` 41,7 gir blåsten etter 0,4 s; `dist` og `swim` legger den der den ikke skjules av båten. Halen kom ikke tydelig fram i m1. |
+| 10.11 | Grovklipp m1 | 50 s på «Fjord at Dawn», 18 klipp, tekster i øvre tredjedel, sluttkort over sluttklippet, felles fargebehandling. 5 min å sette sammen. `trailer/out/rough/m1.mp4` og `m1-540.mp4` på maskinen, kontaktark i `control-m1/grovklipp-m1-kontaktark.jpg`. |
 
 ## Gjenstår
 
-- Klipp 1 satt opp som spillets egen åpning: nytt spill i Vangshamn med naustet i 3D, så `G3.intro` glir ut av selve naustdøra.
-- Fritt kamera (`G3.film`) i egen PR, for klippene fra land og naustdøra med egen bane.
-- Kontrollene: skrog mot land per bilde, mast mot bru (`G3.mastTop`, `G3.bridgeInto`), hopp mellom bilder, lastet-før-start.
-- Hele kysten i `dist/map/` i skyen (kartpakkene fra GitHub-releasen).
+- PR mot arbeidsgrenen med `G3.film` (commit «G3.film: kamera for traileren»).
+- D3D11-feilen («sjø VS: konteksten er mistet») undersøkt i spillet.
 - Lydrendering med `OfflineAudioContext` (vei B i `PLAN.md` del 5), først når bildene er låst.
-- `assemble_rough.py`: klippene satt sammen med ffmpeg på klippekartet.
+
+## Verktøyene (10.11)
+
+- `film.py <klipp.json> --gpu`: filmer ett klipp. Felter ut over de over: `heading` kan være `"coast"` (langs land med land om babord) eller `"upwind"`; `home` (fars naust der, f.eks. `vangshamn`), `moor` (`{port, kind}`: ved kai der `berthPose` legger båten), `peers` (andre båter ved kaia, som andre spilleres båter), `spawn` (dyr i et bestemt bilde), orbit-nøkler med `aim` (meter over båten kameraet sikter på). Bildene og `clip.mp4` i `trailer/out/<klipp>-<størrelse>/` (ikke i git), kontaktark og `log.json` i `control-m1/`.
+- `film-all.sh <klipp> …`: filmer flere etter hverandre.
+- `weather.py weather-wants.json`: leter i spillets vær etter timen som gir ønsket sol, vind, skyer, sikt og nordlys.
+- `beats.py <sang>`: tempo, slag, takter og deler (til `audio/beats.json`).
+- `titles.py`: tekstene og sluttkortet som gjennomsiktige bilder.
+- `assemble.py audio/music-edit-1.json`: grovklippet bilde for bilde på slagene, med tekstene, sluttkortet og låta, til `trailer/out/rough/`.

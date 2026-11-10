@@ -1,0 +1,48 @@
+{
+ "name": "Kystbåten og knølhvalen ved Bleik i midnattssol",
+ "when": "2027-06-17T23:00:00Z",
+ "boat": "kyst15",
+ "place": {
+  "lat": 69.3,
+  "lon": 15.88,
+  "clear": 0.5
+ },
+ "heading": 345,
+ "speed": 5,
+ "pre": 2,
+ "dur": 6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 5,
+    "pitch": 18,
+    "dist": 46,
+    "fov": 46,
+    "aim": 4
+   },
+   {
+    "t": 6,
+    "yaw": 4,
+    "pitch": 17,
+    "dist": 44,
+    "fov": 46,
+    "aim": 4
+   }
+  ]
+ },
+ "spawn": [
+  {
+   "frame": 0,
+   "type": "humpback",
+   "ahead": -10,
+   "dist": 80,
+   "age": 41.7,
+   "n": 1,
+   "swim": "left"
+  }
+ ],
+ "notes": "Klipp 17,41-22,36 s (det rolige partiet). Båten og kameraet mot midnattssola (asimut 347°, 3,4° over havet). Hvalen settes ut i bilde 0, 200 m foran litt til venstre. Første forsøk 10.11: hvalen 200 m unna var en prikk. Nå 75 m fra båten og satt ut ved siste oppdukking (age 41,7 s), så blåsten kommer etter 0,4 s og halen fra rundt 2,3 s. Andre forsøk: hvalen svømte inn bak båten før halen kom; nå 62 m unna og svømmer mot venstre. Tredje forsøk: hvalen lå rett foran og ble skjult av båten; nå 80 m foran og kameraet høyere, så hvalen ses over overbygget mellom båten og sola. Fjerde forsøk: blåsten og ryggen synes, men halen kom bak styrhuset; hvalen lenger til venstre (-15°), kameraet stille i sideretning. Femte forsøk: på -15° svømte hvalen ut av bildet (stående format, ±13° til siden); nå -10° og kameraet høyere (18°), så hvalen ses over masten.",
+ "quality": "ultra"
+}

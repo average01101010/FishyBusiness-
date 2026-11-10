@@ -1,0 +1,37 @@
+{
+ "name": "Kystbåten mot kulingen utenfor Vardø",
+ "when": "2026-10-27T12:15:00Z",
+ "boat": "kyst21",
+ "place": {
+  "lat": 70.395,
+  "lon": 31.1,
+  "clear": 0.8
+ },
+ "heading": "upwind",
+ "speed": 4.5,
+ "pre": 3,
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 194,
+    "pitch": 4,
+    "dist": 92,
+    "fov": 28,
+    "aim": 3
+   },
+   {
+    "t": 3.5,
+    "yaw": 186,
+    "pitch": 4.5,
+    "dist": 88,
+    "fov": 28,
+    "aim": 3
+   }
+  ]
+ },
+ "notes": "Klipp 22,36-24,87 s. Mot vinden (16,8 m/s, 2,2 m sjø). Første forsøk 10.11 øst for Vardø: ingen land i bildet, og de store skumflakene nærmest et lavt kamera så ut som isflak. Nå nord for Vardø (kameraet forfra ser sørover mot byen) og høyere. Andre forsøk: i 7 knop ble skumkragen en hvit ring rundt skroget og kjølvannet sikksakkstriper; nå 4,5 knop, som er mer naturlig mot kulingen. Tredje forsøk: store, flate hvite skumflak i forgrunnen så ut som papir; nå 90 m unna med 28° brennvidde, så forgrunnen er langt unna. Ved 12 m/s var sjøen bare 0,6 m (weather.py), så kulingen beholdes.",
+ "quality": "ultra"
+}

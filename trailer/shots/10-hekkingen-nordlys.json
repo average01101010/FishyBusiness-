@@ -1,0 +1,37 @@
+{
+ "name": "Kystnotbåten ved Hekkingen fyr under nordlyset",
+ "when": "2027-01-03T22:00:00Z",
+ "boat": "ringnot38",
+ "place": {
+  "lat": 69.6,
+  "lon": 17.8,
+  "clear": 0.5
+ },
+ "heading": "coast",
+ "speed": 6,
+ "pre": 2,
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 268,
+    "pitch": -6,
+    "dist": 90,
+    "fov": 56,
+    "aim": 30
+   },
+   {
+    "t": 3.5,
+    "yaw": 276,
+    "pitch": -4,
+    "dist": 88,
+    "fov": 56,
+    "aim": 28
+   }
+  ]
+ },
+ "notes": "Klipp 34,85-37,36 s. Nordlys 0,95, skyfritt (weather.py). Land om babord, kameraet til styrbord og under siktepunktet, så himmelen fyller den øvre delen.",
+ "quality": "ultra"
+}

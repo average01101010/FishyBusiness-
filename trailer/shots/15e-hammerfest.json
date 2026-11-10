@@ -1,0 +1,38 @@
+{
+ "name": "Montasje: Hammerfest",
+ "when": "2027-07-06T09:00:00Z",
+ "boat": "kyst21",
+ "place": {
+  "lat": 70.664,
+  "lon": 23.675,
+  "clear": 0.15
+ },
+ "heading": "coast",
+ "speed": 6,
+ "pre": 2,
+ "dur": 1.6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 252,
+    "pitch": 6,
+    "dist": 90,
+    "fov": 44,
+    "aim": 12
+   },
+   {
+    "t": 1.6,
+    "yaw": 257,
+    "pitch": 6.5,
+    "dist": 87,
+    "fov": 44,
+    "aim": 12
+   }
+  ]
+ },
+ "notes": "Klipp 11 (montasjen 37,37-41,13 s), ett slag (0,63 s). Ved havna i byen, land og by om babord, kameraet lavt til styrbord så byen står i øvre del av bildet. Første forsøk 10.11 høyt og langt ute viste bare sjø og en grønn strand. Andre forsøk: lyse striper i det grunne havnevannet med sola bak kameraet (spillets effekt, i backloggen); med #shoal0 forsvant de her (ikke i Bodø), så den står.",
+ "quality": "ultra",
+ "hash": "shoal0"
+}
