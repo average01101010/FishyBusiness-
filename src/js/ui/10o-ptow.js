@@ -110,7 +110,7 @@ const PTOW = (() => {
   }
   // ---- the polling
   function tick(){
-    if (!cloudOn() || P.off || P.busy || (typeof document !== 'undefined' && document.hidden)) return;
+    if (!S || !S.boat || !cloudOn() || P.off || P.busy || (typeof document !== 'undefined' && document.hidden)) return;   // (!S: signed in, the map still loading, ui/11-boot.js)
     if (S.ptow && S.ptow.id){ P.busy = true; rpc('tow_mine', {}).then(onMine).catch(() => {}).finally(() => { P.busy = false; }); return; }
     if (S.ptowH && S.ptowH.id){ P.busy = true; rpc('tow_mine', {}).then(onMineH).catch(() => {}).finally(() => { P.busy = false; }); return; }
     if (Date.now() - P.at < 30000 || S.boat.status === 'port' || distress()) { if (S.boat.status === 'port') P.open = []; return; }

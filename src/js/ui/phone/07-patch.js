@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skum-101126', '10.11.2026', 'Skumtoppene på sjøen', 'The whitecaps on the sea', [
+       ['Skummet fra en bølgetopp som brekker, blir liggende og tynnes ut med en gang i stedet for å blinke inn og ut.', 'The foam from a breaking crest stays and thins out at once instead of blinking in and out.'],
+       ['Ovenfra synes ikke lenger en stor firkant rundt båten der skummet var tettere: det glir jevnt over i sjøen rundt.', 'From above, a large square round the boat where the foam was denser no longer shows: it fades evenly into the sea round it.'],
+       ['Skumtoppene ligger spredt som på ekte sjø, ikke i rekker og bånd, og skummet blir liggende i vannet som kjølvannet.', 'The whitecaps lie scattered as on a real sea, not in rows and bands, and their foam stays in the water as the wake does.'],
+       ['Ute på sjøen møter båten dønningen og de lange bølgene i sin egen fart, så hun stamper og ruller i riktig takt.', 'Out at sea the boat meets the swell and the long waves at her own speed, so she pitches and rolls at the right pace.']]],
     ['ob9-101126', '10.11.2026', 'Den brukte hurtigsjarken', 'The used speed sjark', [
        ['Sløyebenken på den brukte hurtigsjarken står langs babord ripe tvers av luka, så de to som sløyer, står side om side ved den, og fisken går rett ned i rommet. Stampene står under skjulet forut for benken.', 'On the used speed sjark the gutting bench stands along the port rail abreast the hatch, so the two gutting stand side by side at it, and the fish go straight down into the hold. The line tubs stand under the shelter forward of the bench.'],
        ['Juksamaskinene står på begge sider, fritt for haleporten, døra og kranen. Hun har plass til tre; har du flere om bord, er de tatt i land og betalt tilbake, og det samme gjelder trinnet på maskinene.', 'The jigging machines stand on both sides, clear of the hauling port, the door and the crane. She has room for three; any more aboard were taken ashore and paid back, and so was the reels\' tier.'],
