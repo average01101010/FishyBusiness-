@@ -1,23 +1,20 @@
 # Tekst på skjermen
 
-*Masteren har ingen stemme (Jonas 30.10.2026: stemme ordner han selv, som egen versjon senere). Teksten er det eneste språket i filmen, så den må bære alene med lyden av. Kort, store bokstaver bare i stedsnavn, ingen utropstegn. Skrift: Source Serif 4 Display Semibold (spillets egen, OFL), hvit med myk skygge, nederst i midtre tredjedel så den ikke dekkes av TikTok-knappene.*
+*Masteren har ingen stemme (Jonas 30.10.2026: stemme ordner han selv, som egen versjon senere). Teksten er det eneste språket i filmen, så den må bære alene med lyden av. Kort, store bokstaver bare i stedsnavn, ingen utropstegn. Skrift: Source Serif 4 Display Semibold (spillets egen, OFL), hvit med myk skygge, nederst i midtre tredjedel så den ikke dekkes av TikTok-knappene. Tegnes av `tools/titles.py`. Tidene følger `audio/music-edit-1.json` (v2, 50 s, 10.11.2026).*
 
-| # | Tid (s) | Vindu | Tekst | Faller på |
-|---|---|---|---|---|
-| T1 | 7–10 | 3 s | Finnsnes | klippet til brua (3) |
-| T2 | 12–14 | 2 s | Lofoten | klipp 4 |
-| T3 | 15–17 | 2 s | Lofotfisket | klipp 5 |
-| T4 | 18–20 | 2 s | Finnmark | klipp 6 |
-| T5 | 21–23 | 2 s | Midnattssol | klipp 7, idet hvalen blåser |
-| T6 | 24–26 | 2 s | Varanger | klipp 8 |
-| T7 | 27–29 | 2 s | Bergen | klipp 9 |
-| T8 | 36–39 | 3 s | Fra sjark … | klipp 11, siste slag før droppet |
-| T9 | 50–53 | 3 s | … til snurper | klipp 13, når begge båtene er i bildet |
-| T10 | 54–58 | ett slag hver | Hvaler · Rørvik · Bodø · Tromsø · Hammerfest · Kirkenes | klipp 14 |
-| T11 | 58–59 | – | (logo) | siste store slag |
-| T12 | 59–62 | 3 s | Spill gratis på detstorebla.no | ett slag etter logoen |
-| T13 | 59–62 | liten | Kart: Kartverket (CC BY 4.0), Mapzen (CC BY), OpenStreetMap (ODbL) | nederst på sluttkortet |
+| # | Tid (s) | Tekst | Faller på |
+|---|---|---|---|
+| T1 | 7,70–10,30 | Finnsnes | trebåten under Gisundbrua (3) |
+| T2 | 12,57–14,67 | Lofoten | klipp 4 |
+| T3 | 15,07–17,17 | Lofotfisket | klipp 5 |
+| T4 | 18,00–21,60 | Midnattssol | klipp 6, idet hvalen blåser |
+| T5 | 22,53–24,63 | Varanger | klipp 7 |
+| T6 | 25,03–27,23 | Fra trebåt … | klipp 8, siste takt før droppet (var «Fra sjark …»: filmen begynner med trebåten) |
+| T7 | 37,40–41,10 | Hvaler · Rørvik · Bodø · Tromsø · Hammerfest · Kirkenes | ett slag hver, klipp 11 |
+| T8 | 41,73–44,63 | … til snurper | klipp 12, når begge båtene er i bildet |
+| T9 | 44,87 | (logo) | slaget der utgangen begynner |
+| T10 | 45,50–50,01 | Spill gratis på detstorebla.no | ett slag etter logoen |
 
-Ingen tekst under klipp 1, 2, 10 og 12. Der skal bildet og musikken få stå alene.
+Ingen tekst under klipp 1, 2, 9 og 10. Der skal bildet og musikken få stå alene. Ingen kildehenvisning i bildet (Jonas 10.11.2026); den står i teksten under videoen.
 
-**Stemmeversjonen** (Jonas' egen): om den kommer, legges den over klipp 1–3 og 13, høyst fire korte linjer, og teksten T1, T8 og T9 beholdes likevel, så versjonen fungerer med lyden av.
+**Stemmeversjonen** (Jonas' egen): om den kommer, legges den over klipp 1–3 og 9, høyst fire korte linjer, og T1, T6 og T8 beholdes likevel, så versjonen fungerer med lyden av.

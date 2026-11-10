@@ -1,0 +1,33 @@
+{
+ "name": "Kystbåten på 21 m ved kaia på Finnsnes",
+ "when": "2027-06-05T03:30:00Z",
+ "boat": "kyst21",
+ "moor": {
+  "port": "finnsnes",
+  "kind": "main"
+ },
+ "dur": 3.5,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 160,
+    "pitch": 4,
+    "dist": 26,
+    "fov": 46,
+    "aim": 2
+   },
+   {
+    "t": 3.5,
+    "yaw": 140,
+    "pitch": 7,
+    "dist": 30,
+    "fov": 46,
+    "aim": 2
+   }
+  ]
+ },
+ "notes": "Klipp 24,87-27,38 s, tekst «Fra trebåt …», siste takt før droppet. Nært baugen fra sjøsiden (kaia ligger til styrbord).",
+ "quality": "ultra"
+}

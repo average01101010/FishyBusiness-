@@ -1,0 +1,49 @@
+{
+ "name": "Fra luften over Reine: tindene med snø på toppene en maikveld",
+ "when": "2027-05-10T19:00:00Z",
+ "boat": "snekke",
+ "place": {
+  "lat": 67.915,
+  "lon": 13.1,
+  "clear": 0.15
+ },
+ "heading": 300,
+ "speed": 5,
+ "quality": "ultra",
+ "pre": 1,
+ "dur": 3.5,
+ "cam": {
+  "mode": "fixed",
+  "keys": [
+   {
+    "t": 0,
+    "eye": {
+     "lat": 67.912,
+     "lon": 13.118,
+     "h": 300
+    },
+    "tgt": {
+     "lat": 67.935,
+     "lon": 13.06,
+     "h": 330
+    },
+    "fov": 54
+   },
+   {
+    "t": 3.5,
+    "eye": {
+     "lat": 67.915,
+     "lon": 13.11,
+     "h": 290
+    },
+    "tgt": {
+     "lat": 67.936,
+     "lon": 13.056,
+     "h": 330
+    },
+    "fov": 54
+   }
+  ]
+ },
+ "notes": "Klipp 12,40-14,93 s, tekst «Lofoten». Jonas 10.11: «noen naturbilder fra luften som viser masse fjelltopper som enda har litt snø på toppene». Fritt kamera 400 m over Reinefjorden mot tindene nord-vest for Reine; sola 11° i vest-nordvest gir sidelys. Snekka i fjorden under. Andre forsøk: tindene sto for langt unna; nå 2-3 km fra dem og 300 m opp, så de fyller bildet."
+}

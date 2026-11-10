@@ -120,6 +120,7 @@ Rekkefølgen er satt etter hva som verner spillerne først og hva Jonas må gjø
 - **Funn 6** følger sin egen plan (steg 49) og byggingen den legger inn, i rekkefølgen V7 sier. Etter V7 B må dette være ute før lanseringen:
   - velkomstgaven gitt én gang av serveren (`guest_merge`)
   - kjøpt haill gitt og talt fra `grants`, aldri fra klientens `shop_done` alene
+- **Status 10.11.2026:** Jonas valgte V7 A. Planen for funn 6 er skrevet (`docs/planer/haill-saldo.md`): HS1 velkomstgaven (steg 95, klar) og HS2 kjøpt haill fra `grants` (steg 96, etter valg 29 V1) er over lanseringslinja; HS3–HS5 etter.
 - **Filer:** `build.mjs`, `tools/server/Caddyfile` (CSP-hodet for `/`, eller meta i siden), `ui/11-boot.js` og `ui/` der et inline-skript eller `eval` finnes, `docs/planer/sikkerhet-skyen.md`.
 - **Tester:**
   - ny `tests/csptest.py` (LITE): spillet går en hel førstetur, Kontoen og butikken under CSP-en uten et eneste `securitypolicyviolation`, og et innsatt `<script>` fra en tilbakemelding kjøres ikke. Sett rød uten CSP-en.
@@ -167,8 +168,6 @@ Venter på Jonas (kap. 5, punkt 5–8). Så bygges dette:
 ## 4. Valgene
 
 Svar som «L1 V1 A» osv. Ett anbefalt alternativ per valg.
-
-**Besvart 10.11.2026 (Jonas):** V1 A, V2 A, V3 A, **V4 B** (bare push, med varsel for nede og heng; ingen e-post, ingen e-posttjeneste, ingen ekstra databehandler, kap. 5 punkt 10 faller bort), V5 A, V6 A, V7 A. Fasene 74–78 følger dette; 77 (L1d) bygges uten `err-mail` og `mail_queue`.
 
 - **V1. Hvor produksjonen kommer fra.**
   - **A (anbefalt): `main` er produksjonen,** og et slipp er en PR fra arbeidsgrenen til `main` som flettes som fast-forward. Deny-lista nekter alt nå en økt å pushe til `main`, så ingenting slippes ved et uhell. PR-en viser hva som kommer med.

@@ -214,7 +214,7 @@
     fishCam(){ cam.helm = false; cam.dist = 7; cam.pitch = 0.22; cam.yaw = -0.85; },
     // the cinema: on or off (the HUD is the page's: body.kino-clean)
     kino(on){ if (on !== undefined){ KINO.on = !!on; KINO.shot = null; } return KINO.on; }, intro:introStart, introOn:() => !!INTRO, get kinoShot(){ return KINO.shot ? KINO.shot.type : null; },
-    isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
+    film(o){ FILM = o || null; return !!FILM; }, isHelm:() => cam.helm, setHelm(on){ const G = GEO(vtype()); cam.helm = !!on; cam.zoom = 1; cam.hy = 0; cam.hp = G.hp !== undefined ? G.hp : -0.07; cam.fov = G.fov || 55; },
     // (Ø3c: a terrain mesh's heights, forest and land cover worked out round the eye as buildTerrain does, timed, with a hash of what
     // came out, so a change in meshRows can be shown to give the same mesh)
     _debug:{meshBench(n, span, ox, oz){ const x0 = lastEye[0] + (ox || 0) - span / 2, z0 = lastEye[2] + (oz || 0) - span / 2, B = meshBegin(x0, z0, span, span, n), t0 = performance.now(); meshRows(B, Infinity); const ms = performance.now() - t0;
