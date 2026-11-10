@@ -4,6 +4,12 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **HS1, velkomstgaven fra serveren (steg 95, 10.11.2026, Jonas' økt, grenen `claude/hs1-velkomstgave-u3rnfm`; `docs/planer/haill-saldo.md` status, «Velkomstgaven kommer fra serveren» i `docs/systemer/skyen-og-felles-verden.md`):** bygd, **ikke rullet ut**: PR-en venter på Jonas (ekte penger og gaver), og migreringen `20261110150000_reg_gift.sql` er ikke kjørt. Det som står igjen og er antatt:
+  - **Rekkefølgen:** migreringen først, spillet rett etter, aldri omvendt (spillet uten `reg_luksus` på serveren gir ingen gave). En side fra før HS1 mot den nye serveren gir den som registrerer seg, to luksushaill og en kjøpsbekreftelse uten pris; det går over når siden er oppdatert.
+  - **Kontoene som fantes, er 13 (WorkOS-ID-ene), ikke 19** som planen sa; de regnes som å ha fått gaven. En av dem som aldri fikk den, får den ikke.
+  - **Etter utrullingen:** lesende spørring, antall `reg_luksus`-rader skal være lik antall kontoer.
+  - **Ikke prøvd mot den ekte databasen:** migreringen er kjørt i `sqltest` (PostgreSQL lokalt, også to ganger), ikke på Supabase. Den første starten for en konto laget uten gjest («Lag konto») er ikke spilt i en test; den går samme vei (`tm_hello`, så `shopClaim` fra `shopStart`).
+  - Et nytt spill etter at gaven er levert, har den ikke (som kjøpt haill i dag); HS2 (steg 96) retter det.
 - **Steg 100, kystvaktskipene (10.11.2026, Jonas' økt, grenen `ccr-5e1ba2f4-pusvyd`; `docs/skipsmodeller/kystvakt-grunnlag.md`, 5.30d i `docs/systemer/kvoter-og-regler.md`):** to skip fra `tools/boats/kv.py` (47 m ved kai og langs kysten, 93 m til havs med helikopterdekk og lettbåten som går til fartøyet). Det som er antatt eller står igjen:
   - **Ingen bilder:** bare lengde, bredde, dypgang og deplasement har kilde. Overbyggets plass og høyder, masta, fargen, stripenes vinkel og bredde, «KYSTVAKT»s farge og størrelse og lettbåtene er antatt etter typen. Et sidebilde av hver klasse ville låst dem.
   - **Det store skipets helikopterdekk** er valg 30, ikke lest for forbildet (VS 794-typen); 105 m-klassen har det. Bulb er ikke modellert på noen av dem.
