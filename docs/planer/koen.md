@@ -29,6 +29,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
+- `ccr-07d61e23-19971d` (Jonas' økt, 10.11.2026 06:09): steg 21c Ø3d, `GLBM` som typede tabeller; eier `vessel3d.js`, delene i `view3d/` som leser `GLBM` og `tests/unit/`.
 
 ## Valg som venter på Jonas
 
@@ -63,7 +64,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 18b | **Ø12 D** Driftsplan 2: de siste navnene fra den gamle planen | Driftsplan 2 | klar når ingen økt eier `06g-plan2.js`, `13-work.js` eller `10-gear.js` (ikke samtidig med OB1, OB2 eller R); startmeldingen i `start/` | steg 18 (ferdig) | `core/06d-plan-felles.js`, `06g-plan2.js`, `05-vessels.js`, `03-simulation.js`, `13-work.js`, `10-gear.js`, `06-services.js`, `phone/11-rederi.js`, `tests/unit/havplan.test.mjs` | backloggen «Ø12 C …, det som står igjen» |
 | 19 | **Ø11.8** Farvannet: fartsgrensene og sjømerkene | Lover og sikkerhet | klar (H3b og Ø12 C er ute; hel startmelding i `start/`) | steg 18 (ferdig) | ny `tools/fart/`, `src/data/fart.json`; `core/05e-sjovei.js`, `05-vessels.js`, `16b-dyn.js`, `ui/03-map.js`, `03a-chart.js` | `lover-regler-sikkerhet.md` kap. 6 |
 | 20 | **Ø9 F5** Motstand, grunt vann og bankeffekt | Fysikk 4 | ferdig (c3b21e6, 09.11.2026, versjon c06ffdeaf955; Jonas' økt, `ccr-aa5c8b75-dif283`; squaten i 3D venter til OB7 er ute, backloggen) | steg 7 (ferdig) | `core/16b-dyn.js`, `05-vessels.js` (`groundCheck`), `ui/` (dybden under kjølen) | `fysikk-4-sjo-og-skrog.md` F5 |
-| 21c | **Ø3d** Ytelse: `GLBM` som typede tabeller (skilt ut av Ø3c 09.11.2026) | Ytelse | klar når R og OB6 ikke eier `view3d/09-landing-deck.js` og `10-gear.js` (hel startmelding i `start/21c.md`) | steg 21b | `vessel3d.js`, delene i `view3d/` som leser `GLBM` (`09`, `10`, `16` m.fl.), `tests/unit/` | `3d-verden.md` 4.11p, backloggen «Førstegangsstarten, resten» (c) |
+| 21c | **Ø3d** Ytelse: `GLBM` som typede tabeller (skilt ut av Ø3c 09.11.2026) | Ytelse | pågår (Jonas' økt, gren `ccr-07d61e23-19971d`, 10.11.2026 06:09) | steg 21b | `vessel3d.js`, delene i `view3d/` som leser `GLBM` (`09`, `10`, `16` m.fl.), `tests/unit/` | `3d-verden.md` 4.11p, backloggen «Førstegangsstarten, resten» (c) |
 | 26 | **H3e** Kystvakta, hele turen og stikkprøvene | Havsteget | klar (H3d2 rullet ut 09.11.2026; hel startmelding i `start/`) | steg 25 (ferdig) | `core/09j-kystvakt.js`, `tests/havtur.py`, `phone/07-patch.js` | `havsteget-h3-snokrabbe.md` H3e |
 | 27 | **Ø11.9** Arbeidsavtalen | Lover og sikkerhet | klar (startmeldingen mangler; Ø8b M er ute, rutinen eller koordinatoren skriver den fra planen) | steg 8 (ferdig) | `core/04-crew.js`, `14-crewlife.js`, `phone/13-mannskap-bank-meld.js` | `lover-regler-sikkerhet.md` kap. 6 (fristene i ekte tid kan bli et valg) |
 | 28 | **Ø5 rest a** M5-resten (navnet og flagget i modellen; innbyttebåten ved kaia er tatt ut av B) og M9-resten | Butikkene | klar (startmeldingen mangler) | | `view3d/23-camera-frame.js`, `24-cinema.js`, `ui/10j-paint.js`, `core/09k-market.js`; admin, `build.mjs` | `butikker-og-sponsorer.md`, backloggen 10.7 |
