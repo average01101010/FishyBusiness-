@@ -121,3 +121,44 @@ fanget i nærbildene av runde 1, der baugen allerede så krøllete ut, og baugen
 hoppet jeg fant i stedet for å måle hele flaten; (2) jeg ødela skriptet med en `sed` som byttet `X0` i alle navn og måtte
 gjenopprette det fra mitt eget skriv; (3) ingen overlegg mot tegningene (de ligger ikke i repoet), bare mot tabellene; (4) deplasementet ble
 11,3 t mot 12 t etter at buen ble byttet; (5) stripene knekker fortsatt synlig der de går rundt stevnen.
+
+## 9. OB8: arbeidet om bord, setteporten, bremmen og karakteren etter Jonas' skala (10.11.2026)
+
+Steg 86 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-869710d8-bo5iwu`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Før- og etter-bildene er tatt med `tests/ombord.py sjark`, bare bilder, begge formater; arkene ligger i `docs/okter/2026-11-10-ob8/`.
+
+### 9.1 Bildene av typen (valg 22 B) og Jonas' valg
+
+Commons-API-et (`api.php`) svarte 429 på hver forespørsel i hele økta; den vanlige søkesiden svarte, og miniatyrene ble hentet direkte fra `upload.wikimedia.org` (noen ga 429 og ble hentet på nytt etter en pause). Lisensene er ikke lest; bildene er brukt som referanse for planen, ikke lagt inn i spillet. Bildene ligger ikke i repoet, bare lenkene.
+
+| # | Bilde (Wikimedia Commons) | Hva det viser |
+|---|---|---|
+| 1 | [Fishing boat Henningsvær DSC03772.jpg](https://commons.wikimedia.org/wiki/File:Fishing_boat_Henningsv%C3%A6r_DSC03772.jpg) | En sjark i Henningsvær fra siden: høy baug med bakk og styrhus forut, den lave midja med kar og kasser, et hvitt redskapsrom akter med masta. Nærmest havsjarkens plan |
+| 2 | [SJARK fiskebåt fiskegarn … (SANGIS R-5-S 10,5x4,6m 2000) … Foto fra Jorenholmen P-hus A.jpg](https://commons.wikimedia.org/wiki/File:SJARK_fiskeb%C3%A5t_fiskegarn_Salg_av_fisk_fra_b%C3%A5t_ved_kai_(SANGIS_R-5-S_10,5x4,6m_2000)_%C3%98STERV%C3%85GKAIEN_Stavanger_havn_harbour_NORWAY_2022-03-29_Sale_from_fishing_boat_Garnrulle_Net_drum_winch_Foto_fra_Jorenholmen_P-hus_A.jpg) | En garnsjark på 10,5 × 4,6 m ovenfra: styrhuset forut, garnhaleren på styrbord, sorteringen midt, garnrulla akter og garnet ut over hekken |
+| 3 | [Fishing boats Henningsvær.jpg](https://commons.wikimedia.org/wiki/File:Fishing_boats_Henningsv%C3%A6r.jpg) | To sjarker baug mot kaia: høy baug, styrhuset forut, mast og bom |
+
+Jonas fikk arket med de tre og tre før-bilder fra spillet (settingen akter, juksa i klump, de to ved bordet) og to spørsmål. **Bildene: «Ja, bruk dem».** **Settingen** (garnet og lina gikk gjennom redskapsrommet og ut over hekken 10 cm under toppen av skansen, fordi spillet setter over hekken 0,45 m til styrbord for midten i midjehøyden + 0,10, `view3d/10-gear.js` `drawSetting`): A en åpning med rull i hekken og binga og stampene i styrbord gang akter, B binga og stampene flyttet uten åpning, C redskapsrommet bort og åpen hekk som bilde 2. **Jonas 10.11.2026: «A Åpning i hekken».**
+
+### 9.2 Dekket målt og plassene
+
+Målt i spillet før endringen (`qa/deckpoints.py sjark`, `qa/deckgrid.py sjark`, og en liten probe som lar kjernen fylle karet og skriver ut hvor de fire står etter 20 s): den som iser, sto på lukekanten (0,89 m, lukelemmene), og nummer to ved sløyebordet ble trukket 0,45 m inntil den første, fordi plassen 0,7 m akter for ham (`deckcrew.js` `deckAt`) lå inntil redskapsrommets hjørne og falt tilbake mot ham. Garnbinga og stampene sto forut for luka på babord, så settingen gikk på skrå gjennom redskapsrommet.
+
+| Plass | Modellens x (fra hekken), y (babord +) | Hvorfor |
+|---|---|---|
+| Setteporten | i skansen over speilet, y −0,72 til −0,20, terskelen 1,24 m, rull (Ø 6 cm) med topp 1,32 | Spillets sti går ut i y −0,45 og 1,38 m (`check()`: rullen 6 cm under, skansens topp ellers 1,48) |
+| Garnbinga (`kit.garn`) | x 1,25, y −0,92 (460 l, 1,00 × 1,20 m langskips) | Styrbord gang akter ved siden av redskapsrommet; garnet rett akter til porten, 0,44 m klar av redskapsrommet (`check()`) |
+| Stampene (`kit.stamps`) | to i bredden og tre forover fra x 0,75, y −1,17 (`ry` π, `n` 6; resten stables) | Samme gang; den fjerde raden ville stått på lukekarmen |
+| Sløyebordet (`work.table`) | over babord ripe x 3,60 (før 3,30) | Tvers av luka som før; nummer to står nå 0,60 m fra den første, side om side (F19) |
+| Isepakkeren (`work.pack`, ny) | x 3,22, y −1,08, vendt forover mot karet og luka | Før på lukekanten |
+| Juksaplassene (`anchors.jigZ`, ny) | styrbord x 2,95, babord 4,55, styrbord 0,85, babord 0,95, styrbord 5,05 | Fordelt på begge sider, over en meter imellom på samme side, ingen i gangen ved redskapsrommet (binga og stampene står der) eller ved haleren (F21) |
+| Fenderne | begge på babord akter for redskapsrommet | Styrbord gang akter er redskapets |
+| Den fjerde i mannskapet (`crewSpots[3]`) | x 0,95, midt akter | Før i styrbord gang |
+
+### 9.3 Det som er endret
+
+- **Setteporten i hekken** (Jonas: «A»): hullet skåret gjennom skansen over speilet med terskel og kinn i kappens mørkerøde, rulla på to braketter. `check()` har to nye linjer: rullens topp under spillets settehøyde og veien fra binga og stampene til porten klar av redskapsrommet.
+- **Plassene** som i tabellen over; `STAB_AT.sjark` (`core/03c-stability.js`) lest på nytt: garnet og stampene akter på styrbord, bordet 0,3 m forut. Ny sjekk i `tests/unit/trim.test.mjs` (30 garn akter: hekken ned og slagside mot styrbord), sett rød med den gamle tabellen (−0,02° og −1,61°, altså mot babord) og grønn med den nye (0,32° og 1,56°).
+- **Bremmen på styrhustaket** (valg 26): underkanten 0,12 m ut fra veggene med flatt underslag, flaten skrår innover 0,18 m opp til takkanten, kronen 5 cm, mørkerød som fenderlista og kappene (den gamle leppens farge). 0,12 og ikke plastsjarkens 0,17, så gangen på bakken ved siden av huset forblir dekk (`check()`: 0,57 m bred utenfor bremmen, underslaget 1,22 m over den). Mastestøvelen, øyet for vanten, forstagets øye, rekka, lyskasteren og flåtens plass står på taket; sidelanternene (2,82) og arbeidslysene under underslaget.
+- **Spygattene** var alt åpne uten klaffer (runde 4); klasjsjekkens unntak nevnte fortsatt klaffer og er rettet.
+- **Vekta** (valg 18 A): skroget gir 11,30 t ved tegningens vannlinje mot 12 t (6 % under, innenfor 10 %): formen og vannlinja står.
+- **Klasjsjekken** (`qa/clip_havsjark35.py`): 12 punkter, de samme 12 som før endringen (ankerspillets fot 3 mm i bakkedekket ved x 9,25), ikke nye.
+- **`crewclip`**: ny sjekk for F19 (to ved samme bord eller kar minst 0,55 m imellom) for de reviderte båtene, sett rød mot bygget før (sjark 0,45) og grønn etter (0,60). Kyst15, kyst21, snøkrabbebåten og bunntråleren står 0,40–0,45 og hører til sine faser (backloggen).
