@@ -1,4 +1,4 @@
-// HS5 (supabase/migrations/20261110150000_cheat_flags.sql, docs/planer/haill-saldo.md): the server checks a landing against the hold
+// HS5 (supabase/migrations/20261110160000_cheat_flags.sql, docs/planer/haill-saldo.md): the server checks a landing against the hold
 // of the boat's type and a save against the price of it, from two small tables in the database (cheat_vt, cheat_sp) copied from
 // VESSELS and SPECIES. A type the table does not have counts as 500 kg, so a new or changed boat that is not in the table would give
 // honest players a mark. This reads the last migration that fills each table and holds it against the game: every type with its hold

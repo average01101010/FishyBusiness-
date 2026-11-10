@@ -417,7 +417,7 @@ VIEW.navn = () => {
       (r.removed ? '<span class="warn">Tatt bort' + (r.reason ? ': ' + esc(r.reason) : '') + '</span>' : '<input data-nmre maxlength="300" placeholder="Hvorfor (spilleren ser dette)"> <button data-nmdel="' + esc(r.who) + '">Ta bort</button>') + '</td></tr>').join('') + '</table>')
       : '<p class="note">Ingen brukernavn ennå.</p>');
 };
-// ---------- the marks (HS5, supabase/migrations/20261110150000_cheat_flags.sql, docs/planer/haill-saldo.md) ----------
+// ---------- the marks (HS5, supabase/migrations/20261110160000_cheat_flags.sql, docs/planer/haill-saldo.md) ----------
 // A save whose kroner rose more than the server's own numbers explain, or landings above what the fleet can have caught or the
 // account has reported as catch. Nothing is refused or deleted and the player is told nothing. With the switch on, an open mark
 // keeps the account out of the leaderboards, the fiskarlag's goal, the week's push and the open group's sum, while it sees itself.
@@ -436,7 +436,7 @@ function jkWhy(r){ const d = r.data || {}, kr = v => nf(+v || 0, 0) + ' kr', kg 
   return 'Landet ' + kg(d.kg) + ', lasten er ' + kg(d.hold) + ', og flåten kunne ha tatt ' + nf(+d.had || 0, 1) + ' laster siden sist'; }
 VIEW.juks = () => {
   if (!JK){ jkLoad(); return '<p class="note">Henter …</p>'; }
-  if (JK.err) return card('Juks', '<p class="warn">' + esc(JK.err) + '</p>', 'Er migreringen supabase/migrations/20261110150000_cheat_flags.sql kjørt?');
+  if (JK.err) return card('Juks', '<p class="warn">' + esc(JK.err) + '</p>', 'Er migreringen supabase/migrations/20261110160000_cheat_flags.sql kjørt?');
   const rows = JK.rows || [], open = rows.filter(r => !r.cleared), when = v => v ? esc(new Date(v).toLocaleString('nb-NO')) : '';
   return '<div class="grid">' + kpi('Kontoer med merke', nf(JK.open == null ? new Set(open.map(r => r.who)).size : JK.open, 0), nf(open.filter(r => !r.kept).length, 0) + ' ikke sett på') +
       kpi('Ute av topplistene', JK.on ? 'På' : 'Av', JK.on ? 'en konto med merke er ute' : 'merkene skrives bare') + '</div>' +

@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **HS5, kronene og landingene sjekket på serveren (10.11.2026, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`; `docs/planer/haill-saldo.md` HS5, `docs/systemer/skyen-og-felles-verden.md`):** migreringen `20261110150000_cheat_flags.sql`, fanen «Juks» i admin. Står igjen:
+- **HS5, kronene og landingene sjekket på serveren (10.11.2026, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`; `docs/planer/haill-saldo.md` HS5, `docs/systemer/skyen-og-felles-verden.md`):** migreringen `20261110160000_cheat_flags.sql`, fanen «Juks» i admin. Står igjen:
   - **Bryteren `cheat_on` er av.** Jonas slår den på i admin → Juks når han har sett tallene i planen. Til da skrives merkene bare.
   - **Grensene er målt mot lite:** 10 kontoer med landinger, alle med én båt (trebåt, snekke, sjark). Flere båter, driftsplan over mange døgn og havbåter er regnet, ikke målt. Se på merkene i admin de første ukene, og juster `cheat_land` (8 laster, én last i timen) og `saves_cheat_check` (300 000 kr uforklart per døgn, 30 kr per kg last og time) etter dem.
   - **Feil merke som kan komme:** salg av en båt spilleren ikke står i når flåteverdien ikke er meldt (uten samtykke), og en første lagring med mye penger fra spill uten sky. Begge fjernes med «Fjern merket».
@@ -13,6 +13,13 @@
   - **Prisene i mottakene** (`world_get`, `mkt`) holder ikke merkede kontoer ute.
   - **Spillets adminkonto** (`game_admin`) sjekkes ikke for kroner, men for landinger. Om den skal stå på topplistene, er Jonas' valg.
   - **`cheat_vt` og `cheat_sp` må følge `VESSELS` og `SPECIES`:** `tests/unit/juksetabell.test.mjs` blir rød når de ikke stemmer; rettingen er en ny migrering med de nye radene.
+- **HS1, velkomstgaven fra serveren (steg 95, 10.11.2026, Jonas' økt, grenen `claude/hs1-velkomstgave-u3rnfm`; `docs/planer/haill-saldo.md` status, «Velkomstgaven kommer fra serveren» i `docs/systemer/skyen-og-felles-verden.md`):** bygd og **rullet ut 10.11.2026** (daee2c71; Jonas: «Rull ut på det store blå når du mener du er klar»; migreringen kjørt først, 13 rader for 13 kontoer). Det som står igjen og er antatt:
+  - **Gamle sider:** en side fra før HS1 (åpen fane, appen som ikke har hentet ny versjon) mot den nye serveren gir den som registrerer seg, to luksushaill og en kjøpsbekreftelse uten pris; det går over når siden er oppdatert.
+  - **Kontoene som fantes, er 13 (WorkOS-ID-ene), ikke 19** som planen sa; de regnes som å ha fått gaven. En av dem som aldri fikk den, får den ikke.
+  - **Måles:** antall `reg_luksus`-rader mot antall kontoer (like 10.11.2026: 13 og 13); ser de ulike ut senere, er det en konto som ikke har sagt `tm_hello` etter migreringen.
+  - **Ikke prøvd med en ekte ny registrering etter utrullingen.** Den første starten for en konto laget uten gjest («Lag konto») er ikke spilt i en test; den går samme vei (`tm_hello`, så `shopClaim` fra `shopStart`).
+  - Et nytt spill etter at gaven er levert, har den ikke (som kjøpt haill i dag); HS2 (steg 96) retter det.
+  - **`cloudtest` rød på navnekortet (10.11.2026, ikke HS1):** sjekken «every account has a player name» leter etter «mellomrom» med liten m, og spillet svarer «Mellomrom går ikke: brukernavnet er ett ord.» (teksten sto slik på arbeidsgrenen før HS1; testen var sist grønn 06.11.2026). De 32 andre sjekkene er grønne. Rettes i `tests/cloudtest.py` (HS1 eide ikke fila).
 - **Steg 100, kystvaktskipene (10.11.2026, Jonas' økt, grenen `ccr-5e1ba2f4-pusvyd`; `docs/skipsmodeller/kystvakt-grunnlag.md`, 5.30d i `docs/systemer/kvoter-og-regler.md`):** to skip fra `tools/boats/kv.py` (47 m ved kai og langs kysten, 93 m til havs med helikopterdekk og lettbåten som går til fartøyet). Det som er antatt eller står igjen:
   - **Ingen bilder:** bare lengde, bredde, dypgang og deplasement har kilde. Overbyggets plass og høyder, masta, fargen, stripenes vinkel og bredde, «KYSTVAKT»s farge og størrelse og lettbåtene er antatt etter typen. Et sidebilde av hver klasse ville låst dem.
   - **Det store skipets helikopterdekk** er valg 30, ikke lest for forbildet (VS 794-typen); 105 m-klassen har det. Bulb er ikke modellert på noen av dem.

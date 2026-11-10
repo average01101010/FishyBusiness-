@@ -119,7 +119,7 @@ V5 A, avgjort i økta 10.11.2026 etter at Jonas overlot det (Jonas: «Du vet sik
 
 #### HS5 bygd 10.11.2026 (steg 99, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`)
 
-Migreringen `supabase/migrations/20261110150000_cheat_flags.sql`, fanen «Juks» i admin og testene. Slik det virker, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Bryteren `cheat_on` står av til Jonas har sett tallene under.
+Migreringen `supabase/migrations/20261110160000_cheat_flags.sql`, fanen «Juks» i admin og testene. Slik det virker, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Bryteren `cheat_on` står av til Jonas har sett tallene under.
 
 **Avvik fra planen, med grunn:**
 - Kronene sjekkes av en trigger på `saves`, ikke inne i `save_put4`. Da dekkes også `save_put`, `save_put2` og `save_put3`, som fortsatt kan kalles (funn 6), og `save_put4` er urørt.
@@ -197,7 +197,14 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 
 ## Status
 
-- 10.11.2026: **HS5 bygd** (steg 99, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`): migreringen `20261110150000_cheat_flags.sql`, fanen «Juks» i admin, `sqltest` og `admintest`. Tallene fra målingen står under HS5. Bryteren `cheat_on` er av og slås på når Jonas har sett tallene (admin → Juks → «Slå på»).
+- 10.11.2026: **HS5 bygd** (steg 99, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`): migreringen `20261110160000_cheat_flags.sql`, fanen «Juks» i admin, `sqltest` og `admintest`. Tallene fra målingen står under HS5. Bryteren `cheat_on` er av og slås på når Jonas har sett tallene (admin → Juks → «Slå på»).
+- 10.11.2026: **HS1 rullet ut** (daee2c71, versjon 614ea0f825ec; Jonas: «Rull ut på det store blå når du mener du er klar»). Migreringen ble kjørt først (`reg_gift`), spillet pushet rett etter. Lesende spørring etterpå: 13 `reg_luksus`-rader, alle levert, 13 kontoer, ingen hos gjester, varen ikke aktiv. `tm_hello` i databasen var lik den i repoet før migreringen.
+- 10.11.2026: **HS1 bygd** (steg 95, Jonas' økt, grenen `claude/hs1-velkomstgave-u3rnfm`); rullet ut samme dag, se linja over. Migreringen `20261110150000_reg_gift.sql` (varen `reg_luksus`, delindeksen `grants_reg_gift`, `tm_hello` med granten, de leverte radene for kontoene som finnes), `shopClaim` med grenen `data.gift`, `guestGift` som bare ber om `shopClaim`. Det som avviker fra planen eller er verdt å vite:
+  - **Kontoene er 13, ikke 19.** Planen talte `players` uten `guest`-merket, men merket settes først når en gjest lander eller seiler; 7 av de 19 er anonyme innlogginger (gjester) som ikke har gjort det ennå (lesende spørring mot `auth.users` 10.11.2026: 107 anonyme, 13 WorkOS-ID-er, 120 spillere). Migreringen gir derfor den leverte raden til ID-ene som ikke er en uuid (WorkOS, `user_…`). Hadde gjestene fått en levert rad, ville `guest_merge` flyttet den til den nye kontoen, og den som registrerte seg, hadde aldri fått gaven.
+  - **Rekkefølgen ved utrullingen:** migreringen først, spillet rett etter. En side fra før HS1 mot en server med `reg_luksus` gir den som registrerer seg i mellomtida, to luksushaill (nøkkelen og granten) og kjøpsbekreftelsen «Takk for kjøpet!» med varenavnet `reg_luksus` uten pris (sett i `guesttest` mot den gamle koden). Det gjelder bare nye registreringer på en gammel side, og går over når siden er oppdatert.
+  - **Et nytt spill etter at gaven er levert,** har den ikke (granten er `done`), som for kjøpt haill i dag. HS2 retter det (gaven blir en ubrukt enhet på serveren).
+  - `shopClaim` holder nå bekreftelseslista (`rc`) for sitt eget kall, fordi `guestGift` kan starte et kall mens et annet venter på `shop_done`.
+  - Etter utrullingen: `select count(*) from grants where product_id = 'reg_luksus'` skal være lik antall kontoer (WorkOS-ID-er i `players`).
 - 10.11.2026: V5 avgjort i økta etter at Jonas overlot det («Du vet sikkert bedre enn meg hvordan vi forhindrer juksing i spillet. Du har tross alt skrevet koden»): A og mer; HS5 skrevet om (kronene og landingene sjekket på serveren, et merke holder kontoen ute av topplistene og summen for åpen gruppe til Jonas har sett på det) og flyttet over lanseringslinja; startmeldingen i `start/99.md`. Alle valgene i planen er tatt; steg 49 er ferdig.
 - 10.11.2026: V3 besvart av Jonas («Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil. Det må fikses.»): HS4 skrevet om (serveren er fasiten for haill og alt som er kjøpt, også det som er aktivert) og flyttet over lanseringslinja. Om «andre varer» også gjelder spillkronene og det de kjøper, er valg 30 (V5).
 - 10.11.2026: V2 presisert av Jonas: før lanseringen og så snart som mulig (early access); HS3 flyttet over lanseringslinja, startmeldingen skrevet (`start/97.md`).

@@ -953,11 +953,13 @@ async function guestRegister(signIn){
     setTimeout(() => { if (!document.hidden) toast(cloudL('Åpner ikke registreringen? Sjekk nettet, og at nettleseren ikke blokkerer den, og prøv igjen. Spillet ditt ligger trygt her.', 'Does the registration not open? Check the network and that the browser is not blocking it, and try again. Your game is safe here.')); }, 9000);
   } catch (e){ console.error(e); toast(cloudL('Kunne ikke åpne registreringen nå. Sjekk nettet og prøv igjen.', 'Could not open the registration now. Check the network and try again.')); }
 }
-// once back from registering: the welcome gift
+// once back from registering: the welcome gift. The game gives nothing itself (HS1 10.11.2026; the key on the device used to be the
+// gift, so a key set by hand gave a new one at every start): the gift is a grant the server makes once per account (tm_hello,
+// supabase/migrations/20261110150000_reg_gift.sql) and the shop gives like the rest (ui/10i-shop.js shopClaim, data.gift). The key
+// only asks for it at once, and once more should the first ask have been lost
 function guestGift(){
   if (!CLOUD.on || CLOUD.guest || !localStorage.getItem(REG_GIFT)) return;
   try { localStorage.removeItem(REG_GIFT); } catch (e){}
-  giveHaill('luksus', 'gift'); save();
-  msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
-  toast(cloudL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.'));
+  if (typeof shopClaim !== 'function') return;
+  shopClaim(); setTimeout(shopClaim, 5000);
 }

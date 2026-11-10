@@ -3194,7 +3194,7 @@ SOUND (the user's wish 03.10.2026)
 - **144** the music (Jonas 05.10.2026: «rolig ambient instrumentaler som svak stemning i bakgrunnen. Må kunne skrus av i innstillinger»)
 - **312** the whistle and the bell (Ø11.2; sjøveisreglene FOR-1975-12-01-5 rules 32-35 and vedlegg III, read 06.11.2026)
 
-## `src/js/ui/10f-cloud.js` (964 linjer)
+## `src/js/ui/10f-cloud.js` (966 linjer)
 
 THE CLOUD (04.10.2026; docs/lansering.md E and F)
 
@@ -3291,7 +3291,7 @@ THE CLOUD (04.10.2026; docs/lansering.md E and F)
   - 927 `guestNudge(step)`
   - 939 `guestLogin(src)`
   - 945 `guestRegister(signIn)`
-  - 957 `guestGift()`
+  - 960 `guestGift()`
 
 ## `src/js/ui/10g-push.js` (210 linjer)
 
@@ -3342,7 +3342,7 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (140 linjer)
+## `src/js/ui/10i-shop.js` (145 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
@@ -3357,7 +3357,7 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 68 `shopGive(g)`
   - 91 `shopThanks(rc)`
   - 104 `shopClaim()`
-  - 127 `shopStart()`
+  - 132 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (215 linjer)
 

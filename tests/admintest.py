@@ -58,7 +58,7 @@ async def main():
         check(all(n in sp['th'] for n in need) and sp['bars'] == 2 and any('Målt andel' in x for x in sp['k']) and any('Synlig andel' in x for x in sp['k'])
               and all(c in head for c in ('rendered', 'imp', 'nonview', 'undet', 'measured', 'viewable', 're', 'med', 'mean')) and not sp['wide'] and not sp2['wide'],
               'Sponsorer-fanen viser de tre bøttene, målt og synlig andel, fordelingen og median og snitt synlig tid, og CSV-en har kolonnene (IAB 3.2.10.2)', {'th': sp['th'], 'csv': head, 'wide': [sp['wide'], sp2['wide']]})
-        # the marks (HS5, 20261110150000_cheat_flags.sql): the tab with the public id, what, how much over and when; a boat's name with
+        # the marks (HS5, 20261110160000_cheat_flags.sql): the tab with the public id, what, how much over and when; a boat's name with
         # markup is shown as text; «La stå» and «Fjern merket» change the row, the switch turns; and the economy's numbers say whose they are
         await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.click('nav button[data-t="juks"]'); await pg.wait_for_selector('.jkrow', timeout=5000)
         jk = lambda: pg.evaluate("""(() => { const m = document.querySelector('main'), rows = [...m.querySelectorAll('.jkrow')].map(r => r.innerText.replace(/\\s+/g, ' '));
