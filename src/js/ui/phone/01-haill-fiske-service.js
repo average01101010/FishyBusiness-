@@ -1,7 +1,7 @@
   // --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
   function haill(){
     // the luck aboard (its stage and the hours left), the store with «Aktiver», and the shop (the user's list 04.10.2026)
-    const h = ['<div class="ph-c">'], a = S.haill, st = haillStage(), inv = S.haillInv || {haill:0, luksus:0}, hr = v => v >= 48 ? fmt(v / 24, 1) + L(' døgn', ' days') : fmt(v, 0) + L(' t', ' h');
+    const h = ['<div class="ph-c">'], a = S.haill, st = haillStage(), inv = haillStock(S.haillInv, S.haillSrv, S.haillUsed), hr = v => v >= 48 ? fmt(v / 24, 1) + L(' døgn', ' days') : fmt(v, 0) + L(' t', ' h');
     if (a && st){ const X = HAILL[a.type], tot = X.steps[X.steps.length - 1][0], left = haillLeft(), nx = X.steps.find(q => haillAge() < q[0]);
       h.push('<div class="ph-card haillc"><h4>' + st[S.lang] + ' ' + L('om bord', 'aboard') + '</h4>' + kv(L('Fiskelykke nå', 'Luck now'), '+' + Math.round(st.v * 100) + ' %') + '<div class="qbar"><i style="width:' + (left / tot * 100).toFixed(0) + '%;background:#c9a227"></i></div>' +
         (X.steps.length > 1 ? kv(L('Neste trinn om', 'Next stage in'), hr(nx[0] - haillAge())) : '') + kv(L('Borte om', 'Gone in'), hr(left)) + '</div>'); }

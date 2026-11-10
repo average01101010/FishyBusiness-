@@ -101,6 +101,37 @@ const UPDATE = (() => {
   return {start, check, bar, mine};
 })();
 
+// ================= the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md) =================
+// A build with the channel test (KYST_CHANNEL=test, test.detstorebla.no) says so with a small fixed label at the top left, so a
+// picture or a report from it is never taken for the game the players have. It takes no touch and lies above no button: the corner
+// itself is the small plotter's (its canvas opens the chart, and its minimise button lies on the corner), so the label stands just
+// to the right of the plotter while that is there, and in the corner when it is not (the loading screen, the plotter minimised).
+const CHANNEL_TAG = (() => {
+  const ch = typeof cloudChannel === 'function' ? cloudChannel() : '';
+  let el = null;
+  const lang = () => { const s = typeof cloudS === 'function' ? cloudS() : null; return s && s.lang ? s.lang : /^(nb|nn|no)/i.test(navigator.language || 'no') ? 'no' : 'en'; };
+  function place(){
+    if (!el) return;
+    const t = lang() === 'en' ? 'Test build' : 'Testutgave'; if (el.textContent !== t) el.textContent = t;   // the language is known once the save is read
+    let x = 2;
+    for (const id of ['miniPlot', 'plotMin']){
+      const m = document.getElementById(id), r = m && m.getClientRects().length ? m.getBoundingClientRect() : null;
+      if (r && r.width > 0 && r.top < 40 && r.left < 40 && getComputedStyle(m).visibility !== 'hidden') x = Math.max(x, Math.round(r.right) + 6);
+    }
+    const l = 'calc(env(safe-area-inset-left,0px) + ' + x + 'px)'; if (el.dataset.l !== l){ el.dataset.l = l; el.style.left = l; }
+  }
+  function show(){
+    if (ch !== 'test' || el) return false;
+    el = document.createElement('div'); el.id = 'chTag'; el.setAttribute('aria-hidden', 'true');
+    el.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 2px);z-index:2147483000;pointer-events:none;' +
+      'padding:1px 5px;border-radius:4px;background:rgba(180,40,30,.82);color:#fff;font:700 9px/1.3 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap';
+    document.body.appendChild(el); place(); setInterval(place, 1000); addEventListener('resize', place);
+    return true;
+  }
+  return {ch, show, place};
+})();
+try { CHANNEL_TAG.show(); } catch (e){}
+
 // ================= the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109) =================
 // Firefox and Opera on Android drew the 3D view at 27-35 frames a second on a tablet that has 60 in Chrome, even on the lowest 3D
 // level, so the browser and not the drawing held it back. Those browsers get a small card on the loading screen: the game runs

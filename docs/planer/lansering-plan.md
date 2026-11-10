@@ -281,3 +281,10 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
 ## Status
 
 - 09.11.2026: planen skrevet (L1, steg 71, Jonas' økt, gren `ccr-41bf0bd0-c7ywb9`). Fasene er steg 74–79 i køen med `venter på valg`. Valgene er L1 V1–V7 under «Valg som venter på Jonas». Ingenting er bygd.
+- 10.11.2026: **L1a bygd** (steg 74, Jonas' økt, gren `ccr-1ddbadbc-g5fj4d`), etter V1 A og V3 A. Det som ble avgjort i økta, står i «Testutgave og produksjon» i `docs/systemer/publisering.md`:
+  - merkelappen står til høyre for minikartet, fordi hjørnet er minikartets og minimer-knappens
+  - blokken `test` velges av kanalen **eller** verten, så et testbygg aldri når produksjonens sky
+  - sanntidsreléet er produksjonens: ingen `/rt` på testadressen, og reléet lastes opp bare fra `main`
+  - `deploy.yml` nekter et testbygg til `current/` og et bygg uten kanal til `test/`
+  - admin-siden i testbygget får testprosjektet
+  - «Måles» i L1a: to opphav gir to `localStorage` og to tjenestearbeidere av seg selv; «Ny versjon er ute» spør `version.json` ved siden av siden. Ingen av delene er prøvd på den ekte testadressen ennå.

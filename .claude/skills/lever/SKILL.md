@@ -1,6 +1,6 @@
 ---
 name: lever
-description: Sjekklista før en endring i spillet pushes til arbeidsgrenen (som ruller ut til detstorebla.no). Brukes som siste steg i hver endring, uansett størrelse.
+description: Sjekklista før en endring i spillet pushes til arbeidsgrenen (som ruller ut til testutgaven på test.detstorebla.no; detstorebla.no endres bare av et slipp fra main). Brukes som siste steg i hver endring, uansett størrelse.
 ---
 
 # /lever
@@ -16,5 +16,5 @@ Alt under gjøres i rekkefølge. Et punkt som ikke gjelder (for eksempel skjermb
 7. **Dokumentasjonen.** Systemdokumentet i `docs/systemer/` får det som er nytt eller endret, med dato og Jonas' valg der det var et valg. `docs/BACKLOG.md`: det som er rettet, flyttes til «Strøket» med dato; nytt som ble oppdaget, legges inn. `python3 tools/docs/kodekart.py` når funksjoner er lagt til eller flyttet.
 8. **Commit.** Én commit per endring. Meldingen sier hva som er endret og hvorfor, hvilke tester som gikk, og hvor det er prøvd. Ingen modellnavn i meldingen (commit-vakten i `.claude/hooks/commitvakt.py` nekter en commit med `Claude Opus 5.5`, `claude-sonnet-5-5` eller en Co-Authored-By-linje med Claude; Claude-Session-lenka er grei). `git add` bare filene som hører til endringen (ikke `dist/`, `tests/out/`, `dist-vec/`). Ta med `tests/historikk.tsv` når testene har skrevet linjer i den (historikken for ustabile tester, `docs/systemer/testing.md`).
 9. **Push.** `git push -u origin ccr-5e1ba2f4-pusvyd` (fra en egen gren: `git merge-base --is-ancestor origin/ccr-5e1ba2f4-pusvyd HEAD` først, så `git push origin HEAD:ccr-5e1ba2f4-pusvyd`). Ved nettfeil: nytt forsøk etter 2, 4, 8 og 16 sekunder. Arbeidsrutinen (`tools/plan/RUTINE.md`) pusher bare når porten der holder; en økt med Jonas pusher når han har sagt «rull ut» eller «kjør på», eller når startmeldingen fra `docs/planer/koen.md` sier at porten avgjør.
-10. **Utrullingen.** Når `src/` er endret: `gh api "repos/average01101010/FishyBusiness-/actions/runs?head_sha=$(git rev-parse HEAD)" --jq '.workflow_runs[] | [.name, .status, .conclusion] | @tsv'` til «Appen på Hetzner» og «Appen på GitHub Pages» er `success`. Er en rød, er det neste oppgave, før noe annet.
+10. **Utrullingen.** Når `src/` er endret: `gh api "repos/average01101010/FishyBusiness-/actions/runs?head_sha=$(git rev-parse HEAD)" --jq '.workflow_runs[] | [.name, .status, .conclusion] | @tsv'` til «Appen på Hetzner» er `success`. Er en rød, er det neste oppgave, før noe annet. **Fra L1a (10.11.2026)** går arbeidsgrenen til `test.detstorebla.no`: bare «Appen på Hetzner» kjører (Pages bare på `main`), og versjonen sjekkes i `https://test.detstorebla.no/version.json` (`"ch":"test"`), ikke på detstorebla.no. En ny migrering må Jonas kjøre på testprosjektet for hånd først (`CLAUDE.md`, Publisering).
 11. **Rapporten til Jonas**, kort og på norsk: hva som er endret, hva som er testet og hvor det er prøvd, hva som er svakt eller antatt, og hva som gjenstår. Ingen pynt.

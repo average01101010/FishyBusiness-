@@ -169,8 +169,19 @@ COVER['tests/unit/kvotemarked.test.mjs'] = []
 LITE += ['turlinjetest']
 COVER['tests/turlinjetest.py'] = ['turlinjetest']
 COVER['tests/unit/turlinje.test.mjs'] = []
+# HS2 (10.11.2026): the haill from the server as a copy of the grants (S.haillSrv), on lines of their own for the merge. The pure
+# functions (haillStock, haillMirror) in tests/unit/haillsrv.test.mjs, the claim against a stand-in in kjoptest and guesttest, the database in sqltest
+COVER['supabase/migrations/20261110180000_haill_use.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/haillsrv.test.mjs'] = []
+COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-haill-fiske-service.js'] + ['hailltest', 'kjoptest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
+
+# The test edition (L1a, 10.11.2026): KYST_CHANNEL=test in build.mjs, cloud.json's block «test» and cloudCfg (10f-cloud.js), the label
+# (10p-install.js). kanaltest builds dist-kanal/ itself and compares it with dist/. On lines of their own
+LITE += ['kanaltest']
+COVER['tests/kanaltest.py'] = ['kanaltest']
+for _f in ('build.mjs', 'src/data/cloud.json', 'src/js/ui/10f-cloud.js', 'src/js/ui/10p-install.js'):
+    COVER[_f] = COVER.get(_f, []) + ['kanaltest']
 
 
 # OPP5 (10.11.2026): the upgrades one can see on deck (tools/deck/oppgr.py -> deck-upg): oppshot draws the setter, the magazine, the net

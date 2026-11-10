@@ -45,6 +45,9 @@ OTHER=$(ss -Htln 2>/dev/null | awk '{print $4}' | grep -vE '^(127\.|\[::1\]|\[::
 DNS4=$(getent ahostsv4 "$DOMAIN" 2>/dev/null | awk '{print $1; exit}' || true)
 if [ "$DNS4" = "$IP4" ]; then echo "$DOMAIN points here."
 else echo "Note: $DOMAIN points to ${DNS4:-nothing yet}, not $IP4. Caddy gets the HTTPS certificate by itself once the DNS points here."; fi
+DNST=$(getent ahostsv4 "test.$DOMAIN" 2>/dev/null | awk '{print $1; exit}' || true)
+if [ "$DNST" = "$IP4" ]; then echo "test.$DOMAIN points here."
+else echo "Note: test.$DOMAIN (the test edition) points to ${DNST:-nothing yet}, not $IP4. Its certificate comes once the DNS points here."; fi
 
 # ---------- packages, Caddy ----------
 say "Installing Caddy, the firewall and automatic updates"
@@ -59,7 +62,8 @@ fi
 # ---------- the deploy user: only rsync into /srv/detstorebla (rrsync), no shell, no forwarding ----------
 say "The deploy user"
 id deploy >/dev/null 2>&1 || adduser --disabled-password --gecos '' deploy
-install -d -m 755 -o deploy -g deploy "$SITE" "$SITE/current"
+# current is the production (main), test the test edition on test.$DOMAIN (the working branch, L1a 10.11.2026); rrsync holds the key in $SITE
+install -d -m 755 -o deploy -g deploy "$SITE" "$SITE/current" "$SITE/test"
 install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
 NEWKEY=0
 if [ -z "$KEY" ]; then
@@ -76,10 +80,12 @@ if [ -n "$KEY" ]; then
   chown deploy:deploy /home/deploy/.ssh/authorized_keys; chmod 600 /home/deploy/.ssh/authorized_keys
 fi
 # a page to show until the first upload from GitHub replaces it
-if [ -z "$(ls -A "$SITE/current")" ]; then
-  printf '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Det Store Blå</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#07111d;color:#e8f0f8;font:18px system-ui,sans-serif"><p>Det Store Blå kommer snart.</p></body>\n' > "$SITE/current/index.html"
-  chown deploy:deploy "$SITE/current/index.html"
-fi
+for d in current test; do
+  if [ -z "$(ls -A "$SITE/$d")" ]; then
+    printf '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Det Store Blå</title><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#07111d;color:#e8f0f8;font:18px system-ui,sans-serif"><p>Det Store Blå kommer snart.</p></body>\n' > "$SITE/$d/index.html"
+    chown deploy:deploy "$SITE/$d/index.html"
+  fi
+done
 
 # ---------- the real-time relay: Node, its user, its secret and the service (tools/server/rt/server.mjs) ----------
 say "The real-time relay"
@@ -192,7 +198,7 @@ dpkg-reconfigure -f noninteractive unattended-upgrades
 
 # ---------- what goes into GitHub ----------
 say "Done"
-echo "Caddy serves $SITE/current at https://$DOMAIN (a placeholder page until the first upload)."
+echo "Caddy serves $SITE/current at https://$DOMAIN and $SITE/test at https://test.$DOMAIN (a placeholder page until the first upload)."
 echo "If the server has a firewall in Hetzner's console (Firewalls), it must let in TCP 80 and 443 too."
 echo "The real-time relay listens on 127.0.0.1:8787 behind Caddy's /rt: systemctl status dsb-rt, journalctl -u dsb-rt, curl -s 127.0.0.1:8787/stats"
 if [ "$NEWRT" = 1 ]; then
