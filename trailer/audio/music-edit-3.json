@@ -1,0 +1,237 @@
+{
+ "name": "m3",
+ "song": "trailer/audio/suno/fjord-at-dawn.mp3",
+ "dur": 50.0,
+ "fps": 30,
+ "size": "1080x1920",
+ "bpm": 95.7,
+ "beat": 0.6269,
+ "notes": "Klippekart 3 (10.11.2026), tilpasset stemmemanuset (script.md v4). Redskapene og været før droppet (garn, kuling, snøkrabbe, nordlys), Reine og Senja fra lufta, kystnotbåten på droppet, hvalen etter droppet uten stemme. Båtstigen brytes med vilje (krabbebåten før kystnotbåten, kystbåten med hvalen etter): stemmen bærer historien. «Fra trebåt …» og «… til snurper» er ute; stemmens linjer står som undertekst (`subs`, tidene anslått til stemmefila finnes: 0,45 s per ord pluss 0,6 s, og aldri inn i neste linje eller i stillheten 27,4-41,5 s).",
+ "grade": {
+  "contrast": 0.12,
+  "vignette": 0.22,
+  "grain": 2.2
+ },
+ "black_from": 49.4,
+ "black_len": 0.6,
+ "clips": [
+  {
+   "shot": "01-naust-trebat",
+   "at": 0.0,
+   "in": 0
+  },
+  {
+   "shot": "02-trebat-naert",
+   "at": 4.933,
+   "in": 0
+  },
+  {
+   "shot": "03-trebat-brua",
+   "at": 7.4,
+   "in": 0
+  },
+  {
+   "shot": "05-garn-lofoten",
+   "at": 12.4,
+   "in": 0
+  },
+  {
+   "shot": "07-vardo-kuling",
+   "at": 14.933,
+   "in": 0
+  },
+  {
+   "shot": "18-snokrabbe-svalbard",
+   "at": 17.4,
+   "in": 0.3
+  },
+  {
+   "shot": "10-hekkingen-nordlys",
+   "at": 19.867,
+   "in": 0
+  },
+  {
+   "shot": "04-reine-luft",
+   "at": 22.367,
+   "in": 0
+  },
+  {
+   "shot": "12-senja-luft",
+   "at": 24.867,
+   "in": 0
+  },
+  {
+   "shot": "13-snurper-brua",
+   "at": 27.367,
+   "in": 1.0
+  },
+  {
+   "shot": "06-bleik-hval",
+   "at": 32.367,
+   "in": 0
+  },
+  {
+   "shot": "15a-hvaler",
+   "at": 37.367,
+   "in": 0
+  },
+  {
+   "shot": "15d-tromso",
+   "at": 38.0,
+   "in": 0
+  },
+  {
+   "shot": "15f-kirkenes",
+   "at": 38.6,
+   "in": 0
+  },
+  {
+   "shot": "17a-skottland",
+   "at": 39.233,
+   "in": 0
+  },
+  {
+   "shot": "17b-faeroyene",
+   "at": 39.867,
+   "in": 0
+  },
+  {
+   "shot": "17d-gronland",
+   "at": 40.5,
+   "in": 0
+  },
+  {
+   "shot": "14-side-om-side",
+   "at": 41.133,
+   "in": 0
+  },
+  {
+   "shot": "16-slutt",
+   "at": 44.867,
+   "in": 0,
+   "mix": 0.4,
+   "card": {
+    "logo": 0.0,
+    "url": 0.6269
+   }
+  }
+ ],
+ "words": [
+  {
+   "key": "finnsnes",
+   "at": 7.7,
+   "len": 2.6
+  },
+  {
+   "key": "lofotfisket",
+   "at": 12.533,
+   "len": 2.1
+  },
+  {
+   "key": "varanger",
+   "at": 15.067,
+   "len": 2.1
+  },
+  {
+   "key": "svalbard",
+   "at": 17.533,
+   "len": 2.1
+  },
+  {
+   "key": "lofoten",
+   "at": 22.5,
+   "len": 2.1
+  },
+  {
+   "key": "midnattssol",
+   "at": 33.0,
+   "len": 3.6
+  },
+  {
+   "key": "hvaler",
+   "at": 37.4,
+   "len": 0.567,
+   "ramp": 0.08
+  },
+  {
+   "key": "tromso",
+   "at": 38.033,
+   "len": 0.567,
+   "ramp": 0.08
+  },
+  {
+   "key": "kirkenes",
+   "at": 38.633,
+   "len": 0.567,
+   "ramp": 0.08
+  },
+  {
+   "key": "skottland",
+   "at": 39.267,
+   "len": 0.567,
+   "ramp": 0.08
+  },
+  {
+   "key": "faeroyene",
+   "at": 39.9,
+   "len": 0.567,
+   "ramp": 0.08
+  },
+  {
+   "key": "gronland",
+   "at": 40.533,
+   "len": 0.567,
+   "ramp": 0.08
+  }
+ ],
+ "subs": [
+  {
+   "key": "s1",
+   "at": 0.8,
+   "len": 1.7,
+   "text": "Det store blå."
+  },
+  {
+   "key": "s2",
+   "at": 2.6,
+   "len": 3.75,
+   "text": "Båten er fra femtiseks. Naustet er eldre."
+  },
+  {
+   "key": "s3",
+   "at": 8.0,
+   "len": 4.6,
+   "text": "Han far sa alltid at havet ikke skylder deg noe."
+  },
+  {
+   "key": "s4",
+   "at": 12.7,
+   "len": 2.4,
+   "text": "Noen dager gir sjøen."
+  },
+  {
+   "key": "s5",
+   "at": 15.2,
+   "len": 2.4,
+   "text": "Andre dager tar ho."
+  },
+  {
+   "key": "s6",
+   "at": 17.8,
+   "len": 3.3,
+   "text": "Kulda, mørket, regningene. Alt følger med."
+  },
+  {
+   "key": "s7",
+   "at": 25.1,
+   "len": 2.2,
+   "text": "Men så letter det."
+  },
+  {
+   "key": "s8",
+   "at": 41.5,
+   "len": 2.85,
+   "text": "Nå er det din tur."
+  }
+ ]
+}

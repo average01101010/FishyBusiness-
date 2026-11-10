@@ -108,6 +108,8 @@ def main():
             t0, t1 = wd['at'], wd['at'] + wd['len']; up, down = (0.12, 0.08) if wd['len'] < 1 else (0.35, 0.25)
             f = ramp(t, t0, t1, up, down)
             if f > 0: put(im, wd['key'], f, 14 * K * (1 - ease(min(1, (t - t0) / up))))
+        # the voice's lines as subtitles (`subs`): in on 0.25 s and out on 0.2 s, standing still
+        for sb in E.get('subs', []): put(im, sb['key'], ramp(t, sb['at'], sb['at'] + sb['len'], 0.25, 0.2))
         card = next((cc for cc in clips if cc.get('card')), None)
         if card and t >= card['at']:
             T = card['card']; t0 = card['at']

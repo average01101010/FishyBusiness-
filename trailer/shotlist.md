@@ -12,9 +12,32 @@
 - Båter og dyr kommer inn fra bildekanten eller er med fra første bilde. Lyset endres aldri brått i et klipp.
 - Stående format: motivet i midtre tredjedel i bredden.
 - **Ingen kildehenvisning i bildet** (Jonas 10.11.2026: «Det ser ikke bra ut»). Kartverket (CC BY 4.0), Mapzen (CC BY) og OpenStreetMap (ODbL) krever at kilden oppgis der kartdataene vises, så linja står i teksten under videoen når den publiseres.
-- Ingen stemme i masteren. Teksten på skjermen står i `script.md`.
+- Stemme fra klippekart 3 (10.11.2026); manuset, undertekstene og teksten på skjermen står i `script.md`.
 
-## Klippene
+## Klippene, stemmeversjonen (klippekart 3, `audio/music-edit-3.json`, 10.11.2026)
+
+**Båtstigen brytes med vilje i stemmeversjonen** (Jonas 10.11.2026): krabbebåten kommer før kystnotbåten, og kystbåten med hvalen etter droppet. Stemmen bærer historien (`script.md` v4), så regelen om at båtene blir større for hvert klipp gjelder ikke her. Trebåten og kystnotbåten går fortsatt under den samme brua, først og på droppet. Klippekart 2 (m2, uten stemme) holder båtstigen.
+
+| # | Tid (s) | Klipp | Fra sekund | Hva som skjer | Stedsnavn | Stemme |
+|---|---|---|---|---|---|---|
+| 1 | 0–4,93 | `01-naust-trebat` | 0 | Fars naust i Vangshamn, trebåten | – | S1, S2 |
+| 2 | 4,93–7,40 | `02-trebat-naert` | 0 | Nært på trebåten | – | S2 |
+| 3 | 7,40–12,40 | `03-trebat-brua` | 0 | Trebåten under Gisundbrua | Finnsnes | S3 |
+| 4 | 12,40–14,93 | `05-garn-lofoten` | 0 | Garnene i Lofoten | Lofotfisket | S4 |
+| 5 | 14,93–17,40 | `07-vardo-kuling` | 0 | Kulingen ved Vardø | Varanger | S5 |
+| 6 | 17,40–19,87 | `18-snokrabbe-svalbard` | 0,3 | Snøkrabbefartøyet ved Svalbard | Svalbard | S6 |
+| 7 | 19,87–22,37 | `10-hekkingen-nordlys` | 0 | Nordlyset over Hekkingen | – | S6 |
+| 8 | 22,37–24,87 | `04-reine-luft` | 0 | Reine fra lufta | Lofoten | – |
+| 9 | 24,87–27,37 | `12-senja-luft` | 0 | Senja fra lufta, siste takt før droppet | – | S7 |
+| 10 | 27,37–32,37 | `13-snurper-brua` | 1,0 | Droppet: kystnotbåten under Gisundbrua | – | stille |
+| 11 | 32,37–37,37 | `06-bleik-hval` | 0 | Knølhvalen ved Bleik i midnattssol, hele klippet | Midnattssol | stille |
+| 12 | 37,37–41,13 | `15a-hvaler`, `15d-tromso`, `15f-kirkenes`, `17a-skottland`, `17b-faeroyene`, `17d-gronland` | 0 | Montasjen, ett slag hver | stedsnavnene | stille |
+| 13 | 41,13–44,87 | `14-side-om-side` | 0 | Trebåten og kystnotbåten ved samme kai | – | S8 |
+| 14 | 44,87–50,00 | `16-slutt` | 0 | Overtoning 0,4 s, logoen på slaget, adressen ett slag etter, svart fra 49,4 | sluttkortet | – |
+
+`07-vardo-line` er ute. Det nye klippet ved 19,87 ligger på taktslaget 19,876 (takt åtte i `audio/beats.json`).
+
+## Klippene i v2 (klippekart 1, m1), til historien
 
 | # | Tid (s) | Sted, dato og klokkeslett (UTC) | Båt | Hva som skjer | Tekst | Fil |
 |---|---|---|---|---|---|---|
