@@ -1,12 +1,14 @@
 # The app for the home screen (P1 of the PWA plan, 03.10.2026) on GitHub Pages: https://average01101010.github.io/FishyBusiness-/
 # The map release (kart-N that tools/map/kart-release.json names, else the newest; tools/map/release.py) joined with Senja's packs (tools/map/game.py), the page built with KYST_PWA=1
 # (build.mjs: dist-pwa/ with the manifest, the service worker and the icons), and dist-pwa/ deployed to Pages.
-# Started by a push to the working branch or main that changes the game, the build or the map release, or by hand from the Actions
-# tab once this file is on main. Pages' source must be «GitHub Actions», and the github-pages environment must let the branch deploy.
+# Started by a push to main that changes the game, the build or the map release, or by hand from the Actions tab once this file is
+# on main. The working branch no longer rolls out here (L1a, 10.11.2026): it goes to the test edition on test.detstorebla.no
+# (deploy.yml), and Pages keeps what it had until L1b moves it. Pages' source must be «GitHub Actions», and the github-pages
+# environment must let the branch deploy.
 name: Appen på GitHub Pages
 on:
   push:
-    branches: [main, ccr-5e1ba2f4-pusvyd]
+    branches: [main]
     paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/kart-release.json', 'tools/map/game.py', '.github/workflows/pwa.yml']
   workflow_dispatch:
 permissions:
@@ -18,6 +20,8 @@ concurrency:
   cancel-in-progress: true
 jobs:
   build:
+    # only main goes to Pages, also when the workflow is started by hand on another branch (L1a, 10.11.2026)
+    if: github.ref_name == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

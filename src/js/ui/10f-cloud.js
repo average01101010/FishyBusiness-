@@ -4,7 +4,17 @@
 // consented to (asked once; under 13 a yes does not count). Without the keys, or on another host (the artifact, the tests), all of it
 // is off and the game starts as before. Supabase is reached by fetch on its REST API, only through the functions in
 // supabase/migrations/ (security definer: each checks the player and the consent); the tables themselves are the admin's to read.
-const CLOUD_CFG = (typeof window !== 'undefined' && window.DSB_CLOUD) || /*@include(data/cloud.json)*/null;
+// The test edition (L1a, 10.11.2026, docs/planer/lansering-plan.md V3 A): cloud.json's block «test» (the test project in Supabase, WorkOS
+// Staging, its own hosts) is laid over the rest when the page was built with the channel test (<meta name="dsb-channel">, build.mjs)
+// or lies on one of the block's hosts, so a test build never talks to the players' cloud wherever it lies, and nothing on the test
+// address does whatever build lies there. pubHost(), shopMode() and rtUrl() then see the test host as the production sees its own.
+function cloudChannel(){ try { return (document.querySelector('meta[name=dsb-channel]') || {}).content || ''; } catch (e){ return ''; } }
+function cloudCfg(raw, host, ch){
+  if (!raw || !raw.test) return raw || null;
+  const {test, ...base} = raw;
+  return ch === 'test' || (test.hosts || []).includes(host) ? {...base, ...test} : base;
+}
+const CLOUD_CFG = cloudCfg((typeof window !== 'undefined' && window.DSB_CLOUD) || /*@include(data/cloud.json)*/null, typeof location !== 'undefined' ? location.hostname : '', cloudChannel());
 const CLOUD = {on:false, ak:null, user:null, consent:null, sid:null, q:[], active:0, sent:0, lastSave:0, neg:null, trip:null, errs:0, errSeen:{}, fps:[], owned:[], admin:false};
 const CLOUD_SIGNED = 'dsb_signed';   // set after a sign-in, so the game can start offline on this device later
 function cloudOn(){
