@@ -764,6 +764,44 @@ async def felt(pl):
             len(rows), sum(xs) / len(xs), md(xs), md(x0), round(100 * sum(bs) / (10 * len(bs))), round(100 * sum(r['best0'] for r in rows) / (10 * len(rows))), md(lf), md(ox)))
 MEASURE.add('felt')
 
+# ---- steg 59 (10.11.2026): the minimum sizes after høstingsforskriften § 47. The hand jig within 4 nm of the baselines north of Senja
+# (north of 62° N: cod 55 cm there, 44 cm outside) on 1 March (the skrei) and 10 July, six hours each: of the cod that came up, how many
+# were under 55 cm (1.69 kg with the model's curve, W = 0.0068 L^3.1 g), how many of those were kept, and the kilos. The same numbers
+# before the change (minKg 0.8 kg everywhere) and after it (minKgAt), so the share under the minimum in what is aboard, which the
+# coast guard and § 49 seventh paragraph (20 %) look at, can be read off. Also 5 000 cod drawn at the same spot (sampleFish) for the
+# share in number and in weight without the luck of one day. Not in the default run (MEASURE); run as: python3 tests/fiskeplay.py minste
+MS_HOOK = r"""(() => { if (window.__MS) return; window.__MS = {on:false, up:[], kept:[]};
+  const sf = sampleFish; sampleFish = function (sp){ const w = sf.apply(this, arguments); if (window.__MS.on && sp === 'torsk') window.__MS.up.push(w); return w; };
+  const ac = addCatch; addCatch = function (sp, kg, c, h, o){ if (window.__MS.on && sp === 'torsk' && o && o.how === 'juksa') window.__MS.kept.push(kg); return ac.apply(this, arguments); }; })()"""
+MS_DRAW = """([p, H]) => { const L55 = 0.0068 * Math.pow(55, 3.1) / 1000, n = 5000; let u = 0, kg = 0, ku = 0; window.__MS.on = false;
+  for (let i = 0; i < n; i++){ const w = sampleFish('torsk', p, H); kg += w; if (w < L55){ u++; ku += w; } }
+  return {n, under55:+(u / n).toFixed(3), under55kg:+(ku / kg).toFixed(3), minKg:+(typeof minKgAt === 'function' ? minKgAt('torsk', p) : SPECIES.torsk.minKg).toFixed(3), nm:+blNm(p).toFixed(2)}; }"""
+
+@scenario
+async def minste(pl):
+    """Steg 59: the hand jig within 4 nm north of Senja in March and July, the cod under 55 cm before and after § 47 (see MS_HOOK above)."""
+    await pl.js(MS_HOOK)
+    for tag, (y, m, d) in [('mars', (2027, 3, 1)), ('juli', (2027, 7, 10))]:
+        await pl.js("([y, m, d]) => FP.date(y, m, d, 6)", [y, m, d])
+        # a cod spot 20-90 m deep within 4 nm of the baselines (FP.spot takes the thickest; within 4 nm is asked for here)
+        q = await pl.js("""async () => { const c = portById('husoy').p; await mapNeed(c, MAPD.simR); const H0 = S.t / 60; let best = null, bv = -1;
+          for (let i = 0; i <= 24; i++) for (let k = 0; k < Math.max(1, i * 8); k++){ const a = k / Math.max(1, i * 8) * 2 * Math.PI, q = {x:c.x + Math.cos(a) * 8 * i / 24, y:c.y + Math.sin(a) * 8 * i / 24};
+            try { if (isLand(q) || blNm(q) > 3.5) continue; const d = depthF(q); if (!(d >= 20 && d <= 90)) continue; const v = density('torsk', q, H0); if (v > bv){ bv = v; best = q; } } catch (e){} }
+          return best && {x:best.x, y:best.y, depth:Math.round(depthF(best)), nm:+blNm(best).toFixed(2)}; }""")
+        if not q: pl.note('setup', '%s: found no cod spot within 4 nm near Husøy' % tag); continue
+        await pl.js("p => FP.sea(p)", q); pl.note('setup', '%s: out to %s m deep, %s nm off the baseline near Husøy' % (tag, q['depth'], q['nm']))
+        await pl.js("() => { window.__MS.up = []; window.__MS.kept = []; window.__MS.r0 = S.stats.released || 0; window.__MS.on = true; }")
+        kg = await jig_run(pl, 6, 'minste-' + tag)
+        r = json.loads(await pl.js("""JSON.stringify((() => { const M = window.__MS, L55 = 0.0068 * Math.pow(55, 3.1) / 1000; M.on = false;
+          const up = M.up.length, upU = M.up.filter(w => w < L55).length, kp = M.kept.length, kpU = M.kept.filter(w => w < L55 - 1e-9).length;
+          return {up, upUnder55:up ? +(upU / up).toFixed(3) : null, kept:kp, keptUnder55:kp ? +(kpU / kp).toFixed(3) : null, keptKg:Math.round(M.kept.reduce((a, w) => a + w, 0)),
+            released:(S.stats.released || 0) - M.r0, minKg:+(typeof minKgAt === 'function' ? minKgAt('torsk', S.boat.pos) : SPECIES.torsk.minKg).toFixed(3)}; })())"""))
+        r['tag'] = tag; r['holdKg'] = round(kg)
+        r['draw'] = await pl.js(MS_DRAW, [q, await pl.js("S.t / 60")])
+        pl.note('measure', json.dumps(r, ensure_ascii=False)); print('MINSTE', json.dumps(r, ensure_ascii=False), flush=True)
+        await pl.js("S.hold = []; refreshAll()")
+MEASURE.add('minste')
+
 #SCENARIOS#
 
 async def main():

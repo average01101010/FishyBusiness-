@@ -122,6 +122,17 @@ const GUIDE = (() => {
       '<p class="ph-note">' + L('Mørkere farge: mer fisk den måneden, mot artens beste. Stripet: fredet. Prikkete: bare bifangst. Trykk på en bokstav for å se en annen måned, eller på en art for å lese om den.', 'Darker: more fish that month against the species\' best. Striped: closed. Dotted: by-catch only. Tap a letter to see another month, or a species to read about it.') + '</p>';
   }
   // ----- the species card
+  // the minimum size (høstingsforskriften § 47, MIN47 in core/02-species-gear.js, steg 59): where the boat is, in cm and kg, and the rule's zones
+  function minTxt(sp, s){ const M = MIN47[sp], p = S.boat && S.boat.pos, note = L('Mindre fisk slippes ut igjen (høstingsforskriften § 47).', 'Smaller fish are let go (høstingsforskriften § 47).');
+    if (!M) return s.minKg ? '<div class="ph-kv"><span>' + L('Minstemål', 'Minimum size') + '</span><span>' + fmt(s.minKg, 1) + ' kg</span></div>' : '';
+    const cm = p ? min47Cm(sp, p) : M.n, kg = p ? minKgAt(sp, p) : s.minKg, z = [];
+    if (M.n4 != null) z.push(L(M.n + ' cm nord for 62° N (' + M.n4 + ' cm innenfor 4 nm av grunnlinjene)', M.n + ' cm north of 62° N (' + M.n4 + ' cm within 4 nm of the baselines)'));
+    else if (M.i12 != null) z.push(L(M.i12 + ' cm innenfor 12 nm av grunnlinjene, ' + M.n + ' cm utenfor', M.i12 + ' cm within 12 nm of the baselines, ' + M.n + ' cm outside'));
+    else if (M.n !== M.s) z.push(L(M.n + ' cm nord for 62° N', M.n + ' cm north of 62° N'));
+    if (M.n !== M.s) z.push(L(M.s + ' cm sør for 62° N', M.s + ' cm south of 62° N'));
+    if (M.kg != null) z.push(L(M.n + ' cm og ' + fmt(M.kg, 1) + ' kg', M.n + ' cm and ' + fmt(M.kg, 1) + ' kg'));
+    return '<div class="ph-kv"><span>' + (p ? L('Minstemål her', 'Minimum size here') : L('Minstemål', 'Minimum size')) + '</span><span>' + cm + ' cm · ' + fmt(kg, 1) + ' kg</span></div>' +
+      '<p class="ph-note">' + (z.length ? z.join('; ') + '. ' : '') + note + '</p>'; }
   function card(sp){
     const s = SPECIES[sp], m = month(), r = rel(sp, m), c = chip(sp, m), mx = bestAv(sp), pm = s.pm;
     const bars = MI.map(i => { const a = s.av[i] / mx, k = sp === 'torsk' ? s.skrei[i] / mx : 0, cl = status(sp, i) === 'closed';
@@ -146,7 +157,7 @@ const GUIDE = (() => {
       '<div class="ph-card"><h4>' + L('Pris', 'Price') + '</h4><div class="ph-kv"><span>' + mname(m) + '</span><span>' + fmt(pm[m], 0) + ' kr/kg</span></div>' +
         '<div class="ph-kv"><span>' + L('Best betalt', 'Best paid') + '</span><span>' + mname(pb) + ' · ' + fmt(pm[pb], 0) + ' kr/kg</span></div><div class="ph-kv"><span>' + L('Lavest', 'Lowest') + '</span><span>' + mname(pw) + ' · ' + fmt(pm[pw], 0) + ' kr/kg</span></div>' +
         '<p class="ph-note">' + L('Pris for rund fisk, første ledd. Størrelsen og kvaliteten avgjør hva du får.', 'Price for round fish, first hand. The size and the quality decide what you get.') + '</p></div>' +
-      '<div class="ph-card"><h4>' + L('Regler', 'Rules') + '</h4>' + (s.minKg ? '<div class="ph-kv"><span>' + L('Minstemål', 'Minimum size') + '</span><span>' + fmt(s.minKg, 1) + ' kg</span></div>' : '') +
+      '<div class="ph-card"><h4>' + L('Regler', 'Rules') + '</h4>' + minTxt(sp, s) +
         (s.maxKg ? '<div class="ph-kv"><span>' + L('Største lovlige', 'Largest allowed') + '</span><span>' + s.maxKg + ' kg</span></div>' : '') +
         (sp === 'kveite' ? '<p>' + L('Fredet 20. desember–20. april nord for 62° N. Levende kveite settes ut.', 'Closed 20 December–20 April north of 62° N. Live halibut is released.') + '</p>' : '') +
         (sp === 'krabbe' ? '<p>' + L('Ingen minstemål vest for 26° Ø. Pass på kvotesonen i øst.', 'No minimum size west of 26° E. Mind the quota zone in the east.') + '</p>' : '') +

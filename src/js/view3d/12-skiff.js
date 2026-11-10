@@ -83,9 +83,9 @@
     'foam*=vS;aer*=vS;float d=length(vP);float fg=1.0-exp(-uFogD*uFogD*d*d);' +
     'float al=clamp(max(foam,aer),0.0,0.95);vec3 base=vW4.w<0.5?uAer:uArm;vec3 c=mix(base,uCol,clamp(foam/max(al,0.001),0.0,1.0));gl_FragColor=vec4(mix(c,uFog,fg),al*(1.0-fg));}';
   // builder with normals and gloss: the geometry is VB() (vessel3d.js), this adds the GL buffers
-  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}, g); return o; }
+  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}, g); return o; }
   // arrays {p, n, c} as a mesh to draw
-  const upA = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
+  const upA = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
   const wkMeshes = kit => { const g = n => n ? upA(wkPart(n, kit)) : null, K = wkKitOf(kit);
     return {torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
@@ -187,7 +187,7 @@
   function handKit(t){
     if (!glbHas(t) || !PERSON) return null;      // (the skiff's own kit is in HANDK already, under its name)
     const G = geoOf(t), A = G && G.skiff; if (!A) return null;
-    const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
+    const up = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
     const K = Object.assign({}, HANDK.skiff.SK, {wheelA:0, propA:0, headPrev:null, live:false});
     K.hull = up(glbPart(t, 'lod0')); K.hullT = t; K.livK = ''; K.glass = up(glbPart(t, 'glass')); K.prop = up(glbPart(t, 'prop')); K.tiller = up(glbPart(t, 'tiller')); K.cap = null;
     const cp = glbPart(t, 'cap'); if (cp){ const c = MB(); for (let i = 0; i < cp.p.length; i += 9) c.tri([cp.p[i], cp.p[i + 1], cp.p[i + 2]], [cp.p[i + 3], cp.p[i + 4], cp.p[i + 5]], [cp.p[i + 6], cp.p[i + 7], cp.p[i + 8]], [1, 1, 1]); K.cap = c.mesh(); }
@@ -374,12 +374,12 @@
     const mm = NB(); mm.rbox(0, 0, 0, 0.26, 0.26, 0.36, 0.05, [0.86, 0.87, 0.88, 0.6]); mm.rbox(0, -0.04, 0, 0.3, 0.05, 0.4, 0.02, [0.2, 0.22, 0.25, 0.4]); mm.tube([[0.14, 0.13, 0], [0.2, 0.13, 0]], 0.1, [0.25, 0.27, 0.3, 0.6], 12);
     mm.tube([[0.1, 0.2, 0], [0.8, 0.62, 0]], 0.018, [0.18, 0.2, 0.22, 0.7], 8); mm.tube([[0.78, 0.61, 0], [0.82, 0.63, 0]], 0.03, STL, 8);
     // the machine from tools/gear/juksamaskin.py in place of the drawn one: the body, the spool and the block's sheave, which turn
-    let machG = null; if (typeof glbHas === 'function' && glbHas('gear-jig')){ const up = nm => { const o = glbPart('gear-jig', nm); return o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null; }, jg = glbLoad('gear-jig'), x = (jg && jg.ex) || {};
+    let machG = null; if (typeof glbHas === 'function' && glbHas('gear-jig')){ const up = nm => { const o = glbPart('gear-jig', nm); return o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null; }, jg = glbLoad('gear-jig'), x = (jg && jg.ex) || {};
       const body = up('maskin'); if (body && x.tip) machG = {body, spool:up('spole'), sheave:up('skive'), x}; }
     // (OB1, U4) the hand jig reel as a model (tools/gear/vinde.py, after Jonas' picture 09.11.2026: the blue juksahjul on its bracket on the
     // rail, the spool turned by its knob, the line out through the eye of the wire arm), in the place the drawn one had; the drawn one where
     // the page does not have it
-    let vinde = null; if (typeof glbHas === 'function' && glbHas('gear-vinde')){ const o = glbPart('gear-vinde', 'vinde'), d = glbPart('gear-vinde', 'trommel'), up = q => ({pb:buf(new Float32Array(q.p)), nb:buf(new Float32Array(q.n)), cb:buf(new Float32Array(q.c)), n:q.p.length / 3});
+    let vinde = null; if (typeof glbHas === 'function' && glbHas('gear-vinde')){ const o = glbPart('gear-vinde', 'vinde'), d = glbPart('gear-vinde', 'trommel'), up = q => ({pb:buf(asF32(q.p)), nb:buf(asF32(q.n)), cb:buf(asF32(q.c)), n:q.p.length / 3});
       const vx = (glbLoad('gear-vinde') || {}).ex || {}; if (o && d) vinde = {F:up(o), D:up(d), X:vx}; }
     // one fish, 1 m long along -z (head forward), coloured per species: back, belly
     const FC = {torsk:[[0.36, 0.33, 0.2, 0.5], [0.9, 0.88, 0.8, 0.5]], sei:[[0.2, 0.25, 0.24, 0.6], [0.72, 0.74, 0.74, 0.6]], hyse:[[0.28, 0.3, 0.33, 0.6], [0.85, 0.86, 0.88, 0.7]], lange:[[0.42, 0.36, 0.26, 0.5], [0.8, 0.76, 0.66, 0.5]], brosme:[[0.45, 0.33, 0.2, 0.5], [0.72, 0.6, 0.45, 0.5]], lyr:[[0.33, 0.32, 0.2, 0.55], [0.82, 0.8, 0.7, 0.6]], uer:[[0.72, 0.22, 0.14, 0.6], [0.92, 0.55, 0.42, 0.6]], kveite:[[0.26, 0.25, 0.2, 0.4], [0.94, 0.94, 0.92, 0.6]], blakveite:[[0.17, 0.16, 0.15, 0.4], [0.33, 0.31, 0.29, 0.5]]};
@@ -392,7 +392,7 @@
     // the catch from tools/fish (fisk.py): one part per species and the king crab, 1 m long with the head at -z, in place of the
     // procedural fish above (which stand in when the data is missing)
     if (typeof glbHas === 'function' && glbHas('fish')) for (const sp of [...Object.keys(FC), 'krabbe', 'snokrabbe', 'snokrabbe_h', 'snoklor']){ const o = glbPart('fish', sp);
-      if (o) fishM[sp] = {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3}; }
+      if (o) fishM[sp] = {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}; }
 
     const cvP = document.createElement('canvas'); cvP.width = 512; cvP.height = 320;
     const cvG = document.createElement('canvas'); cvG.width = 512; cvG.height = 256;
@@ -409,7 +409,7 @@
     // places from its anchors; the live plotter, gauges and VHF on the model's dash where it has them (skiff.scr)
     const GK = glbHas('skiff') ? geoOf('skiff') : null, A = GK && GK.skiff;
     if (A){
-      const up = o => o ? {pb:buf(new Float32Array(o.p)), nb:buf(new Float32Array(o.n)), cb:buf(new Float32Array(o.c)), n:o.p.length / 3} : null;
+      const up = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
       SK.hull = up(glbPart('skiff', 'lod0')) || SK.hull; SK.hullT = 'skiff'; SK.glass = up(glbPart('skiff', 'glass')) || SK.glass;
       SK.motor = up(glbPart('skiff', 'outboard')) || SK.motor; SK.prop = up(glbPart('skiff', 'prop')) || SK.prop; SK.propAt = A.prop;
       // (D6, OB5: the 90 hp outboard the player can buy, EQUIP.motor90, as its own parts in the model; drawSkiff swaps it in)

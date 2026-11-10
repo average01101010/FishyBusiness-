@@ -16,7 +16,7 @@
     const M = {};
     for (const k of LIFE_K){ const o = glbPart('dyr', k); if (!o) return LIFE.M = false;
       const n = o.p.length / 3, c = new Float32Array(n * 3); for (let i = 0; i < n; i++) for (let j = 0; j < 3; j++) c[i * 3 + j] = o.c[i * 4 + j];
-      M[k] = {pb:buf(new Float32Array(o.p)), cb:buf(c), n}; }
+      M[k] = {pb:buf(asF32(o.p)), cb:buf(c), n}; }
     // the cars: a body and a cabin, in five colours
     M.cars = [[0.75, 0.1, 0.08], [0.85, 0.86, 0.87], [0.12, 0.13, 0.15], [0.2, 0.3, 0.5], [0.55, 0.56, 0.58]].map(k => { const m = MB(); m.box(0, 0.25, 0, 1.75, 0.7, 4.3, k, 0); m.box(0, 0.95, 0.25, 1.6, 0.55, 2.3, [0.13, 0.15, 0.18], 0, k); return m.mesh(); });
     return LIFE.M = M;
