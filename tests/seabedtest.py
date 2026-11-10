@@ -51,7 +51,9 @@ async def main():
             shots['paa'].save(os.path.join(OUT, f'seabed_{place}.png'))
             noise, d = diff(shots['paa'], shots['paa2']), diff(shots['av'], shots['paa'])
             print(place, 'dry', json.dumps(st), 'støy', noise, 'av mot på', d, 'npcStates per bilde', calls)
-            check(d['ulike'] <= max(4, noise['ulike'] * 2) and d['over8'] <= noise['over8'], f'{place}: the picture is the same with the sea bed and the sky behind the sea left out', d)
+            # (at sea a few pixels may differ: where the sea bed showed through the seams of the sea's strips as dark dots, it no longer
+            # does, docs/systemer/3d-verden.md 4.11r; 2 here, against 40 with the cut set over the tide and 7 270 by the naust)
+            check(d['ulike'] <= max(4, noise['ulike'] * 2) and d['over8'] <= noise['over8'] + (12 if place == 'sjo' else 0), f'{place}: the picture is the same with the sea bed and the sky behind the sea left out', d)
             grids = [st[k] for k in ('TERR', 'MIDM', 'NEARM', 'FINEM') if st.get(k)]
             cut = 1 - sum(g['tri'] for g in grids) / max(1, sum(g['all'] for g in grids))
             check(len(grids) >= 3 and cut > (0.5 if place == 'sjo' else 0.15), f'{place}: the grids leave out the triangles under the sea', (round(cut, 3), [(g['thr'], g['tri'], g['all']) for g in grids]))
