@@ -322,7 +322,21 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
 
 **Målt her** (Playwright med SwiftShader, hele kysten, kart-31; «før» og «etter» er samme bygg med `dryOff`, så alt annet er likt):
 
-MAALT
+| Sted (format) | Terrengtrekanter per bilde, før → etter (`TERR`, `MIDM`, `NEARM`, `FINEM`) | Piksler som skiller før og etter (av 1 024 000) | Støy (samme bilde to ganger) |
+|---|---|---|---|
+| Tromsdalen, i havn (800 × 1280) | 519 000 → 358 000 (129 → 84, 130 → 98, 130 → 106, 130 → 69 tusen) | 0 | 1 |
+| Tromsdalen, i sundet (1280 × 800) | som over | 9–17, høyst 20 av 255 | 4–10, høyst 1 |
+| Åpen sjø nord for Kvaløya, 70,10° N 17,50° Ø, 9 m/s (800 × 1280) | 519 000 → 4 000 (bare `TERR`; de tre andre tegnes ikke) | 343 (101 over 8 nivåer), høyst 30 | 410, høyst 1 |
+| Åpen sjø (1280 × 800) | som over | 332 (8 over 8 nivåer), høyst 27 | 636, høyst 1 |
+| Bergen, i havn (800 × 1280) | 519 000 → 401 000 | 0 | 0 |
+| Bodø, i havn (1280 × 800) | 519 000 → 241 000 | 11, høyst 28 | 0 |
+| Hammerfest, i havn (800 × 1280) | 519 000 → 298 000 | 74, høyst 29 | 6, høyst 1 |
+
+- **Pikslene som skiller, er prikker som er borte.** Før stakk havbunnen gjennom sjøen i enkeltpiksler langs skjøtene mellom sjøens flater (ringene tegnes som fire striper av hvert sitt rutenett, og kantene møtes ikke punkt for punkt): en prikket, mørk linje i sjøen under horisonten på åpen sjø og i Hammerfest, og spredte prikker i sundet ved Tromsø. Uten havbunnen er de borte eller knapt synlige (det som er bak, er disen). Slått av hver for seg ved Tromsdalen: himmelmasken alene gir 5 piksler med høyst 1 nivå (støyen), bunnen alene de samme prikkene. I alle elleve pikslene som skilte over 2 nivåer der, ligner pikselen omgivelsene mer etter enn før. Utsnittene ligger i `docs/okter/2026-11-10-46/`.
+- **Alle trekantene i bildet:** åpen sjø 858 000 → 345 000 per bilde (med den enkle sjøen, `sealvl=2`); i havn ved Tromsdalen går bare terrengets del ned (bygg, trær og båter er resten av 1,6 millioner).
+- **Tida per bilde kan ikke måles her:** SwiftShader bruker 15–36 s på et bilde i telefonens oppløsning, nesten alt i havskyggeleggeren, og bildeintervallene i et lite vindu svinger fra 15 ms til 12 s mellom to like målinger. Tallet må komme fra telefonen (`docs/spill-dette/46.md`).
+- **JS:** bildets egen JS i havn ved Tromsdalen var 9,8 ms per bilde på PC-en her (CDP-profil), av det `npcStates` 1,5 ms i fjernpasset og 0,8 av `drawNPC`s 1,2 ms; nå ett kall.
+- **Testen** `tests/seabedtest.py` (3D): samme sammenligning ved naustet og på åpen sjø vest for Senja, hvor mye som kuttes, at alt tegnes igjen med øyet nede ved tidevannet, og at de andre båtene regnes én gang per bilde.
 
 **Første start** (`first3d` fra telefonen, inkognito, Wi-Fi, `warm:false`): brevet etter 13,7 s, 5,0 s fra «Start her» til første 3D-bilde (`models_s` 0). Ø3a målte 11,2 s og 29,4 s med CPU-en strupet 4× i SwiftShader, og Ø3c 10,9 s etter sine endringer; på telefonen er ventetiden altså halvparten av det testmiljøet viste, og modellene er inne når det spørres etter dem. Tiden til brevet er nedlastingen og tolkingen av siden på et første besøk (9,6 MB før komprimering) og er ikke rørt her.
 
