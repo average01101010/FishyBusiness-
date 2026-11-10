@@ -44,7 +44,7 @@ Jonas' økt, grenen `claude/o6-funn-6-haill-saldo-ume93b`. Ingenting er bygd, in
 
 ## 3. Fasene (én økt hver)
 
-Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1**, **HS2** og **HS3** (V2 B, Jonas 10.11.2026: så snart som mulig, før flere spillere slippes inn i early access). Etter lansering: **HS4** (etter V3) og **HS5**. Alle rører ekte penger eller gaver: PR-en venter på Jonas før utrulling (`CLAUDE.md`), og migreringen kjøres av økta først når Jonas har sett PR-en. Patchnotes nevner ingenting av dette (det er ekte penger og juks); bare en ny linje i Haill-appen, hvis noen, beskrives ved hva den gjør.
+Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1**, **HS2**, **HS3** og **HS4** (V2 og V3, Jonas 10.11.2026: så snart som mulig, før flere spillere slippes inn i early access, og «Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil»). Alle fem er over lanseringslinja: **HS5** også (V5, avgjort i økta 10.11.2026 etter at Jonas overlot det). Alle rører ekte penger eller gaver: PR-en venter på Jonas før utrulling (`CLAUDE.md`), og migreringen kjøres av økta først når Jonas har sett PR-en. Patchnotes nevner ingenting av dette (det er ekte penger og juks); bare en ny linje i Haill-appen, hvis noen, beskrives ved hva den gjør.
 
 ### HS1 Velkomstgaven fra serveren, én gang (steg 95, før lansering)
 
@@ -88,21 +88,34 @@ Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1**, *
 - **Filer:** migrering (`shop_pending`), `ui/10i-shop.js` (`shopClaim`, `shopGive`), `core/15-energy.js` (`giveSkip` med sluttid), `tests/kjoptest.py`, `tests/boostklokke.py`.
 - **Tester:** `kjoptest` (trim gitt på nytt etter et nytt spill, med riktig tid igjen; ingen ny trim når den er gått ut; aldri to ganger; sett rød først), `boostklokke`, `skiptest`, `sqltest`.
 
-### HS4 Saldoen: all haill på serveren (steg 98, etter lansering)
+### HS4 Serveren er fasiten for haill og alt som er kjøpt (steg 98, før lansering, etter HS3)
 
-Etter V3 A:
-- **Puben** trekkes på serveren: `pub_spin()` (én runde per kveld etter den felles klokka `WCLOCK`, 15:00–03:00 spilltid, samme hjul), som gir en grant ved haill eller luksushaill. De 1 000 kronene trekkes fortsatt i klienten.
+Jonas 10.11.2026, som svar på V3: «Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil. Det må fikses.» Det er V3 A og mer: også det som alt er aktivert (haillen om bord, trimen, Skippertak), kreditten for «Ferdig nå» og designene skal komme fra serveren, ikke fra lagringen. Etter HS4 er lagringen bare en kopi for disse; ved hver start med nett og hver `shopClaim` skrives de over fra serveren, så det en spiller skriver inn i lagringen selv, forsvinner.
+
+- **Puben** trekkes på serveren: `pub_spin()` (én runde per kveld etter den felles klokka, 15:00–03:00 spilltid, samme hjul `PUB_WHEEL`; serveren regner spilltida med de samme konstantene som `core/01-world.js`, `WORLD_T0` og `GAME_RATE`). Haill og luksushaill blir en grant, ryktet og «tomt» kommer tilbake til spillet som i dag. De 1 000 kronene trekkes fortsatt i spillet (pengene er V4 A). Puben trenger nett; uten nett sier den det.
 - **Kapittel 2** i merkene gir en grant én gang per konto (`ach_haill(ch)`; en jukser vinner høyst den ene).
-- **Den lokale beholdningen** `S.haillInv` gjøres om til grants én gang per lagring ved første start etter fasen, med et tak (forslag: høyst 3 av hver; antatt, se kap. 5), og blir så borte. Etter det er all haill enheter på serveren, brukt gjennom `haill_use`.
-- **Gjester** får sin pubhaill som grant på gjesten, og `guest_merge` flytter den som i dag.
-- **Filer:** migrering, `ui/09-hand-fishing.js` (puben), `core/09f-merker.js`, `core/03-simulation.js`, `ui/10i-shop.js`, `tests/sqltest.py`, `tests/kjoptest.py` og testen for puben.
+- **Den lokale beholdningen** `S.haillInv` gjøres om til grants én gang per konto ved første start etter fasen, med et lavt tak (forslag: høyst 2 haill og 1 luksushaill, `haill_import`; antatt, se kap. 5), og blir så borte.
+- **Haillen om bord:** `haill_use(id, t0)` lagrer spilltida den ble aktivert (serveren godtar den bare nær sin egen spilltid, eller nær tida køen ble laget uten nett etter V1 A). Spillet setter `S.haill` fra serverens sist brukte haill og overser den i lagringen. En haill aktivert uten nett gjelder til serveren har svart; svarer den at enheten ikke finnes, tas haillen bort.
+- **Trim og Skippertak:** slutten regnes fra serverens grants (som i HS3) og skrives over `b.trim` og `S.skip` ved hver start; en trim eller et Skippertak serveren ikke kjenner, tas bort.
+- **«Ferdig nå»:** kreditten er en grant med `used_at` (`yard_use(id)`), ikke tallet `S.yardCredit` i lagringen.
+- **Designene:** de betalte malingsdesignene leses bare fra `entitlements` (`CLOUD.owned`), ikke fra `S.cos` (`ui/10j-paint.js` `owned`, `giveCos`). Det som er tjent i spillet (skrogfargen fra kapittel 3), står i lagringen som før.
+- **Gjester** har sin pubhaill og takk-haill som grants på gjesten, og `guest_merge` flytter dem som i dag.
+- **Der det ikke er sky** (artifacten, testserveren) er alt som i dag. På spillets egne verter uten sky (`#nocloud`, uten nett, GitHub Pages) gjelder det serveren sa sist, og ingenting nytt kan tjenes eller kjøpes.
+- **Det som ikke kan stoppes:** den som endrer minnet i en åpen side med utviklerverktøy, kan gi seg selv noe til siden lastes på nytt. Det blir ikke lagret, når ikke serveren og vises ikke for andre. Fangsten tatt med det, kommer fram som landinger, som serveren fortsatt tar fra spillet (funn 2).
+- **Filer:** migrering, `ui/09-hand-fishing.js` (puben), `core/09f-merker.js`, `core/03-simulation.js` (`useHaill`, `S.haill`), `core/15-energy.js`, `core/05-vessels.js` (`S.yardCredit`), `ui/10i-shop.js`, `ui/10j-paint.js`, `ui/11-boot.js`, `tests/unit/`, `tests/sqltest.py`, `tests/kjoptest.py`, `tests/maletest.py` og testen for puben.
+- **Tester:** for hver vare en sjekk i `kjoptest` eller `maletest` der lagringen redigeres (haill i beholdningen, haill om bord, trim, Skippertak, kreditten, et design) og spillet etter neste start har det serveren sier, sett rød først; `sqltest` for `pub_spin` (én runde per kveld, ikke utenfor åpningstida), `ach_haill` (én gang), `haill_import` (taket, én gang), `haill_use` med `t0`, `yard_use`.
 
-### HS5 Pengene: en bedre sjekk og ærlige tall i admin (steg 99, etter lansering)
+### HS5 Kronene og landingene sjekket på serveren, og jukserne ut av topplistene (steg 99, før lansering)
 
-Etter V4 A:
-- `saves_cash_check` regner pengene mot det serveren selv har (landingene i `landings` med mottakets pris, megleren, kvotemarkedet) i stedet for klientens egne hendelser. Den varsler i admin, og stopper ingenting.
-- Økonomitallene i admin merkes «meldt av spillet».
-- **Filer:** migrering, `src/admin/index.html`, `tests/sqltest.py`, `tests/admintest.py`.
+V5 A, avgjort i økta 10.11.2026 etter at Jonas overlot det (Jonas: «Du vet sikkert bedre enn meg hvordan vi forhindrer juksing i spillet. Du har tross alt skrevet koden»). Kronene blir i spillet (V4 A), fordi hele økonomien regnes der også når spillet er lukket. Det serveren kan, er å se når en lagring eller en landing ikke kan være ekte, og hindre at det skader andre. Det er bare topplistene, fiskarlagets mål, «Ukas beste fisker» og kvoten for åpen gruppe som rammer andre; det en spiller gjør med sine egne kroner, rammer bare ham selv.
+
+- **Kronene:** `save_put4` sammenligner `summary.cash` og flåtens verdi med forrige lagring. Økningen kan ikke være større enn det serverens egne tall forklarer i tida som har gått: landingene i `landings` (kilo, art og mottak, med mottakets høyeste pris), utbetalingene fra megleren og kvotemarkedet, og et romslig tak per ekte time etter flåten. Går den over, får kontoen et merke (`cheat_flags`: hva, hvor mye, når). Lagringen tas likevel imot (spilleren mister aldri spillet sitt), og ingenting slettes.
+- **Landingene** (funn 2b og 2d): `land_put` sjekker landingen mot fangsten som er meldt med `catch_put`, og mot hvor mye flåten kan ha tatt siden forrige landing i ekte tid (lasten etter båttypen i `presence.vtype`, ganget med tida, så tida som tas igjen etter dager borte og havbåtene går gjennom). En landing over det får et merke på samme måte.
+- **Et merke** holder kontoen ute av `world_top`, `bygde_top`, `ev_top`, fiskarlagets mål (`lag_get`), «Ukas beste fisker» (`push_week`) og summen for åpen gruppe (`world_year`) til Jonas har sett på det i admin og fjernet merket eller latt det stå. Spilleren ser seg selv på topplista som før (ingen beskjed, ingen straff i spillet), så et feil merke koster lite og kan rettes.
+- **Måles først:** sjekkene kjøres mot alle landingene og lagringene som finnes (over 700 landinger og 38 lagringer 10.11.2026), og grensene settes så ingen av dem får merke, før merket tar noen ut av topplistene. Til da skriver den bare merket.
+- **Admin:** en fane med merkene (konto, hva, hvor mye over, når), med «Fjern merket» og «La stå»; økonomitallene merkes «meldt av spillet».
+- **Filer:** migrering (`save_put4`, `land_put`, `cheat_flags`, topplistene, `lag_get`, `push_week`, `world_year`), `src/admin/index.html`, `tests/sqltest.py`, `tests/admintest.py`. Ingen ting i `src/js/`.
+- **Tester:** `sqltest` (en lagring med en million kroner for mye får merke; en ekte lagring etter tre døgn borte med driftsplan gjør det ikke; en landing over det flåten kan ta, får merke; en konto med merke er ute av hver topplisteliste og summen for åpen gruppe, men ser seg selv; «Fjern merket» tar den inn igjen; bare admin med aal2 kan se og fjerne), sett rød mot de gamle funksjonene først; `admintest` med fanen; skjermbilder av fanen i 800×1280 og 1280×800.
 
 ## 4. Valgene
 
@@ -115,7 +128,7 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
   - **A (anbefalt):** etter lansering, slik V7 A sier; til da retter admin det for hånd med en grant (`comp`), som i dag. De varer høyst tre døgn, og det har ikke skjedd ennå.
   - B: før lansering, sammen med HS2.
   - C: aldri.
-- **V3. Haillen fra puben og kapitlene (HS4).** Jonas 10.11.2026: «Skjønner ikke helt hva du mener på denne. Gi meg mer kontekst.» Konteksten er gitt i økta samme dag (under), og **anbefalingen er endret til B**: med pengene i spillet (V4 A) og landingene fra spillet (funn 2) kan en jukser alt skaffe seg mer fangst uten haill, så A stenger en dør mens vinduet står åpent, og puben ville trenge nett. Venter på svaret.
+- **V3. Haillen fra puben og kapitlene (HS4).** **Besvart 10.11.2026, A og mer** (Jonas: «Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil. Det må fikses.»); HS4 er skrevet om etter det og flyttet over lanseringslinja. Før det, samme dag: «Skjønner ikke helt hva du mener på denne. Gi meg mer kontekst.» Konteksten er gitt i økta samme dag (under), og **anbefalingen er endret til B**: med pengene i spillet (V4 A) og landingene fra spillet (funn 2) kan en jukser alt skaffe seg mer fangst uten haill, så A stenger en dør mens vinduet står åpent, og puben ville trenge nett. Venter på svaret.
   - Konteksten: haill kommer fra fem steder. Tre gir serveren (kjøpt, velkomstgaven, takken for tilbakemelding); etter HS2 ligger de på serveren og kan ikke gå tapt eller lages. To gir spillet selv: lykkehjulet på puben (1 000 spillkroner, én runde per kveld, trukket i nettleseren) og kapittel 2 i merkene (én haill). De ligger bare i lagringen, så den som redigerer lagringen, kan gi seg selv så mange han vil. Ingen ekte penger og ingen andre spillere rammes av det. For spilleren ser alt likt ut i Haill-appen i begge tilfellene.
   - A (anbefalt til 10.11.2026): også på serveren, så all haill er én saldo og den lokale beholdningen forsvinner. Puben trekkes på serveren, og kapittelhaillen gis én gang per konto.
   - **B (anbefalt fra 10.11.2026):** bare haillen fra serveren (kjøpt, gaven, takken) er saldo, slik den er etter HS2; puben og kapitlene blir i lagringen. Det gjør HS4 unødvendig, og jukset med dem rammer bare jukseren selv.
@@ -124,14 +137,18 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
   - B: kontantene som saldo på serveren, med hver krone inn og ut gjennom en funksjon (flere måneders arbeid, og spillet uten nett slutter å virke).
   - C: ingenting, la funn 6 stå for pengene.
 
+- **V5. Spillkronene og det de kjøper (båter, motorer, utstyr, redskap), etter Jonas' «andre varer» 10.11.2026.** **Avgjort i økta 10.11.2026, A og mer,** etter at Jonas overlot det («Du vet sikkert bedre enn meg hvordan vi forhindrer juksing i spillet. Du har tross alt skrevet koden»); HS5 er skrevet om og flyttet over lanseringslinja. HS4 gjør serveren til fasiten for haill og alt som er kjøpt for ekte penger. Kronene er V4 A: hele økonomien regnes i spillet, også når det er lukket, og det en spiller kjøper i de tre handelsstedene, betales med kroner fra lagringen. Den som redigerer kronene, kan da kjøpe alt for spillkroner.
+  - **A (anbefalt):** HS4 for haill og det som er kjøpt for ekte penger; for kronene sjekken i HS5 flyttet over lanseringslinja, så en konto med flere kroner enn serverens tall (landingene, megleren, kvotemarkedet) forklarer, merkes i admin, og du avgjør (for eksempel ut av topplistene). Det fanger den som skriver inn en million, ikke den som jukser litt.
+  - B: kronene på serveren (V4 B): hver krone inn og ut gjennom en funksjon, og serveren regner salget, lønna, dieselen og driftsplanene selv. Det er en omskriving av spillet over flere måneder, og spillet slutter å virke uten nett.
+
 ## 5. Det som er antatt eller usikkert
 
 - **Hvem som har fått velkomstgaven, kan ikke ses.** Lagringene er komprimert, og `events` har ingen `reg_done` nå (de er kanskje ryddet bort; det er ikke sjekket hvor lenge hendelsene holdes). HS1 regner alle de 19 kontoene som har fått den. En som aldri fikk den, får den ikke.
 - **Overgangen i HS2** regner de 86 leverte haill-grantene som brukt. En kjøpt haill som ikke er brukt ennå, ligger da fortsatt bare i lagringen, som i dag. Med 3 kjøpte haill er det lite.
 - **`tm_hello` som stedet for gaven** er valgt fordi den kalles ved hver start med innlogging. At den alltid kalles før `shopClaim`, er lest i `cloudGate`, ikke prøvd.
-- **Taket på 3 i overgangen i HS4** er gjettet. Det bør settes etter et oppslag i lagringene (hvor mange haill spillerne har) når HS4 kommer.
+- **Taket i overgangen i HS4** (2 haill og 1 luksushaill) er gjettet. Det bør settes etter et oppslag i lagringene (hvor mange haill spillerne har) når HS4 kommer.
 - **To enheter uten nett** (V1 A) kan bruke samme haill. Hvor ofte det skjer, vet vi ikke; `haill_use` som svarer «brukt før», blir en hendelse som kan telles.
-- **Sjekken i HS5** forutsetter at serveren kan regne prisen på en landing. `land_put` har kilo, art og mottak, men prisen er klientens; HS5 må bruke prisen spillet viste og regne med et slingringsmonn.
+- **Sjekken i HS5** kjenner ikke prisen spillet ga for en landing (`land_put` har kilo, art og mottak). Den bruker den høyeste prisen arten kan få og et romslig tak, så den fanger store jukser og ikke små. Grensene settes etter de ekte lagringene og landingene før merket tar noen ut av topplistene.
 - **Regelverket:** ingenting her bygger på lover eller forskrifter. Angreretten ved kjøpet (angrerettloven § 22 n) er som før.
 
 ## 6. Hva planen ikke gjør
@@ -145,6 +162,8 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 
 ## Status
 
+- 10.11.2026: V5 avgjort i økta etter at Jonas overlot det («Du vet sikkert bedre enn meg hvordan vi forhindrer juksing i spillet. Du har tross alt skrevet koden»): A og mer; HS5 skrevet om (kronene og landingene sjekket på serveren, et merke holder kontoen ute av topplistene og summen for åpen gruppe til Jonas har sett på det) og flyttet over lanseringslinja; startmeldingen i `start/99.md`. Alle valgene i planen er tatt; steg 49 er ferdig.
+- 10.11.2026: V3 besvart av Jonas («Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil. Det må fikses.»): HS4 skrevet om (serveren er fasiten for haill og alt som er kjøpt, også det som er aktivert) og flyttet over lanseringslinja. Om «andre varer» også gjelder spillkronene og det de kjøper, er valg 30 (V5).
 - 10.11.2026: V2 presisert av Jonas: før lanseringen og så snart som mulig (early access); HS3 flyttet over lanseringslinja, startmeldingen skrevet (`start/97.md`).
 - 10.11.2026: Jonas svarte V1 A, V2 A («det burde rettes asap») og V4 A; V3 venter på svaret etter mer kontekst (anbefalingen endret til B). Startmeldingen for HS2 er skrevet (`start/96.md`).
 - 10.11.2026: planen skrevet (steg 49, Jonas' økt, grenen `claude/o6-funn-6-haill-saldo-ume93b`). HS1 er klar (ingen valg; V7 A avgjorde den); HS2 venter på V1, HS3 på V2, HS4 på V3, HS5 på V4. Valgene står som valg 29 i køen. Ingenting er bygd.
