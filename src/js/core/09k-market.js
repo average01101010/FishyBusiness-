@@ -145,18 +145,22 @@ function kmSrcOf(key, item){
   const st = l.st || [], hit = (s, exact) => s.id + '.' + s.from === sk && (!exact || !item || (Math.abs(s.kf - item.kf) < 1e-6 && s.until === item.until));
   let i = st.findIndex(s => hit(s, true)); if (i < 0) i = st.findIndex(s => hit(s, false)); return i < 0 ? null : {v, kind:'struct', i};
 }
-// why it cannot be put out: what lies out already is locked, a boat with her plan running would only try to leave, then kmWhy's reasons
+// why it cannot be put out: what lies out already is locked, then kmWhy's reasons, a catch in the hold (it must be landed first, so what
+// is landed on the right stands when it is packed), and a boat with her plan running, which would only try to leave
 function kmPutWhy(src, H){
   const key = kmKey(src); if (key && kmState().out[key]) return 'listed';
   const w = kmWhy(src, H); if (w) return w;
+  // (nothing may be landed on it after it is packed: the hold empty before, and she cannot leave port while it is out)
+  if (src.v && (vget(src.v, 'hold') || []).some(x => x.kg > 0.5)) return 'hold';
   if (src.v && mbOpsOn(src.v)) return 'ops';
   if (S.fleet.filter(mbSale).length + Object.keys(kmState().out).filter(k => k[0] === 'f').length >= MB.max) return 'many';
   return null;
 }
-// the lock while a good lies out (the server said yes, r = {id, until}): the boat lies in port with b.sale, as a boat at Kystmegleren does
-// (kmWhy and the yard read it), so nothing more is fished on the right after it was packed; a free right is locked by its key alone
-function kmLock(src, r, o){
-  const key = kmKey(src), K = kmState(); if (!key) return null;
+// the lock while a good lies out (r = {id, until}; id null until the server has said yes): the boat lies in port with b.sale, as a boat at
+// Kystmegleren does (kmWhy, depart and the yard read it), and her hold was empty (kmPutWhy), so nothing more is landed on the right
+// after it was packed; a free right is locked by its key alone. key: the one the server holds, when the good was found by it
+function kmLock(src, r, o, key){
+  const K = kmState(); key = key || kmKey(src); if (!key) return null;
   const until = Date.parse(r.until) || Date.now() + o.hours * 3600e3, it = o.item || {};
   K.out[key] = {lid:r.id, until, kind:it.kind, id:it.id, start:o.start, buynow:o.buynow || null, hours:o.hours, value:o.value};
   if (src.v){ const b = vget(src.v, 'boat'); b.sale = {lid:r.id, until, start:o.start, buynow:o.buynow || null, hours:o.hours, port:b.port, value:o.value, km:it.kind, key}; }
@@ -200,7 +204,6 @@ function mbKm(r, d, k, M){
     const nb = how === 'free' ? '' : '«' + vget(v, 'boatName') + '»';
     log('Kjøpte ' + nm + ' i Kvotemarkedet for ' + mktKr(d.price) + (how === 'put' ? ', satt på ' + nb + '.' : how === 'struct' ? ', strukturert inn på ' + nb + '.' : ', ledig hjemmel i rederiet.'),
       'Bought ' + nm + ' in the quota market for ' + mktKr(d.price) + (how === 'put' ? ', put on the ' + nb + '.' : how === 'struct' ? ', structured onto the ' + nb + '.' : ', a free right in the company.'));
-    M.km.got = {listing:r.listing, how, vid:how === 'free' ? null : v.id, t:S.t};
   }
   else if (r.kind === 'paid'){
     const src = kmSrcOf(d.vid, item), o = src ? kmOut(src) : null; kmUnlock(d.vid, r.listing);

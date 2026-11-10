@@ -123,6 +123,13 @@ async def main():
               'lagt ut for 6 timer: serveren får nøkkelen (båtens id), varen fra kmPack, taksten og prisene; hjemmelen er låst, båten går ikke ut, og Rederi sier hvorfor', put)
         await pg.evaluate(TAB + "('dine')"); await pg.wait_for_timeout(200)
         await shot(pg, '#phone .kx-own', 'kvotemarked_dine_liggende.png')
+        # the lock follows the server: a save without it (the page closed before the answer came, another device) is locked again when the list is read;
+        # and a catch in the hold must be landed before a right is put out
+        hl = await pg.evaluate("""(async () => { const v = vesselById(_hav), b = vget(v, 'boat'); delete b.sale; delete kmState().out[_hav]; const open0 = kmPutWhy({v, kind:'right'}); await KMC.load(true);
+          const t = vesselById(_tom); t.hold = [{sp:'torsk', kg:250, fresh:90}]; const l = {id:'h14', hl:HJ.h14.hl, since:_y, landY:_y}; licExtra(l); t.lic = l; const hold = kmPutWhy({v:t, kind:'right'}); const r = await KMC.put({v:t, kind:'right'}, _takst, null, 6); t.hold = []; t.lic = null;
+          return {open0, km:mbSale(v) && mbSale(v).km, lid:mbSale(v) && mbSale(v).lid, out:(kmState().out[_hav] || {}).lid, hold, err:r.err, puts:FAKE.calls.filter(c => c[0] === 'km_put').length}; })()""")
+        check(hl['open0'] is None and hl['km'] == 'right' and hl['lid'] == 61 and hl['out'] == 61 and hl['hold'] == 'hold' and hl['err'] == 'hold' and hl['puts'] == 1,
+              'en lagring uten låsen får den igjen fra serverens liste over det du har ute; med fangst i rommet kan en hjemmel ikke legges ut', hl)
         cn = await pg.evaluate("""(async () => { document.querySelector('#phone [data-pa=kmcancel]').click(); await new Promise(r => setTimeout(r, 400)); const v = vesselById(_hav);
           return {sale:mbSale(v), out:Object.keys(kmState().out).length, state:FAKE.L[0].state, lic:!!vget(v, 'lic'), pend:FAKE.calls.filter(c => c[0] === 'broker_pending').map(c => c[1].km)}; })()""")
         check(cn['sale'] is None and cn['out'] == 0 and cn['state'] == 'cancelled' and cn['lic'] and cn['pend'] and all(k is True for k in cn['pend']),

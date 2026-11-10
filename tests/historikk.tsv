@@ -1964,3 +1964,9 @@
 2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	skiptest	OK	17	lite	samtidig	
 2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	kjoptest	OK	440	lite	samtidig	
 2026-11-10 14:37	claude/hs1-velkomstgave-u3rnfm	12fb7c6	sqltest	OK	35	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	boottest	OK	34	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	kvotemarkedtest	OK	27	lite	samtidig	
+2026-11-10 14:49	ccr-09c0a3db-nj4fwz	c685d0c	megletest	OK	16	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	megletest	OK	16	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	quotatest	OK	19	lite	samtidig	
+2026-11-10 14:57	ccr-09c0a3db-nj4fwz	c685d0c+	boottest	OK	27	lite	samtidig	

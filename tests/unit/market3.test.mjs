@@ -22,6 +22,8 @@ export default function (t){
   t.ok(kmSrcOf(A.id).kind === 'right' && kmSrcOf('v999') === null && kmSrcOf(A.id + '/h14.1999') === null, 'en nøkkel uten vare gir ingenting');
 
   // ---- the seller: the lock, back, paid
+  A.hold = [{sp:'torsk', kg:300}]; t.eq(kmPutWhy({v:A, kind:'right'}), 'hold', 'med fangst i rommet kan hjemmelen ikke legges ut (det som er landet på den, skal stå fast)'); A.hold = [];
+  t.eq(kmPutWhy({v:A, kind:'right'}), null, 'med tomt rom, i havn og uten plan kan den legges ut');
   const c0 = S.cash, item = kmPack({v:A, kind:'right'});
   kmLock({v:A, kind:'right'}, {id:71, until}, {start:5e6, buynow:null, hours:6, value:9e6, item});
   t.ok(mbSale(A) && mbSale(A).km === 'right' && kmState().out[A.id].lid === 71, 'lagt ut: båten er låst (b.sale.km), og oppføringen huskes');
@@ -69,10 +71,13 @@ export default function (t){
   // no choice kept at all (a save from another device): a free right too
   ids = mbApply([{id:115, kind:'right', listing:85, kr:0, lk:'right', data:{item:it14, price:6000000, name:'Hjemmel 14–14,9 m'}}]);
   t.ok(ids.join() === '115' && kmFreeList().length === 2, 'uten et husket valg blir hjemmelen også ledig');
+  t.ok(kmKey({free:0}) !== kmKey({free:1}), 'to ledige hjemler med samme lengde fra samme time får hver sin nøkkel', [kmKey({free:0}), kmKey({free:1})]);
   // the free right's key, and its lock
   { const f = kmFreeList()[0], key = kmKey({free:0}); t.ok(key === kmFreeKey(f) && key[0] === 'f' && key.length <= 16 && kmSrcOf(key).free === 0, 'den ledige hjemmelen har en fast nøkkel som begynner med f', key);
     kmLock({free:0}, {id:90, until}, {start:5e6, buynow:null, hours:6, value:9e6, item:kmPack({free:0})});
-    t.eq(kmPutWhy({free:0}), 'listed', 'og er låst mens den ligger ute'); kmUnlock(key, 90); t.eq(kmPutWhy({free:0}), null, 'til låsen tas av'); }
+    t.eq(kmPutWhy({free:0}), 'listed', 'og er låst mens den ligger ute');
+    { const u0 = f.until, n = kmFreeList().length, r0 = K.npcReg().h14; f.until = H - 1; K.kmFree(H); t.ok(kmFreeList().length === n - 1 + 1 && kmFreeList().includes(f) && K.npcReg().h14 === r0, 'en ledig hjemmel som ligger ute, går ikke tilbake til registeret mens salget går, selv om fristen er ute'); f.until = u0; }
+    kmUnlock(key, 90); t.eq(kmPutWhy({free:0}), null, 'til låsen tas av'); }
   // a structure quota no boat can take is held: not marked done, asked for again, and applied once a boat that can is chosen
   const D = boat('sjark', Lc('h10'), 'Liten'); kmState().to[86] = {vid:D.id, how:'struct', t:1};
   const row = {id:116, kind:'struct', listing:86, kr:0, lk:'struct', data:{item:sq, price:2000000, name:'Strukturkvote 14–14,9 m'}};

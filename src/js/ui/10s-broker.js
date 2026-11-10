@@ -47,10 +47,13 @@ var MBC = (() => {
     if (!on() || st.sync) return 0; st.sync = true; st.last = Date.now();
     try {
       const rows = await cloudRpc('broker_pending', {km:true}); if (!Array.isArray(rows) || !rows.length) return 0;
-      const before = S.fleet.length, ids = mbApply(rows), got = mktState().mb.got;
+      const before = S.fleet.length, w0 = Object.keys(kmState().wait).join(), ids = mbApply(rows), got = mktState().mb.got, waited = w0 !== Object.keys(kmState().wait).join();
       if (ids.length){ save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); try { await cloudRpc('broker_done', {ids}); } catch (e){ console.error(e); } }
       if (got && S.fleet.length > before && typeof BUYM !== 'undefined'){ const v = vesselById(got.vid); mktState().mb.got = null; if (v) setTimeout(() => BUYM.show(v), 60); }
-      if (typeof KMC !== 'undefined') KMC.after();   // (KM3: the quota market's list follows what was settled)
+      // (KM3: a structure quota that waits for a boat is not done, so it comes again each time: saved and drawn only when that changed)
+      if (!ids.length && waited){ save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); }
+      if (!ids.length && !waited) return 0;
+      if (typeof KMC !== 'undefined') KMC.after();   // (the quota market's list follows what was settled)
       if (typeof refreshAll === 'function') refreshAll();
       return ids.length;
     } catch (e){ if (/ 404$/.test(String(e && e.message))) st.off = true; return 0; }
@@ -62,7 +65,7 @@ var MBC = (() => {
     for (const x of hits.slice(0, 3)){ seen.push(x.id); msg('Kystmegleren', 'En båt som passer ønsket ditt, er til salgs: «' + x.name + '» ved verftet i ' + mbPlace(portById(x.port)) + '.', 'A boat that suits your wish is for sale: «' + x.name + '» at the yard in ' + mbPlace(portById(x.port)) + '.'); }
     if (seen.length > 60) seen.splice(0, seen.length - 60);
   }
-  const busy = () => S.fleet.some(v => mbSale(v)) || Object.keys(mktState().mb.held).length > 0 || Object.keys(kmState().out).length > 0 || Object.keys(kmState().wait).length > 0;
+  const busy = () => S.fleet.some(v => mbSale(v)) || Object.keys(mktState().mb.held).length > 0 || Object.keys(kmState().out).length > 0;
   function tick(){
     if (typeof document !== 'undefined' && document.hidden) return;
     if (on() && Date.now() - st.last > (busy() ? 60000 : 300000)) sync();
