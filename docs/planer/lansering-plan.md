@@ -168,6 +168,8 @@ Venter på Jonas (kap. 5, punkt 5–8). Så bygges dette:
 
 Svar som «L1 V1 A» osv. Ett anbefalt alternativ per valg.
 
+**Besvart 10.11.2026 (Jonas):** V1 A, V2 A, V3 A, **V4 B** (bare push, med varsel for nede og heng; ingen e-post, ingen e-posttjeneste, ingen ekstra databehandler, kap. 5 punkt 10 faller bort), V5 A, V6 A, V7 A. Fasene 74–78 følger dette; 77 (L1d) bygges uten `err-mail` og `mail_queue`.
+
 - **V1. Hvor produksjonen kommer fra.**
   - **A (anbefalt): `main` er produksjonen,** og et slipp er en PR fra arbeidsgrenen til `main` som flettes som fast-forward. Deny-lista nekter alt nå en økt å pushe til `main`, så ingenting slippes ved et uhell. PR-en viser hva som kommer med.
   - B: en tag (`prod-ÅÅÅÅMMDD-N`) som en økt setter etter porten. Det er enklere, men ingenting stopper en tag satt ved en feil.
