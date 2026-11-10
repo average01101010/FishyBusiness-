@@ -156,7 +156,7 @@ Målt i spillet før endringen med en liten sonde (som OB8: kjernen setter båte
 | Plass | Modellens x, y | Hvorfor |
 |---|---|---|
 | Sløyebenken (`work.table`, `BENCH`) | x 2,40 (før 3,30), y 1,55 | Langs babord ripe tvers av luka (luka x 1,75–2,95): fisken går rett ned i rommet, og benken står fri av stampene. Nummer to står 0,61 m forut for den første (sonden etter: x 2,39 og 3,00) |
-| Stampene (`kit.stamps`, `STAMP0`) | første rad x 5,10 (før 4,90), y 1,30 | Under skjulet til babord; blokken med åtte x 3,28–5,42, forut for benken og akter for trinnene opp til sidedekket (5,32) |
+| Stampene (`kit.stamps`, `STAMP0`) | første rad x 5,30 (før 4,90), y 0,95 (før 1,30) | Under skjulet til babord, innenfor gangen langs babord ripe: blokken med åtte (spillets boks, `stamp_box()`) x 3,48–5,62, y 0,24–1,14, forut for benken med 0,22 m imellom, innenfor trinnene opp til sidedekket (y fra 1,50) og fri for juksaplassene ved ripa (gjennomgangen 10.11.2026: med y 1,30 sto begge babords juksaplasser i blokken) |
 | Juksaplassene (`anchors.jigZ`, ny) | babord 3,70, styrbord 4,95, babord 4,75 | Begge sider, over en meter imellom på samme side, ingen i haleporten (3,52–4,28), ved haleren, i døra og trinnene (fra 5,30), ved kranen eller under flaggmastas stag (til 1,90). Tre plasser for tre om bord; den fjerde i sonden (fire agenter) står ledig |
 | Babords gripelist | fjernet | Benken står langs skansen der den var (1,60–2,90) |
 | Spillets vannlinje (`WLE`) | 5 cm under tegningens | Valg 18 A: 11,99 t mot 12 t (`check()`, `qa/stubcheck.py`: 13,59 t ved tegningens) |
@@ -165,9 +165,10 @@ Målt i spillet før endringen med en liten sonde (som OB8: kjernen setter båte
 
 - **Bremmen på styrhustaket** (valg 26): rundt hele takkanten, også ut over skansen over skjulet og visiret foran, med underkanten der den gamle leppen var (så haleporten og gangen ved huset har samme takhøyde): en kant på 3 cm med dryppkanten under, flaten skrår 0,10 m inn og 0,18 m opp, kronen 4 cm. Svart som stripene og lista, i stripenes malingssone (sone 2), så den følger malingen. `check()`: dryppkanten 1,90 m over sidedekket og 2,44 over arbeidsdekket (dekkskartet 1,85). Masta, stagføttene, rekka, lyskasteren, flåten og radarbrakettene står på kronen (`roof_top`).
 - **Styrhusveggene uten striper:** de skarpe kantene merkes på nytt etter at vinduene og døra er skåret ut (`shade(shell, 5)`). `qa/flatnorm.py`: 82 flater opptil 74° skjevt før, 0 etter.
-- **Plassene** som i tabellen; `check()` har to nye linjer: benken og stampene fra hverandre med fritt dekk for nummer to, og juksaplassene på begge sider fri for det som står på ripa.
+- **Plassene** som i tabellen; `check()` har to nye linjer: benken og stampeblokken fra hverandre med fritt dekk for nummer to 0,7 m forut og akter (en kropp 0,25 m bred til hver side), og juksaplassene på begge sider fri for det som står på ripa og for stampeblokken. Begge ble sett røde med stampene der de sto i første utkast (5,10 / 1,30) og grønne etter.
+- **Badestigen i hekken** (`vessel3d.js` `LADDERS.hurtigsjark`): spillets forlengelse under modellens stige er løftet 5 cm med den nye vannlinja, så det ikke blir en glipe (gjennomgangen).
 - **Vekta** (valg 18 A): formen står, spillets vannlinje `WLE = WL − 0,05` (som `plast31.py`), så den tomme båten ligger 5 cm høyere i sjøen; malingen står der formen har den.
-- **`STAB_AT.hurtigsjark`** (`core/03c-stability.js`) lest på nytt: `dy` 1,21, benken z 3,1, stampene z 0,4. Ny sjekk i `tests/unit/trim.test.mjs` som leser modellens eksporterte ankre og sammenligner hele tabellen, sett rød mot den gamle (dy, table og tub) og grønn etter.
+- **`STAB_AT.hurtigsjark`** (`core/03c-stability.js`) lest på nytt: `dy` 1,21, benken z 3,1, stampene x −0,95, z 0,2. Ny sjekk i `tests/unit/trim.test.mjs` som leser modellens eksporterte ankre og sammenligner hele tabellen, sett rød mot den gamle (dy, table og tub) og grønn etter.
 - **`crewclip`**: hurtigsjarken med i F19-lista (to ved samme bord minst 0,55 m imellom). Ikke sett rød: før-bygget ga 0,61.
 - **Spygattene** var alt åpne uten klaffer (runde 4), og klasjsjekkens unntak nevner ikke klaffer. **Pyntefenderne:** modellen hadde ingen igjen, bare kommentaren, som er rettet.
 - **Klasjsjekken** (`qa/clip_hurtig11.py`): 0 punkter, som før.

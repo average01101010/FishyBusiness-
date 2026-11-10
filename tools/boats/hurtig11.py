@@ -961,8 +961,13 @@ def bower(G):
 # the gutting bench (work.table, the game's: 1.6 m long on a boat of 10 m and more, deckcrew.js kitBoxes) along the port bulwark abreast
 # the hatch (F19, OB9: at 3.30 it stood under the line tubs' place, 3.08-5.22 with eight aboard, so the one at its side had no free deck
 # and stood inside the first; the gutted fish go straight down the hatch beside it); the line tubs under the shelter to port forward of
-# it, two across and up to four rows aft (STAMP0: the first row's place, kit.stamps)
-BENCH = 2.40; STAMP0 = (5.10, 1.30)
+# it, two across and up to four rows aft (STAMP0: the first row's place, kit.stamps), inboard of the port walkway so the jiggers at the
+# port rail and the way to the port steps stay clear of them (the code review, 10.11.2026: at y 1.30 the block reached 1.49)
+BENCH = 2.40; STAMP0 = (5.30, 0.95)
+def stamp_box(rows=4):
+    """the line tubs' block as the game bars it for the crew (deckcrew.js kitBoxes, ry 0): (x0, x1, y0, y1) in the model's frame, padded"""
+    cx = STAMP0[0] - (rows - 1) * 0.25; hl = (rows * 0.5 + 0.02) / 2 + 0.06; cy = STAMP0[1] - 0.26; hw = 0.78 / 2 + 0.06
+    return (cx - hl, cx + hl, cy - hw, cy + hw)
 # the jigging places on the rails, in the order the machines are bolted on (anchors.jigZ, F21; after havsjark35.py): port on the open deck
 # forward of the gutting bench by the roof's edge, starboard under the shelter forward of the hauling port, and port under the shelter
 # abreast of it; never in the hauling port under the roof's edge or at the hauler, never in the door, never at the crane (the
@@ -1088,15 +1093,17 @@ def check():
         out.append(('%s i plan: største endring i stigningen %.3f m per 6 cm (ved x %.2f)' % (nm, wv[0], wv[1]), wv[0] < 0.02))
     # the gutting bench and the line tubs (F19, deckcrew.js kitBoxes: the bench 0.62 x 1.6 m, the tubs' block with eight aboard 0.78 x
     # 2.02 m, each padded 6 cm): apart, and the deck at the bench's side 0.7 m fore and aft of the one gutting free of both and the hatch
-    bx = (BENCH - 0.86, BENCH + 0.86); sx = (STAMP0[0] - 0.75 - 1.07, STAMP0[0] - 0.75 + 1.07); gy = 1.55 - 0.62
-    two = [BENCH - 0.7, BENCH + 0.7]; free2 = any(not (sx[0] - 0.2 < x < sx[1] + 0.2 and 0.59 - 0.2 < gy < 1.49 + 0.2) for x in two) and gy - 0.25 > HOLD[3] + 0.06
-    out.append(('sløyebenken x %.2f-%.2f ved babord ripe tvers av luka, stampene x %.2f-%.2f forut for den (%.2f m imellom); nummer to ved benken har fritt dekk %.2f m akter for den første (deckAt tar den siden som er fri)' % (bx[0], bx[1], sx[0], sx[1], sx[0] - bx[1], 0.7),
-                sx[0] - bx[1] > 0.0 and free2))
+    bx = (BENCH - 0.86, BENCH + 0.86); sx0, sx1, sy0, sy1 = stamp_box(); gy = 1.55 - 0.62; R = 0.25          # (R: a body's half width)
+    clear = lambda x, y: not (sx0 - R < x < sx1 + R and sy0 - R < y < sy1 + R)
+    free2 = all(clear(x, gy) for x in (BENCH - 0.7, BENCH + 0.7)) and gy - R > HOLD[3] + 0.06
+    out.append(('sløyebenken x %.2f-%.2f ved babord ripe tvers av luka, stampeblokken med åtte x %.2f-%.2f, y %.2f-%.2f forut for den (%.2f m imellom); nummer to ved benken har fritt dekk 0,7 m forut og akter for den første' % (bx[0], bx[1], sx0, sx1, sy0, sy1, sx0 - bx[1]),
+                sx0 - bx[1] > 0.0 and free2))
     # the jigging places (F21): on both sides, over a metre apart on a side, clear of what stands on the rail
     bad = [(sd, x, nm) for sd, x in JIG for x0, x1, nm in JIG_CLEAR[sd] if x0 <= x <= x1]
+    bad += [(sd, x, 'stampene') for sd, x in JIG if not clear(x, sd * -(ybw(x) - 0.45))]     # (the jigger 0.45 inboard of the rail, jigSpot)
     gap = min([abs(a[1] - b[1]) for a in JIG for b in JIG if a is not b and a[0] == b[0]] or [9])
     out.append(('juksaplassene %s: %d på styrbord og %d på babord, minst %.2f m imellom på samme side, fri for %s' % (', '.join('%s %.2f' % ('sb' if sd > 0 else 'bb', x) for sd, x in JIG),
-                sum(1 for sd, _ in JIG if sd > 0), sum(1 for sd, _ in JIG if sd < 0), gap, 'kranen, haleporten, døra, benken og stagene' if not bad else bad), not bad and gap > 1.0 and {1, -1} <= {sd for sd, _ in JIG}))
+                sum(1 for sd, _ in JIG if sd > 0), sum(1 for sd, _ in JIG if sd < 0), gap, 'kranen, haleporten, døra, benken, stagene og stampene' if not bad else bad), not bad and gap > 1.0 and {1, -1} <= {sd for sd, _ in JIG}))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
     return all(o for _, o in out)
 

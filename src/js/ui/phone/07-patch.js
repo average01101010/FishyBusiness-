@@ -1,7 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
     ['ob9-101126', '10.11.2026', 'Den brukte hurtigsjarken', 'The used speed sjark', [
-       ['Sløyebenken på den brukte hurtigsjarken står langs babord ripe tvers av luka, så de to som sløyer, står ved hver sin ende av den, og fisken går rett ned i rommet. Stampene står under skjulet forut for benken.', 'On the used speed sjark the gutting bench stands along the port rail abreast the hatch, so the two gutting stand at each end of it, and the fish go straight down into the hold. The line tubs stand under the shelter forward of the bench.'],
+       ['Sløyebenken på den brukte hurtigsjarken står langs babord ripe tvers av luka, så de to som sløyer, står side om side ved den, og fisken går rett ned i rommet. Stampene står under skjulet forut for benken.', 'On the used speed sjark the gutting bench stands along the port rail abreast the hatch, so the two gutting stand side by side at it, and the fish go straight down into the hold. The line tubs stand under the shelter forward of the bench.'],
        ['Juksamaskinene står på begge sider, fritt for haleporten, døra og kranen.', 'The jigging machines stand on both sides, clear of the hauling port, the door and the crane.'],
        ['Styrhustaket har fått en skrå brem rundt kanten, veggene er glatte uten striper, og båten ligger litt høyere i vannet når hun er tom.', 'The wheelhouse roof has a sloping brim round its edge, the walls are smooth without streaks, and she floats a little higher when empty.']]],
     ['ob8-101126', '10.11.2026', 'Havsjarken', 'The sea sjark', [
