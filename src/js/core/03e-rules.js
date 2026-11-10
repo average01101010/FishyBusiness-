@@ -403,17 +403,8 @@ function f26In(f, ll){
 function ruBlockMsg(q){ const r = rulesAt(q), b = r.items.find(x => x.block && x.v === 'no'); return b ? gL(b.no, b.en) : null; }
 // § 47 minimum sizes (cm) where you are, for the species the game has
 function ruMinSize(sp, p){
-  const ll = LL(p), n62 = ll.lat >= 62, nm = blNm(p);
-  switch (sp){
-    case 'torsk': return n62 ? (nm < 4 ? 55 : 44) : 40;
-    case 'hyse': return n62 ? 40 : 32;
-    case 'sei': return n62 ? 45 : 40;
-    case 'kveite': return 84;
-    case 'blakveite': return 45;
-    case 'uer': return nm < 12 ? 32 : 30;
-    case 'snokrabbe': return 9.5;   // (§ 47: 9.5 cm, measured over the widest part of the shell, § 46)
-    default: return null;
-  }
+  if (sp === 'snokrabbe') return 9.5;   // (§ 47: 9.5 cm, measured over the widest part of the shell, § 46)
+  return MIN47[sp] ? min47Cm(sp, p) : null;   // § 47 for the fish: the fishing's own table (02-species-gear.js, steg 59)
 }
 // the limits on gear in the sea inside the fjord lines where p is (§ 33, § 33a), or null outside them
 function fjordLimits(p, H){ const b = ruBits(p); if (!(b & 2)) return null; const winter = ruIn2(ruMD(H == null ? S.t / 60 : H), 1101, 430);
