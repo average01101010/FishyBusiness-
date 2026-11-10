@@ -1,5 +1,7 @@
 # Manus v4: stemme, undertekster og tekst på skjermen
 
+> **Klippekart 4 (m4, 10.11.2026, `audio/music-edit-4.json`)** er det gjeldende. Endret fra klippekart 3 under: nordlyset kommer før Svalbard (S6: «mørket» over nordlyset, «Alt følger med» over krabbebåten); ingen stedsnavn før droppet (T1–T5 ute), bare Midnattssol og montasjen; montasjen er Hvaler · Bodø · Tromsø · Kirkenes · Færøyene · Svalbard (Skottland og Grønland ute: flatt land uten høyder); undertekstene er 54 px; musikken stiger 6 dB inn i droppet og går ned til +2,5 dB for siste linje, stemmen ligger 5 LU over hele låta (rundt 7,5 dB over musikken der det snakkes), S8 er løftet 2 dB. Målt i fila: stemmen rundt −21,7 dB RMS, musikken mellom linjene −29,1, droppet −19,7; ut −21,6 LUFS, topp −6,0 dBTP. Stemmens tider er som i tabellen under.
+
 *10.11.2026, klippekart 3 (`audio/music-edit-3.json`, grovklipp m3). Stemmen bærer historien (ElevenLabs, en venns modell; Jonas 10.11.2026). Stemmens linjer står også som undertekst, så filmen virker med lyden av. Stedsnavnene følger klippene sine. «Fra trebåt …» og «… til snurper» (T6 og T8 i v3) er ute: de fortalte en annen historie enn stemmen. Alt tegnes av `tools/titles.py` i Source Serif 4 Display Semibold (spillets egen, OFL), hvit med myk skygge. v3 (uten stemme, m2) ligger i `audio/music-edit-2.json`.*
 
 ## Stemmen og undertekstene

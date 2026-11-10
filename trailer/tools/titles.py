@@ -18,7 +18,7 @@ PLACES = {'finnsnes': 'Finnsnes', 'lofoten': 'Lofoten', 'lofotfisket': 'Lofotfis
           'hvaler': 'Hvaler', 'rorvik': 'Rørvik', 'bodo': 'Bodø', 'tromso': 'Tromsø', 'hammerfest': 'Hammerfest', 'kirkenes': 'Kirkenes',
           'svalbard': 'Svalbard', 'skottland': 'Skottland', 'faeroyene': 'Færøyene', 'gronland': 'Grønland'}
 LINES = {'fra': 'Fra trebåt …', 'til': '… til snurper'}
-# the voice's lines as subtitles (script.md v4, klippekart 3), so the film works with the sound off: sentence case, about 46 px at 1080
+# the voice's lines as subtitles (script.md v4, klippekart 3), so the film works with the sound off: sentence case, 54 px at 1080 (46 was small on a phone, m3)
 # wide, the first line 66 % down, at most two lines (<br> where a line is broken), clear of the lowest quarter and of the right edge
 SUBS = {'s1': 'Det store blå.', 's2': 'Båten er fra femtiseks.<br>Naustet er eldre.', 's3': 'Han far sa alltid at havet<br>ikke skylder deg noe.',
         's4': 'Noen dager gir sjøen.', 's5': 'Andre dager tar ho.', 's6': 'Kulda, mørket, regningene.<br>Alt følger med.', 's7': 'Men så letter det.',
@@ -59,7 +59,7 @@ async def main():
         for key, txt in LINES.items():
             await shot(key, page(f'<div class="t" style="top:{y - int(10 * k)}px;font-size:{int(92 * k)}px;letter-spacing:.015em">{txt}</div>', w, h))
         for key, txt in SUBS.items():
-            await shot(key, page(f'<div class="t" style="top:{int(h * 0.66)}px;left:{int(w * 0.13)}px;right:{int(w * 0.13)}px;font-size:{int(46 * k)}px;line-height:1.28;letter-spacing:.01em;'
+            await shot(key, page(f'<div class="t" style="top:{int(h * 0.66)}px;left:{int(w * 0.13)}px;right:{int(w * 0.13)}px;font-size:{int(54 * k)}px;line-height:1.28;letter-spacing:.01em;'
                                   f'text-shadow:{glow(k, 1.15)}">{txt}</div>', w, h))
         lglow = f'filter:drop-shadow(0 0 {int(26 * k)}px rgba(255,255,255,.28)) drop-shadow(0 {int(4 * k)}px {int(18 * k)}px rgba(0,0,0,.35))'
         logo = f'<div style="position:absolute;left:{(w - logo_w) // 2}px;top:{int(h * 0.15)}px;width:{logo_w}px;height:{logo_h}px;{lglow}">{svg}</div>'

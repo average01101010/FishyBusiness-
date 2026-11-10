@@ -37,13 +37,21 @@ def voice_af(gain_db=0.0):
 VOICE_AF = voice_af()
 DIP_AF = 'equalizer=f=2500:t=q:w=1.0:g=-3'
 
-def master(song, dur, out, voice=None, lufs=-14.0, tp=-1.5, level=0.6, over=8.0, fade=0.0):
+def env_expr(env):
+    """[[t, dB], ...] as an ffmpeg volume expression: straight lines in dB between the points, held before the first and after the last"""
+    e = '%.3f' % env[-1][1]
+    for (t0, d0), (t1, d1) in reversed(list(zip(env, env[1:]))): e = 'if(lt(t,%.3f),%.3f+(%.3f)*(t-%.3f)/%.3f,%s)' % (t1, d0, d1 - d0, t0, max(1e-3, t1 - t0), e)
+    return "volume='pow(10,(%s)/20)':eval=frame" % e
+
+def master(song, dur, out, voice=None, lufs=-14.0, tp=-1.5, level=0.6, over=8.0, fade=0.0, env=None):
     """the film's sound as a 48 kHz stereo WAV: the song from its start at one fixed level (never ducked), the voice on top if there is
     one, the whole mix moved with one plain gain to `lufs` (less if the true peak would pass `tp`), then times `level`.
 
     voice: a list of {'file', 'at'} (seconds into the film). Each is high-passed at 70 Hz, moved to the same loudness, compressed (4:1) and limited (voice_af); the
     song gets a 3 dB dip round 2.5 kHz to leave it room, and is turned down only as far as it takes for the voice to lie `over` LU
-    above it. fade: seconds of fade-out at the end of the film. Returns what was measured."""
+    above it (measured on the whole song). fade: seconds of fade-out at the end of the film. A line's own 'gain' (dB) lifts that line.
+    env: the music's level over the film as [[t, dB], ...] on top of that fixed level (klippekart 4: the music rises once at the drop,
+    where no one speaks, and comes part of the way down for the last line). Returns what was measured."""
     voice = voice or []; rep = {}
     ins = ['-i', song]; chain = []; mus = 'aresample=48000,aformat=channel_layouts=stereo'
     if voice:
@@ -52,10 +60,11 @@ def master(song, dur, out, voice=None, lufs=-14.0, tp=-1.5, level=0.6, over=8.0,
         vl = [loudness(v['file'], voice_af(g))[0] for v, g in zip(voice, vg)]; ml = loudness(song, DIP_AF)[0]
         g = min(0.0, min(vl) - over - ml); rep['music_gain_db'] = round(g, 2); rep['voice_lufs'] = [round(x, 1) for x in vl]; rep['music_lufs'] = round(ml, 1)
         mus += ',' + DIP_AF + ',volume=%.2fdB' % g
+    if env: mus += ',' + env_expr(env); rep['music_env'] = env
     chain.append('[0:a]%s[m]' % mus); mixin = '[m]'
     for k, v in enumerate(voice):
         ms = int(round(v['at'] * 1000))
-        chain.append('[%d:a]aresample=48000,%s,aformat=channel_layouts=stereo,adelay=%d:all=1[v%d]' % (k + 1, voice_af(vg[k]), ms, k)); mixin += '[v%d]' % k
+        chain.append('[%d:a]aresample=48000,%s,aformat=channel_layouts=stereo,adelay=%d:all=1[v%d]' % (k + 1, voice_af(vg[k] + v.get('gain', 0)), ms, k)); mixin += '[v%d]' % k
     tail = 'atrim=0:%.3f' % dur + (',afade=t=out:st=%.3f:d=%.3f' % (dur - fade, fade) if fade else '') + ',apad=whole_dur=%.3f' % dur
     chain.append(('%samix=inputs=%d:normalize=0:duration=longest,' % (mixin, len(voice) + 1) if voice else '[m]') + tail + '[o]')
     raw = out.replace('.wav', '-raw.wav')

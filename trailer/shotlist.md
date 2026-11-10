@@ -14,6 +14,10 @@
 - **Ingen kildehenvisning i bildet** (Jonas 10.11.2026: «Det ser ikke bra ut»). Kartverket (CC BY 4.0), Mapzen (CC BY) og OpenStreetMap (ODbL) krever at kilden oppgis der kartdataene vises, så linja står i teksten under videoen når den publiseres.
 - Stemme fra klippekart 3 (10.11.2026); manuset, undertekstene og teksten på skjermen står i `script.md`.
 
+## Klippekart 4 (m4, `audio/music-edit-4.json`, 10.11.2026), det gjeldende
+
+Som klippekart 3 under, med tre endringer: `10-hekkingen-nordlys` ligger på 17,40–19,87 og `18-snokrabbe-svalbard` (fra 0,3 s) på 19,87–22,37; montasjen 37,37–41,13 er `15a-hvaler`, `15c-bodo`, `15d-tromso`, `15f-kirkenes`, `17b-faeroyene`, `17c-svalbard`; stedsnavn bare på hvalen (Midnattssol) og i montasjen. Prøvd og forkastet: `07-vardo-snokuling` (27.2.2027, overskyet og snø, men bare 0,44 m sjø: grått og flatt), så `07-vardo-kuling` står.
+
 ## Klippene, stemmeversjonen (klippekart 3, `audio/music-edit-3.json`, 10.11.2026)
 
 **Båtstigen brytes med vilje i stemmeversjonen** (Jonas 10.11.2026): krabbebåten kommer før kystnotbåten, og kystbåten med hvalen etter droppet. Stemmen bærer historien (`script.md` v4), så regelen om at båtene blir større for hvert klipp gjelder ikke her. Trebåten og kystnotbåten går fortsatt under den samme brua, først og på droppet. Klippekart 2 (m2, uten stemme) holder båtstigen.

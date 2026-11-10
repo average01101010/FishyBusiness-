@@ -51,8 +51,8 @@ def main():
     out = a.out or os.path.join(ROOT, 'trailer', 'out', 'rough', E['name'] + '.mp4'); fdir = os.path.join(os.path.dirname(out), E['name'] + '-frames')
     os.makedirs(fdir, exist_ok=True)
     def sound():
-        wav = out.replace('.mp4', '-mix.wav'); voice = [{'file': os.path.join(ROOT, v['file']), 'at': v['at']} for v in E.get('voice', [])]
-        m = master(os.path.join(ROOT, E['song']), E['dur'], wav, voice, level=E.get('level', 0.6), fade=E.get('fade', 0))
+        wav = out.replace('.mp4', '-mix.wav'); voice = [{'file': os.path.join(ROOT, v['file']), 'at': v['at'], 'gain': v.get('gain', 0)} for v in E.get('voice', [])]
+        m = master(os.path.join(ROOT, E['song']), E['dur'], wav, voice, level=E.get('level', 0.6), fade=E.get('fade', 0), over=E.get('over', 8.0), env=E.get('music_env'))
         print('lyd: %.1f LUFS inn, %+.1f dB%s, så %d %% -> %.1f LUFS, topp %.1f dBTP' % (m['in_lufs'], m['gain_db'], ' (holdt av toppen)' if m['peak_limited'] else '', round(m['level'] * 100), m['out_lufs'], m['out_peak']))
         if voice: print('stemme %s LUFS, musikk %.1f LUFS, musikken %+.1f dB' % (m['voice_lufs'], m['music_lufs'], m['music_gain_db']))
         return wav
