@@ -24,13 +24,18 @@ SUBS = {'s1': 'Det store blå.', 's2': 'Båten er fra femtiseks.<br>Naustet er e
         's4': 'Noen dager gir sjøen.', 's5': 'Andre dager tar ho.', 's6': 'Kulda, mørket, regningene.<br>Alt følger med.', 's7': 'Men så letter det.',
         's8': 'Nå er det din tur.'}
 
+K = 1.0   # the picture's width over 1080, set in main
+def glow(k, a=1.0):
+    """a black glow round the letters and nothing else behind them (Jonas 10.11.2026: no band across the picture, «bare litt svart glød rundt
+    teksten så den skiller seg mer ut fra en lys bakgrunn»): four layers from tight to wide, so the edge is firm and the fall-off soft"""
+    return ','.join('0 %dpx %dpx rgba(0,0,0,%.2f)' % (round(dy * k), round(r * k), min(1, al * a)) for dy, r, al in ((1, 3, .8), (0, 8, .65), (0, 18, .55), (0, 36, .45), (0, 60, .3)))
 def page(body, w, h, bg='transparent'):
     f = base64.b64encode(open(FONT, 'rb').read()).decode()
     return f"""<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face{{font-family:SS4;src:url(data:font/ttf;base64,{f}) format('truetype');}}
 html,body{{margin:0;width:{w}px;height:{h}px;background:{bg};overflow:hidden}}
 .t{{position:absolute;left:0;right:0;text-align:center;font-family:SS4;color:#f7f4ee;
-  text-shadow:0 1px 2px rgba(0,0,0,.6),0 0 6px rgba(0,0,0,.45),0 0 22px rgba(0,0,0,.4)}}
+  text-shadow:{glow(K)}}}
 .cap{{text-transform:uppercase;letter-spacing:.42em;text-indent:.42em}}
 .rule{{position:absolute;left:50%;height:2px;background:rgba(247,244,238,.75);box-shadow:0 0 8px rgba(0,0,0,.25)}}
 </style></head><body>{body}</body></html>"""
@@ -38,6 +43,7 @@ html,body{{margin:0;width:{w}px;height:{h}px;background:{bg};overflow:hidden}}
 async def main():
     ap = argparse.ArgumentParser(); ap.add_argument('--size', default='1080x1920'); ap.add_argument('--out', default=os.path.join(ROOT, 'trailer', 'out', 'titles'))
     a = ap.parse_args(); w, h = map(int, a.size.split('x')); os.makedirs(a.out, exist_ok=True); k = w / 1080
+    global K; K = k
     svg = open(LOGO, encoding='utf-8').read().replace('currentColor', '#f5f8fc')
     logo_w = int(500 * k); logo_h = int(logo_w * 1620 / 1376)
     async with async_playwright() as p:
@@ -45,24 +51,18 @@ async def main():
         async def shot(name, html, omit=True):
             await pg.set_content(html); await pg.evaluate('document.fonts.ready'); await pg.wait_for_timeout(100)
             await pg.screenshot(path=os.path.join(a.out, name + '.png'), omit_background=omit)
-        # a soft dark shade behind the words, with no edge, a band the width of the picture that fades up and down (a round one showed as a smudge on a clear sky), so they can be read over a white hull, snow, the sun's glitter and houses
-        # (Jonas 10.11.2026: «Sørg for at teksten er leselig i alle bilder»): cy the middle of the words, ry the shade's half height
-        def shade(cy, ry, alpha, rx=0.5):
-            return (f'<div style="position:absolute;left:0;right:0;top:{int(cy - ry)}px;height:{int(2 * ry)}px;'
-                    f'background:linear-gradient(to bottom, rgba(4,12,22,0), rgba(4,12,22,{alpha * 0.35:.2f}) 22%, rgba(4,12,22,{alpha}) 42%, rgba(4,12,22,{alpha}) 58%, rgba(4,12,22,{alpha * 0.35:.2f}) 78%, rgba(4,12,22,0))"></div>')
         y = int(h * 0.27)   # the upper third: sky in nearly every shot, below TikTok's bar at the top (the boats are low in the frame)
         for key, txt in PLACES.items():
             rw = int(70 * k)
-            await shot(key, page(shade(y + 50 * k, 210 * k, 0.4) + f'<div class="t cap" style="top:{y}px;font-size:{int(62 * k)}px">{txt}</div>'
+            await shot(key, page(f'<div class="t cap" style="top:{y}px;font-size:{int(62 * k)}px">{txt}</div>'
                                   f'<div class="rule" style="top:{y + int(98 * k)}px;width:{rw}px;margin-left:{-rw // 2}px"></div>', w, h))
         for key, txt in LINES.items():
             await shot(key, page(f'<div class="t" style="top:{y - int(10 * k)}px;font-size:{int(92 * k)}px;letter-spacing:.015em">{txt}</div>', w, h))
         for key, txt in SUBS.items():
-            nl = txt.count('<br>') + 1
-            await shot(key, page(shade(h * 0.66 + 30 * k * nl, (150 + 30 * nl) * k, 0.6) + f'<div class="t" style="top:{int(h * 0.66)}px;left:{int(w * 0.13)}px;right:{int(w * 0.13)}px;font-size:{int(46 * k)}px;line-height:1.28;letter-spacing:.01em;'
-                                  f'text-shadow:0 1px 2px rgba(0,0,0,.75),0 0 5px rgba(0,0,0,.6),0 0 18px rgba(0,0,0,.5)">{txt}</div>', w, h))
-        glow = f'filter:drop-shadow(0 0 {int(26 * k)}px rgba(255,255,255,.28)) drop-shadow(0 {int(4 * k)}px {int(18 * k)}px rgba(0,0,0,.35))'
-        logo = f'<div style="position:absolute;left:{(w - logo_w) // 2}px;top:{int(h * 0.15)}px;width:{logo_w}px;height:{logo_h}px;{glow}">{svg}</div>'
+            await shot(key, page(f'<div class="t" style="top:{int(h * 0.66)}px;left:{int(w * 0.13)}px;right:{int(w * 0.13)}px;font-size:{int(46 * k)}px;line-height:1.28;letter-spacing:.01em;'
+                                  f'text-shadow:{glow(k, 1.15)}">{txt}</div>', w, h))
+        lglow = f'filter:drop-shadow(0 0 {int(26 * k)}px rgba(255,255,255,.28)) drop-shadow(0 {int(4 * k)}px {int(18 * k)}px rgba(0,0,0,.35))'
+        logo = f'<div style="position:absolute;left:{(w - logo_w) // 2}px;top:{int(h * 0.15)}px;width:{logo_w}px;height:{logo_h}px;{lglow}">{svg}</div>'
         await shot('logo', page(logo, w, h))
         await shot('url', page(f'<div class="t cap" style="top:{int(h * 0.15) + logo_h + int(90 * k)}px;font-size:{int(34 * k)}px;letter-spacing:.32em;text-indent:.32em">Spill gratis på detstorebla.no</div>', w, h))
         # the shade behind the end card: darker towards the middle and the foot, so the logo stands on the picture without a box

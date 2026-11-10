@@ -92,7 +92,7 @@ def main():
         return Image.open(src(c['shot'], i)).convert('RGBA')
     def ramp(t, t0, t1, up, down):
         if t < t0 or t > t1: return 0.0
-        return max(0.0, min(1.0, (t - t0) / up if up else 1, (t1 - t) / down if down else 1))
+        f = max(0.0, min(1.0, (t - t0) / up if up else 1, (t1 - t) / down if down else 1)); return f * f * (3 - 2 * f)   # eased at both ends
     ease = lambda u: 1 - (1 - u) ** 3
     for n in rng:
         t = n / fps; k = max(i for i, c in enumerate(clips) if c['at'] <= t + 1e-6); c = clips[k]
@@ -105,11 +105,11 @@ def main():
         arr = lut[arr].astype(np.float32) * vig + grain[n % 8]
         im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)).convert('RGBA')
         for wd in E.get('words', []):
-            t0, t1 = wd['at'], wd['at'] + wd['len']; up, down = (0.12, 0.08) if wd['len'] < 1 else (0.35, 0.25)
+            t0, t1 = wd['at'], wd['at'] + wd['len']; up, down = (0.2, 0.2) if wd['len'] < 1 else (0.6, 0.5)   # (Jonas 10.11.2026: the words fade in and out, they do not jump)
             f = ramp(t, t0, t1, up, down)
             if f > 0: put(im, wd['key'], f, 14 * K * (1 - ease(min(1, (t - t0) / up))))
-        # the voice's lines as subtitles (`subs`): in on 0.25 s and out on 0.2 s, standing still
-        for sb in E.get('subs', []): put(im, sb['key'], ramp(t, sb['at'], sb['at'] + sb['len'], 0.25, 0.2))
+        # the voice's lines as subtitles (`subs`): fading in over 0.5 s and out over 0.45 s, standing still
+        for sb in E.get('subs', []): put(im, sb['key'], ramp(t, sb['at'], sb['at'] + sb['len'], min(0.5, sb['len'] * 0.3), min(0.45, sb['len'] * 0.3)))
         card = next((cc for cc in clips if cc.get('card')), None)
         if card and t >= card['at']:
             T = card['card']; t0 = card['at']

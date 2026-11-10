@@ -18,7 +18,7 @@ Ett opptak, som klippes i linjer og føres inn som `voice` i klippekartet (`tool
 | – | 27,4–41,5 | (stille) | kystnotbåten under brua, hvalen, montasjen |
 | S8 | 41,5 | Nå er det din tur. | de to båtene ved kaia |
 
-**Undertekstene** (`SUBS` i `tools/titles.py`, `subs` i klippekartet): vanlig setningsskrift, 46 px ved 1080 bredde, midtstilt, øverste linje 66 % ned fra toppen, høyst to linjer, 13 % luft på hver side (unna nederste fjerdedel og høyre kant). Inn på 0,25 s, ut på 0,2 s. Til stemmefila finnes, er lengden anslått til 0,45 s per ord pluss 0,6 s, kortet så ingen linje står inn i den neste eller i stillheten (S1 1,7 s, S2 3,75, S3 4,6, S4 2,4, S5 2,4, S6 3,3, S7 2,2, S8 2,85). Når opptaket kommer, rettes tidene og lengdene etter det.
+**Undertekstene** (`SUBS` i `tools/titles.py`, `subs` i klippekartet): vanlig setningsskrift, 46 px ved 1080 bredde, midtstilt, øverste linje 66 % ned fra toppen, høyst to linjer, 13 % luft på hver side (unna nederste fjerdedel og høyre kant). Toner mykt inn over 0,5 s og ut over 0,45 s (stedsnavnene 0,6 og 0,5, navnene i montasjen 0,2). Ingen bånd bak teksten, bare svart glød rundt bokstavene (Jonas 10.11.2026). Til stemmefila finnes, er lengden anslått til 0,45 s per ord pluss 0,6 s, kortet så ingen linje står inn i den neste eller i stillheten (S1 1,7 s, S2 3,75, S3 4,6, S4 2,4, S5 2,4, S6 3,3, S7 2,2, S8 2,85). Når opptaket kommer, rettes tidene og lengdene etter det.
 
 Innstillinger å begynne med i ElevenLabs (fra Laksebaronen): stability 50 %, similarity 75 %. Stemmen skal ligge minst 8 LU over musikken, og musikken senkes aldri bare mens stemmen snakker (`tools/enc.py`).
 
