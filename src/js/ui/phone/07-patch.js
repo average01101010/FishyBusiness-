@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['u28-101126', '10.11.2026', 'Nettbrett og PC', 'Tablet and PC', [
+       ['Statusboksen er så høy som det den viser, skuffen i kartplotteren ligger under stripa, og telefonknappen gjemmer seg mens telefonen er oppe.', 'The status box is as tall as what it shows, the drawer in the chart plotter lies under the strip, and the phone button hides while the phone is open.']]],
     ['ytelse-101126', '10.11.2026', 'Jevnere bilde på telefon', 'A smoother picture on phones', [
        ['Spillet tegner ikke lenger havbunnen under sjøen og himmelen bak sjøen, som aldri syntes. Bildet er det samme, men telefonen eller nettbrettet har mindre å gjøre i hvert bilde, mest ute på åpen sjø.', 'The game no longer draws the sea bed under the sea and the sky behind the sea, which were never seen. The picture is the same, but the phone or tablet has less to do in every frame, most of all out on the open sea.'],
        ['En rekke små mørke prikker i sjøen ut mot horisonten er borte.', 'A row of small dark dots in the sea towards the horizon is gone.'],
