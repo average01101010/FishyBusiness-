@@ -29,6 +29,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
+- `ccr-869710d8-bo5iwu` (Jonas' økt, 10.11.2026 06:09): steg 86 OB8 havsjarken; eier `tools/boats/havsjark35.py`, `src/data/*.b64` (havsjarken), `tools/boats/qa/clip_havsjark35.py`, `docs/skipsmodeller/havsjark-grunnlag.md`.
 
 ## Valg som venter på Jonas
 
@@ -101,7 +102,7 @@ Rekkefølgen tar hensyn til at H3b holder `core/03-simulation.js`, `04-crew.js`,
 | 83 | **OB5** Skiffen til 75/100 | Om bord | venter på Jonas: karakteren (rullet ut 09.11.2026 i 7e2e7e1, versjon 57c75567790d; forslag 75 i `skiff-grunnlag.md` 10.3; bildene i `docs/okter/2026-11-09-ob5/`) | steg 70 | `tools/boats/skiff59.py`, `src/data/*.b64`, `view3d/12-skiff.js` | `om-bord.md` OB5, 4.2 |
 | 84 | **OB6** Snekka til 75/100 | Om bord | venter på Jonas: karakteren (spygattklaffene i hekken tas bort i neste runde på snekka, valg 26; rullet ut 09.11.2026 i 23095a1, versjon 83950c311aba; forslag 77 i `snekke-grunnlag.md` 9.4; bildene i `docs/okter/2026-11-09-ob6/`; Jonas: snekka med deg og én til, to juksamaskiner, ingen flåte eller livbøye under fire om bord, ingen teiner, valg 24 A) | steg 83 | `tools/boats/snekke26.py`, `src/data/*.b64` | `om-bord.md` OB6, 4.3 |
 | 85 | **OB7** Plastsjarken til 75/100, ny arbeidsplan etter ekte båter (Jonas: «frie tøyler») | Om bord | venter på Jonas: karakteren (rullet ut 09.11.2026 i a573bf8, versjon b9ba4a3192ed; forslag 78 i `plastsjark-grunnlag.md` 10.5; bildene i `docs/okter/2026-11-09-ob7/`; Jonas: styrhuset forut, «Forut» (valg 22 B), taket med skrå brem, spygattene uten klaffer, ingen teiner) | steg 84 | `tools/boats/plast31.py`, `src/data/*.b64` | `om-bord.md` OB7, 4.4 |
-| 86 | **OB8** Havsjarken til 75/100 (og bremmen på taket og spygattene uten klaffer, valg 26) | Om bord | klar (OB7 rullet ut 09.11.2026; hel startmelding i `start/86.md`; bildene av typen vises Jonas før modellen endres, valg 22 B) | steg 85 | `tools/boats/havsjark35.py`, `src/data/*.b64` | `om-bord.md` OB8, 4.5 |
+| 86 | **OB8** Havsjarken til 75/100 (og bremmen på taket og spygattene uten klaffer, valg 26) | Om bord | pågår (Jonas' økt, `ccr-869710d8-bo5iwu`, 10.11.2026 06:09; hel startmelding i `start/86.md`; bildene av typen vises Jonas før modellen endres, valg 22 B) | steg 85 | `tools/boats/havsjark35.py`, `src/data/*.b64` | `om-bord.md` OB8, 4.5 |
 | 87 | **OB9** Hurtigsjarken til 75/100 (og bremmen på taket og spygattene uten klaffer, valg 26) | Om bord | venter på OB8 | steg 86 | `tools/boats/hurtig11.py`, `src/data/*.b64` | `om-bord.md` OB9, 4.6 |
 | 88 | **OB10** Den nye hurtigsjarken til 75/100 (og bremmen på taket og spygattene uten klaffer, valg 26) | Om bord | venter på OB9 | steg 87 | `tools/boats/hs11.py`, `src/data/*.b64` | `om-bord.md` OB10, 4.7 |
 | 89 | **OB11** Breisjarken til 75/100 (eksport på nytt) (og bremmen på taket og spygattene uten klaffer, valg 26) | Om bord | venter på OB10 | steg 88 | `tools/boats/malo36.py`, `src/data/*.b64` | `om-bord.md` OB11, 4.8 |
