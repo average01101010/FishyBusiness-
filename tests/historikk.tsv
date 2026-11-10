@@ -1847,3 +1847,7 @@
 2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	boottest	OK	52	lite	samtidig	
 2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	trip2	OK	53	lite	samtidig	
 2026-11-10 08:07	ccr-171f25b0-kdwftj	17749b8	guidetest	OK	11	lite	samtidig	
+2026-11-10 09:21	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	FEIL	49	lite	alene	FEIL a boat hears the boats in her own 10 km square and the eight round it, not two squares on; also north of the frame (y below 0)  {"a1": ["a2a2a2a2a2"], "a2"
+2026-11-10 09:22	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	50	lite	alene	
+2026-11-10 09:32	ccr-a14b7b70-vfrww1	9ca1dcb5+	boottest	OK	19	lite	alene	
+2026-11-10 09:36	ccr-a14b7b70-vfrww1	9ca1dcb5+	rttest	OK	44	lite	alene	

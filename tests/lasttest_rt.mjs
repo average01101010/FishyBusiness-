@@ -12,7 +12,8 @@
 // a second, as the game does (ui/10h-world.js rtSend). For --secs seconds (default 600) it measures:
 //   - the delay from the moment a report is sent to the moment each boat round her has it (a sequence number in the lowest bits of x and
 //     y, 3 m at most, and the send time in shared memory, so it needs no clock on the relay);
-//   - reports up and down a second, bytes down, and the reports lost on the way (gaps in each sender's sequence at each receiver),
+//   - reports up and down a second, bytes down, and the reports lost on the way (gaps in each sender's sequence at each receiver;
+//     beyond 5 km a boat under way is expected once a second, since the relay thins them on purpose: valg 28),
 //     which is where the cap shows (512 reports a receiver each tenth of a second, QMAX in server.mjs) and a receiver that is too slow;
 //   - for a relay it started itself: its CPU (one core = 100 %) and memory every second, and GET /stats.
 // The clients run in worker threads (--workers, default 3 of the machine's cores), so they are not what holds the relay back; the
@@ -129,7 +130,7 @@ async function main(){
     open:s.open, refused:s.fail, closed:s.closed, closeCodes:s.codes,
     upPerS:+(s.sent / secs).toFixed(1), downPerS:+(s.recv / secs).toFixed(1), framesPerS:+(s.frames / secs).toFixed(1), bytesDownPerS:Math.round(s.bytes / secs),
     delayMs:{p50:pct(s.hist, 0.5), p90:pct(s.hist, 0.9), p99:pct(s.hist, 0.99), p999:pct(s.hist, 0.999), max:s.max},
-    lost:s.lost, lostShare:s.recv ? +(s.lost / (s.lost + s.recv)).toFixed(5) : 0,
+    lost:s.lost, lostFar:s.lostFar, lostShare:s.recv ? +(s.lost / (s.lost + s.recv)).toFixed(5) : 0,
     cluster_:{receivers:cl.n, downPerReceiverPerS:cl.n ? +(cl.recv / cl.n / secs).toFixed(1) : 0, maxPerFrame:cl.maxFrame, delayP99:pct(cl.hist, 0.99)},
     spread:{receivers:sp.n, downPerReceiverPerS:sp.n ? +(sp.recv / sp.n / secs).toFixed(1) : 0, maxPerFrame:sp.maxFrame, delayP99:pct(sp.hist, 0.99)},
     relayCpuPct:relay ? {mean:cpu.length ? +(cpu.reduce((a, b) => a + b, 0) / cpu.length).toFixed(1) : null, p95:q(cpu, 0.95), max:q(cpu, 1)} : null,
@@ -145,9 +146,9 @@ async function main(){
   setTimeout(() => process.exit(0), 800);
 }
 function sum(agg, part){
-  const s = {open:0, fail:0, closed:0, codes:{}, sent:0, recv:0, frames:0, bytes:0, lost:0, max:0, maxFrame:0, n:0, hist:new Array(5001).fill(0)};
+  const s = {open:0, fail:0, closed:0, codes:{}, sent:0, recv:0, frames:0, bytes:0, lost:0, lostFar:0, max:0, maxFrame:0, n:0, hist:new Array(5001).fill(0)};
   for (const a0 of agg){ if (!a0) continue; const a = part ? a0[part] : a0.all;
-    for (const k of ['open', 'fail', 'closed', 'sent', 'recv', 'frames', 'bytes', 'lost', 'n']) s[k] += a[k] || 0;
+    for (const k of ['open', 'fail', 'closed', 'sent', 'recv', 'frames', 'bytes', 'lost', 'lostFar', 'n']) s[k] += a[k] || 0;
     s.max = Math.max(s.max, a.max || 0); s.maxFrame = Math.max(s.maxFrame, a.maxFrame || 0);
     for (const [c, k] of Object.entries(a.codes || {})) s.codes[c] = (s.codes[c] || 0) + k;
     for (let i = 0; i < a.hist.length; i++) s.hist[i] += a.hist[i]; }
@@ -158,7 +159,7 @@ async function worker(){
   const require = createRequire(path.join(RTDIR, 'package.json')), WebSocket = require('ws');
   const {url, boats:B, sendT:SB, startAt, measureAt, endAt, ramp} = workerData, sendT = new Float64Array(SB);
   const now = () => performance.timeOrigin + performance.now();
-  const mk = () => ({open:0, fail:0, closed:0, codes:{}, sent:0, recv:0, frames:0, bytes:0, lost:0, max:0, maxFrame:0, n:0, hist:new Array(5001).fill(0)});
+  const mk = () => ({open:0, fail:0, closed:0, codes:{}, sent:0, recv:0, frames:0, bytes:0, lost:0, lostFar:0, max:0, maxFrame:0, n:0, hist:new Array(5001).fill(0)});
   const A = {all:mk(), c:mk(), s:mk()};
   let stop = false;
   parentPort.on('message', m => { if (m === 'stop') stop = true; });
@@ -184,9 +185,12 @@ async function worker(){
         const st = sendT[si * SEQ + sq], ms = st ? Math.round(t - st) : -1;
         A.all.recv++; P.recv++;
         if (ms >= 0){ const h = Math.min(5000, ms); A.all.hist[h]++; P.hist[h]++; if (ms > A.all.max) A.all.max = ms; if (ms > P.max) P.max = ms; }
-        const l = b.last.get(si);
-        if (l != null){ const g = (sq - l + SEQ) % SEQ; if (g > 1 && g < 64){ A.all.lost += g - 1; P.lost += g - 1; } }
-        b.last.set(si, sq);
+        // the gaps: within 4.8 km every report should come, beyond 5.2 km one a second of a boat under way (the relay thins them on
+        // purpose, valg 28) and every one of a boat lying still; the ring between, and a boat that crossed it since the last, count not
+        const dx = xr / 1e4 - b.x, dy = yr / 1e4 - b.y, d2 = dx * dx + dy * dy, band = d2 < 4.8 * 4.8 ? 1 : d2 > 5.2 * 5.2 ? 2 : 0, l = b.last.get(si);
+        if (l != null && band && l.band === band){ const g = (sq - l.sq + SEQ) % SEQ, step = band === 2 && d[o + 7] === 1 ? 5 : 1;
+          if (g > 1 && g < 64){ const k = Math.max(0, Math.round(g / step) - 1); A.all.lost += k; P.lost += k; if (band === 2){ A.all.lostFar += k; P.lostFar += k; } } }
+        b.last.set(si, {sq, band});
       }
     });
   }

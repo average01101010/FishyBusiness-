@@ -157,12 +157,33 @@ async def main():
         # ---- the squares: a boat hears her own 10 km square and the eight round it, not beyond; the same up north (Svalbard: y below 0) ----
         A1, A2, A3 = WS(ticket('a1a1a1a1a1')), WS(ticket('a2a2a2a2a2')), WS(ticket('a3a3a3a3a3'))
         at = {A1: (505.0, -655.0), A2: (512.0, -648.0), A3: (531.0, -655.0)}   # A2 in the square next to A1's, A3 two squares on from A2's
-        for _ in range(5):
+        for _ in range(8):   # 1.6 s: A1 and A2 are 9.9 km apart, so they hear each other once a second (valg 28), not five times
             for w, (x, y) in at.items(): w.send(frame(1, 5, x, y, 0))
             time.sleep(0.2)
         time.sleep(0.3); heard = {n: sorted({e[0] for e in w.entries()}) for n, w in (('a1', A1), ('a2', A2), ('a3', A3))}
         for w in at: w.close()
         check(heard == {'a1': ['a2a2a2a2a2'], 'a2': ['a1a1a1a1a1'], 'a3': []}, 'a boat hears the boats in her own 10 km square and the eight round it, not two squares on; also north of the frame (y below 0)', heard)
+
+        # ---- the far ones thinned (valg 28 A, 10.11.2026): a boat under way more than 5 km off is passed on once a second, not five
+        # times; within 5 km every report; a boat lying still (once a second) reaches the far ones every time ----
+        S5, S1, RN, RF = WS(ticket('b5b5b5b5b5')), WS(ticket('b1b1b1b1b1')), WS(ticket('bcbcbcbcbc')), WS(ticket('bfbfbfbfbf'))
+        pos = {RN: (604.6, 700.0), RF: (605.4, 700.0)}   # S5 and S1 at (600, 700): RN 4.6 km off, RF 5.4 km off, both in the same 10 km square
+        for w, (x, y) in pos.items(): w.send(frame(4, 0, x, y, 0))
+        time.sleep(0.3)
+        t9 = time.time() + 3.0; k = 0
+        while time.time() < t9:
+            S5.send(frame(1, 8, 600.0 + k * 0.001, 700.0, 0))
+            if k % 5 == 0:
+                S1.send(frame(4, 0, 600.0, 700.0, 0))
+                for w, (x, y) in pos.items(): w.send(frame(4, 0, x, y, 0))
+            k += 1; time.sleep(0.2)
+        time.sleep(0.4)
+        cnt = {n: {s: sum(1 for e in w.entries() if e[0] == s) for s in ('b5b5b5b5b5', 'b1b1b1b1b1')} for n, w in (('near', RN), ('far', RF))}
+        for w in (S5, S1, RN, RF): w.close()
+        sent5, sent1 = k, (k + 4) // 5
+        check(cnt['near']['b5b5b5b5b5'] >= sent5 - 2 and 2 <= cnt['far']['b5b5b5b5b5'] <= 4 and cnt['far']['b1b1b1b1b1'] >= sent1 - 1 and cnt['near']['b1b1b1b1b1'] >= sent1 - 1,
+              'the far ones thinned: a boat under way at 5 a second reaches a boat 4.6 km off every time and one 5.4 km off once a second; a boat lying still reaches both every time',
+              {'sent': {'under way': sent5, 'still': sent1}, 'heard': cnt})
 
         async with async_playwright() as p:
             br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
