@@ -17,4 +17,18 @@
 
 Ingen tekst under klipp 1, 2, 9 og 10. Der skal bildet og musikken få stå alene. Ingen kildehenvisning i bildet (Jonas 10.11.2026); den står i teksten under videoen.
 
-**Stemmeversjonen** (Jonas' egen): om den kommer, legges den over klipp 1–3 og 9, høyst fire korte linjer, og T1, T6 og T8 beholdes likevel, så versjonen fungerer med lyden av.
+## Stemmen (Jonas 10.11.2026: «Målet er å bruke elevenlabs. Jeg har en venn med en egen modell som fungerer bra.»)
+
+Valget fra 30.10 (ingen stemme i masteren) er endret: traileren får stemme fra ElevenLabs med vennens modell. Tekstene T1–T10 står likevel, så filmen virker med lyden av.
+
+**Forslag til manus, ikke godkjent av Jonas ennå.** 39 ord på 50 s (0,8 ord i sekundet, under grensen på 0,9). Stille over droppet (27,4–34,9 s), der bildet og musikken står alene. Hele manuset leses i ett opptak og klippes i linjer etterpå. Ingen store bokstaver, taggene styrer tonen.
+
+| # | Starter (s) | Linje | Faller på |
+|---|---|---|---|
+| S1 | 1,0 | `[calm, low]` Ho er fra femtiseks. Grå i treverket, men tett. | naustet og trebåten (1–2) |
+| S2 | 8,0 | `[calm, low]` Alle som har noe på havet i dag, begynte med en sånn. | trebåten under brua (3) |
+| S3 | 15,0 | `[calm]` Lofoten. Varanger. Hele kysten er din. | Lofotfisket og utover (5–7) |
+| S4 | 35,5 | `[calm, low]` Fra trebåt til snurper. | nordlyset, etter droppet (10) |
+| S5 | 45,5 | `[warm]` Det store blå. Spill gratis på detstorebla punktum no. | sluttkortet |
+
+Innstillinger å begynne med (fra Laksebaronen): stability 50 %, similarity 75 %. Lydfila legges i `trailer/audio/voice/` og føres inn i klippekartet som `voice` (`tools/START-4K-MASTER.md` punkt 9).

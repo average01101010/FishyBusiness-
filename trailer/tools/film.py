@@ -167,8 +167,8 @@ def key_at(keys, t, fields):
             return out
     return dict(keys[-1])
 
-def ffmpeg():
-    return shutil.which('ffmpeg') or os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from enc import ffmpeg, video_args
 
 def jumps(out, files, log):
     """every saved frame against the one before, small and grey: a jump stands out against the frames round it"""
@@ -192,23 +192,26 @@ async def main():
     ap.add_argument('--out', default=None); ap.add_argument('--dist', default=os.path.join(ROOT, 'dist'))
     ap.add_argument('--gpu', nargs='?', const='gl', default=None, help='draw on the real graphics card instead of SwiftShader, through ANGLE on this backend: gl (default), vulkan or d3d11')
     ap.add_argument('--no-video', action='store_true')
+    ap.add_argument('--scale', type=int, default=1, help='device scale factor: --size 1080x1920 --scale 2 draws the same picture at 2160x3840 (the folder is named after the pixels)')
+    ap.add_argument('--jpeg', type=int, default=0, help='save the frames as JPEG at this quality (97 for 4K: a tenth of the PNG) instead of PNG')
     a = ap.parse_args(); sh = json.load(open(a.shot, encoding='utf-8')); w, h = map(int, a.size.split('x'))
-    name = os.path.splitext(os.path.basename(a.shot))[0]; tag = name + '-' + a.size
+    ext = 'jpg' if a.jpeg else 'png'; shot_kw = {'type': 'jpeg', 'quality': a.jpeg} if a.jpeg else {}
+    name = os.path.splitext(os.path.basename(a.shot))[0]; tag = name + '-%dx%d' % (w * a.scale, h * a.scale)
     ctl = os.path.join(ROOT, 'trailer', 'control-m1', tag); out = a.out or os.path.join(ROOT, 'trailer', 'out', tag)
     os.makedirs(ctl, exist_ok=True); os.makedirs(out, exist_ok=True)
     for f in os.listdir(out):
-        if f.endswith('.png'): os.remove(os.path.join(out, f))
+        if f.endswith(('.png', '.jpg')): os.remove(os.path.join(out, f))
     every = bool(a.gpu) and not a.stills
     # ("hash": more of the game's own switches in the address, e.g. "shoal0")
     base = serve(a.dist); url = base + 'index.html#seed=%d,notut' % sh.get('seed', 1) + (',' + sh['hash'] if sh.get('hash') else '')
     n = int(round(sh['dur'] * a.fps)); step = 1000.0 / a.fps; keys_at = sorted(set(round(i * (n - 1) / max(1, a.keys - 1)) for i in range(a.keys)))
-    log = {'shot': sh, 'size': a.size, 'fps': a.fps, 'frames': n, 'keys': [], 'errors': [], 'warnings': []}
+    log = {'shot': sh, 'size': '%dx%d' % (w * a.scale, h * a.scale), 'fps': a.fps, 'frames': n, 'keys': [], 'errors': [], 'warnings': []}
     async with async_playwright() as p:
         # headless Chromium falls back to SwiftShader unless told to use the GPU. On the rented Windows machine (RTX PRO 6000, 10.11.2026)
         # ANGLE's gl and vulkan backends reach the card; d3d11 reaches it too, but the 3D view loses its context compiling the sea shader
         args = ['--use-angle=' + a.gpu, '--enable-gpu', '--ignore-gpu-blocklist'] if a.gpu else ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist']
         b = await p.chromium.launch(args=args)
-        pg = await b.new_page(viewport={'width': w, 'height': h}, device_scale_factor=1)
+        pg = await b.new_page(viewport={'width': w, 'height': h}, device_scale_factor=a.scale)
         pg.on('pageerror', lambda e: log['errors'].append('sidefeil: ' + str(e)[:300]))
         pg.set_default_timeout(180000)
         await pg.clock.install()   # runs at real speed until paused below
@@ -325,9 +328,9 @@ async def main():
             if c['shoal'] and not moored: worst['shoal'] = max(worst.get('shoal', 0), c['shoal'])
             if i < 0: continue
             if every or i in keys_at:
-                f = 'f%04d.png' % i; await pg.screenshot(path=os.path.join(out, f)); saved.append(f)
+                f = 'f%04d.%s' % (i, ext); await pg.screenshot(path=os.path.join(out, f), **shot_kw); saved.append(f)
             if i in keys_at:
-                log['keys'].append({'frame': i, 't': round(t, 2), 'file': 'f%04d.png' % i, **c}); print('key', i, c, '%.0fs' % (time.time() - tf), flush=True)
+                log['keys'].append({'frame': i, 't': round(t, 2), 'file': 'f%04d.%s' % (i, ext), **c}); print('key', i, c, '%.0fs' % (time.time() - tf), flush=True)
         nf = len(list(frames)); log['seconds'] = round(time.time() - tf, 1); log['per_frame_s'] = round((time.time() - tf) / max(1, nf), 3)
         if worst.get('shoal'): log['warnings'].append('grunt under skroget i noen bilder (opptil %d av 15 punkter grunnere enn 80 %% av dypgangen)' % worst['shoal'])
         print('film: %d bilder på %.0fs, %.2fs per bilde' % (nf, log['seconds'], log['per_frame_s']), flush=True)
@@ -343,7 +346,7 @@ async def main():
     except Exception as e: print('kontaktark:', e)
     if every and not a.no_video and saved:
         mp4 = os.path.join(out, 'clip.mp4')
-        r = subprocess.run([ffmpeg(), '-y', '-loglevel', 'error', '-framerate', str(a.fps), '-i', os.path.join(out, 'f%04d.png'), '-c:v', 'libx264', '-preset', 'slow', '-crf', '14', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', mp4])
+        r = subprocess.run([ffmpeg(), '-y', '-loglevel', 'error', '-framerate', str(a.fps), '-i', os.path.join(out, 'f%04d.' + ext)] + video_args() + ['-movflags', '+faststart', mp4])
         print('video', mp4 if r.returncode == 0 else 'FEIL', flush=True); log['video'] = os.path.relpath(mp4, ROOT).replace('\\', '/')
     json.dump(log, open(os.path.join(ctl, 'log.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
     print('feil: %d, advarsler: %d' % (len(log['errors']), len(log['warnings'])), flush=True)

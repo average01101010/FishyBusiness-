@@ -52,6 +52,25 @@
 | 10.11 | Hvalen | En knølhval dukker opp fire ganger med 14 s mellomrom, og bare den siste viser halen. `spawn` med `age` 41,7 gir blåsten etter 0,4 s; `dist` og `swim` legger den der den ikke skjules av båten. Halen kom ikke tydelig fram i m1. |
 | 10.11 | Grovklipp m1 | 50 s på «Fjord at Dawn», 18 klipp, tekster i øvre tredjedel, sluttkort over sluttklippet, felles fargebehandling. 5 min å sette sammen. `trailer/out/rough/m1.mp4` og `m1-540.mp4` på maskinen, kontaktark i `control-m1/grovklipp-m1-kontaktark.jpg`. |
 
+## Eksporten, 10.11 (etter innstillingene til Laksebaronens siste trailer)
+
+Jonas fikk innstillingene til Laksebaronens 4K-trailer og valgte samme format. Alt står ett sted, `tools/enc.py`:
+
+| | Før | Nå |
+|---|---|---|
+| Størrelse og rate | 1080×1920, 30 | master 2160×3840, 60 (`film.py --scale 2 --fps 60`); grovklipp som før |
+| Bildefiler | PNG | JPEG 97 for 4K (`--jpeg 97`), PNG ellers |
+| Video | CRF 16 (14 per klipp) | CRF 13, preset `slow` |
+| Farge | umerket, BT.601-matrise | BT.709, begrenset område, merket |
+| Lyd | AAC 256k, låta som den var | AAC 320k, 48 kHz; miks til −14 LUFS og høyst −1,5 dBTP, så 60 % (Jonas' valg), rundt −18,5 LUFS |
+| Filming | ett klipp om gangen | `JOBS=3` i `film-all.sh` |
+| Sammensetting | én prosess | `assemble.py --jobs N` |
+
+- **Fargefeilen var ekte.** ffmpeg regnet RGB om med BT.601 og merket ingenting, og en spiller som antar BT.709 viser da feil farge. Målt her på rene farger gjennom gammel og ny koding, lest slik en telefon leser fila: (200, 60, 40) kom ut som (212, 72, 36) før og (199, 58, 39) nå; (90, 160, 70) som (85, 147, 65) før og (89, 158, 70) nå. Rødt ble altså for sterkt og grønt for mørkt. `accurate_rnd+full_chroma_int` må stå i filteret, ellers blir hvitt fra JPEG 251.
+- **Lyden** er ett fast løft til −14 LUFS (mindre hvis toppen ville gått over −1,5 dBTP), ingen kompresjon. Med stemme (`voice` i klippekartet): høypass 70 Hz, kompresjon 2,5:1 og toppbegrenser på stemmen, 3 dB demping rundt 2,5 kHz i musikken, og musikken på ett fast nivå minst 8 LU under stemmen. Musikken senkes aldri bare mens stemmen snakker.
+- **Prøvd her i skyen** med lagde bilder og lyd (216×384, 60 bilder, JPEG, tre prosesser, stemme): fila kom ut som H.264 60/1, `bt709`, `tv`, AAC 48 kHz, −18,5 LUFS. **Ikke prøvd:** 4K-tegningen i spillet, tida per bilde og tre filminger samtidig på kortet. Det er første oppgave i `tools/START-4K-MASTER.md`.
+- Beholdt fra vårt eget: Source Serif 4 (spillets skrift), tekstene 27 % ned fra toppen (innenfor de trygge sonene: unna nederste fjerdedel og høyre kant), og at hvert bilde settes sammen med fargebehandling og korn før én koding.
+
 ## Gjenstår
 
 - PR mot arbeidsgrenen med `G3.film` (commit «G3.film: kamera for traileren»).
