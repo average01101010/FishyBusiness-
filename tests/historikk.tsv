@@ -1801,3 +1801,16 @@
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	boottest	OK	29	lite	samtidig	
 2026-11-09 21:52	ccr-61bc7d42-bfsaz0	8b63f80	geartest	FEIL	35	lite	samtidig	FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
 2026-11-09 21:53	ccr-61bc7d42-bfsaz0	8b63f80	geartest	OK	27	lite	alene	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	docktest	OK	63	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	vesseltest	OK	17	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	walktest	FEIL	14	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 84
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	crewclip	FEIL	17	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [51, 5170, ['f:3.24:walk', 'f:0.67:walk', 'r:0.64:wal
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	lanterntest	OK	14	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	maletest	OK	18	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	regmarktest	OK	7	lite	samtidig	
+2026-11-10 06:29	ccr-07d61e23-19971d	48c325b	boottest	OK	27	lite	samtidig	
+2026-11-10 06:30	ccr-07d61e23-19971d	48c325b	dbg23o	OK	52	3d	alene	
+2026-11-10 06:38	ccr-07d61e23-19971d	48c325b	unittest	FEIL	436	3d	alene	avsluttet med kode 1
+2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	yardtest	OK	738	3d	alene	
+2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	signtest	FEIL	0	3d	alene	avsluttet med kode -15
+2026-11-10 06:56	ccr-07d61e23-19971d	48c325b	f1test	OK	395	3d	alene	
