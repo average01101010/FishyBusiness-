@@ -50,6 +50,12 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
   - **Ikke gjort:** (b) et tak i ekte tid etter båttypens last er ikke bygd. Ett tak per time ville stoppet ekte landinger når spillet tar igjen flåtens drift etter flere dager borte, og når havfartøyene (H2–H6) lander hundrevis av tonn. Taket på 60 t per konto og år for åpen gruppe står, og (d) står for seg.
   - **Det som gjenstår:** en registrert konto kan fortsatt sende falske landinger, og dermed toppe topplistene, flytte prisene i en havn og telle opptil 60 t i åpen gruppe. Det krever en WorkOS-konto per konto, og kan ikke lenger gjøres med gjester i hopetall.
 
+- **Status 10.11.2026 (HS5, steg 99; `docs/planer/haill-saldo.md`):** (b) og (d) er bygd i `supabase/migrations/20261110150000_cheat_flags.sql`, som merker og ikke som avslag. Slik det virker, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren».
+  - (b): `land_put` holder en bøtte i laster per konto (8 ved start, én last per ekte time, høyst 21 døgn, lasten etter båttypen og antall båter). En landing over det som er i bøtta, får et merke i `cheat_flags`. Det som stoppet (b) 05.11.2026 (tida som tas igjen etter dager borte, og havbåtene), går gjennom fordi bøtta fylles mens spilleren er borte og lasten følger båttypen.
+  - (d): landingene de siste fire døgnene holdes mot fangsten meldt med `catch_put` (tre ganger pluss seks laster). Posisjonen sjekkes ikke.
+  - Med bryteren `cheat_on` på er en konto med åpent merke ute av topplistene, fiskarlagets mål, ukas push og summen for åpen gruppe, men ser seg selv. Bryteren er av til Jonas har sett tallene.
+  - **Det som gjenstår:** prisene i mottakene (`world_get`, `mkt`) holder ikke merkede kontoer ute. Båttypen og antall båter er klientens ord, så en forsiktig jukser som holder seg under én last i timen og også melder falsk fangst, fanges ikke.
+
 ### 3. MIDDELS: falsk fangst tømmer feltene for andre
 
 - **Fil:** `catch_put` (`20261006000000_world_v2.sql:65`): 600 celler per kall, opptil 50 t per celle, 6 000 rader i timen, også gjester. `world_get` gir de andres fangst per celle (tak 5 t per spiller og celle) og klienten trekker den fra bestanden (`wshTake`, `ui/10h-world.js:111`).
@@ -80,6 +86,8 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 - **Treffer bare spilleren selv** (og kjøpet går ikke tapt for oss: Stripe og `shop_paid` på serveren avgjør hva som er betalt). Det merkes for andre gjennom topplistene (funn 2) og fartstiden (funn 11).
 - **Retting på sikt:** haill som en saldo i databasen (innløst med en funksjon, slik `grants` alt er for kjøp), velkomstgaven gitt én gang av `guest_merge` på serveren. Admin-dashbordets økonomitall skal leses som det klienten melder.
 - **Status 10.11.2026:** planen er `docs/planer/haill-saldo.md` (steg 49). Jonas valgte rekkefølgen 10.11.2026 (L1 V7 A): før lansering velkomstgaven fra serveren (HS1, steg 95, klar; gitt fra `tm_hello` i stedet for `guest_merge`, så også en konto uten gjest får den) og kjøpt haill talt fra `grants` (HS2, steg 96); saldoen og pengene etter lansering (HS3–HS5). Valgene står som valg 29 i køen.
+
+- **Status 10.11.2026, pengene (HS5, steg 99):** hver lagring sjekkes av en trigger på `saves` (alle fire `save_put`-funksjonene): kassa kan ikke stige mer enn serverens egne tall forklarer (landingene, megleren og kvotemarkedet, et tak per ekte time etter flåten, og 300 000 kr). Over det får kontoen et merke i `cheat_flags`; lagringen tas imot. Admin har fanen «Juks», og økonomitallene der er merket «meldt av spillet». `saves_cash_check` og `cash_flags` står som før. Haillen og det som er kjøpt, er HS1–HS4.
 
 ### 7. MIDDELS: innloggingene ligger i `localStorage`
 

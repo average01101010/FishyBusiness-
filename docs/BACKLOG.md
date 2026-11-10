@@ -4,6 +4,14 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **HS5, kronene og landingene sjekket på serveren (10.11.2026, Jonas' økt, grenen `claude/hs5-kronene-landingene-niqy2q`; `docs/planer/haill-saldo.md` HS5, `docs/systemer/skyen-og-felles-verden.md`):** migreringen `20261110150000_cheat_flags.sql`, fanen «Juks» i admin. Står igjen:
+  - **Bryteren `cheat_on` er av.** Jonas slår den på i admin → Juks når han har sett tallene i planen. Til da skrives merkene bare.
+  - **Grensene er målt mot lite:** 10 kontoer med landinger, alle med én båt (trebåt, snekke, sjark). Flere båter, driftsplan over mange døgn og havbåter er regnet, ikke målt. Se på merkene i admin de første ukene, og juster `cheat_land` (8 laster, én last i timen) og `saves_cheat_check` (300 000 kr, 30 kr per kg last og time) etter dem.
+  - **Sjekken mot meldt fangst** er prøvd mot fire døgn og tre kontoer (`catches` slettes etter fire døgn).
+  - **Romslig:** en trebåt kan lande 12 t i døgnet uten merke for flåten (ekte topp 5 t). Båttypen og antall båter er spillets ord.
+  - **Prisene i mottakene** (`world_get`, `mkt`) holder ikke merkede kontoer ute.
+  - **Spillets adminkonto** (`game_admin`) sjekkes ikke for kroner, men for landinger. Om den skal stå på topplistene, er Jonas' valg.
+  - **`cheat_vt` og `cheat_sp` må følge `VESSELS` og `SPECIES`:** `tests/unit/juksetabell.test.mjs` blir rød når de ikke stemmer; rettingen er en ny migrering med de nye radene.
 - **Steg 100, kystvaktskipene (10.11.2026, Jonas' økt, grenen `ccr-5e1ba2f4-pusvyd`; `docs/skipsmodeller/kystvakt-grunnlag.md`, 5.30d i `docs/systemer/kvoter-og-regler.md`):** to skip fra `tools/boats/kv.py` (47 m ved kai og langs kysten, 93 m til havs med helikopterdekk og lettbåten som går til fartøyet). Det som er antatt eller står igjen:
   - **Ingen bilder:** bare lengde, bredde, dypgang og deplasement har kilde. Overbyggets plass og høyder, masta, fargen, stripenes vinkel og bredde, «KYSTVAKT»s farge og størrelse og lettbåtene er antatt etter typen. Et sidebilde av hver klasse ville låst dem.
   - **Det store skipets helikopterdekk** er valg 30, ikke lest for forbildet (VS 794-typen); 105 m-klassen har det. Bulb er ikke modellert på noen av dem.
