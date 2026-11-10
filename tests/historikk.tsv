@@ -1978,3 +1978,15 @@
 2026-11-10 15:58	ccr-48adfe3e-yrge1v	10110c3+	kjoptest	OK	594	lite	samtidig	
 2026-11-10 15:58	ccr-48adfe3e-yrge1v	10110c3+	guesttest	OK	82	lite	samtidig	
 2026-11-10 15:58	ccr-48adfe3e-yrge1v	10110c3+	admintest	OK	8	lite	samtidig	
+2026-11-10 16:42	ccr-da624f01-5lbjel	d661847	boottest	OK	28	lite	samtidig	
+2026-11-10 16:42	ccr-da624f01-5lbjel	d661847	npctest	OK	9	lite	samtidig	
+2026-11-10 16:52	ccr-da624f01-5lbjel	d661847	colregtest	OK	602	lite	samtidig	
+2026-11-10 16:52	ccr-da624f01-5lbjel	d661847	trip2	OK	34	lite	samtidig	
+2026-11-10 17:02	ccr-da624f01-5lbjel	d661847	seabedtest	FEIL	615	3d	alene	FEIL sjo: the picture is the same with the sea bed and the sky behind the sea left out  {'ulike': 125, 'over8': 2, 'bbox': (8, 0, 399, 637)}
+2026-11-10 17:11	ccr-da624f01-5lbjel	d661847	profshot	OK	516	3d	alene	
+2026-11-10 17:20	ccr-da624f01-5lbjel	d661847	benchshot	OK	513	3d	alene	
+2026-11-10 17:25	ccr-da624f01-5lbjel	d661847	f1test	OK	352	3d	alene	
+2026-11-10 17:35	ccr-da624f01-5lbjel	d661847	coast3d	OK	583	3d	alene	
+2026-11-10 17:55	ccr-da624f01-5lbjel	d661847	teleport3d	OK	1181	3d	alene	
+2026-11-10 18:05	ccr-da624f01-5lbjel	d661847	vectest	OK	606	3d	alene	
+2026-11-10 18:06	ccr-da624f01-5lbjel	d661847	dbg23o	OK	43	3d	alene	
