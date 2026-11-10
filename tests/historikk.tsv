@@ -1868,3 +1868,16 @@
 2026-11-10 11:04	ccr-c070e597-njia44	5c8a90f7	havtur	FEIL	70	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
 2026-11-10 11:10	ccr-c070e597-njia44	5c8a90f7+	kystvakttest	OK	8	lite	alene	
 2026-11-10 11:11	ccr-c070e597-njia44	20e38256	boottest	OK	24	lite	alene	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	towtest	OK	18	lite	samtidig	
+2026-11-09 22:24	claude/admiring-cray-vqmpdo	ce3e1864	trip2	OK	38	lite	samtidig	
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	dyntest	FEIL	253	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-09 22:28	claude/admiring-cray-vqmpdo	ce3e1864	docktest	OK	62	lite	samtidig	
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	hulltest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	dyntest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	towtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	trip2	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:30	ccr-f1fe6522-gyjgzi	eeac3e4f+	docktest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	hulltest	OK	73	lite	samtidig	
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	towtest	OK	19	lite	samtidig	
+2026-11-10 11:31	ccr-f1fe6522-gyjgzi	eeac3e4f+	trip2	OK	38	lite	samtidig	
+2026-11-10 11:32	ccr-f1fe6522-gyjgzi	eeac3e4f+	docktest	OK	61	lite	samtidig	
