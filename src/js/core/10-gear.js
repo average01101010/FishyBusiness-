@@ -588,7 +588,7 @@ function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
     if (acc[sp] < nx[sp]) break;
     const w = nx[sp]; acc[sp] -= w; nx[sp] = 0;
     if (g && KV47[sp]) kvSampleFish(g, sp, w, p);   // the coast guard's sample of the catch as it comes up: every fish, kept or let go (09j-kystvakt.js)
-    if (w < SPECIES[sp].minKg || (SPECIES[sp].maxKg && w > SPECIES[sp].maxKg) || (sp === 'kveite' && kveiteClosed(H))){ S.stats.released = (S.stats.released || 0) + 1; if (g) g.rel++; continue; }
+    if (letGo(sp, w, p, H)){ S.stats.released = (S.stats.released || 0) + 1; if (g) g.rel++; continue; }   // § 47 where the gear stood (02-species-gear.js)
     const k = Math.min(w, room); room -= k; addCatch(sp, k, clsOf(sp, w), hook, {fresh, how:String(key).split(':')[0]}); got += k;
     if (g){ const q = g.spKg || (g.spKg = {}); q[sp] = (q[sp] || 0) + k; }   // the haul's catch by species (the bycatch share in each catch, 09j-kystvakt.js)
     if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg:k, t:performance.now()}); }
@@ -596,7 +596,7 @@ function landFish(sp, kg, key, mesh, p, H, hook, fresh, g){
   return got;
 }
 // size selection: nets keep fish near the optimal length for the mesh (and big fish that tangle); hooks let the smallest go
-function netLen(w){ return Math.pow(1000 * w / 0.0068, 1 / 3.1); }
+function netLen(w){ return Math.pow(1000 * w / LW0[0], 1 / LW0[1]); }   // (the inverse of lwKg, 02-species-gear.js)
 function retain(sp, key, mesh, w){
   if (key === 'garn' || key.startsWith('garn:')){ const L = netLen(w), Lo = 0.40 * mesh * (GK[sp] || 1), r = Math.exp(-0.5 * ((L - Lo) / (0.18 * Lo)) ** 2); return L > Lo ? Math.max(r, 0.35 * Math.exp(-(L - Lo) / (0.5 * Lo))) : r; }
   if (key === 'line:hyse') return sstep(0.35, 0.9, w);

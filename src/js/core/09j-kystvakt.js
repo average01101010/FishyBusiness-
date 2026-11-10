@@ -14,26 +14,30 @@ const KV_REF = {kvoteh:'J-187-2026 § 14', seiby:'J-187-2026 § 14', lby:'J-128-
 // 15 % tusk after the stop), and a sample of the last catch for the minimum sizes (§ 47) and the admixture (§ 49). The texts of §§ 47,
 // 49, 50, 51, 66 and 68 were read on Lovdata 06.11.2026 (last amended FOR-2026-10-02-1999); § 14 in J-187-2026 on fiskeridir.no.
 const KVH = {visitMin:90, side:0.18, step:1.0, minFish:20, minHaul:100, keep:3};
-// § 47, the minimum sizes in cm: [north of 62° N, south of 62° N, cod north of 62° N within 4 nm of the baselines]. Ling and tusk have none
-const KV47 = {torsk:[44, 40, 55], hyse:[40, 32], sei:[45, 40], blakveite:[45, 45]};
-// length to weight: the model's curve for the gadoids (W = 0.0068 L^3.1 g, as netLen in 10-gear.js) and the Greenland halibut's
-// (W = 4.06e-6 L^3.245 kg, 02-species-gear.js); a fish lighter than the minimum length's weight is under the minimum size
-function kvCmKg(sp, cm){ return sp === 'blakveite' ? 4.06e-6 * Math.pow(cm, 3.245) : 0.0068 * Math.pow(cm, 3.1) / 1000; }
-function kvMinCm(sp, p){ const M = KV47[sp]; if (!M) return 0; if (LL(p).lat < 62) return M[1]; return sp === 'torsk' && blNm(p) < 4 ? M[2] : M[0]; }
+// § 47 and the length–weight curve are the fishing's own (MIN47, min47Cm, lwKg and minKgAt in 02-species-gear.js, steg 59, 10.11.2026), so
+// the sample measures by the same minimum sizes the catch is sorted by. The species sampled are the ones § 47 lists; ling and tusk have none
+const KV47 = MIN47;
+const kvCmKg = lwKg;
+const kvMinCm = min47Cm;
 // one fish as it comes up, counted in the haul's sample (10-gear.js landFish): [measured, under the minimum size] per species, with the
 // minimum for the place where the gear stood worked out once per haul
-function kvSampleFish(g, sp, w, p){ const mk = g.msK || (g.msK = {}); if (mk[sp] == null) mk[sp] = kvCmKg(sp, kvMinCm(sp, p));
+function kvSampleFish(g, sp, w, p){ const mk = g.msK || (g.msK = {}); if (mk[sp] == null) mk[sp] = minKgAt(sp, p);
   const m = g.ms || (g.ms = {}), r = m[sp] || (m[sp] = [0, 0]); r[0]++; if (w < mk[sp]) r[1]++; }
 // a haul done (or stopped) is a catch of its own: its sample and its kilos by species, the last few kept for the coast guard
 function kvHaulKeep(g, s){ if (!g || !(g.spKg || g.ms)) return; const L = S.kvHaul || (S.kvHaul = []), m = setMid(s);
   L.unshift({t:S.t, vid:S.cur, x:+m.x.toFixed(3), y:+m.y.toFixed(3), kind:s.kind, lk:s.lk || null, ms:g.ms || {}, kg:g.spKg || {}}); while (L.length > KVH.keep) L.pop(); }
 // § 49: the share under the minimum size allowed in number in each catch. North of 62° N: 15 % of cod, haddock and saithe together with
-// trawl and conventional gear (fourth paragraph), 20 % when fishing haddock by line in statistics area 03 (fifth), 15 % Greenland
-// halibut (ninth); elsewhere 10 % of each species (first). Returns the worst against its limit, or null with too few fish to say
+// trawl and conventional gear (fourth paragraph), 20 % when fishing haddock by line in statistics area 03 (fifth), 20 % cod when fishing
+// cod with jig and line within 4 nm of the baseline (seventh: «er det tillat å ha til sammen 20 % torsk under minstemål i antall i de
+// enkelte fangster»; read on Lovdata 10.11.2026; the haddock and saithe then by the fourth), 15 % Greenland halibut (ninth); elsewhere
+// 10 % of each species (first). Returns the worst against its limit, or null with too few fish to say
 function kvMix(ms, p, gear, most){
   const n62 = LL(p).lat >= 62, c3 = ['torsk', 'hyse', 'sei'], out = [], cnt = sp => (ms[sp] || [0, 0]);
+  const j7 = n62 && (gear === 'juksa' || gear === 'line') && most === 'torsk' && blNm(p) < 4;
+  if (j7){ const c = cnt('torsk'), hs = ['hyse', 'sei'], n = hs.reduce((a, sp) => a + cnt(sp)[0], 0), u = hs.reduce((a, sp) => a + cnt(sp)[1], 0);
+    if (c[0]) out.push({sp:'torsk', n:c[0], u:c[1], lim:0.20, led:'sjuende'}); if (n) out.push({sp:'hysei', n, u, lim:0.15, led:'fjerde'}); }
   if (n62){ const n = c3.reduce((a, sp) => a + cnt(sp)[0], 0), u = c3.reduce((a, sp) => a + cnt(sp)[1], 0), lim = gear === 'line' && most === 'hyse' && ruHom(p) === '03' ? 0.20 : 0.15;
-    if (n) out.push({sp:'thsei', n, u, lim, led:lim === 0.20 ? 'femte' : 'fjerde'});
+    if (n && !j7) out.push({sp:'thsei', n, u, lim, led:lim === 0.20 ? 'femte' : 'fjerde'});
     const b = cnt('blakveite'); if (b[0]) out.push({sp:'blakveite', n:b[0], u:b[1], lim:0.15, led:'niende'}); }
   else for (const sp of c3.concat('blakveite')){ const r = cnt(sp); if (r[0]) out.push({sp, n:r[0], u:r[1], lim:0.10, led:'første'}); }
   const all = out.reduce((a, o) => a + o.n, 0); if (all < KVH.minFish) return all ? {few:true, n:all} : null;
@@ -78,7 +82,7 @@ function kvHavCheck(b, sets, H, len, add, most){
   // the sample of the last catch: the minimum sizes (§ 47) and the admixture under them (§ 49). Over the limit: move; the Directorate may
   // close the ground (§ 50 a). Within it, what is under the minimum size is lawful catch (live fish may be let go, the dead are landed, § 51)
   if (haul){ const m = kvMix(haul.ms, haul.p, sets.length ? sets[0].kind : 'line', most); R.sample = m;
-    if (m && !m.few && m.pct > m.lim + 1e-9){ const what = m.sp === 'thsei' ? 'torsk, hyse og sei' : SPECIES[m.sp].no.toLowerCase(), whatEn = m.sp === 'thsei' ? 'cod, haddock and saithe' : SPECIES[m.sp].en.toLowerCase(), cm = m.sp === 'thsei' ? 'torsk ' + kvMinCm('torsk', haul.p) + ', hyse ' + kvMinCm('hyse', haul.p) + ' og sei ' + kvMinCm('sei', haul.p) + ' cm' : kvMinCm(m.sp, haul.p) + ' cm';
+    if (m && !m.few && m.pct > m.lim + 1e-9){ const what = m.sp === 'thsei' ? 'torsk, hyse og sei' : m.sp === 'hysei' ? 'hyse og sei' : SPECIES[m.sp].no.toLowerCase(), whatEn = m.sp === 'thsei' ? 'cod, haddock and saithe' : m.sp === 'hysei' ? 'haddock and saithe' : SPECIES[m.sp].en.toLowerCase(), cm = m.sp === 'thsei' ? 'torsk ' + kvMinCm('torsk', haul.p) + ', hyse ' + kvMinCm('hyse', haul.p) + ' og sei ' + kvMinCm('sei', haul.p) + ' cm' : m.sp === 'hysei' ? 'hyse ' + kvMinCm('hyse', haul.p) + ' og sei ' + kvMinCm('sei', haul.p) + ' cm' : kvMinCm(m.sp, haul.p) + ' cm';
       add('f49', 'I stikkprøven av ' + (haul.now ? 'fangsten som dras nå' : 'siste fangst') + ' var ' + m.u + ' av ' + m.n + ' ' + what + ' under minstemålet (' + cm + '), ' + f(m.pct * 100, 0) + ' % i antall; høyst ' + f(m.lim * 100, 0) + ' % er lov i de enkelte fangster. Skift felt; Fiskeridirektoratet kan stenge feltet (§ 50).', 'In the sample of ' + (haul.now ? 'the catch being hauled' : 'the last catch') + ' ' + m.u + ' of ' + m.n + ' ' + whatEn + ' were under the minimum size (' + cm + '), ' + f(m.pct * 100, 0) + ' % in number; at most ' + f(m.lim * 100, 0) + ' % is allowed in each catch. Change ground; the Directorate may close the ground (§ 50).', 'Høstingsforskriften §§ 47 og 49 ' + m.led + ' ledd', RU_HF); } }
   return R;
 }

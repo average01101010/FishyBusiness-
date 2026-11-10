@@ -21,8 +21,9 @@ function hav(t){
   const B = K.BOAT, B0 = Object.assign({}, B); Object.assign(B, VESSELS.autoliner);
   const Hd = (y, m, d) => (Date.UTC(y, m - 1, d, 12) - EPOCH) / 36e5;
 
-  // § 47: the minimum sizes north and south of 62° N, cod 55 cm within 4 nm north of 62° N; ling and tusk have none
-  t.ok(KV47.torsk[0] === 44 && KV47.torsk[1] === 40 && KV47.torsk[2] === 55 && KV47.hyse[0] === 40 && KV47.hyse[1] === 32 && KV47.sei[0] === 45 && KV47.sei[1] === 40 && KV47.blakveite[0] === 45, '§ 47: torsk 44/40 (55 innenfor 4 nm), hyse 40/32, sei 45/40, blåkveite 45 cm');
+  // § 47: the minimum sizes north and south of 62° N, cod 55 cm within 4 nm north of 62° N; ling and tusk have none (KV47 is MIN47 in
+  // 02-species-gear.js from steg 59, 10.11.2026; tests/unit/minstemal.test.mjs has the whole table)
+  t.ok(KV47.torsk.n === 44 && KV47.torsk.s === 40 && KV47.torsk.n4 === 55 && KV47.hyse.n === 40 && KV47.hyse.s === 32 && KV47.sei.n === 45 && KV47.sei.s === 40 && KV47.blakveite.n === 45, '§ 47: torsk 44/40 (55 innenfor 4 nm), hyse 40/32, sei 45/40, blåkveite 45 cm');
   t.ok(!KV47.lange && !KV47.brosme, '§ 47: lange og brosme har ikke minstemål');
   t.near(kvCmKg('torsk', 44), 0.84, 0.02, 'en torsk på 44 cm veier om lag 0,84 kg (modellens kurve, som netLen)');
   t.near(kvCmKg('blakveite', 45), 0.94, 0.03, 'en blåkveite på 45 cm veier om lag 0,94 kg (modellens kurve for blåkveite)');
