@@ -1,0 +1,37 @@
+{
+ "name": "Prøve: Skottland (Scrabster)",
+ "when": "2027-07-06T13:00:00Z",
+ "boat": "kyst21",
+ "place": {
+  "lat": 58.62,
+  "lon": -3.55,
+  "clear": 0.8
+ },
+ "heading": "coast",
+ "speed": 7,
+ "quality": "ultra",
+ "pre": 2,
+ "dur": 1.6,
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": 250,
+    "pitch": 6,
+    "dist": 160,
+    "fov": 46,
+    "aim": 30
+   },
+   {
+    "t": 1.6,
+    "yaw": 256,
+    "pitch": 6.5,
+    "dist": 155,
+    "fov": 46,
+    "aim": 30
+   }
+  ]
+ },
+ "notes": "Prøve 10.11 for Jonas' ønske om å vise havet utenfor Norge (Skottland, Færøyene, Svalbard, Grønland)."
+}

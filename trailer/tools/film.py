@@ -101,6 +101,32 @@ TRACK = """([x, y, hd, len, L, B, D, R]) => { const TH = G3._debug.terrH, s = Ma
   for (let r = 15; r <= R; r += 15) for (let a = 0; a < 24; a++){ const t = a / 24 * 2 * Math.PI, xx = x0 + Math.cos(t) * r, zz = z0 + Math.sin(t) * r, w = worst(xx, zz);
     if (w < -D) return {ok:false, moved:r, dx:(xx - x0) / 1000, dy:(zz - z0) / 1000, worst:+w.toFixed(1), was:+w0.toFixed(1)}; }
   return {ok:false, none:true, was:+w0.toFixed(1)}; }"""
+# the work with the gear (Jonas 10.11.2026: «at man kan fiske med redskaper som garn, liner, teiner»), with the game's own startHaul and
+# startSet as tests/ombord.py does it (OB0): a clean deck, the crew she is built for (no traits: a seasick hand stands over the rail), a set
+# of the kind lying where she is (soaked 12 hours, with a catch in it) and the haul started; or the gear aboard and the setting started
+OP = """(o) => { const b = S.boat, V = VESSELS[b.type], type = b.type, fish = o.fish, kind = fish === 'teiner' ? 'teine' : fish;
+  S.jobs = []; S.sets = []; b.gop = null; b.land = null; b.deckStop = false; b.deckEnd = null; b.dmg = null; b.damage = 0; S.incidents = [];
+  S.settings.gut = true; S.settings.ice = true; S.settings.careAuto = false; S.settings.autoOn = false;
+  S.pgear = newPGear(); S.pgear.kits.n = 4; S.hold = []; b.rig = fish; S.target = o.target || 'torsk'; b.status = 'idle'; S.plan = null; b.v = 0;
+  const nn = Math.min(o.crew || 4, V.crewMax || 0);
+  S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
+  if (kind === 'line') S.equip.linehaler = true;
+  if (kind === 'garn' && equipFits('garnhaler', type)) S.equip.garnhaler = true;
+  if (kind === 'teine') S.equip.teinehaler = true;
+  const p = {...b.pos}, h = b.heading, pot = typeof potK === 'function' ? potK() : 'big', sp = typeof potSp === 'function' ? potSp(pot) : 'krabbe';
+  if (o.do === 'sett'){ const pg = S.pgear;
+    if (kind === 'line'){ pg.lines.hyse.n = 4; pg.lines.hyse.baited = 4; }
+    if (kind === 'garn') pg.nets = [{id:'n1', mesh:180, ty:'bunn', n:6, cond:1}];
+    if (kind === 'teine'){ pg.pots[pot] = o.n || 40; baitOf(pg).makrell = 200; if (pot === 'sno') baitOf(pg).akkar = 200; }
+    const ch = setChoices().find(c => !c.off); if (!ch) return 'SKIP: ingen valg i setChoices';
+    const why = startSet(ch.kind, ch.spec, 0); if (why) return 'SKIP: ' + JSON.stringify(why); }
+  else {
+    const acc = kind === 'teine' ? {[sp]:{kg:o.kg || 300, n:o.cn || 500}} : {torsk:{kg:220, n:70}, hyse:{kg:60, n:40}};
+    S.sets = [{id:'s0', vid:S.cur, kind, n:o.n || 6, a:p, b:{x:p.x + Math.sin(h) * 0.6, y:p.y - Math.cos(h) * 0.6}, tSet:S.t - 12 * 60, acc, dead:0, cond:1, heavy:false, depth:Math.round(depthF(p)), warn:0,
+      ...(kind === 'line' ? {lk:'hyse', hooks:(o.n || 6) * 600, miss:0, bent:0} : kind === 'garn' ? {mesh:180, ty:'bunn', lid:'n1'} : {pot, bait:pot === 'sno' ? 'akkar' : 'makrell'})}];
+    const why = startHaul('s0', false, 0); if (why) return 'SKIP: ' + JSON.stringify(why); }
+  if (S.crew.length && typeof CREW3D !== 'undefined') CREW3D.reset();
+  return {crew:S.crew.length, gop:b.gop ? (b.gop.kind || b.gop.op || 'ja') : null, sets:S.sets.length, pot}; }"""
 # the per-frame checks: hull outline (stern full beam, the bow narrowing to the stem) against the fine terrain and the camera's
 # solids, the mast's height along the centre line against the solids, and the eye
 CHECK = """([L, B, D, MH, moored]) => { window.__filmHide(); for (const q of window.__filmPeers || []) if (!PEERS.includes(q)) PEERS.push(q); const G = G3._debug, bv = G.bv, TH = G.terrH, CI = G.camInside, h = bv.head, s = Math.sin(h), c = Math.cos(h);
@@ -243,6 +269,10 @@ async def main():
             for q in sh.get('peers', []): print('fortøyd ved siden', q.get('vtype'), await pg.evaluate(PEER, q), flush=True)
             for _ in range(sh.get('moor_s', 12)):
                 await pg.evaluate("() => { for (const q of window.__filmPeers || []) if (!PEERS.includes(q)) PEERS.push(q); }"); await pg.wait_for_timeout(1000)
+        if sh.get('op'):
+            r = await pg.evaluate(OP, sh['op']); print('arbeid', r, flush=True); log['op'] = r
+            if isinstance(r, str) and r.startswith('SKIP'): print('FEIL:', r); return 1
+            await pg.wait_for_timeout(sh['op'].get('wait', 8) * 1000)   # the crew to their places, the hauler going
         # the clock frozen. pause_at takes a datetime (a bare number is seconds in Python; milliseconds threw the clock a thousand times
         # ahead, to the year 58 000, and performance.now() so large that the waves, the sky and the sea lost their precision)
         nowms = await pg.evaluate('Date.now()')

@@ -15,7 +15,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 FONT = os.path.join(ROOT, 'tools', 'brand', 'fonts', 'SourceSerif4-Display-Semibold.ttf')
 LOGO = os.path.join(ROOT, 'src', 'brand', 'logo.svg')
 PLACES = {'finnsnes': 'Finnsnes', 'lofoten': 'Lofoten', 'lofotfisket': 'Lofotfisket', 'midnattssol': 'Midnattssol', 'varanger': 'Varanger',
-          'hvaler': 'Hvaler', 'rorvik': 'Rørvik', 'bodo': 'Bodø', 'tromso': 'Tromsø', 'hammerfest': 'Hammerfest', 'kirkenes': 'Kirkenes'}
+          'hvaler': 'Hvaler', 'rorvik': 'Rørvik', 'bodo': 'Bodø', 'tromso': 'Tromsø', 'hammerfest': 'Hammerfest', 'kirkenes': 'Kirkenes',
+          'svalbard': 'Svalbard', 'skottland': 'Skottland', 'faeroyene': 'Færøyene', 'gronland': 'Grønland'}
 LINES = {'fra': 'Fra trebåt …', 'til': '… til snurper'}
 
 def page(body, w, h, bg='transparent'):
