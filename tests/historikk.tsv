@@ -2034,3 +2034,7 @@
 2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
 2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
 2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-10 23:52	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	FEIL	64	lite	alene	FEIL test build stående: Patchnotes has the mark «på test» / «on test» on top, above the notes {"no": null, "en": null, "first": false, "cards": 301, "in": fals
+2026-11-10 23:54	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	FEIL	72	lite	samtidig	FEIL test build stående: the mark lies inside the phone's screen {"no": "på test", "en": "on test", "first": true, "cards": 301, "in": false}
+2026-11-10 23:54	claude/l1b-production-release-allrqm	6ead4836+	boottest	OK	29	lite	samtidig	
+2026-11-10 23:55	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	OK	63	lite	alene	

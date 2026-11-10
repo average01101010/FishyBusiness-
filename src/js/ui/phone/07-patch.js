@@ -1462,6 +1462,11 @@
   const patchNew = () => { const i = PATCH.findIndex(p => p[0] === S.settings.patchSeen); return i < 0 ? PATCH.length : i; };
   function patch(){
     const seen = S.settings.patchLast, h = ['<div class="ph-c">'];
+    // the test edition (L1b, 10.11.2026; the channel test, cloudChannel() in ui/10f-cloud.js) says so on top: its notes are the newest
+    // on the working branch, and the players get them with the next release. The production shows what is released, since the notes
+    // lie in the build
+    if (typeof cloudChannel === 'function' && cloudChannel() === 'test')
+      h.push('<p class="ph-note" id="patchTest"><span class="pnew ptest">' + L('på test', 'on test') + '</span> ' + L('Dette er testutgaven. Det nyeste her kommer til detstorebla.no med neste oppdatering.', 'This is the test build. The newest here reaches detstorebla.no with the next update.') + '</p>');
     for (const [id, date, no, en, lines] of PATCH)
       h.push('<div class="ph-card patchc"><h4>' + L(no, en) + (seen && PATCH.findIndex(p => p[0] === id) < PATCH.findIndex(p => p[0] === seen) ? ' <span class="pnew">' + L('Ny', 'New') + '</span>' : '') + '</h4><p class="ph-note">' + date + '</p><ul>' + lines.map(l => '<li>' + L(l[0], l[1]) + '</li>').join('') + '</ul></div>');
     h.push('</div>');

@@ -39,6 +39,18 @@ LOOK = """(() => {
     url:c.supabaseUrl, anon:c.supabaseAnon, wos:c.workosClientId, hosts:c.hosts, hasTest:'test' in c, on:cloudOn(), pub:pubHost(), mode:shopMode(), tagCh:CHANNEL_TAG.ch};
 })()"""
 
+# the Patchnotes app opened: the mark «på test» in both languages, whether it is the first thing in the list, and inside the screen
+PATCHLOOK = """(() => {
+  S.tut = 0; PHONE.show(true); PHONE.open('patch');
+  const q = () => document.getElementById('patchTest'), txt = () => { const e = q(), b = e && e.querySelector('.ptest'); return b ? b.textContent : null; };
+  const no = txt(); S.lang = 'en'; PHONE.open('patch'); const en = txt(); S.lang = 'no'; PHONE.open('patch');
+  const e = q(), c = e ? e.parentElement : null;
+  return {no, en, first:!!(e && c && c.firstElementChild === e), cards:document.querySelectorAll('.patchc').length};
+})()"""
+# (asked once the phone has slid up)
+PATCHIN = """(() => { const e = document.getElementById('patchTest'), r = e ? e.getBoundingClientRect() : null;
+  return !!r && r.width > 40 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight; })()"""
+
 async def page(br, url, w, h):
     ctx = await br.new_context(viewport={'width': w, 'height': h}, has_touch=True); pg = await ctx.new_page(); errs = []
     pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -68,6 +80,15 @@ async def main():
                 o = (await pg.evaluate(LOOK))['over']
                 check(o == [], 'test build %s: the label lies over no button with %s open' % (name, what), o)
                 if what == 'telefonen': await pg.screenshot(path=os.path.join(OUT, 'kanal_%s_telefon.png' % name))
+            # Patchnotes says «på test» on top in the test edition (L1b, 10.11.2026; ui/phone/07-patch.js)
+            if name in ('stående', 'liggende'):
+                pt = await pg.evaluate(PATCHLOOK)
+                check(pt['no'] == 'på test' and pt['en'] == 'on test' and pt['first'] and pt['cards'] > 3, 'test build %s: Patchnotes has the mark «på test» / «on test» on top, above the notes' % name, pt)
+                await pg.wait_for_timeout(900)
+                check(await pg.evaluate(PATCHIN), 'test build %s: the mark lies inside the screen' % name, pt)
+                shots = os.path.join(ROOT, 'docs', 'okter', '2026-11-10-l1b'); os.makedirs(shots, exist_ok=True)
+                await pg.screenshot(path=os.path.join(shots, 'patchnotes-paa-test-%s.jpg' % ('800x1280' if w == 800 else '1280x800')), type='jpeg', quality=60)
+                await pg.evaluate('PHONE.show(false)')
             if name == 'stående':
                 en = await pg.evaluate("(() => { S.lang = 'en'; CHANNEL_TAG.place(); const e = document.getElementById('chTag'), t = e ? e.textContent : null; S.lang = 'no'; CHANNEL_TAG.place(); return t; })()")
                 check(en == 'Test build', 'test build: the label is «Test build» in English', en)
@@ -84,6 +105,8 @@ async def main():
         check(r['ch'] is None and r['robots'] is None and r['tag'] is None and r['tagCh'] == '', 'production build: no channel, no noindex, no label', r)
         check(r['url'] == PROD['supabaseUrl'] and r['anon'] == PROD['supabaseAnon'] and r['wos'] == PROD['workosClientId'] and r['hosts'] == PROD['hosts'] and not r['hasTest'],
               'production build: the production\'s cloud, and no test block left in it', r)
+        pt = await pg.evaluate(PATCHLOOK); await pg.evaluate('PHONE.show(false)')
+        check(pt['no'] is None and pt['en'] is None and pt['cards'] > 3, 'production build: Patchnotes has no mark «på test»', pt)
         f = await pg.evaluate("""(() => { const raw = {...CLOUD_CFG, test:{hosts:['test.detstorebla.no'], supabaseUrl:'https://t.supabase.co', workosClientId:'client_t'}};
           const a = cloudCfg(raw, 'detstorebla.no', ''), b = cloudCfg(raw, 'test.detstorebla.no', ''), c = cloudCfg(raw, 'detstorebla.no', 'test'), d = cloudCfg({hosts:['127.0.0.1'], supabaseUrl:'https://sb.test'}, '127.0.0.1', 'test');
           return {a:[a.supabaseUrl, a.hosts, 'test' in a], b:[b.supabaseUrl, b.hosts, b.workosClientId, b.supabaseAnon, 'test' in b], c:[c.supabaseUrl, c.hosts], d:d.supabaseUrl, n:cloudCfg(null, 'x', 'test')}; })()""")
