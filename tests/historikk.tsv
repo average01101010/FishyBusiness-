@@ -1930,3 +1930,17 @@
 2026-11-10 13:50	claude/ob9-hurtigsjarken-75-jtun77	43bb5759	jukseboot	OK	10	lite	samtidig	
 2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	boottest	OK	21	lite	samtidig	
 2026-11-10 14:00	ccr-5e1ba2f4-pusvyd	32a679ce	kystvakttest	OK	10	lite	samtidig	
+2026-11-10 14:18	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	77	lite	alene	
+2026-11-10 14:19	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	80	lite	alene	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	tabtest	OK	133	lite	samtidig	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	synctest	OK	86	lite	samtidig	
+2026-11-10 14:23	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	cloudtest	FEIL	56	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-10 14:24	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	errtest	OK	42	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	guesttest	OK	95	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	pwatest	OK	31	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	boottest	OK	33	lite	samtidig	
+2026-11-10 14:25	claude/hs1-velkomstgave-u3rnfm	ea0d42e+	pushtest	OK	24	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	starttest	OK	460	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	bootgtest	OK	184	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	boostklokke	OK	42	lite	samtidig	
+2026-11-10 14:33	claude/hs1-velkomstgave-u3rnfm	3392011	skiptest	OK	17	lite	samtidig	
