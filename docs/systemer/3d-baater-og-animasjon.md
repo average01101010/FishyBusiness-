@@ -407,6 +407,16 @@ Samme arbeid som trebåten (over), på skiffens egne plasser (`skiff59.py` `anch
 - **Fenderen** (Jonas: «en felles blender-modell som brukes av alle båtene»): `tools/deck/anker.py` `fender` (0,22 × 0,62 m) i `deck-anchor`; `view3d/15-env-mooring.js` tegner den når mannskapet henger ut fenderne (OB2), med linja til det øverste øyet (`kitX('anchor').fender.eye`); røret står som reserve. `blaase` (A-blåse 0,40 m) ligger i samme fil, ennå ikke brukt (backloggen). Pyntefendere modelleres ikke inn i båtene (Jonas: «Fjern pyntefenderne fra båt-modellen»).
 - **Striper på plane vegger** (Jonas: «Den ser liksom ut som den huler litt innover mot vinduene pga de stripene»): et skall som glattes (`shade`) før hull skjæres med boolean, får glatte kanter rundt hullene og skjeve skyggenormaler. Merk de skarpe kantene på nytt etter kuttet (`shade(obj, 5)` på en del av plane flater). Sjekken: `python3.11 tools/boats/qa/flatnorm.py tools/boats/<skript>.py` (grensen 20°; runde deler står 13–15°). Hva den fant på de andre båtene, står i backloggen.
 
+## Breisjarken om bord (OB11, 10.11.2026, `docs/planer/om-bord.md` 4.8)
+
+`tools/boats/malo36.py`, grunnlaget i `docs/skipsmodeller/breisjark-grunnlag.md` kap. 10.
+
+- **Plassene står i skriptet og måles i `check()`** mot spillets bokser (`deckcrew.js` `kitBoxes`): `GARN` og `STAMP0` (garnkaret og stampene på dørken akter for luka), `POTS` og `POT_SPOT` (stabelen på akterdekket, teina tømmes i den åpne sida; `pot_kit` med sjekk mot `tools/boats/potplaces.json`), `JIG` med `JIG_CLEAR` (én plass, `anchors.jigZ`), `HAUL_UP` (haleren 0,30 m over ripa: under spillets 1,2 m-grense, F24).
+- **Setteporten** (`SPORT`): spillet setter garn og line over hekken 0,45 m til styrbord for midten i midjehøyden + 0,10 (`drawSetting`), og akterskansen er 1,5 m høy, så hekken har en port mellom galgens stolper (`GANT_Y`) med rulle i terskelen. `check()` måler rullens topp mot høyden redskapet går ut i, og redskapets vei fra karet og stampene mot aktermasta, casingen og stigen.
+- **Vannlinja:** `WLE` er den tomme båtens (6 cm under tegningens), `to_game` og ankrene regner fra den; malingen står ved tegningens. `STAB_AT.breisjark` er lest av modellen (`tests/unit/trim.test.mjs`).
+- **Bremmen** (`BRIM_O`, `BRIM_I`) og `shade(…, 5)` etter kuttene på styrhuset og lyets vegger (`qa/flatnorm.py`).
+- `JIG_Z.breisjark` i `view3d/13-instruments.js` brukes ikke lenger.
+
 ## Den nye hurtigsjarken om bord (OB10, 10.11.2026, `docs/planer/om-bord.md` 4.7)
 
 - **Dekkskartet regner gulvet i et lukket hus som dørk.** Plassfinneren for teinestablene (OB16, `tools/boats/potplaces.json`) la to av den nye hurtigsjarkens fire stabler inne i dekkshuset og styrhuset, så teinene ikke syntes. Plassene står nå i skriptet (`hs11.py` `POTS`, `POT_SPOT`, `pot_kit`), `check()` prøver hver ring på 1,45 m mot husene, benken, karet, kista, skansen og de andre, og sammenligner med `potplaces.json` (som `potplaces.py` ellers skriver over). `gearMax.teine` og `jukseMax` er det modellen rommer (`tests/unit/teiner.test.mjs`, `jig.test.mjs` leser den eksporterte modellen).

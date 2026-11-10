@@ -531,7 +531,7 @@ const SETTERS = {
   sjark:[-0.85, 1.78, 5.10, 0, 1],          // (on the guard rail over the low bulwark: its panels lean in from the bulwark's top)
   hurtigsjark:[-0.75, 1.93, 5.50, 0, 1],
   sjarkny:[-0.75, 2.36, 5.50, 0, 1],
-  breisjark:[-0.9, 2.38, 5.60, 0, 0],        // (the port corner of her high stern, outside the net drum; the drum's frame stands where the magazine would)
+  breisjark:[0.05, 1.62, 5.58, 0, 1],        // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
   // (the 15 m boat has none: her stern is the shelter deck's closed wall. She gets the place with the opening in the stern, OB12)
   kyst21:[0.86, 2.27, 10.30, 0.4, 1]};      // (the round stern, to starboard of the staff)
 for (const k in SETTERS){ (KITADD[k] = KITADD[k] || {}).setter = SETTERS[k]; }

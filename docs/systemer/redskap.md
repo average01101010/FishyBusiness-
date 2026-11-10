@@ -187,11 +187,11 @@ Prinsipp 7 i planen: «det som har modell, tegnes på båten på festepunktene»
   | plastsjark | midt på hekken | ja |
   | havsjark | babord (0,85 m fra midten, klar av casingen og flaggstanga), oppå rekkverket over den lave skansekledningen (panelene heller innover fra toppen av den) | ja |
   | brukt hurtigsjark, ny hurtigsjark | babord på hekken (kranskapet og leideren står til styrbord) | ja |
-  | breisjark | babord hjørne av den høye hekken, utenfor garntrommelen | nei (trommelens ramme står der) |
+  | breisjark | midt på den lave akterskansen (OB11, valg 32), mellom de høye hjørnene | ja |
   | kyst15 | **ingen ennå:** hekken er shelterdekkets lukkede vegg. Plassen kommer med åpningen i hekken (OB12, valg 19) | – |
   | kyst21 | den runde hekken, styrbord for flaggstanga, dreid 0,4 rad | ja |
 
-  Breisjarken bygges om i OB11 mens dette skrives; plassen gjelder modellen slik den var 10.11.2026, og `oppmodell`-testen blir rød om rekka flytter seg.
+  Breisjarken ble bygd om i OB11 samme kveld (lav akterskanse midt på hekken); `oppmodell` ble rød ved flettingen, og plassen ble målt på nytt mot den nye modellen.
 - **«Prøv på båten» og heisen** (`TRY3D` i `view3d/25-controls.js`): `linesetter` og `garnrenne` er med, så kortene i utstyrsbutikken får knappen selv (`tryable` i `ui/phone/13b-nettet.js` leser `G3.TRY3D`), og de heises om bord når de kjøpes (`liftY`).
 - **Plasket** fantes fra før: fisken som glipper over ripa (`crewSlip` → `hooks.onCrewFx(c, 'slip', …)` → `crewFx3d`), går i en bue over rekka og treffer sjøen med et plask (`ancSplash` i `08-plants.js`). Nytt er bare at plasket telles (`DKN.splash`), så `oppshot` kan se det.
 - **Propellen** tegnes ikke (under vann).
