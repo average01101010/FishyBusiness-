@@ -6,19 +6,21 @@
 
 Ett opptak, som klippes i linjer og føres inn som `voice` i klippekartet (`tools/START-4K-MASTER.md` punkt 9). 37 ord. Stille fra 27,4 til 41,5 s (kystnotbåten under brua, hvalen, montasjen), der bildet og musikken står alene. Starttidene er mål: hver linje skal begynne 0,2–0,4 s etter klippet den hører til, aldri på selve klippet, og ingen linje går inn i stillheten.
 
-| # | Starter (s) | Linje | Bildet |
-|---|---|---|---|
-| S1 | 0,8 | Det store blå. | naustet |
-| S2 | 2,6 | Båten er fra femtiseks. Naustet er eldre. | naustet og nærbildet |
-| S3 | 8,0 | Han far sa alltid at havet ikke skylder deg noe. | under brua |
-| S4 | 12,7 | Noen dager gir sjøen. | garnene i Lofoten |
-| S5 | 15,2 | Andre dager tar ho. | kulingen ved Vardø |
-| S6 | 17,8 | Kulda, mørket, regningene. Alt følger med. | Svalbard og nordlyset |
-| S7 | 25,1 | Men så letter det. | Senja fra lufta, siste takt før droppet |
-| – | 27,4–41,5 | (stille) | kystnotbåten under brua, hvalen, montasjen |
-| S8 | 41,5 | Nå er det din tur. | de to båtene ved kaia |
+| # | Stemmen (s) | Underteksten (s) | Linje | Bildet |
+|---|---|---|---|---|
+| S1 | 0,80–2,06 | 0,80–2,56 | Det store blå. | naustet |
+| S2 | 2,90–6,42 | 2,90–6,92 | Båten er fra femtiseks. Naustet er eldre. | naustet og nærbildet («Naustet er eldre» begynner 0,2 s etter klippet) |
+| S3 | 7,70–10,43 | 7,70–10,93 | Han far sa alltid at havet ikke skylder deg noe. | under brua |
+| S4 | 12,70–14,38 | 12,70–14,88 | Noen dager gir sjøen. | garnene i Lofoten |
+| S5 | 15,20–16,55 | 15,20–17,05 | Andre dager tar ho. | kulingen ved Vardø |
+| S6 | 17,80–21,50 | 17,80–22,00 | Kulda, mørket, regningene. Alt følger med. | Svalbard og nordlyset |
+| S7 | 25,10–26,30 | 25,10–26,80 | Men så letter det. | Senja fra lufta, siste takt før droppet |
+| – | 27,4–41,5 | | (stille) | kystnotbåten under brua, hvalen, montasjen |
+| S8 | 41,50–42,79 | 41,50–43,29 | Nå er det din tur. | de to båtene ved kaia |
 
-**Undertekstene** (`SUBS` i `tools/titles.py`, `subs` i klippekartet): vanlig setningsskrift, 46 px ved 1080 bredde, midtstilt, øverste linje 66 % ned fra toppen, høyst to linjer, 13 % luft på hver side (unna nederste fjerdedel og høyre kant). Toner mykt inn over 0,5 s og ut over 0,45 s (stedsnavnene 0,6 og 0,5, navnene i montasjen 0,2). Ingen bånd bak teksten, bare svart glød rundt bokstavene (Jonas 10.11.2026). Til stemmefila finnes, er lengden anslått til 0,45 s per ord pluss 0,6 s, kortet så ingen linje står inn i den neste eller i stillheten (S1 1,7 s, S2 3,75, S3 4,6, S4 2,4, S5 2,4, S6 3,3, S7 2,2, S8 2,85). Når opptaket kommer, rettes tidene og lengdene etter det.
+**Opptak 1** (ElevenLabs, 10.11.2026, 19,4 s) er klippet i de åtte linjene ved pausene (`from` i klippekartet); fila ligger bare på maskinen (`audio/voice/` er ikke i git). S2 og S3 er flyttet fra målene (2,6 og 8,0) til 2,9 og 7,7 så ingen setning begynner på et klipp. Linjene i opptaket var ujevne (9 dB mellom den svakeste og den sterkeste), så hver linje jevnes til samme styrke, komprimeres 4:1 og toppbegrenses (`voice_af` i `tools/enc.py`). Målt i m3: stemmen −28 LUFS mot musikken −36,8 i miksen før løftet (8 LU), ut −24,2 LUFS med topp −6,0 dBTP; i fila ligger stemmen rundt −22 dB RMS, musikken mellom linjene −32 og droppet −28,6.
+
+**Undertekstene** (`SUBS` i `tools/titles.py`, `subs` i klippekartet): vanlig setningsskrift, 46 px ved 1080 bredde, midtstilt, øverste linje 66 % ned fra toppen, høyst to linjer, 13 % luft på hver side (unna nederste fjerdedel og høyre kant). Toner mykt inn over 0,5 s og ut over 0,45 s (stedsnavnene 0,6 og 0,5, navnene i montasjen 0,2). Ingen bånd bak teksten, bare svart glød rundt bokstavene (Jonas 10.11.2026). Hver undertekst står så lenge linja sies pluss 0,5 s.
 
 Innstillinger å begynne med i ElevenLabs (fra Laksebaronen): stability 50 %, similarity 75 %. Stemmen skal ligge minst 8 LU over musikken, og musikken senkes aldri bare mens stemmen snakker (`tools/enc.py`).
 

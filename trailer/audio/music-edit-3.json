@@ -6,7 +6,7 @@
  "size": "1080x1920",
  "bpm": 95.7,
  "beat": 0.6269,
- "notes": "Klippekart 3 (10.11.2026), tilpasset stemmemanuset (script.md v4). Redskapene og været før droppet (garn, kuling, snøkrabbe, nordlys), Reine og Senja fra lufta, kystnotbåten på droppet, hvalen etter droppet uten stemme. Båtstigen brytes med vilje (krabbebåten før kystnotbåten, kystbåten med hvalen etter): stemmen bærer historien. «Fra trebåt …» og «… til snurper» er ute; stemmens linjer står som undertekst (`subs`, tidene anslått til stemmefila finnes: 0,45 s per ord pluss 0,6 s, og aldri inn i neste linje eller i stillheten 27,4-41,5 s).",
+ "notes": "Klippekart 3 (10.11.2026), tilpasset stemmemanuset (script.md v4). Redskapene og været før droppet (garn, kuling, snøkrabbe, nordlys), Reine og Senja fra lufta, kystnotbåten på droppet, hvalen etter droppet uten stemme. Båtstigen brytes med vilje (krabbebåten før kystnotbåten, kystbåten med hvalen etter): stemmen bærer historien. «Fra trebåt …» og «… til snurper» er ute; stemmens linjer står som undertekst (`subs`), og står så lenge linja sies pluss 0,5 s. Stemmen (`voice`) er opptak-1 (ElevenLabs, 10.11.2026, 19,4 s) klippet i åtte linjer ved pausene (`from`: sekundene i opptaket); fila ligger bare på maskinen (`trailer/audio/voice/` er ikke i git).",
  "grade": {
   "contrast": 0.12,
   "vignette": 0.22,
@@ -188,50 +188,124 @@
   {
    "key": "s1",
    "at": 0.8,
-   "len": 1.7,
+   "len": 1.76,
    "text": "Det store blå."
   },
   {
    "key": "s2",
-   "at": 2.6,
-   "len": 3.75,
+   "at": 2.9,
+   "len": 4.02,
    "text": "Båten er fra femtiseks. Naustet er eldre."
   },
   {
    "key": "s3",
-   "at": 8.0,
-   "len": 4.6,
+   "at": 7.7,
+   "len": 3.23,
    "text": "Han far sa alltid at havet ikke skylder deg noe."
   },
   {
    "key": "s4",
    "at": 12.7,
-   "len": 2.4,
+   "len": 2.18,
    "text": "Noen dager gir sjøen."
   },
   {
    "key": "s5",
    "at": 15.2,
-   "len": 2.4,
+   "len": 1.85,
    "text": "Andre dager tar ho."
   },
   {
    "key": "s6",
    "at": 17.8,
-   "len": 3.3,
+   "len": 4.2,
    "text": "Kulda, mørket, regningene. Alt følger med."
   },
   {
    "key": "s7",
    "at": 25.1,
-   "len": 2.2,
+   "len": 1.7,
    "text": "Men så letter det."
   },
   {
    "key": "s8",
    "at": 41.5,
-   "len": 2.85,
+   "len": 1.79,
    "text": "Nå er det din tur."
+  }
+ ],
+ "voice": [
+  {
+   "file": "trailer/audio/voice/s1.wav",
+   "at": 0.8,
+   "len": 1.26,
+   "from": [
+    0.0,
+    1.26
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s2.wav",
+   "at": 2.9,
+   "len": 3.52,
+   "from": [
+    1.81,
+    5.33
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s3.wav",
+   "at": 7.7,
+   "len": 2.73,
+   "from": [
+    5.74,
+    8.47
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s4.wav",
+   "at": 12.7,
+   "len": 1.68,
+   "from": [
+    8.87,
+    10.55
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s5.wav",
+   "at": 15.2,
+   "len": 1.35,
+   "from": [
+    10.68,
+    12.03
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s6.wav",
+   "at": 17.8,
+   "len": 3.7,
+   "from": [
+    12.42,
+    16.12
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s7.wav",
+   "at": 25.1,
+   "len": 1.2,
+   "from": [
+    16.46,
+    17.66
+   ]
+  },
+  {
+   "file": "trailer/audio/voice/s8.wav",
+   "at": 41.5,
+   "len": 1.29,
+   "from": [
+    17.91,
+    19.2
+   ]
   }
  ]
 }
