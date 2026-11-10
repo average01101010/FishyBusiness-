@@ -186,7 +186,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 428 `reqFill(eq, type)`
   - 446 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1299 linjer)
+## `src/js/core/03-simulation.js` (1329 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -385,30 +385,33 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1192 `haillF()`
   - 1193 `luck(sp)`
   - 1197 `haillCap()`
-  - 1199 `giveHaill(type, how)`
-  - 1200 `useHaill(type)`
-  - 1206 `pubEvening(H)`
-  - 1207 `pubOpen(H)`
-  - 1210 `capHold()`
-  - 1212 `cargoRoom()`
-  - 1214 `cargoMin(kg)`
-- **1215** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1218 `streakState()`
-  - 1219 `streakPct()`
-  - 1220 `streakTouch()`
-- **1231** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1235 `effTemp(H)`
-  - 1236 `coldPen(H, hs)`
-- **1243** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1258 `gradeOk(g, q)`
-  - 1259 `ordState()`
-  - 1262 `custNear(c)`
-  - 1267 `repOf(id)`
-  - 1269 `bkOrderable(H)`
-  - 1271 `bkPlant(id)`
-  - 1272 `custSp(c)`
-  - 1273 `spCatchable(sp, H)`
-  - 1275 `ordersTick(H)`
+  - 1206 `haillInit()`
+  - 1210 `haillMirror(list, used)`
+  - 1214 `haillStock(inv, srv, used)`
+  - 1219 `giveHaill(type, how, id)`
+  - 1224 `useHaill(type)`
+  - 1236 `pubEvening(H)`
+  - 1237 `pubOpen(H)`
+  - 1240 `capHold()`
+  - 1242 `cargoRoom()`
+  - 1244 `cargoMin(kg)`
+- **1245** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1248 `streakState()`
+  - 1249 `streakPct()`
+  - 1250 `streakTouch()`
+- **1261** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1265 `effTemp(H)`
+  - 1266 `coldPen(H, hs)`
+- **1273** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1288 `gradeOk(g, q)`
+  - 1289 `ordState()`
+  - 1292 `custNear(c)`
+  - 1297 `repOf(id)`
+  - 1299 `bkOrderable(H)`
+  - 1301 `bkPlant(id)`
+  - 1302 `custSp(c)`
+  - 1303 `spCatchable(sp, H)`
+  - 1305 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (162 linjer)
 
@@ -2650,12 +2653,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1452 linjer)
+## `src/js/ui/phone/07-patch.js` (1460 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1445 `patch()`
+  - 1453 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3373,22 +3376,24 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (147 linjer)
+## `src/js/ui/10i-shop.js` (195 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 19 `shopMode()`
-  - 25 `realKr(nok)`
-  - 27 `shopLabel(nok)`
-  - 32 `shopWhat(k)`
-  - 42 `payBuy(k, give)`
-  - 50 `shopFine()`
-  - 53 `shopGo(k)`
-  - 70 `shopGive(g)`
-  - 93 `shopThanks(rc)`
-  - 106 `shopClaim()`
-  - 134 `shopStart()`
+  - 23 `shopMode()`
+  - 29 `realKr(nok)`
+  - 31 `shopLabel(nok)`
+  - 36 `shopWhat(k)`
+  - 46 `payBuy(k, give)`
+  - 54 `shopFine()`
+  - 57 `shopGo(k)`
+  - 74 `shopGive(g, srv)`
+  - 97 `shopThanks(rc)`
+  - 112 `haillProbe()`
+  - 120 `haillTell(now)`
+  - 131 `shopClaim()`
+  - 181 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (215 linjer)
 
@@ -3481,7 +3486,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (397 linjer)
+## `src/js/ui/11-boot.js` (398 linjer)
 
 ---------- boot ----------
 
@@ -3515,7 +3520,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 379 `bootFail(e)`
+  - 380 `bootFail(e)`
 
 ## `src/js/vessel3d.js` (1664 linjer)
 

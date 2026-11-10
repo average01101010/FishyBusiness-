@@ -31,7 +31,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `kinotest` | 6 min (15 min i skyen 05.11.2026; 1 500 s i `LONG`) | kameraet |
 | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |
 | `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
-| `kjoptest` | 3,5 min | butikken |
+| `kjoptest` | 3,5 min (10–13 min på en treg maskin, 10.11.2026); `KJOP_FRA=6` kjører bare steg 6–8 (én oppstart, rundt 4 min: butikken stengt for nye kontoer og haillen fra serveren, HS2) | butikken, `supabase/migrations/20261110180000_haill_use.sql` |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |
 | `kartlegging` | 4–5 min | UI 2 (06.11.2026): knappelinja, boksen, stripa, skuffen og telefonen målt i 17 tilstander i 390×844 og 800×1280, uten 3D; tallene i `tests/out/kartlegging/<fmt>.json` (`docs/planer/ui-2/kartlegging.md`) |
 | `f1test` | 4 min | konteksten (WebGL 2 og 1), skyggeroversettelsen (`glsl3`), egen båts detaljnivåer, ultra-forsøket i `qualTick` |

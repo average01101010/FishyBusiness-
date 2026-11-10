@@ -169,6 +169,10 @@ COVER['tests/unit/kvotemarked.test.mjs'] = []
 LITE += ['turlinjetest']
 COVER['tests/turlinjetest.py'] = ['turlinjetest']
 COVER['tests/unit/turlinje.test.mjs'] = []
+# HS2 (10.11.2026): the haill from the server as a copy of the grants (S.haillSrv), on lines of their own for the merge. The pure
+# functions (haillStock, haillMirror) in tests/unit/haillsrv.test.mjs, the claim against a stand-in in kjoptest and guesttest, the database in sqltest
+COVER['supabase/migrations/20261110180000_haill_use.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/haillsrv.test.mjs'] = []
+COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-haill-fiske-service.js'] + ['hailltest', 'kjoptest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 
