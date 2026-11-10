@@ -24,10 +24,13 @@ JS = """(async () => {
   R.load = Math.round(anchorLoad(BOAT.risk[2] * 1.5, 0.3, 0.5) * 100) / 100;
   // the anchor reads the current (curAt, F8a): the push on her has the stream of the place in it, and in the narrows of Saltstraumen at the
   // flood it is many times what it is at the anchorage off Husøy
-  { const H = S.t / 60, F = anchorForce(b.type, spot, H), c = curAt(spot, H); R.curRead = F.cur.x === c.x && F.cur.y === c.y;
+  { const H = S.t / 60, F = anchorForce(b.type, spot, H);
     const c0 = P(67.2335, 14.623); let q = null, bd = 1e9; for (const s of STROM.s){ const d = Math.hypot(s.x - c0.x, s.y - c0.y); if (d < bd){ bd = d; q = s; } }
     let Hs = H; for (let h = 0; h < 13; h += 0.1) if (curAt({x:q.x, y:q.y}, H + h).dh > curAt({x:q.x, y:q.y}, Hs).dh) Hs = H + h;
-    const Fs = anchorForce(b.type, {x:q.x, y:q.y}, Hs); R.curSalt = {husoy:Math.round(F.Fc), salt:Math.round(Fs.Fc)}; R.curSaltOk = Fs.Fc > 20 * Math.max(1, F.Fc); }
+    const Fs = anchorForce(b.type, {x:q.x, y:q.y}, Hs); R.curSalt = {husoy:Math.round(F.Fc), salt:Math.round(Fs.Fc)}; R.curSaltOk = Fs.Fc > 20 * Math.max(1, F.Fc);
+    // and without the current there is no push from it: curAt stubbed to still water gives nil
+    const realC = curAt; window.curAt = () => ({x:0, y:0, sx:0, sy:0, nx:0, ny:0, tide:0, snd:0, coast:0, dh:0}); let F0;
+    try { F0 = anchorForce(b.type, {x:q.x, y:q.y}, Hs); } finally { window.curAt = realC; } R.curRead = F0.Fc === 0 && Fs.Fc > 0; }
   window.windAt = () => BOAT.risk[2] * 1.25; window.hsAt = () => BOAT.risk[0] * 1.1; S.settings.autoOn = false; b.windArm = false;
   S.crew = [Object.assign(genCrew(), {bi:false, off:false})];
   let drags = 0; for (let i = 0; i < 40 * 60 && b.anch; i++){ step(); drags = b.anch ? b.anch.drags : drags; } R.dragged = drags > 0;

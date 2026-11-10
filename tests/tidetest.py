@@ -34,7 +34,7 @@ CURJS = """async (Q) => {
   // Saltstraumen: the sound strom.json has nearest the bridge
   const c0 = P(67.2335, 14.623); let q = null, bd = 1e9; for (const s of STROM.s){ const d = Math.hypot(s.x - c0.x, s.y - c0.y); if (d < bd){ bd = d; q = s; } }
   const at = {x:q.x, y:q.y}; let mx = 0, turns = 0, against = 0;
-  for (let h = 0; h < 15 * 24; h += 0.25){ const c = curAt(at, H0 + h); mx = Math.max(mx, Math.abs(c.snd)); if (Math.abs(c.dh) > 0.1){ if (Math.sign(c.snd) === Math.sign(c.dh) && (c.sx * q.ax + c.sy * q.ay) * c.snd > 0) turns++; else against++; } }
+  for (let h = 0; h < 15 * 24; h += 0.25){ const c = curAt(at, H0 + h); mx = Math.max(mx, Math.abs(c.snd)); if (Math.abs(c.dh) > 0.1){ if ((c.nx * q.ax + c.ny * q.ay) * c.dh > 0) turns++; else against++; } }
   R.salt = {d:+bd.toFixed(2), w:q.w, dep:q.d, A:q.A, maxKn:+(mx * KN).toFixed(2), turns, against};
   // the same over a tide: the whole of it, and its parts
   const over = p => { let t = 0, k = 0, a = 0; for (let h = 0; h < 15 * 24; h += 0.5){ const c = curAt(p, H0 + h); t = Math.max(t, Math.abs(c.tide)); k = Math.max(k, c.coast); a = Math.max(a, Math.hypot(c.sx, c.sy)); }
@@ -54,7 +54,7 @@ ARROWS = """async (kind) => { const c0 = P(67.2335, 14.623); let q = null, bd = 
   const b = S.boat, home = {x:q.x - q.ax * 2.5, y:q.y - q.ay * 2.5}; await mapNeed(at, MAPD.simR);
   b.status = 'idle'; b.port = null; b.pos = {x:home.x, y:home.y}; S.plan = null; S.draft = []; b.v = 0; S.t = Math.round(H * 60); WX_FORCE = {w:3, d:200};
   if (typeof G3 !== 'undefined' && G3.show) G3.show(false); view.cx = q.x; view.cy = q.y; view.z = MAP_H / 3; applyView(); CURARR.k = ''; scheduleStatic(); renderStatic(); renderDyn();
-  const c = curAt(at, S.t / 60), n = (CURARR.svg.match(/<g transform/g) || []).length;
+  const c = curAt(at, S.t / 60), n = (curArrowsSvg(1 / view.px).match(/<g transform/g) || []).length;
   return {n, kn:+(Math.hypot(c.sx, c.sy) * 3600 / 1852).toFixed(1), inward:(c.sx * q.ax + c.sy * q.ay) > 0, at:new Date(EPOCH + S.t * 6e4).toISOString().slice(0, 16)}; }"""
 
 async def main():
@@ -117,13 +117,13 @@ async def main():
         check(c['bodo']['tideKn'] < 0.2, 'utenfor Bodø (ikke i sundet): tidevannets strøm under 0,2 knop', c['bodo'])
         check(c['same'], 'strømmen er den samme uansett hva som er lastet av kartet (bare kjernens lag)')
         for vw in [(800, 1280), (1280, 800)]:
-            cp = await (await b.new_context(viewport={'width': vw[0], 'height': vw[1]})).new_page(); cp.on('pageerror', lambda e: errs.append(str(e)))
+            cx = await b.new_context(viewport={'width': vw[0], 'height': vw[1]}); cp = await cx.new_page(); cp.on('pageerror', lambda e: errs.append(str(e)))
             await boot(cp)
             for kind in ('flo', 'fjaere'):
                 a = await cp.evaluate(ARROWS, kind); await cp.wait_for_timeout(1500); await cp.evaluate("(() => { renderStatic(); renderDyn(); })()"); await cp.wait_for_timeout(300)
                 await cp.screenshot(path=os.path.join(ROOT, 'tests', 'out', f'strom-saltstraumen-{kind}-{vw[0]}x{vw[1]}.png'))
                 check(a['n'] >= 3 and a['inward'] == (kind == 'flo') and a['kn'] >= 0.5, f'kartplotteren ({vw[0]}×{vw[1]}): strømpiler i Saltstraumen på {kind}, {"inn mot Skjerstadfjorden" if kind == "flo" else "ut mot Saltfjorden"}', a)
-            await cp.close()
+            await cx.close()
         check(not errs, 'ingen sidefeil', errs[:3])
         await b.close()
 

@@ -630,32 +630,40 @@ function sjvChartSvg(u, bp){
     txt({x:w.p.x + 20 * u, y:w.p.y + 16 * u}, 'CPA ' + w.cpa + ' m · ' + sjvWhen(w), 'lbl-ais pl', 10.5 * u, 'stroke-width="' + (3 * u) + '" style="fill:' + c + '"') + '</g>';
 }
 function renderAisCard(){ const el = $('aisCard'); if (!AISSEL){ el.hidden = true; return; } const n = AISNOW.find(q => q.id === AISSEL); if (!n){ el.hidden = true; return; } el.innerHTML = aisInfo(n); el.hidden = false; $('aisX').onclick = () => { AISSEL = null; renderAisCard(); renderDyn(); }; }
-// the stream through the sounds (Fysikk 4 F8a, 10.11.2026; core/06e-anchor.js curAt, src/data/strom.json): an arrow where it runs at
-// half a knot or more, along each sound in the view (outside them the stream is under half a knot: the coastal current 0.35, the tide's
-// own under 0.2), longer and warmer the stronger it runs (blue under 2 knots, orange to 4, red over), the knots by the middle one when
-// near. Only when the chart is under 60 km tall; kept for five game minutes or until the view moves (renderDyn runs five times a second)
-const CURARR = {k:'', svg:'', kn:0.5, px:46, maxKm:60, near:15};
+// the stream through the sounds (Fysikk 4 F8a, 10.11.2026; core/06e-anchor.js stromSum, src/data/strom.json): an arrow where a sound's own
+// stream runs at half a knot or more, along each sound in the view (the coastal current and the tide's stream along the coast, together
+// about half a knot at most, get none), longer and warmer the stronger it runs (blue under 2 knots, orange to 4, red over), the knots
+// by the middle one when near. Only when the chart is under 60 km tall. Each sound's arrows are made once for the zoom, five game
+// minutes and the chart's colours, and kept: a pan or the view following the boat only joins what is made (renderDyn runs five times a
+// second)
+const CURARR = {k:'', made:new Map(), kn:0.5, px:46, maxKm:60, near:15};
+function curArrowsOf(q, u, H, lab, halo){
+  const KN = 3600 / 1852, at = {x:q.x, y:q.y}, dh = (tideH(H + 0.25, at) - tideH(H - 0.25, at)) / 0.5, g = [];
+  const step = Math.max(0.8 * q.w / 1000, CURARR.px * u), n = Math.ceil(1.3 * Math.max(q.ro, q.ri) / step);
+  for (let k = -n; k <= n; k++){
+    const sAl = k * step; if (sAl < -1.3 * q.ro || sAl > 1.3 * q.ri) continue;
+    const p = {x:q.x + q.ax * sAl, y:q.y + q.ay * sAl}, c = stromSum(p, dh), v = Math.hypot(c.x, c.y) * KN; if (v < CURARR.kn) continue;
+    const L = (12 + 4 * Math.min(v, 8)) * u, hd = 4.2 * u, col = v < 2 ? '#2f7fd0' : v < 4 ? '#e8891c' : '#d23b2e', dg = Math.atan2(c.x, -c.y) * 180 / Math.PI;
+    const d = 'M0,' + (L / 2).toFixed(4) + 'V' + (-L / 2 + hd).toFixed(4) + 'M' + (-hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4) + 'L0,' + (-L / 2).toFixed(4) + 'L' + (hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4);
+    g.push('<g transform="translate(' + p.x.toFixed(3) + ' ' + p.y.toFixed(3) + ') rotate(' + dg.toFixed(1) + ')"><path d="' + d + '" fill="none" stroke="' + halo + '" stroke-opacity=".85" stroke-width="' + (3.6 * u) + '" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (1.8 * u) + '" stroke-linecap="round" stroke-linejoin="round"/></g>');
+    if (lab && k === 0) g.push(txt({x:p.x + 9 * u, y:p.y + 4 * u}, fmt(v, 1) + ' kn', 'lbl-ground', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"'));
+  }
+  return g.join('');
+}
 function curArrowsSvg(u){
   if (typeof STROM === 'undefined' || !STROM.s.length) return '';
   const vr = svg.getBoundingClientRect(), hh = MAP_H / view.z / 2, ww = hh * (vr.width / (vr.height || 1)); if (2 * hh > CURARR.maxKm) return '';
-  const vx0 = view.cx - ww, vx1 = view.cx + ww, vy0 = view.cy - hh, vy1 = view.cy + hh, key = [vx0, vy0, vx1, vy1].map(v => v.toFixed(3)).join(',') + ':' + Math.floor(S.t / 5) + ':' + S.lang + ':' + svg.classList.contains('plot');
-  if (CURARR.k === key) return CURARR.svg;
-  const halo = svg.classList.contains('plot') ? '#0b1a2a' : '#fff';   // (the dark plotter: a dark edge, as its other marks)
-  const H = S.t / 60, KN = 3600 / 1852, seen = new Set(), g = [], lab = 2 * hh < CURARR.near, C = CUR.cell;
+  const plot = svg.classList.contains('plot'), key = view.z.toFixed(4) + ':' + Math.floor(S.t / 5) + ':' + S.lang + ':' + plot;
+  if (CURARR.k !== key){ CURARR.k = key; CURARR.made.clear(); }
+  const vx0 = view.cx - ww, vx1 = view.cx + ww, vy0 = view.cy - hh, vy1 = view.cy + hh, H = Math.floor(S.t / 5) * 5 / 60, lab = 2 * hh < CURARR.near, C = CUR.cell, out = [], seen = new Set();
+  const halo = plot ? '#0b1a2a' : '#fff';   // (the dark plotter: a dark edge, as its other marks)
   for (let i = Math.floor(vx0 / C); i <= Math.floor(vx1 / C); i++) for (let j = Math.floor(vy0 / C); j <= Math.floor(vy1 / C); j++) for (const q of STROM.idx.get(i * 100000 + j) || []){
     if (seen.has(q)) continue; seen.add(q);
-    const step = Math.max(0.8 * q.w / 1000, CURARR.px * u), n = Math.ceil(1.3 * Math.max(q.ro, q.ri) / step);
-    for (let k = -n; k <= n; k++){
-      const sAl = k * step; if (sAl < -1.3 * q.ro || sAl > 1.3 * q.ri) continue;
-      const p = {x:q.x + q.ax * sAl, y:q.y + q.ay * sAl}; if (p.x < vx0 || p.x > vx1 || p.y < vy0 || p.y > vy1) continue;
-      const c = curAt(p, H), v = Math.hypot(c.sx, c.sy) * KN; if (v < CURARR.kn) continue;
-      const L = (12 + 4 * Math.min(v, 8)) * u, hd = 4.2 * u, col = v < 2 ? '#2f7fd0' : v < 4 ? '#e8891c' : '#d23b2e', dg = Math.atan2(c.sx, -c.sy) * 180 / Math.PI;
-      const d = 'M0,' + (L / 2).toFixed(4) + 'V' + (-L / 2 + hd).toFixed(4) + 'M' + (-hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4) + 'L0,' + (-L / 2).toFixed(4) + 'L' + (hd * 0.7).toFixed(4) + ',' + (-L / 2 + hd).toFixed(4);
-      g.push('<g transform="translate(' + p.x.toFixed(3) + ' ' + p.y.toFixed(3) + ') rotate(' + dg.toFixed(1) + ')"><path d="' + d + '" fill="none" stroke="' + halo + '" stroke-opacity=".85" stroke-width="' + (3.6 * u) + '" stroke-linecap="round" stroke-linejoin="round"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="' + (1.8 * u) + '" stroke-linecap="round" stroke-linejoin="round"/></g>');
-      if (lab && k === 0) g.push(txt({x:p.x + 9 * u, y:p.y + 4 * u}, fmt(v, 1) + ' kn', 'lbl-ground', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"'));
-    }
+    const R = 1.3 * Math.max(q.ro, q.ri) + 0.1; if (q.x + R < vx0 || q.x - R > vx1 || q.y + R < vy0 || q.y - R > vy1) continue;
+    let m = CURARR.made.get(q); if (m === undefined){ m = curArrowsOf(q, u, H, lab, halo); CURARR.made.set(q, m); }
+    if (m) out.push(m);
   }
-  CURARR.k = key; CURARR.svg = g.join(''); return CURARR.svg;
+  return out.join('');
 }
 function renderDyn(){
   // the boat where she is between the simulation's minutes (livePose), so she moves on the chart at every redraw (5 a second), not

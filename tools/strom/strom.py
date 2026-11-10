@@ -14,8 +14,11 @@
 #      thin neck of land is dropped), its axis (out of the sea, into the basin), its width across the axis, its mean depth across it
 #      (the 50 m depth layer), and how far the channel stays narrow on each side (where it is three times as wide, the jet is spent).
 #   5. Kept where the tide there (src/data/tide.json, M2 + S2) would give at least SND.minU m/s at the springs.
-# Written to src/data/strom.json (cols: x, y km in the game's frame; ax, ay the axis into the basin; w and d in m; A km2; ro and ri the
-# reach out and in, km), which the page takes in at build (core/06e-anchor.js).
+#   6. Held to what the narrows can carry: U <= sqrt(2 g x the tide's range) (the head across them is at most the range), and 4 knots
+#      where the depth layer has no cell in the section; the basin the game reckons with (A) is then what the narrows can fill.
+# Written to src/data/strom.json (cols: x, y km in the game's frame; ax, ay the axis into the basin; w and d in m; A km2, the basin the
+# narrows fill; ro and ri the reach out and in, km; U the stream at the springs, m/s; A0 the whole basin behind, km2), which the page
+# takes in at build (core/06e-anchor.js).
 #   python3 tools/strom/strom.py [--only x0,y0,x1,y1]     (needs numpy, scipy and numba; about ten minutes for the whole coast)
 import os, sys, json, zlib, time, math, argparse
 import numpy as np
@@ -26,7 +29,8 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.pat
 GAME = os.path.join(ROOT, 'tools', 'map', 'out', 'game'); OUT = os.path.join(ROOT, 'src', 'data', 'strom.json')
 TIDE = os.path.join(ROOT, 'src', 'data', 'tide.json')
 # minA: the least basin (km2); maxW: the widest sound (m); minU: the least stream at the springs (m/s) to keep
-SND = dict(minA=0.5, maxW=3000, minU=0.15, cap=250, c=0.1)
+# unknownU: the most a sound whose depth the 50 m layer does not have may run (m/s, 4 knots)
+SND = dict(minA=0.5, maxW=3000, minU=0.15, cap=250, c=0.1, unknownU=2.06)
 DT = {'u8': np.uint8, 'u8p': np.uint8, 'i16': np.int16, 'f32': np.float32}
 
 def pack_blocks(fn):
@@ -270,7 +274,7 @@ def main():
         # a section narrower than the 50 m depth cells (all of them land there): the water's cells within 150 m, else 2 m (the game's own
         # word for a sound the mask closed, depthWater in core/03-simulation.js)
         if not ds: ds = [v_ for v_ in (depth_at(X + 0.05 * i_, Y + 0.05 * j_) for i_ in range(-3, 4) for j_ in range(-3, 4)) if v_ > 0]
-        d = max(1.0, float(np.mean(ds))) if ds else 2.0
+        d = max(1.0, float(np.mean(ds))) if ds else 2.0; dknown = bool(ds)
         def reach(dirn):   # how far the channel stays narrow: until the section is three times as wide (at most 4 km)
             kk = k; last = 0.0
             while 0 <= kk + dirn < len(path):
@@ -280,7 +284,7 @@ def main():
                 last = L_
             return max(0.15, last)
         amp = TP[np.argmin((TP[:, 0] - X) ** 2 + (TP[:, 1] - Y) ** 2), 2]
-        return dict(x=X, y=Y, ux=ux, uy=uy, w=max(25.0, w), d=d, ro=reach(-1), ri=reach(1), amp=amp)
+        return dict(x=X, y=Y, ux=ux, uy=uy, w=max(25.0, w), d=d, ro=reach(-1), ri=reach(1), amp=amp, dknown=dknown)
     def up(j, n):   # n steps toward the sea along the tree
         k = 0
         while par[j] >= 0 and k < n: j = par[j]; k += 1
@@ -326,7 +330,7 @@ def main():
         # a way the 100 m cells made over a thin neck of land: shut, and the flood again
         for i in bad: A8[i] = 0; E[i] = 0; blocked += 1
     # the other ways out of each basin: the flow is shared by the sections (w d^1.5, as a channel with friction carries it)
-    mark = np.zeros(nx * ny, np.uint16); out = []; st = dict(sounds=len(meas), blocked=blocked, shared=0, slow=0)
+    mark = np.zeros(nx * ny, np.uint16); out = []; st = dict(sounds=len(meas), blocked=blocked, shared=0, slow=0, choked=0, same=0)
     for tag, (i, m) in enumerate(meas.items(), 1):
         A = float(ws[i]) * 0.000625; share = 1.0
         rb = max(15, 3 * int(E[i]))
@@ -348,15 +352,23 @@ def main():
             if only and not (only[0] <= mm['x'] <= only[2] and only[1] <= mm['y'] <= only[3]): continue
             Ab = A * f_; U = Ab * 1e6 * mm['amp'] * om / (mm['w'] * mm['d'])
             if U < SND['minU']: st['slow'] += 1; continue
-            out.append([round(mm['x'], 3), round(mm['y'], 3), round(mm['ux'], 3), round(mm['uy'], 3), round(mm['w']), round(mm['d'], 1), round(Ab, 2), round(mm['ro'], 2), round(mm['ri'], 2), round(U, 2)])
-    # one entry per place: two within a section's width of each other (the same sound found twice) keep the larger basin
+            # the most the water can run through the narrows: the head across them is at most the range of the tide outside (Bernoulli,
+            # U <= sqrt(2 g range)), and where the 50 m depth has no cell in the section (the depth unknown) at most 4 knots; the basin
+            # is then taken as what the narrows can fill (Ae, the area the game reckons with), the whole one kept in A0
+            Uc = min(math.sqrt(2 * 9.81 * 2 * mm['amp']), U if mm['dknown'] else SND['unknownU'])
+            Ae = Ab * min(1.0, Uc / U)
+            if Ae < Ab: st['choked'] += 1
+            out.append([round(mm['x'], 3), round(mm['y'], 3), round(mm['ux'], 3), round(mm['uy'], 3), round(mm['w']), round(mm['d'], 1), round(Ae, 2), round(mm['ro'], 2), round(mm['ri'], 2), round(min(U, Uc), 2), round(Ab, 2)])
+    # one entry per place: the same strait found twice (from two candidates, or as one basin's sound and another's other way out) lies
+    # within a section's width, or within the reach of the one kept along much the same axis; the larger basin is kept
     out.sort(key=lambda r: -r[6]); fin = []
     for r in out:
-        if any(math.hypot(r[0] - q[0], r[1] - q[1]) * 1000 < max(150, q[4]) for q in fin): continue
+        if any(math.hypot(r[0] - q[0], r[1] - q[1]) * 1000 < max(150, q[4]) or (math.hypot(r[0] - q[0], r[1] - q[1]) < max(q[7], q[8], 0.3) and abs(r[2] * q[2] + r[3] * q[3]) > 0.7) for q in fin):
+            st['same'] += 1; continue
         fin.append(r)
     fin.sort(key=lambda r: (r[1], r[0]))
     D = {'src': 'tools/strom/strom.py: the 25 m mask and the 50 m depth of tools/map/out/game, tide.json M2+S2', 'made': time.strftime('%Y-%m-%d'),
-         'cols': ['x', 'y', 'ax', 'ay', 'w', 'd', 'A', 'ro', 'ri', 'U'], 's': fin}
+         'cols': ['x', 'y', 'ax', 'ay', 'w', 'd', 'A', 'ro', 'ri', 'U', 'A0'], 's': fin}
     json.dump(D, open(a.out, 'w'), separators=(',', ':'))
     st['final'] = len(fin); st['s'] = round(time.time() - t0); st['kB'] = os.path.getsize(a.out) // 1024
     print(json.dumps(st))
