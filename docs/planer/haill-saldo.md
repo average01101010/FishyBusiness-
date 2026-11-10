@@ -44,7 +44,7 @@ Jonas' økt, grenen `claude/o6-funn-6-haill-saldo-ume93b`. Ingenting er bygd, in
 
 ## 3. Fasene (én økt hver)
 
-Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1** og **HS2**. Etter lansering: **HS3–HS5**. Alle rører ekte penger eller gaver: PR-en venter på Jonas før utrulling (`CLAUDE.md`), og migreringen kjøres av økta først når Jonas har sett PR-en. Patchnotes nevner ingenting av dette (det er ekte penger og juks); bare en ny linje i Haill-appen, hvis noen, beskrives ved hva den gjør.
+Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1**, **HS2** og **HS3** (V2 B, Jonas 10.11.2026: så snart som mulig, før flere spillere slippes inn i early access). Etter lansering: **HS4** (etter V3) og **HS5**. Alle rører ekte penger eller gaver: PR-en venter på Jonas før utrulling (`CLAUDE.md`), og migreringen kjøres av økta først når Jonas har sett PR-en. Patchnotes nevner ingenting av dette (det er ekte penger og juks); bare en ny linje i Haill-appen, hvis noen, beskrives ved hva den gjør.
 
 ### HS1 Velkomstgaven fra serveren, én gang (steg 95, før lansering)
 
@@ -82,7 +82,7 @@ Før lansering (over lanseringslinja, sporet «Lansering», med L1e): **HS1** og
   - ingen stikkprøver langs kysten (haillen er lik overalt; svaret sier hvorfor)
 - **Måles:** i admin, haill per kilde (kjøpt, gave, takk): levert, brukt, ubrukt, og hendelsen `haill_back` når en lagring får en haill igjen. Den viser hvor ofte et kjøp ville gått tapt før.
 
-### HS3 Trim, Skippertak og «Ferdig nå» tilbake med en tapt lagring (steg 97; før eller etter lansering etter V2)
+### HS3 Trim, Skippertak og «Ferdig nå» tilbake med en tapt lagring (steg 97, før lansering, rett etter HS2)
 
 - `shop_pending` gir også de leverte trim-, Skippertak- og verftsgrantene fra de siste 7 døgnene. Spillet gir på nytt en som ikke står i `S.shopGiven` og ikke er gått ut: trim og Skippertak med tida som er igjen regnet fra `done_at` (aldri forlenget), «Ferdig nå» som en kreditt når jobben ikke finnes i lagringen. `S.shopGiven` må da holde alle ID-ene fra de siste 7 døgnene.
 - **Filer:** migrering (`shop_pending`), `ui/10i-shop.js` (`shopClaim`, `shopGive`), `core/15-energy.js` (`giveSkip` med sluttid), `tests/kjoptest.py`, `tests/boostklokke.py`.
@@ -111,7 +111,7 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 - **V1. En kjøpt haill aktivert uten nett (HS2).** **Besvart 10.11.2026, A** (Jonas: «V1: A»).
   - **A (anbefalt):** den aktiveres med en gang, og serveren får vite det når nettet er tilbake. Spilleren venter aldri på nettet for noe de har betalt for; det verste er at den kan brukes to ganger hvis to enheter er uten nett samtidig, og bare én enhet styrer om gangen.
   - B: knappen sier «Trenger nett» til serveren har svart.
-- **V2. Trim, Skippertak og «Ferdig nå» som går tapt med en lagring (HS3).** **Besvart 10.11.2026, A** (Jonas: «V2: A, det burde rettes asap.»). Lest som: HS3 er det første steget etter lanseringen, rett etter HS2; til da retter admin det med en grant. Mente Jonas før lanseringen, flyttes steg 97 over lanseringslinja (det er B).
+- **V2. Trim, Skippertak og «Ferdig nå» som går tapt med en lagring (HS3).** **Besvart 10.11.2026, B** (Jonas: «V2: A, det burde rettes asap.», så presisert: «Jeg mener at dette burde vi fikse med en gang, så snart som mulig fordi jeg vurderer å ta inn flere spillere til early access/ beta-testing, og da må alt dette med fungere som det skal»). HS3 er over lanseringslinja, rett etter HS2, og HS1–HS3 tas så snart som mulig, før flere spillere slippes inn i early access.
   - **A (anbefalt):** etter lansering, slik V7 A sier; til da retter admin det for hånd med en grant (`comp`), som i dag. De varer høyst tre døgn, og det har ikke skjedd ennå.
   - B: før lansering, sammen med HS2.
   - C: aldri.
@@ -145,5 +145,6 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
 
 ## Status
 
-- 10.11.2026: Jonas svarte V1 A, V2 A («det burde rettes asap»: HS3 først etter lanseringen) og V4 A; V3 venter på svaret etter mer kontekst (anbefalingen endret til B). Startmeldingen for HS2 er skrevet (`start/96.md`).
+- 10.11.2026: V2 presisert av Jonas: før lanseringen og så snart som mulig (early access); HS3 flyttet over lanseringslinja, startmeldingen skrevet (`start/97.md`).
+- 10.11.2026: Jonas svarte V1 A, V2 A («det burde rettes asap») og V4 A; V3 venter på svaret etter mer kontekst (anbefalingen endret til B). Startmeldingen for HS2 er skrevet (`start/96.md`).
 - 10.11.2026: planen skrevet (steg 49, Jonas' økt, grenen `claude/o6-funn-6-haill-saldo-ume93b`). HS1 er klar (ingen valg; V7 A avgjorde den); HS2 venter på V1, HS3 på V2, HS4 på V3, HS5 på V4. Valgene står som valg 29 i køen. Ingenting er bygd.
