@@ -4,7 +4,14 @@
 // told you first: «Kan jeg fiske her?» is the answer. A clean check is one sentence, «Kontrollert» in the papers and a smaller chance of the
 // next one for two weeks; a remark gets the rule read out with its source, and exactly the consequence the game has today (the cod and the
 // bycatch beyond the rule are confiscated at the landing, ui/08-actions.js). No fine (V-A A). Measured in the event kv_check.
-const KV = {p:0.5, pAfterOk:0.25, okFor:14 * 1440, gale:13.9, visitMin:30, minLand:3, nets:80, hooks:5000, keep:10, side:0.028};
+const KV = {p:0.5, pAfterOk:0.25, okFor:14 * 1440, gale:13.9, visitMin:30, minLand:3, nets:80, hooks:5000, keep:10, gap:{kai:1.5, sjo:6}};
+// the coast guard's two ships (tools/boats/kv.py, steg 100, valg 30 V1 C, Jonas 10.11.2026): the 47 m one at the quay and along the coast
+// (the inner coast guard), the 93 m one at sea aboard an ocean vessel (the outer coast guard, as at Svalbard and on the banks); each
+// model's own length and beam, and the 93 m one's RIB (V2 A). KV.gap is the clear water between her hull and the boat's (m): rafted on
+// fenders at the quay, a few metres off at sea; docs/skipsmodeller/kystvakt-grunnlag.md kap. 4
+const KVS = {kyst:{t:'kv47', L:47.2, B:10.3}, hav:{t:'kv90', L:93.0, B:16.6, rib:{L:8.5, B:3.0}}};
+// the RIB's stages through the check at sea (minutes from the visit's start, together KVH.visitMin): lowered from the davit (2), across
+// to the vessel (6), alongside her port side while the inspectors are aboard (74), back (6), hoisted in (2); the times are assumed
 // the source each code cites, for Kystposten's story (the story carries the codes only, 09h-press.js; the texts stay in rulesAt)
 const KV_REF = {kvoteh:'J-187-2026 § 14', seiby:'J-187-2026 § 14', lby:'J-128-2026', bby:'J-128-2026', f49:'Høstingsforskriften § 49', f26:'Høstingsforskriften § 26', f26b:'Høstingsforskriften § 26', f31:'Høstingsforskriften § 31', f33:'Høstingsforskriften § 33', f33a:'Høstingsforskriften § 33a', f18:'Høstingsforskriften § 18', kv40:'Høstingsforskriften § 40', j32b:'J-187-2026 § 32', j32c:'J-187-2026 § 32', henn:'J-187-2026 § 32', borg:'J-187-2026 § 32', kvote:'J-187-2026', byc:'Deltakerforskriften', stengt:'J-melding om stengt felt', gyte:'Forskrift om fredningsområder for kysttorsk', null:'Oslofjordforskriften', oslo:'Oslofjordforskriften', oslog:'Oslofjordforskriften', lopp:'Verneforskriften for Lopphavet', bk1000:'Forskrift om bunnredskap', kc2:'J-136-2026', kc10:'J-138-2026', skag:'Torskeforskriften for Nordsjøen og Skagerrak § 1',
   sk0:'J-237-2025 § 2', sk1:'J-237-2025 § 1', sk2:'J-237-2025 § 1', sk3:'J-237-2025 § 5', sk5:'J-237-2025 § 5', skq:'J-237-2025 §§ 3 og 4', sk7:'Høstingsforskriften § 28', f28:'Høstingsforskriften § 28', f66:'Høstingsforskriften § 66', f29:'Høstingsforskriften § 29 og vedlegg 3f', f18s:'Høstingsforskriften § 18', f25:'Høstingsforskriften § 25', f47s:'Høstingsforskriften §§ 46 og 47', f51s:'Høstingsforskriften § 51', sv58:'Høstingsforskriften § 58', vme:'Forskrift om sårbare marine økosystemer', vmen:'Forskrift om sårbare marine økosystemer'};
@@ -14,7 +21,10 @@ const KV_REF = {kvoteh:'J-187-2026 § 14', seiby:'J-187-2026 § 14', lby:'J-128-
 // bycatch of saithe (§ 14: 25 % in each catch and of the landed catch), ling and tusk (J-128-2026 and the proposal for 2027: 35 % ling,
 // 15 % tusk after the stop), and a sample of the last catch for the minimum sizes (§ 47) and the admixture (§ 49). The texts of §§ 47,
 // 49, 50, 51, 66 and 68 were read on Lovdata 06.11.2026 (last amended FOR-2026-10-02-1999); § 14 in J-187-2026 on fiskeridir.no.
-const KVH = {visitMin:90, side:0.18, step:1.0, minFish:20, minHaul:100, keep:3};
+const KVH = {visitMin:90, side:0.18, gapMin:30, step:1.0, minFish:20, minHaul:100, keep:3};
+const KVRIB = [['ned', 2], ['ut', 6], ['side', 74], ['inn', 6], ['opp', 2]];
+// the RIB's stage min minutes into the check: {ph, f} (f the stage's own 0..1); 'davit' before and after; pure, for tests/unit
+function kvRib(min){ if (!(min >= 0)) return {ph:'davit', f:0}; let a = 0; for (const [ph, d] of KVRIB){ if (min < a + d) return {ph, f:(min - a) / d}; a += d; } return {ph:'davit', f:1}; }
 // § 47 and the length–weight curve are the fishing's own (MIN47, min47Cm, lwKg and minKgAt in 02-species-gear.js, steg 59, 10.11.2026), so
 // the sample measures by the same minimum sizes the catch is sorted by. The species sampled are the ones § 49 counts (kvMix); ling and
 // tusk have none, and the halibut and the redfish are not in the admixture rules the sample is for
@@ -172,23 +182,52 @@ function kvHour(){
 // at sea aboard an ocean vessel she lies off and sends the inspectors over in the ship's boat, and the check takes longer (the catch, the
 // sample, the marking along the line; 90 minutes, assumed); the vessel goes on working meanwhile
 function kvArrive(){
-  const b = S.boat, K = kvState(), sea = kvHav() && b.status !== 'port'; K.visit = {t0:S.t, hav:sea || null}; K.visit.p = kvSide(b); K.visit.hd = b.heading || 0;
+  const b = S.boat, K = kvState(), sea = kvHav() && b.status !== 'port'; K.visit = {t0:S.t, hav:sea || null}; const q = kvPose(b); K.visit.p = q.p; K.visit.hd = q.hd;
   const nm = S.boatName || 'Havbris';
   if (sea) log('Kystvakta på VHF: «' + nm + '», dette er Kystvakta. Vi ligger av babord og setter over inspektører i lettbåten for kontroll. Fortsett arbeidet.', 'The coast guard on the VHF: «' + nm + '», this is the coast guard. We are lying off and sending inspectors over in the boat for an inspection. Carry on working.', 'nav');
   else log('Kystvakta på VHF: «' + nm + '», dette er Kystvakta. Vi kommer langs siden for kontroll.', 'The coast guard on the VHF: «' + nm + '», this is the coast guard. We are coming alongside for an inspection.', 'nav');
   if (typeof toast === 'function') toast(sea ? gL('Kystvakta setter over inspektører for kontroll.', 'The coast guard is sending inspectors over.') : gL('Kystvakta kommer langs siden for kontroll.', 'The coast guard is coming alongside for an inspection.'));
   if (typeof hooks !== 'undefined' && hooks.onNpcChange) try { hooks.onNpcChange(); } catch (e){}
 }
-// her place: off the starboard side, following the boat
-function kvSide(b){ const hd = b.heading || 0, V = S.kv && S.kv.visit, d = V && V.hav ? -KVH.side : KV.side; return {x:b.pos.x + Math.cos(hd) * d, y:b.pos.y + Math.sin(hd) * d}; }
+// which ship comes: the 93 m one to an ocean vessel at sea, else the 47 m one
+const kvShip = hav => hav ? KVS.hav : KVS.kyst;
+// her centre's distance across from the boat's (km, + to starboard, as kvPose lays it out): at the quay rafted on her port side (the quay
+// is to her starboard, berthPose), along the coast off her starboard side, both with the two half-beams and the gap between; at sea aboard
+// an ocean vessel off her port side, KVH.side or more (never closer than KVH.gapMin of clear water); pure, for tests/unit
+function kvOff(bB, sh, where){
+  const half = (bB || 4) / 2 + sh.B / 2;
+  if (where === 'hav') return -Math.max(KVH.side, (half + KVH.gapMin) / 1000);
+  return where === 'kai' ? -(half + KV.gap.kai) / 1000 : (half + KV.gap.sjo) / 1000;
+}
+// her place and heading, following the boat: at the quay alongside the boat where she lies (berthPose: the boat's place in the 3D view,
+// not the harbour's point that b.pos is at the quay), moved out a metre at a time while her hull would stand on land, on a pier or in a
+// harbour unit (up to 40 m)
+function kvPose(b){
+  const V = S.kv && S.kv.visit, hav = !!(V && V.hav), sh = kvShip(hav), bB = (VESSELS[b.type] || {}).beam || 4;
+  let c = b.pos, hd = b.heading || 0, where = hav ? 'hav' : 'sjo';
+  if (!hav && b.status === 'port' && b.port && typeof berthPose === 'function'){
+    let bp = null; try { bp = berthPose(b.port, b.type, typeof berthKind === 'function' ? berthKind(b) : 'main') || berthPose(b.port, b.type); } catch (e){ bp = null; }
+    if (bp){ c = {x:bp.x, y:bp.y}; hd = bp.hd; where = 'kai'; }
+  }
+  const d0 = kvOff(bB, sh, where), sg = d0 < 0 ? -1 : 1, at = d => ({x:c.x + Math.cos(hd) * d, y:c.y + Math.sin(hd) * d});
+  if (where === 'hav') return {p:at(d0), hd};
+  const fx = Math.sin(hd), fy = -Math.cos(hd), rx = Math.cos(hd), ry = Math.sin(hd), hl = sh.L / 2000, hb = sh.B / 2000;
+  const blocked = p => { for (const [u, w] of [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 1], [0, -1], [0.5, 1], [-0.5, 1]]){ const q = {x:p.x + fx * hl * u + rx * hb * w, y:p.y + fy * hl * u + ry * hb * w};
+    if (typeof berthBlocked === 'function' ? berthBlocked(q, 0) : isLand(q)) return true; } return false; };
+  for (let k = 0; k <= 40; k++){ const p = at(d0 + sg * k / 1000); try { if (!blocked(p)) return {p, hd}; } catch (e){ return {p, hd}; } }
+  return {p:at(d0), hd};
+}
+function kvSide(b){ return kvPose(b).p; }
 function kvMinute(){
   const K = S.kv; if (!K || !K.visit) return; const b = S.boat, v = K.visit;
-  v.p = kvSide(b); v.hd = b.heading || 0; v.v = b.status === 'sailing' ? b.v || 0 : 0;
+  const q = kvPose(b); v.p = q.p; v.hd = q.hd; v.v = b.status === 'sailing' ? b.v || 0 : 0;
   if (S.t - v.t0 >= (v.hav ? KVH.visitMin : KV.visitMin)) try { kvFinish(); } catch (e){ console.warn('kv', e); K.visit = null; }
 }
 // the coast guard's ship on the chart and in 3D while she lies alongside (05-vessels.js npcStates)
-function kvNpcs(){ const K = S.kv; if (!K || !K.visit) return []; const v = K.visit;
-  return [{id:'kv', name:'Kystvakta', type:'kyst', p:v.p, hd:v.hd, cog:v.hd, v:Math.round((v.v || 0) * 10) / 10, st:v.v > 0.5 ? 'sailing' : 'idle', coast:true, kv:true, L:15, B:5, liv:1}]; }
+// her own model (vtype: tools/boats/kv.py), length and beam; at sea her RIB's clock (rib.t0, kvRib)
+function kvNpcs(){ const K = S.kv; if (!K || !K.visit) return []; const v = K.visit, sh = kvShip(v.hav);
+  return [{id:'kv', name:'Kystvakta', type:'kyst', vtype:sh.t, p:v.p, hd:v.hd, cog:v.hd, v:Math.round((v.v || 0) * 10) / 10, st:v.v > 0.5 ? 'sailing' : 'idle', coast:true, kv:true, L:sh.L, B:sh.B, liv:1,
+    rib:v.hav && sh.rib ? {t0:v.t0, L:sh.rib.L, B:sh.rib.B} : null}]; }
 // the sums of gear in the sea where a predicate holds (§ 33 and § 33a inside the fjord lines); pure, for tests/unit
 function kvSums(sets, inside){ let nets = 0, hooks = 0; for (const s of sets || []){ if (!inside(s)) continue; if (s.kind === 'garn') nets += s.n || 0; else if (s.kind === 'line') hooks += s.hooks || 0; } return {nets, hooks}; }
 // the species a set or the hold mostly holds (for the rules that ask what you fish for)

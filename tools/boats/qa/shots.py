@@ -36,7 +36,9 @@ def look(night=False):
         bg.inputs['Color'].default_value = (0.55, 0.68, 0.85, 1); bg.inputs['Strength'].default_value = 0.45
         bpy.data.objects['sun'].data.energy = 3.2
 if 'water' not in bpy.data.objects:
-    bm = bmesh.new(); s_ = 80; bm.faces.new([bm.verts.new(p) for p in ((-s_, -s_, WL), (s_, -s_, WL), (s_, s_, WL), (-s_, s_, WL))])
+    # (round the boat's middle and big enough for her: the 93 m coast guard ship's bow stood past the old 80 m square, kv.py 10.11.2026)
+    bm = bmesh.new(); s_ = max(80.0, 2.5 * (B.XF - getattr(B, 'XA', 0.0))); xm_ = (B.XF + getattr(B, 'XA', 0.0)) / 2
+    bm.faces.new([bm.verts.new(p) for p in ((xm_ - s_, -s_, WL), (xm_ + s_, -s_, WL), (xm_ + s_, s_, WL), (xm_ - s_, s_, WL))])
     obj_from_bm('water', bm, [mat('water', (0.03, 0.09, 0.12), 0.9)])
 W = bpy.data.objects['water']
 a = math.radians(38); D = 3.3 * Lb

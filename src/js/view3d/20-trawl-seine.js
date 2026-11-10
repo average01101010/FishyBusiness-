@@ -258,17 +258,20 @@
   // a fishing NPC's model by her length and beam (FLEET's, and the coast's from tools/map/npc.py): the buffers by model, lod and livery,
   // the scale by boat
   // another player's boat is her own type's model (Jonas 05.10.2026: a friend in the same old wooden boat showed as a white box boat)
-  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
-  const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
+  // the coast guard's ship (steg 100, tools/boats/kv.py) is her own model too, kv47 or kv90 (kvNpcs' vtype), not in VESSELS: she cannot be
+  // bought; until her model is in she is the kit's boat of her size, as before. She is drawn near out to 900 m (there is only one of her,
+  // and the 93 m ship lies 180 m off the vessel she inspects)
+  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
+  const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 900 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
   const NKB = {};
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
   function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
-    if (!(k in NKB)){ const m = npcModel(t, lod, liv), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
+    if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
     return NKB[k]; }
   function npcMesh(n, lod){
-    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key
+    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : n.kv ? npcType(n) : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
     const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
-    const V = VESSELS[t], sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
+    const V = VESSELS[t] || (GLBM[t] && GLBM[t].ex) || {len:n.L, beam:n.B}, sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
   }
   let npcNow = [];
@@ -342,11 +345,44 @@
   // a boat's own phase for her rocking (0 to 2π, fixed by her id)
   const NPHS = new Map();
   function npcPhase(id){ let p = NPHS.get(id); if (p == null){ p = (lookHash(String(id)) % 6283) / 1000; if (NPHS.size > 2000) NPHS.clear(); NPHS.set(id, p); } return p; }
+  // the coast guard's ship on her inspection (core/09j-kystvakt.js kvNpcs, steg 100): her model, the skipper on her bridge and two hands
+  // on deck, and at sea her RIB (the GLB's part 'rib', V2 A) through kvRib's stages over the game's minutes: lowered from the starboard
+  // davit to the water under it, across to the vessel, alongside its port side while the inspectors are aboard, back, hoisted in
+  let KVRB = null;
+  function kvDraw(n, eye, t){
+    const K = n.K, G = K.geo || {}, M = chain(n.M, K.S), at = (p, r) => chain(M, M4.T(p[0], p[1], p[2]), M4.RY(r || 0));
+    drawN(K.hull, M);
+    if (!K.glass) return;
+    if (G.skipperAt) drawN(npcPerson('skip', n), at(G.skipperAt));
+    (G.crewSpots || []).slice(0, 2).forEach((c, i) => drawN(npcPerson('crew', {id:'kv' + i}, i), at(c, c[3])));
+    if (n.rib && G.rib) kvRibDraw(n, G.rib, G, M, eye, t);
+  }
+  function kvRibDraw(n, R, G, M, eye, t){
+    if (KVRB === null || KVRB.t !== n.vtype){ const o = typeof glbPart === 'function' ? glbPart(n.vtype, 'rib') : null; KVRB = {t:n.vtype, m:o ? upA(o) : null}; }
+    if (!KVRB.m) return;
+    const st = kvRib(S.t + (typeof currentFrac === 'function' ? currentFrac() : 0) - n.rib.t0), sm = u => u * u * (3 - 2 * u);
+    const wy = (x, z) => (typeof seaH === 'function' ? seaH(x + eye[0], z + eye[2], t) : (env.tide || 0)) - eye[1];
+    const C = xf(M, R.at), W0 = xf(M, [(G.side || 8) + (R.B || 3) / 2 + 1.2, 0, R.at[2]]), W = [W0[0], wy(W0[0], W0[2]), W0[2]];
+    // alongside the vessel's port side, as the 3D view has her (bv), her half-beam and a little water between
+    const hb = (GEO(vtype()).beam || (VESSELS[vtype()] || {}).beam || 4) / 2 + (R.B || 3) / 2 + 0.6, sx = Math.cos(bv.head), sz = Math.sin(bv.head);
+    const T0 = [bv.x - sx * hb - eye[0], 0, bv.z - sz * hb - eye[2]], T = [T0[0], wy(T0[0], T0[2]), T0[2]];
+    const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u, a[2] + (b[2] - a[2]) * u];
+    let p = C, hd = n.hd, water = false;
+    if (st.ph === 'ned' || st.ph === 'opp'){ const u = st.ph === 'ned' ? st.f : 1 - st.f, top = [W[0], C[1], W[2]]; p = u < 0.4 ? lerp(C, top, sm(u / 0.4)) : lerp(top, W, sm((u - 0.4) / 0.6)); }
+    else if (st.ph === 'ut' || st.ph === 'inn'){ const u = sm(st.f), a = st.ph === 'ut' ? W : T, b = st.ph === 'ut' ? T : W; p = lerp(a, b, u); p[1] = wy(p[0], p[2]); water = true;
+      hd = Math.atan2(b[0] - a[0], -(b[2] - a[2])); if (st.f > 0.85) hd += angDiff(hd, st.ph === 'ut' ? bv.head : n.hd) * (st.f - 0.85) / 0.15; }
+    else if (st.ph === 'side'){ p = T; hd = bv.head; water = true; }
+    const roll = water ? Math.sin(t * 1.3 + 0.7) * 0.04 * (0.3 + WV.hs) : 0, pitch = water ? Math.sin(t * 1.1) * 0.03 * (0.3 + WV.hs) : 0;
+    const Mr = model(p[0], p[1], p[2], -hd, pitch, roll); drawN(KVRB.m, Mr);
+    if (st.ph !== 'davit' && R.cox){ const c = R.cox; drawN(npcPerson('skip', {id:'kvrib'}), chain(Mr, M4.T(c[0], c[1], c[2])));
+      // the two inspectors on the jockey seats going over and back; alongside they are aboard the vessel
+      if (st.ph !== 'side') for (const [i, dx] of [[0, -0.45], [1, 0.45]]) drawN(npcPerson('crew', {id:'kvi' + i}, i), chain(Mr, M4.T(dx, c[1], c[2] + 0.9))); }
+  }
   function drawNPC(eye, t, H, VP){
     if (!NPCM) return;
     H = npcClock(H);
     npcNow = npcStates(H).filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000);   // the rescue boat has her own model (RB)
-    const kit = [];
+    const kit = [], kvl = [];
     // (a test camera following a boat of the fleet, G3.npcLook: aimed at her and from astern of her as she goes)
     if (SIGNV.npc){ const f = npcNow.find(q => q.id === SIGNV.npc.id); if (f){ SIGNV.look = [f.p.x * 1000, (env.tide || 0) + 3, f.p.y * 1000]; cam.yaw = f.hd + SIGNV.npc.off - bv.head; } }
     for (const n of npcNow){
@@ -367,14 +403,15 @@
       if (!n.ptow && !(n.tur && n.st === 'tow')) n.hd = npcHead(n, t);
       // (the rocking's phase is the boat's own, from her id: it was her place in metres, so a boat under way at the game's pace, tens of
       // metres a second on the screen, pitched and rolled several times a second, a shudder; Jonas' video 03.11.2026)
-      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry', y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
+      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry' || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, roll);
       const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
-      if (n.K) kit.push(n); else drawLit(NPCM[n.type], n.M);
+      if (n.K) (n.kv ? kvl : kit).push(n); else drawLit(NPCM[n.type], n.M);
     }
     npcWarm(eye);
-    if (!kit.length) return;
+    if (!kit.length && !kvl.length) return;
     const P = people(); nSetup(VP);
+    for (const n of kvl) kvDraw(n, eye, t);
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
       const lf = lifeOn(n.id, n.M, K.sv, K.t, npcAge(n), false, n.st === 'fishing' || n.st === 'port' ? 0 : 4, G); drawN(K.hull, chain(n.M, K.S)); if (lf) lifeOff(); drawSail(K.t, chain(n.M, K.S), n.st !== 'port'); drawHatch(K.t, G, chain(n.M, K.S), 0); drawShipCrane(K.t, G, chain(n.M, K.S), null);
       // an ocean trawler towing (05d-hav.js): her trawl out astern as yours is when towing
