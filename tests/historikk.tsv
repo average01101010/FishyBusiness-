@@ -1814,3 +1814,9 @@
 2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	yardtest	OK	738	3d	alene	
 2026-11-10 06:50	ccr-07d61e23-19971d	48c325b	signtest	FEIL	0	3d	alene	avsluttet med kode -15
 2026-11-10 06:56	ccr-07d61e23-19971d	48c325b	f1test	OK	395	3d	alene	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	boottest	OK	33	lite	samtidig	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	vesseltest	OK	21	lite	samtidig	
+2026-11-10 07:03	ccr-07d61e23-19971d	9dc7b51	maletest	OK	18	lite	samtidig	
+2026-11-10 07:04	ccr-07d61e23-19971d	9dc7b51	dbg23o	OK	44	3d	alene	
+2026-11-10 07:11	ccr-07d61e23-19971d	9dc7b51	f1test	OK	444	3d	alene	
+2026-11-10 07:17	ccr-07d61e23-19971d	8fa561d	boottest	OK	27	lite	alene	
