@@ -210,17 +210,23 @@ function kvPose(b){
     if (bp){ c = {x:bp.x, y:bp.y}; hd = bp.hd; where = 'kai'; }
   }
   const d0 = kvOff(bB, sh, where), sg = d0 < 0 ? -1 : 1, at = d => ({x:c.x + Math.cos(hd) * d, y:c.y + Math.sin(hd) * d});
-  if (where === 'hav') return {p:at(d0), hd};
   const fx = Math.sin(hd), fy = -Math.cos(hd), rx = Math.cos(hd), ry = Math.sin(hd), hl = sh.L / 2000, hb = sh.B / 2000;
   const blocked = p => { for (const [u, w] of [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 1], [0, -1], [0.5, 1], [-0.5, 1]]){ const q = {x:p.x + fx * hl * u + rx * hb * w, y:p.y + fy * hl * u + ry * hb * w};
     if (typeof berthBlocked === 'function' ? berthBlocked(q, 0) : isLand(q)) return true; } return false; };
-  for (let k = 0; k <= 40; k++){ const p = at(d0 + sg * k / 1000); try { if (!blocked(p)) return {p, hd}; } catch (e){ return {p, hd}; } }
+  // out a metre at a time (at sea ten, up to 300 m more, and then the other side); a map block not in yet counts as blocked
+  const step = where === 'hav' ? 0.01 : 0.001, n = where === 'hav' ? 30 : 40;
+  for (const s of where === 'hav' ? [sg, -sg] : [sg]) for (let k = 0; k <= n; k++){ const p = at((s === sg ? d0 : -d0) + s * k * step); let bad = true; try { bad = blocked(p); } catch (e){ bad = true; } if (!bad) return {p, hd}; }
   return {p:at(d0), hd};
 }
+// the key of what her place depends on (the boat's harbour, berth and type, or her position and heading at sea): kvMinute works her
+// place out again only when it changes (at the quay that is once, not every game minute)
+const kvKey = b => b.status === 'port' ? 'p|' + b.port + '|' + b.type + '|' + (typeof berthKind === 'function' ? berthKind(b) : '') : 's|' + b.pos.x.toFixed(4) + '|' + b.pos.y.toFixed(4) + '|' + (b.heading || 0).toFixed(3) + '|' + b.type;
 function kvSide(b){ return kvPose(b).p; }
 function kvMinute(){
   const K = S.kv; if (!K || !K.visit) return; const b = S.boat, v = K.visit;
-  const q = kvPose(b); v.p = q.p; v.hd = q.hd; v.v = b.status === 'sailing' ? b.v || 0 : 0;
+  // (a check at sea goes on if the vessel comes into harbour: the ship stays where she lay outside, the inspectors finish by the boat)
+  const k = kvKey(b); if (k !== v.key && !(v.hav && b.status === 'port')){ const q = kvPose(b); v.p = q.p; v.hd = q.hd; v.key = k; }
+  v.v = v.hav && b.status === 'port' ? 0 : b.status === 'sailing' ? b.v || 0 : 0;
   if (S.t - v.t0 >= (v.hav ? KVH.visitMin : KV.visitMin)) try { kvFinish(); } catch (e){ console.warn('kv', e); K.visit = null; }
 }
 // the coast guard's ship on the chart and in 3D while she lies alongside (05-vessels.js npcStates)

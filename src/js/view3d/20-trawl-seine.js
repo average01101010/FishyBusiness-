@@ -259,10 +259,10 @@
   // the scale by boat
   // another player's boat is her own type's model (Jonas 05.10.2026: a friend in the same old wooden boat showed as a white box boat)
   // the coast guard's ship (steg 100, tools/boats/kv.py) is her own model too, kv47 or kv90 (kvNpcs' vtype), not in VESSELS: she cannot be
-  // bought; until her model is in she is the kit's boat of her size, as before. She is drawn near out to 900 m (there is only one of her,
-  // and the 93 m ship lies 180 m off the vessel she inspects)
+  // bought; until her model is in she is the kit's boat of her size, as before. She is drawn near out to 500 m (there is only one of her,
+  // her near model is 28-36 thousand triangles, and the 93 m ship lies 180 m off the vessel she inspects)
   const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
-  const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 900 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
+  const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
   const NKB = {};
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
   function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
@@ -348,9 +348,9 @@
   // the coast guard's ship on her inspection (core/09j-kystvakt.js kvNpcs, steg 100): her model, the skipper on her bridge and two hands
   // on deck, and at sea her RIB (the GLB's part 'rib', V2 A) through kvRib's stages over the game's minutes: lowered from the starboard
   // davit to the water under it, across to the vessel, alongside its port side while the inspectors are aboard, back, hoisted in
-  let KVRB = null;
+  const KVRB = {};   // the RIB's buffers by the ship's type
   function kvDraw(n, eye, t){
-    const K = n.K, G = K.geo || {}, M = chain(n.M, K.S), at = (p, r) => chain(M, M4.T(p[0], p[1], p[2]), M4.RY(r || 0));
+    const K = n.K, G = K.geo || {}, M = chain(n.M, K.S), sv = K.sv || [1, 1, 1], at = (p, r) => chain(n.M, M4.T(p[0] * sv[0], p[1] * sv[1], p[2] * sv[2]), M4.RY(r || 0));   // (the people placed, not scaled: the kit's boat in her place is stretched to her size)
     drawN(K.hull, M);
     if (!K.glass) return;
     if (G.skipperAt) drawN(npcPerson('skip', n), at(G.skipperAt));
@@ -358,8 +358,8 @@
     if (n.rib && G.rib) kvRibDraw(n, G.rib, G, M, eye, t);
   }
   function kvRibDraw(n, R, G, M, eye, t){
-    if (KVRB === null || KVRB.t !== n.vtype){ const o = typeof glbPart === 'function' ? glbPart(n.vtype, 'rib') : null; KVRB = {t:n.vtype, m:o ? upA(o) : null}; }
-    if (!KVRB.m) return;
+    if (!(n.vtype in KVRB)){ const o = typeof glbPart === 'function' ? glbPart(n.vtype, 'rib') : null; KVRB[n.vtype] = o ? upA(o) : null; }
+    const RB = KVRB[n.vtype]; if (!RB) return;
     const st = kvRib(S.t + (typeof currentFrac === 'function' ? currentFrac() : 0) - n.rib.t0), sm = u => u * u * (3 - 2 * u);
     const wy = (x, z) => (typeof seaH === 'function' ? seaH(x + eye[0], z + eye[2], t) : (env.tide || 0)) - eye[1];
     const C = xf(M, R.at), W0 = xf(M, [(G.side || 8) + (R.B || 3) / 2 + 1.2, 0, R.at[2]]), W = [W0[0], wy(W0[0], W0[2]), W0[2]];
@@ -373,7 +373,7 @@
       hd = Math.atan2(b[0] - a[0], -(b[2] - a[2])); if (st.f > 0.85) hd += angDiff(hd, st.ph === 'ut' ? bv.head : n.hd) * (st.f - 0.85) / 0.15; }
     else if (st.ph === 'side'){ p = T; hd = bv.head; water = true; }
     const roll = water ? Math.sin(t * 1.3 + 0.7) * 0.04 * (0.3 + WV.hs) : 0, pitch = water ? Math.sin(t * 1.1) * 0.03 * (0.3 + WV.hs) : 0;
-    const Mr = model(p[0], p[1], p[2], -hd, pitch, roll); drawN(KVRB.m, Mr);
+    const Mr = model(p[0], p[1], p[2], -hd, pitch, roll); drawN(RB, Mr);
     if (st.ph !== 'davit' && R.cox){ const c = R.cox; drawN(npcPerson('skip', {id:'kvrib'}), chain(Mr, M4.T(c[0], c[1], c[2])));
       // the two inspectors on the jockey seats going over and back; alongside they are aboard the vessel
       if (st.ph !== 'side') for (const [i, dx] of [[0, -0.45], [1, 0.45]]) drawN(npcPerson('crew', {id:'kvi' + i}, i), chain(Mr, M4.T(dx, c[1], c[2] + 0.9))); }
