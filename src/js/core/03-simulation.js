@@ -1195,9 +1195,39 @@ function luck(sp){ return 1 + haillBoost(); }
 // dobbelt så mye», but a full net or line takes no more, so over a long soak the haill gave far less, 6 nets 24 h x1.3): the nets', the
 // lines' and the pots' room grows with the luck, read every hour as the luck is, so the gear takes the same multiple all through the soak
 function haillCap(){ return 1 + haillBoost(); }
-// a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard)
-function giveHaill(type, how){ const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
-function useHaill(type){ const inv = S.haillInv || {}; if (!(inv[type] > 0)) return false; inv[type]--; S.haill = {type, t0:boostT(), how:'inv'}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.'); return true; }
+// a purchase or a pub prize goes into the store; switching one on takes it from there (and replaces the one aboard).
+// The store is two things since HS2 (10.11.2026, docs/planer/haill-saldo.md): S.haillInv, the numbers the game keeps itself (the pub,
+// the chapters), and S.haillSrv = [{id, type}], a copy of the haill the server holds unused for this player (bought, the welcome gift,
+// the thank-you; supabase/migrations/20261110180000_haill_use.sql). The copy is replaced by what the server says at every claim
+// (ui/10i-shop.js shopClaim), so a save that goes on without it loses nothing. S.haillUsed is the ids switched on here (the last 200,
+// never shown again whatever the server says), S.haillQ the ones the server is not told of yet (switched on with no network, Jonas
+// 10.11.2026 «V1: A»: at once, and the server hears when the network is back), and S.haillOld the ids of haill from the server that
+// went into S.haillInv (a page from before HS2, or a server from before it), which must never be counted again from the server.
+function haillInit(){ if (!S.haillInv) S.haillInv = {haill:0, luksus:0};
+  if (!S.haillSrv){ S.haillSrv = []; S.haillOld = (S.shopGiven || []).slice(); }
+  if (!S.haillUsed) S.haillUsed = []; if (!S.haillQ) S.haillQ = []; if (!S.haillOld) S.haillOld = []; }
+// the server's unused haill as the copy: the grants that are haill of a kind the game knows, none of the used ids, each once, oldest first
+function haillMirror(list, used){ const seen = new Set(used || []), out = [];
+  for (const g of list || []){ const d = (g && g.data) || {}; if (!g || g.id == null || seen.has(g.id) || d.give !== 'haill' || !HAILL[d.type]) continue; seen.add(g.id); out.push({id:g.id, type:d.type}); }
+  return out.sort((a, b) => a.id - b.id); }
+// what the Luck app shows of each kind: the game's own and the server's together
+function haillStock(inv, srv, used){ const n = {haill:0, luksus:0, takk:0}, u = new Set(used || []), seen = new Set();
+  for (const k in n) n[k] = Math.max(0, Math.floor((inv || {})[k]) || 0);
+  for (const x of srv || []) if (x && n[x.type] != null && !u.has(x.id) && !seen.has(x.id)){ seen.add(x.id); n[x.type]++; }
+  return n; }
+// (id: a grant the server keeps, into the copy; without one into the game's own numbers)
+function giveHaill(type, how, id){
+  if (id != null){ haillInit(); if (S.haillUsed.includes(id) || S.haillSrv.some(x => x.id === id)) return; S.haillSrv.push({id, type}); S.haillSrv.sort((a, b) => a.id - b.id); }
+  else { const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; }
+  log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
+// the game's own first (it can be lost with the save, the server's cannot), else the oldest from the server: on at once, and the server told
+function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv';
+  if (inv[type] > 0) inv[type]--;
+  else { const srv = S.haillSrv || [], u = S.haillUsed || (S.haillUsed = []), i = srv.findIndex(x => x.type === type && !u.includes(x.id)); if (i < 0) return false;
+    const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; }
+  S.haill = {type, t0:boostT(), how}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
+  if (how === 'srv' && typeof haillTell === 'function') haillTell(true);
+  return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
 const PUB_COST = 1000;
 const PUB_WHEEL = [['tom', 20], ['haill', 6], ['tom', 20], ['rykte', 25], ['haill', 6], ['tom', 20], ['luksus', 3]];   // the halibut luck is gone (04.10.2026)

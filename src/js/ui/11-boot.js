@@ -326,7 +326,8 @@ for (const v of S.fleet) withVessel(v, () => { const V = S.boat && VESSELS[S.boa
 if (S.daily){ const v = S.daily.pubV || 0; if (v > 0){ book('annet', v * PUB_COST, 'Ubrukte pubrunder', 'Unused pub rounds'); log('Kaffe på kaia er lagt ned. Du fikk ' + kr(v * PUB_COST) + ' for ' + v + (v > 1 ? ' ubrukte pubrunder.' : ' ubrukt pubrunde.'), '«Coffee on the quay» is gone. You got ' + kr(v * PUB_COST) + ' for ' + v + ' unused pub round' + (v > 1 ? 's.' : '.')); } delete S.daily; }
 // trim was for good and free to try until 05.10.2026; now it is for a while and bought (core BOOSTS): the old fittings go
 for (const v of S.fleet || []) if (v.boat) delete v.boat.boost; if (S.boat) delete S.boat.boost;
-if (!S.haillInv) S.haillInv = {haill:0, luksus:0}; if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)
+haillInit();   // (HS2 10.11.2026: an old save gets the copy of the server's haill empty, and what it was given before as S.haillOld, core haillInit)
+if (S.haill && !HAILL[S.haill.type]) S.haill.type = 'haill';   // the halibut luck is gone (04.10.2026)
 // brown crab is out of the game (04.10.2026): what an old save has in its holds goes, and the key now means king crab
 if (!S.kc){ S.kc = 1; let kg = 0;
   for (const v of S.fleet) withVessel(v, () => { kg += S.hold.reduce((a, x) => a + (x.sp === 'krabbe' ? x.kg : 0), 0); S.hold = S.hold.filter(x => x.sp !== 'krabbe'); });
