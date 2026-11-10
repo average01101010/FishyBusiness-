@@ -1,0 +1,43 @@
+{
+ "name": "Havsjarken drar garn under Lofotfisket ved Henningsvær",
+ "when": "2027-02-04T10:45:00Z",
+ "boat": "sjark",
+ "place": {
+  "lat": 68.135,
+  "lon": 14.23,
+  "clear": 0.4
+ },
+ "heading": "coast",
+ "speed": 0,
+ "quality": "ultra",
+ "pre": 1,
+ "dur": 3.5,
+ "op": {
+  "do": "trekk",
+  "fish": "garn",
+  "crew": 3,
+  "wait": 10
+ },
+ "cam": {
+  "mode": "orbit",
+  "keys": [
+   {
+    "t": 0,
+    "yaw": -52,
+    "pitch": 24,
+    "dist": 14,
+    "fov": 46,
+    "aim": 0.8
+   },
+   {
+    "t": 3.5,
+    "yaw": -34,
+    "pitch": 22,
+    "dist": 13,
+    "fov": 46,
+    "aim": 0.8
+   }
+  ]
+ },
+ "notes": "Klipp 14,93-17,41 s, tekst «Lofotfisket». Garnet dras med spillets startHaul (som tests/ombord.py trekk). Kameraet over styrbord låring."
+}

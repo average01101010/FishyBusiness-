@@ -4,6 +4,15 @@
 // stations (90 kg each). Checked: nothing aboard in still water lies level and upright; a full hold aft trims her by the stern and one
 // forward by the head; the nets on the stern press the stern down; the line in the hauler heels her towards it; a person at the rail of
 // a small boat heels her a little; and the 3D hull (hullRest, hullStep) lies at the trim the core reckons.
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+// a boat model's anchors (vessel3d.js glbLoad: the GLB's scenes[0].extras.anchors), read from the exported src/data/<file>.b64
+function anchorsOf(file){
+  const b = Buffer.from(readFileSync(join(ROOT, 'src', 'data', file), 'utf8').trim(), 'base64'), n = b.readUInt32LE(12);
+  return JSON.parse(b.subarray(20, 20 + n).toString('utf8')).scenes[0].extras.anchors;
+}
 export default function (t){
   const K = t.K, DEG = 180 / Math.PI;
   const KYST = ['skiff', 'trebat', 'snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21'];
@@ -71,4 +80,13 @@ export default function (t){
     t.near(X.th * DEG, St.trim * DEG, 0.05, type + ': og blir liggende slik i stille vann (10 s)');
     t.near(X.y, R.y0, 0.01, type + ': på samme høyde');
   }
+
+  // ---- STAB_AT is read off the model (OB9, 10.11.2026, the used hurtigsjark): the bench moved aft abreast the hatch, the line tubs forward
+  // under the shelter, and the game's waterline the empty boat's (WLE, 5 cm under the drawn one), so the deck stands 5 cm higher. Each
+  // place the table holds for her against the exported anchors, within 2 cm ----
+  { const A = anchorsOf('boat-hurtig11.b64'), T = K.STAB_AT.hurtigsjark, xz = p => [p[0], p[2]];
+    const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
+      haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern]};
+    for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
+      t.ok(d < 0.02, 'hurtigsjark: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
 }

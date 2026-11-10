@@ -324,6 +324,7 @@ Planen (kap. 3a i `docs/planer/havsteget-h1b-rammen.md`) sa at målestokken ved 
   - Er båten skjult bak land, bygg eller båter i mer enn ett sekund, klippes det til neste opptak.
   - Nærplanet går ut med et høyt kamera langt unna (`KINO.near`, 0,25–6 m), som for det vanlige kameraet.
 - **For testene og trailerens harness:** `G3._debug.kinoNext(type)` ber om et bestemt slag (det tas hvis det passer der båten er og går klar), `G3._debug.kinoTypes` lister dem, og `G3._debug.kino` gir slag, nummer, linse, høyde, fri sikt og avstand.
+- **Trailerens kamera** (`G3.film(o)`, `FILM` i `view3d/24-cinema.js`, flettet inn i arbeidsgrenen 10.11.2026 med Jonas' ja): `null` i spillet, og da går kameraet som før. `{fov}` alene setter følgekameraets brennvidde (grader); `{eye, tgt, fov}` setter øyet i et punkt i verden (meter) og sikter mot `tgt`, eller mot midten av båten når `tgt` er `'boat'` eller mangler. Det går foran kino, men ikke foran visningsmodus (`SHOW`) og maleren (`PAINTV`). Brukes bare av `trailer/tools/film.py`.
 - **«Skjul»** tar bort statusboksen, knappene, kompasset og minikartet. Bare de to kinoknappene står igjen.
 - Kameraknappen avslutter kino.
 
