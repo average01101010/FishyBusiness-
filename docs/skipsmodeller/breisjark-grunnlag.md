@@ -158,3 +158,83 @@ avgjøres.
 1. **Tegningen:** generalarrangementet bak skriptet ligger ikke i repoet. Kan du legge det ved (eller peke på det)? Da legges modellen over
    sideriss og plan hver runde, slik som den nye hurtigsjarken (`qa/overlay_hs11.py`).
 2. **Vekta:** `disp` 20 t mot 21,9 t ved tegningens vannlinje. Er 20 t lettvekt eller lastet? Står Δ eller lettvekt på tegningen?
+
+## 10. OB11: arbeidet om bord, setteporten, bremmen, vannlinja og karakteren etter Jonas' skala (10.11.2026)
+
+Steg 89 i `docs/planer/koen.md`, Jonas' økt på grenen `ccr-7c6616f1-m5zscg`. Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte mennesker, at utstyr står plassert på rasjonelle og logiske plasser, at utstyr opereres på en realistisk måte, at ingenting clipper inn i andre ting». Funnene er de i `docs/planer/om-bord.md` 4.8.
+
+### 10.1 Bildene av typen (valg 22 B)
+
+**Ingen bilder er sett.** Bildefilene på `upload.wikimedia.org` svarte 429 på det ene forsøket, `api.php` svarte «too many requests» på første spørring, og kategorisiden svarte 429; søkesiden og beskrivelsessidene svarte. Sperren er ikke omgått. Bildene er valgt etter beskrivelsen og kategoriene, og arket med lenkene (`docs/okter/2026-11-10-ob11/bilder-av-typen.md`) ble sendt Jonas før modellen ble endret: tre bilder av en glassfibersjark fra 2000 på 10,5 × 4,6 m med garnrull, fotografert ovenfra ved kai (kategoriene «Net drums» og «Fishing nets in Norway»), og to sjarker ved kai. Formen følger fortsatt tabellene som ble målt på generalarrangementet 02.10.2026.
+
+### 10.2 Det før-bildene viste
+
+- **Garnet og lina ble satt på skrå over hele akterdekket** fra rommet under lyet til babord, forbi aktermasta, og **ut gjennom hekken**: spillet fører redskapet ut 0,45 m til styrbord for midten i midjehøyden + 0,10 (3,07 m over grunnlinja), og akterskansen står til 3,76.
+- **Stampeblokken sto 0,7 m inn under sløyebordet:** med åtte stamper om bord (0,78 × 2,02 m) rakk blokken fra x 3,39 til 5,41, og bordet står fra 3,20 til 4,10.
+- **Juksamaskinene på akterdekket sto i skansen:** spillets tabell (`JIG_Z`) hadde fire plasser om styrbord, tre av dem ved den høye akterskansen (1,46 m over dekket), der `jigRail` la maskinen i platene under kappen.
+- **De to som sorterer teinefangsten, sto inni hverandre** ved stigen under lyet, og teina ble tømt på lukas hjørne (spillet la den 2 m akter for haleren). Stabelen sto på akterdekket om styrbord (OB16), i veien for redskapets vei til hekken.
+- **Haleren sto 1,25 m over dekket** (0,55 over ripa), 5 cm over grensen der spillet sender dem som haler og bløgger, inn (F24).
+- Modellen hadde ingen pyntefendere (fargen `fender` var definert, men ikke brukt), og lensportene var alt åpne hull uten klaffer (02.11.2026).
+
+### 10.3 Plassene (modellens x fra aktre perpendikulær, y babord +)
+
+Regnet i `check()` mot spillets egne bokser (`deckcrew.js` `kitBoxes`, hver med 6 cm rundt) før eksporten.
+
+| Plass | Hvor | Målt |
+|---|---|---|
+| Haleren (`hauler`) | x 5,47 på styrbord kappe, **0,30 m over ripa** (før 0,55) | 0,97 m over dørken der den som haler, står (spillets grense 1,2 m; F24) |
+| Blødekaret (`work.tub`) | 4,02–5,22, y −1,45 (uendret) | 1 cm fra skansens fot, 0,27 m til luka, 0,25 m akter for haleren |
+| Sløyebordet (`work.table`, eget) | 3,20–4,10 ved babord ripe (uendret) | den som sløyer, står y 1,03; nummer to 0,7 m forut på fri dørk (F19). Akter står casingen i veien |
+| Stampene (`kit.stamps`, `STAMP0`) | første rad x 3,54, y −0,20 og −0,72, fire rader akterover: **dørken akter for luka** under takets akterkant | blokken med åtte 1,72–3,86 × −0,91..−0,01: 2 cm til luka, 8 cm til aktermasta, 5 cm til stigen, 27 cm til lasteplassen |
+| Garnkaret (`kit.garn`, `GARN`) | x 2,75, y −0,37, samme sted (aldri om bord samtidig med stampene) | 0,47 m til luka, 3 cm til stigen |
+| Setteporten (`SPORT`) | i hekken, y −0,60 til 0,60 mellom galgens stolper (flyttet fra ±0,62 til ±0,67), terskelen 0,58 m over dekket, rulle Ø 8 cm i terskelen | rullens topp 2,94, redskapet går ut i 3,02 ved y −0,45; garnrulla henger over (4,27) |
+| Redskapets vei til porten | rett akterover fra karet eller stampene | 0,32 m klar av aktermasta fra garnkaret, 0,25 m fra stampene; ikke gjennom casingen eller stigen |
+| Teinestabelen (`kit.pots`, `POTS`) | x 0,67, y −0,40 på det åpne akterdekket (plassen OB16 fant på dekkskartet), seks i høyden | 17 cm fra speilet, fri for casingen, masta, pullertene og skansen. I etter-bildene står den ved x 0,55, y 0,35 (babord for midten): `potshot` var rød der og ved x 0,70, y 0,15, fordi dekkskartet knytter casingen til dekket og rutene inntil 0,6 m fra den ikke er gulv. Flyttet tilbake til OB16s plass og skrevet inn i den eksporterte modellen med `tools/boats/potplaces.py`, uten ny eksport og uten nye bilder. Hun står i redskapets vei til setteporten, men teiner og garn eller line er ikke rigget samtidig |
+| Der teina tømmes (`kit.pots.spot`, `POT_SPOT`) | x 3,20, y −1,12 i den åpne sida akter for blødekaret | 4 cm til karet, 3 cm til skansen, 4 cm til lukas hjørne |
+| Juksaplassen (`anchors.jigZ`, `JIG`) | **én**, styrbord x 3,55 i den åpne sida | ripa der 0,71 m over dekket; fri for akterskansen, lyets hjørne, blødekaret og haleren |
+| Slangen | x 5,62, y 1,55 under lyet forut om babord | lå der stampene står nå |
+
+**Juksaplassene er talt ærlig, og det ble én.** Bare den åpne sida om styrbord (2,78 m) har ei ripe en mann kan jukse over, og haleren og blødekaret står i de to fremste tredelene. Akterskansen er 1,46 m høy, babord side er lyets vegg, og bakkens kappe har rekkene sine. `VESSELS.breisjark.jukseMax` er derfor satt fra 6 til **1** (valg 31 A, som på hurtigsjarkene), og maskiner over det tas i land og betales tilbake av `ui/11-boot.js` slik den står. Se spørsmålet til Jonas i 10.7.
+
+### 10.4 Det som ellers er endret
+
+- **Eksportert på nytt** (pchip-feilen fra H3d1). Skriptet hadde alt nøkkelen på tabellens innhold; `check()` har nå sjekken «sidene er like» (0,0000 m mellom styrbord og babord snitt).
+- **Spillets vannlinje er den tomme båtens** (`WLE` = tegningens − 0,06 m): tegningens vannlinje bærer 21,8 t, `disp` 20 t er den tomme båten (valg 18 A), og ved `WLE` veier hun 20,05 t. Formen står. Malingen står ved tegningens vannlinje, 6 cm over den tomme båtens; avstanden er liten, så den er ikke flyttet til den lastede vannlinja (på den nye hurtigsjarken var den 0,67 m). `STAB_AT.breisjark` er lest på nytt (dekket 0,94 m over vannet, redskapet akter for luka, stabelen på akterdekket), med sjekk mot modellens ankre i `tests/unit/trim.test.mjs`.
+- **Bremmen på styrhustaket** (valg 26): rundt hele takkanten, 16 cm ut fra veggene. 3 cm hvit underkant med dryppkanten under, flaten skrår 11 cm inn opp til takkanten **i skrogets marineblå** (lav akter, høy foran der taket stiger til visiret). Dryppkanten står 1,90 m over gangen på bakken.
+- **Veggene uten striper:** de skarpe kantene merkes på nytt etter kuttet på styrhuset og lyets vegger (`shade(…, 5)`). `qa/flatnorm.py`: 291 flater opptil 76° skjevt før, 1 etter (en flate på 0,03 m² i skansens innside, 42°).
+- **Galgen** er 5 cm bredere på hver side (±0,67), så setteporten får 1,2 m mellom stolpene; garnrulla med.
+- Klasjsjekken `qa/clip_malo36.py`: 0. `check()`: 34 av 34.
+
+### 10.5 Testene
+
+- `node tests/unit/run.mjs`: 2 869 OK, 0 feil. **Sett rød først:** mot den nye eksporten og de gamle tallene var fem røde (`STAB_AT.dy`, `net`, `tub` og `pots` i `trim`, og `jukseMax` 6 mot én plass i `jig`); grønne etter at `STAB_AT` og `jukseMax` ble rettet. Sjekken i `teiner` (stabelen rommer `gearMax.teine`, og `kit.pots.spot` er modellens) var grønn også mot den gamle eksporten for stabelen, og er en vakt.
+- `crewclip`: breisjarken lagt i F19-lista. **Ikke sett rød:** paret ved bordet målte over 0,55 m også før (de to som sto inni hverandre i 4.8, var de som sorterer teinefangst, og det paret måler ikke `crewclip`). Rød bare for `snokrabbe`, fra før.
+- `walktest` (breisjarken OK, 500 celler; rød bare for autolineren, fra før), `vesseltest`, `lanterntest`, `regmarktest`: grønne.
+- 3D, én om gangen: `brotest breisjark` (1,88 m under taket, utsikten ikke svart), `vessel3d breisjark` (184 929 punkter nær, 119 994 middels, skroget 11,12 × 4,11 m), `deckshot` med `KYST_DECK=breisjark` (16 OK; den ene røde linja er havbåtenes MOB-båt, som filteret tar bort), `jigshot` (breisjarken 1 av 1) og `potshot` (rød for breisjarkens stabel første gang, «ikke gulv» ved casingens hjørne; og fortsatt rød 15 cm lenger inn; se raden om teinestabelen i 10.3 grønn etter at den ble lagt på OB16s plass).
+- **Droppet:** `hull3d` (bare `jukseMax` og plassene i `STAB_AT` er endret i kjernen, og `hull`- og `trim`-enhetstestene dekker dem), `ma36shot` og `maletest` (ingen malingssone er flyttet), og hele lista fra `run.py changed`.
+- `ombord.py breisjark` før og etter, begge formater, alle 15 operasjonene (kranen finnes ikke på henne); ingen droppet, fordi vannlinja, taket og plassene er endret. Arkene i `docs/okter/2026-11-10-ob11/`.
+
+### 10.6 Karakteren: 68/100, ikke ferdig
+
+Satt som en egen evaluering av en uavhengig underagent som bare fikk arkene, rendringene, bildet fra roret, `check()`-utskriften og skalaen (Jonas 10.11.2026). Målet var 75.
+
+| Punkt | Vekt | Poeng | Begrunnelse (sensorens, forkortet) |
+|---|---|---|---|
+| Skrogutforming | 20 | 15 | Én jevn flate, ren fenderlist og vannlinjestripe, vekta stemmer (20,05 t) og sidene er like. Kjøl, sko, propell og ror er ikke vist i noe bilde; spranget har en synlig knekk der bakken begynner; lengden over alt 11,22 mot 10,99 og bredden 4,12 mot 4,20 |
+| Detaljer | 20 | 13 | Mye riktig beslag (rekker, stag, lyskastere, eksos, pullerter, baugrull, lensporter, trapp, leidere), men rene, flate flater: lite slitasje, ingen sklisikring som synes, ingen navn og merke i rendringene; vinsjen på masta og kapstanen på bakken ser ut som plassholdere |
+| Lanterner | 5 | 3 | Høydene og avstandene etter vedlegg I står i `check()`, og lanternehusene synes, men ikke ett nattbilde |
+| Styrhus | 10 | 7 | Utvendig godt (skrå frontruter, bremmen, dør og sidevinduer). Fra roret: brukbar utsikt, men skjermene er blanke mørke plater, sprossene brede og rattet synes så vidt |
+| Arbeidsflyt | 25 | 16 | Hovedgrepene står riktig og er klart bedre enn før: haling og bløgging i den åpne sida, sløying ved bordet, setting ut gjennom porten under garnrulla; ikke noe redskap gjennom skansen. Trekker ned: de som har pause eller er uten maskin, står rart (stiv grunnstilling, nesa i veggen under lyet, en bak teinestabelen, en som hviler i setteporten); fortøyning og lossing kan ikke vurderes fra bildene |
+| Utforming av dekk | 20 | 14 | Logisk og lesbar plan, og redskapet har egne plasser som ikke står i veien for hverandre. Trangt etter modellens egne tall (0,27 m der bløggeren står, 1–8 cm klaringer), teinestabelen står foran setteporten, dekket viser lite bruk, og bare én juksaplass på en båt for fire |
+| **Sum** | 100 | **68** | |
+
+To ting sensoren var usikker på, er målt etterpå: hodet «i garnrullens motor» (`line_sett`) er perspektiv (motoren og rullens skiver henger 2,0 m og mer over dørken), og mannen bak teinestabelen står mellom stabelen og hjørnet fordi `deckcrew.js` ikke vet om stablene (felles, som OB10).
+
+### 10.7 Det som står igjen, og spørsmålet til Jonas
+
+**Spørsmål til Jonas: juksa og akterskansen.** Modellen har ærlig talt én juksaplass, så `jukseMax` er satt fra 6 til 1. Skal hun kunne ha flere maskiner, må noe i formen endres, og det er et avvik fra tegningen:
+- **A (som nå):** én maskin. Hun er en garn-, line- og teinebåt.
+- **B:** akterskansen om styrbord senkes til ripehøyde (0,7 m) fra lyet og akterover, så tre maskiner til får plass der (fire i alt). Akterdekket blir da åpnere mot sjøen om styrbord.
+- **C:** akterskansen står, men får to–tre juksaluker (åpninger i ripehøyde) om styrbord.
+
+Til 75 mangler sju poeng. Det som kan hentes i modellen: nattbilde av lanternene og bilde av undervannsskroget (vist, ikke bare regnet), instrumenter på skjermene på broa, slitasje og sklisikring som synes, teinestabelen bort fra setteporten (krever at dekkskartet ikke knytter casingen til dekket, eller en plass om styrbord ved x 1,25 som er regnet, men ikke prøvd), og juksaplassene etter svaret over. Det som ligger i felles kode (OB3, OB4, F18, pausene), løfter arbeidsflyten for alle båtene.
