@@ -34,6 +34,12 @@ export default function (t){
   { const St = K.stabOf('hurtigsjark', {hold:0, deck:0, gear:30 * 9, gp:{net:30 * 9}});
     t.ok(St.trim > 0.1 / DEG, 'hurtigsjark med 30 garn på hekken: hekken ned (' + (St.trim * DEG).toFixed(2) + '°)'); }
 
+  // ---- the havsjark's nets and line tubs stand in the starboard gangway aft, by the setting port in the stern (OB8, 10.11.2026; before,
+  // forward of the hatch to port): 30 nets trim her by the stern and heel her a little to starboard ----
+  { const St = K.stabOf('sjark', {hold:0, deck:0, gear:30 * 9, gp:{net:30 * 9}});
+    t.ok(St.trim > 0.3 / DEG, 'sjark med 30 garn akter: hekken ned, over 0,3° (' + (St.trim * DEG).toFixed(2) + '°)');
+    t.ok(St.list > 0, 'sjark med 30 garn i styrbord gang akter: slagside mot styrbord (' + (St.list * DEG).toFixed(2) + '°)'); }
+
   // ---- the line in the hauler heels her towards it (the hauler on the starboard rail) ----
   for (const type of ['sjark', 'plastsjark', 'kyst15']){
     const St = K.stabOf(type, {hold:0, deck:0, gear:0, pull:200, crew:['haling']});
