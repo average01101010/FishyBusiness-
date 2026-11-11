@@ -299,8 +299,48 @@ function crewSim(src){
     return best; }
   // the crane's round as the view runs it (view3d/09-landing-deck.js drawCrane, every frame): u 0-1, loading or landing; kept 1.5 s
   function setCrane(c){ ST.crane = c ? Object.assign({at:ST.clk}, c) : null; }
+  // ---- the deck washed down, the packed lunch and the cold (OB14, 11.11.2026, docs/planer/om-bord.md F12-F14; the roles 'spyl',
+  // 'kost', 'mat' and 'frys' on those on a break, core/13-work.js deckRoles). The one with the hose stands a jet's length from where the
+  // fish were gutted (the table, else the packer's place, else the hauler's), on that deck, turned to it, among the cells the crew use,
+  // his pose clear of everything as he swings the jet from side to side (WASH_SW each way); the one with the brush nearer in. Under a
+  // shelter deck the gutting is out of sight, and so is the washing of it.
+  const WASH_SW = 0.4, WASHC = new Map();
+  function washAt(){ const PT = ST.PT, q = [PT.sloy, PT.is, PT.haling].find(q => q && q.k != null && ST.M0.ok(q.k)); return q ? ST.M0.at(q.k) : null; }
+  function washPlace(id, role){
+    const T = washAt(); if (!T) return null; const M = ST.M, tk = role === 'kost' ? 'sweep' : 'hose', key = ST.type + '|' + tk + '|' + (ST.kitSig || ''); let C = WASHC.get(key);
+    if (!C){ C = []; const N = M.nx * M.nz, lo = tk === 'hose' ? 1.2 : 0.8, hi = tk === 'hose' ? 2.6 : 2.2, want = tk === 'hose' ? 1.6 : 1.1;
+      for (let k = 0; k < N; k++){ if (!M.ok(k) || !livePart(k)) continue; const q = M.at(k); if (Math.abs(q[1] - T[1]) > 0.2) continue; const d = Math.hypot(q[0] - T[0], q[2] - T[2]); if (d < lo || d > hi) continue;
+        const h = face(q[0], q[2], T[0], T[2]); if (poseHits(tk, k, h) || (tk === 'hose' && (poseHits(tk, k, h + WASH_SW) || poseHits(tk, k, h - WASH_SW)))) continue;
+        C.push([Math.abs(d - want), k, h]); }
+      C.sort((a, b) => a[0] - b[0]); WASHC.set(key, C); }
+    // (the brush is not worked in the jet, nor a step from the one who holds the hose)
+    // (nor is the other in the jet as it swings: within 2.2 m ahead of the hose and WASH_SW and a body's width to either side of its heading)
+    const o = A.find(a => a.id !== id && a.goal && a.goal.wash && !a.goal.inside), op = o ? M.at(o.goal.k) : null;
+    const inJet = (hp, hh, q) => { const dx = q[0] - hp[0], dz = q[2] - hp[2], d = Math.hypot(dx, dz); if (d > 2.2) return false; let da = Math.atan2(dx, -dz) - hh; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; return Math.abs(da) < WASH_SW + 0.4; };
+    for (const [, k, h] of C){ if (!M.ok(k) || !free(k, id)) continue;
+      if (op){ const q = M.at(k); if (Math.hypot(q[0] - op[0], q[2] - op[2]) < 1.1 || (tk === 'hose' ? inJet(q, h, op) : inJet(op, o.goal.h || 0, q))) continue; }
+      return {k, h, task:tk, wash:true}; }
+    return null; }
+  // the packed lunch (a boat with no galley): seated on an upturned tub with the back to the rail where that is clear of everything,
+  // else standing, at the rail places nearest the helm (the door on a boat with a house), so they eat together; the lunch first and
+  // the coffee after, as the core says (lunchNow), on the same place
+  function matPlace(id){
+    const PT = ST.PT, M = ST.M, L = (PT.lean || []).filter(l => M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!L.length) return null;
+    const a0 = [PT.ror, PT.door].find(q => q && q.k != null && ST.M0.ok(q.k)), an = a0 ? ST.M0.at(a0.k) : [0, 0, 0], dd = l => { const q = M.at(l.k); return Math.hypot(q[0] - an[0], q[2] - an[2]); };
+    L.sort((a, b) => dd(a) - dd(b));
+    for (const q of L){ const f = fitPlace('sit', q, true); if (!poseHits('sitmat', q.k, f.h, f.rail, f.off) && !poseHits('sitkaffe', q.k, f.h, f.rail, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off, task:'sitmat', dyn:'mat', mat:2}; }
+    for (const way of [true, false]) for (const q of L){ const f = fitPlace('lunch', q, way); if (!poseHits('lunch', q.k, f.h, f.rail, f.off) && !poseHits('coffee', q.k, f.h, f.rail, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off, task:'lunch', dyn:'mat', mat:1}; }
+    return null; }
+  // the cold: where his break has him standing, beating his arms and rubbing his hands, when that is clear of everything there
+  // (else at the nearest rail place where it is: he does not stand still and freeze because a stay is in the way of his arm)
+  function frysPlace(p, ctx){ const g = idleGoal(p, ctx); if (!g || g.inside || !STILL3[g.task]) return g; if (!poseHits('cold', g.k, g.h, g.rail, g.off)){ g.task = 'cold'; return g; }
+    const id = p.c ? 'c' + p.c.id : 'me', M = ST.M, p0 = M.at(g.k), L = (ST.PT.lean || []).filter(l => M.ok(l.k) && livePart(l.k) && free(l.k, id)).sort((a, b) => { const A1 = M.at(a.k), B1 = M.at(b.k); return Math.hypot(A1[0] - p0[0], A1[2] - p0[2]) - Math.hypot(B1[0] - p0[0], B1[2] - p0[2]); });
+    for (const q of L) for (const way of [false, true]){ const f = fitPlace('cold', q, way); if (!poseHits('cold', q.k, f.h, f.rail, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off, task:'cold', until:1e12, idle:true}; }
+    return g; }
+  const STILL3 = {look:1, lean:1, back:1};
   // what a hand at the quay work does this moment (the place is the same through the lifts; the pose follows the hook)
   function dynTask(g){
+    if (g.dyn === 'mat'){ const c = typeof lunchNow === 'function' && (lunchNow() || {}).coffee; return g.mat === 2 ? (c ? 'sitkaffe' : 'sitmat') : c ? 'coffee' : 'lunch'; }
     if (g.dyn === 'is') return ST.iceHose && ST.clk - ST.iceHose.at < 1.5 && !ST.iceHose.on ? 'look' : 'nozzle';
     if (g.dyn === 'kai'){ const c = ST.crane && ST.clk - ST.crane.at < 1.5 ? ST.crane : null; if (!c) return 'look'; const u = c.u;
       return c.loading ? (u >= 0.12 && u < 0.2 ? 'guide' : u >= 0.2 && u < 0.32 ? 'unhook' : 'look') : (u >= 0.2 && u < 0.3 ? 'unhook' : u >= 0.3 && u < 0.42 ? 'guide' : 'look'); }
@@ -471,6 +511,12 @@ function crewSim(src){
     // (OB4: the hands at the landing, the ice and her own crane, 13-work.js quayRoles; without a place for it, the break as before)
     if (p.role && (st === 'pause' || st === 'last')){ const id = p.c ? 'c' + p.c.id : 'me';
       const q = st === 'last' ? (p.role === 'kran' ? kranPlace(id) : null) : p.role === 'hekt' ? hektPlace(id) : p.role === 'luke' ? lukePlace(id) : p.role === 'isrom' ? isPlace(id) : null; if (q) return q; }
+    // (OB14: the deck washed down, the packed lunch, the cold, 13-work.js deckRoles; without a place for it, the break as before)
+    if (DROLE[p.role] && st === 'pause'){ const id = p.c ? 'c' + p.c.id : 'me', r = p.role;
+      if (r === 'spyl' || r === 'kost'){ const Wk = ST.G.work, Dk = ST.G.deck || {}, wy = Wk ? Wk.table[1] : Dk.y;
+        if (wy != null && PT.sloy && ST.M.ok(PT.sloy.k) && Math.abs(ST.M.at(PT.sloy.k)[1] - wy) > 0.5) return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;
+        const q = washPlace(id, r); if (q) return q; }
+      else { const q = r === 'mat' ? matPlace(id) : frysPlace(p, ctx); if (q) return q; } }
     // a break as the game chose it (core/13-work.js idleAssign): inside, asleep in the bunk and up at the shop are not on deck
     if (st === 'pause' && p.idle){ if (p.idle === 'inside' || p.idle === 'sleep' || p.idle === 'shop') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null; return idleGoal(p, ctx); }
     if (ctx.underway && !ctx.open && st === 'pause') return PT.door ? {k:PT.door.k, h:PT.door.h || 0, task:null, inside:'in'} : null;   // under way the crew are inside (03.10.2026)
@@ -502,8 +548,8 @@ function crewSim(src){
     return idleGoal(p, ctx);
   }
   // the station and its part (at the hauler: the hauler, the picker, the pot hand): a person keeps the place while it stays the same
-  const QROLE = {hekt:1, luke:1, isrom:1, kran:1};
-  const kindOf = p => p.spot != null ? 'spot' : p.st === 'fort' ? 'fort:' + (p.mo || '') : QROLE[p.role] && (p.st === 'pause' || p.st === 'last') ? 'kai:' + p.st + ':' + p.role + (p.role === 'hekt' && p.st === 'pause' ? ':' + ((landNow() || {}).place || 0) : '') : p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
+  const QROLE = {hekt:1, luke:1, isrom:1, kran:1}, DROLE = {spyl:1, kost:1, mat:1, frys:1};
+  const kindOf = p => p.spot != null ? 'spot' : p.st === 'fort' ? 'fort:' + (p.mo || '') : DROLE[p.role] && p.st === 'pause' ? 'dekk:' + p.role + (p.role === 'frys' ? ':' + p.idle : '') : QROLE[p.role] && (p.st === 'pause' || p.st === 'last') ? 'kai:' + p.st + ':' + p.role + (p.role === 'hekt' && p.st === 'pause' ? ':' + ((landNow() || {}).place || 0) : '') : p.st === 'haling' ? 'haling:' + (p.role === 'haler' ? 'h' : p.role) : p.st === 'pause' && p.idle ? 'pause:' + p.idle + (p.with ? '>' + p.with : '') : p.st;
   // ---- a free person: something to do for a while, by the weather, the hour and their nature ----
   const IDLE = ['lean', 'lean', 'look', 'coffee', 'sweep', 'sit'];
   // (p.idle: the break the game chose, kept as long as it lasts there; each its own place and pose, view3d.js drawWorker: facing out over
@@ -562,6 +608,12 @@ function crewSim(src){
       case 'unhook': return std([0.38, 1.9, 0.08], [0.35, 1.3, -0.18]);
       case 'remote': return std([0.3, 1.05, 0.11], [0.3, 1.05, -0.11]);
       case 'nozzle': return std([0.42, 0.85, 0.06], [0.36, 0.98, -0.12]);
+      // (OB14: the packed lunch and the coffee seated on an upturned tub, the lunch box on the knee and the flask on the deck beside him;
+      // the cold: the arms beaten round the chest and swung out again, the hands rubbed before it; view3d/08-plants.js drawWorker)
+      case 'sitmat': case 'sitkaffe': return [[[-0.04, 0.5, 0.12], [0.38, 0.52, 0.15]], [[0.38, 0.52, 0.15], [0.44, 0.08, 0.17]], [[-0.04, 0.5, -0.12], [0.38, 0.52, -0.15]], [[0.38, 0.52, -0.15], [0.44, 0.08, -0.17]], [[0, 0.55, 0], [0.1, 1.05, 0]],
+        [[0.15, 1.08, 0], [0.22, 1.36, 0]], [[0.06, 1.0, 0.2], [0.2, 1.1, 0.04]], [[0.06, 1.0, -0.2], [0.34, 0.68, -0.1]], [[-0.31, 0.2, 0], [0.19, 0.2, 0]], [[-0.06, 0.2, 0.25], [-0.06, 0.2, -0.25]], [[-0.06, 0.02, 0], [-0.06, 0.45, 0]]]
+        .concat(k === 'sitkaffe' ? [[[0.1, 0.0, -0.36], [0.1, 0.32, -0.36]]] : []);
+      case 'cold': return std([0.2, 1.36, -0.14], [0.2, 1.36, 0.14], [[0.02, 1.42, 0.21], [0.14, 1.22, 0.56]], [[0.02, 1.42, -0.21], [0.14, 1.22, -0.56]], [[0.02, 1.42, 0.21], [0.28, 1.46, 0.03]]);
       case 'helm': return std([0.3, 1.1, 0.17], [0.3, 1.1, -0.17]);
       case 'gut': { const tt = rail ? rail[1] : 0.9; return std([0.42, tt + 0.28, 0.2], [0.36, tt + 0.06, -0.12]); }
       case 'pack': return std([0.4, 0.95, 0.15], [0.08, 1.02, -0.2]);
@@ -577,7 +629,7 @@ function crewSim(src){
   // how a pose stands at a rail place: facing out, a step back when the rail is closer than 0.2 m (a thick bulwark); facing inboard, the
   // back that far off the rail as the pose needs (leaning back: at it; sitting on a tub: the tub clear of it)
   // (facing out, the hands that work in front of the chest need the rail that far off: the phone, the cup, the snus, the binoculars)
-  const NEED_IN = {back:0.24, sit:0.46}, REACH = {phone:0.34, coffee:0.3, binoc:0.36, snus:0.34, smoke:0.3, seasick:0.2, lean:0.2}, fitPlace = (k, q, way) => { const rl = railAt(q.k, q.h), inb = way == null ? !!IDLE_IN[k] : way, F = [Math.sin(q.h), -Math.cos(q.h)];
+  const NEED_IN = {back:0.24, sit:0.46}, REACH = {cold:0.38, phone:0.34, coffee:0.3, binoc:0.36, snus:0.34, smoke:0.3, seasick:0.2, lean:0.2}, fitPlace = (k, q, way) => { const rl = railAt(q.k, q.h), inb = way == null ? !!IDLE_IN[k] : way, F = [Math.sin(q.h), -Math.cos(q.h)];
     if (!inb){ const need = REACH[k] || 0.2; if (rl && rl[0] < need){ const s = need - rl[0]; return {h:q.h, rail:[need, rl[1]], off:[-F[0] * s, -F[1] * s]}; } return {h:q.h, rail:rl, off:null}; }
     const need = NEED_IN[k] || 0.26, s = rl ? rl[0] - need : 0, sh = k === 'back' ? s : Math.min(0, s); return {h:q.h + Math.PI, rail:null, off:sh ? [F[0] * sh, F[1] * sh] : null}; };
   // (most breaks can be had either way, facing out or with the back to the rail: the other way is tried where the first is not clear)
@@ -615,7 +667,7 @@ function crewSim(src){
   // little turn (the place from the anchors is the station's; this only moves the person within it)
   const RAILWORK = {jig:1, haul:1, pick:1};
   function fitWork(g, id){
-    if (!g || g.inside || g.idle || !ST.M.ok(g.k)) return g; if (g.task === 'sett' || (g.dyn && g.dyn !== 'kai') || g.ice || g.task === 'remote') return g; const M = ST.M, h0 = g.h || 0;   // (the places of the setting and of the quay work are found with their poses tried, OB3 and OB4)
+    if (!g || g.inside || g.idle || !ST.M.ok(g.k)) return g; if (g.task === 'sett' || (g.dyn && g.dyn !== 'kai') || g.ice || g.task === 'remote' || g.wash) return g; const M = ST.M, h0 = g.h || 0;   // (the places of the setting and of the quay work are found with their poses tried, OB3 and OB4)
     const fit = (k, h) => { if (RAILWORK[g.task]){ const rl = railAt(k, h); if (!rl) return {rail:null, off:null}; const F = [Math.sin(h), -Math.cos(h)];
         if (rl[0] < 0.22){ const s = 0.22 - rl[0]; return {rail:[0.22, rl[1]], off:[-F[0] * s, -F[1] * s]}; } return {rail:rl, off:null}; }
       if (g.task === 'gut'){ const W0 = ST.G.work, d0 = ST.G.deck || {y:ST.G.gw || 0}, top = W0 && W0.own && W0.top != null ? W0.top : (d0.y || 0) + 0.885; return {rail:[0.4, top - M.at(k)[1]], off:null}; }

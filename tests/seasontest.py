@@ -24,6 +24,14 @@ async def main():
         rr = await pg.evaluate("""(() => { const m0 = S.msgs.length, r0 = (S.radio || []).length; radioForecast(S.t / 60); const k = toast._keep;
           return {inbox:S.msgs.length - m0, radio:S.radio.length - r0, toast:document.getElementById('toast').textContent.slice(0, 60), ms:k ? k.until - Date.now() : 0}; })()""")
         print(ok(rr['inbox'] == 0 and rr['radio'] == 1 and 'Kystradio' in rr['toast'] and 14000 < rr['ms'] <= 15000), 'the coast radio\'s forecast shows on the screen for 15 seconds and does not go into the messages', rr)
+        # the time away (catchUp): what the coast radio sent while the game was closed was not heard; it goes into the deck log, and does
+        # not come up on the screen one forecast after the other when the game is opened (tilbakemelding #119)
+        aw = await pg.evaluate("""(() => { S.equip.vhf = true; toastClear(); let H = Math.floor(S.t / 60) + 1; while (gDate(H).getUTCHours() !== 8) H++; S.t = H * 60;
+          const r0 = (S.radio || []).length, T0 = toast, seen = []; toast = (m, ms) => { if (/Kystradio/.test(m)) seen.push(m.slice(0, 48)); return T0(m, ms); };
+          try { catchUp(8 * 60 / GAME_RATE * 60000); } finally { toast = T0; }
+          const el = document.getElementById('toast'), on = el.classList.contains('on') && /Kystradio/.test(el.textContent); document.getElementById('modal').hidden = true;
+          return {sent:S.radio.length - r0, shown:seen.length, seen:seen.slice(0, 2), on}; })()""")
+        print(ok(aw['sent'] >= 2 and aw['shown'] == 0 and not aw['on']), 'the forecasts the coast radio sent while the time away was played go into the deck log, not up on the screen', aw)
         # 2. the skrei festival: your biggest cod against the coast's, the prize on Sunday evening
         f = await pg.evaluate("""(() => { const y = 2028, F = festDays(y), d = new Date(EPOCH + F.H0 * 36e5); S.t = (F.H0 + 10) * 60; S.fest = null; const c0 = S.cash;
           addCatch('torsk', 12.5, 3, true); addCatch('torsk', 41.2, 3, true); addCatch('sei', 50, 3, true); const best = S.fest && S.fest.best;

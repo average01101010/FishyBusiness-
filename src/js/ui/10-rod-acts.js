@@ -93,7 +93,10 @@ hooks.onEquip = () => { updateMapButtons(); INSTR.show(); heatReset(); };
 // the queue at the plant (core/07-harbours.js, K3): the strip, the dock and the Lever page follow it; the first answer as a toast
 hooks.onLandQ = (Q, first) => { renderHud(); panelDirty = true; if (typeof renderActs === 'function') renderActs(); if (typeof DOCK !== 'undefined' && DOCK.page === 'lever' && DOCK.open) DOCK.open('lever');
   if (Q && first) toast(landQText(false)[0] + (S.lang === 'no' ? '. Lossingen starter av seg selv. «Lever» viser mottakene i nærheten.' : '. The landing starts by itself. «Land» shows the plants near by.'), 9000); };
-hooks.onRadio = (no, en) => toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000);
+// the coast radio is heard as it is sent (core/06-services.js radio): what it sent while the time away was played (catchUp, LANDQ.away)
+// was not heard, and stays in the deck log only; before, every forecast from the hours away came up on the screen, 15 s each, in a row
+// once the coast had loaded (tilbakemelding #119)
+hooks.onRadio = (no, en) => { if (!LANDQ.away) toast('📻 Kystradio: ' + (S.lang === 'no' ? no : en), 15000); };
 hooks.onMsg = () => { PHONE.setBadge(); const m = S.msgs[S.msgs.length - 1]; if (m && !PHONE.isOpen()) toast('✉ ' + m.from + ': ' + (S.lang === 'no' ? m.no : m.en), 10000); if (PHONE.isOpen() && (PHONE.app === 'meld' || PHONE.app === 'home')) PHONE.render(); };
 $('instrBtn').onclick = () => { S.settings.instr = S.settings.instr === false; save(); updateMapButtons(); INSTR.show(); };
 // the chart is drawn once the game is built (11-boot.js); a theme change before that waits for it

@@ -2681,3 +2681,7 @@
 2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	cashfxtest	OK	9	lite	samtidig	
 2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	booktest	OK	28	lite	samtidig	
 2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	kvtest	LES	13	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	stabtest	OK	19	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	maletest	OK	29	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	boottest	OK	36	lite	samtidig	
+2026-11-11 23:07	claude/zen-babbage-aixu88	c96b087	boottest	OK	29	lite	alene	
