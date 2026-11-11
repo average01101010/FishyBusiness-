@@ -504,7 +504,7 @@ function coastNear(H, only){
   return out;
 }
 function npcStates(H, only){
-  const out = [], d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600, mon = d.getUTCMonth();
+  const out = [], d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600;
   const ago = start => ((hod - start) % 24 + 24) % 24;
   // coastal ship: northbound in the evening, southbound at night, 15 kn, 30 min at the Finnsnes quay
   const v = 15 * NM;
@@ -514,13 +514,8 @@ function npcStates(H, only){
     if (e < t1) s = e * v; else if (e < t1 + 0.5) s = stop; else s = stop + (e - t1 - 0.5) * v;
     if (s < R.len){ const a = atRoute(R, s); out.push({id:'kyst' + dir, name:'MS Kystpilen', type:'coastal', p:berthShift(a.p, 'kyst', true), hd:a.hd, v:(e >= t1 && e < t1 + 0.5) ? 0 : 15}); }
   }
-  // ferry Botnhamn - Brensholmen, summer season only, every 90 min 07-21
-  if (mon >= 4 && mon <= 8 && (!only || only === 'ferje')){
-    const vf = 12 * NM, tc = NPCR.ferry.len / vf; let a = null, sp = 0;
-    if (hod >= 7 && hod < 21.5){ const e = (hod - 7) % 1.5; if (e < tc){ a = atRoute(NPCR.ferry, e * vf); sp = 12; } else if (e < 0.75){ a = atRoute(NPCR.ferry, NPCR.ferry.len); } else if (e < 0.75 + tc){ a = atRoute(NPCR.ferryRev, (e - 0.75) * vf); sp = 12; } }
-    if (!a) a = atRoute(NPCR.ferry, 0);
-    out.push({id:'ferje', name:'MF Senjasund', type:'ferry', p:berthShift(a.p, 'ferje', true), hd:a.hd, v:sp});
-  }
+  // the car ferries: Senja's own (Botnhamn - Brensholmen, the summer season) and the coast's within AIS range, by the timetable (05b-ferje.js)
+  for (const n of ferjeNear(H, only)) out.push(n);
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
   const fb = !only && S && S.boat && S.boat.pos;
   FLEET.forEach((f, i) => {
