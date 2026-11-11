@@ -2034,3 +2034,26 @@
 2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
 2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
 2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-11 00:03	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-11 00:05	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	OK	28	lite	alene	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	OK	33	lite	samtidig	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	ae9d1bf+	trip2	OK	39	lite	samtidig	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	777d285	pwatest	OK	28	lite	samtidig	
+2026-11-11 00:12	ccr-a35513a2-4y5tlo	777d285	errtest	OK	38	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	kanaltest	OK	73	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	csptest	OK	91	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	cloudtest	FEIL	45	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-11 00:15	ccr-a35513a2-4y5tlo	777d285	roetest	OK	119	lite	samtidig	
+2026-11-11 00:19	ccr-a35513a2-4y5tlo	777d285	guesttest	OK	116	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	kjoptest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	admintest	OK	9	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	rttest	OK	54	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	feedbacktest	OK	17	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	maletest	OK	21	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	sponsortest	OK	12	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	pushtest	OK	24	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	sharetest	OK	7	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	installtest	OK	46	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	starttest	OK	179	lite	samtidig	
+2026-11-11 00:43	ccr-a35513a2-4y5tlo	926b499	vectest	OK	657	3d	alene	
+2026-11-11 00:54	ccr-a35513a2-4y5tlo	926b499	tut	OK	661	lite	alene	
