@@ -191,9 +191,19 @@ async function logoCheck(){
   if (r && r.removed){ S.logo = null; if (S.boat.liv && S.boat.liv.flag && S.boat.liv.flag.c === 'LOGO') S.boat.liv.flag = {c:'NO', s:'rekt'};
     msg('Malerverkstedet', 'Logoen din er tatt bort' + (r.reason ? ': ' + r.reason : '.') + ' Du kan laste opp et nytt bilde i Malerverkstedet uten å betale igjen.', 'Your logo has been taken away' + (r.reason ? ': ' + r.reason : '.') + ' You can upload a new picture in the paint shop without paying again.'); save(); }
 }
+// The paid designs are the account's entitlements on the server and nothing else (HS4, 11.11.2026, docs/planer/haill-saldo.md): the
+// save's own list (S.cos) is written over with them at every claim (ui/10i-shop.js srvApply, shop_state's owned), so a design written
+// into the save is gone. Where there is no cloud the list is the game's own, as before. (What is earned in the game, the hull colour
+// of chapter 3, is not here: it stays in the save. Paint already on a boat is only seen on this device: the others see what the
+// account owns, Ø6 funn 5)
+function cosSrv(owned){
+  const c = {}; for (const id of owned || []) if (typeof id === 'string' && id.slice(0, 4) === 'des_' && COS.includes(id.slice(4))) c[id.slice(4)] = 1;
+  S.cos = c;
+}
 // a design is yours (the shop's grant, ui/10i-shop.js shopGive, or a test): on every boat from now on, and on this one at once if it was
 // being tried when it was bought
 function giveCos(k){
+  if (typeof CLOUD !== 'undefined' && CLOUD.on && Array.isArray(CLOUD.owned) && COS.includes(k) && !CLOUD.owned.includes('des_' + k)) CLOUD.owned.push('des_' + k);   // (the account's own list too, until the server is asked again)
   if (!COS.includes(k)) return null; S.cos = Object.assign({}, S.cos, {[k]:1});
   const want = S.cosWant && S.cosWant[k], b = S.boat; if (S.cosWant) delete S.cosWant[k];
   if (want && k === 'reg') regSet(want);

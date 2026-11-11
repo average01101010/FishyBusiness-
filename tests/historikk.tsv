@@ -2487,6 +2487,28 @@
 2026-11-11 02:25	regresjon/2026-11-11	dfc504b	kanaltest	OK	68	lite	samtidig	
 2026-11-11 03:11	regresjon/2026-11-11	dfc504b	tut	OK	2789	lite	alene	
 2026-11-11 11:23	ccr-26bf5fcc-efdoee	ee3796bc	hooktest	OK	1	lite	alene	
+2026-11-11 13:18	plan/2026-11-11-98	a5b783cd	boottest	OK	29	lite	samtidig	
+2026-11-11 13:18	plan/2026-11-11-98	a5b783cd	hailltest	LES	33	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	boostklokke	OK	47	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	skiptest	OK	16	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	skipdrift	OK	22	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	guesttest	OK	84	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	maletest	OK	21	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	haillplass	OK	6	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	merketest	OK	15	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	yardupgtest	OK	15	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	fixtest	OK	38	lite	samtidig	
+2026-11-11 13:35	plan/2026-11-11-98	3fe2cb63	kjoptest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-11 13:37	plan/2026-11-11-98	3fe2cb63	pubtest	OK	121	3d	alene	
+2026-11-11 14:08	plan/2026-11-11-98	3fe2cb63+	kjoptest	FEIL	1800	lite	samtidig	FEIL HS3: two trims of the same kind after each other come back with the end they had when they were bought (18 h left), in one line  {"trim": null, "vx": 1, "n
+2026-11-11 14:08	plan/2026-11-11-98	3fe2cb63+	fasittest	OK	1462	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	kjoptest	OK	152	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	fasittest	OK	20	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	vesseltest	FEIL	22	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	trip2	OK	41	lite	samtidig	
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	simday	LES	13	lite	samtidig	
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	hooktest	OK	1	lite	samtidig	
 2026-11-11 14:37	ccr-2c3acb2e-1xxdth	82bb698+	charttest	OK	60	lite	alene	
 2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	megletest	OK	26	lite	samtidig	
 2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	fleet2test	FEIL	29	lite	samtidig	FEIL both vessels went out, at the same time
@@ -2501,6 +2523,9 @@
 2026-11-11 14:22	ccr-309f2cf5-w71mxh	8e8a5eb	docktest	OK	63	lite	samtidig	
 2026-11-11 14:23	ccr-309f2cf5-w71mxh	8e8a5eb	moortest	OK	41	3d	alene	
 2026-11-11 14:25	ccr-309f2cf5-w71mxh	8e8a5eb	landtest	OK	98	3d	alene	
+2026-11-11 14:37	plan/2026-11-11-98	ead272d8	boottest	OK	30	lite	samtidig	
+2026-11-11 14:37	plan/2026-11-11-98	ead272d8	fasittest	OK	19	lite	samtidig	
+2026-11-11 14:40	plan/2026-11-11-98	ead272d8	kjoptest	OK	147	lite	samtidig	
 2026-11-11 14:42	ccr-2c3acb2e-1xxdth	78818c9+	boottest	OK	32	lite	samtidig	
 2026-11-11 14:42	ccr-2c3acb2e-1xxdth	78818c9+	marktest	OK	8	lite	samtidig	
 2026-11-11 14:47	ccr-2c3acb2e-1xxdth	78818c9+	boottest	OK	36	lite	samtidig	
@@ -2530,3 +2555,8 @@
 2026-11-11 15:47	ccr-2c3acb2e-1xxdth	d089154d+	boottest	OK	27	lite	samtidig	
 2026-11-11 15:47	ccr-2c3acb2e-1xxdth	d089154d+	placetest	OK	6	lite	samtidig	
 2026-11-11 15:48	ccr-2c3acb2e-1xxdth	d089154d+	charttest	OK	51	lite	alene	
+2026-11-11 15:36	plan/2026-11-11-98	76d06d51	boottest	OK	35	lite	samtidig	
+2026-11-11 15:36	plan/2026-11-11-98	76d06d51	fasittest	OK	25	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	kjoptest	OK	165	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	guesttest	OK	89	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	hailltest	LES	32	lite	samtidig	

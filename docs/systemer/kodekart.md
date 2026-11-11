@@ -186,7 +186,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 429 `reqFill(eq, type)`
   - 447 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1371 linjer)
+## `src/js/core/03-simulation.js` (1390 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -391,32 +391,36 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1235 `luck(sp)`
   - 1239 `haillCap()`
   - 1248 `haillInit()`
-  - 1252 `haillMirror(list, used)`
-  - 1256 `haillStock(inv, srv, used)`
-  - 1261 `giveHaill(type, how, id)`
-  - 1266 `useHaill(type)`
-  - 1278 `pubEvening(H)`
-  - 1279 `pubOpen(H)`
-  - 1282 `capHold()`
-  - 1284 `cargoRoom()`
-  - 1286 `cargoMin(kg)`
-- **1287** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1290 `streakState()`
-  - 1291 `streakPct()`
-  - 1292 `streakTouch()`
-- **1303** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1307 `effTemp(H)`
-  - 1308 `coldPen(H, hs)`
-- **1315** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1330 `gradeOk(g, q)`
-  - 1331 `ordState()`
-  - 1334 `custNear(c)`
-  - 1339 `repOf(id)`
-  - 1341 `bkOrderable(H)`
-  - 1343 `bkPlant(id)`
-  - 1344 `custSp(c)`
-  - 1345 `spCatchable(sp, H)`
-  - 1347 `ordersTick(H)`
+  - 1256 `haillFromSrv(loc, srv, wait)`
+  - 1263 `srvToT(m, srvNow, t, world)`
+  - 1264 `tToSrv(m, srvNow, t, world)`
+  - 1267 `boostSrv(list, stack, now)`
+  - 1269 `haillMirror(list, used)`
+  - 1273 `haillStock(inv, srv, used)`
+  - 1278 `giveHaill(type, how, id)`
+  - 1283 `useHaill(type)`
+  - 1297 `pubEvening(H)`
+  - 1298 `pubOpen(H)`
+  - 1301 `capHold()`
+  - 1303 `cargoRoom()`
+  - 1305 `cargoMin(kg)`
+- **1306** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1309 `streakState()`
+  - 1310 `streakPct()`
+  - 1311 `streakTouch()`
+- **1322** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1326 `effTemp(H)`
+  - 1327 `coldPen(H, hs)`
+- **1334** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1349 `gradeOk(g, q)`
+  - 1350 `ordState()`
+  - 1353 `custNear(c)`
+  - 1358 `repOf(id)`
+  - 1360 `bkOrderable(H)`
+  - 1362 `bkPlant(id)`
+  - 1363 `custSp(c)`
+  - 1364 `spCatchable(sp, H)`
+  - 1366 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (162 linjer)
 
@@ -1444,7 +1448,7 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 53 `fsLand(total)`
   - 55 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (227 linjer)
+## `src/js/core/09f-merker.js` (229 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
@@ -1464,9 +1468,9 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **173** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
   - 175 `achCheck(quiet)`
   - 203 `achChapter(ch)`
-  - 214 `achSeed()`
-- **225** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 226 `freeFirst(k)`
+  - 216 `achSeed()`
+- **227** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 228 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (1005 linjer)
 
@@ -3143,13 +3147,13 @@ actions
   - 129 `tutFieldNear(pt, land, skip)`
   - 152 `chooseStart(pt, onProgress)`
 
-## `src/js/ui/09-hand-fishing.js` (59 linjer)
+## `src/js/ui/09-hand-fishing.js` (86 linjer)
 
 ---------- fishing by hand: jig, strike on the bite, reel without snapping the line ----------
 
 - **1** fishing by hand: jig, strike on the bite, reel without snapping the line
 
-## `src/js/ui/09b-pub.js` (366 linjer)
+## `src/js/ui/09b-pub.js` (368 linjer)
 
 ---------- the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026) ----------
 
@@ -3159,12 +3163,12 @@ actions
 - **101** a frame
 - **145** what can be tapped
 - **171** the panels
-- **221** the bartender: the evening's talk in the place's dialect, and a round for the crew
-- **246** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
-- **294** the notice board: Kystposten, the week's best, the trips
-- **305** the round table: the hands looking for a berth (the crew exchange)
-- **312** the top bar
-- **325** open and close
+- **223** the bartender: the evening's talk in the place's dialect, and a round for the crew
+- **248** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
+- **296** the notice board: Kystposten, the week's best, the trips
+- **307** the round table: the hands looking for a berth (the crew exchange)
+- **314** the top bar
+- **327** open and close
 
 ## `src/js/ui/09c-naust3d.js` (303 linjer)
 
@@ -3400,36 +3404,47 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (239 linjer)
+## `src/js/ui/10i-shop.js` (400 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 28 `shopMode()`
-  - 34 `realKr(nok)`
-  - 36 `shopLabel(nok)`
-  - 41 `shopWhat(k)`
-  - 51 `payBuy(k, give)`
-  - 59 `shopFine()`
-  - 62 `shopGo(k)`
-  - 78 `shopYard()`
-  - 82 `shopGive(g, srv)`
-  - 104 `shopThanks(rc)`
-  - 123 `shopBack(list)`
-  - 152 `haillProbe()`
-  - 160 `haillTell(now)`
-  - 171 `shopClaim()`
-  - 225 `shopStart()`
+  - 37 `shopMode()`
+  - 43 `realKr(nok)`
+  - 45 `shopLabel(nok)`
+  - 50 `shopWhat(k)`
+  - 60 `payBuy(k, give)`
+  - 68 `shopFine()`
+  - 71 `shopGo(k)`
+  - 87 `shopYard()`
+  - 91 `shopGive(g, srv)`
+  - 113 `shopThanks(rc)`
+  - 132 `shopBack(list)`
+  - 161 `haillProbe()`
+  - 169 `haillTell(now)`
+  - 175 `haillTell1()`
+- **197** HS4: the server is the truth
+  - 201 `srvOnly()`
+  - 204 `pubAsk()`
+  - 211 `achHaillAsk()`
+  - 216 `yardUsed()`
+  - 226 `srvImport(st)`
+  - 239 `shopClaim4()`
+  - 255 `srvApply(st)`
+  - 325 `shopWords(gifts, thanks)`
+  - 332 `shopClaim()`
+  - 386 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (215 linjer)
+## `src/js/ui/10j-paint.js` (225 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
   - 180 `logoSet(L)`
   - 188 `logoCheck()`
-  - 196 `giveCos(k)`
-  - 210 `regSet(n)`
+  - 199 `cosSrv(owned)`
+  - 205 `giveCos(k)`
+  - 220 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
