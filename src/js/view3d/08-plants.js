@@ -82,6 +82,8 @@
   const DKLAY = {};   // the packer's crate got a gutted fish at t (the gutter's throw, drawWorker 'gutw'), by the packer's id
   function workLow(st, T, idx){
     const k = st.task, e = st.ev, c = e ? e.k : 99;
+    if (st.seated) return [0, 0.2, 1];   // (the packed lunch on an upturned tub, OB14)
+    if (k === 'cold') return [0.04 * Math.max(0, Math.sin(T * 5.2 + idx)), 0.1];   // (hunched, and a little on the knees with the beat)
     if (k === 'hose' || k === 'coil' || k === 'stack' || k === 'gut' || k === 'haul') return [0, 0.12];
     if (k === 'ice') return [0, 0.22];
     if (k === 'lean') return [0, 0.1];
@@ -108,6 +110,7 @@
   function workTurn(st, eye, T, idx){
     const to = q => { if (!q) return 0; let d = Math.atan2(q[0] + eye[0] - st.x, -(q[2] + eye[2] - st.z)) - st.h; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d) < 0.35 ? 0 : clamp(d, -1.3, 1.3); };
     const ez = u => u * u * (3 - 2 * u);
+    if (st.task === 'hose' && st.deck && !st.walk) return 0.4 * Math.sin(T * 0.8 + idx);   // (the jet over the deck from side to side, deckcrew.js WASH_SW)
     if (st.task === 'gutw' && st.Ub){ const s = (T + idx * 1.7) % 5.6, w = s < 0.4 ? ez(s / 0.4) : s < 0.95 ? 1 : s < 1.4 ? 1 - ez((s - 0.95) / 0.45) : 0; return w ? to(st.Ub) * w : 0; }
     if (st.task === 'bleed' && st.ev && st.ev.deck){ const c = st.ev.k, w = c < 1.7 ? 0 : c < 2.05 ? ez((c - 1.7) / 0.35) : c < 2.5 ? 1 : c < 2.9 ? 1 - ez((c - 2.5) / 0.4) : 0; return w ? to(st.ev.U) * w : 0; }
     if (st.task === 'pack' && st.Cr && st.lay != null && st.lay >= 0 && st.lay < 1.5) return to(st.Cr) * 0.6 * Math.sin(st.lay / 1.5 * Math.PI);
@@ -125,7 +128,29 @@
       const P0 = [B[0] + (box[0] - B[0]) * q * 0.4 + (hash(i + 3) - 0.5) * 0.16, B[1] - q * q * Math.max(0, B[1] - box[1] - top), B[2] + (box[2] - B[2]) * q * 0.4 + (hash(i + 9) - 0.5) * 0.16];
       if (BIT) drawN(BIT, chain(M4.T(P0[0], P0[1], P0[2]), M4.RY(hash(i * 7) * 6.28 + q * 3), M4.S(0.55))); else drawN(PM.icebit, M4.T(P0[0], P0[1], P0[2])); }
   }
+  // ---- the cold on the people on deck (OB14, F14): when the cold and the wet cost (13-work.js idleEnv().cold over CHILL), the hood of
+  // an oilskin or a parka is up, and a bare head under another jacket has a knitted cap on. The hood is built here (the figure's parts
+  // have only the parka's rolled one): a cowl round the head open to the face, in the jacket's own colour, fitted to the head part.
+  // (HOODK: the hood of a look's meshes, so a frame looks nothing up)
+  const HOODM = new Map(), HOODK = new WeakMap(), COLDL = new Map(); let HEADBB = null, CHILLT = {t:-1, on:false};
+  function deckChill(){ if (CHILLT.t === S.t) return CHILLT.on; let on = false; try { on = typeof idleEnv === 'function' && typeof CHILL !== 'undefined' && S.boat.status !== 'port' && idleEnv().cold > CHILL; } catch (e) { /* a block not loaded */ } CHILLT = {t:S.t, on}; return on; }
+  function hoodOf(col){
+    const key = col.slice(0, 3).map(v => Math.round(v * 255)).join('.'); let m = HOODM.get(key); if (m) return m;
+    if (!HEADBB){ const o = glbPart('worker', 'head'); if (!o) return null; const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; for (let i = 0; i < o.p.length; i += 3) for (let a = 0; a < 3; a++){ lo[a] = Math.min(lo[a], o.p[i + a]); hi[a] = Math.max(hi[a], o.p[i + a]); } HEADBB = [lo, hi]; }
+    const [lo, hi] = HEADBB, c = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2 + 0.01, (lo[2] + hi[2]) / 2 + 0.012], r = [(hi[0] - lo[0]) / 2 * 1.16 + 0.014, (hi[1] - lo[1]) / 2 * 1.1 + 0.014, (hi[2] - lo[2]) / 2 * 1.12 + 0.014];
+    // (from the back of the head round to the rim, which stands forward over the brow and back under the chin)
+    const b = NB(), G = [], k = [col[0] * 0.92, col[1] * 0.92, col[2] * 0.92, col[3] == null ? 0.3 : col[3]];
+    for (let i = 0; i <= 7; i++){ const row = []; for (let j = 0; j <= 16; j++){ const be = j / 16 * Math.PI * 2, top = Math.sin(be), am = (1.82 + 0.22 * top) * i / 7, sa = Math.sin(am);
+      row.push([c[0] + r[0] * sa * Math.cos(be), c[1] + r[1] * sa * top - (top < 0 ? 0.03 * sa * -top : 0), c[2] + r[2] * Math.cos(am)]); } G.push(row); }
+    b.grid(G, () => k); m = b.mesh(); HOODM.set(key, m); return m; }   // (one per jacket colour, a dozen at most: kept)
+  const HOODTOP = {oilskin:1, parka:1}, HOODHAT = {none:1, beanie:1}, HOODOFF = {bun:1, pony:1, braid:1, long:1};   // (a peak or a brim keeps the hood down; a bun, a tail or long hair is inside it)
+  // (a look for the cold: the same, with a knitted cap on a bare head; kept by the look's key)
+  function coldLook(l){ if (!l || typeof l !== 'object' || HOODTOP[l.tp] || (l.ht && l.ht !== 'none')) return l; const key = lookSig(l); let o = COLDL.get(key); if (!o){ o = Object.assign({}, l, {ht:'beanie'}); if (COLDL.size > 60) COLDL.clear(); COLDL.set(key, o); } return o; }
   function drawWorker(P, st, eye, T, idx){
+    // (OB14: seated with the lunch or the cup; deckcrew.js matPlace)
+    if (st.task === 'sitmat' || st.task === 'sitkaffe'){ st.seated = true; st.task = st.task === 'sitmat' ? 'lunch' : 'coffee'; }
+    const chill = !!st.deck && !!P.look && typeof P.look === 'object' && deckChill(), hooded = chill && HOODTOP[P.look.tp] && HOODHAT[P.look.ht || 'none'];
+    if (chill && !hooded) P.look = coldLook(P.look);
     const y = P.gy([st.x, st.z]), h = st.h + workTurn(st, eye, T, idx); (P.wpos || (P.wpos = {}))[idx] = {x:st.x, y, z:st.z};   // where he stands, for his words (sayWorker)
     const F = [Math.sin(h), -Math.cos(h)], R = [Math.cos(h), Math.sin(h)], rel = (x, yy, z) => [x - eye[0], yy - eye[1], z - eye[2]];
     const W = (a, up, r) => rel(st.x + F[0] * a + R[0] * r, y + up, st.z + F[1] * a + R[1] * r);
@@ -150,11 +175,11 @@
     if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
     // the head's pitch by what he does (down at the phone, the knife, over the rail; up at the northern lights), and a slow turn talking or
     // scanning with the binoculars
-    const HP = {phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04, cut:-0.5, slip:-0.25};
+    const HP = {cold:-0.16, phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04, cut:-0.5, slip:-0.25};
     // (the tired look down, st.slump)
     const hp = (HP[st.task] || 0) - (st.slump || 0) * 0.5; if (st.task === 'chat') hy += Math.sin(T * 0.7 + idx) * 0.12; if (st.task === 'aurora') hy += Math.sin(T * 0.15 + idx) * 0.4; if (st.task === 'binoc') hy += Math.sin(T * 0.22 + idx) * 0.25;
     const hd = W(bend, 1.6 + dy, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
-    if (K){ drawN(K.head, HM); for (const m of [K.hair, K.beard, K.hat]) if (m) drawN(m, HM); } else drawN(P.bare ? PM.headB : PM.head, HM);
+    if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
     let hands;
     const t = T + idx * 1.7;
     // (near, the hands are drawn in their grips, the pose's points being where they hold: a hanging hand's grip is below its wrist)
@@ -171,7 +196,13 @@
         st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
         const G = W(0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
-      case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = [W(0.18 + (1 - k) * 0.1, 1.05 + k * 0.45, 0.14 - k * 0.1), W(0.05, 0.85, -0.25)]; break; }
+      case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = st.seated ? [W(0.3 - k * 0.1, sh + 0.22 + k * 0.42, 0.12 - k * 0.08), W(0.34, sh + 0.2, -0.1)] : [W(0.18 + (1 - k) * 0.1, 1.05 + k * 0.45, 0.14 - k * 0.1), W(0.05, 0.85, -0.25)]; break; }
+      // the cold (OB14, F14): the arms beaten round the chest and flung out again a few times, then the hands rubbed before the chest
+      // and breathed into, over and over
+      case 'cold': { const c = t % 8.4, beat = c < 3.4 ? ease(Math.min(1, c / 0.3)) * (1 - ease(clamp((c - 3.1) / 0.3, 0, 1))) : 0, sw2 = 0.5 + 0.5 * Math.sin(c * 6.6 - 1.2);
+        const rub = Math.sin(t * 11) * 0.035, up = c > 5.6 && c < 7.2 ? Math.sin((c - 5.6) / 1.6 * Math.PI) : 0;
+        const A0 = [W(0.28 + rub, 1.24 + up * 0.22, 0.035), W(0.28 - rub, 1.24 + up * 0.22, -0.035)], B0 = [lerp3(W(0.14, 1.22, 0.56), W(0.2, 1.36, -0.14), sw2), lerp3(W(0.14, 1.22, -0.56), W(0.2, 1.36, 0.14), sw2)];
+        hands = [lerp3(A0[0], B0[0], beat), lerp3(A0[1], B0[1], beat)]; break; }
       // at a landing: hand signals to the crane driver, reaching for a load coming down, unhooking it, counting, and the radio remote
       case 'signal': { const k = Math.sin(t * 3.2); hands = [W(0.2 + k * 0.06, 1.72, 0.32 + k * 0.12), W(0.25, 0.95, -0.22)]; break; }
       case 'guide': hands = [W(0.42, 1.62, 0.22), W(0.42, 1.62, -0.22)]; break;
@@ -327,7 +358,7 @@
       case 'knife': { const S0 = W(0.3, 1.02, -0.06), sd = norm3([F[0] * 0.35 + R[0] * 0.25, 0.9, F[1] * 0.35 + R[1] * 0.25]), c = (t * 1.4) % 1, side = Math.floor(t * 1.4) % 2 ? 1 : -1, u = ease(c), al = 0.06 + u * 0.2;
         const kp = [S0[0] + sd[0] * al + R[0] * side * 0.025, S0[1] + sd[1] * al, S0[2] + sd[2] * al + R[1] * side * 0.025]; hands = [[kp[0] + R[0] * 0.13, kp[1] - 0.02, kp[2] + R[1] * 0.13], S0]; st.steel = {at:S0, dir:sd}; break; }
       // a packed lunch: the paper in the left hand, a slice to the mouth now and then
-      case 'lunch': { const k = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6); hands = [lerp3(W(0.3, 1.08, 0.08), W(0.13, 1.5, 0.03), k), W(0.3, 1.03, -0.1)]; break; }
+      case 'lunch': { const k = Math.pow(Math.max(0, Math.sin(t * 0.55)), 6); hands = st.seated ? [lerp3(W(0.32, sh + 0.22, 0.08), W(0.2, sh + 0.62, 0.03), k), W(0.34, sh + 0.2, -0.1)] : [lerp3(W(0.3, 1.08, 0.08), W(0.13, 1.5, 0.03), k), W(0.3, 1.03, -0.1)]; break; }
       // the phone held in both hands at the chest, a thumb at work
       case 'phone': { const k = Math.sin(t * 3.1) * 0.006; hands = [W(0.26, 1.13 + k, 0.035), W(0.26, 1.12, -0.035)]; break; }
       // the binoculars up at the eyes
@@ -385,7 +416,7 @@
     // the break's things in the hands (tools/deck/pause.py), where the page has them; the old cup otherwise
     const pz = nm => kit('pause', nm), atH = (q, ...m) => chain(M4.T(q[0], q[1], q[2]), M4.RY(-h), ...m);
     if (st.task === 'coffee' && !st.gone){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([GP[0][0], GP[0][1] - 0.045, GP[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
-      if (FL){ const q = W(0.12, 0, -0.32); drawN(FL, atH([q[0], y - eye[1] + 0.01, q[2]])); } }
+      if (FL){ const q = st.seated ? W(0.1, 0, -0.36) : W(0.12, 0, -0.32); drawN(FL, atH([q[0], y - eye[1] + 0.01, q[2]])); } }
     if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(GP[1], st.steel.dir)); }
     if (st.task === 'lunch' && !st.gone){ const M = pz('mat'); if (M) drawN(M, atH(GP[1], M4.RX(0.35), M4.S(0.75))); }
     if (st.task === 'phone' && !st.gone){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
@@ -394,7 +425,7 @@
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
       if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = W(0.2, 1.52, 0.02); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
         DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
-    if (st.task === 'sit'){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
+    if (st.task === 'sit' || st.seated){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
     if (st.task === 'snus' && st.can && !st.gone){ const C = pz('snus'); if (C) drawN(C, atH([GP[1][0], GP[1][1] + 0.01, GP[1][2]])); }
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = knifeKit(!!P.bare), fishAt = (P, sp, kg, rz) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(rz || 0), M4.S(sc))); };
@@ -466,6 +497,8 @@
     if (st.task === 'hose'){ const nz = hands[0], RL = st.deck ? pz('spole') : null; if (RL){ const q = W(0.12, 0, 0.62); drawN(RL, atH([q[0], y - eye[1], q[2]], M4.RY(Math.PI / 2))); }
       drawN(PM.hose, limbM(RL ? W(0.12, 0.3, 0.5) : W(-0.4, 0.05, 0.4), nz, 0.025));
       if (st.deck) for (let i = 0; i < 24; i++){ const q = ((t * 1.3 + i / 24) % 1), d = q * 1.4; DKWATER.push([nz[0] + F[0] * d + (hash(i) - 0.5) * 0.15 * q, nz[1] + d * 0.2 - q * q * 1.2, nz[2] + F[1] * d + (hash(i + 7) - 0.5) * 0.15 * q]); }
+      // (where the jet lands the deck is wet and the water runs out over it: kept in the boat's frame, 09-landing-deck.js dkWet)
+      if (st.deck && st.bp && !st.walk) dkWet(st.bp, h - bv.head);
       let k = 0; for (let i = 0; i < 40; i++){ const q = ((t * 1.3 + i / 40) % 1), d = q * 1.6; PB[k * 3] = nz[0] + F[0] * d + (hash(i) - 0.5) * 0.15 * q; PB[k * 3 + 1] = nz[1] + d * 0.25 - q * q * 1.3; PB[k * 3 + 2] = nz[2] + F[1] * d + (hash(i + 7) - 0.5) * 0.15 * q; PA[k] = 0.7 * (1 - q); k++; }
       P.spray = k; } 
   }

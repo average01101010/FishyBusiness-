@@ -278,6 +278,7 @@ function workAssign(as){
   for (const p of P) if (!p.why) p.why = p.st === 'pause' ? 'nowork' : workWhy(p, p.st, ctx);
   idleAssign(P, ctx);
   quayRoles(P, ctx);
+  deckRoles(P, ctx);
   return P;
 }
 // ---- the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
@@ -301,6 +302,43 @@ function quayRoles(P, ctx){
     // (the one he was chatting with looks out over the sea instead of talking to nobody)
     if (p.idle === 'chat' && p.with) for (const q of P) if (q !== p && !q.role && q.idle === 'chat' && q.with === pKey(p)){ q.idle = 'look'; q.with = null; } });
 }
+// ---- the deck washed down, the packed lunch and the cold, as roles on those on a break (OB14, 11.11.2026, docs/planer/om-bord.md F12,
+// F13, F14; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig, at mannskapet oppfører seg som ekte
+// mennesker»). Roles only, as at the quay (quayRoles): nobody changes station, p.idle is kept, and no number changes (the rest, the
+// meal, the watch and the pace are as before); the 3D view walks them to it (deckcrew.js) and the Mannskap page says it (workDoing).
+//   'spyl' and 'kost' (F12): once the gutting, the icing and the hauling have stopped, the deck they left is washed down as part of the
+//     work: the first one free takes the hose (on an open boat the bucket and the brush), and with three or more free a second scrubs.
+//     From WASH.after minutes after the last deck work (b.deckT, 05-vessels.js deckMinute) and for washMin() minutes; before, only a
+//     break one might draw, and never the hose on an open boat.
+//   'mat' (F13): on a boat with no galley the packed lunch and the flask come out when the meal is served (14-crewlife.js mealMinute,
+//     S.meal.last): those free eat where they sit or stand for WASH.eat minutes, the lunch first and the coffee after.
+//   'frys' (F14): when the cold and the wet cost (coldPen, 03-simulation.js, over CHILL), some of those standing still on a break beat
+//     their arms and rub their hands; more of them the colder it is. At sea, lying still; never one at work.
+// Those asleep, seasick, ashore or worn out are left alone, and so is anyone with a role at the quay.
+const WASH = {after:2, base:4, perM:0.5, eat:12, lunch:7}, CHILL = 0.05, DECKWORK = {sloy:1, is:1, blogg:1, haling:1, sort:1, fort:1}, STILL = {look:1, lean:1, back:1};
+function washMin(){ return clamp(Math.round(WASH.base + WASH.perM * ((VESSELS[S.boat.type] || {}).len || 10)), 6, 16); }
+// (the deck is being washed now: it was worked on, and that stopped a little while ago)
+function deckWash(){ const b = S.boat, e = b.deckT != null ? S.t - b.deckT : -1; return e >= WASH.after && e < WASH.after + washMin(); }
+// (the packed lunch is out now, on a boat with no galley at sea; u: how far into it, 0-1)
+function lunchNow(){ const M = S.meal, L = M && M.last; if (!L || S.boat.status === 'port' || ((BOAT.fac || {}).galley || 'bysse') !== 'none') return null; const e = S.t - L.t; return e >= 0 && e < WASH.eat ? {e, coffee:e >= WASH.lunch} : null; }
+function deckRoles(P, ctx){
+  if (ctx.s === 'aground' || ctx.fort || ctx.mp) return;
+  const OFF = {sleep:1, seasick:1, shop:1, quay:1, worry:1}, free = () => P.filter(p => p.st === 'pause' && !p.role && !OFF[p.idle] && pTired(p) < 0.85).sort((x, y) => (x.c ? 0 : 1) - (y.c ? 0 : 1));
+  // (the one he was chatting with looks out over the sea instead of talking to nobody, as at the quay)
+  const give = (p, r) => { p.role = r; if (p.idle === 'chat' && p.with) for (const q of P) if (q !== p && !q.role && q.idle === 'chat' && q.with === pKey(p)){ q.idle = 'look'; q.with = null; } };
+  // (under way on a boat with a house the crew are inside, Jonas 03.10 and 21.10.2026: nothing of this then; an open boat's are on deck)
+  const E = idleEnv(); if (ctx.ror && !E.open) return;
+  if (lunchNow()) for (const p of free()) give(p, 'mat');
+  if (deckWash() && !P.some(p => DECKWORK[p.st])){ const L = free(); if (L.length){ give(L[0], 'spyl'); if (L.length >= 3) give(L[1], 'kost');
+    // (one hose on deck: another whose break drew the hose takes the brush)
+    for (const q of P) if (q.st === 'pause' && !q.role && q.idle === 'hose') q.idle = 'sweep'; } }
+  // (at sea, as the cold counts there: 04-crew.js crewEffort)
+  if (E.cold > CHILL && !ctx.ror && ctx.s !== 'port'){ const share = clamp(0.25 + 2.5 * (E.cold - CHILL), 0.25, 0.85);
+    for (const p of free()) if (STILL[p.idle] && hashStr(pKey(p) + ':frys:' + Math.floor((S.t + hashStr(pKey(p)) % 12) / 12)) / 4294967296 < share) give(p, 'frys'); }
+}
+const DECK_ING = {spyl:['Spyler dekket', 'Hosing down the deck'], spylO:['Skyller og skrubber dørken', 'Sluicing and scrubbing the boards'], kost:['Skrubber dekket', 'Scrubbing the deck'],
+  mat:['Spiser matpakka', 'Eating a packed lunch'], matK:['Drikker kaffe fra termosen', 'Coffee from the flask'], frys:['Slår floke for å holde varmen', 'Beating the arms to keep warm']};
+function deckDoing(p){ const no = S.lang === 'no', r = p.role, k = r === 'spyl' && (BOAT.fac || {}).house === 'open' ? 'spylO' : r === 'mat' && (lunchNow() || {}).coffee ? 'matK' : r; return DECK_ING[k] ? DECK_ING[k][no ? 0 : 1] : null; }
 const QUAY_ING = {hekt:['Hekter på karene', 'Hooking on the tubs'], luke:['Gir tegn til kranføreren', 'Signalling to the crane driver'], isrom:['Tar imot isen', 'Taking the ice aboard'], kran:['Kjører kranen', 'Driving the crane']};
 // ---- what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
 // seg på rekka, drikker kaffe, skrubber dekk og alle andre aktuelle ting de kan finne på å gjøre»): a spell of about twelve minutes each
@@ -377,6 +415,7 @@ function workDoing(p){ const no = S.lang === 'no';
   if (p.st === 'fort'){ const m = MOOR_ING[typeof moorPhase === 'function' && moorPhase()]; if (m) return m[no ? 0 : 1]; } if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'sett') return no ? 'Setter over hekken' : 'Setting over the stern'; if (p.role === 'lang') return no ? 'Langer redskapet akter' : 'Handing the gear aft'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
   if (p.st === 'last' && p.role === 'hekt') return no ? 'Hekter på og av' : 'Hooking on and off';
   if ((p.st === 'pause' || p.st === 'last') && QUAY_ING[p.role]) return QUAY_ING[p.role][no ? 0 : 1];
+  if (p.st === 'pause' && DECK_ING[p.role]){ const t = deckDoing(p); if (t) return t; }
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
   if (snoVessel() && (p.st === 'sloy' || p.st === 'is')) return p.st === 'sloy' ? (no ? 'Deler krabben i klør' : 'Splitting the crab into clusters') : (no ? 'Koker, fryser og pakker klør' : 'Cooking, freezing and packing clusters');   // the snow crab factory (H3b)
   if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)
