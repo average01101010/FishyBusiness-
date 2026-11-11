@@ -23,6 +23,7 @@ Laget 04.10.2026, da spillet fikk navnet Det Store Blå og domenet detstorebla.n
 - **Rådgiveren:** at spillet og innloggede brukere kan kalle funksjonene, er med vilje, og hver funksjon sjekker selv hvem som spør. «Leaked password protection» kan slås på under Auth → Attack Protection, trolig bare på betalt plan (ikke sjekket).
 - **Serveren (04.10.2026):**
   - Hetzner CX23 `ubuntu-4gb-hel1-10`, 65.108.252.250, Helsinki, med 2 vCPU, 4 GB minne, 40 GB disk og 20 TB trafikk. Det er god margin for statiske filer.
+  - **Fra 11.11.2026 ligger spillet på Hetzner CPX32 `ubuntu-8gb-hel1-1`, 89.167.24.148** (4 vCPU, 8 GB), og `ubuntu-4gb-hel1-10` er bare lagringsporten: «Serverne» i `docs/systemer/publisering.md`.
   - Domenet ligger hos Webhuset.no.
   - **Oppsettet:**
     1. DNS: `A` og `AAAA` for `@`, og `CNAME` for `www`.
