@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ob4-111126', '11.11.2026', 'Lossingen og isen med mannskapet', 'Landing and ice with the crew', [
+       ['Når båten losser ved mottaket, står én av mannskapet ved karet og hekter på stroppen, og en annen står ved rekka mot kaia og gir tegn til kranføreren. Karene står på fritt dekk der kroken kommer rett ned. Er du alene om bord, hekter du på selv.', 'When the boat lands at the plant, one of the crew stands at the tub and hooks the sling on, and another stands at the rail to the quay and signals to the crane driver. The tubs stand on clear deck where the hook comes straight down. Alone aboard, you hook on yourself.'],
+       ['Isen fra siloen kommer gjennom en slange, og én om bord holder den over iskassa.', 'The ice from the silo comes through a hose, and one of the hands holds it over the ice box.'],
+       ['Den nye hurtigsjarken og kystbåtene på 15 og 21 meter legger til med babord side, så kranen deres står mot kaia. Når kranen tar frakt, kjører én den, én hekter på, og kassa henger i kroken hele veien mellom dekket og kaia.', 'The new speed sjark and the 15 and 21 metre coastal boats now lie port side to the quay, so their crane stands next to it. When the crane works freight, one drives it, one hooks on, and the crate hangs in the hook all the way between the deck and the quay.']]],
     ['trim-111126', '11.11.2026', 'Trim på alle båter', 'Tuning on every boat', [
        ['Trim virker nå på alle båter, også skiffen med påhengsmotor.', 'Tuning now works on every boat, the outboard skiff too.']]],
     ['ob3-111126', '11.11.2026', 'Settingen og redskapet om bord', 'Setting, and the gear aboard', [

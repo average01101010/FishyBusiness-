@@ -25,6 +25,9 @@
     // (a freezer vessel's pallets come up through her cargo hatch over the hold, anchors.hatch, H2d: the next one stands down in the hold
     // under the opening, HOLDD below the deck, out of sight under the trunk's dark floor, and comes up through it on the fork, H2d2)
     if (kind === 'pall' && G.hatch) return [[G.hatch.at[0], G.hatch.deck - HOLDD, G.hatch.at[2]]];
+    // (OB4, F10: on a boat with a deck crew the plant's tubs stand where her deck is clear and open to the sky, deckcrew.js landSlots:
+    // [x, y, z, turn]; the fixed square below stood through the hatch coaming on some decks and under the 15 m boat's shelter deck)
+    if (kind === 'tub' && typeof CREW3D !== 'undefined' && CREW3D.on()){ const L = CREW3D.landSlots(); if (L.length) return L; }
     return kind === 'tub' ? [[0.65, d.y, d.z - 0.55], [-0.65, d.y, d.z - 0.55], [0.65, d.y, d.z + 0.55], [-0.65, d.y, d.z + 0.55]] : [[0, d.y, d.z - 0.45], [0, d.y, d.z + 0.45]];
   }
   // the forklift's run on the unit's route: from its spot east of the drop spot forward to the loads, lift, on round a quarter turn to
@@ -136,7 +139,7 @@
     let pkB = SC ? pkOf(0) : null; const pk0 = pkB;   // (pk0: the load's turn on the quay is reckoned from the first lift's, as MQ is)
     if (SC){ const r = Math.hypot(SQ.b[0] - SC.axis[0], SQ.b[2] - SC.axis[2]) - Math.hypot(SC.heel[0] - SC.axis[0], SC.heel[2] - SC.axis[2]); KST.shipReach = +(r / SC.len).toFixed(3); }
     const MQ = SC ? chain(BMrel, M4.RY(angDiff(pkB.a, pdB.a))) : null;
-    const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:SC ? slotOf(j) : slots[Math.min(slots.length - 1, 0)], ry:0}, slewD = SC ? Math.atan2(-MQ[2], MQ[0]) : Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
+    const deckOf = j => L.own ? places[LD[j].place] || {at:slots[0], ry:0} : {at:SC ? slotOf(j) : slots[Math.min(slots.length - 1, 0)], ry:SC ? 0 : slots[0][3] || 0}, slewD = SC ? Math.atan2(-MQ[2], MQ[0]) : Math.atan2(D[0] - P.crane[0], D[1] - P.crane[1]);
     // (yaw: the tub's turn in the world, so the one on the hook turns smoothly from where it stood to where it goes; M: its frame resting)
     const onDeck = j => { const q = deckOf(j), M = chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.ry)); return {w:wpos(q.at), yaw:Math.atan2(-M[2], M[0]), M}; };
     const onQuay = j => { const y = quayY(j), c = [D[0] - eye[0], y - eye[1], D[1] - eye[2]]; return {w:[D[0], y, D[1]], yaw:slewD, M:chain(M4.T(c[0], c[1], c[2]), M4.RY(slewD))}; };
@@ -252,9 +255,13 @@
     const [, fz] = unitL(U, FK.x, FK.z), pz = A.truck.pick[2], az = A.truck.arc[2]; P.doorK = ease(clamp((pz - fz) / (pz - az), 0, 1));
     // the ice chute swings out over the boat's hold while ice runs, and back along the quay after
     const b = S.boat, gt = S.t + currentFrac(), icing = b.iceUntil > gt && b.status === 'port' && b.port === P.id && BMrel, ax = A.silo.axis;
-    let chW = P.chRest;
+    let chW = P.chRest, iceTo = null;
     if (icing){ const c = xf(BMrel, [0, 0, 0]), C = [c[0] + eye[0], c[2] + eye[2]], fw = [Math.sin(bv.head), -Math.cos(bv.head)], Lb = (VESSELS[vtype()] || {len:6}).len, sw = unitW(U, ax[0], ax[2]);
-      const k = clamp((sw[0] - C[0]) * fw[0] + (sw[1] - C[1]) * fw[1], -Lb / 3, Lb / 3), [tx, tz] = unitL(U, C[0] + fw[0] * k, C[1] + fw[1] * k); chW = Math.atan2(tx - ax[0], tz - ax[2]); }
+      const k = clamp((sw[0] - C[0]) * fw[0] + (sw[1] - C[1]) * fw[1], -Lb / 3, Lb / 3); let aim = [C[0] + fw[0] * k, C[1] + fw[1] * k];
+      // (F11, OB4: the chute is swung towards the ice box on her deck, where one of the hands takes the ice, deckcrew.js isPlace;
+      // before, towards the middle of the boat wherever that was)
+      const IB = iceBoxTop(vtype()); iceTo = IB ? xf(BMrel, IB).map((v, i) => v + eye[i]) : null; if (iceTo) aim = [iceTo[0], iceTo[2]];
+      const [tx, tz] = unitL(U, aim[0], aim[1]); chW = Math.atan2(tx - ax[0], tz - ax[2]); }
     P.chA = P.chA === undefined ? P.chRest : P.chA + clamp(angDiff(P.chA, chW), -0.35 * dt, 0.35 * dt);
     const r = drawUnitParts(P, eye, pose, FK, P.doorK, P.chA, LS ? T : null);   // (the driver is on the forklift while it works a landing)
     // what hangs from the hook (in the sling, swaying a little), the sling itself through the landing, the loads on deck and on the quay
@@ -273,7 +280,7 @@
     else if (LS && b.land.kind === 'pall' && kit('pall', 'gaffel')){ const e = rel(r.tip[0] + sway * Math.cos(pose.a), pose.hook - 0.1, r.tip[2] - sway * Math.sin(pose.a)); drawN(kit('pall', 'gaffel'), chain(M4.T(e[0], e[1], e[2]), M4.RY(pose.a + Math.PI / 2))); }   // (the empty pallet fork on the hook)
     else if (LS) drawSling(ring, null, T * 0.3, 0);
     if (LS){
-      for (const q of LS.deck) q.L.draw(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2])));
+      for (const q of LS.deck) q.L.draw(chain(BMrel, M4.T(q.at[0], q.at[1], q.at[2]), M4.RY(q.at[3] || 0)));
       for (const q of LS.quay){ const c = rel(LS.D[0], q.y, LS.D[1]); q.L.draw(chain(M4.T(c[0], c[1], c[2]), M4.RY(LS.slewD))); }
     }
     // people: the day shift, or one on watch at night; everyone turns out for a landing
@@ -283,10 +290,29 @@
     if (LS && LS.hatch) LS.hatch.forEach((q, k) => { const w = xf(BMrel, q.at), H = P.hgang || (P.hgang = {id:P.id, spray:0, y:0, gy(){ return this.y; }}); H.y = w[1] + eye[1];
       drawWorker(H, {x:w[0] + eye[0], z:w[2] + eye[2], h:bv.head + q.h, task:q.task, walk:false, s:0}, eye, T, 4 + k); });
     // ice from the chute's spout down into the boat
+    // (F11, OB4 11.11.2026: on a boat with a deck crew the ice comes through the silo's hose from the spout, and the hand who takes it
+    // aboard holds its end over the ice box (deckcrew.js isPlace); it runs once he stands there. Where the hose would have to go through
+    // the boat to reach him (the 15 m boat's box is under her shelter deck), or nobody is free to take it, the ice falls from the spout
+    // as before, now only down to the first thing of the boat under it, not through it)
     if (icing && Math.abs(angDiff(P.chA, chW)) < 0.15){
-      const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], L = A.silo.chute, O = unitP(U, [ax[0] + Math.sin(P.chA) * L, ax[1] + A.silo.spout, ax[2] + Math.cos(P.chA) * L]), fall = Math.max(0.5, O[1] - dy);
-      let k = P.spray; for (let i = 0; i < 70; i++){ const q = (T * 1.6 + i / 70) % 1, rr = 0.12 + 0.1 * q; PB[k * 3] = O[0] + (hash(i) - 0.5) * rr - eye[0]; PB[k * 3 + 1] = O[1] - q * q * fall - eye[1]; PB[k * 3 + 2] = O[2] + (hash(i + 31) - 0.5) * rr - eye[2]; PA[k] = 0.85; k++; }
-      P.spray = k; }
+      const G = GEO(vtype()), dy = xf(BMrel, [0, (G.deck || {y:G.gw}).y, 0])[1] + eye[1], L = A.silo.chute, O = unitP(U, [ax[0] + Math.sin(P.chA) * L, ax[1] + A.silo.spout, ax[2] + Math.cos(P.chA) * L]);
+      const c0 = xf(BMrel, [0, 0, 0]), ch = Math.cos(bv.head), sh = Math.sin(bv.head), dxw = O[0] - c0[0] - eye[0], dzw = O[2] - c0[2] - eye[2], Ob = [dxw * ch + dzw * sh, O[1] - c0[1] - eye[1], -(dxw * sh - dzw * ch)];
+      const crewOn = typeof CREW3D !== 'undefined' && CREW3D.on() && CREW3D.setIce, taker = crewOn ? CREW3D.agents().find(a => a.role === 'isrom' && a.goal && a.goal.dyn === 'is') : null, man = taker && taker.mode === 'at' && taker.cell === taker.goal.k ? taker : null;
+      let hose = null, from = [O[0] - eye[0], O[1] - eye[1], O[2] - eye[2]], to = null, fall = Math.max(0.5, O[1] - dy);
+      if (man && iceTo){ const Fh = [Math.sin(man.h), -Math.cos(man.h)], hb = [man.x + Fh[0] * 0.44, man.y + 0.86, man.z + Fh[1] * 0.44];
+        if (Math.hypot(hb[0] - Ob[0], hb[1] - Ob[1], hb[2] - Ob[2]) < 10 && CREW3D.clearLine([Ob[0], Ob[1] - 0.2, Ob[2]], [hb[0], hb[1] + 0.3, hb[2]])) hose = xf(BMrel, hb); }
+      if (crewOn) CREW3D.setIce(man ? !!hose : true);
+      // (he is waited for eight seconds from when the ice is at the spout; the core's ice runs on its own clock whatever he does)
+      if (!P.iceT || T - P.iceS > 1.5) P.iceT = T; P.iceS = T; const late = T - P.iceT > 8;
+      KST.iceHose = !!hose; KST.iceWait = !!(taker && !man && !late);
+      if (hose){ let p0 = from; const s0 = Math.min(0.6, Math.hypot(hose[0] - from[0], hose[2] - from[2]) * 0.12);
+        for (let k = 1; k <= 10; k++){ const q = k / 10, Pq = [from[0] + (hose[0] - from[0]) * q, from[1] + (hose[1] - from[1]) * q - s0 * 4 * q * (1 - q), from[2] + (hose[2] - from[2]) * q]; drawN(PM.fhose, limbM(p0, Pq, 0.055)); p0 = Pq; }
+        from = hose; to = [iceTo[0] - eye[0], iceTo[1] - eye[1], iceTo[2] - eye[2]]; fall = Math.max(0.1, from[1] - to[1]); }
+      else if (crewOn){ const y = CREW3D.dropY([Ob[0], Ob[1] - 0.2, Ob[2]]); if (y != null) fall = Math.max(0.3, Ob[1] - y); }
+      if (!taker || man || late){
+        let k = P.spray; const n = hose ? 40 : 70; for (let i = 0; i < n; i++){ const q = (T * 1.6 + i / n) % 1, rr = hose ? 0.05 + 0.05 * q : 0.12 + 0.1 * q;
+          PB[k * 3] = from[0] + (to ? (to[0] - from[0]) * q : 0) + (hash(i) - 0.5) * rr; PB[k * 3 + 1] = from[1] - q * q * fall; PB[k * 3 + 2] = from[2] + (to ? (to[2] - from[2]) * q : 0) + (hash(i + 31) - 0.5) * rr; PA[k] = 0.85; k++; }
+        P.spray = k; } }
     return {night, spray:P.spray, lamps:P.lamps.map(L => rel(L[0], L[2] - 0.12, L[1]))};
   }
   // the coast's plants (06b-coastports.js) are laid out when the eye comes within 1.5 km and their ground is in (the berths read it)
@@ -636,7 +662,7 @@
   // the knuckle-boom crane (V.crane tonnes; tools/deck/kran.py): base, slewing column, main and outer boom, two telescopes, the two
   // cylinders between their eyes and the hook on its wire. Folded at sea; at the quay, while freight goes on or off (a 'last' job,
   // 09g-turer.js cargoJob), it unfolds and works a 40 s round: over a cargo place, the hook down and up, swing out over the quay
-  // (starboard, where she lies), down and up, and back; the crate rides the hook from the quay (loading) or to it (landing). Every
+  // (the side she lies to it with), down and up, and back; the crate rides the hook from the quay (loading) or to it (landing). Every
   // joint moves at its own rate, so it folds and unfolds as a real one does.
   const CRN = {p:null, t:0};
   // a pose from the model (ext is each telescope's slide, e both together; wire the hook's drop under the tip) and the fold limit: with
@@ -670,7 +696,8 @@
       // where the hook must go: a cargo place, or 2.5 m out over the quay on the starboard side, level with the crane
       const cp = K.cargo && K.cargo.length ? K.cargo[(Math.floor(t / 40)) % Math.min(K.cargo.length, Math.max(1, cargoUnits(G)))] : [Q.at[0] - 1.2, d.y, Q.at[2] + 2], qy = (G.gw || d.y + 0.9) + 0.6;
       u = (t % 40) / 40; ph = u < 0.2 ? 0 : u < 0.3 ? 1 : u < 0.4 ? 2 : u < 0.65 ? 3 : u < 0.75 ? 4 : u < 0.85 ? 5 : 6;
-      at = ph <= 2 || ph === 6 ? [cp[0], cp[1] + 0.95, cp[2]] : [G.beam / 2 + 2.5, qy, Q.at[2]];
+      // (F22, OB4: the quay is on the side she lies to it with, 07-harbours.js berthSide, not always to starboard)
+      at = ph <= 2 || ph === 6 ? [cp[0], cp[1] + 0.95, cp[2]] : [(typeof berthSide === 'function' ? berthSide(vtype()) : 1) * (G.beam / 2 + 2.5), qy, Q.at[2]];
       // the slew to the point and the telescopes out to its distance (the tip moves along the outer boom as they slide)
       const dx = at[0] - Q.at[0], dz = at[2] - Q.at[2], sl = Math.atan2(-dx, -dz) - (Q.ry || 0), D = Math.hypot(dx, dz) / (Q.s || 1);
       const r0 = Math.hypot(...[0, 2].map(i => crFrames(X, Q, M4.T(0, 0, 0), {sl:0, a1:work.a1, a2:work.a2, e:0}).tip[i] - Q.at[i])) / (Q.s || 1);
@@ -698,13 +725,17 @@
       const cb = kit('crane', nb), cr = kit('crane', nr); if (!cb || !cr || !fb || !X[ka] || !X[kb]) continue; const A = xf(fa, X[ka]), B = xf(fb, X[kb]), v = [B[0] - A[0], B[1] - A[1], B[2] - A[2]];
       drawN(cb, chain(toolM(A, v), S1)); drawN(cr, chain(toolM(B, v), S1)); }
     // the hook on its wire: short and made fast at sea, paid out to the deck or the quay in the round
-    const H = kit('crane', 'hook'), tip = F.tip, near = !job || Math.hypot(p.sl - tgt.sl, p.e - tgt.e) > 0.15;
-    let hy = tip[1] - (near ? stow.w : work.w * 0.3) * F.s;
+    // (F23, OB4: unf, the crane stands unfolded in its working pose: the hook hangs on its working wire from then on, and what it has
+    // lifted hangs in it through the swing too; before, the crate was drawn only while the crane stood still over the place, so it
+    // was gone from the hook all the way between the deck and the quay)
+    const H = kit('crane', 'hook'), tip = F.tip, near = !job || Math.hypot(p.sl - tgt.sl, p.e - tgt.e) > 0.15, unf = !!job && Math.abs(p.a2 - tgt.a2) < 0.3 && Math.abs(p.a1 - tgt.a1) < 0.3;
+    if (typeof CREW3D !== 'undefined' && CREW3D.setCrane) CREW3D.setCrane(unf ? {u, loading:!!loading} : null);
+    let hy = tip[1] - (unf ? work.w * 0.3 : stow.w) * F.s;
     if (job && !near && at){ const goal = xf(BMrel, at)[1] + 0.35 * F.s, wv = ph === 1 || ph === 4 ? Math.sin(((ph === 1 ? u - 0.2 : u - 0.65) / 0.1) * Math.PI) : 0; const h0 = tip[1] - work.w * 0.3 * F.s; hy = h0 - (h0 - goal) * wv; }
     const at0 = (y) => { const m = F.MC.slice(); m[12] = tip[0]; m[13] = y; m[14] = tip[2]; return m; };   // (the column's turn and the boat's heading, at a point)
     drawN(PM.wire, limbM([tip[0], tip[1], tip[2]], [tip[0], hy, tip[2]], 0.012)); if (H) drawN(H, at0(hy));
     // the crate on the hook: from the quay to the deck when loading, from the deck to the quay when landing
-    const carry = job && !near && (loading ? u >= 0.7 || u < 0.25 : u >= 0.25 && u < 0.7), C = kit('rig', 'kasse');
+    const carry = unf && (loading ? u >= 0.7 || u < 0.25 : u >= 0.25 && u < 0.7), C = kit('rig', 'kasse'); KST.craneCarry = !!carry;
     if (carry && C){ const hl = (X.hook_h || 0.35) * F.s; drawN(C, chain(at0(hy - hl - 0.8), M4.S(1 / F.s))); }
     // the boom rest stands where the parked crane's outer boom comes down (the model's rest_at, from the crane's foot)
     if (parked){ const R = kit('crane', 'rest'); if (R) drawN(R, chain(F.M0, M4.T(X.rest_at[0], X.rest_at[1], X.rest_at[2]))); }
