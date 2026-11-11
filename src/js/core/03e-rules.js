@@ -315,13 +315,16 @@ function rulesAt(q){
   // «kan ha inntil 5 % bifangst av torsk i de enkelte fangster og ved landing». Without a species the jig's catch has cod in it, so it
   // stops as the Oslo fjord's cod ban does (the catch cannot leave the cod out by place yet: BACKLOG). Pots and shellfish are not asked:
   // the game's pots take crab, not cod. With no gear given the exception counts, as everywhere here no gear means «is there a lawful way»
+  // Ø10b (11.11.2026, Jonas on valg 12: «fangsten kan ikke holde torsken ute, det er urealistisk. Bifangst av uønskede eller fredede arter er
+  // et ekte problem og spillet må reflektere dette»): only fishing for cod is stopped (sp 'torsk'). With no species the boat fishes what
+  // is there, the cod comes with it, and § 5 makes it a bycatch: at most 5 % in each catch and at the landing (ruByc, below; fish() says
+  // so over 5 %, landConf takes the rest, kvCheck remarks on it)
   const shell = gear === 'teiner' || !!(sp && SPECIES[sp] && SPECIES[sp].shell);
   if (!n62 && !inBL && !shell && (bits & 64) && ruSkag(p, bits)){
-    if (isSp('torsk')){
-      if ((!gear || gear === 'juksa') && len > 0 && len < 11 && ruIn2(md, 401, 630) && bladB())
+    if (isSp('torsk') && (!gear || gear === 'juksa') && len > 0 && len < 11 && ruIn2(md, 401, 630) && bladB())
         add('warn', 'skag4', 'Unntaket i Skagerrak: fartøy under 11 m med eier på blad B kan fiske og lande høyst 3 tonn torsk med juksa utenfor grunnlinjen fra 1. april til 30. juni. Ellers er torsk forbudt her. Hele den norske kvoten i Skagerrak er 52 tonn i 2026.', 'The Skagerrak exception: vessels under 11 m whose owner is on blad B may fish and land at most 3 tonnes of cod with jig outside the baseline from 1 April to 30 June. Otherwise cod is banned here. Norway\'s whole quota in the Skagerrak is 52 tonnes in 2026.', RU_SKF + ' §§ 1, 2 og 4', RU_SK);
-      else add('no', 'skag', 'Norske fartøy kan ikke fiske torsk i Skagerrak utenfor grunnlinjen (øst for linja Lindesnes–Hanstholmen). Unntaket er juksa fra fartøy under 11 m med eier på blad B, 1. april–30. juni, høyst 3 tonn.', 'Norwegian vessels may not fish cod in the Skagerrak outside the baseline (east of the line Lindesnes–Hanstholm). The exception is jig from vessels under 11 m whose owner is on blad B, 1 April–30 June, at most 3 tonnes.', RU_SKF + ' § 1 og § 4', RU_SK, true);
-    } else add('warn', 'skag5', 'I Skagerrak utenfor grunnlinjen kan du ha høyst 5 % torsk som bifangst når du fisker andre arter.', 'In the Skagerrak outside the baseline you may have at most 5% cod as bycatch when fishing other species.', RU_SKF + ' § 5', RU_SK);
+      else if (sp === 'torsk') add('no', 'skag', 'Norske fartøy kan ikke fiske torsk i Skagerrak utenfor grunnlinjen (øst for linja Lindesnes–Hanstholmen). Unntaket er juksa fra fartøy under 11 m med eier på blad B, 1. april–30. juni, høyst 3 tonn.', 'Norwegian vessels may not fish cod in the Skagerrak outside the baseline (east of the line Lindesnes–Hanstholm). The exception is jig from vessels under 11 m whose owner is on blad B, 1 April–30 June, at most 3 tonnes.', RU_SKF + ' § 1 og § 4', RU_SK, true);
+    else add('warn', 'skag5', 'I Skagerrak utenfor grunnlinjen kan du ha høyst 5 % torsk som bifangst når du fisker andre arter. Fiske etter torsk er forbudt. Er det mer torsk enn det i fangsten, flytter du, og det som er over ved levering, blir inndratt.', 'In the Skagerrak outside the baseline you may have at most 5% cod as bycatch when fishing other species. Fishing for cod is banned. With more cod than that in the catch you move, and what is over at the landing is confiscated.', RU_SKF + ' § 5', RU_SK);
   }
   // the species and the seasons (§ 39, § 40)
   if (sp === 'kveite'){
@@ -400,6 +403,19 @@ function f26In(f, ll){
   const side = (L, P) => Math.sign((L[1][1] - L[0][1]) * c * (P[0] - L[0][0]) - (L[1][0] - L[0][0]) * (P[1] - L[0][1]) * c);
   const P = [ll.lat, ll.lon]; return side(f.l1, P) === side(f.l1, mid) && side(f.l2, P) === side(f.l2, mid);
 }
+// Ø10b: where cod is banned for the boat but may be a bycatch of the fishing for other species, and the share. Now the Skagerrak outside
+// the baseline (FOR-2025-12-19-2805 § 5: «inntil 5 % bifangst av torsk i de enkelte fangster og ved landing» with conventional gear other
+// than seine); not under the § 4 exception (the jig under 11 m on blad B, 1 April – 30 June), whose cod is lawful. q: {p, H, len, gear}.
+// The catch counts itself by it (05-vessels.js bycAdd), the landing takes the cod over the share (landConf), and the coast guard asks
+const RU_BYC = {skag:{share:0.05, ref:RU_SKF + ' § 5', url:RU_SK, kv:'skagby'}};
+function ruByc(q){
+  if (!RU.ok || !q || !q.p) return null; const gear = q.gear || 'juksa'; if (!['juksa', 'line', 'garn'].includes(gear)) return null;
+  const p = q.p, bits = ruBits(p); if ((bits & 1) || !(bits & 64) || LL(p).lat >= 62 || !ruSkag(p, bits)) return null;
+  const len = q.len || 0; if (gear === 'juksa' && len > 0 && len < 11 && ruIn2(ruMD(q.H == null ? S.t / 60 : q.H), 401, 630) && bladB()) return null;
+  return 'skag';
+}
+// the cod over the share in a catch counted by ruByc: c = {kg (all the fish taken there), cod}
+const bycOver = (k, c) => c && RU_BYC[k] ? Math.max(0, (c.cod || 0) - RU_BYC[k].share * (c.kg || 0)) : 0;
 function ruBlockMsg(q){ const r = rulesAt(q), b = r.items.find(x => x.block && x.v === 'no'); return b ? gL(b.no, b.en) : null; }
 // § 47 minimum sizes (cm) where you are, for the species the game has
 function ruMinSize(sp, p){
@@ -433,7 +449,7 @@ const RU_SHORT = {lb28:['Lange og brosme over 28 m', 'Ling and tusk over 28 m'],
   sk0:['Krever snøkrabbetillatelse', 'Snow crab permit needed'], sk1:['Ikke snøkrabbe innenfor 12 nm', 'No snow crab within 12 nm'], sk2:['Annet lands sokkel', 'Another country\'s shelf'], sk3:['Snøkrabbe stengt', 'Snow crab closed'], sk4:['Snøkrabbe: lov', 'Snow crab: allowed'],
   sk5:['Bløtkrabbe: skift felt', 'Soft crab: change field'], sk6:['Høyst 8 000 teiner', 'At most 8,000 pots'], sk7:['Bare teiner', 'Pots only'],
   f27:['Ikke krabbeteiner innenfor 4 nm', 'No crab pots within 4 nm'], f27b:['Ikke krabbeteiner innenfor 6 nm nå', 'No crab pots within 6 nm now'],
-  skag:['Ikke torsk i Skagerrak her', 'No cod in the Skagerrak here'], skag4:['Skagerrak: juksa, høyst 3 t torsk', 'Skagerrak: jig, at most 3 t cod'], skag5:['Høyst 5 % torsk som bifangst', 'At most 5% cod as bycatch']};
+  skag:['Ikke torsk i Skagerrak her', 'No cod in the Skagerrak here'], skag4:['Skagerrak: juksa, høyst 3 t torsk', 'Skagerrak: jig, at most 3 t cod'], skag5:['Høyst 5 % torsk som bifangst', 'At most 5% cod as bycatch'], skagby:['Over 5 % torsk: flytt', 'Over 5% cod: move']};
 function ruCtx(){ const b = S.boat; return {p:b.status === 'port' && typeof portById === 'function' && b.port ? portById(b.port).p : b.pos, len:BOAT.len, gear:b.rig || 'juksa', hav:S.lic && S.lic.hav ? S.lic.id : null,
   sp:b.rig === 'teiner' ? potSp() : S.target === 'kveite' ? 'kveite' : null, hand:!(S.equip && S.equip.jukse > 0)}; }
 // the answer for your boat now, kept for 10 game minutes and 50 m

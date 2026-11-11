@@ -206,6 +206,8 @@ function panelWx(){
   h.push('<div class="kv"><span>' + t('waves') + ', ' + t('here').toLowerCase() + '</span><span>' + fmt(hs, 1) + ' m <span class="r' + riskLevel(W, hs) + '">' + t('risk' + riskLevel(W, hs)) + '</span></span></div>');
   { const q = seaHere(b.pos, H), fra = L(' fra ', ' from ');
     h.push('<div class="kv"><span>' + L('Sjøgang her', 'Sea here') + '</span><span>' + SEAN[S.lang][q.code] + (q.krapp ? L(', krapp', ', short and steep') : '') + '</span></div>');
+    // (the stream here, and the steep sea where the wind stands against it: Ø9 F8b, seaCur in 03b-sea.js)
+    if (q.cur && q.cur.kn >= 0.5) h.push('<div class="kv"><span>' + L('Strøm her', 'Stream here') + '</span><span>' + fmt(q.cur.kn, 1) + ' kn' + L(' mot ', ' setting ') + dirName(q.cur.to) + (q.cur.krapp ? ' <span class="r2">' + L('krapp sjø i strømmen', 'short, steep sea in the stream') + '</span>' : '') + '</span></div>');
     h.push('<div class="kv"><span>' + L('Vindsjø · dønning', 'Wind sea · swell') + '</span><span>' + fmt(q.w, 1) + ' m' + (q.w >= 0.1 ? fra + dirName(q.dir) : '') + ' · ' + fmt(q.sw, 1) + ' m' + (q.sw >= 0.1 ? fra + dirName(q.swDir) + ', ' + fmt(q.swTp, 0) + ' s' : '') + '</span></div>');
     if (b.status !== 'port'){ const Z = motionHere(H, b), dg = r => Math.round(r * 180 / Math.PI), lv = Z.state.lvl;
       h.push('<div class="kv"><span>' + L('Stabilitet', 'Stability') + '</span><span class="r' + lv + '">GM ' + fmt(Z.St.GM, 2) + ' m · ' + L('rulleperiode ', 'roll period ') + fmt(Z.St.Tr, 1) + ' s · ' + L('ruller ±', 'rolls ±') + dg(Z.M.roll) + '°' + (dg(Z.M.heel) >= 1 ? L(', krenger ', ', heels ') + dg(Z.M.heel) + '°' : '') + ' · ' + [L('god', 'good'), L('redusert', 'reduced'), L('kritisk', 'critical')][lv] + '</span></div>'); }
@@ -323,10 +325,11 @@ function portSlip(){
     for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
     const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
     // one row per species with the reason (spilltest 3, F1); notes from before have only the sum
-    const WHY = {kvote:['over kvoten', 'over the quota'], byc10:['over bifangstgrensen på 10 %', 'over the 10 % bycatch limit'], byclukket:['over bifangstgrensen etter maksimalkvoten', 'over the bycatch limit after the maximum quota'],
+    const WHY = {kvote:['over kvoten', 'over the quota'], byc5:['over 5 % bifangst i Skagerrak', 'over 5 % bycatch in the Skagerrak'], byc10:['over bifangstgrensen på 10 %', 'over the 10 % bycatch limit'], byclukket:['over bifangstgrensen etter maksimalkvoten', 'over the bycatch limit after the maximum quota'],
       bk7:['over 7 % bifangst (direktefisket er stengt)', 'over 7 % bycatch (the direct fishery is closed)'], bkmax:['over maksimalkvoten', 'over the maximum quota']};
     if (ls.confRows) for (const [sp, k, v, w] of ls.confRows) h.push(row(LN('Inndratt: ', 'Confiscated: ') + spName(sp).toLowerCase() + ' ' + LN(WHY[w][0], WHY[w][1]), fmt(k, 0), '−' + fmt(v, 0)));
     else if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt over kvote eller bifangstgrense', 'Over quota or bycatch limit, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
+    if (ls.vedKr > 0.5) h.push(row(LN('Vederlag for ilandføring, 20 % av det inndratte', 'Compensation for landing, 20 % of what was confiscated'), '', fmt(ls.vedKr, 0)));
     if (ls.gutKr > 0.5) h.push(row(LN('Sløyd på mottaket: rund hyse og sei, 0,30 kr/kg', 'Gutted by the buyer: round haddock and saithe, 0.30 kr/kg'), fmt(ls.gutKg || 0, 0), '−' + fmt(ls.gutKr, 0)));   // (R2)
     if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
     if (ls.crabDead > 0.05) h.push(row(LN('Død kongekrabbe, vraket', 'Dead king crab, discarded'), fmt(ls.crabDead, 1), '0'));
@@ -388,11 +391,12 @@ function landWarn(p){
   for (const x of S.hold){ const cs = C.confBy[x.sp] || 0; if (!cs) continue; const c = x.cls != null ? x.cls : SPECIES[x.sp].ref, g = grade(x.fresh);
     kg += x.kg * cs; sum += x.kg * cs * (g === 'V' ? 1 : clsPrice(p, x.sp, c, H, x.hook) * GM[g]); }
   if (kg < 0.5) return '';
-  const why = acc === 'none' ? LN('Båten har ikke adgang til å fiske torsk, hyse og sei, så bare 10 % av landingen kan være bifangst.', 'The vessel has no access to fish cod, haddock and saithe, so only 10% of the landing may be bycatch.')
+  const why = C.zConf > 0.5 && C.zConf >= kg / 2 ? LN('I Skagerrak utenfor grunnlinjen kan torsk bare være bifangst, høyst 5 % av fangsten der; ' + fmt(C.zConf, 0) + ' kg torsk er over.', 'In the Skagerrak outside the baseline cod may only be a bycatch, at most 5% of the catch there; ' + fmt(C.zConf, 0) + ' kg of cod is over.')
+    : acc === 'none' ? LN('Båten har ikke adgang til å fiske torsk, hyse og sei, så bare 10 % av landingen kan være bifangst.', 'The vessel has no access to fish cod, haddock and saithe, so only 10% of the landing may be bycatch.')
     : C.codConf > 0.5 ? LN('Du har ikke torskekvote igjen for ' + fmt(C.codConf, 0) + ' kg av torsken.', 'You have no cod quota left for ' + fmt(C.codConf, 0) + ' kg of the cod.')
     : LN('Maksimalkvoten for hyse eller sei er fisket, så bare 30 % hyse og 20 % sei kan være bifangst.', 'The maximum quota for haddock or saithe is fished, so only 30% haddock and 20% saithe may be bycatch.');
   return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
-    LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
+    LN(' Du får 20 % av verdien, ca. ' + kr(Math.round(sum * CONF_PAY)) + ', i vederlag for å føre den i land.', ' You get 20% of the value, about ' + kr(Math.round(sum * CONF_PAY)) + ', as compensation for landing it.') + LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
 }
 // the queue at the plant (core/07-harbours.js LANDQ, K3): [the line, the short word]
 function landQText(short){

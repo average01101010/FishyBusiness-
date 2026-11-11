@@ -102,11 +102,71 @@ function dynInt(P, s, thr, rud, h, capF, E){
   const rcap = P.alat / Math.max(0.5, Math.abs(s.u)); s.r = clamp(s.r, -rcap, rcap);
 }
 // ... and where that takes her: X east, Y south (metres), psi the heading (grid, clockwise from north)
-function dynMove(s, h){
+// (E: the stream carries her over the ground with the water she moves through, F8b; E.side eases it out in the last lengths to a
+// stop, where the skipper holds her up to the point, as for the wind)
+function dynMove(s, h, E){
   // (the model's metres are true ones; on the grid they are k of them, gridScale, H1b of the ocean step)
   const c = Math.cos(s.psi), sn = Math.sin(s.psi), hk = h * gridScale({x:s.X / 1000, y:s.Y / 1000});
   s.X += (s.u * sn + s.v * c) * hk; s.Y -= (s.u * c - s.v * sn) * hk; s.psi += s.r * h;
+  if (E && E.cm){ const sd = E.side == null ? 1 : E.side; s.X += E.cx * sd * hk; s.Y += E.cy * sd * hk; }
 }
+// ---- the stream (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8) ----
+// The water she moves through moves itself (curAt, 06e-anchor.js; as she feels it: curBoat, curEff). Her speed through the water is
+// the engine's as before; over the ground the stream is added (dynMove), so against Saltstraumen she stands nearly still and with it
+// she is through in minutes. The autopilot steers by her course over the ground and so heads up into a stream across the line (dynAuto).
+// Lying with no way on she is carried with it (lieDrift). The waves that run on to the stream change with it (curWave, 03b-sea.js),
+// and so does what she meets of them (dynEnv). The GPS shows her speed and course over the ground (dynSog).
+// How much of her speed through the water v (m/s) is made good over the ground on the course hd (grid, radians) in the stream C: she
+// heads up so the stream's part across the course is met (v^2 - cross^2 is left for the way ahead), and the part along it is added.
+// Under 3 % she cannot stem the stream: 0, she holds up to it where she is until the tide slackens, as the manoeuvring model has her
+// (dynAuto); never over three times.
+function curSogF(C, hd, v){
+  if (!C || !C.m || !(v > 0.05)) return 1;
+  const sn = Math.sin(hd), c = Math.cos(hd), al = C.x * sn - C.y * c, cr = C.x * c + C.y * sn, f = (al + Math.sqrt(Math.max(0, v * v - cr * cr))) / v;
+  return f < 0.03 ? 0 : Math.min(f, 3);
+}
+// the hours a leg from a to w takes at vKn knots through the water, leaving a at the game hour H: the stream sampled along it at the
+// time she is there, every 250 m where a sound's stream may reach and every 2 km elsewhere (kept per leg, speed and ten game
+// minutes: the route's cards and the estimate ask on every draw)
+const CURLEG = new Map();
+function curLegH(a, w, vKn, H){
+  const d = dist(a, w), h0 = kmTrue(a, w) / NM / Math.max(0.1, vKn); if (!(d > 1e-6)) return 0;
+  const key = a.x.toFixed(3) + ',' + a.y.toFixed(3) + ',' + w.x.toFixed(3) + ',' + w.y.toFixed(3) + ',' + vKn.toFixed(1) + ',' + Math.floor(H * 6); let r = CURLEG.get(key); if (r !== undefined) return r;
+  const hd = Math.atan2(w.x - a.x, -(w.y - a.y)), v = vKn * KN_MS; let t = 0, s = 0;
+  // (where she cannot stem it she waits, five game minutes at a time, for the tide to slacken; outside the sounds' reach every 2 km)
+  try { while (s < d - 1e-9 && t < 96){ const p = {x:a.x + (w.x - a.x) * s / d, y:a.y + (w.y - a.y) * s / d}, st = Math.min(d - s, stromNear(p).length ? 0.25 : 2), m = {x:p.x + (w.x - a.x) * st / 2 / d, y:p.y + (w.y - a.y) * st / 2 / d};
+    const f = curSogF(curEff(curAt(m, H + t)), hd, v); if (!f){ t += 1 / 12; continue; } t += st / d * h0 / f; s += st; } } catch (e){ return h0; }   // (the map not in: the leg as in still water, and asked again)
+  if (CURLEG.size > 400) CURLEG.clear(); CURLEG.set(key, t); return t;
+}
+// her speed (knots) and course (grid, radians) over the ground, as the GPS has them: the model's while it has her, the minute step's
+// way with the stream's share (sail, below), the drift lying still, else none
+const SOGM = new WeakMap();
+function dynSog(b = S.boat){
+  if (b === S.boat && dynLive()){ const q = dynPose(); return {kn:q.sog / KN_MS, cog:q.cog}; }
+  if (b.status === 'sailing'){ const m = SOGM.get(b); return m && m.t >= S.t - 1 ? {kn:m.kn, cog:m.cog} : {kn:b.v || 0, cog:b.heading || 0}; }
+  const dv = b.drv; if (dv && dv.t >= S.t - 1 && !b.port){ const km = Math.hypot(dv.x, dv.y); if (km > 1e-5) return {kn:km / gridScale(b.pos) / NM * 60, cog:Math.atan2(dv.x, -dv.y)}; }
+  return {kn:b.gop || b.status === 'tow' ? (b.v || 0) : 0, cog:b.heading || 0};   // (setting, hauling or under tow: the minute's own pace)
+}
+// the share of her speed through the water the minute step made good over the ground last minute (for the pose between the minutes)
+function sailSogF(b = S.boat){ const m = SOGM.get(b); return m && m.t >= S.t - 1 ? m.f : 1; }
+// The minute step (sail, 05-vessels.js: time caught up, the game closed, the company's other vessels) with the stream: she has gone
+// the minute's way through the water along the route, and over the ground that is curSogF of it. Put on here round sail and not in
+// it, because another session has 05-vessels.js while F8b is built (11.11.2026); to be moved into sail (the backlog, «F8b»). A minute
+// in which she passes a waypoint is left as sailed (the stream's share of it is lost, a minute a waypoint at the most).
+const sailStill = sail;
+sail = function (H, W, hs){
+  const b = S.boat, pl = S.plan, p0 = b.pos, i0 = pl ? pl.idx : -1;
+  sailStill(H, W, hs);
+  if (!pl || S.plan !== pl || b.status !== 'sailing' || dynLive()) return;
+  const dx = b.pos.x - p0.x, dy = b.pos.y - p0.y, km = Math.hypot(dx, dy); if (km < 1e-6) return;
+  const C = curBoat(b, H), hd = Math.atan2(dx, -dy), f = curSogF(C, hd, (b.v || 0) * KN_MS);
+  SOGM.set(b, {t:S.t, kn:(b.v || 0) * f, cog:hd, f});
+  if (pl.idx !== i0 || Math.abs(f - 1) < 1e-3) return;
+  let k = f; const w = pl.wps[pl.idx];
+  if (f > 1){ const dw = w ? dist(p0, w) : 0; if (w && km * f >= dw - 1e-4) k = Math.max(1, (dw - 1e-4) / km);   // (not past the waypoint: the next minute arrives there)
+    let gp = true; try { gp = groundCheck(b.pos, {x:p0.x + dx * k, y:p0.y + dy * k}); } catch (e){} if (gp) return; }
+  b.pos = {x:p0.x + dx * k, y:p0.y + dy * k};
+};
 const dynZero = () => ({u:0, v:0, r:0, dl:0, psi:0, X:0, Y:0});
 // the throttle that holds the speed u
 function dynThrEq(P, u, capF){ return u <= 0 ? 0 : clamp(dynRes(P, u, capF) / (P.Tmax * (1 - 0.35 * u / P.umax)), 0, 1); }
@@ -201,19 +261,25 @@ const DYN_YAWF = [[0, 0.25], [90, 0.5], [135, 1], [180, 0.8]];
 function dynEnv(b, d, cal, H, dtG = 0){
   const P = cal.P, p = b.pos, g = gridGamma(p), psi = d.psi; let q = null;
   try { q = seaPartsNear(p, H); } catch (e){ q = null; }
-  const E = {cap:P.umax, capF:1, kT:1, kR:1, fe:0, fn:0, dq:0, wE:0, wN:0, Pem:0, hs:0, cb:1, tau:6};
+  const E = {cap:P.umax, capF:1, kT:1, kR:1, fe:0, fn:0, dq:0, wE:0, wN:0, Pem:0, hs:0, cb:1, tau:6, cx:0, cy:0, cm:0};
+  // the stream she is in (F8b): it carries her (dynMove), and the sea that runs on to it changes (below)
+  const C = curBoat(b, H); if (C.m){ E.cx = C.x; E.cy = C.y; E.cm = C.m; }
   if (q){
-    const hs = Math.max(0.05, Math.hypot(q.w, q.sw)), cb = seaDirF(p, H, psi); E.hs = hs; E.cb = cb;
+    let hs = Math.max(0.05, Math.hypot(q.w, q.sw)); const cb = seaDirF(p, H, psi); E.cb = cb;
+    if (C.m){ let e = 0; for (const [h0, tp, from] of [[q.w, q.tp, q.dir], [q.sw, q.swTp, q.swDir]]) e += (h0 * (tp > 0.3 ? curWave(2 * Math.PI / tp, curAlong(C, from, g)).af : 1)) ** 2; E.hs0 = hs; hs = Math.max(0.05, Math.sqrt(e)); }
+    E.hs = hs;
     E.cap = Math.max(0.3, speedCap(hs, cb) * KN_MS);
     let s2 = 0, dq2 = 0, te = 0, ws = 0;
-    for (const [h0, tp, from] of [[q.w, q.tp, q.dir], [q.sw, q.swTp, q.swDir]]){
+    for (let [h0, tp, from] of [[q.w, q.tp, q.dir], [q.sw, q.swTp, q.swDir]]){
       if (!(h0 > 0.02) || !(tp > 0.3)) continue;
-      const w = 2 * Math.PI / tp, k = w * w / 9.81, mu = dynAng(psi, (from - g) * Math.PI / 180), cm = Math.cos(mu), am = Math.abs(mu) * 180 / Math.PI;
+      const w = 2 * Math.PI / tp, mu = dynAng(psi, (from - g) * Math.PI / 180), cm = Math.cos(mu), am = Math.abs(mu) * 180 / Math.PI;
+      // (in a stream the sea is shorter and higher against it, longer and lower with it, curWave; sg is the frequency the water has)
+      let k = w * w / 9.81, sg = w; if (C.m){ const U = curAlong(C, from, g), cw = curWave(w, U); k *= cw.kf; h0 *= cw.af; sg = Math.max(0.05, w - k * U); }
       const fL = 1 / (1 + (k * P.L * Math.abs(cm) / Math.PI) ** 2), sr = h0 / 4 * (0.2 + 0.65 * (1 - fL)) * (0.6 + 0.4 * (1 + cm) / 2);
       s2 += sr * sr;
       let fq = DYN_YAWF[DYN_YAWF.length - 1][1]; for (let i = 1; i < DYN_YAWF.length; i++) if (am <= DYN_YAWF[i][0]){ const [a0, f0] = DYN_YAWF[i - 1], [a1, f1] = DYN_YAWF[i]; fq = f0 + (f1 - f0) * (am - a0) / (a1 - a0); break; }
       dq2 += (0.12 * h0 / 2 * fq) ** 2;
-      const we = Math.max(0.05, Math.abs(w + k * d.u * cm)); te += h0 * h0 * 2 * Math.PI / we; ws += h0 * h0;
+      const we = Math.max(0.05, Math.abs(sg + k * d.u * cm)); te += h0 * h0 * 2 * Math.PI / we; ws += h0 * h0;
       const Fd = 0.5 * 1025 * 9.81 * (h0 * h0 / 16) * P.L * Math.tanh(1.3 * k * P.T) ** 2, a = (from - g + 180) * Math.PI / 180;
       E.fe += Fd * Math.sin(a); E.fn += Fd * Math.cos(a);
     }
@@ -227,7 +293,8 @@ function dynEnv(b, d, cal, H, dtG = 0){
     if (h > 0) E.cap = Math.max(0.3, E.cap * dynShallowF(P, h, E.cap));
     try { dynBank(E, d, P, true); } catch (e){ E.bY = E.bN = 0; } }
   const c = E.cap; E.capF = Math.max(1, (E.kT * P.Tmax * (1 - 0.35 * c / P.umax) - P.k1 * c) / (P.k2 * c * c * (1 + P.cw * dynHumpG(c / P.sgL))));
-  const U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; E.wE = U * Math.sin(a); E.wN = U * Math.cos(a);
+  // (the wind she feels is the wind over the water she is in: less the stream)
+  const U = windAt(H, p), a = (windDir(H, p) - g + 180) * Math.PI / 180; E.wE = U * Math.sin(a) - E.cx; E.wN = U * Math.cos(a) + E.cy;
   DYN.env = E; return E;
 }
 // ---- squat, the bank and the shallow water (Ø9 F5, docs/planer/fysikk-4-sjo-og-skrog.md; Barrass, Norrbin, Schlichting) ----
@@ -421,7 +488,8 @@ function lieDrift(H){
     if (!home.said){ home.said = true; log('Dere har drevet av feltet. Kjører opp igjen og driver over det på nytt.', 'You have drifted off the ground. Running back up to drift over it again.', 'nav'); }
     b.drv = {x:(home.x - b.pos.x) / d * st, y:(home.y - b.pos.y) / d * st, t:S.t, st:b.status, up:true}; return;
   }
-  const km = D.v * 60 / 1000, step = {x:D.e * 60 / 1000, y:-D.n * 60 / 1000}, to = {x:b.pos.x + step.x, y:b.pos.y + step.y};
+  // (only what turns with the tide, tx and ty: the coastal current runs one way and would take a boat left lying far down the coast)
+  const C = curBoat(b, H), step = {x:(D.e + C.tx) * 60 / 1000, y:(-D.n + C.ty) * 60 / 1000}, km = Math.hypot(step.x, step.y), to = {x:b.pos.x + step.x, y:b.pos.y + step.y};
   if (km < 1e-4) return;
   let held = true; try { held = isLand(to) || !!groundCheck(b.pos, to) || coastDist(to) < LIE.land; } catch (e){}
   if (held){ if (!home.held){ home.held = true; log(b.status === 'adrift' ? 'Båten driver mot land og blir liggende der.' : 'Båten driver mot land. Motoren holder henne unna.', b.status === 'adrift' ? 'The boat drifts in toward the land and lies there.' : 'The boat drifts toward the land. The engine holds her off.', 'nav'); } return; }
@@ -456,8 +524,10 @@ function dynLive(){ const b = S.boat; return DYN.on && b === DYN.b && !!b.dyn &&
 // (waiting for the map, she stands where the last frame had her: the way on from the tick is frozen at the hold, never taken back)
 function dynPose(){
   const d = S.boat.dyn, s = clamp(((DYN.hold ? DYN.holdAt : wallNow()) - d.wall) / 1000, -0.02, 0.5) * simRate(), c = Math.cos(d.psi), sn = Math.sin(d.psi);
-  const X = d.X + (d.u * sn + d.v * c) * s, Y = d.Y - (d.u * c - d.v * sn) * s, psi = d.psi + d.r * s;
-  return {x:X / 1000, y:Y / 1000, hd:psi, cog:Math.abs(d.u) > 0.3 ? psi + Math.atan2(d.v, Math.abs(d.u)) : psi, u:d.u, v:d.v, r:d.r, spd:Math.abs(d.u)};
+  // (over the ground the stream is added, F8b: gE, gN her way east and north; sog and cog are the GPS's)
+  const E = DYN.env, sd = E && E.cm ? (E.side == null ? 1 : E.side) : 0, cx = sd ? E.cx * sd : 0, cy = sd ? E.cy * sd : 0, gE = d.u * sn + d.v * c + cx, gN = d.u * c - d.v * sn - cy;
+  const X = d.X + gE * s, Y = d.Y - gN * s, psi = d.psi + d.r * s;
+  return {x:X / 1000, y:Y / 1000, hd:psi, cog:sd ? (Math.hypot(gE, gN) > 0.3 ? Math.atan2(gE, gN) : psi) : Math.abs(d.u) > 0.3 ? psi + Math.atan2(d.v, Math.abs(d.u)) : psi, u:d.u, v:d.v, r:d.r, spd:Math.abs(d.u), sog:sd ? Math.hypot(gE, gN) : Math.abs(d.u)};
 }
 // the model has just stopped her and nothing else has moved her since (not a minute step caught up, not «Sitter båten fast?»): the 3D
 // view stands where the model left her for the moment before it takes the simulation's spot (view3d updateBoat)
@@ -491,7 +561,7 @@ function dynHelm(d, dtG){
   const b = S.boat, h = S.helm, cal = dynCalOf(b), P = cal.P, H = S.t / 60;
   if (Math.abs(h.v * KN_MS - d.u) > 0.6) d.u = h.v * KN_MS;   // set from outside (a test, «Fortøy» undone): the model takes it
   const E = dynEnv(b, d, cal, H, dtG), capF = E.capF, X0 = d.X, Y0 = d.Y, O = dynObsNear(d.X, d.Y, P.L + Math.abs(d.u) * dtG + 20);
-  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynBank(E, d, P); dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s); dynContact(b, d, P, O); }
+  for (let left = dtG; left > 1e-6;){ const s = Math.min(DYN_H, left); left -= s; dynBank(E, d, P); dynInt(P, d, h.thr, h.rud, s, capF, E); dynMove(d, s, E); dynContact(b, d, P, O); }
   if (!h.thr && Math.abs(d.u) < 0.04){ d.u = 0; }
   // land: over 3 knots she runs aground on it, slower she comes to a stop against it (every 10 m, then the thin breakwaters, then
   // the depth under her)
@@ -605,7 +675,9 @@ function dynAuto(d, dtG){
     // arrived at a harbour: within two lengths of its point and slow, the quay's lines take her the rest of the way (3D moorStep)
     if (stopW && stopW.port && ds < Math.max(2 * L, 10) && Math.abs(d.u) < 2.5){ dynWrite(b, d); if (arrive(stopW) || S.plan !== pl) return; continue; }
     // standing on a stop: exactly on it
-    if (ds < 0.5 && (Math.abs(d.u) < 0.08 || ds < 0.05)){
+    // (cl: the stream along her heading, as dynMove gives it her; her way over the ground along the line is d.u + cl)
+    const cs = E.cm ? E.side : 0, cl = cs ? (E.cx * Math.sin(d.psi) - E.cy * Math.cos(d.psi)) * cs : 0;
+    if (ds < 0.5 && (Math.abs(d.u + cl) < 0.08 || ds < 0.05)){
       if (stopW){ d.X = stopW.x * 1000; d.Y = stopW.y * 1000; } d.u = d.v = d.r = 0; dynWrite(b, d);
       if (stopW){ if (arrive(stopW) || S.plan !== pl) return; T.s = dynLineProj(T, d.X, d.Y, T.s); continue; }
       if (T.ghit){ const gp = T.ghit.gp; T.ghit = null; if (!sailReplan(pl, b, gp)) runAground(gp); return; }
@@ -614,15 +686,17 @@ function dynAuto(d, dtG){
         if (arrive(w) || S.plan !== pl) return; }
     }
     // the speed: the route's, the sea's cap, slow near harbours, slower into sharp corners, and never more than she can stop from
-    let vCmd = pl.replan ? 0 : vc;
+    // (vc and the manoeuvring speed are through the water; what the corners and the stops ask is over the ground, vG, which the
+    // stream along her is taken from, so she is on the point with no way over the ground: F8b)
+    let vCmd = pl.replan ? 0 : vc, vG = 1e9;
     if (T.back > 0 && T.s < T.sOut + T.turnL + 20) vCmd = Math.min(vCmd, 3 * KN_MS);   // (just out from a quay: manoeuvring speed)
     const vBase = vCmd;
     // (into a corner she slows with how sharp it is, but a planing hull no slower than a third of her cruising speed: below that her
     // rudder has no bite without the screw's race, and at two knots she ran 50 m past the corner before it took, 19.10.2026)
     const vTmin = cal.V.planing ? 0.35 * cal.turn.Uc : 1.5 * KN_MS;
-    for (const c of T.corners){ if (c.s <= T.s - 2 * L) continue; if (c.s > T.s + 600) break; const vTurn = Math.min(vc, Math.max(vTmin, vc * (1 - c.th / Math.PI))); if (c.s - T.s > -L) vCmd = Math.min(vCmd, dynVEase(cal, c.s - T.s - L, vTurn)); else vCmd = Math.min(vCmd, vTurn); }
-    vCmd = Math.min(vCmd, dynVEase(cal, ds - 0.3));
-    if (ds < 4) vCmd = Math.min(vCmd, Math.sqrt(2 * 0.12 * Math.max(0, ds - 0.25)) + 0.04);
+    for (const c of T.corners){ if (c.s <= T.s - 2 * L) continue; if (c.s > T.s + 600) break; const vTurn = Math.min(vc, Math.max(vTmin, vc * (1 - c.th / Math.PI))); if (c.s - T.s > -L) vG = Math.min(vG, dynVEase(cal, c.s - T.s - L, vTurn)); else vG = Math.min(vG, vTurn); }
+    vG = Math.min(vG, dynVEase(cal, ds - 0.3));
+    if (ds < 4) vG = Math.min(vG, Math.sqrt(2 * 0.12 * Math.max(0, ds - 0.25)) + 0.04);
     // room for the bow (tilbakemelding #104, 01.11.2026): the ground check above looks along the line, but a boat lying with her bow
     // to the shore when Autonav starts must turn before she is on the line, and went full ahead into the land first (the new 11 m sjark
     // 25 m off the shore south of Finnsnes: aground at 5-8 knots within 10-80 m, even with the route leading straight away behind her).
@@ -640,13 +714,18 @@ function dynAuto(d, dtG){
           let side = was && was.side; if (!side){ const room = sg => { const hh = d.psi + sg * 0.8; let q = null; try { q = groundCheck(a0, {x:a0.x + Math.sin(hh) * look / 1000, y:a0.y - Math.cos(hh) * look / 1000}); } catch (e){} return q ? dist(a0, q) : 1e9; };
             const rs = room(1), rp = room(-1); side = rs === rp ? (dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))) >= 0 ? 1 : -1) : rs > rp ? 1 : -1; }
           T.bow = {gd, astern, bk, u:N0.u, side}; } } }
-    if (T.bow) vCmd = Math.min(vCmd, T.bow.astern ? 0 : T.bow.u);
-    const sj = sjvAuto(d, h, ds, T); if (sj) vCmd = Math.min(vCmd, sj.v);   // giving way (Ø11.1, 05e-sjovei.js): off the line to starboard, or slower
+    if (T.bow) vG = Math.min(vG, T.bow.astern ? 0 : T.bow.u);
+    const sj = sjvAuto(d, h, ds, T); if (sj) vG = Math.min(vG, sj.v);
+    // (away from a stop never under the speed her rudder bites at, vTmin: in a following stream stronger than a corner's speed
+    // she would else be told to go astern through it; into a stop she may, to stand on the point)
+    vCmd = Math.min(vCmd, cl && ds > 3 * L ? Math.max(vG - cl, Math.min(vTmin, vG)) : vG - cl);
+    // she cannot stem the stream (F8b): said once a stream, with what runs against her; she holds up to it till the tide slackens
+    if (cl < -1 && d.u + cl < 0.15 && vCmd > 1){ T.stem = (T.stem || 0) + h; if (T.stem > 120 && !T.stemSaid){ T.stemSaid = true; const kn = fmt1(-cl / KN_MS); log('Strømmen er for sterk: ' + kn + ' knop imot. Båten holder seg opp mot den til den løyer.', 'The stream is too strong: ' + kn + ' knots against her. She holds up to it until it slackens.', 'nav'); } } else if (cl > -0.5){ T.stem = 0; T.stemSaid = false; }   // giving way (Ø11.1, 05e-sjovei.js): off the line to starboard, or slower
     // (the lever goes over gradually, a quarter of its travel a game second, as a hand moves it)
     // the throttle for the acceleration that brings her to the commanded speed in three game seconds, and along the easing curve
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
     const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + dynRes(P, d.u, capF);
-    const thrT = vCmd < 0.05 && d.u < 0.3 ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
+    const thrT = vCmd < 0.05 && d.u < 0.3 && !(cl && vCmd < -0.05) ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
     const thrB = T.bow && T.bow.astern ? (d.u > -0.6 ? -0.35 : 0) : thrT;   // (backing out from the shore: slow astern, the wheel amidships)
     const thr = d.thr = d.thr == null ? thrB : d.thr + clamp(thrB - d.thr, -0.25 * h, 0.25 * h);
     // the rudder: line of sight on the leg she is on, or on the next one from where a turn on her own radius must begin to meet it
@@ -660,16 +739,25 @@ function dynAuto(d, dtG){
     const fN = (us - N[j - 1].u) / Math.max(1e-6, N[j].u - N[j - 1].u), Tn = N[j - 1].T + (N[j].T - N[j - 1].T) * fN, Kn = (N[j - 1].K + (N[j].K - N[j - 1].K) * fN) * Math.max(Math.abs(d.u), 0.5 * N[0].u) / us, wn = Math.min(1.2 / Tn, 0.6);
     const Kp = wn * wn * Tn / Kn, Kd = Math.max(0, (2 * wn * Tn - 1) / Kn), Rn = N[j - 1].R + (N[j].R - N[j - 1].R) * fN;
     const Rt = Math.max(Rn, d.u * d.u / P.alat), n = T.P.length; let seg = dynSeg(T, T.s);
-    if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
+    // (in a stream the wheel goes over earlier, by what the stream carries her while she turns: F8b)
+    if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate) + (cs ? E.cm * cs * th * Rt / Math.max(Math.abs(d.u), 0.5) : 0), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
     const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP) - (sj ? sj.off : 0);
-    const chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi, chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
+    // (in a stream she heads up into what sets her off the line: her course through the water and the angle the stream sets her by,
+    // d.crab, eased over eight game seconds, so a slow corner, where the course over the ground turns with the stream before her bow
+    // has come round, does not ease the wheel too soon. She still runs 2-3 m wider out of a corner in a third of a knot than in still
+    // water, dyntest 11.11.2026: the backlog, «F8b»)
+    let chi = Math.abs(d.u) > 0.3 ? d.psi + Math.atan2(d.v, d.u) : d.psi;
+    if (cs && d.u < 0.3) chi = d.psi;   // (holding astern against a following stream at a stop: her bow is her course)
+    if (cs){ const sp = Math.sin(d.psi), cp = Math.cos(d.psi), gE = d.u * sp + d.v * cp + E.cx * cs, gN = d.u * cp - d.v * sp - E.cy * cs, to = Math.hypot(gE, gN) > 0.3 ? clamp(dynAng(chi, Math.atan2(gE, gN)), -1.2, 1.2) : 0;
+      d.crab = (d.crab || 0) + (to - (d.crab || 0)) * (1 - Math.exp(-h / 8)); chi += d.crab; } else if (d.crab) d.crab = 0;
+    const chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
     const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
-    dynBank(E, d, P); dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h);
+    dynBank(E, d, P); dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h, E);
     // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
     // quay's lines take, 3D moorStep)
     if (!(stopW && stopW.port && ds < 4 * L)){ if (!T.obs || T.obsAt !== Math.round(T.s / 50)){ T.obs = dynObsNear(d.X, d.Y, 80 + P.L); T.obsAt = Math.round(T.s / 50); } dynContact(b, d, P, T.obs); }
     // the last creep on to a stop is the model's, held so she never runs past it
-    if (ds < 4 && d.u > vCmd + 0.02) d.u = Math.max(vCmd + 0.02, d.u - cal.aC * h);
+    if (ds < 4 && d.u > vCmd + 0.02 && !cl) d.u = Math.max(vCmd + 0.02, d.u - cal.aC * h);
   }
   // what the model could not see: the last bit of land under her (a route the player drew through it, or a corner cut too fine)
   // (on a leg the route called safe she is held back where she was and the net under Autonav finds a way round from there, as for

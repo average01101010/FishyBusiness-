@@ -137,7 +137,41 @@ function seaState(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return
 // krapp (short and steep, as a young sea in a fjord: its height over its peak wavelength above 1/25)
 function seaHere(p, H){
   const q = hsParts(p, H), hs = Math.max(0.05, Math.hypot(q.w, q.sw)), Lp = 1.56 * q.tp * q.tp;
-  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04};
+  let cur = null; try { cur = seaCur(p, H, q); } catch (e){}   // (the wind sea against the stream, F8b)
+  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04, cur};
+}
+// ---- waves on a current (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8) ----
+// A wave that runs on to a current keeps its frequency as the ground sees it, om, and its wavenumber follows (om - k U)^2 = g k (deep
+// water; U the current along the way the wave travels, negative against it). The phase speed through the water is then
+// c = c0 (1 + sqrt(1 + 4 U / c0)) / 2 (c0 = g / om) and k = g / c^2: shorter against the stream, longer with it. The height follows the
+// wave action (Longuet-Higgins and Stewart 1961): H / H0 = sqrt(c0 cg0 / (c (cg + U))) = c0 / sqrt(c (c + 2 U)), so a sea against the
+// stream is shorter and higher (steep, breaking), with it longer and lower. At U = -c0 / 4 the wave is blocked (its energy cannot get
+// up against the stream) and the formula goes to infinity: held at CURW.max (2.5, the plan's cap), where the sea breaks instead.
+// The boat feels the stream without the wind's drift (curAt's sx, sy), and none of it under 0.2 knots (all of it from 0.3): the tide's
+// own stream along the open coast is under that, so nothing changes there (curEff).
+const CURW = {max:2.5, dead:0.2 * 1852 / 3600, full:0.3 * 1852 / 3600, krapp:1852 / 3600, w:0.2};
+function curWave(om, U){
+  const c0 = 9.81 / om; if (!(om > 0) || !(Math.abs(U) > 1e-3)) return {kf:1, af:1, c:c0, blocked:false};
+  const x = 1 + 4 * U / c0; if (x <= 0) return {kf:4, af:CURW.max, c:c0 / 2, blocked:true};
+  const c = c0 * 0.5 * (1 + Math.sqrt(x)); return {kf:(c0 / c) ** 2, af:Math.min(CURW.max, c0 / Math.sqrt(c * (c + 2 * U))), c, blocked:false};
+}
+// the stream a vessel and the waves feel, of what curAt gives: m/s east and south on the grid, and its speed (CURW.off: none, for the
+// tests' comparison with still water; the game never sets it)
+// (tx, ty: the part that turns with the tide, the sounds' stream and the tide's own, with the same dead band of its own: what carries a
+// boat lying still, lieDrift. The coastal current runs one way, and a boat left lying a week would be 100 km down the coast.)
+function curEff(c){
+  const band = m => CURW.off ? 0 : m > CURW.dead ? clamp((m - CURW.dead) / (CURW.full - CURW.dead), 0, 1) : 0;
+  const m = Math.hypot(c.sx, c.sy), f = band(m), tx0 = c.tx == null ? c.sx : c.tx, ty0 = c.ty == null ? c.sy : c.ty, ft = band(Math.hypot(tx0, ty0));
+  return {x:c.sx * f, y:c.sy * f, m:m * f, tx:tx0 * ft, ty:ty0 * ft};
+}
+// the stream along the way a sea travels that comes from the true bearing from (degrees) where the grid is turned g: + with it
+function curAlong(C, from, g){ const a = (from - g + 180) * Math.PI / 180; return C.x * Math.sin(a) - C.y * Math.cos(a); }
+// the stream at p for the weather's words: its speed (knots), where it sets (true degrees), how much higher the wind sea stands in
+// it, and krapp: the wind sea (at least CURW.w m of it) runs against a stream of over a knot
+function seaCur(p, H, q){
+  if (typeof curAt !== 'function') return null; const C = curEff(curAt(p, H)); if (!(C.m > 0)) return {kn:0, to:0, af:1, krapp:false};
+  const g = gridGamma(p), U = curAlong(C, q.dir, g), cw = q.tp > 0.3 ? curWave(2 * Math.PI / q.tp, U) : {af:1};
+  return {kn:C.m * 3600 / 1852, to:((Math.atan2(C.x, -C.y) * 180 / Math.PI + g) % 360 + 360) % 360, af:cw.af, against:-U * 3600 / 1852, krapp:q.w >= CURW.w && U <= -CURW.krapp};
 }
 // How much of the sea's speed loss she takes, by where the sea comes from (Fysikk 2, 19.10.2026): Kwon's direction factors for the
 // involuntary speed loss in wind and waves (Y. J. Kwon, «Speed loss due to added resistance in wind and waves», The Naval
