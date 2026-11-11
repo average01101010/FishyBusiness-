@@ -68,44 +68,48 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 513 `bridgeUnderUnit(br, extra)`
   - 518 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (215 linjer)
+## `src/js/core/01b-mapdata.js` (264 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
 - **1** MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
-  - 22 `mapOnReady(f)`
-- **23** IndexedDB, by content
-  - 24 `mapIdb()`
-  - 28 `idbDo(mode, f)`
-  - 29 `mapFetch(pk)`
-- **47** the manifest and the packs
-  - 48 `mapStart(base)`
-  - 65 `mapLoad(pk)`
-  - 76 `mapPackOf(L, bx, by)`
-  - 77 `mapPacksIn(kind, x0, y0, x1, y1)`
-  - 85 `mapSimPacks(p, r)`
-  - 86 `mapReadyAt(p, r)`
-  - 88 `mapSimAt(p)`
-  - 89 `mapViewAt(p)`
-  - 92 `mapKindIn(kind, p, memo)`
-  - 94 `mapNeed(p, r)`
-  - 100 `mapPreload(pts, kinds, onProgress)`
-  - 117 `mapLoadKind(kind)`
-- **118** blocks
-  - 119 `med16(raw, n)`
-  - 125 `med8(raw, n)`
-  - 130 `mapDecode(L, raw)`
-  - 143 `mapBlock(L, bx, by)`
-  - 155 `mapHasBlock(L, bx, by)`
-  - 158 `mapBlockKnown(L, bx, by)`
-  - 161 `rcell(L, ix, iy)`
-  - 169 `rbil(L, p)`
-  - 174 `rbilM(L, x, z)`
-  - 179 `mapHasM(L, x0, z0, x1, z1)`
-  - 186 `mapVec(pk, name)`
-  - 193 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 200 `simAreaReady()`
-  - 210 `mapDrop(pk)`
+  - 26 `mapOnReady(f)`
+- **27** IndexedDB, by content
+  - 28 `mapIdb()`
+  - 32 `idbDo(mode, f)`
+  - 33 `mapFetch(pk)`
+- **51** the manifest and the packs
+  - 55 `mapStart(base)`
+  - 71 `mapLoad(pk)`
+  - 82 `mapPackOf(L, bx, by)`
+  - 83 `mapPacksIn(kind, x0, y0, x1, y1)`
+  - 91 `mapSimPacks(p, r)`
+  - 92 `mapReadyAt(p, r)`
+  - 94 `mapSimAt(p)`
+  - 95 `mapViewAt(p)`
+  - 98 `mapKindIn(kind, p, memo)`
+  - 100 `mapNeed(p, r)`
+  - 106 `mapPreload(pts, kinds, onProgress)`
+  - 123 `mapLoadKind(kind)`
+- **124** blocks
+  - 125 `med16(raw, n)`
+  - 131 `med8(raw, n)`
+  - 136 `mapDecode(L, raw)`
+  - 150 `mapBlock(L, bx, by)`
+  - 162 `mapHasBlock(L, bx, by)`
+  - 165 `mapBlockKnown(L, bx, by)`
+  - 168 `rcell(L, ix, iy)`
+  - 176 `rbil(L, p)`
+  - 181 `rbilM(L, x, z)`
+- **185** the fine ground along the sea (Ø13 K1, 11.11.2026)
+  - 193 `finBlock(L, bx, by)`
+  - 199 `finCell(L, ix, iy)`
+  - 215 `finH(x, z, h)`
+  - 228 `mapHasM(L, x0, z0, x1, z1)`
+  - 235 `mapVec(pk, name)`
+  - 242 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 249 `simAreaReady()`
+  - 259 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (223 linjer)
 
@@ -2719,12 +2723,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1522 linjer)
+## `src/js/ui/phone/07-patch.js` (1531 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1510 `patch()`
+  - 1519 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3621,7 +3625,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1683 linjer)
+## `src/js/vessel3d.js` (1696 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3709,43 +3713,43 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 971 `stripProud(type, st)`
   - 994 `stripPaint(type, st)`
   - 1015 `markStrips(type)`
-  - 1023 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1048 `callStrips(type)`
-  - 1054 `callRGB(type, liv)`
-  - 1057 `anchorLen(bw)`
-  - 1060 `markRGB(type, liv)`
-  - 1068 `hullRGB(type, liv)`
-- **1078** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1089 `facingTris(P, dir, keep)`
-  - 1104 `rayZ(T, x, y, dir, za, zb)`
-  - 1115 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1126 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1137 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1148 `houseFront(type, P, Gl, V)`
-  - 1184 `transom(type, P, V)`
-  - 1219 `namePlaces(type)`
-  - 1237 `placeRGB(type, p, liv)`
-  - 1245 `nameInkLight(rgb)`
-  - 1249 `npcKit(L, B)`
-  - 1252 `npcModel(type, lod, liv)`
-  - 1254 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1266** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1285 `vestKit(K)`
-  - 1300 `wkPart(name, kit)`
-  - 1310 `wkPut(B, o, ax, s, at)`
-  - 1320 `wkLimb(B, o, A, E, r)`
-  - 1327 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1349 `vesselSVG(type, w, h)`
-- **1387** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1394 `deckMap(type)`
-  - 1539 `deckPass(M, k, q)`
-  - 1544 `passLine(M, A, B)`
-  - 1546 `linkPass(M, k, q)`
-  - 1550 `deckComp(M)`
-  - 1559 `deckPath(M, a, b)`
-- **1590** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1603 `lanterns(G, V, st)`
-  - 1642 `deckPoints(type)`
+  - 1028 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1053 `callStrips(type)`
+  - 1059 `callRGB(type, liv)`
+  - 1062 `anchorLen(bw)`
+  - 1065 `markRGB(type, liv)`
+  - 1074 `hullRGB(type, liv)`
+- **1084** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1095 `facingTris(P, dir, keep)`
+  - 1110 `rayZ(T, x, y, dir, za, zb)`
+  - 1121 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1132 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1143 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1154 `houseFront(type, P, Gl, V)`
+  - 1197 `transom(type, P, V)`
+  - 1232 `namePlaces(type)`
+  - 1250 `placeRGB(type, p, liv)`
+  - 1258 `nameInkLight(rgb)`
+  - 1262 `npcKit(L, B)`
+  - 1265 `npcModel(type, lod, liv)`
+  - 1267 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1279** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1298 `vestKit(K)`
+  - 1313 `wkPart(name, kit)`
+  - 1323 `wkPut(B, o, ax, s, at)`
+  - 1333 `wkLimb(B, o, A, E, r)`
+  - 1340 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1362 `vesselSVG(type, w, h)`
+- **1400** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1407 `deckMap(type)`
+  - 1552 `deckPass(M, k, q)`
+  - 1557 `passLine(M, A, B)`
+  - 1559 `linkPass(M, k, q)`
+  - 1563 `deckComp(M)`
+  - 1572 `deckPath(M, a, b)`
+- **1603** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1616 `lanterns(G, V, st)`
+  - 1655 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (879 linjer)
 
@@ -3815,14 +3819,14 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 761 `attr(loc, b, size)`
   - 777 `upload(pos, col, idx)`
 
-## `src/js/view3d/02-mesh-terrain.js` (99 linjer)
+## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
 ---------- mesh builder ----------
 
 - **1** mesh builder
   - 2 `MB()`
 - **45** terrain
-  - 76 `terrRaw(x, z, dil)`
+  - 84 `terrRaw(x, z, dil)`
 
 ## `src/js/view3d/03-berths-naust.js` (431 linjer)
 
@@ -3865,7 +3869,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 409 `buildTerrain()`
   - 418 `stream3d()`
 
-## `src/js/view3d/04-vec-packs.js` (378 linjer)
+## `src/js/view3d/04-vec-packs.js` (399 linjer)
 
 ---------- the coast's packs (01c-vec.js, part 4 of the coast-wide plan): buildings, roads, bridges, piers and breakwaters ----------
 
@@ -3887,13 +3891,14 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 190 `sunGridStep(key, d)`
   - 223 `sgUpload(J)`
   - 231 `updateMid()`
-  - 236 `updateNear()`
-  - 240 `nearWanted()`
-  - 250 `fineWanted()`
-  - 272 `recolor(m, snow)`
-- **366** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
-  - 370 `stonesOf(list, build)`
-  - 375 `drawStones(list, TM, eye)`
+  - 243 `finStream()`
+  - 257 `updateNear()`
+  - 261 `nearWanted()`
+  - 271 `fineWanted()`
+  - 293 `recolor(m, snow)`
+- **387** the breakwaters' armour stones: a mesh a breakwater, drawn only within STONE_R of the eye (beyond it a stone is less than a
+  - 391 `stonesOf(list, build)`
+  - 396 `drawStones(list, TM, eye)`
 
 ## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
 

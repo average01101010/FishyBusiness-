@@ -452,6 +452,16 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
   - Kartblokkene fyller nå hele budsjettet (96 MB) etter seks steder, og det eldste går ut. `teleport3d` sjekker at budsjettet holder.
 - **Kameraet ved kaia** (`view3d.js`): ved lavvann ligger en båt ved kaia rundt 3 m under kaikanten, og en løfting på 57° var ikke nok til å se over kanten (`camtest`, Botnhamn, med tidevannet fra K10). Kameraet kan nå løftes nesten rett ned over båten (1,45 rad).
 
+## 4.6f Pakkeslaget `fin`: den fine bakken langs sjøen (Ø13 K1, 11.11.2026)
+
+**På testutgaven fra 11.11.2026, bare Senja** (jeg så ingen forskjell på bildene; Jonas: «jeg synes forskjellen er merkbar», så laget bygges; hele kysten er K2). Planen og tallene: `docs/planer/kartrelease-o13.md` kapittel 5.
+
+- **Pakken:** `fin-tx-ty-hash.wasm`, én per flis med stripe, KMP1 som de andre. Laget `fin` i manifestet: `c` 0,0125 (12,5 m), `n` 800 (en blokk på 10 km), `type` `i16`, `kind` `fin`, `dec` `half`. En celle er høyden i halve meter (minst 1), 0 for «ingen fin bakke her, les 25 m-laget», eller −1 for sjøen innen 25 m fra stripa (bare fortegnet). Stripa er landet innen 1 km fra sjøen etter vektorkysten på 3 m. En blokk uten stripe finnes ikke i pakken.
+- **Lages av** `python3 tools/map/fin.py game` (etter `python3 tools/map/release.py`): Senjas fire pakker til `src/data/map`, og laget og pakkene inn i manifestet der, uten å røre noe annet. `game.py` tar Senjas lag og pakker som de er. Hele kysten er K2 (`fin-N`).
+- **Leses bare gjennom `finH(x, z, h)`** i `core/01b-mapdata.js`, der `h` er 25 m-bakken på samme sted. Lasteren holder blokkene som Int16 (1,28 MB per blokk; `dec: 'half'` gir ellers Float32, 2,56 MB), `L.k` er 0,5 (`mapLayerK`). En flis uten pakke, en pakke som ikke er hentet og en blokk pakken ikke har, gir `h` og er ikke en feil: `finCell` spør aldri `mapBlock` om en blokk som ikke finnes, så `MAPD.miss` telles ikke. `MAPD.gen` teller opp når en pakke kommer eller glemmes, så «ikke her» ikke huskes for lenge.
+- **Overgangen (øktas valg):** mellom de fire nærmeste cellesentrene teller en landcelle med sin høyde og en celle uten fin bakke med `h`. Da går den fine bakken over i 25 m-bakken over stripas ytterste celle (12,5 m), uten sprang og uten sprekk; de to skiller seg 0,8 m rms. Mot sjøen drar ikke sjøcellene landet ned: landcellenes høyder holder ut til grensa mellom cellene, og over den neste halve cella går bakken jevnt til `h`. Strandprofilen i `terrRaw` (`COAST3`) skjærer vannlinja ved kysten på 3 m som før.
+- **Tester:** `tests/unit/fin.test.mjs` (lesingen, med en ekte pakke) og `tests/fintest.py` (hvem som henter pakken). `tests/finshot.py` tar bildene før og etter.
+
 ## 4.19 Vektorkysten gjelder (04.10.2026)
 
 Jonas: «Jeg vil ha bort det som er i magenta», og vannlinja skal være nøyaktig nok til at skjær og moloer stemmer. Fra nå er vektorkysten (`coast2`) fasiten for land og sjø i hele spillet, ikke 25 m-masken.
