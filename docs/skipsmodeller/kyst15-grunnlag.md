@@ -197,3 +197,35 @@ Tatt med `tests/ombord.py kyst15` mot arbeidsgrenen før endringen (19 operasjon
 - Underveis ble to enhetstester røde av endringen og rettet: `lossing` (de ledige sto mot veggen under dekk: `anchors.leanY`) og `vessel3d: lokalflåten kyst15` (fjernmodellen over taket).
 - Testene i nettleseren og det som ble droppet, står i PR #64 og i commit-meldingene.
 
+### 10.6 Karakteren: 68/100, ikke ferdig
+
+Satt som en egen evaluering av en uavhengig underagent som bare fikk de seks før- og etter-arkene, tre felles etter-bilder, fem rendringer, `check()`-utskriften, funnene fra 4.9 og skalaen (Jonas 10.11.2026). Målet var 75. Karakteren etter OB0 var 71 på den gamle skalaen med åtte punkter; denne er den første etter Jonas' skala, så tallene kan ikke trekkes fra hverandre.
+
+| Punkt | Vekt | Poeng | Begrunnelse (sensorens, forkortet) |
+|---|---|---|---|
+| Skrogutforming | 20 | 16 | Tallene er sterke (75,1 t, sidene like, jevne vannlinjer, propellklaringene). Overgangen mellom side og speil står som en hard kant med ulik rødfarge. Undervannsskroget, kjølen, roret og propellen er ikke vist i noe bilde |
+| Detaljer | 20 | 12 | Flate, ensfargede flater uten slitasje. Setteporten og åpningene i sida er hull uten lem, hengsler eller skalkejern. Luka i sida er ikke kontrollert mot en ekte båt |
+| Lanterner | 5 | 3 | Høydene og avstandene er målt mot vedlegg I, men ingen nattbilder og ingen kontroll av sektorene |
+| Styrhus | 10 | 6 | Bremmen synes og stripene er borte. Ingen bilder fra roret; rutene er svarte i rendringene |
+| Arbeidsflyt | 25 | 17 | Klart bedre: fire juksaplasser ved ripa, folk ved haleren i trekkene, setting ut gjennom porten. Trekker ned: de som sløyer, står i en klump med ryggen til; ryddingen skjer fortsatt på shelterdekket (F12); de ledige står oppe på shelterdekket; teiner, lossing og inn til kai er ikke vist |
+| Utforming av dekk | 20 | 14 | Redskapet står på samme dekk som haleren, og gangbreddene er målt. Stampene står 3–4 m akter for haleren i det andre rommet; shelterdekket er en tom flate med bare kranen; ingen bilder innenfra arbeidsdekket |
+| **Sum** | 100 | **68** | |
+
+### 10.7 Det sensoren så som galt, og hva som er vårt
+
+| Det sensoren så | Hva det er |
+|---|---|
+| Tre som sløyer, står i hverandre i haleporten, med ryggen til | F19, felles kode (`deckcrew.js` `deckAt`), og bordet står langs innerveggen, så de vender ryggen ut. Ikke rettet her: halestasjonen er 1,2 m bred. Står i backloggen |
+| Den akterste i juksabildet har ingen maskin | Opptaket gir henne tre maskiner; den fjerde jukser for hånd på sin plass. Ikke en feil |
+| Garnhalerens trommel og renne henger utenpå skroget forut for haleporten | Garnhalerens modell er lengre forover enn åpningen har plass til fra `HXX` 7,30 (åpningen slutter 7,80). Ikke rettet; backloggen |
+| Garnet er en stiv stang, og karet i akterrommet «er fullt av fisk» | Felles tegning av garnet (`10-gear.js`); det i karet er garnet (`drawNetTub`), som ligner fisk på avstand |
+| Mannen fyller hele setteporten | Porten er 1,08 m høy over en terskel på 0,58 m; den som setter, står rett innenfor. En høyere port ville gått opp i navnet på speilet. Backloggen |
+| Rydding og spyling på shelterdekket | F12, OB14 (steg 92) |
+| De ledige står på shelterdekket | Valgt: rekka er der (`anchors.leanY`); under dekk ville de stått mot en vegg |
+| Sikksakkmønster på styrhusveggen i kranbildet | Skyggen fra kaias kran og rekka (ikke sjekket nærmere); backloggen |
+| Den grønne lanterna «inne på taket» | Sett fra babord baug; sidelanternene står på takets forkant, 0,10 m innenfor veggen (`check()` linje 13 er grønn). Perspektiv |
+| Hvite flekker i sjøen, ingen tau ved kasting | Felles (F1–F3, `24-cinema.js`) |
+
+### 10.8 Det som står igjen
+
+Kyst15 trenger en runde til for 75. Det sensoren mener gir mest: de som sløyer, spredt ved bordet og synlige; ryddingen ned i halestasjonen (OB14); bilder som viser det som ikke er vist (lanternene om natta, fra roret, undervannsskroget, innenfra arbeidsdekket); lemmer på porten og åpningene; slitasje. Spørsmål til Jonas: har du et bilde av en ekte 15-meter med shelterdekk sett aktenfra og fra styrbord, så luka og porten kan kontrolleres mot det?

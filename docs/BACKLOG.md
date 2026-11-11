@@ -4,6 +4,18 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **OB12 kyst15 (steg 90, 11.11.2026, arbeidsrutinen, grenen `plan/2026-11-11-90`, PR #64; `docs/skipsmodeller/kyst15-grunnlag.md` kap. 10, `docs/planer/om-bord.md` 4.9):** gjort: setteport i hekken, garnkaret og stampene på arbeidsdekket akter, en luke til i styrbord side, fire juksaplasser (`jukseMax` 8 → 4), halerens fot innenfor skroget, brem på taket, eksportert på nytt. **Egen evaluering 68/100, under 75: ikke ferdig, en runde til.** Det som står igjen og er antatt:
+  - **Luka i styrbord side er øktas eget valg**, ikke sett på en ekte båt (ingen bilder av typen ble funnet; `docs/okter/2026-11-11-ob12/bilder-av-typen.md`). Jonas avgjør om den skal stå.
+  - **`jukseMax` 8 → 4 er en endring i spillet** (valg 31 A er regelen, tallet er modellens): en spiller med flere maskiner får dem og trinnene som ikke gir noe, kjøpt tilbake ved oppstart (`jigTierBack`). Regelen i `jigTierBack` gjelder alle båtene, så en gammel lagring med trinn 3 på en båt med fire maskiner (plastsjarken, den nye hurtigsjarken) får også trinnet tilbake. Tilbakekjøpet er prøvd i enhetstesten, ikke i en ekte lagring i nettleseren.
+  - **De som sløyer, står i en klump med ryggen ut** i haleporten (F19, `deckcrew.js` `deckAt`; bordet står langs innerveggen og stasjonen er 1,2 m bred). Ikke rettet.
+  - **Garnhalerens hode stikker forut for haleporten** og inn i åpningens kant (haleren står ved x 7,30, åpningen slutter 7,80). Ikke rettet: flytt `HXX` akterover eller forleng åpningen.
+  - **Setteporten og åpningene har ingen lemmer**, og den som setter, fyller hele porten (1,08 m høy). En høyere port går opp i navnet på speilet.
+  - **Spillerens eget kamera ser ikke inn under shelterdekket** fra vanlig vinkel (F18): bare opptaksverktøyet har fått et lavt kamera (`tests/ombord.py` `UNDER`). Et eget utsnitt i `view3d/24-cinema.js` er ikke bygd.
+  - **`anchors.leanY`** er et anker fra modellen og ikke en retting av `deckPoints`' leting etter rekke (`vessel3d.js` `air()`): en ny modell med arbeidsdekket under et dekk må ha ankeret (står i `3d-baater-og-animasjon.md`).
+  - **Ryddingen skjer på shelterdekket** (F12): OB14, steg 92.
+  - **Sikksakkmønster på styrhusveggen i kranbildet ved kai** (sett av sensoren i `felles_kran`): ikke undersøkt.
+  - **Ikke vist i bilder:** lanternene om natta, utsynet fra roret, undervannsskroget og arbeidsdekket innenfra (rommet akter er mørkt i rendringen).
+  - **`unmerged.py` hang** i 30 minutter i denne kjøringen og ble stoppet; filene ble sjekket mot «Øktene som kjører» for hånd.
 - **Ø14 F3, feltnavnene i teksten (steg 31c, 11.11.2026, Jonas' økt, grenen `ccr-cb5d0d6b-itetzc`; 5.3c-F3 i `docs/systemer/fiskerimodellen.md`, statusen under F3 i `docs/planer/fangstfelt.md`):** bygd. Det som står igjen:
   - **161 av 4 675 fiskeplasser har samme ring to ganger i `felt-s.b64`** (Bjørnvika ved Båtsfjord, Billefjordjupet, Vinnaneset, Nordfugløya nordøst m.fl.; trolig samme felt i både laget for aktive og laget for passive redskap). Med partallsregelen i `feltSd` (`core/03j-felt.js`) er da ingenting inne i feltet: `feltAt` gir ingen maske, så F2 løfter ikke fisken der, og tekstene sier «ved <felt>», aldri «på». Rettes i `tools/npc/felt.py` (like ringer slås sammen før de skrives) med ny `felt-s.b64`, eller i `feltSd`. Begge filene var andres i økta. Lokasjonens snitt (`feltLoc`) må regnes med samme regel som masken, så summen per lokasjon står.
   - **Ryktet ser bare felt der kartet er lastet.** `rumourNeed` henter kartet rundt feltene innen 20 km når puben vises; på en treg linje kan ryktet den første kvelden i en ny havn komme fra færre felt (de innen 4 km er alltid inne). Ikke målt på telefon.
