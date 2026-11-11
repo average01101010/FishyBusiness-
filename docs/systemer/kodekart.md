@@ -2360,7 +2360,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (910 linjer)
+## `src/js/ui/03-map.js` (917 linjer)
 
 ---------- map ----------
 
@@ -2369,53 +2369,54 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 11 `applyView()`
   - 24 `toMap(cx, cy)`
   - 26 `txt(p, s, cls, size, extra = '')`
-  - 37 `placeOwn(p)`
-  - 39 `plotCol(d)`
-  - 40 `cssRGB(name)`
-- **41** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
-  - 51 `chartView(scale)`
-  - 57 `paintChart(scale)`
-  - 72 `chartPan()`
-  - 78 `chartWhole(V)`
-  - 84 `chartCompose(V, tiles, budget)`
-  - 118 `chartWork()`
-  - 129 `chartFlush()`
-  - 135 `chartTile(V, i, j, q)`
-  - 151 `chartWant(V)`
-  - 159 `chartPump()`
-  - 169 `chartLoadLine()`
-  - 175 `chartWarm(wps)`
-  - 182 `chartWarmNext()`
-  - 186 `chartCame(pk)`
-  - 201 `ruLayerCanvas(A)`
-  - 210 `chartVectors(V, again)`
-  - 269 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 276 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
-  - 399 `scheduleChart()`
-  - 402 `renderBase()`
-  - 416 `updateMapButtons()`
-  - 432 `tapName(mp, rr)`
-  - 451 `renderStatic()`
-  - 557 `portIcon(p, s, u)`
-  - 578 `anchorPath(x, y, s, u)`
-  - 586 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 605 `scheduleStatic()`
-  - 610 `aisTrack(id, H)`
-  - 615 `aisInfo(n)`
-  - 634 `sjvChartSvg(u, bp)`
-  - 644 `renderAisCard()`
-  - 652 `curArrowsOf(q, u, H, lab, halo)`
-  - 665 `curArrowsSvg(u)`
-  - 683 `renderDyn()`
-  - 772 `pinAdd(mp)`
-  - 777 `pinOpen(id, fresh)`
-  - 797 `pinKb()`
-  - 828 `ptrUp(e)`
-  - 858 `unzoom()`
-  - 865 `portByLabel(pt)`
-  - 870 `addWaypoint(pt)`
+  - 38 `placeOwnIds()`
+  - 42 `placeOwn(p, ids)`
+  - 44 `plotCol(d)`
+  - 45 `cssRGB(name)`
+- **46** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
+  - 56 `chartView(scale)`
+  - 62 `paintChart(scale)`
+  - 77 `chartPan()`
+  - 83 `chartWhole(V)`
+  - 89 `chartCompose(V, tiles, budget)`
+  - 123 `chartWork()`
+  - 134 `chartFlush()`
+  - 140 `chartTile(V, i, j, q)`
+  - 156 `chartWant(V)`
+  - 164 `chartPump()`
+  - 174 `chartLoadLine()`
+  - 180 `chartWarm(wps)`
+  - 187 `chartWarmNext()`
+  - 191 `chartCame(pk)`
+  - 206 `ruLayerCanvas(A)`
+  - 215 `chartVectors(V, again)`
+  - 274 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
+  - 281 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 404 `scheduleChart()`
+  - 407 `renderBase()`
+  - 421 `updateMapButtons()`
+  - 437 `tapName(mp, rr)`
+  - 456 `renderStatic()`
+  - 563 `portIcon(p, s, u)`
+  - 584 `anchorPath(x, y, s, u)`
+  - 592 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 611 `scheduleStatic()`
+  - 616 `aisTrack(id, H)`
+  - 621 `aisInfo(n)`
+  - 640 `sjvChartSvg(u, bp)`
+  - 650 `renderAisCard()`
+  - 658 `curArrowsOf(q, u, H, lab, halo)`
+  - 671 `curArrowsSvg(u)`
+  - 689 `renderDyn()`
+  - 778 `pinAdd(mp)`
+  - 783 `pinOpen(id, fresh)`
+  - 803 `pinKb()`
+  - 834 `ptrUp(e)`
+  - 864 `unzoom()`
+  - 871 `portByLabel(pt)`
+  - 876 `addWaypoint(pt)`
 
-## `src/js/ui/03b-route.js` (281 linjer)
+## `src/js/ui/03b-route.js` (282 linjer)
 
 ---------- the route editor: waypoint names, a timeline for the list, undo and redo, moving and inserting points ----------
 
@@ -2446,13 +2447,13 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
 - **127** «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
   - 130 `leiaArm(on)`
   - 136 `leiaTo(pt, buoy, act)`
-  - 205 `deepNear(p, maxKm)`
-  - 215 `leiaStops()`
-  - 220 `leiaCompare()`
-- **237** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
-  - 245 `draftSea(tl)`
-  - 258 `routeSeaWatch()`
-  - 263 `routeSeaDraw()`
+  - 206 `deepNear(p, maxKm)`
+  - 216 `leiaStops()`
+  - 221 `leiaCompare()`
+- **238** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
+  - 246 `draftSea(tl)`
+  - 259 `routeSeaWatch()`
+  - 264 `routeSeaDraw()`
 
 ## `src/js/ui/03g-planmap.js` (120 linjer)
 

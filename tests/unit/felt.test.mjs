@@ -91,6 +91,8 @@ function f5(t, K, D, S){
   const ll = s.map(f => K.natLL({x:f.x, y:f.y})), out = ll.filter(q => q.lat < 69.6 || q.lon < 20.5).length;
   // (only while Finnmark is the one county fetched, KV_FYLKER in felt.py; more counties, and this check falls away)
   if (raw.meta.kv && raw.meta.kv.fylker.join() === '56') t.ok(out === 0 && s.length < 1200, `alle sjønavnene ligger i Finnmark (nord for 69,6° N og øst for 20,5° Ø; ${out} utenfor)`);
+  // (Troms and Finnmark: north of 68,3° N and east of 15,5° E; and never more names than the two counties have places)
+  if (raw.meta.kv && raw.meta.kv.fylker.join() === '56,55'){ const o2 = ll.filter(q => !(q.lat > 68.3 && q.lon > 15.5)).length; t.ok(o2 === 0 && s.length < 3000, `alle sjønavnene ligger i Troms og Finnmark (${o2} utenfor, ${s.length} navn)`); }
   if (raw.meta.kv && raw.meta.kv.fylker.includes('55')){ const tr = ll.filter(q => q.lat < 69.5 && q.lat > 68.3).length; t.ok(tr > 300, `Troms er med (Jonas 11.11.2026): ${tr} sjønavn mellom 68,3 og 69,5° N`); }
   const bf = K.P(70.635, 29.72), near = n => s.find(f => f.n === n && Math.hypot(f.x - bf.x, f.y - bf.y) < 40);
   t.ok(near('Leira') && near('Seigrunnen') && near('Skarberggrunnen'), `ved Båtsfjord: havdypet Leira og grunnene Seigrunnen og Skarberggrunnen (${s.filter(f => Math.hypot(f.x - bf.x, f.y - bf.y) < 20).length} sjønavn innen 20 km)`);

@@ -31,10 +31,15 @@ let CONT_D = null;
 const ZMIN = MAP_H / 1800, ZMAX = 320;
 // the places (the fish receivers, the yards, the shops, the rorbuer and the naust) stand on the chart only from PLACE_Z (Jonas
 // 11.11.2026: «når man zoomer langt ut så vises ikke fiskemottak, verft, utstyrbutikker, rorbuer og naust på kartet, slik at disse bare
-// vises når man starter å zoome litt nærmere inn»); further out only the player's own: where the boat lies, the home harbour, and
-// the harbours of the route. The view the game opens with (view.z 0.8 at least, 11-boot.js) has them.
+// vises når man starter å zoome litt nærmere inn»); further out only the player's own: where the boats of the fleet lie, the home
+// harbour, and the harbours of the routes and the plan (placeOwnIds; drawn in the static layer, so one that becomes the player's own
+// far out gets its icon at the next pan or zoom). The view the game opens with (view.z 0.8 at least, 11-boot.js) has them.
 const PLACE_Z = 0.75;
-function placeOwn(p){ const b = S.boat; return !!p && (p.id === S.home || (b && b.port === p.id) || (S.draft || []).some(w => w.port === p.id) || !!(S.plan && S.plan.wps && S.plan.wps.some(w => w.port === p.id))); }
+function placeOwnIds(){ const ids = new Set(), add = id => { if (id) ids.add(id); }, wps = L => { for (const w of L || []) add(w.port); };
+  // (the boat and the rest of the fleet, each with its route, a route laid by while hove to and its plan's home and plant; and the draft)
+  add(S.home); wps(S.draft); for (const v of [S.boat].concat(Array.isArray(S.fleet) ? S.fleet : [])){ if (!v) continue; add(v.port); if (v.hove) wps(v.hove.plan && v.hove.plan.wps); if (v.ops){ add(v.ops.home); add(v.ops.M); } }
+  wps(S.plan && S.plan.wps); if (S.ops){ add(S.ops.home); add(S.ops.M); } return ids; }
+function placeOwn(p, ids){ return !!p && (ids || placeOwnIds()).has(p.id); }
 const PLOT_STOPS = [[0,[230,60,40]],[5,[245,140,40]],[15,[250,215,60]],[30,[120,210,80]],[60,[60,200,190]],[120,[40,140,230]],[250,[30,70,200]],[500,[60,30,150]],[1000,[30,10,70]]];
 function plotCol(d){ for (let i = 1; i < PLOT_STOPS.length; i++){ const [b, cb] = PLOT_STOPS[i]; if (d < b){ const [a, ca] = PLOT_STOPS[i - 1], u = (d - a) / (b - a); return [ca[0] + (cb[0] - ca[0]) * u, ca[1] + (cb[1] - ca[1]) * u, ca[2] + (cb[2] - ca[2]) * u]; } } return PLOT_STOPS[PLOT_STOPS.length - 1][1]; }
 function cssRGB(name){ const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace('#', ''); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; }
@@ -493,10 +498,10 @@ function renderStatic(){
   // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
   // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
   // place names keep clear of the labels
-  const taken = [], pl = view.z >= PLACE_Z, over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  const taken = [], pl = view.z >= PLACE_Z, own = pl ? null : placeOwnIds(), over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
   for (const p of PORTS){
     // (Jonas 02.11.2026: «Kan du gjøre iconer litt større slik at de er lettere å se»: half as big again, 19 px across close in)
-    const s = (pl ? 9.5 : 5) * u; if (!inV(p.p.x, p.p.y) || (!pl && !placeOwn(p))) continue;
+    const s = (pl ? 9.5 : 5) * u; if (!inV(p.p.x, p.p.y) || (!pl && !own.has(p.id))) continue;
     g.push(portIcon(p, s, u));
     if (pl) lbl(2, {x:p.p.x + s + 5 * u, y:p.p.y + 4.5 * u}, portLabel(p), 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"', {x:p.p.x, y:p.p.y, n:portLabel(p)}, s);
   }
@@ -532,7 +537,8 @@ function renderStatic(){
   // name only, no circle (Jonas 28.10.2026), Fiskeridirektoratet's fishing grounds along the whole coast (01e-marks.js feltIn) with
   // Senja's as all the others (Jonas 08.11.2026: GROUNDS no longer drawn for themselves), the largest first, then the spawning and
   // nursery grounds in the same type; only from view.z 2, none where a name already stands (cells of FELT_CW × FELT_CH pixels), at most
-  // FELT_MAX, and nothing after the season or the fish. A tap on one, or where one was left out, gives the whole name and its kind (tapName)
+  // FELT_MAX, and nothing after the season or the fish. A tap on one, or where one was left out, gives the whole name and its kind (tapName);
+  // Kartverket's sea names (k = s) neither drawn nor tapped under FELT_S_Z
   LBLFELT.length = 0;
   if (view.z >= 2){ const cells = new Set(), cw = FELT_CW * u, ch = FELT_CH * u, nMax = Math.min(FELT_MAX, Math.round(vr.width * vr.height / FELT_PX)); let n = 0;
     for (const f of feltIn(vx0, vy0, vx1, vy1, true)){ if (f.k === 's' && view.z < FELT_S_Z) continue;
@@ -860,7 +866,7 @@ function unzoom(){ const vv = window.visualViewport, m = document.querySelector(
 window.addEventListener('orientationchange', () => { unzoom(); setTimeout(() => window.dispatchEvent(new Event('resize')), 350); });
 if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (visualViewport.scale > 1.01) unzoom(); });
 
-// a port tapped on its name in the chart (drawn right of the point from view.z 0.5, as renderStatic places it), when no place nearer took
+// a port tapped on its name in the chart (drawn right of the point from PLACE_Z, as renderStatic places it), when no place nearer took
 // the tap (spilltest 2: a tap on the name of the harbour you set out from gave «Det er land»)
 function portByLabel(pt){
   if (view.z < PLACE_Z) return null; const u = 1 / view.px;
@@ -874,7 +880,8 @@ function addWaypoint(pt){
   if (!['port', 'idle'].includes(b.status)){ toast(t('cant_plan')); return; }
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
-  for (const p of PORTS){ if (view.z < PLACE_Z && !placeOwn(p)) continue; const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }   // (only the places the chart shows)
+  const ownT = view.z < PLACE_Z ? placeOwnIds() : null;
+  for (const p of PORTS){ if (ownT && !ownT.has(p.id)) continue; const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }   // (only the places the chart shows)
   // a rorbu's quay (07d-rorbu.js), when the chart is close enough to show its name and not in «Første tur» (a tap in the field's ring
   // went to a rorbu by it)
   if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }

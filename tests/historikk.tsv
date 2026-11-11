@@ -2526,3 +2526,7 @@
 2026-11-11 15:39	ccr-2c3acb2e-1xxdth	0df6def3+	marktest	OK	8	lite	samtidig	
 2026-11-11 15:39	ccr-2c3acb2e-1xxdth	0df6def3+	placetest	OK	6	lite	samtidig	
 2026-11-11 15:42	ccr-2c3acb2e-1xxdth	0df6def3+	etikett	OK	197	lite	samtidig	
+2026-11-11 15:46	ccr-2c3acb2e-1xxdth	d089154d+	charttest	FEIL	56	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-11 15:47	ccr-2c3acb2e-1xxdth	d089154d+	boottest	OK	27	lite	samtidig	
+2026-11-11 15:47	ccr-2c3acb2e-1xxdth	d089154d+	placetest	OK	6	lite	samtidig	
+2026-11-11 15:48	ccr-2c3acb2e-1xxdth	d089154d+	charttest	OK	51	lite	alene	
