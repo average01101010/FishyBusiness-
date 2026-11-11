@@ -11,7 +11,7 @@
 <header><a href="./" class="logo"><!--@logo--></a></header>
 <main>
 <h1>Personvernerklæring</h1>
-<p class="meta">Sist endret 30. oktober 2026</p>
+<p class="meta">Sist endret 11. november 2026</p>
 
 <p>Her står det hvilke opplysninger spillet Det Store Blå samler inn, hvorfor, hvor lenge de lagres, hvem som hjelper oss med dem, og hvilke rettigheter du har.</p>
 
@@ -192,6 +192,7 @@
 <li><strong>Supabase, Inc.</strong> står for databasen med kontoen, lagringen, statistikken og kjøpene. Dataene ligger i EU (Irland).</li>
 <li><strong>Hetzner Online GmbH</strong> (Tyskland) driver serveren som leverer nettsiden. Serveren fører ingen logg over besøk.</li>
 <li><strong>Anthropic, PBC</strong> (USA) leverer KI-assistenten Claude, som leser tilbakemeldingene (teksten, bildene og opplysningene om spillet, uten navn, e-post eller bruker-ID) for å sortere dem og foreslå rettinger og svar.</li>
+<li><strong>GitHub, Inc.</strong> (USA) kjører kontrollen vi gjør før en ny versjon av spillet legges ut. Da hentes det lagrede spillet til hver spiller (det som står under «Spillet ditt», sammen med spiller-ID-en, uten e-postadresse eller navnet på kontoen) inn på en maskin hos GitHub og startes med den nye versjonen. En versjon som ikke klarer å åpne en lagring, blir da stoppet før den når deg. Kontrollen tar noen minutter hver gang, kopiene slettes før den er ferdig, og ingenting om lagringene eller hvem de tilhører, skrives i loggen.</li>
 </ul>
 <p>Noen behandler opplysninger som selvstendig ansvarlige, etter sine egne personvernerklæringer:</p>
 <ul>
@@ -201,7 +202,10 @@
 </ul>
 
 <h2>Overføring ut av EØS</h2>
-<p>WorkOS og Anthropic holder til i USA, og noen av underleverandørene til Supabase og Stripe kan også gjøre det. Overføringene skjer etter EU-kommisjonens standardavtaler for overføring av personopplysninger (standard contractual clauses, beslutning (EU) 2021/914), som er en del av databehandleravtalene.</p>
+<p>WorkOS, Anthropic og GitHub holder til i USA, og noen av underleverandørene til Supabase og Stripe kan også gjøre det. Overføringene skjer etter EU-kommisjonens standardavtaler for overføring av personopplysninger (standard contractual clauses, beslutning (EU) 2021/914), som er en del av databehandleravtalene.</p>
+
+<h2>Testutgaven</h2>
+<p>Nye versjoner prøves først i en testutgave på test.detstorebla.no. Den har sin egen database hos Supabase, samme leverandør og region (EU, Irland) som spillet ellers, og sin egen innlogging. Det du gjør i testutgaven, lagres bare der. Ingenting derfra blandes med dataene til spillerne på detstorebla.no, og ingenting fra detstorebla.no kopieres dit.</p>
 
 <h2>Barn</h2>
 <p>Er du under 13 år, kan du ikke samtykke til statistikk selv (personopplysningsloven § 5). Spillet regner da et ja som et nei, og ingen statistikk samles om deg. Om kjøp for deg under 18 år, se <a href="vilkar.html">vilkårene</a>.</p>
