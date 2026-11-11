@@ -45,6 +45,37 @@ os.makedirs(OUT, exist_ok=True)
 os.chdir(OUT)
 
 
+# wait_for_function under the game's Content-Security-Policy (L1e, 11.11.2026, build.mjs CSP_OF): Playwright checks the condition
+# with eval inside the page, between its polls, and the policy has no 'unsafe-eval' (rightly), so every wait that did not hold at once
+# ended in «EvalError: Evaluating a string as JavaScript violates the following Content Security Policy directive» (boottest, the first
+# run under the policy). evaluate goes through the debugger and is let through, so the wait is done here, with evaluate every 100 ms
+# (or `polling` ms). As Playwright's own: it returns the handle of the value, an error in the condition stops it, a page that is on its
+# way to another document is waited for, and the time-out is the page's default (30 s, or what set_default_timeout said).
+def _csp_wait():
+    import asyncio, time
+    from playwright.async_api import Page, Error, TimeoutError
+    if getattr(Page.wait_for_function, '_dsb', False): return
+    async def wait_for_function(self, expression, *, arg=None, timeout=None, polling=None):
+        if timeout is None:
+            try: timeout = self._impl_obj._timeout_settings.timeout()
+            except Exception: timeout = 30000
+        end = time.monotonic() + timeout / 1000 if timeout else None
+        step = polling / 1000 if isinstance(polling, (int, float)) else 0.1
+        while True:
+            try:
+                h = await self.evaluate_handle(expression, arg)
+                if await h.evaluate('v => !!v'): return h
+                await h.dispose()
+            except Error as e:
+                if isinstance(e, TimeoutError) or not any(w in str(e) for w in ('context was destroyed', 'navigation', 'Cannot find context', 'Target page, context or browser has been closed')) or 'has been closed' in str(e): raise
+            if end and time.monotonic() > end: raise TimeoutError('Page.wait_for_function: Timeout %dms exceeded.' % timeout)
+            await asyncio.sleep(step)
+    wait_for_function._dsb = True
+    Page.wait_for_function = wait_for_function
+try: _csp_wait()
+except ImportError: pass
+
+
 async def boot(pg, url=None):
     """Open the game and press «Start» on the first screen. It waits for the page and the start, not for fixed pauses."""
     # the software GPU of the test machine draws only a few 3D frames a second (05.10.2026): a screenshot or a wait without its own

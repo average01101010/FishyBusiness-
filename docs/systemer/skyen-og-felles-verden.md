@@ -522,3 +522,34 @@ Jonas valgte dem fra lista (nr. 5 og 7).
 ### Venner-appen etter registrering (Tonys spilltest 06.11.2026)
 
 Nye spillere fikk «X vil bli venn med deg. Svar i Venner-appen» uten å finne appen: den kom først fra tredje landing (Onboarding 2, O5). Nå: `appShown('folk')` er sann for en registrert spiller utenfor første tur (`ui/07c-handbook.js`), og `news()` i `ui/10k-friends.js` kaller `appUnlock('folk')` når en forespørsel kommer. Gjester ser den fra tredje landing som før.
+
+## Spillets Content-Security-Policy (L1e, 11.11.2026)
+
+Funn 7 i `docs/planer/sikkerhet-skyen.md`: WorkOS går i utviklermodus (Jonas' valg V6 A 10.11.2026: «behold `workosDevMode`, og vern innloggingen med en CSP for spillet og kortere økter hos WorkOS»), så fornyelsesnøkkelen ligger i `localStorage`, og gjestens nøkler i `dsb_guest`. Et skript som kom inn i siden (en tilbakemelding, et navn, en sponsors tekst som slapp forbi `esc()`), kunne lest dem og sendt dem ut. CSP-en gjør at et slikt skript ikke kjører, og at ingenting kan sendes til en fremmed vert.
+
+- **Hvor:** `build.mjs` (`CSP_OF`) lager den og legger den i siden som `<meta http-equiv="Content-Security-Policy">` på linja til `<meta charset>`, før det første skriptet, så Pages, appen og `KYST_ONE` får den samme. Linjene i siden flytter seg ikke (kildekartet teller dem). `tools/server/Caddyfile` sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for alt (kan ikke settes i en meta); nettleseren holder siden til begge. **GitHub Pages kan ikke sette hoder**, så der står siden uten `frame-ancestors`.
+- **Kartlagt før den ble skrevet** (ikke gjettet): en kopi med `Content-Security-Policy-Report-Only: default-src 'none'` gjennom oppstarten, brevet, telefonens apper, kartplotteren, 3D og teleport til Bergen, Bodø og Hammerfest med vec-pakkene, og skyen som gjest. Det siden gjør: 8 innebygde skript, innebygde stiler (i `<style>` og i `style=` over hele UI-et), skrifter og bilder som `data:`, workers fra `blob:`, og kall til egen vert og Supabase. Ingen `eval`, ingen `new Function`, ingen inline-hendelser (`onclick="…"`), ingen rammer, ingen skjema. **Ingen omskriving av kode trengtes.**
+- **Policyen:**
+
+  | Direktiv | Verdi | Hvorfor |
+  |---|---|---|
+  | `default-src` | `'none'` | alt som ikke er nevnt, er stengt |
+  | `script-src` | én `'sha256-…'` per innebygde skript | ingen `'unsafe-inline'`, ingen `'unsafe-eval'`, ingen vert. **Ikke `'wasm-unsafe-eval'`:** kartpakkene heter `.wasm`, men er data som fflate pakker ut; ingenting kompilerer WebAssembly |
+  | `style-src` | `'unsafe-inline'` | stilene er innebygd. Det står, ærlig sagt: en stil kan ikke kjøre skript, og det den kunne hentet (`url()`), holdes av `img-src` og `font-src` |
+  | `worker-src` | `'self' blob:` | vec- og kystworkerne og fflate lages fra `blob:`; tjenestearbeideren er `sw.js` på egen vert |
+  | `connect-src` | `'self'`, Supabase-prosjektet, `https://api.workos.com` (eller `workosApiHostname`), `wss://<vert>/rt` per vert | lest fra `src/data/cloud.json` for kanalen bygget er for (`KYST_CHANNEL=test` gir testprosjektet og `test.detstorebla.no`), slik `cloudCfg` leser den: ingen vert står to steder |
+  | `img-src` | `'self' data: blob:` og Supabase-prosjektet | brevet, verftets kort og logoene er `data:`, tilbakemeldingens bilder `blob:`. **En sponsors logo må ligge i Supabase-lageret** (eller være `data:`): et bilde fra en annen vert hentes ikke, fordi en bildeadresse er en vei ut for en nøkkel |
+  | `font-src` | `'self' data:` | skriftene er innebygd |
+  | `media-src` | `'self' data: blob:` | tilbakemeldingens video; lyden lages i siden (WebAudio) |
+  | `manifest-src` | `'self'` | appens manifest |
+  | `base-uri`, `form-action` | `'none'` | siden har ingen `<base>` og ingen skjema |
+
+  Innloggingen hos WorkOS og betalingen hos Stripe er omdirigeringer av hele siden (`location.assign`, `location.href`), og dem styrer ikke CSP-en.
+- **Bygget feiler høyt** (`process.exit(1)`, ikke en advarsel) når noe ikke ville kjørt under policyen: et `<script>` med `src=` eller en ukjent type, et innebygd skript uten hash, `eval`, `new Function` eller en tidtaker med tekst, en inline-hendelse i siden eller i HTML et skript skriver, eller en vert i `cloud.json` policyen ikke kan ta. Skriv en lytter i stedet.
+- **Policyen uten hashene er med i versjonen**, så et bygg som bare endrer hva siden kan nå, er et nytt bygg (tjenestearbeideren bytter lager).
+- **Det lokale bygget** (`dist/` og `dist-vec/`, verken appen eller én fil: det testene åpner, aldri lastet opp) slipper også testenes stedfortredere gjennom i `connect-src`: `https://sb.test` (skyen i 13 tester; `.test` finnes aldri på nettet) og `ws://127.0.0.1:*`, `ws://localhost:*` (reléets stedfortreder i `rttest`). Et bygg for en server (`KYST_PWA=1`) eller `KYST_ONE=1` har dem ikke, og `csptest` sjekker det når `sw.js` ligger ved siden.
+- **Brudd hos en spiller synes i admin:** `js/errtrap.js` lytter på `securitypolicyviolation` og sender `csp: <direktiv> <adresse uten spørring>` til feillista (`tm_error`, samme vei som andre feil, `kind` `csp`). Det nettleserutvidelser legger inn i siden, er ikke spillets og sendes ikke.
+- **Grensene:** policyen er laget fra det en førstetur, telefonen, plotteren og tre steder langs kysten gjør. Noe som skjer sjelden (en worker, en `blob:`-adresse, en lyd) kan bli stoppet hos en spiller og ingen andre steder; da kommer det i feillista som `csp: …`. `'unsafe-inline'` for stiler står. Pages har ikke `frame-ancestors`. CSP-en stopper ikke en XSS i å gjøre ting *som* spilleren mot Supabase (kalle funksjonene med økta som alt er i siden); den stopper at nøkkelen tas ut og brukes varig et annet sted.
+- **Testene:** `tests/csptest.py` (LITE, rundt to minutter): policyen i den bygde siden, hele førsteturen uten 3D med en omlasting, Kontoen og butikken som gjest med skyens stedfortreder på adressen policyen tillater, uten ett brudd i siden eller i workerne; så det en angriper ville prøvd (`<img onerror>`, `javascript:`-lenke, innsatt `<script>`, skript fra en annen vert, `eval`, `new Function`, `fetch`, bilde, beacon og WebSocket til en annen vert), som ikke kjører og ikke kommer ut, og at bruddene havner i feillista. Sett rød med policyens `<meta>` tatt ut av `dist/index.html`: da kjørte alle de innsatte skriptene, og gjestens nøkler sto i adressen som gikk ut.
+- **`wait_for_function` i testene:** Playwright sjekker betingelsen med `eval` inne i siden mellom avspørringene, og policyen stopper det (med rette). `tests/_env.py` bytter derfor `Page.wait_for_function` med en som spør gjennom `evaluate` hvert 100. ms (feilsøkeren slipper gjennom), så alle testene går under den ekte policyen. En test som ikke importerer `_env`, må gjøre det samme.
+- **Det Jonas gjør:** kortere økter hos WorkOS (`lansering-plan.md` kap. 5 punkt 12), og `setup.sh` på serveren på nytt, så Caddy får `frame-ancestors` for hele siden (punkt 14).
