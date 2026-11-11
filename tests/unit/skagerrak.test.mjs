@@ -84,8 +84,8 @@ export default function (t){
     if (typeof ruByc === 'function' && typeof bycAdd === 'function'){
       blad(false);
       t.ok(q(krs) === 'skag' && q(are) === 'skag' && q(krs, {gear:'line'}) === 'skag' && q(krs, {gear:'garn'}) === 'skag', 'bifangstsonen: juksa, line og garn utenfor grunnlinja ved Kristiansand og Arendal');
-      t.ok(!q(krsIn) && !q(ege) && !q(krs, {gear:'teiner'}) && !q(brg0()), 'ikke innenfor grunnlinja, ikke ved Egersund, ikke teiner, ikke ved Bergen');
-      blad(true); t.ok(!q(krs) && q(krs, {gear:'line'}) === 'skag' && q(krs, {H:jul}) === 'skag' && q(krs, {len:11}) === 'skag', 'unntaket (§ 4, juksa under 11 m på blad B i juni): torsken er lovlig og telles ikke; line, juli og 11 m telles'); blad(false);
+      t.ok(!q(krsIn) && q(ege) !== 'skag' && !q(krs, {gear:'teiner'}) && q(brg0()) !== 'skag', 'ikke innenfor grunnlinja, ikke ved Egersund, ikke teiner, ikke ved Bergen (der telles torsken mot Nordsjøens tak fra Ø10c: ' + q(ege) + ')');
+      blad(true); t.ok(q(krs) === 'skag4' && RU_BYC.skag4.share === 1 && bycOver('skag4', {kg:100, cod:100}) === 0 && q(krs, {gear:'line'}) === 'skag' && q(krs, {H:jul}) === 'skag' && q(krs, {len:11}) === 'skag', 'unntaket (§ 4, juksa under 11 m på blad B i juni): torsken er lovlig og er ikke bifangst (fra Ø10c telt mot taket på 3 tonn, skag4); line, juli og 11 m er bifangst'); blad(false);
       t.eq(RU_BYC.skag.share, 0.05, 'andelen er 5 %');
       t.ok(Math.abs(bycOver('skag', {kg:1000, cod:200}) - 150) < 1e-9 && bycOver('skag', {kg:1000, cod:50}) === 0 && bycOver('skag', {kg:1000, cod:49}) === 0, '200 kg torsk av 1000: 150 over; 50 og 49 av 1000: ingenting');
       // the hold: 300 kg taken inside the baseline (60 cod), then 400 outside (100 cod)
