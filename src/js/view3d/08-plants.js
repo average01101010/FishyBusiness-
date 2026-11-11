@@ -219,6 +219,8 @@
       case 'haul': { const k = Math.sin(t * 1.6) * 0.03, r = st.rail; hands = r ? [W(r[0] + 0.08, r[1] + 0.1 + k, 0.2), W(r[0] + 0.12, r[1] + 0.24 - k, -0.06)] : [W(0.42, 1.08 + k, 0.2), W(0.52, 1.22 - k, -0.06)]; break; }
       // the pot hand and the crab sorter: hands at the work in front, low
       case 'tend': { const k = Math.sin(t * 2.2); hands = [W(0.45 + k * 0.05, 0.8 + Math.max(0, k) * 0.12, 0.16), W(0.45 - k * 0.05, 0.8 + Math.max(0, -k) * 0.12, -0.16)]; break; }
+      // setting the line or the nets (OB3, F4): the hands on the gear just inside where it goes over, paying it out hand over hand
+      case 'sett': { const k = Math.sin(t * 2.8), r = st.rail || [0.45, 1.05]; hands = [W(r[0] - 0.08 + Math.max(0, k) * 0.16, r[1] + 0.04 + Math.abs(k) * 0.03, 0.13), W(r[0] - 0.08 + Math.max(0, -k) * 0.16, r[1] + 0.04 + Math.abs(k) * 0.03, -0.13)]; break; }
       // the net off the hauler: the hands at the meshes; a fish (the event) is worked out of them, held up and let fall to the deck
       case 'pick': { const e = st.ev, c = e ? e.k : 99, i0 = Math.sin(t * 2.4), pr = st.rail, idle = pr ? [W(pr[0] + 0.06, pr[1] + 0.05 + i0 * 0.05, 0.14), W(pr[0] + 0.06, pr[1] + 0.03 - i0 * 0.05, -0.14)] : [W(0.48, 1.02 + i0 * 0.05, 0.14), W(0.48, 1.0 - i0 * 0.05, -0.14)]; st.held = null; st.fall = null;
         if (e && c < DKDUR.pick){ const Rt = e.R, aR = [Rt[0] + R[0] * 0.09, Rt[1], Rt[2] + R[1] * 0.09], aL = [Rt[0] - R[0] * 0.09, Rt[1] + 0.05, Rt[2] - R[1] * 0.09], back = [W(0.36, 1.0, 0.12), W(0.36, 1.02, -0.12)];

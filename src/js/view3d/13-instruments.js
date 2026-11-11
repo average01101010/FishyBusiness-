@@ -426,7 +426,10 @@
       // first, then the port one, each place's fourth number the side (1 starboard, -1 port: the machine turned round to face out)
       const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3);
       for (const sd of [1, -1]){ const side = [], zs = Array.isArray(zs0) ? zs0 : zs0[sd] || [];
-        for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < 0.7)) continue;
+        // (F21, OB3: an arm's length between two machines, so the lines do not foul each other, and as many to port as to starboard;
+        // before 0.7 m apart and one more to starboard. The models' own places are as they were: anchors.jigZ and JIG_Z)
+        const gap = Array.isArray(zs0) ? 1.0 : 0.7;
+        for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 && !Array.isArray(zs0) ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < gap)) continue;
           const q = railPt(sd, z); if (q) side.push(q); }
         side.sort((a, b) => a[2] - b[2]); out.push(...side); } }
     return (JIGR[t] = out);

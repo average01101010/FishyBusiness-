@@ -38,6 +38,16 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
       for (let i = 0; i < A.length; i++) for (let j = i + 1; j < A.length; j++) if (A[i].goal.task === A[j].goal.task){ n++; m = Math.min(m, Math.hypot(A[i].x - A[j].x, A[i].z - A[j].z)); }
       r.pair = n ? +m.toFixed(2) : null; }
     S.hold = []; b.deckStop = false; S.equip.linehaler = true; b.gop = {op:'haul', kind:'line', n:10, done:0, prog:0, a:{...g}, b:{x:g.x + 0.2, y:g.y}}; addCatch('torsk', 20, null, true); S.t += 1; settle(); r.work.haul = bad(); b.gop = null;
+    // (OB3 11.11.2026, F15 and F4: every place in every pose. The nets coming in (the hauler and the one picking), the line and the nets
+    // going out (the one paying the gear out at the stern and the one handing it to him), the pots where she takes them; and that the
+    // one setting has a place of his own in the setting pose, not the hauler's)
+    const V = VESSELS[vt], gop = (op, kind) => { b.gop = {op, kind, n:10, done:2, prog:0, hooksPer:300, a:{...g}, b:{x:g.x + 0.2, y:g.y}}; S.t += 1; CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt)); settle(); };
+    r.sett = {};
+    if ((V.rigs || []).includes('garn')){ S.equip.garnhaler = true; gop('haul', 'garn'); r.work.haulG = bad(); }
+    for (const kind of ['line', 'garn']) if ((V.rigs || []).includes(kind) && !V.autoHooks){ gop('set', kind); r.work['set_' + kind] = bad();
+      r.sett[kind] = CREW3D.agents().filter(a => a.role === 'sett' && a.goal && a.goal.task === 'sett').length + '/' + CREW3D.agents().filter(a => a.st === 'haling' && a.goal && a.goal.task === 'haul').length; }
+    if ((V.rigs || []).includes('teiner') && !V.pot){ S.equip.teinehaler = true; gop('haul', 'teine'); r.work.pots = bad(); gop('set', 'teine'); r.work.potsSet = bad(); }
+    b.gop = null; CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt));
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
     b.status = 'idle'; b.gop = null; S.hold = []; b.deckStop = false; r.walk = 0; r.walked = 0; CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null; CREW3D.tick(0.05);
     for (let i = 0; i < 600; i++){ if (i % 30 === 0){ FORCE = [breaks[(i / 30) % breaks.length], breaks[(i / 30 + 5) % breaks.length], breaks[(i / 30 + 11) % breaks.length]]; S.t += 13; CREW3D._st.lastSim = S.t; }
@@ -62,10 +72,14 @@ async def main():
         print(ok(len(boats) >= 10), 'every boat with a deck has its crew on it', len(boats))
         print(ok(not idleBad), 'no break, on any boat, puts a limb through a wall, the rail or anything else', idleBad)
         print(ok(not workBad), 'nor does the work at its places (jigging, gutting, icing, hauling)', workBad)
+        sett = {vt: r['sett'] for vt, r in R.items() if r and any(v != '1/0' for v in r.get('sett', {}).values())}
+        print(ok(not sett and sum(len(r.get('sett', {})) for r in R.values() if r) >= 16), 'setting line and nets, one stands where the gear goes over in the setting pose and nobody in the hauling pose (F4; set/haul per kind)', sett)
         # (F19: the boats revised on board so far, OB5-OB11; the others are their phases' to put right, printed so they are seen)
         near = {vt: r['pair'] for vt, r in R.items() if r and r.get('pair') is not None and r['pair'] < 0.55}
         unm = [vt for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark') if R.get(vt) and R[vt].get('pair') is None]
-        print(ok(not any(vt in near for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark'))), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; the revised boats; no pair to measure: %s)' % (unm or '-'), near)
+        # (OB3 11.11.2026: every boat now, deckcrew.js deckAt: the third at a table took the second's side and stood 0.40 m from him on the
+        # 15 m and the 21 m boats, the snow crab vessel and the trawler; seen red on the build from before)
+        print(ok(not near), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; every boat; no pair to measure: %s)' % (unm or '-'), near)
         walk = {vt: [r['walk'], r['walked'], r.get('walkAt')] for vt, r in R.items() if r and r['walk']}
         print(ok(not walk and all(r['walked'] > 50 for r in R.values() if r)), 'nor a body on the way between them (shoulders, chest and back, every tenth of a second)', walk)
         given = {}
