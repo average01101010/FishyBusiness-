@@ -70,11 +70,12 @@ LAND = """async () => {
 
 async def shots(pg, tag):
     out = {}
-    await pg.evaluate("() => { S.settings.hudFull = true; refreshAll(); }")
+    # upright the status is the strip since UI 2 (U2-1, 06.11.2026), and the whole box with the gauges is the card a tap on the strip opens
+    await pg.evaluate("() => { S.settings.hudFull = true; refreshAll(); if (document.body.classList.contains('hudstrip') && typeof hudCardOpen === 'function') hudCardOpen(true); }")
     await pg.wait_for_timeout(400)
     await pg.screenshot(path=os.path.join(OUT, 'fabrikk-hud-' + tag + '.png'))
     out['hud'] = await pg.evaluate("() => (document.querySelector('.gauges') || {}).innerText + ' | ' + Array.from(document.querySelectorAll('.hfull .row')).map(r => r.innerText).join(' / ')")
-    await pg.evaluate("() => { S.settings.hudFull = false; refreshAll(); PHONE.open('beholdning:boat'); }")
+    await pg.evaluate("() => { if (typeof hudCardOpen === 'function') hudCardOpen(false); S.settings.hudFull = false; refreshAll(); PHONE.open('beholdning:boat'); }")
     await pg.wait_for_timeout(500)
     await pg.evaluate("() => { const h = Array.from(document.querySelectorAll('.ph-card h4')).find(e => /^Turen|^The trip/.test(e.textContent)); if (h) h.scrollIntoView({block:'center'}); }")
     await pg.wait_for_timeout(300)

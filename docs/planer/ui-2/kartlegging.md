@@ -167,7 +167,7 @@ Fire skjermer uten 3D (havn, sjø, skuffen Beholdning, telefonens hjem):
 | Radier | 15 | 17 | høyst 6 |
 | Knappestiler | 18 | 17 | 3–4 |
 
-Hele tellingen over alle flatene (`uiplay.py`, 3D) føres inn her når kjøringene er ferdige.
+Hele tellingen over alle flatene (`uiplay.py`, 3D) føres inn her når kjøringene er ferdige. (Ble ikke ført inn i U2-0; tellingen etter UI 2 står i kap. 7.)
 
 ### 3.8 Første tur i stående nettbrett (uiplay med 3D)
 
@@ -205,3 +205,57 @@ Sett på bildene så langt (`u20-brett-tur-plotter-tips-og-toast.jpg`, `u20-bret
 
 - Tellingen fra `uiplay.py` i 800×1280 og 390×844 (kjører) føres inn i 3.7, og feil den finner i første tur i stående, inn i backloggen.
 - ~~«Full last» og «ved egen blåse» måles i U2-3 når linja bygges om, med `fiskeplay.py` som har oppsettet for blåsa.~~ Målt i U2-3 (06.11.2026): `kartlegging.py` har tilstandene `sjo-full-last` (fylt til kapasiteten), `sjo-ved-blasa` (50 m), `sjo-til-blasa` (600 m) og `sjo-blasa-langt` (2 km), pluss naustet ved egen kai, Redskap-vifta og til ankers; radene står i `docs/systemer/ui-og-telefon.md`, «UI 2, U2-3». K1 (resten), K2 og K3 er løst der.
+
+## 7. Etter UI 2 (U2-9, 10.11.2026)
+
+Målt på arbeidsgrenen 2d4381db (alt i UI 2 til og med U2-8 er ute), med hele kysten fra `kart-31` i bygget og frø 1. `tests/kartlegging.py` uten 3D i 390×844 og 800×1280 (57 OK, sidefeil `[]` i begge, rundt ett minutt), og `tests/uiplay.py` med 3D under SwiftShader i 390×844 (`KYST_UIPLAY_SIZE=390x844:tlf`, 105 bilder, 15 min) og 800×1280 (`KYST_UIPLAY_ONE=staaende`, 125 bilder, 83 min), sidefeil `[]` i begge.
+
+### 7.1 Tellingen på fire skjermer, før og etter
+
+De samme fire skjermene som i 3.7 (havn, sjø, skuffen Om bord, telefonens hjem), uten 3D:
+
+| | Telefon før (U2-0) | Telefon etter U2-1 | **Telefon etter UI 2** | Nettbrett før (U2-0) | Nettbrett etter U2-1 | **Nettbrett etter UI 2** | Kystlys' mål |
+|---|---|---|---|---|---|---|---|
+| Skriftstørrelser | 16 | 16 | **15** | 14 | 14 | **14** | høyst 10 |
+| Tekstfarger | 16 | 13 | **14** | 18 | 14 | **14** | |
+| Bakgrunner | 34 | 33 | **28** | 35 | 34 | **29** | høyst 25 |
+| Radier | 15 | 15 | **14** | 17 | 17 | **17** | høyst 6 |
+| Knappestiler | 18 | 16 | **17** | 17 | 16 | **17** | 3–4 |
+
+Skriftstørrelsene på telefonen etter: 8,5, 9, 9,5, 10, 10,5, 11, 12, 12,5, 13, 14, 15, 16, 18, 20 og 46 px (åtte under 13 px, som før); på nettbrettet de samme uten 9,5 og 10,5 og med 11,5.
+
+**Målet fra Kystlys er ikke nådd.** Bakgrunnene er nærmest (28 og 29 mot 25, ned fra 34 og 35). Skriftstørrelsene (15 og 14 mot 10), radiene (14 og 17 mot 6) og knappestilene (17 mot 3–4) står omtrent der de sto. Det er som planen ville: UI 2 flyttet hva som står hvor og beholdt Kystlys-tokenene (prinsipp 7, V2 A), og ingen fase hadde som oppgave å slå sammen størrelser eller radier. Det som skal til for å nå målet, er en egen ryddejobb i `styles.css` (halvpikslene 8,5/9/9,5/10/10,5 til to trinn, radiene til tokens); den står i backloggen 10.7 og bygges ikke før Jonas har sagt ja.
+
+### 7.2 Hele tellingen over alle flatene (`uiplay.py`, 3D)
+
+Hele runden (konvolutten, brevet, første tur, linja, alle skuffesidene, alle appene, plotteren, dagboka, puben), talt over alle bildene. Skriftstørrelsene er talt som Kystlys gjorde det: uten 3D-etiketter under 5 px og uten brøkstørrelsene fra `clamp` og `vw`.
+
+| | Kystlys før (liggende 1280×800, 113 bilder, 04.11.2026) | Telefon 390×844 etter (105 bilder) | Nettbrett 800×1280 etter (125 bilder) |
+|---|---|---|---|
+| Skriftstørrelser | rundt 22 (8–30 px) | 22 (8–46 px; 18 i tre bilder eller flere) | 22 (20 i tre bilder eller flere) |
+| Tekstfarger | 77 | 72 (33 i tre bilder eller flere) | 81 (42) |
+| Bakgrunner | 172 | 193 (53) | 199 (61) |
+| Radier | | 24 (22) | 24 (23) |
+| Knappestiler | | 98 (35) | 99 (36) |
+
+**Svakheter, sagt rett ut:** (1) U2-0 førte aldri inn en `uiplay`-telling i stående før UI 2 (3.7 sier «føres inn her når kjøringene er ferdige», og det ble ikke gjort), så for hele runden finnes ingen «før» i samme format; tallene fra Kystlys er liggende og fra før U0–U10, og kan bare brukes som størrelsesorden. Sammenligningen før og etter som holder, er de fire skjermene i 7.1. (2) Bakgrunnene i hele runden er flere enn hos Kystlys fordi runden har fått flere flater siden 04.11 (Kvotemarkedet, Kystmegleren, sponsorflatene, Om bord-fanene), ikke fordi UI 2 la til farger; det er ikke målt hver for seg. (3) På telefonen stoppet første tur på steget `cast1` (7.4), så bildene fra seiling, fiske, dekket, levering og sluttseddelen i 390×844 mangler i telefonens telling; nettbrettet har hele turen (`n1` til `goal`).
+
+### 7.3 Det UI 2 skulle løse, målt etter
+
+| Funn | Før (kap. 3) | Etter (10.11.2026) |
+|---|---|---|
+| K1 Rader i linja til sjøs, telefon | 2 med seks knapper, «Mer» alltid | 1 rad i alle 22 tilstander, høyst 5 knapper, ingen «Mer», Om bord sist i alle |
+| K3 Grå knapper uten grunn | 1–3 av 6 til sjøs | 0: hver grå knapp har grunnen på seg (`data-why`) |
+| K4 Boksens høyde og minikartets topp, telefon | 110–157 px, kartet 156–203 px | stripa 60 px og kartets topp 40 px i alle tilstander (nettbrett 62 og 8 px) |
+| K5, K6 Tredje linje | pilla og boksen sa det samme | noe på linje 3 i 42 av 48 prøver, pilla er borte (tekst over knappene i 0 prøver) |
+| K7 Trykkflater under 44 px | `hmin` og `plotMin` 32×30, `gauges` 119×31 | ingen i noen tilstand, begge formater |
+| K8 Hjemskjermen | 7 kort over appene; 12 av 22 apper synlige på telefon, 6 på nettbrett | 5 kort; 18 og 12 av 22 |
+| K9 Rederi | 1,7 og 2,5 skjermer; flåten 0,81 og 1,12 skjermer ned | 1,0 og 1,5 skjermer; flåten 0,08 og 0,11 skjermer ned |
+| K10 Ansatte-siden | arket 55 %, 4,6 skjermer på telefon | arket 77 % (81 % på nettbrett), fanen Om bord 3,0 skjermer og Mannskapsbørs 1,9 (nettbrett 1,7 og 1,0) |
+| Skuffen | Beholdning 78 %, 2,0 skjermer; Mannskap 1,5 | Om bord 77 %, 1,6 skjermer; Mannskap 1,9 (14 knapper mot 7: ⋯ per person) |
+
+K2 (viftene), K11 (én hovedknapp per person), K12 og K13 er sett i fasene sine og ikke målt på nytt her. K15 (grensa 32×30 i `uishots` kan heves til 44 for berøring) er ikke gjort: det er en testendring U2-9 ikke eier, og den står i backloggen 10.7.
+
+### 7.4 Funn i målingen: «Kast loss» i første tur peker under skjermen på telefon stående
+
+I 390×844 kom `uiplay` aldri forbi `cast1` (stegene sett: `n1`, `nout`, `intro`, `gps`, `route1`, `cast1`; nettbrettet gikk hele turen). Gjenskapt uten 3D samme dag: steget peker på `#panel .rbar [data-act=start]` (`ui/07b-first-trip.js` linje 96; `cast2` på linje 122 og 162 peker på det samme), og på en telefon stående ligger rutepanelet foldet under skjermkanten. Ringen står på y = 1136 og tipset «Trykk «Kast loss» …» på y = 1057 av 844 px, så spilleren ser verken ring eller tips; han ser plotteren med ruta, og hjelpeteksten til Autonav. Den rosa ▶ (`#rPlay`) til høyre gjør det samme som «Kast loss» og virker, så turen kan fullføres, men uten veiledning. `fish2` åpner skuffen selv på smale skjermer (`innerWidth <= 700`); `cast1` og `cast2` gjør det ikke. `tut.py` spiller 800×1280 og 1280×800, aldri en telefon, så porten har ikke sett det. Ikke undersøkt: fra hvilken commit (plotterens panel på telefon er eldre enn UI 2), og om `cast2` har samme utfall (uiplay kom ikke dit på telefonen). Bildet: `docs/okter/2026-11-10-u2-9/390x844-forste-tur-kast-loss-uten-tips.png`. **Ikke rettet i U2-9** (ingen ny UI-endring, og `ui/07b-first-trip.js` er ikke stegets fil); står øverst i backloggen, fordi det gjelder de første ti minuttene på en telefon (porten P6). Rettingen er trolig liten: pek på `#rPlay` når panelets knapp ikke er på skjermen, og kjør `tut.py` også i 390×844.
