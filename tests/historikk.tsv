@@ -2517,3 +2517,5 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	sponsor2test	OK	18	lite	samtidig	
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	adminbuytest	OK	12	lite	samtidig	
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
+2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
+2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
