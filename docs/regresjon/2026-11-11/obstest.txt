@@ -1,0 +1,9 @@
+OK   Gisundbrua has its piers in the sound as the 3D view sets them, and the deck is high enough in the middle  {"n": 17, "wet": 14, "tot": 1147, "mid": 39.8, "air": 3.4499999999999997, "cells": 1240, "things": 1930}
+OK   Autonav from Finnsnes to Botnhamn goes under Gisundbrua between its piers, clear of land  {"dp": 32.7, "low": 0, "clr": 7.13, "wp": 13, "det": 2, "land": false}
+OK   a leg straight through a pier is taken under the deck in a gap between the piers  {"dp": 33, "low": 0, "clr": 7.13, "hit": true, "n": 2, "land": false, "extra": 5}
+OK   a leg through a sea mark goes round it  {"type": "L", "hit": true, "n": 2, "near": 15, "clr": 7.13}
+OK   a bridge under 60 m is a wall all along (its deck lies low over the water)  {"n": 29, "all": true}
+OK   a drawn route through a pier: under way the boat goes round it under the deck and on to the end  {"dp": 31, "clr": 7.13, "end": 0, "st": "idle"}
+FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "port", "det": 7, "dp": 3, "clr": 7.13}
+OK   along the coast: this build has no vec packs (the artifact's), so only Senja's bridges count here
+errors: []
