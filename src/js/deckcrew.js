@@ -270,11 +270,13 @@ function crewSim(src){
     if (best != null && bl < d * 2.5 + 0.6) return {k:best, h:q.h || 0, task};
     // (F19, OB3: no place fore or aft of the first, a table across the boat or a narrow station: the nearest cell 0.6 to 0.95 m from
     // him on his own deck, a short walk away, rather than on the same point)
-    let b2 = -1, bv = 1e9; const M = ST.M, k0 = M.ok(q.k) ? q.k : near(p[0], p[2], 1);
-    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const c = M.at(k), dd = Math.hypot(c[0] - p[0], c[2] - p[2]); if (dd < 0.6 || dd > 0.95 * Math.ceil(n / 2) || Math.abs(c[1] - p[1]) > 0.2) continue;
+    const b2 = beside(q.k, Math.ceil(n / 2), task, q.h || 0); return {k:b2 >= 0 ? b2 : q.k, h:q.h || 0, task}; }
+  // the nearest cell 0.6 to 0.95 m (times w) from a place, on its own deck and a short walk from it, 0.55 m clear of everyone's place
+  function beside(k1, w, task, h){ let b2 = -1, bv = 1e9; const M = ST.M, p = ST.M0.at(k1), k0 = M.ok(k1) ? k1 : near(p[0], p[2], 1);
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const c = M.at(k), dd = Math.hypot(c[0] - p[0], c[2] - p[2]); if (dd < 0.6 || dd > 0.95 * w || Math.abs(c[1] - p[1]) > 0.2) continue;
       let cl = 9; for (const [t0] of TAKEN){ const u = M.at(t0); cl = Math.min(cl, Math.hypot(u[0] - c[0], u[2] - c[2])); } if (cl < 0.55) continue;
-      const v = Math.abs(dd - 0.7) + poseHits(task, k, q.h || 0) * 2; if (v < bv){ const P = k0 >= 0 ? deckPath(M, k0, k) : null; if (P && P.length <= 8){ bv = v; b2 = k; } } }
-    return {k:b2 >= 0 ? b2 : q.k, h:q.h || 0, task}; }
+      const v = Math.abs(dd - 0.7) + poseHits(task, k, h) * 2; if (v < bv){ const P = k0 >= 0 ? deckPath(M, k0, k) : null; if (P && P.length <= 8){ bv = v; b2 = k; } } }
+    return b2; }
 
   // ---- what the game says: everyone's station this minute, and the boat's state ----
   function context(){
@@ -389,7 +391,8 @@ function crewSim(src){
     if (st === 'sloy') return deckAt(PT.sloy, n, 'gut') || idleGoal(p, ctx, 'look');
     // (on a boat with a hold the packer turns his back to the bleeding tub: the box he packs stands on the deck before him, by the hatch)
     if (st === 'is'){ const g = deckAt(PT.is, n, 'pack'); if (g && ((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk') g.h = (g.h || 0) + Math.PI; return g || idleGoal(p, ctx, 'look'); }
-    if (st === 'sort') return at(PL.pot, 1.4) || idleGoal(p, ctx, 'look');
+    // (the second sorting the crab stands beside the first, not 0.4 m from him in a clump by the hauler: OB3, F19)
+    if (st === 'sort'){ const q = at(PL.pot, 1.4); if (q && n){ const k2 = beside(q.k, Math.ceil(n / 2), 'tend', q.h || 0); if (k2 >= 0) q.k = k2; } return q || idleGoal(p, ctx, 'look'); }
     if (st === 'blogg') return at(PL.bleed, 1.4) || idleGoal(p, ctx, 'look');
     if (st === 'haling'){ const q = p.role === 'plukk' ? at(PL.pick, 1.4) : p.role === 'teine' ? at(PL.pot, 1.4) : at(PL.haul[Math.min(1, n)], 1.4); return q || idleGoal(p, ctx, 'look'); }
     if (st === 'fiske'){ const q = jigSpot(n); return q || idleGoal(p, ctx, 'lean'); }

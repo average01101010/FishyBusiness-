@@ -46,7 +46,10 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
     if ((V.rigs || []).includes('garn')){ S.equip.garnhaler = true; gop('haul', 'garn'); r.work.haulG = bad(); }
     for (const kind of ['line', 'garn']) if ((V.rigs || []).includes(kind) && !V.autoHooks){ gop('set', kind); r.work['set_' + kind] = bad();
       r.sett[kind] = CREW3D.agents().filter(a => a.role === 'sett' && a.goal && a.goal.task === 'sett').length + '/' + CREW3D.agents().filter(a => a.st === 'haling' && a.goal && a.goal.task === 'haul').length; }
-    if ((V.rigs || []).includes('teiner') && !V.pot){ S.equip.teinehaler = true; gop('haul', 'teine'); r.work.pots = bad(); gop('set', 'teine'); r.work.potsSet = bad(); }
+    if ((V.rigs || []).includes('teiner') && !V.pot){ S.equip.teinehaler = true; gop('haul', 'teine'); r.work.pots = bad();
+      // (the two sorting the crab, each a place of their own: they stood 0.40 m apart in a clump by the hauler)
+      { const T = CREW3D.agents().filter(a => a.goal && a.goal.task === 'tend' && !a.goal.inside).map(a => CREW3D._st.M.at(a.goal.k)); let m = 9; for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) m = Math.min(m, Math.hypot(T[i][0] - T[j][0], T[i][2] - T[j][2])); if (T.length > 1) r.pairPots = +m.toFixed(2); }
+      gop('set', 'teine'); r.work.potsSet = bad(); }
     b.gop = null; CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt));
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
     b.status = 'idle'; b.gop = null; S.hold = []; b.deckStop = false; r.walk = 0; r.walked = 0; CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null; CREW3D.tick(0.05);
@@ -76,6 +79,7 @@ async def main():
         print(ok(not sett and sum(len(r.get('sett', {})) for r in R.values() if r) >= 16), 'setting line and nets, one stands where the gear goes over in the setting pose and nobody in the hauling pose (F4; set/haul per kind)', sett)
         # (F19: the boats revised on board so far, OB5-OB11; the others are their phases' to put right, printed so they are seen)
         near = {vt: r['pair'] for vt, r in R.items() if r and r.get('pair') is not None and r['pair'] < 0.55}
+        near.update({vt + ':teiner': r['pairPots'] for vt, r in R.items() if r and r.get('pairPots') is not None and r['pairPots'] < 0.55})
         unm = [vt for vt in ('snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark') if R.get(vt) and R[vt].get('pair') is None]
         # (OB3 11.11.2026: every boat now, deckcrew.js deckAt: the third at a table took the second's side and stood 0.40 m from him on the
         # 15 m and the 21 m boats, the snow crab vessel and the trawler; seen red on the build from before)

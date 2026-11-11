@@ -192,6 +192,11 @@ LONG['oppshot'] = 3600; LONG['trytest'] = 1800   # (trytest on the fast sjark, w
 COVER['tests/oppshot.py'] = ['oppshot']; COVER['tests/unit/oppmodell.test.mjs'] = []; COVER['tools/deck/oppgr.py'] = []; COVER['src/data/deck-upg.b64'] = ['oppshot']
 for _f in ('src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['oppshot', 'trytest']))
 COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/view3d/25-controls.js', []) + ['trytest']))
+# OB3 (11.11.2026): the setting and the gear aboard. The places are tried in Node (tests/unit/ombord.test.mjs, run first with the unit
+# tests) and against the models in crewclip; the files that give them: the hands' pose (08-plants.js), the jigging places
+# (13-instruments.js jigRail), where the gear goes over and the tubs (10-gear.js, 09-landing-deck.js, which the deck crew reads)
+COVER['tests/unit/ombord.test.mjs'] = []
+for _f in ('src/js/view3d/08-plants.js', 'src/js/view3d/13-instruments.js', 'src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['crewclip']))
 
 
 def changed_tests():
