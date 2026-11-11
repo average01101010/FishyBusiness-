@@ -74,7 +74,7 @@ export default function (t){
   K.set('S', K.newState()); const TRK = K.get('TRK');
   TRK.A = null; const A1 = K.trkAreas(); const keep = FELT.d; FELT.d = keep.filter(f => f.k === 'f'); TRK.A = null; const A2 = K.trkAreas(); FELT.d = keep; TRK.A = null;
   const same = A1.gc.every((v, i) => v === A2.gc[i]) && A1.gch.every((v, i) => v === A2.gch[i]);
-  t.ok(same, `trkAreas teller bare fiskeplassene (${A1.gc.reduce((a, b) => a + b, 0)} ruter på felt, det samme uten g og o: ${A2.gc.reduce((a, b) => a + b, 0)})`);
+  t.ok(same, `trkAreas teller bare fiskeplassene (${A1.gc.reduce((a, b) => a + b, 0)} ruter på felt, det samme uten g, o og s: ${A2.gc.reduce((a, b) => a + b, 0)})`);
   const lone = by('g').find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4) && K.lokOfCell({x:f.x, y:f.y}).l >= 0);
   if (lone){ const c = {cx:lone.x, cy:lone.y}; t.eq(K.trkCellW(c), 1, `en rute ved gyteområdet ${lone.n} uten fiskeplass i nærheten har ingen feltvekt i trykket`); }
   else t.ok(false, 'fant ikke et gyteområde langt fra fiskeplassene');
@@ -86,28 +86,34 @@ export default function (t){
 function f5(t, K, D, S){
   const FELT = K.get('FELT'), TRK = K.get('TRK'), s = D.filter(f => f.k === 's'), raw = JSON.parse(readFileSync(join(SRC, 'data', 'felt.json'), 'utf8'));
   // 1. the kind is there, in Finnmark only (first the thinnest stretch), with the names the plan checked by Båtsfjord
-  t.ok(s.length > 500 && s.length < 1200 && raw.meta.kinds.s === s.length, `slaget s finnes: ${s.length} sjønavn fra Kartverket (meta.kinds.s ${raw.meta.kinds.s})`);
+  t.ok(s.length > 500 && raw.meta.kinds.s === s.length && raw.meta.kv && raw.meta.kv.fylker.length > 0, `slaget s finnes: ${s.length} sjønavn fra Kartverket (meta.kinds.s ${raw.meta.kinds.s}, fylkene ${raw.meta.kv && raw.meta.kv.fylker})`);
   t.ok(/Kartverket/.test(raw.meta.src) && /CC BY 4\.0/.test(raw.meta.src), 'kilden og lisensen for sjønavnene står i meta.src (Kartverket, CC BY 4.0)');
   const ll = s.map(f => K.natLL(f.x, f.y)), out = ll.filter(q => q.lat < 69.6 || q.lon < 20.5).length;
-  t.eq(out, 0, 'alle sjønavnene ligger i Finnmark (nord for 69,6° N og øst for 20,5° Ø)');
+  // (only while Finnmark is the one county fetched, KV_FYLKER in felt.py; more counties, and this check falls away)
+  if (raw.meta.kv && raw.meta.kv.fylker.join() === '56') t.ok(out === 0 && s.length < 1200, `alle sjønavnene ligger i Finnmark (nord for 69,6° N og øst for 20,5° Ø; ${out} utenfor)`);
   const bf = K.P(70.635, 29.72), near = n => s.find(f => f.n === n && Math.hypot(f.x - bf.x, f.y - bf.y) < 40);
   t.ok(near('Leira') && near('Seigrunnen') && near('Skarberggrunnen'), `ved Båtsfjord: havdypet Leira og grunnene Seigrunnen og Skarberggrunnen (${s.filter(f => Math.hypot(f.x - bf.x, f.y - bf.y) < 20).length} sjønavn innen 20 km)`);
   // 2. a name and a point only: no gear, no lines, no size, no shape
   t.ok(s.length > 0 && s.every(f => f.g === '-' && f.l.length === 0 && f.r === 0 && f.n), 'et sjønavn er bare navn og punkt: uten redskap, linjer og størrelse');
   if (S) t.ok(s.length > 0 && s.every(f => S[f.i].length === 0), 'og uten form (0 ringer i felt-s.b64, så antallet følger felt.json)');
-  // 3. never the same name twice within 1 km: not against a ground of any kind, and not among themselves
-  const cell = new Map(), key = (x, y) => Math.floor(x) + ':' + Math.floor(y);
-  for (const f of D){ if (!f.n) continue; const k = key(f.x, f.y); if (!cell.has(k)) cell.set(k, []); cell.get(k).push(f); }
-  const dbl = s.filter(f => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) for (const o of cell.get(key(f.x + dx, f.y + dy)) || [])
-    if (o !== f && o.nf.toLowerCase() === f.nf.toLowerCase() && Math.hypot(o.x - f.x, o.y - f.y) < 1) return true; return false; });
-  t.ok(s.length > 0 && dbl.length === 0, `ingen sjønavn står to ganger innen 1 km (${dbl.length}${dbl.slice(0, 3).map(f => ' «' + f.nf + '»').join('')})`);
-  // 4. never weight and never pressure: a cell by a sea name far from any fishing ground has no ground weight, and the fish on the
-  // grounds (03j-felt.js) are built from the fishing grounds alone
-  const lone = s.find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4));
+  // 3. never the same name twice: not a ground's name (its whole name, the chart's name or a part of a slash name; without the
+  // definite ending and the hyphens) within 3 km, as the same name within 3 km is one ground, not a sea name again within 1 km,
+  // and no two sea names on one spot
+  const nk = n => { const k = n.toLowerCase().replace(/[^a-zæøåáčđŋšŧžäö]/g, ''); return k.length > 5 ? k.replace(/(ene|ane|en|an|et|a)$/, '') : k; };
+  const keys = f => new Set([f.nf, f.n.replace(/…$/, ''), ...f.nf.split(/\s*\/\s*/)].filter(Boolean).map(nk));
+  const cell = new Map(), key = (x, y) => Math.floor(x / 3) + ':' + Math.floor(y / 3);
+  for (const f of D){ if (!f.n) continue; f._k = keys(f); const k = key(f.x, f.y); if (!cell.has(k)) cell.set(k, []); cell.get(k).push(f); }
+  const dbl = [], spot = [];
+  for (const f of s) for (let dy = -3; dy <= 3; dy += 3) for (let dx = -3; dx <= 3; dx += 3) for (const o of cell.get(key(f.x + dx, f.y + dy)) || []){ if (o === f) continue;
+    const d = Math.hypot(o.x - f.x, o.y - f.y); if (o.k === 's' && d < 0.1) spot.push(f);
+    if (d < (o.k === 's' ? 1 : 3) && [...f._k].some(q => o._k.has(q))) dbl.push(f.nf + ' / ' + o.nf + ' (' + o.k + ', ' + d.toFixed(2) + ' km)'); }
+  t.ok(s.length > 0 && dbl.length === 0, `ingen sjønavn står to ganger: ikke som et felt innen 3 km, ikke som et sjønavn innen 1 km (${dbl.length}${dbl.slice(0, 4).map(q => ' «' + q + '»').join('')})`);
+  t.eq(spot.length, 0, 'ingen to sjønavn på samme sted (innen 100 m)');
+  // 4. never weight and never pressure: a cell by a sea name far from any fishing ground, inside a location, has no ground weight
+  // (trkAreas without every kind but f is check 7 above; the fish on the grounds, 03j-felt.js, are built from k = f alone)
+  const lone = s.find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4) && K.lokOfCell({x:f.x, y:f.y}).l >= 0);
   if (lone){ const c = {cx:lone.x, cy:lone.y}; t.ok(K.trkCellW(c) === 1 && c.gwa === 1, `en rute ved sjønavnet ${lone.n} uten fiskeplass i nærheten har ingen feltvekt i trykket`); }
-  else t.ok(false, 'fant ikke et sjønavn langt fra fiskeplassene');
-  TRK.A = null; const A1 = K.trkAreas(), keep = FELT.d; FELT.d = keep.filter(f => f.k !== 's'); TRK.A = null; const A2 = K.trkAreas(); FELT.d = keep; TRK.A = null;
-  t.ok(s.length > 0 && A1.gc.every((v, i) => v === A2.gc[i]) && A1.gch.every((v, i) => v === A2.gch[i]), 'trkAreas teller det samme med og uten sjønavnene: ingen s i trykket');
+  else t.ok(false, 'fant ikke et sjønavn langt fra fiskeplassene, i en lokasjon');
 }
 
 // ---- Ø14 F2: the fish on the grounds (core/03j-felt.js) ----

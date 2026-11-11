@@ -10,7 +10,7 @@
 # Ø14 F5 (11.11.2026): where Fiskeridirektoratet has little (first Finnmark, KV_FYLKER), Kartverket's place names in the sea come in
 # as a kind of their own (k = s): the fishing places, banks, shoals, edges and deeps of Sentralt stedsnavnregister (the open API
 # api.kartverket.no/stedsnavn/v1, CC BY 4.0), a name and a point only. Never weight, never pressure, no lines and no shape. A name
-# that already stands among the grounds within KV_DUP_KM is not taken twice.
+# that already stands among the grounds within KV_FELT_KM, or among the sea names within KV_DUP_KM, is not taken twice.
 #
 #   python3 tools/npc/felt.py            (the layers are fetched into tools/npc/cache/; KYST_FELT=<file> writes there instead)
 #
@@ -29,7 +29,8 @@
 #   g     a string with one letter per ground: a active gear (seine, trawl, Danish seine), p passive (nets, line, jig, pots), b both,
 #         - for the spawning and nursery grounds (no gear)
 #   k     a string with one letter per ground: f a fishing ground (fiskeplass), g a spawning ground (gyteområde), o a nursery and
-#         feeding ground (oppvekst- og beiteområde), s a place name in the sea from Kartverket (g is -, r is 0, no lines, no rings).
+#         feeding ground (oppvekst- og beiteområde), s a place name in the sea from Kartverket (g is -, r is 0, no lines, no rings;
+#         they stand last, after all the grounds, which are sorted by y and x among themselves).
 #         Only f is ever weight or pressure in the game.
 #   l     [[[sp, gear, months], ...], ...] per ground: the species (index in meta.sp), the gear as bits (1 << index in meta.gear; 0 for
 #         the spawning and nursery grounds, or a line without gear) and the months as 12 bits (1 << 0 is January). A ground with no
@@ -54,7 +55,10 @@ SIMPLIFY_KM = 0.1      # the shapes: Douglas-Peucker to 100 m (F1 measured this 
 KV = 'https://api.kartverket.no/stedsnavn/v1/sted'
 KV_TYPES = ['fiskeplassISjø', 'bankeISjø', 'grunneISjø', 'eggISjø', 'havdyp']
 KV_FYLKER = ['56']     # Finnmark (east and west): the thinnest in the table of docs/planer/fangstfelt.md 2.5
-KV_DUP_KM = 1.0
+KV_DUP_KM = 1.0        # the same sea name again within this is one place (a shoal is often registered as several points)
+KV_FELT_KM = 3.0       # a ground of the same name within this has the name already (MERGE_KM: the same name within 3 km is one ground,
+                       # and a ground's point is the middle of its polygon, often more than 1 km from Kartverket's point)
+KV_SPOT_KM = 0.15      # another name on the same spot
 SHORT = 28             # a name longer than this is cut at a word for the chart (the whole name in nf)
 # the species the game knows (SPECIES in core/02-species-gear.js), by the name in Fiskeridirektoratet's lines («1022 TORSK»)
 SP = {'TORSK': 'torsk', 'HYSE': 'hyse', 'SEI': 'sei', 'LYR': 'lyr', 'LANGE': 'lange', 'BROSME': 'brosme', 'UER': 'uer', 'KVEITE': 'kveite',
@@ -79,7 +83,8 @@ def fetch(layer):
 
 def fetch_kv(fnr, typ):
     """the places of one kind in one county from Kartverket's place-name API, all pages (the type filter works on /sted with the
-    type's code; the API gives at most 5000 per question, far above any kind in a county)"""
+    type's code; the API gives at most 5000 per question, far above any kind in a county). Nothing is cached, and the run stops,
+    unless every place the API counts has come"""
     os.makedirs(CACHE, exist_ok=True); f = os.path.join(CACHE, f'kv-{fnr}-{typ}.json')
     if os.path.exists(f) and time.time() - os.path.getmtime(f) < 20 * 86400: return json.load(open(f, encoding='utf-8'))
     out = []; side = 1
@@ -88,40 +93,67 @@ def fetch_kv(fnr, typ):
         for i in range(4):
             try:
                 with urllib.request.urlopen(KV + '?' + q, timeout=120) as r: d = json.loads(r.read().decode('utf-8'))
+                tot = d['metadata']['totaltAntallTreff']; page = d['navn']
                 break
             except Exception as e:
                 print('  Kartverket retry', fnr, typ, str(e)[:80]); time.sleep(5 * (i + 1))
         else: raise SystemExit(f'Kartverket did not answer for {fnr} {typ}')
-        out += d.get('navn', []); tot = d['metadata']['totaltAntallTreff']
         if tot > 5000: raise SystemExit(f'{fnr} {typ}: {tot} places, over the API\'s 5000; fetch per municipality')
-        if len(out) >= tot or not d.get('navn'): break
+        out += page
+        if len(out) >= tot: break
+        if not page: raise SystemExit(f'{fnr} {typ}: {len(out)} of {tot} places came, page {side} was empty; nothing written')
         side += 1
     json.dump(out, open(f, 'w', encoding='utf-8'), ensure_ascii=False); return out
 
 def kv_name(st):
     """the name of a place: an approved main name, the Norwegian one first (a place can have a Sami and a Kven name beside it);
-    None when the place has no approved name (only a historical or a proposed one)"""
+    None when the place has no approved name (only a historical or a proposed one). The statuses that count: godkjent, vedtatt and
+    privat, with or without «og prioritert», and «vedtatt navneledd» (the spelling follows from a part of the name that is decided)"""
     ok = [n for n in st.get('stedsnavn', []) if n.get('navnestatus') == 'hovednavn' and (n.get('skrivemåtestatus') or '').split(' ')[0] in ('godkjent', 'vedtatt', 'privat') and n.get('skrivemåte')]
     ok.sort(key=lambda n: (n.get('språk') != 'Norsk', n.get('skrivemåtestatus') != 'godkjent og prioritert'))
-    return ok[0]['skrivemåte'].strip() if ok else None
+    return (ok[0]['skrivemåte'].strip(), ok[0].get('språk') == 'Norsk') if ok else (None, False)
+
+def name_key(n):
+    """a name for comparing: small letters, only the letters, and without the definite ending («Ytre Stabbegrunnen» and «Ytre
+    Stabbegrunn», «Peder Hansa-skallen» and «Peder Hansaskallen» are one name)"""
+    k = re.sub(r'[^a-zæøåáčđŋšŧžäö]', '', n.lower())
+    return re.sub(r'(ene|ane|en|an|et|a)$', '', k) if len(k) > 5 else k
+
+def name_keys(g):
+    """the keys a ground is known by: its whole name, the chart's name, and each part of a name with a slash"""
+    return {name_key(x) for x in [g[0], g[8].rstrip('…')] + re.split(r'\s*/\s*', g[0]) if x and name_key(x)}
 
 def kv_places(G):
-    """Kartverket's names in the sea as grounds of the kind s, without those a ground of the same name already has within KV_DUP_KM"""
+    """Kartverket's names in the sea as grounds of the kind s. Left out: a name a ground already has (its whole name, the chart's
+    name or a part of a slash name, by name_key) within KV_FELT_KM, the same sea name again within KV_DUP_KM, and another name on
+    the same spot (KV_SPOT_KM: a bank registered once with its Norwegian and once with its Sami name; the Norwegian ones are taken first)"""
     # (2 × UNIT over: the points are written in steps of UNIT, and the game measures between the written points)
-    out = []; seen = {}; st = {'places': 0, 'noname': 0, 'dup_felt': 0, 'dup_self': 0}
+    out = []; seen = {}; st = {'places': 0, 'noname': 0, 'nopoint': 0, 'dup_felt': 0, 'dup_self': 0, 'dup_spot': 0}
     have = {}
     for g in G:
-        if g[0]: have.setdefault(g[0].lower(), []).append((g[1], g[2]))
+        for k in name_keys(g): have.setdefault(k, []).append((g[1], g[2]))
+    C = []
     for fnr in KV_FYLKER:
         for typ in KV_TYPES:
             for s in fetch_kv(fnr, typ):
                 if s.get('stedstatus') != 'aktiv': continue
-                st['places'] += 1; n = kv_name(s); rp = s.get('representasjonspunkt') or {}
-                if not n or rp.get('koordsys') != 25833: st['noname'] += 1; continue
-                x, y = (rp['øst'] + 250000) / 1000, (8050000 - rp['nord']) / 1000; k = n.lower()
-                if any(math.hypot(x - a, y - b) < KV_DUP_KM + 2 * UNIT for a, b in have.get(k, [])): st['dup_felt'] += 1; continue
-                if any(math.hypot(x - a, y - b) < KV_DUP_KM + 2 * UNIT for a, b in seen.get(k, [])): st['dup_self'] += 1; continue
-                seen.setdefault(k, []).append((x, y)); out.append([n, x, y, 0.0, '-', 's', [], [], n if len(n) <= SHORT else n[:SHORT] + '…', typ])
+                st['places'] += 1; n, no = kv_name(s); rp = s.get('representasjonspunkt') or {}
+                if not n: st['noname'] += 1; continue
+                if rp.get('koordsys') != 25833 or 'øst' not in rp or 'nord' not in rp: st['nopoint'] += 1; continue
+                C.append((not no, n, (rp['øst'] + 250000) / 1000, (8050000 - rp['nord']) / 1000, typ))
+    if st['nopoint'] > 0.05 * max(1, st['places']): raise SystemExit(f'{st["nopoint"]} of {st["places"]} places came without a point in EPSG:25833; nothing written')
+    C.sort(key=lambda c: c[0])            # (stable: the Norwegian names first, else the API's order)
+    wash0 = dict(WASH); spot = {}
+    for _, n, x, y, typ in C:
+        n, short = wash(n)
+        if not n: st['noname'] += 1; continue
+        k = name_key(n); near = lambda L, km: any(math.hypot(x - a, y - b) < km + 2 * UNIT for a, b in L)
+        if near(have.get(k, []), KV_FELT_KM): st['dup_felt'] += 1; continue
+        if near(seen.get(k, []), KV_DUP_KM): st['dup_self'] += 1; continue
+        ck = (round(x / KV_SPOT_KM), round(y / KV_SPOT_KM))
+        if any(math.hypot(x - a, y - b) < KV_SPOT_KM for dx in (-1, 0, 1) for dy in (-1, 0, 1) for a, b in spot.get((ck[0] + dx, ck[1] + dy), [])): st['dup_spot'] += 1; continue
+        seen.setdefault(k, []).append((x, y)); spot.setdefault(ck, []).append((x, y)); out.append([n, x, y, 0.0, '-', 's', [], [], short, typ])
+    WASH.clear(); WASH.update(wash0)      # (meta.wash counts Fiskeridirektoratet's names only)
     return out, st
 
 def rings(member):
@@ -317,10 +349,13 @@ def main():
             hit[3] += g[3]; hit[6] = hit[6] + g[6]; hit[7] = hit[7] + g[7]; continue
         g = list(g); out.append(g); byname.setdefault(key, []).append(g)
     # Kartverket's names in the sea (F5), after the joining: never joined with a ground, only left out where one has the name
-    kv, kvst = kv_places(out); out += kv
+    kv, kvst = kv_places(out)
     print(f'Kartverket: {len(kv)} names in the sea taken of {kvst["places"]} places ({json.dumps({t: sum(1 for g in kv if g[9] == t) for t in KV_TYPES}, ensure_ascii=False)}); '
-          f'{kvst["dup_felt"]} left out for a ground of the same name within {KV_DUP_KM} km, {kvst["dup_self"]} doubles among themselves, {kvst["noname"]} without an approved name')
-    out.sort(key=lambda g: (g[2], g[1]))
+          f'{kvst["dup_felt"]} left out for a ground of the same name within {KV_FELT_KM} km, {kvst["dup_self"]} doubles among themselves within {KV_DUP_KM} km, '
+          f'{kvst["dup_spot"]} for another name on the same spot, {kvst["noname"]} without an approved name, {kvst["nopoint"]} without a point')
+    # the sea names stand after all the grounds, so a ground's index (which the game draws its pull from, 03j-felt.js feltGeo) is
+    # the same with and without them
+    out.sort(key=lambda g: (g[2], g[1])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
     p = []; px = py = 0
     for g in out:
         x, y = round(g[1] / UNIT), round(g[2] / UNIT); p += [x - px, y - py]; px, py = x, y
