@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['feltnavn-111126', '11.11.2026', 'Fiskeplassene ved navn', 'The fishing grounds by name', [
+       ['Ryktet på puben, kjentmannen ved disken, Kystposten, rekordene og leteoppdragene sier nå navnet på fiskeplassen der det skjer, langs hele kysten: «på Makkaur-sandfjorden» i stedet for milene fra nærmeste havn. Navnene er fra Fiskeridirektoratets kart over fiskeplassene.', 'The rumour at the pub, the old hand at the bar, Kystposten, the records and the search missions now name the fishing ground where it happens, along the whole coast: «at Makkaur-sandfjorden» and not the miles from the nearest harbour. The names are from the Directorate of Fisheries\' chart of the fishing grounds.'],
+       ['Ryktet på puben gjelder en fiskeplass nær havna du ligger i. Før hørte alle om feltene ved Husøy, også i Bergen.', 'The rumour at the pub is about a fishing ground near the harbour you lie in. Before, everyone heard of the grounds by Husøy, in Bergen too.'],
+       ['Kystposten skriver om fiskeplassene nær hjemmehavna di, og sier fra når sesongen begynner på en av dem.', 'Kystposten writes about the fishing grounds near your home harbour, and says when the season begins on one of them.']]],
     ['sjonavn-111126', '11.11.2026', 'Flere navn i sjøkartet i Finnmark', 'More names on the chart in Finnmark', [
        ['Grunner, banker og havdyp i Finnmark står nå med navn i sjøkartet når du zoomer inn, fra Kartverkets stedsnavn. Trykk på et navn for å se hva det er.', 'Shoals, banks and deeps in Finnmark now carry their names on the chart when you zoom in, from the Norwegian Mapping Authority\'s place names. Tap a name to see what it is.']]],
     ['km4-111126', '11.11.2026', 'Båten med eller uten hjemmelen', 'The boat with or without her right', [
