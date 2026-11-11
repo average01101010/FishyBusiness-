@@ -221,6 +221,7 @@ function finH(x, z, h){
   let A = 0, s = 0;   // the weight that is not sea, and its heights
   if (a >= 0){ A += wa; s += wa * (a ? a * k : h); } if (b >= 0){ A += wb; s += wb * (b ? b * k : h); }
   if (c >= 0){ A += wc; s += wc * (c ? c * k : h); } if (d >= 0){ A += wd; s += wd * (d ? d * k : h); }
+  if (!(A > 0)) return h;   // (a land cell with no weight, the point on the line between two sea cells: s / A is 0 / 0)
   return A >= 0.5 ? s / A : h + 2 * A * (s / A - h);
 }
 // whether a view layer's blocks under a box of metres are in (the 3D draws a stand-in until they are)

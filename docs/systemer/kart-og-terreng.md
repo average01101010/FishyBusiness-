@@ -454,7 +454,7 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
 
 ## 4.6f Pakkeslaget `fin`: den fine bakken langs sjøen (Ø13 K1, 11.11.2026)
 
-**Bygd, ikke rullet ut** (grenen `claude/zen-curie-qoa35d`; venter på valg 37 i køen, fordi bildene ikke viste forskjell fra båten). Planen og tallene: `docs/planer/kartrelease-o13.md` kapittel 5.
+**På testutgaven fra 11.11.2026, bare Senja** (jeg så ingen forskjell på bildene; Jonas: «jeg synes forskjellen er merkbar», så laget bygges; hele kysten er K2). Planen og tallene: `docs/planer/kartrelease-o13.md` kapittel 5.
 
 - **Pakken:** `fin-tx-ty-hash.wasm`, én per flis med stripe, KMP1 som de andre. Laget `fin` i manifestet: `c` 0,0125 (12,5 m), `n` 800 (en blokk på 10 km), `type` `i16`, `kind` `fin`, `dec` `half`. En celle er høyden i halve meter (minst 1), 0 for «ingen fin bakke her, les 25 m-laget», eller −1 for sjøen innen 25 m fra stripa (bare fortegnet). Stripa er landet innen 1 km fra sjøen etter vektorkysten på 3 m. En blokk uten stripe finnes ikke i pakken.
 - **Lages av** `python3 tools/map/fin.py game` (etter `python3 tools/map/release.py`): Senjas fire pakker til `src/data/map`, og laget og pakkene inn i manifestet der, uten å røre noe annet. `game.py` tar Senjas lag og pakker som de er. Hele kysten er K2 (`fin-N`).

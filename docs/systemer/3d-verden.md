@@ -84,7 +84,7 @@
 
 ## 4.11a2 Den fine bakken langs sjøen i 3D (Ø13 K1, 11.11.2026)
 
-**Bygd, ikke rullet ut** (grenen `claude/zen-curie-qoa35d`; venter på valg 37 i køen). Pakkeslaget og lesingen står i `kart-og-terreng.md` 4.6f.
+**På testutgaven fra 11.11.2026, bare Senja** (Jonas 11.11.2026: «jeg synes forskjellen er merkbar»; hele kysten er K2). Pakkeslaget og lesingen står i `kart-og-terreng.md` 4.6f.
 
 - **Ett sted:** `terrRaw` (`view3d/02-mesh-terrain.js`) leser `finH` rett etter 25 m-bakken, før strandprofilen. Alt i 3D leser bakken gjennom `terrRaw` eller `terrH` (nettene, strendene og stupene i `17h-shore.js`, nærfeltet i `17f-near.js`, kaiene, byggene, trærne), så alt står på samme bakke. Sjekket med `grep` 11.11.2026; ingen av dem trengte endring.
 - **Hvilke nett:** finnettet (4 m), nærnettet (23 eller 47 m) og alle punktlesingene. Mellomnettet (86 m) og fjernnettet (392 m) leser 25 m-bakken som før (`terrNoFin`, `FINSKIP`): fjernnettet dekker 100 km og ville pakket ut hver blokk på Senja (85 MB).

@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['fin-111126', '11.11.2026', 'Finere fjære og svaberg på Senja', 'Finer shore and rock slopes on Senja', [
+       ['På Høy og Ultra grafikk har landet langs sjøen på Senja fått finere form: bakken nærmest fjæra, svabergene og knausene følger terrenget tettere enn før. Lav og Middels er som før. Resten av kysten kommer senere.', 'On High and Ultra graphics the land along the sea on Senja has a finer shape: the ground nearest the shore, the rock slopes and the knolls follow the terrain more closely than before. Low and Middle are as before. The rest of the coast comes later.']]],
     ['skjaer-111126', '11.11.2026', 'Skjærene synes i sjøen', 'The skerries show in the sea', [
        ['Skjærene i sjøkartet står nå i sjøen i 3D langs hele kysten: lave berg med tang og rur, tørre ved fjære sjø og overskylt ved flo, med brenning rundt når det er sjø. Hold utkikk, de står der kartet viser dem.', 'The rocks on the chart now stand in the sea in 3D along the whole coast: low rocks with rockweed and barnacles, dry at low water and awash at high, with breakers round them when there is a sea. Keep a lookout, they are where the chart shows them.']]],
     ['ob12-111126', '11.11.2026', 'Kystbåten på 15 m: setteport i hekken', 'The 15 m coastal vessel: a setting port in the stern', [

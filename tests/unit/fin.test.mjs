@@ -65,5 +65,10 @@ export default function (t){
   t.eq(K.finH(X(600), Z(100), -4), -4, 'i sjøcella er det 25 m-bakken');
   let down = true; step = 0; prev = NaN; for (let x = X(599); x <= X(601); x += 0.05){ const h = K.finH(x, Z(100), -4); if (prev === prev){ if (h > prev + 1e-9) down = false; step = Math.max(step, prev - h); } prev = h; }
   t.ok(down && step < 2, 'mellom dem faller bakken jevnt fra landet til 25 m-bakken, uten sprang (største ' + step.toFixed(2) + ' m per 5 cm av ' + (top + 4).toFixed(1) + ' m)');
+  // exactly in a sea cell's centre with a land cell diagonally beside it: the land's weight is 0, and the answer is the 25 m ground, not NaN
+  q[10 * n + 700] = -1; q[10 * n + 701] = -1; q[11 * n + 700] = -1; q[11 * n + 701] = 50; MAPD.blk.clear(); MAPD.bytes = 0; L.b = null; L.ox = L.oy = NaN;
+  const z2 = zlib.deflateRawSync(med16(q)); pk.buf = new Uint8Array(z2); pk.idx = new Map([['fin:' + BX + ':' + BY, [0, z2.length]]]); MAPD.gen++;
+  t.eq(K.finH(X(700), Z(10), -3), -3, 'midt i en sjøcelle med land på skrå ved siden av: 25 m-bakken, ikke NaN');
+  t.eq(K.finH(X(700), Z(10) + 4, -3), -3, 'og rett sør for den, langs kanten der landet ikke har vekt');
   t.eq(MAPD.miss, 0, 'MAPD.miss er fortsatt 0');
 }
