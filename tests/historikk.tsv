@@ -2516,3 +2516,6 @@
 2026-11-11 14:22	ccr-309f2cf5-w71mxh	8e8a5eb	docktest	OK	63	lite	samtidig	
 2026-11-11 14:23	ccr-309f2cf5-w71mxh	8e8a5eb	moortest	OK	41	3d	alene	
 2026-11-11 14:25	ccr-309f2cf5-w71mxh	8e8a5eb	landtest	OK	98	3d	alene	
+2026-11-11 14:37	plan/2026-11-11-98	ead272d8	boottest	OK	30	lite	samtidig	
+2026-11-11 14:37	plan/2026-11-11-98	ead272d8	fasittest	OK	19	lite	samtidig	
+2026-11-11 14:40	plan/2026-11-11-98	ead272d8	kjoptest	OK	147	lite	samtidig	
