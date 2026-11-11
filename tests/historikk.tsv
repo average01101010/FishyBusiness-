@@ -2544,3 +2544,8 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 15:36	plan/2026-11-11-98	76d06d51	boottest	OK	35	lite	samtidig	
+2026-11-11 15:36	plan/2026-11-11-98	76d06d51	fasittest	OK	25	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	kjoptest	OK	165	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	guesttest	OK	89	lite	samtidig	
+2026-11-11 15:39	plan/2026-11-11-98	76d06d51	hailltest	LES	32	lite	samtidig	
