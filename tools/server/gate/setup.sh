@@ -41,9 +41,9 @@ SSHP=$( { echo 22; sshd -T 2>/dev/null | awk '$1 == "port" {print $2}';
           systemctl show ssh.socket -p Listen 2>/dev/null | grep -oE ':[0-9]+ ' | tr -d ': ';
           ss -Htlnp 2>/dev/null | awk '/"sshd"/ {sub(/.*:/, "", $4); print $4}'; } | grep -E '^[0-9]+$' | sort -un | tr '\n' ' ' || true)
 echo "SSH ports kept open: $SSHP"
-if [ -d /srv/detstorebla/current ]; then
-  echo "Note: this server also serves the game (/srv/detstorebla). The gate is meant for a server of its own (V1 A); it will work here,"
-  echo "but the database key then lies on the machine the whole net reaches."
+if [ -d /srv/detstorebla ]; then
+  echo "This server serves the game (/srv/detstorebla). The gate is for a server of its own (V1 A): both use the upload user «deploy»,"
+  echo "and this script would take the game's upload key away. Nothing was changed. Run it on the gate's server."; exit 1
 fi
 
 say "Installing rsync, Python, the firewall and automatic updates"
@@ -117,6 +117,8 @@ Group=dsbgate
 EnvironmentFile=$ENVF
 Environment=HOME=$VAR
 ExecStart=$OPT/venv/bin/python $OPT/gate.py fetch
+# a fetch that was killed (a time-out, a restart) leaves no saves: the test's own clean never runs when this unit fails
+ExecStopPost=/bin/sh -c '[ "\$SERVICE_RESULT" = success ] || exec $OPT/venv/bin/python $OPT/gate.py clean'
 TimeoutStartSec=900
 UMask=0077
 NoNewPrivileges=yes

@@ -127,20 +127,27 @@ jobs:
               echo "The build before: $(cut -c1-80 "$RUNNER_TEMP/prev/version.json")"
             else rm -rf "$RUNNER_TEMP/prev"; mkdir -p "$RUNNER_TEMP/prev"; echo "::warning::The build the players have now could not be fetched from the server: the other way is not tried in this release."; fi
           fi
-          rsync -rlz --delete --chmod=D755,F644 -e "$R" dist-pwa/ "$H:in/build/"
-          rsync -rlz --delete --chmod=D755,F644 -e "$R" "$RUNNER_TEMP/prev/" "$H:in/prev/"
-          rsync -rlz --delete --chmod=D755,F644 -e "$R" "$G/" "$H:in/files/"
+          rsync -rltz --delete --chmod=D755,F644 -e "$R" dist-pwa/ "$H:in/build/"
+          rsync -rlcz --delete --chmod=D755,F644 -e "$R" "$RUNNER_TEMP/prev/" "$H:in/prev/"
+          rsync -rlcz --delete --chmod=D755,F644 -e "$R" "$G/" "$H:in/files/"
           # the question last: it starts the gate (dsb-gate.path). The id tells this run's answer from an older one
           printf '{"id":"%s","other":%s}\n' "$ASK_ID" "$OTHER" > "$RUNNER_TEMP/ask"
           rsync --inplace --chmod=F644 -e "$R" "$RUNNER_TEMP/ask" "$H:in/ask"
           echo "Asked the gate ($ASK_ID). Waiting for the answer, at most 40 minutes."
-          ok=
+          # an answer to another question (a run before this one that was cancelled, still at its test when we asked) means ours was
+          # not seen: the gate looks at the question when it starts, not while it runs. Then it is asked once more, once for each such id
+          ok=; again=
           for i in $(seq 1 240); do
             sleep 10
             rm -f "$RUNNER_TEMP/result.json"
             rsync -q -e "$R" "$H:out/result.json" "$RUNNER_TEMP/result.json" 2>/dev/null || continue
             got=$(python3 -c "import json,sys; r=json.load(open(sys.argv[1])); print(r.get('id',''), 'go' if r.get('ok') is True else 'stop')" "$RUNNER_TEMP/result.json" 2>/dev/null || true)
             case "$got" in "$ASK_ID go") ok=go; break;; "$ASK_ID stop") ok=stop; break;; esac
+            other=${got%% *}
+            if [ -n "$other" ] && [ "$other" != "$again" ]; then
+              again=$other; echo "The gate answered another question ($other): asking again."
+              rsync --inplace --chmod=F644 -e "$R" "$RUNNER_TEMP/ask" "$H:in/ask" || true
+            fi
           done
           # the gate's log: the test's own lines, a save named by its fingerprint only (gate.py)
           rsync -q -e "$R" "$H:out/log.txt" "$RUNNER_TEMP/gate-log.txt" 2>/dev/null && cat "$RUNNER_TEMP/gate-log.txt" || echo "(no log from the gate)"

@@ -4,7 +4,8 @@ moved to a scratch place and a stand-in for tools/saves/fetch.py (the real one n
 What must hold: without the key, without saves or with one save that does not start, the result says stop; with healthy saves it says
 go; the saves are gone afterwards whatever happened; and the result and the log name nothing but fingerprints. Needs dist/ (the
 fixture's saves start with it). Seen red 11.11.2026 with the wipe taken out of test() (the saves were left) and with the stop of a
-failed save turned into a pass.
+failed save turned into a pass; and, after the review found it, with the answer written 0600 under the services' umask (the job's
+user could not have read it, and every release would have waited 40 minutes and stopped).
 """
 import json, os, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
@@ -35,7 +36,8 @@ def gate(d, mode, key='k'):
     env = dict(os.environ, DSB_GATE_IN=d['in'], DSB_GATE_OUT=d['out'], DSB_GATE_VAR=d['var'], DSB_GATE_OPT=d['opt'])
     env.pop('SUPABASE_SERVICE_ROLE_KEY', None)
     if key and mode == 'fetch': env['SUPABASE_SERVICE_ROLE_KEY'] = key
-    return subprocess.run([sys.executable, GATE, mode], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).returncode
+    # with the services' umask (UMask=0077): what the gate writes for itself is its own, what it answers must be readable by the job's user
+    return subprocess.run([sys.executable, GATE, mode], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, preexec_fn=lambda: os.umask(0o077)).returncode
 
 res = lambda d: json.load(open(os.path.join(d['out'], 'result.json'))) if os.path.isfile(os.path.join(d['out'], 'result.json')) else None
 left = lambda d: [f for f in (os.listdir(os.path.join(d['var'], 'saves')) if os.path.isdir(os.path.join(d['var'], 'saves')) else [])]
@@ -61,6 +63,8 @@ T, d = setup(good); c = gate(d, 'fetch'); n = len(left(d)); c2 = gate(d, 'test')
 check(c == 0 and n == 2, 'the fetch lays the saves out', (c, n))
 check(c2 == 0 and r['ok'] is True and r['stage'] == 'done' and r['saves'] == 3 and set(r) == KEYS, 'healthy saves: the gate says go, with the fixture added', (c2, r))
 check(not left(d) and not os.path.isdir(os.path.join(d['var'], 'work')), 'the saves and the work folder are gone afterwards', left(d))
+md = lambda f: os.stat(os.path.join(d['out'], f)).st_mode & 0o777
+check(md('result.json') == 0o644 and md('log.txt') == 0o644, 'the answer and the log can be read by the job\'s user (the upload user is another one than the gate\'s)', (oct(md('result.json')), oct(md('log.txt'))))
 check('all held' in lg and 'p0' not in lg and d['var'] not in lg, 'the log has the test\'s own lines and no file names of ours', lg[-300:])
 shutil.rmtree(T)
 # 5. one save that does not start: stop, named by its fingerprint, the saves gone

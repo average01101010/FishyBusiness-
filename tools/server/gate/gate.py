@@ -30,7 +30,7 @@ VAR = os.environ.get('DSB_GATE_VAR', '/var/lib/dsb-gate')
 OPT = os.environ.get('DSB_GATE_OPT', '/opt/dsb-gate')
 SAVES, WORK = os.path.join(VAR, 'saves'), os.path.join(VAR, 'work')
 RESULT, LOG = os.path.join(OUT, 'result.json'), os.path.join(OUT, 'log.txt')
-LIMIT = int(os.environ.get('DSB_GATE_LIMIT', '1080'))   # seconds for each of the two runs: both end before the job gives up at 40 minutes
+LIMIT = int(os.environ.get('DSB_GATE_LIMIT', '840'))   # seconds for each of the two runs: with the fetch's 600 at most 38 minutes, and the job waits 40
 
 def ask():
     # the job's question. It is data from outside: only an id of plain characters and a yes or no are taken from it
@@ -43,23 +43,27 @@ def result(a, ok, stage, why='', saves=None, t0=None):
     os.makedirs(OUT, exist_ok=True)
     r = {'id': a['id'] if a else '', 'ok': bool(ok), 'stage': stage, 'why': why, 'saves': saves, 'secs': round(time.time() - t0) if t0 else None}
     tmp = RESULT + '.tmp'
-    json.dump(r, open(tmp, 'w', encoding='utf-8')); os.replace(tmp, RESULT)   # whole or not at all: the job reads it while we write
+    # whole or not at all (the job reads it while we write), and readable by the job's user, which is another one than ours: the
+    # services run with UMask=0077 for the saves' sake, and the answer would else be ours alone and the job would wait in vain
+    with open(tmp, 'w', encoding='utf-8') as f: json.dump(r, f)
+    os.chmod(tmp, 0o644); os.replace(tmp, RESULT)
     return r
 
 def log(text, new=False):
     os.makedirs(OUT, exist_ok=True)
-    open(LOG, 'w' if new else 'a', encoding='utf-8').write(text if text.endswith('\n') else text + '\n')
+    with open(LOG, 'w' if new else 'a', encoding='utf-8') as f: f.write(text if text.endswith('\n') else text + '\n')
+    os.chmod(LOG, 0o644)
 
 def wipe():
     for d in (SAVES, WORK): shutil.rmtree(d, ignore_errors=True)
 
-def run(cmd, env, cwd=None):
+def run(cmd, env, cwd=None, limit=None):
     # (code, output); the output is the test's own lines, which name a save by its fingerprint only
     try:
-        p = subprocess.run(cmd, env=env, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=LIMIT)
+        p = subprocess.run(cmd, env=env, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=limit or LIMIT)
         return p.returncode, p.stdout.decode('utf-8', 'replace')
     except subprocess.TimeoutExpired as e:
-        return 124, (e.stdout or b'').decode('utf-8', 'replace') + '\nFEIL the run took more than %d s and was stopped\n' % LIMIT
+        return 124, (e.stdout or b'').decode('utf-8', 'replace') + '\nFEIL the run took more than %d s and was stopped\n' % (limit or LIMIT)
 
 def fetch():
     t0 = time.time(); a = ask(); wipe()
@@ -74,7 +78,7 @@ def fetch():
     os.makedirs(SAVES, mode=0o700, exist_ok=True)
     # only the installed fetch.py runs with the key; SUPABASE_URL is not passed on, so it reads the address from the installed cloud.json
     env = {'PATH': os.environ.get('PATH', '/usr/bin:/bin'), 'SUPABASE_SERVICE_ROLE_KEY': key, 'LANG': 'C.UTF-8'}
-    code, out = run([sys.executable, os.path.join(OPT, 'tools/saves/fetch.py'), '--hist', '1', '--out', SAVES], env)
+    code, out = run([sys.executable, os.path.join(OPT, 'tools/saves/fetch.py'), '--hist', '1', '--out', SAVES], env, limit=600)   # under the unit's 900 s, so the stop is ours and is answered
     # fetch.py prints counts only; an error of urllib could name the address, never a save, but only its last line is kept anyway
     last = [l for l in out.strip().split('\n') if l.strip()][-1:] or ['']
     log(('FEIL the saves could not be fetched: ' if code else '') + last[0][:200])
