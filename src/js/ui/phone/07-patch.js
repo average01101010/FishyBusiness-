@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['trim-111126', '11.11.2026', 'Trim på alle båter', 'Tuning on every boat', [
+       ['Trim virker nå på alle båter, også skiffen med påhengsmotor.', 'Tuning now works on every boat, the outboard skiff too.']]],
     ['ob3-111126', '11.11.2026', 'Settingen og redskapet om bord', 'Setting, and the gear aboard', [
        ['Når line og garn settes, står én der redskapet går over og betaler det ut, og en annen langer stampene eller passer garnkaret. Ingen står lenger ved haleren mens det settes. Har båten linesetter eller garnrenne, går lina og garnet ut gjennom den.', 'When the line and the nets are set, one stands where the gear goes over and pays it out, and another hands the tubs along or minds the net tub. Nobody stands at the hauler any more while the gear is set. With a line setter or a net chute aboard, the line and the nets run out through it.'],
        ['Stampene om bord står stablet i det antallet båten har med, og de to første på stampemagasinet der hun har det. Garnet ligger i så mange kar som dekket har plass til. Tomme stamper blir stående om bord til lina er trukket.', 'The line tubs aboard stand stacked in the number the boat carries, the first two on the tub magazine where she has it. The nets lie in as many tubs as the deck has room for. Empty tubs stay aboard until the line is hauled.'],
