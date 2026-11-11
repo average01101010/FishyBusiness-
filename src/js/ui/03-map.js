@@ -420,14 +420,15 @@ let markEnd = Infinity;
 // a tap on an icon whose name the chart left out (E2): its name for a moment; the tap goes on to do what it did (the route). Else a tap
 // on a ground's name, or by a ground whose name was left out (F4): the whole name and what kind of place it is, with the source; never
 // its species, months or fish (Jonas 07.11.2026, V4 C)
-const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground']};
+const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground'],
+  s:['Stedsnavn i sjøen', 'Place name in the sea']};   // (s: Kartverket's names, Ø14 F5; CC BY 4.0, so the source is named)
 function tapName(mp, rr){ let best = null, bd = rr; for (const q of LBLHID){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } }
   // (the drawn name under the finger, the nearest of them when two padded boxes meet; else a left-out ground within 0.6 of the radius,
   // so a tap on open sea where the grounds lie thick seldom gives a bubble)
   if (!best){ const pad = 4 / view.px; for (const e of LBLFELT){ const b = e.box; if (!b || mp.x < b[0] - pad || mp.x > b[2] + pad || mp.y < b[1] - pad || mp.y > b[3] + pad) continue;
       const d = Math.hypot(Math.max(b[0] - mp.x, 0, mp.x - b[2]), Math.max(b[1] - mp.y, 0, mp.y - b[3])) + dist(e, mp) * 1e-3; if (d < bd){ bd = d; best = e; } }
     if (!best){ bd = rr * 0.6; for (const e of LBLFELT){ if (e.box) continue; const d = dist(e, mp); if (d < bd){ bd = d; best = e; } } }
-    if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
+    if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (f.k === 's' ? (en ? 'Norwegian Mapping Authority' : 'Kartverket') : en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
   if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, s:best.s, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
 // the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md); the
 // ground names in the view, with their boxes where drawn (F4)

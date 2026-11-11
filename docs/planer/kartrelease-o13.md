@@ -174,6 +174,8 @@ Rekkefølgen: K0, K1, K2; K3 når Ø11.8 er ferdig; K4 når det passer. N3 (steg
 
 ## 9. Valgene (valg 35 i køen)
 
+**Besvart 11.11.2026.** Jonas: «V1: A V2: A V3: A». Altså: `hgt10` bygges om K0 holder taket og K1s bilder viser forskjell (økta velger stripa og ruta); Ø13 er tillegg til `kart-31` uten ny `kart-N`, og N3 er klar; det utsatte venter på én full `kart-N+1` når havsteget nærmer seg.
+
 **V1. `hgt10`: er finere bakke langs sjøen verdt størrelsen?**
 - **A (anbefalt):** Ja, om K0 viser at laget holder taket på 150 MB på serveren, og K1s bilder fra Senja viser en forskjell fra båten. Økta velger 1 km eller 500 m og 10 eller 12,5 m etter tallene. Bare Høy og Ultra laster det.
 - B: Bare 500 m uansett, for å holde størrelsen nede.
@@ -221,3 +223,4 @@ Rekkefølgen: K0, K1, K2; K3 når Ø11.8 er ferdig; K4 når det passer. N3 (steg
 ## Status
 
 - 11.11.2026: planen skrevet (Jonas' økt, grenen `ccr-28562daf-g7h9ca`). Venter på valg 35 (V1–V3). Fasene K0–K4 står i køen som 33a–33e etter lanseringslinja; startmeldingen for K0 i `docs/planer/start/33a.md`.
+- 11.11.2026: **Jonas svarte på valg 35:** «V1: A V2: A V3: A». K0 (33a), K4 (33e) og N3 (steg 34) er klare; K1 venter på K0, K2 på K1, K3 på Ø11.8.

@@ -203,7 +203,9 @@ function achCheck(quiet){
 function achChapter(ch){
   const A = achState(); A.pen = Math.max(A.pen || 0, ch + 1);
   if (ch === 0) book('annet', ACH_CH1_KR, 'Kapittelet «' + ACH_CH[0][0] + '» fullført', 'The chapter «' + ACH_CH[0][1] + '» complete');
-  if (ch === 1 && typeof giveHaill === 'function') giveHaill('haill', 'gift');
+  // (HS4 11.11.2026: with the cloud the haill is a grant, once per account, asked for from the server, ui/10i-shop.js achHaillAsk;
+  // without it, the artifact and the tests, into the game's own numbers as before)
+  if (ch === 1 && typeof giveHaill === 'function' && !(typeof achHaillAsk === 'function' && achHaillAsk())) giveHaill('haill', 'gift');
   if (ch === 2){ A.colour = 1; }
   const what = [achKr() + ' er satt inn på kontoen din.', 'En haill ligger om bord.', 'Skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
     whatEn = [achKr(true) + ' has been paid into your account.', 'A luck is aboard.', 'The hull colour «Kystfisker» is yours in the paint shop.'][ch];

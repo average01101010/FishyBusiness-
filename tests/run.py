@@ -161,6 +161,9 @@ COVER['src/js/ui/10t-kvotemarked.js'] = ['kvotemarkedtest']
 COVER['tests/kvotemarkedtest.py'] = ['kvotemarkedtest']
 COVER['src/js/ui/phone/04-kvote.js'] = COVER['src/js/ui/phone/04-kvote.js'] + ['kvotemarkedtest']
 COVER['tests/unit/market3.test.mjs'] = []
+# KM4 (the boat with or without her right, 11.11.2026): megletest plays the choice, the move and the yard's trade-in
+for _f in ('src/js/ui/phone/14-act.js', 'src/js/ui/phone/10-fartoy.js'):
+    COVER[_f] = COVER.get(_f, []) + ['megletest']
 COVER['tests/unit/kvotemarked.test.mjs'] = []
 
 # Turens linje (Ø8b S2, 08.11.2026): the trip's sums in fish() and finishHaul (05-vessels.js, 10-gear.js), the line made by tripSum and
@@ -177,6 +180,14 @@ COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-h
 # givenKeep, giveSkip with an end) in tests/unit/shopback.test.mjs, the claim against a stand-in in kjoptest, the one clock in boostklokke
 # (case D), the database in sqltest
 COVER['supabase/migrations/20261111120000_shop_back.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/shopback.test.mjs'] = []
+# HS4 (11.11.2026): the server is the truth for haill and everything bought. The pure functions (haillFromSrv, boostSrv, srvToT) and
+# the wheel's weights in tests/unit/haillfasit.test.mjs, the claim, the pub and the chapter's haill against a stand-in in fasittest
+# (step 10 of kjoptest.py, run alone, 20 s), the database in sqltest. (kjoptest went out on time at 900 s twice 11.11.2026: it made
+# its own address without no3d and drew every 3D frame; with no3d under KYST_LITE it takes 150 s)
+COVER['supabase/migrations/20261111140000_haill_srv.sql'] = ['sqltest', 'fasittest']; COVER['tests/unit/haillfasit.test.mjs'] = []
+LITE += ['fasittest']
+COVER['tests/fasittest.py'] = ['fasittest']; COVER['tests/kjoptest.py'] = COVER.get('tests/kjoptest.py', ['kjoptest']) + ['fasittest']
+for _f in ('src/js/ui/09-hand-fishing.js', 'src/js/ui/09b-pub.js', 'src/js/ui/10j-paint.js', 'src/js/core/09f-merker.js', 'src/js/ui/10i-shop.js'): COVER[_f] = COVER.get(_f, []) + ['fasittest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 
