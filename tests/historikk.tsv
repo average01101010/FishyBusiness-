@@ -2596,3 +2596,7 @@
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	boottest	OK	42	lite	samtidig	
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	hailltest	LES	37	lite	samtidig	
 2026-11-11 16:53	ccr-cb5d0d6b-itetzc	ce1c051	pubtest	OK	143	3d	alene	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	boottest	OK	39	lite	samtidig	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	ferrytest	OK	16	lite	samtidig	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	npctest	OK	11	lite	samtidig	
+2026-11-11 17:07	ccr-df3a37ec-wjhw30	075f22ae	hulltest	OK	78	lite	samtidig	
