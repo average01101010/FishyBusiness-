@@ -75,7 +75,7 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
   'src/js/view3d/16-motion.js':['trackfollow', 'routetest', 'helmjit', 'wetshot', 'hull3d'], 'tests/hull3d.py':['hull3d'],
   'src/js/view3d/15-env-mooring.js':['moortest', 'skytest', 'wetshot'],
   'src/js/view3d/17c-trees.js':['dbg23o', 'treeshot'], 'src/data/trees.b64':['treeshot'],
-  'src/js/view3d/17h-shore.js':['dbg23o', 'havnshot'], 'tools/map/shore.py':[],
+  'src/js/view3d/17h-shore.js':['dbg23o', 'havnshot'], 'src/js/view3d/17i-rocks.js':['dbg23o', 'coast3d'], 'tools/map/shore.py':[],
   'src/js/view3d/17g-marina.js':['dbg23o', 'havnshot'], 'src/data/marina.json':['havnshot'],
   'src/js/view3d/17f-near.js':['dbg23o', 'lifeshot'], 'src/data/naer.b64':['lifeshot'],
   'src/js/view3d/17e-life.js':['dbg23o', 'lifeshot'], 'src/data/dyr.b64':['lifeshot'], 'src/data/fuglefjell.json':['lifeshot'],
