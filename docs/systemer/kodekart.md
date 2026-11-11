@@ -2729,12 +2729,20 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
+<<<<<<< HEAD
+## `src/js/ui/phone/07-patch.js` (1535 linjer)
+=======
 ## `src/js/ui/phone/07-patch.js` (1537 linjer)
+>>>>>>> origin/ccr-5e1ba2f4-pusvyd
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
+<<<<<<< HEAD
+  - 1523 `patch()`
+=======
   - 1525 `patch()`
+>>>>>>> origin/ccr-5e1ba2f4-pusvyd
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3801,29 +3809,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (779 linjer)
+## `src/js/view3d/01-shaders.js` (785 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **131** the sea by the shore (Fysikk 4, F4, 09.11.2026)
 - **248** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **344** the boat's own foam, when she has way on
-- **352** where a slam and the spray land (F3b): four patches, fixed names
-- **354** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 672 `cloudStep(dt)`
-  - 679 `skyFrame(u, Hh, tn, bv)`
-  - 694 `glsl3(src, fs)`
-  - 707 `progStart(vs, fs, attrs, nm = '?')`
-  - 715 `progEnd(P)`
-  - 725 `program(vs, fs, attrs, nm = '?')`
-  - 727 `progWait(list)`
-  - 733 `programA(vs, fs, attrs, nm)`
-  - 734 `buf(data, target, usage)`
-  - 739 `airSet(u, terr)`
-  - 754 `sunT0()`
-  - 761 `attr(loc, b, size)`
-  - 777 `upload(pos, col, idx)`
+- **346** the boat's own foam, when she has way on
+- **354** where a slam and the spray land (F3b): four patches, fixed names
+- **356** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 678 `cloudStep(dt)`
+  - 685 `skyFrame(u, Hh, tn, bv)`
+  - 700 `glsl3(src, fs)`
+  - 713 `progStart(vs, fs, attrs, nm = '?')`
+  - 721 `progEnd(P)`
+  - 731 `program(vs, fs, attrs, nm = '?')`
+  - 733 `progWait(list)`
+  - 739 `programA(vs, fs, attrs, nm)`
+  - 740 `buf(data, target, usage)`
+  - 745 `airSet(u, terr)`
+  - 760 `sunT0()`
+  - 767 `attr(loc, b, size)`
+  - 783 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
