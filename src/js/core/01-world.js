@@ -189,10 +189,65 @@ function legReady(a, c){
     for (const pk of mapPacksIn('chart', x0, y0, x1, y1)) if (!pk.buf || !pk.coast) return false; }
   return true;
 }
-// running aground
+// ===== THE NAMES OF THE FISHING GROUNDS IN THE TEXTS (Ø14 F3 of docs/planer/fangstfelt.md, 11.11.2026) =====
+// Jonas 08.11.2026: «Senja sine felt skal fungere akkurat likt som alle de andre fiskefeltene i landet og ikke være en fast sirkel.» The
+// texts name Fiskeridirektoratet's fishing grounds (felt.json, k = f, read through core/03j-felt.js) along the whole coast, and Senja's six
+// names of the game's own (GROUNDS, which are only points for the calibration and the tests now) are in no text. A text never says how
+// much fish stands on a ground (V4).
+//   feltName(f)        the ground's name for a text: the chart's name, or the whole name when the chart's was cut («…»)
+//   feltNameAt(p, lim) the named ground the point lies on (inside its outline: feltAt's mask over 0.5; of several the smallest), else the
+//                      nearest whose outline is within lim km (1.5 nm): {f, n, d (km outside the outline, 0 on it), on}, or null
+//   placeAt(p)         the place a text names: the ground when the point lies on one (unless within half a mile of a harbour) or by one
+//                      nearer than the nearest harbour, else the nearest harbour: {n, d (km), felt (the ground or null), on}
+//   feltNear(p, R)     the named grounds with their label point within R km of p, the nearest first: [{g (feltGeo's), f, n, d, p (a
+//                      point inside the outline)}]
+//   feltPa(n)          the name with its preposition: {no:'på Bjørnvika', en:'at Bjørnvika'}
+//   feltLawful(sp, p, H) whether the rules let the species be fished there then
+const feltName = f => (f.n && !f.n.endsWith('…') ? f.n : f.nf || f.n);
+// a name that is a description and no place name («Sør av Vallosen», «Utenfor Mefjorden») takes no «på» or «ved» before it
+const FELT_DESC = /^((nord|sør|øst|vest|nordøst|nordvest|sørøst|sørvest|nnø|nnv|ssø|ssv)\s+(av|for|om)|utenfor|utfor|innenfor|mellom|ved|fra|rundt|langs|bak|innerst i|ytterst i|indre del av|ytre del av)\s/i;
+const feltDesc = n => FELT_DESC.test(n), lcFirst = n => n.charAt(0).toLowerCase() + n.slice(1);
+// «på Bjørnvika» / «at Bjørnvika»; a description stands by itself in Norwegian («sør av Vallosen»)
+const feltPa = n => ({no:feltDesc(n) ? lcFirst(n) : 'på ' + n, en:'at ' + n});
+function feltNameAt(p, lim = 1.5 * NM){
+  if (typeof feltAt !== 'function' || !p) return null;
+  const fl = feltAt(p); let best = null;
+  if (fl) for (let i = 0; i < fl.F.length; i++){ const f = fl.F[i].f; if (fl.m[i] > 0.5 && f.n && (!best || f.r < best.r)) best = f; }
+  if (best) return {f:best, n:feltName(best), d:0, on:true};
+  if (!feltGeo() || !FELTW.idx) return null;
+  let bd = lim; const seen = new Set();
+  for (let gy = Math.floor((p.y - lim) / 10); gy <= Math.floor((p.y + lim) / 10); gy++) for (let gx = Math.floor((p.x - lim) / 10); gx <= Math.floor((p.x + lim) / 10); gx++){
+    const a = FELTW.idx.get(gridKey(gx, gy)); if (!a) continue;
+    for (const g of a){ if (!g.f.n || seen.has(g) || g.b[0] > p.x + bd || g.b[2] < p.x - bd || g.b[1] > p.y + bd || g.b[3] < p.y - bd) continue; seen.add(g);
+      const d = -feltSd(g, p.x, p.y); if (d < bd){ bd = d; best = g.f; } } }
+  return best ? {f:best, n:feltName(best), d:Math.max(0, bd), on:bd <= 0} : null;
+}
+function placeAt(p){
+  let n = '', d = Infinity; for (const pt of PORTS){ if (pt.sted && pt.coastal && !pt.mottak) continue; const q = dist(p, pt.p);   // (a harbour or a plant, not a shop or a yard of 06c-steder.js: «4,4 nm fra Kongsfjord utstyrsbutikk»)
+    if (q < d){ d = q; n = pt.name; } }
+  const fg = feltNameAt(p);
+  // (a harbour within half a mile is where she is, on a ground or by one; and nothing lies «ved» a description)
+  if (fg && !(d < Math.max(0.5 * NM, fg.d)) && (fg.on || !feltDesc(fg.n))) return {n:fg.n, d:fg.d, felt:fg.f, on:fg.on};
+  return {n, d, felt:null, on:false};
+}
+const FELT_NEAR = new Map();   // the last few lists (the paper asks for the home harbour's on every reading)
+function feltNear(p, R){
+  const G = typeof feltGeo === 'function' && feltGeo(), out = []; if (!G) return out;
+  const key = p.x + ',' + p.y + ',' + R + ',' + FELTW.gen; if (FELT_NEAR.has(key)) return FELT_NEAR.get(key);
+  for (const g of G){ const f = g.f; if (!f.n || Math.abs(f.x - p.x) > R || Math.abs(f.y - p.y) > R) continue; const d = Math.hypot(f.x - p.x, f.y - p.y); if (d > R) continue;
+    // a point inside the outline: the label point (inside on 97 % of the grounds), else the first of some spread over the box that is
+    let q = {x:f.x, y:f.y}; if (feltSd(g, q.x, q.y) <= 0) for (let k = 0; k < 40; k++){ const c = {x:g.b[0] + (g.b[2] - g.b[0]) * h2(f.i, 7300 + k), y:g.b[1] + (g.b[3] - g.b[1]) * h2(f.i, 7400 + k)}; if (feltSd(g, c.x, c.y) > 0){ q = c; break; } }
+    out.push({g, f, n:feltName(f), d, p:q}); }
+  out.sort((a, b) => a.d - b.d || a.f.i - b.f.i); if (FELT_NEAR.size > 8) FELT_NEAR.clear(); FELT_NEAR.set(key, out); return out;
+}
+// whether the game's rules let the species be fished there then (a small boat with the jig; rulesAt in 03e-rules.js): the texts name no
+// ground for a species that is closed (the halibut in its closed season, the redfish outside the summer, the cod where it is forbidden)
+function feltLawful(sp, p, H){ try { return rulesAt({p, H, len:10, gear:'juksa', sp}).v !== 'no'; } catch (e){ return true; } }
+// running aground, the press, the old hand at the bar: «på Bjørnvika» on a ground, «ved» a ground or a harbour within 1.5 nm, else the
+// miles from the nearest harbour
 function nearestPlace(p){
-  let best = null; for (const q of PORTS.map(pt => ({n:pt.name, e:pt.name, p:pt.p})).concat(GROUNDS.map(g => ({n:g.name.no, e:g.name.en, p:g.p})))){ const d = dist(p, q.p); if (!best || d < best.d) best = {d, q}; }
-  const nm = best.d / NM; return nm < 1.5 ? {no:'ved ' + best.q.n, en:'near ' + best.q.e} : {no:fmt(nm, 1) + ' nm fra ' + best.q.n, en:fmt(nm, 1) + ' nm from ' + best.q.e};
+  const q = placeAt(p); if (q.felt) return q.on ? feltPa(q.n) : {no:'ved ' + q.n, en:'near ' + q.n};
+  const nm = q.d / NM; return nm < 1.5 ? {no:'ved ' + q.n, en:'near ' + q.n} : {no:fmt(nm, 1) + ' nm fra ' + q.n, en:fmt(nm, 1) + ' nm from ' + q.n};
 }
 // sq: her squat (m) at the way she has (16b-dyn.js dynSquat, Ø9 F5): under way she draws that much more; 0 for a plan or a leg checked
 // ahead of time

@@ -14,11 +14,9 @@ function recState(){
   delete S.trophies; delete S.dream;
   return S.rec;
 }
-// the nearest named place (a harbour or a fishing ground) within 25 km, else ''
-function recPlace(p){
-  let best = null; for (const q of PORTS.map(pt => ({n:pt.name, p:pt.p})).concat(GROUNDS.map(g => ({n:g.name[S.lang] || g.name.no, p:g.p})))){ const d = dist(p, q.p); if (!best || d < best.d) best = {n:q.n, d}; }
-  return best && best.d < 25 ? best.n : '';
-}
+// the place of a record: the fishing ground the fish was taken on or by (Ø14 F3, placeAt in 01-world.js: Fiskeridirektoratet's grounds
+// along the whole coast, not Senja's six), else the nearest harbour within 25 km, else ''
+function recPlace(p){ const q = placeAt(p); return q.felt || q.d < 25 ? q.n : ''; }
 function recCatch(sp, kg, how){
   if (!SPECIES[sp] || SPECIES[sp].npc || !(kg > 0)) return;   // (the ocean species, the snow crab since H3a, are not in the records: PLAYSP)
   if (typeof ukeBig === 'function') ukeBig(sp, kg);   // the week's biggest, for the Sunday card (09n-ukas.js)
