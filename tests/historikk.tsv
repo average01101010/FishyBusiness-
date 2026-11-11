@@ -2658,3 +2658,7 @@
 2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	boottest	OK	47	lite	samtidig	
 2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	boottest	OK	32	lite	samtidig	
 2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	docktest	OK	63	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	stabtest	OK	19	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	maletest	OK	29	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	boottest	OK	36	lite	samtidig	
+2026-11-11 23:07	claude/zen-babbage-aixu88	c96b087	boottest	OK	29	lite	alene	
