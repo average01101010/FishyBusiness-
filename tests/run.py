@@ -203,6 +203,10 @@ COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/vie
 # tests) and against the models in crewclip; the files that give them: the hands' pose (08-plants.js), the jigging places
 # (13-instruments.js jigRail), where the gear goes over and the tubs (10-gear.js, 09-landing-deck.js, which the deck crew reads)
 COVER['tests/unit/ombord.test.mjs'] = []
+# OB4 (11.11.2026): the landing, the ice and her own crane with people, and the side to the quay. Tried in Node on every boat's model
+# (tests/unit/lossing.test.mjs, run first with the unit tests) and in the page by crewclip (deckcrew.js is covered above); ombord.py takes
+# the pictures and is run by hand
+COVER['tests/unit/lossing.test.mjs'] = []
 for _f in ('src/js/view3d/08-plants.js', 'src/js/view3d/13-instruments.js', 'src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['crewclip']))
 
 # L1e (11.11.2026): the game's Content-Security-Policy (build.mjs CSP_OF, the breaches told by js/errtrap.js). csptest reads the

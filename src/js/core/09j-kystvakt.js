@@ -204,12 +204,13 @@ function kvOff(bB, sh, where){
 // harbour unit (up to 40 m)
 function kvPose(b){
   const V = S.kv && S.kv.visit, hav = !!(V && V.hav), sh = kvShip(hav), bB = (VESSELS[b.type] || {}).beam || 4;
-  let c = b.pos, hd = b.heading || 0, where = hav ? 'hav' : 'sjo';
+  let c = b.pos, hd = b.heading || 0, where = hav ? 'hav' : 'sjo', qs = 1;
   if (!hav && b.status === 'port' && b.port && typeof berthPose === 'function'){
     let bp = null; try { bp = berthPose(b.port, b.type, typeof berthKind === 'function' ? berthKind(b) : 'main') || berthPose(b.port, b.type); } catch (e){ bp = null; }
-    if (bp){ c = {x:bp.x, y:bp.y}; hd = bp.hd; where = 'kai'; }
+    if (bp){ c = {x:bp.x, y:bp.y}; hd = bp.hd; where = 'kai'; if (bp.side < 0) qs = -1; }
   }
-  const d0 = kvOff(bB, sh, where), sg = d0 < 0 ? -1 : 1, at = d => ({x:c.x + Math.cos(hd) * d, y:c.y + Math.sin(hd) * d});
+  // (a boat lying with her port side to the quay, F22 OB4: the ship is rafted on her starboard side, the one away from the quay)
+  const d0 = kvOff(bB, sh, where) * qs, sg = d0 < 0 ? -1 : 1, at = d => ({x:c.x + Math.cos(hd) * d, y:c.y + Math.sin(hd) * d});
   const fx = Math.sin(hd), fy = -Math.cos(hd), rx = Math.cos(hd), ry = Math.sin(hd), hl = sh.L / 2000, hb = sh.B / 2000;
   const blocked = p => { for (const [u, w] of [[1, 1], [1, -1], [-1, 1], [-1, -1], [0, 1], [0, -1], [0.5, 1], [-0.5, 1]]){ const q = {x:p.x + fx * hl * u + rx * hb * w, y:p.y + fy * hl * u + ry * hb * w};
     if (typeof berthBlocked === 'function' ? berthBlocked(q, 0) : isLand(q)) return true; } return false; };
