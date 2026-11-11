@@ -2606,3 +2606,7 @@
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	boottest	OK	42	lite	samtidig	
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	hailltest	LES	37	lite	samtidig	
 2026-11-11 16:53	ccr-cb5d0d6b-itetzc	ce1c051	pubtest	OK	143	3d	alene	
+2026-11-11 17:24	plan/2026-11-11-90	a53fa64f	boottest	OK	26	lite	alene	
+2026-11-11 17:33	plan/2026-11-11-90	a53fa64f	jigshot	OK	576	3d	alene	
+2026-11-11 17:37	plan/2026-11-11-90	a53fa64f	haultest	OK	209	3d	alene	
+2026-11-11 17:52	plan/2026-11-11-90	a53fa64f	tral3d	FEIL	900	3d	alene	gikk ut på tid
