@@ -286,9 +286,14 @@ function entryWps(pt, from){ if (clearLine(from, pt.p)) return []; const a = app
 const BEAM = Object.fromEntries(Object.entries(VESSELS).map(([k, V]) => [k, V.beam]));   // the ocean vessels too (08.10.2026): the yard's lift takes the biggest, and she lies a beam out from the quay
 const CAST_MIN = 1;   // game minutes to take the lines in before the boat moves (quicker, tilbakemelding #22)
 // Where a vessel lies in a harbour: alongside the quay in QUAYS (kind 'main' or 'bunker'), or else the quay face nearest the harbour's
-// berth point; parallel to it with the quay to starboard (where the skipper stands), off the face by half the beam and the fenders.
+// berth point; parallel to it with the quay to starboard (where the skipper stands; to port for a boat whose crane stands there, berthSide), off the face by half the beam and the fenders.
 // Returned in km like the rest of the chart, with the face (metres) for the bollards and fenders. null when there is no quay near:
 // the boat then lies as before.
+// (F22, OB4 11.11.2026, docs/planer/om-bord.md: the side to the quay is the one her work asks for. A boat whose own deck crane stands to
+// port lies with her port side to the quay, so the crane reaches the quay and not across her whole deck: VESSELS quay -1, from the
+// models, tests/unit/lossing.test.mjs checks it against kit.crane. side is 1 with the quay to starboard and -1 to port; the mooring, the landing and
+// the freight in the 3D view read it, and the Coast Guard lies on her other side, 09j-kystvakt.js kvPose)
+const berthSide = type => (VESSELS[type] || {}).quay === -1 ? -1 : 1;
 const BERTHPOSE = {};
 function berthPose(pid, type, kind = 'main'){
   const key = pid + '|' + type + '|' + kind + (kind === 'naust' && S.naust && S.naust.o ? '|' + S.naust.o.join(',') : '') + (RBID.has(pid) && RBID.get(pid).site ? '|' + RBID.get(pid).site.o.join(',') : ''); if (key in BERTHPOSE) return BERTHPOSE[key];
@@ -318,8 +323,9 @@ function berthPose(pid, type, kind = 'main'){
   if (!best || best.d > 150){ BERTHPOSE[key] = null; return null; }
   // starboard of a boat heading hd is (cos hd, sin hd); the quay must be on that side
   let hd = Math.atan2(best.ux, -best.uz); if (Math.cos(hd) * -best.Nx + Math.sin(hd) * -best.Nz < 0) hd += Math.PI;
+  const side = berthSide(type); if (side < 0) hd += Math.PI;   // (her port side to the quay: the other way round along it)
   const f = {x:Math.sin(hd), z:-Math.cos(hd)};
-  const R = {x:best.cx / 1000, y:best.cz / 1000, hd, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null, out:best.out || 0, kind:best.kind, tre:!!best.tre}, a:best.a, Lb, Bb};
+  const R = {x:best.cx / 1000, y:best.cz / 1000, hd, side, fwd:f, face:{x:best.fx, z:best.fz, ux:best.ux, uz:best.uz, nx:best.Nx, nz:best.Nz, hl:best.hl, depth:best.depth, unit:best.unit || null, out:best.out || 0, kind:best.kind, tre:!!best.tre}, a:best.a, Lb, Bb};
   return nocache ? R : (BERTHPOSE[key] = R);
 }
 // ---- the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og

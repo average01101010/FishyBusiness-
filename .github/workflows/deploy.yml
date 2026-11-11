@@ -8,12 +8,13 @@
 # <dato>»; docs/systemer/publisering.md «Slippet»). Rolling back: start this by hand on main with «commit» set to the commit of the
 # release before; it must already be on main, so nothing that was never released can reach the production this way. On another branch
 # «commit» builds that commit for the test edition.
-# The save gate (L1c, 11.11.2026, docs/systemer/publisering.md «Lagringsporten»): on main only, and at a roll-back too, every player's
-# save (and the one before it) is fetched from the production's database and started with the build before it is uploaded
-# (tools/saves/fetch.py, tests/savestest.py). One save that does not start stops the release. The saves lie in $RUNNER_TEMP only and
-# are deleted when the job ends, and the log names a save by its fingerprint, never by its player or its content. Without the secret
-# SUPABASE_SERVICE_ROLE_KEY the job stops on main: a release must not pass without the gate. Then the other way: what this build
-# writes must start with the build the players have now (fetched from the server), so a roll-back breaks nobody's game.
+# The save gate (L1c, 11.11.2026; on our own server from step 102, docs/systemer/publisering.md «Lagringsporten»): on main only, and
+# at a roll-back too, every player's save (and the one before it) must start with the build before it is uploaded. The saves are not
+# fetched in this job: it uploads the build to the gate's server and asks, and that server (tools/server/gate/) fetches the saves,
+# starts them (tests/savestest.py), tries the other way against the build the players have now, deletes the saves and answers go or
+# stop. One save that does not start stops the release, and so does a missing answer. The log here names a save by its fingerprint
+# only. Needs the secrets GATE_HOST, GATE_KEY and GATE_KNOWN_HOSTS (printed by tools/server/gate/setup.sh); without them the job
+# stops on main: a release must not pass without the gate. The database key is on the gate's server only, not a secret here.
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
 # the server); without DEPLOY_HOST it builds and stops. The real-time relay (tools/server/rt) goes up beside the site, to /srv/detstorebla/rt.
 name: Appen på Hetzner
@@ -35,7 +36,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       # the channel after the branch (build.mjs takes only «test» as a channel): nothing but main reaches the production
       KYST_CHANNEL: ${{ github.ref_name == 'main' && 'prod' || 'test' }}
@@ -45,13 +46,12 @@ jobs:
         with:
           fetch-depth: ${{ inputs.commit && '0' || '1' }}
       # the save gate's own files, as the branch tip has them (L1c): at a roll-back the commit built may be older than the gate, and
-      # the gate is what a roll-back needs most. Copied with their places kept (fetch.py reads src/data/cloud.json beside it)
+      # the gate is what a roll-back needs most. Uploaded to the gate's server below (what fetches the saves is installed there, not sent)
       - name: The save gate's files
         if: ${{ github.ref_name == 'main' }}
         run: |
-          G="$RUNNER_TEMP/gate"; mkdir -p "$G/tests" "$G/tools/saves" "$G/src/data"
+          G="$RUNNER_TEMP/gate"; mkdir -p "$G/tests"
           cp tests/savestest.py tests/_env.py "$G/tests/"; cp -r tests/saves-fixture "$G/tests/"
-          cp tools/saves/fetch.py "$G/tools/saves/"; cp src/data/cloud.json "$G/src/data/"
       # a roll-back (L1b): the commit asked for instead of the branch tip. On main it must be one main already has (an earlier release)
       - name: The commit asked for
         if: ${{ inputs.commit }}
@@ -89,46 +89,72 @@ jobs:
           pip install playwright==1.63.0
           python -m playwright install --with-deps chromium
           KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
-      # The save gate (L1c): the production's saves (each player's, and the one before it) with the build that is about to go out.
-      # The database is the production's own (the address in src/data/cloud.json, which the game itself uses; only the key is a
-      # secret). The fixture's saves (a new player, a fleet along the coast, a boat on land) go with them. At a roll-back this is
-      # also «the other way»: the saves were written by the newer build, and the older one must start them
-      - name: The save gate (every player's save starts with this build)
+      # The save gate (L1c, moved to our own server in step 102, 11.11.2026; docs/planer/lagringsporten-hetzner.md): every player's
+      # save, and the one before it, must start with the build that is about to go out. The saves are NOT fetched here any more
+      # (Jonas 11.11.2026: «A, flytt lagringsporten til Hetzner»: GitHub's data processing agreement does not cover the account, so a
+      # player's save must not pass through a GitHub machine). This job uploads the build, the build the players have now and the
+      # test to the gate's server (tools/server/gate/setup.sh; a server of its own, only SSH open), writes a question there, and
+      # waits for the answer: tools/server/gate/gate.py on that server fetches the saves with a key only it has, starts each with
+      # the build, tries «the other way» (what this build saves must start with the build before, so a roll-back holds; not at a
+      # roll-back, where the gate itself is that test), deletes the saves, and answers go or stop with fingerprints only.
+      # Without the gate's secrets, without an answer, or with stop, nothing is uploaded to the production.
+      - name: The save gate (every player's save starts with this build, on our own server)
         if: ${{ github.ref_name == 'main' }}
         env:
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SUPABASE_URL: ''
-        run: |
-          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then echo "::error::The secret SUPABASE_SERVICE_ROLE_KEY is missing: the save gate cannot run, and a release does not go out without it."; exit 1; fi
-          G="$RUNNER_TEMP/gate"
-          python3 "$G/tools/saves/fetch.py" --hist 1 --out "$RUNNER_TEMP/saves"
-          cp "$G"/tests/saves-fixture/*.json "$RUNNER_TEMP/saves/"
-          KYST_DIST="$PWD/dist-pwa" python3 "$G/tests/savestest.py" --dir "$RUNNER_TEMP/saves" --must
-      # The other way (L1c): each save is played two game hours by this build, saved, and started with the build the players have
-      # now (current/ on the server, fetched with rsync; what this build has unchanged is copied from dist-pwa and not sent). A
-      # save the new build writes that the old one cannot start would make a roll-back break the game of everyone who has played
-      # since. Not at a roll-back (the gate above is that test then). If the old build cannot be fetched, the step says so and the
-      # release goes on: the gate above has held, and tools/plan/RUTINE.md «Slippet» 8 says what a roll-back then needs
-      - name: The other way (what this build saves starts with the build before)
-        if: ${{ github.ref_name == 'main' && !inputs.commit }}
-        env:
+          GATE_HOST: ${{ secrets.GATE_HOST }}
+          GATE_KEY: ${{ secrets.GATE_KEY }}
+          GATE_KNOWN_HOSTS: ${{ secrets.GATE_KNOWN_HOSTS }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          OTHER: ${{ inputs.commit && 'false' || 'true' }}
+          ASK_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          if [ -z "$DEPLOY_HOST" ]; then echo "::warning::No DEPLOY_HOST secret: the other way was not tried."; exit 0; fi
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
-          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          if ! rsync -rlc --copy-dest="$PWD/dist-pwa" -e "ssh -i ~/.ssh/deploy" "deploy@$DEPLOY_HOST:current/" "$RUNNER_TEMP/prev/" || [ ! -s "$RUNNER_TEMP/prev/index.html" ]; then
-            echo "::warning::The build the players have now could not be fetched from the server: the other way was not tried in this release."; exit 0
+          if [ -z "$GATE_HOST" ] || [ -z "$GATE_KEY" ] || [ -z "$GATE_KNOWN_HOSTS" ]; then
+            echo "::error::The secrets GATE_HOST, GATE_KEY and GATE_KNOWN_HOSTS are missing: the save gate cannot run, and a release does not go out without it (tools/server/gate/setup.sh prints them)."; exit 1
           fi
-          echo "The build before: $(cut -c1-80 "$RUNNER_TEMP/prev/version.json")"
-          KYST_DIST="$PWD/dist-pwa" python3 "$RUNNER_TEMP/gate/tests/savestest.py" --dir "$RUNNER_TEMP/saves" --must --old "$RUNNER_TEMP/prev"
-      # the players' saves leave the machine before anything else happens, also when the gate stopped the job
-      - name: The saves are deleted
-        if: ${{ always() && github.ref_name == 'main' }}
-        run: rm -rf "$RUNNER_TEMP/saves" "$RUNNER_TEMP/prev" "$RUNNER_TEMP/gate/tests/out"
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$GATE_KEY" > ~/.ssh/gate && chmod 600 ~/.ssh/gate
+          printf '%s\n' "$GATE_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          G="$RUNNER_TEMP/gate"; R="ssh -i $HOME/.ssh/gate"; H="deploy@$GATE_HOST"
+          # the build the players have now, for the other way (the public files of the site, no one's data): from the game's server
+          # to here, and on to the gate. If it cannot be fetched the gate says so as a warning and the release goes on, as before
+          mkdir -p "$RUNNER_TEMP/prev"
+          if [ "$OTHER" = true ] && [ -n "$DEPLOY_HOST" ]; then
+            printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+            printf '%s\n' "$DEPLOY_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+            if rsync -rlc --copy-dest="$PWD/dist-pwa" -e "ssh -i $HOME/.ssh/deploy" "deploy@$DEPLOY_HOST:current/" "$RUNNER_TEMP/prev/" && [ -s "$RUNNER_TEMP/prev/index.html" ]; then
+              echo "The build before: $(cut -c1-80 "$RUNNER_TEMP/prev/version.json")"
+            else rm -rf "$RUNNER_TEMP/prev"; mkdir -p "$RUNNER_TEMP/prev"; echo "::warning::The build the players have now could not be fetched from the server: the other way is not tried in this release."; fi
+          fi
+          rsync -rltz --delete --chmod=D755,F644 -e "$R" dist-pwa/ "$H:in/build/"
+          rsync -rlcz --delete --chmod=D755,F644 -e "$R" "$RUNNER_TEMP/prev/" "$H:in/prev/"
+          rsync -rlcz --delete --chmod=D755,F644 -e "$R" "$G/" "$H:in/files/"
+          # the question last: it starts the gate (dsb-gate.path). The id tells this run's answer from an older one
+          printf '{"id":"%s","other":%s}\n' "$ASK_ID" "$OTHER" > "$RUNNER_TEMP/ask"
+          rsync --inplace --chmod=F644 -e "$R" "$RUNNER_TEMP/ask" "$H:in/ask"
+          echo "Asked the gate ($ASK_ID). Waiting for the answer, at most 40 minutes."
+          # an answer to another question (a run before this one that was cancelled, still at its test when we asked) means ours was
+          # not seen: the gate looks at the question when it starts, not while it runs. Then it is asked once more, once for each such id
+          ok=; again=
+          for i in $(seq 1 240); do
+            sleep 10
+            rm -f "$RUNNER_TEMP/result.json"
+            rsync -q -e "$R" "$H:out/result.json" "$RUNNER_TEMP/result.json" 2>/dev/null || continue
+            got=$(python3 -c "import json,sys; r=json.load(open(sys.argv[1])); print(r.get('id',''), 'go' if r.get('ok') is True else 'stop')" "$RUNNER_TEMP/result.json" 2>/dev/null || true)
+            case "$got" in "$ASK_ID go") ok=go; break;; "$ASK_ID stop") ok=stop; break;; esac
+            other=${got%% *}
+            if [ -n "$other" ] && [ "$other" != "$again" ]; then
+              again=$other; echo "The gate answered another question ($other): asking again."
+              rsync --inplace --chmod=F644 -e "$R" "$RUNNER_TEMP/ask" "$H:in/ask" || true
+            fi
+          done
+          # the gate's log: the test's own lines, a save named by its fingerprint only (gate.py)
+          rsync -q -e "$R" "$H:out/log.txt" "$RUNNER_TEMP/gate-log.txt" 2>/dev/null && cat "$RUNNER_TEMP/gate-log.txt" || echo "(no log from the gate)"
+          [ -s "$RUNNER_TEMP/result.json" ] && cat "$RUNNER_TEMP/result.json" && echo
+          if [ "$ok" = go ]; then echo "The save gate held."; exit 0; fi
+          if [ "$ok" = stop ]; then echo "::error::The save gate stopped the release: nothing is uploaded, and detstorebla.no stands as it was."; exit 1; fi
+          echo "::error::The save gate gave no answer in 40 minutes: nothing is uploaded. On the gate's server: journalctl -u dsb-gate -u dsb-gate-fetch"; exit 1
       - name: Upload to the server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}

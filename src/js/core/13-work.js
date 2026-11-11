@@ -277,8 +277,31 @@ function workAssign(as){
   const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = ctx.setting ? (i ? 'lang' : 'sett') : i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; if (!p.why) p.why = workWhy(p, 'haling', ctx); });
   for (const p of P) if (!p.why) p.why = p.st === 'pause' ? 'nowork' : workWhy(p, p.st, ctx);
   idleAssign(P, ctx);
+  quayRoles(P, ctx);
   return P;
 }
+// ---- the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
+// utføres på en så ekte måte som mulig»). While the plant's crane lands her tubs, one of those free hooks the sling on at the tubs
+// ('hekt') and one stands where the crane driver sees him and gives the signs ('luke'); while ice runs from the silo, one takes it
+// aboard and spreads it ('isrom'); and with her own crane on the freight, the first on the job drives it and the second hooks on and
+// off ('kran', 'hekt'). Roles only, as 'sett' and 'lang' at the hauler (OB3): nobody changes station, nothing here waits on anything,
+// and the landing, the ice and the freight take the time they took (a hand on a break stays on it in the numbers: p.idle is kept, so
+// the rest, the meal and the watch are as before). Those asleep or worn out are left alone, and an ocean vessel's pallets and live
+// crab have their own gang at the hatch (view3d/09-landing-deck.js landScene). The crew first, you last: alone you hook on yourself.
+function quayRoles(P, ctx){
+  const b = S.boat; if (ctx.s !== 'port' || ctx.fort) return;
+  if (BOAT.crane > 0 && !b.land) P.filter(p => p.st === 'last').forEach((p, i) => { p.role = i ? 'hekt' : 'kran'; });   // (her crane lies folded while the plant lands her, view3d drawCrane)
+  const L = b.land, e = L ? S.t - L.t0 : 0, landing = !!L && L.kind === 'tub' && !(L.lv > 0) && e >= 0 && e < landLiftT(L, L.lifts - 1) + liftMin(L);
+  const icing = (b.iceUntil || 0) > S.t; if (!landing && !icing) return;
+  const free = P.filter(p => p.st === 'pause' && p.idle !== 'sleep' && pTired(p) < 0.85).sort((x, y) => (x.c ? 0 : 1) - (y.c ? 0 : 1));
+  const want = (landing ? ['hekt', 'luke'] : []).concat(icing ? ['isrom'] : []);
+  // (alone, or one free: the ice is taken aboard before the signs are given; the sling is always hooked on first)
+  if (free.length < want.length && icing && landing) want.splice(1, 1);
+  free.slice(0, want.length).forEach((p, i) => { p.role = want[i];
+    // (the one he was chatting with looks out over the sea instead of talking to nobody)
+    if (p.idle === 'chat' && p.with) for (const q of P) if (q !== p && !q.role && q.idle === 'chat' && q.with === pKey(p)){ q.idle = 'look'; q.with = null; } });
+}
+const QUAY_ING = {hekt:['Hekter på karene', 'Hooking on the tubs'], luke:['Gir tegn til kranføreren', 'Signalling to the crane driver'], isrom:['Tar imot isen', 'Taking the ice aboard'], kran:['Kjører kranen', 'Driving the crane']};
 // ---- what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
 // seg på rekka, drikker kaffe, skrubber dekk og alle andre aktuelle ting de kan finne på å gjøre»): a spell of about twelve minutes each
 // (each at their own minute), chosen by the weather, the hour, where she lies, how tired and hungry they are, what they are like and who
@@ -352,6 +375,8 @@ const MOOR_ING = {prep:['Henger ut fenderne', 'Putting the fenders out'], in:['G
   out:['Kaster loss', 'Casting off'], stow:['Tar inn fenderne og kveiler tauene', 'Fenders in, coiling the lines']};
 function workDoing(p){ const no = S.lang === 'no';
   if (p.st === 'fort'){ const m = MOOR_ING[typeof moorPhase === 'function' && moorPhase()]; if (m) return m[no ? 0 : 1]; } if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'sett') return no ? 'Setter over hekken' : 'Setting over the stern'; if (p.role === 'lang') return no ? 'Langer redskapet akter' : 'Handing the gear aft'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
+  if (p.st === 'last' && p.role === 'hekt') return no ? 'Hekter på og av' : 'Hooking on and off';
+  if ((p.st === 'pause' || p.st === 'last') && QUAY_ING[p.role]) return QUAY_ING[p.role][no ? 0 : 1];
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
   if (snoVessel() && (p.st === 'sloy' || p.st === 'is')) return p.st === 'sloy' ? (no ? 'Deler krabben i klør' : 'Splitting the crab into clusters') : (no ? 'Koker, fryser og pakker klør' : 'Cooking, freezing and packing clusters');   // the snow crab factory (H3b)
   if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)
