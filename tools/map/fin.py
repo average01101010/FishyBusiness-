@@ -1,6 +1,12 @@
-# The fine ground along the sea, `hgt10` (Ø13 K0 of docs/planer/kartrelease-o13.md, 11.11.2026): the PROTOTYPE that measures the
-# layer before anything is built for the game. Nothing in src/ is read by the game from here, and everything is written under
-# tools/map/out/fin/ (the Terrarium tiles it fetches too).
+# The fine ground along the sea, `hgt10` (Ø13 of docs/planer/kartrelease-o13.md, 11.11.2026). K0 measured the layer with this script
+# (senja, tile, gain, count: everything under tools/map/out/fin/, the Terrarium tiles it fetches too); from K1 it also writes THE pack
+# the game reads, for Senja's four tiles (game):
+#   the pack  the strip 1 km from the sea, 12.5 m cells (800 x 800 a block of 10 km), Int16 half metres all the way up (the layer's
+#           dec 'half', as the depth; hgtEnc has 2 m steps over 10 m and rounds the whole gain away there, K0), a land cell at least 1
+#           (half a metre), 0 «no fine ground here, read the 25 m layer», the sea cells within 25 m of the strip -1 (the foreshore,
+#           only the sign), and a block without a cell of the strip is not in the pack. The game reads it with finH
+#           (src/js/core/01b-mapdata.js), on High and Ultra only.
+# What K0 measured, and how:
 #   what    the height of the land in a strip along the sea (1 km or 500 m from it) at 10 m or 12.5 m cells, from Terrarium z13
 #           (Kartverket's 10 m terrain in Norway, 5-8 m a pixel here; terrain.sample), where the game's 25 m layer keeps every fourth
 #           pixel. Land and sea come from the vector coast at 3 m (the chart packs' coast2, which is what the game takes for land and
@@ -17,6 +23,8 @@
 #   python3 tools/map/fin.py gain tx,ty ...     what the fine layer adds over the 25 m layer in a tile, and what the coding rounds away
 #   python3 tools/map/fin.py count              the land in the strip (km2) of every mainland tile from the 25 m masks, and the measured
 #                                               bytes per km2 multiplied up to the whole coast
+#   python3 tools/map/fin.py game               Senja's four 'fin' packs into src/data/map, and the layer 'fin' and the packs into its
+#                                               manifest.json; no other entry there is touched (K1; the whole coast is K2's release)
 import os, sys, json, glob, zlib, time, hashlib, numpy as np
 from scipy import ndimage
 import frame, terrain, pack
@@ -137,10 +145,11 @@ def ground(tx, ty, c):
 
 half = lambda v: np.sign(v) * np.round(np.abs(v) * 2)   # half metres all the way up (hgtEnc has 2 m steps from 10 m), for comparison
 # one variant of a tile packed: the bytes of the pack, the blocks, the cells of the strip, and the pack itself in out/fin/<variant>/
-def variant(tx, ty, c, strip, G, enc=hgtEnc, name=None):
+# (sea: what a foreshore cell is written as; the game's pack has -1, the measured variants what the coding gives)
+def variant(tx, ty, c, strip, G, enc=hgtEnc, name=None, sea=None):
     L, dsea, dland, H = G; n = L.shape[0]; nb = n // 5
     land = L & (dsea <= strip); shore = ~L & (dland <= SHORE) & (ndimage.maximum_filter(land, 2 * round(SHORE / c) + 1))
-    h = np.nan_to_num(H); A = np.where(land, enc(np.maximum(h, 0.5)), np.where(shore, enc(np.minimum(h, -0.5)), 0)).astype(np.int16)
+    h = np.nan_to_num(H); A = np.where(land, enc(np.maximum(h, 0.5)), np.where(shore, enc(np.minimum(h, -0.5)) if sea is None else sea, 0)).astype(np.int16)
     head = {'kind': 'fin', 'tile': [tx, ty], 'blocks': []}; body = []; off = 0; raw = 0
     for j in range(5):
         for i in range(5):
@@ -152,7 +161,33 @@ def variant(tx, ty, c, strip, G, enc=hgtEnc, name=None):
     for old in glob.glob(os.path.join(d, f'fin-{tx}-{ty}-*.wasm')): os.remove(old)
     if body: open(os.path.join(d, f'fin-{tx}-{ty}-{hashlib.sha256(data).hexdigest()[:12]}.wasm'), 'wb').write(data)
     hi = float((h[land] >= 9.75).mean()) if land.any() else 0.0
-    return dict(bytes=len(data) if body else 0, blocks=len(body), cells=int(land.sum()), shore=int(shore.sum()), km2=float(land.sum() * c * c / 1e6), over10=hi, raw=raw)
+    return dict(bytes=len(data) if body else 0, blocks=len(body), cells=int(land.sum()), shore=int(shore.sum()), km2=float(land.sum() * c * c / 1e6), over10=hi, raw=raw,
+                file=os.path.join(d, f'fin-{tx}-{ty}-{hashlib.sha256(data).hexdigest()[:12]}.wasm') if body else None)
+
+# THE pack of a tile as the game reads it (K1): 1 km, 12.5 m, half metres, the foreshore -1; in out/fin/game/
+GAME = dict(c=12.5, strip=1000)
+def game_pack(tx, ty):
+    G = ground(tx, ty, GAME['c'])
+    return None if G is None else variant(tx, ty, GAME['c'], GAME['strip'], G, half, 'game', sea=-1)
+# Senja's four packs into src/data/map, and the layer and the packs into its manifest; every other entry stays as it is, byte for byte
+# (the manifest is written as the other tools write it, json.dump with no spaces)
+def game():
+    import shutil
+    mf = os.path.join(SRC, 'manifest.json'); man = json.load(open(mf)); M = man['layers']['mask']; k = round(M['c'] * 1000 / GAME['c']); n = round(man['block'] * 1000 / GAME['c'])
+    assert M['c'] * 1000 == k * GAME['c'] and n * GAME['c'] == man['block'] * 1000
+    new = []
+    for tx, ty in SENJA:
+        r = game_pack(tx, ty)
+        if not r or not r['file']: print(f'{tx},{ty}: no strip, no pack'); continue
+        fn = os.path.basename(r['file']); new.append(dict(file=fn, hash=fn.split('-')[-1].split('.')[0], kind='fin', tile=[tx, ty], box=[tx * 50, ty * 50, tx * 50 + 50, ty * 50 + 50], bytes=r['bytes']))
+        print(f'{tx},{ty}: {fn} {r["bytes"] / 1e6:.3f} MB, {r["blocks"]} blocks, {r["cells"] / 1e6:.2f} M land cells, {r["shore"] / 1e6:.2f} M foreshore cells')
+    for old in glob.glob(os.path.join(SRC, 'fin-*.wasm')): os.remove(old)
+    for p in new: shutil.copyfile(os.path.join(OUT, 'game', p['file']), os.path.join(SRC, p['file']))
+    man['layers']['fin'] = dict(c=GAME['c'] / 1000, ix0=M['ix0'] * k, iy0=M['iy0'] * k, nx=M['nx'] * k, ny=M['ny'] * k, n=n, type='i16', kind='fin', dec='half')
+    man['packs'] = [p for p in man['packs'] if p['kind'] != 'fin'] + sorted(new, key=lambda p: p['file'])
+    raw = open(mf).read(); sep = (',', ':') if ', ' not in raw[:2000] else None
+    json.dump(man, open(mf, 'w'), separators=sep, ensure_ascii=False)
+    print(f'{len(new)} packs, {sum(p["bytes"] for p in new) / 1e6:.2f} MB, in {SRC}; the layer fin {man["layers"]["fin"]}')
 
 # the land in the strip at 25 m (km2) of a tile, from the masks alone (what count multiplies with), and the blocks with any of it
 def strip25(tx, ty):
@@ -230,6 +265,7 @@ if __name__ == '__main__':
     if a[:1] == ['senja']: measure(SENJA, 'Senja')
     elif a[:1] == ['tile']: measure([tuple(map(int, t.split(','))) for t in a[1:]], 'tiles')
     elif a[:1] == ['count']: count()
+    elif a[:1] == ['game']: game()
     elif a[:1] == ['gain']:
         for t in a[1:]: gain(*map(int, t.split(',')))
-    else: sys.exit(__doc__ or 'python3 tools/map/fin.py senja | tile tx,ty ... | gain tx,ty ... | count')
+    else: sys.exit(__doc__ or 'python3 tools/map/fin.py senja | tile tx,ty ... | gain tx,ty ... | count | game')

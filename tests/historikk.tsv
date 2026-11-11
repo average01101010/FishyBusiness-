@@ -2635,3 +2635,6 @@
 2026-11-11 18:12	plan/2026-11-11-90	8e76db94	boottest	OK	26	lite	alene	
 2026-11-11 18:13	plan/2026-11-11-90	8e76db94	dbg23o	OK	47	3d	alene	
 2026-11-11 18:24	plan/2026-11-11-90	8e76db94	jigshot	OK	662	3d	alene	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	maptest	OK	26	lite	samtidig	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	boottest	OK	31	lite	samtidig	
+2026-11-11 20:36	claude/zen-curie-qoa35d	082060a+	landtest	OK	85	3d	alene	

@@ -73,6 +73,14 @@ const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t 
   // top from the line out to one cell at sea before the ramp, so a triangle across the line never dips under water inside it (the sea
   // bit into the land in teeth of up to half a cell); the texture cuts the rest at the waterline. The fine mesh (4 m) carries the ramp.
   const COAST3 = {top:2.0, g:1 / 3, gMole:1 / 1.5, deep:-2.5, swash:0.8};
+  // The fine ground along the sea (Ø13 K1, 11.11.2026; the layer 'fin', core/01b-mapdata.js finH): the land within 1 km of the sea on
+  // 12.5 m cells in half metres, where the tiles' ground has 25 m cells and 2 m steps over 10 m. terrRaw is the one place it is read,
+  // and everything in 3D reads the ground through terrRaw or terrH (the meshes, the shore and its cliffs, the near field, the quays,
+  // the buildings, the trees), so they all stand on the same ground. FINU: the layer is in use (finStream in 04-vec-packs.js: High and
+  // Ultra only; «#fin0» in the address turns it off). FINSKIP: the middle and far meshes (86 m and 392 m between their points) read
+  // the 25 m ground as before, so the fine blocks unpacked are those round the boat, not the 100 km the far mesh covers.
+  const FIN0 = /fin0/.test(location.hash); let FINU = false, FINSKIP = false;
+  const terrNoFin = (x, z) => { FINSKIP = true; try { return terrH(x, z); } finally { FINSKIP = false; } };
   function terrRaw(x, z, dil){
     if (x < MAPB.x0 * 1000 || z < MAPB.y0 * 1000 || x > MAPB.x1 * 1000 || z > MAPB.y1 * 1000) return -40;
     // the tiles' ground (25 m) where they have it and it is in; else the far heights (200 m, phase K8) held to the national core's
@@ -80,6 +88,7 @@ const grassNow = () => typeof seasonAt === 'function' ? Math.round(seasonAt(S.t 
     // a flat stand-in from that land until the far pack comes
     let h;
     h = HG ? tileH(MAPD.L.hgt, 'view', x, z) : NaN;
+    if (FINU && !FINSKIP && h === h) h = finH(x, z, h);
     if (h !== h){ const m = landFracM(x, z); h = HG ? tileH(MAPD.L.far, 'far', x, z) : NaN; if (h !== h) h = m >= 0.5 ? 2 : -4; h = m >= 0.5 ? Math.max(h, 0.3 + (m - 0.5) * 6) : Math.min(h, -0.5 - (0.5 - m) * 8); }
     const fl = dil > 6 ? dil : 0;
     const sd = coastSdIf({x:x / 1000, y:z / 1000}, (COAST3.top - COAST3.deep) / COAST3.g + fl + 2);
