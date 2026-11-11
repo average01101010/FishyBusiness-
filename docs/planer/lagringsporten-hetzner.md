@@ -1,6 +1,6 @@
 # Lagringsporten flyttet fra GitHub til vår egen server (plan 11.11.2026)
 
-Steg 102 i `docs/planer/koen.md`. Skrevet av L1f-økta (steg 79, grenen `ccr-b461eca2-teqw0r`). **Ingenting er bygd.** Planen venter på Jonas' svar på valgene i kap. 3.
+Steg 102 i `docs/planer/koen.md`. Skrevet av L1f-økta (steg 79, grenen `ccr-b461eca2-teqw0r`). **Ingenting er bygd.** Valgene i kap. 3 er besvart 11.11.2026.
 
 ## 1. Hvorfor
 
@@ -26,7 +26,9 @@ Det som er som før: porten kjører bare på `main` og ved tilbakerulling, fixtu
 
 **Personvernerklæringen etterpå:** GitHub tas ut igjen. Hetzner-punktet får én setning om at kontrollen før en ny versjon kjøres der.
 
-## 3. Valgene (venter på Jonas)
+## 3. Valgene (besvart 11.11.2026)
+
+**Jonas 11.11.2026: «V1 A, V2 A».** En egen liten server hos Hetzner bare for porten, og PR #62 flettes uten GitHub-punktet og det slippes ikke før porten er flyttet. GitHub-punktet ble tatt ut av PR #62 samme dag, og sperren mot slipp står øverst i `docs/planer/koen.md` og i «Slippet» i `tools/plan/RUTINE.md`.
 
 - **V1. Hvor porten kjører.**
   - **A (anbefalt): en egen liten server hos Hetzner bare for porten** (samme størrelse som dagens, noen få euro i måneden; prisen er ikke sjekket). Dagens server har 2 vCPU og 4 GB og leverer spillet og reléet. Porten kjørte 74 lagringer på 2,5 minutter og den andre veien på 4,5 på GitHubs maskin med fire om gangen; på to kjerner som også leverer spillet, blir det anslagsvis 10–20 minutter med full last. En egen server holder det unna spillerne, og nøkkelen til databasen ligger ikke på maskinen som står åpen mot nettet.
@@ -59,4 +61,5 @@ Det som er som før: porten kjører bare på `main` og ved tilbakerulling, fixtu
 
 ## Status
 
-- 11.11.2026: planen skrevet. Venter på Jonas: V1 og V2.
+- 11.11.2026: planen skrevet.
+- 11.11.2026: Jonas svarte «V1 A, V2 A». Steget er `klar`. Ikke bygd.
