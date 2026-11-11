@@ -43,7 +43,7 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 | `kyst15` | 76 (godkjent) | **71**, under grensen; etter OB12 **68** (egen evaluering, Jonas' skala; eksportert på nytt) | 4.9 |
 | `breisjark` | 72 | **68**; etter OB11 **68**, etter runde 2 **71** (11.11.2026, uavhengig evaluering, Jonas' skala; under grensen) | 4.8 |
 | `snekke` | ingen | **67** (forslag) | 4.3 |
-| `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala) | 4.7 |
+| `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala); etter runde 2 **67** (ny uavhengig sensor 11.11.2026, `sjarkny-grunnlag.md` 10.9) | 4.7 |
 | `plastsjark` | 66 | **63** | 4.4 |
 | `trebat` | ingen | **63** (forslag) | 4.1 |
 | `sjark` | 64 | **61** | 4.5 |
@@ -676,3 +676,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 10.11.2026: **OB9 bygd** (Jonas' økt, gren `claude/ob9-hurtigsjarken-75-jtun77`): den brukte hurtigsjarken med benken tvers av luka og stampene fri av den (F19), juksa fordelt på begge sider fritt for haleporten, døra og kranen (F21), bremmen (valg 26), styrhusveggene uten striper, den tomme båtens vannlinje (valg 18 A, `WLE`), `STAB_AT` sjekket mot modellens ankre. Settingen går fritt over hekken (ingen setteport). Teinestabelen fra OB16 står fri av blødekaret, stagene og kranen. Forslag 75 etter Jonas' skala (`hurtigsjark-grunnlag.md` 9.5); valg 31 (juksamaskinene) venter på Jonas. Bildene av typen kunne ikke hentes (Wikimedia sperret bildefilene for skyøkta); de er valgt etter beskrivelsen. Neste på sporet: OB10 (den nye hurtigsjarken, `docs/planer/start/88.md`).
 - 10.11.2026: **OB11 bygd** (Jonas' økt, gren `ccr-7c6616f1-m5zscg`): breisjarken, se avsnittet sist i 4.8 og `breisjark-grunnlag.md` kap. 10. Egen evaluering 68 etter Jonas' skala; ikke ferdig etter grensen på 75, rullet ut til testadressen 10.11.2026 (85a1396); Jonas' svar om juksa og akterskansen venter (valg 32, `jukseMax` 6 → 1). Startmeldingen for OB12 i `docs/planer/start/90.md`.
 - 10.11.2026: **OB10 bygd** (Jonas' økt, gren `ccr-e7277295-e9i00p`): den nye hurtigsjarken, se avsnittet sist i 4.7 og `sjarkny-grunnlag.md` kap. 10. Egen evaluering 71 etter Jonas' skala (69 etter første runde); ikke ferdig etter grensen på 75. Startmeldingen for OB11 i `docs/planer/start/89.md`.
+- 11.11.2026: **OB10 runde 2** (Jonas' økt, gren `claude/charming-knuth-ih6c5n`): kranen snudd, taket spart ut over haleporten for teinedaviten, instrumenter på skjermene, detaljer på vegger, speil og dørk, teineplassene i én kilde. Uavhengig karakter **67**, under 75: ikke ferdig. Se `sjarkny-grunnlag.md` 10.7–10.9 og backloggen «OB10 runde 2».

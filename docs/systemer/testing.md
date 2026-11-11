@@ -30,7 +30,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `teleport3d` | 8 min | kartlasteren eller 3D-terrenget |
 | `kinotest` | 6 min (15 min i skyen 05.11.2026; 1 500 s i `LONG`) | kameraet |
 | `unittest` | 5 min | havner og mottak (kai, kran, truck, tidevann) |
-| `coast3d`, `sitetest` | 4–5 min | terrenget, kartdataene eller mottaksregisteret |
+| `coast3d`, `sitetest` | 4–5 min (`coast3d` rundt 10 med skjærene, `KYST_COAST3D=rocks` bare dem) | terrenget, kartdataene, mottaksregisteret eller skjærene i 3D (`view3d/17i-rocks.js`) |
 | `kjoptest` | 2,5 min under `run.py` fra 11.11.2026 (før tegnet den 3D også der, fordi den laget adressen selv uten `no3d`: 3,5 min på en rask maskin, 10–30 min på en treg); `KJOP_FRA=6` kjører bare steg 6–8 (én oppstart, rundt 4 min: butikken stengt for nye kontoer og haillen fra serveren, HS2) | butikken, `supabase/migrations/20261110180000_haill_use.sql` |
 | `fasittest` | 20 s (steg 10 i `kjoptest.py` kjørt alene, `KJOP_FRA=10`). Kjørt for hånd uten `KYST_LITE` tegner den 3D og tar 13 min, som `kjoptest`; det er bare for skjermbildene | serveren som fasit (HS4): `ui/10i-shop.js` (`shopClaim4`, `srvApply`, `srvImport`), puben mot serveren (`ui/09-hand-fishing.js`, `09b-pub.js`), `ui/10j-paint.js` (`cosSrv`), `core/09f-merker.js` eller `supabase/migrations/20261111140000_haill_srv.sql` |
 | `lighttest`, `ultratest`, `uishots`, `haultest` | 2–3 min | lys, ultra-grafikk, UI-oppsett, haling |

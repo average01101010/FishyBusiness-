@@ -2557,6 +2557,15 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 17:31	ccr-6f2117ea-fknkro	e932597+	trip2	OK	44	lite	samtidig	
+2026-11-11 17:32	ccr-6f2117ea-fknkro	e932597+	csptest	OK	100	lite	samtidig	
+2026-11-11 17:32	ccr-6f2117ea-fknkro	e932597+	boottest	OK	41	lite	samtidig	
+2026-11-11 17:33	ccr-6f2117ea-fknkro	e932597+	hulltest	OK	74	lite	samtidig	
+2026-11-11 18:47	ccr-6f2117ea-fknkro	e932597+	dbg23o	OK	44	3d	alene	
+2026-11-11 18:55	ccr-6f2117ea-fknkro	e932597+	coast3d	FEIL	455	3d	alene	avsluttet med kode 1
+2026-11-11 18:57	ccr-6f2117ea-fknkro	e932597+	gfxtest	OK	129	3d	alene	
+2026-11-11 19:00	ccr-6f2117ea-fknkro	e932597+	ultratest	OK	194	3d	alene	
+2026-11-11 19:11	ccr-6f2117ea-fknkro	e932597+	seabedtest	OK	625	3d	alene	
 2026-11-11 16:19	plan/2026-11-11-90	f309be91	trip2	OK	67	lite	samtidig	
 2026-11-11 16:19	plan/2026-11-11-90	f309be91	vesseltest	FEIL	49	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-11 16:19	plan/2026-11-11-90	f309be91	selltest	LES	45	lite	samtidig	
@@ -2635,3 +2644,17 @@
 2026-11-11 18:12	plan/2026-11-11-90	8e76db94	boottest	OK	26	lite	alene	
 2026-11-11 18:13	plan/2026-11-11-90	8e76db94	dbg23o	OK	47	3d	alene	
 2026-11-11 18:24	plan/2026-11-11-90	8e76db94	jigshot	OK	662	3d	alene	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	maptest	OK	26	lite	samtidig	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	boottest	OK	31	lite	samtidig	
+2026-11-11 20:36	claude/zen-curie-qoa35d	082060a+	landtest	OK	85	3d	alene	
+2026-11-11 20:00	ccr-6f2117ea-fknkro	d01de3f	boottest	OK	31	lite	alene	
+2026-11-11 20:01	ccr-6f2117ea-fknkro	d01de3f	dbg23o	OK	47	3d	alene	
+2026-11-11 20:16	ccr-6f2117ea-fknkro	d01de3f	coast3d	OK	888	3d	alene	
+2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	boottest	OK	33	lite	samtidig	
+2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	maptest	OK	31	lite	samtidig	
+2026-11-11 21:50	claude/zen-curie-qoa35d	c6f7bf0+	fintest	OK	446	3d	alene	
+2026-11-11 21:51	claude/zen-curie-qoa35d	c6f7bf0+	landtest	OK	85	3d	alene	
+2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	docktest	OK	71	lite	samtidig	
+2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	boottest	OK	47	lite	samtidig	
+2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	boottest	OK	32	lite	samtidig	
+2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	docktest	OK	63	lite	samtidig	
