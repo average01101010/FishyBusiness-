@@ -101,6 +101,30 @@ export default function (t){
     // a free right left alone goes back to the register after two game years
     const r5 = mbMove({v:b14}, {free:true}, H); kmFree(H + KM.freeY * 8760 - 1); const before = kmFreeList().length; kmFree(H + KM.freeY * 8760);
     t.ok(r5.ok && before === n0 + 1 && kmFreeList().length === n0, 'en ledig hjemmel som blir stående, går tilbake til registeret etter to spillår');
+    // ---- after the review (11.11.2026) ----
+    // what lies in her hold was caught on the right, and a plan that is on would take her out without it
+    { const hv = mk(small, lic('h9')); hv.hold = [{sp:'torsk', kg:300}]; t.eq(mbMoveWhy({v:hv}, {free:true}, H), 'hold', 'lasten må leveres før hjemmelen flyttes'); hv.hold = [];
+      t.eq(mbMoveWhy({v:hv}, {free:true}, H), null, 'med tomt rom går det'); S.fleet.splice(S.fleet.indexOf(hv), 1); }
+    // the same year is not fished twice: a boat that becomes the open-group boat when her right leaves starts with what was fished on it
+    { for (const x of S.fleet.slice()) if (x.id !== S.cur && x.lic) S.fleet.splice(S.fleet.indexOf(x), 1); S.openUsed = null;
+      const ob = mk(small, lic('h9')); ob.quota = {y, torsk:9000, hyse:400, sei:0};
+      const r = mbMove({v:ob}, {free:true}, H), ovv = vesselById(K.openVesselId()), q = ovv && vget(ovv, 'quota');
+      t.ok(r.ok && ovv && q.torsk >= 9000 && q.hyse >= 400 && S.openUsed && S.openUsed.torsk === 9000, 'hjemmelen av den siste båten med hjemmel: rederiets båt i åpen gruppe begynner med det som alt er fisket i år, ikke fra null (§ 29)', {q, ou:S.openUsed});
+      // the promise is two years once: on a boat and off again with nothing landed, the date stands; landed on, it is a new promise
+      const f1 = kmFreeList()[kmFreeList().length - 1], until1 = f1.until, H2 = H + 5000;
+      mbMove({free:kmFreeList().length - 1}, {v:ob}, H2); const l1 = vget(ob, 'lic');
+      t.ok(l1 && l1.fu && l1.fu.until === until1, 'en ledig hjemmel satt på en båt husker fristen', l1 && l1.fu);
+      const rb = mbMove({v:ob}, {free:true}, H2 + 10), f2 = kmFreeList()[kmFreeList().length - 1];
+      t.ok(rb.ok && Math.abs(f2.until - until1) < 1e-6 && /til \d+\.\d+\.\d{4}/.test(S.msgs[S.msgs.length - 1].no), 'tatt av igjen uten at noe er landet på den: fristen er den gamle, ikke to nye år', {until:f2.until, until1, m:S.msgs[S.msgs.length - 1].no});
+      mbMove({free:kmFreeList().length - 1}, {v:ob}, H2 + 20); vget(ob, 'quota').torsk += 500;
+      const rc = mbMove({v:ob}, {free:true}, H2 + 30), f3 = kmFreeList()[kmFreeList().length - 1];
+      t.ok(rc.ok && Math.abs(f3.until - (H2 + 30 + KM.freeY * 8760)) < 1e-6, 'er det landet på den i mellomtida, er den i bruk, og tilsagnet er nytt', {until:f3.until});
+      // undo reverses the move only: what was landed where the right went, stays on the right, and a free right bought meanwhile stands
+      mbMove({free:kmFreeList().length - 1}, {v:ob}, H2 + 40); const tg = mk(small); vget(ob, 'quota').torsk = 1000;
+      const ru = mbMove({v:ob}, {v:tg}, H2 + 50); vget(tg, 'quota').torsk += 250; kmFreeList().push({id:'h8', flen:9, st:[], y, H0:1, until:H2 + 1e5});
+      ru.undo(); const lo = vget(ob, 'lic');
+      t.ok(lo && lo.id === 'h9' && !vget(tg, 'lic') && vget(ob, 'quota').torsk === 1250 && kmFreeList().some(x => x.id === 'h8'), 'angret: hjemmelen er tilbake med det som ble landet på den i mellomtida, og en ledig hjemmel kjøpt imens står', {q:vget(ob, 'quota').torsk, tg:vget(tg, 'lic'), F:kmFreeList().length});
+      S.licFree = []; for (const x of [ob, tg]) S.fleet.splice(S.fleet.indexOf(x), 1); }
     // the boat put out without her right says so on her sale, and an unsold one tells where the right is
     mbLock(b14, {id:72, until:new Date(Date.now() + 3600e3).toISOString()}, {start:1, hours:1, value:1, kept:{free:true}}, y1);
     t.ok(mbSale(b14).kept && mbSale(b14).kept.free, 'låsen husker at hjemmelen ble i rederiet');

@@ -47,7 +47,8 @@
   // KM4: why the right cannot be moved (core/09k-market.js mbMoveWhy); len: the limit of the length rule
   const MV_WHY = {gone:['Hjemmelen finnes ikke lenger.', 'The right is no longer there.'], none:['Hun har ingen hjemmel.', 'She has no right.'], hav:['Havflåtens tillatelser følger fartøyet.', 'The ocean fleet\'s permits follow the vessel.'],
     listed:['Ligger til salgs. Vent til salget er over.', 'For sale. Wait until the sale is over.'], sea:['Båten må ligge i havn.', 'The boat must lie in port.'], busy:['Hun losser ved mottaket.', 'She is landing at the plant.'],
-    coop:['Hjemmelen er i kvotesamarbeid i år.', 'The right is in a quota cooperation this year.'], order:['Hun går i innbytte på verftet.', 'She is being traded in at the yard.'], same:['Hjemmelen er der alt.', 'The right is there already.'],
+    coop:['Hjemmelen er i kvotesamarbeid i år.', 'The right is in a quota cooperation this year.'], hold:['Lasten må leveres først.', 'The catch must be landed first.'], ops:['Slå av driftsplanen hennes først.', 'Turn her plan off first.'],
+    drift:['Ingenting er landet på hjemmelen i år eller de to årene før.', 'Nothing has been landed on the right this year or the two before.'], order:['Hun går i innbytte på verftet.', 'She is being traded in at the yard.'], same:['Hjemmelen er der alt.', 'The right is there already.'],
     boat:['Båten finnes ikke.', 'No such boat.'], type:['En havbåt kan ikke ta en kysthjemmel.', 'An ocean vessel cannot take a coastal right.'], tolisted:['Båten ligger til salgs.', 'The boat is for sale.'], haslic:['Båten har alt en hjemmel.', 'The boat has a right already.']};
   const mvWhyTxt = (w, len) => w === 'len' ? L('Lengderegelen: en hjemmel under ' + len + ' m fra en båt under ' + len + ' m kan ikke flyttes til en båt på ' + len + ' m eller mer.', 'The length rule: a right under ' + len + ' m from a boat under ' + len + ' m cannot be moved to a boat of ' + len + ' m or more.')
     : MV_WHY[w] ? L(MV_WHY[w][0], MV_WHY[w][1]) : L('Det går ikke nå.', 'Not now.');
@@ -177,7 +178,7 @@
   function mlSrc(){ if (!mlSel) return null; if (mlSel.vid){ const v = vesselById(mlSel.vid); return v && vget(v, 'lic') ? {v} : null; } return kmSrcOf(mlSel.key); }
   function mbLicSheet(){
     const src = mlSrc(); if (!src){ mlSel = null; return ''; }
-    const H = S.t / 60, it = kmPack(src.free != null ? src : {v:src.v, kind:'right'}, H); if (!it){ mlSel = null; return ''; }
+    const H = S.t / 60, it = kmPack(mbSrc(src), H); if (!it){ mlSel = null; return ''; }
     const lic = src.v ? vget(src.v, 'lic') : null, f = src.free != null ? kmFreeList()[src.free] : null, w0 = mbMoveWhy(src, src.v ? {free:true} : {v:null}), srcWhy = w0 && w0 !== 'boat' ? w0 : null;
     const h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="mbmv0">‹ ' + L('Tilbake til flåten', 'Back to the fleet') + '</button><div class="ph-card vsheet mb-move"><h4>' + L('Flytt hjemmelen', 'Move the right') + ' · ' + mgEsc(HJ[it.id].hl) + '</h4>'];
     h.push('<p class="ph-note">' + (src.v ? L('Står på «' + mgEsc(vget(src.v, 'boatName')) + '».', 'Stands on the «' + mgEsc(vget(src.v, 'boatName')) + '».') : L('Ledig hjemmel, uten båt. Tilsagnet gjelder til ' + doyStr(yearH(f.until), doyH(f.until)) + ' ' + yearH(f.until) + '.', 'A free right, without a boat. The promise holds until ' + doyStr(yearH(f.until), doyH(f.until)) + ' ' + yearH(f.until) + '.')) + '</p>');

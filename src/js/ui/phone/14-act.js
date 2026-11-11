@@ -187,7 +187,7 @@
     else if (a === 'repayAll'){ const k = d.k || 'loan', Q = S[k]; if (!Q || S.cash < Q.bal) return; book('avdrag', -Q.bal, 'Lånet innfridd, ' + LOANS[k].who, 'Loan paid off, ' + LOANS[k].who); S[k] = null; log((k === 'loanIN' ? 'Risikolånet' : 'Båtlånet') + ' er innfridd.', 'The ' + (k === 'loanIN' ? 'risk' : 'vessel') + ' loan is paid off.'); }
     else if (a === 'papers'){ app = 'kvote'; sub.kvote = 'mine'; }
     else if (a === 'mktab'){ sub.marked = d.s; mkSel = null; }
-    else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; }
+    else if (a === 'mksel'){ mkSel = d.k ? {k:d.k, o:d.o || null} : null; sub.tikeep = null; }   // (KM4: the trade-in's choice about the right is this sheet's)
     else if (a === 'minsheet'){ minSheet = !minSheet; }
     else if (a === 'snomode'){ snoSetMode(d.m); }   // live or frozen snow crab for the trip (H3b, 10e-krabbefabrikk.js)
     else if (a === 'mk3d'){ if (typeof DOCK !== 'undefined') DOCK.close(); if (isOpen) show(false); G3.showroom(d.k); return; }
@@ -205,6 +205,7 @@
       // is traded in (the trade-in was priced without it, tradeIn); else it follows her as before. The second quota from the special
       // scheme falls away either way (kap. 2 § 6)
       const kept = ti && tiKeepOn() ? mbMove({v:curVessel()}, {free:true}) : null, two0 = ti && S.lic && S.lic.two && HJ[S.lic.two] ? S.lic.two : null;
+      sub.tikeep = null;
       // a new build is delivered at once, at this yard, like a used vessel (Jonas 13.10.2026: «Fjern byggetiden når man bestiller nybygg»)
       if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port, hl); hn = v.boatName; setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
@@ -309,6 +310,7 @@
       if (!S.company){ const el = document.getElementById('coName'); S.company = String((el && el.value) || coDraft || '').trim().slice(0, 28) || coDefault(); coDraft = null; log('Rederiet ' + S.company + ' er opprettet.', 'The company ' + S.company + ' is founded.'); }
       finance(x, 180); if (inn) S.inUsed = true;
       if (ti && tiKeepOn()) mbMove({v:curVessel()}, {free:true});   // (KM4: the old right kept as a free right, taken off her before the trade-in)
+      sub.tikeep = null;
       const sl = regSeller(O.id, S.t / 60), lic = {id:O.id, hl:O.hl, kpk:O.kpk, since:yearH(S.t / 60), from:sl.name + ', ' + sl.home}, ov = openVesselId(), lost = ov && !(ti && ov === S.cur) ? vget(vesselById(ov), 'boatName') : null;
       let nm;
       let fished; regTake(O.id);   // the NPC owner leaves the register (03d-quota.js)

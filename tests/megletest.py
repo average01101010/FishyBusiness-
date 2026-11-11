@@ -263,6 +263,12 @@ async def main():
         # withdrawn: the toast says the right can be put back; and it is, from the free rights
         wd = await pg.evaluate("""(async () => { const v = vesselById(_a); await MBC.cancel(mbSale(v).lid); const src = {free:0}, r = mbMove(src, {v}); return {sale:mbSale(v), ok:r.ok, lic:!!vget(v, 'lic'), free:S.licFree.length}; })()""")
         check(wd['sale'] is None and wd['ok'] and wd['lic'] and wd['free'] == 0, 'trukket fra salg: hjemmelen settes tilbake på henne fra ledig hjemmel', wd)
+        # the answer is lost on the way (the net fell out) but the server has her out: she is locked as the server has her, and the right
+        # stays where it was moved (put back on her, it would be lost when she is sold without it)
+        ls2 = await pg.evaluate("""(async () => { const v = vesselById(_a), rpc = window.cloudRpc; window.cloudRpc = async (fn, a) => { const r = await rpc(fn, a); if (fn === 'listing_put') throw new TypeError('Failed to fetch'); return r; };
+          const r = await MBC.put(v.id, Math.round(mbValue(v) - mbLicKr(v)), null, 24, {free:true}); window.cloudRpc = rpc; const s0 = mbSale(v), R = {ok:r.ok, lid:s0 && s0.lid, kept:s0 && s0.kept, lic:!!vget(v, 'lic'), free:S.licFree.length};
+          await MBC.cancel(s0.lid); mbMove({free:0}, {v}); R.back = !!vget(v, 'lic') && !mbSale(v); return R; })()""")
+        check(ls2['ok'] and ls2['lid'] and ls2['kept'] and not ls2['lic'] and ls2['free'] == 1 and ls2['back'], 'svaret forsvant, men serveren har henne ute: hun er låst som serveren har henne, og hjemmelen står ledig, ikke tilbake på båten', ls2)
         # the yard's trade-in: the same choice. Following the boat with the right at the yard, a plastic sjark with her traded in
         ti = await pg.evaluate("""(async () => { PHONE.show(false); const v = vesselById(_a), w = () => new Promise(r => setTimeout(r, 150)); storeVessel(curVessel()); bindVessel(v); S.boat.berth = 'main'; renderActs();
           const full = mbValue(v), lk = mbLicKr(v), R = {full, lk}; DOCK.open('fartoy:marked'); await w(); const dr = document.getElementById('drawerBody'), tap = s => { const e = dr.querySelector(s); if (e) e.click(); return !!e; };

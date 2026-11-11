@@ -94,7 +94,17 @@ var MBC = (() => {
         'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren ' + (keep ? 'without a right ' : '') + 'from ' + kr(start) + (buynow ? ', buy now ' + kr(buynow) : '') + '. She lies at the yard in ' + mbPlace(yard) + ' until the sale is over.');
       if (typeof cloudEv === 'function') cloudEv('mb_put', {type:b.type, hours, pc:Math.round(start / value * 100), bn:buynow ? Math.round(buynow / value * 100) : 0, lic:keep ? (keep.free ? 'free' : 'moved') : vget(v, 'lic') ? 'with' : 'none'});
       load(true); return {ok:true, yard};
-    } catch (e){ return back({err:'srv', text:why(e)}); }
+    } catch (e){
+      // the server answered and said no (cloudRpc: «listing_put 400»): the right goes back. No answer at all (the net fell out): she may be
+      // out all the same, without her right, so the list is asked. Out: she is locked as the server has her. Not out: the right goes back.
+      // No answer to that either: the right stays where it was moved, and the page says so (it can be moved back in Rederi), because a
+      // right put back on a boat that is sold without it would be lost with her
+      if (!mv || / \d{3}$/.test(String(e && e.message))) return back({err:'srv', text:why(e)});
+      st.at = 0; await load(true); const m = st.err ? null : mineOf(vid);
+      if (m){ mbLock(v, {id:m.id, until:m.until}, {start, buynow, hours, value, kept:keep.free ? {free:true} : {vid:keep.v.id}}, yard); save(); return {ok:true, yard}; }
+      if (!st.err) return back({err:'srv', text:why(e)});
+      save(); return {err:'srv', text:L('Fikk ikke svar fra Kystmegleren. Hjemmelen er flyttet, og båten er kanskje ikke lagt ut: se etter når nettet er tilbake, og sett hjemmelen tilbake i Rederi om hun ikke er det.', 'No answer from Kystmegleren. The right has been moved, and the boat may not be out: look when the net is back, and put the right back in the Company app if she is not.')};
+    }
   }
   async function bid(lid, kr0, to){
     const Lx = byId(lid); if (!Lx) return {err:'gone'}; const fee = mbFee(kr0, to, Lx.port), w = mbBuyWhy(Lx, kr0 + fee); if (w) return {err:w};

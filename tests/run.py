@@ -161,6 +161,9 @@ COVER['src/js/ui/10t-kvotemarked.js'] = ['kvotemarkedtest']
 COVER['tests/kvotemarkedtest.py'] = ['kvotemarkedtest']
 COVER['src/js/ui/phone/04-kvote.js'] = COVER['src/js/ui/phone/04-kvote.js'] + ['kvotemarkedtest']
 COVER['tests/unit/market3.test.mjs'] = []
+# KM4 (the boat with or without her right, 11.11.2026): megletest plays the choice, the move and the yard's trade-in
+for _f in ('src/js/ui/phone/14-act.js', 'src/js/ui/phone/10-fartoy.js'):
+    COVER[_f] = COVER.get(_f, []) + ['megletest']
 COVER['tests/unit/kvotemarked.test.mjs'] = []
 
 # Turens linje (Ø8b S2, 08.11.2026): the trip's sums in fish() and finishHaul (05-vessels.js, 10-gear.js), the line made by tripSum and
