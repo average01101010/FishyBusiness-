@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skum-121126', '12.11.2026', 'Skumtoppene når båten går', 'The whitecaps under way', [
+       ['Når båten gikk, ble skummet etter bølgetoppene dratt ut i lange, hvite flak og striper som blinket og dekket mye av sjøen. Nå blir skummet liggende der toppen brakk, like mye i fart som når du ligger stille.', 'With the boat under way the foam behind the breaking crests was drawn out into long white sheets and stripes that flashed and covered much of the sea. Now the foam stays where the crest broke, as much under way as lying still.']]],
     ['p158', '11.11.2026', 'Kystradioen mens du var borte', 'The coast radio while you were away', [
        ['Værmeldingene og varslene kystradioen sendte mens spillet var lukket eller telefonen sov, kommer ikke lenger opp på skjermen etter hverandre når du er tilbake. De står i dekksdagboka. Det kystradioen sender mens du spiller, vises som før.', 'The forecasts and warnings the coast radio sent while the game was closed or the phone slept no longer come up on the screen one after the other when you are back. They are in the deck log. What the coast radio sends while you play shows as before.']]],
     ['ob14-111126', '11.11.2026', 'Dekket spyles, matpakka kommer fram, og kulda synes', 'The deck is hosed down, the packed lunch comes out, and the cold shows', [

@@ -2662,3 +2662,6 @@
 2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	maletest	OK	29	lite	samtidig	
 2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	boottest	OK	36	lite	samtidig	
 2026-11-11 23:07	claude/zen-babbage-aixu88	c96b087	boottest	OK	29	lite	alene	
+2026-11-11 23:34	ccr-899a9674-q3gjp0	2c93f4b+	dbg23o	OK	44	3d	alene	
+2026-11-11 23:40	ccr-899a9674-q3gjp0	2c93f4b+	skumkant	FEIL	380	3d	alene	FEIL no square: the step in the foam where the map ends is no larger than the steps elsewhere (within twice the 95th percentile) {'edge': 0.1296, 'q95': 0.0424}
+2026-11-11 23:41	ccr-899a9674-q3gjp0	2c93f4b+	dbg23o	OK	46	3d	alene	
