@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p158', '11.11.2026', 'Kystradioen mens du var borte', 'The coast radio while you were away', [
+       ['Værmeldingene og varslene kystradioen sendte mens spillet var lukket eller telefonen sov, kommer ikke lenger opp på skjermen etter hverandre når du er tilbake. De står i dekksdagboka. Det kystradioen sender mens du spiller, vises som før.', 'The forecasts and warnings the coast radio sent while the game was closed or the phone slept no longer come up on the screen one after the other when you are back. They are in the deck log. What the coast radio sends while you play shows as before.']]],
     ['skjaer-111126', '11.11.2026', 'Skjærene synes i sjøen', 'The skerries show in the sea', [
        ['Skjærene i sjøkartet står nå i sjøen i 3D langs hele kysten: lave berg med tang og rur, tørre ved fjære sjø og overskylt ved flo, med brenning rundt når det er sjø. Hold utkikk, de står der kartet viser dem.', 'The rocks on the chart now stand in the sea in 3D along the whole coast: low rocks with rockweed and barnacles, dry at low water and awash at high, with breakers round them when there is a sea. Keep a lookout, they are where the chart shows them.']]],
     ['ob12-111126', '11.11.2026', 'Kystbåten på 15 m: setteport i hekken', 'The 15 m coastal vessel: a setting port in the stern', [
