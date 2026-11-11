@@ -31,13 +31,13 @@ SET = """((a) => { const [type, scene, yaw, pitch, dist] = a, b = S.boat, g = GR
   CREW3D.reset();
   const c = G3._debug.cam; c.helm = false; c.pitch = pitch; c.yaw = yaw; c.dist = dist; })"""
 
-STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + a.task), roles:CREW3D.agents().map(a => a.role).filter(Boolean), jobs:(S.jobs || []).map(j => j.kind + ' ' + Math.round(jobDone(j) * 100) + '% left ' + (j.until - S.t)),
+STATE = """(() => ({t:S.t, raw:Math.round((S.hold || []).reduce((a, x) => a + (x.gut ? 0 : x.kg), 0)), st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + a.task), roles:CREW3D.agents().map(a => a.role).filter(Boolean), jobs:(S.jobs || []).map(j => j.kind + ' ' + Math.round(jobDone(j) * 100) + '% left ' + (j.until - S.t)),
   done:(S.jobs || []).map(j => jobDone(j)), egn:window.EGN || null, n:G3._debug.dk.n, bled:(G3._debug.SK && G3._debug.SK.anim && G3._debug.SK.anim.nb) || 0}))()"""
 
 # what each scene must show (the agents' stations and the deck events played since the scene began)
 def judge(scene, a, b):
     st = [x.split(':')[0] for x in b['st']]; d = {k: b['n'][k] - a['n'].get(k, 0) for k in b['n']}   # (a counter that first appears in the scene, a slip, counts from 0)
-    if scene == 'line': return st.count('haling') == 1 and 'blogg' in st and 'sloy' in st and 'is' in st and d['gaff'] > 0 and d['bleed'] > 0, (b['st'], d)
+    if scene == 'line': return st.count('haling') == 1 and 'blogg' in st and 'sloy' in st and 'is' in st and d['gaff'] > 0 and d['bleed'] > 0, (b['st'], d, 'spillminutter %d, usløyd %d kg' % (b['t'] - a['t'], b['raw']))
     if scene == 'garn': return 'plukk' in b['roles'] and d['pick'] > 0, (b['roles'], d)
     if scene == 'jig': return st.count('fiske') >= 2 and d['jigup'] > 0, (b['st'], d)
     if scene == 'skiff': return b['bled'] > a['bled'], b['bled']
