@@ -201,11 +201,16 @@
       const hw = V2.cls === 'hav' ? havLicWhy(d.k) : null; if (hw){ toast(L(hw[0], hw[1])); return; }
       const x = deal(V2.cls === 'hav' ? havPrice(d.k, S.t / 60) : V2.price, ti); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; } finance(x, 120); achAdd('boat');
       const hl = V2.cls === 'hav' ? havLicTake(d.k, S.t / 60) : null; let hn = '';
+      // KM4 (V2 A, the same choice as at the broker): the right is kept as a free right for two game years, taken off her before she
+      // is traded in (the trade-in was priced without it, tradeIn); else it follows her as before. The second quota from the special
+      // scheme falls away either way (kap. 2 § 6)
+      const kept = ti && tiKeepOn() ? mbMove({v:curVessel()}, {free:true}) : null, two0 = ti && S.lic && S.lic.two && HJ[S.lic.two] ? S.lic.two : null;
       // a new build is delivered at once, at this yard, like a used vessel (Jonas 13.10.2026: «Fjern byggetiden når man bestiller nybygg»)
       if (ti) switchVessel(d.k);
       else { const v = newVesselObj(d.k, S.boat.port, hl); hn = v.boatName; setTimeout(() => BUYM.show(v), 60); log('Kjøpte ' + V2.name.no + ' til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(S.boat.port).name + '.', 'Bought the ' + V2.name.en + ' for the fleet. She is called «' + v.boatName + '» and lies at ' + portById(S.boat.port).name + '.'); }
       pressPut('boat', {type:d.k, nb:V2.isNew ? 1 : 0, price:V2.price});   // Kystposten (core/09h-press.js)
-      if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.', 'The closed-group quota went with the old vessel.'); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); }
+      if (ti && S.lic){ log('Kvoten i lukket gruppe fulgte med den gamle båten.' + (two0 ? ' Den andre kvoten fra den særlige ordningen falt bort.' : ''), 'The closed-group quota went with the old vessel.' + (two0 ? ' The second quota from the special scheme fell away.' : '')); regFree(S.lic.id); S.lic = null; freshQuota(); openUsedLoad(); }
+      else if (kept && kept.ok) log('Hjemmelen ble i rederiet som ledig hjemmel i høyst to spillår.', 'The right stayed in the company as a free right for at most two game years.');
       if (hl){ if (ti){ S.lic = hl; freshQuota(); }
         msg('Fiskeridirektoratet', HAVLIC[hl.id].no + ' med kvotefaktor ' + fmt(hl.kf, 2) + ' er registrert på «' + (ti ? S.boatName : hn) + '». Den er kjøpt fra ' + hl.from + '.', 'A ' + HAVLIC[hl.id].en.toLowerCase() + ' with quota factor ' + fmt(hl.kf, 2) + ' is registered to the vessel. It was bought from ' + hl.from + '.'); }
     }
@@ -303,6 +308,7 @@
       const inn = innOK(), x = deal(price, ti, inn); if (!x.ok){ toast(whyText(x) || t('no_cash')); return; }
       if (!S.company){ const el = document.getElementById('coName'); S.company = String((el && el.value) || coDraft || '').trim().slice(0, 28) || coDefault(); coDraft = null; log('Rederiet ' + S.company + ' er opprettet.', 'The company ' + S.company + ' is founded.'); }
       finance(x, 180); if (inn) S.inUsed = true;
+      if (ti && tiKeepOn()) mbMove({v:curVessel()}, {free:true});   // (KM4: the old right kept as a free right, taken off her before the trade-in)
       const sl = regSeller(O.id, S.t / 60), lic = {id:O.id, hl:O.hl, kpk:O.kpk, since:yearH(S.t / 60), from:sl.name + ', ' + sl.home}, ov = openVesselId(), lost = ov && !(ti && ov === S.cur) ? vget(vesselById(ov), 'boatName') : null;
       let nm;
       let fished; regTake(O.id);   // the NPC owner leaves the register (03d-quota.js)

@@ -73,20 +73,28 @@ var MBC = (() => {
   }
   function start(){ clearInterval(st.tm); st.tm = setInterval(tick, 15000); setTimeout(sync, 4000); document.addEventListener('visibilitychange', () => { if (!document.hidden && on()) sync(); }); }
   // put a boat out (B1): checked here as on the server, then she is moved to the nearest yard and locked
-  async function put(vid, start, buynow, hours){
+  // KM4 (V2 A): keep = null, the right follows her; or where it stays in the company, {v} another boat of yours or {free:true}. It is
+  // moved before she is put out (mbMove), so the right has another key than the boat when the server is asked (listing_put refuses a boat
+  // whose right or structure quota is out in the quota market, by the key), and moved back if the server says no. The value told is hers
+  // as she is packed: without the second quota from the special scheme, and without the right when it stays
+  async function put(vid, start, buynow, hours, keep){
     const v = vesselById(vid), w = mbWhy(v); if (w) return {err:w};
-    const value = vesselValue(v), bad = mbPriceWhy(value, start, buynow); if (bad) return {err:bad};
     if (!MB.hours.includes(hours)) return {err:'hours'}; if (!on()) return {err:'cloud'}; if (guest()) return {err:'guest'};
     const b = vget(v, 'boat'), yard = mbYardNear(b.pos); if (!yard) return {err:'yard'};
+    const kw = keep ? mbMoveWhy({v}, keep) : null; if (kw) return {err:'move', mv:kw, len:mbMoveLen({v}, keep)};
+    const val0 = mbValue(v) - (keep ? mbLicKr(v) : 0), bad0 = mbPriceWhy(val0, start, buynow); if (bad0) return {err:bad0};
+    const mv = keep ? mbMove({v}, keep) : null; if (mv && !mv.ok) return {err:'move', mv:mv.err};
+    const back = e => { if (mv){ mv.undo(); save(); } return e; };
+    const value = mbValue(v), bad = mbPriceWhy(value, start, buynow); if (bad) return back({err:bad});
     try {
       const r = await cloudRpc('listing_put', {vid, vessel:mbPack(v, yard), value, lic_kr:mbLicKr(v), start_kr:Math.round(start), buynow:buynow == null ? null : Math.round(buynow), hours, port:yard.id, x:yard.p.x, y:yard.p.y, seller_name:S.company || ''});
-      if (!r || r.id == null) return {err:'server'};
-      mbLock(v, r, {start, buynow, hours, value}, yard); save();
-      log('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren fra ' + kr(start) + (buynow ? ', «Kjøp nå» ' + kr(buynow) : '') + '. Hun ligger ved verftet i ' + mbPlace(yard) + ' til salget er over.',
-        'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren from ' + kr(start) + (buynow ? ', buy now ' + kr(buynow) : '') + '. She lies at the yard in ' + mbPlace(yard) + ' until the sale is over.');
-      if (typeof cloudEv === 'function') cloudEv('mb_put', {type:b.type, hours, pc:Math.round(start / value * 100), bn:buynow ? Math.round(buynow / value * 100) : 0});
+      if (!r || r.id == null) return back({err:'server'});
+      mbLock(v, r, {start, buynow, hours, value, kept:keep ? (keep.free ? {free:true} : {vid:keep.v.id}) : null}, yard); save();
+      log('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren ' + (keep ? 'uten hjemmel ' : '') + 'fra ' + kr(start) + (buynow ? ', «Kjøp nå» ' + kr(buynow) : '') + '. Hun ligger ved verftet i ' + mbPlace(yard) + ' til salget er over.',
+        'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren ' + (keep ? 'without a right ' : '') + 'from ' + kr(start) + (buynow ? ', buy now ' + kr(buynow) : '') + '. She lies at the yard in ' + mbPlace(yard) + ' until the sale is over.');
+      if (typeof cloudEv === 'function') cloudEv('mb_put', {type:b.type, hours, pc:Math.round(start / value * 100), bn:buynow ? Math.round(buynow / value * 100) : 0, lic:keep ? (keep.free ? 'free' : 'moved') : vget(v, 'lic') ? 'with' : 'none'});
       load(true); return {ok:true, yard};
-    } catch (e){ return {err:'srv', text:why(e)}; }
+    } catch (e){ return back({err:'srv', text:why(e)}); }
   }
   async function bid(lid, kr0, to){
     const Lx = byId(lid); if (!Lx) return {err:'gone'}; const fee = mbFee(kr0, to, Lx.port), w = mbBuyWhy(Lx, kr0 + fee); if (w) return {err:w};
