@@ -2500,3 +2500,11 @@
 2026-11-11 14:22	ccr-309f2cf5-w71mxh	8e8a5eb	docktest	OK	63	lite	samtidig	
 2026-11-11 14:23	ccr-309f2cf5-w71mxh	8e8a5eb	moortest	OK	41	3d	alene	
 2026-11-11 14:25	ccr-309f2cf5-w71mxh	8e8a5eb	landtest	OK	98	3d	alene	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	boottest	OK	31	lite	samtidig	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	megletest	OK	25	lite	samtidig	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	fleet3test	OK	15	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	opptest	FEIL	64	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	boktest	OK	10	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	sponsor2test	OK	18	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	adminbuytest	OK	12	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
