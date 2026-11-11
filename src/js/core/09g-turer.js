@@ -327,9 +327,12 @@ function turLeteMinute(m, b){
   else log('Plass ' + m.seen.length + ' av ' + TUR_LETE.spots + ' fisket for leteoppdraget.', 'Place ' + m.seen.length + ' of ' + TUR_LETE.spots + ' fished for the search.');
 }
 const turLeteWho = m => m.from ? turManager(m.from) : 'Havforskningsinstituttet';
-// the place as the fishers name it: by the nearest plant or harbour (not a shop or a yard), «ved» within 1.5 nm
+// the place as the fishers name it: the fishing ground the point lies on (Ø14 F3, feltNameAt in 01-world.js), else by the nearest plant
+// or harbour (not a shop or a yard), «ved» within 1.5 nm
 function turLetePlace(p){
-  const np = PORTS.filter(q => q.mottak || !q.sted).sort((a, b) => dist(a.p, p) - dist(b.p, p))[0]; if (!np) return nearestPlace(p);
+  const np = PORTS.filter(q => q.mottak || !q.sted).sort((a, b) => dist(a.p, p) - dist(b.p, p))[0], fg = feltNameAt(p);
+  if (fg && fg.on && !(np && dist(np.p, p) < 0.5 * NM)) return feltPa(fg.n);   // (as placeAt: a plant within half a mile names it)
+  if (!np) return nearestPlace(p);
   const nmP = kmTrue(np.p, p) / NM; return nmP < 1.5 ? {no:'ved ' + np.name, en:'off ' + np.name} : {no:fmt(nmP, 1) + ' nm fra ' + np.name, en:fmt(nmP, 1) + ' nm from ' + np.name};
 }
 // an answer to one question; all answered, the model checks them, the time is paid and the bonus for the right ones, and what was

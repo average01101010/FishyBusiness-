@@ -17,7 +17,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 60 `natP(lat, lon)`
   - 61 `natLL(p)`
 
-## `src/js/core/01-world.js` (483 linjer)
+## `src/js/core/01-world.js` (538 linjer)
 
 - **10** one clock for everyone (05.10.2026, the shared world V1)
   - 59 `gridScale(p)`
@@ -36,32 +36,37 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 164 `legHazardMemo(a, c, sd)`
   - 169 `draftHazards()`
   - 184 `legReady(a, c)`
-  - 193 `nearestPlace(p)`
-  - 199 `groundCheck(a, c, sq = 0)`
-  - 216 `runAground(p)`
-  - 231 `rocksNear(a, b, r)`
-  - 241 `rocksIn(x0, y0, x1, y1)`
-  - 249 `rocksAlong(a, b, r)`
-  - 263 `coastDist(p)`
-  - 264 `coastDistFar(p)`
-  - 270 `decodeContours()`
-  - 279 `isLand(p)`
-  - 287 `isLandFar(p)`
-  - 293 `isLandUI(p)`
-  - 299 `inHarbourPocket(p)`
-  - 305 `harbourNear(x, z)`
-  - 311 `qPockets()`
-  - 312 `pocketHit(US, QS, x, z)`
-  - 319 `pocketsIn(x0, y0, x1, y1)`
-  - 328 `legClear(a, b)`
-  - 342 `legClearMemo(a, b)`
-  - 373 `portLabel(p)`
-- **389** the harbour unit (02.10.2026)
-  - 430 `fillOut(U, lx, lz)`
-  - 443 `onUnitGround(p)`
-  - 450 `unitCovers(x, z, m)`
-  - 458 `bridgeUnderUnit(br, extra)`
-  - 463 `portApproach(pt)`
+- **192** THE NAMES OF THE FISHING GROUNDS IN THE TEXTS (Ø14 F3 of docs/planer/fangstfelt.md, 11.11.2026)
+  - 212 `feltNameAt(p, lim = 1.5 * NM)`
+  - 225 `placeAt(p)`
+  - 234 `feltNear(p, R)`
+  - 245 `feltLawful(sp, p, H)`
+  - 248 `nearestPlace(p)`
+  - 254 `groundCheck(a, c, sq = 0)`
+  - 271 `runAground(p)`
+  - 286 `rocksNear(a, b, r)`
+  - 296 `rocksIn(x0, y0, x1, y1)`
+  - 304 `rocksAlong(a, b, r)`
+  - 318 `coastDist(p)`
+  - 319 `coastDistFar(p)`
+  - 325 `decodeContours()`
+  - 334 `isLand(p)`
+  - 342 `isLandFar(p)`
+  - 348 `isLandUI(p)`
+  - 354 `inHarbourPocket(p)`
+  - 360 `harbourNear(x, z)`
+  - 366 `qPockets()`
+  - 367 `pocketHit(US, QS, x, z)`
+  - 374 `pocketsIn(x0, y0, x1, y1)`
+  - 383 `legClear(a, b)`
+  - 397 `legClearMemo(a, b)`
+  - 428 `portLabel(p)`
+- **444** the harbour unit (02.10.2026)
+  - 485 `fillOut(U, lx, lz)`
+  - 498 `onUnitGround(p)`
+  - 505 `unitCovers(x, z, m)`
+  - 513 `bridgeUnderUnit(br, extra)`
+  - 518 `portApproach(pt)`
 
 ## `src/js/core/01b-mapdata.js` (215 linjer)
 
@@ -786,7 +791,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1426 linjer)
+## `src/js/core/05-vessels.js` (1421 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -831,69 +836,84 @@ crew: people with skills, habits and moods
   - 473 `coastSet(b, k, pI, i, H)`
   - 482 `coastNear(H, only)`
   - 506 `npcStates(H, only)`
-  - 560 `peerName(s)`
-  - 575 `peerRouteStr(p, wps, idx)`
-  - 585 `peerRoute(s)`
-  - 591 `routeWalk(p, R, d, hd0)`
-  - 598 `ptPred(q, w, t)`
-  - 613 `ptPose(T, now)`
-  - 621 `ptTake(q, now)`
-  - 635 `peerStates()`
-  - 651 `newState()`
-  - 663 `log(no, en, k)`
-  - 665 `navHour()`
-  - 681 `nearestPort(p)`
-  - 683 `nearestYard(p)`
-  - 685 `step()`
-  - 703 `vesselStep(H)`
-  - 803 `plantFuel(b)`
-  - 806 `sailV(H, hs)`
-  - 818 `sail(H, W, hs)`
-  - 850 `sailWaiting()`
-  - 851 `sailReplan(pl, b, gp)`
-  - 879 `iceWhy(p, tried)`
-  - 881 `sailStop(pl, b, why)`
-  - 889 `haltPlan(need)`
-  - 899 `arrive(w)`
-  - 917 `unstuckWhy()`
-  - 923 `unstuckSpot()`
-  - 930 `unstuck()`
-- **944** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 952 `moorPhase(b)`
-  - 967 `dock(pid, berth)`
-  - 994 `catchFactors(H, W, hs)`
-  - 1007 `stockDev(p, sp)`
-  - 1013 `fish(H, W, hs)`
-  - 1116 `endFishing(why)`
-  - 1137 `bycHere(how)`
-  - 1141 `bycAdd(sp, kg, how)`
-  - 1145 `bycConf()`
-  - 1148 `addCatch(sp, kg, cls, hook, opt)`
-- **1170** work on deck: gutting and icing take hands and time
-  - 1186 `deckHands()`
-  - 1189 `deckPending()`
-  - 1190 `deckEta(hands)`
-  - 1195 `moveKg(x, kg, patch)`
-  - 1203 `iceMinute()`
-  - 1210 `iceOut(out)`
-  - 1216 `deckMinute()`
-- **1241** lying to in a storm (H1b R8, 05.11.2026)
-  - 1258 `quayFar(b)`
-  - 1262 `lieTo(W, hs)`
-  - 1269 `lieToStep(W, hs)`
-  - 1279 `risk(W, hs)`
-  - 1307 `hullRepair()`
-  - 1310 `svcOverdue()`
-- **1311** the rescue boat (plan E3, 05.10.2026)
-  - 1337 `rescueBases()`
-  - 1346 `rescueBase(p)`
-  - 1353 `rescueAis(H)`
-  - 1357 `rescue(keepCatch)`
-  - 1381 `towSea(p)`
-  - 1386 `towRoutes(b)`
-  - 1397 `towStep(H)`
-  - 1409 `towDone(t)`
-  - 1415 `towPose(frac)`
+  - 555 `peerName(s)`
+  - 570 `peerRouteStr(p, wps, idx)`
+  - 580 `peerRoute(s)`
+  - 586 `routeWalk(p, R, d, hd0)`
+  - 593 `ptPred(q, w, t)`
+  - 608 `ptPose(T, now)`
+  - 616 `ptTake(q, now)`
+  - 630 `peerStates()`
+  - 646 `newState()`
+  - 658 `log(no, en, k)`
+  - 660 `navHour()`
+  - 676 `nearestPort(p)`
+  - 678 `nearestYard(p)`
+  - 680 `step()`
+  - 698 `vesselStep(H)`
+  - 798 `plantFuel(b)`
+  - 801 `sailV(H, hs)`
+  - 813 `sail(H, W, hs)`
+  - 845 `sailWaiting()`
+  - 846 `sailReplan(pl, b, gp)`
+  - 874 `iceWhy(p, tried)`
+  - 876 `sailStop(pl, b, why)`
+  - 884 `haltPlan(need)`
+  - 894 `arrive(w)`
+  - 912 `unstuckWhy()`
+  - 918 `unstuckSpot()`
+  - 925 `unstuck()`
+- **939** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 947 `moorPhase(b)`
+  - 962 `dock(pid, berth)`
+  - 989 `catchFactors(H, W, hs)`
+  - 1002 `stockDev(p, sp)`
+  - 1008 `fish(H, W, hs)`
+  - 1111 `endFishing(why)`
+  - 1132 `bycHere(how)`
+  - 1136 `bycAdd(sp, kg, how)`
+  - 1140 `bycConf()`
+  - 1143 `addCatch(sp, kg, cls, hook, opt)`
+- **1165** work on deck: gutting and icing take hands and time
+  - 1181 `deckHands()`
+  - 1184 `deckPending()`
+  - 1185 `deckEta(hands)`
+  - 1190 `moveKg(x, kg, patch)`
+  - 1198 `iceMinute()`
+  - 1205 `iceOut(out)`
+  - 1211 `deckMinute()`
+- **1236** lying to in a storm (H1b R8, 05.11.2026)
+  - 1253 `quayFar(b)`
+  - 1257 `lieTo(W, hs)`
+  - 1264 `lieToStep(W, hs)`
+  - 1274 `risk(W, hs)`
+  - 1302 `hullRepair()`
+  - 1305 `svcOverdue()`
+- **1306** the rescue boat (plan E3, 05.10.2026)
+  - 1332 `rescueBases()`
+  - 1341 `rescueBase(p)`
+  - 1348 `rescueAis(H)`
+  - 1352 `rescue(keepCatch)`
+  - 1376 `towSea(p)`
+  - 1381 `towRoutes(b)`
+  - 1392 `towStep(H)`
+  - 1404 `towDone(t)`
+  - 1410 `towPose(frac)`
+
+## `src/js/core/05b-ferje.js` (144 linjer)
+
+The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026; docs/systemer/npc-trafikk.md 4.18). Every
+
+  - 27 `ferjeInit()`
+  - 48 `ferjeFind(a, b)`
+  - 52 `ferjeChain(s, W)`
+  - 72 `ferjeHop(s, a, b)`
+  - 80 `ferjeSailed(s, v, H0)`
+  - 89 `ferjeAt(s, v, w, ok)`
+  - 105 `ferjeClock(H)`
+  - 110 `ferjeName(s, vi)`
+  - 118 `ferjeStates(s, H, wx = true, C = ferjeClock(H)`
+  - 135 `ferjeNear(H, only)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -927,7 +947,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1014 linjer)
+## `src/js/core/05e-sjovei.js` (1015 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -971,51 +991,51 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **371** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
   - 372 `sjvEval(H, list)`
   - 492 `sjvNearMiss(n, R, clr)`
-  - 502 `colregNpc(H, out, only)`
-  - 516 `sjvTrack(list)`
-- **518** Autonav
-  - 522 `sjvFresh(model)`
-  - 532 `sjvAuto(d, h, ds, T)`
-  - 547 `sjvSail(pl, b, left)`
-  - 564 `sjvCreep(pl, b, L, v)`
-- **573** the warning's words (the strip, the box and the card, the chart plotter)
-  - 575 `sjvSay(W, how)`
-  - 612 `sjvWhen(W)`
-  - 614 `sjvWarn()`
-- **616** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
-  - 641 `sjvHullPts(X, Z, psi, L, B)`
-  - 645 `sjvInPoly(P, x, z)`
-  - 652 `sjvSat(A, B)`
-  - 673 `sjvSatC(A, cx, cz, r)`
-  - 682 `sjvMass(n)`
-  - 683 `sjvOwnMass(b = S.boat)`
-  - 686 `sjvKnEq(kn, mA, mB)`
-  - 688 `sjvValue(L)`
-  - 693 `sjvMatOf(n)`
-  - 696 `sjvOtherCost(kn, L, mat, P)`
-  - 706 `sjvOwnLoss(b, c)`
-  - 712 `sjvCpa(a, b, gs)`
-  - 717 `sjvTrailAdd(id, e)`
-  - 735 `sjvFault(T, X)`
-  - 802 `sjvFaultWord(w, no)`
-  - 813 `sjvFaultSay(F, name, lang)`
-  - 824 `sjvSettle(b, F, c, oth, name)`
-  - 835 `sjvPaySay(M, F, name, lang)`
-  - 843 `sjvKr(x, no)`
-  - 845 `sjvFrom()`
-  - 849 `sjvTo()`
-  - 856 `sjvVhf(n, rec)`
-  - 870 `sjvStandBy(n, H)`
-  - 881 `sjvBlow(n, kn, E, H, pre)`
-- **913** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 916 `sjvClock()`
-  - 923 `sjvNear(H, X, Z)`
-  - 942 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 953 `sjvTouch(b, d, P)`
-- **986** the look's sweep (sjvEval), when the model does not have her
-  - 989 `sjvSweep(n, A, H, gs, on)`
+  - 503 `colregNpc(H, out, only)`
+  - 517 `sjvTrack(list)`
+- **519** Autonav
+  - 523 `sjvFresh(model)`
+  - 533 `sjvAuto(d, h, ds, T)`
+  - 548 `sjvSail(pl, b, left)`
+  - 565 `sjvCreep(pl, b, L, v)`
+- **574** the warning's words (the strip, the box and the card, the chart plotter)
+  - 576 `sjvSay(W, how)`
+  - 613 `sjvWhen(W)`
+  - 615 `sjvWarn()`
+- **617** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 642 `sjvHullPts(X, Z, psi, L, B)`
+  - 646 `sjvInPoly(P, x, z)`
+  - 653 `sjvSat(A, B)`
+  - 674 `sjvSatC(A, cx, cz, r)`
+  - 683 `sjvMass(n)`
+  - 684 `sjvOwnMass(b = S.boat)`
+  - 687 `sjvKnEq(kn, mA, mB)`
+  - 689 `sjvValue(L)`
+  - 694 `sjvMatOf(n)`
+  - 697 `sjvOtherCost(kn, L, mat, P)`
+  - 707 `sjvOwnLoss(b, c)`
+  - 713 `sjvCpa(a, b, gs)`
+  - 718 `sjvTrailAdd(id, e)`
+  - 736 `sjvFault(T, X)`
+  - 803 `sjvFaultWord(w, no)`
+  - 814 `sjvFaultSay(F, name, lang)`
+  - 825 `sjvSettle(b, F, c, oth, name)`
+  - 836 `sjvPaySay(M, F, name, lang)`
+  - 844 `sjvKr(x, no)`
+  - 846 `sjvFrom()`
+  - 850 `sjvTo()`
+  - 857 `sjvVhf(n, rec)`
+  - 871 `sjvStandBy(n, H)`
+  - 882 `sjvBlow(n, kn, E, H, pre)`
+- **914** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 917 `sjvClock()`
+  - 924 `sjvNear(H, X, Z)`
+  - 943 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 954 `sjvTouch(b, d, P)`
+- **987** the look's sweep (sjvEval), when the model does not have her
+  - 990 `sjvSweep(n, A, H, gs, on)`
 
-## `src/js/core/06-services.js` (282 linjer)
+## `src/js/core/06-services.js` (333 linjer)
 
 ---------- services behind the phone ----------
 
@@ -1030,18 +1050,23 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 67 `npcWeekKg(i, w)`
   - 72 `myKg(H0, H1)`
   - 73 `toplist(w)`
-  - 82 `newsForDay(day)`
-- **149** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
-  - 151 `autoRestock()`
-  - 160 `depart()`
-  - 189 `finishJob(j)`
-  - 217 `fitHours(k)`
-  - 220 `jobOk(j)`
-  - 225 `queueJob(j)`
-  - 228 `jobsDone()`
-  - 234 `shelterReturn(W, hsOver)`
-  - 260 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **280** CORE END
+- **80** the fishing grounds in the pub and the paper (Ø14 F3 of docs/planer/fangstfelt.md, 11.11.2026)
+  - 87 `rumourAt(pt, H)`
+  - 101 `rumourNeed(pt)`
+  - 109 `feltSeasonIn(near, mo, H)`
+  - 116 `newsThin(hp, day, mo)`
+  - 125 `newsForDay(day)`
+- **200** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
+  - 202 `autoRestock()`
+  - 211 `depart()`
+  - 240 `finishJob(j)`
+  - 268 `fitHours(k)`
+  - 271 `jobOk(j)`
+  - 276 `queueJob(j)`
+  - 279 `jobsDone()`
+  - 285 `shelterReturn(W, hsOver)`
+  - 311 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **331** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1399,14 +1424,14 @@ sailors' tattoos: rewards that come by themselves
   - 36 `tatLanding(pid)`
   - 38 `checkTattoos()`
 
-## `src/js/core/09b-records.js` (44 linjer)
+## `src/js/core/09b-records.js` (42 linjer)
 
 Personal records: the biggest fish you have landed of each species (Jonas 09.10.2026: «Nå kjører vi kun på største fisk man har
 
 - **1** Personal records: the biggest fish you have landed of each species (Jonas 09.10.2026: «Nå kjører vi kun på største fisk man har
   - 9 `recState()`
-  - 18 `recPlace(p)`
-  - 22 `recCatch(sp, kg, how)`
+  - 19 `recPlace(p)`
+  - 20 `recCatch(sp, kg, how)`
 
 ## `src/js/core/09c-seasons.js` (161 linjer)
 
@@ -1482,7 +1507,7 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **227** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
   - 228 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (1005 linjer)
+## `src/js/core/09g-turer.js` (1008 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1520,59 +1545,59 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 280 `turLeteQs(c, sp, samples)`
   - 297 `turLete(o, cls, me = turMe()`
   - 319 `turLeteMinute(m, b)`
-  - 331 `turLetePlace(p)`
-  - 337 `turLeteAnswer(id, qi, opt)`
-- **354** the people: who sends a mission, and what they remember
-  - 359 `turManagerSays(m, n)`
-  - 369 `turAsk(T = turState()`
-- **383** the chain: three links for a manager who knows the boat (docs/planer/oppdrag-2.md K1, Jonas 30.10.2026 «Ja»)
-  - 393 `turChainNext(prev)`
-  - 414 `turChainEnd(m, ok)`
-- **423** the first mission
-  - 426 `turFirst(o)`
-  - 441 `turFirstEnsure(T = turState()`
-  - 452 `turGarn(o)`
-  - 470 `turValue(L)`
-  - 475 `turSlep(o, cls)`
-  - 495 `turSos(Q)`
-  - 513 `turNpcs()`
-  - 526 `turMinute()`
-  - 555 `turStuck(T, b)`
-  - 564 `turProveMinute(m, b)`
-  - 588 `turSesong(o)`
-  - 609 `turStages(m)`
-  - 616 `turSesongStage(m)`
-- **629** survey fishing for Havforskningsinstituttet
-  - 634 `turProve(o, cls)`
-  - 661 `turProveFish(m)`
-  - 672 `turProveDone(m)`
-  - 679 `turEkkoSaw(m)`
-- **687** a picture of a lighthouse for Kystposten
-  - 697 `turLysNext(m, from)`
-  - 698 `turFoto(o, cls, near = null)`
-  - 719 `turFotoAt()`
-  - 722 `turFotoTake(m, seen, img)`
-  - 742 `turMake()`
-  - 768 `turEnsure(force)`
-  - 789 `turWay()`
-  - 796 `turDetour(m, way = turWay()`
-- **808** taking, doing and finishing
-  - 809 `turTake(id)`
-  - 837 `turDrop(id)`
-  - 842 `cargoJob(kg, no, en)`
-  - 843 `turLoad(m)`
-  - 852 `turSpawn(m)`
-  - 871 `turEnd(m, ok, why, how)`
-  - 889 `turPayOut(m, from, no, en, part)`
-  - 897 `turDock(pid)`
-  - 912 `turSale(pid, bySp)`
-  - 925 `turHauled(s)`
-  - 929 `turHour()`
-  - 948 `turWhat(m)`
-- **960** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 974 `turSay(who, no, en, k)`
-  - 979 `turDepart()`
-  - 999 `turMechanic()`
+  - 332 `turLetePlace(p)`
+  - 340 `turLeteAnswer(id, qi, opt)`
+- **357** the people: who sends a mission, and what they remember
+  - 362 `turManagerSays(m, n)`
+  - 372 `turAsk(T = turState()`
+- **386** the chain: three links for a manager who knows the boat (docs/planer/oppdrag-2.md K1, Jonas 30.10.2026 «Ja»)
+  - 396 `turChainNext(prev)`
+  - 417 `turChainEnd(m, ok)`
+- **426** the first mission
+  - 429 `turFirst(o)`
+  - 444 `turFirstEnsure(T = turState()`
+  - 455 `turGarn(o)`
+  - 473 `turValue(L)`
+  - 478 `turSlep(o, cls)`
+  - 498 `turSos(Q)`
+  - 516 `turNpcs()`
+  - 529 `turMinute()`
+  - 558 `turStuck(T, b)`
+  - 567 `turProveMinute(m, b)`
+  - 591 `turSesong(o)`
+  - 612 `turStages(m)`
+  - 619 `turSesongStage(m)`
+- **632** survey fishing for Havforskningsinstituttet
+  - 637 `turProve(o, cls)`
+  - 664 `turProveFish(m)`
+  - 675 `turProveDone(m)`
+  - 682 `turEkkoSaw(m)`
+- **690** a picture of a lighthouse for Kystposten
+  - 700 `turLysNext(m, from)`
+  - 701 `turFoto(o, cls, near = null)`
+  - 722 `turFotoAt()`
+  - 725 `turFotoTake(m, seen, img)`
+  - 745 `turMake()`
+  - 771 `turEnsure(force)`
+  - 792 `turWay()`
+  - 799 `turDetour(m, way = turWay()`
+- **811** taking, doing and finishing
+  - 812 `turTake(id)`
+  - 840 `turDrop(id)`
+  - 845 `cargoJob(kg, no, en)`
+  - 846 `turLoad(m)`
+  - 855 `turSpawn(m)`
+  - 874 `turEnd(m, ok, why, how)`
+  - 892 `turPayOut(m, from, no, en, part)`
+  - 900 `turDock(pid)`
+  - 915 `turSale(pid, bySp)`
+  - 928 `turHauled(s)`
+  - 932 `turHour()`
+  - 951 `turWhat(m)`
+- **963** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 977 `turSay(who, no, en, k)`
+  - 982 `turDepart()`
+  - 1002 `turMechanic()`
 
 ## `src/js/core/09h-press.js` (242 linjer)
 
@@ -2051,7 +2076,7 @@ work aboard: stations, and how the crew share them
   - 385 `workTeam(st, g, as)`
   - 391 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (466 linjer)
+## `src/js/core/14-crewlife.js` (470 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -2095,10 +2120,10 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 426 `lifeInjury(c, hs)`
   - 429 `lifeOffTick(c)`
   - 432 `lifeDepart(c)`
-  - 443 `alumniGround(a)`
-  - 445 `alumniStates(H)`
-  - 452 `lifeHail(H)`
-  - 459 `alumniReturn(B)`
+  - 444 `alumniGround(a)`
+  - 449 `alumniStates(H)`
+  - 456 `lifeHail(H)`
+  - 463 `alumniReturn(B)`
 
 ## `src/js/core/14b-sikkerhet.js` (586 linjer)
 
@@ -2687,12 +2712,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1505 linjer)
+## `src/js/ui/phone/07-patch.js` (1511 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1493 `patch()`
+  - 1499 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3051,36 +3076,37 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 439 `renderPanel()`
   - 443 `panelBusy()`
 
-## `src/js/ui/07b-first-trip.js` (319 linjer)
+## `src/js/ui/07b-first-trip.js` (328 linjer)
 
 ---------- «Første tur»: the guided first trip every new player goes through ----------
 
 - **1** «Første tur»: the guided first trip every new player goes through
-  - 16 `tutEv(k, settle)`
-  - 21 `tutLoadEv(room)`
-  - 24 `tutFishEv()`
-  - 26 `tutMark(k)`
-  - 27 `tutSettle(k)`
-  - 33 `tutFieldWp(list)`
-  - 42 `dockApp(menu, item, page, inner)`
-  - 47 `phoneApp(app, inner)`
-  - 59 `tutNaustTry()`
-  - 66 `tutIntroGo()`
-  - 149 `tutAdrift()`
-  - 157 `tutDriftTip(d)`
-  - 171 `tutStartWhy()`
-  - 184 `tutTip(st)`
-  - 207 `tutReveal(el)`
-  - 213 `tutRect(T0)`
-  - 219 `tutStep()`
-  - 230 `tutNormKg(sale)`
-  - 236 `tutFinish()`
-  - 237 `tutScrollSlip()`
-  - 240 `tutAllow(what)`
-  - 258 `tutView(st)`
-  - 265 `tutUpdate()`
-  - 288 `tipPlace(txt, T0, o)`
-  - 313 `tipToast()`
+  - 16 `tutAt()`
+  - 25 `tutEv(k, settle)`
+  - 30 `tutLoadEv(room)`
+  - 33 `tutFishEv()`
+  - 35 `tutMark(k)`
+  - 36 `tutSettle(k)`
+  - 42 `tutFieldWp(list)`
+  - 51 `dockApp(menu, item, page, inner)`
+  - 56 `phoneApp(app, inner)`
+  - 68 `tutNaustTry()`
+  - 75 `tutIntroGo()`
+  - 158 `tutAdrift()`
+  - 166 `tutDriftTip(d)`
+  - 180 `tutStartWhy()`
+  - 193 `tutTip(st)`
+  - 216 `tutReveal(el)`
+  - 222 `tutRect(T0)`
+  - 228 `tutStep()`
+  - 239 `tutNormKg(sale)`
+  - 245 `tutFinish()`
+  - 246 `tutScrollSlip()`
+  - 249 `tutAllow(what)`
+  - 267 `tutView(st)`
+  - 274 `tutUpdate()`
+  - 297 `tipPlace(txt, T0, o)`
+  - 322 `tipToast()`
 
 ## `src/js/ui/07c-handbook.js` (270 linjer)
 
@@ -3162,7 +3188,7 @@ actions
   - 129 `tutFieldNear(pt, land, skip)`
   - 153 `chooseStart(pt, onProgress)`
 
-## `src/js/ui/09-hand-fishing.js` (86 linjer)
+## `src/js/ui/09-hand-fishing.js` (87 linjer)
 
 ---------- fishing by hand: jig, strike on the bite, reel without snapping the line ----------
 

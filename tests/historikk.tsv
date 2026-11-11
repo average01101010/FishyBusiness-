@@ -2557,6 +2557,19 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	worldtest	OK	20	lite	samtidig	
+2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	trip2	OK	38	lite	samtidig	
+2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	harbourtest	OK	17	lite	samtidig	
+2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	posttest	OK	27	lite	samtidig	
+2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	turtest	OK	21	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	fixtest	OK	41	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	seasontest	OK	7	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	rectest	OK	6	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	uketest	OK	8	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	crewlifetest	OK	6	lite	samtidig	
+2026-11-11 15:50	ccr-cb5d0d6b-itetzc	c2a8a89+	hailltest	LES	33	lite	samtidig	
+2026-11-11 15:52	ccr-cb5d0d6b-itetzc	c2a8a89+	pubtest	OK	112	3d	alene	
+2026-11-11 16:15	ccr-cb5d0d6b-itetzc	c2a8a89+	tut	OK	1385	lite	alene	
 2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	skagtest	OK	37	lite	samtidig	
 2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	snokrabbetest	OK	14	lite	samtidig	
 2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	autolinetest	OK	13	lite	samtidig	
@@ -2588,3 +2601,15 @@
 2026-11-11 15:39	plan/2026-11-11-98	76d06d51	hailltest	LES	32	lite	samtidig	
 2026-11-11 15:51	ccr-2c3acb2e-1xxdth	c9e71ff1	boottest	OK	24	lite	alene	
 2026-11-11 15:52	ccr-2c3acb2e-1xxdth	c9e71ff1	charttest	FEIL	46	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-11 16:47	ccr-df3a37ec-wjhw30	9aa28a7a	ferrytest	OK	13	lite	samtidig	
+2026-11-11 16:56	ccr-df3a37ec-wjhw30	9aa28a7a	colregtest	OK	603	lite	samtidig	
+2026-11-11 16:56	ccr-df3a37ec-wjhw30	9aa28a7a	hulltest	OK	71	lite	samtidig	
+2026-11-11 16:56	ccr-df3a37ec-wjhw30	9aa28a7a	npctest	OK	8	lite	samtidig	
+2026-11-11 16:56	ccr-df3a37ec-wjhw30	9aa28a7a	boottest	OK	33	lite	samtidig	
+2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	boottest	OK	42	lite	samtidig	
+2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	hailltest	LES	37	lite	samtidig	
+2026-11-11 16:53	ccr-cb5d0d6b-itetzc	ce1c051	pubtest	OK	143	3d	alene	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	boottest	OK	39	lite	samtidig	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	ferrytest	OK	16	lite	samtidig	
+2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	npctest	OK	11	lite	samtidig	
+2026-11-11 17:07	ccr-df3a37ec-wjhw30	075f22ae	hulltest	OK	78	lite	samtidig	

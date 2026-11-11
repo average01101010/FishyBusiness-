@@ -9,7 +9,16 @@ const tutNew = () => ({v:2, m:{}, catch:true, pAt:Date.now(), t0:Date.now(), T:S
 const tutField = () => tutFieldAt();   // Gisundet nord, or near a start along the coast (core: the skrei patch while the catch is guaranteed)
 // where the first catch is landed: Botnhamn from Vangshamn (and the old Finnsnes start), the start's own plant elsewhere (ui/08c-start.js); the field's name for the tips
 const tutLand = () => (S.tut && S.tut.land) || 'botnhamn', tutLandN = () => (portById(tutLand()) || {name:'Botnhamn'}).name;
-const tutAt = () => S.tut && S.tut.f && S.tut.f.at ? S.tut.f.at : {no:'ved Gisundet nord', en:'at North Gisundet'};
+// where the patch is, in words: what the start gave («utenfor <havn>», ui/08c-start.js chooseStart, every start along the coast and Senja's
+// too); a game without it (from before the starts) gets the fishing ground the patch lies on, else «utenfor» the home harbour (Ø14 F3:
+// no longer «ved Gisundet nord», one of Senja's six names of the game's own)
+const TUT_AT = {k:'', v:null};
+function tutAt(){
+  if (S.tut && S.tut.f && S.tut.f.at) return S.tut.f.at;
+  const p = tutFieldAt().p, k = p.x + ',' + p.y + ',' + (typeof FELTW !== 'undefined' ? FELTW.key : 0) + ',' + (S.home || ''); if (TUT_AT.k === k) return TUT_AT.v;
+  const fg = feltNameAt(p, 0), hp = portById(S.home || HOME0) || portById(S.boat.port);
+  TUT_AT.k = k; return TUT_AT.v = fg && fg.on ? feltPa(fg.n) : {no:'utenfor ' + (hp ? hp.name : 'havna'), en:'off ' + (hp ? hp.name : 'the harbour')};
+}
 const tutHome = () => portById(S.home || HOME0) || PORTS[0];
 // a step done (the guide's funnel, docs/onboarding.md point 6): the real seconds it took since the step before go to the cloud as
 // tut_step; a step settled by a later one (settle) took no time of its own

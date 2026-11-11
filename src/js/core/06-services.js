@@ -77,7 +77,50 @@ function toplist(w){
   rows.push({name:S.boatName || (S.lang === 'no' ? 'Deg' : 'You'), port:hp ? hp.name : 'Finnsnes', kg:Math.round(myKg(w * 168, (w + 1) * 168)), me:true});
   return rows.sort((a, b) => b.kg - a.kg);
 }
+// ---- the fishing grounds in the pub and the paper (Ø14 F3 of docs/planer/fangstfelt.md, 11.11.2026) ----
+// The pub's rumour: among the named fishing grounds within 20 km of the harbour the boat lies in that have the species in the month (the
+// months the fishermen gave Fiskeridirektoratet, g.sm), the ground and species with the most worth now: the sea's own density at a point
+// inside the ground × the price at the harbour's plant (the nearest one where the harbour has none). Before this the rumour chose among
+// Senja's six for every player, so one in Bergen heard of Husøy. A ground whose waters are not loaded is left out (rumourNeed fetches
+// them when the pub is looked at). {f, n, sp, p}, or null when nobody has anything to tell.
+const RUMOUR_R = 20, NEWS_FELT_R = 20, RUMOUR = {key:'', busy:false, t:0}, NEWS_THIN = new Map();
+function rumourAt(pt, H){
+  if (!pt) return null; const mo = gDate(H).getUTCMonth(), land = pt.mottak ? pt : (plantsNear(pt.p, 1)[0] || {}).pt; if (!land) return null;
+  const near = feltNear(pt.p, RUMOUR_R);
+  // (where no ground near has a species in the month, as by Båtsfjord in March with four grounds for the summer: the jig's species on
+  // the grounds all the same, so a round that drew the rumour is not for nothing; the sea's own density knows the season)
+  for (const all of [false, true]){ let best = null, bv = 0;
+    for (const q of near) for (const sp of all ? FELTW.jig : Object.keys(q.g.sm)){ if ((!all && !((q.g.sm[sp] >> mo) & 1)) || !SPECIES[sp] || SPECIES[sp].npc || !feltLawful(sp, q.p, H)) continue;
+      let v = 0; try { v = density(sp, q.p, H) * price(land, sp, H); } catch (e){ continue; }   // (a block not loaded: leave the ground)
+      if (v > bv){ bv = v; best = {f:q.f, n:q.n, sp, p:q.p}; } }
+    if (best) return best; }
+  return null;
+}
+// the waters of the grounds the rumour may name, fetched once per harbour (nothing waits for it); a fetch that failed, or one asked
+// before the grounds were read, is tried again, no sooner than half a minute later
+function rumourNeed(pt){
+  if (!pt || RUMOUR.key === pt.id || RUMOUR.busy || typeof mapNeed !== 'function' || Date.now() - (RUMOUR.t || 0) < 30000) return;
+  const near = feltNear(pt.p, RUMOUR_R); if (!near.length) return; RUMOUR.t = Date.now();
+  let P = null; try { P = Promise.all(near.map(q => mapNeed(q.p, 0.5))); } catch (e){ return; }
+  RUMOUR.busy = true; P.then(() => { RUMOUR.key = pt.id; RUMOUR.t = 0; }, () => {}).then(() => { RUMOUR.busy = false; });
+}
+// the grounds of a list (feltNear) that go into the season of a species in the month (the month's bit set and the month before's not), the
+// nearest first, one line per ground (cod first, then the game's order); with H, only a species the rules let be fished there then
+function feltSeasonIn(near, mo, H){
+  const pm = (mo + 11) % 12, out = [];
+  for (const q of near){ const sp = ['torsk'].concat(PLAYSP).find(k => q.g.sm[k] && ((q.g.sm[k] >> mo) & 1) && !((q.g.sm[k] >> pm) & 1) && (H == null || feltLawful(k, q.p, H))); if (sp) out.push({q, sp}); }
+  return out;
+}
+// the ground near the home harbour with the thinnest stock under 0.62, for the paper's «Tynt fiske på …» (kept for the game hour: the
+// paper is read many times a minute by the phone's badge)
+function newsThin(hp, day, mo){
+  const key = hp.id + ',' + day + ',' + Math.floor(S.t / 60) + ',' + FELTW.gen; if (NEWS_THIN.has(key)) return NEWS_THIN.get(key);
+  let g = null, gv = 0.62;
+  for (const q of feltNear(hp.p, NEWS_FELT_R)){ const sp = FELTW.jig.find(k => (q.g.sm[k] >> mo) & 1); if (!sp) continue; const v = stockAt(q.p, sp, day * 24 + 12); if (v < gv){ gv = v; g = q; } }
+  if (NEWS_THIN.size > 24) NEWS_THIN.clear(); NEWS_THIN.set(key, g); return g;
+}
 // local news, generated from the same world everyone plays in
+const newsHome = () => portById(S.home || HOME0) || PORTS[0];   // (the calm-day story named Gisundet for every home harbour until Ø14 F3)
 const dayOf2 = t0 => Math.floor(t0 / 60 / 24);
 function newsForDay(day){
   const H0 = day * 24, out = [], mo = gDate(H0).getUTCMonth(), dd = gDate(H0).getUTCDate(), L = (no, en) => ({no, en});
@@ -85,7 +128,7 @@ function newsForDay(day){
   const pick = (arr) => arr[Math.floor(h2(day, 31) * arr.length) % arr.length];
   if (mx >= 20.8) out.push(pick([[L('Storm på kysten', 'Storm on the coast'), L('Vinden nådde ' + Math.round(mx) + ' m/s, og hele sjarkflåten ble liggende i havn.', 'Winds reached ' + Math.round(mx) + ' m/s and the whole small-boat fleet stayed in port.')], [L('Uvær stengte fjordene', 'Storm closes the fjords'), L('Med ' + Math.round(mx) + ' m/s i kastene var det ingen som gikk ut. Fortøyningene ble sjekket to ganger.', 'With gusts of ' + Math.round(mx) + ' m/s nobody went out. Moorings were checked twice.')]]));
   else if (mx >= 13.9) out.push(pick([[L('Kuling stoppet fisket', 'Gale halts fishing'), L('Mange lot båten ligge etter varsel om kuling. Skippere minner om å sjekke prognosen før man går ut.', 'Many stayed in after a gale warning. Skippers urge everyone to check the forecast before heading out.')], [L('Kulingvarsel på kysten', 'Gale warning on the coast'), L('Meteorologene varslet opp mot ' + Math.round(mx) + ' m/s. Småbåter bør holde seg inne.', 'Forecasters warned of up to ' + Math.round(mx) + ' m/s. Small boats should stay in.')], [L('Tungt vær på bankene', 'Heavy weather on the banks'), L('De som var ute, snudde tidlig. Det er fisk å hente når det løyer.', 'Those who went out turned back early. The fish will still be there when it eases.')]]));
-  else if (mx < 7 && h2(day, 33) < 0.6) out.push(pick([[L('Blikkstille og godt fiskevær', 'Flat calm and good fishing weather'), L('Små båter kunne gå helt ut på bankene.', 'Small boats could run all the way out to the banks.')], [L('Speilblank sjø i Gisundet', 'Mirror-flat Gisundet'), L('Rolig vær ga travle kaier og mange landinger.', 'Calm weather meant busy quays and plenty of landings.')], [L('Fint vær, fulle mottak', 'Fine weather, busy plants'), L('Mottakene melder om god tilførsel etter flere rolige dager.', 'The fish plants report steady supply after several calm days.')]]));
+  else if (mx < 7 && h2(day, 33) < 0.6) out.push(pick([[L('Blikkstille og godt fiskevær', 'Flat calm and good fishing weather'), L('Små båter kunne gå helt ut på bankene.', 'Small boats could run all the way out to the banks.')], [L('Speilblank sjø ved ' + newsHome().name, 'Mirror-flat sea off ' + newsHome().name), L('Rolig vær ga travle kaier og mange landinger.', 'Calm weather meant busy quays and plenty of landings.')], [L('Fint vær, fulle mottak', 'Fine weather, busy plants'), L('Mottakene melder om god tilførsel etter flere rolige dager.', 'The fish plants report steady supply after several calm days.')]]));
   const nat0 = out.length;   // the quota and regulation news is the whole coast's (Kystposten's front page, 09h-press.js)
   { const y = yearH(H0), d0 = doyH(H0 + 12), Y = qyAt(H0 + 12), MN = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'], MNe = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const jun29 = Math.floor((Date.UTC(y, 5, 29) - Date.UTC(y, 0, 1)) / 864e5), jun1 = Math.floor((Date.UTC(y, 5, 1) - Date.UTC(y, 0, 1)) / 864e5), dsN = d => { const t = new Date(Date.UTC(y, 0, 1 + d)); return [t.getUTCDate() + '. ' + MN[t.getUTCMonth()], t.getUTCDate() + ' ' + MNe[t.getUTCMonth()]]; };
@@ -118,11 +161,19 @@ function newsForDay(day){
     if (d0 === jun1) out.push([L('Uerfisket åpner for juksa', 'Redfish opens for jigs'), L('Fra 1. juni til 31. august kan båter under 15 meter fiske uer med juksa. Resten av året er uer bare tillatt som bifangst.', 'From 1 June to 31 August boats under 15 m may fish redfish with jigs. The rest of the year redfish is only allowed as bycatch.')]); }
   const nat1 = out.length;
   if (supplyFactor(H0 + 7) >= 1.025) out.push([L('Uværet ga toppris på fisken', 'Bad weather sends fish prices up'), L('Få båter har kommet seg ut, og mottakene betaler godt for fisken som kommer inn.', 'Few boats have made it out, and the plants are paying well for what comes in.')]);
-  if (day % 3 === 0 && S && S.stock){ const g = GROUNDS.slice(0, 4).filter(q => stockAt(q.p, 'torsk') < 0.62)[0]; if (g) out.push([L('Tynt fiske på ' + g.name.no.replace(/^./, c => c.toLowerCase()), 'Poor fishing ' + g.name.en.replace(/^./, c => c.toLowerCase())), L('Mange båter har fisket hardt her, og fangstene faller. Flere prøver seg på nye plasser.', 'Many boats have fished hard here and catches are falling. Several are trying new spots.')]); }
   const p1 = avgPrice('torsk', H0, 1), p0 = avgPrice('torsk', H0 - 72, 1), ch = (p1 / p0 - 1) * 100;
   if (Math.abs(ch) > 4) out.push([L('Torskeprisen ' + (ch > 0 ? 'stiger' : 'faller'), 'Cod price ' + (ch > 0 ? 'rises' : 'falls')), L('Snittprisen for torsk hos mottakene er ' + Math.round(p1) + ' kr/kg, ' + (ch > 0 ? 'opp' : 'ned') + ' ' + Math.abs(Math.round(ch)) + ' % på tre dager.', 'The average cod price at the plants is NOK ' + Math.round(p1) + '/kg, ' + (ch > 0 ? 'up' : 'down') + ' ' + Math.abs(Math.round(ch)) + '% in three days.')]);
   // the news is from where you fish: the home harbour and the plants nearest it
   const hp = portById(S.home || HOME0) || PORTS[0], hn = hp.name, np = plantsNear(hp.p, 2).map(x => x.pt.name), atSenja = dist(hp.p, (portById('finnsnes') || hp).p) < 80;
+  // the fishing grounds near the home harbour (Ø14 F3, 11.11.2026: Fiskeridirektoratet's grounds along the whole coast, not Senja's four):
+  // thin fishing on one of them every third day, and at most one story a week when a ground goes into its season. Never how much fish
+  // stands there (V4), and no push.
+  { if (day % 3 === 0 && S && S.stock){ const g = newsThin(hp, day, mo), pa = g && feltPa(g.n);
+      if (g) out.push([L('Tynt fiske ' + pa.no, 'Poor fishing ' + pa.en), L('Mange båter har fisket hardt her, og fangstene faller. Flere prøver seg på nye plasser.', 'Many boats have fished hard here and catches are falling. Several are trying new spots.')]); }
+    if (dd % 7 === 1 && dd < 29){ const e = feltSeasonIn(feltNear(hp.p, NEWS_FELT_R), mo, H0 + 12)[(dd - 1) / 7];
+      if (e){ const sn = SPECIES[e.sp], pa = feltPa(e.q.n), skrei = e.sp === 'torsk' && mo < 4 && !feltDesc(e.q.n) && natLL(e.q.f).lat > 62;
+        out.push(skrei ? [L('Skreia er kommet til ' + e.q.n, 'The skrei has come to ' + e.q.n), L('Fiskerne er tilbake ' + pa.no + '. Fra denne måneden pleier det å fiskes torsk der, etter Fiskeridirektoratets kart over fiskeplassene.', 'The fishermen are back ' + pa.en + '. From this month cod is usually fished there, by the Directorate of Fisheries’ chart of the fishing grounds.')]
+          : [L('Sesongen for ' + sn.no.toLowerCase() + ' er i gang ' + pa.no, 'The ' + sn.en.toLowerCase() + ' season has begun ' + pa.en), L('Fra denne måneden pleier fiskerne å fiske ' + sn.no.toLowerCase() + ' ' + pa.no + ', etter Fiskeridirektoratets kart over fiskeplassene.', 'From this month the fishermen usually fish ' + sn.en.toLowerCase() + ' ' + pa.en + ', by the Directorate of Fisheries’ chart of the fishing grounds.')]); } } }
   const SEAS = [
     [L('Skreia er på vei inn', 'The skrei is coming in'), L('De første skreifangstene er landet. Sesongen tar seg opp utover måneden.', 'The first spawning cod has been landed. The season picks up through the month.')],
     [L('Skreia står på bankene', 'Spawning cod on the banks'), L('Skreisesongen er i gang, og det meldes om god fangst på juksa utenfor ' + hn + '.', 'The skrei season is on, with good catches on jigs off ' + hn + '.')],
