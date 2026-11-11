@@ -3,6 +3,7 @@ player (hello, consent, batches of events, errors, the cloud save with its confl
 asked for («Dette må ingen andre enn meg ha tilgang til»): no player reads a table or the dashboard, an admin without the second
 factor (aal1) is refused, the admin with aal2 gets every panel. Needs the PostgreSQL server binaries (initdb, pg_ctl); prints OK or
 FEIL, and SKIP without them."""
+import datetime
 import glob, json, os, shutil, subprocess, sys, tempfile, time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -425,16 +426,49 @@ def main():
         sql("delete from public.purchases where player_id = 'user_01HS2'"); sql("delete from public.players where id = 'user_01HS2'")   # (out of the way of the checks below)
         print(ok(HS['pend0'] == [('reg_luksus', None), ('haill', None), ('luksus', None), ('trim_turbo', None), ('haill', None)]),
               'HS2: the open grants come from shop_pending as before, none marked held', HS['pend0'])
-        print(ok(HS['pend1'] == [('reg_luksus', True), ('haill', True), ('luksus', True), ('haill', None)] and HS['data1'] == [{'give': 'haill', 'type': 'haill'}]),
-              'HS2: after shop_done the haill that is not used still comes, marked held (the welcome gift, haill, luksus); the trim does not', HS['pend1'])
-        print(ok(HS['other'] == 'f' and HS['anon'][0] and HS['use'] == ['t', 'f'] and HS['trim'] == 'f' and HS['none'] == 'f' and HS['pend2'] == [('reg_luksus', True), ('luksus', True), ('haill', None)]),
+        print(ok(HS['pend1'] == [('reg_luksus', True), ('haill', True), ('luksus', True), ('trim_turbo', True), ('haill', None)] and HS['data1'] == [{'give': 'haill', 'type': 'haill'}]),
+              'HS2: after shop_done the haill that is not used still comes, marked held (the welcome gift, haill, luksus); so does the trim just delivered (HS3)', HS['pend1'])
+        print(ok(HS['other'] == 'f' and HS['anon'][0] and HS['use'] == ['t', 'f'] and HS['trim'] == 'f' and HS['none'] == 'f' and HS['pend2'] == [('reg_luksus', True), ('luksus', True), ('trim_turbo', True), ('haill', None)]),
               "HS2: haill_use takes the player's own haill once (true, then false), never another player's, a trim or an id that is not there, and not without a sign-in; a used haill is gone from shop_pending", {k: HS[k] for k in ('other', 'anon', 'use', 'trim', 'none', 'pend2')})
-        print(ok(HS['refund'] == 'cs_h1:false:true,cs_h2:true:false,cs_h3:false:false' and HS['gone'] == 'f' and HS['pend3'] == [('reg_luksus', True), ('haill', None)]),
+        print(ok(HS['refund'] == 'cs_h1:false:true,cs_h2:true:false,cs_h3:false:false' and HS['gone'] == 'f' and HS['pend3'] == [('reg_luksus', True), ('trim_turbo', True), ('haill', None)]),
               'HS2: a refund takes back a haill that is delivered and not used, and it can no longer be switched on; a used haill and a delivered trim stay', {k: HS[k] for k in ('refund', 'gone', 'pend3')})
-        print(ok(HS['early'] == 't/true/true' and HS['pend4'] == [('reg_luksus', True)]), 'HS2: a haill switched on before the game said shop_done (no network) is used and delivered in one', {k: HS[k] for k in ('early', 'pend4')})
+        print(ok(HS['early'] == 't/true/true' and HS['pend4'] == [('reg_luksus', True), ('trim_turbo', True)]), 'HS2: a haill switched on before the game said shop_done (no network) is used and delivered in one', {k: HS[k] for k in ('early', 'pend4')})
         print(ok(HS['who'] == 'haill_use,shop_pending,shop_refund' and HS['share'] == '0'), 'HS2: only shop_pending, haill_use and shop_refund read used_at, and nothing that shares with other players reads the grants', {k: HS[k] for k in ('who', 'share')})
         print(ok(HS['run'] == 0 and HS['moved'].split('/')[1:] == ['0', '0'] and int(HS['moved'].split('/')[0]) >= 4 and HS['pend5'] == [('fb_haill', None, 1)] and HS['run2'] == 0 and HS['pend6'] == [('fb_haill', True)]),
               'HS2, the migration: every haill delivered when it runs counts as used (used_at = done_at), an open one and a trim do not, and a second run takes nothing from a haill delivered after the first', {k: HS[k] for k in ('run', 'moved', 'pend5', 'run2', 'pend6')})
+        # trim, Skippertak and the yard done now given again to a save without them (HS3, 20261111120000_shop_back.sql): shop_pending
+        # also answers those delivered the last 7 days, held and with done_at; not older ones, not another player's, not one taken
+        # back, and not a paint design. (HS2's file, run again above, put its own shop_pending back: this one is run again here, as
+        # in the real order. SQL_HS3=0 leaves it out, to see the checks red against HS2's shop_pending)
+        B3 = {'sub': 'user_01HS3', 'role': 'authenticated'}; BK = {}
+        if os.environ.get('SQL_HS3') != '0': BK['run'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261111120000_shop_back.sql')).returncode
+        sql("select public.tm_hello('{}')", B3, 'authenticated')
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_b1', 'user_01HS3', 'trim_turbo', 49, 'open', '{\"boat\":\"v1\"}'), ('cs_b2', 'user_01HS3', 'skip', 39, 'open', '{}'), ('cs_b3', 'user_01HS3', 'verft_na', 19, 'open', '{\"boat\":\"v1\"}'), ('cs_b4', 'user_01HS3', 'trim_pump', 29, 'open', '{\"boat\":\"v1\"}'), ('cs_b5', 'user_01HS3', 'des_ripe', 29, 'open', '{}'), ('cs_b6', 'user_01HS3', 'skip_max', 49, 'open', '{}')")
+        for i in range(1, 7): sql("select public.shop_paid('cs_b%d', 'pi_b%d')" % (i, i))
+        bp = lambda who=B3: [g for g in json.loads(sql("select public.shop_pending()", who, 'authenticated')) if g['data'].get('give') in ('trim', 'skip', 'yard', 'cos')]   # (not the welcome gift, a haill the server keeps)
+        bid = {r.split('=')[0]: int(r.split('=')[1]) for r in sql("select string_agg(purchase_id || '=' || id, ',') from public.grants where player_id = 'user_01HS3' and purchase_id is not null").split(',')}
+        BK['open'] = [(g['product'], g.get('held'), 'done_at' in g) for g in bp()]
+        sql("select public.shop_done(array[%s]::bigint[])" % ','.join(str(bid['cs_b%d' % i]) for i in range(1, 6)), B3, 'authenticated')
+        BK['done'] = [(g['product'], g.get('held')) for g in bp()]; BK['data'] = [g['data'] for g in bp() if g['id'] == bid['cs_b1']]
+        def age(g):
+            try: return (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime.fromisoformat(g['done_at'])).total_seconds()
+            except Exception: return None
+        BK['at'] = [age(g) for g in bp() if g.get('held')]
+        sql("update public.grants set done_at = now() - interval '6 days 23 hours' where id = %d" % bid['cs_b1']); sql("update public.grants set done_at = now() - interval '7 days 1 hour' where id = %d" % bid['cs_b4'])
+        BK['week'] = [(g['product'], g.get('held')) for g in bp()]; BK['old'] = [round(age(g) / 3600) for g in bp() if g['id'] == bid['cs_b1']]
+        BK['other'] = [g['product'] for g in bp(B)] + [g['product'] for g in bp(A) if g['id'] in bid.values()]
+        sql("update public.grants set revoked_at = now() where id = %d" % bid['cs_b3']); BK['gone'] = [(g['product'], g.get('held')) for g in bp()]
+        BK['anon'] = sql("select public.shop_pending()", {}, 'anon', expect_err=True)[0]
+        BK['who'] = sql("select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosrc ~ 'used_at'")
+        sql("delete from public.entitlements where player_id = 'user_01HS3'"); sql("delete from public.purchases where player_id = 'user_01HS3'"); sql("delete from public.players where id = 'user_01HS3'")   # (out of the way of the checks below)
+        print(ok(BK.get('run') == 0 and BK['open'] == [('trim_turbo', None, False), ('skip', None, False), ('verft_na', None, False), ('trim_pump', None, False), ('des_ripe', None, False), ('skip_max', None, False)]),
+              'HS3: the migration runs again after HS2\'s, and the open grants come as before, none held and none with done_at', {k: BK.get(k) for k in ('run', 'open')})
+        print(ok(BK['done'] == [('trim_turbo', True), ('skip', True), ('verft_na', True), ('trim_pump', True), ('skip_max', None)] and BK['data'] == [{'give': 'trim', 'k': 'turbo', 'boat': 'v1'}] and len(BK['at']) == 4 and all(a is not None and 0 <= a < 120 for a in BK['at'])),
+              'HS3: after shop_done the trim, the Skippertak and the yard done now still come, held and with done_at and their data (the boat); a delivered paint design does not, and an open one is as before', {k: BK[k] for k in ('done', 'data', 'at')})
+        print(ok(BK['week'] == [('trim_turbo', True), ('skip', True), ('verft_na', True), ('skip_max', None)] and BK['old'] == [167]),
+              'HS3: one delivered just under 7 days ago still comes, with its own done_at; one delivered over 7 days ago does not', {k: BK[k] for k in ('week', 'old')})
+        print(ok(BK['other'] == [] and BK['anon'] and BK['gone'] == [('trim_turbo', True), ('skip', True), ('skip_max', None)] and BK['who'] == 'haill_use,shop_pending,shop_refund'),
+              'HS3: never another player\'s, not without a sign-in, and not one that is taken back; shop_pending still keeps the haill that is not used', {k: BK[k] for k in ('other', 'anon', 'gone', 'who')})
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
         sql("select public.shop_paid('cs_d1', 'pi_d1')"); R['dOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
