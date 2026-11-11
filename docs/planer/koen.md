@@ -56,6 +56,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 - `ccr-3197902a-uc8d5b`: steg 42 Ø9 F8b (Jonas' økt, 11.11.2026 14:23 UTC). Eier `core/16b-dyn.js`, `core/06e-anchor.js`, `core/03b-sea.js` (`seaH`), `view3d/14-sea.js`, `view3d/01-shaders.js`, ny `tests/unit/strom.test.mjs`. Deler `tests/run.py`, `src/index.html` og `ui/phone/07-patch.js` (flettes).
 - `plan/2026-11-11-90`: steg 90 OB12 kyst15 (arbeidsrutinen, 11.11.2026 15:35 UTC). Eier `tools/boats/kyst15.py`, `src/data/boat-kyst15*.b64`, `tools/boats/qa/clip_kyst15.py`, `deckcrew.js` (`goalOf`), `core/03c-stability.js` (`STAB_AT.kyst15`), `docs/skipsmodeller/kyst15-grunnlag.md`. Deler `tests/unit/trim.test.mjs` og `ui/phone/07-patch.js` (flettes).
+- `ccr-2c3acb2e-1xxdth`: oppfølging av steg 31e (Jonas' økt, 11.11.2026 15:45 UTC): sjønavnene i Troms, sjønavnene først langt inne, mer zoom, stedsikonene bort langt ute. Eier `tools/npc/felt.py`, `src/data/felt.json`, `src/data/felt-s.b64`, `tests/unit/felt.test.mjs`, `ui/03-map.js`, `ui/06c-notebook.js` (naustet i kartet). Deler `ui/phone/07-patch.js` (flettes).
 
 
 ## Valg som venter på Jonas
