@@ -1247,7 +1247,24 @@ function haillCap(){ return 1 + haillBoost(); }
 // went into S.haillInv (a page from before HS2, or a server from before it), which must never be counted again from the server.
 function haillInit(){ if (!S.haillInv) S.haillInv = {haill:0, luksus:0};
   if (!S.haillSrv){ S.haillSrv = []; S.haillOld = (S.shopGiven || []).slice(); }
-  if (!S.haillUsed) S.haillUsed = []; if (!S.haillQ) S.haillQ = []; if (!S.haillOld) S.haillOld = []; }
+  if (!S.haillUsed) S.haillUsed = []; if (!S.haillQ) S.haillQ = []; if (!S.haillOld) S.haillOld = []; if (!S.haillT) S.haillT = {}; }
+// The haill aboard when the server has answered (HS4, 11.11.2026, docs/planer/haill-saldo.md: the server is the truth, the save only a
+// copy; ui/10i-shop.js srvApply). loc: the one in the save; srv: the haill the server has as switched on last ({id, type, t0}, t0 in
+// the game's own minutes) or null; wait: the server is not told of loc yet (switched on with no network, V1 A), so loc stands until
+// it has answered. Else it is the server's, whatever the save says: one the server does not know is gone, and so is one whose
+// minute was moved. (One that has run out is kept as it is: it gives nothing, haillBoost)
+function haillFromSrv(loc, srv, wait){
+  if (wait && loc) return loc;
+  if (srv && HAILL[srv.type] && typeof srv.t0 === 'number' && isFinite(srv.t0)) return {type:srv.type, t0:srv.t0, how:'srv', id:srv.id};
+  return null;
+}
+// A minute on the server's clock as the game's own, and back (srvNow: the server's minute in the same answer). On the one clock they
+// are the same minute; without it (a local test server, its own clock from 0) only the age is kept
+function srvToT(m, srvNow, t, world){ return world ? m : t - (srvNow - m); }
+function tToSrv(m, srvNow, t, world){ return world ? m : srvNow - (t - m); }
+// The trim on one boat, or the Skippertak, as the server's grants say (HS4): every one delivered, in that order, as if each came on
+// when it was delivered (boostBack from nothing), and null when the end has passed. What the save says does not count
+function boostSrv(list, stack, now){ const c = boostBack(null, (list || []).slice().sort((a, b) => a.at - b.at), stack); return c && c.until > now ? c : null; }
 // the server's unused haill as the copy: the grants that are haill of a kind the game knows, none of the used ids, each once, oldest first
 function haillMirror(list, used){ const seen = new Set(used || []), out = [];
   for (const g of list || []){ const d = (g && g.data) || {}; if (!g || g.id == null || seen.has(g.id) || d.give !== 'haill' || !HAILL[d.type]) continue; seen.add(g.id); out.push({id:g.id, type:d.type}); }
@@ -1263,11 +1280,11 @@ function giveHaill(type, how, id){
   else { const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; }
   log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
 // the game's own first (it can be lost with the save, the server's cannot), else the oldest from the server: on at once, and the server told
-function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv';
+function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv', hid = null;
   if (inv[type] > 0) inv[type]--;
   else { const srv = S.haillSrv || [], u = S.haillUsed || (S.haillUsed = []), i = srv.findIndex(x => x.type === type && !u.includes(x.id)); if (i < 0) return false;
-    const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; }
-  S.haill = {type, t0:boostT(), how}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
+    const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; hid = id; }
+  S.haill = {type, t0:boostT(), how}; if (hid != null){ S.haill.id = hid; (S.haillT || (S.haillT = {}))[hid] = S.haill.t0; }   // (the minute goes to the server with the id, HS4 haill_on) log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
   if (how === 'srv' && typeof haillTell === 'function') haillTell(true);
   return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
