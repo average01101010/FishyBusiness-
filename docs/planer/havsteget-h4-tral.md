@@ -159,10 +159,11 @@ H4 deles som H2 og H3, i seks økter med `/lever` etter hver. Hver fase er ett s
   - **Mannskapet og vaktene:** 19–21 om bord etter sedlene (i dag 25 i `VESSELS`: ni nøkkelfolk, fire på dekk og tolv i fabrikken); tallet rettes mot sedlene. Døgndrift i to vakter (Jonas 07.11.2026), som autolineren.
   - **Lotten:** oppgjørsavtalen for trål er ikke funnet. Søkes på nytt i fasen (Fiskebåt og Fiskarlaget var stengt i tidligere økter); finnes den ikke, settes en flat prosent som står mot lønnsomhetsundersøkelsens 28,9 % av inntektene, og merkes som antatt (`OPPG.tral`, `fisheryOf`).
   - **Turen:** turkortet med drivstoffet (900 l i timen under slep, generatorene ellers, `plantLph`), provianten for 30 døgn og emballasjen; en tur er om lag 19 døgn og 400 t rund vekt etter sedlene.
-  - **Lossingen:** paller med båtens kran, som H2d2, ved mottakene som tar tråleren (V5).
+  - **Mottakene (V5 B, Jonas 11.11.2026):** to nye havmottak bare for havflåten, i Ålesund og på Sortland, der 36 og 10 % av den fryste trålfangsten landes (kap. 2b), lagt inn som de 13 havmottakene fra H0 (4.18c i `havner-og-mottak.md`; `tools/mottak/`, kaia fra registeret, plassert etter reglene i `docs/handelssteder.md`, navn etter stedet og aldri etter et firma). Med de ni som tar tråleren i dag blir det elleve. Det nye mottaket tar alle havbåtene kaia og redskapet passer for, ikke bare tråleren.
+  - **Lossingen:** paller med båtens kran, som H2d2, ved mottakene som tar tråleren.
   - **Rapporteringen** (ERS, J-204-2025): fangstdagboka sender fangstmeldingen hver dag og meldingen om havneanløp to timer før, av seg selv, og meldingen om fiskestart i Svalbard-sonen 12–24 timer før; spilleren ser dem i dagboka. Ingen straff for noe spillet gjør selv.
-- **Filer:** `core/10f-trawl.js`, `core/02-species-gear.js`, `core/05-vessels.js` (fabrikkens minutt), `core/04-crew.js` (`OPPG`, turen), `core/07-harbours.js` (lossingen), `core/03-simulation.js` (`sell`), `ui/05b-work.js`, `ui/phone/10-fartoy.js`, `ui/phone/04-kvote.js`, `ui/phone/07-patch.js`.
-- **Tester:** ny `tests/unit/tralfabrikk.test.mjs` (kapasiteten, faktorene, rommet, prisene, lotten; sett rød først), ny `tests/tralfabrikktest.py` (et døgn med fem hal gjennom fabrikken, turkortet, lossingen, Kvote-appen, skjermbilder i begge formater), `fabrikktest`, `landtest`, `selltest`.
+- **Filer:** `core/10f-trawl.js`, `core/02-species-gear.js`, `core/05-vessels.js` (fabrikkens minutt), `core/04-crew.js` (`OPPG`, turen), `core/07-harbours.js` (lossingen), `tools/mottak/`, `src/data/mottak.json`, `core/06b-coastports.js` og `tools/steder/` om noe må flyttes (de to havmottakene), `core/03-simulation.js` (`sell`), `ui/05b-work.js`, `ui/phone/10-fartoy.js`, `ui/phone/04-kvote.js`, `ui/phone/07-patch.js`.
+- **Tester:** ny `tests/unit/tralfabrikk.test.mjs` (kapasiteten, faktorene, rommet, prisene, lotten; sett rød først), ny `tests/tralfabrikktest.py` (et døgn med fem hal gjennom fabrikken, turkortet, lossingen, Kvote-appen, skjermbilder i begge formater), `fabrikktest`, `landtest`, `selltest`; for de to havmottakene `havsteg.test.mjs`, `havntest`, `stedertest` og `placetest`, med skjermbilder av Ålesund og Sortland i begge formater.
 - **Måles:** kroner per turdøgn og per tur mot sedlene (26 kr/kg over alle arter i 2024) og undersøkelsen (187,7 MNOK i året med reker og alt), lotten per mann, og drivstoffet mot 17 % av inntektene.
 
 ### H4c Trål i Driftsplan 2 (steg 32c)
@@ -189,35 +190,35 @@ H4 deles som H2 og H3, i seks økter med `/lever` etter hver. Hver fase er ett s
 - **Hva:**
   - **Kystvaktas havsjekk for tråleren** (`kvTralCheck` i `core/09j-kystvakt.js`, bygd som `kvHavCheck` og `kvSnoCheck`, 5.30b og 5.30c): posisjonen langs slepet som pågår og de siste slepene i fangstdagboka (12 nm, § 56, § 58, stengte felt, sårbare økosystemer og korallrev, 1 000 m); redskapet (maskevidden målt etter § 3 mot 130 mm, rista og spileavstanden for området, stroppene); fartøykvotene for torsk, hyse, sei, snabeluer og blåkveite med kvotefleksen; bifangsten i siste hal (snabeluer 20 %, og satsene i Svalbard-sonen); stikkprøven av siste hal mot minstemålene (§ 47) og 15 % (§ 49), og om hun har skutt igjen på samme felt etter et hal over grensen; koraller og svamp; og fangstdagboka (dagens fangstmelding, § 12 i ERS-forskriften). Skipet ligger av babord og setter over inspektører under slepet, som i dag.
   - **Hele turen** i `tests/havtur.py` (`havtur.py tral`): kjøp med tillatelsen, ut fra Tromsdalen, slep på eggakanten, fabrikken, Kystvakta om bord, hjem og lossing.
-  - **Stikkprøvene:** turer fra Båtsfjord (nord), Tromsdalen eller Melbu (midt) og Selje eller Avaldsnes (sør), blant mottakene som tar båten (V5); skjermbilder i begge formater.
+  - **Stikkprøvene:** turer fra Båtsfjord (nord), Tromsdalen eller Melbu (midt) og Selje eller Avaldsnes (sør), blant mottakene som tar båten, og en tur fra Storegga eller Helgelandsbanken til Ålesund og en til Sortland (V5 B); skjermbilder i begge formater.
   - Patchnotes.
 - **Filer:** `core/09j-kystvakt.js`, `core/10f-trawl.js` (stikkprøven av halet), `ui/phone/08-home-papers-merker.js`, `ui/phone/07-patch.js`, `tests/havtur.py`.
 - **Tester:** `tests/unit/kystvakt.test.mjs` (ny del `tral`; sett rød først), `kystvakttest`, `havtur`.
 
 ## 4. Valgene
 
-Hvert valg har én anbefaling og én setning om hvorfor. Bare det Jonas må ta, står her; resten følger valgene fra `havsteget.md`, H2 og H3 (seks økter med `/lever` etter hver, reglene per år som data, produktvekt i rommet, lagene i to vakter).
+Hvert valg har én anbefaling og én setning om hvorfor. Valgene er tatt 11.11.2026 (Jonas 11.11.2026: «V1: A», «V2: A», «V3: A», «V4: A», «V5: B»). Bare det Jonas må ta, står her; resten følger valgene fra `havsteget.md`, H2 og H3 (seks økter med `/lever` etter hver, reglene per år som data, produktvekt i rommet, lagene i to vakter).
 
-**V1 Hvilken trål som kommer først**
+**V1 Hvilken trål som kommer først** (valgt: A, Jonas 11.11.2026)
 - **A (anbefalt): én stormasket bunntrål med rist, for torsk, hyse og sei** (og snabeluer etter V4). Det er det tillatelsen og båten er laget for, og 97 % av det flåten leverer, er tatt slik og fryst om bord.
 - **B: dobbeltrål** (to tråler side om side med et lodd mellom). Vanlig på de nyeste trålerne, men sedlene har nesten ingen landinger ført som dobbeltrål, og modellen har én slipp.
 - **C: også flytetrål** (pelagisk trål etter uer og sei). Det er H5.
 
-**V2 Hvordan slepet styres på nettbrettet**
+**V2 Hvordan slepet styres på nettbrettet** (valgt: A, Jonas 11.11.2026)
 - **A (anbefalt): ett trykk i kartet for hvor slepet skal ende.** Linja fra båten tegnes og prøves mot land, dybde og regler før hun skyter; «Hal» tar den inn når som helst, og rattet kan tas under slepet. Det virker med berøring i begge formater, og et slep går videre når spillet er lukket.
 - **B: retning og tid** («slep 4 timer på 045°») uten kart. Enklest, men spilleren ser ikke hva slepet krysser.
 - **C: en tegnet linje med flere knekkpunkter** langs en dybdekote. Mest likt virkeligheten, men mer å gjøre for hvert hal; knekkpunktene kommer uansett i Driftsplan 2 (H4c).
 
-**V3 Reketrål**
+**V3 Reketrål** (valgt: A, Jonas 11.11.2026)
 - **A (anbefalt): ikke i H4, en egen plan senere.** Reketrål er egen tillatelse, eget redskap (35 mm og rist med 19 mm), en art spillet ikke har, og innsatsregulert i døgn ved Svalbard; det er et helt steg. Det fyller sommeren for den virkelige flåten (30 000–49 000 t i året, april–september), så det bør komme.
 - **B: med som en sjuende fase i H4.**
 - **C: aldri.**
 
-**V4 Snabeluer**
+**V4 Snabeluer** (valgt: A, Jonas 11.11.2026)
 - **A (anbefalt): med som egen art fra H4a.** Trålerne tok 25 000–39 000 t snabeluer i året, mer enn torsk i 2025 og 2026, og uten den får spillerens tråler en tredel mindre å fiske på enn flåten har. Reglene (fartøykvoten 1 206 t, 20 % bifangst, forbudet 1.3–9.5 og § 15) leses ordrett først.
 - **B: bare torsk, hyse og sei** (og dagens `uer` som bifangst). Raskere, men turen blir fattigere og året kortere.
 
-**V5 Hvor fryst trålfangst landes**
+**V5 Hvor fryst trålfangst landes** (valgt: B, Jonas 11.11.2026)
 - **A (anbefalt): der kaia passer, som for snøkrabben** (V2 C i H3, Jonas 06.11.2026): de ni mottakene i dag, med Tromsdalen for Tromsø, og ingen nye havner. Det følger det Jonas valgte sist.
 - **B: også Ålesund og Sortland som havmottak**, der 36 og 10 % av den fryste trålfangsten landes. Mer likt virkeligheten og kortere vei fra Storegga og Helgelandsbanken, men to nye havner gjennom datarørledningen for mottakene.
 - **C: bare der sedlene har trålfangst** (Tromsdalen, Båtsfjord, Melbu og Senjahopen blant dagens ni).
@@ -241,10 +242,10 @@ Hvert valg har én anbefaling og én setning om hvorfor. Bare det Jonas må ta, 
 
 ## 6. Hva planen ikke gjør
 
-- Ingen reketrål (V3), ingen flytetrål, dobbeltrål eller seitråltillatelse, og ingen fiske ved Grønland utover kvotene som finnes (`gl`).
+- Ingen reketrål (V3 A: en egen plan senere), ingen flytetrål, dobbeltrål eller seitråltillatelse, og ingen fiske ved Grønland utover kvotene som finnes (`gl`).
 - Ingen ferskfisktråler og ingen filet om bord.
 - Ingen leveringsplikt (gjelder fartøy med leveringsvilkår, konsesjonsforskriften § 2-3 og J-148-2023).
-- Ingen nye havner (V5 A) og ingen fryselagre som havner.
+- Ingen nye havner utenom havmottakene i Ålesund og på Sortland (V5 B), og ingen fryselagre som egne steder.
 - Ingen navngitte nøkkelfolk med liv (H7), og ingen strukturkvote eller eiertak (H8; taket er tolv kvotefaktorer, § 2-4).
 - Ingen fabrikk eller rom under dekk i modellen (CLAUDE.md: bare utsiden), og ingen ekte fartøynavn, rederier eller firmanavn.
 - Ingenting selges for ekte penger.
@@ -252,3 +253,4 @@ Hvert valg har én anbefaling og én setning om hvorfor. Bare det Jonas må ta, 
 ## 7. Status
 
 - 11.11.2026: planen skrevet på grenen `ccr-caa67856-3cmr94` (Jonas' økt, steg 32). Regelverket lest samme dag (høstingsforskriften i J-163-2026, J-187-2026, J-82-2024, J-28-2023, J-61-2019, J-78-2023, J-204-2025, J-148-2023, J-4-2020, J-167-2026, J-193-2026, saksdokumentene for 2027; havressurslova § 20 bare som utdrag), sedlene for 2024–2026 regnet ut, og driftstallene søkt opp. Fasene H4a–H4f står i køen som steg 32a–32f etter lanseringslinja, og startmeldingen for H4a i `docs/planer/start/32a.md`. **Venter på valgene V1–V5** (valg 37 i køen). Ingenting er bygd.
+- 11.11.2026: **valgene tatt** (Jonas 11.11.2026: «V1: A», «V2: A», «V3: A», «V4: A», «V5: B»): V1 A (én stormasket bunntrål med rist), V2 A (ett trykk i kartet for hvor slepet skal ende), V3 A (reketrål ikke i H4, en egen plan senere), V4 A (snabeluer som egen art fra H4a) og V5 B (også Ålesund og Sortland som havmottak; lagt i H4b, og stikkprøvene i H4f går dit). Fasene over er rettet etter valgene. **Neste:** H4a (steg 32a) i en ny økt, etter lanseringen eller når Jonas sier det.
