@@ -54,7 +54,7 @@ SIMPLIFY_KM = 0.1      # the shapes: Douglas-Peucker to 100 m (F1 measured this 
 # shipping and no fishing places), the counties they are fetched for, and how near a ground of the same name makes it a double
 KV = 'https://api.kartverket.no/stedsnavn/v1/sted'
 KV_TYPES = ['fiskeplassISjø', 'bankeISjø', 'grunneISjø', 'eggISjø', 'havdyp']
-KV_FYLKER = ['56']     # Finnmark (east and west): the thinnest in the table of docs/planer/fangstfelt.md 2.5
+KV_FYLKER = ['56', '55']   # Finnmark (the thinnest in the table of docs/planer/fangstfelt.md 2.5) and Troms (Jonas 11.11.2026: «Legg til troms også»)
 KV_DUP_KM = 1.0        # the same sea name again within this is one place (a shoal is often registered as several points)
 KV_FELT_KM = 3.0       # a ground of the same name within this has the name already (MERGE_KM: the same name within 3 km is one ground,
                        # and a ground's point is the middle of its polygon, often more than 1 km from Kartverket's point)

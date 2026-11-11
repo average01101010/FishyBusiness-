@@ -97,20 +97,86 @@ Hvert punkt fra startmeldingen, sjekket mot backloggen og koden 11.11.2026.
   3. Minnet per blokk og tiden nettet tar: en blokk på 10 km er 2 MB som Int16 på 10 m (1,3 MB på 12,5 m). Kartbufferen er 96 MB.
 - **Taket** fra grafikkplanen står: rundt 150 MB for hele kysten. Er 1 km over, tas 500 m. Er 500 m også over, eller viser bildene i K1 ingen forskjell en spiller ser fra båten, bygges ikke laget (valg V1).
 
+### K0: målingen (steg 33a, 11.11.2026)
+
+Målt med prototypen `tools/map/fin.py` (`senja`, `tile`, `gain`, `count`), som leser Terrarium z13 i hver celle i stripa, tar land og sjø fra vektorkysten på 3 m (`coast2` i sjøkartpakkene) og pakker laget som `hgt` (Int16, medianprediktoren, deflate per blokk på 10 km, én `fin`-pakke per flis). Alt ligger i `tools/map/out/fin/`; ingenting i `src/` er rørt. Tallene er størrelsen på pakkene slik en release ville hatt dem.
+
+**Slik laget er kodet i prototypen:** en landcelle i stripa er `hgtEnc(max(h, 0,5))`; en sjøcelle innen 25 m fra stripa (fjæra) er `hgtEnc(min(h, −0,5))`, som i praksis er −1 overalt, fordi Terrarium har sjøen på 0; alle andre celler er 0, som `hgtEnc` aldri gir, og som betyr «ingen fin bakke her, les 25 m-laget». En blokk uten en eneste celle i stripa har ingen oppføring. Rundturen er kontrollert på én blokk i to varianter (pakket, pakket ut med `pack.unmed16`, likt celle for celle).
+
+**Senjas fire fliser** (stripa talt på 25 m-masken: 1 156 km² innen 1 km, 650 km² innen 500 m):
+
+| Variant | 16,6 | 17,6 | 16,7 | 17,7 | Sum MB | Blokker | Celler | Byte per celle | kB per km² |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 km, 10 m | 0,33 | 1,33 | 1,02 | 0,78 | 3,44 | 66 | 11,61 mill. | 0,297 | 2,98 |
+| 1 km, 12,5 m | 0,24 | 0,97 | 0,75 | 0,57 | 2,52 | 66 | 7,42 mill. | 0,340 | 2,18 |
+| 500 m, 10 m | 0,23 | 0,93 | 0,73 | 0,51 | 2,40 | 65 | 6,55 mill. | 0,367 | 3,69 |
+| 500 m, 12,5 m | 0,17 | 0,68 | 0,54 | 0,37 | 1,76 | 65 | 4,18 mill. | 0,421 | 2,71 |
+| 1 km, 10 m, halve meter hele veien | 0,44 | 1,81 | 1,39 | 1,07 | 4,71 | 66 | 11,61 mill. | 0,406 | 4,08 |
+| 1 km, 12,5 m, halve meter hele veien | 0,33 | 1,35 | 1,04 | 0,79 | 3,51 | 66 | 7,42 mill. | 0,472 | 3,03 |
+
+**Seks fliser til langs kysten,** laget på samme måte (masken og kysten fra `kart-31`, så `coast.py` trengtes ikke), for å se hvor godt Senja står for resten. kB per km² stripe:
+
+| Flis | Sted | Stripe 1 km, km² | 1 km, 10 m | 1 km, 12,5 m | 500 m, 10 m | 500 m, 12,5 m | Andel av stripa over 10 moh. |
+|---|---|---|---|---|---|---|---|
+| 16–17, 6–7 | Senja | 1 156 | 2,98 | 2,18 | 3,69 | 2,71 | 89 % |
+| 4,29 | Jæren (flat) | 474 | 2,86 | 2,10 | 3,53 | 2,61 | 77 % |
+| 4,26 | Bergen | 627 | 3,20 | 2,35 | 3,87 | 2,85 | 91 % |
+| 12,14 | Helgeland (øyer og skjær) | 410 | 3,60 | 2,68 | 4,15 | 3,08 | 61 % |
+| 14,11 | Bodø | 353 | 3,22 | 2,37 | 3,97 | 2,94 | 82 % |
+| 21,3 | Hammerfest | 345 | 2,94 | 2,14 | 3,76 | 2,75 | 94 % |
+| 25,2 | Båtsfjord | 124 | 2,88 | 2,11 | 3,73 | 2,75 | 86 % |
+
+Senja står godt for resten: de seks andre ligger fra 4 % under til 23 % over Senjas tall, og alle ti flisene samlet 4 % over. Det er ikke bratthet som koster mest (Jæren og Båtsfjord er like billige som Senja), men mye lav og oppstykket kyst (Helgeland). Ti fliser av 168 er målt, og 3 489 km² av 30 948 km² stripe (11 %); resten er ganget opp.
+
+**Hele fastlandet** (`count`: 168 fliser i `kart-31`, 198 541 km² land i flisene, 141 fliser har stripe). Stripa er 30 948 km² innen 1 km fra sjøen (1 806 blokker av 4 200) og 18 546 km² innen 500 m (1 764 blokker). Anslaget i kapittel 6 var 30 000–50 000 km²:
+
+| Variant | Fra Senja | Fra alle ti flisene | Laveste og høyeste enkeltflis | Mot taket på 150 MB |
+|---|---|---|---|---|
+| 1 km, 10 m | 92 MB | 96 MB | 89–112 MB | holder |
+| 1 km, 12,5 m | 68 MB | 70 MB | 65–83 MB | holder |
+| 500 m, 10 m | 69 MB | 71 MB | 65–77 MB | holder |
+| 500 m, 12,5 m | 50 MB | 52 MB | 48–57 MB | holder |
+| 1 km, 10 m, halve meter | 126 MB | 128 MB | 116–136 MB | holder, med liten margin |
+| **1 km, 12,5 m, halve meter** | **94 MB** | **95 MB** | **86–102 MB** | **holder** |
+
+Flisene i `kart-31` har også noe svensk, finsk og russisk kyst (masken skiller ikke land); en release kan klippe dem bort, så tallene er heller for høye enn for lave. 500 m sparer bare en firedel mot 1 km, fordi de dyre cellene er de nær sjøen, og fordi de samme blokkene må med uansett.
+
+**Det laget faktisk gir** (`gain`, 300 000 tilfeldige celler i stripa per flis): høyden i den fine cella mot det spillet har i dag på sitt beste (samme kilde lest i 25 m-cellenes sentre, urundet, bilineært mellom dem).
+
+| Flis | Avvik (rms) | 90 % innen | 99 % innen | Over 1 m | Over 2 m | Innen 100 m fra sjøen (rms, over 1 m) |
+|---|---|---|---|---|---|---|
+| Senja 17,7 | 0,44 m | 0,56 m | 1,34 m | 2,5 % | 0,3 % | 0,66 m, 2,0 % |
+| Jæren 4,29 | 0,58 m | 0,77 m | 2,20 m | 6,2 % | 1,3 % | 0,63 m, 5,5 % |
+| Helgeland 12,14 | 0,56 m | 0,77 m | 1,92 m | 5,7 % | 0,9 % | 0,53 m, 3,4 % |
+| Hammerfest 21,3 | 0,57 m | 0,69 m | 1,99 m | 4,9 % | 1,0 % | 0,99 m, 13,4 % |
+
+To ting følger av det, og begge må sies ærlig:
+
+1. **Gevinsten i høyde er liten i tall.** I ni av ti celler flytter den fine bakken seg under 0,8 m fra det 25 m-laget alt viser. Det laget gir, er de få prosentene der formen er skarp (kanter, knauser, stup i fjæra) og en strandlinje som følger kysten på 3 m i stedet for 25 m-masken. Om en spiller ser det fra båten, kan bare bildene i K1 svare på; valg V1 (A) sier at laget legges bort om de ikke viser forskjell.
+2. **`hgtEnc` runder bort gevinsten over 10 moh.** Kodingen har halve meter opp til 9,75 m og 2 m-trinn over. 2 m-trinn gir en avrundingsfeil på 0,58 m rms, altså like mye som hele gevinsten, og 61–94 % av stripa ligger over 10 moh. Med `hgtEnc` ville `fin` bare vært finere enn 25 m-laget helt nede i fjæra. Laget må derfor kodes i halve meter hele veien (avrunding 0,14 m rms). Det er `dec: 'half'`, som lasteren alt har for dybden, så det trengs ingen ny dekoder. Det koster 37–39 % mer.
+
+10 m og 12,5 m gir samme gevinst (målt på Senja og ved Hammerfest: 0,44 mot 0,44 m og 0,55 mot 0,57 m rms), så de ekstra cellene på 10 m viser ingenting mer.
+
+**Minnet i spillet** (Int16 per blokk på 10 km): 2,00 MB på 10 m (1 000 × 1 000) og 1,28 MB på 12,5 m (800 × 800). Fire blokker rundt båten er 8,0 eller 5,1 MB, ni blokker 18,0 eller 11,5 MB, av kartbufferens 96 MB (`MAPD.budget`). Bare blokker med stripe finnes (43 % av blokkene i fastlandets fliser), så på åpent hav og inne i landet lastes ingenting.
+
+**Kjøretiden:** 21–55 sekunder per flis her (begge rutene, seks varianter, medregnet hentingen av rundt 600 z13-fliser per flis; 6 044 fliser og 324 MB for de ti). Hele fastlandet er godt under en time i én jobb, så `fin.yml` trenger ikke tolv deler.
+
+**K1 bygger: stripa 1 km, ruta 12,5 m, halve meter hele veien (`dec: 'half'`).** Anslag 94 MB for fastlandet (86–102), 1,28 MB per blokk i minnet. Grunnene: 12,5 m viser det samme som 10 m og er 26 % mindre på serveren og 36 % mindre i minnet, og 25 m-cellene deles i 2 × 2; 1 km fordi 500 m bare sparer en firedel og legger skjøten mot 25 m-nettet midt i lia en ser fra båten; halve meter fordi laget ellers ikke gir noe over 10 moh. Laget holder taket på 150 MB i alle variantene, så K1 og K2 går ikke ut på størrelsen. Det som kan stoppe laget, er punkt 1 over: bildene i K1.
+
 ## 6. Størrelsen før og etter, og telefonene
 
 | | Før (`kart-31`) | Etter | Hvordan det måles |
 |---|---|---|---|
 | `sim`, `view`, `vec` | 126,1 / 295,3 / 79,3 MB | uendret, byte for byte | `manifest.json` før og etter (K2 sammenligner hashene) |
 | `chart` | 10,0 MB | anslag 10,3 MB (`sjomerker-8`) | K3 |
-| `fin` (nytt) | 0 | **anslag 60–250 MB på serveren**; tak 150 | K0 på Senja, ganget opp med tellingen |
+| `fin` (nytt) | 0 | **målt 94 MB på serveren** (86–102; 1 km, 12,5 m, halve meter; K0 11.11.2026, ti fliser ganget opp); tak 150 | K0, kapittel 5; K2 måler releasen |
 | Kjernen, `chart0`, far-pakkene | 4,70 / 0,58 / 13 MB | uendret | |
 | Siden | rundt 6 MB | + anslag 0,2–0,4 MB når N3 og N5 legger inn `ferje.json` og `leier.json` | i de stegene |
 | Førstegangsnedlastingen, Lav og Middels | 80,3 MB (målt 04.11.2026) | uendret (ingen `fin`) | K1: `boottest` med nettverksloggen, før og etter |
-| Førstegangsnedlastingen, Høy og Ultra | 80,3 MB | + `fin` for flisene rundt båten, anslag 1–4 MB | K1 |
-| Minnet i 3D, Høy | (måles i K1 før) | + 4–9 blokker `fin`, anslag 8–18 MB av kartbufferens 96 | K1: `MAPD.bytes` og JS-minnet etter starten, som i Ø3d |
+| Førstegangsnedlastingen, Høy og Ultra | 80,3 MB | + `fin` for flisene rundt båten: 0,3–1,4 MB per flis på Senja, største flis på fastlandet rundt 2,5 MB (4,25, Bergen nord); én til fire fliser | K1 |
+| Minnet i 3D, Høy | (måles i K1 før) | + 4–9 blokker `fin` à 1,28 MB: 5,1–11,5 MB av kartbufferens 96 (regnet i K0) | K1: `MAPD.bytes` og JS-minnet etter starten, som i Ø3d |
 
-Anslaget for `fin` er grovt med vilje: jeg kjenner ikke hvor stor del av `view` som er høydene (manifestet har bare pakkene, ikke lagene), og ikke hvor mye land som ligger innen 1 km fra sjøen. Regnestykket er land i stripa (anslag 30 000–50 000 km²) × 10 000 celler per km² × 0,2–0,5 byte per celle etter prediktoren og deflate. Derfor måler K0 før noe annet.
+K0 har målt (kapittel 5, «K0: målingen»); anslaget under er det planen sto med før. Anslaget for `fin` var grovt med vilje: jeg kjenner ikke hvor stor del av `view` som er høydene (manifestet har bare pakkene, ikke lagene), og ikke hvor mye land som ligger innen 1 km fra sjøen. Regnestykket er land i stripa (anslag 30 000–50 000 km²) × 10 000 celler per km² × 0,2–0,5 byte per celle etter prediktoren og deflate. Derfor måler K0 før noe annet.
 
 **Telefonene:** det eneste som kan gjøre vanlige telefoner tregere, er at `fin` lastes der. Regelen i K1 er at Lav og Middels ikke gjør det, og `boottest` og `first3d` skal vise samme tall før og etter på de nivåene. På Høy måler Jonas med `#fps` og `#prof` på nettbrettet (nullpunktet 71 bilder/s ved Finnsnes) før K2 lager laget for kysten. Koster det mer enn 3 ms, trappes det etter `QUAL` (bare Ultra, eller kortere rekkevidde).
 
@@ -134,9 +200,11 @@ Anslaget for `fin` er grovt med vilje: jeg kjenner ikke hvor stor del av `view` 
 - **Filer:** ny `tools/map/fin.py`, `docs/planer/kartrelease-o13.md`.
 - **Tester:** ingen (ingen kode i spillet, ingen UI). Skriptet skriver tallene.
 - **Skjermbilder:** ingen.
+- **Ferdig 11.11.2026.** Tallene står i kapittel 5 («K0: målingen»). K1 bygger 1 km, 12,5 m, halve meter.
 
 ### K1 (steg 33b). `hgt10` i spillet, på Senja
 
+- **Varianten (K0):** stripa 1 km, ruta 12,5 m (n = 800 per blokk), Int16 med `dec: 'half'` (ikke `hgt`), 0 = «ingen fin bakke, les 25 m», blokker uten stripe finnes ikke. Senjas pakker skrives av `fin.py` selv (den lager alt KMP1-pakkene; en ny kommando legger de fire pakkene og laget `fin` inn i manifestet i `src/data/map`), ikke av `tools/mappack.mjs`; `game.py` slipper `fin` gjennom først i K2, så K1 testes med Senja-bygget.
 - **Gjør:** lasteren kjenner pakkeslaget `fin` og laget (`core/01b-mapdata.js`), finbakken og nærterrenget leser det der det finnes og 25 m ellers (`view3d/02-mesh-terrain.js`, `04-vec-packs.js`), strendene, stupene, nærfeltet, kaiene og byggene står på den nye bakken (`17h-shore.js`, `17f-near.js`, `05-quays-breakwaters.js`, `06-buildings-lights.js` leser bakken gjennom samme funksjon; sjekkes, endres bare om de ikke gjør det). Lav og Middels laster ikke `fin`; `#fin0`. Senjas `fin`-pakker lages lokalt av `fin.py` og legges i `src/data/map` gjennom `tools/mappack.mjs` eller `game.py` (K0 sier hvilken).
 - **Filer:** `tools/map/fin.py`, `core/01b-mapdata.js`, `view3d/02-mesh-terrain.js`, `view3d/04-vec-packs.js`, `src/data/map/`, `tests/unit/` (ny `fin.test.mjs`), `tests/run.py` (`COVER`), patchnotatet.
 - **Tester:** ny enhetstest for lesingen (`rbilM` på `fin` der det finnes og 25 m ellers, og at en blokk uten `fin` ikke telles som `MAPD.miss`), **sett rød først** mot koden før lasteren kjenner laget. `maptest`, `landtest`, `terrshot`, `boottest`, `first3d` (minnet og oppstarten på Lav og Middels skal være like før og etter), og `havnshot` for Finnsnes.
@@ -195,13 +263,18 @@ Rekkefølgen: K0, K1, K2; K3 når Ø11.8 er ferdig; K4 når det passer. N3 (steg
 
 ## 10. Antatt og usikkert
 
-- **Størrelsen på `fin`** er et grovt anslag (60–250 MB). K0 måler.
+- **Størrelsen på `fin`** er målt i K0 (11.11.2026): 94 MB for fastlandet i varianten K1 bygger, fra ti fliser av 168 ganget opp med stripa talt på 25 m-masken. De ti lå innen −4 % til +23 % av Senja per km². Det som ikke er målt: de 158 andre flisene, og om flisene med utenlandsk kyst skal med.
+- **Fjæra i `fin` er bare fortegnet.** Terrarium har sjøen på 0 langs kysten, så sjøcellene inntil land blir −0,5 m alle sammen. Laget gir strandlinja, ikke bunnen i fjæra; den kommer fortsatt fra dybdelaget.
+- **Gevinsten er målt mot 25 m-laget på sitt beste** (urundet). Spillets 25 m-lag har selv 2 m-trinn over 10 moh., så forskjellen i spillet kan være noe større enn tabellen i kapittel 5 sier. Det er ikke målt.
 - **At skjærene ikke tegnes i 3D,** er funnet med `grep`, ikke sett i spillet. K4 sjekker først.
-- **Entur og Kystverkets navigasjonsdata:** ikke prøvd herfra, og lisensene er ikke lest. Planen antar at de bare kan nås fra Actions, som Geonorge og Overpass. Om Bjørnøya og Jan Mayen har lykter i det hele tatt, vet jeg ikke.
+- **Entur og Kystverkets navigasjonsdata, prøvd fra en økt i K0 (11.11.2026):**
+  - **Entur:** `api.entur.io` og `developer.entur.org` er stengt (nettverksproxyen svarer 403 på tilkoblingen). Men den nasjonale rutedatafila (GTFS, `rb_norway-aggregated-gtfs.zip` i Enturs åpne bøtte på `storage.googleapis.com`) svarer 200 herfra: 543 MB, sist endret 11.11.2026. N3 (steg 34) kan altså trolig hente rutetidene fra en økt, uten egen workflow for den delen; fila er ikke lastet ned eller åpnet, bare spurt etter med ett kall. Lisensen (NLOD, etter `npc-flaaten.md`) er **ikke lest**: siden den står på, er stengt herfra.
+  - **Kystverket:** `services.kystverket.no` og `kystinfo.no` er stengt (403), og Geonorge (`kartkatalog.geonorge.no`) og `data.norge.no` også. Navigasjonsinnretningene kan bare hentes fra Actions, og lisensen er **ikke lest**. K3 (steg 33d) må lese den fra Actions eller få den av Jonas før dataene tas inn. Om Bjørnøya og Jan Mayen har lykter i det hele tatt, vet jeg fortsatt ikke.
+  - Geofabrik er ikke prøvd (startmeldingen ba om ett kall hver for Entur og Kystverket).
 - **Ferjeleiene i Overture** (`transportation/segment` med vannveier): typen hentes alt, men `vectors.py` leser bare veiene. At ferjeleiene ligger der med nok dekning, er ikke sjekket; Geofabrik-utdraget (`route=ferry`) er reserven.
 - **Gammel side ved ny release** er lest fra koden (`rsync --delete-after`, `mapLoad`), ikke prøvd. K3 skriver testen.
 - **Fortegnet fra vektorkysten:** at `fin` kan klippes mot kysten på 3 m uten sprekk mot 25 m-nettet utenfor stripa, er en antakelse til K1 har bilder.
-- **Tidene i Actions** for `fin.yml` er anslått fra `kart-31`s flisjobber.
+- **Tidene i Actions** for `fin.yml` var anslått fra `kart-31`s flisjobber; K0 målte 21–55 sekunder per flis i en økt (kapittel 5), så hele fastlandet er under en time.
 - **Første oppstart** (80,3 MB) er fra 04.11.2026 og kan ha endret seg med modellene siden; K1 måler på nytt før og etter.
 - **`trees.yml` har laget ti releaser** (`trees-2` til `trees-11`, den siste ved slippet 11.11.2026) uten at `trees.json` er endret i innhold; den mangler trolig vakten `seen.py`. Sett i releaselista i denne økta, ikke undersøkt. Hører hjemme i backloggen 10.7.
 
@@ -224,3 +297,4 @@ Rekkefølgen: K0, K1, K2; K3 når Ø11.8 er ferdig; K4 når det passer. N3 (steg
 
 - 11.11.2026: planen skrevet (Jonas' økt, grenen `ccr-28562daf-g7h9ca`). Venter på valg 35 (V1–V3). Fasene K0–K4 står i køen som 33a–33e etter lanseringslinja; startmeldingen for K0 i `docs/planer/start/33a.md`.
 - 11.11.2026: **Jonas svarte på valg 35:** «V1: A V2: A V3: A». K0 (33a), K4 (33e) og N3 (steg 34) er klare; K1 venter på K0, K2 på K1, K3 på Ø11.8.
+- 11.11.2026: **K0 ferdig** (steg 33a, Jonas' økt, grenen `ccr-950ce757-f9pptn`): `tools/map/fin.py` og målingen i kapittel 5. Alle fire variantene holder taket (50–96 MB med `hgtEnc`). K1 bygger 1 km, 12,5 m, halve meter hele veien (94 MB for fastlandet, 1,28 MB per blokk i minnet), fordi `hgtEnc` runder bort gevinsten over 10 moh. Gevinsten i høyde er liten i tall (0,44–0,58 m rms mot 25 m-laget), så bildene i K1 avgjør om laget bygges for kysten. Entur: rutedatafila nås fra en økt, API-et og lisenssiden ikke; Kystverket: stengt. K1 (33b) er klar, startmeldingen i `docs/planer/start/33b.md`.
