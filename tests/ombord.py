@@ -65,6 +65,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   const nn = Math.min(3, V.crewMax || 0);
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
   if (window.OB_IDLE) { window.idleAssign = window.OB_IDLE; window.OB_IDLE = null; }
+  if (window.OB_COLD) { window.coldPen = window.OB_COLD; window.OB_COLD = null; }
   window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
   window.SEA = (st) => { const g = GROUNDS[0].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
     b.fishUntil = st === 'fishing' ? S.t + 600 : null; G3.vesselChanged(); };
@@ -131,8 +132,11 @@ OPS = {
       const why = startHaul('s0', false, 0); if (why) return 'SKIP: ' + (why[0] || why); if (S.crew.length) CREW3D.reset();""", (-0.8, 0.45, 0.9), 14],
   # clearing the deck: the hose and the broom after gutting (only pauses in the game; forced here as crewclip does)
   'rydd': ['*', 'rydde og spyle dekket etter sløyingen', """if (geoOf(type).hand || !S.crew.length) return 'SKIP: ingen agenter på håndbåtene (drawSkiff)'; SEA('idle'); b.deckT = S.t;
-      const orig = idleAssign; window.OB_IDLE = orig;
-      window.idleAssign = (P, ctx) => { orig(P, ctx); let i = 0; for (const p of P) if (p.st === 'pause' && p.c){ p.idle = ['hose', 'sweep'][i++ % 2]; p.with = null; } };
+      /* (OB14: the washing down is a role now, 13-work.js deckRoles, from two minutes after the deck work stopped; on a build from
+         before it, the breaks are forced as crewclip does) */
+      if (typeof deckRoles === 'function') b.deckT = S.t - WASH.after;
+      else { const orig = idleAssign; window.OB_IDLE = orig;
+        window.idleAssign = (P, ctx) => { orig(P, ctx); let i = 0; for (const p of P) if (p.st === 'pause' && p.c){ p.idle = ['hose', 'sweep'][i++ % 2]; p.with = null; } }; }
       CREW3D.reset(); CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null;""", (0.3, 0.6, 0.9), 10],
   # in to the plant and mooring: 300 m out, then dock; the path in along the quay, the lines one by one
   'inn': ['*', 'inn til mottaket og fortøye: hun glir inn langs kaia, tauene på', """const q = portById('husoy'); b.status = 'idle'; b.port = null;
@@ -161,9 +165,17 @@ OPS = {
       S.jobs = [{kind:'last', crew:true, h:2, until:S.t + 120, no:'Lasting av proviant', en:'Loading the provisions'}]; if (S.crew.length) CREW3D.reset();""", (1.0, 0.45, 1.3), 12],
   # rest and food aboard: the meal is due (the cook) and the skipper turns in where she has bunks
   'hvile': ['*', 'mat og hvile om bord: kokken lager mat, skipperen går til køys der båten har køyer', """if (!S.crew.length) return 'SKIP: ingen mannskap (håndbåt)'; SEA('idle');
-      S.meal = {due:S.t + 10, cook:null, hist:[]}; S.crew.forEach(c => { c.fatigue = 60; }); if ((V.berths || 0) > 0) restStart();
+      b.deckT = null; S.meal = {due:S.t + 10, cook:null, hist:[]}; S.crew.forEach(c => { c.fatigue = 60; }); if ((V.berths || 0) > 0) restStart();
+      /* (OB14, F13: no galley, so the packed lunch is out now; the crew rested enough to eat it sitting up) */
+      if (((V.fac || {}).galley) === 'none'){ S.meal = {due:S.t + 300, cook:null, hist:[2], last:{t:S.t, q:2, by:null, nm:'middag'}}; S.crew.forEach(c => { c.fatigue = 20; }); }
       CREW3D.reset(); CREW3D._st.ctxT = -1e9;""", (0.2, 0.5, 0.95), 10],
+  # the cold (OB14, F14): lying still on a winter's day with the cold costing a third; those on a break beat their arms, the hoods are up
+  'kulde': ['*', 'kulda synes: de som har pause, slår floke og gnir hendene, hetta er oppe', """if (!S.crew.length) return 'SKIP: ingen mannskap (håndbåt)'; SEA('idle');
+      if (typeof deckRoles !== 'function') return 'SKIP: bygget har ikke kulda på folkene (før OB14)';
+      b.deckT = null; window.OB_COLD = coldPen; window.coldPen = () => 0.3; CREW3D.reset(); CREW3D._st.ctxT = -1e9;""", (0.3, 0.6, 0.9), 10],
 }
+# (OB14) the washing down from abeam and nearer, for the boats whose deck is hidden from ahead (the havsjark's gear house)
+OPS['ryddn'] = [OPS['rydd'][0], OPS['rydd'][1] + ' (fra siden, nært)', OPS['rydd'][2], (-1.35, 0.75, 0.75), 10]
 
 # (OB4 11.11.2026) the same at the quay from nearer and lower, so the hands at the tubs, the rail and the ice box can be seen: 'lossn' in
 # the first lift at the game's own pace (the hook comes down, the sling goes on, the tub goes up), 'isn' and 'krann' as 'is' and 'kran'
