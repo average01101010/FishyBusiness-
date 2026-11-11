@@ -140,6 +140,21 @@ async def run(p, w, h, tag, full):
         check(z < 0.8 and abs(z / want - 1) < 0.1, 'berøring: to fingre knipser kartet ut forbi den gamle grensen', (round(z, 3), round(want, 3)))
         await pg.wait_for_timeout(600)
         await pg.screenshot(path='chart_pinch.png')
+    # the places only from PLACE_Z, Kartverket's sea names only from FELT_S_Z, and the zoom to ZMAX 320 (Jonas 11.11.2026)
+    Z = await pg.evaluate("""(() => { const at = (x, y, z) => { view.cx = x; view.cy = y; view.z = z; applyView(); renderStatic(); renderDyn(); };
+      const n = q => document.querySelectorAll('#map ' + q).length, hp = portById(S.home).p, out = {};
+      at(hp.x, hp.y, PLACE_Z * 0.8); out.far = [n('.pi'), n('.rorbu'), n('.lbl-port')];
+      at(hp.x, hp.y, PLACE_Z); out.near = [n('.pi'), n('.rorbu'), n('.lbl-port')];
+      const far = PORTS.find(p => !placeOwn(p) && dist(p.p, hp) > 20); const tap = z => { at(far.p.x, far.p.y, z); S.draft = []; addWaypoint({x:far.p.x, y:far.p.y}); const hit = S.draft.some(w => w.port === far.id); S.draft = []; return hit; };
+      out.tapNear = tap(PLACE_Z); out.tapFar = tap(PLACE_Z * 0.8);
+      const h = P(70.66, 23.68), ks = () => [...document.querySelectorAll('#map .lbl-felt')].filter(e => e.getAttribute('data-k') === 's').length, kf = () => document.querySelectorAll('#map .lbl-felt').length;
+      at(h.x, h.y, 2); out.z2 = [ks(), kf()]; at(h.x, h.y, FELT_S_Z * 0.9); out.zb = [ks(), kf()]; at(h.x, h.y, FELT_S_Z); out.z6 = [ks(), kf()];
+      out.zmax = clamp(1e9, ZMIN, ZMAX); out.pz = PLACE_Z; out.sz = FELT_S_Z; return out; })()""")
+    check(Z['far'][0] >= 1 and Z['far'][0] <= 2 and Z['far'][1] == 0 and Z['far'][2] == 0, f'langt ute (view.z {Z["pz"] * 0.8:.2f}): bare spillerens egne steder står i kartet, ingen rorbuer og ingen stedsnavn', Z['far'])
+    check(Z['near'][0] > 4 and Z['near'][2] > 4, f'fra view.z {Z["pz"]}: mottakene, verftene og butikkene står med navn', Z['near'])
+    check(Z['tapNear'] is True and Z['tapFar'] is False, 'et trykk på et sted går dit når stedet vises, og ikke langt ute der det er skjult', [Z['tapNear'], Z['tapFar']])
+    check(Z['z2'][0] == 0 and Z['z2'][1] > 5 and Z['zb'][0] == 0 and Z['z6'][0] > 0, f'Hammerfest: Kartverkets sjønavn står først fra view.z {Z["sz"]} (feltnavnene fra 2)', [Z['z2'], Z['zb'], Z['z6']])
+    check(Z['zmax'] == 320, 'kartet kan zoomes inn til view.z 320', Z['zmax'])
     check(not errs, 'ingen sidefeil', errs[:3])
     await b.close()
 
