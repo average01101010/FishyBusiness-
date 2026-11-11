@@ -20,7 +20,16 @@
 // answers those delivered the last 7 days (held, with done_at; HS3, 11.11.2026, supabase/migrations/20261111120000_shop_back.sql), and
 // one that is not in the save's S.shopGiven is given again with only the time that is left (shopBack). A server from before that
 // migration answers none of them, and nothing is given again.
-const SHOP = {ready:null, busy:false, ret:null};
+// The server is the truth for haill and everything bought (HS4, 11.11.2026, supabase/migrations/20261111140000_haill_srv.sql; Jonas
+// 10.11.2026: «Spillere skal ikke kunne redigere sin egen lagring og gi seg selv så mye haill eller andre varer de selv vil»): the
+// save is only a copy of the haill in store, the haill aboard, the trim on every boat, Skippertak, the credit for the yard done now
+// and the paid paint designs. At every start with a network and every claim the game asks shop_state() and writes the copy over
+// with the answer (shopClaim4, srvApply), so what a player writes into the save is gone. The pub's wheel is drawn on the server
+// (pubAsk), the haill of chapter 2 is a grant asked for once (achHaillAsk), and the game's own numbers from before are made into
+// grants once, within the server's cap (srvImport). A server from before the migration (shop_state answers 404) gets the game as it
+// was after HS3, all of it. Where there is no cloud (the artifact, the tests) all is as before too; on the game's own sites with the
+// cloud off, what the server said last stands and nothing new is won (srvOnly).
+const SHOP = {ready:null, busy:false, ret:null, hs4:null, gen:0};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
 const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/shop-checkout';
@@ -158,18 +167,174 @@ async function haillProbe(){
 // (now: the game is saved first, so the id is never shown again), at every claim and when the network is back. «false» is a haill the
 // server had as used already, on another device with no network: it is not taken from the player (V1 A), only counted (haill_twice)
 async function haillTell(now){
-  if (now){ save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); }
-  if (SHOP.telling || !CLOUD.on || !CLOUD.user) return;
-  SHOP.telling = true;
-  try { while ((S.haillQ || []).length){ const id = S.haillQ[0]; let r;
-      try { r = await cloudRpc('haill_use', {id}); } catch (e){ break; }
-      const q = S.haillQ || [], i = q.indexOf(id); if (i >= 0) q.splice(i, 1);
-      if (r === false && typeof cloudEv === 'function') cloudEv('haill_twice', {id});
-      save(); } }
-  finally { SHOP.telling = false; }
+  if (now){ SHOP.gen++; save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true); }
+  if (!CLOUD.on || !CLOUD.user) return;
+  if (SHOP.telling) return SHOP.telling;   // (one at a time, and whoever asks meanwhile waits for the same answer)
+  return SHOP.telling = haillTell1().finally(() => { SHOP.telling = null; });
+}
+async function haillTell1(){
+  try {
+    // (HS4: does the server take the minute? Asked once, with an id no grant has. Until it is known nothing is told: a haill switched
+    // on with no network must go with its own minute, never the minute the network came back)
+    if (SHOP.hs4 == null){ try { const r = await cloudRpc('haill_on', {id:0, t0:0}); SHOP.hs4 = !!(r && typeof r.ok === 'boolean'); } catch (e){ if (/ 404$/.test(String(e && e.message))) SHOP.hs4 = false; else return; } }
+    while ((S.haillQ || []).length){ const id = S.haillQ[0]; let r;
+      // (HS4: with the minute it was switched on, on the one clock; the server takes its own minute when it is later or not sent.
+      // A haill the server says is gone, taken back or never there, is taken off the boat; one used before is the server's to say)
+      const t0 = WCLOCK.on && S.haillT && isFinite(S.haillT[id]) ? S.haillT[id] : null;
+      try { r = SHOP.hs4 === true ? await cloudRpc('haill_on', {id, t0}) : await cloudRpc('haill_use', {id}); } catch (e){ break; }
+      const q = S.haillQ || [], i = q.indexOf(id); if (i >= 0) q.splice(i, 1); if (S.haillT) delete S.haillT[id];
+      const twice = r === false || (r && r.ok === false && r.why === 'used'), gone = !!(r && r.ok === false && r.why === 'gone');
+      if (twice && typeof cloudEv === 'function') cloudEv('haill_twice', {id});
+      if (gone){ if (S.haill && S.haill.id === id){ S.haill = null; log('Haillen fantes ikke lenger på kontoen din og er tatt bort.', 'The luck was no longer on your account and has been taken away.'); }
+        if (typeof cloudEv === 'function') cloudEv('haill_gone', {id}); }
+      save(); }
+    // (the credits for the yard done now used here, HS4 yard_use; whatever the server answers, it is told)
+    while ((S.yardQ || []).length){ const id = S.yardQ[0];
+      try { await cloudRpc('yard_use', {id}); } catch (e){ break; }
+      const q = S.yardQ || [], i = q.indexOf(id); if (i >= 0) q.splice(i, 1); save(); } }
+  catch (e){ console.error(e); }
+}
+// ---- HS4: the server is the truth ----
+// Is what the server keeps only the server's to give here? With the cloud and a server that has HS4 (or not asked yet): yes. On the
+// game's own sites with the cloud off (#nocloud, no network, GitHub Pages): yes, and nothing new is won. Where there is no cloud
+// (the artifact, the tests): no, the game gives it itself as before
+function srvOnly(){ return CLOUD.on ? !!CLOUD.user && SHOP.hs4 !== false : pubHost(); }
+// the pub's wheel (ui/09-hand-fishing.js round): the server's answer {ok, k, id} or {ok:false, why}; null with no network; undefined
+// from a server before HS4 (the game draws itself, as before)
+async function pubAsk(){
+  if (!CLOUD.on || !CLOUD.user) return null;
+  try { const r = await cloudRpc('pub_spin', {}); if (r && typeof r.ok === 'boolean'){ SHOP.hs4 = true; return r; } return SHOP.hs4 === false ? undefined : null; }
+  catch (e){ if (/ 404$/.test(String(e && e.message))){ SHOP.hs4 = false; return undefined; } return null; }
+}
+// the haill of chapter 2 (core/09f-merker.js achChapter): true when the server gives it (asked now, or at the next claim when there
+// is no answer), false when the game gives it itself
+function achHaillAsk(){
+  if (!srvOnly()) return false;
+  S.achH = 1; setTimeout(() => { if (typeof shopClaim === 'function') shopClaim(); }, 0); return true;
+}
+// a credit for the yard done now was used (core/05-vessels.js vesselStep): the oldest of the server's is told as used
+function yardUsed(){
+  const ys = S.yardSrv; if (!ys || !ys.length) return;
+  (S.yardQ || (S.yardQ = [])).push(ys.shift()); SHOP.gen++; setTimeout(() => haillTell(true), 0);
+}
+// The game's own numbers from before HS4 made into the server's, once per account (haill_import): the haill in S.haillInv, the
+// credits in S.yardCredit and the haill aboard that the server does not know. A haill from the server that went into the numbers
+// (a page or a server from before HS2, S.haillOld) and is still unused there, stays there and is taken out of the count sent, so
+// it is never counted twice and never lost to the cap. Whatever the server
+// answers, the numbers are gone after: the server gave what its cap allows, or the account was brought over before. False when the
+// server could not be asked now (the numbers stand, and it is tried again at the next claim)
+async function srvImport(st){
+  haillInit();
+  const dbl = {}; for (const g of st.list) if (g.held && (g.data || {}).give === 'haill' && S.haillOld.includes(g.id)) dbl[g.data.type] = (dbl[g.data.type] || 0) + 1;
+  const inv = S.haillInv || {}, n = k => Math.max(0, (Math.floor(inv[k]) || 0) - (dbl[k] || 0)), h = S.haill;
+  const on = h && HAILL[h.type] && h.how !== 'srv' && haillLeft() > 0 ? {type:h.type, t0:tToSrv(h.t0, st.t, boostT(), WCLOCK.on)} : null;
+  const send = {haill:n('haill'), luksus:n('luksus'), takk:n('takk'), yard:Math.max(0, Math.floor(S.yardCredit) || 0), on};
+  let r; try { r = await cloudRpc('haill_import', {inv:send}); } catch (e){ return false; }
+  if (typeof cloudEv === 'function') cloudEv('haill_import', {had:send, got:r});
+  S.haillInv = {haill:0, luksus:0}; S.yardCredit = 0; save();
+  return true;
+}
+// what the server has given this player, all of it, written over the copy in the save. Returns the number of new things given
+// (a purchase delivered now), or null when the server is from before HS4
+async function shopClaim4(){
+  if (S.achH){ try { await cloudRpc('ach_haill', {ch:1}); delete S.achH; } catch (e){ if (/ 404$/.test(String(e && e.message))){ SHOP.hs4 = false; } } }
+  if (SHOP.hs4 === false){ if (S.achH){ delete S.achH; giveHaill('haill', 'gift'); save(); } return null; }
+  // (the state first: it says whether the server has HS4, and only then is the server told of what was switched on here, with its minute)
+  let st, tries = 0;
+  for (;;){ const g0 = SHOP.gen;
+    try { st = await cloudRpc('shop_state', {}); } catch (e){ if (/ 404$/.test(String(e && e.message))){ SHOP.hs4 = false; if (S.achH){ delete S.achH; giveHaill('haill', 'gift'); save(); } return null; } return 0; }
+    if (!st || st.v !== 4 || !Array.isArray(st.list) || !isFinite(st.t)){ SHOP.hs4 = false; return null; }
+    SHOP.hs4 = SHOP.hs = true; haillInit();
+    if ((S.haillQ || []).length || (S.yardQ || []).length){ await haillTell(); if ((S.haillQ || []).length || (S.yardQ || []).length || tries++ > 4) return 0; continue; }
+    if (!st.imp){ if (tries++ < 2 && await srvImport(st)) continue; return 0; }   // (not brought over, and the server not reached: nothing is written over yet)
+    // (a haill switched on or a credit used while the answer was on its way: told, and asked again)
+    if (SHOP.gen !== g0 && tries++ < 4){ await haillTell(); continue; }
+    break; }
+  return srvApply(st);
+}
+function srvApply(st){
+  const list = st.list, now = boostT(), wn = worldNow(), world = WCLOCK.on, tol = world ? 1 : 30, lang = S.lang === 'en' ? 'en' : 'no';
+  const given = S.shopGiven || (S.shopGiven = []), seen = S.shopAt || (S.shopAt = {}), rc = SHOP.rc = [], names = [], ids = [], unk = SHOP.unk || (SHOP.unk = new Set());
+  const ms = g => Date.parse(g.done_at), at = g => backT(ms(g), wn, S.t, world), say = (g, no, en) => rc.push({g, no, en});
+  const ev = (what, x) => { if (typeof cloudEv === 'function') cloudEv('srv_fix', Object.assign({what}, x)); };
+  // (new: delivered by this very answer, or within the last minutes and not confirmed here yet, should that answer have been lost)
+  const isNew = g => !!g.held && !given.includes(g.id) && (g.new === true || wn - ms(g) < 120000);
+  const snap = () => JSON.stringify([S.haillSrv, S.haillInv, S.haill, S.skip, S.yardSrv, S.yardCredit, S.cos, S.pubE, (S.fleet || []).map(v => (v.id === S.cur ? S.boat : v.boat || {}).trim || null)]), was = snap();
+  let thanks = 0, gifts = 0;
+  // 1. the haill in store: the server's unused, never one switched on here. The game's own numbers are gone (srvImport)
+  const had = S.haillSrv || []; S.haillSrv = haillMirror(list.filter(g => g.held), S.haillUsed); S.haillInv = {haill:0, luksus:0}; S.haillOld = [];
+  for (const x of S.haillSrv){ const g = list.find(y => y.id === x.id), d = g.data;
+    if (isNew(g)){ given.push(g.id); seen[g.id] = wn;
+      if (d.reward) thanks++; else if (d.gift) gifts++;
+      else if (!d.pub && !d.ach && !d.imp){ say(g, 'Ligger i Haill-appen. Trykk «Aktiver» når du vil bruke den.', 'It is in the Luck app. Tap «Switch on» when you want it.'); names.push(HAILL[d.type][lang]); } }
+    else if (!had.some(y => y.id === x.id) && !given.includes(g.id) && !d.pub && !d.ach && !d.imp && typeof cloudEv === 'function') cloudEv('haill_back', {id:x.id, type:x.type}); }
+  // 2. the haill aboard: the server's, unless it is not told of the one here yet
+  { const h = S.haill, wait = !!(h && h.id != null && (S.haillQ || []).includes(h.id)), o = st.on;
+    const srv = o && isFinite(o.t0) ? {id:o.id, type:o.type, t0:srvToT(o.t0, st.t, now, world)} : null, next = haillFromSrv(h, srv, wait);
+    if (h && HAILL[h.type] && haillLeft() > 0 && (!next || next.type !== h.type || Math.abs(next.t0 - h.t0) > tol)) ev('haill', {type:h.type});
+    if (!next) S.haill = null; else if (!h || next !== h && (h.type !== next.type || h.id !== next.id || Math.abs(next.t0 - h.t0) > tol)) S.haill = next; }
+  // 3. the trim, boat by boat: what the delivered grants give, and nothing else
+  // (bought for a boat that is not in this save, or given with no boat, a correction: on the first boat, so nothing paid for is lost)
+  const fleet = S.fleet || [], trims = list.filter(g => g.held && (g.data || {}).give === 'trim' && BOOSTS[g.data.k] && isFinite(ms(g))), home = g => fleet.find(x => x.id === g.data.boat) || fleet[0];
+  for (const v of fleet){
+    const gs = trims.filter(g => home(g) === v);
+    const c = boostSrv(gs.map(g => ({k:g.data.k, h:BOOSTS[g.data.k].h, at:at(g)})), false, now);
+    withVessel(v, () => { const b = S.boat, on = b.trim && BOOSTS[b.trim.k] ? {k:b.trim.k, until:trimUntil(b)} : null;
+      if (c){ if (!on || on.k !== c.k || Math.abs(on.until - c.until) > tol){ if (on && on.until > now && !gs.some(isNew)) ev('trim', {k:on.k}); trimBack(c); } }
+      else if (b.trim){ if (trimOn(b)) ev('trim', {k:b.trim.k}); trimEnd(); }
+      for (const g of gs) if (isNew(g)){ given.push(g.id); seen[g.id] = wn; if (!c || c.k !== g.data.k) continue;
+        const w = trimWords(g.data.k, c.t0 < at(g) - tol ? 'ext' : 'new'); log(w.no, w.en); say(g, w.no, w.en); names.push(BOOSTS[g.data.k][lang]); } }); }
+  // 4. Skippertak, one for the whole fleet
+  { const sk = list.filter(g => g.held && (g.data || {}).give === 'skip' && SKIP[g.data.k] && isFinite(ms(g))), fresh = sk.filter(isNew);
+    const c = boostSrv(sk.map(g => ({k:g.data.k, h:SKIP[g.data.k].h, at:at(g)})), true, now), on = skipOn() ? S.skip : null;
+    if (c){ if (!on || fresh.length || Math.abs(on.until - c.until) > tol){ if (on && !fresh.length) ev('skip', {k:on.k}); giveSkip(c.k, c.until, c.t0); } }
+    else if (S.skip && S.skip.until != null && S.skip.until > now){ ev('skip', {k:S.skip.k}); S.skip = null; }
+    for (const g of fresh){ given.push(g.id); seen[g.id] = wn; if (!c) continue; const X = SKIP[g.data.k], h = Math.max(0, (c.until - now) / 60), r = fmt(h / GAME_RATE, h / GAME_RATE < 10 ? 1 : 0);
+      log(X.no + ': du og mannskapet på hele flåten er uthvilt i ' + Math.round(h) + ' timer.', X.en + ': you and the crews of the whole fleet are rested for ' + Math.round(h) + ' hours.');
+      say(g, 'Du og mannskapet på hele flåten er uthvilt i ' + fmt(h, 0) + ' timer (' + r + ' timer i virkeligheten), også på driftsplanene.', 'You and the crews of the whole fleet are rested for ' + fmt(h, 0) + ' hours (' + r + ' hours in real life), on the operations plans too.'); names.push(X[lang]); } }
+  // 5. the yard done now: the grants not used are the credits; one that came now finishes the yard jobs on its boat at once
+  { const q = S.yardQ || (S.yardQ = []), ys = list.filter(g => g.held && (g.data || {}).give === 'yard' && !q.includes(g.id));
+    if ((S.yardCredit || 0) > ys.length) ev('yard', {n:S.yardCredit - ys.length});
+    S.yardSrv = ys.map(g => g.id); S.yardCredit = ys.length;
+    for (const g of ys) if (isNew(g)){ given.push(g.id); seen[g.id] = wn; if (g.data.imp) continue; const v = (S.fleet || []).find(x => x.id === g.data.boat) || curVessel();
+      withVessel(v, () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
+        if (n){ const i = S.yardSrv.indexOf(g.id); if (i >= 0) S.yardSrv.splice(i, 1); S.yardCredit = S.yardSrv.length; q.push(g.id); }
+        const no = n ? 'Verftet gjorde ' + (n > 1 ? n + ' jobber' : 'jobben') + ' på «' + S.boatName + '» ferdig med én gang.' : 'Jobben på «' + S.boatName + '» ble ferdig før kjøpet kom fram. «Ferdig nå» ligger klar og gjør neste verftsjobb ferdig med én gang.',
+          en = n ? 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.' : 'The job on the «' + S.boatName + '» was done before the purchase came. «Done now» is kept and finishes the next yard job at once.';
+        log(no, en); say(g, no, en); names.push(shopL('Verftet er ferdig', 'The yard is done')); }); } }
+  // 6. the paid paint designs: the account's entitlements, never the save's own list
+  if (Array.isArray(st.owned)){ CLOUD.owned = st.owned.slice(); if (typeof cosSrv === 'function') cosSrv(st.owned); }
+  // 7. what is still open: a paint design, given as before and the server told (shop_done); one this game does not know is left there
+  for (const g of list){ if (g.held) continue;
+    if (given.includes(g.id)){ seen[g.id] = wn; ids.push(g.id); continue; }
+    const nm = shopGive(g); if (!nm){ if (!unk.has(g.id)){ unk.add(g.id); console.warn('shop: a grant this game does not know', g.id, g.product); if (typeof cloudEv === 'function') cloudEv('shop_unknown', {id:g.id, product:g.product}); } continue; }
+    names.push(nm); given.push(g.id); seen[g.id] = wn; ids.push(g.id); }
+  // 8. tonight's round at the pub, taken on another device or before a save was lost
+  if (world && st.pub && st.pub.e === pubEvening(S.t / 60) && S.pubE !== st.pub.e) S.pubE = st.pub.e;
+  { const keep = givenKeep(given, seen, wn, 8); if (keep.length !== given.length) given.splice(0, given.length, ...keep); }
+  if (snap() === was && !ids.length && !rc.length && !thanks && !gifts){ if ((S.yardQ || []).length) haillTell(); return 0; }
+  save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
+  if (ids.length) cloudRpc('shop_done', {ids}).catch(e => console.error(e));
+  if ((S.yardQ || []).length) haillTell();
+  if (rc.length) shopThanks(rc);
+  shopWords(gifts, thanks);
+  if (typeof PHONE !== 'undefined' && PHONE.isOpen()) PHONE.render(); if (typeof refreshAll === 'function') refreshAll();
+  return names.length;
+}
+// the directorate's message for the welcome gift, and the thanks for feedback that helped
+function shopWords(gifts, thanks){
+  if (gifts){ msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
+    toast(shopL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.')); }
+  if (thanks){ const no = 'Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. ' + (thanks > 1 ? thanks + ' takk-haill' : 'Takk-haill') + ' med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.',
+      en = 'Thank you for your feedback! It helped us make the game better. ' + (thanks > 1 ? thanks + ' thank-you lucks' : 'Thank-you luck') + ' with 12 hours of full luck ' + (thanks > 1 ? 'are' : 'is') + ' in the Luck app. Switch it on when you like.';
+    msg('Det Store Blå', no, en); toast(shopL(no, en)); }
 }
 async function shopClaim(){
   if (!CLOUD.on || !CLOUD.user) return 0;
+  // (HS4: a server that has shop_state is the truth, and the copy is written over; one from before it goes on as after HS3, below.
+  // One claim at a time: two answers must never be written over each other)
+  if (SHOP.claiming) return SHOP.claiming;
+  if (SHOP.hs4 !== false || S.achH){ const p = shopClaim4().finally(() => { SHOP.claiming = null; }); SHOP.claiming = p.then(n => n == null ? 0 : n); const n = await p; if (n != null) return n; }
   await haillTell();
   let list; try { list = await cloudRpc('shop_pending', {}); } catch (e){ return 0; }
   list = list || []; haillInit();
@@ -213,11 +378,7 @@ async function shopClaim(){
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
   if (ids.length) try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }
   if (rc.length) shopThanks(rc);
-  if (gifts){ msg('Fiskeridirektoratet', 'Du er ført i fiskermanntallet i eget navn. Spillet ditt er lagret på kontoen, og en luksushaill ligger om bord som velkomstgave. God tur!', 'You are in the fishermen’s register in your own name. Your game is saved to the account, and a luxury luck is aboard as a welcome gift. Good fishing!');
-    toast(shopL('Registrert! Luksushaill om bord.', 'Registered! A luxury luck aboard.')); }
-  if (thanks){ const no = 'Takk for tilbakemeldingen! Den hjalp oss å gjøre spillet bedre. ' + (thanks > 1 ? thanks + ' takk-haill' : 'Takk-haill') + ' med 12 timer fullt haill ligger i Haill-appen. Aktiver det når du vil.',
-      en = 'Thank you for your feedback! It helped us make the game better. ' + (thanks > 1 ? thanks + ' thank-you lucks' : 'Thank-you luck') + ' with 12 hours of full luck ' + (thanks > 1 ? 'are' : 'is') + ' in the Luck app. Switch it on when you like.';
-    msg('Det Store Blå', no, en); toast(shopL(no, en)); }
+  shopWords(gifts, thanks);
   if (typeof PHONE !== 'undefined' && PHONE.isOpen()) PHONE.render(); if (typeof refreshAll === 'function') refreshAll();
   return names.length;
 }
