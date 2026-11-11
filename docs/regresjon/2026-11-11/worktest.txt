@@ -1,0 +1,54 @@
+{"fishEmpty": ["fiske", "fiske", "fiske"], "fishTub": ["sloy", "fiske", "fiske"], "gutRate": [5, 5], "effort": [6.91, 4.91], "allFishStop": {"stop": true, "on": ["sloy", "is", "pause"]}, "table": 1, "seed": [true, true, true, true], "sailing": ["ror", "sloy", "is"], "helm": [4], "mate": [true], "haul": ["haling", "sloy", "sort"], "sortFaster": [4.83, 3.71], "forced": 1, "aground": 0, "port": 2, "kept": {"st": ["sloy", "is", "fiske"], "wk": true, "why": ["role", "habit"]}, "same": true, "switches": 2}
+OK   nobody tells them: everyone jigs; with fish in the tub one goes to gut and the others jig ['sloy', 'fiske', 'fiske']
+OK   gutting goes at 5 kg a minute times the gutter's skill
+OK   the one gutting is not at the rail: less fishing effort
+OK   a full tub stops the fishing, and the table and the tub take as many as they have room for {'stop': True, 'on': ['sloy', 'is', 'pause']}
+OK   a chain from before becomes what the person is used to, and the chains are gone [True, True, True, True]
+OK   under way you steer and the hands gut and ice ['ror', 'sloy', 'is']
+OK   without you the best seaman steers; with a mate, the mate [4] [True]
+OK   on pots one hauls, one sorts the crab and one guts; a sorter spares the haulers; worn out, someone still hauls ['haling', 'sloy', 'sort'] [4.83, 3.71]
+OK   aground nobody works; at the quay the deck takes as many as the table and the tub have room for 2
+OK   the station is kept on each person with why, and minutes per station {'st': ['sloy', 'is', 'fiske'], 'wk': True, 'why': ['role', 'habit']}
+OK   the same answer every time within a minute, and no reshuffle every minute (changes in 40 minutes) 2
+places: {"line4": {"st": "sloy,is,haling,blogg", "roles": "haler", "haul": 1, "tF": 1.2854135812471552, "min": 26.154175436236795}, "line1": {"st": "haling", "roles": "haler", "haul": 1, "tF": 1, "min": 26.154175436236795}, "net4": {"st": "haling,sloy,haling,blogg", "roles": "haler,plukk", "haul": 2, "tF": 1.1352623104233046, "min": 4.957973855268079}, "bait1": {"min": 192, "on": 1, "left0": 190, "done": true}, "bait3": {"min": 67, "on": 3, "left0": 64, "done": true}}
+OK   one hauls the line while one bleeds and the others gut and ice, and the hauler goes as fast as with one aboard (by the hauler's own pace) {'st': 'sloy,is,haling,blogg', 'roles': 'haler', 'haul': 1, 'tF': 1.2854135812471552, 'min': 26.154175436236795} {'st': 'haling', 'roles': 'haler', 'haul': 1, 'tF': 1, 'min': 26.154175436236795}
+OK   on a net one hauls and one picks the fish out, and a third bleeds {'st': 'haling,sloy,haling,blogg', 'roles': 'haler,plukk', 'haul': 2, 'tF': 1.1352623104233046, 'min': 4.957973855268079}
+OK   three baiting three tubs together are done sooner than one alone, and the time left shown is the time it takes {'min': 192, 'on': 1, 'left0': 190, 'done': True} {'min': 67, 'on': 3, 'left0': 64, 'done': True}
+life: {"learn": [0.246, 0.087, 0.051], "goodMeal": {"q": 4, "after": 1.5, "by": true, "at": true, "clock": 750}, "bread": {"q": 2, "after": 6, "by": true, "at": true}, "mood": [56.7, 51.7], "said": 9, "minGap": 30, "kept": 5}
+OK   a 19-year-old learns gutting much faster than a 55-year-old, and an unhappy one hardly learns
+OK   a cook of 4 on a break makes a meal of 4 at the next fixed hour (06:30, 12:30, 18:30, 00:30) {'q': 4, 'after': 1.5, 'by': True, 'at': True, 'clock': 750}
+OK   one who cooks at 2 makes hot dogs at the fixed hour (Ø8b M2: before, dry bread from nobody) {'q': 2, 'after': 6, 'by': True, 'at': True}
+OK   good food lifts the mood, bad food sinks it
+OK   the crew talks during a day at sea, not in bursts, and each keeps their last lines
+drive: {"hungry": [0.92, "hungry", "Går litt tregt: sulten"], "sea": [0.928, 0.95], "mood": 1.235, "team": [50, 70, "Godt samhold: de kommer godt overens", "pair"], "effect": [1.024, 0.06], "fresh": [70, 65, true], "quarrel": [65, 54, "Samholdet er så som så: krangelen henger i"]}
+OK   a meal an hour late takes about 8 % of the effort, and the words say they are hungry [0.92, 'hungry', 'Går litt tregt: sulten']
+OK   a heavy sea slows them, the seaman less [0.928, 0.95]
+OK   a glad hand works a fifth faster than a sour one 1.235
+OK   two who get on, with good food and days at sea together, pull together, and the line says why [50, 70, 'Godt samhold: de kommer godt overens', 'pair']
+OK   a crew that pulls together works harder and rests less [1.024, 0.06]
+OK   a new face takes the samhold some of the way back to the start [70, 65, True]
+OK   a quarrel left hanging pulls it down, and the line says so [65, 54, 'Samholdet er så som så: krangelen henger i']
+energy: {"seaHour": 4.17, "openQuay": 0, "bunks": 12.5, "quayHour": 12.5, "warn": true, "slow": 0.75, "asleep": true, "alone": true, "caught": 0, "drift": 1085, "st": "fishing", "black": true, "count": "Trykk ACK for å kvittere", "work": 0, "woke": {"asleep": false, "e": 60}, "blackGone": true, "crewTrip": {"asleep": true, "moved": 5492, "st": "sailing", "helm": [4.5004254545454545]}, "vign": 0.6, "vignOff": 0}
+OK   energy: −100/24 an hour at sea, +100/8 resting in the naust or aboard a boat with bunks, nothing in an open boat at a plant's quay
+OK   at 25 % you are warned and work at three quarters of your pace
+OK   alone at 0 % you sleep: no fishing, and the boat drifts with the wind (or grounds)
+FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+OK   with crew the trip goes on while you sleep, the best seaman at the helm
+OK   under 15 % the edges of the screen darken
+liggende {"noCrew": true, "btn": true, "tab": true, "rows": 3, "flow": ["Ror", "Fiske", "Sløying", "Ising", "Kokk"], "meters": 5, "kv": 0, "noChains": true, "whyShown": 2, "one": ["1/1/wk-mate", "1/1/wk-mate"], "menuShut": true, "menu": [true], "aboard": true, "menuGone": true, "mate": [true, true, true, true], "card": 10, "badge": ["Skipper", "Styrmann"], "cardShut": true, "ashore": ["wk-sk", "wk-sk"], "ashoreMenu": true, "shutOnClose": true, "team": "Samholdet er så som så: Magnus og Kjell går hverandre på nervene", "effShown": 1, "working": 1, "overflow": false, "small": []}
+OK   liggende: no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice ['Ror', 'Fiske', 'Sløying', 'Ising', 'Kokk'] 5 0
+OK   liggende: no chains to set up: each row says why the person does what they do 2
+OK   liggende: Gjør til styrmann makes the mate (the plan's too) and marks the card; a tap on the name shows the skills, and closes on a second tap [True, True, True, True] 10 ['Skipper', 'Styrmann']
+OK   liggende: one main button per person (aboard with no mate: Gjør til styrmann), Gjør til skipper behind «⋯», and the menu shuts when a post is chosen (U2-7) ['1/1/wk-mate', '1/1/wk-mate'] [True]
+OK   liggende: not aboard the main button is Gjør til skipper, and the «⋯» shuts with the drawer (U2-7) ['wk-sk', 'wk-sk'] True True
+OK   liggende: the samhold line on top, and how each one at work is going in words Samholdet er så som så: Magnus og Kjell går hverandre på nervene 1 1
+OK   liggende: no sideways scroll, and every button is at least 44 px []
+staende {"noCrew": true, "btn": true, "tab": true, "rows": 3, "flow": ["Ror", "Fiske", "Sløying", "Ising", "Kokk"], "meters": 5, "kv": 0, "noChains": true, "whyShown": 2, "one": ["1/1/wk-mate", "1/1/wk-mate"], "menuShut": true, "menu": [true], "aboard": true, "menuGone": true, "mate": [true, true, true, true], "card": 10, "badge": ["Skipper", "Styrmann"], "cardShut": true, "ashore": ["wk-sk", "wk-sk"], "ashoreMenu": true, "shutOnClose": true, "team": "Samholdet er så som så: Magnus og Kjell går hverandre på nervene", "effShown": 1, "working": 1, "overflow": false, "small": []}
+OK   staende: no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (and mood for the crew), nobody listed twice ['Ror', 'Fiske', 'Sløying', 'Ising', 'Kokk'] 5 0
+OK   staende: no chains to set up: each row says why the person does what they do 2
+OK   staende: Gjør til styrmann makes the mate (the plan's too) and marks the card; a tap on the name shows the skills, and closes on a second tap [True, True, True, True] 10 ['Skipper', 'Styrmann']
+OK   staende: one main button per person (aboard with no mate: Gjør til styrmann), Gjør til skipper behind «⋯», and the menu shuts when a post is chosen (U2-7) ['1/1/wk-mate', '1/1/wk-mate'] [True]
+OK   staende: not aboard the main button is Gjør til skipper, and the «⋯» shuts with the drawer (U2-7) ['wk-sk', 'wk-sk'] True True
+OK   staende: the samhold line on top, and how each one at work is going in words Samholdet er så som så: Magnus og Kjell går hverandre på nervene 1 1
+OK   staende: no sideways scroll, and every button is at least 44 px []
+errors: []
