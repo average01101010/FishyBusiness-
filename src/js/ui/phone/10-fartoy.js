@@ -1,4 +1,4 @@
-  const tradeIn = () => vesselValue(curVessel());
+  const tradeIn = () => mbValue(curVessel()) - (tiKeepOn() ? mbLicKr(curVessel()) : 0);   // (KM4: without the second quota, and without the right when it is kept; 13c-megler.js)
   // what a purchase costs (deal() in core/03-simulation.js): the trade-in pays off the loans first, then the bank and Innovasjon Norge
   const whyText = x => x.why === 'notes' ? L('Banken vil se tre sluttsedler først.', 'The bank wants to see three landing notes first.') : x.why === 'eq' ? L('For lite egenkapital.', 'Too little equity.') : x.why === 'cap' ? L('Banken låner ikke mer: all gjeld skal ligge innenfor 80 % av verdien på flåten.', 'The bank lends no more: all debt has to stay within 80% of the fleet\'s value.') : '';
   const payNote = (x, no, en, loanNo, loanEn) => '<p class="ph-note">' + L(no, en) + kr(x.cost) + (x.payoff ? ' · ' + L('innbyttet innfrir først ', 'the trade-in first pays off ') + kr(x.payoff) + L(' av gjelda', ' of the debt') : '') +
@@ -261,6 +261,7 @@
         kv(L('Ledige i registeret', 'Left in the register'), fmt(npcReg()[hid] || 0, 0) + ' ' + L('av', 'of') + ' ' + HREG[hid]), kv(L('Kilde', 'Source'), P.src)])); }
     for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying
+    if (!V.lock && !mine && free) h.push(tiLicRow());   // (KM4: the right follows the boat traded in, or is kept as a free right; 13c-megler.js)
     if (V.lock) h.push('<p class="ph-note">' + (hid ? L('Kan ikke kjøpes ennå. Prisen er skroget og kvotene: ' + HAVLIC[hid].no.toLowerCase() + ' med kvotefaktorene til selgeren følger med båten. Det krever blad B.', 'Cannot be bought yet. The price is the hull and the quotas: the ' + HAVLIC[hid].en.toLowerCase() + ' with the seller\'s quota factors comes with her. It needs blad B.') : L('Kan ikke kjøpes ennå.', 'Cannot be bought yet.')) + '</p>');
     else if (hid && !mine && havLicWhy(k)) h.push('<p class="ph-note"><b>' + L(havLicWhy(k)[0], havLicWhy(k)[1]) + '</b></p>');
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');

@@ -203,6 +203,92 @@ async def main():
         await shot(pg, '#drawerBody .mg-here', 'megle_verft_liggende.png')
         await pg.evaluate("DOCK.close()")
 
+        # 7b. KM4: the boat with or without her right (V2 A). «Flytt hjemmelen til …» in Rederi, the free right, the choice in «Legg ut til
+        # salgs», the card that says which it is, the right back when the server says no, and the same choice at the yard's trade-in
+        await pg.evaluate("""(() => { const y = yearH(S.t / 60), L = {id:'h10', hl:HJ.h10.hl, kpk:260, since:y - 2, from:'Ola, Husøy', st:[{id:'h10', kf:0.4, from:y - 1, until:y + 19}]}; licExtra(L);
+          const a = newVesselObj('sjark', S.boat.port, L); vget(a, 'boat').status = 'port'; a.boatName = 'Hjemla'; a.quota = {y, torsk:3200, hyse:0, sei:0};
+          const b = newVesselObj('sjark', S.boat.port); vget(b, 'boat').status = 'port'; b.boatName = 'Tomla'; window._a = a.id; window._b = b.id; S.licFree = []; save(); PHONE.show(true); PHONE.open('rederi'); })()"""); await pg.wait_for_timeout(250)
+        mv = await pg.evaluate("""(async () => { const q = s => document.querySelector('#phone ' + s), has = id => !!q('[data-pa=mbmv][data-id=' + id + ']'); const R = {a:has(_a), b:has(_b)};
+          q('[data-pa=mbmv][data-id=' + _a + ']').click(); await new Promise(r => setTimeout(r, 150)); const sh = q('.mb-move');
+          R.sheet = !!sh; R.txt = sh ? sh.innerText.replace(/\\s+/g, ' ').slice(0, 500) : ''; R.to = [...document.querySelectorAll('#phone [data-pa=mbmvgo]')].map(e => [e.dataset.to === _b ? 'b' : e.dataset.to === 'free' ? 'free' : vget(vesselById(e.dataset.to), 'boatName'), e.disabled, e.dataset.why || '']); return R; })()""")
+        check(mv['a'] and not mv['b'] and mv['sheet'] and 'Strukturkvoter som følger den' in mv['txt'] and ['b', False, ''] in mv['to'] and ['free', False, ''] in mv['to'] and any(t[0] == 'Nordkyn' and t[1] and 'har alt en hjemmel' in t[2] for t in mv['to']),
+              'Rederi «⋯»: «Flytt hjemmelen til …» på båten med hjemmel; arket viser hjemmelen, strukturkvoten, de andre båtene med grunnen når det ikke går, og ledig hjemmel', mv)
+        await shot(pg, '#phone .mb-move', 'km4_flytt_liggende.png'); fk1 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(250); await shot(pg, '#phone .mb-move', 'km4_flytt_staaende.png'); fk2 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(200)
+        m2 = await pg.evaluate("""(async () => { const q = s => document.querySelector('#phone ' + s), w = () => new Promise(r => setTimeout(r, 150)), R = {};
+          q('[data-pa=mbmvgo][data-to=' + _b + ']').click(); await w(); const lb = vget(vesselById(_b), 'lic');
+          R.moved = !vget(vesselById(_a), 'lic') && lb && lb.id === 'h10' && lb.st.length === 1 && lb.since === yearH(S.t / 60) - 2 && vget(vesselById(_b), 'quota').torsk === 3200; R.msg = S.msgs[S.msgs.length - 1].no; R.sheet = !!q('.mb-move');
+          q('[data-pa=mbmv][data-id=' + _b + ']').click(); await w(); q('[data-pa=mbmvgo][data-to=free]').click(); await w();
+          R.free = S.licFree.length === 1 && !vget(vesselById(_b), 'lic') && S.licFree[0].st.length === 1 && S.licFree[0].used.torsk === 3200; R.card = (q('.fl-free') || {}).innerText || ''; R.msg2 = S.msgs[S.msgs.length - 1].no; return R; })()""")
+        check(m2['moved'] and 'flyttet til' in m2['msg'] and not m2['sheet'] and m2['free'] and 'Ledige hjemler' in m2['card'] and 'to år' in m2['msg2'],
+              'flyttet til en annen egen båt med strukturkvoten, kjøpsåret og årets fangst; så til ledig hjemmel, som står under flåten i Rederi', m2)
+        await shot(pg, '#phone .fl-free', 'km4_ledig_liggende.png')
+        m3 = await pg.evaluate("""(async () => { const q = s => document.querySelector('#phone ' + s), w = () => new Promise(r => setTimeout(r, 150)); q('.fl-free [data-pa=mbmv]').click(); await w(); const sh = !!q('.mb-move'), free = !!q('[data-pa=mbmvgo][data-to=free]');
+          q('[data-pa=mbmvgo][data-to=' + _a + ']').click(); await w(); const la = vget(vesselById(_a), 'lic'); return {sh, free, back:!!la && la.id === 'h10' && la.since === yearH(S.t / 60) - 2 && S.licFree.length === 0 && vget(vesselById(_a), 'quota').torsk === 3200}; })()""")
+        check(m3['sh'] and not m3['free'] and m3['back'], 'og fra ledig hjemmel tilbake til en båt, uten tap', m3)
+        # «Legg ut til salgs»: the choice, the value with and without the right
+        await pg.evaluate("document.querySelector('#phone [data-pa=mbput][data-id=' + _a + ']').click()"); await pg.wait_for_timeout(300)
+        fo = await pg.evaluate("""(async () => { const q = s => document.querySelector('#phone ' + s), w = () => new Promise(r => setTimeout(r, 120)), v = vesselById(_a), R = {full:mbValue(v), lic:mbLicKr(v)};
+          R.chips = [...document.querySelectorAll('#phone .mb-lich .chip-b')].map(e => [e.innerText.split('\\n')[0], e.classList.contains('on')]); R.start0 = +document.getElementById('mbStart').value;
+          q('[data-pa=mblic][data-s=keep]').click(); await w(); R.keep = [...document.querySelectorAll('#phone .mb-keep .chip-b')].map(e => [e.innerText.replace(/\\s+/g, ' '), e.classList.contains('on'), e.disabled]);
+          R.start1 = +document.getElementById('mbStart').value; R.txt = q('.mb-form').innerText.replace(/\\s+/g, ' '); return R; })()""")
+        check(fo['chips'] == [['Hjemmelen følger med', True], ['Uten hjemmel', False]] and fo['lic'] > 0 and fo['start1'] < fo['start0'] and fo['start1'] <= fo['full'] - fo['lic'] + 25000 and any('Ledig hjemmel' in k[0] and k[1] for k in fo['keep'])
+              and any('Tomla' in k[0] and not k[2] for k in fo['keep']) and any('Nordkyn' in k[0] and k[2] and 'har alt en hjemmel' in k[0] for k in fo['keep']) and 'Verdien hennes uten hjemmel' in fo['txt'] and 'selges uten hjemmel' in fo['txt'],
+              '«Legg ut til salgs»: «Hjemmelen følger med» eller «Uten hjemmel»; uten er verdien skroget, og hjemmelen går til ledig hjemmel eller en egen båt som kan ta den', fo)
+        await shot(pg, '#phone .mb-licsel', 'km4_valg_liggende.png'); fk3 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(250); await shot(pg, '#phone .mb-licsel', 'km4_valg_staaende.png'); fk4 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(200)
+        # the server says no: the right is back on her, and nothing is left as a free right
+        dn = await pg.evaluate("""(async () => { const v = vesselById(_a), m0 = S.msgs.length; FAKE.down = true; const r = await MBC.put(v.id, Math.round(mbValue(v) - mbLicKr(v)), null, 24, {free:true}); FAKE.down = false;
+          const l = vget(v, 'lic'); return {err:r.err, lic:!!l && l.id === 'h10' && l.st.length === 1, free:S.licFree.length, sale:mbSale(v), msgs:S.msgs.length - m0, q:vget(v, 'quota').torsk}; })()""")
+        check(dn['err'] == 'srv' and dn['lic'] and dn['free'] == 0 and dn['sale'] is None and dn['msgs'] == 0 and dn['q'] == 3200, 'sier serveren nei, er hjemmelen tilbake på båten og ingenting er flyttet', dn)
+        pk = await pg.evaluate("""(async () => { const v = vesselById(_a), q = s => document.querySelector('#phone ' + s), n0 = FAKE.calls.length; document.querySelector('#phone [data-pa=mbkeep][data-s=free]').click(); await new Promise(r => setTimeout(r, 100));
+          document.getElementById('mbBuy').value = ''; q('[data-pa=mbputgo]').click(); await new Promise(r => setTimeout(r, 350));
+          const c = FAKE.calls.slice(n0).find(x => x[0] === 'listing_put'), s = mbSale(v); PHONE.open('rederi'); await new Promise(r => setTimeout(r, 150));
+          return {call:c && {lic:c[1].vessel.lic, quota:c[1].vessel.quota, lic_kr:c[1].lic_kr, value:c[1].value}, hull:vesselValue(v), kept:s && s.kept, free:S.licFree.length, noLic:!vget(v, 'lic'), row:/Til salgs hos Kystmegleren uten hjemmel/.test(q('.ph-c').innerText), lid:s && s.lid}; })()""")
+        check(pk['call'] and pk['call']['lic'] is None and pk['call']['quota'] is None and pk['call']['lic_kr'] == 0 and pk['call']['value'] == pk['hull'] and pk['kept'] and pk['kept'].get('free') and pk['free'] == 1 and pk['noLic'] and pk['row'],
+              'lagt ut uten hjemmel: hjemmelen er ledig hjemmel før serveren spørres, pakka har ingen hjemmel, verdien er skroget, og Rederi sier «uten hjemmel»', pk)
+        # the card: every boat says which it is, also for the buyer
+        cd = await pg.evaluate("""(async () => { window._nL = FAKE.other({type:'kyst15', name:'Havørn', port:_far, value:9000000, start:6000000, vessel:{lic:null}}); window._wL = FAKE.other({type:'kyst15', name:'Lomvi', port:_far, value:11000000, lic_kr:2000000, start:8000000, vessel:{lic:{id:'h14', hl:'14–14,9 m'}}});
+          MBC._st.at = 0; await MBC.load(true); PHONE.open('nett'); const bk = document.querySelector('#phone .mkback[data-s=home]'); if (bk) bk.click(); document.querySelector('#phone .net-tile[data-s=megler]').click(); await new Promise(r => setTimeout(r, 300));
+          const C = id => (document.querySelector('#phone .mg-card[data-id="' + id + '"]') || {}).innerText || ''; const R = {no:C(_nL), yes:C(_wL)};
+          document.querySelector('#phone .mg-card[data-id="' + _nL + '"]').click(); await new Promise(r => setTimeout(r, 250)); R.sheet = document.querySelector('#phone .mg-sheet').innerText.replace(/\\s+/g, ' '); PHONE.dact('nett', 'mgsel', {}); return R; })()""")
+        check('UTEN HJEMMEL' in cd['no'].upper() and 'HJEMMEL FØLGER MED' in cd['yes'].upper() and '14–14,9 m' in cd['yes'] and 'selges uten hjemmel' in cd['sheet'] and 'bifangst' in cd['sheet'],
+              'kortet sier «Uten hjemmel» eller «Hjemmel følger med», også for kjøperen, og oppføringen sier hva det betyr', cd)
+        await pg.wait_for_timeout(200); await pg.evaluate("(() => { const e = document.querySelector('#phone .mg-card[data-id=\"' + _nL + '\"]'); if (e) e.scrollIntoView({block:'start'}); })()")
+        await shot(pg, '#phone .mg-card[data-id="%s"]' % await pg.evaluate("_nL"), 'km4_kort_liggende.png'); fk5 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(250); await shot(pg, '#phone .mg-card[data-id="%s"]' % await pg.evaluate("_nL"), 'km4_kort_staaende.png'); fk6 = await pg.evaluate(FIT % '#phone')
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(200)
+        # withdrawn: the toast says the right can be put back; and it is, from the free rights
+        wd = await pg.evaluate("""(async () => { const v = vesselById(_a); await MBC.cancel(mbSale(v).lid); const src = {free:0}, r = mbMove(src, {v}); return {sale:mbSale(v), ok:r.ok, lic:!!vget(v, 'lic'), free:S.licFree.length}; })()""")
+        check(wd['sale'] is None and wd['ok'] and wd['lic'] and wd['free'] == 0, 'trukket fra salg: hjemmelen settes tilbake på henne fra ledig hjemmel', wd)
+        # the answer is lost on the way (the net fell out) but the server has her out: she is locked as the server has her, and the right
+        # stays where it was moved (put back on her, it would be lost when she is sold without it)
+        ls2 = await pg.evaluate("""(async () => { const v = vesselById(_a), rpc = window.cloudRpc; window.cloudRpc = async (fn, a) => { const r = await rpc(fn, a); if (fn === 'listing_put') throw new TypeError('Failed to fetch'); return r; };
+          const r = await MBC.put(v.id, Math.round(mbValue(v) - mbLicKr(v)), null, 24, {free:true}); window.cloudRpc = rpc; const s0 = mbSale(v), R = {ok:r.ok, lid:s0 && s0.lid, kept:s0 && s0.kept, lic:!!vget(v, 'lic'), free:S.licFree.length};
+          await MBC.cancel(s0.lid); mbMove({free:0}, {v}); R.back = !!vget(v, 'lic') && !mbSale(v); return R; })()""")
+        check(ls2['ok'] and ls2['lid'] and ls2['kept'] and not ls2['lic'] and ls2['free'] == 1 and ls2['back'], 'svaret forsvant, men serveren har henne ute: hun er låst som serveren har henne, og hjemmelen står ledig, ikke tilbake på båten', ls2)
+        # the yard's trade-in: the same choice. Following the boat with the right at the yard, a plastic sjark with her traded in
+        ti = await pg.evaluate("""(async () => { PHONE.show(false); const v = vesselById(_a), w = () => new Promise(r => setTimeout(r, 150)); storeVessel(curVessel()); bindVessel(v); S.boat.berth = 'main'; renderActs();
+          const full = mbValue(v), lk = mbLicKr(v), R = {full, lk}; DOCK.open('fartoy:marked'); await w(); const dr = document.getElementById('drawerBody'), tap = s => { const e = dr.querySelector(s); if (e) e.click(); return !!e; };
+          tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=open]'); await w(); tap('[data-pa=mksel][data-k=plastsjark]'); await w();
+          R.row = (dr.querySelector('.ti-lic') || {}).innerText || ''; R.on0 = (dr.querySelector('.ti-lic .chip-b.on') || {}).innerText || ''; tap('[data-pa=mbti][data-s=keep]'); await w(); R.on1 = (dr.querySelector('.ti-lic .chip-b.on') || {}).innerText || '';
+          const c0 = S.cash, d0 = debt(); R.buy = tap('[data-pa=buy][data-ti="1"]'); await w();
+          R.type = S.boat.type; R.lic = S.lic; R.free = S.licFree.length; R.f = S.licFree[0] && {id:S.licFree[0].id, st:S.licFree[0].st.length, used:S.licFree[0].used.torsk}; R.paid = Math.round(c0 - S.cash); R.price = VESSELS.plastsjark.price; R.debt = debt() - d0; R.log = S.log.slice(-6).filter(l => /ledig hjemmel|Overtok/.test(l.no)).map(l => l.no.slice(0, 60)).join(' | ');
+          const e = document.querySelector('#buyMoment .bm-skip'); if (e) e.click(); DOCK.close(); return R; })()""")
+        ti['row'] = ti['row'][:60]; ti['on0'] = ti['on0'][:30]; ti['on1'] = ti['on1'][:30]
+        check('Hjemmelen ved innbytte'.upper() in ti['row'].upper() and 'Følger innbyttebåten' in ti['on0'] and 'Behold som ledig hjemmel' in ti['on1'] and ti['buy'] and ti['type'] == 'plastsjark' and ti['lic'] is None and ti['free'] == 1 and ti['f'] == {'id': 'h10', 'st': 1, 'used': 3200}
+              and abs(ti['paid'] - (ti['price'] - (ti['full'] - ti['lk']))) <= 2 and 'ledig hjemmel' in ti['log'],
+              'innbytte på verftet: «Følger innbyttebåten» eller «Behold som ledig hjemmel»; beholdt er innbyttet skroget, og hjemmelen står ledig i rederiet med strukturkvoten og fangsten', ti)
+        await pg.evaluate("""(async () => { S.lic = S.licFree.length ? null : S.lic; const f = S.licFree[0]; if (f) mbMove({free:0}, {v:curVessel()}); DOCK.open('fartoy:marked'); await new Promise(r => setTimeout(r, 150));
+          const dr = document.getElementById('drawerBody'), tap = s => { const e = dr.querySelector(s); if (e) e.click(); }; tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=open]'); await new Promise(r => setTimeout(r, 100)); tap('[data-pa=mksel][data-k=snekke]'); })()"""); await pg.wait_for_timeout(250)
+        await shot(pg, '#drawerBody .ti-lic', 'km4_innbytte_liggende.png'); fk7 = await pg.evaluate(FIT % '#drawerBody')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(300); await shot(pg, '#drawerBody .ti-lic', 'km4_innbytte_staaende.png'); fk8 = await pg.evaluate(FIT % '#drawerBody')
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(200)
+        check(not any([fk1, fk2, fk3, fk4, fk5, fk6, fk7, fk8]), 'KM4: ingenting stikker ut, liggende og stående', [fk1, fk2, fk3, fk4, fk5, fk6, fk7, fk8])
+        await pg.evaluate("(() => { DOCK.close(); const me = vesselById(S.me); if (me && me.id !== S.cur){ storeVessel(curVessel()); bindVessel(me); } })()")
+
         # 8. the server without the broker (404): as without the cloud, and no more asking
         gn = await pg.evaluate("(async () => { FAKE.gone = true; MBC._st.at = 0; await MBC.load(true); const off = !MBC.on(); FAKE.gone = false; return {off}; })()")
         check(gn['off'], 'en server uten megleren (404): Kystmegleren slår seg av for økta', gn)
