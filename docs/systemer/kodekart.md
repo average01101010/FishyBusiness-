@@ -2713,12 +2713,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1515 linjer)
+## `src/js/ui/phone/07-patch.js` (1520 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1503 `patch()`
+  - 1508 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3002,7 +3002,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **1** deck log
   - 7 `longDate(day)`
 
-## `src/js/ui/06b-book-tabs.js` (174 linjer)
+## `src/js/ui/06b-book-tabs.js` (175 linjer)
 
 ---------- the deck log's other tabs: seasons, events, gear and sales ----------
 
@@ -3016,9 +3016,9 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 80 `bookGear()`
 - **96** sales: the landing notes, one to a page
   - 107 `bookSales()`
-  - 150 `gearLogEntry(s)`
-  - 156 `bkSplit(items, now, per, head, headNow, emptyOver, emptyNow)`
-  - 162 `bookTabPages(t, spread)`
+  - 151 `gearLogEntry(s)`
+  - 157 `bkSplit(items, now, per, head, headNow, emptyOver, emptyNow)`
+  - 163 `bookTabPages(t, spread)`
 
 ## `src/js/ui/06c-notebook.js` (44 linjer)
 
@@ -3048,7 +3048,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (445 linjer)
+## `src/js/ui/07-guide.js` (446 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -3069,13 +3069,13 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 269 `quayText(short)`
   - 275 `panelPort()`
   - 309 `portSlip()`
-  - 386 `landWarn(p)`
-  - 401 `landQText(short)`
-  - 409 `landQOthers()`
-  - 418 `landPage()`
-  - 434 `panelLog()`
-  - 439 `renderPanel()`
-  - 443 `panelBusy()`
+  - 387 `landWarn(p)`
+  - 402 `landQText(short)`
+  - 410 `landQOthers()`
+  - 419 `landPage()`
+  - 435 `panelLog()`
+  - 440 `renderPanel()`
+  - 444 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (328 linjer)
 
@@ -3134,37 +3134,37 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (468 linjer)
+## `src/js/ui/08-actions.js` (476 linjer)
 
 actions
 
   - 6 `doAct(el)`
   - 76 `panelInput(e)`
   - 82 `panelChange(e)`
-  - 106 `landConf(H, q, acc)`
-  - 145 `sell()`
-- **284** modal
-  - 286 `modal(html)`
-  - 295 `boatUnnamed()`
-  - 296 `boatChristen(nm)`
-  - 298 `showIntro(namesOnly)`
-- **316** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 321 `awayStart(mins, realMs)`
-  - 322 `awayEnd()`
-  - 323 `showAway(A)`
-- **350** time
-  - 356 `playMinutes(n, away)`
-  - 360 `catchUp(realMs)`
-  - 371 `tick()`
-  - 408 `deliverOrder()`
-- **418** chrome
-  - 419 `applyLang()`
-- **432** screens: full-screen 3D, or the chart plotter for route planning
-  - 433 `setBodyView(v3d)`
-  - 438 `openPlotter()`
-  - 443 `plotSetRender()`
-  - 447 `plotSetOpen(on)`
-  - 460 `kinoUi()`
+  - 112 `landConf(H, q, acc)`
+  - 151 `sell()`
+- **292** modal
+  - 294 `modal(html)`
+  - 303 `boatUnnamed()`
+  - 304 `boatChristen(nm)`
+  - 306 `showIntro(namesOnly)`
+- **324** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 329 `awayStart(mins, realMs)`
+  - 330 `awayEnd()`
+  - 331 `showAway(A)`
+- **358** time
+  - 364 `playMinutes(n, away)`
+  - 368 `catchUp(realMs)`
+  - 379 `tick()`
+  - 416 `deliverOrder()`
+- **426** chrome
+  - 427 `applyLang()`
+- **440** screens: full-screen 3D, or the chart plotter for route planning
+  - 441 `setBodyView(v3d)`
+  - 446 `openPlotter()`
+  - 451 `plotSetRender()`
+  - 455 `plotSetOpen(on)`
+  - 468 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -3615,7 +3615,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1683 linjer)
+## `src/js/vessel3d.js` (1696 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3703,43 +3703,43 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 971 `stripProud(type, st)`
   - 994 `stripPaint(type, st)`
   - 1015 `markStrips(type)`
-  - 1023 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1048 `callStrips(type)`
-  - 1054 `callRGB(type, liv)`
-  - 1057 `anchorLen(bw)`
-  - 1060 `markRGB(type, liv)`
-  - 1068 `hullRGB(type, liv)`
-- **1078** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1089 `facingTris(P, dir, keep)`
-  - 1104 `rayZ(T, x, y, dir, za, zb)`
-  - 1115 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1126 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1137 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1148 `houseFront(type, P, Gl, V)`
-  - 1184 `transom(type, P, V)`
-  - 1219 `namePlaces(type)`
-  - 1237 `placeRGB(type, p, liv)`
-  - 1245 `nameInkLight(rgb)`
-  - 1249 `npcKit(L, B)`
-  - 1252 `npcModel(type, lod, liv)`
-  - 1254 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1266** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1285 `vestKit(K)`
-  - 1300 `wkPart(name, kit)`
-  - 1310 `wkPut(B, o, ax, s, at)`
-  - 1320 `wkLimb(B, o, A, E, r)`
-  - 1327 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1349 `vesselSVG(type, w, h)`
-- **1387** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1394 `deckMap(type)`
-  - 1539 `deckPass(M, k, q)`
-  - 1544 `passLine(M, A, B)`
-  - 1546 `linkPass(M, k, q)`
-  - 1550 `deckComp(M)`
-  - 1559 `deckPath(M, a, b)`
-- **1590** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1603 `lanterns(G, V, st)`
-  - 1642 `deckPoints(type)`
+  - 1028 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1053 `callStrips(type)`
+  - 1059 `callRGB(type, liv)`
+  - 1062 `anchorLen(bw)`
+  - 1065 `markRGB(type, liv)`
+  - 1074 `hullRGB(type, liv)`
+- **1084** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1095 `facingTris(P, dir, keep)`
+  - 1110 `rayZ(T, x, y, dir, za, zb)`
+  - 1121 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1132 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1143 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1154 `houseFront(type, P, Gl, V)`
+  - 1197 `transom(type, P, V)`
+  - 1232 `namePlaces(type)`
+  - 1250 `placeRGB(type, p, liv)`
+  - 1258 `nameInkLight(rgb)`
+  - 1262 `npcKit(L, B)`
+  - 1265 `npcModel(type, lod, liv)`
+  - 1267 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1279** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1298 `vestKit(K)`
+  - 1313 `wkPart(name, kit)`
+  - 1323 `wkPut(B, o, ax, s, at)`
+  - 1333 `wkLimb(B, o, A, E, r)`
+  - 1340 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1362 `vesselSVG(type, w, h)`
+- **1400** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1407 `deckMap(type)`
+  - 1552 `deckPass(M, k, q)`
+  - 1557 `passLine(M, A, B)`
+  - 1559 `linkPass(M, k, q)`
+  - 1563 `deckComp(M)`
+  - 1572 `deckPath(M, a, b)`
+- **1603** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1616 `lanterns(G, V, st)`
+  - 1655 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (827 linjer)
 

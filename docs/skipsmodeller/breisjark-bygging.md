@@ -45,3 +45,14 @@ målingen ved foten ga falske treff i den høye akterskansen. `tests/ma36shot.py
 
 61 259 trekanter nær, `lodm` 39 999, fjern 3 918, glass 194, GLB 3,6 MB (før: 25 133 / 2 815, 0,84 MB). Deplasementet er 21,9 t ved
 tegningens vannlinje (før 29,5). Dypgangen er 2,00 m med skoen. Lengden i båndet til `vessel3d` er 11,12 m og bredden 4,11 m.
+
+## 6. Runde 2 (OB11, 11.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.9. Det som gjelder neste båt:
+
+- **En endring i skrogets bredde flytter spillets plasser, også når alt i skriptet stemmer.** Dekkskartet har ruter på 0,2 m, og `deckcrew.js` velger karenes losseplass (`landSlots`) og plassene ved ripa etter rutene. 4 cm mer dørk i en låring ga en ny losseplass og tok plassen til han som gir tegn. `check()` i skriptet ser det ikke; `crewclip` gjør. Kjør `crewclip` rett etter en eksport som endrer skrogets eller dørkens omriss, før bildene tas.
+- **Bilder på skjermer og mønster på dørk uten teksturer:** et rutenett av små flater (11 mm på skjermene, 10 cm på dørken) med et eget materiale, farget i hjørnene av `wear()` etter punktets plass. Spillet og rendringen viser det samme, og fjernmodellen er uten.
+- **Sklisikring som et lag 4 mm over dørken**, bare der ingenting står (`grip_free`): rennene langs skansene og rundt luka, casingen og føttene leser som glatt gelcoat fordi feltene stopper før dem.
+- **En modell kan si hvor navnet og merket står** (`anchors.nameHouse`, `anchors.marks`), når spillets søk ikke finner plassen eieren vil ha. Merkets stripe trenger tette stasjoner i baugen (49 på 1,08 m): `stripProud` leser nærmeste stasjon, og bredden endrer seg 0,66 m per meter der. `regmarktest` var rød med ni.
+- **En liten flis ved et boolsk kutt** (lensporten som slutter 3 cm fra en stasjon) ga den ene flata `flatnorm` fant i runde 1. Flytt åpningen så stasjonen går gjennom den.
+- **Tekst i rendringene** lages med Blenders egen skrift gjort om til flater og lagt på skroget punkt for punkt (`render_only()`, aldri eksportert).

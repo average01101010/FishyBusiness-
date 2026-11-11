@@ -41,7 +41,7 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 | Båt | Satt i grunnlaget | Etter OB0 | Kapittel |
 |---|---|---|---|
 | `kyst15` | 76 (godkjent) | **71**, under grensen; etter OB12 **68** (egen evaluering, Jonas' skala; eksportert på nytt) | 4.9 |
-| `breisjark` | 72 | **68**; etter OB11 **68** (egen evaluering, Jonas' skala) | 4.8 |
+| `breisjark` | 72 | **68**; etter OB11 **68**, etter runde 2 **71** (11.11.2026, uavhengig evaluering, Jonas' skala; under grensen) | 4.8 |
 | `snekke` | ingen | **67** (forslag) | 4.3 |
 | `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala) | 4.7 |
 | `plastsjark` | 66 | **63** | 4.4 |
