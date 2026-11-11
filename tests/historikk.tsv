@@ -2744,3 +2744,6 @@
 2026-11-11 23:52	ccr-49289d8b-v7t3dk	8f36502+	selltest	LES	22	lite	samtidig	
 2026-11-11 23:52	ccr-49289d8b-v7t3dk	8f36502+	geartest	FEIL	33	lite	alene	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
 2026-11-11 23:41	claude/o14-f3-rest-fiskeplasser-74t7wv	a87ab0f+	boottest	OK	21	lite	alene	
+2026-11-11 23:56	ccr-49289d8b-v7t3dk	4459be8	boottest	OK	32	lite	samtidig	
+2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	sor62test	OK	72	lite	samtidig	
+2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	trip2	OK	40	lite	samtidig	
