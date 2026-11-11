@@ -155,7 +155,7 @@ THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes 
   - 76 `feltShapesFrom(bytes)`
   - 89 `feltShape(f)`
 
-## `src/js/core/02-species-gear.js` (453 linjer)
+## `src/js/core/02-species-gear.js` (454 linjer)
 
 Placeholder prices (NOK/kg, grade A) – to be tuned
 
@@ -166,25 +166,25 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 118 `minKgAt(sp, p)`
   - 122 `letGo(sp, w, p, H)`
 - **123** vessels, equipment, crew
-  - 275 `fuelWeek(w)`
-  - 277 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
-  - 364 `equipFits(k, type)`
-- **365** the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
-  - 369 `upgSum(...p)`
-  - 374 `equipLv(k, eq = S.equip, type = S.boat && S.boat.type)`
-  - 378 `equipTier(k, eq, type)`
-  - 382 `tierUnits(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
-  - 388 `tierKr(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
-  - 393 `equipKr(k, eq = S.equip, type = S.boat && S.boat.type)`
-  - 399 `knifeX(eq, type)`
-  - 400 `hookX(f, eq, type)`
-  - 403 `jigSlip(eq, type)`
-  - 406 `fuelBase(v, vmax, planing)`
-  - 407 `fuelKOf(V)`
-  - 409 `vesselDerive(V)`
-  - 422 `reqOf(V)`
-  - 428 `reqFill(eq, type)`
-  - 446 `lsaOf(V)`
+  - 276 `fuelWeek(w)`
+  - 278 `fuelPrice(H = S.t / 60, pid = S.boat && S.boat.port, diesel = BOAT.die…)`
+  - 365 `equipFits(k, type)`
+- **366** the upgrades in tiers (OPP1 of docs/planer/oppgraderinger.md, 07.11.2026)
+  - 370 `upgSum(...p)`
+  - 375 `equipLv(k, eq = S.equip, type = S.boat && S.boat.type)`
+  - 379 `equipTier(k, eq, type)`
+  - 383 `tierUnits(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
+  - 389 `tierKr(k, lv, type = S.boat && S.boat.type, eq = S.equip)`
+  - 394 `equipKr(k, eq = S.equip, type = S.boat && S.boat.type)`
+  - 400 `knifeX(eq, type)`
+  - 401 `hookX(f, eq, type)`
+  - 404 `jigSlip(eq, type)`
+  - 407 `fuelBase(v, vmax, planing)`
+  - 408 `fuelKOf(V)`
+  - 410 `vesselDerive(V)`
+  - 423 `reqOf(V)`
+  - 429 `reqFill(eq, type)`
+  - 447 `lsaOf(V)`
 
 ## `src/js/core/03-simulation.js` (1371 linjer)
 
@@ -1229,7 +1229,7 @@ the fish tubs (docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
   - 59 `tubPack(dims, spec, seed)`
   - 92 `karRefund()`
 
-## `src/js/core/07-harbours.js` (640 linjer)
+## `src/js/core/07-harbours.js` (646 linjer)
 
 harbours: quays, berths and mooring
 
@@ -1253,38 +1253,38 @@ harbours: quays, berths and mooring
   - 225 `approachPath(pt)`
   - 282 `exitWps(pt, to)`
   - 283 `entryWps(pt, from)`
-  - 293 `berthPose(pid, type, kind = 'main')`
-- **325** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
-  - 330 `berthBlocked(p, m = 2)`
-  - 339 `berthClear(a, b, m)`
-  - 340 `berthPath(from, bp)`
-- **365** landing the catch
-  - 388 `landFreeze()`
-  - 394 `landPlan(type, kg, hold)`
-  - 413 `landState(L, t)`
-  - 422 `mottakOpen(H)`
-  - 424 `mottakNext(H)`
-  - 428 `mottakWhen(H, no, from)`
-- **434** The queue at the plant (docs/planer/etter-tonys-test.md K1–K4, K6; Jonas 07.11.2026, V2 A and V3 A)
-  - 445 `landSlots(pt)`
-  - 446 `landQueueOn()`
-  - 448 `landQueueAsk(force)`
-  - 468 `landQueueGo()`
-  - 475 `landQueueEnd()`
-  - 481 `landLook(pts)`
-  - 487 `startLanding(ops)`
-  - 501 `landStart(pt, lp, kg, ops)`
-  - 513 `finishLanding()`
-  - 522 `iceChute(kg)`
-- **524** the bunker quay: moving along the harbour and filling fuel
-  - 537 `quayPos(b)`
-  - 552 `portBusy(b)`
-  - 553 `startShift(to, after)`
-  - 563 `startFueling(ops)`
-  - 576 `quayMinute()`
-  - 593 `buyIce(kg, free)`
-- **603** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
-  - 609 `shopBuy(k, kg, free)`
+  - 298 `berthPose(pid, type, kind = 'main')`
+- **331** the way in to a berth and out of it (the user's list 04.10.2026: «legge til og fra kai uten å gå gjennom landmasse og
+  - 336 `berthBlocked(p, m = 2)`
+  - 345 `berthClear(a, b, m)`
+  - 346 `berthPath(from, bp)`
+- **371** landing the catch
+  - 394 `landFreeze()`
+  - 400 `landPlan(type, kg, hold)`
+  - 419 `landState(L, t)`
+  - 428 `mottakOpen(H)`
+  - 430 `mottakNext(H)`
+  - 434 `mottakWhen(H, no, from)`
+- **440** The queue at the plant (docs/planer/etter-tonys-test.md K1–K4, K6; Jonas 07.11.2026, V2 A and V3 A)
+  - 451 `landSlots(pt)`
+  - 452 `landQueueOn()`
+  - 454 `landQueueAsk(force)`
+  - 474 `landQueueGo()`
+  - 481 `landQueueEnd()`
+  - 487 `landLook(pts)`
+  - 493 `startLanding(ops)`
+  - 507 `landStart(pt, lp, kg, ops)`
+  - 519 `finishLanding()`
+  - 528 `iceChute(kg)`
+- **530** the bunker quay: moving along the harbour and filling fuel
+  - 543 `quayPos(b)`
+  - 558 `portBusy(b)`
+  - 559 `startShift(to, after)`
+  - 569 `startFueling(ops)`
+  - 582 `quayMinute()`
+  - 599 `buyIce(kg, free)`
+- **609** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
+  - 615 `shopBuy(k, kg, free)`
 
 ## `src/js/core/07c-naust.js` (225 linjer)
 
@@ -1604,7 +1604,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (336 linjer)
+## `src/js/core/09j-kystvakt.js` (337 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
@@ -1625,16 +1625,16 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 184 `kvArrive()`
   - 197 `kvOff(bB, sh, where)`
   - 205 `kvPose(b)`
-  - 224 `kvSide(b)`
-  - 225 `kvMinute()`
-  - 234 `kvNpcs()`
-  - 238 `kvSums(sets, inside)`
-  - 240 `kvMostSp(sets)`
-  - 245 `kvCheck(b)`
-  - 272 `kvWhat(r)`
-  - 284 `kvWhatHav(r)`
-  - 298 `kvWhatSno(r)`
-  - 317 `kvFinish()`
+  - 225 `kvSide(b)`
+  - 226 `kvMinute()`
+  - 235 `kvNpcs()`
+  - 239 `kvSums(sets, inside)`
+  - 241 `kvMostSp(sets)`
+  - 246 `kvCheck(b)`
+  - 273 `kvWhat(r)`
+  - 285 `kvWhatHav(r)`
+  - 299 `kvWhatSno(r)`
+  - 318 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -1995,7 +1995,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (380 linjer)
+## `src/js/core/13-work.js` (405 linjer)
 
 work aboard: stations, and how the crew share them
 
@@ -2025,15 +2025,17 @@ work aboard: stations, and how the crew share them
   - 186 `jobMinute(j, A)`
   - 196 `jobWait(j)`
   - 201 `workAssign(as)`
-- **282** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 298 `crewVice(c)`
-  - 300 `idleEnv()`
-  - 308 `idleWeights(p, ctx, E, mates)`
-  - 331 `idleAssign(P, ctx)`
-  - 345 `idleText(p)`
-  - 353 `workDoing(p)`
-  - 360 `workTeam(st, g, as)`
-  - 366 `workMinute()`
+- **283** the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
+  - 291 `quayRoles(P, ctx)`
+- **305** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 321 `crewVice(c)`
+  - 323 `idleEnv()`
+  - 331 `idleWeights(p, ctx, E, mates)`
+  - 354 `idleAssign(P, ctx)`
+  - 368 `idleText(p)`
+  - 376 `workDoing(p)`
+  - 385 `workTeam(st, g, as)`
+  - 391 `workMinute()`
 
 ## `src/js/core/14-crewlife.js` (466 linjer)
 
@@ -2664,12 +2666,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1488 linjer)
+## `src/js/ui/phone/07-patch.js` (1492 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1476 `patch()`
+  - 1480 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3680,26 +3682,27 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 1603 `lanterns(G, V, st)`
   - 1642 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (722 linjer)
+## `src/js/deckcrew.js` (827 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
 - **41** the kit on the deck, out of the walking map
-- **98** the nets aboard in their tubs (F8, OB3): NET_TUB nets to a 460 l tub (assumed; a 27.5 m net is some 35-40 l in a heap), the
-- **129** setting the line and the nets (F4, F20, OB3; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig»): the
-- **221** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
-- **284** what the game says: everyone's station this minute, and the boat's state
-- **307** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
-- **411** a free person: something to do for a while, by the weather, the hour and their nature
-- **417** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **510** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **525** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **537** the agents follow the people aboard
-- **654** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **674** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-  - 706 `sternKit(vt)`
-  - 708 `moorSpots(G, sd)`
-  - 716 `npcCrewCtx(n, G)`
+- **100** the nets aboard in their tubs (F8, OB3): NET_TUB nets to a 460 l tub (assumed; a 27.5 m net is some 35-40 l in a heap), the
+- **131** setting the line and the nets (F4, F20, OB3; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig»): the
+- **224** the landing, the ice and the freight at the quay (OB4, 11.11.2026; docs/planer/om-bord.md F10, F11, F22, F23; Jonas 09.11.2026:
+- **313** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
+- **376** what the game says: everyone's station this minute, and the boat's state
+- **399** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
+- **507** a free person: something to do for a while, by the weather, the hour and their nature
+- **513** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
+- **613** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **628** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **640** the agents follow the people aboard
+- **757** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **777** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+  - 811 `sternKit(vt)`
+  - 813 `moorSpots(G, sd)`
+  - 821 `npcCrewCtx(n, G)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -3924,89 +3927,89 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **319** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
 - **422** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (887 linjer)
+## `src/js/view3d/09-landing-deck.js` (918 linjer)
 
 ---------- landing the catch ----------
 
 - **1** landing the catch
   - 23 `deckSlots(kind)`
-  - 36 `fkRun(P, back, Q)`
-  - 55 `legAt(g, w)`
-  - 64 `landLoad(L, j)`
-  - 82 `drawLiveTub(KL, M, K, j)`
-  - 86 `hatchOpenK()`
-  - 89 `landOff(L)`
-  - 93 `landBack(L)`
-  - 104 `shipQuay(P, BMrel, eye, VG)`
-  - 110 `shipAim(C, x, z, hook)`
-  - 112 `shipPark(C)`
-  - 116 `landScene(P, T, BMrel, eye)`
-  - 236 `follow(P, key, st, T, v)`
-  - 244 `drawPlant(P, eye, VP, T, BMrel)`
-  - 294 `plantsCoast(eye)`
-  - 302 `nearestPlant(eye)`
-- **304** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
-  - 306 `deckActivity()`
-- **315** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
-  - 319 `kit(f, nm)`
-  - 322 `kitX(f)`
-- **333** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
-  - 343 `handMeshes()`
-  - 356 `handFrame(z0, sp, side)`
-  - 365 `handSpecs(st, F, R, hands)`
-  - 411 `toolM(A, dir)`
-  - 419 `dkEvent(kind, at, sp, kg, o)`
-  - 425 `dkFor(who, p, task)`
-  - 433 `dkEv(e, BMrel, G)`
-  - 435 `catchQ()`
-  - 440 `dkTick()`
-  - 453 `dkBloodDraw(VP)`
-  - 462 `rigAt(G, kind, d)`
-  - 467 `drawNetTub(BMrel, at, fill, ry)`
-  - 475 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 485 `drawTub1(M, f, green, top)`
-  - 492 `magTubs(BMrel, G)`
-  - 496 `drawTubList(BMrel, G, d, F, at)`
-  - 505 `drawLineOp(BMrel, G, d, g)`
-- **511** the nets aboard (F8, OB3): NET_TUB to a tub, the tubs where the deck has room for them (deckcrew.js netTubs), the first ones
-  - 514 `netsAboard(g)`
-  - 516 `netTubsNow(G, d, n)`
-  - 520 `netFrom(G, d, g)`
-  - 521 `drawNets(BMrel, G, d, n)`
-  - 523 `drawNetsOp(BMrel, G, d, g)`
-  - 527 `jobTubs(j)`
-  - 531 `drawMendNet(BMrel, G, d, R)`
-  - 545 `drawRigRest(BMrel, G, d)`
-- **561** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 567 `boyeCanvas(txt)`
-  - 573 `boyeTex()`
-  - 580 `ladderMesh(L)`
-  - 588 `boyeQ()`
-  - 589 `drawSafety(BMrel, G, VP, t)`
-  - 630 `cargoUnits(G)`
-  - 631 `drawCargo(BMrel, G, hide)`
-  - 646 `crFrames(X, Q, BMrel, p)`
-  - 655 `crLink(X, a2)`
-  - 658 `drawCrane(BMrel, G, VP, t, d)`
-- **713** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 724 `karPlan(key, spec, kg, dims)`
-  - 732 `karSpec()`
-  - 734 `drawKarLoad(M, load, key, washed)`
-  - 753 `karPlaces(vt)`
-  - 757 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 763 `karTop(vt, i)`
-  - 766 `karFilling(vt)`
-- **767** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 770 `iceBoxAt(vt)`
-  - 775 `iceBoxTop(vt)`
-  - 779 `drawIceBox(BMrel, vt, shovelIn)`
-  - 790 `shaftM(A, B)`
-- **794** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 796 `drawSling(H, M, swing, k)`
-- **814** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 818 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 836 `dkTub(G)`
-  - 837 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 39 `fkRun(P, back, Q)`
+  - 58 `legAt(g, w)`
+  - 67 `landLoad(L, j)`
+  - 85 `drawLiveTub(KL, M, K, j)`
+  - 89 `hatchOpenK()`
+  - 92 `landOff(L)`
+  - 96 `landBack(L)`
+  - 107 `shipQuay(P, BMrel, eye, VG)`
+  - 113 `shipAim(C, x, z, hook)`
+  - 115 `shipPark(C)`
+  - 119 `landScene(P, T, BMrel, eye)`
+  - 239 `follow(P, key, st, T, v)`
+  - 247 `drawPlant(P, eye, VP, T, BMrel)`
+  - 320 `plantsCoast(eye)`
+  - 328 `nearestPlant(eye)`
+- **330** work on deck: the bleeding tub and the gutting table on the after deck; whoever works the deck guts or ices there
+  - 332 `deckActivity()`
+- **341** the deck kit (the user's wish 19.10.2026, tools/deck/*.py): the fish tubs, the gaff and the knife, the gutting table and
+  - 345 `kit(f, nm)`
+  - 348 `kitX(f)`
+- **359** the hands in their grips (tools/harbour/hender.py): the meshes once for all the figures (the glove is the same on every look),
+  - 369 `handMeshes()`
+  - 382 `handFrame(z0, sp, side)`
+  - 391 `handSpecs(st, F, R, hands)`
+  - 437 `toolM(A, dir)`
+  - 445 `dkEvent(kind, at, sp, kg, o)`
+  - 451 `dkFor(who, p, task)`
+  - 459 `dkEv(e, BMrel, G)`
+  - 461 `catchQ()`
+  - 466 `dkTick()`
+  - 479 `dkBloodDraw(VP)`
+  - 488 `rigAt(G, kind, d)`
+  - 493 `drawNetTub(BMrel, at, fill, ry)`
+  - 501 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 511 `drawTub1(M, f, green, top)`
+  - 518 `magTubs(BMrel, G)`
+  - 522 `drawTubList(BMrel, G, d, F, at)`
+  - 531 `drawLineOp(BMrel, G, d, g)`
+- **537** the nets aboard (F8, OB3): NET_TUB to a tub, the tubs where the deck has room for them (deckcrew.js netTubs), the first ones
+  - 540 `netsAboard(g)`
+  - 542 `netTubsNow(G, d, n)`
+  - 546 `netFrom(G, d, g)`
+  - 547 `drawNets(BMrel, G, d, n)`
+  - 549 `drawNetsOp(BMrel, G, d, g)`
+  - 553 `jobTubs(j)`
+  - 557 `drawMendNet(BMrel, G, d, R)`
+  - 571 `drawRigRest(BMrel, G, d)`
+- **587** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 593 `boyeCanvas(txt)`
+  - 599 `boyeTex()`
+  - 606 `ladderMesh(L)`
+  - 614 `boyeQ()`
+  - 615 `drawSafety(BMrel, G, VP, t)`
+  - 656 `cargoUnits(G)`
+  - 657 `drawCargo(BMrel, G, hide)`
+  - 672 `crFrames(X, Q, BMrel, p)`
+  - 681 `crLink(X, a2)`
+  - 684 `drawCrane(BMrel, G, VP, t, d)`
+- **744** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 755 `karPlan(key, spec, kg, dims)`
+  - 763 `karSpec()`
+  - 765 `drawKarLoad(M, load, key, washed)`
+  - 784 `karPlaces(vt)`
+  - 788 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 794 `karTop(vt, i)`
+  - 797 `karFilling(vt)`
+- **798** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 801 `iceBoxAt(vt)`
+  - 806 `iceBoxTop(vt)`
+  - 810 `drawIceBox(BMrel, vt, shovelIn)`
+  - 821 `shaftM(A, B)`
+- **825** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 827 `drawSling(H, M, swing, k)`
+- **845** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 849 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 867 `dkTub(G)`
+  - 868 `drawDeck(BMrel, eye, VP, t, DK)`
 
 ## `src/js/view3d/10-gear.js` (781 linjer)
 
