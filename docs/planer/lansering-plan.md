@@ -296,4 +296,4 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - hastefeil: «slipp nå», eller rettingen plukket ut til en gren fra `main` når arbeidsgrenen har noe som ikke kan slippes
   - tilbakerulling: `deploy.yml` på `main` med `inputs.commit` (bare en commit som alt ligger på `main`)
   - Patchnotes har merket «på test» i testutgaven; `pwa.yml` legger ut flyttesiden på Pages, bare for hånd, når Jonas sier til (ikke kjørt)
-  - det første slippet er ikke gjort: PR-en «Slipp 11.11.2026» står til Jonas (ekte penger: HS2), med `haill_use`-migreringen først. **P1 i porten er ferdig når det første slippet er gjort.**
+  - det første slippet er ikke gjort: PR-en «Slipp 11.11.2026» (#1) står til Jonas (ekte penger: HS2), med `haill_use`-migreringen først. **P1 i porten er ferdig når det første slippet er gjort.**
