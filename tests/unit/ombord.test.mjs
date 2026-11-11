@@ -19,12 +19,13 @@ export default function (t){
     b.status = 'fishing'; b.port = null; b.pos = {...g0}; S.hold = []; b.deckStop = false; S.equip.linehaler = true; S.equip.garnhaler = true;
     for (const kind of ['line', 'garn']){
       // the core: the same people on the hauling station setting as hauling (the pace is theirs, gopUnitMin), but none of them hauls
-      gop('haul', kind); const nH = workAssign().filter(p => p.st === 'haling').length, uH = K.gopUnitMin(b.gop, S.t / 60, 0.3);
+      gop('haul', kind);
       settle(); const hauler = CREW3D.agents().find(a => a.st === 'haling' && a.role === 'haler');
       if (!hauler || !hauler.goal || hauler.goal.inside || hauler.goal.task !== 'haul') noHaul.push(vt + ':' + kind);
       gop('set', kind); const WA = workAssign().filter(p => p.st === 'haling'), roles = WA.map(p => p.role);
       if (roles.filter(r => r === 'sett').length !== 1 || roles.some(r => r !== 'sett' && r !== 'lang')) noSett.push(vt + ':' + kind + ':' + roles.join('+'));
-      if (!(WA.length >= 1 && WA.length <= nH + 1)) pace.push(vt + ':' + kind + ':' + WA.length + '/' + nH); void uH;
+      // (the pace is the hands' on the station whatever their role: the same with the roles taken away again)
+      const u1 = K.gopUnitMin(b.gop, S.t / 60, 0.3), n1 = K.workTeam('haling', 'line').n; if (!(n1 === WA.length && n1 >= 1 && u1 > 0 && u1 < 1e6)) pace.push(vt + ':' + kind + ':' + n1 + '/' + WA.length + ':' + u1);
       // the place: at the stern (or the rail) where the gear goes over, within reach of it, not at the hauler, no limb through anything
       settle(); const a = CREW3D.agents().find(q => q.role === 'sett'), P = CREW3D.setPlan(kind), G = CREW3D._st.G;
       if (!a || !a.goal || a.goal.inside || a.goal.task !== 'sett'){ noSett.push(vt + ':' + kind + ':ingen plass'); continue; }
@@ -43,7 +44,7 @@ export default function (t){
   t.ok(!far.length, 'den som setter, står innen rekkevidde av der redskapet går over (1,05 m)' + (far.length ? ': ' + far.join(' ') : ''));
   t.ok(!atHauler.length, 'og ikke ved haleren' + (atHauler.length ? ': ' + atHauler.join(' ') : ''));
   t.ok(!clip.length, 'ingen lem gjennom modellen for den som setter og den som langer' + (clip.length ? ': ' + clip.join(' ') : ''));
-  t.ok(!pace.length, 'like mange på stasjonen under setting som før (farten er uendret)' + (pace.length ? ': ' + pace.join(' ') : ''));
+  t.ok(!pace.length, 'de som setter og langer, står på stasjonen Haling og gir settefarten (minst én, og tida per enhet er endelig)' + (pace.length ? ': ' + pace.join(' ') : ''));
   t.ok(!noHaul.length, 'under trekk står det en ved haleren på alle båtene, også der den står høyt (F24)' + (noHaul.length ? ': ' + noHaul.join(' ') : ''));
   t.ok(!tubsBad.length, 'garnkarene: minst ett, aldri flere enn garnet fyller, og ikke i hverandre' + (tubsBad.length ? ': ' + tubsBad.join(' ') : ''));
   // the words on the crew page

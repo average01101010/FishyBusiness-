@@ -510,8 +510,9 @@
     drawTubList(BMrel, G, d, F, PN && PN.tub); }
   // ---- the nets aboard (F8, OB3): NET_TUB to a tub, the tubs where the deck has room for them (deckcrew.js netTubs), the first ones
   // full and the last with what is left; what the tubs do not hold is heaped on the last
-  function netsAboard(g){ const pg = S.pgear || {}, MJ = (S.jobs || []).find(j => j.kind === 'mend' && !j.shop), mend = MJ ? (pg.shore || []).find(x => x.kind === 'mendself' && x.lenke && x.lenke.id === MJ.nid) : null;
-    return (pg.nets || []).reduce((a, l) => a + (l.n || 1), 0) + (mend ? mend.lenke.n || 1 : 0) + (g && g.kind === 'garn' ? (g.op === 'set' ? g.n - g.done : g.done) : 0); }
+  // (how many: deckcrew.js rigGear, the same count the walking map takes the tubs out by)
+  function netsAboard(g){ const R = typeof CREW3D !== 'undefined' ? CREW3D.gear() : null; if (R) return R.netN || 0;
+    const pg = S.pgear || {}; return (pg.nets || []).reduce((a, l) => a + (l.n || 1), 0) + (g && g.kind === 'garn' ? (g.op === 'set' ? g.n - g.done : g.done) : 0); }
   function netTubsNow(G, d, n){ const on = !G.hand && typeof CREW3D !== 'undefined' && CREW3D.on(), NT = on ? CREW3D.NET_TUB : 12, R = rigAt(G, 'garn', d);
     const P = on && G.kit && G.kit.garn ? CREW3D.netTubs(n) : [[R.at[0], R.at[1], R.at[2], R.ry]], F = P.map((q, i) => i < P.length - 1 ? clamp((n - i * NT) / NT, 0, 1) : clamp((n - i * NT) / NT, 0, 1.7));
     return {P, F}; }
@@ -549,7 +550,7 @@
     if (rig === 'garn' || MJ){ const mend = MJ ? (pg.shore || []).find(x => x.kind === 'mendself' && x.lenke && x.lenke.id === MJ.nid) : null, aboard = (pg.nets || []).reduce((a, l) => a + (l.n || 1), 0) + (mend ? mend.lenke.n || 1 : 0);
       const out = (typeof mySets === 'function' ? mySets() : []).filter(x => x.kind === 'garn').reduce((a, x) => a + (x.n || 0), 0), R = rigAt(G, 'garn', d);
       // (F8, OB3: a boat with a crew has the nets in as many tubs as they fill; a boat worked by hand her one tub by the share aboard)
-      if (aboard + out > 0){ if (G.hand) drawNetTub(BMrel, R.at, aboard / (aboard + out), R.ry); else drawNets(BMrel, G, d, aboard); } if (MJ) drawMendNet(BMrel, G, d, R); }
+      if (aboard + out > 0){ if (G.hand) drawNetTub(BMrel, R.at, aboard / (aboard + out), R.ry); else drawNets(BMrel, G, d, netsAboard(null)); } if (MJ) drawMendNet(BMrel, G, d, R); }
     if (rig === 'line' || EJ.length){ const L = pg.lines || {}, n = rig === 'line' ? (L.hyse ? L.hyse.n : 0) + (L.bank ? L.bank.n : 0) : 0, bt = rig === 'line' ? (L.hyse ? L.hyse.baited : 0) + (L.bank ? L.bank.baited : 0) : 0;
       // the job's tubs first (they are off the line aboard while it runs, pg.shore 'egnself' and 'stripself', 10-gear.js), then the rest
       const fill = []; for (const j of EJ) fill.push(...jobTubs(j)); for (let i = 0; i < n; i++) fill.push(i < bt ? 1 : 0);

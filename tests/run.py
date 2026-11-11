@@ -297,7 +297,7 @@ def report(r):
 
 # what the unit tests read: the core, the boat models (tests/unit/vessel3d.test.mjs builds every model from src/data/ in Node, 01.11.2026),
 # the fishing data (tests/unit/fiske.test.mjs, B1 01.11.2026), and the fishing grounds (tests/unit/felt.test.mjs, Ø14 F1 08.11.2026)
-UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
+UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/js/deckcrew.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
 
 
 def main():
