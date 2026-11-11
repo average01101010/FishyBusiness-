@@ -424,11 +424,18 @@
       const zs0 = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
       // as many as she may carry (jukseMax; Jonas' survey 30.10.2026, D2: only three were drawn of up to eight): the starboard rail
       // first, then the port one, each place's fourth number the side (1 starboard, -1 port: the machine turned round to face out)
-      const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3);
+      const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3), sides = [];
       for (const sd of [1, -1]){ const side = [], zs = Array.isArray(zs0) ? zs0 : zs0[sd] || [];
-        for (const z of zs){ if (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0)) break; if (side.some(q => Math.abs(q[2] - z) < 0.7)) continue;
+        // (F21, OB3: an arm's length between two machines, so the lines do not foul each other, and as many to port as to starboard;
+        // before 0.7 m apart and one more to starboard. The models' own places are as they were: anchors.jigZ and JIG_Z)
+        const gap = Array.isArray(zs0) ? 1.0 : 0.7;
+        for (const z of zs){ if (!Array.isArray(zs0) && (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0))) break; if (side.length >= max) break; if (side.some(q => Math.abs(q[2] - z) < gap)) continue;
           const q = railPt(sd, z); if (q) side.push(q); }
-        side.sort((a, b) => a[2] - b[2]); out.push(...side); } }
+        side.sort((a, b) => a[2] - b[2]); if (Array.isArray(zs0)) sides.push(side); else out.push(...side); }
+      // (searched places, F21: the machines are bolted on a side in turn, starboard first, so two machines stand one to each side, each
+      // side from the middle of the working deck outwards)
+      // (a side with fewer places than the other: the rest on the side that has them, as many as she may carry)
+      if (sides.length){ for (const sd of sides) sd.sort((a, b) => Math.abs(a[2] - G.deck.z) - Math.abs(b[2] - G.deck.z)); for (let i = 0; out.length < max && (i < sides[0].length || i < sides[1].length); i++) for (const sd of sides) if (sd[i] && out.length < max) out.push(sd[i]); } }
     return (JIGR[t] = out);
   }
   const JA = {mc:[], t:null};

@@ -235,7 +235,23 @@
   function drawSetting(BMrel, t, g, G, stack, x0, over){
     const garn = g.kind === 'garn', gw = G.gw || 1, st = G.stern, v = clamp(2.5 * KNV(), 0.6, 4);
     SETA += v * clamp(t - SETT, 0, 0.1); SETT = t; if (SETG !== g){ SETG = g; SETT0 = t; }
-    const O = over, path = O ? [[stack[0], stack[1] + 0.35, stack[2]], [O[0] - 0.05, O[1] + 0.06, O[2]], [O[0] + 0.12, O[1] - 0.02, O[2] + 0.15], [O[0] + 0.5, -0.12, O[2] + 1.6], [O[0] + 0.9, -1.0, O[2] + 8], [O[0] + 1.2, -2.6, O[2] + 15]]
+    // (OB3, F4 and F20: on a boat with a crew the gear goes over where the one setting stands, deckcrew.js setPlan: through the line
+    // setter (in at its mouth, out over the roller) or the net chute when she has the one for the gear, else over the stern at the models'
+    // own place or over the rail; the line from the tub that stands by him, or from the first tub in the magazine; the net from its tub)
+    const PN = !over && !G.hand && typeof CREW3D !== 'undefined' && CREW3D.on() ? CREW3D.setPlan(g.kind) : null;
+    let O = over, path, hand = null;
+    if (PN){ const E0 = PN.ov, a = PN.dir, ca = Math.cos(a), sa = Math.sin(a), fr = (lx, ly, lz) => [E0[0] + ca * lx + sa * lz, E0[1] + ly, E0[2] - sa * lx + ca * lz], X = kitX('upg');
+      const from = garn ? [stack[0], stack[1] + 0.8, stack[2]] : PN.mag && X.mag ? fr(0, X.mag.top + 0.33, -(X.mag.at[0] + 0.27)) : PN.tub ? [PN.tub[0], PN.tub[1] + 0.33, PN.tub[2]] : [stack[0], stack[1] + 0.35, stack[2]];
+      path = [from];
+      if (PN.thru === 'linesetter' && X.setter){ path.push(fr(X.setter.mouth[0], X.setter.mouth[1], X.setter.mouth[2]), fr(X.setter.lip[0], X.setter.lip[1] + 0.02, X.setter.lip[2])); }
+      else if (PN.thru === 'garnrenne' && X.renne){ path.push(fr(0, 0.07, -X.renne.in), fr(X.renne.lip[0], X.renne.lip[1] + 0.03, X.renne.lip[2])); }
+      else path.push(E0.slice());
+      // (from there it falls to the sea and lies where it falls as she runs on: aft of her, whichever way it went over)
+      const E = path[path.length - 1], lat = [0.1, 0.3, 0.6, 0.9], out = [0.3, 0.6, 0.8, 1.0], aft = [0, 2.0, 8.6, 15.6], ys = [E[1] - 0.15, -0.12, -1.0, -2.6];
+      for (let i = 0; i < 4; i++) path.push([E[0] + sa * out[i] + ca * lat[i], ys[i], E[2] + ca * out[i] - sa * lat[i] + aft[i]]);
+      if (PN.man){ const m = PN.man; hand = [m[0] + Math.sin(m[3]) * 0.38, m[1] + 1.12, m[2] - Math.cos(m[3]) * 0.38]; }
+      KST.setting = {ov:E.map(v => Math.round(v * 100) / 100), thru:PN.thru || null, mag:!!PN.mag, tub:!!PN.tub, man:!!PN.man};
+    } else path = O ? [[stack[0], stack[1] + 0.35, stack[2]], [O[0] - 0.05, O[1] + 0.06, O[2]], [O[0] + 0.12, O[1] - 0.02, O[2] + 0.15], [O[0] + 0.5, -0.12, O[2] + 1.6], [O[0] + 0.9, -1.0, O[2] + 8], [O[0] + 1.2, -2.6, O[2] + 15]]
       : [[stack[0], stack[1] + 0.35, stack[2]], [x0, gw + 0.1, st - 0.15], [x0 + 0.1, gw - 0.05, st + 0.15], [x0 + 0.3, -0.12, st + 2.4], [x0 + 0.6, -1.0, st + 9], [x0 + 0.9, -2.6, st + 16]];
     const L = []; let tot = 0; for (let i = 1; i < path.length; i++){ const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); L.push(l); tot += l; }
     const pos = s => { let i = 0; while (i < L.length - 1 && s > L[i]){ s -= L[i]; i++; } const u = clamp(s / L[i], 0, 1), A = path[i], B = path[i + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u]; };
@@ -246,7 +262,10 @@
       if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.04, p[2]], [q[0], q[1] + 0.04, q[2]], 0.035))); drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.3, p[2]], 0.005))); }
       else { drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.22, p[2] + 0.02], 0.004))); drawN(GB.bait, chain(BMrel, M4.T(p[0], p[1] - 0.24, p[2] + 0.02))); } }
     const ta = t - SETT0;
-    if (GB.dregg && g.done === 0 && ta < 4){ const u = clamp(ta / 1.4, 0, 1), A = path[1], B = O ? [O[0] + 0.6, -0.2, O[2] + 1.8] : [x0 + 0.4, -0.2, st + 2.6], dn = Math.max(0, ta - 1.4);
+    // (the grapnel first: in the hands of the one setting for a moment, then thrown clear of the stern)
+    if (PN && GB.dregg && g.done === 0 && ta < 4.6){ const A = hand || path[path.length - 5], B = path[path.length - 3], u = clamp((ta - 0.6) / 1.4, 0, 1), dn = Math.max(0, ta - 2.0);
+      drawN(GB.dregg, chain(BMrel, M4.T(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - 0.1 - A[1]) * u + Math.sin(Math.PI * u) * 0.7 - dn * 0.9, A[2] + (B[2] - A[2]) * u + dn * 0.4), M4.RX(Math.max(0, ta - 0.6) * 2))); }
+    else if (GB.dregg && g.done === 0 && ta < 4){ const u = clamp(ta / 1.4, 0, 1), A = path[1], B = O ? [O[0] + 0.6, -0.2, O[2] + 1.8] : [x0 + 0.4, -0.2, st + 2.6], dn = Math.max(0, ta - 1.4);
       drawN(GB.dregg, chain(BMrel, M4.T(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + Math.sin(Math.PI * u) * 0.6 - dn * 0.9, A[2] + (B[2] - A[2]) * u + dn * 0.4), M4.RX(ta * 2))); }
   }
   // the autoline going out (H2d2, 06.11.2026): the baiting machine baits each hook as the line runs out through the setting chute in her
@@ -483,9 +502,7 @@
   // over the sea; mag 0: no room on her deck for the magazine; vessel3d.js KITADD until the models carry the place themselves): the line
   // setter, with its tub magazine from the second tier, or the net chute. One place, so one of them: the one tried on or being lifted
   // aboard, else the one for her rig, else the one she has. Nothing changes what they do (10-gear.js setterX)
-  function sternPick(){ const eq = S.equip || {}, vt = vtype(), own = k => !!eq[k] && equipFits(k, vt), rig = typeof rigOf === 'function' ? rigOf() : S.boat.rig;
-    const hot = [TRYK, HOIST && HOIST.k].find(k => k === 'linesetter' || k === 'garnrenne');
-    return hot || (rig === 'garn' && own('garnrenne') ? 'garnrenne' : rig === 'line' && own('linesetter') ? 'linesetter' : own('linesetter') ? 'linesetter' : own('garnrenne') ? 'garnrenne' : null); }
+  function sternPick(){ const hot = [TRYK, HOIST && HOIST.k].find(k => k === 'linesetter' || k === 'garnrenne'); return hot || sternKit(vtype()); }   // (deckcrew.js sternKit: the gear is set through it, OB3)
   const UPGC = {};
   // the deck under the magazine's legs (a ray down the model, vessel3d.js deckMap): how long the legs are, their top at ly over the place
   function magLegs(vt, G, P, X){ const key = vt + ':leg'; if (key in UPGC) return UPGC[key]; const a = P[3] || 0, lz = X.leg[2], x = P[0] + Math.sin(a) * lz, z = P[2] + Math.cos(a) * lz, y = P[1] + X.leg[1];
@@ -666,7 +683,7 @@
   }
   function drawGearOp(BMrel, eye, VP, t){
     autoMarks(BMrel, eye, t); ASLIDE.VP = VP; drawAutoSlides(BMrel);   // (the autoline's marks over the stern, and its gaffed fish down the chute, H2d2)
-    const b = S.boat, g = b.gop; KST.sno = null; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
+    const b = S.boat, g = b.gop; KST.sno = null; KST.setting = null; if (!g || b.status !== 'fishing') return; if (!GB) buildGear();
     const vt = vtype(), G = GEO(vt), gw = G.gw || 1, sx = G.beam / 2, d = G.deck || {y:gw, z:1}, skiff = !!G.hand;
     // the hauler on the starboard rail just forward of the working deck; gear stacks on the deck aft of it
     // (a boat worked by hand draws her nets over the rail by hand, OB1, valg 21 B: a line hauler she has stands still meanwhile)
@@ -691,7 +708,7 @@
       HAULA += v * clamp(t - HAULT, 0, 0.1) / (auto ? HM.rg : HM.r); HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);
-      if (setting){ if (auto) drawAutoSet(BMrel, t, g, G); else drawSetting(BMrel, t, g, G, rigAt(G, g.kind, d).at, 0.45, postH && SKA.set); } else {
+      if (setting){ if (auto) drawAutoSet(BMrel, t, g, G); else drawSetting(BMrel, t, g, G, g.kind === 'garn' ? netFrom(G, d, g) : rigAt(G, g.kind, d).at, 0.45, postH && SKA.set); } else {
       const path = HM.path.map(q => [P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]]); path[0] = auto ? [P0[0] + 3.4, -0.3, P0[2] - 3.0] : W0.slice();
       const garn = g.kind === 'garn', rope = garn ? GB.net : GB.float;
       for (let i = 1; i < path.length; i++) seg(path[i - 1], path[i], garn ? 0.03 : 0.006, rope, i === 1 ? 0.25 : 0);
@@ -729,11 +746,10 @@
         if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.05, p[2]], [q[0], q[1] + 0.05, q[2]], 0.035))); if (s < L[0] && Math.floor(s + HAULA * HM.r) % 3 === 0) drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.45, p[2]], 0.01))); }
         else drawN(GB.float, chain(BMrel, limbM(p, [p[0], p[1] - 0.25, p[2] + 0.02], 0.004))); }
       }
-      const R = rigAt(G, g.kind, d), n = g.op === 'haul' ? g.done : g.n - g.done;
-      if (g.kind === 'garn') drawNetTub(BMrel, R.at, clamp(n / Math.max(1, g.n), 0, 1), R.ry); else if (!auto) drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
+      if (g.kind === 'garn') drawNetsOp(BMrel, G, d, g); else if (!auto) drawLineOp(BMrel, G, d, g);
     } else if (g.kind === 'garn'){
       // float line on top, lead line below, and the mesh between them moving with the net
-      if (setting) drawSetting(BMrel, t, g, G, rigAt(G, 'garn', d).at, -0.55, skiff && SKA.set); else {
+      if (setting) drawSetting(BMrel, t, g, G, netFrom(G, d, g), -0.55, skiff && SKA.set); else {
       // (by hand the net comes in over the rail itself, SKA.rail, OB1)
       const NP = still && SKA.rail ? SKA.rail : HP;
       seg([NP[0], NP[1] + 0.12, NP[2]], [W0[0], W0[1] + 0.3, W0[2]], 0.012, GB.float, 0.15); seg([NP[0], NP[1] - 0.12, NP[2]], W0, 0.01, GB.net, 0.25);
@@ -741,12 +757,10 @@
       for (let u = ph, k = 0; u < 1; u += 0.125, k++){ const A = [NP[0] + (W0[0] - NP[0]) * u, NP[1] + 0.12 + (W0[1] + 0.3 - NP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), NP[2] + (W0[2] - NP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004)));
         if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(B2[0], B2[1] - 0.1, B2[2]), M4.RX(Math.PI / 2), M4.S(0.45))); }
       }
-      const n = g.op === 'haul' ? g.done : g.n - g.done, fill = clamp(n / Math.max(1, g.n), 0, 1);
-      const R = rigAt(G, 'garn', d); drawNetTub(BMrel, R.at, fill, R.ry);
+      drawNetsOp(BMrel, G, d, g);
     } else if (g.kind === 'line'){
       const R = rigAt(G, 'line', d); if (setting) drawSetting(BMrel, t, g, G, R.at, -0.55, skiff && SKA.set); else seg(HP, W0, 0.008, GB.float, 0.2);
-      const n = g.op === 'haul' ? g.done : g.n - g.done;
-      drawLineTubs(BMrel, R.at, n, g.op === 'set' ? n : 0, false, R.ry);
+      drawLineOp(BMrel, G, d, g);
     } else drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg);
     // those on «Haling» in the work chains (the skipper too when it is his job; he then leaves the wheel, gopMe): the first at the
     // hauler taking the gear in, the next clearing it at the end of the tray, a third stacking it aft (the skiff's fisher is drawn with

@@ -16,6 +16,10 @@
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
 		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		# nothing here is shown inside another site's frame (L1e, 11.11.2026, funn 7): the game's own policy for scripts and hosts is
+		# a <meta> in the page (build.mjs CSP_OF), and frame-ancestors cannot be set there. The browser holds the page to both.
+		Content-Security-Policy "frame-ancestors 'none'"
+		X-Frame-Options "DENY"
 		-Server
 	}
 	@packs path_regexp packs ^/(map/.+\.wasm|data/.+\.bin)$

@@ -192,6 +192,20 @@ LONG['oppshot'] = 3600; LONG['trytest'] = 1800   # (trytest on the fast sjark, w
 COVER['tests/oppshot.py'] = ['oppshot']; COVER['tests/unit/oppmodell.test.mjs'] = []; COVER['tools/deck/oppgr.py'] = []; COVER['src/data/deck-upg.b64'] = ['oppshot']
 for _f in ('src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['oppshot', 'trytest']))
 COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/view3d/25-controls.js', []) + ['trytest']))
+# OB3 (11.11.2026): the setting and the gear aboard. The places are tried in Node (tests/unit/ombord.test.mjs, run first with the unit
+# tests) and against the models in crewclip; the files that give them: the hands' pose (08-plants.js), the jigging places
+# (13-instruments.js jigRail), where the gear goes over and the tubs (10-gear.js, 09-landing-deck.js, which the deck crew reads)
+COVER['tests/unit/ombord.test.mjs'] = []
+for _f in ('src/js/view3d/08-plants.js', 'src/js/view3d/13-instruments.js', 'src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['crewclip']))
+
+# L1e (11.11.2026): the game's Content-Security-Policy (build.mjs CSP_OF, the breaches told by js/errtrap.js). csptest reads the
+# policy in the built page, plays the first trip, the account and the shop under it and tries what an attacker would. tests/_env.py
+# has the wait every test uses under the policy (wait_for_function without eval), so boottest covers it. On lines of their own
+LITE += ['csptest']
+COVER['tests/csptest.py'] = ['csptest']; COVER['tests/_env.py'] = COVER.get('tests/_env.py', []) + ['csptest', 'boottest']
+COVER['tools/server/Caddyfile'] = COVER.get('tools/server/Caddyfile', [])
+for _f in ('build.mjs', 'src/js/errtrap.js', 'src/data/cloud.json', 'src/index.html'):
+    COVER[_f] = COVER.get(_f, []) + ['csptest']
 
 
 def changed_tests():
@@ -292,7 +306,7 @@ def report(r):
 
 # what the unit tests read: the core, the boat models (tests/unit/vessel3d.test.mjs builds every model from src/data/ in Node, 01.11.2026),
 # the fishing data (tests/unit/fiske.test.mjs, B1 01.11.2026), and the fishing grounds (tests/unit/felt.test.mjs, Ø14 F1 08.11.2026)
-UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
+UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/js/deckcrew.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
 
 
 def main():

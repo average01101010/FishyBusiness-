@@ -93,6 +93,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 
 - WorkOS kjører i utviklermodus (`cloud.json`: `workosDevMode:true`, tomt `workosApiHostname`), så fornyelsesnøkkelen ligger i `localStorage` (`workos:refresh-token:<klient>`, `src/vendor/authkit.js:155,178`). Gjestens nøkler ligger i `localStorage.dsb_guest` (`ui/10f-cloud.js:70`). Enhver XSS i spillet blir da en varig overtakelse av kontoen.
 - **Retting:** eget innloggingsdomene (`auth.detstorebla.no`, står alt som plan i `skyen-og-felles-verden.md`) og `devMode:false`, så nøkkelen ligger i en httpOnly-cookie.
+- **Status 11.11.2026 (L1e, steg 78; Jonas' valg V6 A 10.11.2026: behold `workosDevMode`, vern innloggingen med en CSP og kortere økter):** spillet har en Content-Security-Policy, laget av `build.mjs` og lagt i siden som `<meta>`: bare sidens egne skript kjører (hash per skript, ingen `'unsafe-inline'`, ingen `eval`), og siden når bare egen vert, Supabase-prosjektet, WorkOS og reléet (fra `cloud.json`). Et innsatt skript kjører ikke, og en `fetch`, et bilde eller en WebSocket til en fremmed vert kommer ikke ut (`tests/csptest.py`, sett rød uten policyen). `frame-ancestors 'none'` sendes av Caddy for hele siden etter at Jonas har kjørt `setup.sh`. Nøkkelen ligger fortsatt i `localStorage`: en XSS kan ikke ta den med seg, men kan fortsatt handle som spilleren mens siden er åpen. Domenet (`auth.detstorebla.no`) tas når inntektene dekker det. Alt står i «Spillets Content-Security-Policy» i `docs/systemer/skyen-og-felles-verden.md`. **Jonas gjør:** kortere økter hos WorkOS (`lansering-plan.md` kap. 5 punkt 12).
 
 ### 8. MIDDELS: tilbakemeldinger fra spillerne kan styre en PR som rulles ut av seg selv
 
@@ -162,7 +163,7 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
   - **Admin-siden har en streng CSP**, lagt inn av `build.mjs`: bare sitt eget skript etter hash, bilder som `data:`, video og kall bare til Supabase, ingen `<base>` og ingen skjema. Den ene `onclick` i HTML-en er flyttet inn i skriptet. `admintest` sjekker CSP-en, og alle 18 fanene tegner under den uten brudd.
   - **Caddyfile** sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for `/admin`. Det trer i kraft først når `setup.sh` kjøres på serveren igjen, fordi utrullingen bare laster opp siden. **I kraft 06.11.2026:** Jonas kjørte `setup.sh` for Ø16, og `/admin/` svarer med begge hodene.
   - **`setup.sh`** stopper når `rrsync` mangler, i stedet for å gi deploy-nøkkelen et skall.
-  - CSP for selve spillet er ikke laget: det har workers, blob-URL-er og WASM og trenger en egen gjennomgang.
+  - CSP for selve spillet: laget 11.11.2026 (L1e, se funn 7). Caddyfile sender `frame-ancestors 'none'` og `X-Frame-Options DENY` for hele siden, ikke bare `/admin`; i kraft når `setup.sh` er kjørt igjen.
 
 ## Det som er sjekket og er i orden
 
@@ -181,6 +182,6 @@ Alvorlighet: **høy** = én spiller kan ødelegge for alle eller ta penger; **mi
 1. ~~**Funn 1** (XSS i admin)~~: rettet 05.11.2026 i admin (b5289877, med funn 13) og i databasen (`20261105120000_fb_meta.sql`, kjørt av Jonas).
 2. ~~**Funn 2a, 3 og 4**~~: gjort 05.11.2026 (`20261105130000_guest_world.sql`, med 2c). Turnstile (funn 4) og 2b er ikke bygd, se funnene.
 3. ~~**Funn 5 og 14**~~: rettet 05.11.2026 (acdaf0db; migreringen `20261105140000_liv_owned.sql` kjørt av Jonas). 2c og 13 er gjort tidligere; 2b står.
-4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS.
+4. **Funn 7** (innloggingsdomenet) når Jonas setter opp `auth.detstorebla.no` hos WorkOS. CSP-en for spillet (V6 A) er bygd 11.11.2026 (L1e).
 5. ~~**Funn 8, 9, 10, 11, 12 og 15**~~: gjort 05.11.2026 (656da4d2 og `supabase/migrations/20261105150000_rydd.sql`, kjørt av Jonas i SQL Editor 05.11.2026 og bekreftet: `anon` kan bare kjøre `sp_now`, `tm_error` og `tm_perf`, og `authenticated` har rettighetene sine; tre funksjoner hadde retten gjennom `PUBLIC` og trengte en linje til); det som ikke er gjort, står under hvert funn.
 6. **Funn 6** (haill på serveren) hører til en større plan for økonomien; den rammer bare jukseren selv.

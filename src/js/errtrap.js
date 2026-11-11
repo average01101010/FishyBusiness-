@@ -28,6 +28,15 @@
     var r = e.reason;
     put(r && r.message ? (r.name && r.name !== 'Error' ? r.name + ': ' : '') + r.message : String(r), 'promise', r && r.stack, 'promise');
   });
+  // something the page's Content-Security-Policy stopped (L1e, 11.11.2026, build.mjs CSP_OF): the policy is made from what a first
+  // trip, the phone, the plotter and three places along the coast do, so a thing that happens rarely (a worker, a blob: address, a
+  // sound) may be stopped at a player's and nowhere else. It is told here: which directive, and what was stopped (an address without
+  // its query, or «inline», «eval»). What a browser extension put into the page is not the game's and is left out.
+  addEventListener('securitypolicyviolation', function(e){
+    var b = String(e.blockedURI || ''), f = String(e.sourceFile || '');
+    if (/^[a-z-]*extension/i.test(b) || /^[a-z-]*extension/i.test(f)) return;
+    put('csp: ' + (e.effectiveDirective || e.violatedDirective || '') + ' ' + b.split(/[?#]/)[0].slice(0, 160), f.split(/[?#]/)[0] + ':' + (e.lineNumber || '') + ':' + (e.columnNumber || ''), '', 'csp');
+  });
   // console.warn too, but only when it is handed an Error: the catches that go on after a fault (the missions, the coast guard, the
   // plan's builder, a 3D layer that falls back) write it there; a warning in words alone is a note, not a fault
   var cw = console.warn;

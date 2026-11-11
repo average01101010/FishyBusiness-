@@ -2218,6 +2218,45 @@
 2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
 2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
 2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	geartest	FEIL	52	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	worktest	FEIL	36	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	crewwalk	OK	14	lite	samtidig	
+2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	selfcrew	OK	10	lite	samtidig	
+2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 78
+2026-11-11 00:20	ccr-13ec41bb-wikvwe	f5909a5	trip2	OK	39	lite	samtidig	
+2026-11-11 00:21	ccr-13ec41bb-wikvwe	f5909a5+	geartest	FEIL	53	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-11 00:21	ccr-13ec41bb-wikvwe	f5909a5+	worktest	FEIL	35	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-11 00:21	ccr-13ec41bb-wikvwe	f5909a5+	walktest	FEIL	21	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 40
+2026-11-11 00:46	ccr-13ec41bb-wikvwe	992ba48	decktest	OK	16	lite	samtidig	
+2026-11-11 00:47	ccr-13ec41bb-wikvwe	992ba48	opsowntest	OK	45	lite	samtidig	
+2026-11-11 00:47	ccr-13ec41bb-wikvwe	992ba48	opptest	FEIL	62	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-11 00:48	ccr-13ec41bb-wikvwe	0c14887	dbg23o	OK	44	3d	alene	
+2026-11-11 00:51	ccr-13ec41bb-wikvwe	0c14887	haultest	OK	167	3d	alene	
+2026-11-11 01:00	ccr-13ec41bb-wikvwe	0c14887	jigshot	OK	561	3d	alene	
+2026-11-11 01:30	ccr-13ec41bb-wikvwe	de5b93f	workshot	FEIL	1800	3d	alene	FEIL garntrekket: én haler og én plukker fisken ut av garnet  ([], {'gaff': 0, 'pick': 2, 'jigup': 0, 'bleed': 0})
+2026-11-11 00:03	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	FEIL	12	lite	alene	avsluttet med kode 1
+2026-11-11 00:05	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	OK	28	lite	alene	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	ae9d1bf+	boottest	OK	33	lite	samtidig	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	ae9d1bf+	trip2	OK	39	lite	samtidig	
+2026-11-11 00:11	ccr-a35513a2-4y5tlo	777d285	pwatest	OK	28	lite	samtidig	
+2026-11-11 00:12	ccr-a35513a2-4y5tlo	777d285	errtest	OK	38	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	kanaltest	OK	73	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	csptest	OK	91	lite	samtidig	
+2026-11-11 00:13	ccr-a35513a2-4y5tlo	777d285	cloudtest	FEIL	45	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-11 00:15	ccr-a35513a2-4y5tlo	777d285	roetest	OK	119	lite	samtidig	
+2026-11-11 00:19	ccr-a35513a2-4y5tlo	777d285	guesttest	OK	116	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	kjoptest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	admintest	OK	9	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	rttest	OK	54	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	feedbacktest	OK	17	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	maletest	OK	21	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	sponsortest	OK	12	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	pushtest	OK	24	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	sharetest	OK	7	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	installtest	OK	46	lite	samtidig	
+2026-11-11 00:32	ccr-a35513a2-4y5tlo	926b499	starttest	OK	179	lite	samtidig	
+2026-11-11 00:43	ccr-a35513a2-4y5tlo	926b499	vectest	OK	657	3d	alene	
+2026-11-11 00:54	ccr-a35513a2-4y5tlo	926b499	tut	OK	661	lite	alene	
 2026-11-10 23:52	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	FEIL	64	lite	alene	FEIL test build stående: Patchnotes has the mark «på test» / «on test» on top, above the notes {"no": null, "en": null, "first": false, "cards": 301, "in": fals
 2026-11-10 23:54	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	FEIL	72	lite	samtidig	FEIL test build stående: the mark lies inside the phone's screen {"no": "på test", "en": "on test", "first": true, "cards": 301, "in": false}
 2026-11-10 23:54	claude/l1b-production-release-allrqm	6ead4836+	boottest	OK	29	lite	samtidig	
@@ -2226,3 +2265,12 @@
 2026-11-10 23:59	ccr-adaac755-n9bghe	e61ffe5e+	docktest	OK	61	lite	samtidig	
 2026-11-11 00:06	claude/l1b-production-release-allrqm	37d9d7ff	boottest	OK	30	lite	samtidig	
 2026-11-11 00:07	claude/l1b-production-release-allrqm	37d9d7ff	kanaltest	OK	70	lite	samtidig	
+2026-11-11 02:03	ccr-a35513a2-4y5tlo	9f8c03b	boottest	OK	28	lite	samtidig	
+2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	csptest	OK	92	lite	samtidig	
+2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	kanaltest	OK	73	lite	samtidig	
+2026-11-11 02:05	ccr-a35513a2-4y5tlo	9f8c03b	errtest	OK	32	lite	samtidig	
+2026-11-11 03:38	ccr-13ec41bb-wikvwe	31adbdb	oppshot	FEIL	1217	3d	alene	FEIL plastsjark: fisken som glipper over ripa, treffer sjøen med et plask  [True, {'splash': 0, 'slip': 1}]
+2026-11-11 04:18	ccr-13ec41bb-wikvwe	31adbdb	deckshot	FEIL	2400	3d	alene	gikk ut på tid
+2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	boottest	OK	22	lite	samtidig	
+2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	crewwalk	OK	7	lite	samtidig	
+2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	selfcrew	OK	6	lite	samtidig	

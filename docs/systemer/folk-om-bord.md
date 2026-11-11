@@ -212,6 +212,12 @@ Steg 80 i køen, `docs/planer/om-bord.md` F1, F2 og F3. Jonas 09.11.2026: «at a
 - **Antatt:** to på tauene fra 10 m og én under; ett spillminutt (10 s) til tauene og ett til å ta inn fendere og tau; 400 m før havna for fenderne. Mann over bord-risikoen (`MOBW` i `core/14b-sikkerhet.js`) har ingen vekt for `fort` ennå (ingen risiko på tauene); ikke rørt.
 - **Tester:** `tests/unit/fortoy.test.mjs` (22 sjekker: spellene, hvem som står hvor med to, tre og ingen i mannskapet, snekka, forhalingen og en gammel lagring; sett rød med `13-work.js` fra før, 12 FEIL), og skjermbilder før og etter (snekka, havsjarken og kyst15, begge formater, `docs/okter/2026-11-09-ob2/`). Stikkprøve (`/stikkprove`, hele kysten fra `kart-31`): mottakene nærmest Bergen (Bøvågen), Bodø og Båtsfjord og Husøy, med snekka, havsjarken og kyst15: liggeplass funnet overalt, de samme spellene og stasjonene (`prep`, `in`, `lines` med roret holdt, `out`, `stow`), hendene når plassene sine på dekket, ingen gjennom modellen.
 
+## 5.19d Settingen: én akter, de andre langer (OB3, 11.11.2026)
+
+Under setting av line og garn har de på stasjonen «Haling» rollene `sett` og `lang` (`core/13-work.js`, `workCtx().setting`; teiner og autoline som før). Det er de samme folkene som før, så farten er uendret; rollen bestemmer bare hvor de står og hva Mannskap-siden sier («Setter over hekken», «Langer redskapet akter»). I 3D står den som setter, der redskapet går over, og den som langer, ved stampene eller garnkaret; ingen står ved haleren i trekkestilling (`deckcrew.js` `setPlace`, `langPlace`). Hvor redskapet går over, stampen akter, magasinet, garnkarene og stablene i gangkartet står i «Settingen og redskapet om bord» i `docs/systemer/redskap.md`.
+
+To regler i `deckcrew.js` ble rettet samtidig: den som haler og den som bløgger, sendes ikke lenger inn fordi haleren står høyt over dekket (F24: kyst15 og kyst21 trakk med tomt dekk), og den tredje ved et bord eller kar tar ikke plassen til den andre (F19: 0,40 m mellom to på fire båter; nå minst 0,55 på alle, `crewclip`).
+
 ## 5.54 Mannskapets arbeid på sjøen og prat om redskapen (Jonas 09.10.2026)
 
 - **Arbeid på sjøen:** egning, krokbytte, reparasjon av line og teiner, bøting og nytt juksesett kan nå gjøres på sjøen (`seaWork()` i `core/10b-gearcare.js`). Kravene:
