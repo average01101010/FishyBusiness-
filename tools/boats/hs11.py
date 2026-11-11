@@ -536,8 +536,8 @@ DOOR = (-1.82, -1.22, ZWH + 0.04, 4.20)                         # the door to th
 # the roof's cut-out over the hauling port (OB10 round 2, sjarkny-grunnlag.md 10.5 punkt 4: the game's pot davit, tools/gear/teine.py, is a
 # post of 2.3 m with its arm up to 3.0 m and its foot 0.2 m inside her half beam (view3d/10-gear.js haulFootP), and the roof stood 2.17 m
 # over the deck out to the bulwark, so the davit went through the roof's edge). The place is the drawing's, so the roof gives way: from
-# x 5.20 forward to the wheelhouse its edge stands in at y 1.92, 0.22 m inside the post, as a shelter is cut away over a hauler; the one
-# at the hauler (y 1.68) still stands under it. Not on the drawing
+# x 5.20 forward to the wheelhouse its edge stands in at y 1.92, 0.22 m inside the post's middle and 0.14 m inside its surface (check()), as a shelter is cut away over a
+# hauler; the one at the hauler (y 1.69) still stands under it. Not on the drawing
 ROOF_CUT = (5.20, 1.92)
 def lean(z): return LEAN * max(0.0, z - ZFD) / (WR - ZFD)
 def wh_ring(z):
@@ -548,7 +548,7 @@ def roof_ring():
     forward-raked front"""
     d = lean(WR); ya = ysh(X_SH) + 0.03
     side = [(X_SH, ya), (WX0 - 0.01, ya + 0.004), (WX0 + 0.25, WY + 0.06), (WXC - d + 0.06, WY + 0.06), (WXF - d + 0.10, WF + 0.06)]
-    # (OB10 round 2: the cut-out over the hauling port to starboard, ROOF_CUT below)
+    # (OB10 round 2: the cut-out over the hauling port to starboard, ROOF_CUT above)
     stb = [(X_SH, ya), (ROOF_CUT[0], ya + 0.002), (ROOF_CUT[0], ROOF_CUT[1]), (WX0 - 0.08, ROOF_CUT[1]), (WX0 - 0.08, WY + 0.06), (WXC - d + 0.06, WY + 0.06), (WXF - d + 0.10, WF + 0.06)]
     return [(x, -y) for x, y in stb] + [(x, y) for x, y in reversed(side)]
 def roof_top(x, y): return WR + BRIM_H + 0.04 * (1 - min(1.0, (y / 2.4) ** 2))
@@ -1008,7 +1008,7 @@ def underwater(fine=True):
 # fields on the deck where they walk and work, with the waterways along the bulwarks and round the hatch left smooth; louvred vents low on
 # the deckhouse; a fire extinguisher, a junction box with its conduit and the door's kick plate and hinges on its starboard face; the deck
 # wash hose coiled on its peg on the after face; fairlead cleats on the transom's cap, lifting eyes and anodes on the transom; the draft
-# marks on the quarters. Nothing stands out more than 9 cm, and nothing on the deck where the game sets its own kit
+# marks on the quarters. Nothing stands out more than 9 cm but the fire extinguisher (13 cm, at chest height on the deckhouse wall), and nothing on the deck where the game sets its own kit
 GRIP = [(0.22, 0.82, -1.92, 1.42), (0.95, 3.02, -1.95, -0.86), (1.28, 3.04, 0.86, 1.42), (2.50, 3.04, -0.60, 0.60), (3.30, 5.74, -1.96, -0.72)]   # (x0, x1, y0, y1)
 def details(A):
     s = lambda q: C['steel']
@@ -1048,8 +1048,9 @@ def details(A):
     acyl(A, hc + V((0.02, 0, 0.09)), hc + V((-0.07, 0, 0.09)), 0.016, s, seg=8)
     acyl(A, hc + V((0.02, 0.0, 0.42)), hc + V((-0.05, 0.0, 0.42)), 0.014, s, seg=8); acyl(A, hc + V((-0.05, 0, 0.42)), hc + V((-0.05, 0, 0.36)), 0.011, s, seg=6)
     for k in range(3): F.atorus(A, hc + V((-0.022 - 0.024 * k, 0, -0.07)), (1, 0, 0), 0.15 - 0.004 * k, 0.012, lambda a: C['hose'], seg=20, rseg=6)
-    # the transom: fairlead cleats on its cap either side of where the gear goes out, two lifting eyes outside, two anodes under water
-    for y in (1.05, -1.15): F.cleat(A, (TT / 2, y, z_cap(0.0) + 0.006), (0, 0, 1), (0, 1, 0), 0.20, C['steel'])
+    # the transom: fairlead cleats on its cap out toward the quarters (clear of where the gear goes out at y -0.45 and of the game's line
+    # setter and net chute, which stand on the transom at y +0.75), two lifting eyes outside, two anodes under water
+    for y in (1.42, -1.28): F.cleat(A, (TT / 2, y, z_cap(0.0) + 0.006), (0, 0, 1), (0, 1, 0), 0.20, C['steel'])
     for y in (1.30, -1.00): F.atorus(A, (-0.004, y, 1.72), (0, 1, 0), 0.030, 0.008, lambda a: C['steel'], seg=12, rseg=5, a0=math.pi / 2, a1=3 * math.pi / 2)
     for y in (0.95, -0.95): F.anode(A, (0.0, y, 0.27), (-1, 0, 0), (0, 1, 0), C['anode'], L=0.30, w=0.09, t=0.035, m_strap=C['steel'])
     # the draft marks (decimetres from the keel's underside, 10 cm figures every 20 cm): on the quarters, both sides
