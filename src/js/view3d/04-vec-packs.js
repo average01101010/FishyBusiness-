@@ -110,7 +110,7 @@
   // a pack has come: the meshes over its tile are built again (one being built over it goes again when it is done)
   function staleMesh(kind){ const m = kind === 'near' ? NEARM : kind === 'fine' ? FINEM : kind === 'mid' ? MIDM : TERR; if (m) m.stale = true; const J = MJOBS.get(kind); if (J) J.dirty = true; }
   function staleOver(pk){
-    if (pk.kind === 'view'){ staleWater(pk); staleShore(pk); }   // the fresh water lies on the tile's ground (17b-inland-water.js)
+    if (pk.kind === 'view' || pk.kind === 'fin'){ staleWater(pk); staleShore(pk); }   // the fresh water lies on the tile's ground (17b-inland-water.js)
     const T = MAPD.man.tile * 1000, x0 = pk.tile[0] * T, z0 = pk.tile[1] * T;
     for (const [m, kind] of [[NEARM, 'near'], [FINEM, 'fine'], [MIDM, 'mid'], [TERR, 'far']]){
       const J = MJOBS.get(kind); if (J){ const B = J.B; if (B.x0 < x0 + T && B.x0 + B.sx > x0 && B.z0 < z0 + T && B.z0 + B.sz > z0) J.dirty = true; }
@@ -125,7 +125,7 @@
     if (TERR && !TERR.stale && TERR.sx === TERRW.spans[QUAL.lvl] && TERR.gn === QUAL.farN[QUAL.lvl] && Math.abs(bv.x - TERR.cx) < TERRW.move && Math.abs(bv.z - TERR.cz) < TERRW.move) return;
     TERRW.span = TERRW.spans[QUAL.lvl];
     const cx = Math.round(bv.x / TERRW.snap) * TERRW.snap, cz = Math.round(bv.z / TERRW.snap) * TERRW.snap;
-    meshTask('far', TERR && TERR.sx === TERRW.span && TERR.gn === QUAL.farN[QUAL.lvl] ? TERR : null, cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, QUAL.farN[QUAL.lvl], null, (M, dirty) => { const old = TERR; TERR = M; TERR.cx = cx; TERR.cz = cz; TERR.stale = dirty; shSeed(TERR, old); if (old) freeMesh(old); });
+    meshTask('far', TERR && TERR.sx === TERRW.span && TERR.gn === QUAL.farN[QUAL.lvl] ? TERR : null, cx - TERRW.span / 2, cz - TERRW.span / 2, TERRW.span, QUAL.farN[QUAL.lvl], terrNoFin, (M, dirty) => { const old = TERR; TERR = M; TERR.cx = cx; TERR.cz = cz; TERR.stale = dirty; shSeed(TERR, old); if (old) freeMesh(old); });
   }
   // sharp terrain in a 6 km corridor around the boat, rebuilt as it moves. The shadows are marched towards the sun in time slices
   // (SHMS ms a frame: 7 000 points a frame stalled the user's tablet for a third of a second, 03.10.2026): the fine ground near the
@@ -231,11 +231,32 @@
   function updateMid(){
     const span = 22000, snap = 2000, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;
     if (MIDM && !MIDM.stale && MIDM.gn === QUAL.midN[QUAL.lvl] && Math.abs(cx - MIDM.cx) < 3000 && Math.abs(cz - MIDM.cz) < 3000) return;
-    meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], null, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
+    meshTask('mid', MIDM && MIDM.gn === QUAL.midN[QUAL.lvl] ? MIDM : null, cx - span / 2, cz - span / 2, span, QUAL.midN[QUAL.lvl], terrNoFin, (M, dirty) => { const old = MIDM; MIDM = M; MIDM.cx = cx; MIDM.cz = cz; MIDM.stale = dirty; shSeed(MIDM, old); if (old) freeMesh(old); });
+  }
+  // The fine ground's packs (Ø13 K1, 11.11.2026; 'fin', one a tile, 0.3-1.4 MB on Senja): asked for round the boat on High and Ultra
+  // only, so Low and Middle fetch and unpack nothing new. A level chosen by hand (or «#qfix») counts at once; 'auto' must have held
+  // High for 30 s of drawing first (the 3D behind the start screen counts, and that alone was over 10 s: fintest saw Low fetch
+  // the pack), so a phone that starts at High and steps down never fetches them. When the level falls under High the layer is no
+  // longer read, its unpacked blocks leave the map buffer at once (the packs themselves, 0.3-1.4 MB, stay), and the meshes and what
+  // stands on the ground are built again, as when a pack comes. Asked every 2 s, as stream3d.
+  let finT = -1e9, finHeld = 0;
+  function finStream(){
+    const now = performance.now(); if (now - finT < 2000) return; const dt = Math.min(4, (now - finT) / 1000); finT = now;
+    if (FIN0 || !HG || !MAPD.L.fin) return;
+    const hand = qualSet() !== 'auto' || QUAL.fix;   // (qualSet first: a level just chosen is in QUAL.lvl before it is read here; fintest saw Low fetch the pack)
+    finHeld = QUAL.lvl >= 2 ? finHeld + dt : 0;
+    const on = QUAL.lvl >= 2 && (finHeld >= 30 || hand), x = bv.x / 1000, z = bv.z / 1000, V = 7;
+    if (on !== FINU){ FINU = on; for (const pk of mapPacksIn('fin', x - 30, z - 30, x + 30, z + 30)) if (pk.buf) staleOver(pk);
+      if (!on){ const L = MAPD.L.fin; for (const [k, a] of MAPD.blk) if (k % 64 === L.id){ MAPD.blk.delete(k); MAPD.bytes -= a.byteLength; } L.b = null; L.bx = L.by = L.ox = L.oy = NaN; } }
+    if (!on) return;
+    for (const pk of mapPacksIn('fin', x - V, z - V, x + V, z + V)){
+      if (pk.buf || pk.want3d) continue; pk.want3d = true;
+      mapLoad(pk).then(() => { pk.want3d = false; if (FINU) staleOver(pk); }, e => { pk.want3d = false; console.error(e); });
+    }
   }
   function updateNear(){
     SLICE_END = performance.now() + meshSlice();
-    berthPits(); npcPits(); stream3d(); nearWanted(); fineWanted(); updateMid(); updateFar(); if (GJOB) groundStep(); meshStep(); if (RCQ.length) recolorStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
+    berthPits(); npcPits(); stream3d(); finStream(); nearWanted(); fineWanted(); updateMid(); updateFar(); if (GJOB) groundStep(); meshStep(); if (RCQ.length) recolorStep(); tileStep(); if (LMJOB) lmStep();   // the near mesh first when more than one is due
   }
   function nearWanted(){
     const span = QUAL.near[QUAL.lvl][cam.dist > 1200 ? 1 : 0], snap = span / 10, cx = Math.round(bv.x / snap) * snap, cz = Math.round(bv.z / snap) * snap;

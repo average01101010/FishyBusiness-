@@ -2644,6 +2644,9 @@
 2026-11-11 18:12	plan/2026-11-11-90	8e76db94	boottest	OK	26	lite	alene	
 2026-11-11 18:13	plan/2026-11-11-90	8e76db94	dbg23o	OK	47	3d	alene	
 2026-11-11 18:24	plan/2026-11-11-90	8e76db94	jigshot	OK	662	3d	alene	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	maptest	OK	26	lite	samtidig	
+2026-11-11 20:35	claude/zen-curie-qoa35d	082060a+	boottest	OK	31	lite	samtidig	
+2026-11-11 20:36	claude/zen-curie-qoa35d	082060a+	landtest	OK	85	3d	alene	
 2026-11-11 20:00	ccr-6f2117ea-fknkro	d01de3f	boottest	OK	31	lite	alene	
 2026-11-11 20:01	ccr-6f2117ea-fknkro	d01de3f	dbg23o	OK	47	3d	alene	
 2026-11-11 20:16	ccr-6f2117ea-fknkro	d01de3f	coast3d	OK	888	3d	alene	
@@ -2673,3 +2676,15 @@
 2026-11-11 23:06	claude/charming-faraday-my9nnq	b0640be+	docktest	OK	63	lite	samtidig	
 2026-11-11 23:16	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	593	3d	alene	FEIL sjarkny (staa): stablene om bord viser teinene som er om bord  {'om bord': 12, 'plass': 12, 'tegnet': 0}
 2026-11-11 23:30	claude/charming-faraday-my9nnq	b0640be+	deckshot	FEIL	842	3d	alene	FEIL havbåtene fra 45 m har MOB-båten med davit, og bøyene og røyken reglene krever (deck_*_mob.png)  []
+2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	boottest	OK	33	lite	samtidig	
+2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	maptest	OK	31	lite	samtidig	
+2026-11-11 21:50	claude/zen-curie-qoa35d	c6f7bf0+	fintest	OK	446	3d	alene	
+2026-11-11 21:51	claude/zen-curie-qoa35d	c6f7bf0+	landtest	OK	85	3d	alene	
+2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	docktest	OK	71	lite	samtidig	
+2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	boottest	OK	47	lite	samtidig	
+2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	boottest	OK	32	lite	samtidig	
+2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	docktest	OK	63	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	stabtest	OK	19	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	maletest	OK	29	lite	samtidig	
+2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	boottest	OK	36	lite	samtidig	
+2026-11-11 23:07	claude/zen-babbage-aixu88	c96b087	boottest	OK	29	lite	alene	

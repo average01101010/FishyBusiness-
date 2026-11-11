@@ -11,6 +11,10 @@
 //                         is not in is an error, never a stand-in value. A view that reads farther (the chart, the 3D shore) asks
 //                         first (mapViewReady) and draws without the depth until the pack comes.
 //   view  hgt, forest     for the 3D view, as they come round the boat (view3d.js stream3d; mapViewIn first)
+//   fin   fin             the fine ground along the sea for the 3D view (Ø13 K1, 11.11.2026; tools/map/fin.py): the land within 1 km of
+//                         the sea on 12.5 m cells, half metres, where hgt has 25 m cells and 2 m steps over 10 m. Read only through
+//                         finH, below; only the 3D view's High and Ultra ask for the packs (view3d finStream), a tile need not have one
+//                         and a pack has only the blocks with a strip in them, so a block that is missing is never an error here
 //   far   far             the ground at 200 m for the 3D view's far terrain, on the coast's 191 tiles with land (phase K8)
 //   chart coast1, coast2, names   the chart's vectors per tile (tools/map/chart.py; the core has coast0 and names0 for the whole
 //                         country): entries with a count as a sixth field, read with mapVec (ui/03a-chart.js draws them). Loaded
@@ -18,7 +22,7 @@
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
 // numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
 // 50 km line up with the frame, so the packs of the whole coast fit together.
-const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, chart0:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0};
+const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, chart0:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0, gen:0};
 function mapOnReady(f){ if (typeof document === 'undefined' || document.readyState !== 'loading') f(); else document.addEventListener('DOMContentLoaded', f); }
 // ---------- IndexedDB, by content ----------
 function mapIdb(){
@@ -45,12 +49,14 @@ async function mapFetch(pk){
   return new Uint8Array(buf);
 }
 // ---------- the manifest and the packs ----------
+// what a cell's number is worth: the heights are kept as Int16 decimetres (phase K8), half the room of Float32, and the fine ground as
+// the Int16 half metres it is packed in (Ø13 K1)
+const mapLayerK = l => l.dec === 'hgt' ? 0.1 : l.dec === 'x10' ? 10 : l.kind === 'fin' ? 0.5 : 1;
 async function mapStart(base){
   if (base) MAPD.base = base;
   const man = MAPD.man = await (await fetch(MAPD.base + 'manifest.json', {cache:'no-cache'})).json();
   let id = 0;
-  // k: what a cell's number is worth; the heights are kept as Int16 decimetres (phase K8), half the room of Float32
-  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, ox:NaN, oy:NaN, b:null, k:man.layers[name].dec === 'hgt' ? 0.1 : man.layers[name].dec === 'x10' ? 10 : 1}, man.layers[name]);
+  for (const name in man.layers) MAPD.L[name] = Object.assign({name, id:id++, bx:NaN, by:NaN, ox:NaN, oy:NaN, b:null, k:mapLayerK(man.layers[name])}, man.layers[name]);
   const dc = MAPD.L.dc; Object.assign(DC, {nx:dc.nx, ny:dc.ny, ix0:dc.ix0, iy0:dc.iy0});
   // a joined pack (tools/map/game.py: the far heights and the chart, several tiles a file) is filed under each of its tiles as a
   // pack of its own that loads through it
@@ -68,7 +74,7 @@ function mapLoad(pk){
   if (!pk.load) pk.load = mapFetch(pk).then(b => {
     if (String.fromCharCode(b[0], b[1], b[2], b[3]) !== 'KMP1') throw new Error('map: ' + pk.file + ' is not a map pack');
     const hl = b[4] | b[5] << 8 | b[6] << 16 | b[7] << 24, head = JSON.parse(new TextDecoder().decode(b.subarray(8, 8 + hl))), at = 8 + hl;
-    pk.idx = new Map(head.blocks.map(e => [e[0] + ':' + e[1] + ':' + e[2], [at + e[3], e[4], e[5]]])); pk.vec = {}; pk.buf = b; return pk;
+    pk.idx = new Map(head.blocks.map(e => [e[0] + ':' + e[1] + ':' + e[2], [at + e[3], e[4], e[5]]])); pk.vec = {}; pk.buf = b; MAPD.gen++; return pk;
   }).catch(e => { pk.load = null; throw e; });
   return pk.load;
 }
@@ -133,6 +139,7 @@ function mapDecode(L, raw){
   if (L.type === 'u8p') return med8(raw, n);
   if (L.type === 'f32') return new Float32Array(raw.byteOffset % 4 ? raw.slice().buffer : raw.buffer, raw.byteOffset % 4 ? 0 : raw.byteOffset, N);
   const q = med16(raw, n);
+  if (L.kind === 'fin') return new Int16Array(q);   // the fine ground: half metres as they are (L.k = 0.5), 1.28 MB a block where Float32 is 2.56
   // depth in half metres; the ground's height in half metres to 10 m and then 2 m steps (the page's own packing of hgt), kept as
   // Int16 decimetres (L.k = 0.1)
   if (L.dec === 'half'){ const out = new Float32Array(N); for (let i = 0; i < N; i++) out[i] = q[i] / 2; return out; }
@@ -175,6 +182,48 @@ function rbilM(L, x, z){
   const cm = L.c * 1000, gx = clamp(x / cm - 0.5, L.ix0, L.ix0 + L.nx - 1.001), gz = clamp(z / cm - 0.5, L.iy0, L.iy0 + L.ny - 1.001), ix = Math.floor(gx), iz = Math.floor(gz), fx = gx - ix, fz = gz - iz;
   return ((rcell(L, ix, iz) * (1 - fx) + rcell(L, ix + 1, iz) * fx) * (1 - fz) + (rcell(L, ix, iz + 1) * (1 - fx) + rcell(L, ix + 1, iz + 1) * fx) * fz) * L.k;
 }
+// ---------- the fine ground along the sea (Ø13 K1, 11.11.2026) ----------
+// The layer 'fin' (tools/map/fin.py): the land within 1 km of the sea on 12.5 m cells (800 x 800 a block), Int16 half metres. A cell is
+// > 0 land (its height, at least half a metre), 0 «no fine ground here, read the 25 m layer», or -1 the sea within 25 m of the strip
+// (the foreshore: only the sign). A block with no cell of the strip is not in the pack, and a tile with none of it has no pack.
+// finCell: a cell of it, or 0 where there is none: no pack for the tile, the pack not in (yet, or never on Low and Middle, which do not
+// ask for it), or the block not in the pack. None of those is an error and none counts in MAPD.miss. The «not here» of the last block
+// asked is remembered until the packs change (MAPD.gen), so the readers off the strip do not look the pack up cell by cell.
+const FINB = {bx:NaN, by:NaN, gen:-1};
+function finBlock(L, bx, by){
+  if (bx === FINB.bx && by === FINB.by && FINB.gen === MAPD.gen) return null;
+  const pk = mapPackOf(L, bx, by);
+  if (!pk || !pk.buf || !pk.idx.has(L.name + ':' + bx + ':' + by)){ FINB.bx = bx; FINB.by = by; FINB.gen = MAPD.gen; return null; }
+  return mapBlock(L, bx, by);
+}
+function finCell(L, ix, iy){
+  const n = L.n, i = ix - L.ox, j = iy - L.oy;
+  if (i >= 0 && i < n && j >= 0 && j < n) return L.b[j * n + i];
+  const bx = Math.floor(ix / n), by = Math.floor(iy / n), b = finBlock(L, bx, by); if (!b) return 0;
+  L.b = b; L.bx = bx; L.by = by; L.ox = bx * n; L.oy = by * n;
+  return b[(iy - by * n) * n + (ix - bx * n)];
+}
+// THE ground at x, z (m) for the 3D view: the fine ground where there is some, else h, the 25 m ground the caller has read there
+// (view3d terrRaw is the one caller, and everything in 3D reads the ground through it). Between the four nearest cell centres:
+//   a land cell counts with its height;
+//   a cell without fine ground counts with h, so the fine ground goes over to the 25 m ground across the strip's outermost cell with
+//   no step and no crack (the two differ by half a metre rms, K0), and off the strip the answer is h itself;
+//   a sea cell (-1) does not pull the land beside it down: the land cells' own heights hold out to the border between the cells
+//   (where the land has at least half the weight), and over the half cell beyond it the ground goes evenly to h, the 25 m layer's
+//   sea bed. terrRaw's shore profile (COAST3) then cuts the waterline at the chart's coast line as before; what is new is that the
+//   land right behind the line has its own height, where the 25 m cells were pulled flat by the sea cell beside them.
+function finH(x, z, h){
+  const L = MAPD.L.fin; if (!L) return h;
+  const cm = L.c * 1000, gx = x / cm - 0.5, gz = z / cm - 0.5, ix = Math.floor(gx), iz = Math.floor(gz);
+  const a = finCell(L, ix, iz), b = finCell(L, ix + 1, iz), c = finCell(L, ix, iz + 1), d = finCell(L, ix + 1, iz + 1);
+  if (a <= 0 && b <= 0 && c <= 0 && d <= 0) return h;
+  const fx = gx - ix, fz = gz - iz, wa = (1 - fx) * (1 - fz), wb = fx * (1 - fz), wc = (1 - fx) * fz, wd = fx * fz, k = L.k;
+  let A = 0, s = 0;   // the weight that is not sea, and its heights
+  if (a >= 0){ A += wa; s += wa * (a ? a * k : h); } if (b >= 0){ A += wb; s += wb * (b ? b * k : h); }
+  if (c >= 0){ A += wc; s += wc * (c ? c * k : h); } if (d >= 0){ A += wd; s += wd * (d ? d * k : h); }
+  if (!(A > 0)) return h;   // (a land cell with no weight, the point on the line between two sea cells: s / A is 0 / 0)
+  return A >= 0.5 ? s / A : h + 2 * A * (s / A - h);
+}
 // whether a view layer's blocks under a box of metres are in (the 3D draws a stand-in until they are)
 function mapHasM(L, x0, z0, x1, z1){
   const bm = L.n * L.c * 1000;
@@ -208,7 +257,7 @@ function simAreaReady(){
 }
 // for the tests (maptest.py): forget a pack, also in IndexedDB, as if it had never come; the decoded blocks go too
 function mapDrop(pk){
-  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; pk.coast = null; pk.coastQ = null; COAST.last = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false};
+  pk.buf = null; pk.idx = null; pk.vec = null; pk.load = null; pk.coast = null; pk.coastQ = null; COAST.last = null; MAPD.blk.clear(); MAPD.bytes = 0; MVI = {k:'', v:false}; MFI = {k:'', v:false}; MAPD.gen++;
   for (const n in MAPD.L){ const L = MAPD.L[n]; L.bx = L.by = L.ox = L.oy = NaN; L.b = null; }
   return idbDo('readwrite', s => s.delete(pk.hash));
 }

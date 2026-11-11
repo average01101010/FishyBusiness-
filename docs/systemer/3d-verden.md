@@ -82,6 +82,15 @@
   - Hvordan terrenget ser ut, er ikke endret: punktene, fargene og teksturene regnes som før, bare fordelt over flere bilder. `G3._debug.tjobs` viser jobbene som står, og hvor mange som er ferdige av hvert slag (`now` er de som ble bygd i ett strekk).
   - Målt på PC med hele kysten (kart-31), sjarkny med fullt pådrag i 150 s utenfor Skjervøy, CDP-profil. Tallene er bare tiden i terrengarbeidet (`updateNear`, `updateWater`, `updateShore`) per sammenhengende strekk på hovedtråden. Strekk over 50 ms: 11 → 2, over 100 ms: 4 → 0. Det lengste: 295 → 53 ms (bildets bit i SwiftShader er 30 % av et bilde på 100–500 ms, høyst 60 ms). Stikkprøver i Bergen og Bodø: se backloggen.
 
+## 4.11a2 Den fine bakken langs sjøen i 3D (Ø13 K1, 11.11.2026)
+
+**På testutgaven fra 11.11.2026, bare Senja** (Jonas 11.11.2026: «jeg synes forskjellen er merkbar»; hele kysten er K2). Pakkeslaget og lesingen står i `kart-og-terreng.md` 4.6f.
+
+- **Ett sted:** `terrRaw` (`view3d/02-mesh-terrain.js`) leser `finH` rett etter 25 m-bakken, før strandprofilen. Alt i 3D leser bakken gjennom `terrRaw` eller `terrH` (nettene, strendene og stupene i `17h-shore.js`, nærfeltet i `17f-near.js`, kaiene, byggene, trærne), så alt står på samme bakke. Sjekket med `grep` 11.11.2026; ingen av dem trengte endring.
+- **Hvilke nett:** finnettet (4 m), nærnettet (23 eller 47 m) og alle punktlesingene. Mellomnettet (86 m) og fjernnettet (392 m) leser 25 m-bakken som før (`terrNoFin`, `FINSKIP`): fjernnettet dekker 100 km og ville pakket ut hver blokk på Senja (85 MB).
+- **Hvem laster (`finStream` i `04-vec-packs.js`, hvert 2. sekund):** bare Høy og Ultra, pakkene innen 7 km fra båten. Et nivå valgt for hånd (eller `#qfix`) gjelder med en gang. «Auto» må ha holdt Høy i 30 s med 3D tegnet (3D bak startskjermen teller, og går på Høy i over ti sekunder), så en telefon som trapper ned, aldri henter noe. Faller nivået under Høy, leses ikke laget lenger, blokkene går ut av kartbufferen straks, og nettene og det som står på bakken, bygges på nytt (`staleOver`, som når en pakke kommer). `#fin0` i adressen slår laget av.
+- **Målt** (PC, programvare-GPU, Finnsnes): Lav og Middels som før (8,59 MB hentet, 16,3 MB i kartbufferen); Høy 0,79 MB og fem blokker (6,4 MB) til; høydene i nærnettet 37 → 40–41 ms og i finnettet 76 → 80 ms per helt nett. Bildene viste ingen forskjell fra båten.
+
 ## 4.11b Bakkens materialer i skyggeleggeren (Jonas 18.10.2026)
 
 Jonas så en video om teksturflising og spurte om verden kunne bli penere. Vi har ingen fliser: bakken ble farget per punkt i nettet (12–47 m mellom dem) og så glattet. Det som manglet, var materiale, ikke variasjon. Rammene fra Jonas: terrenget er viktigst («arbeidsplassen er naturen og båten»), og spillet skal gå jevnt på telefoner, nettbrett og i nettleser.
