@@ -1014,6 +1014,11 @@ function stripPaint(type, st){
 const MARKSTRIP = {}, MARKPAINT = {};
 function markStrips(type){
   if (type in MARKSTRIP) return MARKSTRIP[type];
+  // (a model that says where its mark stands, geo.marks: [[bottom row, top row] starboard, the same to port], as sideStrip's. The
+  // breisjark, Jonas 11.11.2026: «Det andre nummeret kan gjøres mindre og plasseres høyere opp på det hvite»: the search below only
+  // knows the hull's own paint and never finds the white bulwark over the strake)
+  { const m = vesselModel(type), own = m && m.geo && m.geo.marks;
+    if (own && own.length === 2){ MARKPAINT[type] = own.map(s => stripPaint(type, s)); return MARKSTRIP[type] = own; } }
   const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15;
   return MARKSTRIP[type] = stripSearch(type, lh, [0.11, 0.14], [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19], MARKPAINT);
 }
@@ -1156,6 +1161,12 @@ function houseFront(type, P, Gl, V){
   if (!isFinite(gy1) || gw < 0.3) return null;
   // the band over the windows: what faces forward near the windows' front, up from their top as long as the rays at the middle meet it
   const T = facingTris(P, -1, (v, q) => { const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; return y > gy1 - 0.3 && y < gy1 + 2 && Math.abs(z - gz) < 1.5; });
+  // (a model that says where the name stands on its house, geo.nameHouse: [bottom row, top row] from the reader's left. The breisjark,
+  // Jonas 11.11.2026: «Navnet på båten skal bare være over styrhusvinduet på bremen og på akterspeilet»: the search below took the thin
+  // white band under her roof's brim, in its shadow)
+  { const own = m.geo.nameHouse;
+    if (own && own.length === 2){ const B = own[0], Tp = own[1], n = B.length - 1, zs = B.concat(Tp).map(p => p[2]), sh = Math.hypot(Tp[0][1] - B[0][1], Tp[0][2] - B[0][2]);
+      return [{kind:'house', line:'name', B, T:Tp, aspect:Math.abs(B[0][0] - B[n][0]) / sh, paint:crossPaint(T, B[0][0], B[n][0], B[0][1], Tp[0][1], -1, Math.min(...zs) - 0.15, Math.max(...zs) + 0.15)}]; } }
   // the band over the windows: heights where rays across the front (nine, out to six tenths of the windows' breadth) meet one surface near
   // the windows' front, without a step; the lowest such band at least 10 cm tall (or the tallest of 7), up from the windows' top
   const runs = []; let run = null;
