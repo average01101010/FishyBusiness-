@@ -58,7 +58,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   const m = document.getElementById('modal'); if (m) m.hidden = true;
   b.type = type; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris';
   S.equip = {}; S.jobs = []; S.cargo = []; S.sets = []; S.plan = null; S.rest = null; S.me = S.cur; S.myJob = null; S.meal = null;
-  b.gop = null; b.land = null; b.shift = null; b.deckStop = false; b.dmg = null; b.damage = 0; S.incidents = []; b.deckEnd = null; b.ice = 300; b.fuel = BOAT.fuelCap;
+  b.gop = null; b.land = null; b.iceUntil = 0; b.shift = null; b.deckStop = false; b.dmg = null; b.damage = 0; S.incidents = []; b.deckEnd = null; b.ice = 300; b.fuel = BOAT.fuelCap;
   S.settings.gut = true; S.settings.ice = true; S.settings.careAuto = false;
   S.settings.hudMin = true; S.settings.plotMin = true; S.settings.hudOff = true; renderHud();   /* (the chart, the status box and the compass away, so they do not cover the boat; Jonas 09.11.2026) */
   S.pgear = newPGear(); S.pgear.kits.n = 4; S.hold = []; b.rig = fish; S.target = 'torsk';
@@ -148,9 +148,13 @@ OPS = {
       for (const pid of ['husoy', 'torsken']){ const q = portById(pid); if (!q) continue; b.status = 'port'; b.port = pid; b.pos = {...q.p}; b.berth = 'main'; b.land = null; S.plan = null; G3.vesselChanged();
         S.hold = [{sp:'sei', cls:1, kg:Math.max(450, Math.min(4000, (V.holdCap || 500) * 0.8)), n:200, bled:true, iced:true, hr:0, fresh:95, gut:false, hook:true}];
         why = startLanding(false); if (!why && b.land) break; }
+      /* (OB4: she has lain there an hour, so nobody is on the lines: moorPhase) */ b.moorT = S.t - 60;
       if (!b.land) return 'SKIP: ' + JSON.stringify(why); if (S.crew.length) CREW3D.reset();
       /* (the plant waits a minute before the first lift and takes 2.5 game minutes a lift: the clip starts in the first lift, at twice the pace) */
       S.mult = 2; b.land.t0 -= LANDING.prep * 0.95; b.land.until -= LANDING.prep * 0.95;""", (-0.6, 1.0, 1.8), 14],
+  # ice from the plant's silo (OB4, F11): the chute swung out over her, one of the hands takes the ice aboard
+  'is': ['*', 'is om bord ved mottaket: renna fra siloen svinger ut, én tar imot isen og fordeler den', """QUAY('husoy'); if (!plantFor(portById('husoy'), type)) return 'SKIP: ikke mottak for henne';
+      b.ice = 150; iceChute(2500); if (S.crew.length) CREW3D.reset();""", (-0.6, 1.0, 1.8), 14],
   # the boat's own crane at the quay with freight
   'kran': ['*', 'båtens egen kran ved kaia: frakt om bord', """if (!(V.crane > 0)) return 'SKIP: ingen kran'; QUAY('husoy');
       S.cargo = [{tur:'t1', kg:Math.min(1500, V.deckCargo || 0), no:'proviant', en:'provisions'}];
@@ -160,6 +164,13 @@ OPS = {
       S.meal = {due:S.t + 10, cook:null, hist:[]}; S.crew.forEach(c => { c.fatigue = 60; }); if ((V.berths || 0) > 0) restStart();
       CREW3D.reset(); CREW3D._st.ctxT = -1e9;""", (0.2, 0.5, 0.95), 10],
 }
+
+# (OB4 11.11.2026) the same at the quay from nearer and lower, so the hands at the tubs, the rail and the ice box can be seen: 'lossn' in
+# the first lift at the game's own pace (the hook comes down, the sling goes on, the tub goes up), 'isn' and 'krann' as 'is' and 'kran'
+OPS['lossn'] = [OPS['loss'][0], OPS['loss'][1] + ' (nært: den som hekter på, og den som gir tegn)', OPS['loss'][2] + " S.mult = 1; b.land.t0 -= LANDING.prep * 0.05 + LANDING.lift * 0.2; b.land.until -= LANDING.prep * 0.05 + LANDING.lift * 0.2;", (0.55, 1.22, 0.95), 16]
+OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22, 0.95), 12]
+OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
+QUAYOPS = {'kast', 'inn', 'loss', 'lossn', 'is', 'isn', 'kran', 'krann'}
 
 # the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck)
 CLIP = """(() => { if (!CREW3D.on()) return null; const M = CREW3D._st.M;
@@ -238,6 +249,8 @@ async def record(o, fmt, outdir):
             if isinstance(res, str) and res.startswith('SKIP'):
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 'skip': res}; log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
             yaw, pitch, dist = cam
+            # (F22, OB4: at a quay the camera stands off the side away from it; a boat that lies port side to has it on the other side)
+            if op in QUAYOPS: yaw *= await pg.evaluate("(t) => typeof berthSide === 'function' ? berthSide(t) : 1", o['boat'])
             await pg.evaluate("([y, p, d]) => { const c = G3._debug.cam; c.helm = false; c.yaw = y; c.pitch = p; c.dist = d; }", [yaw, pitch, dist * max(L, 4) * (1.35 if fmt == 'staaende' else 1)])
             try:
                 await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 3; }", arg=[o['boat'], n0], timeout=120000)
