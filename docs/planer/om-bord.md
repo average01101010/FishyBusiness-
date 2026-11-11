@@ -505,6 +505,19 @@ OB3 (steg 81, Jonas' økt, grenen `ccr-13ec41bb-wikvwe`) tok det felles arbeidet
 | **F21** juksa | Der plassene søkes (kyst21), står maskinene 1,0 m fra hverandre og festes annenhver side. De andre har modellens plasser fra båtfasene. | Kyst15 har bare styrbord (OB12). |
 | **F24** haleren | Regelen på 1,2 m er rettet: den som haler og den som bløgger, står ved haleren på kyst15 og kyst21 (og alle andre). | På kyst15 synes de ikke fra kameraet (F18, OB12). |
 
+**Arbeidsflyten etter OB3, egen evaluering (11.11.2026).** Satt av en egen underagent som bare fikk arkene med bildene og Jonas' skala (arbeidsflyt 0–25), og bare for det bildene viser (setting og trekk; ikke fortøyning, lossing eller sløying i detalj). Tallene er derfor ikke hele K6 for båten, og de erstatter ikke karakterene i 4.1–4.10; de sier hvor settingen og trekket står.
+
+| Båt | Arbeidsflyt i setting og trekk (av 25) | Det som ser riktig ut | Det som trekker ned |
+|---|---|---|---|
+| `plastsjark` | 17 | Linesetter og garnrenne over hekken, én betaler ut der, stampene og garnkaret rett ved, ingen ved haleren | De som har pause, står i klynge ved renna og skulder ved skulder i ro; den ved garnrenna står rakrygget uten synlig grep |
+| `hurtigsjark` | 16 | Teinetrekket: én ved haleren, én ved karet, teina på dekk | Teina ser ut til å gå inn i beina på én; under setting av teiner står én ved haleren og ingen ved teina |
+| `sjark` | 15 | Setting akter gjennom renna med stampene eller karet ved siden; linetrekket med én ved haleren | De som har pause under setting, står forut ved haleren; i garntrekket står to tett; flagget står foran den som setter; garnkaret står langt fra haleren |
+| `snekke` | 13 | Ingen ved haleren under setting; én ved haleren i trekket | Redskapet går over babord side midtskips (karene sperrer hekken); de to ved garnkaret står tett; garnhaleren står utsvingt under setting |
+| `kyst21` | 13 (usikker: kameraet er langt unna) | Folk ved haleren i linetrekket | De ved haleren står tett; bare én juksamaskin synes bemannet fra kameraet |
+| `kyst15` | 9 | Folk i halestasjonen under trekket (knapt synlig) | Setting midtskips fra shelterdekket, ikke akter; redskapet en etasje over haleren; ledige på dekket under trekket (OB12) |
+
+Det evalueringen fant og OB3 ikke har rettet, står i backloggen under OB3: de som har pause, samler seg der arbeidet er; setting av teiner har ingen ved teina; flagget på havsjarken står foran den som setter.
+
 Bildene før og etter står i `docs/okter/2026-11-11-ob3/`. Før-bildene er av snekka, havsjarken og kyst15 (setting, juksa for hånd, juksamaskin og trekk, begge formater), og av den brukte hurtigsjarkens teiner, kyst21s linetrekk og juksamaskiner, og plastsjarken med fullt redskap. Etter-bildene er av de samme, uten juksa på snekka, havsjarken og kyst15: juksaplassene deres kommer fra modellene og er ikke endret, så bildene ville vært like.
 
 ## 5. Båten i sjøen
