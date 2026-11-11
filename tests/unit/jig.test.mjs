@@ -36,4 +36,10 @@ export default function (t){
   // rail's step to the high aft bulwark stands a metre further aft to starboard). Three of her six machines stood in the plating)
   { const A = anchorsOf('boat-malo36.b64'), n = (A.jigZ || []).length;
     t.ok(n >= 2 && V.breisjark.jukseMax === 2 && V.breisjark.jukseMax <= n, 'breisjark: plass til ' + V.breisjark.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
+  // (and the kyst15, OB12: her side is the shelter's closed wall but for the hauling station's opening and the after hatch, both to
+  // starboard: two places aft of the bleeding tub in the station and two in the hatch, an arm's length apart. Before, three places 0.7 m
+  // apart on the station's sill, and the rest of her eight machines' hands jigged from the shelter deck's rail, 3 m over the sea)
+  { const A = anchorsOf('boat-kyst15.b64'), J = A.jigZ || [], n = J.length, zs = J.map(q => q[1]).sort((a, b) => a - b), gap = Math.min(...zs.slice(1).map((z, i) => z - zs[i]));
+    t.ok(n >= 4 && V.kyst15.jukseMax === 4 && V.kyst15.jukseMax <= n, 'kyst15: plass til ' + V.kyst15.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen');
+    t.ok(gap >= 0.95, 'kyst15: minst en armlengde mellom to juksaplasser (' + gap.toFixed(2) + ' m)'); }
 }

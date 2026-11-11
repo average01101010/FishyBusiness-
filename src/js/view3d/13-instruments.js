@@ -404,9 +404,9 @@
   // the places along a model's rails where the side is no rail to bolt a machine to (a shelter's wall, a casing, a table): per side, 1 starboard
   // and -1 port, in the game's z. The breisjark (malo36.py, 02.11.2026, Jonas: the shelter open to starboard for the work): starboard in the
   // open side under the shelter aft of the bleeding tub and on the aft deck clear of the ladder; port aft of the casing
-  // The 15 m shelter-decker (kyst15.py, 02.11.2026): only the hauling station's sill to starboard is a rail at the working deck, aft of the
-  // hauler (the rest of her side is the shelter's closed wall, whose own points jigRail took for a rail)
-  const JIGR = {}, JIG_Z = {breisjark:{1:[1.33, 2.03, 3.43, 4.13], '-1':[4.63]}, kyst15:{1:[1.145, 1.845, 2.545], '-1':[]}};
+  // The 15 m shelter-decker (kyst15.py, OB12 11.11.2026): her places are the model's own, anchors.jigZ: two on the hauling station's sill
+  // aft of the bleeding tub and two in the after hatch (the rest of her side is the shelter's closed wall)
+  const JIGR = {}, JIG_Z = {breisjark:{1:[1.33, 2.03, 3.43, 4.13], '-1':[4.63]}};   // (both models carry anchors.jigZ now, OB11 and OB12: the table is only for an old export)
   function jigRail(t, G){
     if (t in JIGR) return JIGR[t];
     const m = vesselModel(t), P = m && m.o && m.o.p, out = [];

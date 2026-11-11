@@ -532,7 +532,7 @@ const SETTERS = {
   hurtigsjark:[-0.75, 1.93, 5.50, 0, 1],
   sjarkny:[-0.75, 2.36, 5.50, 0, 1],
   breisjark:[0.05, 1.62, 5.58, 0, 1],        // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
-  // (the 15 m boat has none: her stern is the shelter deck's closed wall. She gets the place with the opening in the stern, OB12)
+  // (the 15 m boat carries the place herself, kyst15.py kit.setter: the sill of the setting port in her stern, OB12 11.11.2026)
   kyst21:[0.86, 2.27, 10.30, 0.4, 1]};      // (the round stern, to starboard of the staff)
 for (const k in SETTERS){ (KITADD[k] = KITADD[k] || {}).setter = SETTERS[k]; }
 // the old rescue boat in each hull (the game's frame: [x0, x1, y0, y1, z0, z1]): the triangles wholly inside are left out of your own
@@ -1674,7 +1674,9 @@ function deckPoints(type){
       lean.push({k, h:hd}); break; } }
   // on the working deck where she has room there (not on the house's roof or a locker's top: the wide sjark's roof edge), else where the
   // map has her rail (the shelter-deckers, whose working deck under the shelter the map does not hold)
-  const low = lean.filter(l => Math.abs(M.at(l.k)[1] - d.y) < 0.6), rail = low.length >= 4 ? low : lean;
+  // (OB12: a model whose working deck lies under a deck says which deck her rail is on, anchors.leanY: the kyst15's working deck runs aft to
+  // the transom now, and the cells along the transom's inside counted as a rail, so the idle hands stood facing the wall under the shelter deck)
+  const ly = typeof G.leanY === 'number' ? G.leanY : d.y, low = lean.filter(l => Math.abs(M.at(l.k)[1] - ly) < 0.6), rail = low.length >= 4 ? low : lean;
   rail.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(rail.length / 10)); pt.lean = rail.filter((_, i) => i % step === 0).slice(0, 10);
   DECKPTS[type] = pt; return pt;
 }
