@@ -36,3 +36,16 @@ Skrevet på nytt med koden fra `hurtig11.py` (ett nett, `pchip`, ekte hull, `che
 i dysa, styrhusets høyde, øyet, dashbordet, rattet, skipperen bak ruta, taket over haleplassen, trinnet, skansen, kista, luka, haleporten,
 arbeidsflyten, registreringsmerket, båndet `vessel3d` måler, jevnheten. `qa/clip_hs11.py` (0), `qa/fair.py`, `qa/shots.py`,
 `qa/overlay_hs11.py <tegningen> <K3s> <ut>` (overlegget på sideriss), `tests/hs11shot.py` (bildene i spillet).
+
+## 4. OB10 runde 2 (11.11.2026)
+
+Det som ble lagt til i skriptet, og det som er verdt å vite neste gang (avgjørelsene og karakteren står i `sjarkny-grunnlag.md` 10.7–10.9).
+
+- **Kranens fold har en retning.** Spillets kran (`tools/deck/kran.py`) ligger foldet langs båten fra aksen: knekken og den lave bommen 1,19 m én vei (fra 0,23 m over foten), teleskopenes hoder 0,96 m den andre veien og 1,73 m opp (ganger `s`). `kit.crane.ry` velger hvilken vei. Legg den lave enden bort fra der folk står, og regn begge endene i `check()` (`CRANE_LOW`, `CRANE_HIGH`).
+- **Redskapets høyde mot tak.** Teinedaviten (`tools/gear/teine.py`) er en stolpe på 2,30 m med armen til 3,02 m, og foten står 0,2 m innenfor halve bredden når modellen ikke gir `haulerFoot` (`view3d/10-gear.js` `haulFootP`). Et tak over haleplassen må være over 3,1 m eller spart ut der stolpen står (`ROOF_CUT`). Garnhaleren er 1,95 m.
+- **Vinduer på en kasse** (`bar_window`): et hus som er en `abox`, får ikke ekte hull uten å bygges om. Fire lister som står 30 mm ut rundt en rute 6 mm fra veggen, gir samme dybde for øyet, og en dryppelist over.
+- **Skjermene** (`screen_art`): malt innhold i lag, 0,6 mm mellom lagene og 2 mm over skjermflata. Fargene eksporteres som hjørnefarger, så de lyser ikke om natta i spillet.
+- **Dypgangsmerker** (`fittings.draft_scale`) bare der sida er nær loddrett og rett. I baugen, der sida faller ut og svinger inn mot stevnen, sank de flate tallene inn i skroget.
+- **Gripefelt på dørken** (`GRIP`): flater 5 mm over dekket med kant ned, delt i ruter på rundt 0,45 m så de følger dekkets bue. Hold dem unna luka, surringsøyene og skansens fot.
+- **Rendringer:** `qa/shots.py` legger vannet på `WL`, som her er tegningens største vannlinje. `qa/hs11_wle.py` gir spillets vannlinje (`WLE`), og `qa/hs11_uv.py` lys nedenfra og tre bilder av undervannsskroget (`uv_q`, `uv_side`, `uv_prop`). Nattbildet K6 i Blender viser nesten bare den grønne lanterna; bruk nattbildene fra spillet (`tests/hs11shot.py`).
+- **Teineplassene** leses nå fra `tools/boats/potplaces.json` (`POTS`, `POT_SPOT`, `pot_kit`), som på de andre båtene. Endres plassene, endres de der.

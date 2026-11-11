@@ -202,6 +202,8 @@ Etter-bildene (`tests/ombord.py sjarkny`, begge formater, alle 16 operasjonene, 
 
 ### 10.6 Karakteren: 71/100, ikke ferdig
 
+**Runde 2 (11.11.2026): 67/100, fortsatt ikke ferdig.** Det som ble gjort står i 10.7, det som står igjen i 10.8, og karakteren med det som mangler i 10.9.
+
 Satt som en egen evaluering av en uavhengig underagent som bare fikk arkene, rendringene, bildet fra roret, `check()`-utskriften og skalaen (Jonas 10.11.2026). Første evaluering, etter runde 1, ga **69**; etter runde 2 (livbøyene, leideren, kista, lasten, småbeslagene) ga en ny underagent **71**. Forslaget i OB0 var 66 etter en annen skala.
 
 | Punkt | Vekt | Runde 1 | Runde 2 | Begrunnelse (runde 2) |
@@ -215,3 +217,62 @@ Satt som en egen evaluering av en uavhengig underagent som bare fikk arkene, ren
 | **Sum** | **100** | **69** | **71** | Under grensen på 75 |
 
 **Min egen vurdering:** jeg er enig i tallet. Det som skiller 71 fra 75, er mest arbeidsflyten (16 av 25), og der er de fleste trekkene felles kode som OB3 og OB4 eier (`deckcrew.js`, `core/13-work.js`, `view3d/09` og `10`), ikke plassene. Modellen selv kan hente et par poeng på detaljer (dørken, veggene, speilet) og på bilder som viser lanternene om natta og undervannsskroget. Den nye hurtigsjarken trenger altså en runde til etter OB3 og OB4, som trebåten (OB1, 73).
+
+### 10.7 Runde 2 (11.11.2026): det OB3 og OB4 rettet, og det som er rettet i modellen
+
+Steg 88 runde 2, Jonas' økt på grenen `claude/charming-knuth-ih6c5n`, etter startmeldingen i `docs/planer/start/88.md`. Før-bildene er tatt på nytt med den gamle modellen og dagens kode (OB3 og OB4 er ute), etter-bildene med den nye; alle 24 operasjonene `tests/ombord.py sjarkny` nå har, begge formater, ingen droppet. Arkene, bildene fra roret, nattbildene og undervannsskroget ligger i `docs/okter/2026-11-11-ob10-r2/`. Vannlinja, `jukseMax` 4 og de to teinestablene er ikke rørt (Jonas 10.11.2026).
+
+**Det OB3 og OB4 alene hadde rettet (punkt 2 i 10.5), sett i før-bildene og i det opptaket skriver ut:**
+- **Garnet settes med én ved garnkaret** (`haling:gear`) og én som setter; i runde 1 sto ingen ved karet (F4).
+- **Kranen kjøres av en med fjernkontroll, og én følger lasten** (`last:remote`, `last:look`); i runde 1 kjørte ingen kranen (F23).
+- **Isen tas imot av en ved tuten** (`nozzle`), og ved lossingen hektes karene av (`unhook`).
+- **Den fjerde jukser for hånd** når tre maskiner er om bord; i runde 1 sto han uten noe.
+- **Lina settes av én** fra stampen ved hekken (eller gjennom linesetteren med magasinet), de tre andre har pause. Det er riktig bemanning for en båt på 11 m, men tre ledige synes i bildet.
+- Står igjen i felles kode: den som har pause, kan sette seg der teinestabelen står (punkt 1, OB14, steg 92).
+
+**Rettet i modellen (`tools/boats/hs11.py`):**
+
+| Punkt i 10.5 | Før | Nå |
+|---|---|---|
+| 3. Den foldede kranbommen | `ry` 0, foten midt på kista (x 0,605): knekken og den lave bommen lå 0,83 m **forover** fra 1,46 m over dørken, over benkens aktre ende ved hodet til nummer to | **Snudd** (`CRANE_RY` π) og foten flyttet til x 0,78: knekken og den lave bommen ligger akterover over kista til speilet (x −0,05, 0,70 m over ripa), teleskopenes hoder forover til x 1,45 i **2,51 m** over dørken. Ingenting av kranen under mannshøyde over benken. `check()` regner begge endene og spillets boks rundt foten mot nummer to ved benken |
+| 4. Garnhaleren og teinedaviten | Ikke undersøkt | **Undersøkt:** plassen er riktig (haleporten på tegningen, stolpens fot 9 cm innenfor skansen), og at garnhalerens arm står ut over sida, er slik haleren er bygd. Feilen var **taket**: teinedaviten er en stolpe på 2,30 m med armen til 3,02 m, og taket sto 2,17 m over dørken helt ut til skansen, så stolpen gikk gjennom takkanten. Taket er **spart ut over haleporten** (`ROOF_CUT`: fra x 5,20 til styrhuset står kanten inne ved y 1,92, 0,14 m innenfor stolpen); den som står ved haleren (y 1,69), står fortsatt under tak. **Avvik fra tegningen**, som har taket helt ut. Rekka på taket ender akter for utsparingen |
+| 5. Nakne flater | Dekkshusets vinduer var en rute 1 mm utenpå en flat ramme; veggene, speilet og dørken hadde nesten ingenting; dashbordet tre svarte skjermer | **Vinduene** i dekkshuset har fire lister 30 mm ut rundt ruta, som ligger 24 mm dypt, og en dryppelist over; styrhusets ruter ligger 48 mm inne i veggen (30 før). **Dørken:** fem gripefelt der de går og arbeider, med renner langs skansen og rundt luka. **Dekkshuset:** ventilrister lavt på to vegger, brannslukker, koblingsboks med rør, sparkeplate og hengsler på døra, spyleslangen med kran på akterveggen. **Speilet:** klamper på rekka på hver side av der redskapet går ut, løfteøyer, to anoder til under vann. **Hekken:** dypgangsmerker på begge låringer. **Dashbordet:** kartplotteren med land, grunner, rute og båt, ekkoloddet med bunn og merker, motorpanelet med tre visere og lamper (malt, ikke levende) |
+| 6. Ikke vist | Lanternene om natta og undervannsskroget | Nattbilder fra spillet fra styrbord og babord baug, og tre rendringer av undervannsskroget (kjøl, ror, propell i dyse, anoder) |
+| 7. Juksaplassene i hekken | Sto som «i gangen ved stampene, garnkaret eller teinestabelen når det er om bord» | **Plassene står** (2,80, 3,85, 1,70, 0,65). Påstanden var feil: spillet setter stampene, garnkaret og teinestablene på dekk bare når hun er rigget for det redskapet eller arbeider med det (`deckcrew.js` `rigGear`), og det jukses bare når hun er rigget for juksa. Da er styrbord side fri fra speilet til blødekaret, som `juksa_jig` og `juksa_maskin` viser. Maskinene står boltet på ripas topp hele tida, over gangen og ikke i den |
+| 8. Teineplassene to steder | `hs11.py` og `potplaces.json`, holdt like av `check()` | **Ett sted:** skriptet leser `tools/boats/potplaces.json` som de andre båtene. Ingen andre båter rørt |
+
+**Ellers:** `qa/flatnorm.py` som etter runde 1 (bare to flater på den runde mastesøylen, 20,6° mot grensen 20; ingen på vegger). `qa/clip_hs11.py` 0. Modellen er 63 974 trekanter nær (taket er rundt 300 000), fjernmodellen 2 609.
+
+### 10.8 Etter-bildene i runde 2 og det som står igjen
+
+Sett i arkene: kranen står foldet som en høy V på kista med den lave enden mot speilet, og de to ved benken har fri luft over seg; teinedaviten står fritt i utsparingen og går ikke gjennom taket; garnhaleren står i samme utsparing med armen ut over sida; gripefeltene, ristene, slangen og vinduenes dybde synes fra kameraet i alle operasjonene; fra roret viser skjermene instrumenter. Opptakets egen klippsjekk (`clipNow`, `bodyHits`, folk utenfor dekket) fant ingenting i noen av de 48 opptakene.
+
+**Står igjen:**
+1. **Teina som trekkes, er bredere enn utsparingen** (ring 1,45 m, utsparingen 1,06 m lang): når den svinges inn fra davitens blokk i 2,8 m, går den over takkanten. Det er spillets animasjon (`view3d/10-gear.js` `drawPots`) mot et tak på 2,2 m, og hører til felles kode.
+2. **En som har pause i teinestabelen** (OB14, steg 92).
+3. **Tre ledige mens lina settes**, og fulle stamper (24) fyller dørken akter helt inn til benken; `gearMax.stamp` 30 er mer enn dørken rommer ryddig. Ikke rørt (felles kode og et tall Jonas ikke har bedt om å endre).
+4. **Skjermene er malt**, ikke levende, og lyser ikke om natta.
+5. **Etter-bildene ble tatt før dypgangsmerkene i baugen ble tatt bort** (de sank inn i skroget der sida svinger inn mot stevnen og syntes som noen prikker); modellen som er eksportert, har merkene bare akter. Ellers er den lik.
+
+### 10.9 Karakteren etter runde 2: 67/100, ikke ferdig
+
+Satt 11.11.2026 av en uavhengig underagent som bare fikk de 24 arkene, 15 rendringer, sju bilder fra spillet (også fra roret og om natta), `check()`-utskriften og skalaen, som i runde 1. Den fikk ikke karakteren fra runde 1 og ikke denne teksten. Jeg har ikke bedt om en ny karakter.
+
+| Punkt | Vekt | Runde 1 (71) | Runde 2 | Sensorens begrunnelse (kort) |
+|---|---|---|---|---|
+| Skrogutforming | 20 | 15 | 14 | Én ren flate, jevne linjer, kjøl, dyse og ror henger sammen, vekta treffer. Trekk: kasseform med plane sider, flatt loddrett speil og butt baug; høyt fribord (2,36 m) |
+| Detaljer | 20 | 14 | 13 | Mye beslag på plass (anoder, dypgangsmerker, brannslukker, rist, slange). Trekk: ingen slitasje å se (rust, skrubb, sømmer), vinduene svarte plater, dekket uten struktur |
+| Lanterner | 5 | 4 | 3,5 | Rødt og grønt lyser i nattbildene, høydene etter vedlegg I. Trekk: den hvite på mastetoppen er utenfor bildet; lanterneglansen ligger over merket |
+| Styrhus | 10 | 7 | 6,5 | Utsiden god; fra roret baugen, horisonten og instrumenter på skjermene. Trekk: mørkt og nakent inne, brede stolper, øyet 9 cm under vinduets overkant |
+| Arbeidsflyt | 25 | 16 | 16 | Operasjonene kan skilles, og folk står stort sett riktig. Trekk: ledige og stive folk, tre–fire tett i styrbord akterhjørne når det settes, teina som svinges inn går gjennom mann og takstolpe |
+| Utforming av dekk | 20 | 15 | 14 | Planen er logisk. Trekk: trangt overalt (klaringer på 2–5 cm, 0,68 m gang), fullt redskap fyller dørken akter, alle juksaplasser om styrbord, den foldede kranen ruver som en høy V foran vindu og livbøye |
+| **Sum** | **100** | **71** | **67** | Under grensen på 75 |
+
+**Min egen vurdering.** Tallet er lavere enn i runde 1 selv om modellen har flere detaljer og to klipp færre. Sensorene er to ulike kjøringer, og denne så flere bilder (24 operasjoner mot 16, nattbilder, undervannsskroget), så tallene kan ikke trekkes fra hverandre punkt for punkt. Det jeg tar med meg:
+- **Det modellen ikke kan rette:** skrogformen er tegningens (Jonas 02.11.2026: «Gjør den mer lik tegningen»), og vannlinja og fribordet følger vekta (Jonas 10.11.2026). Arbeidsflyten (16 av 25) er felles kode: ledige folk, teina som svinges inn, flagget i arbeidshjørnet, kaikranens bom over taket ved lossing.
+- **Snuingen av kranen ble trukket for.** Den lave bommen er borte fra dem som sløyer, men den høye enden peker nå forover og står som en V foran dekkshusets vindu. Sensoren mener det ser rarere ut enn før. Det er et valg for Jonas: som nå (ingenting i hodehøyde ved benken), tilbake (lavere å se på, men bommen over benkens ende), eller en bomstøtte så kranen kan ligge parkert lavt (`kit.crane.rest`), som krever plass til en 3,1 m lang bom.
+- **Detaljene syntes ikke nok.** Slitasjen (`wear`) finnes i modellen, men synes ikke i bildene; gripefeltene leste sensoren ikke som struktur. Vinduene er fortsatt mørke plater i spillets lys.
+- **To av rendringene var ubrukelige** (`c_work` grå, `c_shelter` bare et hjørne): kameraene i `CLOSE` står inne i det som er lagt til siden de ble satt. De må flyttes før neste runde.
+- **Nattbildet** må tas med hele masta i bildet, så den hvite synes.
+
+**Det som mangler til 75** (rundt åtte poeng): arbeidsflyten når OB14 og fellesfunnene under er rettet (anslått 3–4), synlig slitasje og struktur på nært hold (2–3), styrhuset inne (1–2), og et valg om kranen og nattbildet (1–2). Uten endringer i felles kode er 75 neppe innen rekkevidde med modellen alene.
