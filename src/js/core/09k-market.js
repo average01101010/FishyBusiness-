@@ -29,12 +29,19 @@ const mbNext = L => L.top == null ? L.start : Math.ceil(L.top * (1 + MB.step) - 
 const mbFee = (kr0, to, port) => to && to !== port ? Math.round(kr0 * MB.deliver) : 0;
 const mbNet = kr0 => Math.round(kr0 * (1 - MB.comm));
 // the quick sale (B4, V6 A): the broker buys her at once for 90 % of her value, and she is gone (not put out again)
-const mbQuick = v => Math.round(vesselValue(v) * MB.quick);
+const mbQuick = v => Math.round(mbValue(v) * MB.quick);
 // what can be sold between players: the open group and the coastal fleet (the ocean vessels and the locked types at the yard only)
 const mbSellable = type => { const V = VESSELS[type]; return !!V && !V.lock && (V.cls === 'open' || V.cls === 'kyst'); };
 const mbSale = v => { const b = v && vget(v, 'boat'); return (b && b.sale) || null; };
-// the right's part of her value (vesselValue's 95 % of licValue), told to the server with the value
-const mbLicKr = v => Math.round(licValue(vget(v, 'lic')) * 0.95);
+// the right as it leaves with a boat sold (KM4): without the quota cooperation (the seller's agreement with a partner) and without the
+// second quota from the special scheme under 11 m, which falls away when the vessel is sold for continued fishing, replaced or the right
+// moved (kvoteforskriften kap. 2 § 6: «faller kvote for deltakeradgang som er oppgitt etter § 4 annet ledd bokstav c bort»)
+function mbLicSold(lic){ if (!lic) return null; const L0 = Object.assign({}, lic); delete L0.coop; if (L0.two){ delete L0.two; if (HJ[L0.id]) licExtra(L0); } return L0; }
+// the right's part of her value (vesselValue's 95 % of licValue), told to the server with the value; without the second quota
+const mbLicKr = v => Math.round(licValue(mbLicSold(vget(v, 'lic'))) * 0.95);
+// her value at a sale (the broker's listing, the quick sale, the yard's trade-in): vesselValue, less the part of it that is the second
+// quota or the partner's quota in a cooperation this year, neither of which the buyer gets
+function mbValue(v){ const l = vget(v, 'lic'); return l && (l.two || l.coop) ? vesselValue(v) - Math.round(licValue(l) * 0.95) + mbLicKr(v) : vesselValue(v); }
 function mbOpsOn(v){ try { return withVessel(v, () => { const o = plan2Ops(); return !!(o && o.on); }); } catch (e){ return false; } }
 // why she cannot be put out for sale (a word), or null: she must lie in port with nobody aboard, an empty hold and no gear in the sea,
 // the plan off, nothing under way at the yard or with a delivery skipper, and the company must keep another boat
@@ -56,7 +63,7 @@ function mbPack(v, yard){
   const b = vget(v, 'boat'), V = VESSELS[b.type], eq = vget(v, 'equip') || {}, lic = vget(v, 'lic'), E = {}, r3 = x => Math.round((+x || 0) * 1000) / 1000;
   // (a tiered item, the knives and the gaff of OPP1, goes as its tier: true would be read as tier 2, and tier 3 came to the buyer as 2; OPP4)
   for (const [k, n] of Object.entries(eq)) if (EQUIP[k] && n) E[k] = EQUIP[k].multi ? Math.max(0, Math.min(99, Math.round(+n || 0))) : EQUIP[k].tiers ? equipLv(k, eq, b.type) : true;
-  const L0 = lic ? Object.assign({}, lic) : null; if (L0) delete L0.coop;   // (a quota cooperation is the seller's agreement with a partner)
+  const L0 = mbLicSold(lic);   // (no quota cooperation and no second quota from the special scheme; a boat sold «uten hjemmel» has none: mbMove first, KM4)
   return {type:b.type, name:String(vget(v, 'boatName') || V.name.no).replace(/[<>&"]/g, '').slice(0, 30), built:b.built || null, engH:Math.round(b.engH || 0), svcAt:Math.round(b.svcAt || 0),
     foul:r3(b.foul), damage:r3(b.damage), engLv:b.engLv || 0, holdLv:b.holdLv || 0, upg:b.upg || null, gear:!!b.gear, kgear:!!b.kgear, equip:E, lic:L0,
     quota:L0 ? vget(v, 'quota') || null : null, pgear:vget(v, 'pgear') || null, at:yard ? mbPlace(yard) : ''};
@@ -86,6 +93,49 @@ function mbLock(v, r, o, yard){
   const b = vget(v, 'boat');
   if (yard && b.port !== yard.id){ b.port = yard.id; b.pos = {x:yard.p.x, y:yard.p.y}; const tr = vget(v, 'trail'); if (Array.isArray(tr)) tr.push({x:yard.p.x, y:yard.p.y, port:yard.id}); }
   b.status = 'port'; b.sale = {lid:r.id, until:Date.parse(r.until) || Date.now() + o.hours * 3600e3, start:o.start, buynow:o.buynow || null, hours:o.hours, port:b.port, value:o.value};
+  if (o.kept) b.sale.kept = o.kept;   // (KM4: put out without her right, which stayed in the company: {vid} the boat it went to, or {free:true})
+}
+// ---- KM4 (docs/planer/kvotemarkedet.md kap. 4.4; Jonas 07.11.2026, V2 A: the seller chooses whether the right follows the boat, taking
+// over for continued fishing, or stays in the company, replacement or a free right for at most two game years). The right with its
+// structure quotas and the year's catch on it moves from a boat of yours to another (the length rule kmLenWhy decides which can take it)
+// or becomes a free right (kmFreeAdd), and a free right moves to a boat. It is the quota market's own goods and steps (kmPack, kmOut,
+// kmApply in 03i-kvotemarked.js) with nobody else in it, so the register is not touched and nothing is paid. The second quota from the
+// special scheme falls away here too (kap. 2 § 6: «ved utskifting av fartøy»); the quota cooperation holds the right where it is.
+// src = {v} a boat's right or {free:i}; to = {v} or {free:true}. Why not (a word), or null:
+//   gone, none, hav, listed (she or the free right is for sale), sea, busy, coop, order (being traded in), same, boat, type (an ocean
+//   vessel), tolisted (the boat it would go to is for sale), haslic, len (the length rule; mbMoveLen gives the limit)
+function mbMoveWhy(src, to, H){
+  H = H == null ? S.t / 60 : H; if (!src || !to) return 'gone';
+  const s = src.free != null ? {free:src.free} : {v:src.v, kind:'right'}, w = kmWhy(s, H); if (w) return w;
+  if (s.free != null && kmState().out[kmKey(s)]) return 'listed';
+  if (s.v && S.order && S.order.vid !== null && (S.order.vid || S.cur) === s.v.id) return 'order';
+  if (to.free) return s.free != null ? 'same' : null;
+  const v = to.v; if (!v || !S.fleet.includes(v)) return 'boat'; if (v === s.v) return 'same';
+  const b = vget(v, 'boat'), V = VESSELS[b.type]; if (!V || V.cls === 'hav') return 'type'; if (b.sale) return 'tolisted'; if (vget(v, 'lic')) return 'haslic';
+  if (kmLenWhy(kmPack(s, H), V.len)) return 'len';
+  return null;
+}
+// the limit of the length rule that stops a move (11, 15 or 21 m), or 0
+function mbMoveLen(src, to, H){ const it = kmPack(src.free != null ? {free:src.free} : {v:src.v, kind:'right'}, H == null ? S.t / 60 : H), V = to && to.v && VESSELS[vget(to.v, 'boat').type]; return it && V ? kmLenWhy(it, V.len) : 0; }
+// the move. Returns {ok, two (the second quota that fell away, or null), item, undo()}: undo puts everything back as it was (the listing
+// that the move was made for did not come through, 10s-broker.js put), with the messages the move wrote taken away again
+function mbMove(src, to, H){
+  H = H == null ? S.t / 60 : H; const w = mbMoveWhy(src, to, H); if (w) return {err:w};
+  const s = src.free != null ? {free:src.free} : {v:src.v, kind:'right'}, cp = x => x == null ? x : JSON.parse(JSON.stringify(x));
+  const old = s.free != null ? kmFreeList()[s.free] : vget(s.v, 'lic'), keep = {since:old.since, from:old.from, kpk:old.kpk}, nm = s.v ? vget(s.v, 'boatName') : null;
+  const snap = [s.v, to.v].filter(Boolean).map(v => [v, cp(vget(v, 'lic')), cp(vget(v, 'quota'))]), F0 = cp(kmFreeList()), O0 = cp(S.openUsed), M0 = new Set(S.msgs);
+  const item = kmPack(s, H), out = item && kmOut(s, H); if (!out) return {err:'gone'};
+  const R = HJ[item.id], two = out.two && HJ[out.two] ? out.two : null;
+  const twoNo = two ? ' Den andre kvoten fra den særlige ordningen (' + HJ[two].hl + ') falt bort, slik den gjør når hjemmelen flyttes (kvoteforskriften kap. 2 § 6).' : '';
+  const twoEn = two ? ' The second quota from the special scheme (' + HJ[two].hl + ') fell away, as it does when the right is moved (kvoteforskriften kap. 2 § 6).' : '';
+  if (to.free){ const f = kmFreeAdd(item, H); for (const k of Object.keys(keep)) if (keep[k] != null) f[k] = keep[k];
+    msg('Fiskeridirektoratet', 'Hjemmelen ' + R.hl + ' er tatt av «' + nm + '» og står uten båt i rederiet' + ((item.st || []).length ? ', med strukturkvotene sine' : '') + '. Tilsagnet gjelder i to år: sett den på en båt, legg den ut i Kvotemarkedet eller selg den til registeret før det.' + twoNo,
+      'The ' + R.hl + ' quota length right has been taken off the «' + nm + '» and stands without a boat in the company' + ((item.st || []).length ? ', with its structure quotas' : '') + '. The promise holds for two years: put it on a boat, put it out in the quota market or sell it to the register before then.' + twoEn); }
+  else { kmApply(item, {v:to.v, how:'put'}, H); const l = vget(to.v, 'lic'); if (l) for (const k of Object.keys(keep)) if (keep[k] != null) l[k] = keep[k];
+    if (two) msg('Fiskeridirektoratet', twoNo.trim(), twoEn.trim()); }
+  const added = S.msgs.filter(m => !M0.has(m));
+  const undo = () => { for (const [v, l, q] of snap) withVessel(v, () => { S.lic = l; S.quota = q; }); S.licFree = F0; S.openUsed = O0; S.msgs = S.msgs.filter(m => !added.includes(m)); };
+  return {ok:true, two, item, undo};
 }
 // why you cannot bid on or buy a listing L (from listings_get), or null: not your own; a right needs blad B (deltakerloven § 6, as at the
 // yard); a company with no right can have one boat in the open group only (as the yard); and the money (kr: what the bid binds)
@@ -263,8 +313,9 @@ function mbApply(rows){
       log('Kystmegleren solgte ' + nm + ' for ' + mktKr(d.price) + '.' + (gone ? '' : ' Båten fantes ikke i denne lagringen.'), 'Kystmegleren sold ' + nm + ' for ' + mktKr(d.price) + '.' + (gone ? '' : ' The boat was not in this save.'));
     }
     else if (r.kind === 'back'){
-      const v = vesselById(d.vid); if (v){ const b = vget(v, 'boat'); if (b.sale && (b.sale.lid === r.listing || !b.sale.lid)) delete b.sale; }
-      if (d.why !== 'cancelled') msg('Kystmegleren', nm + ' ble ikke solgt, og er din igjen. Hun ligger ved verftet.', nm + ' was not sold, and is yours again. She lies at the yard.');
+      const v = vesselById(d.vid); let kept = false; if (v){ const b = vget(v, 'boat'); if (b.sale && (b.sale.lid === r.listing || !b.sale.lid)){ kept = !!b.sale.kept && !vget(v, 'lic'); delete b.sale; } }
+      // (KM4: she was out without her right, which stayed in the company; it can be put back on her)
+      if (d.why !== 'cancelled') msg('Kystmegleren', nm + ' ble ikke solgt, og er din igjen. Hun ligger ved verftet.' + (kept ? ' Hjemmelen ble i rederiet: sett den tilbake med «Flytt hjemmelen til …» i Rederi om du vil.' : ''), nm + ' was not sold, and is yours again. She lies at the yard.' + (kept ? ' The right stayed in the company: put it back with «Move the right to …» in the Company app if you like.' : ''));
     }
     D.push(r.id); out.push(r.id);
   }
