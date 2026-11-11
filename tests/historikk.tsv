@@ -2249,3 +2249,7 @@
 2026-11-10 23:59	ccr-adaac755-n9bghe	e61ffe5e+	docktest	OK	61	lite	samtidig	
 2026-11-11 00:06	claude/l1b-production-release-allrqm	37d9d7ff	boottest	OK	30	lite	samtidig	
 2026-11-11 00:07	claude/l1b-production-release-allrqm	37d9d7ff	kanaltest	OK	70	lite	samtidig	
+2026-11-11 02:03	ccr-a35513a2-4y5tlo	9f8c03b	boottest	OK	28	lite	samtidig	
+2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	csptest	OK	92	lite	samtidig	
+2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	kanaltest	OK	73	lite	samtidig	
+2026-11-11 02:05	ccr-a35513a2-4y5tlo	9f8c03b	errtest	OK	32	lite	samtidig	
