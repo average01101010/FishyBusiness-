@@ -434,7 +434,7 @@ Bestillingen (steg 10 i `docs/planer/koen.md`, fra backloggen «Regelmotoren man
 
 ## 5.28d Bifangsten der torsken er forbudt (Ø10b, steg 65, 11.11.2026)
 
-Jonas 08.11.2026 (valg 12): «Valg 12: fangsten kan ikke holde torsken ute, det er urealistisk. Bifangst av uønskede eller fredede arter er et ekte problem og spillet må reflektere dette». Bygd for Skagerrak utenfor grunnlinja øst for Lindesnes.
+Jonas 08.11.2026 (valg 12): «Valg 12: fangsten kan ikke holde torsken ute, det er urealistisk. Bifangst av uønskede eller fredede arter er et ekte problem og spillet må reflektere dette». Bygd for Skagerrak utenfor grunnlinja øst for Lindesnes. Rullet ut til testutgaven 11.11.2026 i ef22cd6 (versjon 5770a07c34e0).
 
 **Regelverket** (lest 11.11.2026 på Lovdata gjennom en leseagent, som bare kunne gjengi korte sitater ordrett; resten er gjengitt etter innholdet, og det er sagt der det gjelder):
 - **FOR-2025-12-19-2805 § 5** (Lovdata, sist endret FOR-2026-10-01-1976, og J-160-2026): andre konvensjonelle redskap enn snurrevad i Skagerrak: 5 % torsk, «i de enkelte fangster og ved landing» (ordene gjelder hver prosentsats i paragrafen). Nordsjøen 15 %, snurrevad 8,5 % i Nordsjøen og 2,5 % i Skagerrak (ikke i spillet). Forskriften har ingen egen paragraf om inndragning; § 10 viser til havressurslova § 59 (gebyr) og § 11 til §§ 60, 61, 64 og 65 (straff).
