@@ -19,13 +19,13 @@ x −1,6 (rundgattens spiss) til 19,4 (stevnens topp). Spillets midtskips er x 8
 ## 2. Reglene som gjelder modellen
 
 - Bare utsiden (CLAUDE.md). Ingen redskap modellert inn: haleren, karene, flåtene, livbøyene, radaren og kranen er spillets og settes
-  på ankrene. Skipets egne systemer står: galgen, masta med lastebommen og lastevinsjen, ankerspillet, halerullen på ripa og setterullen
+  på ankrene. Skipets egne systemer står: galgen, masta med lastebommen, lastevinsjen på bakken, ankerspillet, halerullen på ripa og setterullen
   i hekken.
 - Ingen ekte firmanavn. Forbildenes navn står bare her og i kommentarer.
 - Valg 26 (Jonas 09.11.2026): brem på styrhustaket som skrår innover oppover, spygatt uten klaffer. Ingen pyntefendere (10.11.2026).
 - Valg 18 A: `disp` er den tomme båten.
 - Jonas 11.11.2026, underveis i økta: «jeg tenker modellen burde være sånn 140000 trekanter i nær. Dette burde bli en vakker båt rett og
-  slett». Nærmodellen er 141 988 trekanter.
+  slett». Nærmodellen er 141 982 trekanter.
 
 ## 3. Avgjørelser
 
@@ -51,7 +51,7 @@ Fra `om-bord.md` 4.10, den gamle byggefila og før-bildene (`tests/ombord.py kys
 | # | Avvik | Rettet |
 |---|---|---|
 | A1 | 249 t mot 190 (+31 %) | 190,1 t (B1) |
-| A2 | Skroget var rader fra to spant med lapper i endene, kjøl og dødved som klosser | Én flate med kjølen i snittet (`Mesh`, 141 988 trekanter med alt) |
+| A2 | Skroget var rader fra to spant med lapper i endene, kjøl og dødved som klosser | Én flate med kjølen i snittet (`Mesh`, 141 982 trekanter med alt) |
 | A3 | Ingen spygatt, ingen klyss som hull, ingen koøyer i skroget | Åtte spygatt per side (åpne, med en stang), klyss, koøyer forut og akter, døra i bakkens front: ekte hull med foring |
 | A4 | Bakken 1,0 m over dekket, dør 0,86 m | B3 |
 | A5 | Garnet og lina gjennom huset (F20) | B5, B6 |
@@ -97,7 +97,7 @@ Modellens x fra rorstammen, y babord +. Alle er regnet i `check()` mot spillets 
 | Den som iser (`work.pack`) | ved lukas styrbord karm x 10,2 | 0,49 m fra karmen |
 | Luka | x 9,40–11,80, 2,2 m bred, karm 0,6 m | – |
 | Stampene (`kit.stamps`) | blokken med åtte om babord for luka, x 9,53–11,67 | 0,92 m gang til luka, 0,55 m til skansekledningen |
-| Teinestablene (`kit.pots`, `potplaces.json`) | tre på tvers forut for luka (x 13,0) og én på luka: 8 + 8 + 7 + 7 = 30 | fri av haleren, karet, bordet, stampene og hverandre |
+| Teinestablene (`kit.pots`, `potplaces.json`) | tre på tvers forut for luka (x 13,0; y −0,75, 0,75 og 2,25) og én på luka: 8 + 8 + 7 + 7 = 30 | fri av haleren, karet, bordet, stampene og hverandre |
 | Lasteenhetene (`kit.cargo`) | fire mellom huset og luka, én på lukas akterkant | fri av bordet, stampene og stabelen på luka |
 | Akterdekket | x −1,6 til 2,40 | – |
 | Garnkaret (`kit.garn`) | x 0,75, y −0,55; de neste karene legger spillet ved siden av | 1,57 m dørk til den som setter, 0,99 m gang til huset |
@@ -119,6 +119,7 @@ sidedekket ved huset.
 | 4 | Roret hang som en plate akter for hekken | Rorstammen flyttet inn under hekken, bladet følger skroget |
 | 5 | Spillets gangkart: bakken ikke lenket (en pullert sto i leiderens topp), rom under båtdekket, bordplata som dekk, pullerter midt i sidedekket | Pullertene flyttet, B12, spylerøret |
 | 6 | Jonas: 140 000 trekanter og en vakker båt | Finere skrog (354 spant), plateskjøter, skansestøtter, plankene i styrhuset og på båtdekket, kappeventiler, lastevinsj, mastetrinn, skipsklokke, brannbøtter, kompass, tregrating, lister, vantskruer |
+| 7 | `potshot`: tre teinestabler sto ikke på fritt gulv. Lastevinsjen fra runde 6 sto ved mastefoten midt i dem, vantene gikk gjennom den ytterste, og lastebommen ligger over midten | Vinsjen flyttet opp på bakken bak mastebeina, vantfestene forover til masta, lastebommens feste løftet til 2,15 m over dekket (en bom lavere enn 1,85 m tar gulvet under seg ut av gangkartet), skansestøttene ved stabelen om babord tatt bort |
 
 `qa/flatnorm.py`: tre små flater (0,04 m² hver, 21–22° skjevt) på ripestripa og under vann; ingen på hus og styrhus (`shade(shell, 5)`
 etter kuttet).

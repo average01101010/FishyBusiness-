@@ -950,7 +950,8 @@ def rig(A, fine=True):
         else: acyl(A, (MX + LAMP_ARM, 0, z - 0.05), (MX + LAMP_ARM, 0, z + 0.05), 0.045, lambda q: mt, seg=6)
     # her own derrick (a boat from 1978 lifted with a boom on the mast; the crane the player has is the game's): the gooseneck on the
     # mast, the boom laid aft and up over the hatch in its topping lift, the cargo runner and its hook made fast at the mast
-    gz = zm0 + 1.25; tip = (HATCH[0] + 0.5, 0.0, 9.05)
+    gz = zm0 + 2.15   # (the gooseneck over head height: a boom lower than 1.85 m over the deck takes the floor under it out of the game's deck map, and the pots' stacks stand there, potshot)
+    tip = (HATCH[0] + 0.5, 0.0, 9.05)
     abox(A, MX - 0.22, MX - 0.12, -0.06, 0.06, gz - 0.08, gz + 0.08, C['steel'])
     acyl(A, (MX - 0.20, 0, gz), tip, 0.085, cm, seg=8 if fine else 5, r1=0.06)
     acyl(A, (MX, 0, 11.3), tip, 0.011, d, seg=4)
@@ -961,7 +962,7 @@ def rig(A, fine=True):
         for sg in (1, -1): acyl(A, tip, (HATCH[1] + 0.3, sg * (ybw(HATCH[1] + 0.3) - 0.10), z_cap(HATCH[1] + 0.3)), 0.007, d, seg=4)   # the guys to the rails
         # the shrouds to the bulwark's cap, the forestay to the stem
         for sg in (1, -1):
-            cx = MX - 1.1; acyl(A, (MX, sg * 0.05, 10.3), (cx, sg * gunwale_y(cx, sg), z_cap(cx) + 0.02), 0.008, d, seg=4)
+            cx = MX - 0.25; acyl(A, (MX, sg * 0.05, 10.3), (cx, sg * gunwale_y(cx, sg), z_cap(cx) + 0.02), 0.008, d, seg=4)
         acyl(A, (MX, 0, 11.3), (XF - 0.30, 0, z_cap(XF - 0.30) + 0.05), 0.008, d, seg=4)
         F.work_light(A, (MX - 0.14, 0, 9.6), (-1, 0, -0.8), C['dark'], C['lens'])
         for sy in (-0.9, 0.9): F.whip(A, (MX, sy, 10.42), 1.5, C['white'], r0=0.014, r1=0.006, m_foot=C['steel'])
@@ -1087,7 +1088,7 @@ def details(A, G):
         # the bulwark's stays inside, a flat bar from the deck up to under the cap, every 1.2 m, clear of the work's places
         for x in [-0.4 + 1.2 * k for k in range(12)]:
             if sg < 0 and (TABLE[0] - 0.2 < x < HX + 0.9 or GAL[0] - 0.3 < x < GAL[1] + 0.3): continue
-            if abs(x - 7.75) < 0.4 or abs(x - 1.6) < 0.4 or abs(x - 13.95) < 0.4: continue
+            if abs(x - 7.75) < 0.4 or abs(x - 1.6) < 0.4 or abs(x - 13.95) < 0.4 or (sg > 0 and 12.1 < x < 13.9): continue   # (the bitts; the pots' stack by the port bulwark)
             yb = ybw(x, None, sg); yt = ycap(x, sg) - 0.012; zd = z_md(x); zt = z_cap(x) - 0.04
             P = [(x, sg * yb, zd), (x, sg * (yb - 0.11), zd), (x, sg * (yt - 0.03), zt), (x, sg * yt, zt)]
             A.poly([(q[0] - 0.005, q[1], q[2]) for q in P], C['inner'], (-1, 0, 0)); A.poly([(q[0] + 0.005, q[1], q[2]) for q in P], C['inner'], (1, 0, 0))
@@ -1109,15 +1110,15 @@ def details(A, G):
     bd = BD() + 0.06
     for y in (1.25, -1.25): cowl_vent(A, (FUN[0] + 0.15, y, bd), (1, 0), C['cream'], C['red'], r=0.13, h=1.05)
     for y in (0.95, -0.95): cowl_vent(A, (18.25, y, fdeck(18.25, y)), (1, 0), C['white'], C['red'], r=0.09, h=0.62)
-    # the cargo winch at the mast's foot (hers: the derrick's runner): the bed, the drum between its cheeks, the warping heads, the motor
-    wx, wz = MX - 0.95, mdeck(MX - 0.95, 0)
+    # the cargo winch (hers: the derrick's runner): the bed, the drum between its cheeks, the warping heads, the motor
+    wx, wz = X_FC + 0.62, fdeck(X_FC + 0.62, 0)       # (on the forecastle abaft the mast's legs: at the mast's foot on the main deck it stood in the pots' stacks, potshot)
     abox(A, wx - 0.34, wx + 0.34, -0.50, 0.50, wz - 0.004, wz + 0.08, C['dark'])
     for y in (-0.36, 0.36): abox(A, wx - 0.22, wx + 0.22, y - 0.03, y + 0.03, wz + 0.08, wz + 0.52, C['dark'])
     acyl(A, (wx, -0.33, wz + 0.36), (wx, 0.33, wz + 0.36), 0.13, lambda q: C['galv'], seg=16)
     for y in (-0.33, 0.33): acyl(A, (wx, y - 0.012, wz + 0.36), (wx, y + 0.012, wz + 0.36), 0.20, lambda q: C['dark'], seg=18)
     for sg in (1, -1): acyl(A, (wx, sg * 0.39, wz + 0.36), (wx, sg * 0.60, wz + 0.36), 0.085, s, seg=14, r1=0.12)
     abox(A, wx - 0.30, wx - 0.06, -0.16, 0.16, wz + 0.08, wz + 0.30, C['red']); acyl(A, (wx + 0.20, 0.30, wz + 0.52), (wx + 0.36, 0.30, wz + 0.86), 0.014, s, seg=6)
-    acyl(A, (wx, 0.0, wz + 0.49), (MX - 0.24, 0.0, mdeck(MX, 0) + 1.33), 0.008, lambda q: C['dark'], seg=4)
+    acyl(A, (wx, 0.0, wz + 0.49), (MX + 0.10, 0.0, 9.9), 0.008, lambda q: C['dark'], seg=4)
     # the mast's steps up its after side to the cross-tree, the ship's bell on its bracket under the forecastle's edge
     for k in range(18):
         z = mdeck(MX, 0) + 2.3 + 0.34 * k; r_ = 0.15 - 0.05 * (z - mdeck(MX, 0)) / (11.4 - mdeck(MX, 0))
@@ -1181,7 +1182,7 @@ def details(A, G):
         beam(A, V((a_[0], a_[1], WS() - 0.045)) + nn * 0.012, V((b_[0], b_[1], WS() - 0.045)) + nn * 0.012, 0.03, 0.035, C['teakd'])
     # the shrouds' chain plates and bottle screws on the bulwark's cap, the derrick's blocks
     for sg in (1, -1):
-        cx = MX - 1.1; y = sg * gunwale_y(cx, sg); zc = z_cap(cx)
+        cx = MX - 0.25; y = sg * gunwale_y(cx, sg); zc = z_cap(cx)
         abox(A, cx - 0.03, cx + 0.03, y - 0.008, y + 0.008, zc - 0.16, zc + 0.05, C['steel'])
         d_ = (V((MX, sg * 0.05, 10.3)) - V((cx, y, zc + 0.02))).normalized()
         acyl(A, V((cx, y, zc + 0.04)) + d_ * 0.05, V((cx, y, zc + 0.04)) + d_ * 0.38, 0.016, lambda q: C['galv'], seg=6)

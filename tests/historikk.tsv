@@ -2647,3 +2647,29 @@
 2026-11-11 20:00	ccr-6f2117ea-fknkro	d01de3f	boottest	OK	31	lite	alene	
 2026-11-11 20:01	ccr-6f2117ea-fknkro	d01de3f	dbg23o	OK	47	3d	alene	
 2026-11-11 20:16	ccr-6f2117ea-fknkro	d01de3f	coast3d	OK	888	3d	alene	
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	crewclip	FEIL	25	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [28, 5076, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 90
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	crewwalk	OK	12	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	vesseltest	FEIL	29	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	lanterntest	OK	19	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	maletest	OK	28	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	regmarktest	OK	9	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	docktest	OK	74	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	stabtest	OK	17	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	trip2	OK	47	lite	samtidig	
+2026-11-11 21:19	claude/charming-faraday-my9nnq	7e1266c	brotest	FEIL	900	3d	alene	gikk ut på tid
+2026-11-11 21:47	claude/charming-faraday-my9nnq	7e1266c+	boottest	OK	30	lite	alene	
+2026-11-11 21:58	claude/charming-faraday-my9nnq	b0640be	jigshot	OK	638	3d	alene	
+2026-11-11 22:10	claude/charming-faraday-my9nnq	b0640be	potshot	FEIL	717	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['0: ikke gulv ved 0.08,-4.32', '1: ikke gulv ved -1.22,-4.62
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	boottest	OK	42	lite	samtidig	
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	crewclip	FEIL	22	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [19, 4670, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 75
+2026-11-11 22:34	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	729	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['0: ikke gulv ved 0.08,-4.32', '1: ikke gulv ved -0.17,-4.52
+2026-11-11 22:55	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	773	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['1: ikke gulv ved -0.19,-4.32', '2: ikke gulv ved -3.00,-3.9
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	boottest	OK	38	lite	samtidig	
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	crewclip	FEIL	23	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [28, 5076, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 12
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	crewwalk	OK	11	lite	samtidig	
+2026-11-11 23:06	claude/charming-faraday-my9nnq	b0640be+	docktest	OK	63	lite	samtidig	
+2026-11-11 23:16	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	593	3d	alene	FEIL sjarkny (staa): stablene om bord viser teinene som er om bord  {'om bord': 12, 'plass': 12, 'tegnet': 0}
+2026-11-11 23:30	claude/charming-faraday-my9nnq	b0640be+	deckshot	FEIL	842	3d	alene	FEIL havbåtene fra 45 m har MOB-båten med davit, og bøyene og røyken reglene krever (deck_*_mob.png)  []
