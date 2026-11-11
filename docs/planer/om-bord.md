@@ -520,6 +520,31 @@ Det evalueringen fant og OB3 ikke har rettet, står i backloggen under OB3: de s
 
 Bildene før og etter står i `docs/okter/2026-11-11-ob3/`. Før-bildene er av snekka, havsjarken og kyst15 (setting, juksa for hånd, juksamaskin og trekk, begge formater), og av den brukte hurtigsjarkens teiner, kyst21s linetrekk og juksamaskiner, og plastsjarken med fullt redskap. Etter-bildene er av de samme, uten juksa på snekka, havsjarken og kyst15: juksaplassene deres kommer fra modellene og er ikke endret, så bildene ville vært like.
 
+### 4.14 Etter OB4 (11.11.2026): lossingen, isen og båtens egen kran
+
+OB4 (steg 82, Jonas' økt, grenen `ccr-309f2cf5-w71mxh`) tok arbeidet ved kaia for båtene med mannskap på dekk; systemet står i 5.19e i `docs/systemer/folk-om-bord.md` og «Liggeplassen» i `docs/systemer/havner-og-mottak.md`.
+
+| Funn | Hva som er gjort | Står igjen |
+|---|---|---|
+| **F10** lossing | Én av mannskapet står ved karet og hekter stroppen på når kroken er nede (rollen `hekt`), én står ved rekka mot kaia og gir tegn mens kranen går (`luke`). Stillingen følger kroken. Mottakets kar står på fritt dekk under åpen himmel, ute av gangkartet; før sto fire på en fast firkant midt på dekket. Alene hekter skipperen på selv. | Ingen står nede i rommet og fyller karene: lukene er lukket i modellene, og karene fylles ikke synlig (båtfasene). Karet på plass to hopper til plass én når det første er løftet (fra før). Håndbåtene er som før. |
+| **F11** is | Renna svinges mot iskassa, isen kommer gjennom en slange fra tuten, og én står ved kassa og holder slangen over den (`isrom`). | Kyst15 og den nye hurtigsjarken: iskassa står under shelterdekket og under skjulet, så isen faller fra tuten uten slange (OB12, steg 88). Kyst21: slangen går rundt sju meter over dekket til kassa om styrbord. På snekka (kassa under tofta) står han med hendene på kassa. |
+| **F22** siden mot kaia | `berthPose` gir `side`: den nye hurtigsjarken, kyst15 og kyst21 (kranen om babord) legger babord til. Fortøyningen, fenderne, båtens kran, mannskapets plasser og Kystvakta utenpå følger siden. | Siden velges etter kranen, ikke etter kaia (innseilingen): hun kommer inn fra den andre kanten enn før; der det er stengt, tar `berthPath` veien rett ut fra kaia, som før. Fyllestussen for drivstoff står på siden bort fra kaia på de fleste båtene (nå også den nye hurtigsjarken). |
+| **F23** båtens egen kran | Én kjører den med fjernkontroll ved kranfoten (`kran`), én hekter på og av ved frakta (`hekt`), kaia er på riktig side, og kassa henger i kroken hele veien mellom dekket og kaia. | Ingen på kaia hekter på eller av der. Lossingen av fisk går fortsatt med mottakets kran også på kranbåtene (spillets valg fra før). |
+
+**Stikkprøven langs kysten (`/stikkprove`, hele kysten fra `kart-31`, 3D):** mottakene Husøy, Bøvågen (nærmest Bergen, 41 km), Bodø og Båtsfjord, med havsjarken (styrbord til), den nye hurtigsjarken og kyst21 (babord til). Alle tolv: liggeplass funnet, kaia på den siden `berthSide` sier, ingen del av båten på land, lossingen startet, én hekter på og én gir tegn, ingen lem gjennom modellen. Mottakets kran når karet overalt (rekkevidde 9,19 m): 8,9 m til havsjarkens kar akter om styrbord (knapt, og lenger enn før, da karene sto midt på dekket), 6,0 m på den nye hurtigsjarken og 5,9 m på kyst21. Veien inn akterfra er fri overalt unntatt for kyst21 i Bodø, der den er stengt med babord til (den var fri med styrbord til): hun tar da `berthPath` sin reservevei rett inn mot kaia. Isen: den som tar imot, var ennå på vei til iskassa da stikkprøven leste av (16 s under programvaretegning), så slangen er ikke sett der; den er bekreftet for seg ved Husøy: havsjarken, plastsjarken og kyst21 får isen gjennom slangen, den nye hurtigsjarken ikke (slangen måtte gått gjennom huset til kassa under skjulet).
+
+**Arbeidsflyten i lossing, is og kran, egen evaluering (11.11.2026).** Satt av en egen underagent som bare fikk arkene med bildene (før og etter) og Jonas' skala (arbeidsflyt 0–25), og bare for det bildene viser. Tallene er ikke hele K6 for båten og erstatter ikke karakterene i 4.1–4.10.
+
+| Båt | Før (av 25) | Etter (av 25) | Det som ser riktig ut | Det som trekker ned |
+|---|---|---|---|---|
+| `sjark` | 10 | 17 | Karet på fritt dekk akter, én ved karet, én ved rekka med armen opp; én ved iskassa under isingen | Ingen slange å se i bildene; karet står helt inntil rekka; krok og wire til karet synes ikke; de andre står bare |
+| `sjarkny` | 8 | 14 | Babord og kranen mot kaia; karet på fritt dekk ved luka med én ved det; kassa ved kranen | Tegngiveren synes ikke (han står under skjulets tak); karet står på sjøsiden av dekket; isen og slangen synes ikke; ved egen kran ser den som hekter, ut til å stå i kassa sett rett ovenfra, og det kan ikke ses at kassa henger |
+| `kyst21` | 8 | 12 | Babord og kranen mot kaia; kar og frakt på åpent dekk forut | Bildene er tatt for høyt til at folkene kan skilles; slangen, kranføreren og kassa i kroken kan ikke bekreftes |
+
+Det evalueringen fant og OB4 ikke har rettet, står i backloggen under OB4: bildene av kyst21 er for høye til å bedømme arbeidet, og isslangen og kassa i kroken bør ses på nært hold av Jonas på nettbrettet (`docs/spill-dette/82.md`).
+
+Bildene før og etter står i `docs/okter/2026-11-11-ob4/`: innseilingen, lossingen (oversikt og nært), isen og kranen for havsjarken, den nye hurtigsjarken og kyst21, i begge formater.
+
 ## 5. Båten i sjøen
 
 Regnet i spillet uten 3D 09.11.2026 med `stabOf` (`core/03c-stability.js`), tom båt og med fullt rom eller kar (`holdCap`), uten redskap på dekk. Hiv og stamp i 3D kommer fra skrogsnittene i F2 (`hullSections`, `hullRest`, `hullStep`), rullet fra `stabOf`. Målt i sjø før (`fysikk-og-styring.md`, F2): sjarken ruller 11,5° signifikant i 3,45 m tverrsjø og stamper 9° i 6,1 m motsjø i 8,5 knop; skiffen stamper 4,6° i 2,7 m krapp sjø i 18 knop.
@@ -639,6 +664,7 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 09.11.2026: **OB2 rullet ut** (Jonas' økt, gren `ccr-a9ccd5ec-it307t`, 7d2404bd, versjon e5e171f41fc3): F1, F2 og F3 rettet for alle båtene med mannskap; F22 flyttet til OB4. Forslagene til K6 i 4.11.
 - 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
 - 11.11.2026: **OB3 rullet ut til testutgaven** (Jonas' økt, gren `ccr-13ec41bb-wikvwe`, d9f148f, versjon fc8e85de4868): F4, F8, F15, F19, F21 og F24 rettet for båtene med mannskap, F7 og F20 delvis; tabellen i 4.13. Neste: OB4 (steg 82, startmeldingen i `docs/planer/start/82.md`).
+- 11.11.2026: **OB4 bygd** (Jonas' økt, gren `ccr-309f2cf5-w71mxh`): F10, F11, F22 og F23 rettet for båtene med mannskap på dekk; tabellen i 4.14. Neste på sporet: OB14 (steg 92, `docs/planer/start/92.md`) og OB12 (steg 90).
 - 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).
 - 09.11.2026: **OB5 bygd** (Jonas' økt, gren `ccr-b0ab5771-n45cmj`): 4.2 over, forslag 75 etter Jonas' skala. Neste på sporet: OB6 (snekka, `docs/planer/start/84.md`).
 - 10.11.2026: **OB8 bygd** (Jonas' økt, gren `ccr-869710d8-bo5iwu`): havsjarken med setteport i hekken (Jonas: «A Åpning i hekken»; F20), de to ved bordet side om side (F19), juksa fordelt (F21), pakkerens plass og iskassa, bremmen (valg 26), styrhusveggene uten striper, livbøya under vinduet, pyntefenderne ut og fenderen som felles modell; forslag 76 i `havsjark-grunnlag.md` 9.5. Funnene i 4.5 med alvor A er rettet, utenom F4 (OB3). Neste på sporet: OB9 (hurtigsjarken, `docs/planer/start/87.md`).

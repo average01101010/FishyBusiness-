@@ -290,14 +290,16 @@ function workAssign(as){
 // crab have their own gang at the hatch (view3d/09-landing-deck.js landScene). The crew first, you last: alone you hook on yourself.
 function quayRoles(P, ctx){
   const b = S.boat; if (ctx.s !== 'port' || ctx.fort) return;
-  if (BOAT.crane > 0) P.filter(p => p.st === 'last').forEach((p, i) => { p.role = i ? 'hekt' : 'kran'; });
+  if (BOAT.crane > 0 && !b.land) P.filter(p => p.st === 'last').forEach((p, i) => { p.role = i ? 'hekt' : 'kran'; });   // (her crane lies folded while the plant lands her, view3d drawCrane)
   const L = b.land, e = L ? S.t - L.t0 : 0, landing = !!L && L.kind === 'tub' && !(L.lv > 0) && e >= 0 && e < landLiftT(L, L.lifts - 1) + liftMin(L);
   const icing = (b.iceUntil || 0) > S.t; if (!landing && !icing) return;
   const free = P.filter(p => p.st === 'pause' && p.idle !== 'sleep' && pTired(p) < 0.85).sort((x, y) => (x.c ? 0 : 1) - (y.c ? 0 : 1));
   const want = (landing ? ['hekt', 'luke'] : []).concat(icing ? ['isrom'] : []);
   // (alone, or one free: the ice is taken aboard before the signs are given; the sling is always hooked on first)
   if (free.length < want.length && icing && landing) want.splice(1, 1);
-  free.slice(0, want.length).forEach((p, i) => { p.role = want[i]; });
+  free.slice(0, want.length).forEach((p, i) => { p.role = want[i];
+    // (the one he was chatting with looks out over the sea instead of talking to nobody)
+    if (p.idle === 'chat' && p.with) for (const q of P) if (q !== p && !q.role && q.idle === 'chat' && q.with === pKey(p)){ q.idle = 'look'; q.with = null; } });
 }
 const QUAY_ING = {hekt:['Hekter på karene', 'Hooking on the tubs'], luke:['Gir tegn til kranføreren', 'Signalling to the crane driver'], isrom:['Tar imot isen', 'Taking the ice aboard'], kran:['Kjører kranen', 'Driving the crane']};
 // ---- what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener

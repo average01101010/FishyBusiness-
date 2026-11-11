@@ -302,12 +302,14 @@
       if (man && iceTo){ const Fh = [Math.sin(man.h), -Math.cos(man.h)], hb = [man.x + Fh[0] * 0.44, man.y + 0.86, man.z + Fh[1] * 0.44];
         if (Math.hypot(hb[0] - Ob[0], hb[1] - Ob[1], hb[2] - Ob[2]) < 10 && CREW3D.clearLine([Ob[0], Ob[1] - 0.2, Ob[2]], [hb[0], hb[1] + 0.3, hb[2]])) hose = xf(BMrel, hb); }
       if (crewOn) CREW3D.setIce(man ? !!hose : true);
-      KST.iceHose = !!hose; KST.iceWait = !!(taker && !man);
+      // (he is waited for eight seconds from when the ice is at the spout; the core's ice runs on its own clock whatever he does)
+      if (!P.iceT || T - P.iceS > 1.5) P.iceT = T; P.iceS = T; const late = T - P.iceT > 8;
+      KST.iceHose = !!hose; KST.iceWait = !!(taker && !man && !late);
       if (hose){ let p0 = from; const s0 = Math.min(0.6, Math.hypot(hose[0] - from[0], hose[2] - from[2]) * 0.12);
         for (let k = 1; k <= 10; k++){ const q = k / 10, Pq = [from[0] + (hose[0] - from[0]) * q, from[1] + (hose[1] - from[1]) * q - s0 * 4 * q * (1 - q), from[2] + (hose[2] - from[2]) * q]; drawN(PM.fhose, limbM(p0, Pq, 0.055)); p0 = Pq; }
         from = hose; to = [iceTo[0] - eye[0], iceTo[1] - eye[1], iceTo[2] - eye[2]]; fall = Math.max(0.1, from[1] - to[1]); }
       else if (crewOn){ const y = CREW3D.dropY([Ob[0], Ob[1] - 0.2, Ob[2]]); if (y != null) fall = Math.max(0.3, Ob[1] - y); }
-      if (!taker || man){
+      if (!taker || man || late){
         let k = P.spray; const n = hose ? 40 : 70; for (let i = 0; i < n; i++){ const q = (T * 1.6 + i / n) % 1, rr = hose ? 0.05 + 0.05 * q : 0.12 + 0.1 * q;
           PB[k * 3] = from[0] + (to ? (to[0] - from[0]) * q : 0) + (hash(i) - 0.5) * rr; PB[k * 3 + 1] = from[1] - q * q * fall; PB[k * 3 + 2] = from[2] + (to ? (to[2] - from[2]) * q : 0) + (hash(i + 31) - 0.5) * rr; PA[k] = 0.85; k++; }
         P.spray = k; } }
@@ -695,7 +697,7 @@
       const cp = K.cargo && K.cargo.length ? K.cargo[(Math.floor(t / 40)) % Math.min(K.cargo.length, Math.max(1, cargoUnits(G)))] : [Q.at[0] - 1.2, d.y, Q.at[2] + 2], qy = (G.gw || d.y + 0.9) + 0.6;
       u = (t % 40) / 40; ph = u < 0.2 ? 0 : u < 0.3 ? 1 : u < 0.4 ? 2 : u < 0.65 ? 3 : u < 0.75 ? 4 : u < 0.85 ? 5 : 6;
       // (F22, OB4: the quay is on the side she lies to it with, 07-harbours.js berthSide, not always to starboard)
-      at = ph <= 2 || ph === 6 ? [cp[0], cp[1] + 0.95, cp[2]] : [(typeof MO !== 'undefined' && MO.side < 0 ? -1 : 1) * (G.beam / 2 + 2.5), qy, Q.at[2]];
+      at = ph <= 2 || ph === 6 ? [cp[0], cp[1] + 0.95, cp[2]] : [(typeof berthSide === 'function' ? berthSide(vtype()) : 1) * (G.beam / 2 + 2.5), qy, Q.at[2]];
       // the slew to the point and the telescopes out to its distance (the tip moves along the outer boom as they slide)
       const dx = at[0] - Q.at[0], dz = at[2] - Q.at[2], sl = Math.atan2(-dx, -dz) - (Q.ry || 0), D = Math.hypot(dx, dz) / (Q.s || 1);
       const r0 = Math.hypot(...[0, 2].map(i => crFrames(X, Q, M4.T(0, 0, 0), {sl:0, a1:work.a1, a2:work.a2, e:0}).tip[i] - Q.at[i])) / (Q.s || 1);

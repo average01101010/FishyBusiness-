@@ -230,7 +230,9 @@ function crewSim(src){
   // stands by it with the shovel; her own crane is driven from beside its foot, and the other hand hooks on at the freight.
   const quaySide = () => { const m = moorNow(); return m && m.side ? m.side : typeof berthSide === 'function' ? berthSide(ST.type) : 1; };
   // (a landing of the plant's tubs from her hold now)
-  function landPlant(){ if (src || !S.boat) return false; const b = S.boat, L = b.land; return !!L && b.status === 'port' && L.kind === 'tub' && !L.own && !(L.lv > 0); }
+  // (until the last of them is on the hook: after that the view draws none on deck, and the deck is clear again)
+  function landPlant(){ if (src || !S.boat) return false; const b = S.boat, L = b.land; if (!L || b.status !== 'port' || L.kind !== 'tub' || L.own || L.lv > 0) return false;
+    return typeof landLiftT !== 'function' || S.t - L.t0 < landLiftT(L, L.lifts - 1) + 0.42 * liftMin(L); }
   // where the landing is now: the lift i (-1 before the first), how far into it (u, 0-1), an own tub's place, and whether it comes back washed
   function landNow(){ if (src || !S.boat) return null; const b = S.boat, L = b.land; if (!L || b.status !== 'port' || L.kind !== 'tub' || L.lv > 0 || typeof landLiftT !== 'function') return null;
     const e = S.t + (typeof currentFrac === 'function' ? currentFrac() : 0) - L.t0, lf = liftMin(L); let i = -1; for (let j = 0; j < L.lifts; j++) if (e >= landLiftT(L, j)) i = j;
@@ -239,7 +241,7 @@ function crewSim(src){
   function landSlots(){
     const V = VESSELS[ST.type] || {}; if (V.kar || !ST.M0) return []; const id = ST.type + '|ls|' + (ST.kitSig0 || ''); if (LANDPL.has(id)) return LANDPL.get(id);
     const M0 = ST.M0, Mk = overlay(M0, fixedBoxes().concat(gearBoxes([], true))), G = ST.G, d = G.deck || {y:G.gw, z:0}, N = M0.nx * M0.nz, out = [];
-    const st = ['sloy', 'is', 'haling', 'door'].map(nm => ST.PT[nm]).filter(q => q && q.k != null && M0.ok(q.k)).map(q => q.k), C0 = deckComp(Mk), joined = st.filter(k => Mk.ok(k) && C0[k] === C0[st[0]]);
+    const st = ['sloy', 'is', 'haling', 'door'].map(nm => ST.PT[nm]).filter(q => q && q.k != null && M0.ok(q.k)).map(q => q.k), C0 = deckComp(Mk), st1 = st.filter(k => Mk.ok(k)), joined = st1.filter(k => C0[k] === C0[st1[0]]);   // (the stations that are joined now, from the first that is on the map)
     const keeps = L => { const Mx = overlay(Mk, L.map(q => [q[0], q[2], TUBX + 0.06, TUBZ + 0.06, q[3]])), C = deckComp(Mx); return joined.every(k => Mx.ok(k) && C[k] === C[joined[0]]); };
     const fits = (x, y, z, ry) => { const c = Math.cos(ry), sn = Math.sin(ry);
       for (const q of out) if (Math.hypot(x - q[0], z - q[2]) < 1.25) return false;
@@ -613,7 +615,7 @@ function crewSim(src){
   // little turn (the place from the anchors is the station's; this only moves the person within it)
   const RAILWORK = {jig:1, haul:1, pick:1};
   function fitWork(g, id){
-    if (!g || g.inside || g.idle || !ST.M.ok(g.k)) return g; if (g.task === 'sett' || g.dyn || g.ice || g.task === 'remote') return g; const M = ST.M, h0 = g.h || 0;   // (the places of the setting and of the quay work are found with their poses tried, OB3 and OB4)
+    if (!g || g.inside || g.idle || !ST.M.ok(g.k)) return g; if (g.task === 'sett' || (g.dyn && g.dyn !== 'kai') || g.ice || g.task === 'remote') return g; const M = ST.M, h0 = g.h || 0;   // (the places of the setting and of the quay work are found with their poses tried, OB3 and OB4)
     const fit = (k, h) => { if (RAILWORK[g.task]){ const rl = railAt(k, h); if (!rl) return {rail:null, off:null}; const F = [Math.sin(h), -Math.cos(h)];
         if (rl[0] < 0.22){ const s = 0.22 - rl[0]; return {rail:[0.22, rl[1]], off:[-F[0] * s, -F[1] * s]}; } return {rail:rl, off:null}; }
       if (g.task === 'gut'){ const W0 = ST.G.work, d0 = ST.G.deck || {y:ST.G.gw || 0}, top = W0 && W0.own && W0.top != null ? W0.top : (d0.y || 0) + 0.885; return {rail:[0.4, top - M.at(k)[1]], off:null}; }
