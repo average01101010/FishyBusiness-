@@ -40,7 +40,7 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 
 | Båt | Satt i grunnlaget | Etter OB0 | Kapittel |
 |---|---|---|---|
-| `kyst15` | 76 (godkjent) | **71**, under grensen; må også eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen) | 4.9 |
+| `kyst15` | 76 (godkjent) | **71**, under grensen; etter OB12 **68** (egen evaluering, Jonas' skala; eksportert på nytt) | 4.9 |
 | `breisjark` | 72 | **68**; etter OB11 **68** (egen evaluering, Jonas' skala) | 4.8 |
 | `snekke` | ingen | **67** (forslag) | 4.3 |
 | `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala) | 4.7 |
@@ -392,6 +392,8 @@ Opptakene: liggende, 2,8–3,6 bilder i sekundet, alle 16 klippene (kranen med).
 **F18 og valg 19:** Ja, begge synes. Sløyingen er helt usynlig (alle fire under shelterdekket, kameraet over), og i tillegg tegnes ingen ved haleren og blødekaret (1,2 m-regelen), så **ingenting av fisket på kyst15 synes etter at juksa er over**. Garnkaret, stampene og frakten står på shelterdekket mens redskapet hales en etasje under (valg 19 A støttes av bildene).
 
 **Karakteren:** 76 i grunnlaget (K6 12). Klippene viser to funn med alvor A som er kyst15s egne (sløyingen usynlig; ingen ved haleren og blødekaret), i tillegg til F1–F3, og flere B (haleren gjennom skroget, juksa fra shelterdekket, redskapet på feil dekk, kranen). K6 går fra 12 til **7**. K1 6, K2 18, K3 13, K4 5, K5 9, **K6 7**, K7 9, K8 4 = **71**. Den eneste godkjente båten faller da under 75; med K6 9 (taket så lenge en A står åpen) ville hun fått 73. Begge A-funnene er regler i koden (1,2 m-grensen og kameraets plass), ikke modellen.
+
+**Etter OB12 (11.11.2026, arbeidsrutinen, grenen `plan/2026-11-11-90`, PR #64; `docs/skipsmodeller/kyst15-grunnlag.md` kap. 10):** arbeidsdekket går akterover under shelterdekket til speilet, med **setteport i hekken** (valg 19) og garnkaret og stampene på arbeidsdekket rett innenfor; garn og line settes ut gjennom porten. En **luke til i styrbord side** akter for haleporten gir fire juksaplasser med en armlengde imellom (`jukseMax` 8 → 4, valg 31 A), og ingen jukser fra shelterdekket. Halerens fot står innenfor skroget, taket har fått brem (valg 26), stripene på styrhusveggene er borte, og modellen er eksportert på nytt (sidene like). F18: `tests/ombord.py` har et lavt kamera fra siden og aktenfra for arbeid under shelterdekk, så bildene ser inn; spillerens eget kamera er ikke endret. Karakteren satt som egen evaluering av en uavhengig sensor: **68** (16 + 12 + 3 + 6 + 17 + 14), under 75. Det som mangler mest: de som sløyer, står i en klump (F19, felles), ryddingen skjer på shelterdekket (F12, OB14), porten og åpningene har ingen lemmer, og lanternene, roret og undervannsskroget er ikke vist i bilder. Bildene: `docs/okter/2026-11-11-ob12/`.
 
 **Til Jonas:** Kyst15 har plassene riktig under shelterdekket, men spilleren ser ingen av dem: sløyingen skjer der kameraet ikke ser, ingen står ved haleren, og garnet og stampene står en etasje over der redskapet hales.
 

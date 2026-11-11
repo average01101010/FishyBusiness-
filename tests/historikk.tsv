@@ -2557,6 +2557,21 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 16:19	plan/2026-11-11-90	f309be91	trip2	OK	67	lite	samtidig	
+2026-11-11 16:19	plan/2026-11-11-90	f309be91	vesseltest	FEIL	49	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 16:19	plan/2026-11-11-90	f309be91	selltest	LES	45	lite	samtidig	
+2026-11-11 16:20	plan/2026-11-11-90	f309be91	shoptest	OK	82	lite	samtidig	
+2026-11-11 16:20	plan/2026-11-11-90	f309be91	bktest	OK	16	lite	samtidig	
+2026-11-11 16:20	plan/2026-11-11-90	f309be91	stabtest	OK	27	lite	samtidig	
+2026-11-11 16:21	plan/2026-11-11-90	f309be91	worktest	FEIL	47	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-11 16:21	plan/2026-11-11-90	f309be91	crewwalk	OK	22	lite	samtidig	
+2026-11-11 16:21	plan/2026-11-11-90	f309be91	crewclip	FEIL	39	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [31, 4855, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 16:22	plan/2026-11-11-90	f309be91	docktest	OK	85	lite	samtidig	
+2026-11-11 16:22	plan/2026-11-11-90	f309be91	walktest	FEIL	29	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 17
+2026-11-11 16:22	plan/2026-11-11-90	f309be91	lanterntest	OK	27	lite	samtidig	
+2026-11-11 16:23	plan/2026-11-11-90	f309be91	maletest	OK	41	lite	samtidig	
+2026-11-11 16:23	plan/2026-11-11-90	f309be91	regmarktest	OK	14	lite	samtidig	
+2026-11-11 16:24	plan/2026-11-11-90	f309be91	opptest	FEIL	114	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
 2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	worldtest	OK	20	lite	samtidig	
 2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	trip2	OK	38	lite	samtidig	
 2026-11-11 15:49	ccr-cb5d0d6b-itetzc	c2a8a89+	harbourtest	OK	17	lite	samtidig	
@@ -2609,7 +2624,14 @@
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	boottest	OK	42	lite	samtidig	
 2026-11-11 16:50	ccr-cb5d0d6b-itetzc	ce1c051	hailltest	LES	37	lite	samtidig	
 2026-11-11 16:53	ccr-cb5d0d6b-itetzc	ce1c051	pubtest	OK	143	3d	alene	
+2026-11-11 17:24	plan/2026-11-11-90	a53fa64f	boottest	OK	26	lite	alene	
+2026-11-11 17:33	plan/2026-11-11-90	a53fa64f	jigshot	OK	576	3d	alene	
+2026-11-11 17:37	plan/2026-11-11-90	a53fa64f	haultest	OK	209	3d	alene	
+2026-11-11 17:52	plan/2026-11-11-90	a53fa64f	tral3d	FEIL	900	3d	alene	gikk ut på tid
 2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	boottest	OK	39	lite	samtidig	
 2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	ferrytest	OK	16	lite	samtidig	
 2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	npctest	OK	11	lite	samtidig	
 2026-11-11 17:07	ccr-df3a37ec-wjhw30	075f22ae	hulltest	OK	78	lite	samtidig	
+2026-11-11 18:12	plan/2026-11-11-90	8e76db94	boottest	OK	26	lite	alene	
+2026-11-11 18:13	plan/2026-11-11-90	8e76db94	dbg23o	OK	47	3d	alene	
+2026-11-11 18:24	plan/2026-11-11-90	8e76db94	jigshot	OK	662	3d	alene	

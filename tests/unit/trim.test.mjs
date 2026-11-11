@@ -107,4 +107,17 @@ export default function (t){
       pots:[T.pots, [P.reduce((a, q) => a + q[0], 0) / P.length, P.reduce((a, q) => a + q[2], 0) / P.length]]};
     for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
       t.ok(d < 0.02, 'breisjark: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
+  // ---- and for the kyst15 (OB12, 11.11.2026; valg 19): the net tub and the line tubs stand on the working deck aft, inside the setting
+  // port in the stern (they stood on the shelter deck, a storey over the hauler); fish is the middle of her four jigging places on the
+  // sills. The model weighs 75.1 t at the drawn waterline, so the game's waterline is the drawing's ----
+  { const A = anchorsOf('boat-kyst15.b64'), T = K.STAB_AT.kyst15, xz = p => [p[0], p[2]], J = A.jigZ;
+    const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
+      haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern],
+      fish:[T.fish || [0, 0], [A.haulerFoot[0], J.reduce((a, q) => a + q[1], 0) / J.length]]};
+    for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
+      t.ok(d < 0.02, 'kyst15: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); }
+    // (the gear stands on the working deck, not a storey up: within 5 cm of the deck's height)
+    t.ok(Math.abs(A.kit.garn.at[1] - A.deck.y) < 0.05 && Math.abs(A.kit.stamps.at[1] - A.deck.y) < 0.05, 'kyst15: garnkaret og stampene står på arbeidsdekket (' + A.kit.garn.at[1] + ' og ' + A.kit.stamps.at[1] + ' mot dekket ' + A.deck.y + ')');
+    // (the setting place is the port's sill in the stern, under the shelter deck and over the working deck)
+    t.ok(Array.isArray(A.kit.setter) && Math.abs(A.kit.setter[2] - A.stern) < 0.02 && A.kit.setter[1] > A.deck.y + 0.4 && A.kit.setter[1] < A.gw, 'kyst15: setteplassen er terskelen i porten i hekken (' + JSON.stringify(A.kit.setter) + ')'); }
 }

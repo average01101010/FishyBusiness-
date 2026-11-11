@@ -4,6 +4,18 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **OB12 kyst15 (steg 90, 11.11.2026, arbeidsrutinen, grenen `plan/2026-11-11-90`, PR #64; `docs/skipsmodeller/kyst15-grunnlag.md` kap. 10, `docs/planer/om-bord.md` 4.9):** gjort: setteport i hekken, garnkaret og stampene på arbeidsdekket akter, en luke til i styrbord side, fire juksaplasser (`jukseMax` 8 → 4), halerens fot innenfor skroget, brem på taket, eksportert på nytt. **Egen evaluering 68/100, under 75: ikke ferdig, en runde til.** Det som står igjen og er antatt:
+  - **Luka i styrbord side er øktas eget valg**, ikke sett på en ekte båt (ingen bilder av typen ble funnet; `docs/okter/2026-11-11-ob12/bilder-av-typen.md`). Jonas avgjør om den skal stå.
+  - **`jukseMax` 8 → 4 er en endring i spillet** (valg 31 A er regelen, tallet er modellens): en spiller med flere maskiner får dem og trinnene som ikke gir noe, kjøpt tilbake ved oppstart (`jigTierBack`). Regelen i `jigTierBack` gjelder alle båtene, så en gammel lagring med trinn 3 på en båt med fire maskiner (plastsjarken, den nye hurtigsjarken) får også trinnet tilbake. Tilbakekjøpet er prøvd i enhetstesten, ikke i en ekte lagring i nettleseren.
+  - **De som sløyer, står i en klump med ryggen ut** i haleporten (F19, `deckcrew.js` `deckAt`; bordet står langs innerveggen og stasjonen er 1,2 m bred). Ikke rettet.
+  - **Garnhalerens hode stikker forut for haleporten** og inn i åpningens kant (haleren står ved x 7,30, åpningen slutter 7,80). Ikke rettet: flytt `HXX` akterover eller forleng åpningen.
+  - **Setteporten og åpningene har ingen lemmer**, og den som setter, fyller hele porten (1,08 m høy). En høyere port går opp i navnet på speilet.
+  - **Spillerens eget kamera ser ikke inn under shelterdekket** fra vanlig vinkel (F18): bare opptaksverktøyet har fått et lavt kamera (`tests/ombord.py` `UNDER`). Et eget utsnitt i `view3d/24-cinema.js` er ikke bygd.
+  - **`anchors.leanY`** er et anker fra modellen og ikke en retting av `deckPoints`' leting etter rekke (`vessel3d.js` `air()`): en ny modell med arbeidsdekket under et dekk må ha ankeret (står i `3d-baater-og-animasjon.md`).
+  - **Ryddingen skjer på shelterdekket** (F12): OB14, steg 92.
+  - **Sikksakkmønster på styrhusveggen i kranbildet ved kai** (sett av sensoren i `felles_kran`): ikke undersøkt.
+  - **Ikke vist i bilder:** lanternene om natta, utsynet fra roret, undervannsskroget og arbeidsdekket innenfra (rommet akter er mørkt i rendringen).
+  - **`unmerged.py` hang** i 30 minutter i denne kjøringen og ble stoppet; filene ble sjekket mot «Øktene som kjører» for hånd.
 - **Ø15 N3, ferjene langs hele kysten (steg 34, 11.11.2026, Jonas' økt, grenen `ccr-df3a37ec-wjhw30`; 4.18 i `docs/systemer/npc-trafikk.md`):** bygd og rullet ut til testutgaven (6dd8f8b9, versjon 0f7ed2548e0e). Det som står igjen eller er antatt:
   - **Kartet har en firkant med land i Ryfylke** (rundt x 229–236, y 1444–1458 km, over Byre, Helgøy og Nord-Hidle; både 25 m-masken, kjernen og `isLand` sier land der det er sjø og småøyer). Funnet fordi ferjekaiene der ikke fant vann. Ferjene der er ute til kartet er rettet (en full `kart-N+1`).
   - **Sommerrutene mangler:** Enturs data rakk 11.11.2026 ikke til sommeren 2027, så vinteruka brukes hele året. `ferje.yml` kjører den 5. hver måned; fila må tas inn i `src/data/ferje.json` av en økt når en release har `sum` satt (trolig fra april).

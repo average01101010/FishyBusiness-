@@ -1675,7 +1675,7 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 306 `kvWhatSno(r)`
   - 325 `kvFinish()`
 
-## `src/js/core/10-gear.js` (946 linjer)
+## `src/js/core/10-gear.js` (955 linjer)
 
 passive gear: nets, line and pots that stand in the sea while the boat is away
 
@@ -1713,60 +1713,61 @@ passive gear: nets, line and pots that stand in the sea while the boat is away
 - **249** buying (in port)
   - 252 `buyGate(what, spec, lv)`
   - 276 `tierGate(k, lv)`
-  - 295 `tierBuy(k, lv)`
-  - 305 `buyGear(what, spec, n)`
-  - 340 `joinNets(id1, id2)`
-  - 341 `splitNets(id, n)`
-- **343** rules for setting at a place
-  - 345 `segDist(p, a, b)`
-  - 346 `nearSet(p, km)`
-  - 347 `gearRules(kind, spec, p)`
-  - 381 `setGeom(p, hdg, km)`
-  - 388 `setGeomExact(p, hdg, km)`
-- **390** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
-  - 391 `gopUnitMin(g, H, hs)`
-  - 416 `startSet(kind, spec, fishAfter, hdg)`
-  - 439 `startHaul(sid, reset, fishAfter)`
-  - 458 `endLines(op, kind, d)`
-  - 461 `thiefOf(s)`
-  - 471 `haulSlow(g)`
-  - 476 `gearOpMinute(H, W, hs)`
-  - 501 `finishSet(g, H)`
-  - 513 `gopEnd(g)`
-  - 515 `gopAfter(b = S.boat)`
-  - 519 `gearUnset(s, n)`
-  - 529 `gopAbort(why)`
-  - 549 `gearBack(s, n, cond, W)`
-  - 556 `wearNets(s, g)`
-  - 565 `haulUnit(g, H, SL)`
-  - 583 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
-  - 599 `netLen(w)`
-  - 600 `retain(sp, key, mesh, w)`
-  - 607 `sampleSel(sp, key, mesh, p, H)`
-  - 610 `landCrabs(g, n, kg)`
-  - 621 `finishHaul(g, H)`
-- **661** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
-  - 664 `cycleSpec(kind, want, n)`
-  - 678 `gearCycle(w, fishAfter)`
-  - 696 `opsGearNeeds(o)`
-  - 706 `opsGearAfter()`
-- **712** in the sea, every hour: catch, losses, weather and deadlines (company level)
-  - 713 `soakHour(s, H)`
-  - 758 `potsOver(type = S.boat && S.boat.type, pg = S.pgear, sets = mySets()`
-  - 761 `potsUnfit()`
-  - 783 `gearHour(H)`
-  - 821 `reportLost(sid)`
-  - 829 `netMended(l)`
-- **830** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
-  - 836 `egnOrder(lk, n, bait)`
-  - 850 `egnHands()`
-  - 859 `egnSelf(lk, n, bait)`
-  - 880 `stripSelf(lk, bait, n, then)`
-  - 894 `mendSelf(nid)`
-  - 905 `botOrder(nid)`
-  - 916 `gearJob(j)`
-  - 928 `gearJobCancel(j)`
-  - 935 `shoreTick()`
+  - 297 `jigTierBack(type, n0, lv)`
+  - 304 `tierBuy(k, lv)`
+  - 314 `buyGear(what, spec, n)`
+  - 349 `joinNets(id1, id2)`
+  - 350 `splitNets(id, n)`
+- **352** rules for setting at a place
+  - 354 `segDist(p, a, b)`
+  - 355 `nearSet(p, km)`
+  - 356 `gearRules(kind, spec, p)`
+  - 390 `setGeom(p, hdg, km)`
+  - 397 `setGeomExact(p, hdg, km)`
+- **399** the work at sea: status stays 'fishing' with b.gop, so deck work, rest rules, auto-return and the tub pause work as before
+  - 400 `gopUnitMin(g, H, hs)`
+  - 425 `startSet(kind, spec, fishAfter, hdg)`
+  - 448 `startHaul(sid, reset, fishAfter)`
+  - 467 `endLines(op, kind, d)`
+  - 470 `thiefOf(s)`
+  - 480 `haulSlow(g)`
+  - 485 `gearOpMinute(H, W, hs)`
+  - 510 `finishSet(g, H)`
+  - 522 `gopEnd(g)`
+  - 524 `gopAfter(b = S.boat)`
+  - 528 `gearUnset(s, n)`
+  - 538 `gopAbort(why)`
+  - 558 `gearBack(s, n, cond, W)`
+  - 565 `wearNets(s, g)`
+  - 574 `haulUnit(g, H, SL)`
+  - 592 `landFish(sp, kg, key, mesh, p, H, hook, fresh, g)`
+  - 608 `netLen(w)`
+  - 609 `retain(sp, key, mesh, w)`
+  - 616 `sampleSel(sp, key, mesh, p, H)`
+  - 619 `landCrabs(g, n, kg)`
+  - 630 `finishHaul(g, H)`
+- **670** a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
+  - 673 `cycleSpec(kind, want, n)`
+  - 687 `gearCycle(w, fishAfter)`
+  - 705 `opsGearNeeds(o)`
+  - 715 `opsGearAfter()`
+- **721** in the sea, every hour: catch, losses, weather and deadlines (company level)
+  - 722 `soakHour(s, H)`
+  - 767 `potsOver(type = S.boat && S.boat.type, pg = S.pgear, sets = mySets()`
+  - 770 `potsUnfit()`
+  - 792 `gearHour(H)`
+  - 830 `reportLost(sid)`
+  - 838 `netMended(l)`
+- **839** in port: baiting at the shed or by the crew, mending by the crew or at the net loft in Finnsnes
+  - 845 `egnOrder(lk, n, bait)`
+  - 859 `egnHands()`
+  - 868 `egnSelf(lk, n, bait)`
+  - 889 `stripSelf(lk, bait, n, then)`
+  - 903 `mendSelf(nid)`
+  - 914 `botOrder(nid)`
+  - 925 `gearJob(j)`
+  - 937 `gearJobCancel(j)`
+  - 944 `shoreTick()`
 
 ## `src/js/core/10b-gearcare.js` (273 linjer)
 
@@ -2712,12 +2713,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1511 linjer)
+## `src/js/ui/phone/07-patch.js` (1515 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1499 `patch()`
+  - 1503 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3569,7 +3570,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
 - **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (398 linjer)
+## `src/js/ui/11-boot.js` (403 linjer)
 
 ---------- boot ----------
 
@@ -3603,7 +3604,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
   - 242 `bootGame()`
-  - 380 `bootFail(e)`
+  - 385 `bootFail(e)`
 
 ## `src/js/ui/11b-watchdog.js` (89 linjer)
 
@@ -3614,7 +3615,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1681 linjer)
+## `src/js/vessel3d.js` (1683 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -4069,7 +4070,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 867 `dkTub(G)`
   - 868 `drawDeck(BMrel, eye, VP, t, DK)`
 
-## `src/js/view3d/10-gear.js` (781 linjer)
+## `src/js/view3d/10-gear.js` (785 linjer)
 
 ---------- passive gear: buoys at both ends of every set, and the work over the rail when setting and hauling ----------
 
@@ -4085,38 +4086,38 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 130 `drawAutoDrops(eye, t)`
   - 160 `underProf(s, kind)`
   - 178 `drawGearUnder(VP, eye)`
-  - 235 `drawSetting(BMrel, t, g, G, stack, x0, over)`
-  - 277 `drawAutoSet(BMrel, t, g, G)`
-  - 291 `haulFish(g)`
-  - 301 `haulModel(kind)`
-  - 310 `gopHauls()`
-  - 324 `potDeck(G, HP, sx, d, pw, vt, ph)`
-  - 335 `potSet()`
-  - 340 `potPlaces(G, d, HP, sx, PS)`
-  - 348 `drawPotStacks(BMrel, K, n, PS)`
-  - 357 `stackTop(K, i, d, PS)`
-  - 361 `potsAboard()`
-  - 362 `drawPotsAboard(BMrel, G, d, n)`
-  - 374 `tankAt(x, z, d, vt)`
-  - 392 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
-  - 454 `drawCrabTank(BMrel, G, d, sx, HP)`
-  - 463 `autoPort(G)`
-  - 468 `aCleanS(HM, L)`
-  - 470 `drawAutoSlides(BMrel)`
-  - 477 `drawHaulRest(BMrel, G, d, VP)`
-- **500** the upgrades one can see on deck (OPP5 of docs/planer/oppgraderinger.md, 10.11.2026; tools/deck/oppgr.py)
-  - 505 `sternPick()`
-  - 508 `magLegs(vt, G, P, X)`
-  - 510 `drawStern(BMrel, G, VP)`
-  - 522 `gaffRail(vt, G)`
-  - 542 `drawGaffRest(BMrel, G, VP)`
-  - 551 `drawUpg(BMrel, G, d, VP)`
-  - 554 `snoHauler(BMrel, G, VP, a)`
-- **556** the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
-  - 571 `snoCrabs(BMrel, p, n, pr)`
-  - 573 `snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS)`
-  - 668 `snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k0…)`
-  - 684 `drawGearOp(BMrel, eye, VP, t)`
+  - 239 `drawSetting(BMrel, t, g, G, stack, x0, over)`
+  - 281 `drawAutoSet(BMrel, t, g, G)`
+  - 295 `haulFish(g)`
+  - 305 `haulModel(kind)`
+  - 314 `gopHauls()`
+  - 328 `potDeck(G, HP, sx, d, pw, vt, ph)`
+  - 339 `potSet()`
+  - 344 `potPlaces(G, d, HP, sx, PS)`
+  - 352 `drawPotStacks(BMrel, K, n, PS)`
+  - 361 `stackTop(K, i, d, PS)`
+  - 365 `potsAboard()`
+  - 366 `drawPotsAboard(BMrel, G, d, n)`
+  - 378 `tankAt(x, z, d, vt)`
+  - 396 `drawPots(BMrel, t, g, G, HP, sx, d, skiff, seg)`
+  - 458 `drawCrabTank(BMrel, G, d, sx, HP)`
+  - 467 `autoPort(G)`
+  - 472 `aCleanS(HM, L)`
+  - 474 `drawAutoSlides(BMrel)`
+  - 481 `drawHaulRest(BMrel, G, d, VP)`
+- **504** the upgrades one can see on deck (OPP5 of docs/planer/oppgraderinger.md, 10.11.2026; tools/deck/oppgr.py)
+  - 509 `sternPick()`
+  - 512 `magLegs(vt, G, P, X)`
+  - 514 `drawStern(BMrel, G, VP)`
+  - 526 `gaffRail(vt, G)`
+  - 546 `drawGaffRest(BMrel, G, VP)`
+  - 555 `drawUpg(BMrel, G, d, VP)`
+  - 558 `snoHauler(BMrel, G, VP, a)`
+- **560** the snow crab vessel's work (H3d2, 08.11.2026; her places are the model's, tools/boats/krabbe50.py anchors.snok and kit.pots,
+  - 575 `snoCrabs(BMrel, p, n, pr)`
+  - 577 `snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS)`
+  - 672 `snoSort(BMrel, u, s, g, TS, TB, TW, TL, hole, dch, dOut, TUB, ST, k0…)`
+  - 688 `drawGearOp(BMrel, eye, VP, t)`
 
 ## `src/js/view3d/11-bunker.js` (65 linjer)
 
@@ -4154,7 +4155,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (572 linjer)
+## `src/js/view3d/13-instruments.js` (573 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4186,14 +4187,14 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 211 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
   - 400 `drawSkiffGlass(BMrel, VP)`
   - 410 `jigRail(t, G)`
-  - 442 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 475 `drawGlass(m, BMrel, VP)`
-  - 494 `drawDrops(m, BMrel, VP, t)`
-  - 505 `buildBoat()`
-  - 531 `buildFlag()`
-  - 543 `flagTex()`
-  - 556 `mastTop(G)`
-  - 560 `updateFlag(t, appW)`
+  - 443 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 476 `drawGlass(m, BMrel, VP)`
+  - 495 `drawDrops(m, BMrel, VP, t)`
+  - 506 `buildBoat()`
+  - 532 `buildFlag()`
+  - 544 `flagTex()`
+  - 557 `mastTop(G)`
+  - 561 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (563 linjer)
 
