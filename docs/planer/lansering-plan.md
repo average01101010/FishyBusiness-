@@ -121,6 +121,7 @@ Rekkefølgen er satt etter hva som verner spillerne først og hva Jonas må gjø
   - velkomstgaven gitt én gang av serveren (`guest_merge`)
   - kjøpt haill gitt og talt fra `grants`, aldri fra klientens `shop_done` alene
 - **Status 10.11.2026:** Jonas valgte V7 A. Planen for funn 6 er skrevet (`docs/planer/haill-saldo.md`): HS1 velkomstgaven (steg 95, klar) og HS2 kjøpt haill fra `grants` (steg 96, etter valg 29 V1) er over lanseringslinja; HS3–HS5 etter.
+- **Status 11.11.2026: CSP-en er bygd** (steg 78, Jonas' økt, gren `ccr-a35513a2-4y5tlo`). Kartlagt med Report-Only først: ingen `eval`, ingen inline-hendelser og ingen WebAssembly i siden, så ingen kode ble skrevet om, og `'wasm-unsafe-eval'` er ikke med (kartpakkene heter `.wasm`, men er data). Policyen ligger som `<meta>` i siden; `frame-ancestors 'none'` sendes av Caddy for hele siden i begge blokkene. Bruddene går til feillista fra `js/errtrap.js` (den første fila i siden, så også brudd under lastingen kommer med), ikke fra `ui/11-boot.js`. Det lokale testbygget slipper testenes stedfortredere gjennom i `connect-src`; bygget for serveren gjør ikke det. Alt står i «Spillets Content-Security-Policy» i `docs/systemer/skyen-og-felles-verden.md`. **Står igjen:** Jonas' punkt 12 og 14 i kap. 5, og sjekken på testadressen med ekte nett (WorkOS fram og tilbake).
 - **Filer:** `build.mjs`, `tools/server/Caddyfile` (CSP-hodet for `/`, eller meta i siden), `ui/11-boot.js` og `ui/` der et inline-skript eller `eval` finnes, `docs/planer/sikkerhet-skyen.md`.
 - **Tester:**
   - ny `tests/csptest.py` (LITE): spillet går en hel førstetur, Kontoen og butikken under CSP-en uten et eneste `securitypolicyviolation`, og et innsatt `<script>` fra en tilbakemelding kjøres ikke. Sett rød uten CSP-en.
@@ -250,7 +251,7 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
     - [WorkOS](https://dashboard.workos.com/)
     - Webhuset
     - e-posten
-14. **Kjør `setup.sh` på serveren** etter L1a (og etter L1e om CSP-en legges i Caddy). Logg inn med SSH fra iMacen og kjør `curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/setup.sh | bash -s detstorebla.no` som root. Den beholder deploy-nøkkelen.
+14. **Kjør `setup.sh` på serveren** etter L1a, og **en gang til etter L1e** (11.11.2026: Caddyfile sender nå `frame-ancestors 'none'` for hele siden; til da virker resten av CSP-en, som ligger i siden, men spillet kan vises i en annens ramme). Logg inn med SSH fra iMacen og kjør `curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/setup.sh | bash -s detstorebla.no` som root. Den beholder deploy-nøkkelen.
 15. **Slipp-PR-ene** (V1 A): i GitHub-appen → repoet → Pull requests → «Slipp <dato>» → Merge. Det trengs bare for slipp som rører ekte penger eller `src/legal/`, eller alle slipp etter V2 B.
 16. **Spilltesten i L3** på nettbrettet, på testadressen, og karakterene.
 
@@ -265,7 +266,7 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
 - **Lagringer den andre veien:** at en eldre versjon tåler en lagring fra en nyere, er ikke prøvd. En tilbakerulling kan derfor ødelegge for spillere som har spilt på den nye. L1c prøver det, og L1b bruker tilbakerulling bare når porten har prøvd den.
 - **Supabase-koblingen i Claude** er satt opp for prosjektet `xcqbqzrsgycpeoyclakm`. Om den kan nå et testprosjekt uten nytt oppsett, er ikke sjekket.
 - **Kostnaden** for et prosjekt til på Supabase (V3 A) avhenger av planen produksjonen er på. Det er ikke lest her.
-- **CSP-en for spillet** (L1e) kan stoppe noe som bare skjer sjelden (en worker, en `blob:`-adresse, en lyd). `csptest` går en hel førstetur, men ikke alt i spillet.
+- **CSP-en for spillet** (L1e) kan stoppe noe som bare skjer sjelden (en worker, en `blob:`-adresse, en lyd). `csptest` går en hel førstetur, men ikke alt i spillet. Fra 11.11.2026 sendes hvert brudd til feillista som `csp: …`, så det synes i admin.
 - **V2 A** forutsetter at feilvarselet (L1d) skiller test fra produksjon. Før det kan rutinen ikke se om testadressen har stått uten feil, og da slipper bare Jonas.
 - Funnet om at butikken alt er i ekte modus, var ikke kjent for startmeldingen. Den sa «betalingen i ekte modus» som om den var i testmodus.
 
@@ -288,3 +289,13 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - `deploy.yml` nekter et testbygg til `current/` og et bygg uten kanal til `test/`
   - admin-siden i testbygget får testprosjektet
   - «Måles» i L1a: to opphav gir to `localStorage` og to tjenestearbeidere av seg selv; «Ny versjon er ute» spør `version.json` ved siden av siden. Ingen av delene er prøvd på den ekte testadressen ennå.
+- 11.11.2026: L1e (steg 78) bygd: CSP-en for spillet (funn 7). Se statuslinja under L1e.
+- 11.11.2026: **L1b bygd** (steg 75, Jonas' økt, gren `claude/l1b-production-release-allrqm`), etter V1 A og V2 A. Det som ble avgjort i økta, står i «Slippet» og «GitHub Pages har flyttet» i `docs/systemer/publisering.md` og i «Slippet» i `tools/plan/RUTINE.md`:
+  - `tools/release/slipp.py` skriver slipp-PR-en og er porten for et automatisk slipp (`--auto`); den fletter aldri
+  - `main` er roten av arbeidsgrenens historie, så et slipp kan være en ren framoverføring; men ingen økt kan gjøre den uten at deny-lista endres eller en workflow gjør det, og `merge_pull_request` gir aldri en fast-forward: **valg 33** (A Jonas fletter, B workflow «Slipp», C økta fletter med flettecommit; anbefalt B). Til det er svart, fletter Jonas selv, og rutinen slipper ikke
+  - migreringene: på testprosjektet av Jonas for hånd før pushen, i produksjon rett før slippet; rutinen stopper ved en som ikke står som kjørt på test; `list_migrations` i produksjon er ikke fasiten
+  - Edge Functions deployes ikke av rutinen: et slipp med en endret funksjon venter på Jonas
+  - hastefeil: «slipp nå», eller rettingen plukket ut til en gren fra `main` når arbeidsgrenen har noe som ikke kan slippes
+  - tilbakerulling: `deploy.yml` på `main` med `inputs.commit` (bare en commit som alt ligger på `main`)
+  - Patchnotes har merket «på test» i testutgaven; `pwa.yml` legger ut flyttesiden på Pages, bare for hånd, når Jonas sier til (ikke kjørt)
+  - det første slippet er ikke gjort: PR-en «Slipp 11.11.2026» står til Jonas (ekte penger: HS2), med `haill_use`-migreringen først. **P1 i porten er ferdig når det første slippet er gjort.**

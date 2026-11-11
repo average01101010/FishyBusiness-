@@ -198,6 +198,15 @@ COVER['src/js/view3d/25-controls.js'] = list(dict.fromkeys(COVER.get('src/js/vie
 COVER['tests/unit/ombord.test.mjs'] = []
 for _f in ('src/js/view3d/08-plants.js', 'src/js/view3d/13-instruments.js', 'src/js/view3d/10-gear.js', 'src/js/view3d/09-landing-deck.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['crewclip']))
 
+# L1e (11.11.2026): the game's Content-Security-Policy (build.mjs CSP_OF, the breaches told by js/errtrap.js). csptest reads the
+# policy in the built page, plays the first trip, the account and the shop under it and tries what an attacker would. tests/_env.py
+# has the wait every test uses under the policy (wait_for_function without eval), so boottest covers it. On lines of their own
+LITE += ['csptest']
+COVER['tests/csptest.py'] = ['csptest']; COVER['tests/_env.py'] = COVER.get('tests/_env.py', []) + ['csptest', 'boottest']
+COVER['tools/server/Caddyfile'] = COVER.get('tools/server/Caddyfile', [])
+for _f in ('build.mjs', 'src/js/errtrap.js', 'src/data/cloud.json', 'src/index.html'):
+    COVER[_f] = COVER.get(_f, []) + ['csptest']
+
 
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
