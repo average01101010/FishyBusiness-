@@ -2632,3 +2632,6 @@
 2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	ferrytest	OK	16	lite	samtidig	
 2026-11-11 17:06	ccr-df3a37ec-wjhw30	075f22ae	npctest	OK	11	lite	samtidig	
 2026-11-11 17:07	ccr-df3a37ec-wjhw30	075f22ae	hulltest	OK	78	lite	samtidig	
+2026-11-11 18:12	plan/2026-11-11-90	8e76db94	boottest	OK	26	lite	alene	
+2026-11-11 18:13	plan/2026-11-11-90	8e76db94	dbg23o	OK	47	3d	alene	
+2026-11-11 18:24	plan/2026-11-11-90	8e76db94	jigshot	OK	662	3d	alene	
