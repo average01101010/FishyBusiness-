@@ -2509,6 +2509,13 @@
 2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	simday	LES	13	lite	samtidig	
 2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	hooktest	OK	1	lite	samtidig	
+2026-11-11 14:37	ccr-2c3acb2e-1xxdth	82bb698+	charttest	OK	60	lite	alene	
+2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	megletest	OK	26	lite	samtidig	
+2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	fleet2test	FEIL	29	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	vesseltest	FEIL	23	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 14:39	ccr-3fa0cb76-jclvr1	a2c674d+	quotatest	OK	19	lite	samtidig	
+2026-11-11 14:40	ccr-3fa0cb76-jclvr1	a2c674d+	kvotemarkedtest	OK	27	lite	samtidig	
+2026-11-11 14:40	ccr-3fa0cb76-jclvr1	a2c674d+	markettest	OK	33	lite	samtidig	
 2026-11-11 14:21	ccr-309f2cf5-w71mxh	8e8a5eb	boottest	OK	34	lite	samtidig	
 2026-11-11 14:21	ccr-309f2cf5-w71mxh	8e8a5eb	crewclip	FEIL	19	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [28, 5076, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
 2026-11-11 14:21	ccr-309f2cf5-w71mxh	8e8a5eb	harbourtest	OK	20	lite	samtidig	
@@ -2519,3 +2526,21 @@
 2026-11-11 14:37	plan/2026-11-11-98	ead272d8	boottest	OK	30	lite	samtidig	
 2026-11-11 14:37	plan/2026-11-11-98	ead272d8	fasittest	OK	19	lite	samtidig	
 2026-11-11 14:40	plan/2026-11-11-98	ead272d8	kjoptest	OK	147	lite	samtidig	
+2026-11-11 14:42	ccr-2c3acb2e-1xxdth	78818c9+	boottest	OK	32	lite	samtidig	
+2026-11-11 14:42	ccr-2c3acb2e-1xxdth	78818c9+	marktest	OK	8	lite	samtidig	
+2026-11-11 14:47	ccr-2c3acb2e-1xxdth	78818c9+	boottest	OK	36	lite	samtidig	
+2026-11-11 14:47	ccr-2c3acb2e-1xxdth	78818c9+	marktest	OK	8	lite	samtidig	
+2026-11-11 14:50	ccr-2c3acb2e-1xxdth	78818c9+	etikett	OK	205	lite	samtidig	
+2026-11-11 14:50	ccr-2c3acb2e-1xxdth	78818c9+	simday	LES	15	lite	samtidig	
+2026-11-11 14:51	ccr-2c3acb2e-1xxdth	78818c9+	charttest	OK	48	lite	alene	
+2026-11-11 14:56	ccr-2c3acb2e-1xxdth	78818c9+	heattest	OK	299	3d	alene	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	boottest	OK	31	lite	samtidig	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	megletest	OK	25	lite	samtidig	
+2026-11-11 14:54	ccr-3fa0cb76-jclvr1	f426574	fleet3test	OK	15	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	opptest	FEIL	64	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	boktest	OK	10	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	sponsor2test	OK	18	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	adminbuytest	OK	12	lite	samtidig	
+2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
+2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
+2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	

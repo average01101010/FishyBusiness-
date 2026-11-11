@@ -87,7 +87,15 @@ jobs:
       - name: Boot test of the app
         run: |
           pip install playwright==1.63.0
-          python -m playwright install --with-deps chromium
+          # the browser first, from Playwright's own download; then the system packages it may want, which come from Ubuntu's
+          # mirror. That mirror could not be looked up from GitHub's machine twice on 11.11.2026 (the first release through the new
+          # save gate stood for ten minutes and stopped here, both times on font packages). The packages are tried three times and
+          # are then let go with a warning: the boot test below is what says whether Chromium starts, and it stops the job if not
+          python -m playwright install chromium
+          for i in 1 2 3; do
+            if timeout 180 python -m playwright install-deps chromium; then break; fi
+            if [ "$i" = 3 ]; then echo "::warning::Chromium's system packages could not be installed (Ubuntu's mirror did not answer). Going on: the boot test says whether the browser starts."; else sleep 15; fi
+          done
           KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
       # The save gate (L1c, moved to our own server in step 102, 11.11.2026; docs/planer/lagringsporten-hetzner.md): every player's
       # save, and the one before it, must start with the build that is about to go out. The saves are NOT fetched here any more

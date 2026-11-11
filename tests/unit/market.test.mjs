@@ -49,7 +49,16 @@ export default function (t){
   // with a right: it follows the boat, and so does the year's catch on it (B8)
   const O = LIC_OFFERS.find(o => o.id === 'h9'), lv = newVesselObj('sjark', S.boat.port, {id:O.id, hl:O.hl, kpk:O.kpk, coop:{id:'h9', y:2027}}); lv.quota = {y:2027, torsk:1200};
   const LP = mbPack(lv, ny); t.ok(LP.lic && LP.lic.id === 'h9' && !LP.lic.coop && LP.quota && LP.quota.torsk === 1200, 'hjemmelen og årets fangst på den følger med, kvotesamarbeidet ikke');
-  t.eq(mbLicKr(lv), Math.round(licValue(lv.lic) * 0.95), 'hjemmelens del av verdien er 95 % av den, som i vesselValue');
+  t.eq(mbLicKr(lv), Math.round(licValue({id:O.id, hl:O.hl, kpk:O.kpk}) * 0.95), 'hjemmelens del av verdien er 95 % av den, uten partnerens kvote i kvotesamarbeidet (KM4)');
+  t.eq(K.mbValue(lv), vesselValue(lv) - Math.round(licValue(lv.lic) * 0.95) + mbLicKr(lv), 'og båtens verdi ved salg er uten den også');
+  // KM4: the second quota from the special scheme under 11 m falls away at a boat sale (kvoteforskriften kap. 2 § 6), with or without the right
+  { const tv2 = newVesselObj('sjark', yard.id, {id:'h9', hl:'9–9,9 m', two:'h8', st:[], since:2025}); K.licExtra(tv2.lic); vget(tv2, 'boat').status = 'port';
+    const full = licValue(tv2.lic), TP2 = mbPack(tv2, ny);
+    t.ok(TP2.lic && TP2.lic.id === 'h9' && !('two' in TP2.lic) && Math.abs(TP2.lic.extra) < 1e-9, 'den andre kvoten fra den særlige ordningen følger ikke med ved båtsalg (kap. 2 § 6)', TP2.lic);
+    t.ok(tv2.lic.two === 'h8' && tv2.lic.extra > 0, 'og selgeren har den til båten er solgt', tv2.lic);
+    t.ok(mbLicKr(tv2) < Math.round(full * 0.95) && mbLicKr(tv2) === Math.round(licValue({id:'h9', hl:'9–9,9 m', st:[], extra:0}) * 0.95), 'hjemmelens del av verdien er uten den andre kvoten', {kr:mbLicKr(tv2), full});
+    t.ok(K.mbValue(tv2) === vesselValue(tv2) - Math.round(full * 0.95) + mbLicKr(tv2) && mbQuick(tv2) === Math.round(K.mbValue(tv2) * 0.9), 'båtens verdi ved salg og «Selg nå» er uten den andre kvoten', {v:K.mbValue(tv2), full:vesselValue(tv2)});
+    S.fleet.splice(S.fleet.indexOf(tv2), 1); }
   // the lock: moved to the yard, and she cannot go out
   vget(v, 'boat').port = 'finnsnes'; mbLock(v, {id:41, until:new Date(Date.now() + 3600e3).toISOString()}, {start:500000, buynow:900000, hours:1, value:vesselValue(v)}, ny);
   const sale = mbSale(v);

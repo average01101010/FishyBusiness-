@@ -1,6 +1,6 @@
 # Fangstfeltene med navn langs hele kysten (Ø14, plan 07.11.2026)
 
-Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). F1, F2 og F4 er bygd 08.11.2026 (status under F1, F2 og F4 og i kap. 8); F3 og F5 er ikke bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F3 (steg 31c) er klar.
+Plan for steg 31 i `docs/planer/koen.md` (`/planlegg`). F1, F2 og F4 er bygd 08.11.2026 og F5 11.11.2026 (status under F1, F2, F4 og F5 og i kap. 8); F3 er ikke bygd. Fasene står i køen som steg 31a–31e. Jonas svarte på valgene 07.11.2026 (kap. 5), og F2, F4 og F5 er lagt om etter svarene; 08.11.2026 sa han at Senjas felt skal være som alle de andre (2.8). F3 (steg 31c) er klar.
 
 ## 1. Hva Jonas ba om
 
@@ -263,6 +263,26 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 - **Filer:** `tools/npc/felt.py`, `src/data/felt.json`, `tests/unit/felt.test.mjs`.
 - **Tester:** `felt.test.mjs`, `charttest`.
 - **Måles:** tabellen i 2.5 på nytt.
+- **Bygd 11.11.2026** (Jonas' økt, gren `ccr-2c3acb2e-1xxdth`):
+  - **Hentingen:** typefilteret virker likevel, på `/sted` (ikke `/navn`) og med typens kode (`navneobjekttype=grunneISjø`, ikke «Grunne i sjø», som gir 0 treff), så `felt.py` henter hele fylket per type (`fnr=56`, 500 per side) i stedet for per kommune. API-et gir høyst 5 000 treff per spørring; `felt.py` stopper om en type i et fylke går over. Svarene mellomlagres i `tools/npc/cache/` i 20 dager, som WFS-lagene.
+  - **Det som ble tatt inn (Finnmark, `KV_FYLKER = ['56']`):** 882 aktive steder: 732 med i `felt.json` som `k = s` (715 «Grunne i sjø», 9 «Fiskeplass i sjø», 5 «Havdyp», 2 «Banke i sjø», 1 «Egg i sjø»). Ute: 60 fordi et felt alt har navnet innen 3 km, 80 fordi samme sjønavn står to ganger innen 1 km (en grunne er ofte registrert som flere punkter), 1 fordi et annet sjønavn står på samme sted (innen 150 m), og 9 uten godkjent eller vedtatt navn (bare historisk eller foreslått).
+  - **Dobbeltnavn strengere enn startmeldingen** (etter gjennomgangen av koden, som fant 19 dobbeltnavn i første utgave): mot feltene er grensa 3 km, ikke 1 (`KV_FELT_KM`, som `MERGE_KM`: samme navn innen 3 km er ett felt, og feltets punkt er midten av polygonet, ofte over 1 km fra Kartverkets punkt: «Kobbøygrunnen» 1,18 km, «Ryggen» 1,99 km, «Grunnskallen» 2,79 km). Navnene sammenlignes uten bestemt endelse og bindestrek (`name_key`: «Ytre Stabbegrunnen» er «Ytre Stabbegrunn», «Peder Hansa-skallen» er «Peder Hansaskallen»), og mot feltets hele navn, kartets korte navn og hver del av et navn med skråstrek («Storklakken» mot «Storklakken/Mellafjorden»). Mellom sjønavnene er grensa 1 km.
+  - **Sjønavnene står sist i fila**, etter alle feltene, så et felts nummer er det samme med og uten dem: `03j-felt.js` trekker feltets fase fra nummeret (`h2(f.i, …)`), og med sjønavnene flettet inn etter posisjon flyttet alle fasene seg (F2-sjekken «ingen kant» gikk fra 7,4 til 10,2 % per 100 m, over grensa på 10). Der et sted har flere navn, tas det norske hovednavnet, ellers det samiske eller kvenske (de ni fiskeplassene ved Bugøynes har kvenske navn: «Pelkeplassen», «Pikku-Skitsi»). «Båe i sjø» og «Skjær i sjø» er ikke med; «Klakk i sjø» (2 i Finnmark, begge «Klakken»; 30 i Troms) er ikke blant de fem typene planen sjekket, og er ikke tatt med.
+  - **Bare navn og punkt:** `g` er `-`, `r` er 0, `l` er `[]`, og 0 ringer i `felt-s.b64` (antallet der følger `felt.json`). Aldri vekt (`03j-felt.js` bygger bare av `k = f`) og aldri trykk (`trkAreas`, `trkCellW`). I kartet kommer de sist, etter fiskeplassene og gyte- og oppvekstområdene, og bare der det er plass (`feltIn` med `all` sorterer etter `r`).
+  - **Lisensen:** Kartverkets gratis produkter, også Sentralt stedsnavnregister, er lisensiert CC BY 4.0 (Kartverkets «Vilkår for bruk» og Geonorges metadata for stedsnavnene, funnet ved nettsøk 11.11.2026; sidene på `kartverket.no` og `geonorge.no` er stengt fra øktas miljø og ble ikke lest direkte, og den nøyaktige ordlyden Kartverket vil ha i krediteringen er derfor ikke sjekket). CC BY krever at kilden navngis: `meta.src` i `felt.json` sier «Kartverket, Sentralt stedsnavnregister … CC BY 4.0», kartet har «© Kartverket» nederst fra før, og boblen ved trykk på et sjønavn sier «Stedsnavn i sjøen · Kartverket» (to linjer i `ui/03-map.js`, `FELT_KIND` og `tapName`: uten dem ville boblen sagt «Fiskeplass · Fiskeridirektoratet» for Kartverkets navn).
+  - **Dobbeltnavn mot kartet (`chartNamesSvg`):** kartets egne navn er byer, fjorder, sund og øyer fra Overture (`tools/map/chart.py`), ikke grunner, banker eller dyp, så generatoren sammenligner bare med feltene. I kartet står et sjønavn aldri oppå et annet navn (`over` i `03-map.js`); skjermbildene ved Båtsfjord, Tana og Hammerfest viser ingen navn to ganger.
+  - **Fiskeridirektoratets lag ble hentet på nytt samtidig** (`felt.py` henter alltid alle lagene): 4 675 fiskeplasser mot 4 683 den 08.11.2026 (29 felt ut eller endret og 21 inn, alle sett i Rogaland: «Vigdel» og «Tananger» ute, «Feistein» og «Ølberg» inne, «Botne» med nye måneder), 1 635 gyteområder og 445 oppvekstområder som før.
+  - **Tabellen i 2.5 på nytt** (samme inndeling som etter F1; Vest-Finnmark er mottakene nord for 69,95° N og vest for 25,5° Ø, som gir de 24 mottakene; fiskeplassene per landsdel teller litt annerledes enn i F1-tabellen, 287 mot 305, fordi grensa ikke er helt den samme):
+
+    | Landsdel | Mottak | Fiskeplasser innen 10 / 20 km | Gyte- og oppvekstområder innen 20 km | Sjønavn (`s`) innen 10 / 20 km | Alle navn innen 20 km før → etter F5 | Nærmeste navn (median) før → etter |
+    |---|---|---|---|---|---|---|
+    | Vest-Finnmark | 24 | 5,3 / 20,3 | 10,8 | 11,0 / 41,0 | 31,1 → 72,1 | 1,9 → 1,8 km |
+    | Øst-Finnmark | 42 | 2,5 / 8,4 | 6,9 | 6,6 / 17,1 | 15,4 → 32,5 | 5,2 → 1,9 km |
+
+    De tynneste: **Båtsfjord** 10 sjønavn innen 20 km av mottakene (før 3–5 fiskeplasser og 1 gyteområde; nærmeste er Skarberggrunnen 9–11 km ut, så selve fjorden er like tom som før: ingen kilde har et navn der); **Tana** 2–5 (Sivlesáttu og Sáttoboldni innerst, Seigrunnen ute; nærmeste 14–15 km fra mottakene); **Kirkenes** 6, **Bugøynes** 12–13, **Vadsø** 12, **Berlevåg** 15, **Mehamn** 44, **Honningsvåg** 29–30, **Havøysund** 92–96. Øst-Finnmark har 227 av sjønavnene og Vest-Finnmark 505.
+  - **Stikkprøvene i kartet** (`view.z` 2 og 4, 800×1280 og 1280×800, `docs/okter/2026-11-11-31e/`): **Båtsfjord** 9 feltnavn stående og 20 liggende ved `view.z` 2 (6 av dem sjønavn: Skarberggrunnen, Veidnesgrunnen, Lønfallet, Grønøygrunnen), mot 3–14 før; **Tana** 5 og 11 (2–3 sjønavn); **Hammerfest** 43 og 74 (30 og 36 sjønavn; 2,9 og 5,0 % av skjermen, som er taket fra F4: tett, men lesbart i bildet); **Bodø** 50 og 74 og **Bergen** 45 og 63, uten sjønavn og som før F5. Ingen navn oppå hverandre noe sted, ingen sidefeil.
+  - **Tester:** `felt.test.mjs` (9 nye sjekker: slaget finnes, kilden og lisensen i `meta.src`, alle i Finnmark så lenge bare fylke 56 hentes, Leira, Seigrunnen og Skarberggrunnen ved Båtsfjord, bare navn og punkt, 0 ringer, ingen dobbeltnavn (felt innen 3 km, sjønavn innen 1 km), ingen to sjønavn på samme sted, ingen feltvekt ved et sjønavn i en lokasjon; **sett rød**: 8 FEIL mot `felt.json` fra før F5; dobbeltnavn-sjekken rød med 19 navn og samme-sted-sjekken med 2 mot første utgave av dataene; trykksjekkene røde med filteret i `03g-trykk.js` åpnet for `s`, også den gamle «trkAreas teller bare fiskeplassene», som nå dekker `s`), og testene i commit-meldingen. Stikkprøvene over målte overlappet med `etikett.py`s egen måling (`FELTM`).
+  - **Det som står igjen:** resten av kysten (Troms har 1 010 grunner i registeret og er nest tynnest; `KV_FYLKER` er ett tall å utvide, men tettheten i kartet bør ses på nettbrettet først), og den nøyaktige krediteringsteksten fra Kartverkets vilkår.
 
 ## 4. Slik måles det, samlet
 
@@ -300,7 +320,7 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 - **Finnmarks felt** har bare torsk, sei og hyse; kveita, lyren og de dype artene får ingen feltvekt der.
 - **Tabellen i 2.5** er grovt delt etter breddegrad og regnet per mottak, så steder med mange mottak teller mer.
 - **Tettheten i 2.7** er regnet, ikke målt, og ingenting er sett på Pad 3.
-- **Kartverket** gir lite i Øst-Finnmark (rundt 5–15 navn per kommune) og nesten bare grunner; lisensen er ikke sjekket (F5).
+- **Kartverket** gir lite i Øst-Finnmark (rundt 5–15 navn per kommune) og nesten bare grunner. Lisensen er CC BY 4.0 (sjekket ved nettsøk 11.11.2026, F5); den nøyaktige krediteringsteksten i Kartverkets vilkår er ikke lest, fordi `kartverket.no` er stengt fra øktas miljø.
 
 ## 7. Det planen ikke gjør
 
@@ -315,6 +335,7 @@ Senjas seks navn er spillets egne («Havet nord for Husøy», «Utenfor Mefjorde
 
 ## 8. Status
 
+- 11.11.2026: **F5 bygd** (Jonas' økt, gren `ccr-2c3acb2e-1xxdth`): 732 av Kartverkets stedsnavn i sjøen i Finnmark som eget slag (`k = s`), bare navn og punkt, CC BY 4.0. Alle navn innen 20 km av et mottak i Øst-Finnmark 15,4 → 32,5 og i Vest-Finnmark 31,1 → 72,1. Tallene under F5.
 - 08.11.2026: **F2 bygd og rullet ut i c199ab8a** (Jonas' økt, gren `claude/o14-f2-fiske-flate-nv6aqz`): fisken på fiskeplassene i sesong, i feltets form og uten kant, summen per lokasjon som før, flåten følger fisken, Senjas sirkler ute (Jonas: Senja på samme vilkår som resten, `k` står). Tallene under F2. F3 (31c) er klar.
 - 08.11.2026: **F4 bygd og rullet ut i bcd65760** (Jonas' økt, gren `claude/o14-f4-feltnavnene-kart-htpg70`): feltnavnene fra `view.z ≥ 2`, gyte- og oppvekstområdene med lavest prioritet, Senjas seks navn ikke lenger for seg, taket etter skjermflaten og trykket med hele navnet og slaget. Tallene under F4. Står igjen til Jonas: tettheten på Pad 3.
 - 08.11.2026: **F1 bygd** (Jonas' økt, gren `ccr-6e53b4c0-qs2mg1`): art, redskap og måneder per felt, gyte- og oppvekstområdene som egne slag, navnevasken, formene i en egen fil (`felt-s.b64`, 157 kB), og Senjas fiskeplasser som resten. Tallene under F1. F2 (31b), F4 (31d) og F5 (31e) er klare; startmeldingene er rettet etter formatet.
