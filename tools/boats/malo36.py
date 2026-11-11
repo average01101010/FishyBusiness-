@@ -1291,7 +1291,7 @@ def stamp_box(rows=4):
 # in the open side aft of the bleeding tub (POT_SPOT; the game laid it 2 m aft of the hauler, on the hatch's corner)
 # Round 2 (11.11.2026): the stack stood at x 0.67, y -0.40, 17 cm from the transom in front of the setting port. Now on the starboard
 # quarter against the high aft bulwark, aft of the ladder and the low rail where they jig: the port and the deck forward of it are free
-POTS = [(1.20, -1.01, 0.0)]   # (x, y, over the deck)
+POTS = [(1.20, -0.86, 0.0)]   # (x, y, over the deck; 0.18 m in from the bulwark's foot: the deck map's outermost cell, 1.6-1.8 m out, is no floor, and potshot lets a ring reach into it only from 1.65 m out)
 POT_SPOT = (3.15, -1.11)
 def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, z_deck(x) + camber(x, y) + dz) + [0.0, 6] for x, y, dz in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_deck(POT_SPOT[0]) + camber(*POT_SPOT))}}
