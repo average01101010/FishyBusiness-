@@ -24,13 +24,14 @@ OUT = arg('--out') or os.path.join(os.path.dirname(__file__), '../../tests/saves
 fp = lambda s: hashlib.sha256(s.encode('utf-8')).hexdigest()[:8]
 
 def get(path):
-    # a thousand rows at a time (PostgREST gives no more in one answer, and says nothing about the rest)
+    # a thousand rows at a time, until a page comes back empty (PostgREST gives no more than the project's «max rows» in one answer
+    # and says nothing about the rest); the caller's order must be total, or rows move between the pages while players save
     out = []
     while True:
         rq = urllib.request.Request(URL.rstrip('/') + '/rest/v1/' + path + '&limit=1000&offset=%d' % len(out), headers={'apikey': KEY, 'Authorization': 'Bearer ' + KEY})
         with urllib.request.urlopen(rq, timeout=60) as r: page = json.load(r)
+        if not page: return out
         out += page
-        if len(page) < 1000: return out
 
 def raw(code):
     if not code or not code.startswith('KYST2:'): return code
@@ -41,9 +42,9 @@ def main():
     find = arg('--find')
     if find and os.environ.get('GITHUB_ACTIONS'): sys.exit('--find is not for a job: its answer names a player, and the log is public')
     hist = int(arg('--hist') or 0) or (3 if find else 0)
-    rows = [('save', r) for r in get('saves?select=player_id,data,updated_at')]
+    rows = [('save', r) for r in get('saves?select=player_id,data,updated_at&order=player_id')]
     if hist:
-        h = get('save_hist?select=player_id,data,saved_at&order=saved_at.desc')
+        h = get('save_hist?select=player_id,data,saved_at&order=id.desc')
         per = {}
         for r in h:
             per.setdefault(r['player_id'], [])
@@ -63,7 +64,10 @@ def main():
             continue
         if f in seen: continue
         seen.add(f); open(os.path.join(OUT, f + '.json'), 'w', encoding='utf-8').write(s)
-    if skipped: print(skipped, 'rows skipped (not a save that can be read)')
-    if not find: print(len(seen), 'saves fetched')
+    if find: return
+    if skipped: print(('::warning::' if os.environ.get('GITHUB_ACTIONS') else '') + '%d rows skipped (not a save that can be read)' % skipped)
+    print(len(seen), 'saves fetched')
+    # no save, or more rows unreadable than read (the cloud's format has changed under this script): the gate would test nothing
+    if not seen or skipped > len(seen): sys.exit('The saves could not be fetched as saves: %d read, %d unreadable. The gate has nothing to stand on.' % (len(seen), skipped))
 
 if __name__ == '__main__': main()

@@ -28,7 +28,8 @@ JOBS = max(1, int(arg('--jobs', '4')))
 FAILED = "/Spillet startet ikke|The game did not start|Kartet lastet ikke/.test((document.getElementById('modal') || {}).innerText || '')"
 fp = lambda raw: hashlib.sha256(raw.encode('utf-8')).hexdigest()[:8]
 # what a message quotes may be a piece of the save (a JSON error quotes the text it stopped at; a boat's name): out of the log
-clean = lambda s: re.sub(r'"[^"]*"|\'[^\']*\'|«[^»]*»|`[^`]*`', '«…»', str(s))[:160]
+# (cut at the first quote, not quote by quote: a quoted piece of JSON has quotes of its own, and pairing them would leave its words)
+clean = lambda s: (lambda m: m[0][:160] + (' «…»' if len(m) > 1 else ''))(re.split(r'["\'«`]', str(s), maxsplit=1))
 
 async def start(br, url, raw, keep=False):
     """One save on a fresh device: opened, two game hours played. With keep, the game then saves, and what it wrote comes back."""
@@ -47,11 +48,12 @@ async def start(br, url, raw, keep=False):
         if st['ready'] and not st['failed']:
             # two game hours whatever the world clock says (catchUp plays only up to the shared clock, which may be nothing), and
             # with the wait the game itself has: the clock stands until the map round the boats is in (simAreaReady), so the rest
-            # is asked for again for up to a minute. A save whose waters never come stands still for its player too, and is stopped
+            # is asked for again for up to a minute (only when nothing is queued: what playMinutes could not play, it leaves in
+            # CATCH_LEFT for the game's own tick, and asking again each time would queue the same hours many times over). A save whose waters never come stands still for its player too, and is stopped
             st['after'] = a = await pg.evaluate("(() => { try { catchUp(2 * 3600e3 / GAME_RATE); } catch (e){ return {err:String(e && e.message || e)}; } return {}; })()")
             end = time.time() + 60
             while not a.get('err'):
-                a.update(await pg.evaluate("(t0 => { try { const left = 120 - (S.t - t0); if (left > 0) playMinutes(left, true); } catch (e){ return {err:String(e && e.message || e)}; } return {t:S.t, map:simAreaReady(), boat:!!(S.boat && S.boat.pos && isFinite(S.boat.pos.x) && isFinite(S.boat.pos.y))}; })(" + str(st['t']) + ")"))
+                a.update(await pg.evaluate("(t0 => { try { const left = 120 - (S.t - t0); if (left > 0 && !CATCH_LEFT && simAreaReady()) playMinutes(left, true); } catch (e){ return {err:String(e && e.message || e)}; } return {t:S.t, map:simAreaReady(), boat:!!(S.boat && S.boat.pos && isFinite(S.boat.pos.x) && isFinite(S.boat.pos.y))}; })(" + str(st['t']) + ")"))
                 if a.get('t', 0) >= st['t'] + 120 or time.time() > end: break
                 await asyncio.sleep(0.25)
             if a.get('err'): a['err'] = clean(a['err'])
@@ -70,7 +72,10 @@ async def run(br, files, old=None, want=True):
         async with sem:
             raw = open(f, encoding='utf-8').read(); t0 = time.time()
             good, why, wrote = await start(br, GAME, raw, keep=bool(old))
-            if old and good:
+            if old and good and (not isinstance(wrote, str) or wrote == raw):
+                # (save() returns quietly when it may not write; the old build would then be handed the save it was given)
+                good, why = False, {'saved': False}; line = (ok(False), 'the new build saves after the two hours (before the other way can be tried):')
+            elif old and good:
                 g2, w2, _ = await start(br, old, wrote)
                 line = (ok(g2), 'a save the new build wrote starts with the build before, plays two game hours and keeps its boat:')
                 good, why = g2, dict(w2, wrote=fp(wrote))
