@@ -210,7 +210,7 @@ def main():
         L.append('%d. **Edge Functions deployes i produksjon:** %s%s.' % (n, ', '.join('`%s`' % f for f in funcs) or 'alle som bruker `_shared/`', ' (og `_shared/` er endret: alle som bruker den)' if shared and funcs else '')); n += 1
     if server:
         L.append('%d. **`setup.sh` kjøres på serveren som root** (utrullingen tar ikke Caddyfilen og tjenestene): %s.' % (n, ', '.join('`%s`' % f for f in server[:6]))); n += 1
-    L.append('%d. Porten: «Appen på Hetzner» grønn på `%s`, testutgaven har stått minst %d timer uten en ny feil i feilvarselet, og lagringsporten (når den finnes, L1c) er grønn.' % (n, head[:8], HOURS_ON_TEST)); n += 1
+    L.append('%d. Porten: «Appen på Hetzner» grønn på `%s`, testutgaven har stått minst %d timer uten en ny feil i feilvarselet, og ingenting i slippet venter på Jonas. Lagringsporten kjører i «Appen på Hetzner» på `main` etter flyttingen (hver spillers lagring startes med bygget før opplastingen; én som ikke starter, stopper slippet, og detstorebla.no står da som før).' % (n, head[:8], HOURS_ON_TEST)); n += 1
     L.append('%d. `main` flyttes fram til `%s` (ikke squash, ikke rebase: commitene skal være de samme som på arbeidsgrenen).' % (n, head[:8])); n += 1
     L.append('%d. Etterpå: «Appen på Hetzner» på `main` grønn, og `https://detstorebla.no/version.json` har ny versjon uten `ch`.' % n)
     L += ['', '## Patchnotatene som kommer med (%d)' % len(new_ids), '']

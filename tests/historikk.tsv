@@ -2295,3 +2295,7 @@
 2026-11-11 07:34	ccr-d120fd15-qq3fhp	1f8dda3	hengtest	OK	117	lite	samtidig	
 2026-11-11 07:34	ccr-d120fd15-qq3fhp	1f8dda3	boottest	OK	43	lite	samtidig	
 2026-11-11 07:35	ccr-d120fd15-qq3fhp	1f8dda3	csptest	OK	90	lite	samtidig	
+2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	boottest	OK	30	lite	samtidig	
+2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	savestest	OK	7	lite	samtidig	
+2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	savestest	OK	6	lite	alene	
+2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	hooktest	OK	1	lite	alene	

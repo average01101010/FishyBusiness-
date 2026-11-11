@@ -214,6 +214,11 @@ COVER['tools/server/Caddyfile'] = COVER.get('tools/server/Caddyfile', [])
 for _f in ('build.mjs', 'src/js/errtrap.js', 'src/data/cloud.json', 'src/index.html'):
     COVER[_f] = COVER.get(_f, []) + ['csptest']
 
+# L1c (11.11.2026): the save gate. savestest starts the fixture's saves (tests/saves-fixture/, or the real ones tools/saves/fetch.py
+# put in tests/saves/) four at a time and wants the one made broken on purpose stopped. On lines of their own
+for _f in ('tests/savestest.py', 'tools/saves/fetch.py', 'tests/saves-fixture/lag.py', 'tests/saves-fixture/ny.json', 'tests/saves-fixture/flate.json', 'tests/saves-fixture/paa-land.json', 'tests/saves-fixture/broken/uten-posisjon.json', '.github/workflows/deploy.yml'):
+    COVER[_f] = COVER.get(_f, []) + ['savestest']
+
 
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()

@@ -8,6 +8,12 @@
 # <dato>»; docs/systemer/publisering.md «Slippet»). Rolling back: start this by hand on main with «commit» set to the commit of the
 # release before; it must already be on main, so nothing that was never released can reach the production this way. On another branch
 # «commit» builds that commit for the test edition.
+# The save gate (L1c, 11.11.2026, docs/systemer/publisering.md «Lagringsporten»): on main only, and at a roll-back too, every player's
+# save (and the one before it) is fetched from the production's database and started with the build before it is uploaded
+# (tools/saves/fetch.py, tests/savestest.py). One save that does not start stops the release. The saves lie in $RUNNER_TEMP only and
+# are deleted when the job ends, and the log names a save by its fingerprint, never by its player or its content. Without the secret
+# SUPABASE_SERVICE_ROLE_KEY the job stops on main: a release must not pass without the gate. Then the other way: what this build
+# writes must start with the build the players have now (fetched from the server), so a roll-back breaks nobody's game.
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
 # the server); without DEPLOY_HOST it builds and stops. The real-time relay (tools/server/rt) goes up beside the site, to /srv/detstorebla/rt.
 name: Appen på Hetzner
@@ -29,7 +35,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       # the channel after the branch (build.mjs takes only «test» as a channel): nothing but main reaches the production
       KYST_CHANNEL: ${{ github.ref_name == 'main' && 'prod' || 'test' }}
@@ -38,6 +44,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: ${{ inputs.commit && '0' || '1' }}
+      # the save gate's own files, as the branch tip has them (L1c): at a roll-back the commit built may be older than the gate, and
+      # the gate is what a roll-back needs most. Copied with their places kept (fetch.py reads src/data/cloud.json beside it)
+      - name: The save gate's files
+        if: ${{ github.ref_name == 'main' }}
+        run: |
+          G="$RUNNER_TEMP/gate"; mkdir -p "$G/tests" "$G/tools/saves" "$G/src/data"
+          cp tests/savestest.py tests/_env.py "$G/tests/"; cp -r tests/saves-fixture "$G/tests/"
+          cp tools/saves/fetch.py "$G/tools/saves/"; cp src/data/cloud.json "$G/src/data/"
       # a roll-back (L1b): the commit asked for instead of the branch tip. On main it must be one main already has (an earlier release)
       - name: The commit asked for
         if: ${{ inputs.commit }}
@@ -75,6 +89,46 @@ jobs:
           pip install playwright==1.63.0
           python -m playwright install --with-deps chromium
           KYST_DIST=dist-pwa python3 tests/run.py smoke boottest
+      # The save gate (L1c): the production's saves (each player's, and the one before it) with the build that is about to go out.
+      # The database is the production's own (the address in src/data/cloud.json, which the game itself uses; only the key is a
+      # secret). The fixture's saves (a new player, a fleet along the coast, a boat on land) go with them. At a roll-back this is
+      # also «the other way»: the saves were written by the newer build, and the older one must start them
+      - name: The save gate (every player's save starts with this build)
+        if: ${{ github.ref_name == 'main' }}
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_URL: ''
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then echo "::error::The secret SUPABASE_SERVICE_ROLE_KEY is missing: the save gate cannot run, and a release does not go out without it."; exit 1; fi
+          G="$RUNNER_TEMP/gate"
+          python3 "$G/tools/saves/fetch.py" --hist 1 --out "$RUNNER_TEMP/saves"
+          cp "$G"/tests/saves-fixture/*.json "$RUNNER_TEMP/saves/"
+          KYST_DIST="$PWD/dist-pwa" python3 "$G/tests/savestest.py" --dir "$RUNNER_TEMP/saves" --must
+      # The other way (L1c): each save is played two game hours by this build, saved, and started with the build the players have
+      # now (current/ on the server, fetched with rsync; what this build has unchanged is copied from dist-pwa and not sent). A
+      # save the new build writes that the old one cannot start would make a roll-back break the game of everyone who has played
+      # since. Not at a roll-back (the gate above is that test then). If the old build cannot be fetched, the step says so and the
+      # release goes on: the gate above has held, and tools/plan/RUTINE.md «Slippet» 8 says what a roll-back then needs
+      - name: The other way (what this build saves starts with the build before)
+        if: ${{ github.ref_name == 'main' && !inputs.commit }}
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          if [ -z "$DEPLOY_HOST" ]; then echo "::warning::No DEPLOY_HOST secret: the other way was not tried."; exit 0; fi
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          if ! rsync -rlc --copy-dest="$PWD/dist-pwa" -e "ssh -i ~/.ssh/deploy" "deploy@$DEPLOY_HOST:current/" "$RUNNER_TEMP/prev/" || [ ! -s "$RUNNER_TEMP/prev/index.html" ]; then
+            echo "::warning::The build the players have now could not be fetched from the server: the other way was not tried in this release."; exit 0
+          fi
+          echo "The build before: $(cut -c1-80 "$RUNNER_TEMP/prev/version.json")"
+          KYST_DIST="$PWD/dist-pwa" python3 "$RUNNER_TEMP/gate/tests/savestest.py" --dir "$RUNNER_TEMP/saves" --must --old "$RUNNER_TEMP/prev"
+      # the players' saves leave the machine before anything else happens, also when the gate stopped the job
+      - name: The saves are deleted
+        if: ${{ always() && github.ref_name == 'main' }}
+        run: rm -rf "$RUNNER_TEMP/saves" "$RUNNER_TEMP/prev" "$RUNNER_TEMP/gate/tests/out"
       - name: Upload to the server
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
