@@ -276,3 +276,10 @@ Satt 11.11.2026 av en uavhengig underagent som bare fikk de 24 arkene, 15 rendri
 - **Nattbildet** må tas med hele masta i bildet, så den hvite synes.
 
 **Det som mangler til 75** (rundt åtte poeng): arbeidsflyten når OB14 og fellesfunnene under er rettet (anslått 3–4), synlig slitasje og struktur på nært hold (2–3), styrhuset inne (1–2), og et valg om kranen og nattbildet (1–2). Uten endringer i felles kode er 75 neppe innen rekkevidde med modellen alene.
+
+### 10.10 Jonas' svar 11.11.2026 (valg 38 og 39)
+
+Spurt om kranen (som nå, tilbake, eller bomstøtte) og utsparingen i taket (behold, eller taket som på tegningen med en lavere davit): «V38: ok» og «V39: behold».
+
+- **Kranen står som nå**, foldet med den lave enden mot speilet og den høye forover (`CRANE_RY` π, `CRANE_X` 0,78). Ikke rør den i runde 3.
+- **Utsparingen i taket over haleporten beholdes** (`ROOF_CUT`), som et godkjent avvik fra tegningen.
