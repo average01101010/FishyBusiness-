@@ -40,6 +40,8 @@ Det som er som før: porten kjører bare på `main` og ved tilbakerulling, fixtu
 
 ## 4. Det Jonas må gjøre selv
 
+**Serveren finnes.** Jonas opprettet serveren 11.11.2026: `ubuntu-8gb-hel1-1`, Hetzner CPX32 (4 vCPU, 8 GB, 160 GB), Helsinki, 89.167.24.148 (skjermbilde fra Hetzner). Den er større enn planen ba om (2 vCPU og 4 GB holdt), fordi Jonas også vil ha rom framover («sikret for fremtiden … opp mot 5000 brukere»). Spillet og reléet ligger fortsatt på `ubuntu-4gb-hel1-10` (CX23, 65.108.252.250). Planen står: den nye er portens server. Om spillet senere flyttes dit, er et eget steg (DNS, sertifikatene, reléets hemmelighet, deploy-nøkkelen) og ikke en del av steg 102. Ingenting er satt opp på den ennå.
+
 - Etter V1 A: opprette serveren hos Hetzner (Helsinki, Ubuntu) og kjøre `setup.sh` på den som root; etter V1 B: kjøre `setup.sh` på nytt på dagens server.
 - Legge nøkkelen til databasen i fila på serveren (kommandoen står i `setup.sh` sin utskrift), og senere ta den bort fra GitHubs hemmeligheter.
 - Starte det første slippet etter flyttingen og se at porten holder.
@@ -63,3 +65,4 @@ Det som er som før: porten kjører bare på `main` og ved tilbakerulling, fixtu
 
 - 11.11.2026: planen skrevet.
 - 11.11.2026: Jonas svarte «V1 A, V2 A». Steget er `klar`. Ikke bygd.
+- 11.11.2026: serveren for porten opprettet av Jonas (`ubuntu-8gb-hel1-1`, CPX32, 89.167.24.148). Ikke satt opp.
