@@ -2269,3 +2269,5 @@
 2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	csptest	OK	92	lite	samtidig	
 2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	kanaltest	OK	73	lite	samtidig	
 2026-11-11 02:05	ccr-a35513a2-4y5tlo	9f8c03b	errtest	OK	32	lite	samtidig	
+2026-11-11 03:38	ccr-13ec41bb-wikvwe	31adbdb	oppshot	FEIL	1217	3d	alene	FEIL plastsjark: fisken som glipper over ripa, treffer sjøen med et plask  [True, {'splash': 0, 'slip': 1}]
+2026-11-11 04:18	ccr-13ec41bb-wikvwe	31adbdb	deckshot	FEIL	2400	3d	alene	gikk ut på tid
