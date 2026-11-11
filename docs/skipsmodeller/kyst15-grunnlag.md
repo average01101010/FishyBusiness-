@@ -145,3 +145,55 @@ Trekk:
 1. **Bildene fra 06.10.2026** (forfra, fra siden og skrått bakfra) og helst **generalarrangementet**: de ligger ikke i repoet. Med et bilde rett
    fra siden legges modellen over det hver runde (`qa/overlay_hs11.py`); til da er overlegget mot den gamle profilen.
 2. Et bilde ovenfra eller av shelterdekket akter (kranens plass, luker, rekka) og av halestasjonen innenfra.
+
+## 10. OB12: arbeidsdekket akter, setteporten, luka og karakteren etter Jonas' skala (11.11.2026)
+
+Steg 90 i `docs/planer/koen.md`, bygd av arbeidsrutinen (grenen `plan/2026-11-11-90`, PR #64). Jonas, valg 19 (09.11.2026): «Lag en åpning i hekken for setting av garn, liner. Lag også en garn-binge for oppbevaring av garn ombord». Funnene som skulle rettes, står i `docs/planer/om-bord.md` 4.9.
+
+### 10.1 Bildene av typen (valg 22 B)
+
+Ingen bilder er funnet, og ingen er sett: `docs/okter/2026-11-11-ob12/bilder-av-typen.md` sier hva som ble søkt, og hva hver del bygger på i stedet. Luka i styrbord side er øktas eget valg og er ikke sett på en ekte båt.
+
+### 10.2 Det før-bildene viste
+
+Tatt med `tests/ombord.py kyst15` mot arbeidsgrenen før endringen (19 operasjoner, begge formater). F24 (ingen ved haleren) var alt rettet i den felles koden av OB3: i linetrekket står én ved haleren og én ved karet, men de synes så vidt fra kameraet over shelterdekket.
+
+- **Setting:** garnkaret og stampene sto på shelterdekket, og garnet og lina gikk ut over rekka der, tre meter over sjøen.
+- **Juksa:** to sto i haleporten skulder ved skulder, og to «jukset» fra rekka på shelterdekket uten maskin.
+- **Sløying og trekk:** kameraet så shelterdekket; arbeidet under det syntes ikke (F18).
+- **Haleren:** stolpen sto utenpå skroget under haleporten.
+
+### 10.3 Plassene (modellens x fra speilet, y babord +, z fra kjølens underkant)
+
+| Plass | Hvor | Regnet mot |
+|---|---|---|
+| Arbeidsdekket akter | x 0,08–4,56, fra skrogets innside om styrbord til innerveggen y 1,05; dørken som i halestasjonen (z 3,90), 2,04 m under taket | – |
+| Setteporten (`SPORT`) | i speilet, y −1,05 til 0,15, terskelen 0,58 m over dørken, 1,08 m høy; karm ute og rulle i terskelen | speilets bredde der (4,52 m), fenderlista under (9 cm), navnet over, redningsleideren (y −1,32), og punktet spillet setter ut i uten mannskap (y −0,45, 1,05 m over dørken) |
+| `kit.setter` | terskelens ytterkant midt i porten | `deckcrew.js` `setOver`, `10-gear.js` `drawStern` (linesetteren og garnrenna står der) |
+| Garnkaret (`kit.garn`) | x 2,25, y −0,45: rett forut for porten | boksen 1,0 × 1,2 m; setterens magasin (0,6 × 1,06 m) får plass mellom karet og porten; 1,57 m dørk til den som setter; gangen om styrbord 1,73 m |
+| Stampene (`kit.stamps`) | x 4,06, y 0,86: blokken med åtte ligger langs innerveggen, x 2,24–4,38 | boksen 0,78 × 2,02 m, fri av garnkaret og veggen |
+| Luka akter (`AH0`–`AH1`) | styrbord side x 2,00–4,20, samme terskel (0,95 m) og overkant som haleporten, 0,40 m stolpe imellom | – |
+| Juksaplassene (`anchors.jigZ`) | x 5,83 og 4,86 i haleporten, 3,60 og 2,60 i luka | 0,97 m eller mer mellom to, 0,12 m akter for blødekarets boks, 1,47 m fra haleren |
+| Halerens fot (`anchors.haulerFoot`) | 2,71 m fra midten, 0,20 m innenfor skrogets innside | spillet satte den ved 3,10 (0,2 m innenfor største bredde), som er utenfor skroget ved dørken |
+| Rekka de ledige står ved (`anchors.leanY`) | shelterdekkets | `vessel3d.js` `deckPoints` |
+
+`python3.11 tools/boats/kyst15.py check`: 28 sjekker, alle grønne (21 fra før, sju nye: sidene er like, setteporten, redskapet på arbeidsdekket, redskapets vei, juksaplassene, halerens fot, åpningene).
+
+### 10.4 Det som ellers er endret
+
+- **Bremmen på styrhustaket** (valg 26): 16 cm ut fra veggene, 3 cm underkant med dryppkant, flaten skrår 11 cm inn opp til takkanten, i skrogets røde. Taket er lukket innenfor bremmen (rutenettet over stoppet før fronten).
+- **Stripene på styrhusveggene:** `qa/flatnorm.py` ga 258 plane flater med skyggenormaler over 20° skjevt før, 0 etter (`shade(shell, 5)` etter kuttet, som på de andre båtene).
+- **Navnet på speilet** står over porten (z 5,70–6,12; før 5,18–5,62).
+- **Ventilen om styrbord akter** er tatt bort (luka står der); maskinrommets luft er om babord.
+- **Vekta:** 75,1 t ved tegningens vannlinje mot 75 t i `VESSELS`: vannlinja står, ingen `WLE`.
+- **pchip:** skriptet hadde alt nøkkelen på tabellens innhold; eksporten i repoet var fra før rettingen. Sjekken «sidene er like» gir 0,0000 m.
+- **Spygattene** har ingen klaffer, og ingen fendere er stuet på dekk: ingenting å ta bort.
+- **Fjernmodellen** (`lod1`): rommet i få flater, 3 719 trekanter (taket er 4 000).
+- **`jukseMax` 8 → 4** (valg 31 A): maskinene over går i land til full pris, og trinn på maskinene som ikke gir noe med fire, betales tilbake (`jigTierBack`).
+
+### 10.5 Testene
+
+- `node tests/unit/run.mjs`: 3 120 grønne. Nye sjekker for kyst15 i `trim.test.mjs` (`STAB_AT` mot ankrene, redskapet på arbeidsdekket, setteplassen i hekken) og `jig.test.mjs` (fire plasser, en armlengde imellom, hvert punkt på terskelen, `jigTierBack`), sett røde før rettingene.
+- Underveis ble to enhetstester røde av endringen og rettet: `lossing` (de ledige sto mot veggen under dekk: `anchors.leanY`) og `vessel3d: lokalflåten kyst15` (fjernmodellen over taket).
+- Testene i nettleseren og det som ble droppet, står i PR #64 og i commit-meldingene.
+
