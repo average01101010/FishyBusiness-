@@ -243,6 +243,13 @@ for _f in ('tools/server/gate/gate.py', 'tests/gatetest.py', 'tests/savestest.py
     COVER[_f] = COVER.get(_f, []) + ['gatetest']
 
 
+# The car ferries along the whole coast (Ø15 N3, 11.11.2026): core/05b-ferje.js sails src/data/ferje.json (tools/npc/ferje.py); ferrytest
+# needs the whole coast in the build (tools/map/out/game), and the old tests with Senja's ferry in them cover the file too
+LITE += ['ferrytest']
+COVER['tests/ferrytest.py'] = ['ferrytest']; COVER['tests/unit/ferje.test.mjs'] = []
+COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npctest', 'boottest']; COVER['src/data/ferje.json'] = ['ferrytest', 'boottest']
+
+
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
     files = sorted(set(git('diff', '--name-only', 'HEAD') + git('ls-files', '--others', '--exclude-standard')))

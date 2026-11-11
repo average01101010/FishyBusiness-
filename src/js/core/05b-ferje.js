@@ -41,7 +41,7 @@ function ferjeInit(){
   // Brensholmen 45 minutes after, at 12 knots, in May to September; she lies as she always has (berthShift), with her bow out
   const qa = FERJE.q.push({name:'Botnhamn', p:NPCR.ferry.pts[0]}) - 1, qb = FERJE.q.push({name:'Brensholmen', p:NPCR.ferryRev.pts[0]}) - 1, tc = NPCR.ferry.len / (12 * NM) * 60;
   const day = [[420].concat(Array(9).fill(90)), [465].concat(Array(9).fill(90))];
-  add({k:1, sz:[49.9, 12.4, 3.1], id:'ferje', name:'MF Senjasund', m:[4, 8], lg:true, w:{d:[0, 0, 0, 0, 0, 0, 0], t:[day]}, s:null}, [{q:[qa, qb], tm:[tc], R:[NPCR.ferry]}, {q:[qb, qa], tm:[tc], R:[NPCR.ferryRev]}]);
+  add({k:1, sz:[49.9, 12.4, 3.1], id:'ferje', name:'MF Senjasund', cs:'LMSB', own:'Senja Ferjedrift AS', m:[4, 8], lg:true, w:{d:[0, 0, 0, 0, 0, 0, 0], t:[day]}, s:null}, [{q:[qa, qb], tm:[tc], R:[NPCR.ferry]}, {q:[qb, qa], tm:[tc], R:[NPCR.ferryRev]}]);
   return FERJE;
 }
 // the crossing that calls at both quays (by their names), or undefined
@@ -122,7 +122,8 @@ function ferjeStates(s, H, wx = true, C = ferjeClock(H), only){
   for (let vi = 0; vi < V.length; vi++){
     const id = s.id || 'j' + s.i + '.' + vi; if (only && only !== id) continue;
     const a = ferjeAt(s, V[vi], C.w, wx && !s.lg ? ferjeSailed(s, V[vi], C.H0) : null);
-    out.push({id, name:ferjeName(s, vi), type:'ferry', p:s.lg ? berthShift(a.p, 'ferje', true) : a.p, hd:a.hd, v:a.v, L:s.L, B:s.B, T:s.T});
+    const n = {id, name:ferjeName(s, vi), type:'ferry', p:s.lg ? berthShift(a.p, 'ferje', true) : a.p, hd:a.hd, v:a.v, L:s.L, B:s.B, T:s.T}; if (s.cs){ n.cs = s.cs; n.own = s.own; }   // (her made-up call sign and owner, for the AIS card)
+    out.push(n);
   }
   return out;
 }

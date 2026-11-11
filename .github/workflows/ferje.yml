@@ -1,0 +1,59 @@
+# The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026): tools/npc/ferje.py reads Entur's national
+# GTFS export (NLOD; the car ferries' lines, journeys, days and quays), finds each leg's fairway in the game's own 25 m mask, and
+# checks and mends the legs against the game's own land in the built game (bake). The result is kept as a release ferje-<run number>
+# (ferje.json), which a session takes into src/data/ferje.json. No operator, line or vessel name is written (only the quays' place names).
+# Started by a push that changes tools/npc/ferje.py or this file (on any branch; a merge that only brings a file a release was
+# already made from stops at tools/ci/seen.py), on the 5th of every month (on the default branch: the timetables change), or by hand.
+name: Ferjene langs kysten
+on:
+  push:
+    paths: ['tools/npc/ferje.py', '.github/workflows/ferje.yml']
+  schedule:
+    - cron: '23 5 5 * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  PYTHONUNBUFFERED: '1'
+jobs:
+  ferje:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - id: seen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/ci/seen.py ferje tools/npc/ferje.py
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - if: steps.seen.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - if: steps.seen.outputs.skip != 'true'
+        name: The whole coast's map packs
+        run: |
+          pip install numpy requests pyproj playwright==1.56.0
+          python3 -m playwright install --with-deps chromium
+          python3 tools/map/game.py
+      - if: steps.seen.outputs.skip != 'true'
+        name: ferje.json (the timetable and the fairways in the 25 m mask)
+        run: python3 tools/npc/ferje.py
+      - if: steps.seen.outputs.skip != 'true'
+        name: The bake (the legs against the game's own land) and the checks
+        run: |
+          node build.mjs
+          python3 tools/npc/ferje.py bake
+          node tests/unit/run.mjs ferje
+          cp src/data/ferje.json ferje.json && ls -la ferje.json
+      - if: steps.seen.outputs.skip != 'true'
+        name: The release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=ferje-${{ github.run_number }}
+          gh release create "$TAG" ferje.json --target "${{ github.sha }}" --title "Ferjene $TAG" \
+            --notes "Bilferjesambandene langs kysten: kaiene, leia i spillets eget kart, overfartstida og avgangene gjennom en uke (tools/npc/ferje.py), fra Enturs nasjonale GTFS-uttrekk. Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Entur. Ingen operatører, linjer eller fartøynavn. Commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"

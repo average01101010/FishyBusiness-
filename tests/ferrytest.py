@@ -50,7 +50,7 @@ ALL = """async () => { const F = ferjeInit(), seen = new Set(); let legs = 0, ba
     const R = P.R[j]; let hit = 0; for (let d = 0; d <= R.len; d += 0.01){ const p = atRoute(R, d).p; if (!mapReadyAt(p, 0)) await mapNeed(p, 0.5); if (isLand(p)) hit++; }
     legs++; if (hit) bad.push(F.q[P.q[j]].name + ' - ' + F.q[P.q[j + 1]].name + ' ' + hit); }
   return {legs, bad}; }"""
-SENJA = """() => { const at = (mo, d, h, mi) => { S.t = Math.round((Date.UTC(2027, mo, d, h, mi) - EPOCH) / 6e4); const n = npcStates(S.t / 60).filter(q => q.id === 'ferje'); return n.length ? {name:n[0].name, v:n[0].v, L:n[0].L, type:n[0].type} : null; };
+SENJA = """() => { const at = (mo, d, h, mi) => { S.t = Math.round((Date.UTC(2027, mo, d, h, mi) - EPOCH) / 6e4); const n = npcStates(S.t / 60).filter(q => q.id === 'ferje'); return n.length ? {name:n[0].name, v:n[0].v, L:n[0].L, type:n[0].type, card:aisInfo(n[0])} : null; };
   const p = NPCR.ferry.pts[0]; S.boat.pos = {x:p.x + 1.5, y:p.y}; WX_FORCE = {w:5, d:200};
   return {june:at(5, 16, 7, 10), night:at(5, 16, 3, 0), nov:at(10, 17, 12, 0), others:npcStates(S.t / 60).filter(n => n.type === 'ferry' && n.id !== 'ferje').length}; }"""
 # the chart with a ferry under way off Halhjem and her AIS card
@@ -81,12 +81,14 @@ async def main():
             check(r['land'] == 0 and r['samples'] > 50, '%s: leia holder seg på vann i spillets kart' % nm, '%d punkter, %d på land' % (r['samples'], r['land']))
             check(r['far'] <= ais and r['same'], '%s: ferjene vises bare innen AIS-rekkevidden, og samme klokke gir samme sted' % nm, r['far'])
             card = r.get('card') or ''
-            check(r['name'] and r['name'].startswith('MF ') and r['name'] in card and not r['fish'] and r['size'] and r['size'][0] == r['L'], '%s: oppdiktet navn, AIS-kort, størrelsen fra klassen, og hun tar ikke fisk (ingen fiskebåt)' % nm, (r['name'], r['size']))
+            sz = ('%.1f × %.1f m' % (r['size'][0], r['size'][1])).replace('.', ',') if r['size'] else '?'
+            check(r['name'] and r['name'].startswith('MF ') and r['name'] in card and sz in card and 'Senja' not in card and 'Rederi' not in card and not r['fish'] and r['size'][0] == r['L'], '%s: oppdiktet navn, AIS-kortet med størrelsen fra klassen og uten rederi, og hun tar ikke fisk (ingen fiskebåt)' % nm, (r['name'], sz))
         r = await pg.evaluate(ALL)
         check(r['legs'] > 250 and not r['bad'], 'alle leggene i landet holder seg på vann i spillets kart (hver 10. m)', (r['legs'], r['bad'][:6]))
         r = await pg.evaluate(SENJA)
-        check(r['june'] and r['june']['name'] == 'MF Senjasund' and r['june']['v'] == 12 and r['june']['L'] == 49.9 and r['night'] and r['night']['v'] == 0 and r['nov'] is None,
-              'Senjas ferje: «MF Senjasund» går i juni (12 kn kl. 07:10), ligger ved kai om natta, og går ikke i november', r)
+        jc = (r['june'] or {}).pop('card', ''); (r['night'] or {}).pop('card', '')
+        check(r['june'] and r['june']['name'] == 'MF Senjasund' and r['june']['v'] == 12 and r['june']['L'] == 49.9 and r['night'] and r['night']['v'] == 0 and r['nov'] is None and 'LMSB' in jc and '49,9 × 12,4 m' in jc and '3,1 m' in jc,
+              'Senjas ferje: «MF Senjasund» går i juni (12 kn kl. 07:10), ligger ved kai om natta, går ikke i november, og AIS-kortet er som før', r)
         for name, vp in (('liggende', {'width': 1280, 'height': 800}), ('staaende', {'width': 800, 'height': 1280})):
             await pg.set_viewport_size(vp); await asyncio.sleep(0.5)
             r = await pg.evaluate(SHOT); await asyncio.sleep(1.2)

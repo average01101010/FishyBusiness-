@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['ferjene-111126', '11.11.2026', 'Ferjene går langs hele kysten', 'The ferries sail along the whole coast', [
+       ['Bilferjene går nå etter rutetida på over 130 samband fra Oslofjorden til Finnmark. Du ser dem på AIS og i kartet når du er i nærheten, de ligger ved ferjekaia mellom turene, og i storm blir de liggende.', 'The car ferries now sail by the timetable on more than 130 crossings from the Oslofjord to Finnmark. You see them on the AIS and the chart when you are near, they lie at the ferry quay between the journeys, and in a storm they stay in.']]],
     ['sjonavn-111126', '11.11.2026', 'Sjøkartet: flere navn, mer zoom og ryddigere langt ute', 'The chart: more names, more zoom and tidier far out', [
        ['Grunner, banker og havdyp i Troms og Finnmark står nå med navn i sjøkartet når du zoomer langt inn, fra Kartverkets stedsnavn. Trykk på et navn for å se hva det er.', 'Shoals, banks and deeps in Troms and Finnmark now carry their names on the chart when you zoom far in, from the Norwegian Mapping Authority\'s place names. Tap a name to see what it is.'],
        ['Kartet kan zoomes dobbelt så langt inn som før.', 'The chart zooms in twice as far as before.'],

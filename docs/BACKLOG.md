@@ -4,6 +4,15 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Ø15 N3, ferjene langs hele kysten (steg 34, 11.11.2026, Jonas' økt, grenen `ccr-df3a37ec-wjhw30`; 4.18 i `docs/systemer/npc-trafikk.md`):** bygd. Det som står igjen eller er antatt:
+  - **Kartet har en firkant med land i Ryfylke** (rundt x 229–236, y 1444–1458 km, over Byre, Helgøy og Nord-Hidle; både 25 m-masken, kjernen og `isLand` sier land der det er sjø og småøyer). Funnet fordi ferjekaiene der ikke fant vann. Ferjene der er ute til kartet er rettet (en full `kart-N+1`).
+  - **Sommerrutene mangler:** Enturs data rakk 11.11.2026 ikke til sommeren 2027, så vinteruka brukes hele året. `ferje.yml` kjører den 5. hver måned; fila må tas inn i `src/data/ferje.json` av en økt når en release har `sum` satt (trolig fra april).
+  - **Lisensene er ikke lest:** `data.norge.no` (NLOD) og `developer.entur.org` er stengt fra øktene. Jonas eller en workflow bør bekrefte vilkårene og kildeteksten før lansering, og Entur bør inn i kildelista i spillet (`src/legal/` er ikke rørt).
+  - **Ferjene er den gamle kassa på 44 m i 3D** uansett størrelsesklasse (N7, steg 36), og snur på stedet ved kaia.
+  - **Størrelsesklassen er et anslag** fra avganger og legglengde, ikke bilkapasitet.
+  - **Værøy–Røst** fant ingen vei i masken (trolig havna på Røst), **Kvamsøya–Voksa** ingen vei rundt land i bakingen, og 6 av 228 ferjer bytter kai natt til mandag (uka går ikke opp).
+  - **Navnene** er ikke sjekket mot et skipsregister.
+  - **Fortøyde ferjer og kaia i 3D** er sett ved Bognes (ferja ligger i sjøen utenfor kaia); ikke gått gjennom sted for sted.
 - **HS4, serveren er fasiten for haill og alt som er kjøpt (steg 98, 11.11.2026, arbeidsrutinen, grenen `plan/2026-11-11-98`, PR #61; «Serveren er fasiten» i `docs/systemer/haill-pub-og-bonus.md` 5.10, statusen i `docs/planer/haill-saldo.md`):** bygd, ikke kjørt og ikke rullet ut. Ekte penger: PR-en står til Jonas har sett den. Det som står igjen eller er antatt:
   - **Venter på Jonas:** se PR #61, avgjør taket under, og kjør `supabase/migrations/20261111140000_haill_srv.sql` for hånd på testprosjektet (SQL Editor, «Run without RLS»). Først da flettes grenen til arbeidsgrenen. I produksjon kjøres migreringen rett før slippet som tar med koden.
   - **Taket i importen er antatt** (2 haill og 1 luksushaill fra lagringens egne tall, pluss det serveren selv leverte inn i lagringen før den holdt dem). Lagringene er ikke slått opp: rutinen har ikke Supabase-verktøyene og leser ikke spillerdata. En spiller med mer fra puben mister resten ved første start etter HS4. En økt med Jonas kan telle haillen i lagringene først (bare antall per spiller, ingen navn) og sette tallet i `haill_import`.
