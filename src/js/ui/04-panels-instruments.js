@@ -105,6 +105,8 @@ function hudLine3(how){
   if (atSea){ const w = sjvWarn(); if (w){ cls = w.sev; h = sjvSay(w, strip ? 'tiny' : how === 'card' ? 'box' : 'strip'); if (strip) hs = '· CPA ' + w.cpa + ' m'; else h += ' <small>· CPA ' + w.cpa + ' m ' + sjvWhen(w) + '</small>'; } }
   // the hull (core/16c-hull.js, Fysikk 3; Jonas 07.11.2026 after Tony's test: «viste ikke om det var noe å være bekymret for»): red while
   // the water rises, with the minutes to a full engine room and «Verft ›» (the nearest yard by Autonav); yellow while the pump keeps up
+  // the fairway (Ø11.8, core/05e-sjovei.js): over the speed limit, or on the wrong side of a cardinal mark, when she steers herself
+  if (!h && atSea){ const fw = farvWarn(); if (fw){ cls = 'r1'; h = farvSay(fw, strip ? 'tiny' : 'strip'); } }
   if (!h && atSea){ const hw = hullWarn(b); if (hw){ cls = hw.cls; go = 'yard'; h = hw.short; } }
   if (strip && atSea){
     if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }

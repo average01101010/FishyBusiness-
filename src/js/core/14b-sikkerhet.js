@@ -431,6 +431,9 @@ const MOBLEARN = {
   stop:['Nødstoppen ved haleren skal kunne nås fra der du står, og ingen står i bukta på lina. Ingen forskrift krever den; den er god praksis.', 'The hauler\'s emergency stop must be in reach of where you stand, and nobody stands in the bight of the line. No regulation asks for it; it is good practice.', 'God praksis (ikke krav i FOR-2013-11-22-1404)', 'Good practice (not required by FOR-2013-11-22-1404)'],
   sos:['Skipsføreren skal hjelpe den som er i havsnød, så langt det kan skje uten særlig fare for eget skip og folk om bord. For å redde folk gis det ingen bergelønn.', 'The master is to help anyone in distress at sea, as far as it can be done without serious danger to her own ship and people aboard. Saving people earns no salvage reward.', 'Sjøloven § 135', 'The Maritime Code § 135']
 };
+// (Ø11.8: over the speed limit, and a cardinal mark on the wrong side)
+MOBLEARN.fart = ['I havna går du sakte. Farten skal avpasses så bølgene dine ikke skader folk, båter og kaier.', 'In harbour you go slowly. The speed is to be such that your wash harms neither people, boats nor quays.', 'Forskrift om fartsgrenser på sjøen § 2', 'Regulation on speed limits at sea § 2'];
+MOBLEARN.merke = ['Kardinalmerket sier hvor det er trygt: nord for et nordmerke, øst for et østmerke, sør for et sørmerke og vest for et vestmerke.', 'A cardinal mark names the safe side: north of a north mark, east of an east mark, south of a south mark and west of a west mark.', 'IALA region A, kardinalmerkene', 'IALA region A, the cardinal marks'];
 const MOBGEAR = {line:['lina', 'the line'], garn:['garnet', 'the net'], teine:['teinetauet', 'the pot rope']};
 // the card's rows, newest first: {t, k, x, y, vid, what:[no, en], learn:[no, en, src no, src en]}
 function mobSafeRows(max){
@@ -445,6 +448,8 @@ function mobSafeRows(max){
       L = r.how === 'boat' ? MOBLEARN.mobB : MOBLEARN.mob; }
     else if (r.k === 'stop'){ const G = MOBGEAR[r.gear] || MOBGEAR.line; w = [first(r.name) + ' hang seg fast i ' + G[0] + ', og haleren ble stoppet med nødstoppen i tide.', first(r.name) + ' was caught in ' + G[1] + ', and the hauler was stopped with the emergency stop in time.']; L = MOBLEARN.stop; }
     else if (r.k === 'ground'){ w = ['Autonav stoppet før grunt vann forut.', 'Autonav stopped short of shallow water ahead.']; L = MOBLEARN.ground; }
+    else if (r.k === 'fart'){ const v = String(r.v).replace('.', ','), wh = r.name ? ' (' + r.name + ')' : ''; w = ['Gikk ' + v + ' knop der fartsgrensa er ' + r.kn + ' knop' + wh + '.', 'Made ' + r.v + ' knots where the speed limit is ' + r.kn + ' knots' + wh + '.']; L = MOBLEARN.fart; }
+    else if (r.k === 'merke'){ const W = FARV_WORD[r.cat] || FARV_WORD.north; w = ['Passerte et ' + W[0] + 'merke på feil side.', 'Passed ' + W[2] + ' cardinal mark on the wrong side.']; L = MOBLEARN.merke; }
     else if (r.k === 'sea'){ w = ['Tok inn sjø over ripa.', 'Shipped a sea over the rail.']; L = MOBLEARN.sea; }
     else if (r.k === 'sos'){ if (r.sk === 'eng') w = ['Svarte på PAN-PAN fra «' + r.boat + '» og slepte henne i havn.', 'Answered the PAN-PAN from the «' + r.boat + '» and towed her in.'];
       else if (r.out === 'own') w = ['Svarte på MAYDAY fra «' + r.boat + '» og tok ' + r.name + ' opp etter ' + r.min + ' min.', 'Answered the MAYDAY from the «' + r.boat + '» and picked ' + r.name + ' up after ' + r.min + ' min.'];

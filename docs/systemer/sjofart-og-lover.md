@@ -155,12 +155,12 @@ Ikke funnet i forskriften: plikt til å bære vest på dekk, nødstopp på haler
 ### 2.9 Farvannet
 
 - **Havne- og farvannsloven, LOV-2019-06-21-70**, §§ 1–32 ordrett: § 7 staten regulerer ferdselen; **§ 8 kommunen kan bare regulere fritidsfartøy**, så spillets næringsfartøy følger de statlige fartsgrensene; § 10 skiltene; § 11 varsle om farer; § 17 fartøy til fare.
-- **FOR-2021-04-19-1214** § 2: aktsomhetsregelen, og 5 knop innen 50 m fra der det bades.
-- **FOR-2021-12-16-3622**, statlige fartsgrenser for næringsfartøy: ikke lest.
-- **Datasettet** «Statlige fartsgrenser på sjøen for næringsfartøy» (Kystverket) i Geonorges testkatalog; lisensen ikke sjekket.
+- **FOR-2021-04-19-1214**, forskrift om fartsgrenser på sjøen (lest på Lovdata 11.11.2026 med leseverktøyet, som gjengir med egne ord og korte sitater): § 1 gjelder alle fartøy, i sjøterritoriet, de indre farvann, elver og innsjøer; **§ 2 aktsomhetsregelen** («Enhver som fører et fartøy skal utvise forsiktighet og avpasse farten etter sikt- og farvannsforholdene», og etter fartøyet, så det ikke blir fare, skade eller ulempe for folk, andre fartøy, kaier, anlegg, strandlinja og dyrelivet, blant annet ved bølgeslag); **§ 3 badeplassene**: «Fartøy skal ikke gå med høyere fart enn 5 knop innenfor 50 meter fra steder hvor bading pågår» eller fra merkebøyene ved offentlige badeplasser, og innenfor merkebøyene er det forbudt å ankre og å ferdes med motor eller seil (det eneste ankringsforbudet i de to forskriftene). Planen og startmeldingen la 5 knop-regelen til § 2; den står i § 3.
+- **FOR-2021-12-16-3622**, forskrift om statlige fartsgrenser på sjøen (Kystverket, i kraft 01.01.2022, sist endret 31.08.2026; lest hel på Lovdata 11.11.2026 med leseverktøyet): gjelder næringsfartøy og fritidsfartøy (inntil 24 m) hver for seg, ikke utrykningsfartøy; koordinatene er WGS-84 i grader og desimalminutter (§ 1-4); teksten sier ikke om farten er over grunnen eller gjennom vannet. Områdene står i teksten, kommune for kommune i kapittel 2–15, som linjer mellom nummererte posisjoner, og noen steder som et belte fra land (50, 100, 150 eller 200 m) eller «innaskjærs farvann», noen bare om sommeren. For næringsfartøy: 5 knop i Havøysund, Harstad sentrum, Grøtasundet og Sundsvollsundet, Bodø indre havn, Røssøysundet (Lurøy), Dolmsundet (Hitra), Svaet (Frosta), Fosnavåg fiskerihavn, Bolsøysundet, innerst i Geirangerfjorden og Aurlandsfjorden, Vågen i Bergen, Espevær og Langevåg (Bømlo), Norheimsund, flere sund på Stord og i Øygarden, Marøystraumen (Alver), Nordasundet og flere i Eigersund, Røvær og Smedasundet (Haugesund), Røyksund (Karmøy), og en lang rekke sund, kiler og indre havner fra Agder til Østfold (Arendal, Grimstad, Kristiansand, Lillesand, Lindesnes, Tvedestrand, Kragerø, Brevik, Langesund, Færder, Larvik, Sandefjord, Tønsberg, Hvaler, Moss), mange av dem bare 1. mai eller 1. juni til 31. august og innen 50 eller 100 m fra land; 8 knop i Straumane (Herøy), Moldefjorden, Geirangerfjorden, Puddefjorden, Halhjem, Måløysundet, deler av Bømlo, Vibrandsøysundet, Sandnes, Risavika, Stavanger havnebasseng og Byøyene, Stangholmgapet (Risør), Skienselva, Brevikstrømmen, Larvik havnebasseng, Svelvikstrømmen, 200 m fra land i Asker og Bærum, Kjøkøysundet, Haldenleia, og 150 m fra land i Oslo; 10 knop innen 200 m fra land i Molde og i Asnes–Framnes (Sandefjord); 25 knop ellers i Oslo og Nesodden og 30 knop innaskjærs i Arendal, Grimstad, Kragerø, Grenland, Færder og Larvik. Nord for Trøndelag har forskriften bare Bodø, Lurøy, Harstad og Havøysund; Tromsø og Hammerfest har ingen statlig fartsgrense. Ingen ankringsforbud. § 17-1: bot (V1 A: ikke i spillet). Koordinatene er ikke hentet: leseverktøyet gjengir ikke lange utdrag, og Lovdata svarer ikke `curl` (heller ikke `api.lovdata.no`).
+- **Datasettet** «Statlige fartsgrenser på sjøen for næringsfartøy» (Kystverket): ikke hentet og lisensen ikke lest. `kartkatalog.geonorge.no`, `kartkatalog.test.geonorge.no`, `www.kystverket.no` og `services.kystverket.no` er stengt i øktenes nettverk (11.11.2026); `nedlasting.geonorge.no` og `wfs.geonorge.no` svarer, men datasettet står ikke i nedlastingsfeeden, og gjettede WFS-navn ga ingenting. Derfor V4 A (kap. 9).
 - **FOR-2012-12-19-1329**, farvannsskilt.
 
-→ Ø11.8.
+→ Ø11.8, bygd 11.11.2026 (kap. 9).
 
 ### 2.10 Ulykkene
 
@@ -573,3 +573,53 @@ Se 2.2: bare lest i sammendrag (to forsøk 08.11.2026). Det spillet bygger på, 
 - `sdir.no`, `kystverket.no`, `geonorge.no` og `nkom.no` nås ikke herfra. Lovdata svarer bare leseverktøyet, ikke `curl` eller Chromium (06.11.2026).
 - Skyldfordelingen (Ø11.3) avgjøres i virkeligheten av en domstol; spillet bruker en enkel regel ut fra vikeplikten.
 - Vikingen er lokal (npc-flåten 4 A): to spillere nær samme NPC-båt kan se den vike ulikt.
+
+## 9. Ø11.8 Farvannet: fartsgrensene og sjømerkene (L5)
+
+Bygd 11.11.2026 (Jonas' økt, grenen `ccr-c987b885-ap4668`). Koden står sist i `core/05e-sjovei.js` («Ø11.8»), laget i kartet i `ui/03a-chart.js` (`fartSvg`), dataene i `src/data/fart.json` fra `tools/fart/fart.py`.
+
+### 9.1 Fartsgrensa: V4 A, en fast grense i havnene
+
+- **Valget.** Jonas 28.10.2026 (V4 A): «En fast grense i havnene hvis Kystverket ikke har et åpent datasett». Datasettet finnes, men kunne ikke hentes og lisensen ikke leses herfra (2.9), så reserven gjelder: **5 knop innen 500 m fra hvert havnepunkt** (`PORTS`, 370 med hele kysten 11.11.2026), likt langs hele kysten. Tallene står i `fart.json` (`havn.kn`, `havn.r`); sonene lager spillet selv fra `PORTS`, så en ny havn får sin uten at fila skrives på nytt. Radien er i sanne meter (`gridScale`).
+- **Dette er ikke de statlige fartsgrensene.** De gjelder få steder (2.9), og utenfor dem er det bare aktsomhetsregelen. Den faste grensa er spillets lesning av § 2: sakte i havna. Der forskriften har 8 knop (Stavanger havnebasseng) eller ingen grense (Tromsø), har spillet likevel 5 i selve havna.
+- **Oppslaget** `fartAt(p, H)` gir `{kn, name, k, id}` eller `null`. Områder fra et datasett (`fart.json` `omr`: ring i lat/lon, knop, måneder `[fra, til]` eller hele året) går foran havnene, og den laveste grensa gjelder der to ligger over hverandre. `omr` er tom i dag. `tools/fart/fart.py omrader.geojson` gjør et GeoJSON om til `omr`; feltnavnene i datasettet er ikke sett, så de gis på kommandolinja, og den delen er ikke prøvd mot ekte data.
+- **Autonav holder grensa.** Manøvreringsmodellen: `sjvCapV` (som `sjvAuto` alt gir autopiloten) tar med `fartCapMs`, grensa der hun er og der hun er om tjue sekunder (minst 60 m forut), så hun er nede i farten når hun kommer inn. Minuttsteget: én linje i `sailV` (`05-vessels.js`), så grensa gjelder også med spillet lukket (den felles klokka). `16b-dyn.js` er ikke rørt. Målt i `farttest`: trebåten går 6,0 knop utenfor og 4,7–4,9 inne i havnas vann, og 6,0 igjen etterpå. NPC-ene følger ikke grensa (9.4).
+- **For hånd** (`farvLook`, fra `sjvEval`, ett blikk i sekundet; bare med spillet åpent og skipperen ved roret, prinsipp 4): over grensa med mer enn 0,5 knop sier tredje linje i stripa «Fartsgrense 5 kn» (telefonen) eller «Fartsgrense 5 knop: du går 6,9», gult, etter vikepliktvarselet og foran skroget og reglene (`farvWarn`, `farvSay`, én gren i `hudLine3`). Farten er den over grunnen. En passering mer enn én knop over i 30 spillsekunder skrives én gang per besøk: «Gikk 6,9 knop der fartsgrensa er 5 knop (Botnhamn).» i dagboka og en rad i Sikkerhet-kortet (`mobRec` `k:'fart'`, `mobSafeRows`), med setningen «I havna går du sakte …» og kilden forskrift om fartsgrenser på sjøen § 2. **Ingen bot, ingen kaskofølge** (V1 A).
+- **Kartet.** Fra zoom 3,5 (som sjømerkene) tegner kartplotteren hver grense som en stiplet magenta ring (kartets farge for grenser og restriksjoner) med farvannsskiltet for fartsgrense på toppen: rundt, hvitt med rød kant og tallet i svart (FOR-2012-12-19-1329; skiltet er tegnet etter beskrivelsen, forskriften er ikke lest). Skilt som ville ligget oppå hverandre, tegnes én gang. Laget har ingen bryter (9.4).
+- **Håndboka** (`fart`, kapittel 3): grensa i havnene, Autonav, varselet, aktsomhetsregelen (§ 2), 5 knop innen 50 m fra badende (§ 3) og kardinalmerkene.
+
+### 9.2 «Du går på feil side av merket»
+
+- **Bare kardinalmerkene** (`C` bøye og `S` stake med nord, øst, sør eller vest): innen 200 m fra merket, i kvadranten motsatt navnet (peilingen fra merket til båten innen 45° fra den siden merket advarer mot, gjort sann med `gridGamma`, som gir grader), i minst 2 knop og for hånd. Stripa sier «Feil side av merket» eller «Du går på feil side av merket: hold nord for det», og én gang per merke per spilltime skrives «Passerte et nordmerke på feil side. Det er trygt nord for merket.» i dagboka og en rad i Sikkerhet-kortet (`k:'merke'`), med kilden IALA region A.
+- **Lateralmerkene dømmes ikke.** Rød om babord og grønn om styrbord gjelder i merkeretningen (inn fra sjøen, og langs kysten nordover), og den står ikke i dataene (OSM har den ikke per merke; leinettet har ingen retning). Et varsel uten den ville vært feil halve tida.
+- På Autonav kommer ikke varselet: ruta legges etter dybdene, ikke etter merkene.
+
+### 9.3 Sjømerkene mot IALA region A (`sjomerker-7`, 04.11.2026-utdraget)
+
+Kontrollert 11.11.2026 mot det spillet leser (`[x, y, type, kategori]` og lysene) og det det tegner (`03-map.js`, `view3d/05-quays-breakwaters.js` `markInto`). 23 878 merker, 7 811 lys.
+
+| Punkt | Funn |
+|---|---|
+| Lateral, farge | Riktig for region A: babord rød, styrbord grønn (3 246 staker, 1 530 bøyer). «Preferred channel to port» blir styrbord og omvendt, som er hovedfargen. |
+| Lateral, lys | Riktig: røde lys på babord (464), grønne på styrbord (480). Fire babordbøyer og én styrbordstake har hvitt lys i kilden. |
+| Kardinal, lys | Riktig: hvite, med nord uavbrutt hurtigblink, øst 3, sør 6 og et langt, vest 9 (49 med lys av 331). Én sørbøye har ett blink hvert 10. s i kilden. |
+| Kardinal, farge og toppmerke | **Galt i 3D:** alle fire tegnes svart nederst og gult øverst (det er sørmerket); nord skal ha svart over gult, øst svart–gult–svart, vest gult–svart–gult. Ingen toppmerker (de to kjeglene). I kartet er alle en gul prikk uten kvadrant. |
+| Isolert fare, trygt farvann, spesialmerke | **Galt:** 696 bøyer uten kategori tegnes røde som babord (12 av dem har gult lys og er spesialmerker); stakene av samme slag (`D`, 13 519, i Norge mest jernstenger) tegnes svarte med rødt bånd uansett. 21 lateralstaker uten kategori tegnes røde. |
+| Indirekte belysning | **Galt:** 2 075 lateralstaker har en gul sektor ved siden av den røde eller grønne (`ry`, `gy`): det er flomlyset på staken (indirekte belysning), som leses som et eget gult lys. |
+| Toppmerke lateral | Mangler: stakene og bøyene er bokser uten sylinder (babord) og kjegle (styrbord). |
+
+De røde punktene er Ø13 K3 sine (steg 33d, `tools/map/sjomerker.py`, `markInto`), og står i backloggen.
+
+### 9.4 Ikke med, og antatt
+
+- De statlige områdene (2.9) er ikke i spillet. Koordinatene står i forskriften (lover og forskrifter er frie, åndsverkloven § 14), men er ikke hentet; områdene må dessuten lukkes mot land fra linjer mellom posisjoner, og beltene fra land og sommergrensene trenger egne regler. Med datasettet (eller koordinatene) tar `fart.py` flatene inn i `omr`, og oppslaget, kartet, Autonav og varselet virker som for havnene.
+- NPC-ene holder ikke grensa (de følger den felles banen sin). Andre spilleres fart sjekkes ikke.
+- Laget i kartet har ingen bryter: `ui/07-guide.js` og `ui/08-actions.js` var en annen økts (Ø10c) 11.11.2026.
+- Ankringsforbud: ikke i dataene (bare innenfor merkebøyene ved badeplasser, § 3), så ikke bygd.
+- 500 m, 0,5 og 1 knop over, 30 spillsekunder og 200 m og 45° ved merket er spillvalg, ikke regler.
+- Rundt 250 m fra havnepunktet gikk Autonav alt i 5 knop (`sailV`); grensa flytter kanten til 500 m, så en anløpstur tar rundt et kvarter spillminutt lenger hver vei for en båt som marsjer i 6 knop, mer for en rask.
+
+### 9.5 Tester og målinger
+
+- `tests/unit/fart.test.mjs` (43 sjekker): havna inne, på kanten og utenfor, alle havnene, månedene (også over nyttår), områder over hverandre og foran havna, kvadrantene for alle fire kardinalmerkene med sann nord kontrollert mot projeksjonen, ordene og radene. Den fant at `gridGamma` gir grader (første utgave la dem til som radianer).
+- `tests/farttest.py` (LITE, 21 sjekker): oppslaget, laget i kartet, Autonav gjennom en havns vann, minuttsteget, for hånd med varselet, dagboka og kortet, nordmerket på feil og riktig side, og kassa urørt. Sett rød mot koden fra før (`FART_D is not defined`), og den fant en navnekollisjon i telleren underveis.

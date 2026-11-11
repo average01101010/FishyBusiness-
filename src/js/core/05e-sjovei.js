@@ -363,9 +363,9 @@ function sjvFogSigs(H, list, A, gs, vis, dark){
 // the speed Autonav may have now (m/s; 1e9 for none): after a fog signal ahead the minimum steerage, or nothing when she is close (19 e),
 // else the safe speed in restricted visibility; only with the game open and running, for the boat the look is for
 function sjvCapV(){
-  if (!sjvLive() || SJV.vid !== S.cur || !SJV.fog) return 1e9;
-  const e = SJV.e19; if (e && !e.off) return e.stop ? 0 : sjvMinKn() * KN_MS;
-  return SJV.cap || 1e9;
+  let cap = 1e9;
+  if (sjvLive() && SJV.vid === S.cur && SJV.fog){ const e = SJV.e19; cap = e && !e.off ? (e.stop ? 0 : sjvMinKn() * KN_MS) : SJV.cap || 1e9; }
+  return Math.min(cap, fartCapMs());   // (and the speed limit where she is and just ahead, Ø11.8)
 }
 
 // ---- one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second) ----
@@ -373,6 +373,7 @@ function sjvEval(H, list){
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0, b = S.boat;
   if (SJV.vid !== S.cur){ SJV.E.clear(); SJV.sits.clear(); SJV.own = null; SJV.ownOff = 0; SJV.warn = null; SJV.vid = S.cur; SJV.e19 = null; SJV.heard.clear(); SJV.fogT.clear(); SJV.trail.clear(); SJV.lp.clear(); SJV.clash.clear(); }
   SJV.at = H;
+  farvLook(H);   // (the speed limit and the cardinal marks, Ø11.8, at the end of the file)
   const A = sjvOwn(), harb = A.cls === 'moor' || A.cls === 'towed' || A.cls === 'anch' || inHarbour(A.p), gsA = gridScale(A.p);
   const auto = !!(S.plan && b.status === 'sailing' && !(typeof helmOn === 'function' && helmOn()) && !S.plan.replan);
   // the sight where she is (Ø11.2): the visibility, the dark, and restricted visibility (with half a kilometre's hysteresis, so it does
@@ -1011,4 +1012,108 @@ function sjvSweep(n, A, H, gs, on){
     return sjvBlow(Object.assign({}, n, {p:{x:bx / m, y:by / m}}), -vn / KN_MS / gs, 0.5 * meff * vn * vn, Hf, pre);
   }
   return null;
+}
+
+// ---- Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9) ----
+// The speed limits (src/data/fart.json, tools/fart/fart.py). Jonas' choice V4 A (28.10.2026): «En fast grense i havnene hvis Kystverket
+// ikke har et åpent datasett»: the data set of the state's limits for commercial vessels (FOR-2021-12-16-3622, read on Lovdata
+// 11.11.2026) could not be fetched from the sessions' network, so the limit is the fixed one: 5 knots within half a kilometre of every
+// harbour point (PORTS). Areas from the data set, when they come, are FART_D.omr (rings in lat/lon, a limit, the months) and go before
+// the harbours. Autonav holds the limit (sjvCapV for the manoeuvring model, 05-vessels.js sailV for the minute step, so with the game
+// closed too: the shared clock); by hand the strip says so when she is over, and a passage well over it is a line in the log and a row
+// in the Sikkerhet card (V1 A: no fines). The cardinal marks (IALA region A): by hand, close by a cardinal mark on the side it warns
+// of, the strip says «Du går på feil side av merket». The lateral marks are not judged: the direction of buoyage is not in the data.
+const FART_D = /*@include(data/fart.json)*/null;
+const FART = {omr:null, cell:null, n:-1, last:null,   // the areas in km, the harbours by 1 km cell (built again when PORTS grows), the last answer
+  w:null,                   // what the strip says now: {k:'fart', kn, v, name} or {k:'merke', cat}
+  over:null,                // the passage over the limit going on: {id, H0, peak, said}
+  mk:new Map(),             // the cardinal marks said: 'x,y' -> H
+  rows:0, nMk:0,            // rows written since the page was opened (tests/farttest.py)
+  TOL:0.5, REC:1, HOLD:30 / 3600,   // over by this much (knots) the strip says so; by this much for this long (game hours) it is written
+  MKR:0.2, MKV:2};          // a cardinal mark's reach (true km) and the least speed (knots)
+function fartMonth(H){ try { return Math.min(12, Math.floor(yearFrac(H) * 12) + 1); } catch (e){ return 0; } }
+function fartAreas(){
+  if (FART.omr) return FART.omr; const out = [];
+  for (const a of (FART_D && FART_D.omr) || []){ const xs = [], ys = []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    for (const q of a.p || []){ const g = P(q[0], q[1]); xs.push(g.x); ys.push(g.y); if (g.x < x0) x0 = g.x; if (g.x > x1) x1 = g.x; if (g.y < y0) y0 = g.y; if (g.y > y1) y1 = g.y; }
+    if (xs.length >= 3) out.push({n:a.n || '', kn:+a.kn, m:a.m || null, xs, ys, bb:[x0, y0, x1, y1]}); }
+  return FART.omr = out;
+}
+// the months an area holds in ([from, to], 1-12, over the new year when from > to; none: the whole year)
+function fartInSeason(m, mo){ if (!m || !mo) return true; return m[0] <= m[1] ? mo >= m[0] && mo <= m[1] : mo >= m[0] || mo <= m[1]; }
+function fartInRing(xs, ys, x, y){ let c = false; for (let i = 0, j = xs.length - 1; i < xs.length; j = i++) if ((ys[i] > y) !== (ys[j] > y) && x < (xs[j] - xs[i]) * (y - ys[i]) / (ys[j] - ys[i]) + xs[i]) c = !c; return c; }
+// the speed limit at p (grid km) at H (game hours): {kn, name, k:'omr'|'havn', id}, or null where there is none. The lowest of the areas
+// p is inside in their months, else the harbour's fixed limit within its radius (true metres: the radius over the grid's scale)
+function fartAt(p, H){
+  const L = FART.last; if (L && L.x === p.x && L.y === p.y && Math.abs(L.H - H) < 1) return L.f;
+  let f = null; const A = fartAreas();
+  if (A.length){ const mo = fartMonth(H); for (let i = 0; i < A.length; i++){ const a = A[i]; if (p.x < a.bb[0] || p.x > a.bb[2] || p.y < a.bb[1] || p.y > a.bb[3] || !fartInSeason(a.m, mo) || !fartInRing(a.xs, a.ys, p.x, p.y)) continue;
+    if (!f || a.kn < f.kn) f = {kn:a.kn, name:a.n, k:'omr', id:'o' + i}; } }
+  const hv = FART_D && FART_D.havn;
+  if (!f && hv && typeof PORTS !== 'undefined'){
+    if (!FART.cell || FART.n !== PORTS.length){ FART.cell = new Map(); FART.n = PORTS.length;
+      for (const pt of PORTS) for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++){ const k = (Math.floor(pt.p.x) + a) * 65536 + Math.floor(pt.p.y) + b; let l = FART.cell.get(k); if (!l) FART.cell.set(k, l = []); l.push(pt); } }
+    const l = FART.cell.get(Math.floor(p.x) * 65536 + Math.floor(p.y));
+    if (l){ const r = hv.r * gridScale(p); let bd = r; for (const pt of l){ const d = dist(p, pt.p); if (d < bd){ bd = d; f = {kn:hv.kn, name:pt.name || '', k:'havn', id:'h' + pt.id}; } } }
+  }
+  FART.last = {x:p.x, y:p.y, H, f}; return f;
+}
+const fartKn = (p, H) => { const f = fartAt(p, H); return f ? f.kn : 1e9; };
+// Autonav's speed under the limit (m/s, 1e9 for none): where she is and where she will be in twenty seconds (at least 60 m ahead), so
+// she is down to it when she comes in, not after
+function fartCapMs(){
+  try {
+    if (!S.boat || !FART_D) return 1e9; const H = S.t / 60;
+    if (typeof dynLive === 'function' && dynLive()){ const q = dynPose(), a = Math.max(60, q.spd * 20) / 1000 * gridScale(q), kn = Math.min(fartKn({x:q.x, y:q.y}, H), fartKn({x:q.x + Math.sin(q.hd) * a, y:q.y - Math.cos(q.hd) * a}, H)); return kn < 1e8 ? kn * KN_MS : 1e9; }
+    const kn = fartKn(S.boat.pos, H); return kn < 1e8 ? kn * KN_MS : 1e9;
+  } catch (e){ return 1e9; }
+}
+// a cardinal mark's safe side, as the bearing from the mark (true, radians): north of a north mark, and so on
+const FARV_CARD = {north:0, east:Math.PI / 2, south:Math.PI, west:-Math.PI / 2};
+// on the wrong side of a cardinal mark: within reach of it, in the quarter opposite its name (the bearing from the mark to her within
+// 45 degrees of the side it warns of). p and mk in grid km, the bearing made true with the grid's convergence. The mark, or null
+function farvWrongSide(p, marks){
+  const gs = gridScale(p), g = gridGamma(p) * Math.PI / 180; let best = null, bd = FART.MKR * gs;
+  for (const mk of marks){ if ((mk[2] !== 'C' && mk[2] !== 'S') || FARV_CARD[mk[3]] == null) continue;
+    const dx = p.x - mk[0], dy = p.y - mk[1], d = Math.hypot(dx, dy); if (d >= bd || d < 1e-6) continue;
+    if (Math.abs(sjvWrap(Math.atan2(dx, -dy) + g - FARV_CARD[mk[3]] - Math.PI)) < Math.PI / 4){ bd = d; best = mk; } }
+  return best;
+}
+// one look (from sjvEval, a real second apart): only with the game open and the skipper steering herself (prinsipp 4; Autonav holds
+// the limit and finds its own way by the depths), under way. The strip's words while it lasts; a passage over the limit by a knot for
+// thirty game seconds is written once a visit, a cardinal mark once a game hour
+function farvLook(H){
+  FART.w = null;
+  try {
+    const b = S.boat; if (!sjvLive() || !b || b.status !== 'sailing' || (S.plan && !(typeof helmOn === 'function' && helmOn()))){ FART.over = null; return; }
+    const live = typeof dynLive === 'function' && dynLive(), q = live ? dynPose() : null, p = q ? {x:q.x, y:q.y} : b.pos, v = q ? q.sog / KN_MS : (b.v || 0);
+    const f = fartAt(p, H);
+    if (f && v > f.kn + (FART.over ? 0.2 : FART.TOL)){
+      FART.w = {k:'fart', kn:f.kn, v, name:f.name, hk:f.k};
+      const o = FART.over && FART.over.id === f.id ? FART.over : (FART.over = {id:f.id, H0:H, peak:0, said:false});
+      if (v > o.peak) o.peak = v;
+      if (!o.said && o.peak > f.kn + FART.REC && H - o.H0 >= FART.HOLD){ o.said = true; FART.rows++;
+        const no = fmtC(o.peak, 1), wh = f.name ? ' (' + f.name + ')' : '';
+        log('Gikk ' + no + ' knop der fartsgrensa er ' + f.kn + ' knop' + wh + '.', 'Made ' + no + ' knots where the speed limit is ' + f.kn + ' knots' + wh + '.');
+        if (typeof mobRec === 'function') mobRec({k:'fart', kn:f.kn, v:Math.round(o.peak * 10) / 10, name:f.name || ''}); }
+    } else if (!f || v <= f.kn) { if (!f) FART.over = null; else if (FART.over && !FART.over.said) FART.over = null; }
+    if (!FART.w && v >= FART.MKV && typeof marksNear === 'function'){
+      const mk = farvWrongSide(p, marksNear('marks', p.x, p.y, 0.5));
+      if (mk){ FART.w = {k:'merke', cat:mk[3]}; const key = mk[0] + ',' + mk[1], was = FART.mk.get(key);
+        if (was == null || H - was > 1){ FART.mk.set(key, H); FART.nMk++; if (FART.mk.size > 200) FART.mk.clear();
+          const W = FARV_WORD[mk[3]];
+          log('Passerte et ' + W[0] + 'merke på feil side. Det er trygt ' + W[0] + ' for merket.', 'Passed ' + W[2] + ' cardinal mark on the wrong side. The safe water is ' + W[1] + ' of it.');
+          if (typeof mobRec === 'function') mobRec({k:'merke', cat:mk[3]}); } }
+    }
+  } catch (e){ FART.w = null; }
+}
+const FARV_WORD = {north:['nord', 'north', 'a north'], east:['øst', 'east', 'an east'], south:['sør', 'south', 'a south'], west:['vest', 'west', 'a west']};
+// what the strip, the box and the card say (after the rules of the road's own warning): {sev, k, ...} or null
+function farvWarn(){ return sjvLive() && S.boat && S.boat.status !== 'port' ? FART.w : null; }
+function farvSay(w, how){
+  const no = S.lang !== 'en', tiny = how === 'tiny';
+  if (w.k === 'fart') return tiny ? (no ? 'Fartsgrense ' + w.kn + ' kn' : 'Speed limit ' + w.kn + ' kn')
+    : (no ? 'Fartsgrense ' + w.kn + ' knop: du går ' + fmtC(w.v, 1) : 'Speed limit ' + w.kn + ' knots: you make ' + fmtC(w.v, 1));
+  const W = FARV_WORD[w.cat] || FARV_WORD.north;
+  return tiny ? (no ? 'Feil side av merket' : 'Wrong side of the mark') : (no ? 'Du går på feil side av merket: hold ' + W[0] + ' for det' : 'You are on the wrong side of the mark: keep ' + W[1] + ' of it');
 }
