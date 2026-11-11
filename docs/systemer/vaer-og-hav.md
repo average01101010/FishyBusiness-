@@ -367,6 +367,19 @@ Jonas 27.10.2026: «Ytterligere forbedring av vannfysikk og hvordan båten samha
 
 - **Det mørke beltet langs land rettet 29.10.2026** (Jonas' bilder fra Bleik): regelen om 5 m ved linja (der en av de grove cellene rundt var land) laget et mørkt belte en grov celle bredt rundt hver holme og molo, trappete som cellene, og de grove grunnene utenfor ble en lys ring. Nå gir fjærekartet (`uLandS`) dybden helt ned til 4 m der det finnes, og dybden er minst 4 m utenfor det; de grove høydene teller bare dypere enn det. Det turkise toner da jevnt ut fra fjæra. Bilde før og etter i `docs/pr/ccr-1d00422f-gjapvb/g10/grunt_for_etter.png`.
 
+## 5.20k Strømmen på bølgene (Fysikk 4, F8b, 11.11.2026)
+
+Jonas 27.10.2026 («5a», strøm som egen fase). Kjernens del står i «F8b» under 5.62 i `fysikk-og-styring.md`; her er det som tegnes.
+
+- **Hva:** i `updateWaves` (`view3d/14-sea.js`) får hver av de 13 bølgene (ti vindbølger, tre dønninger) bølgetallet og høyden strømmen langs bølgens vei gir (`curWave` i `core/03b-sea.js`: (ω − k·U)² = g·k og bølgeaksjonen). Frekvensen er den samme. Mot strømmen blir sjøen kortere og høyere, med den lengre og lavere. Fasen holdes der båten er (som når vinden dreier), så sjøen ikke glir forbi henne når strømmen endrer seg.
+- **Alt som leser bølgene, følger med uten egen kode:** skyggerne (`uWa`, `uWb`), `seaH` og `seaDisp` på CPU, skroget, skummet og nærfeltet bruker samme liste. **Skyggerne er ikke endret** (`01-shaders.js` er urørt), så bildetakten er den samme.
+- **Brytningen:** skarphetens grense (`WV.steep`) følger sammentrykningen strømmen legger til (forholdet `r` mellom summen av k·a med og uten strøm, 0,5–2,2), holdt under 0,95, så kammene når spissen og Jacobi-skummet fra F3 bryter dem. Skumtoppenes dekning (Monahan, U^3,41) tar skyggerne og `capAt` fra vinden, så sjøprogrammene får `env.seaWind = U·r^0,6` (rundt r² av dekningen). `env.wind` selv (flagg, regn, sprut) er urørt.
+- **Bølger nær blokkering:** en bølge strømmen har kortet til under halve lengden, bryter og er borte. Bølgetallet holdes på det dobbelte, og høyden tones ned til 0,3 av formelens fra k/k₀ 2 til 4. Uten dette tegnet de korte bølgene seg som rette, tette rygger over hele sjøen (første forsøk 11.11.2026, bildene i `docs/okter/2026-11-11-42/`).
+- **Strømmen er den der båten er,** lest to ganger i sekundet og dempet over sekundene sjøen bruker på vinden, og **den samme over hele bølgeflaten og fjernsjøen**. Planen sa sjøtilstandsteksturen (to kanaler til): det er ikke gjort, fordi et bølgetall som endrer seg fra sted til sted, river bølgenes faser fra hverandre ved kanten av strømmen (en fasefeil på over 20 radianer 100 m fra båten). Følgen: står båten i straumen, er sjøen krapp også utenfor den, og står hun like utenfor, ser hun ikke straumen som krapp sjø. Står i backloggen («F8b»).
+- **`#cur0`** i adressen slår strømmen av på bølgene (til sammenligning, som `#nf0` og `#foam0`). Kjernen har ingen slik bryter i spillet.
+- **Målt** (`tests/stromshot.py`, Husøyfeltet, 10 m/s, strømmen holdt med `WV.cur.fix`): uten strøm Hs 1,72 m, 0,58 % av sjøen over skumterskelen, skarphet 0,66; 1 m/s (1,9 kn) motstrøm Hs 2,13 m, 2,21 %, 0,95 (r 1,67); 1 m/s medstrøm Hs 1,62 m, 0,18 %, 0,35. Hver bølges bølgetall og høyde stemmer med formlene regnet i testen. Bildetakten er ikke målt (SwiftShader gir 0,2–0,8 bilder i sekundet og sier ingenting): **Jonas måler `#fps` med og uten `#cur0` på nettbrettet.**
+- **Usikkert:** om sjøen i motstrøm ser ekte ut på nettbrettet (bare sett under SwiftShader); eksponenten 0,6 for skumdekningen og dempingen nær blokkering er valgt etter bildene, ikke etter målinger.
+
 ## 5.20f Havet langt nord: klimaet, tidevannet, isen, lyset og dekningen (Havsteget H1b R5, 04.11.2026)
 
 Jonas 04.11.2026: «Kjør på med r5 i ny økt». Planen er R5 i `docs/planer/havsteget-h1b-rammen.md` (V3 A: iskanten etter måned).

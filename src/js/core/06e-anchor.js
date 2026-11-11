@@ -101,7 +101,17 @@ function curAt(p, H){
   const U = windAt(H, p), a = (windDir(H, p) - gridGamma(p) + 180 + CUR.ekman) * RAD, uw = CUR.wind * U;
   const tx = u * fx + sn.x, ty = u * fy + sn.y, X = tx + uk * kx, Y = ty + uk * ky;
   // tide: what turns with the tide (the tide's own stream and the sounds'), its speed with the sign of the rise; snd the sounds' alone
-  return {x:X + uw * Math.sin(a), y:Y - uw * Math.cos(a), sx:X, sy:Y, nx:sn.x, ny:sn.y, tide:Math.hypot(tx, ty) * (Math.sign(dh) || 1), snd:Math.hypot(sn.x, sn.y) * (Math.sign(dh) || 1), coast:uk, dh};
+  return {x:X + uw * Math.sin(a), y:Y - uw * Math.cos(a), sx:X, sy:Y, tx, ty, nx:sn.x, ny:sn.y, tide:Math.hypot(tx, ty) * (Math.sign(dh) || 1), snd:Math.hypot(sn.x, sn.y) * (Math.sign(dh) || 1), coast:uk, dh};
+}
+// the stream where a vessel is, as she feels it (curEff, 03b-sea.js): read once a game minute a vessel and used again (F8b), and
+// again when she has moved 50 m where a sound's stream reaches (500 m elsewhere), so the time away played minute by minute
+// (catchUp) asks once a minute a vessel and the manoeuvring model's tick does not ask every frame
+const CURB = new WeakMap();
+function curBoat(b, H){
+  const t = Math.floor(H * 60 + 1e-6), p = b.pos, m = CURB.get(b);
+  if (m && m.t === t && Math.hypot(p.x - m.x, p.y - m.y) < (m.snd ? 0.05 : 0.5)) return m.c;
+  let c; try { c = curEff(curAt(p, H)); } catch (e){ c = {x:0, y:0, m:0, tx:0, ty:0}; }
+  CURB.set(b, {t, x:p.x, y:p.y, snd:stromNear(p).length > 0, c}); return c;
 }
 // ---- the ground tackle and how she lies to it ----
 // Chain from 10 m (its size about 2.6 + 0.6 mm a metre of length, 0.022 d^2 kg a metre), on the smaller boats a rope with a few metres of

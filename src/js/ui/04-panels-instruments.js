@@ -4,7 +4,9 @@ function estimate(){
   let km = 0, fishH = 0, bad = -1, a = quayPos(b);   // from where she lies (at Father's naust its berth, not the plant's harbour point)
   S.draft.forEach((w, i) => { km += kmTrue(a, w); if (bad < 0 && !legClearMemo(a, w)) bad = i; fishH += w.fish || 0; a = w; });
   const v = Math.min(S.draftSpeed, speedCap(hsAt(b.pos, H)));
-  const nm = km / NM, hours = nm / v, fuel = fuelLph(v, W) * hours;
+  // (the hours with the stream along the way at the time she is there, Ø9 F8b: curLegH, 16b-dyn.js; nm / v where none runs)
+  let hours = 0; { let q = quayPos(b); const H0 = (S.draftDep && S.draftDep > S.t ? S.draftDep : S.t) / 60; for (const w of S.draft){ hours += curLegH(q, w, Math.max(1, v), H0 + hours) + (w.fish || 0); q = w; } hours -= fishH; }
+  const nm = km / NM, fuel = fuelLph(v, W) * hours;
   return {nm, hours, fishH, fuel, bad, v};
 }
 
@@ -226,7 +228,7 @@ function livePose(frac){
   // lying still, she drifts along the minute's drift (core/16b-dyn.js lieDrift)
   if (b.drv && b.drv.st === b.status && b.drv.t === S.t) return {p:{x:b.pos.x + b.drv.x * frac, y:b.pos.y + b.drv.y * frac}, hd:b.drv.up ? Math.atan2(b.drv.x, -b.drv.y) : b.heading, frac, idx};
   if (b.status === 'sailing' && S.plan){
-    let left = sailV(S.t / 60) * NM / 60 * frac;
+    let left = sailV(S.t / 60) * NM / 60 * frac * sailSogF(b);   // (over the ground: the stream's share of the last minute, Ø9 F8b)
     while (left > 1e-9 && idx < S.plan.wps.length){
       const w = S.plan.wps[idx], d = dist(p, w);
       if (d > 1e-6) hd = Math.atan2(w.x - p.x, -(w.y - p.y));
@@ -272,20 +274,25 @@ const INSTR = (() => {
   // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
   function render3d(pose, H, sog, ll, nv){
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
-    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null};   // the little chart's foot (03e-miniplot.js)
+    const cg = cogUi(pose, sog);   // (her course over the ground where a stream sets her off her heading, F8b)
+    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
       setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b><span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
     { const pm = $('plotMin'); if (pm.textContent !== '–'){ pm.textContent = '–'; pm.setAttribute('aria-label', no ? 'Minimer kartplotteren' : 'Minimise the chart plotter'); } }
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
-    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
+    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (cg ? row('COG', cg) : '') + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
       (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
   }
+  // the course over the ground (COG) when it is 3 degrees or more off the heading at half a knot or more over the ground (a stream
+  // across her, or a drift): else null, and the heading says it all (COG was taken off the bar 2026 when it only ever repeated it)
+  let COGNOW = null;
+  function cogUi(pose, sog){ const g = COGNOW; if (!g || !(sog >= 0.5)) return null; let d = (g.cog - pose.hd) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d) >= 3 * Math.PI / 180 ? deg3(g.cog) : null; }
   const GPSC = {k:'', nx:null, st:null};
   function renderGPS(){
     const v3 = document.body.classList.contains('v3d'); if (!v3 && !document.body.classList.contains('vplot')) return;
-    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' || (b.status === 'tow' && b.tow && b.tow.ph === 'tow') ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
+    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, g0 = COGNOW = b.status === 'tow' || b.status === 'port' ? null : dynSog(b), sog = g0 ? g0.kn : b.status === 'tow' && b.tow && b.tow.ph === 'tow' ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, b.status === 'sailing' ? Math.max(sog, 1) : 0);   // (the route's times from her way over the ground under way, never from a drift)
     if (v3){ render3d(pose, H, sog, ll, nv); return; }
     const nav = !!nv;
     if (document.body.classList.contains('navon') !== nav) document.body.classList.toggle('navon', nav);
@@ -293,7 +300,7 @@ const INSTR = (() => {
       $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt;
       $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
-    $('ecHdg').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH';
+    $('ecHdg').textContent = deg3(pose.hd); { const cg = cogUi(pose, sog); setHtml($('ecSog'), fmt(sog, 1) + ' kn' + (cg ? '<br><small>COG ' + cg + '</small>' : '')); } $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH';
     // (and the water under her keel in shallow water, with her squat at the way she has: Ø9 F5, 16b-dyn.js keelClear)
     { const ukc = b.status === 'port' ? null : keelUi(); setHtml($('ecDep'), b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m' + (ukc == null ? '' : '<br><small' + (ukc < 1 ? ' class="warn"' : '') + '>' + fmt(ukc, 1) + (no ? ' m u. kjølen' : ' m under keel') + '</small>')); }
     // the next tide and the sun's day change slowly: worked out again every 10 game minutes or km

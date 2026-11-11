@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['strom-111126', '11.11.2026', 'Strømmen tar båten', 'The stream takes the boat', [
+       ['Strømmen i sundene flytter nå båten. Mot strømmen går det saktere over grunn, med strømmen fortere, og en båt som ligger stille, driver med den. I Saltstraumen ved springflo kan en liten båt bli stående til strømmen løyer.', 'The stream in the sounds now moves the boat. Against it she is slower over the ground, with it faster, and a boat lying still drifts with it. In Saltstraumen at the springs a small boat may stand still until the stream slackens.'],
+       ['Kartplotteren viser farten over grunn (SOG), og kursen over grunn (COG) når strømmen setter båten av. Ruta regner tida med strømmen, og etappene viser hvor sterk den er, og om den går med eller mot.', 'The chart plotter shows the speed over the ground (SOG), and the course over the ground (COG) when the stream sets the boat off. The route reckons its time with the stream, and the legs show how strong it is and whether it runs with or against you.'],
+       ['Der vinden står mot strømmen, blir sjøen kortere og brattere og bryter mer. Været og ruta sier da «krapp sjø i strømmen».', 'Where the wind stands against the stream the sea is shorter and steeper and breaks more. The weather and the route then say «short, steep sea in the stream».']]],
     ['trim-111126', '11.11.2026', 'Trim på alle båter', 'Tuning on every boat', [
        ['Trim virker nå på alle båter, også skiffen med påhengsmotor.', 'Tuning now works on every boat, the outboard skiff too.']]],
     ['ob3-111126', '11.11.2026', 'Settingen og redskapet om bord', 'Setting, and the gear aboard', [
