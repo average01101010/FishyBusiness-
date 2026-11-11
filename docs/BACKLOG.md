@@ -17,7 +17,7 @@
   - **Rutinen kjører bare fixturen før et slipp** («Slippet» punkt 2): den finner et bygg som ikke starter en ny spiller eller en flåte, ikke det en bestemt spillers lagring har. Det finner jobben, etter at `main` er flyttet.
 
 - **HS3, trim, Skippertak og «Ferdig nå» tilbake med en tapt lagring (steg 97, 11.11.2026, Jonas' økt, grenen `ccr-80add647-ogpssb`; `docs/planer/haill-saldo.md` status, 5.40 i `docs/systemer/haill-pub-og-bonus.md`):** sluppet til detstorebla.no 11.11.2026 (22465021, versjon 68975d97fc7b; Jonas: «Slipp nå»; migreringen kjørt i produksjon rett før). Det som står igjen eller er antatt:
-  - **Jonas:** kjør `supabase/migrations/20261111120000_shop_back.sql` for hånd på testprosjektet (den er ikke kjørt der, så testutgaven gir ingenting på nytt).
+  - **Migreringen er kjørt på testprosjektet** av Jonas 11.11.2026 («Sql success»). Ikke prøvd for hånd der: kjøp en trim på `test.detstorebla.no`, start et nytt spill under Innstillinger, og se at «Kjøpet ditt er lagt inn igjen» kommer.
   - **Se på feillista etter slippet:** hendelsene `shop_back` (et kjøp lagt inn igjen) og `shop_unknown`, og om noen melder dobbel trim. To leverte grants var innenfor vinduet da migreringen ble kjørt.
   - **Ikke prøvd mot en ekte server:** bare stedfortrederen i `kjoptest` og en lokal PostgreSQL i `sqltest`. Etter flettingen bør et kjøp på `test.detstorebla.no` prøves: kjøp en trim, start et nytt spill (Innstillinger), og se at meldingen «Kjøpet ditt er lagt inn igjen» kommer og Trim-appen viser timene som er igjen.
   - **`done_at` er når `shop_done` nådde fram,** ikke når trimen kom på. Nådde den ikke fram før neste start, varer en trim gitt på nytt tilsvarende lenger. HS4 bør la serveren holde tida selv (`start/98.md`, tillegget).
