@@ -53,7 +53,7 @@ async def main():
           for (const pid of PORTS.filter(q => !q.coastal).map(q => q.id)) for (const kind of ['main', 'bunker']) for (const t of Object.keys(BEAM).filter(t => VESSELS[t].cls !== 'hav')){
             const f = quayFace(pid, kind); if (!f) continue; const b = berthPose(pid, t, kind), fx = Math.sin(b.hd), fz = -Math.cos(b.hd), sx = Math.cos(b.hd), sz = Math.sin(b.hd), X = b.x * 1000, Z = b.y * 1000;
             const pts = [[0, 0], [b.Lb / 2 - 0.5, 0], [-b.Lb / 2 + 0.5, 0], [0, b.Bb / 2], [0, -b.Bb / 2]].map(([l, s]) => [X + fx * l + sx * s, Z + fz * l + sz * s]);
-            const off = (X - f.x) * f.nx + (Z - f.z) * f.nz, starb = sx * -f.nx + sz * -f.nz;
+            const off = (X - f.x) * f.nx + (Z - f.z) * f.nz, starb = (sx * -f.nx + sz * -f.nz) * (b.side || 1) * (typeof berthSide === 'function' ? berthSide(t) * (b.side || 1) : 1);   /* (F22, OB4 11.11.2026: the quay on the side berthPose says, and that side the one the boat's type asks for: port for a boat with her crane to port) */
             R[pid + '|' + kind + '|' + t] = {wet:pts.every(([x, z]) => !land(x, z)), off:Math.round(off * 10) / 10, bb:b.Bb, out:b.face.out || 0, starb:starb > 0.99, fits:f.hl * 2 >= b.Lb + 2}; }
           R.near = PORTS.filter(q => !q.coastal && quayFace(q.id, 'main')).map(q => { const f = quayFace(q.id, 'main'); return [q.id, Math.round(Math.hypot(q.p.x * 1000 - f.x, q.p.y * 1000 - f.z))]; });
           return R; })()""")
@@ -61,7 +61,7 @@ async def main():
         ntypes = len({k.split('|')[2] for k in q if k != 'near'})
         if bad: print({k: q[k] for k in bad[:20:4]})
         print('quays:', len(q) - 1, 'berths, bad:', bad, 'harbour point to quay (m):', q['near'])
-        print(ok(not bad and len(q) - 1 == ntypes * 17 and ntypes >= 10), 'every coastal vessel type (%d) lies alongside each quay face (Finnsnes, and the landing and bunker berths of the eight harbour units), half its beam off the quay (built out to her where the shore is dry), quay to starboard, in the water of the 3D coastline' % ntypes)
+        print(ok(not bad and len(q) - 1 == ntypes * 17 and ntypes >= 10), 'every coastal vessel type (%d) lies alongside each quay face (Finnsnes, and the landing and bunker berths of the eight harbour units), half its beam off the quay (built out to her where the shore is dry), quay to starboard (to port for the boats with their crane to port, F22), in the water of the 3D coastline' % ntypes)
         print(ok(sorted({k.split('|')[0] for k in q if k.endswith('|bunker|skiff')}) == sorted(BUNKER)), 'a bunker berth in every harbour unit')
         print(ok(all(d < 30 for _, d in q['near'])), 'the harbour point lies off the landing berth (Finnsnes: the quay by the net loft)')
         # the plotter: a tap on a harbour, or on the sea when leaving one, routes round the breakwaters on the way in and out

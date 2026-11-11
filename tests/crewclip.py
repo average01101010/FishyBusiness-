@@ -50,6 +50,21 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
       // (the two sorting the crab, each a place of their own: they stood 0.40 m apart in a clump by the hauler)
       { const T = CREW3D.agents().filter(a => a.goal && a.goal.task === 'tend' && !a.goal.inside).map(a => CREW3D._st.M.at(a.goal.k)); let m = 9; for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++) m = Math.min(m, Math.hypot(T[i][0] - T[j][0], T[i][2] - T[j][2])); if (T.length > 1) r.pairPots = +m.toFixed(2); }
       gop('set', 'teine'); r.work.potsSet = bad(); }
+    // (OB4 11.11.2026, F10, F11, F23: the boat's own hands at the quay. While the plant's crane lands her tubs, one hooks the sling on
+    // beside the tub that goes next and one gives the signs at the rail to the quay; the ice from the silo is taken aboard by one at the
+    // ice box; her own crane is driven by one beside it while the other hooks on. Every pose of it against the model, on the coast boats:
+    // an ocean vessel's pallets have their own gang at the hatch)
+    if ((V.hold || {}).kind === 'rom' || V.kar){ const q = portById('husoy'), own = !!V.kar, K0 = geoOf(vt).kit || {}, M = () => CREW3D._st.M, at = a => M().at(a.goal.k);
+      b.gop = null; b.status = 'port'; b.port = 'husoy'; b.berth = 'main'; b.pos = {...q.p}; b.moorT = S.t - 90; S.hold = []; S.jobs = []; S.cargo = [];
+      b.land = {pid:'husoy', t0:S.t, until:S.t + 20, kind:'tub', n:2, lifts:own ? 4 : 2, kg:800, own, wash:own ? LANDING.wash : 0}; b.iceUntil = S.t + 30; S.t += 0.4;
+      CREW3D.reset(); CREW3D.on(); settle(); r.work.loss = bad();
+      const A = CREW3D.agents(), hk = A.find(a => a.role === 'hekt' && a.goal && a.goal.dyn), lk = A.find(a => a.role === 'luke' && a.goal && a.goal.dyn), ic = A.find(a => a.role === 'isrom' && a.goal && a.goal.ice);
+      const Ls = CREW3D.landSlots ? CREW3D.landSlots() : [], T = own ? (K0.tubs || [])[0] : Ls[0], sd = CREW3D.quaySide ? CREW3D.quaySide() : 1;
+      r.loss = {slots:own ? 1 : Ls.length, hekt:hk && T ? +Math.hypot(at(hk)[0] - T[0], at(hk)[2] - T[2]).toFixed(2) : null, luke:lk ? +(at(lk)[0] * sd).toFixed(2) : null, is:!!ic, pose:hk ? [0.36, 0.5].map(u => { S.t = b.land.t0 + LANDING.prep + u * LANDING.lift; CREW3D.tick(0.05); return hk.task; }).join('+') : null};
+      if (V.crane > 0 && K0.crane){ b.land = null; b.iceUntil = 0; S.cargo = [{tur:'t1', kg:500, no:'proviant', en:'provisions'}]; S.jobs = [{kind:'last', crew:true, h:2, until:S.t + 120, no:'Lasting av proviant', en:'Loading the provisions'}]; S.t += 1; settle(); r.work.kran = bad();
+        const A2 = CREW3D.agents(), kr = A2.find(a => a.role === 'kran' && a.goal && a.goal.task === 'remote'); r.loss.kran = kr ? +Math.hypot(at(kr)[0] - K0.crane.at[0], at(kr)[2] - K0.crane.at[2]).toFixed(2) : null;
+        r.loss.kranHekt = A2.filter(a => a.role === 'hekt' && a.goal && a.goal.dyn === 'kai').length; S.jobs = []; S.cargo = []; }
+      b.land = null; b.iceUntil = 0; b.status = 'idle'; b.port = null; b.pos = {...g}; }
     b.gop = null; CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt));
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
     b.status = 'idle'; b.gop = null; S.hold = []; b.deckStop = false; r.walk = 0; r.walked = 0; CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null; CREW3D.tick(0.05);
@@ -74,9 +89,15 @@ async def main():
             if any(r['work'].values()): workBad[vt] = r['work']
         print(ok(len(boats) >= 10), 'every boat with a deck has its crew on it', len(boats))
         print(ok(not idleBad), 'no break, on any boat, puts a limb through a wall, the rail or anything else', idleBad)
-        print(ok(not workBad), 'nor does the work at its places (jigging, gutting, icing, hauling)', workBad)
+        print(ok(not workBad), 'nor does the work at its places (jigging, gutting, icing, hauling, setting, and landing, ice and the crane at the quay)', workBad)
         sett = {vt: r['sett'] for vt, r in R.items() if r and any(v != '1/0' for v in r.get('sett', {}).values())}
         print(ok(not sett and sum(len(r.get('sett', {})) for r in R.values() if r) >= 16), 'setting line and nets, one stands where the gear goes over in the setting pose and nobody in the hauling pose (F4; set/haul per kind)', sett)
+        # (OB4 11.11.2026, F10, F11, F23; seen red on the build from before: no one had a place at the tubs, the rail or the ice box)
+        LO = {vt: r['loss'] for vt, r in R.items() if r and r.get('loss')}
+        lossBad = {vt: l for vt, l in LO.items() if not l['slots'] or l['hekt'] is None or not 0.55 <= l['hekt'] <= 1.45 or l['luke'] is None or l['luke'] <= 0 or not l['is'] or l['pose'] != 'unhook+guide'}
+        print(ok(not lossBad and len(LO) >= 8), 'landing at the plant, one hooks the sling on beside the tub (0.55-1.45 m from its middle, hooking on with the hook down), one gives the signs at the rail to the quay, and one takes the ice at the ice box (F10, F11; %d boats)' % len(LO), lossBad)
+        kranBad = {vt: l for vt, l in LO.items() if 'kran' in l and (l['kran'] is None or not 0.8 <= l['kran'] <= 2.4 or l['kranHekt'] != 1)}
+        print(ok(not kranBad and sum(1 for l in LO.values() if 'kran' in l) >= 4), 'her own crane on the freight: one drives it from beside its foot, one hooks on at the freight (F23)', kranBad)
         # (F19: the boats revised on board so far, OB5-OB11; the others are their phases' to put right, printed so they are seen)
         near = {vt: r['pair'] for vt, r in R.items() if r and r.get('pair') is not None and r['pair'] < 0.55}
         near.update({vt + ':teiner': r['pairPots'] for vt, r in R.items() if r and r.get('pairPots') is not None and r['pairPots'] < 0.55})
