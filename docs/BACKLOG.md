@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **Ø13 K1, `hgt10` i spillet på Senja (steg 33b, 11.11.2026, Jonas' økt, grenen `claude/zen-curie-qoa35d`; ikke rullet ut, venter på valg 37; `docs/planer/kartrelease-o13.md` kap. 5 «K1», `kart-og-terreng.md` 4.6f, `3d-verden.md` 4.11a2):** laget `fin` er bygd og virker, men bildene fra Husøy, Finnsnes, Bøvær og Vangshamn viser ingen forskjell fra båten (`docs/okter/2026-11-11-33b/`).
+- **Ø13 K1, `hgt10` i spillet på Senja (steg 33b, 11.11.2026, Jonas' økt, grenen `claude/zen-curie-qoa35d`; **lagt bort**, Jonas 11.11.2026 «V37: A»; grenen flettes ikke; `docs/planer/kartrelease-o13.md` kap. 5 «K1», `kart-og-terreng.md` 4.6f, `3d-verden.md` 4.11a2):** laget `fin` er bygd og virker, men bildene fra Husøy, Finnsnes, Bøvær og Vangshamn viser ingen forskjell fra båten (`docs/okter/2026-11-11-33b/`).
   - **Ikke prøvd:** lavt sollys og snø (små former synes best der), et nettbrett eller en telefon (alt er målt på PC med programvare-GPU), Ultra, og et bygg med hele kysten (`game.py` skal ta Senjas `fin` som den er, lest i koden, ikke kjørt).
   - **Nærnettet koster 3,5 ms mer per nett på Høy** (37 → 40–41 ms for høydene), litt over grensa på 3 ms i startmeldingen. Ikke trappet ned til bare Ultra, fordi steget stoppet; tas i K2 om Jonas svarer B.
   - **Kameraet i `tests/finshot.py` står ikke helt likt** mellom kjøringen med og uten laget (båten driver noen meter, og kameraet følger henne), så bildene kan ikke trekkes fra hverandre piksel for piksel; de er for øyet.
