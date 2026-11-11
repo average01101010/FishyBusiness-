@@ -46,8 +46,9 @@ async def main():
             # the work at sea: fishing on the ground, two hands, line rig, the catch
             await pg.evaluate(SET, [TYPE, 'dekk', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 8.5; c.pitch = 0.62; c.yaw = 0.9; })()"); await pg.wait_for_timeout(6000)
             await pg.screenshot(path=shot('dekk', f), timeout=400000)
-            # K6: K1 at night
-            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 13; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
+            # K6: K1 at night, from further off so the whole mast is in the picture and the white all-round light over it shows (OB10
+            # round 3: at 13 m the picture cut the mast, and the judge could not see the white)
+            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 22; c.pitch = 0.12; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
             await pg.screenshot(path=shot('natt', f), timeout=400000)
             # K6 from the port bow too: the red and the white, the green screened off
             await pg.evaluate("(() => { const c = G3._debug.cam; c.yaw = -2.5; })()"); await pg.wait_for_timeout(4000)

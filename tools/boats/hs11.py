@@ -272,7 +272,8 @@ def colours():
     w('sRoute', (0.88, 0.16, 0.62), 0.9, 0, 0, 0.8); w('sBoat', (0.92, 0.12, 0.10), 0.9, 0, 0, 0.8); w('sBar', (0.06, 0.07, 0.09), 0.9); w('sTxt', (0.88, 0.90, 0.92), 0.9, 0, 0, 0.8)
     w('sDeep', (0.03, 0.09, 0.26), 0.9, 0, 0, 0.5); w('sBot', (0.64, 0.17, 0.08), 0.9, 0, 0, 0.7); w('sEcho', (0.96, 0.80, 0.15), 0.9, 0, 0, 0.8)
     w('sOk', (0.20, 0.76, 0.32), 0.9, 0, 0, 0.8); w('sWarn', (0.96, 0.60, 0.10), 0.9, 0, 0, 0.8)
-    w('grip', (0.31, 0.34, 0.35), 0.04, 4); w('hose', (0.78, 0.66, 0.12), 0.3); w('extred', (0.78, 0.08, 0.06), 0.6); w('louvre', (0.62, 0.64, 0.66), 0.5, 0, 0.6)
+    # (OB10 round 3: the grip fields lighter than the deck and studded, so the sole reads as a surface in the game's light)
+    w('grip', (0.47, 0.49, 0.49), 0.04, 4); w('stud', (0.60, 0.62, 0.62), 0.18, 4); w('hose', (0.78, 0.66, 0.12), 0.3); w('extred', (0.78, 0.08, 0.06), 0.6); w('louvre', (0.62, 0.64, 0.66), 0.5, 0, 0.6)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
 
 
@@ -285,29 +286,73 @@ FREE = {1: [(1.45, 0.38), (2.48, 0.38)], -1: [(0.34, 0.38), (1.18, 0.38), (2.05,
 FREE_H = 0.15                # their height, from 2 cm over the deck (the strake's top is under it)
 EXH = (-0.62, 1.58); EXH_R = 0.06                             # the wet exhaust in the transom (y, z)
 BILGE = (5.20, -1, WLL + 0.45); BILGE_R = 0.02                 # the bilge pump's outlet
+RUST = (0.40, 0.21, 0.09); GRIME = (0.10, 0.10, 0.09); SLIME = (0.16, 0.20, 0.10)
+CLEATS = (8.30, 3.95, 0.35)
+WH_LIFT = 1.6
+def in_wh(p): return WX0 + 0.02 < p[0] < WXF + 0.45 and abs(p[1]) < WY - 0.02 and ZWH - 0.02 < p[2] < WR + 0.005
+def mix(base, *layers):
+    """the factors that take the material's colour base toward each (rgb, k) in turn"""
+    c = list(base)
+    for rgb, k in layers:
+        k = max(0.0, min(1.0, k)); c = [c[i] + (rgb[i] - c[i]) * k for i in range(3)]
+    return [c[i] / max(base[i], 1e-3) for i in range(3)]
+def run_under(x, z, x0, l, ztop, ln, side):
+    """0-1: a run down the side under an opening x0..x0+l whose foot is at ztop, ln long, in streaks (the stations stand 6 cm apart)"""
+    u = (x - x0) / l
+    if u < -0.2 or u > 1.2 or z > ztop + 0.03 or z < ztop - ln: return 0.0
+    return ss(-0.2, 0.05, u) * ss(1.2, 0.95, u) * (0.45 + 0.55 * ss(-0.35, 0.35, n3(x * 17.0, side * 3.1, 0.3))) * ss(ztop - ln, ztop - 0.02, z) ** 1.3
 def wear(p, m, n):
-    """a new boat (2027): only the gelcoat's sheen varying, a little grime at the boot top and under the freeing ports, the deck darker
-    where they stand"""
-    x, y, z = p; nm = m.name; side = 1 if y > 0 else -1
+    """(OB10 round 3, 11.11.2026: a boat from 2009 that has worked for seventeen years, and it has to show at close range in the game:
+    the judge of round 2 found «ingen slitasje å se».) Rust runs down the side under the freeing ports and the bilge outlet, dark runs
+    under the cleats, a slimy band over the boot top, the gelcoat chalked where the fenders rub, the white strake and the caps scuffed
+    dark, soot round the exhaust, the bulwarks' inside dirty at the deck, the deck stained where they work; and inside the wheelhouse
+    everything lifted (the baked shadow of a closed room made it a dark box seen from the wheel)"""
+    x, y, z = p; nm = m.name; side = 1 if y > 0 else -1; base = m['rgb']
+    if nm not in ('white', 'hull', 'strake', 'glass', 'frame', 'boot', 'af') and in_wh(p):
+        v = WH_LIFT * (0.97 + 0.03 * n3(x * 5.0, y * 5.0, z * 5.0)); return [v, v, v]
     if nm == 'hull':
-        g = 0.98 + 0.03 * n3(x * 3.0, z * 6.0, side)
-        g *= 1 - 0.05 * ss(0.10, 0.0, z - paint_line(x, Z_BT))
-        for x0, l in FREE[side]:
-            g *= 1 - 0.05 * ss(0.06, 0.0, abs(x - x0 - l / 2) - l / 2 + 0.05) * ss(ZMD, ZMD - 0.5, z) * (z > WLL + 0.1)
-        return [g, g, g]
-    if nm in ('boot', 'strake'):
+        if x < -0.0015:                                         # the soot's patch on the transom (details())
+            d = math.hypot(y - EXH[0], (z - EXH[1]) * 0.8 if z > EXH[1] else z - EXH[1])
+            return mix(base, (GRIME, 0.75 * ss(0.26, EXH_R, d)))
+        if n[0] < -0.9 and x < 0.02: return [1.0, 1.0, 1.0]     # the transom itself: even, so the patch's edge does not show
+        g = 0.97 + 0.05 * n3(x * 3.0, z * 6.0, side)
+        r = 0.0
+        if z > WLL + 0.1:
+            for x0, l in FREE[side]: r = max(r, run_under(x, z, x0, l, ZMD + 0.03, 0.95, side))
+            if side == BILGE[1]: r = max(r, 1.2 * run_under(x, z, BILGE[0] - 0.07, 0.14, BILGE[2], 0.42, side))
+        k = 0.0
+        for xc in CLEATS: k = max(k, run_under(x, z, xc - 0.10, 0.20, z_sh(xc), 0.55, side))
+        chalk = ss(0.10, 0.45, n3(x * 1.9, z * 2.6, side * 5.0 + 9.0)) * ss(Z_BT + 0.25, 1.45, z) * ss(z_kn(x) + 0.02, z_kn(x) - 0.15, z) * ss(1.2, 2.4, x) * ss(9.4, 8.2, x)
+        slime = ss(0.20, 0.0, z - paint_line(x, Z_BT)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 6.0, side, 2.0)))
+        t = mix(base, ((0.30, 0.50, 0.52), 0.30 * chalk), (SLIME, 0.45 * slime), (GRIME, 0.55 * k), (RUST, 0.62 * r))
+        return [t[i] * g for i in range(3)]
+    if nm == 'strake':
+        v = 0.95 + 0.05 * n3(x * 4.0, z * 9.0, side)
+        scuff = ss(0.02, 0.42, n3(x * 6.5, z * 14.0, side * 2.0 + 4.0)) * (0.55 if z > ZMD + 0.4 else 1.0)
+        r = 0.0
+        if z < ZMD + 0.05:
+            for x0, l in FREE[side]: r = max(r, run_under(x, z, x0, l, ZMD + 0.03, 0.95, side))
+        t = mix(base, (GRIME, 0.50 * scuff), (RUST, 0.60 * r))
+        return [t[i] * v for i in range(3)]
+    if nm == 'boot':
         v = 0.95 + 0.06 * n3(x * 4.0, z * 9.0, side)
         return [v, v, v]
     if nm == 'af':
-        v = 0.90 + 0.10 * n3(x * 2.5, z * 6.0, y * 2.0)
-        return [v, v, v]
+        v = 0.88 + 0.12 * n3(x * 2.5, z * 6.0, y * 2.0)
+        t = mix(base, (SLIME, 0.55 * ss(0.30, 0.0, paint_line(x, Z_AF) - z) * (0.5 + 0.5 * ss(-0.3, 0.3, n3(x * 5.0, side, 7.0)))))
+        return [t[i] * v for i in range(3)]
     if nm in ('white', 'roofy', 'inner'):
         v = 0.97 + 0.03 * n3(x * 5.0, y * 5.0, z * 5.0)
-        if nm == 'inner': v -= 0.06 * ss(0.15, 0.0, z - dk(x))
+        if nm == 'inner' and x < X_STEP and z < ZMD + 0.8:
+            r = 0.0
+            for x0, l in FREE[side]: r = max(r, ss(0.16, 0.0, max(abs(x - x0 - l / 2) - l / 2, 0.0) + max(z - ZMD - 0.02 - FREE_H, 0.0)))
+            t = mix(base, (GRIME, 0.30 * ss(0.30, 0.0, z - dk(x)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 4.0, side, 5.0)))), (RUST, 0.45 * r))
+            return [t[i] * v for i in range(3)]
         return [v, v, v]
-    if nm in ('deck', 'nonslip', 'grip'):
-        v = 0.94 + 0.07 * n3(x * 5.0, y * 5.0, 1.0)
-        v *= 1 - 0.08 * ss(0.8, 0.0, math.hypot(x - HXR, y + 1.7)) - 0.06 * ss(0.7, 0.0, math.hypot(x - 3.0, y - 1.5))   # where they work
+    if nm in ('deck', 'nonslip', 'grip', 'stud'):
+        v = 0.90 + 0.12 * n3(x * 3.0, y * 3.0, 1.0) + 0.05 * n3(x * 11.0, y * 11.0, 4.0)
+        v *= 1 - 0.16 * ss(0.9, 0.0, math.hypot(x - HXR, y + 1.7)) - 0.12 * ss(0.8, 0.0, math.hypot(x - 3.0, y - 1.5)) - 0.10 * ss(0.7, 0.0, math.hypot(x - 1.0, y + 1.2))   # where they work
+        if x < X_STEP: v *= 1 - 0.14 * ss(0.28, 0.0, ybw(x) - abs(y))                                                      # along the bulwarks' feet
         return [v, v, v]
     return None
 
@@ -591,10 +636,12 @@ def wheelhouse(fine=True):
         # (the stripes on flat walls, OB8 10.11.2026 on the havsjark: «Den ser liksom ut som den huler litt innover mot vinduene pga de
         # stripene»: the sharp edges marked again after the cut, qa/flatnorm.py)
         shade(shell, 5)
+        tint(shell)                                               # (OB10 round 3: its inside lifted, wear())
     objs.append(shell)
     # the sole inside, a step over the working deck (the deck runs on under it), wood-grey; its front under the console
     ri = offset_poly([(x, y) for x, y, _ in wh_ring(ZWH)], -(WT + 0.002))
     A.poly([(x, y, ZWH) for x, y in ri], C['sole'], (0, 0, 1))
+    A.poly([(x, y, WR - 0.004) for x, y in offset_poly([(x, y) for x, y, _ in wh_ring(WR)], -(WT + 0.002))], C['inner'], (0, 0, -1))   # the lining under the roof inside (lifted with the room, wear())
     if not fine:
         for nm, o, u, v, wins in wh_faces():
             vv = V(v).normalized(); n = norm_of(nm, u, v)
@@ -727,7 +774,7 @@ def dash_pt(t, y):
     (x0, z0), (x1, z1) = DASHL; return V((x0 + (x1 - x0) * t, y, z0 + (z1 - z0) * t))
 def dash_n():
     (x0, z0), (x1, z1) = DASHL; return V((-(z1 - z0), 0, x1 - x0)).normalized()
-SCR = {'plot': (-1.66, -1.30, 0.10, 0.90), 'sound': (-1.26, -1.12, 0.55, 0.92), 'eng': (-1.00, -0.60, 0.10, 0.90)}
+SCR = {'plot': (-1.66, -1.30, 0.10, 0.90), 'sound': (-1.26, -1.12, 0.55, 0.92), 'eng': (-0.90, -0.52, 0.10, 0.90)}
 HELM_EXTRA = []
 def screen_art(A, nm, P, n):
     """what a screen shows (painted, not live: the game draws nothing on this boat's dash): the chart plotter with land, shallows, the
@@ -780,7 +827,7 @@ def helm(A, G, fine=True):
         # (OB10 round 2: the screens were three black panes; now each shows what it is, seen from the wheel. u from the skipper's left,
         # v from the screen's foot, each layer 0.6 mm over the one under it)
         screen_art(A, nm, lambda u_, v_, k=0, ya=ya, yb_=yb_, ta=ta, tb=tb: dash_pt(ta + (tb - ta) * (0.08 + 0.84 * v_), yb_ + (ya - yb_) * (0.08 + 0.84 * u_)) + n * (0.0165 + 0.0006 * k), n)
-    cb = dash_pt(0.40, -0.45) + V((0.0, 0, -0.005))
+    cb = dash_pt(0.40, -0.40) + V((0.0, 0, -0.005))
     acyl(A, cb, cb + V((0, 0, 0.05)), 0.065, lambda q: C['dark'], seg=16)
     HELM_EXTRA.append(sphere('compass', cb + V((0, 0, 0.08)), 0.055, C['glass'], (1, 1, 0.7)))
     cp = dash_pt(0.25, -1.24) + n * 0.003
@@ -788,10 +835,28 @@ def helm(A, G, fine=True):
     for k in range(4): obox(A, cp + n * 0.005 + V((0, -0.05 + 0.033 * k, 0)), V((0, 0.009, 0)), V((0.004, 0, 0.008)), n * 0.004, C['lampG'] if k < 3 else C['lampR'])
     F.helm_wheel(A, WHEEL, WHEEL_AX, 0.20, C['cush'], C['steel'], C['dark'])
     acyl(A, V(WHEEL) - V(WHEEL_AX).normalized() * 0.14, (HX0 + 0.004, WHEEL[1], WHEEL[2] + 0.02), 0.03, lambda q: C['dark'], seg=10)
-    F.single_lever(A, (HX0 + 0.12, HY1, z0 + 0.80), (0, 1, 0), (1, 0, 0), C['dark'], C['steel'], C['black'])
-    vc = V((7.60, -1.70, WR - 0.06))                          # the VHF overhead
-    obox(A, vc, V((0.09, 0, 0)), V((0, 0.10, 0)), V((0, 0, 0.05)), C['dark'])
-    A.poly([vc + V((-0.091, -0.08, -0.03)), vc + V((-0.091, 0.08, -0.03)), vc + V((-0.091, 0.08, 0.03)), vc + V((-0.091, -0.08, 0.03))], C['screen'], (-1, 0, 0))
+    # (OB10 round 3: «radio og gass synlige fra roret». The single lever stood on the console's inboard side and the VHF overhead by the
+    # door, both outside the view from the wheel in both formats. Now the lever stands on the dash between the sounder and the engine
+    # panel, at the skipper's left hand, and the VHF is let into the dash over it with its fist microphone on a clip beside it)
+    up_ = (dash_pt(1, 0) - dash_pt(0, 0)).normalized(); Y = V((0, 1, 0))
+    lp = dash_pt(0.40, -1.05)
+    obox(A, lp + n * 0.010, Y * 0.036, up_ * 0.058, n * 0.010, C['steel'])
+    acyl(A, lp + n * 0.034 - Y * 0.030, lp + n * 0.034 + Y * 0.030, 0.030, lambda q: C['dark'], seg=14)
+    d = (n * math.cos(0.32) + up_ * math.sin(0.32)).normalized(); h = lp + n * 0.034
+    acyl(A, h, h + d * 0.16, 0.010, lambda q: C['chrome'], seg=8, r1=0.008)
+    acyl(A, h + d * 0.16 - Y * 0.032, h + d * 0.16 + Y * 0.032, 0.017, lambda q: C['red'], seg=12)
+    vc = dash_pt(0.80, -1.015)
+    obox(A, vc + n * 0.016, Y * 0.082, up_ * 0.036, n * 0.016, C['dark'])
+    fq = lambda a_, b_: vc + n * 0.0325 + Y * a_ + up_ * b_
+    A.poly([fq(0.070, -0.022), fq(0.012, -0.022), fq(0.012, 0.024), fq(0.070, 0.024)], C['sShal'], n)                 # its display
+    for a_, b_ in ((0.050, 0.008), (0.030, 0.008), (0.050, -0.008)): A.poly([fq(a_ + 0.008, b_ - 0.003) + n * 0.0006, fq(a_ - 0.008, b_ - 0.003) + n * 0.0006, fq(a_ - 0.008, b_ + 0.003) + n * 0.0006, fq(a_ + 0.008, b_ + 0.003) + n * 0.0006], C['sBar'], n)
+    A.poly([fq(a_, b_) for a_, b_ in ((-0.004, 0.022), (-0.016, 0.022), (-0.016, 0.010), (-0.004, 0.010))], C['sBoat'], n)   # the distress button's red cover
+    for a_ in (-0.034, -0.062): acyl(A, fq(a_, 0.004), fq(a_, 0.004) + n * 0.016, 0.011, lambda q: C['switch'], seg=10)   # volume and squelch
+    mc = dash_pt(0.56, -0.935)
+    obox(A, mc + n * 0.006, Y * 0.014, up_ * 0.014, n * 0.006, C['steel'])                                             # the clip
+    obox(A, mc + n * 0.030, Y * 0.027, up_ * 0.040, n * 0.018, C['black'])                                             # the fist microphone
+    obox(A, mc + n * 0.030 - Y * 0.030, Y * 0.004, up_ * 0.016, n * 0.008, C['red'])                                   # its key
+    F.pipe(A, [mc + n * 0.030 - up_ * 0.040] + [mc + n * (0.030 + 0.012 * (k % 2)) - up_ * (0.050 + 0.012 * k) + Y * (-0.012 * k) for k in range(1, 6)] + [vc + n * 0.012 - up_ * 0.036 + Y * 0.02], 0.004, C['black'], 5)
     F.helm_seat(A, (SEAT[0], SEAT[1], z0), (1, 0, 0), 0.76, C['steel'], C['cush'])
     # the bench to port along the side, the chart table forward of it
     yi = WY - WT
@@ -1013,7 +1078,7 @@ GRIP = [(0.22, 0.82, -1.92, 1.42), (0.95, 3.02, -1.95, -0.86), (1.28, 3.04, 0.86
 def details(A):
     s = lambda q: C['steel']
     for x0, x1, y0, y1 in GRIP:
-        nx = max(1, round((x1 - x0) / 0.45)); ny = max(1, round((y1 - y0) / 0.45))
+        nx = max(1, round((x1 - x0) / 0.15)); ny = max(1, round((y1 - y0) / 0.15))      # (0.45 before: finer, so the wear's stains run across a field)
         zf = lambda x, y: ZMD + camber(x, y) + 0.005
         for i in range(nx):
             for j in range(ny):
@@ -1021,6 +1086,27 @@ def details(A):
                 A.poly([(xa, ya, zf(xa, ya)), (xb, ya, zf(xb, ya)), (xb, yb_, zf(xb, yb_)), (xa, yb_, zf(xa, yb_))], C['grip'], (0, 0, 1))
         for (xa, ya), (xb, yb_), nr in (((x0, y0), (x1, y0), (0, -1, 0)), ((x1, y0), (x1, y1), (1, 0, 0)), ((x1, y1), (x0, y1), (0, 1, 0)), ((x0, y1), (x0, y0), (-1, 0, 0))):
             A.poly([(xa, ya, zf(xa, ya)), (xb, yb_, zf(xb, yb_)), (xb, yb_, zf(xb, yb_) - 0.008), (xa, ya, zf(xa, ya) - 0.008)], C['grip'], nr)
+    # (OB10 round 3: «struktur på dørken som leses i spillets lys». The fields are studded like moulded non-slip: raised lozenges in
+    # crossed pairs, 4 mm high, lighter than the field, their sloping faces catching the light; fittings.tread_plate's, on the camber)
+    PT, LL, LW, LH = 0.11, 0.056, 0.015, 0.004
+    for x0, x1, y0, y1 in GRIP:
+        for i in range(int((x1 - x0 - 0.04) / PT)):
+            for j in range(int((y1 - y0 - 0.04) / PT)):
+                x = x0 + 0.02 + (i + 0.5) * PT; y = y0 + 0.02 + (j + 0.5) * PT
+                a = math.pi / 4 if (i + j) % 2 else -math.pi / 4
+                d = V((math.cos(a), math.sin(a), 0)); sv = V((-d.y, d.x, 0)); c = V((x, y, ZMD + camber(x, y) + 0.005 - 0.0004))
+                b0, b1, b2, b3 = c - d * (LL / 2), c - sv * (LW / 2), c + d * (LL / 2), c + sv * (LW / 2)
+                r0 = c - d * (LL / 2 - LW * 0.6) + V((0, 0, LH)); r1 = c + d * (LL / 2 - LW * 0.6) + V((0, 0, LH))
+                A.poly([b0, b1, r0], C['stud'], (b0 + b1) / 2 - c - sv * 0.001); A.poly([b1, b2, r1, r0], C['stud'], -sv + V((0, 0, 0.5)))
+                A.poly([b2, b3, r1], C['stud'], (b2 + b3) / 2 - c + sv * 0.001); A.poly([b3, b0, r0, r1], C['stud'], sv + V((0, 0, 0.5)))
+    # the soot round the wet exhaust: a patch 3 mm off the transom in the hull's own colour and paint zone, darkened toward the pipe and
+    # even with the transom at its rim (wear()); the transom is one face a strip and carries no stain of its own
+    RS = (EXH_R + 0.012, EXH_R + 0.05, EXH_R + 0.11, 0.27); NS = 20
+    sp = lambda k, a: (-0.003, EXH[0] + RS[k] * math.cos(a), EXH[1] + RS[k] * math.sin(a) * (1.25 if math.sin(a) > 0 else 1.0))
+    for k in range(len(RS) - 1):
+        for i in range(NS):
+            a0, a1 = 2 * math.pi * i / NS, 2 * math.pi * (i + 1) / NS
+            A.poly([sp(k, a0), sp(k, a1), sp(k + 1, a1), sp(k + 1, a0)], C['hull'], (-1, 0, 0))
     def louvre(o, u, n, w, z0, z1):
         o = V((o[0], o[1], 0)); u = V(u); n = V(n); Z = V((0, 0, 1))
         obox(A, o + u * (w / 2) + n * 0.009 + Z * ((z0 + z1) / 2), u * (w / 2), n * 0.009, Z * ((z1 - z0) / 2), C['louvre'])
@@ -1342,8 +1428,8 @@ K5 = ((0.40, -0.40, ZMD + 1.70), (5.6, 0.0, ZMD + 0.9))
 EYE = (SKIP[0], SKIP[1], ZWH + EYE_H)
 CLOSE = [('c_helm', (7.30, -0.30, 4.10), (8.35, -0.80, 3.45), 30, False, False), ('c_wh', (11.4, -5.0, 4.4), (7.4, -0.4, 3.6), 30, True, False),
          ('c_stern', (-3.6, -2.9, 2.6), (0.3, 0, 1.6), 32, True, False), ('c_bow', (13.4, -2.9, 3.6), (10.2, 0, 2.6), 30, False, False),
-         ('c_under', (1.6, -3.9, -0.3), (1.0, 0, -0.1), 30, False, False), ('c_work', (5.6, -0.2, 5.0), (2.6, 0.0, 1.6), 30, False, False),
-         ('c_haul', (4.9, -4.2, 3.4), (4.6, -1.9, 2.4), 30, True, False), ('c_shelter', (2.4, 0.6, 3.6), (5.8, 0.0, 2.7), 30, False, False),
+         ('c_under', (1.6, -3.9, -0.3), (1.0, 0, -0.1), 30, False, False), ('c_work', (-0.7, 0.9, 4.3), (3.0, -0.4, 2.2), 30, False, False),
+         ('c_haul', (4.9, -4.2, 3.4), (4.6, -1.9, 2.4), 30, True, False), ('c_shelter', (1.6, -1.2, 3.75), (5.6, -1.45, 3.0), 30, False, False),
          ('c_side', (7.2, 4.6, 3.6), (7.4, 1.9, 2.6), 30, True, False), ('c_fore', (7.8, 0.0, 5.0), (10.2, 0, 3.0), 30, False, False),
          ('c_rig', (10.0, -6.5, 7.0), (6.4, 0.0, 6.6), 35, True, False), ('c_bottom', (6.0, -6.0, -1.6), (5.5, 0, 0.6), 30, False, False),
          ('K6p', (5.5 + 31.0, 24.0, 4.0), (5.5, 0, 2.5), 100, True, True)]      # K6 from the port bow: the red and the white only
