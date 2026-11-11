@@ -335,9 +335,12 @@ def wear(p, m, n):
 
 # what wears the aft deck's non-slip (the same in the render and the game: colours at the corners): pale and scuffed where they stand and
 # walk day after day, a rust-brown bloom round the steel's feet, dark where the water stands
+# the bitts on the quarters (round 2: they stood at 1.45 and touched the deck map's cell 1.2-1.4 m out, which then was no floor under the
+# pots' stack on the starboard quarter, potshot; 7 cm further out, 13 cm from the bulwark's foot)
+BITT_Y = 1.52
 WORN = [(5.25, -1.38, 0.55, 0.20), (4.62, -0.86, 0.50, 0.16), (3.65, 1.03, 0.55, 0.18), (3.66, -1.45, 0.45, 0.14), (2.64, -1.42, 0.45, 0.14),
         (5.80, -1.62, 0.50, 0.14), (1.90, 0.70, 0.55, 0.12), (0.35, -0.45, 0.60, 0.12), (3.0, -0.2, 0.9, 0.08)]
-RUSTY = [(0.35, 1.45, 0.30), (0.35, -1.45, 0.30), (1.62, 0.0, 0.34), (3.25, 1.35, 0.16), (4.05, 1.35, 0.16), (2.07, -1.20, 0.22)]
+RUSTY = [(0.35, BITT_Y, 0.30), (0.35, -BITT_Y, 0.30), (1.62, 0.0, 0.34), (3.25, 1.35, 0.16), (4.05, 1.35, 0.16), (2.07, -1.20, 0.22)]
 def grip_wear(x, y):
     v = 0.90 + 0.16 * n3(x * 6.0, y * 6.0, 2.0) + 0.07 * n3(x * 23.0, y * 23.0, 5.0)
     for wx, wy, wr, k in WORN: v += k * ss(wr, wr * 0.25, math.hypot(x - wx, y - wy)) * (0.75 + 0.5 * n3(x * 11.0, y * 11.0, 7.0))
@@ -970,7 +973,7 @@ def aft_deck(A, fine=True):
     for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)):
         acyl(A, (x, y, z_deck(x) + camber(x, y) - 0.004), (x, y, zt2 - 0.05), 0.02, s, seg=8)
     # the bitts on the quarters, the cleats amidships, the diesel filler by the shelter, a deck hose coiled, the fenders stowed
-    for y in (1.45, -1.45): bitts(A, 0.35, y, z_deck(0.35) + camber(0.35, y), 0.30)
+    for y in (BITT_Y, -BITT_Y): bitts(A, 0.35, y, z_deck(0.35) + camber(0.35, y), 0.30)
     for x in (2.55,):
         for sg in (1, -1): F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.26, C['steel'])
     fx, fy = FILL; fz = z_deck(fx) + camber(fx, fy)
@@ -996,7 +999,7 @@ def grip_free(x, y):
     cx0, cx1, cy0, cy1, _ = CASING
     if cx0 - 0.08 < x < cx1 + 0.08 and y > cy0 - 0.08: return False
     if math.hypot(x - AM[0], y - AM[1]) < 0.20: return False
-    if x < 0.62 and abs(abs(y) - 1.45) < 0.22: return False                                      # the bitts
+    if x < 0.62 and abs(abs(y) - BITT_Y) < 0.22: return False                                    # the bitts
     if x > STEPS[0] - 0.06 and y < STEPS[3] + 0.06: return False                                 # the steps to the forecastle
     if math.hypot(x - FILL[0], y - FILL[1]) < 0.12: return False
     if abs((x - 0.22) % 1.30) < 0.05 or abs(y) < 0.025 or abs(abs(y) - 0.98) < 0.025: return False   # the seams between the fields
@@ -1450,7 +1453,7 @@ def check():
     wg, ws = way(GARN), way(STAMP0)
     out.append(('redskapets vei til setteporten: fra garnkaret %.2f m klar av aktermasta, fra stampene %.2f m; ikke gjennom casingen eller stigen (før: fra babord under lyet på skrå over hele akterdekket)' % (wg[0], ws[0]), wg[0] > 0.12 and ws[0] > 0.12 and not wg[1] and not ws[1]))
     # the pots' stack (a ring of 1.45 m) and the place where a pot is emptied
-    r = 0.725; bit = [(0.35, 1.45), (0.35, -1.45)]; pk = []
+    r = 0.725; bit = [(0.35, BITT_Y), (0.35, -BITT_Y)]; pk = []
     for i, (x, y, dz) in enumerate(POTS):
         okb = x - r > XA + TT and abs(y) + r < ybw(x) and all(math.hypot(x - bx, y - by) > r + 0.14 for bx, by in bit) and math.hypot(x - AM[0], y - AM[1]) > r + 0.08
         okc = math.hypot(max(0.0, CASING[0] - x), max(0.0, CASING[2] - y)) > r and x + r < SH_RX0

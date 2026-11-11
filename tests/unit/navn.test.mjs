@@ -38,4 +38,13 @@ export default function (t){
   // every boat with a closed wheelhouse in the national fleet has the name on it, and all but the stern trawler on the transom too
   for (const k of ['sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21', 'ringnot38', 'snokrabbe', 'autoliner', 'pelagisk'])
     if (types.includes(k)) t.ok(/house/.test(sum[k]) && /stern\+havn/.test(sum[k]), `${k}: navnet på styrhuset foran og på hekken med hjemmehavnen`);
+  // the breisjark says where her name and her mark stand (OB11 round 2, Jonas 11.11.2026: «Navnet på båten skal bare være over
+  // styrhusvinduet på bremen og på akterspeilet. det andre nummeret kan gjøres mindre å plasseres høyere opp på det hvite»): the name
+  // on the roof brim's front face in the hull's paint, the mark on the white bulwark over the strake, its ink by the superstructure's
+  // paint as the player has painted it
+  if (types.includes('breisjark')){ const { markStrips, markRGB, stripPaint, vesselModel } = t.K, G = vesselModel('breisjark').geo, h = namePlaces('breisjark').find(p => p.kind === 'house');
+    t.ok(h && h.B === G.nameHouse[0] && h.paint && h.paint.zone1 >= 0.9, 'breisjark: navnet står på bremmens forkant, modellens egen plass, på skrogets maling', h && h.paint);
+    const mk = markStrips('breisjark'), P = stripPaint('breisjark', mk[0]), lum = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
+    t.ok(mk === G.marks && P && P.zone3 >= 0.9 && lum(P.rgb) > 0.7, 'breisjark: merket står på den hvite skansen, modellens egen plass', P);
+    t.ok(lum(markRGB('breisjark', null)) > 0.7 && lum(markRGB('breisjark', {house:[0.05, 0.1, 0.3]})) < 0.3, 'breisjark: merkets blekk følger overbyggets maling (hvitt gir mørke bokstaver, et mørkt malt overbygg lyse)'); }
 }

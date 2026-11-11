@@ -994,17 +994,17 @@ function stripProud(type, st){
 function stripPaint(type, st){
   const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0; if (!P || !P.zone || !P.c) return null;
   const port = st[0][0][0] < 0, [B, T] = port ? st.map(r => r.map(p => [-p[0], p[1], p[2]])) : st, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb);
-  const L = [], a = [0, 0, 0]; let z1n = 0;
+  const L = [], a = [0, 0, 0]; let z1n = 0, z3n = 0;
   for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
     const q = v * 3, sx = port ? -1 : 1, x = sx * (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3, nx = sx * (P.n[q] + P.n[q + 3] + P.n[q + 6]) / 3; if (x <= 0 || nx < 0.4) continue;
     const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; if (z < z0 || z > z1) continue;
     const i = Math.round((z - za) / (zb - za) * N), b = B[i], t = T[i]; if (y < b[1] || y > t[1] || x < b[0] - 0.2) continue;
     const ao = Math.max(0.05, P.ao[v]), c = [0, 1, 2].map(k => P.c[v * 4 + k] / ao), lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
-    for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); if (P.zone[v] === 1) z1n++;
+    for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); if (P.zone[v] === 1) z1n++; else if (P.zone[v] === 3) z3n++;
   }
   if (L.length < 3) return null;
   const rgb = a.map(v => v / L.length), m = 0.3 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2], even = L.filter(l => (l < 0.5) === (m < 0.5)).length / L.length;
-  return {rgb, zone1:z1n / L.length, even, n:L.length};
+  return {rgb, zone1:z1n / L.length, zone3:z3n / L.length, even, n:L.length};
 }
 // the registration mark's strip near the stem: the letters as tall as § 23 asks by the boat's length (45 cm from 15 m, 25 cm from 9 m,
 // else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name. It finds a place of its own
@@ -1065,6 +1065,7 @@ function anchorLen(bw){ const kg = bw.kg || 10; return bw.kind === 'hall' ? 1.49
 function markRGB(type, liv){
   markStrips(type); const P = MARKPAINT[type], p = P && (P[0] || P[1]);
   if (!p || p.zone1 >= 0.6) return hullRGB(type, liv);
+  if (p.zone3 >= 0.6 && liv && liv.house) return liv.house.slice(0, 3);   // (a mark on the superstructure's paint, the breisjark's white bulwark: as the player has painted it, like placeRGB)
   return p.rgb;
 }
 // the hull's colour as it is painted (liv) or as she came (a detailed model's paint zone 1 on average, a kit's hull colour): the name
@@ -1165,7 +1166,8 @@ function houseFront(type, P, Gl, V){
   // Jonas 11.11.2026: «Navnet på båten skal bare være over styrhusvinduet på bremen og på akterspeilet»: the search below took the thin
   // white band under her roof's brim, in its shadow)
   { const own = m.geo.nameHouse;
-    if (own && own.length === 2){ const B = own[0], Tp = own[1], n = B.length - 1, zs = B.concat(Tp).map(p => p[2]), sh = Math.hypot(Tp[0][1] - B[0][1], Tp[0][2] - B[0][2]);
+    const B = own && own[0], Tp = own && own[1], n = B ? B.length - 1 : 0, sh = B && Tp && n > 0 && Tp.length === B.length ? Math.hypot(Tp[0][1] - B[0][1], Tp[0][2] - B[0][2]) : 0;
+    if (sh >= 0.08){ const zs = B.concat(Tp).map(p => p[2]);   // (a strip too low for letters of 6 cm is not used: the search below)
       return [{kind:'house', line:'name', B, T:Tp, aspect:Math.abs(B[0][0] - B[n][0]) / sh, paint:crossPaint(T, B[0][0], B[n][0], B[0][1], Tp[0][1], -1, Math.min(...zs) - 0.15, Math.max(...zs) + 0.15)}]; } }
   // the band over the windows: heights where rays across the front (nine, out to six tenths of the windows' breadth) meet one surface near
   // the windows' front, without a step; the lowest such band at least 10 cm tall (or the tallest of 7), up from the windows' top
