@@ -33,7 +33,7 @@ export default function (t){
     for (let dd = 0; dd < 7 && !best; dd++) for (const P of s.pats){ const n0 = F.q[P.q[0]].name, n1 = F.q[P.q[1]].name; if (!((n0 === a && n1 === b) || (n0 === b && n1 === a))) continue;
       let m = 0; for (const dt of s.w.t[s.w.d[(2 + dd) % 7]][P.i] || []){ m += dt; if (m >= 360 && (!best || m < best.m)) best = {m:m + dd * 1440, P}; } }
     t.ok(!!best, `${a}–${b} har en avgang etter kl. 06 onsdag eller en av dagene etter`); if (!best) continue;
-    const {m, P} = best, R = P.R[0], dur = P.tm[0], q0 = F.q[P.q[0]], q1 = F.q[P.q[1]], off = s.L / 2000 + 0.04, hhmm = ['on', 'to', 'fr', 'lø', 'sø', 'ma', 'ti'][Math.floor(m / 1440)] + ' ' + String(Math.floor(m % 1440 / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    const {m, P} = best, R = P.R[0], dur = P.tm[0], q0 = F.q[P.q[0]], q1 = F.q[P.q[1]], off = s.L / 2000 + 0.04 + 3 * (s.L + 15) / 1000, hhmm = ['on', 'to', 'fr', 'lø', 'sø', 'ma', 'ti'][Math.floor(m / 1440)] + ' ' + String(Math.floor(m % 1440 / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
     const before = K.ferjeStates(s, H(m - 0.5), false), lying = before.filter(n => n.v === 0 && dist(n.p, q0.p) <= off);
     t.ok(lying.length >= 1, `${q0.name}–${q1.name}: en ferje ligger ved ${q0.name} et halvt minutt før avgangen ${hhmm}`);
     const mid = K.ferjeStates(s, H(m + dur / 2), false), under = mid.filter(n => n.v > 0 && dist(n.p, at(R, R.len / 2)) < 0.05 && lying.some(q => q.id === n.id));
@@ -48,10 +48,13 @@ export default function (t){
   t.ok(JSON.stringify(K2.ferjeStates(s2, H(611.3), false)) === JSON.stringify(K.ferjeStates(s1, H(611.3), false)), 'en annen spiller (en ny kjerne) ser de samme ferjene på samme sted med samme navn');
 
   // 3. at night: every ferry that is not under way lies at a quay of her crossing, and few are under way at 03
-  let nN = 0, nU = 0, off = 0;
-  for (const s of F.s) for (const n of K.ferjeStates(s, H(180), false)){ nN++; if (n.v > 0){ nU++; continue; }
-    if (!s.pats.some(P => P.q.some(q => dist(n.p, F.q[q].p) <= s.L / 2000 + 0.04))) off++; }
+  let nN = 0, nU = 0, off = 0, close = 0;
+  for (const s of F.s){ const A = K.ferjeStates(s, H(180), false), lie = A.filter(n => n.v === 0);
+    for (const n of A){ nN++; if (n.v > 0){ nU++; continue; }
+      if (!s.pats.some(P => P.q.some(q => dist(n.p, F.q[q].p) <= s.L / 2000 + 0.04 + A.length * (s.L + 15) / 1000))) off++; }
+    for (let i = 0; i < lie.length; i++) for (let j = i + 1; j < lie.length; j++) if (dist(lie[i].p, lie[j].p) < s.L / 1000) close++; }
   t.ok(nN >= 150 && off === 0 && nU < nN * 0.15, `kl. 03 ligger ferjene ved en ferjekai (${nN} ferjer, ${nU} under fart, ${off} et annet sted)`);
+  t.ok(close <= 2, `to ferjer ved samme kai ligger etter hverandre, ikke i hverandre (${close} par nærmere enn en båtlengde: en legg for kort for rekka)`);
 
   // 4. the deal: every journey to one ferry, and a ferry's next journey leaves from where her last one ended, after it ended
   let trips = 0, dealt = 0, jump = 0, early = 0, wrap = 0, ferries = 0, fast = 0, legs = 0;

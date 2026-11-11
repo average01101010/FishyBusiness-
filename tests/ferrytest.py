@@ -26,7 +26,7 @@ ONE = """async ([a, b]) => {
   for (let dd = 0; dd < 7 && !best; dd++) for (const P of s.pats){ const n0 = F.q[P.q[0]].name, n1 = F.q[P.q[1]].name; if (!((n0 === a && n1 === b) || (n0 === b && n1 === a))) continue;
     let m = 0; for (const dt of s.w.t[s.w.d[(2 + dd) % 7]][P.i] || []){ m += dt; if (m >= 360 && (!best || m < best.m)) best = {m:m + dd * 1440, P}; } }
   if (!best) return {nodep:true};
-  const {m, P} = best, R = P.R[0], dur = P.tm[0], q0 = F.q[P.q[0]], q1 = F.q[P.q[1]], off = s.L / 2000 + 0.04, T0 = Math.round((Date.UTC(2027, 10, 17) - EPOCH) / 6e4);
+  const {m, P} = best, R = P.R[0], dur = P.tm[0], q0 = F.q[P.q[0]], q1 = F.q[P.q[1]], off = s.L / 2000 + 0.04 + 3 * (s.L + 15) / 1000, T0 = Math.round((Date.UTC(2027, 10, 17) - EPOCH) / 6e4);
   const side = p => { const h = atRoute(R, R.len / 2).hd; return {x:p.x + Math.cos(h) * 2, y:p.y + Math.sin(h) * 2}; };
   const at = (mi, p) => { S.t = T0 + Math.floor(mi); const bt = S.boat; bt.status = 'idle'; bt.port = null; bt.pos = side(p); bt.v = 0; S.plan = null; COASTM.k = '';
     return npcStates((T0 + mi) / 60).filter(n => n.type === 'ferry' && n.id !== 'ferje'); };

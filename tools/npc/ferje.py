@@ -94,7 +94,7 @@ def running(cal, exc):
     return runs
 
 def quay_name(n):
-    n = re.sub(r'\s+(ferje|ferge|hurtigbåt|hurtigbåt)(kai|leie|kaia|kaien)\b.*$', '', n.strip(), flags=re.I)
+    n = re.sub(r'\s+(ferje|ferge|hurtigbåt|hurtigbåts)(kai|leie|kaia|kaien)\b.*$', '', n.strip(), flags=re.I)
     n = re.sub(r'\s+(kai|kaia|brygge|ferje|ferjekai\s*\d*)$', '', n, flags=re.I)
     return re.sub(r'\s*\(.*?\)\s*', ' ', n).strip()
 
@@ -228,8 +228,12 @@ def main():
     print('journeys of the car ferries:', len(trips), 'stops:', len(stops), flush=True)
     wk = week_of(runs, trips, today + datetime.timedelta(days=1), today + datetime.timedelta(days=48))
     if not wk: raise SystemExit('the timetable has no journeys in the next six weeks')
-    y = today.year + (1 if today > datetime.date(today.year, SUMMER[0][0], SUMMER[0][1]) else 0)
-    sm = week_of(runs, trips, datetime.date(y, *SUMMER[0]), datetime.date(y, *SUMMER[1]))
+    # the summer of this year till it is over (a run in July takes the summer it is in), then the next
+    y = today.year + (1 if today > datetime.date(today.year, SUMMER[1][0], SUMMER[1][1]) else 0)
+    sm = week_of(runs, trips, max(today + datetime.timedelta(days=1), datetime.date(y, *SUMMER[0])), datetime.date(y, *SUMMER[1]))
+    if sm and wk >= datetime.date(y, SUMMER[0][0], SUMMER[0][1]) - datetime.timedelta(days=6) and wk <= datetime.date(y, *SUMMER[1]):
+        # the ordinary week must not be a summer week: the best of the six weeks after the summer, where the timetable reaches
+        wk = week_of(runs, trips, datetime.date(y, *SUMMER[1]) + datetime.timedelta(days=7), datetime.date(y, *SUMMER[1]) + datetime.timedelta(days=55)) or wk
     print('the week:', wk, 'the summer week:', sm, flush=True)
 
     # the quays: the stops of one stop place are one quay, at the mean of the stops used
@@ -251,7 +255,7 @@ def main():
         if len(st) < 2: continue
         t0 = st[0][2]; tm = []
         for k in range(1, len(st)):
-            tm.append(max(st[k][1], (tm[-1] if tm else t0) + 1) if True else 0)   # an arrival is at least a minute after the departure before it
+            tm.append(max(st[k][1], (tm[-1] if tm else t0) + 1))   # an arrival is at least a minute after the departure before it
             if k < len(st) - 1: tm.append(max(st[k][2], tm[-1]))
         key = (tuple(s[0] for s in st), tuple(v - t0 for v in tm)); L = lines[t['route']]; pi = L['pat'].setdefault(key, len(L['pat']))
         for wkey, mon in (('w', wk), ('s', sm)):

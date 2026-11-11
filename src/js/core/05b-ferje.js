@@ -23,10 +23,10 @@ const FERJE_WIND = [20, 22, 25];
 const FERJE_WEEK = 10080;
 const FERJE_N1 = ['Stor', 'Lang', 'Ytter', 'Inner', 'Nord', 'Sør', 'Vest', 'Aust', 'Blå', 'Grå', 'Kvit', 'Høg', 'Låg', 'Brei', 'Djup'];
 const FERJE_N2 = ['skjæret', 'båen', 'flua', 'straumen', 'leia', 'tangen', 'odden', 'taren', 'dønninga', 'bråttet', 'kavlen', 'fallet', 'røsta', 'drivet', 'draget'];
-const FERJE = {s:null, q:[], sum:null};
+const FERJE = {s:null, q:[], sum:null, legs:new Map()};
 function ferjeInit(){
   if (FERJE.s) return FERJE;
-  const D = FERJE_D || {q:[], l:[], s:[], meta:{}}, legs = new Map();
+  const D = FERJE_D || {q:[], l:[], s:[], meta:{}}, legs = FERJE.legs;
   FERJE.q = D.q.map(q => ({name:q[0], p:{x:q[1] / 1000, y:q[2] / 1000}})); FERJE.sum = D.meta && D.meta.sumDays || null; FERJE.s = [];
   for (const [a, b, f] of D.l){ const pts = [[f[0] / 1000, f[1] / 1000]]; let x = f[0], y = f[1]; for (let i = 2; i < f.length; i += 2){ x += f[i]; y += f[i + 1]; pts.push([x / 1000, y / 1000]); }
     legs.set(a + '|' + b, prepRoute(pts)); legs.set(b + '|' + a, prepRoute(pts.slice().reverse())); }
@@ -72,16 +72,16 @@ function ferjeChain(s, W){
 function ferjeHop(s, a, b){
   for (const P of s.pats) for (let j = 0; j < P.R.length; j++){ const dep = j ? P.tm[2 * j - 1] : 0, dur = P.tm[2 * j] - dep;
     if (P.q[j] === a && P.q[j + 1] === b) return {i:-1, q:[a, b], tm:[dur], R:[P.R[j]], dur};
-    if (P.q[j] === b && P.q[j + 1] === a) return {i:-1, q:[a, b], tm:[dur], R:[prepRoute(P.R[j].pts.slice().reverse().map(p => [p.x, p.y]))], dur}; }
+    if (P.q[j] === b && P.q[j + 1] === a && FERJE.legs.has(a + '|' + b)) return {i:-1, q:[a, b], tm:[dur], R:[FERJE.legs.get(a + '|' + b)], dur}; }
   return null;
 }
 // which of a ferry's journeys are sailed in the week that began at hour H0: not one that leaves in a wind over her limit, and not one
 // from a quay she is not at because of it. Worked out once per ferry and week.
 function ferjeSailed(s, v, H0){
-  if (v.H0 === H0) return v.ok;
+  const M = v.okm || (v.okm = new Map()); if (M.has(H0)) return M.get(H0); if (M.size > 3) M.clear();   // (this week and the next, for a track or a look ahead across Sunday night)
   const lim = FERJE_WIND[s.k], ok = []; let q = v.tr[0].P.q[0];
   for (const tr of v.tr){ const go = tr.P.q[0] === q && windAt(H0 + tr.t0 / 60, FERJE.q[q].p) < lim; ok.push(go); if (go) q = tr.P.q[tr.P.q.length - 1]; }
-  v.H0 = H0; return v.ok = ok;
+  M.set(H0, ok); return ok;
 }
 // where a ferry is w minutes into the week: under way on a leg of the journey she is on, or at the quay. The legs are sailed at an
 // even speed between the timetable's departure and arrival, from half her length off the one quay to half her length off the other
@@ -92,11 +92,11 @@ function ferjeAt(s, v, w, ok){
   let tr, e; if (k < 0){ tr = v.tr[v.tr.length - 1]; e = w + FERJE_WEEK - tr.t0; if (ok && !ok[v.tr.length - 1]){ tr = v.tr[0]; e = -1; } } else { tr = v.tr[k]; e = w - tr.t0; }
   const P = tr.P, T = P.tm, n = P.R.length, off = R => s.lg ? 0 : Math.min(s.L / 2000 + 0.008, R.len * 0.25);
   const lie = (R, end) => { if (s.lg && P.q[end ? n : 0] === s.pats[0].q[0]){ const a = atRoute(s.pats[0].R[0], 0); return {p:a.p, hd:a.hd, v:0, q:P.q[end ? n : 0]}; }
-    const a = atRoute(R, end ? R.len - off(R) : off(R)); return {p:a.p, hd:end ? a.hd : a.hd + Math.PI, v:0, q:P.q[end ? n : 0]}; };
+    const a = atRoute(R, end ? R.len - off(R) : off(R)); return {p:a.p, hd:end ? a.hd : a.hd + Math.PI, v:0, q:P.q[end ? n : 0], R, end, o:off(R)}; };
   if (e < 0) return lie(P.R[0], false);
   for (let j = 0; j < n; j++){
     const dep = j ? T[2 * j - 1] : 0, arr = T[2 * j], R = P.R[j], o = off(R);
-    if (e < dep){ const a = atRoute(P.R[j - 1], P.R[j - 1].len - off(P.R[j - 1])); return {p:a.p, hd:a.hd, v:0, q:P.q[j]}; }
+    if (e < dep){ const R0 = P.R[j - 1], a = atRoute(R0, R0.len - off(R0)); return {p:a.p, hd:a.hd, v:0, q:P.q[j], R:R0, end:true, o:off(R0)}; }
     if (e < arr){ const run = R.len - 2 * o, a = atRoute(R, o + run * (e - dep) / (arr - dep)); return {p:a.p, hd:a.hd, v:Math.round(run / ((arr - dep) / 60) / NM / gridScale(a.p) * 10) / 10}; }
   }
   return lie(P.R[n - 1], true);
@@ -118,10 +118,13 @@ function ferjeName(s, vi){
 function ferjeStates(s, H, wx = true, C = ferjeClock(H), only){
   if (s.m && (C.mon < s.m[0] || C.mon > s.m[1])) return [];
   const sk = C.sum && s.s ? 's' : 'w', W = s[sk]; if (!W) return [];
-  const V = s.ch[sk] || (s.ch[sk] = ferjeChain(s, W)), out = [];
+  let V = s.ch[sk]; if (!V){ V = s.ch[sk] = ferjeChain(s, W); for (let vi = 0; vi < V.length; vi++) ferjeName(s, vi); }   // (named in order, so a name never depends on who was asked for first)
+  const out = [], at = new Map();
   for (let vi = 0; vi < V.length; vi++){
-    const id = s.id || 'j' + s.i + '.' + vi; if (only && only !== id) continue;
     const a = ferjeAt(s, V[vi], C.w, wx && !s.lg ? ferjeSailed(s, V[vi], C.H0) : null);
+    // two ferries at the same quay lie one behind the other along the leg, a length and 15 m apart (the first by her number at the quay)
+    if (a.R && !s.lg){ const k = at.get(a.q) || 0; at.set(a.q, k + 1); if (k){ const d = Math.min(a.o + k * (s.L + 15) / 1000, a.R.len * 0.45), q = atRoute(a.R, a.end ? a.R.len - d : d); a.p = q.p; } }
+    const id = s.id || 'j' + s.i + '.' + vi; if (only && only !== id) continue;
     const n = {id, name:ferjeName(s, vi), type:'ferry', p:s.lg ? berthShift(a.p, 'ferje', true) : a.p, hd:a.hd, v:a.v, L:s.L, B:s.B, T:s.T}; if (s.cs){ n.cs = s.cs; n.own = s.own; }   // (her made-up call sign and owner, for the AIS card)
     out.push(n);
   }
