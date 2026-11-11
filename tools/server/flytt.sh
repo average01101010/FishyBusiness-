@@ -3,7 +3,8 @@
 # smaller one, «få det gjort først som sist»). Run as root on the NEW server, with the old one still serving the players:
 #
 #   ssh -A root@<the new server>          (-A lends this login your key, so the new server can read from the old one)
-#   curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/flytt.sh | bash -s detstorebla.no <the old server's address>
+#   curl -fsSL https://raw.githubusercontent.com/average01101010/FishyBusiness-/ccr-5e1ba2f4-pusvyd/tools/server/flytt.sh -o flytt.sh
+#   bash flytt.sh detstorebla.no <the old server's address>
 #
 # What it does, in this order, and nothing on the old server is changed (it is only read):
 #   1. takes the save gate off this server if it is here (its services, its files and the database key): the gate gets a server of its
@@ -27,17 +28,19 @@ export DEBIAN_FRONTEND=noninteractive
 command -v rsync >/dev/null || { apt-get update -q; apt-get install -yq rsync; }
 
 # one login to the old server for all of it (a password is asked for once, or the key lent with ssh -A is used)
+# ssh -n on every command: this script may come through «curl | bash», and ssh would else read the rest of it as its input
+# (11.11.2026: it stopped silently after the first ssh). rsync gives its ssh its own input, so -e "\$SSH" stays without -n
 say "Reading from the old server ($OLD)"
 CM=$(mktemp -d); SSH="ssh -o ControlMaster=auto -o ControlPath=$CM/s -o ControlPersist=600 -o StrictHostKeyChecking=accept-new"
 trap 'ssh -o ControlPath=$CM/s -O exit root@$OLD 2>/dev/null || true; rm -rf "$CM"' EXIT
-if ! $SSH "root@$OLD" true; then
+if ! $SSH -n "root@$OLD" true; then
   echo "Could not log in to root@$OLD from here. Log in to this server with «ssh -A root@$IP4» from the machine you reach the old one from,"
   echo "and run this again. Nothing was changed."; exit 1
 fi
-$SSH "root@$OLD" "test -s $SITE/current/index.html && test -s /etc/dsb-rt.env && test -s /home/deploy/.ssh/authorized_keys" \
+$SSH -n "root@$OLD" "test -s $SITE/current/index.html && test -s /etc/dsb-rt.env && test -s /home/deploy/.ssh/authorized_keys" \
   || { echo "The old server does not look like the game's (no $SITE/current, relay secret or upload key). Nothing was changed."; exit 1; }
-echo "The old server has: $($SSH "root@$OLD" "cut -c1-80 $SITE/current/version.json" 2>/dev/null || echo '?')"
-PUB=$($SSH "root@$OLD" "cat /home/deploy/.ssh/authorized_keys" | sed -n 's/^.*\(ssh-[a-z0-9-]* [A-Za-z0-9+\/=]* *[^ ]*\) *$/\1/p' | head -1)
+echo "The old server has: $($SSH -n "root@$OLD" "cut -c1-80 $SITE/current/version.json" 2>/dev/null || echo '?')"
+PUB=$($SSH -n "root@$OLD" "cat /home/deploy/.ssh/authorized_keys" | sed -n 's/^.*\(ssh-[a-z0-9-]* [A-Za-z0-9+\/=]* *[^ ]*\) *$/\1/p' | head -1)
 case "$PUB" in ssh-*) ;; *) echo "Could not read the upload key from the old server. Nothing was changed."; exit 1;; esac
 
 # ---------- 1. the save gate off this server ----------
@@ -55,7 +58,7 @@ fi
 
 # ---------- 2. the relay's secret, before setup.sh would make a new one ----------
 say "The relay's secret (the same as the database has)"
-$SSH "root@$OLD" "cat /etc/dsb-rt.env" > /etc/dsb-rt.env.new
+$SSH -n "root@$OLD" "cat /etc/dsb-rt.env" > /etc/dsb-rt.env.new
 grep -qE '^RT_SECRET=[0-9a-f]{64}' /etc/dsb-rt.env.new || { rm -f /etc/dsb-rt.env.new; echo "The relay's secret on the old server is not as expected. Stopped."; exit 1; }
 chmod 600 /etc/dsb-rt.env.new; chown root:root /etc/dsb-rt.env.new; mv /etc/dsb-rt.env.new /etc/dsb-rt.env
 
@@ -70,7 +73,7 @@ say "Copying the site (current, test and the relay)"
 for d in current test rt; do rsync -a --delete -e "$SSH" "root@$OLD:$SITE/$d/" "$SITE/$d/"; done
 chown -R deploy:deploy "$SITE/current" "$SITE/test" "$SITE/rt"
 say "Copying the HTTPS certificates"
-if $SSH "root@$OLD" "test -d $CERTS"; then
+if $SSH -n "root@$OLD" "test -d $CERTS"; then
   systemctl stop caddy
   install -d -m 700 -o caddy -g caddy "$CERTS"
   rsync -a --delete -e "$SSH" "root@$OLD:$CERTS/" "$CERTS/"
