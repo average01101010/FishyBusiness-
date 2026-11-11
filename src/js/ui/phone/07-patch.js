@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['u28-101126', '10.11.2026', 'Nettbrett og PC', 'Tablet and PC', [
+       ['Statusboksen er så høy som det den viser, skuffen i kartplotteren ligger under stripa, og telefonknappen gjemmer seg mens telefonen er oppe.', 'The status box is as tall as what it shows, the drawer in the chart plotter lies under the strip, and the phone button hides while the phone is open.']]],
     ['opp5-101126', '10.11.2026', 'Oppgraderingene synes om bord', 'The upgrades show aboard', [
        ['Linesetteren og garnrenna står nå over hekken når de er om bord: en rustfri renne med rulle for lina, og en bred renne for garna. Med stampemagasin står det et rullebord for stampene innenfor rekka der dekket har plass. Er båten rigget for garn og har begge, står garnrenna der; ellers linesetteren.', 'The line setter and the net chute now stand over the stern when they are aboard: a stainless chute with a roller for the line, and a wide chute for the nets. With the tub magazine a roller rack for the tubs stands inside the rail where the deck has room. Rigged for nets with both aboard she carries the net chute; otherwise the line setter.'],
        ['Kniven og høtten ser ut som trinnet båten har: nye sløyekniver med gult skaft, kniver i ett stykke stål med stålhanske på den andre handa, stålhøtt og den lange høtten. Høtten står ved ripa ved haleren når ingen bruker den.', 'The knife and the gaff look like the tier the boat has: new gutting knives with a yellow handle, knives in one piece of steel with a steel glove on the other hand, the steel gaff and the long gaff. The gaff stands at the rail by the hauler when nobody is using it.'],
@@ -1462,6 +1464,11 @@
   const patchNew = () => { const i = PATCH.findIndex(p => p[0] === S.settings.patchSeen); return i < 0 ? PATCH.length : i; };
   function patch(){
     const seen = S.settings.patchLast, h = ['<div class="ph-c">'];
+    // the test edition (L1b, 10.11.2026; the channel test, cloudChannel() in ui/10f-cloud.js) says so on top: its notes are the newest
+    // on the working branch, and the players get them with the next release. The production shows what is released, since the notes
+    // lie in the build
+    if (typeof cloudChannel === 'function' && cloudChannel() === 'test')
+      h.push('<p class="ph-note" id="patchTest"><span class="pnew ptest">' + L('på test', 'on test') + '</span> ' + L('Dette er testutgaven. Det nyeste her kommer til detstorebla.no med neste oppdatering.', 'This is the test build. The newest here reaches detstorebla.no with the next update.') + '</p>');
     for (const [id, date, no, en, lines] of PATCH)
       h.push('<div class="ph-card patchc"><h4>' + L(no, en) + (seen && PATCH.findIndex(p => p[0] === id) < PATCH.findIndex(p => p[0] === seen) ? ' <span class="pnew">' + L('Ny', 'New') + '</span>' : '') + '</h4><p class="ph-note">' + date + '</p><ul>' + lines.map(l => '<li>' + L(l[0], l[1]) + '</li>').join('') + '</ul></div>');
     h.push('</div>');
