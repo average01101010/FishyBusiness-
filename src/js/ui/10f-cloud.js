@@ -62,7 +62,10 @@ function cloudMeta(){
   return {version:(document.querySelector('meta[name=dsb-version]') || {}).content || 'dev', browser, platform, pwa, lang:S.lang, tz:(Intl.DateTimeFormat().resolvedOptions() || {}).timeZone,
     quality:(S.settings && S.settings.q3d) || 'auto', boat:b.type, home:b.port || null, cash:Math.round(S.cash || 0), fleet:fleet.length || 1,
     fleetValue:(() => { try { return Math.round(fleet.length ? fleet.reduce((a, v) => a + (((VES[(vget(v, 'boat') || {}).type] || {}).price) || 0), 0) : ((VES[b.type] || {}).price || 0)); } catch (e){ return null; } })(),
-    streak:(S.streak && S.streak.days) || 0, gameDays:Math.floor((S.t || 0) / 1440), sid:CLOUD.sid};
+    streak:(S.streak && S.streak.days) || 0, gameDays:Math.floor((S.t || 0) / 1440), sid:CLOUD.sid,
+    // the edition (L1d, 10.11.2026): 'test' on the test edition, nothing on the production; tm_error keeps it with the error (errors.ch),
+    // so the alert says «[test]» (an older tm_error never reads it)
+    ch:cloudChannel() || undefined};
 }
 
 // ---------- talking to Supabase ----------

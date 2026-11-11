@@ -95,6 +95,8 @@ Rekkefølgen er satt etter hva som verner spillerne først og hva Jonas må gjø
 
 ### L1d Feilvarselet (steg 77)
 
+**Bygd 10.11.2026 (Jonas' økt, grenen `ccr-d120fd15-qq3fhp`) etter V4 B: bare push.** E-posten under (`mail_queue`, `err-mail`, morgensammendraget) er ikke bygd og skal ikke bygges. Nede, heng og kanalen er bygd som beskrevet, med disse avvikene: reléet spørres med `GET /rt` uten billett (404 fra reléet er «oppe», 502 fra Caddy «nede»), vakten ligger i `ui/11b-watchdog.js`, og `err_alert` har én markør og én halvtime per kanal. Alt står under «Feilvarselet L1d» i `docs/systemer/tilbakemelding-og-admin.md`. Migreringen `20261110190000_err_kanal_uptime.sql` kjøres i produksjonen rett før slippet som tar med koden (den kan også kjøres før: den er bakoverkompatibel, og varselet for nede trenger ingen kode i spillet), og av Jonas for hånd i testprosjektet.
+
 - **E-post** (etter V4): `err_alert()` legger det samme varselet i en ny kø `mail_queue` i tillegg til push. En ny Edge Function `err-mail` (pg_cron hvert tiende minutt) sender det til Jonas' adresse gjennom e-posttjenesten (`RESEND_API_KEY` eller tilsvarende, som Jonas legger inn selv). Et sammendrag kommer hver morgen kl. 07 norsk tid, med feilene siste døgn gruppert som i Teknikk, og bare når det har vært noe.
 - **Nede:** en ny pg_cron-jobb (`dsb-uptime`, hvert femte minutt) spør `https://detstorebla.no/version.json` og reléet med pg_net. To bom på rad gir «detstorebla.no svarer ikke» på push og e-post, og nytt varsel når siden er oppe igjen. Det samme gjøres for testadressen, men uten push om natta.
 - **Heng:** en liten vakt i en Web Worker får et livstegn fra siden hvert sekund. Står hovedtråden stille i 15 s, sender vakten selv «Spillet hang i N s» med versjonen og hvor i oppstarten eller spillet det var (`tm_error` med `fetch` fra workeren, som ikke henger), og «hang i N s, kom tilbake» når siden kommer tilbake. Fra før fanges det som skjer før siden blir stående, i «Oppstarten står fast» ved neste start.
@@ -266,7 +268,7 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
 - **Supabase-koblingen i Claude** er satt opp for prosjektet `xcqbqzrsgycpeoyclakm`. Om den kan nå et testprosjekt uten nytt oppsett, er ikke sjekket.
 - **Kostnaden** for et prosjekt til på Supabase (V3 A) avhenger av planen produksjonen er på. Det er ikke lest her.
 - **CSP-en for spillet** (L1e) kan stoppe noe som bare skjer sjelden (en worker, en `blob:`-adresse, en lyd). `csptest` går en hel førstetur, men ikke alt i spillet.
-- **V2 A** forutsetter at feilvarselet (L1d) skiller test fra produksjon. Før det kan rutinen ikke se om testadressen har stått uten feil, og da slipper bare Jonas.
+- **V2 A** forutsetter at feilvarselet (L1d) skiller test fra produksjon. Før det kan rutinen ikke se om testadressen har stått uten feil, og da slipper bare Jonas. **Etter L1d (10.11.2026):** feilene er merket med kanalen, men feilene fra testadressen ligger i testprosjektets `errors`, som øktene og rutinen ikke når. Rutinen kan derfor fortsatt ikke lese om testadressen har stått uten feil; det kan bare Jonas (SQL Editor i testprosjektet, eller push derfra når `push-send` er satt opp der). L1b må enten gi rutinen en lesevei til testprosjektet eller la Jonas bekrefte.
 - Funnet om at butikken alt er i ekte modus, var ikke kjent for startmeldingen. Den sa «betalingen i ekte modus» som om den var i testmodus.
 
 ## 7. Hva planen ikke gjør
@@ -288,3 +290,4 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - `deploy.yml` nekter et testbygg til `current/` og et bygg uten kanal til `test/`
   - admin-siden i testbygget får testprosjektet
   - «Måles» i L1a: to opphav gir to `localStorage` og to tjenestearbeidere av seg selv; «Ny versjon er ute» spør `version.json` ved siden av siden. Ingen av delene er prøvd på den ekte testadressen ennå.
+- 10.11.2026: **L1d bygd** (steg 77, Jonas' økt, gren `ccr-d120fd15-qq3fhp`), etter V4 B: bare push. Nede (`dsb-uptime`), heng (vakten i en Web Worker) og kanalen i `errors` med «[test]» og nattestillhet. Ingen e-post. Koden går til testadressen; migreringen venter på Jonas (testprosjektet for hånd, produksjonen før slippet). Se «Feilvarselet L1d» i `docs/systemer/tilbakemelding-og-admin.md`.

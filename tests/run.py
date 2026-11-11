@@ -179,6 +179,13 @@ for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/1
 # The test edition (L1a, 10.11.2026): KYST_CHANNEL=test in build.mjs, cloud.json's block «test» and cloudCfg (10f-cloud.js), the label
 # (10p-install.js). kanaltest builds dist-kanal/ itself and compares it with dist/. On lines of their own
 LITE += ['kanaltest']
+# hengtest: the watchdog in a Web Worker that tells of a hang itself (ui/11b-watchdog.js, L1d 10.11.2026); the error alert's channel,
+# night and «down» are in sqltest (supabase/migrations/20261110190000_err_kanal_uptime.sql). On lines of their own
+LITE += ['hengtest']
+COVER['tests/hengtest.py'] = ['hengtest']
+COVER['src/js/ui/11b-watchdog.js'] = ['hengtest', 'errtest', 'boottest']
+COVER['supabase/migrations/20261110190000_err_kanal_uptime.sql'] = ['sqltest']
+COVER['src/js/ui/10f-cloud.js'] = COVER.get('src/js/ui/10f-cloud.js', []) + ['hengtest']
 COVER['tests/kanaltest.py'] = ['kanaltest']
 for _f in ('build.mjs', 'src/data/cloud.json', 'src/js/ui/10f-cloud.js', 'src/js/ui/10p-install.js'):
     COVER[_f] = COVER.get(_f, []) + ['kanaltest']

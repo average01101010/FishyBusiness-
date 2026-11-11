@@ -2034,3 +2034,15 @@
 2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
 2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
 2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-11 00:02	ccr-d120fd15-qq3fhp	679a35c+	trip2	OK	38	lite	samtidig	
+2026-11-11 00:03	ccr-d120fd15-qq3fhp	679a35c+	tabtest	OK	112	lite	samtidig	
+2026-11-11 00:03	ccr-d120fd15-qq3fhp	679a35c+	synctest	OK	73	lite	samtidig	
+2026-11-11 00:04	ccr-d120fd15-qq3fhp	679a35c+	cloudtest	FEIL	44	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-11 00:04	ccr-d120fd15-qq3fhp	679a35c+	errtest	OK	39	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	guesttest	OK	84	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	pwatest	OK	27	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	boottest	OK	30	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	pushtest	OK	23	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	starttest	OK	387	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	bootgtest	OK	162	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	kanaltest	OK	65	lite	samtidig	
