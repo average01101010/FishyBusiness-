@@ -90,8 +90,10 @@ jobs:
           MARKED: ${{ steps.what.outputs.marked }}
         run: |
           [ -n "$PR" ] || { echo "Slippet rører ekte penger eller src/legal/, og det finnes ingen åpen slipp-PR som Jonas kan ha sett (python3 tools/release/slipp.py lager den)."; exit 1; }
-          at=$(gh api "repos/${{ github.repository }}/issues/$PR/events" --paginate -q '[.[] | select(.event == "labeled" and .label.name == "jonas-har-sett")] | last | .created_at // ""')
-          has=$(gh pr view "$PR" --json labels -q '[.labels[].name] | index("jonas-har-sett") // ""')
+          # (the pull request has hundreds of events, so page by page: one line for each time the label was set, the last one counts)
+          at=$(gh api "repos/${{ github.repository }}/issues/$PR/events?per_page=100" --paginate --jq '.[] | select(.event == "labeled" and .label.name == "jonas-har-sett") | .created_at' | tail -n 1)
+          has=$(gh pr view "$PR" --json labels -q '.labels[] | select(.name == "jonas-har-sett") | .name')
+          echo "Merkelappen på PR #$PR: ${has:-ingen}, satt ${at:-aldri}."
           if [ -z "$has" ] || [ -z "$at" ]; then echo "Slippet rører ekte penger eller src/legal/: PR #$PR må ha merkelappen jonas-har-sett, satt av Jonas, før main flyttes."; exit 1; fi
           newest=$(git log -1 --format=%cI "${MARKED:-HEAD}" 2>/dev/null || true)
           if [ -n "$MARKED" ] && [ "$(date -d "$newest" +%s)" -gt "$(date -d "$at" +%s)" ]; then
