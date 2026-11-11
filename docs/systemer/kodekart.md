@@ -186,7 +186,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 429 `reqFill(eq, type)`
   - 447 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1371 linjer)
+## `src/js/core/03-simulation.js` (1390 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -391,32 +391,36 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1235 `luck(sp)`
   - 1239 `haillCap()`
   - 1248 `haillInit()`
-  - 1252 `haillMirror(list, used)`
-  - 1256 `haillStock(inv, srv, used)`
-  - 1261 `giveHaill(type, how, id)`
-  - 1266 `useHaill(type)`
-  - 1278 `pubEvening(H)`
-  - 1279 `pubOpen(H)`
-  - 1282 `capHold()`
-  - 1284 `cargoRoom()`
-  - 1286 `cargoMin(kg)`
-- **1287** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1290 `streakState()`
-  - 1291 `streakPct()`
-  - 1292 `streakTouch()`
-- **1303** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1307 `effTemp(H)`
-  - 1308 `coldPen(H, hs)`
-- **1315** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1330 `gradeOk(g, q)`
-  - 1331 `ordState()`
-  - 1334 `custNear(c)`
-  - 1339 `repOf(id)`
-  - 1341 `bkOrderable(H)`
-  - 1343 `bkPlant(id)`
-  - 1344 `custSp(c)`
-  - 1345 `spCatchable(sp, H)`
-  - 1347 `ordersTick(H)`
+  - 1256 `haillFromSrv(loc, srv, wait)`
+  - 1263 `srvToT(m, srvNow, t, world)`
+  - 1264 `tToSrv(m, srvNow, t, world)`
+  - 1267 `boostSrv(list, stack, now)`
+  - 1269 `haillMirror(list, used)`
+  - 1273 `haillStock(inv, srv, used)`
+  - 1278 `giveHaill(type, how, id)`
+  - 1283 `useHaill(type)`
+  - 1297 `pubEvening(H)`
+  - 1298 `pubOpen(H)`
+  - 1301 `capHold()`
+  - 1303 `cargoRoom()`
+  - 1305 `cargoMin(kg)`
+- **1306** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1309 `streakState()`
+  - 1310 `streakPct()`
+  - 1311 `streakTouch()`
+- **1322** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1326 `effTemp(H)`
+  - 1327 `coldPen(H, hs)`
+- **1334** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1349 `gradeOk(g, q)`
+  - 1350 `ordState()`
+  - 1353 `custNear(c)`
+  - 1358 `repOf(id)`
+  - 1360 `bkOrderable(H)`
+  - 1362 `bkPlant(id)`
+  - 1363 `custSp(c)`
+  - 1364 `spCatchable(sp, H)`
+  - 1366 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (162 linjer)
 
@@ -1444,7 +1448,7 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 53 `fsLand(total)`
   - 55 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (227 linjer)
+## `src/js/core/09f-merker.js` (229 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
@@ -1464,9 +1468,9 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **173** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
   - 175 `achCheck(quiet)`
   - 203 `achChapter(ch)`
-  - 214 `achSeed()`
-- **225** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 226 `freeFirst(k)`
+  - 216 `achSeed()`
+- **227** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 228 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (1005 linjer)
 
@@ -2360,7 +2364,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (899 linjer)
+## `src/js/ui/03-map.js` (917 linjer)
 
 ---------- map ----------
 
@@ -2369,52 +2373,54 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 11 `applyView()`
   - 24 `toMap(cx, cy)`
   - 26 `txt(p, s, cls, size, extra = '')`
-  - 32 `plotCol(d)`
-  - 33 `cssRGB(name)`
-- **34** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
-  - 44 `chartView(scale)`
-  - 50 `paintChart(scale)`
-  - 65 `chartPan()`
-  - 71 `chartWhole(V)`
-  - 77 `chartCompose(V, tiles, budget)`
-  - 111 `chartWork()`
-  - 122 `chartFlush()`
-  - 128 `chartTile(V, i, j, q)`
-  - 144 `chartWant(V)`
-  - 152 `chartPump()`
-  - 162 `chartLoadLine()`
-  - 168 `chartWarm(wps)`
-  - 175 `chartWarmNext()`
-  - 179 `chartCame(pk)`
-  - 194 `ruLayerCanvas(A)`
-  - 203 `chartVectors(V, again)`
-  - 262 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 269 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
-  - 392 `scheduleChart()`
-  - 395 `renderBase()`
-  - 409 `updateMapButtons()`
-  - 425 `tapName(mp, rr)`
-  - 440 `renderStatic()`
-  - 546 `portIcon(p, s, u)`
-  - 567 `anchorPath(x, y, s, u)`
-  - 575 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 594 `scheduleStatic()`
-  - 599 `aisTrack(id, H)`
-  - 604 `aisInfo(n)`
-  - 623 `sjvChartSvg(u, bp)`
-  - 633 `renderAisCard()`
-  - 641 `curArrowsOf(q, u, H, lab, halo)`
-  - 654 `curArrowsSvg(u)`
-  - 672 `renderDyn()`
-  - 761 `pinAdd(mp)`
-  - 766 `pinOpen(id, fresh)`
-  - 786 `pinKb()`
-  - 817 `ptrUp(e)`
-  - 847 `unzoom()`
-  - 854 `portByLabel(pt)`
-  - 859 `addWaypoint(pt)`
+  - 38 `placeOwnIds()`
+  - 42 `placeOwn(p, ids)`
+  - 44 `plotCol(d)`
+  - 45 `cssRGB(name)`
+- **46** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
+  - 56 `chartView(scale)`
+  - 62 `paintChart(scale)`
+  - 77 `chartPan()`
+  - 83 `chartWhole(V)`
+  - 89 `chartCompose(V, tiles, budget)`
+  - 123 `chartWork()`
+  - 134 `chartFlush()`
+  - 140 `chartTile(V, i, j, q)`
+  - 156 `chartWant(V)`
+  - 164 `chartPump()`
+  - 174 `chartLoadLine()`
+  - 180 `chartWarm(wps)`
+  - 187 `chartWarmNext()`
+  - 191 `chartCame(pk)`
+  - 206 `ruLayerCanvas(A)`
+  - 215 `chartVectors(V, again)`
+  - 274 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
+  - 281 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 404 `scheduleChart()`
+  - 407 `renderBase()`
+  - 421 `updateMapButtons()`
+  - 437 `tapName(mp, rr)`
+  - 456 `renderStatic()`
+  - 563 `portIcon(p, s, u)`
+  - 584 `anchorPath(x, y, s, u)`
+  - 592 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 611 `scheduleStatic()`
+  - 616 `aisTrack(id, H)`
+  - 621 `aisInfo(n)`
+  - 640 `sjvChartSvg(u, bp)`
+  - 650 `renderAisCard()`
+  - 658 `curArrowsOf(q, u, H, lab, halo)`
+  - 671 `curArrowsSvg(u)`
+  - 689 `renderDyn()`
+  - 778 `pinAdd(mp)`
+  - 783 `pinOpen(id, fresh)`
+  - 803 `pinKb()`
+  - 834 `ptrUp(e)`
+  - 864 `unzoom()`
+  - 871 `portByLabel(pt)`
+  - 876 `addWaypoint(pt)`
 
-## `src/js/ui/03b-route.js` (281 linjer)
+## `src/js/ui/03b-route.js` (282 linjer)
 
 ---------- the route editor: waypoint names, a timeline for the list, undo and redo, moving and inserting points ----------
 
@@ -2445,13 +2451,13 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
 - **127** «Autonav» (the button in the chart plotter, and the dock's Auto-nav): the next tap on the chart is where to go, and the route
   - 130 `leiaArm(on)`
   - 136 `leiaTo(pt, buoy, act)`
-  - 205 `deepNear(p, maxKm)`
-  - 215 `leiaStops()`
-  - 220 `leiaCompare()`
-- **237** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
-  - 245 `draftSea(tl)`
-  - 258 `routeSeaWatch()`
-  - 263 `routeSeaDraw()`
+  - 206 `deepNear(p, maxKm)`
+  - 216 `leiaStops()`
+  - 221 `leiaCompare()`
+- **238** the sea along the route (Ø8, 06.11.2026): the wave height on each leg at the minute the boat is there, as the local forecast gives it
+  - 246 `draftSea(tl)`
+  - 259 `routeSeaWatch()`
+  - 264 `routeSeaDraw()`
 
 ## `src/js/ui/03g-planmap.js` (120 linjer)
 
@@ -2666,12 +2672,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1494 linjer)
+## `src/js/ui/phone/07-patch.js` (1496 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1482 `patch()`
+  - 1484 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3141,13 +3147,13 @@ actions
   - 129 `tutFieldNear(pt, land, skip)`
   - 152 `chooseStart(pt, onProgress)`
 
-## `src/js/ui/09-hand-fishing.js` (59 linjer)
+## `src/js/ui/09-hand-fishing.js` (86 linjer)
 
 ---------- fishing by hand: jig, strike on the bite, reel without snapping the line ----------
 
 - **1** fishing by hand: jig, strike on the bite, reel without snapping the line
 
-## `src/js/ui/09b-pub.js` (366 linjer)
+## `src/js/ui/09b-pub.js` (368 linjer)
 
 ---------- the pub in 3D: a stool at the bar, seen in first person (Jonas 08.10.2026) ----------
 
@@ -3157,12 +3163,12 @@ actions
 - **101** a frame
 - **145** what can be tapped
 - **171** the panels
-- **221** the bartender: the evening's talk in the place's dialect, and a round for the crew
-- **246** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
-- **294** the notice board: Kystposten, the week's best, the trips
-- **305** the round table: the hands looking for a berth (the crew exchange)
-- **312** the top bar
-- **325** open and close
+- **223** the bartender: the evening's talk in the place's dialect, and a round for the crew
+- **248** the old hand at the bar with the echo sounder's news (tilbakemelding #58; Jonas 09.10.2026: «i puben 1 gang per spilldøgn»)
+- **296** the notice board: Kystposten, the week's best, the trips
+- **307** the round table: the hands looking for a berth (the crew exchange)
+- **314** the top bar
+- **327** open and close
 
 ## `src/js/ui/09c-naust3d.js` (303 linjer)
 
@@ -3398,36 +3404,47 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (239 linjer)
+## `src/js/ui/10i-shop.js` (400 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 28 `shopMode()`
-  - 34 `realKr(nok)`
-  - 36 `shopLabel(nok)`
-  - 41 `shopWhat(k)`
-  - 51 `payBuy(k, give)`
-  - 59 `shopFine()`
-  - 62 `shopGo(k)`
-  - 78 `shopYard()`
-  - 82 `shopGive(g, srv)`
-  - 104 `shopThanks(rc)`
-  - 123 `shopBack(list)`
-  - 152 `haillProbe()`
-  - 160 `haillTell(now)`
-  - 171 `shopClaim()`
-  - 225 `shopStart()`
+  - 37 `shopMode()`
+  - 43 `realKr(nok)`
+  - 45 `shopLabel(nok)`
+  - 50 `shopWhat(k)`
+  - 60 `payBuy(k, give)`
+  - 68 `shopFine()`
+  - 71 `shopGo(k)`
+  - 87 `shopYard()`
+  - 91 `shopGive(g, srv)`
+  - 113 `shopThanks(rc)`
+  - 132 `shopBack(list)`
+  - 161 `haillProbe()`
+  - 169 `haillTell(now)`
+  - 175 `haillTell1()`
+- **197** HS4: the server is the truth
+  - 201 `srvOnly()`
+  - 204 `pubAsk()`
+  - 211 `achHaillAsk()`
+  - 216 `yardUsed()`
+  - 226 `srvImport(st)`
+  - 239 `shopClaim4()`
+  - 255 `srvApply(st)`
+  - 325 `shopWords(gifts, thanks)`
+  - 332 `shopClaim()`
+  - 386 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (215 linjer)
+## `src/js/ui/10j-paint.js` (225 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
   - 180 `logoSet(L)`
   - 188 `logoCheck()`
-  - 196 `giveCos(k)`
-  - 210 `regSet(n)`
+  - 199 `cosSrv(owned)`
+  - 205 `giveCos(k)`
+  - 220 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
