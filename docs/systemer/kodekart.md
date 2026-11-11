@@ -2352,7 +2352,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (898 linjer)
+## `src/js/ui/03-map.js` (899 linjer)
 
 ---------- map ----------
 
@@ -2385,26 +2385,26 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 392 `scheduleChart()`
   - 395 `renderBase()`
   - 409 `updateMapButtons()`
-  - 424 `tapName(mp, rr)`
-  - 439 `renderStatic()`
-  - 545 `portIcon(p, s, u)`
-  - 566 `anchorPath(x, y, s, u)`
-  - 574 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 593 `scheduleStatic()`
-  - 598 `aisTrack(id, H)`
-  - 603 `aisInfo(n)`
-  - 622 `sjvChartSvg(u, bp)`
-  - 632 `renderAisCard()`
-  - 640 `curArrowsOf(q, u, H, lab, halo)`
-  - 653 `curArrowsSvg(u)`
-  - 671 `renderDyn()`
-  - 760 `pinAdd(mp)`
-  - 765 `pinOpen(id, fresh)`
-  - 785 `pinKb()`
-  - 816 `ptrUp(e)`
-  - 846 `unzoom()`
-  - 853 `portByLabel(pt)`
-  - 858 `addWaypoint(pt)`
+  - 425 `tapName(mp, rr)`
+  - 440 `renderStatic()`
+  - 546 `portIcon(p, s, u)`
+  - 567 `anchorPath(x, y, s, u)`
+  - 575 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 594 `scheduleStatic()`
+  - 599 `aisTrack(id, H)`
+  - 604 `aisInfo(n)`
+  - 623 `sjvChartSvg(u, bp)`
+  - 633 `renderAisCard()`
+  - 641 `curArrowsOf(q, u, H, lab, halo)`
+  - 654 `curArrowsSvg(u)`
+  - 672 `renderDyn()`
+  - 761 `pinAdd(mp)`
+  - 766 `pinOpen(id, fresh)`
+  - 786 `pinKb()`
+  - 817 `ptrUp(e)`
+  - 847 `unzoom()`
+  - 854 `portByLabel(pt)`
+  - 859 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (281 linjer)
 
@@ -2658,12 +2658,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1483 linjer)
+## `src/js/ui/phone/07-patch.js` (1485 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1471 `patch()`
+  - 1473 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

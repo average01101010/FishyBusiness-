@@ -7,6 +7,10 @@
 # fishermen gave (fiskeart_N, redskap_N, fra_N, til_N), its shape (the polygons, simplified) for F2, and the names are washed (2.6).
 # The spawning grounds (gyteomraader) and the nursery and feeding grounds (oppvekst_beiteomraade) of the same interviews come in as
 # kinds of their own (V3, Jonas: «Ta det mest realistiske»): a name, a point, the species and the months; never weight or pressure.
+# Ø14 F5 (11.11.2026): where Fiskeridirektoratet has little (first Finnmark, KV_FYLKER), Kartverket's place names in the sea come in
+# as a kind of their own (k = s): the fishing places, banks, shoals, edges and deeps of Sentralt stedsnavnregister (the open API
+# api.kartverket.no/stedsnavn/v1, CC BY 4.0), a name and a point only. Never weight, never pressure, no lines and no shape. A name
+# that already stands among the grounds within KV_DUP_KM is not taken twice.
 #
 #   python3 tools/npc/felt.py            (the layers are fetched into tools/npc/cache/; KYST_FELT=<file> writes there instead)
 #
@@ -25,7 +29,8 @@
 #   g     a string with one letter per ground: a active gear (seine, trawl, Danish seine), p passive (nets, line, jig, pots), b both,
 #         - for the spawning and nursery grounds (no gear)
 #   k     a string with one letter per ground: f a fishing ground (fiskeplass), g a spawning ground (gyteområde), o a nursery and
-#         feeding ground (oppvekst- og beiteområde). Only f is ever weight or pressure in the game.
+#         feeding ground (oppvekst- og beiteområde), s a place name in the sea from Kartverket (g is -, r is 0, no lines, no rings).
+#         Only f is ever weight or pressure in the game.
 #   l     [[[sp, gear, months], ...], ...] per ground: the species (index in meta.sp), the gear as bits (1 << index in meta.gear; 0 for
 #         the spawning and nursery grounds, or a line without gear) and the months as 12 bits (1 << 0 is January). A ground with no
 #         species the game knows has no lines (V2 A: it counts for the jig species all year).
@@ -44,6 +49,12 @@ LAYERS = {'fiskeplasser_aktive_redskap': ('f', 'a'), 'fiskeplasser_passive_redsk
 UNIT = 0.05            # km: 50 m is finer than any label needs
 MERGE_KM = 3.0         # the same name within 3 km is one ground (a ground is often mapped for both kinds of gear)
 SIMPLIFY_KM = 0.1      # the shapes: Douglas-Peucker to 100 m (F1 measured this against 500 m cells, docs/planer/fangstfelt.md)
+# Kartverket's place names in the sea (F5): the kinds taken (the API's codes; not båeISjø and skjærISjø, which are dangers to
+# shipping and no fishing places), the counties they are fetched for, and how near a ground of the same name makes it a double
+KV = 'https://api.kartverket.no/stedsnavn/v1/sted'
+KV_TYPES = ['fiskeplassISjø', 'bankeISjø', 'grunneISjø', 'eggISjø', 'havdyp']
+KV_FYLKER = ['56']     # Finnmark (east and west): the thinnest in the table of docs/planer/fangstfelt.md 2.5
+KV_DUP_KM = 1.0
 SHORT = 28             # a name longer than this is cut at a word for the chart (the whole name in nf)
 # the species the game knows (SPECIES in core/02-species-gear.js), by the name in Fiskeridirektoratet's lines («1022 TORSK»)
 SP = {'TORSK': 'torsk', 'HYSE': 'hyse', 'SEI': 'sei', 'LYR': 'lyr', 'LANGE': 'lange', 'BROSME': 'brosme', 'UER': 'uer', 'KVEITE': 'kveite',
@@ -65,6 +76,53 @@ def fetch(layer):
         except Exception as e:
             print('  WFS retry', layer, str(e)[:80]); time.sleep(5 * (i + 1))
     raise SystemExit('the WFS did not answer for ' + layer)
+
+def fetch_kv(fnr, typ):
+    """the places of one kind in one county from Kartverket's place-name API, all pages (the type filter works on /sted with the
+    type's code; the API gives at most 5000 per question, far above any kind in a county)"""
+    os.makedirs(CACHE, exist_ok=True); f = os.path.join(CACHE, f'kv-{fnr}-{typ}.json')
+    if os.path.exists(f) and time.time() - os.path.getmtime(f) < 20 * 86400: return json.load(open(f, encoding='utf-8'))
+    out = []; side = 1
+    while True:
+        q = urllib.parse.urlencode(dict(fnr=fnr, navneobjekttype=typ, treffPerSide=500, side=side, utkoordsys=25833))
+        for i in range(4):
+            try:
+                with urllib.request.urlopen(KV + '?' + q, timeout=120) as r: d = json.loads(r.read().decode('utf-8'))
+                break
+            except Exception as e:
+                print('  Kartverket retry', fnr, typ, str(e)[:80]); time.sleep(5 * (i + 1))
+        else: raise SystemExit(f'Kartverket did not answer for {fnr} {typ}')
+        out += d.get('navn', []); tot = d['metadata']['totaltAntallTreff']
+        if tot > 5000: raise SystemExit(f'{fnr} {typ}: {tot} places, over the API\'s 5000; fetch per municipality')
+        if len(out) >= tot or not d.get('navn'): break
+        side += 1
+    json.dump(out, open(f, 'w', encoding='utf-8'), ensure_ascii=False); return out
+
+def kv_name(st):
+    """the name of a place: an approved main name, the Norwegian one first (a place can have a Sami and a Kven name beside it);
+    None when the place has no approved name (only a historical or a proposed one)"""
+    ok = [n for n in st.get('stedsnavn', []) if n.get('navnestatus') == 'hovednavn' and (n.get('skrivemåtestatus') or '').split(' ')[0] in ('godkjent', 'vedtatt', 'privat') and n.get('skrivemåte')]
+    ok.sort(key=lambda n: (n.get('språk') != 'Norsk', n.get('skrivemåtestatus') != 'godkjent og prioritert'))
+    return ok[0]['skrivemåte'].strip() if ok else None
+
+def kv_places(G):
+    """Kartverket's names in the sea as grounds of the kind s, without those a ground of the same name already has within KV_DUP_KM"""
+    # (2 × UNIT over: the points are written in steps of UNIT, and the game measures between the written points)
+    out = []; seen = {}; st = {'places': 0, 'noname': 0, 'dup_felt': 0, 'dup_self': 0}
+    have = {}
+    for g in G:
+        if g[0]: have.setdefault(g[0].lower(), []).append((g[1], g[2]))
+    for fnr in KV_FYLKER:
+        for typ in KV_TYPES:
+            for s in fetch_kv(fnr, typ):
+                if s.get('stedstatus') != 'aktiv': continue
+                st['places'] += 1; n = kv_name(s); rp = s.get('representasjonspunkt') or {}
+                if not n or rp.get('koordsys') != 25833: st['noname'] += 1; continue
+                x, y = (rp['øst'] + 250000) / 1000, (8050000 - rp['nord']) / 1000; k = n.lower()
+                if any(math.hypot(x - a, y - b) < KV_DUP_KM + 2 * UNIT for a, b in have.get(k, [])): st['dup_felt'] += 1; continue
+                if any(math.hypot(x - a, y - b) < KV_DUP_KM + 2 * UNIT for a, b in seen.get(k, [])): st['dup_self'] += 1; continue
+                seen.setdefault(k, []).append((x, y)); out.append([n, x, y, 0.0, '-', 's', [], [], n if len(n) <= SHORT else n[:SHORT] + '…', typ])
+    return out, st
 
 def rings(member):
     """the exterior rings of the feature's polygons, in the game's frame (km)"""
@@ -258,6 +316,10 @@ def main():
             if g[4] not in hit[4]: hit[4] += g[4]
             hit[3] += g[3]; hit[6] = hit[6] + g[6]; hit[7] = hit[7] + g[7]; continue
         g = list(g); out.append(g); byname.setdefault(key, []).append(g)
+    # Kartverket's names in the sea (F5), after the joining: never joined with a ground, only left out where one has the name
+    kv, kvst = kv_places(out); out += kv
+    print(f'Kartverket: {len(kv)} names in the sea taken of {kvst["places"]} places ({json.dumps({t: sum(1 for g in kv if g[9] == t) for t in KV_TYPES}, ensure_ascii=False)}); '
+          f'{kvst["dup_felt"]} left out for a ground of the same name within {KV_DUP_KM} km, {kvst["dup_self"]} doubles among themselves, {kvst["noname"]} without an approved name')
     out.sort(key=lambda g: (g[2], g[1]))
     p = []; px = py = 0
     for g in out:
@@ -278,9 +340,10 @@ def main():
             varint(len(v) // 2, B)
             for c in v: varint(zz(c), B)
         if g[7]: ncell += len(cells_of(g[7], 0.5))
-    kinds = {k: sum(1 for g in out if g[5] == k) for k in 'fgo'}
+    kinds = {k: sum(1 for g in out if g[5] == k) for k in 'fgos'}
     D = {'meta': {'made': time.strftime('%Y-%m-%d'),
-                  'src': 'Fiskeridirektoratet, «Fiskeplasser – redskap» (aktive og passive redskap), «Gyteområder» og «Oppvekst- og beiteområder», WFS FiskeridirWFS_fiskeri, NLOD',
+                  'src': 'Fiskeridirektoratet, «Fiskeplasser – redskap» (aktive og passive redskap), «Gyteområder» og «Oppvekst- og beiteområder», WFS FiskeridirWFS_fiskeri, NLOD; Kartverket, Sentralt stedsnavnregister (stedsnavn i sjøen, slaget s), api.kartverket.no/stedsnavn/v1, CC BY 4.0',
+                  'kv': {'fylker': KV_FYLKER, 'types': KV_TYPES},
                   'n': len(out), 'unit': UNIT, 'sp': SPL, 'gear': GEAR, 'kinds': kinds, 'wash': WASH, 'simplify': SIMPLIFY_KM, 'sb': len(B)},
          'p': p, 'n': [g[8] for g in out], 'nf': [[i, g[0]] for i, g in enumerate(out) if g[8] != g[0]],
          'r': [round(math.sqrt(g[3]) * 10) for g in out],

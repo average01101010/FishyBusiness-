@@ -1,5 +1,5 @@
 // The fishing grounds along the whole coast (Ø14 F1 of docs/planer/fangstfelt.md, 08.11.2026; tools/npc/felt.py → src/data/felt.json and
-// felt-s.b64, core/01e-marks.js feltData, feltIn, feltShape): the three kinds, the species with gear and months from Fiskeridirektoratet,
+// felt-s.b64, core/01e-marks.js feltData, feltIn, feltShape): the three kinds (and since Ø14 F5 Kartverket's names in the sea, the kind s), the species with gear and months from Fiskeridirektoratet,
 // the washed names, the shapes around their points, Senja's grounds as all the others, and the spawning and nursery grounds never in
 // the fleet's pressure (core/03g-trykk.js trkAreas, trkCellW). And Ø14 F2 (08.11.2026, core/03j-felt.js): the fish on the grounds as the
 // good spots stand in the sea, the location's sum the same, no edge, and the baseline as high on a ground as beside it.
@@ -67,8 +67,8 @@ export default function (t){
   t.ok(box.length === by('f').filter(f => f.n).length && box.every(f => f.k === 'f' && f.n), `feltIn gir bare fiskeplassene med navn (${box.length})`);
   // with all (the chart's names, F4): the named spawning and nursery grounds too, after every fishing ground, none without a name
   const all = K.feltIn(-1e4, -1e4, 1e4, 1e4, true), firstGO = all.findIndex(f => f.k !== 'f');
-  t.ok(all.length === D.filter(f => f.n).length && all.every(f => f.n) && firstGO === box.length && all.slice(firstGO).every(f => f.k === 'g' || f.k === 'o')
-    && all.slice(firstGO).every((f, i, a) => !i || a[i - 1].r >= f.r), `feltIn med all gir også gyte- og oppvekstområdene med navn, etter fiskeplassene og de største først (${all.length}, ${all.length - box.length} g og o)`);
+  t.ok(all.length === D.filter(f => f.n).length && all.every(f => f.n) && firstGO === box.length && all.slice(firstGO).every(f => f.k === 'g' || f.k === 'o' || f.k === 's')
+    && all.slice(firstGO).every((f, i, a) => !i || a[i - 1].r >= f.r), `feltIn med all gir også gyte- og oppvekstområdene og Kartverkets sjønavn, etter fiskeplassene og de største først (${all.length}, ${all.length - box.length} g, o og s)`);
   // 7. the spawning and nursery grounds are never pressure: trkAreas counts the same without them, and a cell by a spawning ground
   // far from any fishing ground has no ground weight
   K.set('S', K.newState()); const TRK = K.get('TRK');
@@ -78,7 +78,36 @@ export default function (t){
   const lone = by('g').find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4) && K.lokOfCell({x:f.x, y:f.y}).l >= 0);
   if (lone){ const c = {cx:lone.x, cy:lone.y}; t.eq(K.trkCellW(c), 1, `en rute ved gyteområdet ${lone.n} uten fiskeplass i nærheten har ingen feltvekt i trykket`); }
   else t.ok(false, 'fant ikke et gyteområde langt fra fiskeplassene');
+  f5(t, K, D, S);
   f2(t, K, D, S);
+}
+
+// ---- Ø14 F5 (11.11.2026): Kartverket's place names in the sea where Fiskeridirektoratet has little (the kind s) ----
+function f5(t, K, D, S){
+  const FELT = K.get('FELT'), TRK = K.get('TRK'), s = D.filter(f => f.k === 's'), raw = JSON.parse(readFileSync(join(SRC, 'data', 'felt.json'), 'utf8'));
+  // 1. the kind is there, in Finnmark only (first the thinnest stretch), with the names the plan checked by Båtsfjord
+  t.ok(s.length > 500 && s.length < 1200 && raw.meta.kinds.s === s.length, `slaget s finnes: ${s.length} sjønavn fra Kartverket (meta.kinds.s ${raw.meta.kinds.s})`);
+  t.ok(/Kartverket/.test(raw.meta.src) && /CC BY 4\.0/.test(raw.meta.src), 'kilden og lisensen for sjønavnene står i meta.src (Kartverket, CC BY 4.0)');
+  const ll = s.map(f => K.natLL(f.x, f.y)), out = ll.filter(q => q.lat < 69.6 || q.lon < 20.5).length;
+  t.eq(out, 0, 'alle sjønavnene ligger i Finnmark (nord for 69,6° N og øst for 20,5° Ø)');
+  const bf = K.P(70.635, 29.72), near = n => s.find(f => f.n === n && Math.hypot(f.x - bf.x, f.y - bf.y) < 40);
+  t.ok(near('Leira') && near('Seigrunnen') && near('Skarberggrunnen'), `ved Båtsfjord: havdypet Leira og grunnene Seigrunnen og Skarberggrunnen (${s.filter(f => Math.hypot(f.x - bf.x, f.y - bf.y) < 20).length} sjønavn innen 20 km)`);
+  // 2. a name and a point only: no gear, no lines, no size, no shape
+  t.ok(s.length > 0 && s.every(f => f.g === '-' && f.l.length === 0 && f.r === 0 && f.n), 'et sjønavn er bare navn og punkt: uten redskap, linjer og størrelse');
+  if (S) t.ok(s.length > 0 && s.every(f => S[f.i].length === 0), 'og uten form (0 ringer i felt-s.b64, så antallet følger felt.json)');
+  // 3. never the same name twice within 1 km: not against a ground of any kind, and not among themselves
+  const cell = new Map(), key = (x, y) => Math.floor(x) + ':' + Math.floor(y);
+  for (const f of D){ if (!f.n) continue; const k = key(f.x, f.y); if (!cell.has(k)) cell.set(k, []); cell.get(k).push(f); }
+  const dbl = s.filter(f => { for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) for (const o of cell.get(key(f.x + dx, f.y + dy)) || [])
+    if (o !== f && o.nf.toLowerCase() === f.nf.toLowerCase() && Math.hypot(o.x - f.x, o.y - f.y) < 1) return true; return false; });
+  t.ok(s.length > 0 && dbl.length === 0, `ingen sjønavn står to ganger innen 1 km (${dbl.length}${dbl.slice(0, 3).map(f => ' «' + f.nf + '»').join('')})`);
+  // 4. never weight and never pressure: a cell by a sea name far from any fishing ground has no ground weight, and the fish on the
+  // grounds (03j-felt.js) are built from the fishing grounds alone
+  const lone = s.find(f => !D.some(o => o.k === 'f' && Math.hypot(o.x - f.x, o.y - f.y) < TRK.groundR + 4));
+  if (lone){ const c = {cx:lone.x, cy:lone.y}; t.ok(K.trkCellW(c) === 1 && c.gwa === 1, `en rute ved sjønavnet ${lone.n} uten fiskeplass i nærheten har ingen feltvekt i trykket`); }
+  else t.ok(false, 'fant ikke et sjønavn langt fra fiskeplassene');
+  TRK.A = null; const A1 = K.trkAreas(), keep = FELT.d; FELT.d = keep.filter(f => f.k !== 's'); TRK.A = null; const A2 = K.trkAreas(); FELT.d = keep; TRK.A = null;
+  t.ok(s.length > 0 && A1.gc.every((v, i) => v === A2.gc[i]) && A1.gch.every((v, i) => v === A2.gch[i]), 'trkAreas teller det samme med og uten sjønavnene: ingen s i trykket');
 }
 
 // ---- Ø14 F2: the fish on the grounds (core/03j-felt.js) ----

@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['sjonavn-111126', '11.11.2026', 'Flere navn i sjøkartet i Finnmark', 'More names on the chart in Finnmark', [
+       ['Grunner, banker og havdyp i Finnmark står nå med navn i sjøkartet når du zoomer inn, fra Kartverkets stedsnavn. Trykk på et navn for å se hva det er.', 'Shoals, banks and deeps in Finnmark now carry their names on the chart when you zoom in, from the Norwegian Mapping Authority\'s place names. Tap a name to see what it is.']]],
     ['trim-111126', '11.11.2026', 'Trim på alle båter', 'Tuning on every boat', [
        ['Trim virker nå på alle båter, også skiffen med påhengsmotor.', 'Tuning now works on every boat, the outboard skiff too.']]],
     ['ob3-111126', '11.11.2026', 'Settingen og redskapet om bord', 'Setting, and the gear aboard', [
