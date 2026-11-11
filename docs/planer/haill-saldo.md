@@ -176,7 +176,7 @@ Rekkefølgen og hva som kommer før lansering, er avgjort (V7 A). Det som står 
   - **A (anbefalt):** HS4 for haill og det som er kjøpt for ekte penger; for kronene sjekken i HS5 flyttet over lanseringslinja, så en konto med flere kroner enn serverens tall (landingene, megleren, kvotemarkedet) forklarer, merkes i admin, og du avgjør (for eksempel ut av topplistene). Det fanger den som skriver inn en million, ikke den som jukser litt.
   - B: kronene på serveren (V4 B): hver krone inn og ut gjennom en funksjon, og serveren regner salget, lønna, dieselen og driftsplanene selv. Det er en omskriving av spillet over flere måneder, og spillet slutter å virke uten nett.
 
-- **V6. Taket når haillen i lagringene flyttes til serveren (HS4; valg 35 i køen, 11.11.2026).** Venter på svaret. Importen (`haill_import`) tar lagringens egne haill (puben, kapittel 2) inn på serveren én gang per konto, innenfor et tak; kjøpt haill, takk-haill og velkomstgaven er utenfor taket og mistes aldri. Tallet er gjettet, fordi lagringene ikke er talt.
+- **V6. Taket når haillen i lagringene flyttes til serveren (HS4; valg 36 i køen, 11.11.2026).** Venter på svaret. Importen (`haill_import`) tar lagringens egne haill (puben, kapittel 2) inn på serveren én gang per konto, innenfor et tak; kjøpt haill, takk-haill og velkomstgaven er utenfor taket og mistes aldri. Tallet er gjettet, fordi lagringene ikke er talt.
   - **A (anbefalt):** tell først. En økt med Jonas teller hvor mange haill hver lagring har (bare antall), og taket settes så ingen ærlig spiller mister noe.
   - B: 2 haill og 1 luksushaill, som bygd. En spiller som har spart mer fra puben, mister resten.
   - C: et romslig tak uten å telle (for eksempel 10 og 3). En som alt har redigert lagringen, får med seg opptil 13.
