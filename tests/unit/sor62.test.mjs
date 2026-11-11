@@ -76,7 +76,7 @@ export default function (t){
   const z = (p, o = {}) => ruByc({p, H:o.H == null ? H(6, 1) : o.H, len:o.len == null ? 10 : o.len, gear:o.gear || 'juksa'});
   blad(false); S().hold = []; delete S().boat.byc; S().quota = null;
   t.ok(z(ege) === 'nsjo' && z(brg) === 'nsjo' && z(ege, {gear:'line'}) === 'nsjo' && z(ege, {gear:'garn'}) === 'nsjo' && !z(ege, {gear:'teiner'}), 'fangsten i Nordsjøen telles (juksa, line og garn; ikke teiner)');
-  t.ok(z(krs) === 'skag' && !z(krsIn) && !z(aal), 'Skagerrak utenfor grunnlinja som før; innenfor grunnlinja ved Kristiansand og nord for 62° N telles ingenting');
+  t.ok(z(krs) === 'skag' && z(krsIn) === 'sorfri' && !z(aal), 'Skagerrak utenfor grunnlinja som før; innenfor grunnlinja ved Kristiansand telles torsken som fri (ingen kvote der); nord for 62° N telles ingenting');
   blad(true); t.ok(z(krs) === 'skag4' && z(krs, {H:H(7, 1)}) === 'skag' && z(krs, {len:11}) === 'skag' && z(krs, {gear:'line'}) === 'skag', 'under unntaket (juksa under 11 m på blad B, 1.4–30.6) telles torsken mot 3 tonn (skag4); ellers bifangst');
   blad(false); t.ok(!t.K.ruBycOnly({p:ege, H:H(6, 1), len:10, gear:'juksa'}) && !t.K.ruBycOnly({p:brg, H:H(6, 1), len:10, gear:'juksa'}) && t.K.ruBycOnly({p:krs, H:H(6, 1), len:10, gear:'juksa'}) === 'skag', 'første turs felt (ruBycOnly): Nordsjøen er ikke en bifangstsone, Skagerrak utenfor grunnlinja er'); blad(true);
   // the room and what the landing takes: pure, sorConf(byc, codHold, q, acc)
@@ -110,4 +110,42 @@ export default function (t){
     const q = t.K.quotaState(); q.nsjo = 3000; const f = at(ege).items.find(i => i.k === 'nsjoby');
     t.ok(!!f && f.v === 'warn' && !f.block && /15 %/.test(f.no) && /§§ 1, 4 og 5/.test(f.ref) && at(ege).v === 'warn', 'taket fullt: gult, torsk bare som bifangst, høyst 15 % (§§ 4 og 5)');
     S().quota = null; }
+  // ---- the follow-up (Jonas 11.11.2026: «Fiks alt som er svakt eller antatt»)
+  // the nets' mesh in the nursery areas (J-99-2026 § 3: nets of 160 mm and more only; the game's cod nets are 156, 180 and 200 mm)
+  { const g = (m, o = {}) => keys(rulesAt({p:O.midt, H:H(9, 1), len:10, gear:'garn', sp:null, mesh:m, ...o}));
+    t.ok(g(156).includes('opp19:no!') && /156 mm/.test((rulesAt({p:O.midt, H:H(9, 1), len:10, gear:'garn', sp:null, mesh:156}).items.find(i => i.k === 'opp19') || {}).no || ''), 'garn på 156 mm er stoppet i oppvekstområdet, og grunnen sier maskevidden');
+    t.ok(!g(180).some(k => /:no/.test(k)) && !g(200).some(k => /:no/.test(k)) && !g(160).some(k => /:no/.test(k)), 'garn på 160, 180 og 200 mm er lov');
+    t.ok(!keys(rulesAt({p:O.midt, H:H(6, 1), len:10, gear:'garn', sp:null, mesh:156})).some(k => k.startsWith('opp19')), '… og 156 mm er lov før 1. juli');
+    S().pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:10}, {id:'n2', mesh:156, ty:'bunn', n:5}];
+    t.ok(keys(rulesAt({p:O.midt, H:H(9, 1), len:10, gear:'garn', sp:null})).includes('opp19:no!'), 'uten oppgitt maskevidde gjelder de minste garna om bord (156 mm): stoppet');
+    S().pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:10}];
+    t.ok(!keys(rulesAt({p:O.midt, H:H(9, 1), len:10, gear:'garn', sp:null})).some(k => /:no/.test(k)), '… og med bare 180 mm om bord: lov');
+    S().pgear.nets = []; }
+  // inside the baseline east of Lindesnes: neither the North Sea nor the Skagerrak of the regulation, so no quota: counted as free
+  { const c = sorConf({sorfri:{kg:500, cod:400}}, 400, {nsjo:3000, skag4:3000}, 'none');
+    t.ok(c.kg === 0 && Math.abs(c.cod - 400) < 1e-9, 'torsk tatt innenfor grunnlinja øst for Lindesnes: ingenting inndras, og den regnes ikke mot kvoten nord for 62° N');
+    t.eq(z(P(59.3, 10.55)), null, 'Oslofjorden er ikke med (torsk er forbudt der, som før)'); }
+  // who is in the open group in the North Sea (deltakerforskriften § 16 and § 6): the owner aboard, one vessel an owner
+  { const {sorAcc} = t.K; t.ok(typeof sorAcc === 'function', 'sorAcc finnes');
+    if (typeof sorAcc === 'function'){ const s0 = S(); s0.quota = null; const own0 = s0.tripOwner;
+      s0.tripOwner = true; t.eq(sorAcc(), 'open', 'eieren om bord, ingen annen båt har fisket på kvoten: åpen gruppe');
+      s0.tripOwner = false; t.eq(sorAcc(), 'none', 'eieren er ikke om bord: ikke åpen gruppe (§ 16 d), bare bifangst');
+      s0.tripOwner = true; const y = t.K.yearH(s0.t / 60), other = {id:'vX', quota:{y, nsjo:120}}; s0.fleet = s0.fleet || []; s0.fleet.push(other);
+      t.eq(sorAcc(), 'none', 'en annen av eierens båter har alt fisket på åpen gruppe i år: denne kan ikke (§ 6)');
+      other.quota.y = y - 1; t.eq(sorAcc(), 'open', '… men fjorårets fiske teller ikke');
+      s0.fleet.pop(); s0.tripOwner = own0; } }
+  // the word in the catch: only where the cod is a bycatch now
+  { const {ruBycWarn} = t.K; t.ok(typeof ruBycWarn === 'function', 'ruBycWarn finnes');
+    if (typeof ruBycWarn === 'function'){ S().quota = null; S().hold = []; delete S().boat.byc; S().tripOwner = true;
+      t.ok(!ruBycWarn('nsjo', 40), 'Nordsjøen med plass på taket: ikke noe varsel i fangsten');
+      t.K.quotaState().nsjo = 3000; const w = ruBycWarn('nsjo', 40);
+      t.ok(!!w && w.share === 0.15 && /40 %/.test(w.no) && /Nordsjøen/.test(w.no) && /15 %/.test(w.no) && /§ 5/.test(w.ref), 'taket fullt: varselet over 15 % sier Nordsjøen og prosenten, med § 5: ' + (w ? w.no : ''));
+      const k = ruBycWarn('skag', 24); t.ok(!!k && k.share === 0.05 && /Skagerrak/.test(k.no) && /24 %/.test(k.no), 'Skagerrak som før: 5 %');
+      t.ok(!ruBycWarn('skag4', 90) && !ruBycWarn('sorfri', 90) && !ruBycWarn(null, 90), 'unntaket med plass, fri torsk og ingen sone: ikke noe varsel');
+      S().quota = null; } }
+  // the cod aboard that is not on the quota north of 62° N
+  { const {sorCodAboard} = t.K; t.ok(typeof sorCodAboard === 'function', 'sorCodAboard finnes');
+    if (typeof sorCodAboard === 'function'){ const b = S().boat; S().hold = [{sp:'torsk', kg:300, cls:0}, {sp:'sei', kg:100, cls:0}]; b.byc = {nsjo:{kg:250, cod:200}, skag:{kg:50, cod:30}};
+      t.eq(sorCodAboard(), 230, '200 kg fra Nordsjøen og 30 fra Skagerrak av 300 kg torsk om bord: 230 er ikke på kvoten i nord');
+      b.byc.nsjo.cod = 900; t.eq(sorCodAboard(), 300, 'aldri mer enn torsken om bord'); S().hold = []; delete b.byc; } }
 }

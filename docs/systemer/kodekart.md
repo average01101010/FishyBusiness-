@@ -494,7 +494,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 267 `hullX(R)`
   - 282 `hullStep(H, R, X, eta, deta, dt, o)`
 
-## `src/js/core/03d-quota.js` (503 linjer)
+## `src/js/core/03d-quota.js` (522 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 
@@ -573,12 +573,15 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 454 `bkLanded(H, bk, all)`
   - 456 `bkNews(H)`
 - **462** cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
-  - 484 `sorRoom(k, q, acc)`
-  - 486 `sorLeft(k)`
-  - 493 `sorConf(byc, codHold, q, acc)`
-  - 502 `sorLanded(q, ok)`
+  - 496 `sorOpenId()`
+  - 497 `sorAcc()`
+  - 500 `sorCodAboard()`
+  - 503 `sorRoom(k, q, acc)`
+  - 505 `sorLeft(k)`
+  - 512 `sorConf(byc, codHold, q, acc)`
+  - 521 `sorLanded(q, ok)`
 
-## `src/js/core/03e-rules.js` (573 linjer)
+## `src/js/core/03e-rules.js` (601 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
@@ -605,18 +608,20 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 169 `kcQuota(ll)`
   - 186 `ruSeaRules(c, q, ll, md, add)`
   - 259 `rulesAt(q)`
-  - 451 `f26In(f, ll)`
-  - 465 `ruByc(q)`
-  - 479 `ruBlockMsg(q)`
-  - 481 `ruMinSize(sp, p)`
-  - 486 `fjordLimits(p, H)`
-  - 514 `ruCtx()`
-  - 518 `ruNow()`
-  - 529 `ruLayerBlock(bx, by, q, budget, tail)`
-  - 543 `ruWpQ(w)`
-  - 548 `ruWpMsg(w)`
-  - 555 `ruOpenNear(p, q, maxKm)`
-  - 564 `ruTips()`
+  - 456 `f26In(f, ll)`
+  - 476 `ruMeshNow()`
+  - 480 `ruBycWarn(k, pc)`
+  - 491 `ruByc(q)`
+  - 507 `ruBlockMsg(q)`
+  - 509 `ruMinSize(sp, p)`
+  - 514 `fjordLimits(p, H)`
+  - 542 `ruCtx()`
+  - 546 `ruNow()`
+  - 557 `ruLayerBlock(bx, by, q, budget, tail)`
+  - 571 `ruWpQ(w)`
+  - 576 `ruWpMsg(w)`
+  - 583 `ruOpenNear(p, q, maxKm)`
+  - 592 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (387 linjer)
 
@@ -801,7 +806,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1421 linjer)
+## `src/js/core/05-vessels.js` (1424 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -879,36 +884,36 @@ crew: people with skills, habits and moods
   - 989 `catchFactors(H, W, hs)`
   - 1002 `stockDev(p, sp)`
   - 1008 `fish(H, W, hs)`
-  - 1111 `endFishing(why)`
-  - 1132 `bycHere(how)`
-  - 1136 `bycAdd(sp, kg, how)`
-  - 1140 `bycConf()`
-  - 1143 `addCatch(sp, kg, cls, hook, opt)`
-- **1165** work on deck: gutting and icing take hands and time
-  - 1181 `deckHands()`
-  - 1184 `deckPending()`
-  - 1185 `deckEta(hands)`
-  - 1190 `moveKg(x, kg, patch)`
-  - 1198 `iceMinute()`
-  - 1205 `iceOut(out)`
-  - 1211 `deckMinute()`
-- **1236** lying to in a storm (H1b R8, 05.11.2026)
-  - 1253 `quayFar(b)`
-  - 1257 `lieTo(W, hs)`
-  - 1264 `lieToStep(W, hs)`
-  - 1274 `risk(W, hs)`
-  - 1302 `hullRepair()`
-  - 1305 `svcOverdue()`
-- **1306** the rescue boat (plan E3, 05.10.2026)
-  - 1332 `rescueBases()`
-  - 1341 `rescueBase(p)`
-  - 1348 `rescueAis(H)`
-  - 1352 `rescue(keepCatch)`
-  - 1376 `towSea(p)`
-  - 1381 `towRoutes(b)`
-  - 1392 `towStep(H)`
-  - 1404 `towDone(t)`
-  - 1410 `towPose(frac)`
+  - 1114 `endFishing(why)`
+  - 1135 `bycHere(how)`
+  - 1139 `bycAdd(sp, kg, how)`
+  - 1143 `bycConf()`
+  - 1146 `addCatch(sp, kg, cls, hook, opt)`
+- **1168** work on deck: gutting and icing take hands and time
+  - 1184 `deckHands()`
+  - 1187 `deckPending()`
+  - 1188 `deckEta(hands)`
+  - 1193 `moveKg(x, kg, patch)`
+  - 1201 `iceMinute()`
+  - 1208 `iceOut(out)`
+  - 1214 `deckMinute()`
+- **1239** lying to in a storm (H1b R8, 05.11.2026)
+  - 1256 `quayFar(b)`
+  - 1260 `lieTo(W, hs)`
+  - 1267 `lieToStep(W, hs)`
+  - 1277 `risk(W, hs)`
+  - 1305 `hullRepair()`
+  - 1308 `svcOverdue()`
+- **1309** the rescue boat (plan E3, 05.10.2026)
+  - 1335 `rescueBases()`
+  - 1344 `rescueBase(p)`
+  - 1351 `rescueAis(H)`
+  - 1355 `rescue(keepCatch)`
+  - 1379 `towSea(p)`
+  - 1384 `towRoutes(b)`
+  - 1395 `towStep(H)`
+  - 1407 `towDone(t)`
+  - 1413 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (144 linjer)
 
@@ -2673,14 +2678,15 @@ the Regler app (R3 of the rules plan, 05.10.2026): «Her og nå» answers «can 
   - 46 `ruLearn()`
   - 57 `regler()`
 
-## `src/js/ui/phone/04-kvote.js` (72 linjer)
+## `src/js/ui/phone/04-kvote.js` (86 linjer)
 
 the Kvote app: your quotas, the open group's season, the stocks, and the market for rights (core/03d-quota.js)
 
   - 3 `kvote()`
-  - 9 `kvOpen(H)`
-  - 26 `kvStock(H)`
-  - 44 `kvReg(H)`
+  - 10 `kvSor()`
+  - 23 `kvOpen(H)`
+  - 40 `kvStock(H)`
+  - 58 `kvReg(H)`
 
 ## `src/js/ui/phone/04b-kvotemarked.js` (213 linjer)
 
@@ -2729,12 +2735,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1537 linjer)
+## `src/js/ui/phone/07-patch.js` (1542 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1525 `patch()`
+  - 1530 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

@@ -137,6 +137,37 @@ async def main():
         l = await pg.evaluate(LAND)
         check(l['sConf'] == 0 and l['zConf'] == 0 and abs(l['dq']['skag4'] - f['cod']) <= 1, 'Kristiansand: landed under the exception: nothing taken, the cod counted on the 3 tonnes', l)
 
+        # ---- the follow-up: the word in the catch with the North Sea's cap full, the Kvote app, the free cod inside the baseline on Sørlandet
+        await pg.evaluate("(() => { const q = quotaState(); q.nsjo = 3000; q.skag4 = 0; S.hold = []; delete S.boat.byc; S.ruAt = null; S.sorWarn = null; })()")
+        f = await pg.evaluate(FISH, [58.438, 5.979, True])
+        t = await pg.evaluate("S.msgs.filter(m => m.from === 'Regler' && /Nordsjøen/.test(m.no)).slice(-1).map(m => m.no)[0] || ''")
+        over = f.get('cod', 0) > 0.15 * f.get('kg', 0) + 1 and f.get('kg', 0) >= 20
+        check((f.get('told') == 1 and '15 %' in t and '§ 5' in t) if over else f.get('told') == 0, 'Egersund with the 3 tonnes fished' + (': over 15 % cod in the catch, the game says so once, with the paragraph' if over else ': at most 15 % cod, no word'), {'kg': f.get('kg'), 'cod': f.get('cod'), 'text': t[:160]})
+        check('nsjoby:warn' in f.get('keys', []) and 'nsjo3' in f.get('kv', []) if over else True, 'Egersund with the 3 tonnes fished: yellow, and the coast guard remarks on the cod over', f.get('kv'))
+        lg = await pg.evaluate("S.log.filter(l => /Maksimalkvoten på 3 tonn torsk i Nordsjøen er full/.test(l.no || l[1] || '')).length")
+        check(lg == 1, 'the log says once that the North Sea quota is full', lg)
+        await pg.evaluate("(() => { quotaState().nsjo = 1240; S.hold = []; delete S.boat.byc; const pt = PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, S.boat.pos) - dist(y.p, S.boat.pos))[0]; S.boat.status = 'port'; S.boat.port = pt.id; S.boat.pos = {...pt.p}; })()")
+        for tag, w, h in [('liggende', 1280, 800), ('staaende', 800, 1280)]:
+            await pg.set_viewport_size({'width': w, 'height': h}); await pg.wait_for_timeout(300)
+            await pg.evaluate("toastClear(); PHONE.open('kvote')"); await pg.wait_for_timeout(700)
+            await pg.evaluate("(() => { const e = [...document.querySelectorAll('.ph-card h4')].find(x => /sør for 62/.test(x.textContent)); if (e) e.scrollIntoView({block:'start'}); })()"); await pg.wait_for_timeout(300)
+            await pg.screenshot(path=os.path.join(OUT, 'sor62-kvote-' + tag + '.png'))
+            tx = await pg.evaluate("document.body.innerText.replace(/\\s+/g, ' ')")
+            check('Torsk sør for 62° N' in tx and '1 240 kg' in tx.replace('\u00a0', ' ') and '1 760 kg' in tx.replace('\u00a0', ' '), tag + ': the Kvote app has the card with what is landed (1 240 kg) and what is left (1 760 kg) of the North Sea\'s 3 tonnes')
+            await pg.evaluate("PHONE.show(false)")
+        await pg.set_viewport_size({'width': 1280, 'height': 800})
+        await pg.evaluate("(() => { S.hold = []; delete S.boat.byc; S.ruAt = null; })()")
+        f = await pg.evaluate(FISH, [58.140, 7.996, False])
+        c = (f.get('byc') or {}).get('sorfri') or {}
+        check(f.get('zone') == 'sorfri' and f.get('inBL') and abs(c.get('cod', -9) - f.get('cod', 0)) <= 1 and f.get('told') == 0 and not any(k.startswith(('nsjo', 'skag')) for k in f.get('keys', [])), 'Kristiansand inside the baseline: no quota there, the cod is counted as free, no rule and no word', f)
+        l = await pg.evaluate(LAND)
+        check(l['sConf'] == 0 and l['zConf'] == 0 and l['codConf'] == 0 and l['dq']['torsk'] == 0 and l['dq']['nsjo'] == 0, 'Kristiansand inside the baseline: landed, nothing taken, and not counted on the quota north of 62° N or on a cap', l)
+        # nets of 156 mm in a nursery area: stopped where the string is set (10-gear.js passes the string's mesh)
+        g = await pg.evaluate("""(([a, b]) => { S.pgear.nets = [{id:'t156', mesh:156, ty:'bunn', n:5, cond:1}, {id:'t180', mesh:180, ty:'bunn', n:5, cond:1}]; const H = S.t / 60 + 60 * 24;
+          const q = m => ruBlockMsg({p:a, H, len:BOAT.len, gear:'garn', sp:null, mesh:m}); return {date:dayStr(H), m156:q(156), m180:q(180), none:ruBlockMsg({p:a, H, len:BOAT.len, gear:'garn', sp:null})}; })""", [(await pg.evaluate(AREA, [19, 'Midtbanken', 0, 'garn']))['p'], 0])
+        check(bool(g['m156']) and '156 mm' in g['m156'] and not g['m180'] and bool(g['none']), 'Midtbanken ' + g['date'] + ': a string of 156 mm nets is stopped, 180 mm is not; with both aboard and no string named, the smallest decides', g)
+        await pg.evaluate("S.pgear.nets = []")
+
         # ---- north of 62° N: nothing of this
         f = await pg.evaluate(FISH, [69.65, 18.96, False])
         check(f.get('zone') is None and not any(k.startswith(('nsjo', 'skag', 'gyte18', 'opp19')) for k in f.get('keys', [])) and not f.get('byc'), 'Tromsø: no zone, no count, none of the rules', f)

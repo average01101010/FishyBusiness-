@@ -377,7 +377,7 @@ function gearRules(kind, spec, p){
     if (spec.bait && BAITS[spec.bait] ? (baitOf(pg)[spec.bait] || 0) < kg - 1e-9 : !baitPick(pg, kg)) return [gL('Teinene trenger agn: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' ' + BAITS[spec.bait].no.toLowerCase() : '') + '.', 'The pots need bait: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' of ' + BAITS[spec.bait].en.toLowerCase() : '') + '.')]; }
   // the rules where the gear goes (03e-rules.js): the fjord lines by length, the baseline zones, closed areas; then the limits on gear
   // in the sea inside the fjord lines (§ 33 hooks, in six Finnmark fjords inside their own lines in winter; § 33a cod nets)
-  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? potSp(spec.pot) : null, egn:kind === 'line' && isAuto(spec.lk)}); if (rb) return [rb];
+  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? potSp(spec.pot) : null, egn:kind === 'line' && isAuto(spec.lk), mesh:kind === 'garn' ? ((pg.nets.find(x => x.id === spec.nid) || {}).mesh || undefined) : undefined}); if (rb) return [rb];   // (mesh: the nursery areas south of 62° N take nets of 160 mm and more only, Ø10c)
   const lim = fjordLimits(p);
   if (lim){
     const inside = mySets().filter(s => fjordLimits(setMid(s)));
