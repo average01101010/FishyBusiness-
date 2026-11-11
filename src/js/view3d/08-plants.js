@@ -131,7 +131,8 @@
   // ---- the cold on the people on deck (OB14, F14): when the cold and the wet cost (13-work.js idleEnv().cold over CHILL), the hood of
   // an oilskin or a parka is up, and a bare head under another jacket has a knitted cap on. The hood is built here (the figure's parts
   // have only the parka's rolled one): a cowl round the head open to the face, in the jacket's own colour, fitted to the head part.
-  const HOODM = new Map(), HOODK = new WeakMap(), COLDL = new Map();   // (HOODK: the hood of a look's meshes, so a frame looks nothing up) let HEADBB = null, CHILLT = {t:-1, on:false};
+  // (HOODK: the hood of a look's meshes, so a frame looks nothing up)
+  const HOODM = new Map(), HOODK = new WeakMap(), COLDL = new Map(); let HEADBB = null, CHILLT = {t:-1, on:false};
   function deckChill(){ if (CHILLT.t === S.t) return CHILLT.on; let on = false; try { on = typeof idleEnv === 'function' && typeof CHILL !== 'undefined' && S.boat.status !== 'port' && idleEnv().cold > CHILL; } catch (e) { /* a block not loaded */ } CHILLT = {t:S.t, on}; return on; }
   function hoodOf(col){
     const key = col.slice(0, 3).map(v => Math.round(v * 255)).join('.'); let m = HOODM.get(key); if (m) return m;
@@ -142,7 +143,7 @@
     for (let i = 0; i <= 7; i++){ const row = []; for (let j = 0; j <= 16; j++){ const be = j / 16 * Math.PI * 2, top = Math.sin(be), am = (1.82 + 0.22 * top) * i / 7, sa = Math.sin(am);
       row.push([c[0] + r[0] * sa * Math.cos(be), c[1] + r[1] * sa * top - (top < 0 ? 0.03 * sa * -top : 0), c[2] + r[2] * Math.cos(am)]); } G.push(row); }
     b.grid(G, () => k); m = b.mesh(); HOODM.set(key, m); return m; }   // (one per jacket colour, a dozen at most: kept)
-  const HOODTOP = {oilskin:1, parka:1}, HOODHAT = {none:1, beanie:1, flat:1, ball:1}, HOODOFF = {bun:1, pony:1, braid:1};   // (a bun or a tail is inside the hood)
+  const HOODTOP = {oilskin:1, parka:1}, HOODHAT = {none:1, beanie:1}, HOODOFF = {bun:1, pony:1, braid:1, long:1};   // (a peak or a brim keeps the hood down; a bun, a tail or long hair is inside it)
   // (a look for the cold: the same, with a knitted cap on a bare head; kept by the look's key)
   function coldLook(l){ if (!l || typeof l !== 'object' || HOODTOP[l.tp] || (l.ht && l.ht !== 'none')) return l; const key = lookSig(l); let o = COLDL.get(key); if (!o){ o = Object.assign({}, l, {ht:'beanie'}); if (COLDL.size > 60) COLDL.clear(); COLDL.set(key, o); } return o; }
   function drawWorker(P, st, eye, T, idx){

@@ -13,7 +13,8 @@ export default function (t){
   K.set('hsWork', () => 0.3); K.set('hsAt', () => 0.3); let COLD = 0; K.set('coldPen', () => COLD);
   const BOATS = ['snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21'];
   const settle = () => { const ST = CREW3D._st; ST.ctxT = -1e9; ST.lastSim = null; CREW3D.tick(0.05); ST.ctxT = -1e9; CREW3D.tick(0.05); };
-  const crew = n => { S.crew = [...Array(n).keys()].map(() => Object.assign(genCrew(), {bi:false, off:false, sleepW:false, fatigue:10, morale:62, traits:[]})); S.me = S.cur; };
+  // (the same people every run: the breaks and who feels the cold hang on a hash of the id)
+  const crew = n => { S.crew = [...Array(n).keys()].map(i => Object.assign(genCrew(), {id:'ob14-' + i, age:30 + 9 * i, vice:null, bi:false, off:false, sleepW:false, fatigue:10, morale:62, traits:[]})); S.me = S.cur; };
   const sea = vt => { S.tut = 0; b.type = vt; applyVessel(); CREW3D.reset(); b.status = 'idle'; b.port = null; b.berth = null; b.gop = null; b.land = null; b.iceUntil = 0; b.moorT = null; b.castT = null; b.shift = null; b.deckT = null; b.deckStop = false;
     S.plan = null; S.jobs = []; S.cargo = []; S.hold = []; S.rest = null; S.meal = null; };
   const rolesOf = A => A.filter(p => p.role).map(p => (p.c ? 'c' : 'me') + ':' + p.st + ':' + p.role).sort().join(' ');
@@ -37,6 +38,8 @@ export default function (t){
   A = workAssign(); t.ok(A.some(p => p.st === 'sloy') && !/spyl|kost/.test(rolesOf(A)), 'mens noen sløyer, spyler ingen', [A.map(p => p.st), rolesOf(A)]); S.hold = [];
   S.crew.forEach(c => { c.fatigue = 95; }); t.eq(rolesOf(workAssign()), 'me:pause:spyl', 'de som er utslitt, får være; da spyler du selv'); S.crew.forEach(c => { c.fatigue = 10; });
   crew(1); t.eq(rolesOf(workAssign()), 'c:pause:spyl', 'med to ledige spyler én, og ingen skrubber'); crew(3);
+  // (under way on a boat with a house the crew are inside: Jonas 03.10 and 21.10.2026)
+  b.status = 'sailing'; b.v = 8; b.dest = {x:b.pos.x + 5, y:b.pos.y}; A = workAssign(); t.ok(A.some(p => p.st === 'ror') && !/spyl|kost/.test(rolesOf(A)), 'under fart på en båt med hus er mannskapet inne: ingen spyler', [A.map(p => p.st), rolesOf(A)]); b.status = 'idle'; b.v = 0; b.dest = null;
   b.status = 'aground'; t.eq(rolesOf(workAssign()), '', 'på grunn spyler ingen'); b.status = 'idle';
   sea('skiff'); t.eq(K.workDoing({st:'pause', role:'spyl'}), 'Skyller og skrubber dørken', 'en åpen båt uten slange: pøs og kost');
 
@@ -74,7 +77,8 @@ export default function (t){
     else if (!h || h.goal.inside || h.goal.task !== 'hose' || !T) noHose.push(vt + ':' + (h ? h.goal.task + (h.goal.inside ? ' (inne)' : '') : 'ingen'));
     else { const p = M.at(h.goal.k), dd = Math.hypot(p[0] - T[0], p[2] - T[2]); if (dd < 1.2 || dd > 2.6) hoseBad.push(vt + ':' + dd.toFixed(2) + ' m fra sløyeplassen'); if (Math.abs(p[1] - T[1]) > 0.2) hoseBad.push(vt + ':på et annet dekk');
       let dh = Math.atan2(T[0] - p[0], -(T[2] - p[2])) - h.goal.h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) > 0.05) hoseBad.push(vt + ':vendt ' + dh.toFixed(2) + ' rad fra sløyeplassen'); }
-    const ko = ag('kost'); if (ko && !ko.goal.inside && ko.goal.task === 'sweep' && h && !h.goal.inside){ const p = M.at(ko.goal.k), q = M.at(h.goal.k); if (Math.hypot(p[0] - q[0], p[2] - q[2]) < 1.1) kostBad.push(vt + ':oppå den som spyler'); }
+    const ko = ag('kost'); if (ko && !ko.goal.inside && ko.goal.task === 'sweep' && h && !h.goal.inside){ const p = M.at(ko.goal.k), q = M.at(h.goal.k); if (Math.hypot(p[0] - q[0], p[2] - q[2]) < 1.1) kostBad.push(vt + ':oppå den som spyler');
+      let da = Math.atan2(p[0] - q[0], -(p[2] - q[2])) - h.goal.h; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; if (Math.hypot(p[0] - q[0], p[2] - q[2]) <= 2.2 && Math.abs(da) < 0.8) kostBad.push(vt + ':i strålen (' + da.toFixed(2) + ' rad fra den)'); }
     for (const c of CREW3D.clipNow() || []) if (c.n > 0 && ['hose', 'sweep'].includes(c.task)) clip.push(vt + ':' + c.task + ':' + c.n + '[' + c.segs.join('.') + ']');
     // the cold, where the break has them
     b.deckT = null; COLD = 0.3; let seen = 0; for (let i = 0; i < 30 && !seen; i++){ S.t += 12; settle(); for (const a of CREW3D.agents()) if (a.role === 'frys' && a.goal && !a.goal.inside){ if (a.goal.task === 'cold') seen++; }

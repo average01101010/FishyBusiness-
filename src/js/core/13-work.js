@@ -326,10 +326,14 @@ function deckRoles(P, ctx){
   const OFF = {sleep:1, seasick:1, shop:1, quay:1, worry:1}, free = () => P.filter(p => p.st === 'pause' && !p.role && !OFF[p.idle] && pTired(p) < 0.85).sort((x, y) => (x.c ? 0 : 1) - (y.c ? 0 : 1));
   // (the one he was chatting with looks out over the sea instead of talking to nobody, as at the quay)
   const give = (p, r) => { p.role = r; if (p.idle === 'chat' && p.with) for (const q of P) if (q !== p && !q.role && q.idle === 'chat' && q.with === pKey(p)){ q.idle = 'look'; q.with = null; } };
+  // (under way on a boat with a house the crew are inside, Jonas 03.10 and 21.10.2026: nothing of this then; an open boat's are on deck)
+  const E = idleEnv(); if (ctx.ror && !E.open) return;
   if (lunchNow()) for (const p of free()) give(p, 'mat');
-  if (deckWash() && !P.some(p => DECKWORK[p.st])){ const L = free(); if (L.length){ give(L[0], 'spyl'); if (L.length >= 3) give(L[1], 'kost'); } }
+  if (deckWash() && !P.some(p => DECKWORK[p.st])){ const L = free(); if (L.length){ give(L[0], 'spyl'); if (L.length >= 3) give(L[1], 'kost');
+    // (one hose on deck: another whose break drew the hose takes the brush)
+    for (const q of P) if (q.st === 'pause' && !q.role && q.idle === 'hose') q.idle = 'sweep'; } }
   // (at sea, as the cold counts there: 04-crew.js crewEffort)
-  const E = idleEnv(); if (E.cold > CHILL && !ctx.ror && ctx.s !== 'port'){ const share = clamp(0.25 + 2.5 * (E.cold - CHILL), 0.25, 0.85);
+  if (E.cold > CHILL && !ctx.ror && ctx.s !== 'port'){ const share = clamp(0.25 + 2.5 * (E.cold - CHILL), 0.25, 0.85);
     for (const p of free()) if (STILL[p.idle] && hashStr(pKey(p) + ':frys:' + Math.floor((S.t + hashStr(pKey(p)) % 12) / 12)) / 4294967296 < share) give(p, 'frys'); }
 }
 const DECK_ING = {spyl:['Spyler dekket', 'Hosing down the deck'], spylO:['Skyller og skrubber dørken', 'Sluicing and scrubbing the boards'], kost:['Skrubber dekket', 'Scrubbing the deck'],

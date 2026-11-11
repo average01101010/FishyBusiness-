@@ -314,8 +314,11 @@ function crewSim(src){
         C.push([Math.abs(d - want), k, h]); }
       C.sort((a, b) => a[0] - b[0]); WASHC.set(key, C); }
     // (the brush is not worked in the jet, nor a step from the one who holds the hose)
+    // (nor is the other in the jet as it swings: within 2.2 m ahead of the hose and WASH_SW and a body's width to either side of its heading)
     const o = A.find(a => a.id !== id && a.goal && a.goal.wash && !a.goal.inside), op = o ? M.at(o.goal.k) : null;
-    for (const [, k, h] of C){ if (!M.ok(k) || !free(k, id)) continue; if (op){ const q = M.at(k); if (Math.hypot(q[0] - op[0], q[2] - op[2]) < 1.1) continue; }
+    const inJet = (hp, hh, q) => { const dx = q[0] - hp[0], dz = q[2] - hp[2], d = Math.hypot(dx, dz); if (d > 2.2) return false; let da = Math.atan2(dx, -dz) - hh; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; return Math.abs(da) < WASH_SW + 0.4; };
+    for (const [, k, h] of C){ if (!M.ok(k) || !free(k, id)) continue;
+      if (op){ const q = M.at(k); if (Math.hypot(q[0] - op[0], q[2] - op[2]) < 1.1 || (tk === 'hose' ? inJet(q, h, op) : inJet(op, o.goal.h || 0, q))) continue; }
       return {k, h, task:tk, wash:true}; }
     return null; }
   // the packed lunch (a boat with no galley): seated on an upturned tub with the back to the rail where that is clear of everything,

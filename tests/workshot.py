@@ -36,7 +36,7 @@ STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + a.ta
 
 # what each scene must show (the agents' stations and the deck events played since the scene began)
 def judge(scene, a, b):
-    st = [x.split(':')[0] for x in b['st']]; d = {k: b['n'][k] - a['n'][k] for k in b['n']}
+    st = [x.split(':')[0] for x in b['st']]; d = {k: b['n'][k] - a['n'].get(k, 0) for k in b['n']}   # (a counter that first appears in the scene, a slip, counts from 0)
     if scene == 'line': return st.count('haling') == 1 and 'blogg' in st and 'sloy' in st and 'is' in st and d['gaff'] > 0 and d['bleed'] > 0, (b['st'], d)
     if scene == 'garn': return 'plukk' in b['roles'] and d['pick'] > 0, (b['roles'], d)
     if scene == 'jig': return st.count('fiske') >= 2 and d['jigup'] > 0, (b['st'], d)
