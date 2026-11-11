@@ -565,11 +565,11 @@ OB14 (steg 92, Jonas' økt, grenen `claude/nice-edison-lxafdp`) tok F12, F13 og 
 | `sjark` | 8 | 11 | Tre samlet om arbeidet ved sløyebordet, ikke én alene akter; hvitt vann ved bordet fra siden | De to ved bordet overlapper fra kameraet; matpausen som før (kokeplate: de spiser inne); kulda vises nesten ikke i den størrelsen |
 | `breisjark` | 8 | 10 | Strålen går ikke lenger mot folkene akter; to står sammen i kulda | Verken stråle, vann eller kost å se i bildene ovenfra; folkene «står bare»; matpausen uleselig |
 
-Evalueringen sa selv at bildene fra `tests/ombord.py` (640×360) er for små til å bedømme matpakka og koppen, hetta og lua, floken og hvor slangen peker på sjarkene (kameraet står bak redskapsrommet). Nærbildene i 1000×700 viser dem: `sjark_spyling_naert.jpg` (én spyler, vannet på dørken, én skrubber, skipperen slår floke), `snekke_spyling_naert.jpg` og `sjark_kulde_naert.jpg` (hettene). Jonas bør se dette på nettbrettet (`docs/spill-dette/92.md`). Det evalueringen fant og OB14 ikke har rettet, står i backloggen under OB14.
+Evalueringen sa selv at bildene fra `tests/ombord.py` (640×360) er for små til å bedømme matpakka og koppen, hetta og lua, floken og hvor slangen peker på sjarkene (kameraet står bak redskapsrommet). Nærbildene i 1000×700 viser dem: `sjark_spyling_naert.jpg` (én spyler, vannet på dørken, én skrubber ved benken, to står i kulda ved rekka), `snekke_spyling_naert.jpg` (slangen fra trommelen, skipperen gnir hendene), `sjark_kulde_naert.jpg` (én gnir hendene; dette mannskapet har sydvest, hjelm og lue, så ingen hette) og `sjark_hette_naert.jpg` (hettene oppe på to i oljehyre; tatt underveis, før den som skrubber, ble flyttet ut av strålen). Jonas bør se dette på nettbrettet (`docs/spill-dette/92.md`). Det evalueringen fant og OB14 ikke har rettet, står i backloggen under OB14.
 
 **Forslag til K6 per båt etter OB14:** F12–F14 har alvor B og C, så taket på rundt 60 % for åpne A-funn flyttes ikke av dette steget. Forslaget er uendret K6 for alle åtte (ingen poeng opp på grunnlag av bilder evalueringen ikke kunne lese), og at rundene som setter karakteren per båt (OB10, OB11, OB13 og de neste), tar med rydding, mat og kulde i sine egne bilder på nært hold.
 
-Bildene før og etter står i `docs/okter/2026-11-11-ob14/`: rydding (ovenfra og fra siden), mat og hvile, og kulda for snekka, havsjarken og breisjarken, i begge formater, og tre nærbilder.
+Bildene før og etter står i `docs/okter/2026-11-11-ob14/`: rydding (ovenfra og fra siden), mat og hvile, og kulda for snekka, havsjarken og breisjarken, i begge formater, og fire nærbilder.
 
 ## 5. Båten i sjøen
 
