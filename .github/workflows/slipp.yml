@@ -1,0 +1,139 @@
+# The release to production (L1b, 11.11.2026; Jonas' valg 33 B the same day, after V1 A and V2 A of valg 16): main is moved straight
+# forward to a commit of the working branch, and nothing else. No session may push to main (the deny list in .claude/settings.json),
+# and neither the GitHub tool nor «Merge pull request» can fast-forward, so this does it: started by the work routine at night when
+# its gate holds (tools/plan/RUTINE.md «Slippet»), by a session when Jonas says «slipp nå», or by Jonas from the Actions tab.
+# It refuses: a commit that is not on the branch named, a move that is not a fast-forward, a branch other than the working branch
+# or an urgent one from main (slipp/…), and a release that touches real money or src/legal/ (tools/release/slipp.py finds that)
+# unless the release's pull request carries the label `jonas-har-sett`, set after the newest such commit was made. The label is
+# taken off again after the release, so the next one that touches money waits for Jonas anew.
+# The migrations and the Edge Functions the pull request lists must be out in the production BEFORE this is started; it cannot check
+# the database, so the one who starts it says so with «migreringer».
+# The push: with the deploy key in the secret SLIPP_KEY (an SSH deploy key with write access; Settings → Deploy keys) when it is set,
+# else with the workflow's own token. The token may not push commits that change .github/workflows/ (GitHub refuses it), so a release
+# with a workflow change needs the key; the step says so when it happens. A push with the token starts no workflow, so «Appen på
+# Hetzner» is started here; a push with the key starts it by itself.
+name: Slipp
+on:
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Commiten main flyttes fram til (tom = toppen av grenen under)'
+        required: false
+        default: ''
+      gren:
+        description: 'Grenen commiten ligger på: arbeidsgrenen, eller en hastegren fra main (slipp/…)'
+        required: false
+        default: 'ccr-5e1ba2f4-pusvyd'
+      migreringer:
+        description: 'Skriv «kjørt» når migreringene og Edge Functions slipp-PR-en lister, er ute i produksjon (eller «ingen»)'
+        required: true
+        default: ''
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+concurrency:
+  group: slipp
+  cancel-in-progress: false
+jobs:
+  slipp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.gren }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Hva som slippes
+        id: what
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMIT: ${{ inputs.commit }}
+          GREN: ${{ inputs.gren }}
+          MIG: ${{ inputs.migreringer }}
+        run: |
+          case "$GREN" in ccr-5e1ba2f4-pusvyd|slipp/*) ;; *) echo "Bare arbeidsgrenen eller en hastegren (slipp/…) kan slippes: $GREN"; exit 1;; esac
+          case "$MIG" in kjørt|ingen) ;; *) echo "Skriv «kjørt» eller «ingen» i «migreringer»: de må være ute i produksjon før main flyttes."; exit 1;; esac
+          git fetch -q origin main
+          if [ -n "$COMMIT" ]; then
+            printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$' || { echo "Ikke en commit: $COMMIT"; exit 1; }
+            sha=$(git rev-parse --verify -q "$COMMIT^{commit}") || { echo "Ukjent commit: $COMMIT"; exit 1; }
+          else sha=$(git rev-parse HEAD); fi
+          git merge-base --is-ancestor "$sha" HEAD || { echo "$sha ligger ikke på $GREN."; exit 1; }
+          if git merge-base --is-ancestor "$sha" origin/main; then echo "Ingenting å slippe: main har alt $sha."; exit 1; fi
+          git merge-base --is-ancestor origin/main "$sha" || { echo "main kan ikke flyttes rett fram til $sha: main har commits grenen ikke har. Flett main inn i grenen først."; exit 1; }
+          python3 tools/release/slipp.py --dry --json --no-fetch --offline --base origin/main --head "$sha" > slipp.txt
+          tail -n 1 slipp.txt > slipp.json
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d = json.load(open('slipp.json'))
+          print('wait=%d' % (1 if d.get('money') or d.get('legal') else 0))
+          print('marked=%s' % ((d.get('marked') or [''])[0]))
+          print('nmig=%d' % len(d.get('migrations') or []))
+          PY
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "old=$(git rev-parse origin/main)" >> "$GITHUB_OUTPUT"
+          git diff --name-only origin/main "$sha" -- .github/workflows | grep -q . && echo "wf=1" >> "$GITHUB_OUTPUT" || echo "wf=0" >> "$GITHUB_OUTPUT"
+          pr=$(gh pr list --base main --head "$GREN" --state open --json number -q '.[0].number')
+          echo "pr=$pr" >> "$GITHUB_OUTPUT"
+          { echo "### Slipp: main $(git rev-parse --short origin/main) → $(git rev-parse --short "$sha") ($GREN)"; echo; sed -n '1,60p' slipp.txt | head -c 6000; } >> "$GITHUB_STEP_SUMMARY"
+      # real money and the legal pages: never before Jonas has seen the pull request (CLAUDE.md). The label must be newer than the
+      # newest commit that touches them, so one set for an earlier look does not let a later change through
+      - name: Ekte penger og src/legal/ venter på Jonas
+        if: steps.what.outputs.wait == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.what.outputs.pr }}
+          MARKED: ${{ steps.what.outputs.marked }}
+        run: |
+          [ -n "$PR" ] || { echo "Slippet rører ekte penger eller src/legal/, og det finnes ingen åpen slipp-PR som Jonas kan ha sett (python3 tools/release/slipp.py lager den)."; exit 1; }
+          at=$(gh api "repos/${{ github.repository }}/issues/$PR/events" --paginate -q '[.[] | select(.event == "labeled" and .label.name == "jonas-har-sett")] | last | .created_at // ""')
+          has=$(gh pr view "$PR" --json labels -q '[.labels[].name] | index("jonas-har-sett") // ""')
+          if [ -z "$has" ] || [ -z "$at" ]; then echo "Slippet rører ekte penger eller src/legal/: PR #$PR må ha merkelappen jonas-har-sett, satt av Jonas, før main flyttes."; exit 1; fi
+          newest=$(git log -1 --format=%cI "${MARKED:-HEAD}" 2>/dev/null || true)
+          if [ -n "$MARKED" ] && [ "$(date -d "$newest" +%s)" -gt "$(date -d "$at" +%s)" ]; then
+            echo "Merkelappen jonas-har-sett ble satt $at, men $MARKED (ekte penger eller src/legal/) er fra $newest. Jonas må se PR #$PR på nytt og sette merkelappen igjen."; exit 1; fi
+          echo "PR #$PR har merkelappen jonas-har-sett fra $at."
+      - name: Migreringene
+        env:
+          MIG: ${{ inputs.migreringer }}
+          NMIG: ${{ steps.what.outputs.nmig }}
+        run: |
+          if [ "$NMIG" != 0 ] && [ "$MIG" != kjørt ]; then echo "Slippet har $NMIG migrering(er) (se sammendraget): kjør dem i produksjon først, og start med «kjørt»."; exit 1; fi
+          echo "Migreringer i slippet: $NMIG ($MIG)."
+      - name: main flyttes fram
+        id: push
+        env:
+          SLIPP_KEY: ${{ secrets.SLIPP_KEY }}
+          SHA: ${{ steps.what.outputs.sha }}
+          OLD: ${{ steps.what.outputs.old }}
+          WF: ${{ steps.what.outputs.wf }}
+        run: |
+          if [ -n "$SLIPP_KEY" ]; then
+            install -d -m 700 ~/.ssh
+            printf '%s\n' "$SLIPP_KEY" > ~/.ssh/slipp && chmod 600 ~/.ssh/slipp
+            ssh-keyscan -t ed25519,rsa github.com >> ~/.ssh/known_hosts 2>/dev/null
+            export GIT_SSH_COMMAND="ssh -i ~/.ssh/slipp -o IdentitiesOnly=yes"
+            url="git@github.com:${{ github.repository }}.git"; echo "how=key" >> "$GITHUB_OUTPUT"
+          else
+            url=origin; echo "how=token" >> "$GITHUB_OUTPUT"
+            if [ "$WF" = 1 ]; then echo "Slippet endrer .github/workflows/, og workflowens eget token får ikke pushe det. Legg en deploy-nøkkel med skrivetilgang i hemmeligheten SLIPP_KEY (docs/systemer/publisering.md, «Slippet»)."; fi
+          fi
+          # a fast-forward only: no force, and main must still be where it was when the release was worked out
+          # (a plain push: git refuses it when it is not a fast-forward, also if main moved since the release was worked out)
+          git push "$url" "$SHA:refs/heads/main"
+          echo "main er nå $SHA (før: $OLD)." | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Etterpå
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ steps.what.outputs.pr }}
+          HOW: ${{ steps.push.outputs.how }}
+          OLD: ${{ steps.what.outputs.old }}
+        run: |
+          # a push with the workflow's token starts no workflow: the production build is started here
+          if [ "$HOW" = token ]; then gh workflow run deploy.yml --ref main; echo "«Appen på Hetzner» startet på main."; fi
+          if [ -n "$PR" ]; then gh pr edit "$PR" --remove-label jonas-har-sett 2>/dev/null || true; fi
+          echo "Tilbakerulling: «Appen på Hetzner» på main med commit $OLD." >> "$GITHUB_STEP_SUMMARY"

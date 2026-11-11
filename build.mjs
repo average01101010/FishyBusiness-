@@ -120,13 +120,67 @@ if (CHANNEL){
   if (!page.includes('</head>')){ console.error('build: no </head> for the channel'); process.exit(1); }
   page = page.replace('</head>', `<meta name="dsb-channel" content="${CHANNEL}"><meta name="robots" content="noindex">\n</head>`);
 }
-const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).digest('hex').slice(0, 12);
+// The game's Content-Security-Policy (L1e, 11.11.2026, docs/planer/sikkerhet-skyen.md funn 7; Jonas' valg V6 A 10.11.2026): the
+// sign-in's refresh token lies in localStorage (WorkOS in dev mode), so a script that got into the page could send it away. With this
+// policy only the page's own scripts run (each by its sha256; no 'unsafe-inline', no eval), and the page talks only to itself, the
+// channel's Supabase project, WorkOS and the relay, read from src/data/cloud.json as cloudCfg (ui/10f-cloud.js) reads it: no host is
+// written twice. It goes into the page as a <meta http-equiv>, so Pages, the app and KYST_ONE get the same one; frame-ancestors
+// cannot be set in a meta, tools/server/Caddyfile sends it. What the page does was listed first with a Report-Only policy of
+// default-src 'none' (the first trip's start, the phone's apps, the plotter, 3D at Bergen, Bodø and Hammerfest, the guest's cloud):
+// - scripts: the inline ones only. The map packs are named .wasm but are data (fflate unpacks them), so no 'wasm-unsafe-eval'.
+// - workers: from blob: (core/01c-vec.js, 01d-coast.js, fflate, the watchdog) and the service worker from the page's own origin.
+// - styles: inline, in <style> and in style attributes all over the UI, so 'unsafe-inline' stands. A style cannot run a script; what
+//   it could have fetched (url()) is held by img-src and font-src.
+// - pictures: data: (the letter, the yard's cards, the logos), blob: (the feedback's pictures) and the cloud's own storage (a
+//   sponsor's logo must lie there: another site's picture is not fetched).
+// - sound: made in the page (WebAudio); media-src is for the feedback's video (blob:).
+// The local build (dist/ and dist-vec/, neither the app nor one file: what the tests open, never uploaded) also lets the tests'
+// stand-ins through: https://sb.test for the cloud (.test never resolves, RFC 2606) and the stand-in relay on 127.0.0.1 (rttest.py).
+const CSP_OF = hashes => {
+  const raw = JSON.parse(readFileSync(join(SRC, 'data', 'cloud.json'), 'utf8')), {test, ...base} = raw, c = CHANNEL === 'test' && test ? {...base, ...test} : base;
+  const sb = new URL(c.supabaseUrl).origin, wos = 'https://' + (c.workosApiHostname || 'api.workos.com');
+  const hostOk = h => /^[a-z0-9.-]+$/.test(h), rt = (c.hosts || []).filter(hostOk).map(h => 'wss://' + h + '/rt');
+  if (!/^https:\/\/[a-z0-9.-]+$/.test(sb) || !/^https:\/\/[a-z0-9.-]+$/.test(wos) || rt.length !== (c.hosts || []).length){ console.error('build: cloud.json has a host the CSP cannot take'); process.exit(1); }
+  const local = PWA || ONE ? [] : ['https://sb.test', 'ws://127.0.0.1:*', 'ws://localhost:*'];
+  return ["default-src 'none'", 'script-src ' + (hashes || ['@hashes@']).join(' '), "style-src 'unsafe-inline'", "worker-src 'self' blob:",
+    "connect-src 'self' " + [sb, wos, ...rt, ...local].join(' '), "img-src 'self' data: blob: " + sb, "font-src 'self' data:", "media-src 'self' data: blob:",
+    "manifest-src 'self'", "base-uri 'none'", "form-action 'none'"].join('; ');
+};
+// (the policy without the hashes is part of the version: a build that only changes what the page may reach is a new build)
+const ver = createHash('sha256').update(page).update(JSON.stringify(mapMan)).update(JSON.stringify(dataFiles)).update(CSP_OF()).digest('hex').slice(0, 12);
 page = page.replace('</head>', `<meta name="dsb-version" content="${ver}">\n</head>`);
 // and beside the page, for an open game to ask whether a newer build is out (ui/10p-install.js UPDATE; Jonas 06.11.2026)
 writeFileSync(join(DIST, 'version.json'), JSON.stringify({v:ver, at:new Date().toISOString(), ...(CHANNEL ? {ch:CHANNEL} : {})}));
 { const sm = srcMarks(page), b = sm.page.lastIndexOf('</body>');
   if (b < 0){ console.error('build: no </body> for the source map'); process.exit(1); }
   page = sm.page.slice(0, b) + '<script>window.DSB_SRCMAP=' + JSON.stringify(sm.map) + ';</script>' + sm.page.slice(b); }
+// the policy into the page, last: the scripts are now what the browser will get (the source marks are out, the source map is in).
+// It goes on the line of <meta charset>, before the first script, and moves no line (the source map counts them). The build stops,
+// it does not warn, when a script would not run under the policy: one with src= or a type the page does not know, an inline event
+// handler (onclick="…" and the like, in the page or in HTML a script writes), or eval and new Function. Write a listener instead.
+{ const die = m => { console.error('build (CSP): ' + m); process.exit(1); };
+  const hashes = [], seen = new Set();
+  for (const m of page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)){
+    if (/^ id="[^"]+" type="application\/octet-stream"/.test(m[1])) continue;   // (a data element: never run)
+    if (m[1] !== '') die('a <script' + m[1].slice(0, 80) + '> the policy has no place for: only inline <script> without attributes get a hash');
+    if (/\r/.test(m[2])) die('a script has a carriage return: the browser would hash it differently');
+    const h = "'sha256-" + createHash('sha256').update(m[2], 'utf8').digest('base64') + "'"; if (!seen.has(h)){ seen.add(h); hashes.push(h); }
+    const ev = /\beval\s*\(|\bnew Function\b|\bset(?:Timeout|Interval)\s*\(\s*['"`]/.exec(m[2]);
+    if (ev) die('«' + m[2].slice(Math.max(0, ev.index - 60), ev.index + 40).replace(/\n/g, ' ') + '»: eval, new Function and a timer with a string do not run under the policy');
+    const on = /[\s"']on(?:click|dblclick|load|error|input|change|submit|focus|blur|toggle|scroll|wheel|contextmenu|key[a-z]+|mouse[a-z]+|pointer[a-z]+|touch[a-z]+|drag[a-z]*|drop|animation[a-z]+|transition[a-z]+)\s*=\s*\\?["'][^"'<>]/.exec(m[2]);
+    if (on) die('«' + m[2].slice(Math.max(0, on.index - 60), on.index + 60).replace(/\n/g, ' ') + '»: an inline event handler in HTML a script writes does not run under the policy');
+  }
+  const stat = page.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/g, ''), onS = /<[a-zA-Z][^<>]*\son[a-z]+\s*=/.exec(stat) || /(?:href|src|action)\s*=\s*["']?\s*javascript:/i.exec(stat);
+  if (onS) die('«' + stat.slice(onS.index, onS.index + 120).replace(/\n/g, ' ') + '»: an inline event handler in the page does not run under the policy');
+  if (!hashes.length) die('no inline script found');
+  const csp = CSP_OF(hashes), at = '<meta charset="utf-8">';
+  if (/["<>]/.test(csp)) die('the policy has a character the meta cannot hold');
+  if (page.indexOf(at) < 0 || page.indexOf(at) > page.indexOf('<script') || page.indexOf(at) !== page.lastIndexOf(at)) die('no single <meta charset="utf-8"> before the first script to put the policy by');
+  page = page.replace(at, at + '<meta http-equiv="Content-Security-Policy" content="' + csp + '">');
+  // and every script once more, as the browser will: each one's hash is in the policy that went in
+  const pol = (/<meta http-equiv="Content-Security-Policy" content="([^"]*)">/.exec(page) || [])[1] || '';
+  for (const m of page.matchAll(/<script>([\s\S]*?)<\/script>/g)) if (!pol.includes("'sha256-" + createHash('sha256').update(m[1], 'utf8').digest('base64') + "'")) die('an inline script has no hash in the policy');
+  console.log(`${basename(DIST)}/index.html: CSP with ${hashes.length} script hashes` + (PWA || ONE ? '' : ' (and the tests\' stand-ins in connect-src: a local build)')); }
 writeFileSync(OUT, page);
 console.log(`${basename(DIST)}/index.html: ${(Buffer.byteLength(page) / 1e6).toFixed(2)} MB, version ${ver}${CHANNEL ? ', channel ' + CHANNEL : ''}`);
 console.log(`${basename(DIST)}/map/: ${mapFiles.length - 1} packs, ${(mapBytes / 1e6).toFixed(2)} MB (${MAPSRC === GAMEMAP ? 'the whole coast, tools/map/out/game' : MAPSRC})`);

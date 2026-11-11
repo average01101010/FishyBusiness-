@@ -148,7 +148,7 @@ function workCtx(as){
   // on its way to it (the gutted fish, and the round fish waiting for the knife)
   // (round a quay, OB2: the helm is held until she lies made fast, and the lines and the fenders have their hands; 05-vessels.js moorPhase)
   const mp = as === 'fishing' || typeof moorPhase !== 'function' ? null : moorPhase(b);
-  return {s, stop, mp, fort:!!mp, ror:s === 'sailing' || s === 'unmooring' || s === 'engine' || mp === 'in' || mp === 'lines' || mp === 'out', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk,
+  return {s, stop, mp, fort:!!mp, ror:s === 'sailing' || s === 'unmooring' || s === 'engine' || mp === 'in' || mp === 'lines' || mp === 'out', fiske:s === 'fishing' && !g && !stop, haling:!!g && !stop, gk, setting:!!g && g.op === 'set' && (gk === 'line' || gk === 'garn') && !g.auto,
     blogg:!!g && g.op === 'haul' && gk !== 'teine' && !stop && s !== 'aground', gutKg:cg ? gut : 0, iceKg:icing ? gut + ice : 0,
     sort:!!g && gk === 'teine' && g.op === 'haul', hands:g && gk === 'garn' && g.op === 'haul' ? 2 : 1, sloy:deck && gut > 0.01, is:deck && icing && (ice > 0.01 || gut > 0.01), iceNow:icing ? ice : 0, kokk:as !== 'fishing' && mealDue(), pause:true};
 }
@@ -272,7 +272,9 @@ function workAssign(as){
   // stopped to gut: everyone free goes on deck, as long as there is room at the table and the tub
   if (ctx.stop) for (const p of P) if ((p.st === 'pause' || (alone && p.st === 'haling')) && pTired(p) < 0.85 && (ctx.sloy || ctx.is)){ const k = ctx.sloy && room('sloy') ? 'sloy' : ctx.is && room('is') && iceOpen() ? 'is' : null; if (k) put(p, k, 'stop'); }
   // at the hauler: those at the haulers, then the one picking the net or handling the pots (who bleeds when nobody else does: p.bl)
-  const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; if (!p.why) p.why = workWhy(p, 'haling', ctx); });
+  // (setting line or nets, OB3, F4: nobody hauls; the first pays the gear out over the stern and the others hand it to him: the next tub
+  // carried aft, the net seen clear of its tub. The same people on the same station as before, so the pace is as it was: gopUnitMin)
+  const hp = haulPlaces(); P.filter(p => p.st === 'haling').forEach((p, i) => { p.role = ctx.setting ? (i ? 'lang' : 'sett') : i < hp ? 'haler' : ctx.gk === 'garn' ? 'plukk' : 'teine'; p.bl = p.role === 'plukk'; if (!p.why) p.why = workWhy(p, 'haling', ctx); });
   for (const p of P) if (!p.why) p.why = p.st === 'pause' ? 'nowork' : workWhy(p, p.st, ctx);
   idleAssign(P, ctx);
   return P;
@@ -349,7 +351,7 @@ function idleText(p){
 const MOOR_ING = {prep:['Henger ut fenderne', 'Putting the fenders out'], in:['Gjør klar tauene', 'Getting the lines ready'], lines:['Fortøyer', 'Making fast'],
   out:['Kaster loss', 'Casting off'], stow:['Tar inn fenderne og kveiler tauene', 'Fenders in, coiling the lines']};
 function workDoing(p){ const no = S.lang === 'no';
-  if (p.st === 'fort'){ const m = MOOR_ING[typeof moorPhase === 'function' && moorPhase()]; if (m) return m[no ? 0 : 1]; } if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
+  if (p.st === 'fort'){ const m = MOOR_ING[typeof moorPhase === 'function' && moorPhase()]; if (m) return m[no ? 0 : 1]; } if (p.role === 'plukk') return no ? 'Plukker og bløgger' : 'Picking and bleeding'; if (p.role === 'sett') return no ? 'Setter over hekken' : 'Setting over the stern'; if (p.role === 'lang') return no ? 'Langer redskapet akter' : 'Handing the gear aft'; if (p.role === 'teine') return no ? 'Tømmer og egner teiner' : 'Emptying and baiting pots';
   if (p.st === 'pause' && p.idle){ const t = idleText(p); if (t) return t; }
   if (snoVessel() && (p.st === 'sloy' || p.st === 'is')) return p.st === 'sloy' ? (no ? 'Deler krabben i klør' : 'Splitting the crab into clusters') : (no ? 'Koker, fryser og pakker klør' : 'Cooking, freezing and packing clusters');   // the snow crab factory (H3b)
   if (p.st === 'is' && holdFreezes()) return no ? 'Pakker og fryser' : 'Packing and freezing';   // a freezer hold (05-vessels.js)

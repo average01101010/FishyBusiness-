@@ -104,6 +104,22 @@ OPS = {
       if (fish === 'teiner'){ S.equip.teinehaler = true; pg.pots.big = 6; baitOf(pg).makrell = 50; }
       const ch = setChoices().find(c => !c.off); if (!ch) return 'SKIP: ingen valg i setChoices';
       const why = startSet(ch.kind, ch.spec, 0); if (why) return 'SKIP: ' + (why[0] || why); if (S.crew.length) CREW3D.reset();""", (0.5, 0.45, 1.0), 12],
+  # (OB3, steg 81: the same with everything she may carry aboard and the kit over the stern: the line through the line setter from the
+  # tubs on its magazine, the nets through the net chute, the tubs stacked and the nets in as many tubs as the deck has room for)
+  'settfull': [['line', 'garn'], 'sette med fullt redskap om bord, gjennom linesetteren eller garnrenna', """SEA('idle'); const pg = S.pgear, GM = V.gearMax || {};
+      if (geoOf(type).hand) return 'SKIP: håndbåt';
+      if (fish === 'line'){ S.equip.linehaler = true; if (equipFits('linesetter', type)){ S.equip.linesetter = true; S.equip.linesetterLv = 2; } pg.lines.hyse.n = Math.min(24, GM.stamp || 4); pg.lines.hyse.baited = pg.lines.hyse.n; pg.kits.n = 8; }
+      if (fish === 'garn'){ if (!equipFits('garnhaler', type)) return 'SKIP: garnhaleren passer ikke'; S.equip.garnhaler = true; if (equipFits('garnrenne', type)) S.equip.garnrenne = true;
+        const n = Math.min(60, GM.garn || 6); pg.nets = []; for (let i = 0; i < n; i += 15) pg.nets.push({id:'n' + i, mesh:180, ty:'bunn', n:Math.min(15, n - i), cond:1}); pg.kits.n = 12; }   /* (strings of 15: six nets were out through the chute before the middle picture) */
+      const ch = setChoices().find(c => !c.off); if (!ch) return 'SKIP: ingen valg i setChoices';
+      const why = startSet(ch.kind, ch.spec, 0); if (why) return 'SKIP: ' + (why[0] || why); if (S.crew.length) CREW3D.reset();""", (0.5, 0.5, 1.05), 12],
+  # (and lying still rigged with all of it aboard: the tubs stacked, the two first on the magazine, the nets in their tubs)
+  'riggfull': [['line', 'garn'], 'ligge stille med fullt redskap om bord: stampene stablet, garnet i karene', """SEA('idle'); const pg = S.pgear, GM = V.gearMax || {};
+      if (geoOf(type).hand) return 'SKIP: håndbåt';
+      if (fish === 'line'){ S.equip.linehaler = true; if (equipFits('linesetter', type)){ S.equip.linesetter = true; S.equip.linesetterLv = 2; } pg.lines.hyse.n = Math.min(24, GM.stamp || 4); pg.lines.hyse.baited = Math.round(pg.lines.hyse.n / 2); }
+      if (fish === 'garn'){ if (!equipFits('garnhaler', type)) return 'SKIP: garnhaleren passer ikke'; S.equip.garnhaler = true; if (equipFits('garnrenne', type)) S.equip.garnrenne = true;
+        const n = Math.min(60, GM.garn || 6); pg.nets = []; for (let i = 0; i < n; i += 6) pg.nets.push({id:'n' + i, mesh:180, ty:'bunn', n:Math.min(6, n - i), cond:1}); }
+      if (S.crew.length) CREW3D.reset();""", (0.5, 0.55, 1.05), 6],
   # hauling: a real set in the sea, startHaul, the fish in over the rail, gaffed or picked, bled
   'trekk': [['line', 'garn', 'teiner'], 'trekke: haleren går, fisken inn over rekka, hugget eller plukket, bløgget', """SEA('idle'); const p = {...b.pos}, kind = fish === 'teiner' ? 'teine' : fish;
       if (kind === 'line') S.equip.linehaler = true;
@@ -154,6 +170,7 @@ CLIP = """(() => { if (!CREW3D.on()) return null; const M = CREW3D._st.M;
 STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.task || '')), n:JSON.parse(JSON.stringify(G3._debug.dk.n || {})),
   anim:(G3._debug.SK && G3._debug.SK.anim) ? G3._debug.SK.anim.st : null, gop:S.boat.gop ? S.boat.gop.op + ':' + S.boat.gop.kind : null, status:S.boat.status,
   hold:Math.round((S.hold || []).reduce((s, h) => s + h.kg, 0)), jobs:(S.jobs || []).map(j => j.kind),
+  kst:(k => ({setting:k.setting || null, stamps:k.stamps, stampsAll:k.stampsAll, netTubs:k.netTubs, stern:k.stern || null}))(G3._debug.kitStat || {}), roles:CREW3D.agents().filter(a => a.role).map(a => a.role + ':' + (a.goal && a.goal.task)),
   dmg:S.boat.dmg ? JSON.parse(JSON.stringify(S.boat.dmg)) : null, inc:(S.incidents || []).slice(-3).map(i => i.k)}))()"""
 
 
@@ -237,7 +254,7 @@ async def record(o, fmt, outdir):
                 t2 = time.time() - T0
                 b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
                 d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
-                rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
+                rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'kst': b.get('kst'), 'roles': b.get('roles'), 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
                 log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
             await pg.evaluate("(k) => __TK.set(k)", o['k']); t1 = time.time() - T0
             # the picture in the middle as a screenshot; the early and the late one are taken from the recording when it is cut (a screenshot
@@ -251,7 +268,7 @@ async def record(o, fmt, outdir):
             await pg.evaluate("__TK.set(1)")
             b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
             d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
-            rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / sec, 1)}
+            rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'kst': b.get('kst'), 'roles': b.get('roles'), 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / sec, 1)}
             log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True)
         log.append({'errors': errs[:5]}); log.append({'tend': time.time() - T0})
         await ctx.close(); raw = None if o['bilder'] else await pg.video.path(); await br.close()
