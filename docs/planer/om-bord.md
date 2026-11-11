@@ -49,7 +49,7 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 | `sjark` | 64 | **61** | 4.5 |
 | `hurtigsjark` | 62 | **59** | 4.6 |
 | `skiff` | ingen | **57** (forslag) | 4.2 |
-| `kyst21` | ingen (ikke revidert) | **48** (grovt anslag) | 4.10 |
+| `kyst21` | ingen (ikke revidert) | **48** (grovt anslag); etter OB13 **70** (egen evaluering, Jonas' skala; bygd på nytt) | 4.10 |
 
 Ingen av de ti er over 75 etter klippene. Det som trekker ned, er nesten bare K6 (arbeidsflyten og plassene): funnene med alvor A i arbeidet. De fleste av dem ligger i den felles koden (kapittel 3), ikke i modellene, så OB2–OB4 løfter alle båtene samtidig.
 
@@ -450,6 +450,8 @@ Bilder til Jonas:
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_jig_liggende_2.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_sloy_liggende_3.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/felles_kran_liggende_2.jpg
+
+**Etter OB13 (11.11.2026, steg 91, Jonas' økt, grenen `claude/charming-faraday-my9nnq`): 70/100, ikke ferdig.** Båten er bygd på nytt etter pilotens arbeidsmåte (`docs/skipsmodeller/kyst21-grunnlag.md`): skroget som én flate på 190,1 t (249 før), bakken i full høyde, et akterdekk bak huset med garnkarene og en setterull i hekken (F20), haleren under galgen med blødekaret og et sløyebord på 2,0 m for tre side om side (F19), den som iser ved luka, åtte juksaplasser fordelt på begge sider (F21), teinestablene og lasteplassene regnet mot spillets bokser, lanternene etter vedlegg I for 20 m og over, brem på taket og åpne spygatt (valg 26). 141 988 trekanter nær (Jonas 11.11.2026: «Dette burde bli en vakker båt rett og slett»). Karakteren er satt av en uavhengig underagent: skrog 16, detaljer 14, lanterner 3, styrhus 7, arbeidsflyt 15, dekk 15. Det som trekker ned og ikke er rettet: klumpen ved galgen i teinetrekket, utsikten fra roret (bakken, masta og bommen), det flekkete dekket, det nakne akterdekket, lanternene ikke sett om natta til sjøs, og kranen (M16, spillets felles). Runde 2 står i `docs/planer/start/91.md`. Bildene: `docs/okter/2026-11-11-ob13/`.
 
 ### 4.11 Etter OB2 (09.11.2026): arbeidsflyten med fortøyningen, forslag
 

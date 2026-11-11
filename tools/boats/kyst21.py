@@ -1066,7 +1066,6 @@ def cowl_vent(A, c, face, m, m_in, r=0.11, h=0.75):
         e1 = V((-f.y, f.x, 0)); e2 = e1.cross(ax).normalized()
         rings.append([ctr + e1 * (rr * math.cos(2 * math.pi * j / n)) + e2 * (rr * math.sin(2 * math.pi * j / n)) for j in range(n)])
     F.loft(A, rings, lambda i: m, cap0=False, cap1=False)
-    F.loft(A, [rings[-1], [p + (rings[-2][j] - p) * 0.0 - f * 0.0 for j, p in enumerate(rings[-1])]], lambda i: m, cap0=False, cap1=False)
     ctr = sum(rings[-1], V()) / n; A.poly([ctr - f * 0.12 + (p - ctr) * 0.86 for p in rings[-1]], m_in, f)
     A.poly([ctr - f * 0.12 + (p - ctr) * 0.86 for p in reversed(rings[-1])], m_in, -f)
     for j in range(n):
@@ -1167,7 +1166,7 @@ def details(A, G):
     for xa, xb_, ya, yb_ in ((HX - 0.75, HX + 0.95, -(ybi(HX) - 0.30), -(ybi(HX) - 1.15)), (TABLE[0] + 0.05, TABLE[1] - 0.05, table_y()[1] + 0.10, table_y()[1] + 0.80)):
         n = int((yb_ - ya) / 0.085)
         for k in range(n):
-            y = ya + (yb_ - ya) * (k + 0.5) / n; zz = max(mdeck(xa, y), mdeck(xb_, y), mdeck((xa + xb_) / 2, y))
+            y = ya + (yb_ - ya) * (k + 0.5) / n
             beam(A, (xa, y, mdeck(xa, y) + 0.035), (xb_, y, mdeck(xb_, y) + 0.035), 0.06, 0.022, C['wood'])
         for x in (xa + 0.15, (xa + xb_) / 2, xb_ - 0.15): beam(A, (x, ya, mdeck(x, ya) + 0.012), (x, yb_, mdeck(x, yb_) + 0.012), 0.05, 0.024, C['wood'])
     # a drip moulding over every porthole of the deckhouse, a moulding under the wheelhouse's windows all round
@@ -1257,7 +1256,6 @@ def kit_places(G):
     hatch and out over the quay (she lies port side to, 07-harbours.js berthSide), its booms stowed upright (no rest)"""
     r = lambda v: round(v, 3); h = math.pi / 2; bd = BD() + 0.06; xs_ = set_x()
     rail = lambda x, sg: G(x, sg * (DHY + 0.15 - 0.05 + 0.022), bd + 0.95) + [r(-sg * h)]
-    a = math.atan2(-(y_at(xs_ + 0.05, z_cap(xs_)) - y_at(xs_ - 0.05, z_cap(xs_ - 0.05) - 1e-3)), 0.10)   # (the stern's plan there; the gear goes out dead aft)
     return {'raft': [G(3.45, -1.95, bd) + [r(h)], G(3.45, 1.95, bd) + [r(h)]],
             'buoys': [G(5.85, -DHY, mdeck(5.85, DHY) + 1.45) + [r(h)], G(5.85, DHY, mdeck(5.85, DHY) + 1.45) + [r(-h)], rail(2.9, 1), rail(2.9, -1)],
             'radarA': G(_radp()[0], 0, _radp()[1]),

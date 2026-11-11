@@ -25,7 +25,7 @@ x −1,6 (rundgattens spiss) til 19,4 (stevnens topp). Spillets midtskips er x 8
 - Valg 26 (Jonas 09.11.2026): brem på styrhustaket som skrår innover oppover, spygatt uten klaffer. Ingen pyntefendere (10.11.2026).
 - Valg 18 A: `disp` er den tomme båten.
 - Jonas 11.11.2026, underveis i økta: «jeg tenker modellen burde være sånn 140000 trekanter i nær. Dette burde bli en vakker båt rett og
-  slett». Nærmodellen er 142 100 trekanter.
+  slett». Nærmodellen er 141 988 trekanter.
 
 ## 3. Avgjørelser
 
@@ -51,7 +51,7 @@ Fra `om-bord.md` 4.10, den gamle byggefila og før-bildene (`tests/ombord.py kys
 | # | Avvik | Rettet |
 |---|---|---|
 | A1 | 249 t mot 190 (+31 %) | 190,1 t (B1) |
-| A2 | Skroget var rader fra to spant med lapper i endene, kjøl og dødved som klosser | Én flate med kjølen i snittet (`Mesh`, 142 100 trekanter med alt) |
+| A2 | Skroget var rader fra to spant med lapper i endene, kjøl og dødved som klosser | Én flate med kjølen i snittet (`Mesh`, 141 988 trekanter med alt) |
 | A3 | Ingen spygatt, ingen klyss som hull, ingen koøyer i skroget | Åtte spygatt per side (åpne, med en stang), klyss, koøyer forut og akter, døra i bakkens front: ekte hull med foring |
 | A4 | Bakken 1,0 m over dekket, dør 0,86 m | B3 |
 | A5 | Garnet og lina gjennom huset (F20) | B5, B6 |
@@ -122,3 +122,48 @@ sidedekket ved huset.
 
 `qa/flatnorm.py`: tre små flater (0,04 m² hver, 21–22° skjevt) på ripestripa og under vann; ingen på hus og styrhus (`shade(shell, 5)`
 etter kuttet).
+
+## 8. Karakteren: 70/100, ikke ferdig
+
+Satt 11.11.2026 som en egen evaluering av en uavhengig underagent som bare fikk rendringene (14 bilder), de seks før- og etter-arkene,
+tretten etter-bilder fra spillet, `check()`-utskriften, funnene i 4.10 og Jonas' skala (Jonas 10.11.2026). Målet var 75. Anslaget før
+var 48 på den gamle skalaen med åtte punkter, så tallene kan ikke trekkes fra hverandre.
+
+| Punkt | Vekt | Poeng | Begrunnelse (sensorens, forkortet) |
+|---|---|---|---|
+| Skrogutforming | 20 | 16 | Sammenhengende skrog med jevnt spring, rundgatt, kjøl med hæl, ror, propell, slingrekjøl, plateskjøter og dypgangsmerker; målene stemmer. Formen er troverdig, men ikke bekreftet mot tegning eller bilde. Baugen er nokså butt og flat i platene |
+| Detaljer | 20 | 14 | Koøyer, spygatt, pullerter, lufterør, ankerspill, klokke, leidere, brannbøtter og lukekiler synes. Dekket er en flekkete grå flate uten sveis; lastevinsjen er en sylinder med en rød kloss; døra i bakkens front er et svart hull; rust synes knapt |
+| Lanterner | 5 | 3 | Høydene og avstandene er regnet mot reglene. I nattbildene fra spillet ved kai synes ingen lanterner, og nattrendringen er for mørk til å vise mer enn tre lys |
+| Styrhus | 10 | 7 | Teakstyrhus på hvitt dekkshus med båtdekk, rekke og utstyr på taket ser riktig ut for typen. Fra roret er stolpene tjukke, og bakken, masta og bommen fyller midtfeltet |
+| Arbeidsflyt | 25 | 15 | Folk ved haleren i garn- og linetrekket, juksa på begge sider, tre på rekke ved bordet, kranen mot kaia med en mann ved den. Åpent: klump ved galgen i teinetrekket, ingen på dekk ved setting av teiner, ryddingen på akterdekket. Holdt på 60 % fordi F19 ikke kan utelukkes i teinetrekket |
+| Utforming av dekk | 20 | 15 | Logisk rekke om styrbord (galge og haler, kar, bord, luke) med tregrating og sidedekk på 1,04 m; garnkar og setterull akter, stamper om babord. Akterdekket er nakent i modellen; fire garnkar er lite mot 240 garn |
+| **Sum** | 100 | **70** | |
+
+## 9. Det sensoren så som galt, og hva som er vårt
+
+| Det sensoren så | Hva det er |
+|---|---|
+| Tre–fire i en klump ved galgen i teinetrekket | Felles kode (`deckcrew.js`: de som sorterer, får plassene `pick` og `pot` ved haleren). Klippesjekken i opptaket var tom, men bildet er for lite til å avgjøre. Modellens del: plassen der teina tømmes (`kit.pots.spot`) er ikke satt, så spillet legger den ved haleren. **Runde 2:** et eget sted for tømmingen akter for karet |
+| Ingen på dekk og ingen stabler ved setting av teiner | Felles (F4 for teiner, OB3 «står igjen»). Stablene tegnes når teinene er om bord; opptaket setter dem ut først |
+| Lanternene synes ikke i nattbildene | Ved kai er lanternene slukket i spillet (`lanterns`: ingen i havn). Ikke sett under seilas om natta: **runde 2** tar et nattbilde til sjøs |
+| Dekket flekkete grått uten sveis | Modellen. **Runde 2:** sveisesømmer i dekksplatene, sklisikre felt, slitasje der de går |
+| Utsikten fra roret stengt av bakken, masta og bommen; tjukke stolper | Modellen: bakken er hevet til 1,97 m, og øyet ser 0,9° over rekka forut. **Runde 2:** smalere stolper, bommen lagt til side eller lavere, og vurder høyere styrhusdørk |
+| Ryddingen på akterdekket, «ingen slange» | Felles (F12, OB14, steg 92). Slangen finnes på husets front ved bordet, men synes ikke i bildene |
+| Lastevinsjen grov, døra i bakken et svart hull, bordet som et stativ | Modellen. **Runde 2** |
+| Akterdekket nakent | Modellen: bare setterullen og pullertene. **Runde 2:** en garnbinge av bord, beslag for karene, lys |
+| Den moderne røde kranen | Spillets felles kran (M16). Står i backloggen |
+| Hvite flekker bak båten | Felles (`24-cinema.js`) |
+
+## 10. Testene
+
+- `python3.11 tools/boats/kyst21.py check`: 33 sjekker, alle grønne.
+- `node tests/unit/run.mjs`: 3 306 grønne. Nye sjekker for kyst21 i `trim.test.mjs` (sett røde mot den gamle tabellen), `jig.test.mjs`
+  (sett røde mot den gamle eksporten) og `teiner.test.mjs` (grønn også mot den gamle).
+- `tests/ombord.py kyst21` før og etter, begge formater, alle operasjonene; redskapsreglene slått av i opptaket
+  (`KYST_OMBORD_NORULE=1`), fordi alle feltene i Senja-pakka ligger innenfor grunnlinjen. Klippesjekken var tom i alle klippene.
+- Testene i nettleseren står i commit-meldingen og i meldingen til Jonas.
+
+## 11. Spørsmål og det som ville gjort resultatet bedre
+
+- Et bilde av en stålbåt på 18–25 m fra 60- eller 70-tallet med bakk og rundgatt, sett ovenfra eller aktenfra (akterdekket er eget valg).
+- Skal styrhuset løftes en halv etasje, slik at skipperen ser over bakken? Det endrer silhuetten.
