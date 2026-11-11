@@ -1037,6 +1037,91 @@ def main():
         print(ok(E['first'] == '0' and E['one'] == '1' and '«errtest ny 1282 feil»' in E['body'] and 'nye feil' in E['body'] and '3 krasj' in E['body'] and 'TypeError: x' not in E['body']
                  and E['wait'] == '0' and E['next'] == '1' and 'errtest annen' in E['body2'] and E['same'] == '0' and E['anon'] and E['pl']),
               'a new error or three crashes push the admin once, never a known one; half an hour between, nothing lost; numbers do not make a message new; no player runs it', E)
+        # L1d, the error alert (20261110190000_err_kanal_uptime.sql): the page's channel is kept with the error (meta.ch, and an older
+        # page without it still gets through); an error from the test edition pushes with «[test]» first and never at night (23-07
+        # Norwegian time: the cursor waits and it is told at seven), at most one each half hour as before, and the production's alert
+        # is as it was; «Spillet hang i N s» pushes each time, «kom tilbake» not by itself. Down: two misses in a row (pg_net behind a
+        # stand-in, the test has no net) give «svarer ikke», the answer after gives «oppe igjen», the relay is up on a 404, and the
+        # test edition is never told at night.
+        L = {}
+        try:
+            DAY, NIGHT, MORN = "'2026-11-12 12:00+01'", "'2026-11-12 23:30+01'", "'2026-11-13 07:05+01'"
+            sql("update public.players set game_admin = true where id = '%s'; insert into public.push_subs (endpoint, player_id, p256dh, auth, lang) values ('https://push.test/adm', '%s', 'k', 'a', 'no') on conflict do nothing" % (adm, adm))
+            sql("delete from public.push_state where k like 'err_alert_at%'")
+            sql("select public.tm_error('l1d fra test', 'x', '', '{\"ch\":\"test\",\"version\":\"v1\"}')", {}, 'anon'); sql("select public.tm_error('l1d uten kanal', 'x', '', '{\"version\":\"v1\"}')", {}, 'anon')
+            sql("select public.tm_error('l1d rar kanal', 'x', '', '{\"ch\":\"<b>hei\"}')", {}, 'anon')
+            L['ch'] = sql("select string_agg(coalesce(ch, '-'), ',' order by id) from public.errors where msg like 'l1d %'")
+            L['first'] = sql("select public.err_alert(%s)" % DAY)   # (the test edition's cursor was started by the migration: its first error is told)
+            sql("delete from public.push_queue where tag like 'dsb-err%'; delete from public.push_state where k like 'err_alert_at%'")
+            q = lambda tag: sql("select coalesce((select title || ' / ' || replace(body, E'\\n', ' | ') from public.push_queue where tag = '%s' order by id desc limit 1), '')" % tag)
+            nq = lambda tag: int(sql("select count(*) from public.push_queue where tag = '%s'" % tag))
+            sql("insert into public.errors (msg, src, ch) values ('l1d ny testfeil', 'x', 'test')")
+            L['night'] = sql("select public.err_alert(%s)" % NIGHT); L['night_q'] = nq('dsb-err-test')
+            L['morn'] = sql("select public.err_alert(%s)" % MORN); L['test'] = q('dsb-err-test')
+            sql("insert into public.errors (msg, src, ch) values ('l1d enda en testfeil', 'x', 'test'), ('l1d ny i produksjon', 'x', null)")
+            L['half'] = sql("select public.err_alert(%s::timestamptz + interval '10 minutes')" % MORN); L['prod'] = q('dsb-err'); L['half_test'] = nq('dsb-err-test')
+            L['later'] = sql("select public.err_alert(%s::timestamptz + interval '40 minutes')" % MORN); L['test2'] = q('dsb-err-test')
+            # the production at night is told as before
+            sql("insert into public.errors (msg, src) values ('l1d natt i produksjon', 'x')")
+            L['prod_night'] = sql("select public.err_alert(%s::timestamptz + interval '1 day')" % NIGHT); L['prod_night_q'] = q('dsb-err')
+            # a hang from the watchdog: told each time, the return alone not
+            sql("delete from public.push_state where k like 'err_alert_at%'")
+            sql("insert into public.errors (msg, src) values ('Spillet hang i 15 s · kart · sailing', 'watchdog')"); L['hang1'] = sql("select public.err_alert(%s)" % DAY)
+            sql("delete from public.push_state where k like 'err_alert_at%'")
+            sql("insert into public.errors (msg, src) values ('Spillet hang i 16 s · kart · sailing', 'watchdog')"); L['hang2'] = sql("select public.err_alert(%s)" % DAY); L['hang_q'] = q('dsb-err')
+            sql("delete from public.push_state where k like 'err_alert_at%'")
+            sql("insert into public.errors (msg, src) values ('Spillet hang i 57 s, kom tilbake · 3d · fishing', 'watchdog')"); L['back'] = sql("select public.err_alert(%s)" % DAY)   # (a shape never seen before)
+            L['anon'] = sql("select public.err_alert()", {}, 'anon', expect_err=True)[0]; L['pl'] = sql("select public.err_alert()", A, 'authenticated', expect_err=True)[0]
+            print(ok(L['ch'] == 'test,-,-' and L['first'] == '2'), 'the error keeps the channel the page says (test), nothing for the production or for anything else; the first error from the test edition is told', (L['ch'], L['first']))
+            print(ok(L['night'] == '0' and L['night_q'] == 0 and L['morn'] == '1' and L['test'].startswith('[test] Feil i spillet / ') and 'l1d ny testfeil' in L['test']),
+                  'an error from the test edition pushes with «[test]» first, never between 23 and 07: the cursor waits and it is told at seven', (L['night'], L['night_q'], L['morn'], L['test']))
+            print(ok(L['half'] == '1' and L['prod'].startswith('Feil i spillet / ') and 'l1d ny i produksjon' in L['prod'] and 'testfeil' not in L['prod'] and L['half_test'] == 1
+                     and L['later'] == '1' and 'l1d enda en testfeil' in L['test2']),
+                  'at most one push each half hour for each edition, nothing lost; the production\'s alert has no «[test]» and nothing from the test edition', (L['half'], L['prod'], L['half_test'], L['later'], L['test2']))
+            print(ok(L['prod_night'] == '1' and 'l1d natt i produksjon' in L['prod_night_q']), 'the production is told at night as before', (L['prod_night'], L['prod_night_q']))
+            print(ok(L['hang1'] == '1' and L['hang2'] == '1' and 'Alvorlig: Spillet hang i 16 s' in L['hang_q'] and L['back'] == '0' and L['anon'] and L['pl']),
+                  '«Spillet hang i N s» pushes each time (a grave one), «kom tilbake» not by itself; no player runs err_alert', (L['hang1'], L['hang2'], L['hang_q'], L['back']))
+            # down, with pg_net behind a stand-in: http_get gives an id, and the test writes the answers
+            sql("""create schema if not exists net; create sequence if not exists net.seq;
+                   create table if not exists net._http_response (id bigint primary key, status_code int, timed_out boolean, error_msg text);
+                   create or replace function net.http_get(url text, params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds int default 5000) returns bigint language sql as $f$ select nextval('net.seq') $f$;""")
+            def answer(prod, rt, test):   # the answers to the questions asked last: a status, or None for no answer (timed out)
+                for site, st in (('prod', prod), ('rt', rt), ('test', test)):
+                    sql("insert into net._http_response (id, status_code, timed_out, error_msg) select req, %s, %s, %s from public.uptime where site = '%s' and req is not null on conflict do nothing"
+                        % ('null' if st is None else st, 'true' if st is None else 'false', "'timeout'" if st is None else 'null', site))
+            tick = lambda at: sql("select public.uptime_tick(%s)" % at)
+            ups = lambda: sql("select coalesce(string_agg(title, ' ; ' order by id), '') from public.push_queue where tag like 'dsb-up-%'")
+            U = {'ask': tick(DAY)}; U['sites'] = sql("select string_agg(site || ':' || (req is not null), ',' order by site) from public.uptime")
+            answer(200, 404, 200); U['up'] = tick(DAY)
+            answer(None, 404, 200); U['miss1'] = tick(DAY); U['q1'] = ups()
+            answer(502, 404, 200); U['miss2'] = tick(DAY); U['q2'] = ups()
+            answer(None, 404, 200); U['miss3'] = tick(DAY); U['q3'] = ups()
+            answer(200, 404, 200); U['back'] = tick(DAY); U['q4'] = ups()
+            sql("delete from public.push_queue where tag like 'dsb-up-%'")
+            answer(200, 502, 200); tick(DAY); answer(200, 502, 200); U['rt'] = tick(DAY); U['q_rt'] = ups()
+            answer(200, 404, 200); tick(DAY); sql("delete from public.push_queue where tag like 'dsb-up-%'")
+            # the test edition: down in the night says nothing; still down at seven: told then, with «[test]» first
+            answer(200, 404, None); tick(NIGHT); answer(200, 404, None); U['t_night'] = tick(NIGHT); U['q_night'] = ups()
+            answer(200, 404, None); U['t_morn'] = tick(MORN); U['q_morn'] = ups()
+            answer(200, 404, 200); U['t_back'] = tick(MORN); U['q_back'] = ups()
+            # down and up again within the night: nothing at all
+            sql("delete from public.push_queue where tag like 'dsb-up-%'")
+            answer(200, 404, None); tick(NIGHT); answer(200, 404, None); tick(NIGHT); answer(200, 404, 200); tick(NIGHT); answer(200, 404, 200); U['t_quiet'] = tick(MORN); U['q_quiet'] = ups()
+            # no answer row at all (pg_net not running): neither up nor down
+            sql("delete from public.push_queue where tag like 'dsb-up-%'"); tick(DAY); tick(DAY); U['none'] = tick(DAY); U['q_none'] = ups()
+            U['anon'] = sql("select public.uptime_tick()", {}, 'anon', expect_err=True)[0]; U['tab'] = sql("select count(*) from public.uptime", A, 'authenticated', expect_err=True)[0]
+            print(ok(U['ask'] == '0' and U['sites'] == 'prod:true,rt:true,test:true' and U['up'] == '0' and U['miss1'] == '0' and U['q1'] == ''
+                     and U['miss2'] == '1' and U['q2'] == 'detstorebla.no svarer ikke' and U['miss3'] == '0' and U['q3'] == U['q2']
+                     and U['back'] == '1' and U['q4'] == 'detstorebla.no svarer ikke ; detstorebla.no er oppe igjen'),
+                  'down: one miss says nothing, two in a row (no answer, or a 502) push «svarer ikke» once, and the answer after pushes «oppe igjen»', U)
+            print(ok(U['rt'] == '1' and U['q_rt'] == 'Sanntidsreléet på detstorebla.no svarer ikke'), 'the relay is up on its own 404 without a ticket, and down on Caddy\'s 502', (U['rt'], U['q_rt']))
+            print(ok(U['t_night'] == '0' and U['q_night'] == '' and U['t_morn'] == '1' and U['q_morn'] == '[test] test.detstorebla.no svarer ikke'
+                     and U['t_back'] == '1' and U['q_back'].endswith('[test] test.detstorebla.no er oppe igjen') and U['t_quiet'] == '0' and U['q_quiet'] == ''),
+                  'the test edition: «[test]» first, never a push between 23 and 07 (told at seven if it still holds, nothing when it came back in the night)', (U['t_night'], U['q_night'], U['q_morn'], U['q_back'], U['q_quiet']))
+            print(ok(U['none'] == '0' and U['q_none'] == '' and U['anon'] and U['tab']), 'no answer row at all (pg_net not running) is neither up nor down; no player runs uptime_tick or reads the table', (U['none'], U['q_none']))
+        except Exception as e:
+            print('FEIL', 'L1d, the error alert with the channel, the night and down (20261110190000_err_kanal_uptime.sql)', str(e)[:400], L)
+        sql("update public.players set game_admin = false where id = '%s'; delete from public.push_subs where endpoint = 'https://push.test/adm'; delete from public.push_queue where tag like 'dsb-err%%' or tag like 'dsb-up-%%'" % adm)
         # Ø6 ryddejobbene (20261105150000_rydd.sql), last, so the ceilings stop nothing above. Funn 9: without a sign-in the errors and the
         # frame rate stop at a ceiling that grows with the active players; an event's data is kept to 4 000 bytes. Funn 10: a guest's berth gives way to an account and is not shown to it. Funn 12: anon runs only what it should.
         PY = {'sub': 'user_01RYD', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", PY, 'authenticated'); sql("select public.tm_consent(true, 1990)", PY, 'authenticated')

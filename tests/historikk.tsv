@@ -2218,6 +2218,18 @@
 2026-11-10 22:05	ccr-0d64d46d-7ojp1d	d9150a0	guesttest	OK	72	lite	alene	
 2026-11-10 23:09	claude/opp5-modellene-vkbwvw	9fd8fa4+	boottest	OK	19	lite	alene	
 2026-11-10 23:17	claude/opp5-modellene-vkbwvw	6febca3+	boottest	OK	18	lite	alene	
+2026-11-11 00:02	ccr-d120fd15-qq3fhp	679a35c+	trip2	OK	38	lite	samtidig	
+2026-11-11 00:03	ccr-d120fd15-qq3fhp	679a35c+	tabtest	OK	112	lite	samtidig	
+2026-11-11 00:03	ccr-d120fd15-qq3fhp	679a35c+	synctest	OK	73	lite	samtidig	
+2026-11-11 00:04	ccr-d120fd15-qq3fhp	679a35c+	cloudtest	FEIL	44	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-11 00:04	ccr-d120fd15-qq3fhp	679a35c+	errtest	OK	39	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	guesttest	OK	84	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	pwatest	OK	27	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	boottest	OK	30	lite	samtidig	
+2026-11-11 00:05	ccr-d120fd15-qq3fhp	679a35c+	pushtest	OK	23	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	starttest	OK	387	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	bootgtest	OK	162	lite	samtidig	
+2026-11-11 00:12	ccr-d120fd15-qq3fhp	679a35c+	kanaltest	OK	65	lite	samtidig	
 2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	geartest	FEIL	52	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
 2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	worktest	FEIL	36	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
 2026-11-11 00:19	ccr-13ec41bb-wikvwe	f5909a5	crewwalk	OK	14	lite	samtidig	
@@ -2265,6 +2277,10 @@
 2026-11-10 23:59	ccr-adaac755-n9bghe	e61ffe5e+	docktest	OK	61	lite	samtidig	
 2026-11-11 00:06	claude/l1b-production-release-allrqm	37d9d7ff	boottest	OK	30	lite	samtidig	
 2026-11-11 00:07	claude/l1b-production-release-allrqm	37d9d7ff	kanaltest	OK	70	lite	samtidig	
+2026-11-11 00:16	ccr-d120fd15-qq3fhp	01a5f95	hengtest	OK	105	lite	samtidig	
+2026-11-11 00:16	ccr-d120fd15-qq3fhp	01a5f95	errtest	OK	34	lite	samtidig	
+2026-11-11 00:16	ccr-d120fd15-qq3fhp	01a5f95	boottest	OK	22	lite	samtidig	
+2026-11-11 00:16	ccr-d120fd15-qq3fhp	01a5f95	kanaltest	OK	68	lite	samtidig	
 2026-11-11 02:03	ccr-a35513a2-4y5tlo	9f8c03b	boottest	OK	28	lite	samtidig	
 2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	csptest	OK	92	lite	samtidig	
 2026-11-11 02:04	ccr-a35513a2-4y5tlo	9f8c03b	kanaltest	OK	73	lite	samtidig	
@@ -2276,3 +2292,7 @@
 2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	selfcrew	OK	6	lite	samtidig	
 2026-11-11 07:10	claude/l1b-production-release-allrqm	99ea4bc7	boottest	OK	36	lite	samtidig	
 2026-11-11 07:11	claude/l1b-production-release-allrqm	99ea4bc7	kanaltest	OK	73	lite	samtidig	
+2026-11-11 07:34	ccr-d120fd15-qq3fhp	1f8dda3	hengtest	OK	117	lite	samtidig	
+2026-11-11 07:34	ccr-d120fd15-qq3fhp	1f8dda3	boottest	OK	43	lite	samtidig	
+2026-11-11 07:35	ccr-d120fd15-qq3fhp	1f8dda3	csptest	OK	90	lite	samtidig	
+2026-11-11 09:01	ccr-80add647-ogpssb	e0aa096+	boottest	OK	47	lite	alene	
