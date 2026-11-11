@@ -4,7 +4,7 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
-- **OB4, lossingen, isen og båtens egen kran med mannskapet (steg 82, 11.11.2026, Jonas' økt, grenen `ccr-309f2cf5-w71mxh`; 5.19e i `docs/systemer/folk-om-bord.md`, «Liggeplassen» i `docs/systemer/havner-og-mottak.md`, 4.14 i `docs/planer/om-bord.md`):** F10, F11, F22 og F23 rettet for båtene med mannskap på dekk. **Rullet ut til testutgaven 11.11.2026 (versjon 6a98d456e2b8); produksjonen får det ved et slipp.** Det som står igjen og er antatt:
+- **OB4, lossingen, isen og båtens egen kran med mannskapet (steg 82, 11.11.2026, Jonas' økt, grenen `ccr-309f2cf5-w71mxh`; 5.19e i `docs/systemer/folk-om-bord.md`, «Liggeplassen» i `docs/systemer/havner-og-mottak.md`, 4.14 i `docs/planer/om-bord.md`):** F10, F11, F22 og F23 rettet for båtene med mannskap på dekk. **Rullet ut til testutgaven 11.11.2026 (versjon 756582fc0efa); produksjonen får det ved et slipp.** Det som står igjen og er antatt:
   - **Ingen står nede i rommet (F10, delvis):** lukene er lukket i modellene, så mottakets kar står på dekket og fylles ikke synlig fra rommet. Den som hekter på, står med hendene på neste kar mellom løftene. En åpen luke og en mann i den hører til båtfasene (OB12, OB13 og de neste rundene på sjarkene).
   - **Karet på plass to hopper til plass én** når det første er løftet (`landScene` `deck`, fra før). Å la trucken eller kranen sette tomme kar om bord er ikke bygd.
   - **Kyst15:** mottakets kar står oppe på shelterdekket (eneste dekk med åpen himmel), og isen faller på shelterdekket uten slange fordi iskassa står under det. OB12 (steg 90) reviderer båten; da bør luka og isen ses på.
