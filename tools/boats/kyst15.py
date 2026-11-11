@@ -784,7 +784,11 @@ def wheelhouse(fine=True):
         A.poly([(a[0], a[1], zl), (b[0], b[1], zl), (e[0], e[1], zt_), (f[0], f[1], zt_)], C['hull'], (nrm[0] / ln * (zt_ - zl), nrm[1] / ln * (zt_ - zl), BRIM_I))   # the face, sloping in
         A.poly([(f[0], f[1], zt_), (e[0], e[1], zt_), (c[0], c[1], crown(*c)), (d[0], d[1], crown(*d))], C['roof'], (0, 0, 1))
         A.poly([(a[0], a[1], WR - 0.001), (b[0], b[1], WR - 0.001), (b[0], b[1], WR - 0.025), (a[0], a[1], WR - 0.025)], C['frame'], nrm)   # the drip edge
-    A.poly([(x, y, crown(x, y)) for x, y in ri], C['roof'], (0, 0, 1))
+    # (the roof inside the brim's inner edge, as a fan from its middle: the grid over it stops short of the front and of the edge, and the
+    # roof was open there down to its underside; a fan, not one big face, which goes dark in the game: kap. 19)
+    cx_ = sum(p[0] for p in ri) / len(ri)
+    for i in range(len(ri)):
+        a, b = ri[i], ri[(i + 1) % len(ri)]; A.poly([(cx_, 0.0, crown(cx_, 0.0) - 0.002), (a[0], a[1], crown(*a)), (b[0], b[1], crown(*b))], C['roof'], (0, 0, 1))
     # the roof's top as a grid (a big flat face goes dark in the game: kap. 19)
     xr0, xr1 = WX0 + 0.10, WXS - 0.10; NXR, NYR = (10, 10) if fine else (1, 1)
     yr = lambda x: wy(x) - 0.12
@@ -1180,7 +1184,8 @@ def anchors():
             'deck': {'y': round(ZMD - WL, 3), 'z': round(-(6.2 - XM), 3)}, 'gw': round(SILL - WL, 3),
             'stern': round(XM - XA, 3), 'bow': round(-(XF - XM), 3), 'side': round(BEAM / 2, 3), 'beam': BEAM, 'pl': 6.0, 'rl': 2.5, 'open': False, 'hand': False,
             'pole': G(px - 0.18, py, zp + 1.42), 'hauler': G(HXX, -(ybi(HXX) - 0.05), SILL + 0.30), 'haulerFoot': G(HXX, -(ybi(HXX) - HFOOT), ZMD),
-            'jigZ': [[sd, round(XM - x, 3)] for sd, x in JIG],
+            # ([side, z, x, y]: the point on the sill itself, 5 cm inside its outer edge; 13-instruments.js jigRail)
+            'jigZ': [[sd, round(XM - x, 3), round(sd * (y_at(x, SILL, -1) - 0.05), 3), round(SILL - WL, 3)] for sd, x in JIG],
             # (the rail the idle hands lean on is the shelter deck's: the working deck under it has walls, vessel3d.js deckPoints)
             'leanY': round(z_sd(5.0) - WL, 3), 'filler': G(8.9, 2.6, sdeck(8.9, 2.6) + 0.06),
             'kit': kit_places(G)}

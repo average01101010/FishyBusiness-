@@ -226,6 +226,10 @@
   // The haulers from Blender (tools/gear/haler.py, the user's drawings 03.10.2026): the net hauler and the line hauler on a post inside
   // the starboard rail with the arm out over the side. Parts from their own origins: the frame from the post's foot, the sheave and the
   // stripper from their axles (along the boat, so they turn about z); in the extras the path the gear takes over them.
+  // the foot of the hauler's post (and the pot davit's) on deck: where the model says (anchors.haulerFoot, OB12: on a hull that flares out
+  // to the rail, 0.2 m inside her greatest beam is outside her side at the working deck, and the kyst15's post came down outside the
+  // hull), else 0.2 m inside her half beam abreast the hauler
+  const haulFootP = (G, d, sx, hz) => G.haulerFoot ? [G.haulerFoot[0], G.haulerFoot[1], G.haulerFoot[2]] : [sx - 0.2, d.y, hz];
   const HAULM = {}; let HAULA = 0, HAULT = 0, GAFFH = null;   // GAFFH: where the line was at the last frame (the gaff events)
   // setting nets or lines (plan E2): the gear runs from the stack over the stern into the sea astern at the setting speed, the net with
   // its floats and lead line, the line with baited hooks on their snoods; the grapnel goes over first and sinks
@@ -401,7 +405,7 @@
       POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
     const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
     if (G.snok && GB.snoHaul && G.kit && G.kit.pots){ snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS); return; }   // (the snow crab vessel's own work, H3d2)
-    const DV = potDavit(skiff) && !G.snok, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
+    const DV = potDavit(skiff) && !G.snok, P0 = skiff ? [sx - 0.2, d.y, HP[2]] : haulFootP(G, d, sx, HP[2]), blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
     const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
     // tipped over its inboard edge of the bottom ring by tip (rad) to be emptied through its laced bottom
     const tipM = (p, tip) => chain(BMrel, M4.T(p[0] - pw, p[1], p[2]), M4.RZ(tip), M4.T(pw, 0, 0), M4.S(ps));
@@ -488,9 +492,7 @@
     if (G.hand && SKA && SKA.haulFoot && pick === 'linehaler'){ const HM = haulModel('line'); if (HM){ const F = SKA.haulFoot, at = q => chain(BMrel, M4.T(F[0] + q[0], F[1] + up + q[1], F[2] + q[2]));
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick; return; } }
     if (G.hand){ if (pick === 'garnhaler' || !SKA || !SKA.haul) return; nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(SKA.haul[0], SKA.haul[1] + up, SKA.haul[2]))); KST.haul = pick; return; }
-    // (OB12: the post's foot where the model says, anchors.haulerFoot: on a hull that flares out to the rail, 0.2 m inside her greatest
-    // beam is outside her side at the working deck, and the kyst15's post came down outside the hull)
-    if (!G.hauler) return; const P0 = [G.haulerFoot ? G.haulerFoot[0] : G.beam / 2 - 0.2, d.y + up, G.hauler[2]], X = GB.px || {};
+    if (!G.hauler) return; const F0 = haulFootP(G, d, G.beam / 2, G.hauler[2]), P0 = [F0[0], F0[1] + up, F0[2]], X = GB.px || {};
     if (G.kit && G.kit.pots && G.snok && GB.snoHaul){ snoHauler(BMrel, G, VP, 0); KST.haul = 'snokrabbe'; return; }
     if (pick === 'teinehaler'){ if (!GB.davit || G.snok) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
       if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]))); KST.haul = pick; return; }
@@ -706,7 +708,7 @@
       // the hauler on its post inside the rail (its foot on deck), the gear from the water up its path, over the sheave and down the
       // tray; the sheave turns with the gear (0.6 m/s while hauling), the stripper the other way; floats on the net, snoods on the line
       // (the autoline's sheave turns at the line's speed, about 2 500 hooks an hour at 1.3 m: 0.9 m/s, on the groove's radius)
-      const P0 = auto ? G.aline.foot : postH ? SKA.haulFoot : [G.haulerFoot ? G.haulerFoot[0] : sx - 0.2, d.y, HP[2]], v = turning ? (auto ? 0.9 : 0.6) : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
+      const P0 = auto ? G.aline.foot : postH ? SKA.haulFoot : skiff ? [sx - 0.2, d.y, HP[2]] : haulFootP(G, d, sx, HP[2]), v = turning ? (auto ? 0.9 : 0.6) : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
       HAULA += v * clamp(t - HAULT, 0, 0.1) / (auto ? HM.rg : HM.r); HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);

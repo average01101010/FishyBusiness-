@@ -168,9 +168,9 @@ OPS = {
 # (OB4 11.11.2026) the same at the quay from nearer and lower, so the hands at the tubs, the rail and the ice box can be seen: 'lossn' in
 # the first lift at the game's own pace (the hook comes down, the sling goes on, the tub goes up), 'isn' and 'krann' as 'is' and 'kran'
 # the camera for the work under a shelter deck (F18, OB12): abeam to starboard and low for the hauling station, astern and low for the
-# setting port
-UNDER = {'jig': (-1.45, 0.10, 0.75), 'maskin': (-1.45, 0.10, 0.75), 'sloy': (-1.30, 0.10, 0.70), 'trekk': (-1.20, 0.10, 0.75),
-         'sett': (0.22, 0.10, 0.85), 'settfull': (0.22, 0.10, 0.85), 'riggfull': (-2.0, 0.12, 0.85)}
+# setting port; the fourth number is how far aft of her middle the camera looks, as a part of her length (cam.at)
+UNDER = {'jig': (-1.45, 0.10, 0.62, 0.20), 'maskin': (-1.45, 0.10, 0.62, 0.20), 'sloy': (-1.30, 0.10, 0.55, 0.14), 'trekk': (-1.25, 0.10, 0.60, 0.10),
+         'sett': (0.22, 0.10, 0.70, 0.42), 'settfull': (0.22, 0.10, 0.70, 0.42), 'riggfull': (-2.0, 0.14, 0.75, 0.30)}
 OPS['lossn'] = [OPS['loss'][0], OPS['loss'][1] + ' (nært: den som hekter på, og den som gir tegn)', OPS['loss'][2] + " S.mult = 1; b.land.t0 -= LANDING.prep * 0.05 + LANDING.lift * 0.2; b.land.until -= LANDING.prep * 0.05 + LANDING.lift * 0.2;", (0.55, 1.22, 0.95), 16]
 OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22, 0.95), 12]
 OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
@@ -255,7 +255,9 @@ async def record(o, fmt, outdir):
             yaw, pitch, dist = cam
             # (F18, OB12: on a boat whose work is under a shelter deck the camera stands low off the working side, or astern for the
             # setting through the port in her stern, and looks in through the openings; from above only the shelter deck shows)
-            if op in UNDER and await pg.evaluate("(t) => { const V = VESSELS[t]; return !!(V.fac && V.fac.shelter === true && V.len >= 12 && V.len < 20); }", o['boat']): yaw, pitch, dist = UNDER[op]
+            if op in UNDER and await pg.evaluate("(t) => { const V = VESSELS[t]; return !!(V.fac && V.fac.shelter === true && V.len >= 12 && V.len < 20); }", o['boat']):
+                yaw, pitch, dist, aft = UNDER[op]
+                await pg.evaluate("(z) => { G3._debug.cam.at = [0, 0.9, z]; }", aft * L)
             # (F22, OB4: at a quay the camera stands off the side away from it; a boat that lies port side to has it on the other side)
             if op in QUAYOPS: yaw *= await pg.evaluate("(t) => typeof berthSide === 'function' ? berthSide(t) : 1", o['boat'])
             await pg.evaluate("([y, p, d]) => { const c = G3._debug.cam; c.helm = false; c.yaw = y; c.pitch = p; c.dist = d; }", [yaw, pitch, dist * max(L, 4) * (1.35 if fmt == 'staaende' else 1)])

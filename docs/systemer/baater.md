@@ -163,7 +163,7 @@ Tabellene under er hentet fra spillet 19.10.2026 (`VESSELS` etter `vesselDerive`
 | `hurtigsjark` | styrhus | – | kokeplate | ja | – | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 50 / 26 / 18 | 350 kg | 6 |
 | `sjarkny` | styrhus | – | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 60 / 30 / 12 | 400 kg | 4 |
 | `breisjark` | styrhus | ja | bysse | ja | ja | – | 2 / 1 | ja | – | – / – | linehaler, garnhaler, teinehaler | 100 / 33 / 6 | 450 kg | 2 (OB11, valg 32: to juksaplasser på den lave ripa om styrbord; akterskansen er 1,5 m høy) |
-| `kyst15` | styrhus | ja | bysse | ja | ja | ja | 3 / 2 | ja | 1 | – / – | linehaler, garnhaler, teinehaler | 160 / 33 / 30 | 800 kg | 8 |
+| `kyst15` | styrhus | ja | bysse | ja | ja | ja | 3 / 2 | ja | 1 | – / – | linehaler, garnhaler, teinehaler | 160 / 33 / 30 | 800 kg | 4 (OB12, valg 31 A: to juksaplasser i haleporten og to i luka akter for den; resten av sida er shelterdekkets vegg) |
 | `kyst21` | styrhus | – | bysse | ja | ja | ja | 3 / 2 | ja | 2 | – / – | linehaler, garnhaler, teinehaler | 240 / 33 / 30 | 1200 kg | 8 |
 | `snokrabbe` | styrhus | ja | bysse | ja | ja | ja | 4 / 2 | ja | 5 | – / – | linehaler, garnhaler, teinehaler | 0 / 0 / 7000 | 2000 kg | 0 |
 | `autoliner` | styrhus | ja | bysse | ja | ja | ja | 4 / 1 | ja | 3 | – / 2 500 | linehaler, garnhaler, teinehaler | 0 / 0 / 4 | 2000 kg | 0 |
