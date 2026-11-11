@@ -68,7 +68,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 513 `bridgeUnderUnit(br, extra)`
   - 518 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (263 linjer)
+## `src/js/core/01b-mapdata.js` (264 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -105,11 +105,11 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 193 `finBlock(L, bx, by)`
   - 199 `finCell(L, ix, iy)`
   - 215 `finH(x, z, h)`
-  - 227 `mapHasM(L, x0, z0, x1, z1)`
-  - 234 `mapVec(pk, name)`
-  - 241 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 248 `simAreaReady()`
-  - 258 `mapDrop(pk)`
+  - 228 `mapHasM(L, x0, z0, x1, z1)`
+  - 235 `mapVec(pk, name)`
+  - 242 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 249 `simAreaReady()`
+  - 259 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (223 linjer)
 
@@ -494,7 +494,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 267 `hullX(R)`
   - 282 `hullStep(H, R, X, eta, deta, dt, o)`
 
-## `src/js/core/03d-quota.js` (462 linjer)
+## `src/js/core/03d-quota.js` (503 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 
@@ -572,45 +572,51 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 449 `bkAllow(H, bk, all)`
   - 454 `bkLanded(H, bk, all)`
   - 456 `bkNews(H)`
+- **462** cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
+  - 484 `sorRoom(k, q, acc)`
+  - 486 `sorLeft(k)`
+  - 493 `sorConf(byc, codHold, q, acc)`
+  - 502 `sorLanded(q, ok)`
 
-## `src/js/core/03e-rules.js` (512 linjer)
+## `src/js/core/03e-rules.js` (573 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
-  - 31 `ruPip(rings, x, y)`
-  - 32 `ruIn(P, x, y)`
-  - 38 `ruBlock(bx, by)`
-  - 56 `ruBits(p)`
-  - 73 `ruSeaBlock(bx, by)`
-  - 87 `ruSea(p)`
-  - 91 `ruShelf(p)`
-  - 96 `ruSkag(p, b = ruBits(p)`
-  - 102 `zoneLic(c)`
-  - 103 `zoneLicApply(c)`
-  - 107 `insideFjord(p)`
-  - 108 `insideBaseline(p)`
-  - 110 `blDist(p)`
-  - 116 `ruHom(p)`
-  - 122 `landsdel(p)`
-  - 123 `ruLok(p)`
-  - 125 `ruZone(p)`
-  - 126 `ruAt(id, p)`
-  - 128 `ruLineName(ref)`
-  - 143 `kcQuota(ll)`
-  - 160 `ruSeaRules(c, q, ll, md, add)`
-  - 233 `rulesAt(q)`
-  - 401 `f26In(f, ll)`
-  - 411 `ruByc(q)`
-  - 419 `ruBlockMsg(q)`
-  - 421 `ruMinSize(sp, p)`
-  - 426 `fjordLimits(p, H)`
-  - 453 `ruCtx()`
-  - 457 `ruNow()`
-  - 468 `ruLayerBlock(bx, by, q, budget, tail)`
-  - 482 `ruWpQ(w)`
-  - 487 `ruWpMsg(w)`
-  - 494 `ruOpenNear(p, q, maxKm)`
-  - 503 `ruTips()`
+  - 33 `ruPip(rings, x, y)`
+  - 34 `ruIn(P, x, y)`
+  - 40 `ruBlock(bx, by)`
+  - 58 `ruBits(p)`
+  - 75 `ruSeaBlock(bx, by)`
+  - 89 `ruSea(p)`
+  - 93 `ruShelf(p)`
+  - 98 `ruSkag(p, b = ruBits(p)`
+  - 109 `ruNsjo(p, ll = LL(p)`
+  - 128 `zoneLic(c)`
+  - 129 `zoneLicApply(c)`
+  - 133 `insideFjord(p)`
+  - 134 `insideBaseline(p)`
+  - 136 `blDist(p)`
+  - 142 `ruHom(p)`
+  - 148 `landsdel(p)`
+  - 149 `ruLok(p)`
+  - 151 `ruZone(p)`
+  - 152 `ruAt(id, p)`
+  - 154 `ruLineName(ref)`
+  - 169 `kcQuota(ll)`
+  - 186 `ruSeaRules(c, q, ll, md, add)`
+  - 259 `rulesAt(q)`
+  - 451 `f26In(f, ll)`
+  - 465 `ruByc(q)`
+  - 479 `ruBlockMsg(q)`
+  - 481 `ruMinSize(sp, p)`
+  - 486 `fjordLimits(p, H)`
+  - 514 `ruCtx()`
+  - 518 `ruNow()`
+  - 529 `ruLayerBlock(bx, by, q, budget, tail)`
+  - 543 `ruWpQ(w)`
+  - 548 `ruWpMsg(w)`
+  - 555 `ruOpenNear(p, q, maxKm)`
+  - 564 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (387 linjer)
 
@@ -1647,7 +1653,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (344 linjer)
+## `src/js/core/09j-kystvakt.js` (352 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
@@ -1674,10 +1680,10 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 239 `kvSums(sets, inside)`
   - 241 `kvMostSp(sets)`
   - 246 `kvCheck(b)`
-  - 280 `kvWhat(r)`
-  - 292 `kvWhatHav(r)`
-  - 306 `kvWhatSno(r)`
-  - 325 `kvFinish()`
+  - 288 `kvWhat(r)`
+  - 300 `kvWhatHav(r)`
+  - 314 `kvWhatSno(r)`
+  - 333 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (955 linjer)
 
@@ -2717,12 +2723,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1518 linjer)
+## `src/js/ui/phone/07-patch.js` (1527 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1506 `patch()`
+  - 1515 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3052,7 +3058,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (446 linjer)
+## `src/js/ui/07-guide.js` (449 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -3074,12 +3080,12 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 275 `panelPort()`
   - 309 `portSlip()`
   - 387 `landWarn(p)`
-  - 402 `landQText(short)`
-  - 410 `landQOthers()`
-  - 419 `landPage()`
-  - 435 `panelLog()`
-  - 440 `renderPanel()`
-  - 444 `panelBusy()`
+  - 405 `landQText(short)`
+  - 413 `landQOthers()`
+  - 422 `landPage()`
+  - 438 `panelLog()`
+  - 443 `renderPanel()`
+  - 447 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (328 linjer)
 
@@ -3138,7 +3144,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (476 linjer)
+## `src/js/ui/08-actions.js` (486 linjer)
 
 actions
 
@@ -3146,29 +3152,29 @@ actions
   - 76 `panelInput(e)`
   - 82 `panelChange(e)`
   - 112 `landConf(H, q, acc)`
-  - 151 `sell()`
-- **292** modal
-  - 294 `modal(html)`
-  - 303 `boatUnnamed()`
-  - 304 `boatChristen(nm)`
-  - 306 `showIntro(namesOnly)`
-- **324** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 329 `awayStart(mins, realMs)`
-  - 330 `awayEnd()`
-  - 331 `showAway(A)`
-- **358** time
-  - 364 `playMinutes(n, away)`
-  - 368 `catchUp(realMs)`
-  - 379 `tick()`
-  - 416 `deliverOrder()`
-- **426** chrome
-  - 427 `applyLang()`
-- **440** screens: full-screen 3D, or the chart plotter for route planning
-  - 441 `setBodyView(v3d)`
-  - 446 `openPlotter()`
-  - 451 `plotSetRender()`
-  - 455 `plotSetOpen(on)`
-  - 468 `kinoUi()`
+  - 154 `sell()`
+- **302** modal
+  - 304 `modal(html)`
+  - 313 `boatUnnamed()`
+  - 314 `boatChristen(nm)`
+  - 316 `showIntro(namesOnly)`
+- **334** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 339 `awayStart(mins, realMs)`
+  - 340 `awayEnd()`
+  - 341 `showAway(A)`
+- **368** time
+  - 374 `playMinutes(n, away)`
+  - 378 `catchUp(realMs)`
+  - 389 `tick()`
+  - 426 `deliverOrder()`
+- **436** chrome
+  - 437 `applyLang()`
+- **450** screens: full-screen 3D, or the chart plotter for route planning
+  - 451 `setBodyView(v3d)`
+  - 456 `openPlotter()`
+  - 461 `plotSetRender()`
+  - 465 `plotSetOpen(on)`
+  - 478 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
