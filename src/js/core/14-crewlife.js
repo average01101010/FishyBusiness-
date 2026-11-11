@@ -438,10 +438,14 @@ function lifeDepart(c){
   crewQuit(c, crewDialect(c, 'Takk for tiden om bord. Nå går jeg om bord i min egen. Du ser meg nok på feltet.'), 'Thank you for the time aboard. Now I go aboard my own. You will see me on the grounds.');
   log(c.name + ' har kjøpt egen båt, «' + boat + '», og fisker fra ' + (hp ? hp.name : c.home) + '.', c.name + ' has bought a boat of their own, the «' + boat + '», and fishes out of ' + (hp ? hp.name : c.home) + '.');
 }
-// the alumni's boats on the AIS (core/05-vessels.js npcStates): on the nearest known ground within 40 km of the home port, 07–15
-// every day but Sunday; no ground that near, and the boat stays out of sight (the national grounds are not in the game yet)
-function alumniGround(a){ if (a.g !== undefined) return a.g; const hp = (a.homePort && portById(a.homePort)) || portById(S.home || HOME0) || portById('finnsnes'); if (!hp || typeof GROUNDS === 'undefined') return a.g = null;   // a home with no port in the game: out of the skipper's home port
-  let best = null, bd = 40; for (const g of GROUNDS){ if (!g.p) continue; const d = dist(g.p, hp.p); if (d < bd){ bd = d; best = g.p; } } return a.g = best ? {x:best.x, y:best.y} : null; }
+// the alumni's boats on the AIS (core/05-vessels.js npcStates): on the nearest named fishing ground within 40 km of the home port
+// (Ø14 F3, 11.11.2026: Fiskeridirektoratet's grounds along the whole coast, feltNear in 01-world.js, not Senja's six), 07–15 every day
+// but Sunday; no ground that near, and the boat stays out of sight. a.gv: the place was found after F3 (one from before is found anew)
+function alumniGround(a){ if (a.g !== undefined && a.gv === 1) return a.g; const hp = (a.homePort && portById(a.homePort)) || portById(S.home || HOME0) || portById('finnsnes');
+  if (!hp){ a.gv = 1; return a.g = null; }   // a home with no port in the game: out of the skipper's home port
+  const q = feltNear(hp.p, 40).find(k => k.d > 1.5 && feltSd(k.g, k.p.x, k.p.y) > 0), g = q ? {x:Math.round(q.p.x * 1000) / 1000, y:Math.round(q.p.y * 1000) / 1000} : null;
+  // (kept only once the grounds' shapes are in, or known not to come: before that every ground is a circle round its label point)
+  if (typeof FELTW !== 'undefined' && FELTW.key >= 1){ a.g = g; a.gv = 1; } return g; }
 function alumniStates(H){
   const out = []; if (!S.alumni || !S.alumni.length) return out; const d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60; if (d.getUTCDay() === 0) return out;
   S.alumni.forEach((a, i) => { const G = alumniGround(a); if (!G) return; const j = (lookHash(String(a.id)) % 100) / 100; if (hod < 7 + j || hod >= 15 + j * 1.5) return;

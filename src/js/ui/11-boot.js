@@ -317,6 +317,11 @@ for (const v of S.fleet) withVessel(v, () => { const V = S.boat && VESSELS[S.boa
   if (lv > 1 && !equipFits('jukseLv', S.boat.type)){ let kr0 = 0; for (let i = 1; i < lv; i++) kr0 += EQUIP.jukseLv.tiers[i].kr * Math.max(0, S.equip.jukse || 0);
     delete S.equip.jukseLv; if (kr0 > 0){ book('redskap', kr0, 'Trinnet på juksamaskinene kjøpt tilbake', 'The reels\' tier bought back');
       log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner, og én person passer dem uten ' + lc1(EQUIP.jukseLv.tiers[lv - 1].no.replace(/^Juksamaskiner med /, '')) + '. Trinnet er kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' reels, and one person tends them without ' + EQUIP.jukseLv.tiers[lv - 1].en.replace(/^Reels with /, '') + '. The tier was bought back for ' + kr(kr0) + '.'); } }
+  // (OB12, the kyst15 from eight reels to four: a tier that gives nothing at the new count is paid back for every reel, and the tiers
+  // she keeps for the reels that go ashore, core/10-gear.js jigTierBack; before only a tier that did not fit the boat at all was)
+  { const n0 = S.equip.jukse || 0, lv1 = Math.round(+S.equip.jukseLv || 1), B = n0 > 0 && lv1 > 1 ? jigTierBack(S.boat.type, n0, lv1) : null;
+    if (B && B.kr > 0){ if (B.lv > 1) S.equip.jukseLv = B.lv; else delete S.equip.jukseLv; book('redskap', B.kr, 'Trinnet på juksamaskinene kjøpt tilbake', 'The reels\' tier bought back');
+      log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. Det du betalte for trinn på maskinene som ikke gir noe med så mange, er kjøpt tilbake for ' + kr(B.kr) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. What you paid for tiers on the reels that give nothing with that many was bought back for ' + kr(B.kr) + '.'); } }
   const over = (S.equip.jukse || 0) - (V.jukseMax || 0);
   if (over > 0){ const kr0 = equipKr('jukse') * over; S.equip.jukse -= over; book('redskap', kr0, 'Juksamaskiner tatt i land', 'Jigging reels taken ashore');
     log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. ' + over + ' er tatt i land og kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. ' + over + ' were taken ashore and bought back for ' + kr(kr0) + '.'); }

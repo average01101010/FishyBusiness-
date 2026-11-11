@@ -131,6 +131,7 @@ function bookSales(){
     if (bon.length) h += '<div class="bk-sub">' + BKL('Bonus', 'Bonus') + '</div>' + bon.map(([a, b]) => row(a, b)).join('');
     const cost = [];
     if (d.conf && d.conf[1] > 0.5) cost.push([BKL('Inndratt over kvote eller bifangst', 'Confiscated over quota or bycatch'), '−' + kr(d.conf[1])]);
+    if (d.ved > 0.5) cost.push([BKL('Vederlag for ilandføring, 20 % av det inndratte', 'Compensation for landing, 20 % of what was confiscated'), kr(d.ved)]);
     if (d.conf && d.conf[3] > 0.5) cost.push([BKL('Krabbe under minstemål', 'Undersized crab'), '−' + kr(d.conf[3])]);
     if (d.roe > 0.5) cost.push([BKL('Trekk for rognkrabbe', 'Berried crab deduction'), '−' + kr(d.roe)]);
     if (d.gf > 0.5) cost.push([BKL('Sløyd på mottaket', 'Gutted by the buyer'), '−' + kr(d.gf)]);   // (round haddock and saithe, R2)

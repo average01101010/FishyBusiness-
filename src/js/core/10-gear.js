@@ -291,6 +291,15 @@ function tierGate(k, lv){
   if (b.status !== 'port' || !portServices(portById(b.port), berthKind(b)).butikk) return [gL(E.name.no + ' kjøper du ved utstyrsbutikkens kai.', 'You buy the ' + E.name.en.toLowerCase() + ' at the tackle shop\'s quay.')];
   return null;
 }
+// what the tiers of a boat's reels are worth back when her datasheet takes fewer reels than a save has aboard (OB12, the kyst15 from
+// eight to four; ui/11-boot.js): a tier that gives nothing at the new count (one person tends all she carries with the tier under it,
+// as tierGate says) for every reel it was bought for, and the tiers she keeps for the reels that go ashore. {lv, kr}
+function jigTierBack(type, n0, lv){
+  const T = EQUIP.jukseLv.tiers, max = (VESSELS[type] || {}).jukseMax || 0, over = Math.max(0, n0 - max); let kr = 0;
+  while (lv > 1 && T[lv - 2].tend >= max){ kr += T[lv - 1].kr * n0; lv--; }
+  for (let i = 1; i < lv; i++) kr += T[i].kr * over;
+  return {lv, kr};
+}
 // the next tier, paid and aboard at once (no fitting: the crew takes them in hand)
 function tierBuy(k, lv){
   const gate = tierGate(k, lv); if (gate) return gate;
