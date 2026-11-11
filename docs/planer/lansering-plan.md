@@ -244,7 +244,7 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
     - legg API-nøkkelen inn i Supabase → Edge Functions → Secrets som `RESEND_API_KEY`
     - si hvilken adresse varslene skal til
 11. **Grensen for anonyme innlogginger** (funn 4). [Authentication → Rate Limits](https://supabase.com/dashboard/project/xcqbqzrsgycpeoyclakm/auth/rate-limits): sett «anonymous sign-ins» lavere enn standarden (30 i timen per IP), for eksempel 10.
-12. **Kortere økter hos WorkOS** (V6 A, med L1e). [dashboard.workos.com](https://dashboard.workos.com/) → Production → Authentication → Sessions: sett levetiden på økta («maximum session length») til for eksempel 30 dager, og «inactivity timeout» til 7 dager (sjekk navnene, de kan ha endret seg).
+12. **Kortere økter hos WorkOS** (V6 A, med L1e). [dashboard.workos.com](https://dashboard.workos.com/) → Production → Applications → applikasjonen → fanen Sessions → «Session lifetime» (der lå den 11.11.2026, ikke under Authentication; søk etter «sessions» finner den): sett levetiden på økta («maximum session length») til for eksempel 30 dager, og «inactivity timeout» til 7 dager (sjekk navnene, de kan ha endret seg).
 13. **Totrinnsinnlogging** på alt som kan styre spillet, om det ikke alt er gjort (`lansering.md` E):
     - [GitHub](https://github.com/settings/security)
     - [Supabase](https://supabase.com/dashboard/account/security)
