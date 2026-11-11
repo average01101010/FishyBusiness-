@@ -2274,3 +2274,5 @@
 2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	boottest	OK	22	lite	samtidig	
 2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	crewwalk	OK	7	lite	samtidig	
 2026-11-11 04:34	ccr-13ec41bb-wikvwe	c33af24	selfcrew	OK	6	lite	samtidig	
+2026-11-11 07:10	claude/l1b-production-release-allrqm	99ea4bc7	boottest	OK	36	lite	samtidig	
+2026-11-11 07:11	claude/l1b-production-release-allrqm	99ea4bc7	kanaltest	OK	73	lite	samtidig	
