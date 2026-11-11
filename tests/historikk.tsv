@@ -2519,3 +2519,16 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	skagtest	OK	37	lite	samtidig	
+2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	snokrabbetest	OK	14	lite	samtidig	
+2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	autolinetest	OK	13	lite	samtidig	
+2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	rulestest	OK	16	lite	samtidig	
+2026-11-11 15:57	ccr-cd8f915c-56r9sv	ef7712c+	sonetest	OK	11	lite	samtidig	
+2026-11-11 15:58	ccr-cd8f915c-56r9sv	ef7712c+	r4test	OK	18	lite	samtidig	
+2026-11-11 15:58	ccr-cd8f915c-56r9sv	ef7712c+	geartest	OK	56	lite	samtidig	
+2026-11-11 15:58	ccr-cd8f915c-56r9sv	ef7712c+	selltest	LES	32	lite	samtidig	
+2026-11-11 15:59	ccr-cd8f915c-56r9sv	ef7712c+	vesseltest	FEIL	35	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 15:59	ccr-cd8f915c-56r9sv	ef7712c+	trip2	OK	41	lite	samtidig	
+2026-11-11 15:59	ccr-cd8f915c-56r9sv	ef7712c+	bktest	OK	9	lite	samtidig	
+2026-11-11 15:59	ccr-cd8f915c-56r9sv	ef7712c+	tutfull	OK	9	lite	samtidig	
+2026-11-11 15:59	ccr-cd8f915c-56r9sv	ef7712c+	krabbefabrikktest	OK	20	lite	samtidig	
