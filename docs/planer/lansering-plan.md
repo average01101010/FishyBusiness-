@@ -308,5 +308,5 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - den andre veien bruker bygget som ligger på serveren (rsync fra `current/`), ikke et nytt bygg av forrige commit; kan det ikke hentes, er det en advarsel og ikke et stopp
   - den ødelagte fixturen er en båt uten posisjon: «båt på land utenfor lastede blokker» tåler spillet nå, og den står blant de friske
   - GitHub behandler lagringene i jobben (hentet til `$RUNNER_TEMP`, slettet til slutt): L1f tar GitHub inn som databehandler
-  - **P2 i porten er ferdig når porten har stoppet eller sluppet gjennom et ekte slipp, eller når Jonas sier at den lokale prøven holder.** Jobben er ikke kjørt ennå.
+  - **P2 i porten er ferdig.** Porten kjørte i slippet 11.11.2026 10:53 UTC (`4b98263a`, «Appen på Hetzner» #483 på `main`): 74 lagringer (71 fra databasen og fixturens tre), alle startet; porten tok 2,5 minutter, den andre veien 270 s (3,6 s per lagring, fire om gangen) mot bygget hentet fra serveren med rsync, alle holdt; lagringene slettet; hele jobben 11,5 minutter.
 - 11.11.2026 09:00 UTC: **det første slippet gjort** (`d147bab7`, versjon `28a8ad5814b7`), startet av Jonas med workflowen «Slipp». P1 i porten er ferdig. Flyttesiden lagt ut på Pages etterpå (valg 34).
