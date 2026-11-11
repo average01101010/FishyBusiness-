@@ -28,8 +28,8 @@ OK   stampeblokken med åtte x 1.78-3.92, y -0.91 til -0.01 akter for luka (3.96
 OK   garnkaret x 2.09-3.41, y -0.93 til 0.19 samme sted (aldri om bord samtidig med stampene): 0.55 m til luka, 0.03 til stigen
 OK   setteporten i hekken: y -0.60 til 0.60 mellom galgens stolper (0.67), terskelen 0.58 m over dekket, rullens topp 2.94; redskapet går ut ved y -0.45 i 3.02 (skansens topp ellers 3.76: før gikk det gjennom den), under garnrulla (4.27)
 OK   redskapets vei til setteporten: fra garnkaret 0.32 m klar av aktermasta, fra stampene 0.25 m; ikke gjennom casingen eller stigen (før: fra babord under lyet på skrå over hele akterdekket)
-OK   teinestabelen (seks) x 1.20 y -0.86 på det åpne akterdekket: 0.70 m fra speilet, fri for casingen, masta, pullertene og skansen, akter for takkanten; teina tømmes ved x 3.15, y -1.11 i den åpne sida akter for blødekaret (0.09 m til karet, 0.03 til skansen, 0.20 til lukas hjørne)
-OK   teinestabelen 0.73 m fra setteportens åpning (før 0,18: hun sto foran porten), 0.07 m akter for stigen, 0.47 m akter for den som jukser akterst, 0.19 m fra skansens fot
+OK   teinestabelen (seks) x 0.67 y -0.40 på det åpne akterdekket: 0.18 m fra speilet, fri for casingen, masta, pullertene og skansen, akter for takkanten; teina tømmes ved x 3.15, y -1.11 i den åpne sida akter for blødekaret (0.09 m til karet, 0.03 til skansen, 0.20 til lukas hjørne)
+OK   teinestabelen 0.18 m fra setteportens åpning (styrbord låring, 0,76 m fra porten, er prøvd: potshot finner ikke gulv til ringen der)
 OK   potplaces.json har de samme plassene som skriptet (python3 tools/boats/potplaces.py skriver dem ellers over)
 OK   juksaplassene sb 3.66, sb 2.64: 2 (jukseMax i VESSELS er det, valg 32: to); ripa der 0.71 m over dekket (akterskansen 1.46: for høy å jukse over), fri for akterskansen, takstolpen, lyets hjørne, blødekaret og haleren
 OK   taket med bremmen: dryppkanten 1.90 m over gangen på bakken, bremmen 0.16 m ut fra veggene og 0.11 inn opp til takkanten

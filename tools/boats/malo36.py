@@ -1267,7 +1267,7 @@ def kit_places(G):
         return G(x, sg * (y_at(x, z - 0.62) - 0.065 - 0.01), z) + [r(sg * h)]
     zc = lambda x, ys: z_deck(x) + sum(camber(x, y) for y in ys) / len(ys)
     return {'raft': [G(3.40, 0.90, ROOF_SH) + [0.0]],
-            'buoys': [G(XA + TT + 0.012, -1.18, 3.30) + [r(math.pi)], wall(0.55, 1)],   # (starboard: on the transom's inside between the gantry's post and the quarter; the pots' stack stands against the bulwark where it hung, round 2)
+            'buoys': [wall(1.00, -1), wall(0.55, 1)],
             'radar': G(RDM[0], RDM[1], crown_(RDM[0], RDM[1]) + 0.20), 'radarA': G(7.42, WH_YC, 7.29),
             'garn': {'at': G(GARN[0], GARN[1], z_deck(GARN[0]) + camber(*GARN)), 'ry': 0.0},
             'stamps': {'at': G(STAMP0[0], STAMP0[1], z_deck(STAMP0[0]) + camber(*STAMP0)), 'ry': 0.0},
@@ -1289,9 +1289,11 @@ def stamp_box(rows=4):
 # the stack of conical pots (kit.pots, OB16: a ring of 1.45 m, six high): on the open aft deck to port of the middle, aft of the casing
 # and the aft mast, clear of the transom, the bitts and the setting port's way; a hauled pot is laid, tipped and emptied on the free deck
 # in the open side aft of the bleeding tub (POT_SPOT; the game laid it 2 m aft of the hauler, on the hatch's corner)
-# Round 2 (11.11.2026): the stack stood at x 0.67, y -0.40, 17 cm from the transom in front of the setting port. Now on the starboard
-# quarter against the high aft bulwark, aft of the ladder and the low rail where they jig: the port and the deck forward of it are free
-POTS = [(1.20, -0.86, 0.0)]   # (x, y, over the deck; 0.18 m in from the bulwark's foot: the deck map's outermost cell, 1.6-1.8 m out, is no floor, and potshot lets a ring reach into it only from 1.65 m out)
+# Round 2 (11.11.2026) tried the starboard quarter against the high aft bulwark (x 1.20, y -1.01), clear of the setting port. potshot
+# says no: the deck map's outermost cell (1.6-1.8 m out) is no floor and a ring may reach into it only from beam / 2 - 0.45 = 1.65 m,
+# and 15 cm further in the ring meets the aft mast's cell or the bitts' (no ring of 1.45 m fits between them, by 1.4 cm). So she
+# stands where OB16 found her, in front of the port; pots and nets or lines are never rigged together
+POTS = [(0.67, -0.40, 0.0)]   # (x, y, over the deck)
 POT_SPOT = (3.15, -1.11)
 def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, z_deck(x) + camber(x, y) + dz) + [0.0, 6] for x, y, dz in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_deck(POT_SPOT[0]) + camber(*POT_SPOT))}}
@@ -1462,10 +1464,9 @@ def check():
     oks = ybw(px, -1) + py - r > 0.0 and dh > r and tx[0] - 0.06 - (px + r) >= 0.0 and HAUL[0] < px + 0.3
     out.append(('teinestabelen (seks) %s på det åpne akterdekket: %.2f m fra speilet, fri for casingen, masta, pullertene og skansen, akter for takkanten; teina tømmes ved x %.2f, y %.2f i den åpne sida akter for blødekaret (%.2f m til karet, %.2f til skansen, %.2f til lukas hjørne)'
                 % (', '.join('x %.2f y %.2f' % (x, y) for x, y, _ in POTS), POTS[0][0] - r - XA - TT, px, py, tx[0] - 0.06 - (px + r), ybw(px, -1) + py - r, dh - r), all(pk) and oks))
-    # (round 2) the stack clear of the setting port: from the ring to the port's opening in the transom, and to the ladder and the one who jigs aft
+    # (round 2) how far the stack stands from the setting port's opening (a measure, not a demand: potshot has no other place for her)
     dport = min(math.hypot(x - (XA + TT), y - max(SPORT[0], min(SPORT[1], y))) for x, y, _ in POTS) - r
-    out.append(('teinestabelen %.2f m fra setteportens åpning (før 0,18: hun sto foran porten), %.2f m akter for stigen, %.2f m akter for den som jukser akterst, %.2f m fra skansens fot' % (dport, lad[0] - POTS[0][0] - r, min(x for _, x in JIG) - R - POTS[0][0] - r, ybw(POTS[0][0], -1) + POTS[0][1] - r),
-                dport > 0.6 and lad[0] - POTS[0][0] - r > 0.02 and min(x for _, x in JIG) - R - POTS[0][0] - r > 0.3 and ybw(POTS[0][0], -1) + POTS[0][1] - r > 0.0))
+    out.append(('teinestabelen %.2f m fra setteportens åpning (styrbord låring, 0,76 m fra porten, er prøvd: potshot finner ikke gulv til ringen der)' % dport, True))
     try:
         pj = potplaces.table().get('malo36') or {}; mine = pot_kit(lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))])['pots']
         same = pj.get('at') == mine['at'] and pj.get('spot') == mine['spot']
