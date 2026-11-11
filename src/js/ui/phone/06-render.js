@@ -33,8 +33,8 @@
     const b = S.boat, V = VESSELS[b.type], on = trimOn(b), h = ['<div class="ph-c">'], hrs = x => fmt(x, 0) + L(' timer', ' hours');
     h.push('<div class="ph-card"><h4>«' + S.boatName + '» · ' + V.name[S.lang] + '</h4>' + kv(L('Toppfart', 'Top speed'), fmt(BOAT.vmax, 1) + ' kn') + kv(L('Med lasten og skroget nå', 'With the load and hull now'), fmt(speedCap(0.3), 1) + ' kn') +
       (on ? kv(L('På nå', 'On now'), '<b>' + on[S.lang] + ' +' + Math.round((on.x - 1) * 100) + ' %</b>') + kv(L('Går ut om', 'Ends in'), hrs(trimLeft(b))) : '') + '</div>');
-    if (!canBoost(V)) h.push('<div class="ph-card"><p class="ph-note">' + L('Trim krever dieselmotor. Påhengsmotoren på denne båten har verken dieselpumpe, ladeluftkjøling eller turbo. Den største påhengsmotoren får du under Oppgrader på verftet.', 'Tuning needs a diesel engine. This boat\'s outboard has no injection pump, charge air cooling or turbo. The biggest outboard is under Upgrade at the yard.') + '</p></div>');
-    else for (const [k, B] of Object.entries(BOOSTS)){ const v1 = BOAT.vmax / (on ? on.x : 1) * B.x;
+    // (on every boat, also one with an outboard: Jonas 11.11.2026, core canBoost)
+    for (const [k, B] of Object.entries(BOOSTS)){ const v1 = BOAT.vmax / (on ? on.x : 1) * B.x;
       h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + (k === 'turbo' ? kbBest() : '') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
         kv(L('Toppfart med den', 'Top speed with it'), '<b>' + fmt(v1, 1) + ' kn</b>') + kv(L('Varer', 'Lasts'), hrs(B.h)) + (shopMode() !== 'live' ? kv(L('Pris', 'Price'), realKr(B.nok)) : '') +   // live, the buy button shows the price (tilbakemelding #17)
         // (the same kind adds its hours; another takes the place and the rest of the one on, asked first: trimPend, 14-act.js)

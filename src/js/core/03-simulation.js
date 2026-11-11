@@ -83,9 +83,11 @@ const UPGS = {
 const upgLv = (b, k) => (b && b.upg && b.upg[k]) || 0;
 const upgNext = (b, k) => { const U = UPGS[k], V = VESSELS[(b || S.boat).type || 'skiff'], st = U.steps[upgLv(b, k)]; return U.fit(V) && st && (!st.minLen || V.len >= st.minLen) ? st : null; };
 // Trim (Jonas 05.10.2026): more speed for the boat for a while, sold for real money, the time in game hours. One at a time on a boat
-// (a new one takes the place of the one on, b.trim {k, t0}), diesel engines only. x: top and cruising speed.
+// (a new one takes the place of the one on, b.trim {k, t0}). x: top and cruising speed. On every boat, also one with an outboard
+// (Jonas 11.11.2026: «Trim-boost skal fungere på alle båter uavhengig om det er diesel eller bensin. Spilleren betaler for fart og skal
+// da få det de betaler for»; until then diesel engines only, and the outboard skiff had no trim to buy).
 const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{x:1.75, h:48, nok:39, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{x:2, h:72, nok:49, no:'Økt turbotrykk', en:'Higher boost pressure'}};
-const canBoost = V => !!(V && V.diesel && !V.outboard);
+const canBoost = V => !!V;
 // (until: the end, game minutes; a trim from before it was kept ends at t0 + its hours)
 const trimUntil = b => b.trim.until != null ? b.trim.until : b.trim.t0 + BOOSTS[b.trim.k].h * 60;
 const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < trimUntil(b) ? T : null; };

@@ -186,7 +186,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 428 `reqFill(eq, type)`
   - 446 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1369 linjer)
+## `src/js/core/03-simulation.js` (1371 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -209,214 +209,214 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 31 `vesselValue(v)`
   - 34 `newVesselObj(type, pid, lic)`
 - **46** the yard's rebuilds, per boat (S.boat; the user's list 04.10.2026): a bigger hold in three steps, the last doubling it (more
-  - 97 `trimRescale(v0)`
-  - 106 `trimSet(k)`
-- **111** a bought boost given again to a save that went on without it (HS3, 11.11.2026, docs/planer/haill-saldo.md; ui/10i-shop.js shopBack)
-  - 115 `backT(doneMs, nowMs, t, world)`
-  - 123 `boostBack(on, list, stack)`
-  - 137 `trimBack(c)`
-  - 145 `givenKeep(ids, at, now, days)`
-  - 152 `trimWords(k, how)`
-  - 157 `trimEnd()`
-  - 158 `powerX(b)`
-  - 160 `applyVessel()`
-  - 183 `speedPin()`
-  - 197 `jigPer(eq, type)`
-  - 198 `effortOf(people, jk, hand, per = jigPer()`
-  - 199 `fishEffort()`
-  - 207 `jigMeShare()`
-  - 216 `hash(n)`
-  - 217 `h2(a, b)`
-  - 218 `vn(t, s)`
-  - 219 `sstep(a, b, x)`
-  - 220 `seasonal(arr, H)`
-  - 240 `wxTrack()`
-  - 251 `wxMeasure(p)`
-  - 259 `wxPlace(p)`
-  - 267 `wxLowShape(k, m)`
-  - 274 `stormsNear(H, p)`
-  - 286 `wxWindF(H, p)`
-  - 287 `windAt(H, p)`
-  - 297 `windDir(H, p)`
-  - 308 `exposure(p)`
-  - 310 `fcErr(H, now, seed)`
-  - 311 `fcWind(H, now, p)`
-  - 313 `beaufort(W)`
-  - 328 `climW(p)`
-  - 334 `climV(key, H, p)`
-  - 335 `climDiff(key, H, p)`
-  - 336 `climRatio(key, H, p)`
-  - 337 `airTemp(H, p)`
-  - 339 `precipAt(H, p)`
-  - 340 `cloudAt(H, p)`
-  - 341 `visibility(H, p)`
-  - 343 `seaTemp(H, p)`
-- **344** snow and the seasons on land (V2 and V3 of the weather plan; Jonas 09.10.2026: «vi må bygge ferdig værsystemene og årstidene»).
-  - 356 `wxDay(d, p)`
-  - 363 `seasonAt(H, p)`
-  - 390 `snowLineAt(H, p)`
-  - 397 `snowAt(H, z, p)`
-  - 404 `obsAt(p)`
-  - 405 `eqToHor(ra, dec, d, ob)`
-  - 411 `sunEq(d)`
-  - 415 `moonEq(d)`
-  - 420 `sunAt(H, p)`
-  - 421 `moonAt(H, p)`
-  - 428 `moonName(mo)`
-  - 430 `sunTimes(H, p)`
-  - 438 `flagUp(H, p)`
-- **443** tide: harmonic prediction per place (phase K10 of the coast plan)
-  - 456 `tidePlace(p)`
-  - 465 `tideH(H, p)`
-  - 473 `tideEvents(H0, hours, p)`
-  - 481 `auroraAt(H, p)`
-  - 484 `riskLevel(W, hs)`
-- **487** weight (the user's list 04.10.2026: «mer last og vekt betyr mindre fart ... viktig at ikke dette blir urealistisk»): what she
-  - 492 `boatTons()`
-  - 493 `boatTons0()`
-  - 494 `loadF()`
-- **495** fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
-  - 499 `foulHour(H)`
-  - 503 `fuelUse(b, l)`
-  - 504 `fuelAdd(b, l, kr0)`
-  - 505 `fuelLph(v, W)`
-  - 506 `speedCap(hs, cb = 1)`
-  - 509 `noise2(x, y, s)`
-  - 515 `slopeAt(p)`
-  - 523 `hotField(sp, p, H, k)`
-  - 529 `hotspot(sp, p, H, P = 1)`
-  - 538 `schField(sp, p, H, k, si, v)`
-  - 542 `school(sp, p, H)`
-  - 549 `schoolHeading(sp, p, H)`
-  - 558 `fieldCode(p)`
-  - 561 `skreiSpot(p, d = depthF(p)`
-  - 565 `gauss(u1, u2)`
-  - 567 `sampleFish(sp, p, H)`
-  - 572 `clsOf(sp, kg)`
-  - 575 `kveiteClosed(H)`
-  - 578 `targetF(sp, H, pilk)`
-  - 583 `uerOpen(H)`
-  - 587 `denPlace(p)`
-  - 604 `inBasin(p)`
-  - 612 `harbourNote()`
-  - 617 `denTime(H)`
-  - 625 `denSp(sp, q, H, T)`
-  - 639 `density(sp, p, H)`
-  - 646 `eggaArea(p, d, H, E)`
-  - 673 `tutBonus(sp, p)`
-  - 685 `stockIdx(p)`
-  - 687 `stockW(p)`
-  - 692 `stockFill(v)`
-  - 697 `stockAt(p, sp, H)`
-  - 705 `takeStock(p, kg, sp, npc)`
-- **712** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
-  - 718 `wq()`
-  - 719 `wshOpen(y)`
-  - 720 `wshSat(pid, sp, H)`
-  - 721 `wshTake(k, kg)`
-  - 723 `wshLand(port, H, acc, kgSp, codQ)`
-  - 732 `initStock()`
-  - 733 `stockHour(H)`
-  - 758 `depthFactor(sp, d, k = 1)`
-  - 763 `depthF(p)`
-  - 769 `depthHas(p)`
-  - 778 `deepAt(p)`
-  - 783 `offDepth(p)`
-  - 786 `tileDepth(p, d)`
-  - 793 `depthWater(p)`
-  - 805 `depthAt(p)`
-  - 806 `depthModel(p)`
-  - 807 `grade(f)`
-- **808** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
-  - 818 `keepDay(f)`
-  - 819 `keepF(day)`
-  - 822 `keepK(x, rrs)`
-  - 824 `keepHours(f, f2, k)`
-  - 826 `supplyFactor(H)`
-  - 833 `weekOfH(H)`
-  - 834 `weekDev(sp, H)`
-  - 840 `marketPrice(sp, H, fz)`
-  - 842 `clsPrice(port, sp, c, H, hook, fz)`
-  - 848 `price(port, sp, H)`
-  - 850 `avgPrice(sp, H, days)`
-- **851** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
-  - 852 `doyH(H)`
-  - 853 `yearH(H)`
-  - 854 `quotaState()`
-  - 872 `licValue(l)`
-- **889** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
-  - 911 `bookMigrate()`
-  - 919 `bookAll(parts, no, en, vid)`
-  - 933 `bookResult(y)`
-- **935** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
-  - 944 `bankS()`
-  - 952 `bankMove(k, kr0, no, en)`
-  - 955 `bankAfterIncome(inKr)`
-  - 963 `taxPay(kr0, no, en)`
-  - 966 `bankRelease()`
-  - 970 `bankDay(H)`
-  - 1003 `taxOf(P, form, days, skj = 0, carry = 0)`
-  - 1013 `saldoOf(v)`
-  - 1024 `skjOf(frac, ri = 1)`
-  - 1028 `txInit(H, adv)`
-  - 1030 `yearFrac(H)`
-  - 1032 `txProfit(H)`
-  - 1035 `txNow(H = S.t / 60)`
-  - 1041 `taxOwed(H = S.t / 60)`
-  - 1046 `enkAdv(H)`
-  - 1052 `taxPlan(H = S.t / 60)`
-  - 1065 `asBase(y)`
-  - 1069 `txClose(H)`
-  - 1085 `taxDayMark(H)`
-  - 1091 `taxFix(H)`
-  - 1108 `taxTick(H)`
-  - 1146 `foundAS()`
-  - 1159 `mvaCheck(total)`
-  - 1168 `trekkOf(total, len)`
-  - 1173 `fmInit()`
-  - 1175 `fmLand(total)`
-  - 1184 `takeLoan(amount, months, k)`
-  - 1188 `payDown(x)`
-  - 1194 `deal(price, ti, inn)`
-  - 1201 `finance(x, months)`
-  - 1204 `lenGroup()`
-  - 1205 `codLimits(H)`
-  - 1208 `codOpen(H)`
-  - 1209 `codLimitNow(H)`
-- **1210** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
-  - 1228 `haillBoost()`
-  - 1229 `haillLeft()`
-  - 1230 `haillStage()`
-  - 1232 `haillF()`
-  - 1233 `luck(sp)`
-  - 1237 `haillCap()`
-  - 1246 `haillInit()`
-  - 1250 `haillMirror(list, used)`
-  - 1254 `haillStock(inv, srv, used)`
-  - 1259 `giveHaill(type, how, id)`
-  - 1264 `useHaill(type)`
-  - 1276 `pubEvening(H)`
-  - 1277 `pubOpen(H)`
-  - 1280 `capHold()`
-  - 1282 `cargoRoom()`
-  - 1284 `cargoMin(kg)`
-- **1285** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1288 `streakState()`
-  - 1289 `streakPct()`
-  - 1290 `streakTouch()`
-- **1301** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1305 `effTemp(H)`
-  - 1306 `coldPen(H, hs)`
-- **1313** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1328 `gradeOk(g, q)`
-  - 1329 `ordState()`
-  - 1332 `custNear(c)`
-  - 1337 `repOf(id)`
-  - 1339 `bkOrderable(H)`
-  - 1341 `bkPlant(id)`
-  - 1342 `custSp(c)`
-  - 1343 `spCatchable(sp, H)`
-  - 1345 `ordersTick(H)`
+  - 99 `trimRescale(v0)`
+  - 108 `trimSet(k)`
+- **113** a bought boost given again to a save that went on without it (HS3, 11.11.2026, docs/planer/haill-saldo.md; ui/10i-shop.js shopBack)
+  - 117 `backT(doneMs, nowMs, t, world)`
+  - 125 `boostBack(on, list, stack)`
+  - 139 `trimBack(c)`
+  - 147 `givenKeep(ids, at, now, days)`
+  - 154 `trimWords(k, how)`
+  - 159 `trimEnd()`
+  - 160 `powerX(b)`
+  - 162 `applyVessel()`
+  - 185 `speedPin()`
+  - 199 `jigPer(eq, type)`
+  - 200 `effortOf(people, jk, hand, per = jigPer()`
+  - 201 `fishEffort()`
+  - 209 `jigMeShare()`
+  - 218 `hash(n)`
+  - 219 `h2(a, b)`
+  - 220 `vn(t, s)`
+  - 221 `sstep(a, b, x)`
+  - 222 `seasonal(arr, H)`
+  - 242 `wxTrack()`
+  - 253 `wxMeasure(p)`
+  - 261 `wxPlace(p)`
+  - 269 `wxLowShape(k, m)`
+  - 276 `stormsNear(H, p)`
+  - 288 `wxWindF(H, p)`
+  - 289 `windAt(H, p)`
+  - 299 `windDir(H, p)`
+  - 310 `exposure(p)`
+  - 312 `fcErr(H, now, seed)`
+  - 313 `fcWind(H, now, p)`
+  - 315 `beaufort(W)`
+  - 330 `climW(p)`
+  - 336 `climV(key, H, p)`
+  - 337 `climDiff(key, H, p)`
+  - 338 `climRatio(key, H, p)`
+  - 339 `airTemp(H, p)`
+  - 341 `precipAt(H, p)`
+  - 342 `cloudAt(H, p)`
+  - 343 `visibility(H, p)`
+  - 345 `seaTemp(H, p)`
+- **346** snow and the seasons on land (V2 and V3 of the weather plan; Jonas 09.10.2026: «vi må bygge ferdig værsystemene og årstidene»).
+  - 358 `wxDay(d, p)`
+  - 365 `seasonAt(H, p)`
+  - 392 `snowLineAt(H, p)`
+  - 399 `snowAt(H, z, p)`
+  - 406 `obsAt(p)`
+  - 407 `eqToHor(ra, dec, d, ob)`
+  - 413 `sunEq(d)`
+  - 417 `moonEq(d)`
+  - 422 `sunAt(H, p)`
+  - 423 `moonAt(H, p)`
+  - 430 `moonName(mo)`
+  - 432 `sunTimes(H, p)`
+  - 440 `flagUp(H, p)`
+- **445** tide: harmonic prediction per place (phase K10 of the coast plan)
+  - 458 `tidePlace(p)`
+  - 467 `tideH(H, p)`
+  - 475 `tideEvents(H0, hours, p)`
+  - 483 `auroraAt(H, p)`
+  - 486 `riskLevel(W, hs)`
+- **489** weight (the user's list 04.10.2026: «mer last og vekt betyr mindre fart ... viktig at ikke dette blir urealistisk»): what she
+  - 494 `boatTons()`
+  - 495 `boatTons0()`
+  - 496 `loadF()`
+- **497** fouling: weed and barnacles on the hull (S.boat.foul, 0 to 1) slow her up to 15 % and cost up to 25 % more fuel; it grows in
+  - 501 `foulHour(H)`
+  - 505 `fuelUse(b, l)`
+  - 506 `fuelAdd(b, l, kr0)`
+  - 507 `fuelLph(v, W)`
+  - 508 `speedCap(hs, cb = 1)`
+  - 511 `noise2(x, y, s)`
+  - 517 `slopeAt(p)`
+  - 525 `hotField(sp, p, H, k)`
+  - 531 `hotspot(sp, p, H, P = 1)`
+  - 540 `schField(sp, p, H, k, si, v)`
+  - 544 `school(sp, p, H)`
+  - 551 `schoolHeading(sp, p, H)`
+  - 560 `fieldCode(p)`
+  - 563 `skreiSpot(p, d = depthF(p)`
+  - 567 `gauss(u1, u2)`
+  - 569 `sampleFish(sp, p, H)`
+  - 574 `clsOf(sp, kg)`
+  - 577 `kveiteClosed(H)`
+  - 580 `targetF(sp, H, pilk)`
+  - 585 `uerOpen(H)`
+  - 589 `denPlace(p)`
+  - 606 `inBasin(p)`
+  - 614 `harbourNote()`
+  - 619 `denTime(H)`
+  - 627 `denSp(sp, q, H, T)`
+  - 641 `density(sp, p, H)`
+  - 648 `eggaArea(p, d, H, E)`
+  - 675 `tutBonus(sp, p)`
+  - 687 `stockIdx(p)`
+  - 689 `stockW(p)`
+  - 694 `stockFill(v)`
+  - 699 `stockAt(p, sp, H)`
+  - 707 `takeStock(p, kg, sp, npc)`
+- **714** the shared world V2 (05.10.2026; ui/10h-world.js, supabase/migrations/20261006000000_world_v2.sql): one sea, one quota and one
+  - 720 `wq()`
+  - 721 `wshOpen(y)`
+  - 722 `wshSat(pid, sp, H)`
+  - 723 `wshTake(k, kg)`
+  - 725 `wshLand(port, H, acc, kgSp, codQ)`
+  - 734 `initStock()`
+  - 735 `stockHour(H)`
+  - 760 `depthFactor(sp, d, k = 1)`
+  - 765 `depthF(p)`
+  - 771 `depthHas(p)`
+  - 780 `deepAt(p)`
+  - 785 `offDepth(p)`
+  - 788 `tileDepth(p, d)`
+  - 795 `depthWater(p)`
+  - 807 `depthAt(p)`
+  - 808 `depthModel(p)`
+  - 809 `grade(f)`
+- **810** How the catch keeps (D3 of the operations plan, Jonas 23.10.2026, svar 15a: calibrated against the sources)
+  - 820 `keepDay(f)`
+  - 821 `keepF(day)`
+  - 824 `keepK(x, rrs)`
+  - 826 `keepHours(f, f2, k)`
+  - 828 `supplyFactor(H)`
+  - 835 `weekOfH(H)`
+  - 836 `weekDev(sp, H)`
+  - 842 `marketPrice(sp, H, fz)`
+  - 844 `clsPrice(port, sp, c, H, hook, fz)`
+  - 850 `price(port, sp, H)`
+  - 852 `avgPrice(sp, H, days)`
+- **853** quotas north of 62° N: the regulation and the year's figures are in 03d-quota.js
+  - 854 `doyH(H)`
+  - 855 `yearH(H)`
+  - 856 `quotaState()`
+  - 874 `licValue(l)`
+- **891** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
+  - 913 `bookMigrate()`
+  - 921 `bookAll(parts, no, en, vid)`
+  - 935 `bookResult(y)`
+- **937** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
+  - 946 `bankS()`
+  - 954 `bankMove(k, kr0, no, en)`
+  - 957 `bankAfterIncome(inKr)`
+  - 965 `taxPay(kr0, no, en)`
+  - 968 `bankRelease()`
+  - 972 `bankDay(H)`
+  - 1005 `taxOf(P, form, days, skj = 0, carry = 0)`
+  - 1015 `saldoOf(v)`
+  - 1026 `skjOf(frac, ri = 1)`
+  - 1030 `txInit(H, adv)`
+  - 1032 `yearFrac(H)`
+  - 1034 `txProfit(H)`
+  - 1037 `txNow(H = S.t / 60)`
+  - 1043 `taxOwed(H = S.t / 60)`
+  - 1048 `enkAdv(H)`
+  - 1054 `taxPlan(H = S.t / 60)`
+  - 1067 `asBase(y)`
+  - 1071 `txClose(H)`
+  - 1087 `taxDayMark(H)`
+  - 1093 `taxFix(H)`
+  - 1110 `taxTick(H)`
+  - 1148 `foundAS()`
+  - 1161 `mvaCheck(total)`
+  - 1170 `trekkOf(total, len)`
+  - 1175 `fmInit()`
+  - 1177 `fmLand(total)`
+  - 1186 `takeLoan(amount, months, k)`
+  - 1190 `payDown(x)`
+  - 1196 `deal(price, ti, inn)`
+  - 1203 `finance(x, months)`
+  - 1206 `lenGroup()`
+  - 1207 `codLimits(H)`
+  - 1210 `codOpen(H)`
+  - 1211 `codLimitNow(H)`
+- **1212** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
+  - 1230 `haillBoost()`
+  - 1231 `haillLeft()`
+  - 1232 `haillStage()`
+  - 1234 `haillF()`
+  - 1235 `luck(sp)`
+  - 1239 `haillCap()`
+  - 1248 `haillInit()`
+  - 1252 `haillMirror(list, used)`
+  - 1256 `haillStock(inv, srv, used)`
+  - 1261 `giveHaill(type, how, id)`
+  - 1266 `useHaill(type)`
+  - 1278 `pubEvening(H)`
+  - 1279 `pubOpen(H)`
+  - 1282 `capHold()`
+  - 1284 `cargoRoom()`
+  - 1286 `cargoMin(kg)`
+- **1287** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1290 `streakState()`
+  - 1291 `streakPct()`
+  - 1292 `streakTouch()`
+- **1303** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1307 `effTemp(H)`
+  - 1308 `coldPen(H, hs)`
+- **1315** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1330 `gradeOk(g, q)`
+  - 1331 `ordState()`
+  - 1334 `custNear(c)`
+  - 1339 `repOf(id)`
+  - 1341 `bkOrderable(H)`
+  - 1343 `bkPlant(id)`
+  - 1344 `custSp(c)`
+  - 1345 `spCatchable(sp, H)`
+  - 1347 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (162 linjer)
 

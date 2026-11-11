@@ -456,8 +456,10 @@ def main():
         BK['at'] = [age(g) for g in bp() if g.get('held')]
         sql("update public.grants set done_at = now() - interval '6 days 23 hours' where id = %d" % bid['cs_b1']); sql("update public.grants set done_at = now() - interval '7 days 1 hour' where id = %d" % bid['cs_b4'])
         BK['week'] = [(g['product'], g.get('held')) for g in bp()]; BK['old'] = [round(age(g) / 3600) for g in bp() if g['id'] == bid['cs_b1']]
+        sql("update public.grants set done_at = now() - interval '23 hours' where id = %d" % bid['cs_b3']); BK['yard23'] = [g['product'] for g in bp() if g['id'] == bid['cs_b3']]
+        sql("update public.grants set done_at = now() - interval '25 hours' where id = %d" % bid['cs_b3']); BK['yard25'] = [g['product'] for g in bp() if g['id'] == bid['cs_b3']]
         BK['other'] = [g['product'] for g in bp(B)] + [g['product'] for g in bp(A) if g['id'] in bid.values()]
-        sql("update public.grants set revoked_at = now() where id = %d" % bid['cs_b3']); BK['gone'] = [(g['product'], g.get('held')) for g in bp()]
+        sql("update public.grants set revoked_at = now() where id = %d" % bid['cs_b2']); BK['gone'] = [(g['product'], g.get('held')) for g in bp()]
         BK['anon'] = sql("select public.shop_pending()", {}, 'anon', expect_err=True)[0]
         BK['who'] = sql("select string_agg(p.proname, ',' order by p.proname) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosrc ~ 'used_at'")
         sql("delete from public.entitlements where player_id = 'user_01HS3'"); sql("delete from public.purchases where player_id = 'user_01HS3'"); sql("delete from public.players where id = 'user_01HS3'")   # (out of the way of the checks below)
@@ -467,7 +469,8 @@ def main():
               'HS3: after shop_done the trim, the Skippertak and the yard done now still come, held and with done_at and their data (the boat); a delivered paint design does not, and an open one is as before', {k: BK[k] for k in ('done', 'data', 'at')})
         print(ok(BK['week'] == [('trim_turbo', True), ('skip', True), ('verft_na', True), ('skip_max', None)] and BK['old'] == [167]),
               'HS3: one delivered just under 7 days ago still comes, with its own done_at; one delivered over 7 days ago does not', {k: BK[k] for k in ('week', 'old')})
-        print(ok(BK['other'] == [] and BK['anon'] and BK['gone'] == [('trim_turbo', True), ('skip', True), ('skip_max', None)] and BK['who'] == 'haill_use,shop_pending,shop_refund'),
+        print(ok(BK['yard23'] == ['verft_na'] and BK['yard25'] == []), 'HS3: the yard done now comes again only the first day after it was delivered (23 hours: yes, 25 hours: no)', {k: BK[k] for k in ('yard23', 'yard25')})
+        print(ok(BK['other'] == [] and BK['anon'] and BK['gone'] == [('trim_turbo', True), ('skip_max', None)] and BK['who'] == 'haill_use,shop_pending,shop_refund'),
               'HS3: never another player\'s, not without a sign-in, and not one that is taken back; shop_pending still keeps the haill that is not used', {k: BK[k] for k in ('other', 'anon', 'gone', 'who')})
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")

@@ -126,8 +126,8 @@ function shopBack(list){
   const tell = (no, en) => { no = 'Kjøpet ditt er lagt inn igjen: ' + no; en = 'Your purchase is back in the game: ' + en; log(no, en); msg('Det Store Blå', no, en); };
   const left = h => { const r = h / GAME_RATE; return [fmt(h, h < 10 ? 1 : 0) + ' timer igjen (' + fmt(r, r < 10 ? 1 : 0) + ' timer i virkeligheten)', fmt(h, h < 10 ? 1 : 0) + ' hours left (' + fmt(r, r < 10 ? 1 : 0) + ' hours in real life)']; };
   const did = new Set();
-  // trim, boat by boat (the boat is known by its id only: one with no diesel engine now is not the boat it was bought for)
-  const boats = new Map(); for (const g of L){ const d = g.data || {}; if (d.give !== 'trim' || !BOOSTS[d.k]) continue; const v = (S.fleet || []).find(x => x.id === d.boat); if (!v || !canBoost(VESSELS[(vget(v, 'boat') || {}).type])) continue; if (!boats.has(v)) boats.set(v, []); boats.get(v).push(g); }
+  // trim, boat by boat (the boat is known by its id only)
+  const boats = new Map(); for (const g of L){ const d = g.data || {}; if (d.give !== 'trim' || !BOOSTS[d.k]) continue; const v = (S.fleet || []).find(x => x.id === d.boat); if (!v) continue; if (!boats.has(v)) boats.set(v, []); boats.get(v).push(g); }
   for (const [v, gs] of boats) withVessel(v, () => { for (const g of gs) did.add(g.id); const b = S.boat, on = b.trim && BOOSTS[b.trim.k] ? {k:b.trim.k, t0:b.trim.t0, until:trimUntil(b)} : null;
     const c = boostBack(on, gs.map(g => ({k:g.data.k, h:BOOSTS[g.data.k].h, at:at(g)})), false);
     if (!c || !(c.until > now) || (on && on.k === c.k && on.until === c.until)) return;

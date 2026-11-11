@@ -50,7 +50,7 @@ async def main():
             # (HS3: the trim, Skippertak and yard grants delivered the last 7 days come too, and a delivered grant has done_at; st['hs3']
             # False is a server from before that migration)
             G = st['grants']; isH = lambda g: g['data'].get('give') == 'haill'; now = datetime.datetime.now(datetime.timezone.utc)
-            week = lambda g: g['data'].get('give') in ('trim', 'skip', 'yard') and g.get('done_at') and (now - datetime.datetime.fromisoformat(g['done_at'])).total_seconds() < 7 * 86400
+            week = lambda g: g['data'].get('give') in ('trim', 'skip', 'yard') and g.get('done_at') and (now - datetime.datetime.fromisoformat(g['done_at'])).total_seconds() < (1 if g['data'].get('give') == 'yard' else 7) * 86400   # (the yard done now: one day)
             if fn == 'shop_pending':
                 r = [dict({'id': g['id'], 'product': g['product'], 'data': g['data']}, **(dict({'held': True}, **({'done_at': g.get('done_at')} if st['hs3'] else {})) if g.get('done') else {})) for g in G
                      if not g.get('gone') and (not g.get('done') or (st['hs'] and isH(g) and not g.get('used')) or (st['hs3'] and week(g)))]
@@ -275,7 +275,7 @@ async def main():
               and f2['skip']['until'] == f['skip']['until'] and f2['newMsg'] == 0 and f3['skip'] is None and f3['en'] < 100 and f3['newMsg'] == 0 and 56 in f3['given'],
               'HS3: a Skippertak delivered and not in the save is given again with the time that is left (42 h of 48) and the rest, never twice; one whose time has passed gives nothing and no rest', {'given': {k: f[k] for k in ('skip', 'en', 'newMsg', 'thanks', 'ev')}, 'msg': f['back'][-1:], 'again': f2['skip'], 'passed': {k: f3[k] for k in ('skip', 'en', 'newMsg')}})
         # the yard done now, with no yard job running: kept as a credit, once
-        st['grants'] = [dn(57, 'verft_na', {'give': 'yard', 'boat': cur6}, 30)]
+        st['grants'] = [dn(57, 'verft_na', {'give': 'yard', 'boat': cur6}, 3)]
         g1 = await pg6.evaluate(claim); g2 = await pg6.evaluate(claim)
         check(g1['credit'] == 1 and g1['newMsg'] == 1 and 'Ferdig nå' in g1['back'][-1] and g2['credit'] == 1 and g2['newMsg'] == 0 and g1['thanks'] == 0,
               'HS3: the yard done now delivered and not in the save is kept as a credit for the next yard job, once', {'first': {k: g1[k] for k in ('credit', 'newMsg', 'thanks')}, 'msg': g1['back'][-1:], 'again': g2['credit']})

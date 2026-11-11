@@ -42,6 +42,9 @@ export default function (t){
     t.ok(!!K.giveSkip('std', 5000 + 10 * H, 4500), 'giveSkip med en slutt fram i tid: gitt'); t.eq([S.skip.k, S.skip.t0, S.skip.until, S.energy], ['std', 4500, 5000 + 10 * H, 100], 'slutten er den som ble gitt, ikke nå + 48 timer, og energien er full');
     K.giveSkip('light'); t.eq(S.skip.until, 5000 + 34 * H, 'et vanlig kjøp etterpå legges til som før'); }
 
+  // ---- trim on every boat (Jonas 11.11.2026: «Trim-boost skal fungere på alle båter uavhengig om det er diesel eller bensin») ----
+  { const V = K.get('VESSELS'), no = Object.keys(V).filter(k => !K.canBoost(V[k])); t.eq(no, [], 'trim kan settes på hver båttype, også med påhengsmotor'); }
+
   // ---- the ids kept by age (givenKeep) ----
   const D = 864e5, now = 100 * D;
   { const at = {1:now - 9 * D, 2:now - 7.5 * D, 3:now - D}; t.eq(K.givenKeep([1, 2, 3], at, now, 8), [2, 3], 'en ID sist sett for over 8 døgn siden går ut, de andre står'); t.eq(Object.keys(at), ['2', '3'], 'og tida til den som gikk ut, ryddes'); }
