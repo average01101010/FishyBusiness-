@@ -83,9 +83,11 @@ const UPGS = {
 const upgLv = (b, k) => (b && b.upg && b.upg[k]) || 0;
 const upgNext = (b, k) => { const U = UPGS[k], V = VESSELS[(b || S.boat).type || 'skiff'], st = U.steps[upgLv(b, k)]; return U.fit(V) && st && (!st.minLen || V.len >= st.minLen) ? st : null; };
 // Trim (Jonas 05.10.2026): more speed for the boat for a while, sold for real money, the time in game hours. One at a time on a boat
-// (a new one takes the place of the one on, b.trim {k, t0}), diesel engines only. x: top and cruising speed.
+// (a new one takes the place of the one on, b.trim {k, t0}). x: top and cruising speed. On every boat, also one with an outboard
+// (Jonas 11.11.2026: «Trim-boost skal fungere på alle båter uavhengig om det er diesel eller bensin. Spilleren betaler for fart og skal
+// da få det de betaler for»; until then diesel engines only, and the outboard skiff had no trim to buy).
 const BOOSTS = {pump:{x:1.5, h:24, nok:29, no:'Justert dieselpumpe', en:'Tuned injection pump'}, ic:{x:1.75, h:48, nok:39, no:'Ladeluftkjøling', en:'Charge air cooling'}, turbo:{x:2, h:72, nok:49, no:'Økt turbotrykk', en:'Higher boost pressure'}};
-const canBoost = V => !!(V && V.diesel && !V.outboard);
+const canBoost = V => !!V;
 // (until: the end, game minutes; a trim from before it was kept ends at t0 + its hours)
 const trimUntil = b => b.trim.until != null ? b.trim.until : b.trim.t0 + BOOSTS[b.trim.k].h * 60;
 const trimOn = b => { const T = b && b.trim && BOOSTS[b.trim.k]; return T && S.t < trimUntil(b) ? T : null; };
@@ -107,6 +109,46 @@ function trimSet(k){
   const b = S.boat, B = BOOSTS[k]; if (!B) return null;
   if (trimOn(b) && b.trim.k === k){ b.trim.until = trimUntil(b) + B.h * 60; return 'ext'; }
   const v0 = BOAT.vmax, t0 = boostT(); b.trim = {k, t0, until:t0 + B.h * 60}; applyVessel(); trimRescale(v0); return 'new';   // (from the world's minute: boostT)
+}
+// ---- a bought boost given again to a save that went on without it (HS3, 11.11.2026, docs/planer/haill-saldo.md; ui/10i-shop.js shopBack) ----
+// The game minute a grant was delivered: the server's done_at on the one clock (as worldTf, 01-world.js; done_at is the server's own
+// time, so the device's clock error is not in it). Without the world clock (a local test server, its own clock from 0) it is the
+// real time since then taken from the game's minute now
+function backT(doneMs, nowMs, t, world){ return world ? (doneMs - WORLD_T0) * GAME_RATE / 60000 : t - (nowMs - doneMs) * GAME_RATE / 60000; }
+// The boost as it stands when the grants the save does not have are put back, as if each came on when it was delivered. on: the one in
+// the save now ({k, t0, until}, game minutes) or null; list: [{k, h, at}] in the order they were delivered (at: backT, h: game hours);
+// stack: every kind adds to the one on (Skippertak), else only the same kind does and another kind takes its place (trim, trimSet).
+// The end is max(the end of the one on, delivered) + its hours: never longer than what was bought, and two after each other end where
+// they did when they were bought. One delivered before the one on came on is laid in before it (the hours it still had then are
+// carried), and a trim of another kind delivered before the one on is left out: the one on took its place. The caller gives nothing
+// when the end has passed
+function boostBack(on, list, stack){
+  let c = on && on.until != null ? {k:on.k, t0:on.t0 != null ? on.t0 : on.until, until:on.until} : null;
+  for (const g of list || []){
+    if (!g || !(g.h > 0) || !isFinite(g.at)) continue;
+    const m = g.h * 60;
+    if (!c || (!stack && c.k !== g.k && c.t0 <= g.at)) c = {k:g.k, t0:g.at, until:g.at + m};
+    else if (!stack && c.k !== g.k) continue;
+    else if (c.until <= g.at) c = {k:g.k, t0:g.at, until:g.at + m};   // (the one on had run out before it: a new one, from its own delivery)
+    else if (c.t0 <= g.at) c = {k:stack ? g.k : c.k, t0:c.t0, until:c.until + m};
+    else c = {k:c.k, t0:g.at, until:Math.max(g.at + m, c.t0) + (c.until - c.t0)};
+  }
+  return c;
+}
+// the trim put back on the boat aboard with the end it had (inside withVessel for the boat it was bought for)
+function trimBack(c){
+  const b = S.boat; if (!c || !BOOSTS[c.k]) return false;
+  const v0 = BOAT.vmax; b.trim = {k:c.k, t0:c.t0, until:c.until}; applyVessel(); trimRescale(v0); return true;
+}
+// The ids of the grants the game has given (S.shopGiven) were the last 200; a grant delivered within a week can now come again from the
+// server (shop_pending, held), so an id must be kept as long as the server can list it: S.shopAt[id] is when the server last listed it
+// (or when it was given), and an id goes after `days` days. S.shopGiven stays a list of plain ids, so a save from before and a page
+// from before read it as they did. An id with no time (a save from before HS3) gets its time now. Returns the ids kept
+function givenKeep(ids, at, now, days){
+  const lim = now - (days || 8) * 864e5, out = [];
+  for (const id of ids || []){ if (at[id] == null || at[id] > now) at[id] = now; if (at[id] > lim) out.push(id); }
+  const has = new Set(out.map(String)); for (const k of Object.keys(at)) if (!has.has(k)) delete at[k];
+  return out;
 }
 // what a trim given says (the log, the confirmation of a purchase): on for its hours, or added to the one on
 function trimWords(k, how){

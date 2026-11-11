@@ -173,6 +173,10 @@ COVER['tests/unit/turlinje.test.mjs'] = []
 # functions (haillStock, haillMirror) in tests/unit/haillsrv.test.mjs, the claim against a stand-in in kjoptest and guesttest, the database in sqltest
 COVER['supabase/migrations/20261110180000_haill_use.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/haillsrv.test.mjs'] = []
 COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-haill-fiske-service.js'] + ['hailltest', 'kjoptest']
+# HS3 (11.11.2026): trim, Skippertak and the yard done now given again to a save without them. The pure functions (backT, boostBack,
+# givenKeep, giveSkip with an end) in tests/unit/shopback.test.mjs, the claim against a stand-in in kjoptest, the one clock in boostklokke
+# (case D), the database in sqltest
+COVER['supabase/migrations/20261111120000_shop_back.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/shopback.test.mjs'] = []
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 

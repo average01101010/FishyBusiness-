@@ -15,6 +15,11 @@
 // supabase/migrations/20261110180000_haill_use.sql): shop_pending answers the open grants and the haill that is delivered and not used
 // (held), S.haillSrv is replaced by that at every claim, and switching one on tells the server (haillTell, haill_use), now or when the
 // network is back. A server from before the migration (haill_use answers 404) gets the game as it was: the haill into S.haillInv.
+// Trim, Skippertak and the yard done now are used when they are delivered, so a save that goes on without them (two devices in
+// conflict, an earlier save taken back, an upload that never arrived, a new game) had lost what was paid for. Now shop_pending also
+// answers those delivered the last 7 days (held, with done_at; HS3, 11.11.2026, supabase/migrations/20261111120000_shop_back.sql), and
+// one that is not in the save's S.shopGiven is given again with only the time that is left (shopBack). A server from before that
+// migration answers none of them, and nothing is given again.
 const SHOP = {ready:null, busy:false, ret:null};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
   des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo'};   // the paint designs (ui/10j-paint.js)
@@ -69,6 +74,9 @@ async function shopGo(k){
     toast(shopL('Kunne ikke åpne betalingen: ', 'Could not open the payment: ') + (e.message || e));
   }
 }
+// the yard done now, on the boat aboard: the yard jobs running are finished, or with none a credit is kept. Returns the jobs finished
+function shopYard(){ let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
+  if (!n) S.yardCredit = (S.yardCredit || 0) + 1; return n; }
 // what the server has granted and the game has not given yet: given now, and the server told. Each gift leaves a line for the
 // confirmation (SHOP.rc, shopThanks): what it did, and on which boat
 function shopGive(g, srv){
@@ -77,8 +85,7 @@ function shopGive(g, srv){
   // (the same kind as the one on adds its hours, another kind takes its place: core trimSet)
   if (d.give === 'trim' && BOOSTS[d.k]) return withVessel(v, () => { const B = BOOSTS[d.k], w = trimWords(d.k, trimSet(d.k)); log(w.no, w.en); say(w.no, w.en); return B[S.lang === 'en' ? 'en' : 'no']; });
   // (nothing left to finish when it came, the job done during the payment: kept as a credit for the next yard job, YARD_NOW_MIN)
-  if (d.give === 'yard') return withVessel(v, () => { let n = 0; for (const j of S.jobs || []) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t){ j.until = S.t; n++; }
-    if (!n) S.yardCredit = (S.yardCredit || 0) + 1;
+  if (d.give === 'yard') return withVessel(v, () => { const n = shopYard();
     const no = n ? 'Verftet gjorde ' + (n > 1 ? n + ' jobber' : 'jobben') + ' på «' + S.boatName + '» ferdig med én gang.' : 'Jobben på «' + S.boatName + '» ble ferdig før kjøpet kom fram. «Ferdig nå» ligger klar og gjør neste verftsjobb ferdig med én gang.',
       en = n ? 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.' : 'The job on the «' + S.boatName + '» was done before the purchase came. «Done now» is kept and finishes the next yard job at once.';
     log(no, en); say(no, en); return shopL('Verftet er ferdig', 'The yard is done'); });
@@ -106,6 +113,39 @@ function shopThanks(rc){
     '<p class="note">' + L('Bekreftelsen ligger også i Meldinger.', 'The confirmation is in Messages too.') + '</p><div class="btns"><button class="btn p" data-close>' + L('Fint!', 'Great!') + '</button></div></div>';
   const show = () => { const m = document.getElementById('modal'); if (m && !m.hidden){ setTimeout(show, 2000); return; } modal(html); };
   setTimeout(show, 300);
+}
+// Bought, delivered and not in this save (HS3): given again, in the order they were delivered, as if each came on then. A trim goes on
+// the boat it was bought for (not in the fleet: not given), with the end it had: boostBack, never longer than what was bought, and
+// nothing when the end has passed. Skippertak the same, for the whole fleet. The yard done now finishes the yard jobs running, or
+// is kept as a credit. No new confirmation: one line in the log and in Meldinger, and the event shop_back. Returns the ids that are
+// dealt with (given, or with nothing left to give); one whose boat is not in this save, or of a kind this page does not know, is not
+// among them and is asked about again at the next claim, never marked as given and lost
+function shopBack(list){
+  const ms = g => Date.parse(g.done_at), now = boostT(), wn = worldNow(), at = g => backT(ms(g), wn, S.t, WCLOCK.on), hrs = e => Math.max(0, (e - now) / 60);
+  const L = list.filter(g => isFinite(ms(g))).sort((a, b) => ms(a) - ms(b) || a.id - b.id), ev = (g, h) => { if (typeof cloudEv === 'function') cloudEv('shop_back', {id:g.id, product:g.product, h:Math.round(h * 10) / 10}); };
+  const tell = (no, en) => { no = 'Kjøpet ditt er lagt inn igjen: ' + no; en = 'Your purchase is back in the game: ' + en; log(no, en); msg('Det Store Blå', no, en); };
+  const left = h => { const r = h / GAME_RATE; return [fmt(h, h < 10 ? 1 : 0) + ' timer igjen (' + fmt(r, r < 10 ? 1 : 0) + ' timer i virkeligheten)', fmt(h, h < 10 ? 1 : 0) + ' hours left (' + fmt(r, r < 10 ? 1 : 0) + ' hours in real life)']; };
+  const did = new Set();
+  // trim, boat by boat (the boat is known by its id only)
+  const boats = new Map(); for (const g of L){ const d = g.data || {}; if (d.give !== 'trim' || !BOOSTS[d.k]) continue; const v = (S.fleet || []).find(x => x.id === d.boat); if (!v) continue; if (!boats.has(v)) boats.set(v, []); boats.get(v).push(g); }
+  for (const [v, gs] of boats) withVessel(v, () => { for (const g of gs) did.add(g.id); const b = S.boat, on = b.trim && BOOSTS[b.trim.k] ? {k:b.trim.k, t0:b.trim.t0, until:trimUntil(b)} : null;
+    const c = boostBack(on, gs.map(g => ({k:g.data.k, h:BOOSTS[g.data.k].h, at:at(g)})), false);
+    if (!c || !(c.until > now) || (on && on.k === c.k && on.until === c.until)) return;
+    trimBack(c); const B = BOOSTS[c.k], h = hrs(c.until), w = left(h), g = gs.filter(x => x.data.k === c.k).pop() || gs[gs.length - 1];
+    tell(B.no + ' på «' + S.boatName + '», ' + w[0] + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', B.en + ' on the «' + S.boatName + '», ' + w[1] + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); ev(g, h); });
+  // Skippertak, one for the whole fleet
+  const sk = L.filter(g => (g.data || {}).give === 'skip' && SKIP[g.data.k]);
+  for (const g of sk) did.add(g.id);
+  if (sk.length){ const on = S.skip && S.skip.until != null ? {k:S.skip.k, t0:S.skip.t0, until:S.skip.until} : null, c = boostBack(on, sk.map(g => ({k:g.data.k, h:SKIP[g.data.k].h, at:at(g)})), true);
+    if (c && c.until > now && !(on && on.until === c.until) && giveSkip(c.k, c.until, c.t0)){ const X = SKIP[c.k], h = hrs(c.until), w = left(h);
+      tell(X.no + ', ' + w[0] + ' for deg og mannskapet på hele flåten.', X.en + ', ' + w[1] + ' for you and the crews of the whole fleet.'); ev(sk[sk.length - 1], h); } }
+  // the yard done now
+  for (const g of L){ const d = g.data || {}; if (d.give !== 'yard') continue; const v = (S.fleet || []).find(x => x.id === d.boat) || curVessel();
+    withVessel(v, () => { const k = shopYard();
+      if (k) tell('verftet gjorde ' + (k > 1 ? k + ' jobber' : 'jobben') + ' på «' + S.boatName + '» ferdig med én gang.', 'the yard finished ' + (k > 1 ? k + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.');
+      else tell('«Ferdig nå» ligger klar og gjør neste verftsjobb ferdig med én gang.', '«Done now» is kept and finishes the next yard job at once.'); });
+    ev(g, 0); did.add(g.id); }
+  return did;
 }
 // does the server keep the haill (the migration is run)? Asked once, with an id no grant has: true or false from the new server, 404
 // from the old one. Null when it cannot be known now (no network): then the haill waits on the server
@@ -138,11 +178,13 @@ async function shopClaim(){
   let srv = SHOP.hs; if (srv == null && list.some(g => g.held)) srv = SHOP.hs = true;
   if (srv == null && (S.haillSrv.length || list.some(isH))) srv = await haillProbe();
   haillInit();
-  const given = S.shopGiven || (S.shopGiven = []), old = S.haillOld, ids = [], names = [], mir = [], fresh = new Set(), unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0, gifts = 0; const rc = SHOP.rc = [];   // (rc is this call's own: another call may start while this one waits for shop_done)
+  const given = S.shopGiven || (S.shopGiven = []), seen = S.shopAt || (S.shopAt = {}), tNow = worldNow(), back = [], old = S.haillOld, ids = [], names = [], mir = [], fresh = new Set(), unk = SHOP.unk || (SHOP.unk = new Set()); let thanks = 0, gifts = 0; const rc = SHOP.rc = [];   // (rc is this call's own: another call may start while this one waits for shop_done)
   for (const g of list){
     // (a haill delivered before and not used, kept on the server: into the copy, with no words. One that went into the game's own
     // numbers, from a page or a server before HS2, is used on the server now, so it is never counted twice)
-    if (g.held){ if (!isH(g)) continue; if (old.includes(g.id)) cloudRpc('haill_use', {id:g.id}).then(() => { const o = S.haillOld || [], i = o.indexOf(g.id); if (i >= 0) o.splice(i, 1); }).catch(() => {}); else mir.push(g); continue; }
+    // (HS3: a trim, a Skippertak or the yard done now delivered the last week and not in this save is given again below, shopBack)
+    if (given.includes(g.id)) seen[g.id] = tNow;   // (kept for as long as the server lists it, givenKeep)
+    if (g.held){ if (!isH(g)){ if (!given.includes(g.id) && g.done_at) back.push(g); continue; } if (old.includes(g.id)) cloudRpc('haill_use', {id:g.id}).then(() => { const o = S.haillOld || [], i = o.indexOf(g.id); if (i >= 0) o.splice(i, 1); }).catch(() => {}); else mir.push(g); continue; }
     // (given before and the server not told, a lost connection: told now. One this game does not know, a product newer than the page
     // or a page from before an update, is left on the server and given when the game knows it: never marked done and lost, 06.11.2026)
     if (given.includes(g.id)){ ids.push(g.id); if (isH(g) && !old.includes(g.id)) mir.push(g); continue; }
@@ -157,14 +199,16 @@ async function shopClaim(){
       else names.push(shopGive(g, srv));
     }
     else { const nm = shopGive(g); if (!nm){ if (!unk.has(g.id)){ unk.add(g.id); console.warn('shop: a grant this game does not know', g.id, g.product); if (typeof cloudEv === 'function') cloudEv('shop_unknown', {id:g.id, product:g.product}); } continue; } names.push(nm); }
-    given.push(g.id); ids.push(g.id); }
+    given.push(g.id); seen[g.id] = tNow; ids.push(g.id); }
   // the copy is what the server says now, never added to: a haill taken back or used on another device is gone. One that comes
   // back because the save did not have it, is counted (haill_back: how often a purchase would have been lost before HS2)
   let moved = false;
   if (srv === true){ const was = S.haillSrv, next = haillMirror(mir, S.haillUsed.concat(old));
     for (const x of next) if (!fresh.has(x.id) && !was.some(y => y.id === x.id) && typeof cloudEv === 'function') cloudEv('haill_back', {id:x.id, type:x.type});
     moved = JSON.stringify(was.map(x => x.id).sort((a, b) => a - b)) !== JSON.stringify(next.map(x => x.id)) || fresh.size > 0; S.haillSrv = next; }
-  if (given.length > 200) given.splice(0, given.length - 200);
+  if (back.length) for (const id of shopBack(back)){ given.push(id); seen[id] = tNow; moved = true; }
+  // (every id the server can still list is kept: by age, not the last 200, core givenKeep)
+  { const keep = givenKeep(given, seen, tNow, 8); if (keep.length !== given.length) given.splice(0, given.length, ...keep); }
   if (!ids.length && !moved) return 0;
   save(); if (typeof cloudSaveSoon === 'function') cloudSaveSoon(true);
   if (ids.length) try { await cloudRpc('shop_done', {ids}); } catch (e){ console.error(e); }

@@ -6,8 +6,11 @@ Scenarios (world clock on, #world on localhost):
   A  boot, catch-up completes synchronously in bootGame, grant 300 ms after SIMREADY (as shopStart -> setTimeout 0 -> RPC)
   B  boot, the sim packs come 2 s late (simAreaReady false until then: the CATCH_LEFT remainder), grant 300 ms after SIMREADY
   C  live tab that slept: S.t behind, TAB.wait (cloudWake) holds tick while shop_pending answers first, then released
+  D  (HS3, 11.11.2026) as C, but the boosts are given again to a save that went on without them (ui/10i-shop.js shopBack): delivered
+     one real hour ago by the server's clock, they have what was left then when the game is live (72 - 6 and 48 - 6 game hours),
+     counted on the one clock (core backT) and not from the game's old minute
 KYST_LITE=1 python3 tests/boostklokke.py. Prints OK or FEIL."""
-import sys, os, asyncio, json
+import sys, os, asyncio, json, re
 HERE = os.path.dirname(os.path.abspath(__file__))
 from _env import GAME, boot
 from playwright.async_api import async_playwright
@@ -18,7 +21,9 @@ PATCH_TO = 'function simAreaReady(){ if (window.__holdUntil && Date.now() < wind
 
 def patched(hold):
     body = open(os.path.join(os.environ.get('KYST_DIST') or os.path.join(HERE, '..', 'dist'), 'index.html'), encoding='utf-8').read()
-    if hold: assert body.count(PATCH_FROM) == 1; body = body.replace(PATCH_FROM, PATCH_TO)
+    # (the page's own Content-Security-Policy has the hash of every script, L1e 11.11.2026: a patched script would be refused and the
+    # game never start, so the policy is taken out of the patched page; tests/csptest.py is the test of the policy)
+    if hold: assert body.count(PATCH_FROM) == 1; body = re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>', '', body.replace(PATCH_FROM, PATCH_TO))
     return body
 async def route_page(pg, hold):
     async def patch(route):
@@ -87,12 +92,32 @@ async def sleep_case(br, name, slept_h, wait_ms=600):
     await ctx.close()
 
 
+async def back_case(br, name, slept_h, ago_h):
+    ctx = await br.new_context(viewport={'width': 1000, 'height': 760}); pg = await ctx.new_page(); errs = []
+    pg.on('pageerror', lambda e: errs.append(str(e)))
+    await boot(pg, GAME + '#world'); await pg.wait_for_timeout(1500)
+    await pg.evaluate("document.getElementById('modal').hidden = true; S.skip = null; delete S.boat.trim; applyVessel()")
+    g = await pg.evaluate("""(([m, ago]) => { TAB.wait = true; S.t = worldT() - m; const at = new Date(worldNow() - ago * 3600e3).toISOString(), m0 = S.msgs.length;
+      if (typeof shopBack !== 'function') return null;
+      const n = shopBack([{id:2, product:'trim_turbo', held:true, done_at:at, data:{give:'trim', k:'turbo', boat:S.cur}}, {id:1, product:'skip', held:true, done_at:at, data:{give:'skip', k:'std'}}]).size;
+      window.__g = {n, at:{t:S.t, w:worldT()}, msgs:S.msgs.slice(m0).map(x => x.no)}; return window.__g; })([%d, %f])""" % (int(slept_h * 360), ago_h))
+    if not g: check(False, f'{name}: shopBack finnes ikke (spillet fra før HS3)'); await ctx.close(); return
+    await pg.wait_for_timeout(600); await pg.evaluate("TAB.wait = false")
+    await pg.wait_for_function("CATCH_LEFT === 0 && worldT() - S.t <= 2", timeout=120000)
+    await pg.wait_for_timeout(500)
+    s = await pg.evaluate(STATE); want_s, want_t = 48 - ago_h * 6, 72 - ago_h * 6
+    check(g['n'] == 2 and abs(s['skip'] - want_s) < 0.1 and abs(s['trim'] - want_t) < 0.1 and len(g['msgs']) == 2 and not errs,
+          f'{name}, sov {slept_h} t, levert for {ago_h} t siden: Skippertak og trim gitt på nytt har det som var igjen ({want_s:g} og {want_t:g} timer) når spillet er i gang, verken mer eller mindre',
+          {'skip': s['skip'], 'trim': s['trim'], 'bak da de ble gitt': g['at']['w'] - g['at']['t'], 'meldinger': g['msgs'], 'sidefeil': errs[:2]})
+    await ctx.close()
+
+
 def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False)) if extra != '' else ''), flush=True)
 
 
 async def main():
-    which = sys.argv[1:] or ['A', 'B24', 'B4', 'C']
+    which = sys.argv[1:] or ['A', 'B24', 'B4', 'C', 'D']
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--disable-gpu-compositing'])
         for w in which:
@@ -101,6 +126,7 @@ async def main():
             elif w == 'B24': await boot_case(br, 'B boot, packs 2 s late', 24, True)
             elif w == 'B4': await boot_case(br, 'B boot, packs 2 s late', 4, True)
             elif w == 'C': await sleep_case(br, 'C tab slept, shop_pending before save_beat', 2)
+            elif w == 'D': await back_case(br, 'D given again while the tab wakes', 2, 1)
             elif w == 'C8': await sleep_case(br, 'C tab slept, shop_pending before save_beat', 8)
         print('sidefeil: []')
         await br.close()

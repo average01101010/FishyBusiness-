@@ -105,16 +105,19 @@ const skipOn = () => !!(S.skip && S.skip.until != null && S.t < S.skip.until);
 const skipLeft = () => skipOn() ? (S.skip.until - S.t) / 60 : 0;   // game hours left
 // the crews of the whole fleet (the vessel you are on keeps hers in S.crew, the others in their own fields: VKEYS)
 function fleetCrews(){ const out = [S.crew || []]; for (const v of S.fleet || []) if (v.id !== S.cur && v.crew) out.push(v.crew); return out; }
-function giveSkip(k){
+// (end: given again to a save that went on without it, with the end it had when it was bought, HS3 11.11.2026, ui/10i-shop.js
+// shopBack: nothing when that end has passed, and so no rest either; t0 is where its time began, for the bar in the app)
+function giveSkip(k, end, t0){
   const X = SKIP[k]; if (!X) return null;
   const now = boostT(), from = skipOn() ? Math.max(S.skip.until, now) : now;   // (from the world's minute: boostT, 01-world.js)
-  S.skip = {k, t0:now, until:from + X.h * 60};
+  if (end != null && !(end > now)) return null;
+  S.skip = end != null ? {k, t0:t0 != null ? Math.min(t0, now) : now, until:end} : {k, t0:now, until:from + X.h * 60};
   S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false;
   for (const cr of fleetCrews()) for (const c of cr) c.fatigue = 0;
   // (no rest on the rorbu, the tab says: you go aboard, and the plans go on at once; Jonas 06.11.2026)
   if (S.rest) restEnd();
   if (typeof plan2SkipGiven === 'function') plan2SkipGiven();
-  const hl = Math.round((S.skip.until - now) / 60); log(X.no + ': du og mannskapet på hele flåten er uthvilt i ' + hl + ' timer.', X.en + ': you and the crews of the whole fleet are rested for ' + hl + ' hours.');
+  const hl = Math.round((S.skip.until - now) / 60); if (end == null) log(X.no + ': du og mannskapet på hele flåten er uthvilt i ' + hl + ' timer.', X.en + ': you and the crews of the whole fleet are rested for ' + hl + ' hours.');
   if (hooks.onEnergy) hooks.onEnergy('skip');
   return X[S.lang === 'en' ? 'en' : 'no'];
 }

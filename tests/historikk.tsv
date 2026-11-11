@@ -2299,3 +2299,5 @@
 2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	savestest	OK	7	lite	samtidig	
 2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	savestest	OK	6	lite	alene	
 2026-11-11 09:51	ccr-26bf5fcc-efdoee	337c82c+	hooktest	OK	1	lite	alene	
+2026-11-11 09:01	ccr-80add647-ogpssb	e0aa096+	boottest	OK	47	lite	alene	
+2026-11-11 09:42	ccr-80add647-ogpssb	e80caa18+	boottest	OK	33	lite	alene	
