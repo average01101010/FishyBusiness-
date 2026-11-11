@@ -2519,3 +2519,12 @@
 2026-11-11 14:55	ccr-3fa0cb76-jclvr1	f426574	kvotemarkedtest	OK	27	lite	samtidig	
 2026-11-11 14:59	ccr-2c3acb2e-1xxdth	2bf58fe	boottest	OK	24	lite	alene	
 2026-11-11 15:00	ccr-2c3acb2e-1xxdth	2bf58fe	charttest	OK	57	lite	alene	
+2026-11-11 17:31	ccr-6f2117ea-fknkro	e932597+	trip2	OK	44	lite	samtidig	
+2026-11-11 17:32	ccr-6f2117ea-fknkro	e932597+	csptest	OK	100	lite	samtidig	
+2026-11-11 17:32	ccr-6f2117ea-fknkro	e932597+	boottest	OK	41	lite	samtidig	
+2026-11-11 17:33	ccr-6f2117ea-fknkro	e932597+	hulltest	OK	74	lite	samtidig	
+2026-11-11 18:47	ccr-6f2117ea-fknkro	e932597+	dbg23o	OK	44	3d	alene	
+2026-11-11 18:55	ccr-6f2117ea-fknkro	e932597+	coast3d	FEIL	455	3d	alene	avsluttet med kode 1
+2026-11-11 18:57	ccr-6f2117ea-fknkro	e932597+	gfxtest	OK	129	3d	alene	
+2026-11-11 19:00	ccr-6f2117ea-fknkro	e932597+	ultratest	OK	194	3d	alene	
+2026-11-11 19:11	ccr-6f2117ea-fknkro	e932597+	seabedtest	OK	625	3d	alene	

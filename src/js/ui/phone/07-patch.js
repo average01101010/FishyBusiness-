@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['skjaer-111126', '11.11.2026', 'Skjærene synes i sjøen', 'The skerries show in the sea', [
+       ['Skjærene i sjøkartet står nå i sjøen i 3D langs hele kysten: lave berg med tang og rur, tørre ved fjære sjø og overskylt ved flo, med brenning rundt når det er sjø. Hold utkikk, de står der kartet viser dem.', 'The rocks on the chart now stand in the sea in 3D along the whole coast: low rocks with rockweed and barnacles, dry at low water and awash at high, with breakers round them when there is a sea. Keep a lookout, they are where the chart shows them.']]],
     ['sjonavn-111126', '11.11.2026', 'Flere navn i sjøkartet i Finnmark', 'More names on the chart in Finnmark', [
        ['Grunner, banker og havdyp i Finnmark står nå med navn i sjøkartet når du zoomer inn, fra Kartverkets stedsnavn. Trykk på et navn for å se hva det er.', 'Shoals, banks and deeps in Finnmark now carry their names on the chart when you zoom in, from the Norwegian Mapping Authority\'s place names. Tap a name to see what it is.']]],
     ['km4-111126', '11.11.2026', 'Båten med eller uten hjemmelen', 'The boat with or without her right', [

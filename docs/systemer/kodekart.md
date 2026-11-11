@@ -2666,12 +2666,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1494 linjer)
+## `src/js/ui/phone/07-patch.js` (1496 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1482 `patch()`
+  - 1484 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4236,7 +4236,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (270 linjer)
+## `src/js/view3d/17-draw.js` (271 linjer)
 
 ---------- drawing ----------
 
@@ -4335,6 +4335,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 71 `updateShore(eye)`
   - 86 `staleShore(pk)`
   - 87 `drawShore(VP)`
+
+## `src/js/view3d/17i-rocks.js` (174 linjer)
+
+---------- the skerries (Ø13 K4, docs/planer/kartrelease-o13.md; the rest of G10, 11.11.2026) ----------
+
+- **1** the skerries (Ø13 K4, docs/planer/kartrelease-o13.md; the rest of G10, 11.11.2026)
+  - 26 `rockShape(qx, qy)`
+  - 35 `rockPoint(S, ang, s, out)`
+  - 47 `rockCol(S, x, y, z, out)`
+  - 78 `updateRocks(eye)`
+  - 107 `drawRocks(VP, eye)`
+  - 132 `drawRockFoam(VP, eye, t)`
+  - 168 `rocksInfo(ax, az)`
 
 ## `src/js/view3d/18-setup.js` (262 linjer)
 
