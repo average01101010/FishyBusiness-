@@ -1826,7 +1826,7 @@ the snow crab aboard: the factory for the clusters and the live crab in the tank
 - **114** the trip of a snow crab vessel (tripLeft, 04-crew.js): the bait for the pots at the trip's pace (a pot baited at each setting, half
   - 117 `snoTrip(R, b, d)`
 
-## `src/js/core/09k-market.js` (294 linjer)
+## `src/js/core/09k-market.js` (371 linjer)
 
 Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-test.md; Jonas 07.11.2026, V4 A, V5 A, V6 A)
 
@@ -1835,32 +1835,38 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 21 `mbYardNear(pos)`
   - 23 `mbBounds(value)`
   - 24 `mbPriceWhy(value, start, buynow)`
-  - 38 `mbOpsOn(v)`
-  - 41 `mbWhy(v)`
-  - 55 `mbPack(v, yard)`
-  - 65 `mbCond(P)`
-  - 68 `mbUnpack(P, port)`
-  - 85 `mbLock(v, r, o, yard)`
-  - 92 `mbBuyWhy(L, kr0)`
-  - 101 `mbWishHits(list)`
-- **103** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
-  - 104 `mbQuickWhy(v)`
-  - 108 `mbDrop(v)`
-  - 115 `mbQuickSell(vid)`
-- **125** the quota market in the save (KM3 of docs/planer/kvotemarkedet.md; the goods and the rules are core/03i-kvotemarked.js, the server
-  - 129 `kmState()`
-  - 134 `kmKey(src)`
-  - 140 `kmSrcOf(key, item)`
-  - 150 `kmPutWhy(src, H)`
-  - 162 `kmLock(src, r, o, key)`
-  - 169 `kmUnlock(key, lid)`
-  - 179 `mbKm(r, d, k, M)`
-- **223** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
-  - 227 `mbApply(rows)`
-- **274** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
-  - 278 `mktDelWhy(v, to)`
-  - 279 `mktDeliver(vid, to)`
-  - 285 `mktHour(H)`
+  - 39 `mbLicSold(lic)`
+  - 44 `mbValue(v)`
+  - 45 `mbOpsOn(v)`
+  - 48 `mbWhy(v)`
+  - 62 `mbPack(v, yard)`
+  - 72 `mbCond(P)`
+  - 75 `mbUnpack(P, port)`
+  - 92 `mbLock(v, r, o, yard)`
+- **98** KM4 (docs/planer/kvotemarkedet.md kap. 4.4; Jonas 07.11.2026, V2 A: the seller chooses whether the right follows the boat, taking
+  - 108 `mbMoveWhy(src, to, H)`
+  - 124 `mbMoveLen(src, to, H)`
+  - 134 `mbMove(src, to, H)`
+  - 168 `mbBuyWhy(L, kr0)`
+  - 177 `mbWishHits(list)`
+- **179** the quick sale (B4): to the broker for 90 % of her value, at once, from anywhere she lies in port; the loans are paid first
+  - 180 `mbQuickWhy(v)`
+  - 184 `mbDrop(v)`
+  - 191 `mbQuickSell(vid)`
+- **201** the quota market in the save (KM3 of docs/planer/kvotemarkedet.md; the goods and the rules are core/03i-kvotemarked.js, the server
+  - 205 `kmState()`
+  - 210 `kmKey(src)`
+  - 216 `kmSrcOf(key, item)`
+  - 226 `kmPutWhy(src, H)`
+  - 238 `kmLock(src, r, o, key)`
+  - 245 `kmUnlock(key, lid)`
+  - 255 `mbKm(r, d, k, M)`
+- **299** the ledger (broker_pending): every krone bound, given back or paid, every boat handed over, applied once (S.mkt.mb.done keeps
+  - 303 `mbApply(rows)`
+- **351** delivery (10.2b «Få henne levert»): a skipper from the yard sails a boat of yours that nobody is aboard to the port you choose, for
+  - 355 `mktDelWhy(v, to)`
+  - 356 `mktDeliver(vid, to)`
+  - 362 `mktHour(H)`
 
 ## `src/js/core/09l-sponsor.js` (31 linjer)
 
@@ -2658,12 +2664,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1483 linjer)
+## `src/js/ui/phone/07-patch.js` (1488 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1471 `patch()`
+  - 1476 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2699,7 +2705,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 134 `redning()`
 - **152** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (326 linjer)
+## `src/js/ui/phone/10-fartoy.js` (327 linjer)
 
   - 14 `goals()`
   - 39 `goalsCard()`
@@ -2716,15 +2722,15 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 191 `market()`
   - 218 `specSecs(k, O)`
   - 242 `sheet(k, O)`
-  - 290 `fartoy(tab0)`
-- **325** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 291 `fartoy(tab0)`
+- **326** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
-## `src/js/ui/phone/11-rederi.js` (85 linjer)
+## `src/js/ui/phone/11-rederi.js` (88 linjer)
 
   - 6 `selRow()`
   - 8 `vSummary()`
   - 45 `rederi()`
-- **84** equipment
+- **87** equipment
 
 ## `src/js/ui/phone/12-utstyr-redskap.js` (238 linjer)
 
@@ -2782,24 +2788,31 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 105 `nett()`
   - 117 `netShop()`
 
-## `src/js/ui/phone/13c-megler.js` (182 linjer)
+## `src/js/ui/phone/13c-megler.js` (256 linjer)
 
 Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
 
 - **1** Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-tonys-test.md, Jonas 07.11.2026; EAFC's auction house)
   - 19 `mbLeftTxt(ms)`
-  - 27 `mgNear(Q)`
-  - 29 `mgCard(Q)`
-  - 48 `mgOwnRow(v, quick)`
-  - 67 `mbForm(v)`
-  - 82 `megler()`
-  - 105 `mgWishCard()`
-  - 114 `mgSheet(Q)`
-  - 148 `mgHere()`
-  - 156 `mgAfter(key, okNo, okEn)`
-  - 158 `mgAct(a, d)`
+  - 29 `mgNear(Q)`
+  - 31 `mgCard(Q)`
+  - 60 `mbKeepOf(v)`
+  - 65 `mgOwnRow(v, quick)`
+  - 84 `mbForm(v)`
+  - 109 `megler()`
+  - 132 `mgWishCard()`
+  - 141 `mgSheet(Q)`
+- **176** KM4: «Flytt hjemmelen til …» (Rederi «⋯», and the free rights under the fleet). mlSel = {vid} a boat's right or {key} a free right
+  - 178 `mlSrc()`
+  - 179 `mbLicSheet()`
+  - 197 `mbMoveBtn(v)`
+  - 199 `mbFreeCard()`
+  - 205 `tiLicRow()`
+  - 210 `mgHere()`
+  - 218 `mgAfter(key, okNo, okEn)`
+  - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (325 linjer)
+## `src/js/ui/phone/14-act.js` (333 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3427,7 +3440,7 @@ Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sp
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 - **57** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
 
-## `src/js/ui/10s-broker.js` (115 linjer)
+## `src/js/ui/10s-broker.js` (133 linjer)
 
 Kystmegleren and the cloud (B1–B8 in docs/planer/etter-tonys-test.md, supabase/migrations/20261107140000_broker.sql)
 
