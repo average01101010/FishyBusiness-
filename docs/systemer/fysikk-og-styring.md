@@ -241,7 +241,7 @@ Første av to økter for strømmen (Jonas 27.10.2026: «5a», strøm som egen fa
 - **Antatt og usikkert:** sundene med 2 m dybde har ingen dybde i 50 m-laget og kan være dypere eller grunnere; et basseng antas å stige og synke med tidevannet utenfor (ingen struping eller forsinkelse, så slakkvannet kommer ved høy- og lavvann utenfor); delingen mellom flere utløp etter w·d^1,5 er et anslag; sund som er åpne i begge ender (Gisundet, Moskstraumen, sundene ved Bergen) har ingen egen strøm; et sund under 25 m bredt ser ikke masken.
 - **Tester:** `tests/unit/strom.test.mjs` (Saltstraumen funnet og målt, taket, inn på flo og ut på fjære, stille ved høy- og lavvann, avtar ut fra det trangeste, Rystraumen, under 0,2 kn utenfor sundene; to sund som når hverandre holdes under taket, bassenget i regningen aldri over hele; sett rød med `curAt` tatt bort, og taket for summen sett rødt med 14 kn uten det), `tidetest` (det samme i nettleseren på hele kysten, kyststrømmens retning, strømmen lik uansett lastet kart, pilene i Saltstraumen på flo og fjære i begge formater), `anchortest` (ankeret leser `curAt`: i Saltstraumen på flo 2 319 N mot 2 N ved Husøy, og null med `curAt` satt til stille vann).
 
-### F8b: strømmen i manøvreringen, driften, rutetida og bølgene (11.11.2026, Jonas' økt, grenen `ccr-3197902a-uc8d5b`, steg 42)
+### F8b: strømmen i manøvreringen, driften, rutetida og bølgene (11.11.2026, Jonas' økt, grenen `ccr-3197902a-uc8d5b`, steg 42; rullet ut til testutgaven i d3a03a4, versjon c848c35ed678)
 
 Andre av to økter for strømmen. Strømmen fra F8a (`curAt`) flytter nå båten, og sjøen som går inn på den, endrer seg. Målet (Jonas 09.11.2026): «at båten skal fungere så ekte som mulig».
 
