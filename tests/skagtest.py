@@ -35,7 +35,7 @@ FISH = """(async ([lat, lon]) => { const a = P(lat, lon), H = S.t / 60; let best
 LAND = """(() => { const b = S.boat, pt = PORTS.filter(q => q.mottak).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0]; b.status = 'port'; b.port = pt.id; b.pos = {...pt.p}; S.fsess = null; delete b.land;
   const q = quotaState(), C = landConf(S.t / 60, q, access()), d = document.createElement('div'); d.innerHTML = landWarn(pt); const txt = d.textContent, n0 = S.msgs.length, cod = S.hold.reduce((s, x) => s + (x.sp === 'torsk' ? x.kg : 0), 0);
   sell(); const ls = S.lastSale, m = S.msgs.slice(n0).filter(x => x.from === 'Norges Råfisklag' && /Skagerrak/.test(x.no));
-  return {port:pt.name, acc:access(), cod:Math.round(cod), zConf:+C.zConf.toFixed(1), codConf:+C.codConf.toFixed(1), warn:txt, rows:ls.confRows, confKg:Math.round(ls.confKg), msg:m.length, byc:b.byc || null}; })()"""
+  return {port:pt.name, acc:access(), ved:ls.vedKr, confKr:Math.round(ls.confKr), cod:Math.round(cod), zConf:+C.zConf.toFixed(1), codConf:+C.codConf.toFixed(1), warn:txt, rows:ls.confRows, confKg:Math.round(ls.confKg), msg:m.length, byc:b.byc || null}; })()"""
 
 # the set scene for the pictures: 300 kg of saithe and 100 kg of cod jigged outside the baseline off Kristiansand
 SCENE = """(async () => { const a = P(58.140, 7.996); let p = null; for (let d = 0.2; d <= 40 && !p; d += 0.2){ const q = {x:a.x, y:a.y + d}; if (!insideBaseline(q) && blNm(q) > 1) p = q; }
@@ -66,6 +66,7 @@ async def main():
             want = max(0, (f['byc']['cod'] - 0.05 * f['byc']['kg'])) if f.get('byc') else 0
             if skag and want > 1:
                 check(abs(l['zConf'] - f['conf']) < 0.2 and 'Skagerrak' in l['warn'] and any(r[0] == 'torsk' for r in (l['rows'] or [])) and l['msg'] == 1 and l['byc'] is None, name + ': the quay says it before «Lever», the landing takes the cod over 5 %, and the count ends', l)
+                check(l['ved'] == round(0.2 * l['confKr']) and l['ved'] > 0 and '20 %' in l['warn'], name + ': 20 % of the confiscated value comes back as compensation for landing it (FOR-2010-03-12-390 § 3), and the quay says so', l)
             else:
                 check(l['zConf'] == 0 and 'Skagerrak' not in l['warn'] and not any(r[3] == 'byc5' for r in (l['rows'] or [])), name + ': nothing confiscated as Skagerrak bycatch', l)
         # the pictures, both formats: the word on the screen, the quay before «Lever», the landing note
@@ -81,6 +82,7 @@ async def main():
             await pg.screenshot(path=os.path.join(OUT, 'skag-seddel-' + tag + '.png'))
             t2 = await pg.evaluate("document.body.innerText.replace(/\\s+/g, ' ')")
             check(abs(s['conf'] - 80) < 0.01 and 'Skagerrak' in t1 and '80 kg' in t1, tag + ': the quay says 80 kg (100 cod of 400 kg taken there)', {'scene': s})
+            check('Vederlag for ilandføring' in t2, tag + ': the landing note has the row for the compensation')
             check('over 5 % bifangst i Skagerrak' in t2, tag + ': the landing note has the row «Inndratt: torsk over 5 % bifangst i Skagerrak»')
             await pg.evaluate("PHONE.show(false)")
         print('errors:', errs[:5])

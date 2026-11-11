@@ -329,6 +329,7 @@ function portSlip(){
       bk7:['over 7 % bifangst (direktefisket er stengt)', 'over 7 % bycatch (the direct fishery is closed)'], bkmax:['over maksimalkvoten', 'over the maximum quota']};
     if (ls.confRows) for (const [sp, k, v, w] of ls.confRows) h.push(row(LN('Inndratt: ', 'Confiscated: ') + spName(sp).toLowerCase() + ' ' + LN(WHY[w][0], WHY[w][1]), fmt(k, 0), '−' + fmt(v, 0)));
     else if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt over kvote eller bifangstgrense', 'Over quota or bycatch limit, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
+    if (ls.vedKr > 0.5) h.push(row(LN('Vederlag for ilandføring, 20 % av det inndratte', 'Compensation for landing, 20 % of what was confiscated'), '', fmt(ls.vedKr, 0)));
     if (ls.gutKr > 0.5) h.push(row(LN('Sløyd på mottaket: rund hyse og sei, 0,30 kr/kg', 'Gutted by the buyer: round haddock and saithe, 0.30 kr/kg'), fmt(ls.gutKg || 0, 0), '−' + fmt(ls.gutKr, 0)));   // (R2)
     if (ls.crabKg > 0.05) h.push(row(LN('Krabbe under minstemål, inndratt', 'Undersized crab, confiscated'), fmt(ls.crabKg, 1), '−' + fmt(ls.crabKr, 0)));
     if (ls.crabDead > 0.05) h.push(row(LN('Død kongekrabbe, vraket', 'Dead king crab, discarded'), fmt(ls.crabDead, 1), '0'));
@@ -395,7 +396,7 @@ function landWarn(p){
     : C.codConf > 0.5 ? LN('Du har ikke torskekvote igjen for ' + fmt(C.codConf, 0) + ' kg av torsken.', 'You have no cod quota left for ' + fmt(C.codConf, 0) + ' kg of the cod.')
     : LN('Maksimalkvoten for hyse eller sei er fisket, så bare 30 % hyse og 20 % sei kan være bifangst.', 'The maximum quota for haddock or saithe is fished, so only 30% haddock and 20% saithe may be bycatch.');
   return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
-    LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
+    LN(' Du får 20 % av verdien, ca. ' + kr(Math.round(sum * CONF_PAY)) + ', i vederlag for å føre den i land.', ' You get 20% of the value, about ' + kr(Math.round(sum * CONF_PAY)) + ', as compensation for landing it.') + LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
 }
 // the queue at the plant (core/07-harbours.js LANDQ, K3): [the line, the short word]
 function landQText(short){

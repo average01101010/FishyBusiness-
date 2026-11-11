@@ -456,7 +456,7 @@ Jonas 08.11.2026 (valg 12): «Valg 12: fangsten kan ikke holde torsken ute, det 
 **Antatt og forenklet:**
 - **5 % regnes av fangsten tatt i sonen**, ikke av hele landingen: torsk tatt lovlig innenfor grunnlinja er ikke bifangst og røres ikke. Forskriften sier «ved landing» uten å skille; dette er vår lesning.
 - **Alt landes.** § 51 a sier at levende fangst tatt i strid med reglene skal slippes straks. Spillet bløgger fisken idet den kommer over rekka, så torsken regnes som død og landes. Bifangst innenfor 5 % er uansett lovlig fangst.
-- **Ingen 20 % vederlag** (inndragningsforskriften § 3): ingen inndragning i spillet gir det i dag (kvote, bifangst uten adgang, blåkveite). Skal det inn, gjelder det alle (backloggen).
+- **20 % vederlag for ilandføring** (inndragningsforskriften § 3). Jonas 11.11.2026: «Dette må inn. Jeg vet at fiskere utnytter seg av slikt regelverk bevist, så det er realistisk.» Alle inndragninger ved levering (over kvoten, bifangst uten adgang, bifangst etter maksimalkvoten, blåkveite, snøkrabbe, Skagerrak) gir 20 % av den inndratte verdien tilbake (`CONF_PAY` i `ui/08-actions.js`, `vedKr`): egen rad på sluttseddelen og i dekksdagbokas salg, med i totalen (så trekkene og lotten regnes av den), og kaia sier beløpet før «Lever». Antatt: spillet kan ikke vite om fangsten var tilsiktet, så alle får det; § 3 unntar overfiske av kongekrabbe og de pelagiske artene, som spillet ikke inndrar.
 - **Varselet i fangsten gjelder juksa.** Line og garn telles i lasten, ved levering og hos Kystvakta, men trekket gir ikke eget varsel.
 - **Feltet stenges ikke** (§ 50 gjelder minstemål).
 

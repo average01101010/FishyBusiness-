@@ -474,7 +474,7 @@
 - **Regelmotoren sør for 62° N, det som står igjen etter Ø10** (07.11.2026, `docs/systemer/kvoter-og-regler.md` 5.28c):
   - ~~**Juksa stopper helt utenfor grunnlinja i Skagerrak**~~ (Ø10b, steg 65, 11.11.2026, grenen `ccr-cd8f915c-56r9sv`; `kvoter-og-regler.md` 5.28d): juksa, line og garn stoppes ikke lenger, torsken er bifangst (5 %, § 5), spillet sier fra over 5 % i fangsten, torsken over 5 % av Skagerrak-fangsten inndras ved levering, og Kystvakta ser på andelen. Det som står igjen etter Ø10b:
     - **Oslofjorden (`oslo`) og § 31 (`f31`) stopper som før.** Oslofjord-regelen for torsk ble ikke funnet på Lovdata, og de 5 % i `f31h` (J-187-2026 § 32) ble ikke lest ordrett. Mekanismen er klar (`RU_BYC`, `ruByc`); kildene må leses først.
-    - **20 % vederlag for ilandføring** (FOR-2010-03-12-390 § 3, når den ulovlige fangsten ikke var tilsiktet) gis ikke ved noen inndragning i spillet. Et valg for Jonas: skal alle inndragninger gi 20 %?
+    - ~~**20 % vederlag for ilandføring**~~ (FOR-2010-03-12-390 § 3): bygd 11.11.2026 for alle inndragninger etter Jonas' svar («Dette må inn»), `kvoter-og-regler.md` 5.28d. Antatt at ingen fangst regnes som tilsiktet.
     - **Råfisklagets egen praksis** ved fangst over en bifangstgrense er ikke lest (sidene lot seg ikke hente).
     - **Line og garn gir ikke varsel i trekket** over 5 % torsk, bare juksa. Lasten, kaia og Kystvakta teller dem.
     - **Uer som bifangst** (høstingsforskriften § 44: inntil 10 %, 30 % under 21 m 1.8–31.12) og død kveite fra garn og line i fredningstida (§ 41) er ikke modellert; § 44 første ledd ble bare delvis lest.

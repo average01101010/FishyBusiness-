@@ -59,8 +59,8 @@ async def run(p, w, h, tag):
         d = R['sale'].get('d') or {}
         ex = sum(v[1] for v in (d.get('ex') or {}).values())
         fish = sum(l[5] for l in d.get('ln', []))
-        calc = fish - d['conf'][1] - d['conf'][3] - d['roe'] + d['st'][1] + d['ord'] + ex
-        check(d and calc == R['sale']['total'], 'sluttseddelen i salget summerer seg: fisk + bonus − inndratt = total', [calc, R['sale']['total']])
+        calc = fish - d['conf'][1] - d['conf'][3] - d['roe'] - d.get('gf', 0) + d.get('ved', 0) + d['st'][1] + d['ord'] + ex
+        check(d and calc == R['sale']['total'], 'sluttseddelen i salget summerer seg: fisk + bonus − inndratt − sløying + vederlag = total', [calc, R['sale']['total']])
         check(d and R['cash'] == R['sale']['total'] - sum(d.get('tk') or []) - d['lott'] - d['fine'], 'kassa fikk netto: total − trekk − lott − gebyr', [R['cash'], R['sale']['total'], d.get('tk'), d.get('lott')])
         check(all(len(l) == 7 and l[6] > 0 for l in d.get('ln', [])), 'linjene har antall fisk', d.get('ln'))
         check(R['orderLog'], 'et levert oppdrag står i Drift')

@@ -103,6 +103,12 @@ document.addEventListener('pointercancel', e => { const q = rangeTouch; rangeTou
   const r = q.r.isConnected ? q.r : q.r.id && document.getElementById(q.r.id); if (!r || r.value === q.v) return; r.value = q.v; r.dispatchEvent(new Event('input', {bubbles:true})); }, true);
 // what the sales organisation confiscates of the hold if it is landed now (cod beyond the fresh-fish allowance and the quota, bycatch
 // over its limits): the share of each species. Apart from sell() so the quay can show it before you land (R4); q is not changed
+// the compensation for landing what is confiscated (Jonas 11.11.2026: «Dette må inn. Jeg vet at fiskere utnytter seg av slikt regelverk
+// bevist, så det er realistisk»): forskrift om inndraging av fangst og bruk av inndregne midlar (FOR-2010-03-12-390) § 3, «Vederlaget
+// skal setjast til 20 % av verdien av meirfangsten eller den ulovlege fangsten», given when the catch «ikkje var tilsikta». The game
+// cannot tell intent, so every confiscation of fish and snow crab gets it (the regulation leaves out king crab over quota and the
+// pelagic species; the game confiscates neither). On the landing note as a row of its own, and in the total
+const CONF_PAY = 0.2;
 function landConf(H, q, acc){
   const kgOf = sp => S.hold.filter(x => x.sp === sp).reduce((a, x) => a + x.kg, 0), wk = weekOfH(H), ffTot = q.ffW === wk ? q.ffTot : 0, ffCod = q.ffW === wk ? q.ffCod : 0;
   // the fresh-fish allowance counts fish only (assumed: shellfish do not count), and fresh fish only (J-187-2026 § 25: the fresh landings;
@@ -191,7 +197,8 @@ function sell(){
   ordKr = Math.round(ordKr);
   const ex = {}; for (const [n, k2, pr] of extra){ ex[n] = ex[n] || {kg:0, sum:0}; ex[n].kg += k2; ex[n].sum += k2 * pr; }
   let exKr = 0; for (const n in ex){ ex[n].sum = Math.round(ex[n].sum); exKr += ex[n].sum; }
-  const total = fishKr + stKr + ordKr + exKr;
+  const vedKr = Math.round(CONF_PAY * confKr);   // (§ 3: 20 % of what was confiscated, for landing it)
+  const total = fishKr + stKr + ordKr + exKr + vedKr;
   // quota cooperation (§ 31): cod landed beyond your own vessel quota goes on the partner's, and he takes his share of its value
   let coopKr = 0; if (acc === 'lukket' && S.lic.coop && S.lic.coop.y === yearH(H) && codQ > 0){ const own = licQ({...S.lic, coop:null}, H).torsk, onP = Math.max(0, q.torsk + codQ - own) - Math.max(0, q.torsk - own);
     const codGross = Object.values(lines).filter(r => r.sp === 'torsk').reduce((a, r) => a + r.sum, 0); coopKr = Math.round(COOP.share * onP * codGross / Math.max(1, codKg)); }
@@ -230,14 +237,14 @@ function sell(){
   achSale(total, Object.values(lines).map(r => r.sp));   // the badges (core/09f-merker.js)
   { const by = {}; for (const r of arr) by[r.sp] = (by[r.sp] || 0) + r.kg; turSale(port.id, by); }   // missions (core/09g-turer.js)
   const cashBefore = S.cash;
-  bookAll({fisk:fishKr, tillegg:stKr + ordKr + exKr, trekk:-tk.sum, mannskap:-lott, kvote:-coopKr}, 'Levering, ' + port.name, 'Landing, ' + port.name);
+  bookAll({fisk:fishKr, tillegg:stKr + ordKr + exKr + vedKr, trekk:-tk.sum, mannskap:-lott, kvote:-coopKr}, 'Levering, ' + port.name, 'Landing, ' + port.name);
   bankAfterIncome(net - lott - coopKr);   // the set-aside for the tax and the regular savings (core/03-simulation.js, Økonomi 2 Ø3)
   if (coopKr > 0) log(S.lic.coop.name + ' fikk ' + kr(coopKr) + ' for torsken på kvoten hans.', S.lic.coop.name + ' got ' + kr(coopKr) + ' for the cod on his quota.'); S.stats.kg += kg; S.hold = []; delete b.byc;
   const fs = S.marks.length ? S.marks[S.marks.length - 1] : null, field = fieldCode(S.fsess || fs || b.pos);
   // the whole landing note goes with the sale, for the deck log's Salg tab (ui/06b-book-tabs.js)
   S.saleSeq = (S.saleSeq || 0) + 1;
   const det = {id:S.saleSeq, ln:arr.map(r => [r.sp, r.c, r.g, r.gut ? 1 : 0, Math.round(r.kg * 10) / 10, r.sum, Math.round(r.n || 0)].concat(r.fz ? [1] : [])), ex:Object.fromEntries(Object.entries(ex).map(([n, v]) => [n, [Math.round(v.kg * 10) / 10, v.sum]])),
-    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, gf:gutKr, crew:LS.per.map(p => [p.c.name, p.lots, p.kr].concat(p.sk ? [1, p.x] : [])), lott, fk:[Math.round(fk.fuelL), fk.fuelKr, Math.round(fk.iceKg), fk.iceKr, fk.baitKr, fk.havnKr, fk.gearKr], dl:[LS.D, LS.M, LS.n, LS.own, LS.f], fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
+    st:[stPct, stKr], ord:ordKr, conf:[Math.round(confKg), confKr, Math.round(crabSmall * 10) / 10, crabKr], roe:roeCut, gf:gutKr, ved:vedKr, crew:LS.per.map(p => [p.c.name, p.lots, p.kr].concat(p.sk ? [1, p.x] : [])), lott, fk:[Math.round(fk.fuelL), fk.fuelKr, Math.round(fk.iceKg), fk.iceKr, fk.baitKr, fk.havnKr, fk.gearKr], dl:[LS.D, LS.M, LS.n, LS.own, LS.f], fine:0, tk:[tk.lag, tk.pens, tk.prod, tk.forsk, tk.ress, tk.ktrl], mva};
   if (snoQ) det.sno = [Math.round(snoQ.tq), Math.round(snoQ.ord), Math.round(snoQ.live)];   // (the extra quota, the ordinary, the live crab; H3b)
   folkSold(port.id, kg);   // the plant's manager keeps count (09d-folk.js)
   S.sales.push({t:S.t, v:S.cur, port:port.id, kg:Math.round(kg), total, sp:ALLSP.map(sp => [sp, Math.round(arr.filter(r => r.sp === sp).reduce((a, r) => a + r.kg, 0))]).filter(r => r[1] > 0), d:det}); if (S.sales.length > 200) S.sales.shift();
@@ -260,13 +267,14 @@ function sell(){
       vt + (dir ? 'The maximum quota for Greenland halibut is fished. ' : 'The direct fishery for Greenland halibut is closed, and then it can only be bycatch, at most 7 % of the week\'s landings. ') + Math.round(z.kg) + ' kg of Greenland halibut is confiscated, worth ' + kr(Math.round(z.kr)) + '.'); }
   // the rows of the note: one per species with the reason (spilltest 3, F1: all of it was called «cod over quota»)
   if (zConf > 0.5){ confSp.torsk.kg += zConf; confSp.torsk.kr += zKr; }
+  if (vedKr > 0) log('Vederlag for ilandføring av det inndratte: ' + kr(vedKr) + ' (20 % av verdien).', 'Compensation for landing what was confiscated: ' + kr(vedKr) + ' (20% of its value).');
   const confRows = Object.keys(confSp).filter(sp => confSp[sp].kg > 0.5).sort((a, c) => ALLSP.indexOf(a) - ALLSP.indexOf(c)).map(sp => [sp, Math.round(confSp[sp].kg), Math.round(confSp[sp].kr),
     sp === 'blakveite' ? (bkDirect(H, BOAT.len) ? 'bkmax' : 'bk7') : sp === 'torsk' && zConf > 0.5 && zConf >= confSp.torsk.kg - zConf ? 'byc5' : acc === 'none' ? 'byc10' : sp === 'torsk' ? 'kvote' : 'byclukket']);
   { const d = confRows.reduce((a, r) => a + r[2], 0) - confKr; if (confRows.length && d) confRows[confRows.length - 1][2] -= d; }   // the rows add up to the total taken off
   const crabFine = 0;
   if (crabDead > 0.05) msg(port.name, vt + fmt(crabDead, 1) + ' kg av kongekrabben var død og er vraket. Død krabbe betales ikke. Et krabbekar med sjøvann holder den levende i flere døgn.', vt + fmt(crabDead, 1) + ' kg of the king crab was dead and has been discarded. Dead crab is not paid for. A live crab tank keeps it alive for days.');
   // confKg and confKr count all that was confiscated (crab too); codKg and codKr are the cod, haddock and saithe rows on the note
-  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, gutKr, gutKg:Math.round(gutKg), ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null, why}; b.tripGear = {};
+  S.lastSale = {port:port.id, t:S.t, lines:arr, total, ex, confKg:confKg + crabSmall, confKr:confKr + crabKr, codKg:confKg, codKr:confKr, vedKr, confRows, crabKg:crabSmall, crabKr, crabDead, ordKr, gutKr, gutKg:Math.round(gutKg), ffKg:codFF, field, lott, tk, mva, fk, ls:{D:LS.D, M:LS.M, n:LS.n, own:LS.own, tot:LS.tot, f:LS.f, ref:LS.ref, pot:LS.pot, mask:(S.equip && S.equip.jukse) || 0, per:LS.per.map(p => ({name:p.c.name, lots:p.lots, kr:p.kr, sk:p.sk, x:p.x, appr:p.appr}))}, coopKr, ord:ordLines, acc, crabFine, roeCut, streak:{pct:stPct, kr:stKr}, gear:Object.keys(b.tripGear || {}), sno:snoQ ? {tq:snoQ.tq, ord:snoQ.ord, live:snoQ.live} : null, why}; b.tripGear = {};
   tatLanding(port.id); checkTattoos();
   if (S.tut && S.tut.catch) S.tut.catch = false;   // the first-trip guarantee ends with the first landing
   for (const x of S.hold) delete x._used;
