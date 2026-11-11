@@ -35,6 +35,12 @@ from playwright.async_api import async_playwright
 BOATS = ['trebat', 'skiff', 'snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21']
 FISHERIES = ['juksa', 'line', 'garn', 'teiner']
 FORMATS = {'liggende': (640, 360), 'staaende': (360, 640)}
+# the ground she is set on at sea (GROUNDS' index; OB13 11.11.2026). Every ground of the Senja pack lies inside the baseline, where kyst21
+# (21 m) may not fish cod, haddock and saithe (J-187-2026 § 32): see NORULE
+GI = int(os.environ.get('KYST_OMBORD_GROUND', '0'))
+# KYST_OMBORD_NORULE=1 takes the gear's rules away for the recording (gearRules): the Senja pack has no ground outside the baseline, so
+# kyst21's setting of line and nets cannot be seen otherwise (in the game she sets outside it)
+NORULE = "window.gearRules = () => null;" if os.environ.get('KYST_OMBORD_NORULE') else ''
 
 # the slow clock for the whole page (see the docstring); __TK.set(k) changes the pace from now on
 TIMESCALE = """(() => {
@@ -66,7 +72,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
   if (window.OB_IDLE) { window.idleAssign = window.OB_IDLE; window.OB_IDLE = null; }
   window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
-  window.SEA = (st) => { const g = GROUNDS[0].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
+  window.SEA = (st) => { const g = GROUNDS[__GI__].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
     b.fishUntil = st === 'fishing' ? S.t + 600 : null; G3.vesselChanged(); };
   window.FEEDON = (sp) => { clearInterval(window.FEED); window.FEED = setInterval(() => { const Q = window.CATCHQ || (window.CATCHQ = []);
     if (Q.length < 3) Q.push({sp:sp || (Math.random() < 0.75 ? 'torsk' : 'hyse'), kg:2 + Math.random() * 4, t:performance.now()}); }, 900); };
@@ -248,8 +254,9 @@ async def record(o, fmt, outdir):
             f = fish if fish != 'felles' else (rigs[0] if rigs else 'juksa')
             n0 = await pg.evaluate("G3._debug.kitStat.n")
             await pg.evaluate("__TK.set(1)")
-            await pg.evaluate(BASE, [o['boat'], f, op])
-            res = await pg.evaluate("(async (a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type], g = GROUNDS[0].p; " + js + " })", [o['boat'], f, op])
+            await pg.evaluate(BASE.replace('__GI__', str(GI)), [o['boat'], f, op])
+            if NORULE: await pg.evaluate(NORULE)
+            res = await pg.evaluate("(async (a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type], g = GROUNDS[%d].p; " % GI + js + " })", [o['boat'], f, op])
             if isinstance(res, str) and res.startswith('SKIP'):
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 'skip': res}; log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
             yaw, pitch, dist = cam

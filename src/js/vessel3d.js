@@ -531,9 +531,9 @@ const SETTERS = {
   sjark:[-0.85, 1.78, 5.10, 0, 1],          // (on the guard rail over the low bulwark: its panels lean in from the bulwark's top)
   hurtigsjark:[-0.75, 1.93, 5.50, 0, 1],
   sjarkny:[-0.75, 2.36, 5.50, 0, 1],
-  breisjark:[0.05, 1.62, 5.58, 0, 1],        // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
-  // (the 15 m boat carries the place herself, kyst15.py kit.setter: the sill of the setting port in her stern, OB12 11.11.2026)
-  kyst21:[0.86, 2.27, 10.30, 0.4, 1]};      // (the round stern, to starboard of the staff)
+  // (the 15 m boat carries the place herself, kyst15.py kit.setter: the sill of the setting port in her stern, OB12 11.11.2026; and
+  // the 21 m one, kyst21.py kit.setter: the roller in her round stern's bulwark, OB13 11.11.2026)
+  breisjark:[0.05, 1.62, 5.58, 0, 1]};       // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
 for (const k in SETTERS){ (KITADD[k] = KITADD[k] || {}).setter = SETTERS[k]; }
 // the old rescue boat in each hull (the game's frame: [x0, x1, y0, y1, z0, z1]): the triangles wholly inside are left out of your own
 // boat (the boat, her cradle or platform and the old davit; tests/unit/vessel3d.test.mjs counts them and checks that no deck goes)
