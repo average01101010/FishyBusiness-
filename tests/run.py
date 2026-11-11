@@ -177,6 +177,11 @@ COVER['src/js/ui/phone/01-haill-fiske-service.js'] = COVER['src/js/ui/phone/01-h
 # givenKeep, giveSkip with an end) in tests/unit/shopback.test.mjs, the claim against a stand-in in kjoptest, the one clock in boostklokke
 # (case D), the database in sqltest
 COVER['supabase/migrations/20261111120000_shop_back.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/shopback.test.mjs'] = []
+# HS4 (11.11.2026): the server is the truth for haill and everything bought. The pure functions (haillFromSrv, boostSrv, srvToT) and
+# the wheel's weights in tests/unit/haillfasit.test.mjs, the claim, the pub and the chapter's haill against a stand-in in kjoptest
+# (step 10, KJOP_FRA=10 alone), the database in sqltest
+COVER['supabase/migrations/20261111140000_haill_srv.sql'] = ['sqltest', 'kjoptest']; COVER['tests/unit/haillfasit.test.mjs'] = []
+for _f in ('src/js/ui/09-hand-fishing.js', 'src/js/ui/09b-pub.js', 'src/js/ui/10j-paint.js', 'src/js/core/09f-merker.js'): COVER[_f] = COVER.get(_f, []) + ['kjoptest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
     COVER[_f] = COVER.get(_f, []) + ['turlinjetest']
 

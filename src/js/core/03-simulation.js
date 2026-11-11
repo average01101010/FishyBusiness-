@@ -1284,7 +1284,9 @@ function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv', hid = nu
   if (inv[type] > 0) inv[type]--;
   else { const srv = S.haillSrv || [], u = S.haillUsed || (S.haillUsed = []), i = srv.findIndex(x => x.type === type && !u.includes(x.id)); if (i < 0) return false;
     const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; hid = id; }
-  S.haill = {type, t0:boostT(), how}; if (hid != null){ S.haill.id = hid; (S.haillT || (S.haillT = {}))[hid] = S.haill.t0; }   // (the minute goes to the server with the id, HS4 haill_on) log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
+  // (the minute goes to the server with the id, HS4 haill_on)
+  S.haill = {type, t0:boostT(), how}; if (hid != null){ S.haill.id = hid; (S.haillT || (S.haillT = {}))[hid] = S.haill.t0; }
+  log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
   if (how === 'srv' && typeof haillTell === 'function') haillTell(true);
   return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000
