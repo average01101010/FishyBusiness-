@@ -1,0 +1,237 @@
+== 1: dagen på planen, tørt: fra mottaket og ute på havet
+  oppsett: Vannareid [{'lat': 70.81461047322435, 'lon': 20.380615235480192}, {'lat': 70.9485087627565, 'lon': 20.417094671347858}]
+  sjekk: [] []
+  fra mottaket:
+     06:00 Går fra Vannareid
+     06:00 Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 14 mann)
+     10:24 Setter 4 lenker autoline på felt 1
+     13:10 Setter 4 lenker autoline på felt 2
+     15:56 Venter ved felt 1 til ståtida er ute kl. 18:15
+     18:15 Trekker felt 1 (sto 6,0 t)
+     02:15 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen)
+     05:01 Trekker felt 2 (sto 14,0 t)
+     13:01 Setter de 4 lenkene ut igjen på felt 2 (egnemaskinen)
+      Felt 1: står til ståtida er ute i morgen kl. 10:06
+      Felt 2: står til ståtida er ute i morgen kl. 20:52
+      Døgndrift med lagene; turen går til lasten, agnet, drivstoffet eller provianten sier stopp.
+  ute på havet:
+     06:00 Går fra der båten ligger
+     06:00 Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 14 mann)
+     06:00 Setter 4 lenker autoline på felt 1
+     08:46 Setter 4 lenker autoline på felt 2
+     11:32 Venter ved felt 1 til ståtida er ute kl. 13:51
+     13:51 Trekker felt 1 (sto 6,0 t)
+     21:51 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen)
+     00:37 Trekker felt 2 (sto 14,0 t)
+     08:37 Setter de 4 lenkene ut igjen på felt 2 (egnemaskinen)
+     11:23 Trekker felt 1 (sto 11,7 t)
+     19:23 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen)
+      Felt 2: står til ståtida er ute i morgen kl. 16:28
+      Felt 1: står til ståtida er ute om 2 døgn, kl. 03:14
+      Døgndrift med lagene; turen går til lasten, agnet, drivstoffet eller provianten sier stopp.
+  turen er over:
+     06:00 Går fra der båten ligger
+     06:00 Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 14 mann)
+     06:00 Venter ved felt 1 til ståtida er ute kl. 09:00
+     09:00 Trekker felt 1 (sto 6,0 t), inn på magasinene
+     17:55 Trekker felt 2 (sto 14,9 t), inn på magasinene
+     07:10 Leverer i Vannareid (paller, om lag 38 t)
+      Turen er over: lasten er 96 % full.
+OK   the plan for the autoliner is ready without you aboard (the teams have their own skipper and mate) []
+OK   at sea: both fields set, hauled when due and set again at once by the machine, no way home or to the plant ['avgang', 'lagvakt', 'sett', 'sett', 'vent', 'trekkr', 'sett+', 'trekkr', 'sett+', 'trekkr', 'sett+']
+OK   the hold at 95 %: the strings hauled home to the magazines, nothing set, then the plant ['avgang', 'lagvakt', 'vent', 'trekk', 'trekk', 'lever']
+== 2: tre døgn på planen fra mottaket, uten deg om bord
+     ['D1 06:01', 'fish:unmooring@Vannareid', 0]
+     ['D1 06:02', 'fish:sailing', 0]
+     ['D1 09:28', 'fish:fishing/set', 0]
+     ['D1 12:01', 'fish:fishing', 0]
+     ['D1 12:02', 'fish:sailing', 0]
+     ['D1 13:57', 'fish:fishing/set', 0]
+     ['D1 16:28', 'fish:fishing', 0]
+     ['D1 16:29', 'fish:sailing', 0]
+     ['D1 18:23', 'fish:fishing', 0]
+     ['D1 21:05', 'fish:sailing', 0]
+     ['D1 21:08', 'fish:fishing/haul', 0]
+     ['D2 08:06', 'fish:fishing/set', 8315]
+     ['D2 10:41', 'fish:fishing', 8315]
+     ['D2 10:42', 'fish:sailing', 8315]
+     ['D2 12:35', 'fish:fishing/haul', 8315]
+     ['D2 23:15', 'fish:fishing/set', 15216]
+     ['D2 01:54', 'fish:fishing', 15216]
+     ['D2 01:55', '-:idle', 15216]
+     ['D2 01:56', 'fish:sailing', 15216]
+     ['D2 03:52', 'fish:fishing/haul', 15216]
+     ['D3 14:28', 'fish:fishing/set', 20178]
+     ['D3 16:57', 'fish:fishing', 20178]
+     ['D3 16:58', 'fish:sailing', 20178]
+     ['D3 18:53', 'fish:fishing/haul', 20178]
+     log ['D1 06:01', 'Kjøpte agn for turen: 14394 kg blekksprut og 14394 kg saury for 834\xa0852 kr.']
+     log ['D1 12:01', "Satte 4 lenker autoline (20\xa0000 krok) på 193 m, 70°55,0'N 020°33,0'Ø."]
+     log ['D1 16:28', "Satte 4 lenker autoline (20\xa0000 krok) på 180 m, 71°03,9'N 020°26,9'Ø."]
+     log ['D2 08:06', 'Trakk line: 8\xa0315 kg, sto 9 t, 4 fisk sluppet.']
+     log ['D2 10:41', "Satte 4 lenker autoline (20\xa0000 krok) på 193 m, 70°55,0'N 020°33,0'Ø."]
+     log ['D2 23:15', 'Trakk line: 6\xa0900 kg, sto 20 t, 3 fisk sluppet.']
+     log ['D2 01:54', "Satte 4 lenker autoline (20\xa0000 krok) på 180 m, 71°03,9'N 020°26,9'Ø."]
+     log ['D3 14:28', 'Trakk line: 4\xa0962 kg, sto 17 t, 2 fisk sluppet.']
+     log ['D3 16:57', "Satte 4 lenker autoline (20\xa0000 krok) på 193 m, 70°55,0'N 020°33,0'Ø."]
+     log ['D3 05:57', 'Trakk line: 2\xa0984 kg, sto 17 t, 3 fisk sluppet.']
+  hauls [('D1 12:01', 'D2 08:06', 8315), ('D1 16:28', 'D2 23:15', 6900), ('D2 10:41', 'D3 14:28', 4962), ('D2 01:54', 'D3 05:57', 2984)] on deck [4, 5, 5, 5, 5, 4, 5, 5, 4, 4, 6, 5] ops {'on': True, 'stop': None, 'wait': None, 'M': 'mT155'}
+OK   three days without you aboard: the lenker set, hauled and set again, the catch aboard [4, 23162]
+OK   the bait for the trip bought at the plant before she went out (squid and saury) [6000, 32748]
+OK   the teams on deck in their watches all the while, never home or to a shelter [4, 6]
+== 3: en uke på planen mot en uke for hånd, og en uke spilt som catchUp
+   {'open': {'kg': 43208, 'hauls': 10, 'ms': 9752, 'wait': None, 'stop': None, 'waits': [], 'gear': ['D1 08:39>D1 04:41:6461', 'D1 13:08>D2 19:51:7024', 'D2 07:18>D3 11:22:5820', 'D2 22:27>D3 02:09:2955', 'D3 13:50>D4 17:39:4349', 'D3 04:50>D5 09:13:2482', 'D4 20:13>D5 00:15:3259', 'D5 11:48>D6 15:08:3107', 'D5 02:51>D6 05:18:3163', 'D6 17:32>D7 19:05:2333', 'D7 07:38>null:null', 'D7 21:35>null:null']}, 'closed': {'kg': 43263, 'hauls': 10, 'ms': 3619, 'gear': ['D1 08:39>D1 04:41:6461', 'D1 13:08>D2 19:52:7028', 'D2 07:18>D3 11:23:5824', 'D2 22:28>D3 02:11:2959', 'D3 13:51>D4 17:41:4350', 'D3 04:52>D5 09:15:2484', 'D4 20:15>D5 00:18:3269', 'D5 11:50>D6 15:11:3114', 'D5 02:54>D6 05:19:3171', 'D6 17:35>D7 19:06:2355', 'D7 07:39>null:null', 'D7 21:36>null:null']}, 'hand': {'kg': 43314, 'hauls': 12, 'log': ['Båten har drevet 1,0 nm fra blåsa.', 'Trekker line: 4 lenker, sto 15 t.', 'Båten har drevet 1,0 nm fra blåsa.'], 'ms': 4054}}
+OK   a week on the plan catches as a week by hand on the same fields (within 15 %): 43208 kg against 43314 kg, 0.2 %
+OK   the week played as catchUp plays it (the game closed): 43263 kg against 43208 kg open, 0.1 %
+== 4: turen er over: lasten full, lenkene inn, lossing på paller, nytt skift og ut igjen
+     ['D2 12:01', 'fish:fishing/haul', 557965]
+     ['D2 19:54', 'fish:fishing/set', 563278]
+     ['D2 22:30', 'fish:fishing', 563278]
+     ['D2 22:31', 'fish:sailing', 563278]
+     ['D2 00:39', 'fish:fishing/haul', 563278]
+     ['D3 11:32', 'fish:fishing/set', 569107]
+     ['D3 14:00', 'fish:fishing', 569107]
+     ['D3 14:01', '-:idle', 569107]
+     ['D3 14:02', 'fish:sailing', 569107]
+     ['D3 15:37', 'fish:fishing/haul', 569107]
+     ['D3 02:27', 'fish:fishing/set', 572066]
+     ['D3 05:08', 'fish:fishing', 572066]
+     ['D3 05:09', 'fish:sailing', 572066]
+     ['D4 07:10', 'fish:fishing/haul', 572066]
+     ['D4 18:03', 'fish:fishing/set', 576150]
+     ['D4 20:38', 'fish:fishing', 576150]
+     ['D4 20:39', 'fish:sailing', 576150]
+     ['D4 22:42', 'fish:fishing/haul', 576150]
+     ['D5 09:45', 'fish:fishing/set', 578513]
+     ['D5 12:20', 'fish:fishing', 578513]
+     ['D5 12:21', '-:idle', 578513]
+     ['D5 12:22', 'fish:sailing', 578513]
+     ['D5 14:23', 'fish:fishing/haul', 578513]
+     ['D5 00:55', 'fish:fishing', 581918]
+     ['D5 00:56', 'fish:sailing', 581918]
+     ['D5 02:57', 'fish:fishing/haul', 581918]
+     ['D6 13:29', 'fish:fishing', 584708]
+     ['D6 13:30', 'fish:sailing', 584708]
+     ['D6 18:49', '-:port@Vannareid', 584708]
+     ['D6 18:50', '-:port@Vannareid/land', 584708]
+     ['D8 09:53', '-:port@Vannareid', 0]
+     ['D8 10:35', 'fish:unmooring@Vannareid', 0]
+     ['D8 10:36', 'fish:sailing', 0]
+     log ['D6 18:50', 'Losser 390,0 t fryst (584,7 t rund vekt) på 390 paller i Vannareid. Sluttseddelen kommer tirsdag kl. 10:00.']
+     log ['D8 09:53', 'Mannskapet fikk 12\xa0444\xa0724 kr i lott.']
+     log ['D8 09:53', 'Skift A går i land med 12\xa0444\xa0724 kr i lott, og skift B mønstrer på (14 mann, ferdighet 3,0).']
+     log ['D8 09:57', 'Fyller 28\xa0426 L diesel, ferdig ca. kl. 10:35.']
+     log ['D8 10:35', 'Kjøpte agn for turen: 15754 kg blekksprut og 15754 kg saury for 913\xa0732 kr.']
+     log ['D8 10:35', 'Skipshandelen har levert proviant om bord for 60 døgn til 15 mann: 19\xa0369 kr.']
+FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 584708, [0, 1]]
+OK   and out again on the next trip [{'on': True, 'stop': None, 'wait': None, 'M': 'mT155'}, 5, 0]
+== 5: været: over arbeidsgrensen venter skipet ved lina, over grensen for å ligge bi ligger det bi, og planen går videre når det løyer
+   {"lim": {"wind": 18, "hs": 5}, "lie": [24, 7.5], "before": {"sets": 2, "gop": true}, "A": {"ev": [["D1 20:01", "-:idle?wx", 1186]], "wait": "wx", "hs": 7.3, "gop": false, "hove": false, "log": [["D1 20:01", "Vinden er 20 m/s, over grensen for arbeidet (18 m/s). Stopper draget, og resten av lenka står i sjøen."]], "ly": false, "status": "idle"}, "B": {"hove": true, "log": [["D1 23:01", "Vinden er 28 m/s. Skipet legger seg bi med baugen mot sjøen og venter til det løyer."]], "port": false, "hs": 11.2}, "C": {"hove": false, "log": [["D1 03:00", "Det har løyet etter 4 timer."], ["D1 03:43", "Trekker line: 4 lenker, sto 19 t."]], "on": true, "stop": null, "ev": [["D1 02:01", "-:idle/bi?wx", 1186], ["D1 03:00", "-:idle?wx", 1186], ["D1 03:01", "fish:sailing", 1186], ["D1 03:43", "fish:fishing/haul", 1186]]}, "year": {"work": 2, "lie": 0.5}}
+OK   over the working limit (20 m/s, 7.3 m): the work stops and she waits by the gear, not to a shelter quay [['D1 20:01', 'Vinden er 20 m/s, over grensen for arbeidet (18 m/s). Stopper draget, og resten av lenka står i sjøen.']]
+OK   over her lying-to limit (28 m/s, 11.2 m): she lies to where she is [['D1 23:01', 'Vinden er 28 m/s. Skipet legger seg bi med baugen mot sjøen og venter til det løyer.']]
+OK   when it eases the plan goes on with the gear [['D1 03:00', 'Det har løyet etter 4 timer.'], ['D1 03:43', 'Trekker line: 4 lenker, sto 19 t.']]
+  året ved felt 1: arbeidet holdt igjen 2.0 % av tida, ligge bi 0.5 %
+== 7: stikkprøver langs kysten: to døgn med planen fra et mottak i nord-øst, midt og sør
+   Båtsfjord {"plant": "Båtsfjord", "F": [{"lat": 71.4359543472551, "lon": 24.15755702660573}, {"lat": 71.49320107541493, "lon": 23.766292651758416}], "n": 2, "check": {"ok": true, "errors": [], "warnings": [], "go": []}, "M": "Båtsfjord", "hauls": 1, "sets": 3, "hold": 4770, "ops": {"on": true, "stop": null, "wait": null, "M": "mF161"}, "ev": [["D1 07:00", "fish:sailing", 0], ["D1 17:00", "fish:fishing/set", 0], ["D1 20:05", "fish:sailing", 0], ["D1 22:05", "fish:fishing/set", 0], ["D1 01:05", "fish:sailing", 0], ["D1 03:05", "fish:fishing", 0], ["D1 05:05", "fish:fishing/haul", 0], ["D2 16:05", "fish:fishing/set", 3469]], "at": {"lat": 71.57477861055159, "lon": 23.194820242495332}, "log": [["D2 15:53", "Båten har drevet 8,3 nm fra blåsa."], ["D2 18:30", "Satte 4 lenker autoline (20 000 krok) på 350 m, 71°27,6'N 023°48,0'Ø."], ["D2 19:46", "WP12 passert. Ny kurs 295°."], ["D2 20:27", "Trekker line: 
+OK   spot check Båtsfjord: the plan made, out from Båtsfjord, the lenker set and hauled, fish aboard [[{'lat': 71.4359543472551, 'lon': 24.15755702660573}, {'lat': 71.49320107541493, 'lon': 23.766292651758416}], 1, 4770, None, []]
+   Ålesund {"plant": "Valderøya", "F": [{"lat": 63.77040619623098, "lon": 5.3879421534687335}, {"lat": 63.90312028079909, "lon": 5.342140132925888}], "n": 2, "check": {"ok": true, "errors": [], "warnings": [], "go": []}, "M": "Valderøya", "hauls": 1, "sets": 3, "hold": 2062, "ops": {"on": true, "stop": null, "wait": null, "M": "mM294"}, "ev": [["D1 07:00", "fish:sailing", 0], ["D1 13:00", "fish:fishing/set", 0], ["D1 16:00", "fish:sailing", 0], ["D1 18:00", "fish:fishing/set", 0], ["D1 20:00", "fish:sailing", 0], ["D1 22:00", "fish:fishing", 0], ["D1 01:00", "fish:fishing/haul", 0], ["D1 03:00", "-:idle?wx", 150]], "at": {"lat": 63.96451325649695, "lon": 5.320785542743227}, "log": [["D2 00:40", "Satte 4 lenker autoline (20 000 krok) på 892 m, 63°52,9'N 005°18,8'Ø."], ["D2 01:55", "WP2 passert. Ny kurs 351°."], ["D2 02:36", "WP3 passert. Ny kurs 171°."], ["D2 02:36", "Trekker line: 4 lenker, sto 31 
+OK   spot check Ålesund: the plan made, out from Valderøya, the lenker set and hauled, fish aboard [[{'lat': 63.77040619623098, 'lon': 5.3879421534687335}, {'lat': 63.90312028079909, 'lon': 5.342140132925888}], 1, 2062, None, []]
+   Egersund {"plant": "Egersund", "F": [{"lat": 58.20146034486967, "lon": 4.7576312194772274}, {"lat": 58.33776297009976, "lon": 4.653928646303756}], "n": 2, "check": {"ok": true, "errors": [], "warnings": [], "go": []}, "M": "Egersund", "hauls": 2, "sets": 3, "hold": 7629, "ops": {"on": true, "stop": null, "wait": null, "M": "mR40"}, "ev": [["D1 07:00", "fish:sailing", 0], ["D1 10:30", "fish:fishing/set", 0], ["D1 13:30", "fish:sailing", 0], ["D1 15:30", "-:idle?wx", 0], ["D1 21:30", "-:engine?wx", 0], ["D1 22:30", "-:idle?wx", 0], ["D1 23:30", "fish:sailing", 0], ["D1 00:30", "fish:fishing/set", 0]], "at": {"lat": 58.46171768244706, "lon": 4.494109791029809}, "log": [["D2 18:28", "Trekker line: 4 lenker, sto 16 t."], ["D2 19:24", "Båten har drevet 1,0 nm fra blåsa."], ["D2 04:24", "Trakk line: 3 708 kg, sto 16 t."], ["D2 04:24", "Setter 4 lenker."], ["D2 04:24", "Båten har drevet 8,9 nm fra blåsa.
+OK   spot check Egersund: the plan made, out from Egersund, the lenker set and hauled, fish aboard [[{'lat': 58.20146034486967, 'lon': 4.7576312194772274}, {'lat': 58.33776297009976, 'lon': 4.653928646303756}], 2, 7629, None, []]
+== 8: snøkrabbefartøyet (H3c): 40 lenker på Sentralbanken fra Båtsfjord
+  oppsett: Båtsfjord [{'lat': 74.8, 'lon': 34.39999999999999}, {'lat': 74.86804563600427, 'lon': 35.218325987925574}] [240, 240]
+  sjekk: [] []
+  fra mottaket:
+     06:00 Går fra Båtsfjord
+     06:00 Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 22 mann)
+     12:04 Setter lenke 1 på felt 1 (200 teiner)
+     12:38 Setter lenke 2 på felt 1 (200 teiner)
+     13:12 Setter lenke 3 på felt 1 (200 teiner)
+     13:46 Setter lenke 4 på felt 1 (200 teiner)
+     14:20 Setter lenke 5 på felt 1 (200 teiner)
+     14:54 Setter lenke 6 på felt 1 (200 teiner)
+     15:28 Setter lenke 7 på felt 1 (200 teiner)
+     16:02 Setter lenke 8 på felt 1 (200 teiner)
+     17:25 Setter lenke 9 på felt 1 (200 teiner)
+     17:59 Setter lenke 10 på felt 1 (200 teiner)
+     18:33 Setter lenke 11 på felt 1 (200 teiner)
+     19:07 Setter lenke 12 på felt 1 (200 teiner)
+     19:41 Setter lenke 13 på felt 1 (200 teiner)
+     20:15 Setter lenke 14 på felt 1 (200 teiner)
+  ute ved lenkene:
+     06:00 Går fra der båten ligger
+     06:00 Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 22 mann)
+     06:25 Trekker lenke 1 på felt 1 (sto 7,0 døgn)
+     09:12 Setter lenke 1 ut igjen på felt 1 (agnet med akkar)
+     09:46 Trekker lenke 2 på felt 1 (sto 7,1 døgn)
+     12:33 Setter lenke 2 ut igjen på felt 1 (agnet med akkar)
+     13:07 Trekker lenke 3 på felt 1 (sto 7,2 døgn)
+     15:53 Setter lenke 3 ut igjen på felt 1 (agnet med akkar)
+     16:27 Trekker lenke 4 på felt 1 (sto 7,3 døgn)
+     19:14 Setter lenke 4 ut igjen på felt 1 (agnet med akkar)
+     19:48 Trekker lenke 5 på felt 1 (sto 7,4 døgn)
+     22:35 Setter lenke 5 ut igjen på felt 1 (agnet med akkar)
+OK   the plan for the snow crab vessel is ready without you aboard []
+OK   at sea: the strings that have stood their week are hauled and set out again at once, the day ends by them ['avgang', 'lagvakt', 'trekk', 'sett+', 'trekk', 'sett+', 'trekk', 'sett+', 'trekk', 'sett+', 'trekk', 'sett+']
+   {"open": {"kg": 20564, "prod": 13881, "hauls": 19, "ms": 7396, "wait": null, "stop": null, "lost": 0, "inSea": 40, "waits": [], "log": [["D-28 06:25", "Trekker teiner: 200 teiner, sto 168 t."], ["D-28 10:01", "Sortert: 1 905 krabber beholdt, 41 bløte, 23 døde; 537 satt ut levende (456 under 9,5 cm, 81 hunner)."], ["D-28 10:01", "Setter 200 teiner."], ["D-28 11:02", "Trekker teiner: 200 teiner, sto 172 t."]], "long": ["D-28 10:36→D-28 10:37", "D-28 15:10→D-28 15:11", "D-28 19:46→D-28 19:47", "D-28 00:31→D-28 00:32", "D-28 05:25→D-28 05:26", "D-27 10:19→D-27 10:20"], "ev": 78}, "closed": {"kg": 20005, "hauls": 19, "ms": 3730}, "hand": {"kg": 20067, "hauls": 21, "ms": 3016, "log": ["Setter 200 teiner.", "Båten har drevet 1,0 nm fra blåsa.", "Satte 200 snøkrabbeteiner på 190 m, 74°56,0'N 034°32,3'Ø.", "Trekker teiner: 200 teiner, sto 243 t."]}, "days": 4}
+OK   four days on the plan catch as four days by hand on the same strings (within 15 %): 20564 kg against 20067 kg round weight, 2.5 % (19 and 21 hauls)
+OK   and as H3b by hand on Sentralbanken in February: 5.1 t round weight a fishing day against 5.7 t (9.8 %)
+OK   the days played as catchUp plays them (the game closed): 20005 kg against 20564 kg open, 2.7 %
+     ['D-28 07:00', 'fish:sailing', 0]
+     ['D-28 05:00', 'fish:fishing/haul', 203]
+     ['D-27 08:00', 'fish:fishing/set', 912]
+     ['D-27 09:00', 'fish:fishing/haul', 917]
+     ['D-27 13:00', 'fish:fishing/set', 1824]
+     ['D-27 14:00', 'fish:fishing/haul', 1878]
+     ['D-27 18:00', 'fish:fishing/set', 2778]
+     ['D-27 19:00', 'fish:fishing/haul', 2913]
+     ['D-27 23:00', 'fish:sailing', 3722]
+     ['D-27 00:00', 'fish:fishing/haul', 3945]
+     ['D-27 03:00', 'fish:fishing/set', 4686]
+     ['D-27 04:00', 'fish:fishing/haul', 4708]
+     ['D-26 08:00', 'fish:fishing/set', 5630]
+     ['D-26 09:00', 'fish:fishing/haul', 5722]
+     ['D-26 13:00', 'fish:sailing', 6584]
+     ['D-26 14:00', 'fish:fishing/haul', 6756]
+     ['D-26 18:00', 'fish:sailing', 7534]
+     ['D-26 19:00', 'fish:fishing/haul', 7603]
+     ['D-26 23:00', 'fish:fishing/set', 8480]
+     ['D-26 00:00', 'fish:fishing/haul', 8608]
+     ['D-26 04:00', 'fish:fishing', 9414]
+     ['D-26 05:00', 'fish:fishing/haul', 9533]
+     ['D-25 09:00', 'fish:fishing/set', 10272]
+     ['D-25 10:00', 'fish:fishing', 10272]
+     ['D-25 18:00', 'fish:fishing/haul', 10457]
+     ['D-25 22:00', 'fish:sailing', 11190]
+     ['D-25 23:00', 'fish:fishing/haul', 11393]
+     ['D-25 03:00', 'fish:sailing', 12193]
+     ['D-25 04:00', 'fish:fishing/haul', 12363]
+     ['D-24 08:00', 'fish:sailing', 13215]
+     log ['D-8 19:28', 'Går til Båtsfjord for å levere.']
+     log ['D-7 22:52', 'Skift A blir om bord og får 2\xa0043\xa0593 kr i lott. Det har vært om bord i 22 av 35 døgn.']
+     log ['D-7 02:00', 'Kjøpte 3,5 t akkar til teinene for 117\xa0640 kr.']
+     log ['D-7 02:00', 'Skipshandelen har levert proviant om bord for 30 døgn til 23 mann: 118\xa0338 kr.']
+   landings [{'t': 1012, 'd': '2027-03-01', 'ord': 64266, 'tq': 0, 'live': 0, 'conf': 0, 'kr': 3548138}] in sea 40 aboard 83 None
+  målt: en frysetur fra Båtsfjord med lenkene stående: 64.3 t rund vekt landet etter 21.7 døgn, mot H3b-anslaget for hånd om lag 95 t på 20 døgn uten været (32.4 % under)
+OK   a frozen trip on the plan from the plant: the strings worked, the clusters landed (64.3 t), the strings stood in the sea while she landed (40), the plan on
+OK   and out again to the strings after the landing: 15 strings hauled since
+== 9: sesongen mot sedlene: fryst og levende, fra januar til kvoten er tatt eller fredningen
+   {"mode": "frys", "Q": {"base": 433000, "max": 476300, "extra": 110000}, "ord": 449635.7810074731, "tq": 0, "conf": 0, "n": 7, "LOG": [["2027-01-27", 36.2, 0, 2.3], ["2027-02-17", 76.3, 0, 5], ["2027-03-11", 85.8, 0, 4.8], ["2027-04-02", 88.9, 0, 5.7], ["2027-04-24", 73.7, 0, 4.2], ["2027-05-15", 55.7, 0, 3.3], ["2027-06-06", 33, 0, 2.6]], "gaps": [21.4, 21.6, 22.1, 21.5, 21.4, 21.6], "lost": 0, "ms": 411873, "until": "2027-06-23", "wait": "Ikke noe å gjøre i dag: 20 lenker settes ikke: fredningen begynner 1. juli; 20 lenker settes ikke: fredningen begynner 1. juli.", "inSea": 0}
+OK   season frys: 450 t round weight in 7 landings (median 73.7 t), median 21.6 days between landings, 0 strings lost, until 2027-06-23 (the notes: frozen 99-127 t a landing, 19-20 days between, about 430 t a vessel in 2026)
+   {"mode": "lev", "Q": {"base": 433000, "max": 476300, "extra": 110000}, "ord": 311496.27700000006, "tq": 110000, "conf": 0, "n": 20, "LOG": [["2027-01-15", 11.9, 11.7, 0.8], ["2027-01-26", 18.7, 18.3, 1.3], ["2027-02-03", 21.7, 21.1, 1.4], ["2027-02-12", 29.1, 28.2, 1.7], ["2027-02-21", 26.9, 26.1, 1.7], ["2027-03-02", 22.1, 21.4, 1.3], ["2027-03-11", 34.3, 33, 1.9], ["2027-03-19", 31.7, 30.6, 1.8], ["2027-03-28", 28.8, 27.9, 1.6], ["2027-04-06", 30.2, 29.1, 1.7], ["2027-04-14", 27.8, 26.9, 1.5], ["2027-04-23", 25.8, 25.1, 1.5], ["2027-05-01", 20.3, 19.7, 1.3], ["2027-05-10", 23, 22.3, 1.3], ["2027-05-19", 18.4, 17.9, 1.1], ["2027-05-27", 13.9, 13.6, 0.8], ["2027-06-05", 12.1, 11.9, 0.7], ["2027-06-13", 10.7, 10.4, 0.6], ["2027-06-22", 9.9, 9.7, 0.6], ["2027-06-27", 4.1, 4, 0.2]], "gaps": [10.1, 8.8, 8.8, 8.8, 8.8, 8.8, 8.7, 8.6, 8.6, 8.7, 8.6, 8.5, 8.7, 8.6, 8.5, 8.5, 8.5, 8.5, 4.9], "lost": 0, "ms": 103468, "until": "2027-07-03", "wait": "Ikke noe å gjøre i dag: fredningen begynner 1. juli, og alle teinene skal være på land (J-237-2025 § 5).", "inSea": 0}
+OK   season lev: 421 t round weight in 20 landings (median 22.1 t), median 8.6 days between landings, 0 strings lost, until 2027-07-03 (the notes: live 21-32 t a landing, 8-9 days between, about 430 t a vessel in 2026)
+== 10: siden og kartvinduet for snøkrabbefartøyet i begge formater
+OK   no sideways overflow at 800 px {'w': 800, 'cw': 800}
+   Driftsplan · «T-658-LK» | Start planen | Neste dag · ut kl. 06:01 | 06:01 | Går fra Båtsfjord | 06:01 | Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 22 mann) | 12:05 | Setter lenke 1 på felt 1 (200 teiner) | 12:39 | Setter lenke 2 på felt 1 (200 teiner) | 13:13 | Setter lenke 3 på felt 1 (200 teiner) | 13:47 | Setter lenke 4 på felt 1 (200 teiner) | 14:21 | Setter lenke 5 på felt 1 (200 teiner) | 14:55 | Setter lenke 6 på felt 1 (200 teiner) | 15:29 | Setter lenke 7 på felt 1 (200 teiner) | 16:03 | Setter lenke 8 på felt 1 (200 teiner) | 17:26 | Setter lenke 9 på felt 1 (200 teiner) | 18:00 | Setter lenke 10 på felt 1 (200 teiner) | 18:34 | Setter lenke 11 på felt 1 (200 teiner) | 19:08 | Setter lenke 12 på felt 1 (200 teiner) | 19:42 | Setter lenke 13 på felt 1 (200 teiner) | 20:16 | Setter lenke 14 på felt 1 (200 teiner) | 20:50 | Setter len
+OK   the page speaks of strings of 200 and the soak in days (800 px)
+OK   Levering: «Fryste klør» or «Levende krabbe», frozen chosen ['Fryste klør*', 'Levende krabbe']
+OK   the chart draws every string of the fields (40) Felt 1 | × | Lenker | − | 20 à 200 av 20 | + | Ståtid | − | 7 døgn | + | Lenka 5,0 km | ↶ | etter kursen | ↷ | 265,6 nm fra hjem · ikke fisket her ennå | ↑ | ↓ | Fjern
+OK   no sideways overflow at 1280 px {'w': 380, 'cw': 380}
+OK   the page speaks of strings of 200 and the soak in days (1280 px)
+OK   Levering: «Fryste klør» or «Levende krabbe», frozen chosen ['Fryste klør*', 'Levende krabbe']
+OK   the chart draws every string of the fields (40) Felt 1 | × | Lenker | − | 20 à 200 av 20 | + | Ståtid | − | 7 døgn | + | Lenka 5,0 km | ↶ | etter kursen | ↷ | 265,6 nm fra hjem · ikke fisket her ennå | ↑ | ↓ | Fjern
+== 6: siden i begge formater
+OK   no sideways overflow at 800 px {'w': 800, 'cw': 800}
+   Driftsplan · «T-658-LK» | Start planen | Neste dag · ut kl. 06:01 | 06:01 | Kjøper 28,8 t agn for turen i Vannareid (blekksprut og saury) | 06:11 | Lagene går seks og seks: 1. vakt 00–06 og 12–18, 2. vakt 06–12 og 18–24 (skift A om bord, 14 mann) | 09:47 | Setter 4 lenker autoline på felt 1 | 12:22 | Setter 4 lenker autoline på felt 2 | 14:57 | Venter ved felt 1 til ståtida er ute kl. 17:38 | 17:38 | Trekker felt 1 (sto 6,0 t) | 01:38 | Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen) | 04:13 | Trekker felt 2 (sto 14,0 t) | 12:13 | Setter de 4 lenkene ut igjen på felt 2 (egnemaskinen) | F
+OK   no sideways overflow at 1280 px {'w': 380, 'cw': 380}
+sidefeil: []

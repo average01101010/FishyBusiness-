@@ -302,4 +302,16 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - Patchnotes har merket «på test» i testutgaven; `pwa.yml` legger ut flyttesiden på Pages, bare for hånd; valg 34, **besvart 11.11.2026** (Jonas: «Etter første slipp»), ikke kjørt
   - det første slippet er ikke gjort: PR-en «Slipp 11.11.2026» (#1) står til Jonas (ekte penger: HS2), med `haill_use`-migreringen først. **P1 i porten er ferdig når det første slippet er gjort.**
 - 10.11.2026: **L1d bygd** (steg 77, Jonas' økt, gren `ccr-d120fd15-qq3fhp`), etter V4 B: bare push. Nede (`dsb-uptime`), heng (vakten i en Web Worker) og kanalen i `errors` med «[test]» og nattestillhet. Ingen e-post. Koden går til testadressen; migreringen venter på Jonas (testprosjektet for hånd, produksjonen før slippet). Se «Feilvarselet L1d» i `docs/systemer/tilbakemelding-og-admin.md`.
+- 11.11.2026: **L1c bygd** (steg 76, Jonas' økt, gren `ccr-26bf5fcc-efdoee`). Det som ble avgjort, står i «Lagringsporten» i `docs/systemer/publisering.md`:
+  - porten ligger i `deploy.yml` på `main` og i tilbakerullingen, med portens filer tatt fra grentoppen; uten nøkkelen stopper jobben
+  - `savestest.py` tar fire om gangen: 75 kopier av fixturen på 71 s lokalt (én om gangen: 168 s); målet var under 10 minutter
+  - den andre veien bruker bygget som ligger på serveren (rsync fra `current/`), ikke et nytt bygg av forrige commit; kan det ikke hentes, er det en advarsel og ikke et stopp
+  - den ødelagte fixturen er en båt uten posisjon: «båt på land utenfor lastede blokker» tåler spillet nå, og den står blant de friske
+  - GitHub behandler lagringene i jobben (hentet til `$RUNNER_TEMP`, slettet til slutt): L1f tar GitHub inn som databehandler
+  - **P2 i porten er ferdig.** Porten kjørte i slippet 11.11.2026 10:53 UTC (`4b98263a`, «Appen på Hetzner» #483 på `main`): 74 lagringer (71 fra databasen og fixturens tre), alle startet; porten tok 2,5 minutter, den andre veien 270 s (3,6 s per lagring, fire om gangen) mot bygget hentet fra serveren med rsync, alle holdt; lagringene slettet; hele jobben 11,5 minutter.
 - 11.11.2026 09:00 UTC: **det første slippet gjort** (`d147bab7`, versjon `28a8ad5814b7`), startet av Jonas med workflowen «Slipp». P1 i porten er ferdig. Flyttesiden lagt ut på Pages etterpå (valg 34).
+- 11.11.2026: **L1f bygd, venter på Jonas** (steg 79, Jonas' økt, gren `ccr-b461eca2-teqw0r`, PR #62; `src/legal/` rulles ikke ut):
+  - kildesiden: ODbL-avsnittet med lenke til lisensen og kartreleasene; ODbL 4.3 og 4.6 og OSMFs retningslinjer lest ved kilden
+  - personvernerklæringen: GitHub som databehandler (L1c henter ekte lagringer inn i jobben) og seksjonen «Testutgaven»; feilrapportene er ikke endret (teksten dekker rapporten fra en side som henger); ingen e-posttjeneste (V4 B)
+  - vilkårene: «Prisene er oppgitt i norske kroner og er det du betaler. Der merverdiavgift gjelder, er den med i prisen, og ingenting kommer i tillegg i kassen.» (sann før og etter Stripe Tax; L2 kan stramme inn)
+  - **åpent for Jonas:** om GitHub-kontoen har en databehandleravtale (gjelder ifølge GitHub Teams og Enterprise); attribusjonen i selve spillet mangler (backloggen «L1f»)
