@@ -28,7 +28,7 @@ FISH = """(async ([lat, lon]) => { const a = P(lat, lon), H = S.t / 60; let best
   b.status = 'fishing'; b.deckStop = false; b.deckEnd = null; b.fishUntil = S.t + 240; for (let k = 0; k < 240 && b.status === 'fishing'; k++){ S.t += 1; fish(S.t / 60, 3, 0.3); }
   const fs = S.fsess, kgOf = sp => S.hold.reduce((s, x) => s + (x.sp === sp ? x.kg : 0), 0), tot = S.hold.reduce((s, x) => s + x.kg, 0);
   const told = S.msgs.slice(n0).filter(m => m.from === 'Regler' && /bifangst/.test(m.no)), kv = kvCheck(b).items.map(i => i.k);
-  return {p:[+p.x.toFixed(1), +p.y.toFixed(1)], nm:+blNm(p).toFixed(1), zone, block, blockCod, v:v.v, keys:v.items.map(i => i.k), kg:Math.round(tot), cod:Math.round(kgOf('torsk')), byc:b.byc ? {kg:Math.round(b.byc.skag.kg), cod:Math.round(b.byc.skag.cod)} : null,
+  return {p:[+p.x.toFixed(1), +p.y.toFixed(1)], nm:+blNm(p).toFixed(1), zone, block, blockCod, v:v.v, keys:v.items.map(i => i.k), kg:Math.round(tot), cod:Math.round(kgOf('torsk')), byc:b.byc && b.byc.skag ? {kg:Math.round(b.byc.skag.kg), cod:Math.round(b.byc.skag.cod)} : null,
     st:b.status, dens:+best.v.toFixed(3), log:S.log.slice(-2).map(l => l.no || l[1] || String(l)), told:told.length, text:told[0] ? told[0].no : '', kv, conf:+bycConf().kg.toFixed(1)}; })"""
 
 # to the nearest plant with what is aboard: the quay's word before «Lever», then the landing
@@ -61,7 +61,7 @@ async def main():
                 over = f['byc']['cod'] > 0.05 * f['byc']['kg'] + 1 and f['byc']['kg'] >= 20
                 check((f['told'] == 1 and '§ 5' in f['text'] and 'skagby' in f['kv']) if over else f['told'] == 0, name + (': over 5 % cod: the word once, with the paragraph, and the coast guard remarks on it' if over else ': at most 5 % cod here: no word'), f)
             else:
-                check(f['zone'] is None and 'skag5' not in f['keys'] and f['byc'] is None and f['told'] == 0 and f['conf'] == 0 and 'skagby' not in f['kv'], name + ': nothing new (no bycatch zone, no count, no word)', f)
+                check(f['zone'] == 'nsjo' and 'skag5' not in f['keys'] and f['byc'] is None and f['told'] == 0 and f['conf'] == 0 and 'skagby' not in f['kv'], name + ': nothing from the Skagerrak (the North Sea\'s own zone from Ø10c, tests/sor62test.py; no bycatch count, no word)', f)
             l = await pg.evaluate(LAND)
             want = max(0, (f['byc']['cod'] - 0.05 * f['byc']['kg'])) if f.get('byc') else 0
             if skag and want > 1:
