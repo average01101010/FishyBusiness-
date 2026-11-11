@@ -490,6 +490,23 @@ Stedet der teina tømmes, er flyttet akter for teinemannen (`potDeck`: 1,3 m + r
 
 **Valg 25, besvart A** (Jonas 09.11.2026: «Valg 25: A»): `gearMax.teine` er det dørken rommer: den brukte hurtigsjarken og breisjarken 6, den nye hurtigsjarken 21, kyst21 30. Havsjarken og kyst15 har ikke teiner i `rigs` (som snekka, valg 24 A): teinehaleren og krabbekaret passer ikke (`equipFits` `fit.rig`), og båtbladet sier at det ikke er plass til kongekrabbeteiner. En lagring med flere teiner enn plassen: `potsOver` (teinene om bord og i sjøen over `gearMax.teine`), og `potsUnfit` tar de overskytende om bord i land i havn og betaler dem tilbake til full pris (haleren og karet står); på havsjarken og kyst15 som før for snekka (teinene i havn, haleren og karet ved verftet). `gearHour` binder bare båtene i havn som har noe å ta i land. Sjekkene i `tests/unit/teiner.test.mjs` ble sett røde mot koden før. Plastsjarkens tall (12 nå) settes av OB7 når plassene er lagt.
 
+### 4.13 Etter OB3 (11.11.2026): settingen og redskapet om bord
+
+OB3 (steg 81, Jonas' økt, grenen `ccr-13ec41bb-wikvwe`) tok det felles arbeidet for båtene med mannskap på dekk; systemet står i «Settingen og redskapet om bord» i `docs/systemer/redskap.md`.
+
+| Funn | Hva som er gjort | Står igjen |
+|---|---|---|
+| **F4** setting | Én står der redskapet går over og betaler det ut (rollen `sett`), de andre langer (`lang`); ingen ved haleren i trekkestilling. Dreggen kastes fra hendene hans. Gjennom linesetteren eller garnrenna når hun har den, ellers modellens plass over hekken, ellers over rekka. | Teinene settes fortsatt med én ved haleren. Kyst15 setter fra shelterdekket til OB12. |
+| **F8** antallet | Alle stampene tegnes, stablet i lag (høyst fire), og de tomme blir om bord; de to første på magasinet. Garnet i 12 per kar, flere kar der dekket har plass, resten som høyere haug. | De fleste dekkene rommer bare ett garnkar (binger i båtfasene). |
+| **F7** teinene | Stablene er ute av gangkartet (ingen står eller sitter i dem), og den andre som sorterer, har egen plass. | `potDeck` og `tankAt` kjenner ikke fangstkarene; sett bare på hurtigsjarken. |
+| **F15** klippesjekken | `crewclip` prøver nå garntrekket, settingen av line og garn og teinene, og F4 og F19 på alle båtene. Enhetstesten `ombord.test.mjs` prøver plassene i Node. | Håndbåtene har fortsatt ingen klippesjekk (faste figurer). |
+| **F19** to på samme punkt | Den tredje ved bordet tok den andres side (0,40 m på kyst15, kyst21, snøkrabbebåten, bunntråleren); nå minst 0,55 m på alle. | – |
+| **F20** gjennom huset | Stampen det settes fra, står akter, så lina ikke går over dekket (hurtigsjarken: fra skjulet forut). | Garnets vei fra karet til hekken er ikke prøvd mot modellen. |
+| **F21** juksa | Der plassene søkes (kyst21), står maskinene 1,0 m fra hverandre og festes annenhver side. De andre har modellens plasser fra båtfasene. | Kyst15 har bare styrbord (OB12). |
+| **F24** haleren | Regelen på 1,2 m er rettet: den som haler og den som bløgger, står ved haleren på kyst15 og kyst21 (og alle andre). | På kyst15 synes de ikke fra kameraet (F18, OB12). |
+
+Bildene før og etter står i `docs/okter/2026-11-11-ob3/`. Før-bildene er av snekka, havsjarken og kyst15 (setting, juksa for hånd, juksamaskin og trekk, begge formater), og av den brukte hurtigsjarkens teiner, kyst21s linetrekk og juksamaskiner, og plastsjarken med fullt redskap. Etter-bildene er av de samme, uten juksa på snekka, havsjarken og kyst15: juksaplassene deres kommer fra modellene og er ikke endret, så bildene ville vært like.
+
 ## 5. Båten i sjøen
 
 Regnet i spillet uten 3D 09.11.2026 med `stabOf` (`core/03c-stability.js`), tom båt og med fullt rom eller kar (`holdCap`), uten redskap på dekk. Hiv og stamp i 3D kommer fra skrogsnittene i F2 (`hullSections`, `hullRest`, `hullStep`), rullet fra `stabOf`. Målt i sjø før (`fysikk-og-styring.md`, F2): sjarken ruller 11,5° signifikant i 3,45 m tverrsjø og stamper 9° i 6,1 m motsjø i 8,5 knop; skiffen stamper 4,6° i 2,7 m krapp sjø i 18 knop.
@@ -608,6 +625,7 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 09.11.2026: **OB0 ferdig** (Jonas' økt, gren `ccr-59f8e7e6-m00yni`). Alle ti båtene tatt opp liggende med alle operasjonene, stående med juksa og linetrekket (trebåten med alle), innseilingen og lossingen tatt på nytt. Ingenting i `src/` er endret. Neste: OB1 (trebåten), som venter på valg 17, 18, 21, 22 og 23, (H3d2 og Ø8b S2 ble rullet ut samme natt); OB2 og OB15 er klare.
 - 09.11.2026: **OB2 rullet ut** (Jonas' økt, gren `ccr-a9ccd5ec-it307t`, 7d2404bd, versjon e5e171f41fc3): F1, F2 og F3 rettet for alle båtene med mannskap; F22 flyttet til OB4. Forslagene til K6 i 4.11.
 - 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
+- 11.11.2026: **OB3 bygd** (Jonas' økt, gren `ccr-13ec41bb-wikvwe`): F4, F8, F15, F19, F21 og F24 rettet for båtene med mannskap, F7 og F20 delvis; tabellen i 4.13. Neste: OB4 (steg 82, startmeldingen i `docs/planer/start/82.md`).
 - 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).
 - 09.11.2026: **OB5 bygd** (Jonas' økt, gren `ccr-b0ab5771-n45cmj`): 4.2 over, forslag 75 etter Jonas' skala. Neste på sporet: OB6 (snekka, `docs/planer/start/84.md`).
 - 10.11.2026: **OB8 bygd** (Jonas' økt, gren `ccr-869710d8-bo5iwu`): havsjarken med setteport i hekken (Jonas: «A Åpning i hekken»; F20), de to ved bordet side om side (F19), juksa fordelt (F21), pakkerens plass og iskassa, bremmen (valg 26), styrhusveggene uten striper, livbøya under vinduet, pyntefenderne ut og fenderen som felles modell; forslag 76 i `havsjark-grunnlag.md` 9.5. Funnene i 4.5 med alvor A er rettet, utenom F4 (OB3). Neste på sporet: OB9 (hurtigsjarken, `docs/planer/start/87.md`).
