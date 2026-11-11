@@ -13,13 +13,20 @@
 --   ach_haill(ch)         the haill of chapter 2 (ch = 1), one grant per account for good
 --   haill_import(inv)     the game's own numbers (S.haillInv, the haill aboard, S.yardCredit) made into grants, once per account,
 --                         within a cap: 2 haill, 1 luksus, plus what this server itself delivered into the saves before it kept
---                         them (the grants HS2 and this file count as used when they run); the yard credit only within those
+--                         them (the grants HS2 and this file count as used when they run); the yard credit only within those;
+--                         the haill aboard counts as one of its kind
+--   grants_moved          a guest's grants moved to an account (guest_merge) never get past «once per account»: the chapter's
+--                         haill and the imported ones are taken back when the account has had its own (or another guest's), and a
+--                         pub haill when the account already had a round that evening. Else a row of guests could be merged
+--                         into one account, each with its own free haill
 --   haill_on(id, t0)      as haill_use(id), with the game minute it was switched on: never later than the server's own minute, so
 --                         a haill cannot be made longer (an earlier minute only shortens it: switched on with no network, V1 A)
 --   yard_use(id)          the yard done now is a grant that is unused until it finishes a job: the credit is counted here
 --   shop_state()          what the game needs to write over its copy: the server's minute, the grants (the open ones; the haill
---                         that is unused; the trim and Skippertak delivered the last 7 days; the yard grants not used), the haill
---                         switched on last with its minute, whether the import is done, and the last round at the pub. The open
+--                         that is unused; the trim and Skippertak delivered the last 90 days, so a long row of them bought after
+--                         each other keeps its end; the yard grants not used), the haill
+--                         switched on last with its minute, whether the import is done, the paint designs the account owns (entitlements,
+--                         as tm_hello's owned) and the last round at the pub. The open
 --                         grants of these kinds are delivered by this call itself (done_at), marked new:true in that answer, so
 --                         the end of a trim is the server's from the first moment and no shop_done is needed for them
 --   shop_pending()        as after HS3 (20261111120000_shop_back.sql), but a yard grant that is used (yard_use) is no longer
@@ -118,7 +125,7 @@ end $$;
 
 create or replace function public.haill_import(inv jsonb) returns jsonb
 language plpgsql security definer set search_path = public as $$
-declare p text := pid(); n int; cap int; out jsonb := '{"ok":true}'::jsonb; ty text; ot text; ot0 double precision;
+declare p text := pid(); n int; cap int; out jsonb := '{"ok":true}'::jsonb; ty text; ot text := inv -> 'on' ->> 'type'; ot0 double precision;
   num constant text := '^-?[0-9]+(\.[0-9]+)?$';
 begin
   if p is null then raise exception 'not signed in'; end if;
@@ -131,18 +138,17 @@ begin
     select count(*) into cap from grants g where g.player_id = p and g.revoked_at is null and g.used_at is not null and g.used_at = g.done_at
        and g.product_id not like 'imp\_%' and case when ty = 'yard' then g.data ->> 'give' = 'yard' else g.data ->> 'give' = 'haill' and g.data ->> 'type' = ty end;
     cap := cap + case ty when 'haill' then 2 when 'luksus' then 1 else 0 end;
+    -- the haill aboard when the save came over: one, as used, with its minute (never later than now), and within the cap of its kind
+    if ty = ot and ty <> 'yard' and cap > 0 then
+      ot0 := case when (inv -> 'on' ->> 't0') ~ num then (inv -> 'on' ->> 't0')::double precision else game_min() end;
+      insert into grants (player_id, product_id, data, done_at, used_at, t0) select p, pr.id, pr.data, now(), now(), least(ot0, game_min()) from products pr where pr.id = 'imp_' || ot;
+      out := out || jsonb_build_object('on', ot); cap := cap - 1;
+    end if;
     n := case when (inv ->> ty) ~ num then least(floor((inv ->> ty)::numeric), 100000)::int else 0 end;
     n := greatest(0, least(n, cap));
     insert into grants (player_id, product_id, data, done_at) select p, pr.id, pr.data, now() from products pr, generate_series(1, n) where pr.id = 'imp_' || ty;
     out := out || jsonb_build_object(ty, n);
   end loop;
-  -- the haill aboard when the save came over: one, as used, with its minute (never later than now)
-  ot := inv -> 'on' ->> 'type';
-  if ot in ('haill', 'luksus', 'takk') then
-    ot0 := case when (inv -> 'on' ->> 't0') ~ num then (inv -> 'on' ->> 't0')::double precision else game_min() end;
-    insert into grants (player_id, product_id, data, done_at, used_at, t0) select p, pr.id, pr.data, now(), now(), least(ot0, game_min()) from products pr where pr.id = 'imp_' || ot;
-    out := out || jsonb_build_object('on', ot);
-  end if;
   return out;
 end $$;
 
@@ -186,11 +192,14 @@ begin
       from grants g where g.player_id = p and g.revoked_at is null
        and (g.done_at is null
          or (g.data ->> 'give' in ('haill', 'yard') and g.used_at is null)
-         or (g.data ->> 'give' in ('trim', 'skip') and g.done_at > now() - interval '7 days'))),
+         or (g.data ->> 'give' in ('trim', 'skip') and g.done_at > now() - interval '90 days'))),
     'on', (select jsonb_build_object('id', g.id, 'type', g.data ->> 'type', 't0', coalesce(g.t0, game_min_at(g.used_at)))
       from grants g where g.player_id = p and g.revoked_at is null and g.data ->> 'give' = 'haill' and g.used_at > now() - interval '7 days'
       order by coalesce(g.t0, game_min_at(g.used_at)) desc, g.id desc limit 1),
     'imp', exists (select 1 from haill_once o where o.player_id = p and o.what = 'import'),
+    -- (the designs the account owns: bought, entitlements as tm_hello's owned, or given by a grant alone, a correction from the admin)
+    'owned', coalesce((select jsonb_agg(x.id order by x.id) from (select e.product_id id from entitlements e where e.player_id = p
+      union select g.product_id from grants g where g.player_id = p and g.revoked_at is null and g.data ->> 'give' = 'cos') x), '[]'::jsonb),
     'pub', (select jsonb_build_object('e', r.e, 'k', r.k) from pub_rounds r where r.player_id = p order by r.e desc limit 1));
 end $$;
 
@@ -204,6 +213,33 @@ language sql stable security definer set search_path = public as $$
        or (g.data ->> 'give' in ('trim', 'skip') and g.done_at > now() - interval '7 days')
        or (g.data ->> 'give' = 'yard' and g.used_at is null and g.done_at > now() - interval '1 day'))
 $$;
+
+-- (guest_merge, 20261105130000_guest_world.sql, moves every grant of the guest to the account, and the guest's rows in haill_once
+-- and pub_rounds go with the guest: without this the «once» would be once per guest)
+create or replace function public.grants_moved() returns trigger
+language plpgsql security definer set search_path = public as $$
+declare ev int;
+begin
+  if new.revoked_at is not null then return new; end if;
+  if new.product_id = 'ach_haill' then
+    insert into haill_once (player_id, what, data) values (new.player_id, 'ach1', jsonb_build_object('from', old.player_id)) on conflict do nothing;
+    if not found then new.revoked_at := now(); end if;
+  elsif new.product_id like 'imp\_%' then
+    insert into haill_once (player_id, what, data) values (new.player_id, 'import', jsonb_build_object('from', old.player_id)) on conflict do nothing;
+    if not found and not exists (select 1 from haill_once o where o.player_id = new.player_id and o.what = 'import' and o.data ->> 'from' = old.player_id) then new.revoked_at := now(); end if;
+  elsif new.product_id like 'pub\_%' then
+    select r.e into ev from pub_rounds r where r.player_id = old.player_id and r.grant_id = new.id;
+    if ev is not null then
+      insert into pub_rounds (player_id, e, k, grant_id) values (new.player_id, ev, coalesce(new.data ->> 'type', 'haill'), new.id) on conflict do nothing;
+      if not found then new.revoked_at := now(); end if;
+    end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists grants_moved on public.grants;
+create trigger grants_moved before update of player_id on public.grants
+  for each row when (old.player_id is distinct from new.player_id) execute function public.grants_moved();
+revoke all on function public.grants_moved() from public, anon, authenticated;
 
 revoke all on function public.game_min(), public.game_min_at(timestamptz), public.pub_spin(), public.ach_haill(int), public.haill_import(jsonb),
   public.haill_on(bigint, double precision), public.yard_use(bigint), public.shop_state() from public, anon, authenticated;
