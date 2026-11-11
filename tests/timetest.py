@@ -1,7 +1,7 @@
 """Time shown to the player: the clock runs six times as fast, real-time countdowns next to game times, and the «Neste»
 chip in the HUD. Prints OK or FEIL per check."""
 from _env import GAME, ROUTES
-import asyncio, json
+import re, asyncio, json
 from playwright.async_api import async_playwright
 
 
@@ -37,19 +37,20 @@ async def main():
         chip = lambda: pg.evaluate("(document.querySelector('#hud .st.nx') || {}).textContent || ''")
         await pg.evaluate("S.draftDep = S.t + 120; doAct({dataset:{act:'start'}}); renderHud()")
         c = await chip()
-        check(c.startswith('⏱ Avgang kl. ') and 'om 20 min i ekte tid' in c, 'planlagt avgang: klokkeslettet først, så om 20 min i ekte tid', c)
+        check(re.match(r'⏱ Avgang \d\d:\d\d', c) and 'om 20 min i ekte tid' in c, 'planlagt avgang: klokkeslettet først, så om 20 min i ekte tid', c)
         await pg.evaluate("S.plan.depAt = S.t + 1; for (let i = 0; i < 14; i++) step(); renderHud()")
         c = await chip()
         check('Fremme' in c and 'om' in c, 'underveis: når båten er fremme', c)
         await pg.evaluate("const b = S.boat; b.status = 'fishing'; b.fishUntil = S.t + 90; renderHud(); renderActs()")
         c = await chip()
-        stop = await pg.evaluate("document.getElementById('dockInfo').textContent")
-        check('Fisket er ferdig kl. ' in c and 'om 15 min i ekte tid' in c and 'om 15 min i ekte tid' in stop, 'fisket: klokkeslett og nedtelling i ekte tid i HUD og over knappene', [c, stop])
+        # the pill over the buttons (#dockInfo) went in UI 2 (U2-1, 06.11.2026): what it said stands on the next-line alone, and the clock stands without «kl.»
+        pill = await pg.evaluate("!!document.getElementById('dockInfo') && !document.getElementById('dockInfo').hidden && document.getElementById('dockInfo').textContent")
+        check(re.search(r'Fisket er ferdig \d\d:\d\d', c) and 'om 15 min i ekte tid' in c and not pill, 'fisket: klokkeslett og nedtelling i ekte tid på neste-linja, og ingen tekst over knappene', [c, pill])
         await pg.evaluate("""(() => { const b = S.boat, q = portById('botnhamn'); S.plan = null; b.status = 'port'; b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; b.fishUntil = null;
           S.hold = [{sp:'torsk', cls:2, kg:120, n:30, bled:true, iced:true, hr:0, fresh:90, gut:false}]; startLanding(); renderHud(); tab = 'port'; renderPanel(); })()""")
         c = await chip()
         note = await pg.evaluate("[...document.querySelectorAll('#panel p.note')].map(p => p.textContent).find(s => /Sluttseddelen/.test(s)) || ''")
-        check(c.startswith('⏱ Sluttseddelen kl. ') and ' · om ' in c and ' · om ' in note, 'lossing: seddelen med nedtelling', [c, note[-40:]])
+        check(re.match(r'⏱ Sluttseddelen \d\d:\d\d', c) and ' · om ' in c and ' · om ' in note, 'lossing: seddelen med nedtelling', [c, note[-40:]])
         await pg.screenshot(path='time_hud.png', clip={'x': 0, 'y': 0, 'width': 320, 'height': 220})
         print('sidefeil', errs)
         await b.close()

@@ -4,6 +4,10 @@
 # Two editions (L1a, 10.11.2026, docs/planer/lansering-plan.md V1 A): main is the production and goes to current/ (detstorebla.no);
 # every other branch, so the working branch, is built with KYST_CHANNEL=test and goes to test/ (test.detstorebla.no). The real-time
 # relay is the production's and is uploaded from main only.
+# The release (L1b, 10.11.2026): detstorebla.no changes only when main moves (tools/release/slipp.py writes the pull request «Slipp
+# <dato>»; docs/systemer/publisering.md «Slippet»). Rolling back: start this by hand on main with «commit» set to the commit of the
+# release before; it must already be on main, so nothing that was never released can reach the production this way. On another branch
+# «commit» builds that commit for the test edition.
 # Needs the secrets DEPLOY_HOST (the server's address), DEPLOY_KEY (the private deploy key) and DEPLOY_KNOWN_HOSTS (ssh-keyscan of
 # the server); without DEPLOY_HOST it builds and stops. The real-time relay (tools/server/rt) goes up beside the site, to /srv/detstorebla/rt.
 name: Appen på Hetzner
@@ -12,6 +16,11 @@ on:
     branches: [main, ccr-5e1ba2f4-pusvyd]
     paths: ['src/**', 'build.mjs', 'tools/map/kart.json', 'tools/map/kart-release.json', 'tools/map/game.py', 'tools/server/**', '.github/workflows/deploy.yml']
   workflow_dispatch:
+    inputs:
+      commit:
+        description: 'Tilbakerulling: commiten som skal bygges og legges ut i stedet for grentoppen (på main: et tidligere slipp). Tom = grentoppen.'
+        required: false
+        default: ''
 permissions:
   contents: read
 concurrency:
@@ -27,6 +36,22 @@ jobs:
       DEPLOY_DIR: ${{ github.ref_name == 'main' && 'current' || 'test' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: ${{ inputs.commit && '0' || '1' }}
+      # a roll-back (L1b): the commit asked for instead of the branch tip. On main it must be one main already has (an earlier release)
+      - name: The commit asked for
+        if: ${{ inputs.commit }}
+        env:
+          COMMIT: ${{ inputs.commit }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$' || { echo "Not a commit: $COMMIT"; exit 1; }
+          sha=$(git rev-parse --verify -q "$COMMIT^{commit}") || { echo "Unknown commit: $COMMIT"; exit 1; }
+          if [ "$BRANCH" = main ]; then
+            git merge-base --is-ancestor "$sha" HEAD || { echo "$sha is not on main: only what has been released can go to the production."; exit 1; }
+          fi
+          git checkout -q --detach "$sha"
+          echo "Building $(git log -1 --format='%h %s')"
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -70,8 +95,9 @@ jobs:
       # beside the site (rrsync keeps the key in /srv/detstorebla), compared by content and without times, so an unchanged relay is not
       # touched; VERSION (the hash of the files) goes last, and setup.sh's dsb-rt-reload.path restarts the service when it changes.
       # Before setup.sh has made the service on the server, the files just lie there.
+      # (not at a roll-back: the relay stays as the newest release left it; a bad relay is rolled back with a release of its own)
       - name: Upload the real-time relay
-        if: github.ref_name == 'main'
+        if: ${{ github.ref_name == 'main' && !inputs.commit }}
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |

@@ -1,0 +1,109 @@
+<!doctype html>
+<!-- The page GitHub Pages gets when the game has moved (L1b, 10.11.2026, docs/planer/lansering-plan.md): «Spillet har flyttet til
+     detstorebla.no», with the save of this address as a code. A game played here keeps its save in this origin's localStorage
+     (kystfiske_v2), which detstorebla.no cannot read, so the page makes the same code Innstillinger → Lagret spill makes
+     (saveCode in src/js/ui/02-format-state.js: the save gzipped, in base64, after «KYST2:») and the player pastes it there.
+     Uploaded by .github/workflows/pwa.yml, by hand, when Jonas says Pages can be moved. It changes nothing in localStorage. -->
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b1622">
+<title>Det Store Blå har flyttet</title>
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%}
+  body{background:#0b1622 linear-gradient(180deg,#16314c 0%,#0b1622 70%) no-repeat;color:#e8eef4;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:calc(env(safe-area-inset-top,0px) + 24px) calc(env(safe-area-inset-right,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 24px) calc(env(safe-area-inset-left,0px) + 16px)}
+  main{max-width:560px;margin:0 auto}
+  h1{font-size:26px;line-height:1.2;margin:0 0 6px}
+  h2{font-size:17px;margin:0 0 6px}
+  p{margin:0 0 12px}
+  .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin:16px 0}
+  .btn{display:block;width:100%;min-height:52px;border:0;border-radius:12px;padding:14px 16px;font-family:inherit;font-size:17px;font-weight:600;line-height:1.2;text-align:center;text-decoration:none;cursor:pointer;background:#2f7fd0;color:#fff}
+  .btn.alt{background:#24425f;color:#e8eef4}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn + .btn{margin-top:10px}
+  textarea{display:none;width:100%;margin-top:10px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:#08111b;color:#cfe0ee;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;padding:10px}
+  textarea.on{display:block}
+  ol{margin:0 0 4px;padding-left:22px} li{margin:4px 0}
+  .note{color:#a9bccd;font-size:14px}
+  #msg{min-height:1.5em;margin:10px 0 0;font-weight:600}
+  #msg.bad{color:#ffb4a8} #msg.ok{color:#9fe0b4}
+  .lang{float:right;background:none;border:1px solid rgba(255,255,255,.25);color:#cfe0ee;border-radius:9px;padding:6px 10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <button class="lang" id="lang" type="button">English</button>
+  <h1 data-no="Det Store Blå har flyttet" data-en="Det Store Blå has moved">Det Store Blå har flyttet</h1>
+  <p data-no="Spillet ligger nå på detstorebla.no. Denne adressen oppdateres ikke lenger." data-en="The game now lives at detstorebla.no. This address is no longer updated.">Spillet ligger nå på detstorebla.no. Denne adressen oppdateres ikke lenger.</p>
+
+  <div class="card" id="saveCard">
+    <h2 data-no="Ta med spillet ditt" data-en="Take your game along">Ta med spillet ditt</h2>
+    <p id="has" class="note"></p>
+    <button class="btn" id="copy" type="button" data-no="Kopier lagringen" data-en="Copy the save">Kopier lagringen</button>
+    <textarea id="code" rows="5" readonly aria-label="KYST2"></textarea>
+    <p id="msg" role="status"></p>
+    <ol class="note">
+      <li data-no="Trykk «Kopier lagringen»." data-en="Tap «Copy the save».">Trykk «Kopier lagringen».</li>
+      <li data-no="Åpne detstorebla.no og start spillet." data-en="Open detstorebla.no and start the game.">Åpne detstorebla.no og start spillet.</li>
+      <li data-no="Åpne telefonen i spillet → Innstillinger → Lagret spill → «Lim inn lagring», lim inn koden og trykk «Last inn dette spillet»." data-en="Open the phone in the game → Settings → Saved game → «Paste a save», paste the code and tap «Load this game».">Åpne telefonen i spillet → Innstillinger → Lagret spill → «Lim inn lagring», lim inn koden og trykk «Last inn dette spillet».</li>
+    </ol>
+  </div>
+
+  <a class="btn" id="go" href="https://detstorebla.no/" data-no="Gå til detstorebla.no" data-en="Go to detstorebla.no">Gå til detstorebla.no</a>
+  <p class="note" style="margin-top:14px" data-no="Lagringen på denne adressen blir liggende i nettleseren din. Ingenting slettes her." data-en="The save at this address stays in your browser. Nothing is deleted here.">Lagringen på denne adressen blir liggende i nettleseren din. Ingenting slettes her.</p>
+</main>
+<script>
+'use strict';
+(() => {
+  const KEY = 'kystfiske_v2';   // the game's save (src/js/ui/02-format-state.js); read, never written
+  const $ = id => document.getElementById(id);
+  let lang = /^(nb|nn|no)/i.test(navigator.language || 'no') ? 'no' : 'en', state = ['', ''];
+  const T = {
+    none:['Det ligger ingen lagring på denne adressen i denne nettleseren. Har du spilt i en annen nettleser eller som app på hjemskjermen, åpne denne siden der.', 'There is no save at this address in this browser. If you played in another browser or as an app on the home screen, open this page there.'],
+    has:['Du har et spill lagret på denne adressen. Kopier det som en kode og lim den inn på detstorebla.no.', 'You have a game saved at this address. Copy it as a code and paste it at detstorebla.no.'],
+    copied:['Koden er kopiert.', 'The code is copied.'],
+    manual:['Nettleseren lot oss ikke kopiere. Marker koden under og kopier den selv.', 'The browser did not let us copy. Select the code below and copy it yourself.'],
+    old:['Nettleseren er for gammel til å lage koden. Oppdater den, eller åpne siden i en annen nettleser på samme enhet.', 'The browser is too old to make the code. Update it, or open the page in another browser on the same device.'],
+    blocked:['Nettleseren slipper oss ikke til lagringen (privat modus?).', 'The browser does not let us reach the save (private mode?).']};
+  const say = (k, cls) => { state = [k, cls || '']; const m = $('msg'); m.textContent = k ? T[k][lang === 'no' ? 0 : 1] : ''; m.className = cls || ''; };
+  function raw(){ try { return localStorage.getItem(KEY); } catch (e){ return undefined; } }
+  function paint(){
+    document.documentElement.lang = lang;
+    for (const e of document.querySelectorAll('[data-no]')) e.textContent = e.dataset[lang];
+    $('lang').textContent = lang === 'no' ? 'English' : 'Norsk';
+    document.title = lang === 'no' ? 'Det Store Blå har flyttet' : 'Det Store Blå has moved';
+    const r = raw(); $('has').textContent = T[r === undefined ? 'blocked' : r ? 'has' : 'none'][lang === 'no' ? 0 : 1]; $('copy').disabled = !r;
+    say(state[0], state[1]);
+  }
+  // the same code as saveCode() in the game: the save gzipped, in base64, after «KYST2:»
+  const b64of = u => { let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+  async function code(){
+    const r = raw(); if (!r) return null;
+    const z = new Uint8Array(await new Response(new Blob([r]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+    return 'KYST2:' + b64of(z);
+  }
+  $('copy').addEventListener('click', async () => {
+    let c = null;
+    try { c = await code(); } catch (e){ say('old', 'bad'); return; }
+    if (!c){ paint(); return; }
+    const ta = $('code'); ta.value = c; ta.classList.add('on');
+    try { await navigator.clipboard.writeText(c); say('copied', 'ok'); }
+    catch (e){ ta.focus(); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (x){} say(ok ? 'copied' : 'manual', ok ? 'ok' : 'bad'); }
+  });
+  $('code').addEventListener('focus', e => e.target.select());
+  $('lang').addEventListener('click', () => { lang = lang === 'no' ? 'en' : 'no'; paint(); });
+  paint();
+  // the old app's service worker and its caches go, so this page is what the address shows from now on (the save in localStorage stays)
+  try {
+    if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+    if (window.caches) caches.keys().then(ks => ks.filter(k => k.startsWith('kyst-')).forEach(k => caches.delete(k))).catch(() => {});
+  } catch (e){}
+})();
+</script>
+</body>
+</html>
