@@ -288,3 +288,12 @@ Rekkefølgen er den fasene trenger dem i. Hemmeligheter (nøkler, passord) skriv
   - `deploy.yml` nekter et testbygg til `current/` og et bygg uten kanal til `test/`
   - admin-siden i testbygget får testprosjektet
   - «Måles» i L1a: to opphav gir to `localStorage` og to tjenestearbeidere av seg selv; «Ny versjon er ute» spør `version.json` ved siden av siden. Ingen av delene er prøvd på den ekte testadressen ennå.
+- 11.11.2026: **L1b bygd** (steg 75, Jonas' økt, gren `claude/l1b-production-release-allrqm`), etter V1 A og V2 A. Det som ble avgjort i økta, står i «Slippet» og «GitHub Pages har flyttet» i `docs/systemer/publisering.md` og i «Slippet» i `tools/plan/RUTINE.md`:
+  - `tools/release/slipp.py` skriver slipp-PR-en og er porten for et automatisk slipp (`--auto`); den fletter aldri
+  - `main` er roten av arbeidsgrenens historie, så et slipp kan være en ren framoverføring; men ingen økt kan gjøre den uten at deny-lista endres eller en workflow gjør det, og `merge_pull_request` gir aldri en fast-forward: **valg 33** (A Jonas fletter, B workflow «Slipp», C økta fletter med flettecommit; anbefalt B). Til det er svart, fletter Jonas selv, og rutinen slipper ikke
+  - migreringene: på testprosjektet av Jonas for hånd før pushen, i produksjon rett før slippet; rutinen stopper ved en som ikke står som kjørt på test; `list_migrations` i produksjon er ikke fasiten
+  - Edge Functions deployes ikke av rutinen: et slipp med en endret funksjon venter på Jonas
+  - hastefeil: «slipp nå», eller rettingen plukket ut til en gren fra `main` når arbeidsgrenen har noe som ikke kan slippes
+  - tilbakerulling: `deploy.yml` på `main` med `inputs.commit` (bare en commit som alt ligger på `main`)
+  - Patchnotes har merket «på test» i testutgaven; `pwa.yml` legger ut flyttesiden på Pages, bare for hånd, når Jonas sier til (ikke kjørt)
+  - det første slippet er ikke gjort: PR-en «Slipp 11.11.2026» står til Jonas (ekte penger: HS2), med `haill_use`-migreringen først. **P1 i porten er ferdig når det første slippet er gjort.**

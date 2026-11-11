@@ -130,5 +130,6 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 | `docs/handelssteder.md` | Handelsstedene og plasseringen av steder. Jonas fyller på. |
 | `docs/push-plan.md` | Push-varslene. |
 | `tools/feedback/RUTINE.md` | Det tilbakemeldingsrutinen gjør hver kjøring. |
-| `tools/plan/RUTINE.md` | Det arbeidsrutinen gjør hver kjøring (07.11.2026): låsen `plan/kjorer`, valget av steg fra køen, porten før utrulling, migreringene, utrullingen, «Når Jonas svarer», av-bryteren. `tools/plan/tester.py` finner testene for alt en gren endret. |
+| `tools/plan/RUTINE.md` | Det arbeidsrutinen gjør hver kjøring (07.11.2026): låsen `plan/kjorer`, valget av steg fra køen, porten før utrulling, migreringene, utrullingen til testutgaven, slippet til produksjonen (L1b, 11.11.2026), «Når Jonas svarer», av-bryteren. `tools/plan/tester.py` finner testene for alt en gren endret. |
+| `tools/release/slipp.py` | Slippet til produksjonen (L1b, 11.11.2026): skriver PR-en «Slipp <dato>» fra arbeidsgrenen til `main` med commitene, patchnotatene, migreringene og en rød linje for ekte penger og `src/legal/`; `--dry`, `--auto`, `--since`. Reglene står i «Slippet» i `tools/plan/RUTINE.md` og `docs/systemer/publisering.md`. `tools/release/pages/` er siden Pages får når spillet har flyttet. |
 | `tools/plan/KOORDINATOR.md` | Den korte koordinatorøkta (09.11.2026): rydder køen, samler «spill dette» og gir Jonas neste runde med prompter. Jonas skriver bare «Les tools/plan/KOORDINATOR.md og gjør det den sier.» |

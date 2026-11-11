@@ -15,6 +15,8 @@ for Jonas (CLAUDE.md).
     python3 tools/release/slipp.py --auto            the gate for a release nobody asked for (V2 A): exits 1 unless it is 03-05
                                                      Norwegian time, the test edition has stood six hours and nothing waits for Jonas
     --base REF / --head REF                          other ends than origin/main and origin/ccr-5e1ba2f4-pusvyd
+    --since REF                                      the commit the production stands on, when main does not say it (the first
+                                                     release: main is empty, and the production has the last roll-out before L1a)
     --json                                           what it found as JSON on the last line (money, legal, migrations, ...)
 
 It never merges and never pushes: who moves `main` stands in tools/plan/RUTINE.md («Slippet») and docs/systemer/publisering.md.
@@ -101,7 +103,7 @@ def main():
     ap.add_argument('--dry', action='store_true'); ap.add_argument('--auto', action='store_true'); ap.add_argument('--json', action='store_true')
     ap.add_argument('--base', default='origin/' + PROD); ap.add_argument('--head', default='origin/' + WORK)
     ap.add_argument('--last', type=int, default=0); ap.add_argument('--out', default=''); ap.add_argument('--no-fetch', action='store_true')
-    ap.add_argument('--offline', action='store_true', help='do not ask the two version.json')
+    ap.add_argument('--offline', action='store_true', help='do not ask the two version.json'); ap.add_argument('--since', default='')
     a = ap.parse_args()
 
     if not a.no_fetch and not a.last:
@@ -127,7 +129,11 @@ def main():
             print('Ingenting å slippe: %s har alt som står på %s.' % (a.base, a.head)); return 0
         mb = git('merge-base', a.base, a.head, ok=False).strip()
         if not mb: sys.exit('%s og %s har ingen felles historie: et slipp må kunne flyttes framover.' % (a.base, a.head))
-        base = git('rev-parse', a.base).strip()
+        base = git('rev-parse', a.base).strip(); main_empty = not git('ls-tree', '-r', '--name-only', base, '--', 'src/').strip()
+        if a.since:                                   # what the players have is this commit, not main's tree
+            if not has(a.since): sys.exit('Finner ikke %s' % a.since)
+            base = git('rev-parse', a.since + '^{commit}').strip()
+            if subprocess.run(['git', 'merge-base', '--is-ancestor', base, head], cwd=ROOT).returncode: sys.exit('%s ligger ikke på %s' % (a.since, a.head))
         # the tree of main against the tree of the head: this is what the players get that they do not have
         status = {}
         for l in git('diff', '--name-status', '--no-renames', base, head).splitlines():
@@ -138,9 +144,9 @@ def main():
         new_ids = [p for p in patch_ids(head) if p[0] not in old_ids]
         mig_new = [f for f in files if f.startswith('supabase/migrations/') and status[f] == 'A']
         mig_chg = [f for f in files if f.startswith('supabase/migrations/') and status[f] == 'M']
-        base_desc = '`%s` (%s)' % (PROD, base[:8])
+        base_desc = ('`%s` (%s), commiten produksjonen står på' % (base[:8], git('log', '-1', '--format=%s', base).strip()[:70])) if a.since else '`%s` (%s)' % (PROD, base[:8])
 
-    first = not a.last and not git('ls-tree', '-r', '--name-only', base, '--', 'src/').strip()   # main has no game yet: the first release
+    first = not a.last and main_empty                 # main has no game yet: the first release
     money_files = [f for f in files if MONEY.match(f)]
     legal_files = [f for f in files if LEGAL.match(f)]
     # shop_* in the database: over the whole range (the tree diff), so a merge that brought it is seen too
@@ -175,7 +181,7 @@ def main():
         if len(money_files + shop_sql + legal_files) > 20: L.append('> - … og %d filer til' % (len(money_files + shop_sql + legal_files) - 20))
         L.append('')
     L += ['Slippet til produksjonen (`tools/release/slipp.py`, L1b): `%s` flyttes fram til `%s` på arbeidsgrenen `%s`, og detstorebla.no får det som står der.' % (PROD, head[:8], WORK), '',
-          '- Fra: %s%s' % (base_desc, ', som er tom: **dette er det første slippet**' if first else ''),
+          '- Fra: %s%s' % (base_desc, ('. `%s` er tom: **dette er det første slippet**' % PROD if a.since else ', som er tom: **dette er det første slippet**') if first else ''),
           '- Til: `%s` (%s)' % (head[:8], git('log', '-1', '--format=%s', head).strip()[:100]),
           '- Commits: %d, filer endret: %d' % (len(cs), len(files))]
     if tv or pv:
@@ -184,7 +190,7 @@ def main():
     n = 1
     if mig_new or mig_chg:
         L.append('%d. **Migreringene kjøres i produksjon (`xcqbqzrsgycpeoyclakm`) før `main` flyttes, aldri etter**, i denne rekkefølgen:' % n); n += 1
-        if first: L.append('   - `main` er tom, så lista er alle migreringene i repoet. Bare de som ikke står i produksjonens `list_migrations`, kjøres.')
+        if first and not a.since: L.append('   - `main` er tom, så lista er alle migreringene i repoet. Bare de som ikke alt er kjørt i produksjon, kjøres (`--since <commiten produksjonen står på>` gir lista over de nye).')
         show = mig_new if len(mig_new) <= 30 else mig_new[-30:]
         if len(mig_new) > 30: L.append('   - … %d eldre (fra `%s`), og de 30 nyeste:' % (len(mig_new) - 30, os.path.basename(mig_new[0])))
         for f in show: L.append('   - `%s`' % os.path.basename(f))
@@ -211,7 +217,7 @@ def main():
         L.append('')
     for c, w in marked[:MAX_COMMITS]: L.append('- %s`%s` %s' % ('🔴 ' if w else '', c['h'], c['s'][:140]))
     if len(cs) > MAX_COMMITS: L.append('- … og %d eldre (`git log --no-merges %s`)' % (len(cs) - MAX_COMMITS, (base[:8] + '..' + head[:8]) if base else a.head))
-    L += ['', '## Tilbake', '', 'Et slipp som viser seg å være galt: «Appen på Hetzner» startes for hånd på forrige slipps commit%s (`docs/systemer/publisering.md`, «Slippet»).' % (' (`%s`)' % base[:8] if base and not first else ''), '',
+    L += ['', '## Tilbake', '', 'Et slipp som viser seg å være galt: «Appen på Hetzner» startes for hånd på forrige slipps commit%s (`docs/systemer/publisering.md`, «Slippet»).' % (' (`%s`)' % base[:8] if base and (a.since or not first) else ''), '',
           '🤖 Generated with [Claude Code](https://claude.com/claude-code)']
     body = '\n'.join(L) + '\n'
 
