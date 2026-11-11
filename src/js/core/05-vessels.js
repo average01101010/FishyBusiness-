@@ -1040,7 +1040,7 @@ function fish(H, W, hs){
     if (rb){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log(rb + ' Båten venter.', rb + ' The boat waits.'); } return; } }
   const {eff, keff, wpen, pen, jig, cold, jq} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
-  let got = 0;
+  let got = 0; S.fcod = 0;   // (the minute's cod, for the bycatch share below)
   if (jig && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // jigging by hand counts as your own work on deck
   let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0, m0 = 0, mS = 0, mL = 0;
   const dv0 = stockDev(b.pos), Eu = S.target === 'kveite' && b.kgear ? keff : eff;   // (the common stock's share is the same for every species: once a minute)
@@ -1059,7 +1059,7 @@ function fish(H, W, hs){
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
       if (letGo(sp, w, b.pos, H)){ S.stats.released = (S.stats.released || 0) + 1; if (sp === 'kveite' && w >= SPECIES.kveite.minKg && (S.kvRel || -1e9) < S.t - 720){ S.kvRel = S.t; log('Slapp en kveite på ' + fmt(w, 0) + ' kg' + (kveiteClosed(H) ? ' (fredningstid).' : ' (over 200 cm).'), 'Released a ' + fmt(w, 0) + ' kg halibut' + (kveiteClosed(H) ? ' (closed season).' : ' (over 200 cm).')); } continue; }
-      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg;
+      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg; if (sp === 'torsk') S.fcod += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
   }
@@ -1091,6 +1091,16 @@ function fish(H, W, hs){
       J.p0 += m0 / q; J.pS += mS / q; J.pW += mS / q * wpen; J.pC += mS / q * ws; J.pJ += mS * ws; J.pL += mL * ws; } }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
+  // Ø10b: the cod where it may only be a bycatch (the Skagerrak outside the baseline, § 5: 5 % «i de enkelte fangster»). Over the share
+  // in this spell on the place (S.fsess, from 20 kg), the game says so once for the spell, with the reason and the paragraph, and asks
+  // the player to move; the boat is not stopped (the soft crab's way, sk5). The landing takes what is over (landConf)
+  { const fs = S.fsess, k = got > 0 ? bycHere('juksa') : null;
+    if (k){ fs.zk = (fs.zk || 0) + got; fs.zc = (fs.zc || 0) + (S.fcod || 0);
+      if (!fs.zTold && fs.zk >= 20 && fs.zc > RU_BYC[k].share * fs.zk){ fs.zTold = 1; const pc = Math.round(fs.zc / fs.zk * 100), R = RU_BYC[k];
+        const no = 'Det er ' + pc + ' % torsk i fangsten her. I Skagerrak utenfor grunnlinjen kan torsk bare være bifangst, høyst 5 % i hver fangst og ved levering. Flytt til et sted med mindre torsk. All fangst skal landes, og torsken over 5 % blir inndratt ved levering.',
+          en = 'There is ' + pc + '% cod in the catch here. In the Skagerrak outside the baseline cod may only be a bycatch, at most 5% in each catch and at the landing. Move to a place with less cod. All catch must be landed, and the cod over 5% is confiscated at the landing.';
+        log(no, en); msg('Regler', no + ' (' + R.ref + '; høstingsforskriften § 51)', en + ' (' + R.ref + '; høstingsforskriften § 51)');
+        if (typeof toast === 'function' && !VTAG) toast(S.lang === 'no' ? pc + ' % torsk i fangsten: over bifangstgrensen på 5 %. Flytt.' : pc + '% cod in the catch: over the 5% bycatch limit. Move.', 8000); } } }
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
   // has fallen to half the crew move on to the next place, taking the hours left with them
   { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
@@ -1119,11 +1129,28 @@ function endFishing(why){
 }
 // the fish is bled as it comes over the rail (a cut and into the bleeding tub, no time lost) and lies in the tub, round and not iced,
 // until someone guts and ices it
+// Ø10b (11.11.2026): the hold knows what was taken where cod may only be a bycatch (03e-rules.js ruByc: the Skagerrak outside the
+// baseline): b.byc = {skag:{kg, cod}}, all the fish taken there this trip and the cod in it, the boat's own (S.boat is a vessel's). It
+// starts afresh with an empty hold, so every way the hold is emptied (the landing, a rescue) ends it. The place is asked once in ten
+// game minutes and 50 m. how: the gear ('juksa', 'line', 'garn'; your own bites in the jig game come without)
+let BYC_AT = null;
+function bycHere(how){ const b = S.boat, gear = how || 'juksa';
+  if (BYC_AT && BYC_AT.g === gear && BYC_AT.v === S.cur && Math.abs(BYC_AT.t - S.t) < 10 && dist(BYC_AT.p, b.pos) < 0.05) return BYC_AT.k;
+  let k = null; try { k = ruByc({p:b.pos, len:BOAT.len, gear}); } catch (e){}
+  BYC_AT = {g:gear, v:S.cur, t:S.t, p:{x:b.pos.x, y:b.pos.y}, k}; return k; }
+function bycAdd(sp, kg, how){ const b = S.boat; if (!S.hold.length) delete b.byc;
+  if (SPECIES[sp].shell || how === 'teine' || how === 'teiner') return; const k = bycHere(how); if (!k) return;
+  const c = (b.byc = b.byc || {})[k] = (b.byc || {})[k] || {kg:0, cod:0}; c.kg += kg; if (sp === 'torsk') c.cod += kg; }
+// the cod aboard over the bycatch share of what was taken there: {kg, by:{skag:kg}}, never more than the cod in the hold
+function bycConf(){ const b = S.boat, by = {}; let kg = 0, left = S.hold.reduce((a, x) => a + (x.sp === 'torsk' ? x.kg : 0), 0);
+  for (const k in (b.byc || {})){ const o = Math.min(left, bycOver(k, b.byc[k])); if (o > 0.01){ by[k] = o; kg += o; left -= o; } }
+  return {kg, by}; }
 function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
   // the jig's catch for the trip's line (Ø8b S2): fish()'s, and your own bites in the jig game (ui/10-rod-acts.js, no opt) only in a minute
   // fish() counted (J.tl), so bites while the boat waits on the deck or a rule add no kilos to hours not counted; not the gear's
   if (hook !== false){ const how = opt && opt.how; if (how === 'juksa') tripJ(tripOf(S.boat)).kg += kg; else if (!how){ const J = tripJ(tripOf(S.boat)); if (J.tl != null && J.tl >= S.t - 1) J.kg += kg; } }
+  bycAdd(sp, kg, opt && opt.how);   // where cod is only a bycatch: the catch taken there, with its cod (Ø10b)
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)

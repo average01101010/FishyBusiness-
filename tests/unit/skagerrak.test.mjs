@@ -5,6 +5,7 @@
 // gear). The points outside the baseline are found from the data (south from the plants until the baseline is passed), so a new
 // rules.json moves them rather than breaking the test.
 export default function (t){
+  const brg0 = () => t.K.P(60.39, 4.6);
   const {rulesAt, ruBlockMsg, ruSea, insideBaseline, blNm, P, newState, EPOCH} = t.K;
   t.K.set('S', newState());
   const S = () => t.K.get('S');
@@ -39,7 +40,11 @@ export default function (t){
   t.ok(!!it && /2805/.test(it.ref) && /§ 1/.test(it.ref) && !!it.url, '… med forskriften, paragrafen og lenka');
   t.ok(/Skagerrak/.test(ruBlockMsg({p:krs, H:jun, len:10, gear:'juksa', sp:'torsk', hand:true}) || ''), 'ruBlockMsg gir Skagerrak-grunnen');
   t.eq(at(are).v, 'no', 'Arendal utenfor grunnlinja: forbudt på samme måte');
-  t.ok(keys(at(krs, {sp:null})).includes('skag:no!'), 'juksa uten art (alt fisket med juksa) stoppes, fordi torsken er med i fangsten');
+  // Ø10b (Jonas on valg 12, 08.11.2026): without a species the boat fishes, and the cod is a bycatch (§ 5), not a stop
+  for (const g of ['juksa', 'line', 'garn']){ const k = keys(at(krs, {sp:null, gear:g}));
+    t.ok(!k.includes('skag:no!') && k.includes('skag5:warn') && at(krs, {sp:null, gear:g}).v === 'warn', g + ' uten art stoppes ikke lenger: gult med bifangstgrensen på 5 % (skag5)'); }
+  t.ok(!ruBlockMsg({p:krs, H:jun, len:10, gear:'juksa', sp:null, hand:true}) && !ruBlockMsg({p:are, H:jun, len:10, gear:'garn', sp:null}), 'ruBlockMsg uten art er tom ved Kristiansand og Arendal (ruta, «Kast loss» og Autonav stopper ikke)');
+  t.ok(/inndratt/.test((at(krs, {sp:null}).items.find(i => i.k === 'skag5') || {}).no || '') && /§ 5/.test((at(krs, {sp:null}).items.find(i => i.k === 'skag5') || {}).ref || ''), '… og teksten sier at det som er over, blir inndratt, med § 5');
   t.ok(keys(at(krs, {gear:'garn'})).includes('skag:no!') && keys(at(krs, {gear:'line'})).includes('skag:no!'), 'garn og line etter torsk stoppes');
   t.ok(!keys(at(krsIn)).some(k => k.startsWith('skag')), 'innenfor grunnlinja ved Kristiansand: ingen Skagerrak-regel');
   t.ok(!keys(at(ege)).some(k => k.startsWith('skag')), 'utenfor grunnlinja ved Egersund: ingen Skagerrak-regel');
@@ -62,7 +67,9 @@ export default function (t){
     t.K.set('isLandFar', p => insideBaseline(p));   // no map in the unit tests: the sea outside the baseline is what is asked about
     const red = () => { try { return t.K.ruLayerBlock(bx, by, {len:10, gear:'juksa', sp:null, hand:true}).reduce((n, x) => n + (x === 2 ? 1 : 0), 0); } catch (e){ return 'feil: ' + e.message; } };
     const r0 = red(); blad(true); const r1 = red(); S().t = t0; blad(false); t.K.set('isLandFar', land0);
-    t.ok(typeof r0 === 'number' && r0 > 100 && r1 < r0 / 10, 'regellaget 1. juni ved Kristiansand: rødt utenfor grunnlinja uten blad B, ikke med (' + r0 + ' og ' + r1 + ' røde ruter av 1600)'); }
+    t.ok(typeof r0 === 'number' && r0 === 0 && r1 === 0, 'regellaget 1. juni ved Kristiansand: ikke rødt utenfor grunnlinja, verken uten eller med blad B (' + r0 + ' og ' + r1 + ' røde ruter av 1600)');
+    blad(false); S().t = Math.round(jun * 60); t.K.set('isLandFar', p => insideBaseline(p)); let yel = 'feil'; try { yel = t.K.ruLayerBlock(bx, by, {len:10, gear:'juksa', sp:null, hand:true}).reduce((n, x) => n + (x === 1 ? 1 : 0), 0); } catch (e){} S().t = t0; t.K.set('isLandFar', land0);
+    t.ok(yel > 100, '… men gult (bifangst): ' + yel + ' gule ruter'); }
 
   // § 5: other species with conventional gear, at most 5 % cod bycatch; not a stop
   const sei = at(krs, {sp:'sei'});
@@ -70,6 +77,29 @@ export default function (t){
   t.ok(!keys(at(krs, {sp:'krabbe', gear:'teiner'})).some(k => k.startsWith('skag')), 'teiner etter krabbe: ingen Skagerrak-regel');
   t.ok(!keys(at(krs, {sp:null, gear:'teiner'})).some(k => k.startsWith('skag')), 'teiner uten art (Kystvakta med tom last): ingen Skagerrak-regel');
   t.ok(!keys(at(krs, {sp:'krabbe', gear:null})).some(k => k.startsWith('skag')), 'krabbe uten redskap: ingen bifangstgrense for torsk');
+
+  // Ø10b: where the catch counts as bycatch (ruByc), the count in the hold (bycAdd), and what the landing takes (bycConf, bycOver)
+  { const {ruByc, bycAdd, bycConf, bycOver, RU_BYC} = t.K, q = (p, o = {}) => ruByc({p, H:o.H == null ? jun : o.H, len:o.len == null ? 10 : o.len, gear:o.gear || 'juksa'});
+    t.ok(typeof ruByc === 'function' && typeof bycAdd === 'function' && typeof bycConf === 'function', 'ruByc, bycAdd og bycConf finnes');
+    if (typeof ruByc === 'function' && typeof bycAdd === 'function'){
+      blad(false);
+      t.ok(q(krs) === 'skag' && q(are) === 'skag' && q(krs, {gear:'line'}) === 'skag' && q(krs, {gear:'garn'}) === 'skag', 'bifangstsonen: juksa, line og garn utenfor grunnlinja ved Kristiansand og Arendal');
+      t.ok(!q(krsIn) && !q(ege) && !q(krs, {gear:'teiner'}) && !q(brg0()), 'ikke innenfor grunnlinja, ikke ved Egersund, ikke teiner, ikke ved Bergen');
+      blad(true); t.ok(!q(krs) && q(krs, {gear:'line'}) === 'skag' && q(krs, {H:jul}) === 'skag' && q(krs, {len:11}) === 'skag', 'unntaket (§ 4, juksa under 11 m på blad B i juni): torsken er lovlig og telles ikke; line, juli og 11 m telles'); blad(false);
+      t.eq(RU_BYC.skag.share, 0.05, 'andelen er 5 %');
+      t.ok(Math.abs(bycOver('skag', {kg:1000, cod:200}) - 150) < 1e-9 && bycOver('skag', {kg:1000, cod:50}) === 0 && bycOver('skag', {kg:1000, cod:49}) === 0, '200 kg torsk av 1000: 150 over; 50 og 49 av 1000: ingenting');
+      // the hold: 300 kg taken inside the baseline (60 cod), then 400 outside (100 cod)
+      const b = S().boat, t0 = S().t, pos0 = {...b.pos}; S().t = Math.round(jun * 60); S().hold = []; delete b.byc;
+      const put = (sp, kg) => { bycAdd(sp, kg, 'juksa'); S().hold.push({sp, kg, cls:0}); };
+      b.pos = {x:krsIn.x, y:krsIn.y}; S().t += 20; put('torsk', 60); put('sei', 240);
+      t.ok(!b.byc && bycConf().kg === 0, 'fangst innenfor grunnlinja telles ikke, og ingenting inndras');
+      b.pos = {x:krs.x, y:krs.y}; S().t += 20; put('torsk', 100); put('sei', 300);
+      t.ok(b.byc && b.byc.skag && Math.abs(b.byc.skag.kg - 400) < 1e-9 && Math.abs(b.byc.skag.cod - 100) < 1e-9, 'utenfor: 400 kg telt i Skagerrak, 100 av dem torsk');
+      t.ok(Math.abs(bycConf().kg - 80) < 1e-9 && Math.abs(bycConf().by.skag - 80) < 1e-9, 'inndragningen: 100 − 5 % av 400 = 80 kg torsk (torsken innenfor grunnlinja røres ikke)');
+      bycAdd('krabbe', 50, 'teine'); t.ok(Math.abs(b.byc.skag.kg - 400) < 1e-9, 'krabbe fra teiner teller ikke i fangsten');
+      S().hold = S().hold.filter(x => x.sp !== 'torsk').concat([{sp:'torsk', kg:30, cls:0}]); t.ok(Math.abs(bycConf().kg - 30) < 1e-9, 'aldri mer enn torsken som er om bord');
+      S().hold = []; S().t += 20; b.pos = {x:krsIn.x, y:krsIn.y}; put('sei', 10); t.ok(!b.byc, 'tom last (etter levering) begynner tellingen på nytt');
+      S().hold = []; delete b.byc; S().t = t0; b.pos = pos0; } }
 
   // only in Norway's waters: the Danish and Swedish zones are closed in the game anyway (dk0), with their own reason
   const dk = P(57.6, 9.6);

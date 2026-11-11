@@ -555,7 +555,7 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
   - 454 `bkLanded(H, bk, all)`
   - 456 `bkNews(H)`
 
-## `src/js/core/03e-rules.js` (496 linjer)
+## `src/js/core/03e-rules.js` (512 linjer)
 
 The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a place, a time, the boat's length, the gear and the
 
@@ -581,17 +581,18 @@ The rules along the coast (R2 of the rules plan, 05.10.2026). rulesAt() takes a 
   - 143 `kcQuota(ll)`
   - 160 `ruSeaRules(c, q, ll, md, add)`
   - 233 `rulesAt(q)`
-  - 398 `f26In(f, ll)`
-  - 403 `ruBlockMsg(q)`
-  - 405 `ruMinSize(sp, p)`
-  - 410 `fjordLimits(p, H)`
-  - 437 `ruCtx()`
-  - 441 `ruNow()`
-  - 452 `ruLayerBlock(bx, by, q, budget, tail)`
-  - 466 `ruWpQ(w)`
-  - 471 `ruWpMsg(w)`
-  - 478 `ruOpenNear(p, q, maxKm)`
-  - 487 `ruTips()`
+  - 401 `f26In(f, ll)`
+  - 411 `ruByc(q)`
+  - 419 `ruBlockMsg(q)`
+  - 421 `ruMinSize(sp, p)`
+  - 426 `fjordLimits(p, H)`
+  - 453 `ruCtx()`
+  - 457 `ruNow()`
+  - 468 `ruLayerBlock(bx, by, q, budget, tail)`
+  - 482 `ruWpQ(w)`
+  - 487 `ruWpMsg(w)`
+  - 494 `ruOpenNear(p, q, maxKm)`
+  - 503 `ruTips()`
 
 ## `src/js/core/03f-fiske.js` (387 linjer)
 
@@ -776,7 +777,7 @@ crew: people with skills, habits and moods
   - 618 `flyOut(c)`
   - 626 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1399 linjer)
+## `src/js/core/05-vessels.js` (1426 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -854,33 +855,36 @@ crew: people with skills, habits and moods
   - 994 `catchFactors(H, W, hs)`
   - 1007 `stockDev(p, sp)`
   - 1013 `fish(H, W, hs)`
-  - 1106 `endFishing(why)`
-  - 1122 `addCatch(sp, kg, cls, hook, opt)`
-- **1143** work on deck: gutting and icing take hands and time
-  - 1159 `deckHands()`
-  - 1162 `deckPending()`
-  - 1163 `deckEta(hands)`
-  - 1168 `moveKg(x, kg, patch)`
-  - 1176 `iceMinute()`
-  - 1183 `iceOut(out)`
-  - 1189 `deckMinute()`
-- **1214** lying to in a storm (H1b R8, 05.11.2026)
-  - 1231 `quayFar(b)`
-  - 1235 `lieTo(W, hs)`
-  - 1242 `lieToStep(W, hs)`
-  - 1252 `risk(W, hs)`
-  - 1280 `hullRepair()`
-  - 1283 `svcOverdue()`
-- **1284** the rescue boat (plan E3, 05.10.2026)
-  - 1310 `rescueBases()`
-  - 1319 `rescueBase(p)`
-  - 1326 `rescueAis(H)`
-  - 1330 `rescue(keepCatch)`
-  - 1354 `towSea(p)`
-  - 1359 `towRoutes(b)`
-  - 1370 `towStep(H)`
-  - 1382 `towDone(t)`
-  - 1388 `towPose(frac)`
+  - 1116 `endFishing(why)`
+  - 1137 `bycHere(how)`
+  - 1141 `bycAdd(sp, kg, how)`
+  - 1145 `bycConf()`
+  - 1148 `addCatch(sp, kg, cls, hook, opt)`
+- **1170** work on deck: gutting and icing take hands and time
+  - 1186 `deckHands()`
+  - 1189 `deckPending()`
+  - 1190 `deckEta(hands)`
+  - 1195 `moveKg(x, kg, patch)`
+  - 1203 `iceMinute()`
+  - 1210 `iceOut(out)`
+  - 1216 `deckMinute()`
+- **1241** lying to in a storm (H1b R8, 05.11.2026)
+  - 1258 `quayFar(b)`
+  - 1262 `lieTo(W, hs)`
+  - 1269 `lieToStep(W, hs)`
+  - 1279 `risk(W, hs)`
+  - 1307 `hullRepair()`
+  - 1310 `svcOverdue()`
+- **1311** the rescue boat (plan E3, 05.10.2026)
+  - 1337 `rescueBases()`
+  - 1346 `rescueBase(p)`
+  - 1353 `rescueAis(H)`
+  - 1357 `rescue(keepCatch)`
+  - 1381 `towSea(p)`
+  - 1386 `towRoutes(b)`
+  - 1397 `towStep(H)`
+  - 1409 `towDone(t)`
+  - 1415 `towPose(frac)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -1604,7 +1608,7 @@ looks: how the people of the game look (Jonas 10.10.2026: character customisatio
   - 99 `lookQuay(id, i)`
   - 106 `lookFromKey(s)`
 
-## `src/js/core/09j-kystvakt.js` (337 linjer)
+## `src/js/core/09j-kystvakt.js` (344 linjer)
 
 Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026; docs/planer/oppdrag-2.md, docs/systemer/kvoter-og-regler.md 5.30)
 
@@ -1631,10 +1635,10 @@ Kystvakta: the inspection at the quay or on the field (Oppdrag 2 V1, 30.10.2026;
   - 239 `kvSums(sets, inside)`
   - 241 `kvMostSp(sets)`
   - 246 `kvCheck(b)`
-  - 273 `kvWhat(r)`
-  - 285 `kvWhatHav(r)`
-  - 299 `kvWhatSno(r)`
-  - 318 `kvFinish()`
+  - 280 `kvWhat(r)`
+  - 292 `kvWhatHav(r)`
+  - 306 `kvWhatSno(r)`
+  - 325 `kvFinish()`
 
 ## `src/js/core/10-gear.js` (946 linjer)
 
@@ -2666,12 +2670,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1494 linjer)
+## `src/js/ui/phone/07-patch.js` (1499 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1482 `patch()`
+  - 1487 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3001,7 +3005,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (442 linjer)
+## `src/js/ui/07-guide.js` (443 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -3023,12 +3027,12 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 273 `panelPort()`
   - 307 `portSlip()`
   - 384 `landWarn(p)`
-  - 398 `landQText(short)`
-  - 406 `landQOthers()`
-  - 415 `landPage()`
-  - 431 `panelLog()`
-  - 436 `renderPanel()`
-  - 440 `panelBusy()`
+  - 399 `landQText(short)`
+  - 407 `landQOthers()`
+  - 416 `landPage()`
+  - 432 `panelLog()`
+  - 437 `renderPanel()`
+  - 441 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (319 linjer)
 
@@ -3086,7 +3090,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (463 linjer)
+## `src/js/ui/08-actions.js` (468 linjer)
 
 actions
 
@@ -3094,29 +3098,29 @@ actions
   - 76 `panelInput(e)`
   - 82 `panelChange(e)`
   - 106 `landConf(H, q, acc)`
-  - 144 `sell()`
-- **279** modal
-  - 281 `modal(html)`
-  - 290 `boatUnnamed()`
-  - 291 `boatChristen(nm)`
-  - 293 `showIntro(namesOnly)`
-- **311** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
-  - 316 `awayStart(mins, realMs)`
-  - 317 `awayEnd()`
-  - 318 `showAway(A)`
-- **345** time
-  - 351 `playMinutes(n, away)`
-  - 355 `catchUp(realMs)`
-  - 366 `tick()`
-  - 403 `deliverOrder()`
-- **413** chrome
-  - 414 `applyLang()`
-- **427** screens: full-screen 3D, or the chart plotter for route planning
-  - 428 `setBodyView(v3d)`
-  - 433 `openPlotter()`
-  - 438 `plotSetRender()`
-  - 442 `plotSetOpen(on)`
-  - 455 `kinoUi()`
+  - 145 `sell()`
+- **284** modal
+  - 286 `modal(html)`
+  - 295 `boatUnnamed()`
+  - 296 `boatChristen(nm)`
+  - 298 `showIntro(namesOnly)`
+- **316** «Mens du var borte» (Jonas 07.10.2026: «en følelse av instant-belønning»)
+  - 321 `awayStart(mins, realMs)`
+  - 322 `awayEnd()`
+  - 323 `showAway(A)`
+- **350** time
+  - 356 `playMinutes(n, away)`
+  - 360 `catchUp(realMs)`
+  - 371 `tick()`
+  - 408 `deliverOrder()`
+- **418** chrome
+  - 419 `applyLang()`
+- **432** screens: full-screen 3D, or the chart plotter for route planning
+  - 433 `setBodyView(v3d)`
+  - 438 `openPlotter()`
+  - 443 `plotSetRender()`
+  - 447 `plotSetOpen(on)`
+  - 460 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -3127,7 +3131,7 @@ actions
   - 32 `letterSound(kind)`
   - 44 `showLetter(done)`
 
-## `src/js/ui/08c-start.js` (174 linjer)
+## `src/js/ui/08c-start.js` (175 linjer)
 
 «Hvor står fars naust?»: where a new game starts (05.10.2026)
 
@@ -3139,7 +3143,7 @@ actions
   - 56 `showStart(done)`
   - 118 `tutMixAt(q, H, len, land)`
   - 129 `tutFieldNear(pt, land, skip)`
-  - 152 `chooseStart(pt, onProgress)`
+  - 153 `chooseStart(pt, onProgress)`
 
 ## `src/js/ui/09-hand-fishing.js` (59 linjer)
 

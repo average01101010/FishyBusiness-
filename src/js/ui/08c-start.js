@@ -136,6 +136,7 @@ function tutFieldNear(pt, land, skip){
       if (isLand(q) || (skip && skip.some(k => dist(k, q) < 0.8))) continue; const d = depthF(q); if (d < d0 || d > d1) continue;
       if (startSeaMax(q, H) > lim) continue;
       if (ruBlockMsg({p:q, H, len, gear:'juksa', sp:null, hand:true})) continue;
+      if (ruByc({p:q, H, len, gear:'juksa'})) continue;   // not where the cod is only a bycatch (Ø10b): the first trip's catch is not confiscated
       const m = tutMixAt(q, H, len, land); if (!Object.keys(m.mix).length) continue;
       const s = m.val * (1 - r * 0.02); if (!best || s > best.s) best = {s, p:q, mix:m.mix};
     }
