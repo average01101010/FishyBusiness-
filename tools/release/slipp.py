@@ -30,7 +30,10 @@ PATCH_FILE = 'src/js/ui/phone/07-patch.js'
 # real money and the legal pages (CLAUDE.md: never rolled out before Jonas has seen the PR)
 MONEY = re.compile(r'^(src/js/ui/10i-shop\.js|src/js/ui/10q-buymoment\.js|supabase/functions/(shop-|stripe-)[^/]*/)')
 LEGAL = re.compile(r'^src/legal/')
-SHOP_SQL = re.compile(r'\bshop_[a-z0-9_]+')          # shop_* in the database: a migration or a function that names one
+SHOP_SQL = re.compile(r'\bshop_[a-z0-9_]+|\bStripe\b|\bstripe[-_.(]|\bSTRIPE_')   # shop_* or Stripe named on a changed line, in supabase/ or in the game's code (not «striper»)
+SCAN = ['supabase/', 'src/js/']                      # where changed lines are read for it
+# what a push must touch to reach the test edition (the paths of deploy.yml)
+DEPLOYS = ['src', 'build.mjs', 'tools/map/kart.json', 'tools/map/kart-release.json', 'tools/map/game.py', 'tools/server', '.github/workflows/deploy.yml']
 PATCH_ID = re.compile(r"^\s*\['([A-Za-z0-9_.-]+)', '([^']*)', '((?:[^'\\]|\\.)*)', ")
 EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904'
 MAX_COMMITS, MAX_NOTES = 120, 40                     # a pull request's text holds 65 536 characters; the first release has thousands of commits
@@ -57,7 +60,7 @@ def patch_ids(ref):
 
 
 def commits(rng, last=0):
-    """The commits of the range that are not merges, newest first, each with its files and whether its own diff names shop_* in supabase/."""
+    """The commits of the range that are not merges, newest first, each with its files and whether its own diff names shop_* or Stripe."""
     args = ['log', '--no-merges', '--format=\x01%h\x02%s', '--name-only'] + (['-%d' % last] if last else []) + [rng]
     out = []
     for blk in git(*args).split('\x01')[1:]:
@@ -66,8 +69,9 @@ def commits(rng, last=0):
         out.append({'h': h, 's': s.strip(), 'files': [f for f in rest.splitlines() if f.strip()], 'shop_sql': False})
     # one pass over the same commits' diffs in supabase/ for shop_* (added or removed lines)
     by = {c['h']: c for c in out}
-    args = ['log', '--no-merges', '--format=\x01%h', '-p', '--unified=0'] + (['-%d' % last] if last else []) + [rng, '--', 'supabase/']
-    for blk in git(*args).split('\x01')[1:]:
+    # (no -N here: with a path it would count the commits that touched the path; the range is bounded by the oldest of ours instead)
+    rng2 = (out[-1]['h'] + '~1..' + rng) if last and out and has(out[-1]['h'] + '~1') else rng
+    for blk in git('log', '--no-merges', '--format=\x01%h', '-p', '--unified=0', rng2, '--', *SCAN).split('\x01')[1:]:
         h, _, diff = blk.partition('\n')
         if h in by and any(l[:1] in '+-' and not l.startswith(('+++', '---')) and SHOP_SQL.search(l) for l in diff.splitlines()):
             by[h]['shop_sql'] = True
@@ -94,8 +98,10 @@ def oslo_now():
     try:
         from zoneinfo import ZoneInfo
         return datetime.datetime.now(ZoneInfo('Europe/Oslo'))
-    except Exception:                                 # (no tz database: winter time, UTC+1)
-        return datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
+    except Exception:                                 # (no tz database: summer time from the last Sunday of March to that of October, 01 UTC)
+        u = datetime.datetime.now(datetime.timezone.utc)
+        last_sun = lambda m: max(d for d in (datetime.datetime(u.year, m, x, 1, tzinfo=datetime.timezone.utc) for x in range(25, 32)) if d.weekday() == 6)
+        return u + datetime.timedelta(hours=2 if last_sun(3) <= u < last_sun(10) else 1)
 
 
 def main():
@@ -108,7 +114,8 @@ def main():
 
     if not a.no_fetch and not a.last:
         for ref, br in ((a.base, PROD), (a.head, WORK)):
-            if ref == 'origin/' + br: subprocess.run(['git', 'fetch', '-q', 'origin', br], cwd=ROOT)
+            if ref == 'origin/' + br and subprocess.run(['git', 'fetch', '-q', 'origin', br], cwd=ROOT).returncode:
+                sys.exit('git fetch origin %s feilet: slippet regnes ikke ut fra gamle grener (--no-fetch for å bruke dem likevel).' % br)
     if not has(a.head): sys.exit('Finner ikke %s (git fetch origin %s)' % (a.head, WORK))
     head = git('rev-parse', a.head).strip()
 
@@ -118,7 +125,7 @@ def main():
         status = {f: 'M' for f in files}
         old_ids = set()
         new_ids = []                                  # (a patch note is new when one of the commits added its line)
-        added = git('log', '--no-merges', '-%d' % a.last, '--format=', '-p', '--unified=0', a.head, '--', PATCH_FILE)
+        added = git('log', '--no-merges', '--format=', '-p', '--unified=0', (cs[-1]['h'] + '~1..' + a.head) if cs and has(cs[-1]['h'] + '~1') else a.head, '--', PATCH_FILE)
         for l in added.splitlines():
             m = PATCH_ID.match(l[1:]) if l.startswith('+') and not l.startswith('+++') else None
             if m: new_ids.append((m.group(1), m.group(2), m.group(3).replace("\\'", "'")))
@@ -126,7 +133,9 @@ def main():
     else:
         if not has(a.base): sys.exit('Finner ikke %s (git fetch origin %s)' % (a.base, PROD))
         if subprocess.run(['git', 'merge-base', '--is-ancestor', a.head, a.base], cwd=ROOT).returncode == 0:
-            print('Ingenting å slippe: %s har alt som står på %s.' % (a.base, a.head)); return 0
+            print('Ingenting å slippe: %s har alt som står på %s.' % (a.base, a.head))
+            if a.json: print(json.dumps({'nothing': True, 'stop': ['ingenting å slippe']}, ensure_ascii=False))
+            return 1 if a.auto else 0
         mb = git('merge-base', a.base, a.head, ok=False).strip()
         if not mb: sys.exit('%s og %s har ingen felles historie: et slipp må kunne flyttes framover.' % (a.base, a.head))
         base = git('rev-parse', a.base).strip(); main_empty = not git('ls-tree', '-r', '--name-only', base, '--', 'src/').strip()
@@ -152,12 +161,12 @@ def main():
     # shop_* in the database: over the whole range (the tree diff), so a merge that brought it is seen too
     shop_sql = []
     if base:
-        for f in files:
-            if not f.startswith('supabase/') or MONEY.match(f): continue
-            d = git('diff', '--unified=0', base, head, '--', f, ok=False)
-            if any(l[:1] in '+-' and not l.startswith(('+++', '---')) and SHOP_SQL.search(l) for l in d.splitlines()): shop_sql.append(f)
+        cur = None
+        for l in git('diff', '--unified=0', '--no-renames', base, head, '--', *SCAN, ok=False).splitlines():
+            if l.startswith('diff --git '): cur = l.split(' b/', 1)[-1]
+            elif cur and l[:1] in '+-' and not l.startswith(('+++', '---')) and SHOP_SQL.search(l) and not MONEY.match(cur) and cur not in shop_sql: shop_sql.append(cur)
     else:
-        shop_sql = sorted({f for c in cs if c['shop_sql'] for f in c['files'] if f.startswith('supabase/') and not MONEY.match(f)})
+        shop_sql = sorted({f for c in cs if c['shop_sql'] for f in c['files'] if f.startswith(tuple(SCAN)) and not MONEY.match(f)})
     marked = [(c, why(c)) for c in cs]
     money = bool(money_files or shop_sql or any('ekte penger' in w for _, w in marked))
     legal = bool(legal_files)
@@ -229,20 +238,27 @@ def main():
     if hours is None: stop.append('testutgavens alder er ukjent (%s)' % (tv.get('err') or 'ikke spurt'))
     elif hours < HOURS_ON_TEST: stop.append('testutgaven har stått %.1f timer, kravet er %d' % (hours, HOURS_ON_TEST))
     if mig_new or mig_chg: stop.append('%d migrering(er) må kjøres i produksjon først' % len(mig_new + mig_chg))
+    if funcs or shared: stop.append('Edge Functions må deployes i produksjon først (%s): venter på Jonas' % (', '.join(funcs) or '_shared'))
+    if server: stop.append('setup.sh må kjøres på serveren først (%s): venter på Jonas' % ', '.join(server[:3]))
+    # the build on the test edition must be younger than the last commit that rolls out: else the head has not stood there at all
+    lastsrc = git('log', '-1', '--format=%ct', head, '--', *DEPLOYS, ok=False).strip()
+    if tv.get('at') and lastsrc and hours is not None:
+        built = datetime.datetime.fromisoformat(tv['at'].replace('Z', '+00:00')).timestamp()
+        if int(lastsrc) > built: stop.append('siste endring som ruller ut, er nyere enn bygget på testadressen (kjøringen går ennå, eller den er rød)')
 
     print(title); print(); print(body)
-    out = a.out or ('' if a.dry else 'slipp.md')
+    out = a.out or ('' if a.dry or a.last or (a.auto and stop) else 'slipp.md')
     if out:
         with open(out, 'w', encoding='utf-8') as f: f.write(body)
     if money or legal: print('VENTER PÅ JONAS: slippet rører %s.' % ('ekte penger' if money else 'src/legal/'))
     if a.auto or a.dry:
         print('Automatisk slipp (V2 A): ' + ('porten her holder; resten står i tools/plan/RUTINE.md («Slippet»).' if not stop else 'NEI: ' + '; '.join(stop) + '.'))
     code = 1 if a.auto and stop else 0
-    if a.json:
-        print(json.dumps({'title': title, 'base': base, 'head': head, 'commits': len(cs), 'first': first, 'money': money, 'legal': legal,
+    def tell():
+        if a.json: print(json.dumps({'title': title, 'base': base, 'head': head, 'commits': len(cs), 'first': first, 'money': money, 'legal': legal,
                           'marked': [c['h'] for c, w in marked if w], 'migrations': [os.path.basename(f) for f in mig_new + mig_chg], 'functions': funcs,
                           'notes': [i for i, _, _ in new_ids], 'test': tv, 'prod': pv, 'hours_on_test': hours, 'stop': stop}, ensure_ascii=False))
-    if a.dry or a.last or (a.auto and stop): return code
+    if a.dry or a.last or (a.auto and stop): tell(); return code
 
     # the pull request: made or updated with gh where it is there; else the description stands in the file for create_pull_request
     try:
@@ -257,8 +273,8 @@ def main():
         print('PR-en: ' + (r.stdout.strip() or '#' + num.stdout.strip()))
     except Exception as e:
         print('gh laget ikke PR-en (%s). Beskrivelsen står i %s: lag den med GitHub-verktøyet (create_pull_request, base %s, head %s, tittel «%s»), eller oppdater den åpne (update_pull_request).' % (e, out, PROD, WORK, title))
-        return 3
-    return code
+        tell(); return 3
+    tell(); return code
 
 
 if __name__ == '__main__':

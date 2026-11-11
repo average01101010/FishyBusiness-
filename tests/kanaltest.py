@@ -86,7 +86,7 @@ async def main():
                 check(pt['no'] == 'på test' and pt['en'] == 'on test' and pt['first'] and pt['cards'] > 3, 'test build %s: Patchnotes has the mark «på test» / «on test» on top, above the notes' % name, pt)
                 await pg.wait_for_timeout(900)
                 check(await pg.evaluate(PATCHIN), 'test build %s: the mark lies inside the screen' % name, pt)
-                shots = os.path.join(ROOT, 'docs', 'okter', '2026-11-10-l1b'); os.makedirs(shots, exist_ok=True)
+                shots = os.environ.get('KYST_SHOTS') or OUT; os.makedirs(shots, exist_ok=True)   # (KYST_SHOTS=docs/okter/<dato>-<steg> for the session's pictures)
                 await pg.screenshot(path=os.path.join(shots, 'patchnotes-paa-test-%s.jpg' % ('800x1280' if w == 800 else '1280x800')), type='jpeg', quality=60)
                 await pg.evaluate('PHONE.show(false)')
             if name == 'stående':

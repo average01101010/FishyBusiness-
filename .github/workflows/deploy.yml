@@ -43,10 +43,11 @@ jobs:
         if: ${{ inputs.commit }}
         env:
           COMMIT: ${{ inputs.commit }}
+          BRANCH: ${{ github.ref_name }}
         run: |
           printf '%s' "$COMMIT" | grep -qE '^[0-9a-f]{7,40}$' || { echo "Not a commit: $COMMIT"; exit 1; }
           sha=$(git rev-parse --verify -q "$COMMIT^{commit}") || { echo "Unknown commit: $COMMIT"; exit 1; }
-          if [ "${{ github.ref_name }}" = main ]; then
+          if [ "$BRANCH" = main ]; then
             git merge-base --is-ancestor "$sha" HEAD || { echo "$sha is not on main: only what has been released can go to the production."; exit 1; }
           fi
           git checkout -q --detach "$sha"
@@ -94,8 +95,9 @@ jobs:
       # beside the site (rrsync keeps the key in /srv/detstorebla), compared by content and without times, so an unchanged relay is not
       # touched; VERSION (the hash of the files) goes last, and setup.sh's dsb-rt-reload.path restarts the service when it changes.
       # Before setup.sh has made the service on the server, the files just lie there.
+      # (not at a roll-back: the relay stays as the newest release left it; a bad relay is rolled back with a release of its own)
       - name: Upload the real-time relay
-        if: github.ref_name == 'main'
+        if: ${{ github.ref_name == 'main' && !inputs.commit }}
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
         run: |

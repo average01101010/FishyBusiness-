@@ -2224,3 +2224,5 @@
 2026-11-10 23:55	claude/l1b-production-release-allrqm	6ead4836+	kanaltest	OK	63	lite	alene	
 2026-11-10 23:58	ccr-adaac755-n9bghe	e61ffe5e+	boottest	OK	22	lite	samtidig	
 2026-11-10 23:59	ccr-adaac755-n9bghe	e61ffe5e+	docktest	OK	61	lite	samtidig	
+2026-11-11 00:06	claude/l1b-production-release-allrqm	37d9d7ff	boottest	OK	30	lite	samtidig	
+2026-11-11 00:07	claude/l1b-production-release-allrqm	37d9d7ff	kanaltest	OK	70	lite	samtidig	
