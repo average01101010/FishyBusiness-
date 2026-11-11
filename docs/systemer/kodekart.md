@@ -2360,7 +2360,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (899 linjer)
+## `src/js/ui/03-map.js` (910 linjer)
 
 ---------- map ----------
 
@@ -2369,50 +2369,51 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 11 `applyView()`
   - 24 `toMap(cx, cy)`
   - 26 `txt(p, s, cls, size, extra = '')`
-  - 32 `plotCol(d)`
-  - 33 `cssRGB(name)`
-- **34** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
-  - 44 `chartView(scale)`
-  - 50 `paintChart(scale)`
-  - 65 `chartPan()`
-  - 71 `chartWhole(V)`
-  - 77 `chartCompose(V, tiles, budget)`
-  - 111 `chartWork()`
-  - 122 `chartFlush()`
-  - 128 `chartTile(V, i, j, q)`
-  - 144 `chartWant(V)`
-  - 152 `chartPump()`
-  - 162 `chartLoadLine()`
-  - 168 `chartWarm(wps)`
-  - 175 `chartWarmNext()`
-  - 179 `chartCame(pk)`
-  - 194 `ruLayerCanvas(A)`
-  - 203 `chartVectors(V, again)`
-  - 262 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
-  - 269 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
-  - 392 `scheduleChart()`
-  - 395 `renderBase()`
-  - 409 `updateMapButtons()`
-  - 425 `tapName(mp, rr)`
-  - 440 `renderStatic()`
-  - 546 `portIcon(p, s, u)`
-  - 567 `anchorPath(x, y, s, u)`
-  - 575 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 594 `scheduleStatic()`
-  - 599 `aisTrack(id, H)`
-  - 604 `aisInfo(n)`
-  - 623 `sjvChartSvg(u, bp)`
-  - 633 `renderAisCard()`
-  - 641 `curArrowsOf(q, u, H, lab, halo)`
-  - 654 `curArrowsSvg(u)`
-  - 672 `renderDyn()`
-  - 761 `pinAdd(mp)`
-  - 766 `pinOpen(id, fresh)`
-  - 786 `pinKb()`
-  - 817 `ptrUp(e)`
-  - 847 `unzoom()`
-  - 854 `portByLabel(pt)`
-  - 859 `addWaypoint(pt)`
+  - 37 `placeOwn(p)`
+  - 39 `plotCol(d)`
+  - 40 `cssRGB(name)`
+- **41** chart painted at screen resolution for the current view (crisp at any zoom, like a real chart plotter)
+  - 51 `chartView(scale)`
+  - 57 `paintChart(scale)`
+  - 72 `chartPan()`
+  - 78 `chartWhole(V)`
+  - 84 `chartCompose(V, tiles, budget)`
+  - 118 `chartWork()`
+  - 129 `chartFlush()`
+  - 135 `chartTile(V, i, j, q)`
+  - 151 `chartWant(V)`
+  - 159 `chartPump()`
+  - 169 `chartLoadLine()`
+  - 175 `chartWarm(wps)`
+  - 182 `chartWarmNext()`
+  - 186 `chartCame(pk)`
+  - 201 `ruLayerCanvas(A)`
+  - 210 `chartVectors(V, again)`
+  - 269 `chartRaster(d, PW, PH, x0, y0, pkx, pky, V, st)`
+  - 276 `chartRasterJob(d, PW, PH, x0, y0, pkx, pky, V, st, scr)`
+  - 399 `scheduleChart()`
+  - 402 `renderBase()`
+  - 416 `updateMapButtons()`
+  - 432 `tapName(mp, rr)`
+  - 451 `renderStatic()`
+  - 557 `portIcon(p, s, u)`
+  - 578 `anchorPath(x, y, s, u)`
+  - 586 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 605 `scheduleStatic()`
+  - 610 `aisTrack(id, H)`
+  - 615 `aisInfo(n)`
+  - 634 `sjvChartSvg(u, bp)`
+  - 644 `renderAisCard()`
+  - 652 `curArrowsOf(q, u, H, lab, halo)`
+  - 665 `curArrowsSvg(u)`
+  - 683 `renderDyn()`
+  - 772 `pinAdd(mp)`
+  - 777 `pinOpen(id, fresh)`
+  - 797 `pinKb()`
+  - 828 `ptrUp(e)`
+  - 858 `unzoom()`
+  - 865 `portByLabel(pt)`
+  - 870 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (281 linjer)
 
@@ -2666,12 +2667,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1494 linjer)
+## `src/js/ui/phone/07-patch.js` (1496 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1482 `patch()`
+  - 1484 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

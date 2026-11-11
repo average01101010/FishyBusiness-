@@ -88,9 +88,10 @@ function f5(t, K, D, S){
   // 1. the kind is there, in Finnmark only (first the thinnest stretch), with the names the plan checked by Båtsfjord
   t.ok(s.length > 500 && raw.meta.kinds.s === s.length && raw.meta.kv && raw.meta.kv.fylker.length > 0, `slaget s finnes: ${s.length} sjønavn fra Kartverket (meta.kinds.s ${raw.meta.kinds.s}, fylkene ${raw.meta.kv && raw.meta.kv.fylker})`);
   t.ok(/Kartverket/.test(raw.meta.src) && /CC BY 4\.0/.test(raw.meta.src), 'kilden og lisensen for sjønavnene står i meta.src (Kartverket, CC BY 4.0)');
-  const ll = s.map(f => K.natLL(f.x, f.y)), out = ll.filter(q => q.lat < 69.6 || q.lon < 20.5).length;
+  const ll = s.map(f => K.natLL({x:f.x, y:f.y})), out = ll.filter(q => q.lat < 69.6 || q.lon < 20.5).length;
   // (only while Finnmark is the one county fetched, KV_FYLKER in felt.py; more counties, and this check falls away)
   if (raw.meta.kv && raw.meta.kv.fylker.join() === '56') t.ok(out === 0 && s.length < 1200, `alle sjønavnene ligger i Finnmark (nord for 69,6° N og øst for 20,5° Ø; ${out} utenfor)`);
+  if (raw.meta.kv && raw.meta.kv.fylker.includes('55')){ const tr = ll.filter(q => q.lat < 69.5 && q.lat > 68.3).length; t.ok(tr > 300, `Troms er med (Jonas 11.11.2026): ${tr} sjønavn mellom 68,3 og 69,5° N`); }
   const bf = K.P(70.635, 29.72), near = n => s.find(f => f.n === n && Math.hypot(f.x - bf.x, f.y - bf.y) < 40);
   t.ok(near('Leira') && near('Seigrunnen') && near('Skarberggrunnen'), `ved Båtsfjord: havdypet Leira og grunnene Seigrunnen og Skarberggrunnen (${s.filter(f => Math.hypot(f.x - bf.x, f.y - bf.y) < 20).length} sjønavn innen 20 km)`);
   // 2. a name and a point only: no gear, no lines, no size, no shape
