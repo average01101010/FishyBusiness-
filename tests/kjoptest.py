@@ -16,7 +16,7 @@ that migration (st['hs3'] False). The pictures of the message and the Trim app g
 elsewhere).
 After HS4 (11.11.2026, supabase/migrations/20261111140000_haill_srv.sql) the server is the truth: with st['hs4'] the stand-in also has
 shop_state (which delivers the open haill, trim, Skippertak and yard grants itself), haill_on, yard_use, haill_import, pub_spin and
-ach_haill, and step 10 (hs4 below; KJOP_FRA=10 runs only that) checks, for each thing, that a save that was written in has what the
+ach_haill, and step 10 (hs4 below; run alone, as tests/fasittest.py or with KJOP_FRA=10) checks, for each thing, that a save that was written in has what the
 server says after the next start: the haill in store, the haill aboard, the trim, Skippertak, the credit for the yard done now and a
 paint design; that the game's own numbers are brought over once within the server's cap; that a purchase is delivered and confirmed
 once; that the pub's wheel is the server's and needs a network; and that a server from before the migration (404) gets the game as
@@ -34,7 +34,9 @@ CFG = {'hosts': ['127.0.0.1', 'localhost'], 'supabaseUrl': 'https://sb.test', 's
 STUB = """window.DSB_CLOUD = %s;
 window.DSB_AUTHKIT = {createClient: async () => ({getUser: () => ({id:'user_test', email:'spiller@test.no'}), getAccessToken: async () => 'tok_test', signIn: () => {}, signUp: () => {}, signOut: () => {}})};""" % json.dumps(CFG)
 BASE = GAME.split('#')[0]
-url = lambda q='': BASE + (('&' if '?' in BASE else '?') + q if q else '') + '#notut,ro0'   # (ro0: the calm off, tests/_env.py)
+# (ro0: the calm off, tests/_env.py. no3d under tests/run.py, KYST_LITE, as _env.py's own address has it: no check here looks at 3D, and
+# with every frame drawn under SwiftShader the test took over half an hour, 11.11.2026. Run by hand it draws 3D, for the pictures)
+url = lambda q='': BASE + (('&' if '?' in BASE else '?') + q if q else '') + '#notut,ro0' + (',no3d' if os.environ.get('KYST_LITE') == '1' else '')
 
 
 
@@ -465,7 +467,6 @@ async def main():
         check(i1['trim'] and 50 in i1['given'] and len(i1['given']) > 300 and i2['newMsg'] == 0 and i2['trim']['until'] == i1['trim']['until'],
               'HS3: the ids given are kept by age, not the last 200: with 300 newer ids the trim is still not given twice', {'n': len(i1['given']), 'trim': i1['trim'], 'again': i2['trim'], 'newMsg': i2['newMsg']})
         await ctx3.close()
-        await hs4(br, handle, st, calls, errs)
         print('errors:', errs[:3]); await ctx.close(); await br.close()
 
 asyncio.run(main())

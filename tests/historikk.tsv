@@ -2470,3 +2470,25 @@
 2026-11-11 02:25	regresjon/2026-11-11	dfc504b	kanaltest	OK	68	lite	samtidig	
 2026-11-11 03:11	regresjon/2026-11-11	dfc504b	tut	OK	2789	lite	alene	
 2026-11-11 11:23	ccr-26bf5fcc-efdoee	ee3796bc	hooktest	OK	1	lite	alene	
+2026-11-11 13:18	plan/2026-11-11-98	a5b783cd	boottest	OK	29	lite	samtidig	
+2026-11-11 13:18	plan/2026-11-11-98	a5b783cd	hailltest	LES	33	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	boostklokke	OK	47	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	skiptest	OK	16	lite	samtidig	
+2026-11-11 13:19	plan/2026-11-11-98	a5b783cd	skipdrift	OK	22	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	guesttest	OK	84	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	maletest	OK	21	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	haillplass	OK	6	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	merketest	OK	15	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	yardupgtest	OK	15	lite	samtidig	
+2026-11-11 13:20	plan/2026-11-11-98	a5b783cd	fixtest	OK	38	lite	samtidig	
+2026-11-11 13:35	plan/2026-11-11-98	3fe2cb63	kjoptest	FEIL	900	lite	samtidig	gikk ut på tid
+2026-11-11 13:37	plan/2026-11-11-98	3fe2cb63	pubtest	OK	121	3d	alene	
+2026-11-11 14:08	plan/2026-11-11-98	3fe2cb63+	kjoptest	FEIL	1800	lite	samtidig	FEIL HS3: two trims of the same kind after each other come back with the end they had when they were bought (18 h left), in one line  {"trim": null, "vx": 1, "n
+2026-11-11 14:08	plan/2026-11-11-98	3fe2cb63+	fasittest	OK	1462	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	kjoptest	OK	152	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	fasittest	OK	20	lite	samtidig	
+2026-11-11 14:32	plan/2026-11-11-98	3fe2cb63+	vesseltest	FEIL	22	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	trip2	OK	41	lite	samtidig	
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	worktest	FEIL	26	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	simday	LES	13	lite	samtidig	
+2026-11-11 14:33	plan/2026-11-11-98	3fe2cb63+	hooktest	OK	1	lite	samtidig	
