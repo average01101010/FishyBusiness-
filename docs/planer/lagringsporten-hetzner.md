@@ -66,3 +66,9 @@ Det som er som før: porten kjører bare på `main` og ved tilbakerulling, fixtu
 - 11.11.2026: planen skrevet.
 - 11.11.2026: Jonas svarte «V1 A, V2 A». Steget er `klar`. Ikke bygd.
 - 11.11.2026: serveren for porten opprettet av Jonas (`ubuntu-8gb-hel1-1`, CPX32, 89.167.24.148). Ikke satt opp.
+- 11.11.2026: **bygd** (Jonas: «Vi kjører på»; Jonas' økt, gren `ccr-b461eca2-teqw0r`). Det som ble avgjort, står i «Lagringsporten på vår egen server» i `docs/systemer/publisering.md`. Avvik fra kap. 2:
+  - porten har to trinn med hver sin tjeneste: *fetch* med nøkkelen kjører bare installert kode, og *test* kjører det opplastede uten nøkkel og uten nett (`PrivateNetwork`)
+  - bygget spillerne har, ligger på en annen maskin enn porten (V1 A), så jobben henter det fra spillets server og laster det opp til `in/prev/`
+  - den gamle porten i jobben er tatt bort uten bryter: V2 A sier at lagringene ikke skal til GitHub igjen
+  - `fetch.py` og `savestest.py` er ikke endret
+  - **står igjen (Jonas):** kjøre `tools/server/gate/setup.sh` på serveren, legge inn nøkkelen, legge de tre hemmelighetene i GitHub, og starte et slipp. Steget er ferdig når det slippet har gått gjennom porten.
