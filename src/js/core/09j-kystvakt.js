@@ -246,10 +246,10 @@ function kvMostSp(sets){ const kg = {}; for (const s of sets) for (const sp in (
 function kvCheck(b){
   const H = S.t / 60, len = (typeof BOAT !== 'undefined' && BOAT.len) || 7, out = [], seen = {}, add = (k, no, en, ref, url) => { if (seen[k]) return; seen[k] = 1; out.push({k, no, en, ref, url}); };
   const sets = (S.sets || []).filter(s => s.vid === S.cur && !s.lost && s.a && s.b), hand = !(S.equip && S.equip.jukse > 0), most = kvMostSp(sets);
-  const probe = (p, gear, sp) => { let r = null; try { r = rulesAt({p, H, len, gear, sp, hand}); } catch (e){} if (r) for (const it of r.items) if (it.block && it.v === 'no' && it.k !== 'skag') add(it.k, it.no, it.en, it.ref, it.url); };
+  const probe = (p, gear, sp, mesh) => { let r = null; try { r = rulesAt({p, H, len, gear, sp, hand, mesh}); } catch (e){} if (r) for (const it of r.items) if (it.block && it.v === 'no' && it.k !== 'skag') add(it.k, it.no, it.en, it.ref, it.url); };
   // an ocean vessel's gear is checked along the whole string (kvHavCheck, below); a coastal boat's at its middle, and the jig where she fishes
   const hav = kvHav();
-  if (!hav){ for (const s of sets) probe(setMid(s), s.kind === 'teine' ? 'teiner' : s.kind, most);
+  if (!hav){ for (const s of sets) probe(setMid(s), s.kind === 'teine' ? 'teiner' : s.kind, most, s.kind === 'garn' ? s.mesh : undefined);
     if (b.status === 'fishing') probe(b.pos, 'juksa', S.target === 'kveite' ? 'kveite' : most); }
   // § 33a and § 33: at most 80 nets in the cod fishery and 5 000 hooks a day inside the fjord lines (fjordLimits: no hook limit in the six Finnmark fjords in winter)
   const inF = s => { try { return insideFjord(setMid(s)); } catch (e){ return false; } }, sums = kvSums(sets, inF);
@@ -269,9 +269,9 @@ function kvCheck(b){
   // under the exception in the Skagerrak; 03d-quota.js sorConf), asked as the quota north of 62° N is: what is over the cap and the
   // bycatch after it is confiscated at the landing. That cod is not asked about against the quota north of 62° N
   let sorCod = 0;
-  if (kgOf('torsk') > 0){ let C = null; try { C = sorConf(b.byc, kgOf('torsk') - bycConf().kg, quotaState(), access()); } catch (e){}
+  if (kgOf('torsk') > 0){ let C = null; try { C = sorConf(b.byc, kgOf('torsk') - bycConf().kg, quotaState(), sorAcc()); } catch (e){}
     if (C){ sorCod = C.cod;
-      if ((C.by.nsjo || 0) > 0.5) add('nsjo3', (access() === 'none' ? 'Båten har ikke adgang til å fiske torsk i Nordsjøen' : 'Fartøyet har fisket maksimalkvoten på 3 tonn torsk i Nordsjøen (åpen gruppe)') + ', og da kan torsk bare være bifangst, høyst 15 % i hver fangst og ved landing. ' + fmtC(C.by.nsjo, 0) + ' kg av torsken om bord er over og blir inndratt ved levering.', (access() === 'none' ? 'The vessel has no access to fish cod in the North Sea' : 'The vessel has fished the maximum quota of 3 tonnes of cod in the North Sea (the open group)') + ', and then cod may only be a bycatch, at most 15% in each catch and at the landing. ' + fmtC(C.by.nsjo, 0) + ' kg of the cod aboard is over and is confiscated at the landing.', SORQ.nsjo.ref, SORQ.nsjo.url);
+      if ((C.by.nsjo || 0) > 0.5) add('nsjo3', sorWhy(sorAcc())[0] + ', og da kan torsk bare være bifangst, høyst 15 % i hver fangst og ved landing. ' + fmtC(C.by.nsjo, 0) + ' kg av torsken om bord er over og blir inndratt ved levering.', sorWhy(sorAcc())[1] + ', and then cod may only be a bycatch, at most 15% in each catch and at the landing. ' + fmtC(C.by.nsjo, 0) + ' kg of the cod aboard is over and is confiscated at the landing.', SORQ.nsjo.ref, SORQ.nsjo.url);
       if ((C.by.skag4 || 0) > 0.5) add('skag3', 'Taket på 3 tonn torsk med juksa i Skagerrak utenfor grunnlinjen er nådd, og da kan torsk bare være bifangst, høyst 5 %. ' + fmtC(C.by.skag4, 0) + ' kg av torsken om bord er over og blir inndratt ved levering.', 'The cap of 3 tonnes of cod with jig in the Skagerrak outside the baseline is reached, and then cod may only be a bycatch, at most 5%. ' + fmtC(C.by.skag4, 0) + ' kg of the cod aboard is over and is confiscated at the landing.', SORQ.skag4.ref, SORQ.skag4.url); } }
   // the cod beyond what is left of the quota (the game warns of it once a day, 05-vessels.js; the landing confiscates it)
   if (access() !== 'none' && kgOf('torsk') - sorCod > 0.5){ let over = 0; try { const q = quotaState(); over = q.torsk + kgOf('torsk') - sorCod - codLimitNow(H); if (ffPct(H)) over = 0; } catch (e){}

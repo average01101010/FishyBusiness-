@@ -260,6 +260,7 @@ function rulesAt(q){
   if (q.hav === undefined) q = {...q, hav:S.lic && S.lic.hav ? S.lic.id : null};   // the boat's ocean permit when the caller does not say
   if (q.egn === undefined) q = {...q, egn:!!(typeof BOAT !== 'undefined' && BOAT && BOAT.autoHooks > 0)};   // a baiting machine aboard (§ 26)
   const p = q.p, H = q.H == null ? S.t / 60 : q.H, len = q.len || 0, gear = q.gear || null, sp = q.sp || null, out = [], md = ruMD(H);
+  const mesh = q.mesh != null ? q.mesh : gear === 'garn' ? ruMeshNow() : null;   // the nets' mesh (mm): the string's, or the smallest aboard
   const ll = LL(p), n62 = ll.lat >= 62, bits = ruBits(p), F = !!(bits & 2), inBL = !!(bits & 1), nm = blNm(p), hom = n62 ? ruHom(p) : null;
   const add = (v, k, no, en, ref, url, block) => out.push({v, k, no, en, ref, url, block:!!block});
   const isSp = s => !sp || sp === s, cod3 = !sp || RU_COD.includes(sp), conv = !gear || RU_CONV.includes(gear);
@@ -335,12 +336,16 @@ function rulesAt(q){
   // områder i Norges økonomiske sone sør for 62°N i perioden 1. juli – 31. desember 2026», and § 3: not purse seine for herring,
   // mackerel and horse mackerel or pelagic trawl for herring and mackerel, «Forbudet i § 2 gjelder ikke fiske med juksa» and «… ikke
   // fiske med garn med maskestørrelse ikke mindre enn 160 mm»). Only the part of an area that lies in Norway's economic zone (the
-  // regulations say so; the neighbours' zones have their own rules, ruSeaRules). The game's nets have no mesh size, so nets are not
-  // stopped in the nursery areas, only told of the 160 mm (assumed: the nets the game sells for cod and saithe are that wide)
+  // regulations say so; the neighbours' zones have their own rules, ruSeaRules). The nets carry their mesh (10-gear.js NETOPT: cod and
+  // floating nets of 156, 180 and 200 mm, the Greenland halibut net 360 mm): a string under 160 mm is stopped, and with no string asked
+  // about, the smallest mesh aboard decides (ruMeshNow); with no nets aboard the rule is said. Høstingsforskriften § 19 (J-163-2026)
+  // sets 126 mm for bottom nets south of 62° N and 148 mm outside 4 nm in the economic zone west of the line; all the game's nets are wider
   for (const f of ruAt(18, p)){ const g = RU_GYTE.find(g => g.re.test(f.a.navn || '')); if (!g || !ruIn2(md, g.per[0], g.per[1]) || !ruSeaNo(p)) continue;
     add('no', 'gyte18', g.n + ': alt fiske er forbudt ' + g.no + ' (gyteområde for torsk i Norges økonomiske sone sør for 62° N).', g.n + ': all fishing is banned ' + g.en + ' (a spawning area for cod in Norway\'s economic zone south of 62° N).', 'J-229-2025 § 2 (forskrift om forbud mot fiske i gyteområder for torsk i Norges økonomiske sone sør for 62° i 2026)', RU_FD + 'j-229-2025', true); }
   if (ruIn2(md, 701, 1231)) for (const f of ruAt(19, p)){ if (!ruSeaNo(p)) continue; const n = f.a.navn || 'Oppvekstområde', R = 'J-99-2026 § 2 og § 3 (forskrift om forbud mot fiske i oppvekstområder for torsk i Norges økonomiske sone sør for 62° N i 2026)', U = RU_FD + 'j-99-2026';
-    if (gear && gear !== 'juksa' && gear !== 'garn') add('no', 'opp19', n + ': oppvekstområde for torsk. Alt fiske er forbudt 1. juli–31. desember, unntatt med juksa og med garn med maskevidde på minst 160 mm.', n + ': a nursery area for cod. All fishing is banned 1 July–31 December, except with jig and with nets of a mesh of at least 160 mm.', R, U, true);
+    if (gear === 'garn' && mesh != null && mesh < 160) add('no', 'opp19', n + ': oppvekstområde for torsk. Fra 1. juli til 31. desember er garn bare lov med maskevidde på minst 160 mm; garna dine er ' + mesh + ' mm.', n + ': a nursery area for cod. From 1 July to 31 December nets are only allowed with a mesh of at least 160 mm; your nets are ' + mesh + ' mm.', R, U, true);
+    else if (gear === 'garn' && mesh != null) add('ok', 'opp19g', n + ': oppvekstområde for torsk 1. juli–31. desember. Garn med maskevidde på minst 160 mm er lov (dine: ' + mesh + ' mm); line og teiner er forbudt.', n + ': a nursery area for cod 1 July–31 December. Nets with a mesh of at least 160 mm are allowed (yours: ' + mesh + ' mm); line and pots are banned.', R, U);
+    else if (gear && gear !== 'juksa' && gear !== 'garn') add('no', 'opp19', n + ': oppvekstområde for torsk. Alt fiske er forbudt 1. juli–31. desember, unntatt med juksa og med garn med maskevidde på minst 160 mm.', n + ': a nursery area for cod. All fishing is banned 1 July–31 December, except with jig and with nets of a mesh of at least 160 mm.', R, U, true);
     else if (gear === 'garn') add('warn', 'opp19g', n + ': oppvekstområde for torsk 1. juli–31. desember. Garn må ha maskevidde på minst 160 mm; line og teiner er forbudt.', n + ': a nursery area for cod 1 July–31 December. Nets must have a mesh of at least 160 mm; line and pots are banned.', R, U);
     else add('ok', 'opp19j', n + ': oppvekstområde for torsk 1. juli–31. desember. Juksa er lov; line og teiner er forbudt.', n + ': a nursery area for cod 1 July–31 December. Jig is allowed; line and pots are banned.', R, U); }
   // the Skagerrak (Ø10, 07.11.2026; docs/systemer/kvoter-og-regler.md 5.28c): FOR-2025-12-19-2805, read on Lovdata 07.11.2026 as amended
@@ -372,9 +377,9 @@ function rulesAt(q){
   // and after it, or for a vessel without access, cod is a bycatch of at most 15 % (§ 5). Nothing is stopped: while there is room it is
   // said and no more (ok, so the Regler app lists it and nothing turns yellow), and when the cap is taken the answer is yellow. The count is the landing's (03d-quota.js sorConf)
   if (!n62 && !shell && isSp('torsk') && (!gear || gear === 'juksa' || gear === 'line' || gear === 'garn') && ruNsjo(p, ll)){
-    const left = sorLeft('nsjo'); let acc = 'open'; try { acc = access(); } catch (e){}
+    const left = sorLeft('nsjo'); let acc = 'open'; try { acc = sorAcc(); } catch (e){}
     if (left > 0) add('ok', 'nsjo', 'Nordsjøen (sør for 62° N, vest for linja Lindesnes–Hanstholmen): i åpen gruppe kan fartøyet fiske og lande høyst 3 tonn torsk i året (2 tonn er garantert). Du har ' + ruF1(left / 1000) + ' tonn igjen. Etter det kan torsk bare være bifangst, høyst 15 % i hver fangst og ved landing.', 'The North Sea (south of 62° N, west of the line Lindesnes–Hanstholm): in the open group the vessel may fish and land at most 3 tonnes of cod a year (2 tonnes are guaranteed). You have ' + ruF1(left / 1000) + ' tonnes left. After that cod may only be a bycatch, at most 15% in each catch and at the landing.', RU_SKF + ' §§ 1, 4 og 5', RU_SK);
-    else add('warn', 'nsjoby', (acc === 'none' ? 'Båten har ikke adgang til å fiske torsk i Nordsjøen' : 'Maksimalkvoten på 3 tonn torsk i Nordsjøen er fisket') + ': torsk kan bare være bifangst, høyst 15 % i hver fangst og ved landing. Det som er over ved levering, blir inndratt.', (acc === 'none' ? 'The vessel has no access to fish cod in the North Sea' : 'The maximum quota of 3 tonnes of cod in the North Sea is fished') + ': cod may only be a bycatch, at most 15% in each catch and at the landing. What is over at the landing is confiscated.', RU_SKF + ' §§ 1, 4 og 5', RU_SK);
+    else add('warn', 'nsjoby', sorWhy(acc)[0] + ': torsk kan bare være bifangst, høyst 15 % i hver fangst og ved landing. Det som er over ved levering, blir inndratt.', sorWhy(acc)[1] + ': cod may only be a bycatch, at most 15% in each catch and at the landing. What is over at the landing is confiscated.', RU_SKF + ' §§ 1, 4 og 5', RU_SK);
   }
   // the species and the seasons (§ 39, § 40)
   if (sp === 'kveite'){
@@ -461,12 +466,35 @@ function f26In(f, ll){
 // there is room: their share here is 1, so the catch is not warned about and bycConf takes nothing; the landing counts them against the
 // cap (03d-quota.js sorConf). 'nsjo' is the North Sea (ruNsjo, the fjords too), 'skag4' the Skagerrak under the § 4 exception while its
 // 3 tonnes last; with them taken the answer is 'skag' again
-const RU_BYC = {skag:{share:0.05, ref:RU_SKF + ' § 5', url:RU_SK, kv:'skagby'}, nsjo:{share:1, ref:RU_SKF + ' §§ 4 og 5', url:RU_SK}, skag4:{share:1, ref:RU_SKF + ' § 4', url:RU_SK}};
+const RU_BYC = {skag:{share:0.05, ref:RU_SKF + ' § 5', url:RU_SK, kv:'skagby'}, nsjo:{share:1, ref:RU_SKF + ' §§ 4 og 5', url:RU_SK}, skag4:{share:1, ref:RU_SKF + ' § 4', url:RU_SK}, sorfri:{share:1}};
+// why a vessel has the bycatch only in the North Sea: outside the open group (the owner ashore, or another of the owner's vessels has
+// it this year: deltakerforskriften § 16 d and § 6), or the 3 tonnes are fished
+const sorWhy = acc => acc === 'none' ? (S.tripOwner === false ? ['I åpen gruppe i Nordsjøen må eieren selv stå om bord som høvedsmann, så denne turen har båten ikke adgang til å fiske torsk der', 'In the open group in the North Sea the owner must be aboard as skipper, so on this trip the vessel has no access to fish cod there']
+    : ['En annen av båtene dine har åpen gruppes kvote i Nordsjøen i år, så denne båten har ikke adgang til å fiske torsk der', 'Another of your vessels has the open group\'s quota in the North Sea this year, so this vessel has no access to fish cod there'])
+  : ['Maksimalkvoten på 3 tonn torsk i Nordsjøen er fisket', 'The maximum quota of 3 tonnes of cod in the North Sea is fished'];
+// the smallest mesh among the nets aboard (mm), or null with none
+function ruMeshNow(){ const ns = (S.pgear && S.pgear.nets) || []; let m = null; for (const l of ns) if (l.n > 0 && l.mesh && (m == null || l.mesh < m)) m = l.mesh; return m; }
+// the word in the catch (05-vessels.js fish()): where the cod is a bycatch only now, the share and the word to say when the catch on the
+// place has pc % cod. The Skagerrak outside the baseline (5 %), and the North Sea once the 3 tonnes are fished or for a vessel outside
+// the open group (15 %); null where the cod goes on a cap or is free
+function ruBycWarn(k, pc){
+  if (k === 'skag') return {share:0.05, ref:RU_BYC.skag.ref,
+    no:'Det er ' + pc + ' % torsk i fangsten her. I Skagerrak utenfor grunnlinjen kan torsk bare være bifangst, høyst 5 % i hver fangst og ved levering. Flytt til et sted med mindre torsk. All fangst skal landes, og torsken over 5 % blir inndratt ved levering.',
+    en:'There is ' + pc + '% cod in the catch here. In the Skagerrak outside the baseline cod may only be a bycatch, at most 5% in each catch and at the landing. Move to a place with less cod. All catch must be landed, and the cod over 5% is confiscated at the landing.',
+    tNo:pc + ' % torsk i fangsten: over bifangstgrensen på 5 %. Flytt.', tEn:pc + '% cod in the catch: over the 5% bycatch limit. Move.'};
+  if (k === 'nsjo' && sorLeft('nsjo') <= 0){ const w = sorWhy(sorAcc()); return {share:SORQ.nsjo.by, ref:RU_SKF + ' § 5',
+    no:'Det er ' + pc + ' % torsk i fangsten her. ' + w[0] + ', og da kan torsk i Nordsjøen bare være bifangst, høyst 15 % i hver fangst og ved levering. Flytt til et sted med mindre torsk. All fangst skal landes, og torsken over 15 % blir inndratt ved levering.',
+    en:'There is ' + pc + '% cod in the catch here. ' + w[1] + ', and then cod in the North Sea may only be a bycatch, at most 15% in each catch and at the landing. Move to a place with less cod. All catch must be landed, and the cod over 15% is confiscated at the landing.',
+    tNo:pc + ' % torsk i fangsten: over bifangstgrensen på 15 %. Flytt.', tEn:pc + '% cod in the catch: over the 15% bycatch limit. Move.'}; }
+  return null;
+}
 function ruByc(q){
   if (!RU.ok || !q || !q.p) return null; const gear = q.gear || 'juksa'; if (!['juksa', 'line', 'garn'].includes(gear)) return null;
   const p = q.p, ll = LL(p); if (ll.lat >= 62) return null;
   if (ruNsjo(p, ll)) return 'nsjo';
-  const bits = ruBits(p); if ((bits & 1) || !(bits & 64) || !ruSkag(p, bits)) return null;
+  const bits = ruBits(p); if ((bits & 16) || ruAt(8, p).length || ruAt(37, p).length) return null;   // (the Oslo fjord and its no-fishing areas: cod is banned there, 5.28; nothing is free)
+  if ((bits & 1) && ruSeaNo(p)) return 'sorfri';   // inside the baseline east of the line: no quota (03d-quota.js)
+  if ((bits & 1) || !(bits & 64) || !ruSkag(p, bits)) return null;
   const len = q.len || 0; if (gear === 'juksa' && len > 0 && len < 11 && ruIn2(ruMD(q.H == null ? S.t / 60 : q.H), 401, 630) && bladB() && sorLeft('skag4') > 0) return 'skag4';
   return 'skag';
 }
