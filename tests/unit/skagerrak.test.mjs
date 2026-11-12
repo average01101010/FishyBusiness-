@@ -84,21 +84,21 @@ export default function (t){
     if (typeof ruByc === 'function' && typeof bycAdd === 'function'){
       blad(false);
       t.ok(q(krs) === 'skag' && q(are) === 'skag' && q(krs, {gear:'line'}) === 'skag' && q(krs, {gear:'garn'}) === 'skag', 'bifangstsonen: juksa, line og garn utenfor grunnlinja ved Kristiansand og Arendal');
-      t.ok(!q(krsIn) && !q(ege) && !q(krs, {gear:'teiner'}) && !q(brg0()), 'ikke innenfor grunnlinja, ikke ved Egersund, ikke teiner, ikke ved Bergen');
-      blad(true); t.ok(!q(krs) && q(krs, {gear:'line'}) === 'skag' && q(krs, {H:jul}) === 'skag' && q(krs, {len:11}) === 'skag', 'unntaket (§ 4, juksa under 11 m på blad B i juni): torsken er lovlig og telles ikke; line, juli og 11 m telles'); blad(false);
+      t.ok(q(krsIn) !== 'skag' && q(ege) !== 'skag' && !q(krs, {gear:'teiner'}) && q(brg0()) !== 'skag', 'ikke innenfor grunnlinja, ikke ved Egersund, ikke teiner, ikke ved Bergen (der telles torsken mot Nordsjøens tak fra Ø10c: ' + q(ege) + ')');
+      blad(true); t.ok(q(krs) === 'skag4' && RU_BYC.skag4.share === 1 && bycOver('skag4', {kg:100, cod:100}) === 0 && q(krs, {gear:'line'}) === 'skag' && q(krs, {H:jul}) === 'skag' && q(krs, {len:11}) === 'skag', 'unntaket (§ 4, juksa under 11 m på blad B i juni): torsken er lovlig og er ikke bifangst (fra Ø10c telt mot taket på 3 tonn, skag4); line, juli og 11 m er bifangst'); blad(false);
       t.eq(RU_BYC.skag.share, 0.05, 'andelen er 5 %');
       t.ok(Math.abs(bycOver('skag', {kg:1000, cod:200}) - 150) < 1e-9 && bycOver('skag', {kg:1000, cod:50}) === 0 && bycOver('skag', {kg:1000, cod:49}) === 0, '200 kg torsk av 1000: 150 over; 50 og 49 av 1000: ingenting');
       // the hold: 300 kg taken inside the baseline (60 cod), then 400 outside (100 cod)
       const b = S().boat, t0 = S().t, pos0 = {...b.pos}; S().t = Math.round(jun * 60); S().hold = []; delete b.byc;
       const put = (sp, kg) => { bycAdd(sp, kg, 'juksa'); S().hold.push({sp, kg, cls:0}); };
       b.pos = {x:krsIn.x, y:krsIn.y}; S().t += 20; put('torsk', 60); put('sei', 240);
-      t.ok(!b.byc && bycConf().kg === 0, 'fangst innenfor grunnlinja telles ikke, og ingenting inndras');
+      t.ok(!(b.byc || {}).skag && bycConf().kg === 0, 'fangst innenfor grunnlinja telles ikke som Skagerrak-fangst, og ingenting inndras');
       b.pos = {x:krs.x, y:krs.y}; S().t += 20; put('torsk', 100); put('sei', 300);
       t.ok(b.byc && b.byc.skag && Math.abs(b.byc.skag.kg - 400) < 1e-9 && Math.abs(b.byc.skag.cod - 100) < 1e-9, 'utenfor: 400 kg telt i Skagerrak, 100 av dem torsk');
       t.ok(Math.abs(bycConf().kg - 80) < 1e-9 && Math.abs(bycConf().by.skag - 80) < 1e-9, 'inndragningen: 100 − 5 % av 400 = 80 kg torsk (torsken innenfor grunnlinja røres ikke)');
       bycAdd('krabbe', 50, 'teine'); t.ok(Math.abs(b.byc.skag.kg - 400) < 1e-9, 'krabbe fra teiner teller ikke i fangsten');
       S().hold = S().hold.filter(x => x.sp !== 'torsk').concat([{sp:'torsk', kg:30, cls:0}]); t.ok(Math.abs(bycConf().kg - 30) < 1e-9, 'aldri mer enn torsken som er om bord');
-      S().hold = []; S().t += 20; b.pos = {x:krsIn.x, y:krsIn.y}; put('sei', 10); t.ok(!b.byc, 'tom last (etter levering) begynner tellingen på nytt');
+      S().hold = []; S().t += 20; b.pos = {x:krsIn.x, y:krsIn.y}; put('sei', 10); t.ok(!(b.byc || {}).skag, 'tom last (etter levering) begynner tellingen på nytt');
       S().hold = []; delete b.byc; S().t = t0; b.pos = pos0; } }
 
   // only in Norway's waters: the Danish and Swedish zones are closed in the game anyway (dk0), with their own reason

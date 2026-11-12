@@ -24,10 +24,12 @@ export default function (t){
   // 1. nearestPlace and recPlace on Bjørnvika by Båtsfjord (the ground of the plan's example): the ground, not the miles from a harbour
   const line = (f, sp) => f.l.find(q => q[0] === sp), SNV = 1 << FELT.gear.indexOf('snurrevad');
   const bjo = D.find(f => f.k === 'f' && f.n === 'Bjørnvika' && line(f, 'torsk') && (line(f, 'torsk')[1] & SNV)), bj = {x:bjo.x, y:bjo.y};
-  // (Bjørnvika is one of 161 grounds felt-s.b64 has the same ring twice for, 11.11.2026: by the even-odd rule of feltSd nothing is inside
-  // it, so the point is «ved» it and not «på»; in the backlog. The ground still names the place, 7.8 km from the nearest harbour.)
-  const nb = K.nearestPlace(bj);
-  t.ok(/^(på|ved) Bjørnvika$/.test(nb.no) && dPort(bj) > 1.5 * NM, `nearestPlace på Bjørnvika (${dPort(bj).toFixed(1)} km fra nærmeste havn) gir feltet: «${nb.no}» / «${nb.en}»`);
+  // (Bjørnvika had the same ring twice in felt-s.b64 until Ø14 F3-rest, 12.11.2026, so by the even-odd rule of feltSd nothing was
+  // inside it and the point was «ved Bjørnvika»; tools/npc/felt.py now writes the union of a ground's polygons, and the ground's own
+  // point lies inside it: «på». Seen red against the data before: «ved Bjørnvika», feltSd −0.57.)
+  const nb = K.nearestPlace(bj), bg = G.find(g => g.f === bjo);
+  t.ok(bg && bg.R && bg.R.length === 1 && K.feltSd(bg, bj.x, bj.y) > 0, `Bjørnvikas punkt ligger inne i feltets ene ring (${bg && bg.R ? bg.R.length : 0} ringer, feltSd ${bg ? K.feltSd(bg, bj.x, bj.y).toFixed(2) : '–'} km)`);
+  t.ok(nb.no === 'på Bjørnvika' && nb.en === 'at Bjørnvika' && dPort(bj) > 1.5 * NM, `nearestPlace på Bjørnvika (${dPort(bj).toFixed(1)} km fra nærmeste havn) gir feltet: «${nb.no}» / «${nb.en}»`);
   t.eq(K.recPlace(bj), 'Bjørnvika', 'recPlace på Bjørnvika gir feltets navn');
   // a ground with a whole outline (Makkaur-sandfjorden by Båtsfjord), a point well inside it: «på»
   const mak = G.find(g => g.f.n === 'Makkaur-sandfjorden'); let bp = {x:mak.f.x, y:mak.f.y};

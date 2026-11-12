@@ -2650,6 +2650,32 @@
 2026-11-11 20:00	ccr-6f2117ea-fknkro	d01de3f	boottest	OK	31	lite	alene	
 2026-11-11 20:01	ccr-6f2117ea-fknkro	d01de3f	dbg23o	OK	47	3d	alene	
 2026-11-11 20:16	ccr-6f2117ea-fknkro	d01de3f	coast3d	OK	888	3d	alene	
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	crewclip	FEIL	25	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [28, 5076, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 90
+2026-11-11 19:57	claude/charming-faraday-my9nnq	78f7cc5+	crewwalk	OK	12	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	vesseltest	FEIL	29	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	lanterntest	OK	19	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	maletest	OK	28	lite	samtidig	
+2026-11-11 19:58	claude/charming-faraday-my9nnq	78f7cc5+	regmarktest	OK	9	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	docktest	OK	74	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	stabtest	OK	17	lite	samtidig	
+2026-11-11 19:59	claude/charming-faraday-my9nnq	78f7cc5+	trip2	OK	47	lite	samtidig	
+2026-11-11 21:19	claude/charming-faraday-my9nnq	7e1266c	brotest	FEIL	900	3d	alene	gikk ut på tid
+2026-11-11 21:47	claude/charming-faraday-my9nnq	7e1266c+	boottest	OK	30	lite	alene	
+2026-11-11 21:58	claude/charming-faraday-my9nnq	b0640be	jigshot	OK	638	3d	alene	
+2026-11-11 22:10	claude/charming-faraday-my9nnq	b0640be	potshot	FEIL	717	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['0: ikke gulv ved 0.08,-4.32', '1: ikke gulv ved -1.22,-4.62
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	boottest	OK	42	lite	samtidig	
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	crewclip	FEIL	22	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [19, 4670, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 22:22	claude/charming-faraday-my9nnq	b0640be+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 75
+2026-11-11 22:34	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	729	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['0: ikke gulv ved 0.08,-4.32', '1: ikke gulv ved -0.17,-4.52
+2026-11-11 22:55	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	773	3d	alene	FEIL hver stabel står på ett gulv med høyden fri over seg, unna haleren og krabbekaret  {'kyst21': ['1: ikke gulv ved -0.19,-4.32', '2: ikke gulv ved -3.00,-3.9
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	boottest	OK	38	lite	samtidig	
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	crewclip	FEIL	23	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [28, 5076, ['f:3.22:walk', 'rlf:3.11:walk', 'lfb:3:wa
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 12
+2026-11-11 23:05	claude/charming-faraday-my9nnq	b0640be+	crewwalk	OK	11	lite	samtidig	
+2026-11-11 23:06	claude/charming-faraday-my9nnq	b0640be+	docktest	OK	63	lite	samtidig	
+2026-11-11 23:16	claude/charming-faraday-my9nnq	b0640be+	potshot	FEIL	593	3d	alene	FEIL sjarkny (staa): stablene om bord viser teinene som er om bord  {'om bord': 12, 'plass': 12, 'tegnet': 0}
+2026-11-11 23:30	claude/charming-faraday-my9nnq	b0640be+	deckshot	FEIL	842	3d	alene	FEIL havbåtene fra 45 m har MOB-båten med davit, og bøyene og røyken reglene krever (deck_*_mob.png)  []
 2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	boottest	OK	33	lite	samtidig	
 2026-11-11 21:43	claude/zen-curie-qoa35d	c6f7bf0+	maptest	OK	31	lite	samtidig	
 2026-11-11 21:50	claude/zen-curie-qoa35d	c6f7bf0+	fintest	OK	446	3d	alene	
@@ -2658,7 +2684,170 @@
 2026-11-11 21:55	claude/charming-knuth-ih6c5n	0dcd23f+	boottest	OK	47	lite	samtidig	
 2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	boottest	OK	32	lite	samtidig	
 2026-11-11 22:09	claude/charming-knuth-ih6c5n	f9cba93	docktest	OK	63	lite	samtidig	
+2026-11-12 00:00	ccr-c987b885-ap4668	ef90157	farttest	OK	383	lite	samtidig	
+2026-11-12 00:00	ccr-c987b885-ap4668	ef90157	tutfull	OK	6	lite	samtidig	
+2026-11-12 00:00	ccr-c987b885-ap4668	ef90157	krabbefabrikktest	OK	15	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	colregtest	OK	601	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	keeptest	OK	12	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	autonavtest	OK	21	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	turtest	OK	16	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	decktest	OK	12	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	trip2	OK	36	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	worktest	FEIL	22	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	npctest	OK	8	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	towtest	OK	18	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	tattest	OK	15	lite	samtidig	
+2026-11-12 00:04	ccr-c987b885-ap4668	ef90157	peergear	OK	5	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	mobtest	OK	203	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	turlinjetest	OK	5	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	hudtest	OK	86	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	havflaate	OK	10	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	hulltest	OK	70	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	lanterntest	OK	17	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	seaworktest	OK	5	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	driftsplan2map	OK	12	lite	samtidig	
+2026-11-12 00:06	ccr-c987b885-ap4668	ef90157	placetest	OK	4	lite	samtidig	
+2026-11-12 00:07	ccr-c987b885-ap4668	ef90157	sidetab	OK	13	lite	samtidig	
+2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	etikett	OK	180	lite	samtidig	
+2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	legmemotest	OK	17	lite	samtidig	
+2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	hbtest	OK	16	lite	samtidig	
+2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-12 00:19	ccr-c987b885-ap4668	bfe16db+	vectest	OK	560	3d	alene	
+2026-11-12 00:23	ccr-c987b885-ap4668	bfe16db+	anchorlight3d	OK	284	3d	alene	
+2026-11-11 23:13	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	boottest	OK	29	lite	samtidig	
+2026-11-11 23:13	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	marktest	OK	6	lite	samtidig	
+2026-11-11 23:13	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	kvtest	LES	12	lite	samtidig	
+2026-11-11 23:13	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	geartest	FEIL	34	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-11 23:14	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	charttest	FEIL	42	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-11 23:18	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	heattest	OK	242	3d	alene	
+2026-11-11 23:23	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	etikett	OK	140	lite	alene	
+2026-11-11 23:32	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	boottest	OK	28	lite	samtidig	
+2026-11-11 23:32	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	marktest	OK	7	lite	samtidig	
+2026-11-11 23:34	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	etikett	OK	137	lite	samtidig	
+2026-11-11 23:37	claude/o14-f3-rest-fiskeplasser-74t7wv	d9eadf4+	heattest	OK	223	3d	alene	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	sor62test	OK	62	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	skagtest	OK	36	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	quotatest	OK	19	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	kystvakttest	OK	11	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	selltest	LES	27	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	r4test	OK	20	lite	samtidig	
+2026-11-11 23:20	ccr-49289d8b-v7t3dk	4b94a3a+	rulestest	OK	15	lite	samtidig	
+2026-11-11 23:21	ccr-49289d8b-v7t3dk	4b94a3a+	trip2	OK	32	lite	samtidig	
+2026-11-11 23:22	ccr-49289d8b-v7t3dk	4b94a3a+	sor62test	OK	58	lite	samtidig	
+2026-11-11 23:22	ccr-49289d8b-v7t3dk	4b94a3a+	rulestest	OK	16	lite	samtidig	
+2026-11-11 23:22	ccr-49289d8b-v7t3dk	4b94a3a+	r4test	OK	16	lite	samtidig	
+2026-11-11 23:25	ccr-49289d8b-v7t3dk	4b94a3a+	boottest	OK	34	lite	samtidig	
+2026-11-11 23:25	ccr-49289d8b-v7t3dk	4b94a3a+	bktest	OK	8	lite	samtidig	
+2026-11-11 23:25	ccr-49289d8b-v7t3dk	4b94a3a+	fleet2test	FEIL	33	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-11 23:26	ccr-49289d8b-v7t3dk	4b94a3a+	autolinetest	OK	11	lite	samtidig	
+2026-11-11 23:26	ccr-49289d8b-v7t3dk	4b94a3a+	snokrabbetest	OK	12	lite	samtidig	
+2026-11-11 23:26	ccr-49289d8b-v7t3dk	4b94a3a+	sonetest	OK	8	lite	samtidig	
+2026-11-11 23:26	ccr-49289d8b-v7t3dk	4b94a3a+	geartest	FEIL	43	lite	samtidig	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-11 23:26	ccr-49289d8b-v7t3dk	4b94a3a+	vesseltest	FEIL	24	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	shoptest	OK	36	lite	samtidig	
+2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	cashfxtest	OK	9	lite	samtidig	
+2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	booktest	OK	28	lite	samtidig	
+2026-11-11 23:27	ccr-49289d8b-v7t3dk	4b94a3a+	kvtest	LES	13	lite	samtidig	
 2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	stabtest	OK	19	lite	samtidig	
 2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	maletest	OK	29	lite	samtidig	
 2026-11-11 22:39	claude/zen-babbage-aixu88	4fe8616	boottest	OK	36	lite	samtidig	
 2026-11-11 23:07	claude/zen-babbage-aixu88	c96b087	boottest	OK	29	lite	alene	
+2026-11-11 23:34	ccr-899a9674-q3gjp0	2c93f4b+	dbg23o	OK	44	3d	alene	
+2026-11-11 23:40	ccr-899a9674-q3gjp0	2c93f4b+	skumkant	FEIL	380	3d	alene	FEIL no square: the step in the foam where the map ends is no larger than the steps elsewhere (within twice the 95th percentile) {'edge': 0.1296, 'q95': 0.0424}
+2026-11-11 23:41	ccr-899a9674-q3gjp0	2c93f4b+	dbg23o	OK	46	3d	alene	
+2026-11-11 23:31	ccr-49289d8b-v7t3dk	d555fb5	boottest	OK	33	lite	samtidig	
+2026-11-11 23:31	ccr-49289d8b-v7t3dk	d555fb5	sor62test	OK	69	lite	samtidig	
+2026-11-11 23:31	ccr-49289d8b-v7t3dk	d555fb5	skagtest	OK	36	lite	samtidig	
+2026-11-11 23:32	ccr-49289d8b-v7t3dk	d555fb5	r4test	OK	13	lite	samtidig	
+2026-11-11 23:37	claude/charming-faraday-my9nnq	b5df25c+	boottest	OK	27	lite	alene	
+2026-11-11 23:46	ccr-49289d8b-v7t3dk	8f36502+	sor62test	OK	48	lite	alene	
+2026-11-11 23:50	ccr-49289d8b-v7t3dk	8f36502+	skagtest	OK	36	lite	samtidig	
+2026-11-11 23:50	ccr-49289d8b-v7t3dk	8f36502+	quotatest	OK	19	lite	samtidig	
+2026-11-11 23:50	ccr-49289d8b-v7t3dk	8f36502+	kystvakttest	OK	10	lite	samtidig	
+2026-11-11 23:50	ccr-49289d8b-v7t3dk	8f36502+	r4test	OK	17	lite	samtidig	
+2026-11-11 23:50	ccr-49289d8b-v7t3dk	8f36502+	rulestest	OK	14	lite	samtidig	
+2026-11-11 23:51	ccr-49289d8b-v7t3dk	8f36502+	trip2	OK	39	lite	samtidig	
+2026-11-11 23:51	ccr-49289d8b-v7t3dk	8f36502+	boottest	OK	35	lite	samtidig	
+2026-11-11 23:51	ccr-49289d8b-v7t3dk	8f36502+	booktest	OK	30	lite	samtidig	
+2026-11-11 23:51	ccr-49289d8b-v7t3dk	8f36502+	bktest	OK	8	lite	samtidig	
+2026-11-11 23:52	ccr-49289d8b-v7t3dk	8f36502+	geartest	FEIL	39	lite	samtidig	FEIL mending: the crew in port, or the net loft in Finnsnes for a fee, back a day later
+2026-11-11 23:52	ccr-49289d8b-v7t3dk	8f36502+	selltest	LES	22	lite	samtidig	
+2026-11-11 23:52	ccr-49289d8b-v7t3dk	8f36502+	geartest	FEIL	33	lite	alene	FEIL a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+2026-11-11 23:41	claude/o14-f3-rest-fiskeplasser-74t7wv	a87ab0f+	boottest	OK	21	lite	alene	
+2026-11-12 00:26	ccr-899a9674-q3gjp0	6bb206b+	dbg23o	OK	43	3d	alene	
+2026-11-11 23:56	ccr-49289d8b-v7t3dk	4459be8	boottest	OK	32	lite	samtidig	
+2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	sor62test	OK	72	lite	samtidig	
+2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	trip2	OK	40	lite	samtidig	
+2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	boottest	OK	37	lite	samtidig	
+2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	sor62test	OK	69	lite	samtidig	
+2026-11-12 01:22	ccr-e16ec9aa-rdf1k2	8b01b9a+	posttest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 01:22	ccr-e16ec9aa-rdf1k2	8b01b9a+	turtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 01:25	ccr-e16ec9aa-rdf1k2	40a94c8+	posttest	OK	24	lite	samtidig	
+2026-11-12 01:25	ccr-e16ec9aa-rdf1k2	40a94c8+	turtest	OK	17	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	fixtest	OK	32	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	fleet3test	OK	14	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	opsowntest	OK	39	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	seasontest	OK	6	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	autonavtest	FEIL	8	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 130, 'cell': 0.2, 'maxSlice': 8.3, 'mended': 0, 'b
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	trip2	OK	32	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	booktest	OK	25	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	worktest	FEIL	19	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	decktest	OK	13	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	selfcrew	OK	6	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	turtest	OK	17	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	selfcrew	OK	6	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	decktest	OK	15	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	mannskapshot	OK	14	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	hudtest	OK	84	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	skipdrift	OK	18	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	trip2	OK	31	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	boottest	OK	29	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	2055546	posttest	OK	23	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	2055546	fixtest	OK	31	lite	samtidig	
+2026-11-12 01:32	ccr-e16ec9aa-rdf1k2	2055546	driftsplan2test	FEIL	83	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-12 01:18	ccr-899a9674-q3gjp0	53e9d63+	dbg23o	OK	46	3d	alene	
+2026-11-12 00:36	ccr-c987b885-ap4668	f32356a	vindshot	OK	756	3d	alene	
+2026-11-12 00:40	ccr-c987b885-ap4668	8418af2	heattest	OK	261	3d	alene	
+2026-11-12 00:41	ccr-c987b885-ap4668	8418af2	routetest	OK	42	lite	alene	
+2026-11-12 00:42	ccr-c987b885-ap4668	8418af2	charttest	FEIL	41	lite	alene	FEIL hele landet: Hardangervidda, Børgefjell og Lyngen er land (ingen sømmer mellom landbitene), Norskehavet er sjø (kysten fra kjernen)  [[167, 203, 235], [167
+2026-11-12 00:43	ccr-c987b885-ap4668	8418af2	boottest	OK	27	lite	alene	
+2026-11-12 00:54	ccr-c987b885-ap4668	8418af2+	mobtest	OK	203	lite	samtidig	
+2026-11-12 00:54	ccr-c987b885-ap4668	8418af2+	hudtest	OK	84	lite	samtidig	
+2026-11-12 01:02	ccr-c987b885-ap4668	6459b1f	colregtest	OK	598	lite	samtidig	
+2026-11-12 01:02	ccr-c987b885-ap4668	6459b1f	boottest	OK	32	lite	samtidig	
+2026-11-12 01:04	ccr-c987b885-ap4668	6459b1f	boottest	OK	28	lite	samtidig	
+2026-11-12 01:10	ccr-c987b885-ap4668	6459b1f	farttest	OK	383	lite	samtidig	
+2026-11-12 00:14	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	bktest	OK	7	lite	samtidig	
+2026-11-12 00:14	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	jigalongtest	OK	14	lite	samtidig	
+2026-11-12 00:14	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	progweek	LES	32	lite	samtidig	
+2026-11-12 00:18	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	boottest	OK	31	lite	samtidig	
+2026-11-12 00:18	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	marktest	OK	7	lite	samtidig	
+2026-11-12 00:18	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	geartest	OK	33	lite	samtidig	
+2026-11-12 00:20	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	etikett	OK	141	lite	samtidig	
+2026-11-12 00:21	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	charttest	OK	42	lite	alene	
+2026-11-12 00:24	claude/o14-f3-rest-fiskeplasser-74t7wv	a0a2afed+	heattest	OK	225	3d	alene	
+2026-11-12 00:35	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	boottest	OK	26	lite	samtidig	
+2026-11-12 00:35	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	jukseboot	OK	8	lite	samtidig	
+2026-11-12 00:35	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	savestest	OK	7	lite	samtidig	
+2026-11-12 00:35	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	trip2	OK	32	lite	samtidig	
+2026-11-12 00:35	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	worldtest	OK	18	lite	samtidig	
+2026-11-12 00:36	claude/o14-f3-rest-fiskeplasser-74t7wv	529e9121+	errtest	OK	32	lite	samtidig	
+2026-11-12 00:38	claude/o14-f3-rest-fiskeplasser-74t7wv	cc3836d3	bootgtest	OK	143	lite	samtidig	
+2026-11-12 00:38	claude/o14-f3-rest-fiskeplasser-74t7wv	cc3836d3	docktest	OK	60	lite	samtidig	
+2026-11-12 00:38	claude/o14-f3-rest-fiskeplasser-74t7wv	cc3836d3	geartest	OK	41	lite	samtidig	
+2026-11-12 00:38	claude/o14-f3-rest-fiskeplasser-74t7wv	cc3836d3	charttest	OK	43	lite	alene	
+2026-11-12 00:43	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	boottest	OK	32	lite	samtidig	
+2026-11-12 00:43	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	kvtest	LES	11	lite	samtidig	
+2026-11-12 00:43	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	progweek	LES	39	lite	samtidig	
+2026-11-12 00:45	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	etikett	OK	144	lite	samtidig	
+2026-11-12 00:49	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	heattest	OK	231	3d	alene	
+2026-11-12 00:56	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	kvtest	LES	12	lite	samtidig	
+2026-11-12 00:57	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	progweek	LES	34	lite	samtidig	
+2026-11-12 00:59	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	boottest	OK	20	lite	alene	
+2026-11-12 01:00	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	charttest	OK	43	lite	alene	
+2026-11-12 01:13	ccr-c987b885-ap4668	6bc15f8	boottest	OK	23	lite	alene	
+2026-11-12 01:23	ccr-899a9674-q3gjp0	3c5462b+	dbg23o	OK	44	3d	alene	
+2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
+2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
+2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	

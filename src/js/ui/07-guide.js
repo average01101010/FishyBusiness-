@@ -325,7 +325,7 @@ function portSlip(){
     for (const n in (ls.ex || {})) if (ls.ex[n].kg > 0.05) h.push('<tr><td>' + (n === 'lever' ? LN('Lever', 'Liver') : LN('Rogn', 'Roe')) + '</td><td></td><td></td><td>' + fmt(ls.ex[n].kg, 1) + '</td><td></td><td>' + fmt(ls.ex[n].sum, 0) + '</td></tr>');
     const codKg = ls.codKg != null ? ls.codKg : ls.confKg, codKr = ls.codKr != null ? ls.codKr : ls.confKr;
     // one row per species with the reason (spilltest 3, F1); notes from before have only the sum
-    const WHY = {kvote:['over kvoten', 'over the quota'], byc5:['over 5 % bifangst i Skagerrak', 'over 5 % bycatch in the Skagerrak'], byc10:['over bifangstgrensen på 10 %', 'over the 10 % bycatch limit'], byclukket:['over bifangstgrensen etter maksimalkvoten', 'over the bycatch limit after the maximum quota'],
+    const WHY = {kvote:['over kvoten', 'over the quota'], nsjo3:['over 3 tonn i Nordsjøen (15 % bifangst)', 'over 3 tonnes in the North Sea (15 % bycatch)'], skag3:['over 3 tonn med juksa i Skagerrak (5 % bifangst)', 'over 3 tonnes with jig in the Skagerrak (5 % bycatch)'], byc5:['over 5 % bifangst i Skagerrak', 'over 5 % bycatch in the Skagerrak'], byc10:['over bifangstgrensen på 10 %', 'over the 10 % bycatch limit'], byclukket:['over bifangstgrensen etter maksimalkvoten', 'over the bycatch limit after the maximum quota'],
       bk7:['over 7 % bifangst (direktefisket er stengt)', 'over 7 % bycatch (the direct fishery is closed)'], bkmax:['over maksimalkvoten', 'over the maximum quota']};
     if (ls.confRows) for (const [sp, k, v, w] of ls.confRows) h.push(row(LN('Inndratt: ', 'Confiscated: ') + spName(sp).toLowerCase() + ' ' + LN(WHY[w][0], WHY[w][1]), fmt(k, 0), '−' + fmt(v, 0)));
     else if (codKg > 0.5) h.push(row(ls.acc === 'none' ? LN('Inndratt over bifangstgrensen', 'Over the bycatch limit, confiscated') : LN('Inndratt over kvote eller bifangstgrense', 'Over quota or bycatch limit, confiscated'), fmt(codKg, 0), '−' + fmt(codKr, 0)));
@@ -392,11 +392,14 @@ function landWarn(p){
     kg += x.kg * cs; sum += x.kg * cs * (g === 'V' ? 1 : clsPrice(p, x.sp, c, H, x.hook) * GM[g]); }
   if (kg < 0.5) return '';
   const why = C.zConf > 0.5 && C.zConf >= kg / 2 ? LN('I Skagerrak utenfor grunnlinjen kan torsk bare være bifangst, høyst 5 % av fangsten der; ' + fmt(C.zConf, 0) + ' kg torsk er over.', 'In the Skagerrak outside the baseline cod may only be a bycatch, at most 5% of the catch there; ' + fmt(C.zConf, 0) + ' kg of cod is over.')
+    : C.sConf > 0.5 && C.sConf >= kg / 2 ? ((C.sBy.nsjo || 0) >= (C.sBy.skag4 || 0)
+      ? LN(sorWhy(sorAcc())[0] + ', så torsk kan bare være bifangst, høyst 15 % av fangsten derfra; ' + fmt(C.sConf, 0) + ' kg torsk er over.', sorWhy(sorAcc())[1] + ', so cod may only be a bycatch, at most 15% of the catch from there; ' + fmt(C.sConf, 0) + ' kg of cod is over.')
+      : LN('Taket på 3 tonn torsk med juksa i Skagerrak er nådd, så torsk kan bare være bifangst, høyst 5 % av fangsten derfra; ' + fmt(C.sConf, 0) + ' kg torsk er over.', 'The cap of 3 tonnes of cod with jig in the Skagerrak is reached, so cod may only be a bycatch, at most 5% of the catch from there; ' + fmt(C.sConf, 0) + ' kg of cod is over.'))
     : acc === 'none' ? LN('Båten har ikke adgang til å fiske torsk, hyse og sei, så bare 10 % av landingen kan være bifangst.', 'The vessel has no access to fish cod, haddock and saithe, so only 10% of the landing may be bycatch.')
     : C.codConf > 0.5 ? LN('Du har ikke torskekvote igjen for ' + fmt(C.codConf, 0) + ' kg av torsken.', 'You have no cod quota left for ' + fmt(C.codConf, 0) + ' kg of the cod.')
     : LN('Maksimalkvoten for hyse eller sei er fisket, så bare 30 % hyse og 20 % sei kan være bifangst.', 'The maximum quota for haddock or saithe is fished, so only 30% haddock and 20% saithe may be bycatch.');
   return '<p class="bad landwarn">' + LN('Leverer du nå, blir ca. ' + fmt(kg, 0) + ' kg inndratt, verdi ca. ' + kr(Math.round(sum)) + '. ', 'If you land now, about ' + fmt(kg, 0) + ' kg is confiscated, worth about ' + kr(Math.round(sum)) + '. ') + why +
-    LN(' Du får 20 % av verdien, ca. ' + kr(Math.round(sum * CONF_PAY)) + ', i vederlag for å føre den i land.', ' You get 20% of the value, about ' + kr(Math.round(sum * CONF_PAY)) + ', as compensation for landing it.') + LN(' Se Kvote-appen.', ' See the Kvote app.') + '</p>';
+    LN(' Du får 20 % av verdien, ca. ' + kr(Math.round(sum * CONF_PAY)) + ', i vederlag for å føre den i land.', ' You get 20% of the value, about ' + kr(Math.round(sum * CONF_PAY)) + ', as compensation for landing it.') + (C.sConf > 0.5 && C.sConf >= kg / 2 ? LN(' Se Kvote-appen.', ' See the Kvote app.') : LN(' Se Kvote-appen.', ' See the Kvote app.')) + '</p>';
 }
 // the queue at the plant (core/07-harbours.js LANDQ, K3): [the line, the short word]
 function landQText(short){

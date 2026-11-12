@@ -220,7 +220,11 @@
   // so no water is shaded twice and the shader never discards (which costs the early depth test on phone and tablet GPUs)
   function seaRing(u, eye, y, R, Hl){
     if (Hl){ Hl = [Math.max(R[0], Hl[0]), Math.max(R[1], Hl[1]), Math.min(R[2], Hl[2]), Math.min(R[3], Hl[3])]; if (Hl[2] <= Hl[0] || Hl[3] <= Hl[1]) Hl = null; }
-    const strips = Hl ? [[R[0], R[1], R[2], Hl[1]], [R[0], Hl[3], R[2], R[3]], [R[0], Hl[1], Hl[0], Hl[3]], [Hl[2], Hl[1], R[2], Hl[3]]] : [R];
+    // (the side strips reach a little into the ones above and below, 12.11.2026: they met them edge to edge with other vertices along
+    // the edge, and the T-junctions left pinholes, dotted lines across the sea from the hole's corners outward that showed the bed, and
+    // the wave patch's square from far above, Jonas. The sea is flat here, so the overlap lies in the same plane)
+    const m = Hl ? 2 + (R[3] - R[1]) * 1e-5 : 0;
+    const strips = Hl ? [[R[0], R[1], R[2], Hl[1]], [R[0], Hl[3], R[2], R[3]], [R[0], Math.max(R[1], Hl[1] - m), Hl[0], Math.min(R[3], Hl[3] + m)], [Hl[2], Math.max(R[1], Hl[1] - m), R[2], Math.min(R[3], Hl[3] + m)]] : [R];
     attr(0, FARQ.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, FARQ.ib);
     for (const [a, b, c, d] of strips){
       if (c - a < 0.5 || d - b < 0.5) continue; const ox = (a + c) / 2, oz = (b + d) / 2;
@@ -241,7 +245,7 @@
     // the waves' phases and their groups' phases at the render origin (wavePh), so the shaders work near zero
     const {ub, gp} = wavePh();
     gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); if (u.uFWa){ gl.uniform4fv(u.uFWa, WV.ua); gl.uniform4fv(u.uFWb, ub); gl.uniform1fv(u.uFGp, gp); } plSet(u);
-    if (u.uNFp){ gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp); } if (u.uFNFp){ gl.uniform1fv(u.uFNFp, NF.ph); gl.uniform1fv(u.uFNFg, NF.gp); } if (u.uNFD) gl.uniform2f(u.uNFD, NF.D[0], NF.D[1]);
+    if (u.uNFp){ gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp); } if (u.uFNFp){ gl.uniform1fv(u.uFNFp, NF.ph); gl.uniform1fv(u.uFNFg, NF.gp); } if (u.uNFD) gl.uniform2f(u.uNFD, NF.D[0], NF.D[1]); if (u.uNFL) gl.uniform2f(u.uNFL, NF.L[0], NF.L[1]);
     foamBind(u, t);   // the foam map (14-sea.js), in the near pass; and the sea by the shore (F4)
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.uniform3fv(u.uZen, env.zen); airSet(u); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.seaWind || env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);

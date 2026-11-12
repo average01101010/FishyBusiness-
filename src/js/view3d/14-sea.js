@@ -105,7 +105,7 @@
   // the foam (wrapped at 64 km, when she is slow). The long waves and the swell stand in the world, so land, buoys and other boats
   // still pass at the game's speed, and what passes the hull passes at her real speed through the water. «#nf0» in the address turns
   // it off, for the comparison.
-  const NF = {on:!/nf0/.test(location.hash), ph:new Float32Array(13), gp:new Float32Array(13), D:new Float64Array(2), lx:null, lz:null, R:0};
+  const NF = {on:!/nf0/.test(location.hash), ph:new Float32Array(13), gp:new Float32Array(13), D:new Float64Array(2), L:new Float64Array(2), lx:null, lz:null, R:0};
   function nfStep(){
     const TAU = 2 * Math.PI, dx = NF.lx == null ? 0 : bv.px - NF.lx, dz = NF.lz == null ? 0 : bv.pz - NF.lz; NF.lx = bv.px; NF.lz = bv.pz;
     NF.R = NF.on ? clamp(1 - 1 / (typeof simRate === 'function' ? simRate() : 6), 0, 1) : 0;
@@ -120,7 +120,8 @@
     for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const f = i >= 4 && i < 10 ? 1 : lf; if (!f) continue;
       const a = (c.Dx * ex + c.Dz * ez) * f, g = (c.Dz * ex - c.Dx * ez) * f;
       NF.ph[i] = (NF.ph[i] + c.k * a) % TAU; NF.gp[i] = (NF.gp[i] + c.k * (0.083 * a + 0.041 * g)) % TAU; }
-    NF.D[0] += ex; NF.D[1] += ez;
+    NF.D[0] += ex; NF.D[1] += ez; NF.L[0] += ex * lf; NF.L[1] += ez * lf;   // (L: the long waves' frame, for their groups, grpW)
+    for (let k = 0; k < 2; k++) if (Math.abs(NF.L[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.L[k]) > 120000)) NF.L[k] -= Math.sign(NF.L[k]) * 65536;
     for (let k = 0; k < 2; k++) if (Math.abs(NF.D[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.D[k]) > 120000)) NF.D[k] -= Math.sign(NF.D[k]) * 65536;
   }
 
@@ -272,7 +273,7 @@
     gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, lon ? LMTEX : SSDUMMY); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0);
     if (lon) gl.uniform4fv(u.uLRect, [LRECT[0] - RO.x, LRECT[1] - RO.z, LRECT[2], LRECT[3]]);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
-    gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.seaWind || env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
+    gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); if (u.uNFL != null) gl.uniform2f(u.uNFL, NF.L[0], NF.L[1]); gl.uniform1f(u.uWind, env.seaWind || env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
     const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
@@ -372,19 +373,26 @@
   const FRC = x => x - Math.floor(x), HS3 = (x, y) => { let a = FRC(x * 0.1031), b = FRC(y * 0.1031), c = FRC(x * 0.1031); const d = a * (b + 33.33) + b * (c + 33.33) + c * (a + 33.33); a += d; b += d; c += d; return FRC((a + b) * c); };
   const NS3 = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy); return (HS3(ix, iy) * (1 - ux) + HS3(ix + 1, iy) * ux) * (1 - uy) + (HS3(ix, iy + 1) * (1 - ux) + HS3(ix + 1, iy + 1) * ux) * uy; };
   FOAM.capK = WCAP.k; FOAM.wcap = WCAP;   // (WCAP for the tests: sea3d's share, and a threshold set wrong on purpose to see it red)
+  // the wind waves' groups (grpW in 01-shaders.js) and the swell's (grpOf), as the shaders have them
+  function grpAt(i, c, x, z, t){
+    if (i >= 10) return 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.0415 + i * 2.59 - NF.gp[i]);
+    const F = i < 4 ? NF.L : NF.D, px = x - RO.x - F[0], pz = z - RO.z - F[1];
+    const u = 0.09 * (c.k * (px * c.Dx + pz * c.Dz) - 0.5 * c.om * t) + 1.7 * i, v = 0.19 * c.k * (px * c.Dz - pz * c.Dx) + 2.3 * i;
+    return 1.352 * Math.sin(u + 1.3 * Math.sin(0.63 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.71 * u + 2.1 * i));
+  }
   FOAM.capAt = (x, z, t, fine = 1, U = env.seaWind || env.wind || 0, kk = WCAP.k, mid = 1) => {
     const S = ssAt(x, z), dv = S[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05)), Qw = seaQ(S, ren);
     let y = 0, sa = 1e-6, jxx = 0, jxz = 0, jtr = 0, jv = 1e-8, jsc = 0, jsv = 1e-8;
     for (let i = 0; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const am = S[0] * (dv * c.wo + (1 - dv) * c.wy) * ren;
-      const gr = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
+      const gr = grpAt(i, c, x, z, t);
       const sn = Math.sin(c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i]), wa = c.k * am * gr, jw = Qw * wa * sn;
       y += am * gr * sn; sa += am * am * 0.228; jxx += jw * c.Dx * c.Dx; jxz += jw * c.Dx * c.Dz; jtr += jw; jv += (Qw * c.k * am) ** 2 * 0.228; if (i >= 4){ jsc += jw; jsv += (Qw * c.k * am) ** 2 * 0.228; } }
     const jzz = jtr - jxx, J = (1 - jxx) * (1 - jzz) - jxz * jxz, jn = (1 - J) / Math.sqrt(jv), crest = y / Math.sqrt(sa);
     const w = env.windDir || [0, 1], px = x - RO.x - NF.D[0], pz = z - RO.z - NF.D[1], a = px * w[0] + pz * w[1], b = px * -w[1] + pz * w[0];
-    const g = NS3(a * 0.3 + t * 0.35, b * 0.36) * 0.5 + (0.5 + (NS3(a * 0.9 - t * 0.5, b * 1.1 - t * 0.2) - 0.5) * mid) * 0.3 + (0.5 + (NS3(a * 2.8 + t * 0.8, b * 3.4 + 1.7) - 0.5) * fine) * 0.2;
-    // (the gate, capGate in 01-shaders.js: only where a random field of 3-35 m lets them do the crests break, the share WCAP.G of the sea)
-    const bn = NS3(a * 0.02857 + t * 0.02 + 3.1, b * 0.04545 + 7.1) * 0.25 + NS3(a * 0.0909 + 3.3 - t * 0.05, b * 0.1111 + 1.9) * 0.15 + NS3(a * 0.35 + 5.2 + t * 0.1, b * 0.125 + 0.6) * 0.6;
-    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), sg = sstep(0.03, 0.15, Wc), gate = sstep(0.54 - 0.5 * sg, 0.66 - 0.5 * sg, bn), Ge = Math.min(1, WCAP.G + sg * (0.8399 + sg * (2.3623 + sg * (-4.0139 + sg * 1.6192)))), W = clamp(Wc * kk / Ge, 1e-5, 0.5);
+    // (capBr in 01-shaders.js: the breakers' own field, travelling downwind at a breaking wave's pace)
+    const cb = clamp(0.35 * U, 2.5, 7), ab = a - cb * t;
+    const g = NS3(ab * 0.4 + 1.7, b * 0.11 + 4.2) * 0.5 + NS3((a - 0.7 * cb * t) * 0.16 + 8.3, b * 0.06 + 2.6) * 0.2 + (0.5 + (NS3(ab * 0.9 + 3.9, b * 1.1 + 0.8) - 0.5) * mid) * 0.18 + (0.5 + (NS3(ab * 2.8 + t * 0.8, b * 3.4 + 1.7) - 0.5) * fine) * 0.12;
+    const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), gate = 1, W = clamp(Wc * kk, 1e-5, 0.5);   // (no gate since capBr, 12.11.2026)
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
     return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g - (1 - gate) * 1.5, gate, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
@@ -536,7 +544,7 @@
     for (let i = 0; i < WV.list.length; i++){
       const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell));
       const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Qw;
-      const grp = 0.62 + 0.38 * Math.sin((x * c.Dx + z * c.Dz) * c.k * 0.083 + (x * c.Dz - z * c.Dx) * c.k * 0.041 - c.om * t * 0.5 + i * 2.59 - NF.gp[i]);
+      const grp = grpAt(i, c, x, z, t);
       shW(c, SH, sg); const e2 = (am0 * sg[0] * grp) ** 2; if (c.swell) Eu += e2; else Et += e2; Es += e2 * sg[2];
       if (att <= 0) continue;
       const am = am0 * sg[0] * Math.sqrt(Math.max(1 - sg[2], 0)) * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);

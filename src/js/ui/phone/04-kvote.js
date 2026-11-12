@@ -2,8 +2,22 @@
   // (KM3: Marked is Kvotemarkedet, kvMkt in 04b-kvotemarked.js; what stood here is its first tab, Registeret, kvReg below)
   function kvote(){ const t = ['mine', 'open', 'stock', 'mkt'].includes(sub.kvote) ? sub.kvote : 'mine', H = S.t / 60;
     const top = subs('kvote', [['mine', 'Mine kvoter', 'My quotas'], ['open', 'Åpen gruppe', 'Open group'], ['stock', 'Bestand', 'Stock'], ['mkt', 'Marked', 'Market']]);
-    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + papZlic() + papKv() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
+    if (t === 'mine') return top + '<div class="ph-c">' + '<h4 style="margin:4px 2px 6px">' + L('Papirer', 'Papers') + '</h4>' + papBladB() + papPermit() + papZlic() + kvSor() + papKv() + (rederiOpen() ? '' : papBiz()) + '</div>' + salg('kvote');
     return top + '<div class="ph-c">' + (t === 'open' ? kvOpen(H) : t === 'stock' ? kvStock(H) : kvMkt(H)) + '</div>'; }
+  // Ø10c: the caps south of 62° N (core/03d-quota.js SORQ): the open group's 3 tonnes of cod in the North Sea and the jig exception's 3 tonnes
+  // in the Skagerrak, what is landed on them this year, what is aboard from there and what is left. Shown to the boat that lies south of
+  // 62° N or has landed on a cap this year
+  function kvSor(){ let p = null; try { p = ruCtx().p; } catch (e){} const q = quotaState(), south = !!p && LL(p).lat < 62;
+    if (!south && !(q.nsjo > 0) && !(q.skag4 > 0)) return '';
+    const kg = v => fmt(Math.round(v), 0) + ' kg', ab = k => ((S.boat.byc || {})[k] || {}).cod || 0, acc = sorAcc(), h = [];
+    h.push('<div class="ph-card"><h4>' + L('Torsk sør for 62° N', 'Cod south of 62° N') + '</h4><p class="ph-note"><b>' + L('Nordsjøen, åpen gruppe', 'The North Sea, the open group') + '</b> ' + L('(vest for Lindesnes, fjordene også)', '(west of Lindesnes, the fjords too)') + '</p>');
+    if (acc === 'none') h.push('<p class="ph-note">' + L(sorWhy(acc)[0] + '. Torsk kan bare være bifangst, høyst 15 % av fangsten.', sorWhy(acc)[1] + '. Cod may only be a bycatch, at most 15% of the catch.') + '</p>');
+    else h.push(kv(L('Maksimalkvote i år', 'Maximum quota this year'), kg(SORQ.nsjo.max)) + kv(L('Landet', 'Landed'), kg(q.nsjo || 0)) + (ab('nsjo') > 0.5 ? kv(L('Om bord derfra', 'Aboard from there'), kg(ab('nsjo'))) : '') + kv(L('Igjen', 'Left'), kg(sorLeft('nsjo'))) +
+      '<p class="ph-note">' + L('2 tonn er garantert. Når kvoten er fisket, kan torsk bare være bifangst, høyst 15 % av fangsten derfra, og resten blir inndratt.', '2 tonnes are guaranteed. When the quota is fished, cod may only be a bycatch, at most 15% of the catch from there, and the rest is confiscated.') + '</p>');
+    if (BOAT.len < 11 && (bladB() || q.skag4 > 0)) h.push('<p class="ph-note"><b>' + L('Skagerrak utenfor grunnlinjen, juksa 1. april–30. juni', 'The Skagerrak outside the baseline, jig 1 April–30 June') + '</b></p>' + kv(L('Tak i år', 'Cap this year'), kg(SORQ.skag4.max)) + kv(L('Landet', 'Landed'), kg(q.skag4 || 0)) + (ab('skag4') > 0.5 ? kv(L('Om bord derfra', 'Aboard from there'), kg(ab('skag4'))) : '') + kv(L('Igjen', 'Left'), kg(Math.max(0, SORQ.skag4.max - (q.skag4 || 0) - ab('skag4')))) +
+      '<p class="ph-note">' + L('Ellers er torsk der bare bifangst, høyst 5 %.', 'Otherwise cod there is only a bycatch, at most 5%.') + '</p>');
+    h.push('<p class="ph-note">' + L('Innenfor grunnlinjen øst for Lindesnes er det ingen kvote på torsk (i Oslofjorden er torsk forbudt). Kilde: forskrift om regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026.', 'Inside the baseline east of Lindesnes there is no quota for cod (in the Oslo fjord cod is banned). Source: the regulation of the cod fishery in the North Sea and the Skagerrak in 2026.') + '</p></div>');
+    return h.join(''); }
   const MNS = () => S.lang === 'no' ? ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'] : ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const doyStr = (y, d) => { const t = new Date(Date.UTC(y, 0, 1 + d)); return t.getUTCDate() + (S.lang === 'no' ? '. ' : ' ') + MNS()[t.getUTCMonth()]; };
   function kvOpen(H){
