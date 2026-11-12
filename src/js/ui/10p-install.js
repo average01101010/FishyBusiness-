@@ -76,7 +76,10 @@ const INSTALL = (() => {
 const UPDATE = (() => {
   const L = (no, en) => cloudL(no, en), mine = () => (document.querySelector('meta[name=dsb-version]') || {}).content || 'dev';
   let el = null, snooze = 0, had = false, seen = null;
-  function bar(){
+  // force (a map pack that is gone, 01b-mapdata.js mapStale): the page cannot load the map ahead any more, so the bar comes even when
+  // it was put off; the version is then whatever the server has now
+  function bar(force){
+    if (force){ snooze = 0; seen = seen || 'map'; }
     if (el || Date.now() < snooze || (typeof booting === 'function' && booting())) return;
     el = document.createElement('div'); el.id = 'updBar';
     el.innerHTML = '<span>' + L('En ny versjon av spillet er klar.', 'A new version of the game is ready.') + '</span><button type="button" id="updGo">' + L('Oppdater nå', 'Update now') + '</button><button type="button" id="updX" aria-label="' + L('Senere', 'Later') + '">✕</button>';
