@@ -43,7 +43,19 @@ async def moment3d(br, errs):
         await until(pg, "G3.isActive()", 60000); await pg.wait_for_timeout(3000)
         # (the card's own 15 s are held off here, and the moment's clock is held by G3.buyFix: SwiftShader takes seconds over a frame, and
         # a screenshot longer; the 15 s and «Hopp over» on time are checked without 3D above)
-        await pg.evaluate("(() => { const st = window.setTimeout; window.setTimeout = (f, ms, ...r) => ms === BUYM.DUR ? 0 : st(f, ms, ...r); BUYM.show(); window.setTimeout = st; })()"); await pg.wait_for_timeout(200)
+        # lying down a real purchase: a new snekke at the yard in Finnsnes with the old boat traded in (the moment comes from switchVessel);
+        # standing up the moment alone (BUYM.show(), as switchVessel calls it)
+        await pg.evaluate("(() => { const st = window.setTimeout; window.__st = st; window.setTimeout = (f, ms, ...r) => ms === BUYM.DUR ? 0 : st(f, ms, ...r); })()")
+        if fmt == 'liggende':
+            await pg.evaluate("""(() => { S.cash = 2e6; S.sales = S.sales.length >= 3 ? S.sales : [{}, {}, {}]; renderActs(); DOCK.open('fartoy'); const dr = document.getElementById('drawerBody'), tap = s => { const e = dr.querySelector(s); if (e) e.click(); };
+              tap('[data-pa=mksel]:not([data-k])'); tap('[data-pa=mktab][data-s=open]'); tap('[data-pa=mksel][data-k=snekke]'); tap('[data-pa=buy][data-ti="1"][data-k=snekke]'); })()""")
+            await until(pg, "BUYM.on", 30000)
+        else:
+            await pg.evaluate("BUYM.show()")
+        await pg.evaluate("window.setTimeout = window.__st"); await pg.wait_for_timeout(200)
+        if fmt == 'liggende':
+            bt = await pg.evaluate("({type:S.boat.type, name:S.boatName})")
+            check(bt['type'] == 'snekke' and bt['name'] == 'Havbris', '3D: båten er kjøpt ved verftet med den gamle i bytte, og hun heter fortsatt Havbris', bt)
         a = await pg.evaluate("({card:document.getElementById('buyMoment') ? true : false, in3d:BUYM.in3d, painting:G3.painting, b:G3.buying})")
         bm = await pg.evaluate(BM)
         check(a['in3d'] and a['painting'] and a['b'] is not None and bm and not bm['letters'] and not bm['flag'] and bm['sub'] and 'ved kaia i' in bm['sub'],

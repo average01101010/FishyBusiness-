@@ -28,7 +28,7 @@ var BUYM = (() => {
       // (the 3D view must be up now: the first time it is loaded, or where it cannot be, the card paints the name itself; so it does for
       // a boat with no name, which carries only her mark on the hull, ui/08-actions.js boatUnnamed)
       if (!S.unnamed && G3.buyShow && !G3.failWhy && G3.isActive && G3.isActive()){ G3.buyShow(nm); r3d = true; } }
-    el = document.createElement('div'); el.id = 'buyMoment'; el.className = 'bm' + (r3d ? ' bm-3d' : ''); el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', L('Båten er din', 'The boat is yours') + (r3d ? ': ' + nm : ''));
+    el = document.createElement('div'); el.id = 'buyMoment'; el.className = 'bm'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', L('Båten er din', 'The boat is yours') + (r3d ? ': ' + nm : ''));
     const letters = [...String(nm)].map((c, i) => '<span style="animation-delay:' + (0.6 + i * 0.22).toFixed(2) + 's">' + (c === ' ' ? '&nbsp;' : esc(c)) + '</span>').join('');
     el.innerHTML = '<div class="bm-card"><p class="bm-k">' + L('Kontrakten er underskrevet', 'The contract is signed') + '</p>' +
       (r3d ? '' : '<div class="bm-row"><div class="bm-pole"><i></i><span class="bm-flag">' + FLAG + '</span></div><div class="bm-name" aria-label="' + esc(nm) + '">' + letters + '</div></div>') +
