@@ -113,11 +113,12 @@
   }
   // the moment a boat is bought (ui/10q-buymoment.js, M5; steg 28): on the boat you are on, the name is painted onto the hull letter by
   // letter where she carries it (from 0.6 s, 0.22 s a letter, as the card over the view did before), the home port under it on the
-  // transom after it (0.15 s a letter), and the ensign goes up its pole once the name is on (3 s from 0.7 m below the top), while the
+  // transom after it (0.15 s a letter), and the ensign goes up its pole once the name is on (3 s from 0.5 m below the top: the poles stand
+  // 1-1.5 m over the rail, so the cloth stays clear of it), while the
   // camera turns round her (paintView). In the real time of the page, not the game's. BUYR: {nm, t0}; G3.buyShow sets it, and
   // G3.buyFix(s) holds it at s seconds (the tests: SwiftShader draws a frame in seconds, so the real 15 s would be gone before they look)
   let BUYR = null;
-  const BUY = {n0:0.6, nl:0.22, pl:0.15, f0:0.4, ft:3.0, fd:0.7, end:16};
+  const BUY = {n0:0.6, nl:0.22, pl:0.15, f0:0.4, ft:3.0, fd:0.5, end:16};   // (end: a second after the card's own 15 s, in case it never says)
   function buyAt(){
     if (!BUYR) return null; const s = BUYR.fix != null ? BUYR.fix : (performance.now() - BUYR.t0) / 1000; if (s > BUY.end && BUYR.fix == null){ buyShow(null); return null; }
     const ne = BUY.n0 + [...BUYR.nm.toUpperCase()].length * BUY.nl;

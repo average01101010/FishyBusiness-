@@ -32,7 +32,7 @@ async def take(pg, name, cap, ok, what, extra=''):
     except Exception as e: print('FEIL skjermbildet %s kom ikke: %s' % (name, str(e)[:80])); return
     from PIL import Image
     im = Image.open(raw).convert('RGB'); w, h = im.size; im = im.resize((960, round(h * 960 / w)), Image.LANCZOS)
-    f = 'format-%s.jpg' % name; im.save(os.path.join(OUTD, f), 'JPEG', quality=80, optimize=True, progressive=True)
+    f = 'format-%s.jpg' % name; im.save(os.path.join(os.getcwd(), f), 'JPEG', quality=80, optimize=True, progressive=True)   # (to docs/ only when all five are taken)
     SHOTS.append({'file': f, 'cap': cap})
 
 
@@ -89,8 +89,9 @@ async def main():
         await take(pg, 'jakke', 'Partnerens jakke i Garderoben, gratis for spillerne', w['btn'] and 'Samarbeid' in w['note'], 'jakka i Garderoben', w)
         await pg.evaluate("WARD.close ? WARD.close() : null")
         if len(SHOTS) == 5:
+            for x in SHOTS: os.replace(os.path.join(os.getcwd(), x['file']), os.path.join(OUTD, x['file']))
             json.dump(SHOTS, open(os.path.join(OUTD, 'format.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1); open(os.path.join(OUTD, 'format.json'), 'a').write('\n')
-        check(len(SHOTS) == 5, 'fem bilder i docs/sponsor/ og format.json skrevet', [x['file'] for x in SHOTS])
+        check(len(SHOTS) == 5, 'fem bilder i docs/sponsor/ og format.json skrevet (ellers står de gamle)', [x['file'] for x in SHOTS])
         print('sidefeil', errs)
         await br.close()
 

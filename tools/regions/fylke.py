@@ -27,7 +27,7 @@ def ask(lat, lon):
             with urllib.request.urlopen(urllib.request.Request(API % (lat, lon), headers={'User-Agent': 'kystfiske-regions/1'}), timeout=30) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code == 404: return None
+            if 400 <= e.code < 500: return None   # (no municipality at the point: 404, and maybe 400 or 422 for one beyond the baseline)
             if i == 3: raise
         except (urllib.error.URLError, TimeoutError):
             if i == 3: raise
