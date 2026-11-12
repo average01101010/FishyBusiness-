@@ -1,5 +1,7 @@
 # The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026): every ferry crossing with its quays, its
 # fairway, its crossing time and its departures through a week, read from Entur's national timetable and laid in the game's own map.
+# From N4 (12.11.2026) the express boats (route type 1014) and the local passenger ferries (1008) are crossings of the same kind (y 1
+# and 2), and the coastal route Bergen - Kirkenes (1002) is one round journey sailed every day by the ships it takes (k, below).
 # Out: src/data/ferje.json (KYST_FERJE=<file> writes there instead), which core/05b-ferje.js sails as a pure function of the shared clock.
 #
 #   python3 tools/map/release.py && python3 tools/map/game.py     (the whole coast's packs: the fairways are found in the game's 25 m mask)
@@ -8,9 +10,15 @@
 #
 # The source: Entur's national GTFS export (rb_norway-aggregated-gtfs.zip, made every night from the operators' NeTEx; NLOD, «Inneholder
 # data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Entur»). Read from it: the lines with route type 1004 (local
-# car ferry) and 1013 (car high-speed ferry), their journeys' stops and times, the days they run (calendar, calendar_dates), and the
-# quays' names and positions. The passenger boats (1008, 1014) and the coastal route (1002) are N4. International ferries (1001) are
-# not taken.
+# car ferry), 1013 (car high-speed ferry), 1014 (passenger high-speed ferry: the express boats), 1008 (local passenger ferry) and 1002
+# (the coastal route), their journeys' stops and times, the days they run (calendar, calendar_dates), and the quays' names and
+# positions. International ferries (1001) are not taken.
+#
+# The coastal route (N4): Entur has both operators' round journeys Bergen - Kirkenes - Bergen (one journey of 10 days 18 hours with
+# all the calls), but not on every day: 12.11.2026 there was a departure on 258 of the next 415 days. The route sails every day
+# (Statens kystrute: one ship each way every day, 11 ships, 34 ports, 11 days round), so the game takes the calls and the times of
+# the journey that runs most in the week from Entur, and lets it leave Bergen every day at its time; the ships are as many as one
+# round and the turn at Bergen take, in whole days (11).
 #
 # Not written: operators, authorities, line numbers, line names, journey ids or vessel names (Jonas 07.10.2026: «Jeg orker ikke å bli
 # saksøkt»; choice 2 A 05.11.2026: made-up names on every vessel). Only the quays' place names, which are place names. The game gives
@@ -30,19 +38,24 @@
 #   q     [[name, x, y], ...]            the quays: the place name and the water point nearest the stop
 #   l     [[qa, qb, [x0, y0, dx, dy, ...]], ...]   the legs, from quay qa to qb (qa < qb), the first point whole and the rest as steps
 #   s     [{k, p, w, s?}, ...]           the crossings:
-#           k  the size class 0-2 (small, medium, large: an estimate, for the timetable has no car capacity. Large: 28 departures a
-#              day each way or more over a leg of 2 km or more, a leg of 18 km or more with 10 departures, or a leg of 60 km.
-#              Small: no leg over 1.5 km, under 14 departures with no leg of 8 km, or under 4 with no leg of 18 km)
+#           y  the kind (left out when 0): 0 a car ferry (1004, 1013), 1 an express boat (1014), 2 a passenger ferry (1008)
+#           k  the size class. A car ferry 0-2 (small, medium, large: an estimate, for the timetable has no car capacity. Large: 28
+#              departures a day each way or more over a leg of 2 km or more, a leg of 18 km or more with 10 departures, or a leg of 60
+#              km. Small: no leg over 1.5 km, under 14 departures with no leg of 8 km, or under 4 with no leg of 18 km). An express
+#              boat 0-1: 1 when a journey is 60 km or more. A passenger ferry 0-1: 1 with a leg of 8 km or more
 #           p  the patterns: [[q0, q1, ...], [arr1, dep1, arr2, ...]] the quays a journey calls at and the minutes after the first
 #              departure it arrives at and leaves each (the last has only an arrival)
 #           w, s  the winter and the summer week: {d: [7 indices, Monday first, into t], t: [day, ...]}, a day a list as long as p
 #              of the pattern's departures that day, the first whole (minutes after midnight) and the rest as steps
+#   k     {p, tm, dep, n} the coastal route: the quays of the round journey from Bergen, the minutes after the departure it arrives
+#         at and leaves each (as a pattern's), its departure from Bergen (minutes after midnight, every day) and the ships (whole days
+#         a round and the turn take)
 import os, sys, json, csv, io, re, zipfile, zlib, math, heapq, datetime, collections
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE)); sys.path.insert(0, os.path.join(ROOT, 'tools', 'map'))
 URL = 'https://storage.googleapis.com/marduk-production/outbound/gtfs/rb_norway-aggregated-gtfs.zip'
-SRC = 'Entur, nasjonalt GTFS-uttrekk (rb_norway-aggregated-gtfs.zip), rutetype 1004 og 1013'
+SRC = 'Entur, nasjonalt GTFS-uttrekk (rb_norway-aggregated-gtfs.zip), rutetype 1004, 1013, 1014, 1008 og 1002'
 LIC = 'NLOD: Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Entur'
-TYPES = {'1004', '1013'}
+TYPES = {'1004':0, '1013':0, '1014':1, '1008':2, '1002':'k'}   # the route type: the kind of crossing, or the coastal route
 GAME = os.path.join(ROOT, 'tools', 'map', 'out', 'game')
 OUT = os.environ.get('KYST_FERJE') or os.path.join(ROOT, 'src', 'data', 'ferje.json')
 SENJA = {'Botnhamn', 'Brensholmen'}   # Senja's own ferry is in the game by hand (core/05b-ferje.js), as it has been
@@ -55,10 +68,10 @@ def mins(t):
 def read_gtfs(path):
     z = zipfile.ZipFile(path)
     def rows(name): return csv.DictReader(io.TextIOWrapper(z.open(name), 'utf-8-sig'))
-    routes = {r['route_id'] for r in rows('routes.txt') if r['route_type'] in TYPES}
+    routes = {r['route_id']: TYPES[r['route_type']] for r in rows('routes.txt') if r['route_type'] in TYPES}
     trips = {}
     for r in rows('trips.txt'):
-        if r['route_id'] in routes: trips[r['trip_id']] = dict(route=r['route_id'], svc=r['service_id'], st=[])
+        if r['route_id'] in routes: trips[r['trip_id']] = dict(route=r['route_id'], y=routes[r['route_id']], svc=r['service_id'], st=[])
     # stop_times.txt is 0.8 GB: read line by line, split only the lines of the ferries' journeys
     with z.open('stop_times.txt') as f:
         head = f.readline().decode('utf-8-sig').strip().split(','); iT, iS, iA, iD, iQ = [head.index(k) for k in ('trip_id', 'stop_id', 'arrival_time', 'departure_time', 'stop_sequence')]
@@ -81,7 +94,7 @@ def read_gtfs(path):
 # the ferries' part of the timetable, kept beside the zip (reading it takes minutes), by the zip's size and time
 def timetable(path):
     import pickle
-    st = os.stat(path); key = (st.st_size, int(st.st_mtime), sorted(TYPES)); c = path + '.ferje.pickle'
+    st = os.stat(path); key = (st.st_size, int(st.st_mtime), sorted(TYPES.items())); c = path + '.ferje.pickle'
     if os.path.exists(c):
         k, v = pickle.load(open(c, 'rb'))
         if k == key: return v
@@ -94,6 +107,8 @@ def running(cal, exc):
     return runs
 
 def quay_name(n):
+    n = re.sub(r'\s+(kystrutekai|kystruteterminal|hurtigbåtkai|hurtigbåtterminal|hurtigbåthavn|båtkai|terminal|ferjeterminal)\b.*$', '', n.strip(), flags=re.I)
+    n = re.sub(r'(kai)?terminalen$', 'kaien', n.strip(), flags=re.I) if re.search(r'\wterminalen$', n.strip(), re.I) else n
     n = re.sub(r'\s+(ferje|ferge|hurtigbåt|hurtigbåts)(kai|leie|kaia|kaien)\b.*$', '', n.strip(), flags=re.I)
     n = re.sub(r'\s+(kai|kaia|brygge|ferje|ferjekai\s*\d*)$', '', n, flags=re.I)
     return re.sub(r'\s*\(.*?\)\s*', ' ', n).strip()
@@ -199,9 +214,36 @@ class Sea:
         if not s or not g: return None, 'no water within 600 m of ' + ('the first' if not s else 'the second') + ' quay'
         if s == g: return None, 'the quays share a cell'
         c = self.path(s, g)
+        if not c: c = self.path(s, g, 16000000)   # (a long leg round an open headland, Trondheim - Rørvik 163 km or Berlevåg - Mehamn, takes up to some ten million cells)
         if not c: return None, 'no way on water'
         pts = [((I + 0.5) * 0.05, (J + 0.5) * 0.05) for I, J in c]
         return self.pull(self.pull(pts, True), False, 0.6), None
+
+# the legs not found before, found four at a time (each worker a fork with the mask; a leg is minutes for the long ones)
+_SEA = None
+def _leg(ab): return ab, _SEA.leg(*ab)
+def find_legs(sea, todo):
+    global _SEA
+    _SEA = sea; import multiprocessing as mp
+    with mp.get_context('fork').Pool(min(4, os.cpu_count() or 1)) as pool:
+        for n, (ab, r) in enumerate(pool.imap_unordered(_leg, todo, chunksize=1)): yield ab, r
+
+# a journey's times with no leg sailed faster than vmax (knots): the timetable has whole minutes, and a call on request often has the
+# time of the call before, so a leg of 5 km may have a minute. The departure is moved earlier into the stay at the quay before, then the
+# arrival later, and the times after it later only as far as their own stays do not take it up.
+VMAX = {0: 25, 1: 40, 2: 40, 'k': 22}
+def retime(tm, lens, vmax):
+    t = [0] + list(tm); moved = 0
+    for j, L in enumerate(lens):
+        need = math.ceil(L / (vmax * 1.852) * 60)
+        if t[2 * j + 1] - t[2 * j] >= need: continue
+        moved += 1
+        if j: t[2 * j] = max(t[2 * j - 1], t[2 * j + 1] - need)
+        if t[2 * j + 1] - t[2 * j] < need:
+            t[2 * j + 1] = t[2 * j] + need
+            for k in range(2 * j + 2, len(t)): t[k] = max(t[k], t[k - 1])
+    return t[1:], moved
+def leglen(pts): return sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(pts, pts[1:]))
 
 def week_of(runs, trips, first, last):
     best = None; d = first + datetime.timedelta(days=(7 - first.weekday()) % 7)
@@ -225,7 +267,7 @@ def main():
     today = datetime.date.fromisoformat(os.environ['KYST_FERJE_DATE']) if os.environ.get('KYST_FERJE_DATE') else datetime.date.today()
     trips, stops, cal, exc = timetable(src); runs = running(cal, exc)
     for t in trips.values(): t['st'].sort()
-    print('journeys of the car ferries:', len(trips), 'stops:', len(stops), flush=True)
+    print('journeys:', len(trips), dict(collections.Counter(t['y'] for t in trips.values())), 'stops:', len(stops), flush=True)
     wk = week_of(runs, trips, today + datetime.timedelta(days=1), today + datetime.timedelta(days=48))
     if not wk: raise SystemExit('the timetable has no journeys in the next six weeks')
     # the summer of this year till it is over (a run in July takes the summer it is in), then the next
@@ -246,6 +288,7 @@ def main():
 
     # per line: the journeys of each week by pattern and weekday
     lines = collections.defaultdict(lambda: dict(pat={}, w=collections.defaultdict(lambda: [[] for _ in range(7)]), s=collections.defaultdict(lambda: [[] for _ in range(7)])))
+    kyst = collections.Counter()   # the coastal route's journeys by (quays, times, departure): how often each runs in the week
     for t in trips.values():
         st = []
         for _, sid, a, d in t['st']:
@@ -257,27 +300,58 @@ def main():
         for k in range(1, len(st)):
             tm.append(max(st[k][1], (tm[-1] if tm else t0) + 1))   # an arrival is at least a minute after the departure before it
             if k < len(st) - 1: tm.append(max(st[k][2], tm[-1]))
-        key = (tuple(s[0] for s in st), tuple(v - t0 for v in tm)); L = lines[t['route']]; pi = L['pat'].setdefault(key, len(L['pat']))
+        key = (tuple(s[0] for s in st), tuple(v - t0 for v in tm))
+        if t['y'] == 'k':
+            kyst[key + (t0 % 1440,)] += 1 + 1000 * sum(runs(t['svc'], wk + datetime.timedelta(days=k)) for k in range(7)); continue
+        L = lines[t['route']]; L['y'] = t['y']; pi = L['pat'].setdefault(key, len(L['pat']))
         for wkey, mon in (('w', wk), ('s', sm)):
             if not mon: continue
             for k in range(7):
                 if runs(t['svc'], mon + datetime.timedelta(days=k)): L[wkey][pi][(k + t0 // 1440) % 7].append(t0 % 1440)
 
-    M = Mask(GAME); sea = Sea(M); Q = []; qi = {}; LEG = {}; legfail = {}; out = []; drop = collections.Counter(); ntr = 0
+    M = Mask(GAME); sea = Sea(M); Q = []; qi = {}; LEG = {}; legfail = {}; out = []; drop = collections.Counter(); ntr = 0; kinds = collections.Counter(); retimed = [0]
+    # the legs found before, kept beside the timetable by the two quays' positions and the mask's manifest (finding them all takes an hour)
+    import pickle
+    lc = os.path.join(os.path.dirname(src), 'ferje-legs.pickle'); mk = os.path.getmtime(os.path.join(GAME, 'manifest.json')); LC = {}
+    if os.path.exists(lc):
+        k0, v0 = pickle.load(open(lc, 'rb'))
+        if k0 == mk: LC = v0
+    nlc = [0]
+    def sealeg(pa, pb):
+        k = (round(pa[0], 4), round(pa[1], 4), round(pb[0], 4), round(pb[1], 4))
+        if k not in LC:
+            LC[k] = sea.leg(pa, pb); nlc[0] += 1
+            if nlc[0] % 25 == 0: pickle.dump((mk, LC), open(lc, 'wb'))
+        return LC[k]
     def qidx(par):
         if par not in qi: qi[par] = len(Q); Q.append(par)
         return qi[par]
+    # every leg a journey in the weeks or the coastal route calls for, found first (in parallel) where the cache does not have it
+    need = set()
+    for L in lines.values():
+        for (qs, _), pi in L['pat'].items():
+            if any(L['w'][pi][k] or L['s'][pi][k] for k in range(7)): need |= {(min(a, b), max(a, b)) for a, b in zip(qs, qs[1:])}
+    if kyst: need |= {(min(a, b), max(a, b)) for a, b in zip(kyst.most_common(1)[0][0][0], kyst.most_common(1)[0][0][0][1:])}
+    ab = lambda k: ((quay[k[0]]['x'], quay[k[0]]['y']), (quay[k[1]]['x'], quay[k[1]]['y']))
+    key = lambda pa, pb: (round(pa[0], 4), round(pa[1], 4), round(pb[0], 4), round(pb[1], 4))
+    todo = sorted({ab(k) for k in need if key(*ab(k)) not in LC}, key=lambda e: -math.hypot(e[0][0] - e[1][0], e[0][1] - e[1][1]))
+    print('legs:', len(need), 'to find:', len(todo), flush=True)
+    for n, ((pa, pb), r) in enumerate(find_legs(sea, todo)):
+        LC[key(pa, pb)] = r
+        if n % 25 == 24: pickle.dump((mk, LC), open(lc, 'wb')); print('  found', n + 1, 'of', len(todo), flush=True)
+    pickle.dump((mk, LC), open(lc, 'wb'))
     def leg(a, b):
         k = (a, b) if a < b else (b, a)
         if k not in LEG and k not in legfail:
-            pa, pb = quay[k[0]], quay[k[1]]; pts, why = sea.leg((pa['x'], pa['y']), (pb['x'], pb['y']))
+            pa, pb = quay[k[0]], quay[k[1]]; pts, why = sealeg((pa['x'], pa['y']), (pb['x'], pb['y']))
             print('  leg', len(LEG) + len(legfail) + 1, pa['name'], '-', pb['name'], round(math.hypot(pa['x'] - pb['x'], pa['y'] - pb['y']), 1), 'km', why or len(pts), flush=True)
             if pts: LEG[k] = pts
             else: legfail[k] = why
         return k in LEG
     for rid in sorted(lines):
         L = lines[rid]; pats = sorted(L['pat'].items(), key=lambda e: e[1])
-        if any(quay[q]['name'] in SENJA for (qs, _), _ in pats for q in qs): drop['Senja (in the game by hand)'] += 1; continue
+        y = L['y']
+        if y == 0 and any(quay[q]['name'] in SENJA for (qs, _), _ in pats for q in qs): drop['Senja (in the game by hand)'] += 1; continue
         if not any(any(L['w'][pi][k] or L['s'][pi][k] for k in range(7)) for _, pi in pats): drop['no journeys in the weeks'] += 1; continue
         keep = {}
         for (qs, tm), pi in pats:
@@ -285,6 +359,15 @@ def main():
             if all(leg(qs[k], qs[k + 1]) for k in range(len(qs) - 1)): keep[pi] = (qs, tm)
             else: drop['a pattern with a leg not found on water'] += 1
         if not keep: drop['no pattern on water'] += 1; continue
+        # a passenger ferry (1008) whose timetable sails at 20 knots or more (the median of its legs) is an express boat: some operators
+        # give their fast local boats that route type
+        LL = lambda x, z: leglen(LEG[(min(x, z), max(x, z))])
+        if y == 2:
+            sp = sorted(LL(x, z) / max(1, tm[2 * j] - (tm[2 * j - 1] if j else 0)) * 60 / 1.852 for qs, tm in keep.values() for j, (x, z) in enumerate(zip(qs, qs[1:])))
+            if sp and sp[len(sp) // 2] >= 20: y = 1; drop['a passenger ferry at an express boat\'s speed (taken as one)'] += 1
+        for pi in keep:
+            qs, tm = keep[pi]; tm2, mv = retime(tm, [LL(x, z) for x, z in zip(qs, qs[1:])], VMAX[y])
+            if mv: keep[pi] = (qs, tuple(tm2)); retimed[0] += mv
         order = sorted(keep); P = [[[qidx(q) for q in keep[pi][0]], list(keep[pi][1])] for pi in order]
         def week(W):
             days = []
@@ -299,11 +382,25 @@ def main():
         w, s = week(L['w']), (week(L['s']) if sm else None)
         ndir = max(sum(len(L['w'][pi][k]) + (0 if w else len(L['s'][pi][k])) for pi in order) for k in range(7)) / 2
         far = max(sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(LEG[(min(x, y), max(x, y))], LEG[(min(x, y), max(x, y))][1:])) for qs, _ in keep.values() for x, y in zip(qs, qs[1:]))
-        k = 2 if (ndir >= 28 and far >= 2) or far >= 60 or (far >= 18 and ndir >= 10) else 0 if far < 1.5 or (ndir < 14 and far < 8) or (ndir < 4 and far < 18) else 1
+        if y == 1: k = 1 if max(sum(sum(math.hypot(a[0] - b[0], a[1] - b[1]) for a, b in zip(LEG[(min(x, z), max(x, z))], LEG[(min(x, z), max(x, z))][1:])) for x, z in zip(qs, qs[1:])) for qs, _ in keep.values()) >= 60 else 0
+        elif y == 2: k = 1 if far >= 8 else 0
+        else: k = 2 if (ndir >= 28 and far >= 2) or far >= 60 or (far >= 18 and ndir >= 10) else 0 if far < 1.5 or (ndir < 14 and far < 8) or (ndir < 4 and far < 18) else 1
         e = dict(k=k, p=P)
+        if y: e['y'] = y
         if w: e['w'] = w
         if s and s != w: e['s'] = s
-        out.append(e); ntr += sum(len(L['w'][pi][kk]) for pi in order for kk in range(7))
+        out.append(e); ntr += sum(len(L['w'][pi][kk]) for pi in order for kk in range(7)); kinds[y] += 1
+    # the coastal route: the round journey that runs most in the week (else most often), leaving Bergen every day at its time
+    K = None
+    if kyst:
+        (qs, tm, dep), n = kyst.most_common(1)[0]
+        print('the coastal route:', len(qs), 'calls,', round(tm[-1] / 1440, 2), 'days, from', quay[qs[0]]['name'], 'at', '%02d:%02d' % divmod(dep, 60), '(runs in the week:', n // 1000, 'of 7; journeys', len(kyst), ')', flush=True)
+        bad = [(quay[a]['name'], quay[b]['name']) for a, b in zip(qs, qs[1:]) if not leg(a, b)]
+        pickle.dump((mk, LC), open(lc, 'wb'))
+        if bad: raise SystemExit('the coastal route has legs with no way on water: ' + str(bad))
+        tm, mv = retime(tm, [leglen(LEG[(min(a, b), max(a, b))]) for a, b in zip(qs, qs[1:])], VMAX['k']); retimed[0] += mv
+        K = dict(p=[qidx(q) for q in qs], tm=list(tm), dep=dep, n=math.ceil((tm[-1] + 60) / 1440))
+    pickle.dump((mk, LC), open(lc, 'wb'))
     # the quays and the legs that are used, in metres
     legs = []
     for (a, b), pts in sorted(LEG.items(), key=lambda e: (qi.get(e[0][0], -1), qi.get(e[0][1], -1))):
@@ -320,19 +417,22 @@ def main():
     for k, why in sorted(legfail.items(), key=lambda e: quay[e[0][0]]['name']): print('  no leg', quay[k[0]]['name'], '-', quay[k[1]]['name'] + ':', why)
     doy = lambda m, d: datetime.date(2001, m, d).timetuple().tm_yday
     meta = dict(made=today.isoformat(), src=SRC, lic=LIC, week=wk.isoformat(), sum=sm.isoformat() if sm else None, sumDays=[doy(*SUMMER[0]), doy(*SUMMER[1])],
-                n=dict(samband=len(out), kaier=len(q), legger=len(legs), turer=ntr))
-    js = json.dumps(dict(meta=meta, q=q, l=legs, s=out), ensure_ascii=False, separators=(',', ':'))
+                n=dict(samband=len(out), kaier=len(q), legger=len(legs), turer=ntr, ferjer=kinds[0], hurtigbaater=kinds[1], passasjerferjer=kinds[2], kystruteskip=K['n'] if K else 0))
+    D = dict(meta=meta, q=q, l=legs, s=out)
+    if K: D['k'] = K
+    js = json.dumps(D, ensure_ascii=False, separators=(',', ':'))
     open(OUT, 'w', encoding='utf-8').write(js + '\n')
-    print(json.dumps(meta['n']), 'classes:', dict(collections.Counter(e['k'] for e in out)), 'dropped:', dict(drop), 'bytes:', len(js.encode()), '->', OUT)
+    print(json.dumps(meta['n']), 'classes:', dict(collections.Counter(e['k'] for e in out)), 'dropped:', dict(drop), 'legs retimed:', retimed[0], 'bytes:', len(js.encode()), '->', OUT)
 
 # ---- the bake: every leg checked against the game's own land (the fine coast with its breakwaters and quays, which the 25 m mask
 # does not have), in the built game run headless (dist/ with the whole coast's packs: node build.mjs first), as tools/leia/bake.py does.
+# Every metre along the leg (5 m and 2 m let a skerry's corner through: ferrytest's every 10 m from another start found them, 12.11.2026).
 # A leg's end that lies on a quay or behind a breakwater is drawn back to where 60 m of the leg is water (400 m at most); a stretch
 # on land further out is gone round by a point 30-400 m to the side. A leg that cannot be mended goes out with the patterns that sail it.
 #   python3 tools/npc/ferje.py bake
 BAKE = """async (D) => {
   const land = async p => { if (!mapReadyAt(p, 0)) await mapNeed(p, 0.5); return isLand(p); };
-  const hits = async (a, b) => { const n = Math.max(1, Math.ceil(dist(a, b) / 0.005)); for (let k = 0; k <= n; k++) if (await land({x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n})) return true; return false; };
+  const hits = async (a, b) => { const n = Math.max(1, Math.ceil(dist(a, b) / 0.001)); for (let k = 0; k <= n; k++) if (await land({x:a.x + (b.x - a.x) * k / n, y:a.y + (b.y - a.y) * k / n})) return true; return false; };
   const out = [], st = {ok:0, trimmed:0, round:0, fail:0};
   for (const [qa, qb, f] of D.l){
     let pts = [{x:f[0] / 1000, y:f[1] / 1000}], x = f[0], y = f[1]; for (let i = 2; i < f.length; i += 2){ x += f[i]; y += f[i + 1]; pts.push({x:x / 1000, y:y / 1000}); }
@@ -374,8 +474,10 @@ def prune(D, gone):
                 if wk in e: e[wk]['t'] = [[day[i] for i in keep] for day in e[wk]['t']]
             if not any(any(p) for wk in ('w', 's') if wk in e for day in e[wk]['t'] for p in day): continue
         S.append(e)
-    used = sorted({q for e in S for p in e['p'] for q in p[0]}); new = {q: i for i, q in enumerate(used)}
-    pairs = {(min(a, b), max(a, b)) for e in S for p in e['p'] for a, b in zip(p[0], p[0][1:])}
+    K = D.get('k'); kq = K['p'] if K else []
+    if any((min(a, b), max(a, b)) in gone for a, b in zip(kq, kq[1:])): raise SystemExit('a leg of the coastal route could not be mended')
+    used = sorted({q for e in S for p in e['p'] for q in p[0]} | set(kq)); new = {q: i for i, q in enumerate(used)}
+    pairs = {(min(a, b), max(a, b)) for e in S for p in e['p'] for a, b in zip(p[0], p[0][1:])} | {(min(a, b), max(a, b)) for a, b in zip(kq, kq[1:])}
     L = []
     for a, b, f in D['l']:
         if (a, b) not in pairs or (a, b) in gone: continue
@@ -384,9 +486,11 @@ def prune(D, gone):
         L.append([new[a], new[b], f])
     for e in S:
         for p in e['p']: p[0] = [new[q] for q in p[0]]
+    if K: K['p'] = [new[q] for q in kq]
     ends = {}
     for a, b, f in L: ends.setdefault(a, (f[0], f[1])); ends.setdefault(b, (f[0] + sum(f[2::2]), f[1] + sum(f[3::2])))
     D['q'] = [[D['q'][q][0], ends[new[q]][0], ends[new[q]][1]] for q in used]; D['l'] = L; D['s'] = S
+    D['meta']['n'].update(ferjer=sum(1 for e in S if not e.get('y')), hurtigbaater=sum(1 for e in S if e.get('y') == 1), passasjerferjer=sum(1 for e in S if e.get('y') == 2))
     D['meta']['n'].update(samband=len(S), kaier=len(used), legger=len(L), turer=sum(len(D2['w']['t'][d][i]) for D2 in S if 'w' in D2 for d in D2['w']['d'] for i in range(len(D2['p'])))); return D
 
 def bake():

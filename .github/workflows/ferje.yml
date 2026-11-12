@@ -1,5 +1,6 @@
-# The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026): tools/npc/ferje.py reads Entur's national
-# GTFS export (NLOD; the car ferries' lines, journeys, days and quays), finds each leg's fairway in the game's own 25 m mask, and
+# The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026), and from N4 (12.11.2026) the express boats,
+# the passenger ferries and the coastal route: tools/npc/ferje.py reads Entur's national GTFS export (NLOD; the lines, journeys, days
+# and quays of route types 1004, 1013, 1014, 1008 and 1002), finds each leg's fairway in the game's own 25 m mask (four at a time), and
 # checks and mends the legs against the game's own land in the built game (bake). The result is kept as a release ferje-<run number>
 # (ferje.json), which a session takes into src/data/ferje.json. No operator, line or vessel name is written (only the quays' place names).
 # Started by a push that changes tools/npc/ferje.py or this file (on any branch; a merge that only brings a file a release was
@@ -18,7 +19,7 @@ env:
 jobs:
   ferje:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150   # (N4: some 1 100 legs, the coastal route's up to 250 km; 12.11.2026 a session found them in some 8 minutes on 4 cores)
     steps:
       - uses: actions/checkout@v4
       - id: seen
@@ -55,7 +56,7 @@ jobs:
         run: |
           TAG=ferje-${{ github.run_number }}
           gh release create "$TAG" ferje.json --target "${{ github.sha }}" --title "Ferjene $TAG" \
-            --notes "Bilferjesambandene langs kysten: kaiene, leia i spillets eget kart, overfartstida og avgangene gjennom en uke (tools/npc/ferje.py), fra Enturs nasjonale GTFS-uttrekk. Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Entur. Ingen operatører, linjer eller fartøynavn. Commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"
+            --notes "Bilferjene, hurtigbåtene, passasjerferjene og kystruta langs kysten: kaiene, leia i spillets eget kart, overfartstida og avgangene gjennom en uke (tools/npc/ferje.py), fra Enturs nasjonale GTFS-uttrekk. Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Entur. Ingen operatører, linjer eller fartøynavn. Commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"
       # after the release: the unit test names crossings and counts of the timetable it was written against, so a red run here says
       # «look before the file is taken in», and the file is there to look at
       - if: steps.seen.outputs.skip != 'true'
