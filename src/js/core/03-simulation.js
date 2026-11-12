@@ -856,8 +856,9 @@ function yearH(H){ return gDate(H).getUTCFullYear(); }
 function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y){ if (S.quota) snoFlexNewYear(S.quota, y); S.quota = {y, torsk:0, hyse:0, sei:0, snokrabbe:0, snoTq:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; } if (S.quota.snokrabbe == null) S.quota.snokrabbe = 0; if (S.quota.snoTq == null) S.quota.snoTq = 0; return S.quota; }
 // Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde). The quotas are the year's (licQ in
 // 03d-quota.js): cod as a fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg for the boat's largest length. The price
-// is the boat plus the cod quota at KPK kr a kg. KPK is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in
-// 2025, about 270 kr/kg; no source publishes quota prices.
+// is the boat plus the cod quota at the quota price now (kpkAt in 03d-quota.js, KM5: it lives with the cod price and the quota outlook,
+// 0.7–1.4 times KPK). KPK, the 2026 price, is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in 2025, about
+// 270 kr/kg; no source publishes quota prices.
 const KPK = 260;
 const LIC_OFFERS = [
   {id:'u7', ves:'trebat', no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
@@ -871,7 +872,8 @@ const LIC_OFFERS = [
   {id:'h14', ves:'kyst15', no:'Kystbåt 14,99 m med hjemmel 14–14,9 m', en:'14.99 m coastal vessel with a right of 14–14.9 m'},
   {id:'h20', ves:'kyst21', no:'Eldre kystbåt 21 m med hjemmel 20–20,9 m', en:'Older 21 m coastal vessel with a right of 20–20.9 m'}
 ];
-function licValue(l){ return l ? Math.round(licQ(l).torsk * KPK) : 0; }
+// a right's value at H (now by default): its quota at the quota price then; what it was bought at stays in l.kpk
+function licValue(l, H){ return l ? Math.round(licQ(l, H).torsk * kpkAt(H)) : 0; }
 // blad B in the fishermen's register, simplified. Deltakerloven § 6 asks the buyer of a closed-group vessel to have fished commercially
 // in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
 // you aboard and 1 G of first-hand value (G from 1 May 2026: 136 549 kr, nav.no/grunnbelopet)

@@ -5,7 +5,7 @@
 // stays in the fleet (a paid for a right never drops the boat with the same id), back takes the lock off. And the seller's keys.
 export default function (t){
   const K = t.K, {newState, ensureFleet, newVesselObj, vget, HJ, STRUCT, licExtra, yearH, mbApply, mbSale, mktState, kmState, kmKey, kmSrcOf, kmFreeKey, kmPutWhy, kmLock, kmUnlock, kmPack, kmApply, kmFreeList,
-    WORLD_SEED, PORTS, portServices, depart, withVessel} = K;
+    PORTS, portServices, depart, withVessel} = K, WORLD_SEED = K.get('WORLD_SEED');
   const S = newState(); S.qseed = WORLD_SEED; K.set('S', S); ensureFleet(); S.me = S.cur; S.cash = 5e7; S.boat.status = 'port'; S.fm = {n:0, last:-1, kr:0, b:true};
   const port = PORTS.find(p => portServices(p).verft).id, H = S.t / 60, y = yearH(H);
   const boat = (type, lic, name) => { const v = newVesselObj(type, port, lic || null); vget(v, 'boat').status = 'port'; if (name) v.boatName = name; return v; };
