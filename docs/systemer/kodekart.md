@@ -962,7 +962,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1128 linjer)
+## `src/js/core/05e-sjovei.js` (1173 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -987,83 +987,87 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 235 `sjvRoom(n, nx, ny, k)`
   - 248 `sjvRoomOn(n, E, H)`
   - 261 `sjvRoomOwn(a, nx, ny, k)`
-  - 269 `sjvStart(n, R, H, mover, why, own, id)`
-- **280** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
-  - 284 `sjvLampNm(k, L)`
-  - 295 `sjvLightNm(D0, vis)`
-  - 302 `sjvSeenKm(L, vis, dark)`
-  - 304 `sjvHearNm(L)`
-  - 309 `sjvFogPat(c, v, L)`
-  - 318 `sjvManPat(side, slow)`
-  - 323 `sjvLanternSt(n)`
-  - 325 `sjvMinKn()`
-  - 328 `sjvSafeMs(dM)`
-  - 334 `sjvVisAt(H, p)`
-  - 335 `sjvDark(H, p)`
-  - 339 `sjvSig(id, pat, p, L, own)`
-  - 347 `sjvFogSigs(H, list, A, gs, vis, dark)`
-  - 365 `sjvFogCapV()`
-  - 372 `sjvCapV()`
-- **374** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
-  - 375 `sjvEval(H, list)`
-  - 496 `sjvNearMiss(n, R, clr)`
-  - 507 `colregNpc(H, out, only)`
-  - 521 `sjvTrack(list)`
-- **523** Autonav
-  - 527 `sjvFresh(model)`
-  - 537 `sjvAuto(d, h, ds, T)`
-  - 552 `sjvSail(pl, b, left)`
-  - 569 `sjvCreep(pl, b, L, v)`
-- **578** the warning's words (the strip, the box and the card, the chart plotter)
-  - 580 `sjvSay(W, how)`
-  - 617 `sjvWhen(W)`
-  - 619 `sjvWarn()`
-- **621** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
-  - 646 `sjvHullPts(X, Z, psi, L, B)`
-  - 650 `sjvInPoly(P, x, z)`
-  - 657 `sjvSat(A, B)`
-  - 678 `sjvSatC(A, cx, cz, r)`
-  - 687 `sjvMass(n)`
-  - 688 `sjvOwnMass(b = S.boat)`
-  - 691 `sjvKnEq(kn, mA, mB)`
-  - 693 `sjvValue(L)`
-  - 698 `sjvMatOf(n)`
-  - 701 `sjvOtherCost(kn, L, mat, P)`
-  - 711 `sjvOwnLoss(b, c)`
-  - 717 `sjvCpa(a, b, gs)`
-  - 722 `sjvTrailAdd(id, e)`
-  - 740 `sjvFault(T, X)`
-  - 807 `sjvFaultWord(w, no)`
-  - 818 `sjvFaultSay(F, name, lang)`
-  - 829 `sjvSettle(b, F, c, oth, name)`
-  - 840 `sjvPaySay(M, F, name, lang)`
-  - 848 `sjvKr(x, no)`
-  - 850 `sjvFrom()`
-  - 854 `sjvTo()`
-  - 861 `sjvVhf(n, rec)`
-  - 875 `sjvStandBy(n, H)`
-  - 886 `sjvBlow(n, kn, E, H, pre)`
-- **918** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 921 `sjvClock()`
-  - 928 `sjvNear(H, X, Z)`
-  - 947 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 958 `sjvTouch(b, d, P)`
-- **991** the look's sweep (sjvEval), when the model does not have her
-  - 994 `sjvSweep(n, A, H, gs, on)`
-- **1020** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
-  - 1037 `fartMonth(H)`
-  - 1038 `fartAreas()`
-  - 1046 `fartInSeason(m, mo)`
-  - 1047 `fartInRing(xs, ys, x, y)`
-  - 1050 `fartAt(p, H)`
-  - 1067 `fartCapMs()`
-  - 1078 `farvWrongSide(p, marks)`
-  - 1088 `farvLook(H)`
-  - 1117 `farvRec(r)`
-  - 1120 `farvWarn()`
-  - 1121 `farvSay(w, how)`
+  - 277 `sjvBackClear(M, Q, lim, gs)`
+  - 293 `sjvLead(R, v)`
+  - 296 `sjvBackNpc(n0, n, E, H)`
+  - 303 `sjvBackOwn(A, O)`
+  - 309 `sjvStart(n, R, H, mover, why, own, id)`
+- **322** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
+  - 326 `sjvLampNm(k, L)`
+  - 337 `sjvLightNm(D0, vis)`
+  - 344 `sjvSeenKm(L, vis, dark)`
+  - 346 `sjvHearNm(L)`
+  - 351 `sjvFogPat(c, v, L)`
+  - 360 `sjvManPat(side, slow)`
+  - 365 `sjvLanternSt(n)`
+  - 367 `sjvMinKn()`
+  - 370 `sjvSafeMs(dM)`
+  - 376 `sjvVisAt(H, p)`
+  - 377 `sjvDark(H, p)`
+  - 381 `sjvSig(id, pat, p, L, own)`
+  - 389 `sjvFogSigs(H, list, A, gs, vis, dark)`
+  - 407 `sjvFogCapV()`
+  - 414 `sjvCapV()`
+- **416** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
+  - 417 `sjvEval(H, list)`
+  - 539 `sjvNearMiss(n, R, clr)`
+  - 550 `colregNpc(H, out, only)`
+  - 564 `sjvTrack(list)`
+- **566** Autonav
+  - 570 `sjvFresh(model)`
+  - 580 `sjvAuto(d, h, ds, T)`
+  - 595 `sjvSail(pl, b, left)`
+  - 614 `sjvCreep(pl, b, L, v)`
+- **623** the warning's words (the strip, the box and the card, the chart plotter)
+  - 625 `sjvSay(W, how)`
+  - 662 `sjvWhen(W)`
+  - 664 `sjvWarn()`
+- **666** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 691 `sjvHullPts(X, Z, psi, L, B)`
+  - 695 `sjvInPoly(P, x, z)`
+  - 702 `sjvSat(A, B)`
+  - 723 `sjvSatC(A, cx, cz, r)`
+  - 732 `sjvMass(n)`
+  - 733 `sjvOwnMass(b = S.boat)`
+  - 736 `sjvKnEq(kn, mA, mB)`
+  - 738 `sjvValue(L)`
+  - 743 `sjvMatOf(n)`
+  - 746 `sjvOtherCost(kn, L, mat, P)`
+  - 756 `sjvOwnLoss(b, c)`
+  - 762 `sjvCpa(a, b, gs)`
+  - 767 `sjvTrailAdd(id, e)`
+  - 785 `sjvFault(T, X)`
+  - 852 `sjvFaultWord(w, no)`
+  - 863 `sjvFaultSay(F, name, lang)`
+  - 874 `sjvSettle(b, F, c, oth, name)`
+  - 885 `sjvPaySay(M, F, name, lang)`
+  - 893 `sjvKr(x, no)`
+  - 895 `sjvFrom()`
+  - 899 `sjvTo()`
+  - 906 `sjvVhf(n, rec)`
+  - 920 `sjvStandBy(n, H)`
+  - 931 `sjvBlow(n, kn, E, H, pre)`
+- **963** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 966 `sjvClock()`
+  - 973 `sjvNear(H, X, Z)`
+  - 992 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 1003 `sjvTouch(b, d, P)`
+- **1036** the look's sweep (sjvEval), when the model does not have her
+  - 1039 `sjvSweep(n, A, H, gs, on)`
+- **1065** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
+  - 1082 `fartMonth(H)`
+  - 1083 `fartAreas()`
+  - 1091 `fartInSeason(m, mo)`
+  - 1092 `fartInRing(xs, ys, x, y)`
+  - 1095 `fartAt(p, H)`
+  - 1112 `fartCapMs()`
+  - 1123 `farvWrongSide(p, marks)`
+  - 1133 `farvLook(H)`
+  - 1162 `farvRec(r)`
+  - 1165 `farvWarn()`
+  - 1166 `farvSay(w, how)`
 
-## `src/js/core/06-services.js` (333 linjer)
+## `src/js/core/06-services.js` (334 linjer)
 
 ---------- services behind the phone ----------
 
@@ -1091,10 +1095,10 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 268 `fitHours(k)`
   - 271 `jobOk(j)`
   - 276 `queueJob(j)`
-  - 279 `jobsDone()`
-  - 285 `shelterReturn(W, hsOver)`
-  - 311 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **331** CORE END
+  - 280 `jobsDone()`
+  - 286 `shelterReturn(W, hsOver)`
+  - 312 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **332** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1612,7 +1616,7 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
 - **811** taking, doing and finishing
   - 812 `turTake(id)`
   - 840 `turDrop(id)`
-  - 845 `cargoJob(kg, no, en)`
+  - 845 `cargoJob(kg, no, en, out)`
   - 846 `turLoad(m)`
   - 855 `turSpawn(m)`
   - 874 `turEnd(m, ok, why, how)`
@@ -2063,7 +2067,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (444 linjer)
+## `src/js/core/13-work.js` (452 linjer)
 
 work aboard: stations, and how the crew share them
 
@@ -2093,23 +2097,23 @@ work aboard: stations, and how the crew share them
   - 186 `jobMinute(j, A)`
   - 196 `jobWait(j)`
   - 201 `workAssign(as)`
-- **284** the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
-  - 292 `quayRoles(P, ctx)`
-- **305** the deck washed down, the packed lunch and the cold, as roles on those on a break (OB14, 11.11.2026, docs/planer/om-bord.md F12,
-  - 319 `washMin()`
-  - 321 `deckWash()`
-  - 323 `lunchNow()`
-  - 324 `deckRoles(P, ctx)`
-  - 341 `deckDoing(p)`
-- **343** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 359 `crewVice(c)`
-  - 361 `idleEnv()`
-  - 369 `idleWeights(p, ctx, E, mates)`
-  - 392 `idleAssign(P, ctx)`
-  - 406 `idleText(p)`
-  - 414 `workDoing(p)`
-  - 424 `workTeam(st, g, as)`
-  - 430 `workMinute()`
+- **292** the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
+  - 300 `quayRoles(P, ctx)`
+- **313** the deck washed down, the packed lunch and the cold, as roles on those on a break (OB14, 11.11.2026, docs/planer/om-bord.md F12,
+  - 327 `washMin()`
+  - 329 `deckWash()`
+  - 331 `lunchNow()`
+  - 332 `deckRoles(P, ctx)`
+  - 349 `deckDoing(p)`
+- **351** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 367 `crewVice(c)`
+  - 369 `idleEnv()`
+  - 377 `idleWeights(p, ctx, E, mates)`
+  - 400 `idleAssign(P, ctx)`
+  - 414 `idleText(p)`
+  - 422 `workDoing(p)`
+  - 432 `workTeam(st, g, as)`
+  - 438 `workMinute()`
 
 ## `src/js/core/14-crewlife.js` (470 linjer)
 
@@ -2750,12 +2754,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1556 linjer)
+## `src/js/ui/phone/07-patch.js` (1559 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1544 `patch()`
+  - 1547 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
