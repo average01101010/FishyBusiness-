@@ -9,7 +9,7 @@
 
 ## Halen
 
-**Halen** som avslutter alle startmeldingene (skrives ikke om igjen i hver): «Sjekk «Øktene som kjører» i `docs/planer/koen.md` før du begynner, og hent arbeidsgrenen først. Porten i `tools/plan/RUTINE.md` punkt 6 avgjør utrullingen: holder alt, rull ut selv (punkt 7 og 8); ellers står PR-en til Jonas. Skjermbildene i `docs/okter/<dato>-<steg>/`, sett på, og med i meldingen til Jonas. Oppdater status for steget i planfila og i køen, og skriv hel startmelding for neste steg på sporet. Avslutt med `/lever` og `/okt-slutt`.»
+**Halen** som avslutter alle startmeldingene (skrives ikke om igjen i hver): «Sjekk «Øktene som kjører» i `docs/planer/koen.md` før du begynner, og hent arbeidsgrenen først. Porten i `tools/plan/RUTINE.md` punkt 6 avgjør utrullingen: holder alt, rull ut selv (punkt 7 og 8); ellers står PR-en til Jonas. Skjermbildene i `docs/okter/<dato>-<steg>/`, sett på, og med i meldingen til Jonas. Ta lukkerunden før du leverer (`CLAUDE.md`, «Økta lukker det den åpner»): alt som er svakt, antatt eller gjenstående, lukkes i økta, feil du finner rettes, og et valg bare Jonas kan ta, stilles ham straks med spørsmålsverktøyet. Oppdater status for steget i planfila og i køen, og skriv hel startmelding for neste steg på sporet. Avslutt med `/lever` og `/okt-slutt`.»
 
 ## 11–22 og videre
 
