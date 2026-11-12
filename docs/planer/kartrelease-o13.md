@@ -180,6 +180,8 @@ Bygd på grenen `claude/zen-curie-qoa35d`, **ikke rullet ut**: bildene viser ing
 
 JS-minnet svinger mer fra kjøring til kjøring (±15 MB) enn laget flytter det, så det tallet sier bare at laget ikke synes der. Etter tre flytt på rad (Husøy, Bøvær, Vangshamn) lå 17 blokker `fin` (21,8 MB) i bufferen, innenfor de 96 MB; de går ut etter tur som de andre.
 
+**Målt i spillernes bygg (12.11.2026, engangsrunden mot testutgaven, versjon `97b13cec726d`, `tests/fintest.py` gjennom en proxy på 127.0.0.1):** Høy ved Finnsnes gir 15 blokker `fin` (19,2 MB) etter starten, og kartbufferen 41 MB. Senja-bygget over ga 5, fordi det mangler kartdataene rundt Senja: i hele kystens bygg leser broene, innsjøene, lysene og dyrelivet opptil 25 km unna bakken gjennom `finH` og pakker ut blokkene sine (sett med kallstakken til `mapBlock`). Lav, Middels og `#fin0` henter fortsatt ingenting, og ingen blokk telles som `MAPD.miss`. Jonas 12.11.2026: «A: Behold, K2 avgjør». Tallet går inn i K2s valg mellom Høy og bare Ultra, sammen med målingen hans på nettbrettet (`docs/spill-dette/33b.md`).
+
 **Tiden per nett** (`G3._debug.meshBench`, medianen av sju, to kjøringer hver): høydene i nærnettet (256 × 256 over 6 km) 37 → 40–41 ms, i finnettet (256 × 256 over 1 km) 75–77 → 79–82 ms. Det er hele nettet, som bygges i tidsbiter over mange bilder; per bilde er det ikke målbart. Regnet per nett er nærnettet 3,5 ms dyrere, altså litt over grensa på 3 ms i startmeldingen. Laget er ikke trappet ned til bare Ultra, fordi steget stoppet; bygges laget likevel, tas det valget i K2 etter Jonas' måling på nettbrettet.
 
 **Fin mot spillets 25 m-lag** (flisa 17,7, 400 000 celler i stripa): middel 0,07 m, rms 0,81 m, 90 % innen 0,88 m, 5,4 % over 1 m og 1,3 % over 2 m. Under 5 moh. er avviket størst (rms 2,1 m, middel +0,7 m): det er der 25 m-cellene blir dratt ned av sjøcella ved siden av.
@@ -199,7 +201,7 @@ JS-minnet svinger mer fra kjøring til kjøring (±15 MB) enn laget flytter det,
 | Siden | rundt 6 MB | + anslag 0,2–0,4 MB når N3 og N5 legger inn `ferje.json` og `leier.json` | i de stegene |
 | Førstegangsnedlastingen, Lav og Middels | 80,3 MB (målt 04.11.2026) | uendret (ingen `fin`); **målt i K1 på Senja-bygget: kartet 8,59 MB før og etter, kartbufferen 16,3 MB før og etter** | K1: `tests/fintest.py` med nettverksloggen, før og etter |
 | Førstegangsnedlastingen, Høy og Ultra | 80,3 MB | + `fin` for flisene rundt båten: 0,3–1,4 MB per flis på Senja, største flis på fastlandet rundt 2,5 MB (4,25, Bergen nord); én til fire fliser | K1 |
-| Minnet i 3D, Høy | **målt i K1: kartbufferen 16,3 MB ved Finnsnes** | + 4–9 blokker `fin` à 1,28 MB: 5,1–11,5 MB av kartbufferens 96 (regnet i K0) | K1: `MAPD.bytes` og JS-minnet etter starten, som i Ø3d |
+| Minnet i 3D, Høy | **målt i K1: kartbufferen 16,3 MB ved Finnsnes** | + 4–9 blokker `fin` à 1,28 MB: 5,1–11,5 MB av kartbufferens 96 (regnet i K0); **målt på testutgaven 12.11.2026: 15 blokker, 19,2 MB, bufferen 41 MB** (broer, innsjøer, lys og dyreliv opptil 25 km unna, K1 over) | K1: `MAPD.bytes` og JS-minnet etter starten, som i Ø3d |
 
 K0 har målt (kapittel 5, «K0: målingen»); anslaget under er det planen sto med før. Anslaget for `fin` var grovt med vilje: jeg kjenner ikke hvor stor del av `view` som er høydene (manifestet har bare pakkene, ikke lagene), og ikke hvor mye land som ligger innen 1 km fra sjøen. Regnestykket er land i stripa (anslag 30 000–50 000 km²) × 10 000 celler per km² × 0,2–0,5 byte per celle etter prediktoren og deflate. Derfor måler K0 før noe annet.
 
