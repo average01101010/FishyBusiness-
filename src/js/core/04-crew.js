@@ -674,6 +674,7 @@ function crewTick(H){
   vitalsTalk(on);
   sayHour(H, on, hs);
   if (typeof lifeHail === 'function') lifeHail(H);
+  if (typeof errandHour === 'function') errandHour(H);   // the small errands (14-crewlife.js, steg 45a)
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }
