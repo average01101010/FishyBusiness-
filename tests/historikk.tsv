@@ -2929,3 +2929,18 @@
 2026-11-12 03:08	ccr-899a9674-q3gjp0	a275b3b	dbg23o	OK	38	3d	alene	
 2026-11-12 03:07	ccr-899a9674-q3gjp0	5a77fac+	hull3d	OK	2267	3d	alene	
 2026-11-12 03:26	ccr-899a9674-q3gjp0	922a215+	dbg23o	OK	48	3d	alene	
+2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	driftsplan2ui	OK	38	lite	samtidig	
+2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	opsowntest	OK	49	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	fleet2test	FEIL	35	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	fleet3test	OK	18	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	geartest	OK	50	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	skiptest	OK	21	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	skipdrift	OK	32	lite	samtidig	
+2026-11-12 04:19	ccr-013bxxid-18b	f923c4c	boottest	OK	38	lite	samtidig	
+2026-11-12 04:19	ccr-013bxxid-18b	f923c4c	mig2test	OK	28	lite	samtidig	
+2026-11-12 04:20	ccr-013bxxid-18b	f923c4c	trip2	OK	53	lite	samtidig	
+2026-11-12 04:20	ccr-013bxxid-18b	f923c4c	worktest	FEIL	40	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 04:36	ccr-013bxxid-18b	f923c4c+	havplantest	FEIL	963	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 584696, [0, 1]]
+2026-11-12 04:36	ccr-013bxxid-18b	f923c4c+	driftsplan2kyst	OK	227	lite	samtidig	
+2026-11-12 04:38	ccr-013bxxid-18b	f923c4c+	driftsplan2test	FEIL	162	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-12 04:42	ccr-013bxxid-18b	f923c4c+	fleet2test	OK	29	lite	alene	
