@@ -3301,3 +3301,6 @@
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	docktest	OK	63	lite	samtidig	
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	skiptest	OK	17	lite	samtidig	
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	boostklokke	OK	49	lite	samtidig	
+2026-11-12 18:39	ccr-e7efd74c-rioki0	ee013930	hopptest	OK	8	lite	samtidig	
+2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	fasittest	OK	38	lite	samtidig	
+2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	admintest	OK	10	lite	samtidig	
