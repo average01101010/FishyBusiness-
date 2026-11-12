@@ -592,11 +592,14 @@
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}');
-  const terFS = q => SUNV('#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
+  const terFS = q => SUNV('#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;uniform vec4 uNSea;' +
     'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;uniform float uExpo;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
-    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
+    // the near grid's bed under the water outside the near pass's sea (uNSea, 17-draw.js nearIn: the band of a near-terrain cell along the
+    // square's edge) is cut, so the far pass's sea under it is seen there; drawn, it was a short pale line on the water by an islet at
+    // the edge from 12 km (5.20s, Ø9 F7 12.11.2026). Elsewhere uNSea is the whole plane
+    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;if(vP.y<uTideY){float mg=2.0+0.004*length(vW);if(vW.x<uNSea.x+mg||vW.x>uNSea.z-mg||vW.z<uNSea.y+mg||vW.z>uNSea.w-mg)discard;}vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
     'if(uLOn>0.5&&vP.y>uTideY-3.5&&vP.y<uTideY+4.0&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r*8.0-4.0<uTideY-uSwash)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
         // the ground's own surface (Jonas 18.10.2026: terrain first, and smooth on every device): the vertex colour is the vegetation, and
     // vM carries the weights of rock, wood, snow and a harbour's fill from recolor. MATQ 0 blends them plainly (the low quality, as before);
