@@ -32,7 +32,8 @@ function pickW(pairs){ let r = Math.random() * pairs.reduce((a, q) => a + q[1], 
 function crewAge(){ const b = pickW([[0, 4.3], [1, 19.4], [2, 19.5], [3, 16.7], [4, 20.1], [5, 16.1], [6, 3.9]]), lo = [16, 20, 30, 40, 50, 60, 70][b], hi = [19, 29, 39, 49, 59, 69, 74][b]; return lo + Math.floor(Math.random() * (hi - lo + 1)); }
 const r15 = x => clamp(Math.round(x * 2) / 2, 1, 5);
 function skreiSeason(H){ const m = gDate(H).getUTCMonth(); return m <= 3; }
-function crewDerive(c){ const lvl = c.attr.erf >= 4 ? 2 : c.attr.erf >= 2.5 ? 1 : 0; c.lv = ['lærling', 'erfaren', 'dreven'][lvl]; c.lvEn = ['apprentice', 'experienced', 'seasoned'][lvl]; c.skill = clamp(0.6 + 0.1 * c.attr.erf + 0.04 * c.attr.sjo, 0.7, 1.3); return c; }
+// (an apprentice who came to learn from you, c.laer in 14-crewlife.js, stays one until the apprenticeship is over: the share of § 24.4)
+function crewDerive(c){ const lvl = c.laer && !c.laer.done ? 0 : c.attr.erf >= 4 ? 2 : c.attr.erf >= 2.5 ? 1 : 0; c.lv = ['lærling', 'erfaren', 'dreven'][lvl]; c.lvEn = ['apprentice', 'experienced', 'seasoned'][lvl]; c.skill = clamp(0.6 + 0.1 * c.attr.erf + 0.04 * c.attr.sjo, 0.7, 1.3); return c; }
 function genCrew(){
   const f = Math.random() < 0.06, age = crewAge(), yrs = Math.max(0, Math.round((age - 16) * (0.25 + Math.random() * 0.75))), home = crewHome();
   const ex = 1 + 4 * (1 - Math.exp(-yrs / 9)), peak = 1 - Math.abs(age - 34) / 45, rnd = () => Math.random() - 0.5;
@@ -523,32 +524,36 @@ function crewFrist(c, t = S.t){
 const OPP_SAY = {
   egenbat:['Jeg har spart nok til egen båt nå. Jeg sier opp, og går i land {d}. Takk for tiden om bord.', 'I have saved enough for a boat of my own now. I give notice, and go ashore {d}. Thank you for the time aboard.'],
   trivsel:['Jeg har ikke trivdes på lenge. Jeg sier opp, og går i land {d}.', 'I have not been happy for a long time. I give notice, and go ashore {d}.'],
-  krangel:['Når ingen tar tak i dette, sier jeg opp. Jeg går i land {d}.', 'When nobody deals with this, I give notice. I go ashore {d}.']};
+  krangel:['Når ingen tar tak i dette, sier jeg opp. Jeg går i land {d}.', 'When nobody deals with this, I give notice. I go ashore {d}.'],
+  // the apprentice whose time is up (14-crewlife.js laerHour): a used boat of his own, bought with a loan from the bank
+  laer:['Læretida er over, og banken har sagt ja til lån på en brukt sjark. Jeg sier opp og går i land {d}. Takk for alt du har lært meg.', 'The apprenticeship is over, and the bank has said yes to a loan for a used sjark. I give notice and go ashore {d}. Thank you for all you have taught me.']};
 function crewNotice(c, gr){
   if (!c || c.opp) return null; const [end, len] = crewFrist(c), s = OPP_SAY[gr] || OPP_SAY.trivsel, d = avtDay(end);
   c.opp = {t:S.t, end, gr};
   msg(c.name, (typeof crewDialect === 'function' ? crewDialect(c, s[0].replace('{d}', d)) : s[0].replace('{d}', d)) + ' (Oppsigelsesfristen er ' + len[0] + '.)', s[1].replace('{d}', d) + ' (The notice is ' + len[1] + '.)');
-  if (typeof lifeStory === 'function') lifeStory(c, (gr === 'egenbat' ? 'Sa opp for å kjøpe egen båt, med ' : 'Sa opp med ') + len[0] + 's frist.', (gr === 'egenbat' ? 'Gave notice to buy a boat of their own, ' : 'Gave notice, ') + len[1] + '.');
+  if (typeof lifeStory === 'function') lifeStory(c, (gr === 'egenbat' || gr === 'laer' ? 'Sa opp for å kjøpe egen båt, med ' : 'Sa opp med ') + len[0] + 's frist.', (gr === 'egenbat' || gr === 'laer' ? 'Gave notice to buy a boat of their own, ' : 'Gave notice, ') + len[1] + '.');
   return c.opp;
 }
 // the notice is up and the boat lies in a harbour: ashore, with the settlement for the catch aboard (crewSettle) and nothing else; at sea
 // they wait for the next harbour, also with the game closed. True when the person left
 function crewOppTick(c){
   const o = c.opp; if (!o || S.t < o.end || !S.boat || S.boat.status !== 'port') return false;
-  if ((o.gr === 'egenbat' || crewDream(c)) && typeof lifeDepart === 'function') lifeDepart(c);
+  if (crewOwnBoat(c) && typeof lifeDepart === 'function') lifeDepart(c);
   else crewQuit(c, 'Fristen er ute, og jeg går i land her. Takk for nå.', 'The notice is up, and I go ashore here. Thank you for now.');
   return !S.crew.includes(c);
 }
 // ask one who gave notice to stay: by agreement (§ 5-2 (6)) when their mood has come back (AVT.stay); one who is off to a boat of their
 // own does not turn back. Null when they stay, else why not
 function crewStay(c){
-  const o = c && c.opp; if (!o) return 'none'; if (o.gr === 'egenbat') return 'egenbat'; if (c.morale < AVT.stay) return 'mood';
+  const o = c && c.opp; if (!o) return 'none'; if (o.gr === 'egenbat' || o.gr === 'laer') return 'egenbat'; if (c.morale < AVT.stay) return 'mood';
   delete c.opp; c.low = 0; if (typeof lifeStory === 'function') lifeStory(c, 'Trakk oppsigelsen og ble om bord.', 'Took back the notice and stayed aboard.');
   msg(c.name, typeof crewDialect === 'function' ? crewDialect(c, 'Greit, jeg blir. Det har gått bedre i det siste.') : 'Greit, jeg blir. Det har gått bedre i det siste.', 'All right, I will stay. It has gone better lately.');
   return null;
 }
 // saved enough for the boat of their own they dream of (14-crewlife.js)
 const crewDream = c => !!(c.life && c.life.goal === 'egenbat' && c.life.saved >= c.life.target);
+// off to a boat of their own when they go ashore: the dream within reach, or notice given for it (or at the end of the apprenticeship)
+const crewOwnBoat = c => crewDream(c) || !!(c.opp && (c.opp.gr === 'egenbat' || c.opp.gr === 'laer'));
 // the ground when you let someone go (§ 5-6, and § 5-5 on probation): agreed when they had given notice themselves; on probation their
 // fit for the work; a quarrel aboard they are in; otherwise the business (fewer hands needed)
 function crewGrunn(c){
@@ -563,7 +568,7 @@ function crewLetGo(c){
   const i = S.crew.indexOf(c); if (i < 0) return null; const g = crewGrunn(c), own = !!c.opp, [end, len] = crewFrist(c);
   if (c.err && typeof errEv === 'function'){ errEv('lapse', c.err); delete c.err; }   // an errand left open (14-crewlife.js) ends with them
   // one who had given notice and has the boat of their own within reach goes to it (the alumni, the AIS, back in a year or two)
-  if (own && crewDream(c) && typeof lifeDepart === 'function') lifeDepart(c); else { crewSettle(c); flyOut(c); S.crew.splice(i, 1); }
+  if (own && crewOwnBoat(c) && typeof lifeDepart === 'function') lifeDepart(c); else { crewSettle(c); flyOut(c); S.crew.splice(i, 1); }
   for (const o of S.crew){ o.morale = clamp(o.morale + (compat(o, c) < 0 ? 4 : -4), 0, 100); if (o.grudge) delete o.grudge[c.id]; }
   if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null;
   if (own) log(c.name + ' har gått i land før fristen, etter avtale.', c.name + ' has gone ashore before the end of the notice, by agreement.');
@@ -605,6 +610,7 @@ function borsTick(H){
   if (typeof alumniReturn === 'function') alumniReturn(B);
   const n = skreiSeason(H) ? (Math.random() < 0.5 ? 1 : 0) : 1 + (Math.random() < 0.5 ? 1 : 0);
   for (let i = 0; i < n + (first ? 2 : 0) && B.pool.length < 6; i++){ const c = genCrew(); c.until = S.t + (2 + Math.floor(Math.random() * 4)) * 1440; B.pool.push(c); }
+  if (typeof laerBors === 'function') laerBors(B);   // from ten years at sea a young one who wants to learn from you (14-crewlife.js, steg 45b)
 }
 function crewRumour(){ const B = S.bors; if (!B || Math.random() < 0.5) return null; const c = B.pool.find(x => !x.known[1] && x.traits.length > 1); if (!c) return null; c.known[1] = true; const T = TRAITS[c.traits[1]];
   return S.lang === 'no' ? 'Kjentfolk på puben sier at ' + c.name + ' fra Mannskapsbørsen er ' + T.no.toLowerCase() + '. ' + T.d.no : 'Locals at the pub say ' + c.name + ' from the crew exchange is ' + T.en.toLowerCase() + '. ' + T.d.en; }
@@ -677,6 +683,7 @@ function crewTick(H){
   sayHour(H, on, hs);
   if (typeof lifeHail === 'function') lifeHail(H);
   if (typeof errandHour === 'function') errandHour(H);   // the small errands (14-crewlife.js, steg 45a)
+  if (typeof laerHour === 'function') laerHour(H);       // the apprentice's questions and the end of his time (14-crewlife.js, steg 45b)
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }

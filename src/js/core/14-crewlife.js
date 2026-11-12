@@ -414,7 +414,8 @@ function lifeDay(c, H){
   if (L.notice && !c.opp){ if (S.t >= L.notice && S.boat.status === 'port') lifeDepart(c); return; }   // (a week's notice from a save before Ø11.9)
   if (c.off && c.offUntil) return;
   // the dream within reach: notice by the law (Ø11.9, crewNotice in 04-crew.js), ashore at the first harbour after it (crewOppTick)
-  if (L.goal === 'egenbat' && L.saved >= L.target && !c.opp){ const o = crewNotice(c, 'egenbat'); if (o) L.notice = o.end; return; }
+  // (an apprentice goes at the end of his time instead, laerHour)
+  if (L.goal === 'egenbat' && L.saved >= L.target && !c.opp && !(c.laer && !c.laer.done)){ const o = crewNotice(c, 'egenbat'); if (o) L.notice = o.end; return; }
   if (L.goal === 'skipper' && !L.saidSkip && c.attr.erf >= 4.5 && c.attr.sjo >= 4){ L.saidSkip = true; msg(c.name, crewDialect(c, 'Jeg er klar til å føre en båt for deg den dagen du får en til.'), 'I am ready to skipper a boat for you the day you get another.'); }
   const r = Math.random();
   if (L.fam === 'partner' && c.age < 50 && r < 0.0012){ lifeOff(c, 3, 'Jeg gifter meg på lørdag! Jeg tar tre dager fri.', 'I am getting married on Saturday! I take three days off.', 'Giftet seg.', 'Got married.'); for (const o of S.crew) o.morale = Math.min(100, o.morale + 3); }
@@ -430,12 +431,17 @@ function lifeOffTick(c){ if (c.offUntil && S.t >= c.offUntil){ c.off = false; de
 // out of their home port and come back to the exchange after a year or two
 function lifeDepart(c){
   const L = crewLife(c), hp = c.homePort && portById(c.homePort), used = new Set((S.alumni || []).map(a => a.boat)), boat = LIFE_BOATS.find(b => !used.has(b)) || LIFE_BOATS[Math.floor(Math.random() * LIFE_BOATS.length)];
+  const laer = !!(c.laer && !c.laer.done); if (laer) c.laer.done = S.t;   // the apprentice at the end of his time (laerHour)
   lifeStory(c, 'Kjøpte egen båt, «' + boat + '».', 'Bought a boat of their own, the «' + boat + '».');
   let lk = null; try { lk = typeof lookOf === 'function' && typeof lookKey === 'function' ? lookKey(lookOf(c)) : null; } catch (e){}
   const snap = JSON.parse(JSON.stringify(Object.assign({}, c, {wk:undefined, grudge:{}, earn:[], off:false, offUntil:undefined, trip:undefined, sleepW:undefined, low:0})));
-  S.alumni = (S.alumni || []).filter(a => a.id !== c.id).concat([{id:c.id, name:c.name, boat, home:c.home, homePort:c.homePort, lk, t0:S.t, back:S.t + Math.round((365 + Math.random() * 365) * 1440), c:snap}]).slice(-10);
-  crewQuit(c, crewDialect(c, 'Takk for tiden om bord. Nå går jeg om bord i min egen. Du ser meg nok på feltet.'), 'Thank you for the time aboard. Now I go aboard my own. You will see me on the grounds.');
+  // (an apprentice keeps his boat: laer marks him in the list, and he never comes back to the exchange, alumniReturn; the ten kept are
+  // the apprentices first, then the latest of the others)
+  const A0 = (S.alumni || []).filter(a => a.id !== c.id).concat([Object.assign({id:c.id, name:c.name, boat, home:c.home, homePort:c.homePort, lk, t0:S.t, back:S.t + Math.round((365 + Math.random() * 365) * 1440), c:snap}, laer ? {laer:1} : {})]);
+  while (A0.length > 10){ const i = A0.findIndex(a => !a.laer); A0.splice(i < 0 ? 0 : i, 1); } S.alumni = A0;
+  crewQuit(c, crewDialect(c, laer ? 'Takk for alt du har lært meg. Nå går jeg om bord i min egen. Du ser meg på feltet.' : 'Takk for tiden om bord. Nå går jeg om bord i min egen. Du ser meg nok på feltet.'), laer ? 'Thank you for all you have taught me. Now I go aboard my own. You will see me on the grounds.' : 'Thank you for the time aboard. Now I go aboard my own. You will see me on the grounds.');
   log(c.name + ' har kjøpt egen båt, «' + boat + '», og fisker fra ' + (hp ? hp.name : c.home) + '.', c.name + ' has bought a boat of their own, the «' + boat + '», and fishes out of ' + (hp ? hp.name : c.home) + '.');
+  if (laer) laerDone(c, boat, hp);
 }
 // the alumni's boats on the AIS (core/05-vessels.js npcStates): on the nearest named fishing ground within 40 km of the home port
 // (Ø14 F3, 11.11.2026: Fiskeridirektoratet's grounds along the whole coast, feltNear in 01-world.js, not Senja's six), 07–15 every day
@@ -455,8 +461,9 @@ function alumniStates(H){
 function lifeHail(H){
   if (!S.alumni || !S.alumni.length || S.boat.status === 'port') return; const day = Math.floor(H / 24);
   for (const n of alumniStates(H)){ const a = S.alumni.find(x => 'al' + x.id === n.id); if (!a || a.hailDay === day || dist(n.p, S.boat.pos) > 1.5) continue; a.hailDay = day;
-    msg('Sjøen', n.first + ' tuter til deg fra «' + a.boat + '».', n.first + ' sounds the horn at you from the «' + a.boat + '».');
-    if (typeof SND !== 'undefined' && SND.horn) SND.horn(0.6); if (typeof G3 !== 'undefined' && G3.sayBoat) G3.sayBoat(n.id, S.lang === 'en' ? 'Good to see you!' : crewDialect(a.c || null, 'Godt å se deg!')); }
+    if (a.laer) msg('Sjøen', n.first + ', lærlingen din, tuter til deg fra «' + a.boat + '».', n.first + ', your apprentice, sounds the horn at you from the «' + a.boat + '».');
+    else msg('Sjøen', n.first + ' tuter til deg fra «' + a.boat + '».', n.first + ' sounds the horn at you from the «' + a.boat + '».');
+    if (typeof SND !== 'undefined' && SND.horn) SND.horn(0.6); if (typeof G3 !== 'undefined' && G3.sayBoat) G3.sayBoat(n.id, S.lang === 'en' ? (a.laer ? 'Thanks for everything!' : 'Good to see you!') : crewDialect(a.c || null, a.laer ? 'Takk for alt!' : 'Godt å se deg!')); }
 }
 // ===== the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md) =====
 // One aboard asks for something that belongs to their life while the boat is out: in by their home harbour, a short call at a harbour
@@ -560,10 +567,132 @@ function errandDone(c){
 const errandLearn = c => (c.life && c.life.errUp > S.t) ? ERRAND.learn : 1;
 // back to the exchange after the years with a boat of their own: a smaller share asked, and the story goes on
 function alumniReturn(B){
-  for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
+  // (an apprentice stays a skipper on his own boat: never back)
+  for (const a of (S.alumni || []).slice()){ if (a.laer || a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
     const c = crewDerive(Object.assign(a.c, {ask:lotR(lotMigrate(a.c).ask - LOTT.step), morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
     delete c.opp; delete c.avt; delete c.hiredT; c.noProve = true;   // a new agreement when signing on again, without probation (Ø11.9; a game choice in the spirit of § 3-2 (3))
     if (c.life){ c.life.notice = null; c.life.goal = 'ro'; c.life.saved = Math.round(c.life.target * 0.3); c.life.day = -1; lifeStory(c, 'Solgte «' + a.boat + '» og søker hyre igjen.', 'Sold the «' + a.boat + '» and looks for a berth again.'); }
     B.pool.push(c); }
 }
 
+// ===== the apprentice (Oppdrag 2, punkt 8; steg 45b, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md) =====
+// Not a mentor for the beginner but an apprentice for the one who has climbed: from ten years at sea (fsOf, 09e-fartstid.js) a young one
+// (18–22) may stand in the crew exchange wanting to learn from you, one at a time for the company. He works as a hand on the apprentice's
+// share of the agreement (§ 24.4: 40 % his first year, apprLot; Jonas' plan of 30.10.2026 said «lott som en mann», the rules from the
+// agreement came after and go first), and stays an apprentice while he learns (crewDerive). After something that happened aboard (fished
+// in a running stream, set nets or lines, came in before a gale) he asks you why, at most once a day, with you aboard; the three answers
+// on his card under Crew are his knowledge: the right one by the game's own rules lifts the skill that belongs to it by LAER.up[0], the
+// others by LAER.up[1], never the catch. What he has got right he does not ask again. After the apprenticeship (LAER.days on the shared
+// clock and LAER.minQ answers) he gives notice by the law (crewNotice 'laer', Ø11.9), goes ashore to a boat of his own (lifeDepart), a
+// named skipper among S.alumni with the apprentice's mark who fishes near his home and hails you, and you get «Læremester» (ACHL 'laer').
+// No line in Kystposten this round: no news kind fits without a migration (docs/planer/oppdrag-2.md). All numbers are start values.
+//   fs: years at sea; p: the chance a day; stay: days in the exchange; days: the apprenticeship; gap: minutes between questions; life: an
+//   unanswered question runs out; cur: a stream of half a knot (curAt); tide: the tide rising or falling 0.25 m an hour, 70 % of the stream
+//   biteF and targetF (03-simulation.js, 03f-fiske.js) take as full; gale: liten kuling, Bft 6 (10.8 m/s); fcH: the forecast's hours ahead
+const LAER = {fs:10, p:0.25, stay:5, age:[18, 22], days:90, minQ:2, gap:1440, life:1440, up:[0.3, 0.1], cur:0.5 * 1852 / 3600, tide:0.25, gale:10.8, fcH:12};
+// the questions, each with the answer that is right by the game's own rules first (the card shows them in an order of their own):
+//   strom: the cod bite best at slack water (biteF, after Reubens et al.), the halibut too (targetF); the stream carries food to the edges
+//   garn, line: the fish on a net or a line that stands over a day loses its freshness, and the price with it (finishHaul in 10-gear.js:
+//     3 points an hour after 24 h; Råfisklaget's quality grades follow freshness); a long soak wears the nets more (netWear, over 48 h)
+//   kuling: in before the sea builds; the fish do not go deep in a blow (gearVertF: the cod, haddock and saithe stand higher in wind)
+const LAER_Q = {
+  strom:{q:['Strømmen drar godt nå. Hvorfor blir vi liggende her og fiske?', 'The stream is running hard now. Why do we stay and fish here?'], w:['hvorfor vi fisker i strømmen', 'why we fish in the stream'],
+    a:[['Strømmen fører maten forbi, og fisken står og venter på den. Når strømmen stilner, biter torsken best, og da vil vi være her.', 'The stream carries the food past, and the fish wait for it. When the stream slackens the cod bite best, and we want to be here then.'],
+      ['Strømmen holder agnet i bevegelse, så fisken ser det bedre.', 'The stream keeps the bait moving, so the fish see it better.'],
+      ['Strømmen har ingenting å si. Fisken biter like godt hele døgnet.', 'The stream does not matter. The fish bite just as well all day.']]},
+  garn:{q:['Hvorfor skal garnet ikke stå lenger enn et døgn?', 'Why should the nets not stand longer than a day?'], w:['hvorfor garnet ikke skal stå for lenge', 'why the nets should not stand too long'],
+    a:[['Fisken dør i garnet og blir dårligere for hver time. Står det over et døgn, går kvaliteten og prisen ned.', 'The fish die in the net and get worse by the hour. Left over a day, the quality and the price go down.'],
+      ['Garnet slites mer jo lenger det står.', 'The net wears more the longer it stands.'],
+      ['Fisken går ut av garnet igjen om natta.', 'The fish get out of the net again at night.']]},
+  line:{q:['Hvorfor trekker vi lina før den har stått et døgn?', 'Why do we haul the line before it has stood a day?'], w:['hvorfor lina skal trekkes i tide', 'why the line is hauled in time'],
+    a:[['Fisken på kroken dør og blir dårligere jo lenger lina står. Etter et døgn går kvaliteten og prisen ned.', 'The fish on the hook die and get worse the longer the line stands. After a day the quality and the price go down.'],
+      ['Agnet faller av krokene etter en stund.', 'The bait falls off the hooks after a while.'],
+      ['Fisken biter bare om morgenen.', 'The fish only bite in the morning.']]},
+  kuling:{q:['Det er jo fint vær nå. Hvorfor gikk vi inn?', 'The weather is fine now. Why did we come in?'], w:['hvorfor vi går inn før kulingen', 'why we go in before the gale'],
+    a:[['Varselet sier kuling. Sjøen bygger seg fort opp, og det er bedre å ligge trygt til kai enn å bli tatt av den ute.', 'The forecast says a gale. The sea builds up fast, and it is better to lie safe at the quay than be caught out in it.'],
+      ['For å spare diesel til været blir bedre.', 'To save diesel until the weather gets better.'],
+      ['Fisken går ned på dypet i dårlig vær, så det er ingen vits å være ute.', 'The fish go deep in bad weather, so there is no point being out.']]}};
+const laerEv = (k, q, ok) => { if (typeof cloudEv === 'function') cloudEv('crew_laer', Object.assign({k}, q ? {q} : {}, ok != null ? {ok:ok ? 1 : 0} : {})); };
+// an apprentice in his time aboard (signed on, not yet gone)
+const laerOn = c => !!(c && c.laer && c.laer.t0 != null && !c.laer.done);
+// the company has one: in the exchange, or aboard any of its boats
+function laerTaken(B){
+  if (((B && B.pool) || []).some(c => c.laer)) return true; if ((S.crew || []).some(c => c.laer && !c.laer.done)) return true;
+  for (const v of S.fleet || []) if (v.id !== S.cur && (v.crew || []).some(c => c.laer && !c.laer.done)) return true; return false;
+}
+// a young one from the places round your home harbour (crewHome): little experience, no years at sea, the apprentice's share
+function laerMake(){
+  const c = genCrew(), r = Math.random;
+  c.age = LAER.age[0] + Math.floor(r() * (LAER.age[1] - LAER.age[0] + 1)); c.yrs = 0; c.bi = false; c.biDays = null;
+  Object.assign(c.attr, {erf:1, sjo:r15(1 + r() * 0.8)}); Object.assign(c.gear, {juksa:r15(1.5 + r() * 0.8), line:1, garn:1, teiner:1, sloy:r15(1 + r() * 0.8), is:r15(1 + r() * 0.8), sort:1});
+  c.traits = c.traits.filter(t => t !== 'grinebiter'); if (!c.traits.length) c.traits = ['laerevillig'];
+  c.ask = c.share = LOTT.appr[0]; c.laer = {t0:null, q:[], n:0}; c.until = S.t + LAER.stay * 1440;
+  return crewDerive(c);
+}
+// once a morning (borsTick): from ten years at sea, now and then, when the company has none
+function laerBors(B){
+  if (!B || S.tut || fsOf(fsState().p).y < LAER.fs || laerTaken(B) || Math.random() >= LAER.p) return null;
+  const c = laerMake(); if (B.pool.length >= 6) B.pool.splice(B.pool.indexOf(B.pool.slice().sort((x, y) => x.until - y.until)[0]), 1);
+  B.pool.push(c);
+  msg('Mannskapsbørsen', c.name + ' (' + c.age + ') fra ' + c.home + ' vil gå i lære hos deg. Se Mannskapsbørsen.', c.name + ' (' + c.age + ') from ' + c.home + ' wants to learn from you. See the crew exchange.');
+  return c;
+}
+// signed on (the hire on the card, 14-act.js): the apprenticeship starts, and his dream is a boat of his own
+function laerSign(c){
+  if (!c || !c.laer || c.laer.t0 != null) return; c.laer.t0 = S.t; const L = crewLife(c); L.goal = 'egenbat'; if (L.fam === 'kids') L.fam = 'single';
+  lifeStory(c, 'Gikk i lære om bord i «' + (S.boatName || 'båten') + '».', 'Started an apprenticeship aboard the «' + (S.boatName || 'boat') + '».');
+  laerEv('sign');
+}
+// the skill an answer lifts: the stream the gear she fishes with (the jig when no gear is rigged), nets and lines their own, the gale seamanship
+function laerSkill(k){ if (k === 'kuling') return ['attr', 'sjo']; if (k === 'garn' || k === 'line') return ['gear', k]; return stationSkill('haling') || ['gear', 'juksa']; }
+// a running stream where she lies: the tide turning fast (as biteF reads it), or the current of the sounds and the coast
+function laerStream(p, H){
+  try { if (Math.abs(tideH(H + 0.5, p) - tideH(H - 0.5, p)) >= LAER.tide) return true; } catch (e){}
+  try { if (typeof curAt === 'function' && curEff(curAt(p, H)).m >= LAER.cur) return true; } catch (e){}
+  return false;
+}
+// a gale (liten kuling or more) in the forecast for the next hours, and fair weather now
+function laerGale(p, H){ if (windAt(H, p) >= LAER.gale) return false; for (let k = 1; k <= LAER.fcH; k++) if (fcWind(H + k, H, p) >= LAER.gale) return true; return false; }
+// what happened aboard this hour that he could ask about, and does not know yet (prev: where the boat was the hour before)
+function laerSaw(c, H, prev){
+  const b = S.boat, E = c.laer, out = [];
+  for (const s of typeof mySets === 'function' ? mySets() : []) if ((s.kind === 'garn' || s.kind === 'line') && s.tSet > S.t - 60) out.push(s.kind);
+  if (b.status === 'fishing' && laerStream(b.pos, H)) out.push('strom');
+  if (b.status === 'port' && prev && prev.indexOf('port') !== 0 && laerGale(b.pos, H)) out.push('kuling');
+  return out.find(k => !E.q.some(x => x[0] === k && x[1])) || null;
+}
+function laerAsk(c, k){
+  const E = c.laer, o = [0, 1, 2]; for (let i = 2; i > 0; i--){ const j = Math.floor(crewRand() * (i + 1)) % (i + 1); const x = o[i]; o[i] = o[j]; o[j] = x; }
+  E.ask = {k, t0:S.t, o, sk:laerSkill(k)}; E.qT = S.t; const Q = LAER_Q[k];
+  msg(c.name, crewDialect(c, Q.q[0]) + ' Svar på kortet under Mannskap.', Q.q[1] + ' Answer on the card under Crew.');
+  laerEv('ask', k);
+}
+// the answer on his card (i: the place on the card): true when right, false when not, null when there was no question
+function laerAnswer(id, i){
+  const c = crewById(id), E = c && c.laer, A = E && E.ask; if (!A || !(i >= 0 && i < 3)) return null;
+  const right = A.o[i] === 0, o = c[A.sk[0]]; o[A.sk[1]] = Math.min(5, (o[A.sk[1]] || 1) + LAER.up[right ? 0 : 1]); crewDerive(c);
+  E.q.push([A.k, right, S.t]); while (E.q.length > 20) E.q.shift(); E.n = (E.n || 0) + 1; delete E.ask;
+  const w = LAER_Q[A.k].w;
+  if (right){ msg(c.name, crewDialect(c, 'Det gir mening. Det skal jeg huske.'), 'That makes sense. I will remember that.'); lifeStory(c, 'Lærte ' + w[0] + '.', 'Learnt ' + w[1] + '.'); }
+  else msg(c.name, crewDialect(c, 'Jaså. Det får jeg tenke litt på.'), 'I see. I will have to think about that.');
+  laerEv('ans', A.k, right); return right;
+}
+// once an hour (crewTick, for each vessel): the end of his time, a question running out, or a new one after what happened
+function laerHour(H){
+  const b = S.boat; if (!b) return;
+  for (const c of (S.crew || []).slice()){ if (!laerOn(c)) continue;
+    const E = c.laer, prev = E.st; E.st = b.status === 'port' ? 'port:' + b.port : b.status;
+    // the apprenticeship is over: notice by the law, ashore at the first harbour after it (crewOppTick, lifeDepart)
+    if (!c.opp && S.t - E.t0 >= LAER.days * 1440 && (E.n || 0) >= LAER.minQ){ if (E.ask) delete E.ask; crewNotice(c, 'laer'); continue; }
+    if (E.ask){ if (S.t - E.ask.t0 >= LAER.life || c.off || c.opp || c.mobOff){ laerEv('lapse', E.ask.k); delete E.ask; } continue; }
+    if (S.tut || (typeof FS_AWAY !== 'undefined' && FS_AWAY) || (typeof lagOf === 'function' && lagOf()) || !meAboard() || c.off || c.opp || c.fly || c.mobOff) continue;
+    if (E.qT != null && S.t - E.qT < LAER.gap) continue;
+    const k = laerSaw(c, H, prev); if (k) laerAsk(c, k);
+  }
+}
+// gone to his own boat (lifeDepart): the badge, a word from the exchange, and the event
+function laerDone(c, boat, hp){
+  if (typeof achAdd === 'function'){ achAdd('laer'); if (typeof achCheck === 'function') achCheck(); }
+  msg('Mannskap', c.name + ' gikk i lære hos deg og fører nå sin egen båt, «' + boat + '», fra ' + (hp ? hp.name : c.home) + '. Du er læremester.', c.name + ' learnt the trade with you and now skippers a boat of their own, the «' + boat + '», out of ' + (hp ? hp.name : c.home) + '. You are a master of the trade.');
+  laerEv('done');
+}
