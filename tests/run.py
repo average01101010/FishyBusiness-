@@ -253,6 +253,8 @@ for _f in ('tools/server/gate/gate.py', 'tests/gatetest.py', 'tests/savestest.py
 LITE += ['ferrytest']
 COVER['tests/ferrytest.py'] = ['ferrytest']; COVER['tests/unit/ferje.test.mjs'] = []
 COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npctest', 'boottest']; COVER['src/data/ferje.json'] = ['ferrytest', 'boottest']
+D3 += ['kystshot']; COVER['tests/kystshot.py'] = ['kystshot']   # (Ø15 N4: the coastal route's ship and an express boat at their quays in 3D)
+COVER['src/data/ferje.json'] += ['kystshot']; COVER['src/js/core/05b-ferje.js'] += ['kystshot']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
 # fin.test.mjs (unit) the reading. finshot is pictures for the eye (before and after), run by hand
 COVER['tests/fintest.py'] = ['fintest']; COVER['tests/finshot.py'] = []; COVER['tools/map/fin.py'] = []; COVER['tests/unit/fin.test.mjs'] = []
