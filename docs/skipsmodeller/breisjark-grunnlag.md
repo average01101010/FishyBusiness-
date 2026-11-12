@@ -360,3 +360,50 @@ Alt dette er felles kode (`deckcrew.js`, `core/13-work.js`) og er ikke rørt her
 - **Akterlanternen vist om natta** (et nattbilde rett akterfra).
 - **Felles kode (ikke modellen):** han som står ved styrbord galgestolpe i pausen, tre tett ved porten under settingen, og hvile som bare er å stå.
 
+
+### 10.11 Runde 4 (12.11.2026)
+
+Steg 89 på nytt, Jonas' økt på grenen `claude/ob11-r4-breisjark`, etter startmeldingen «Runde 4» i `docs/planer/start/89.md`. Valg 32, bredden (4,12 m), navnet og merket på 20 cm står urørt. Bildene, arkene og `check.txt` står i `docs/okter/2026-11-12-ob11-r4/`.
+
+**Hvor folkene står (sonden).** I stedet for å gjette plassene fra `deckcrew.js` ble spillet spurt: en sonde kjørte scenene fra `tests/ombord.py` (teiner sett og trekk, juksa jig, maskin og sløy, line og garn sett og trekk, rydd, hvile, ut) og skrev ut hver som sto på plass (`CREW3D.visible()`, `mode` `at`) i modellens ramme. Mannen i blått i `spill_teiner` var den som tar kaffe ved ripa om styrbord (x 2,5, y −1,7), 0,02 m fra skuldra til stolpen ved x 2,30. Juksaren på den akterste plassen (x 2,64) sto mellom den stolpen og lyets vegg (0,19 m til veggens ende). Mannen i rødt i `teiner_trekk` sto ved x 3,9, y −1,3 (nummer to ved teina), 0,8 m fra veggen: han sto ikke i en stolpe, men bak lyets veggende sett fra kameraet akter om styrbord. Plassene står i `CREW_WORK` og `CREW_REST` i skriptet. Sonden er `tools/boats/qa/crewplaces.py`, og arkene lages av `tools/boats/qa/sheet_ob11.py` (FØR fra forrige rundes ETTER-rad).
+
+**Det som er gjort i modellen:**
+
+| Punkt fra 10.10 | Gjort | Målt (`check()`) |
+|---|---|---|
+| Folk i stolpen under lyets akterkant om styrbord | Stolpen er tatt bort (`ROOF_POSTS`). Takhjørnet bæres av lyets vegg akter for åpningen med et kne under takkanten (0,4 m dypt, 2,0 m over dekket), av veggen om babord og av stolpen om babord over maskinkassa; det henger 0,8 m akter for veggen. Den akterste juksaplassen er flyttet fra x 2,64 til 2,40 (`JIG`, `anchors.jigZ`) | ny linje: arbeidsplassene (juksaplassene, haleren, ved teina og blødekaret, bordet, setteren, den som mater garnet) minst 0,25 m fra skuldra til stolpene (lyets akterstolpe, lyets vegg akter for åpningen, åpningens forkant, galgestolpene, aktermasta): nærmeste 0,29. Ny linje: plassene i pausen og ryddingen minst 0,05: nærmeste 0,08 (kaffe forut for veggens ende). Begge røde med runde 3-målene |
+| Setteren 2,5 cm fra galgestolpen | Setteporten og galgen 8 cm bredere på hver side: porten ±0,78, stolpene ±0,85 | setteren 0,105 m fra stolpens innside; krever 0,10 (før 0,02). Rød med 0,77 |
+| Flaggstanga skrå over setteren | Rett opp i hylsa på utsida av babord galgebjelke | ny del av linja: toppen rett over foten; rød med den skrå stanga |
+| Roret og hælen leses som plater | Roret: bladets omriss med 0,14 m radius der forkanten møter toppen og foten, bladet 0,11 m lavere (toppen 0,86) så stammen (Ø 0,11) synes over det, kobling med fire bolter og et nav der stammen går inn i skroget. Skoen er en kropp, 0,165 m dyp (før en plate på 9 cm), 0,20 bred ved kjølen og 0,15 ved hælen, med en hulkil opp i kjølens akterende og avrundet hæl | propellen 0,20 m over skoen (før 0,28 mot den tynne); `c_rudder` |
+| Detaljer | Ankeret i baugrulla i rendringene (spillets eget: `anchors.bower`, en plog på 16 kg; det manglet i alle rendringer fordi spillet tegner det). Viskere som pendler fra veggen over hver frontrute, rustfrie armer og svart gummi (svarte armer forsvant mot det mørke glasset). Sopplufter med boltet fot, bånd, kuppel og mørk munn under skjørtet. Pullerter med skrådd fotplate, bolter, sveis, midje og tung hette med leppe | `c_anchor`, `c_wipers`, `c_vents` |
+| Slitasje på de store hvite boksene | Styrhusets vegger og maskinkassa er rutenett på 0,12–0,15 m, så slitasjen per hjørne har hjørner å sitte på; regnstriper ned veggene; rustrenner under lensportene på det blå (som `hs11.py`) og ved baugen under ankeret | `flatnorm` 0; `c_free`, `K2` |
+| Akterlanternen om natta | Nattbildet rett akterfra i spillet (`ma36shot`, `natt_akter`) og i rendringen (`c_night_stern`) | — |
+| Teinene ovenfra | `ma36shot` tar settingen og trekkingen ovenfra og skriver hvor hver står | `spill_teiner_ovenfra`, `spill_teinetrekk_ovenfra` |
+
+**Før-bildene.** Arkene har runde 3s etter-rad som FØR (samme modell som før denne runden, tatt 12.11.2026 om morgenen) og opptakene fra denne runden som ETTER. Før-opptaket på nytt ble startet og stoppet etter 8 av 24 klipp: med to opptak samtidig tok det over to timer per format, og modellen var den samme som i runde 3. Felles kode kan ha endret seg mellom runde 3 og nå (OB10 runde 4 eier `deckcrew.js` og var ikke flettet inn da opptakene ble tatt).
+
+**`STAB_AT.breisjark.fish`** er midten av de to juksaplassene: 2,03 (fra midtskips, akterover) med runde 3s plasser, 2,15 nå. `core/03c-stability.js` eies av OB10 runde 4 (arbeidsrutinen) mens denne økta går, så tallet står i den øktas linje under «Øktene som kjører» i køen. `tests/unit/trim.test.mjs` sjekker ikke `fish`, og 12 cm for to mann gir ingen trim som synes.
+
+**Testene i runde 4.** `check()` 40 av 40 (fire linjer nye eller strengere, alle røde med runde 3-målene), `flatnorm` 0, `clip_malo36` 0, enhetstestene 3 638 OK, `lanterntest`, `regmarktest` og `vesseltest` grønne, `crewclip` (breisjarken `jig 2/2`; rød bare for `snokrabbe` som før) og `walktest` (breisjarken OK; rød bare for autolineren som før). `ombord.py breisjark` 24 operasjoner i begge formater med `clipcheck` tom i alle. `potshot`, `brotest breisjark` og `vessel3d breisjark`: se commit-meldingen.
+
+**Karakteren i runde 4: 71/100, ikke ferdig.** Satt 12.11.2026 av en uavhengig underagent som bare fikk mappa og skalaen (kap. 2 i `om-bord.md` uten tabellen med karakterene), ikke grunnlaget, forrige karakter eller øktas vurdering.
+
+| Punkt | Vekt | Runde 3 | Runde 4 | Sensorens begrunnelse (forkortet) |
+|---|---|---|---|---|
+| Skrogutforming | 20 | 16 | 16 | Glatt og likt, vekta treffer. Trekk: dødveden og propellbrønnen er en firkantet kloss med loddrett akterstevn, roret leses fortsatt som en plate (profilen synes ikke fra siden), 2 % for lang |
+| Detaljer | 20 | 13 | 14 | Ankeret, viskerne, soppluftene og pullertene sett. Trekk: rustrennene var mettet oransje og så ut som lys om natta, lite slitasje ellers, nakne innvegger i lyet og styrhuset, en sagtakket kant ved styrhusets akterhjørne, eksosrøret tett inntil flåten |
+| Lanterner | 5 | 4 | 4 | Riktig, rødt over hvitt. Trekk: dekkslyset overdøver akterlanterna under gange, Blender-nattbildene for mørke |
+| Styrhus | 10 | 8 | 7 | God sikt og dashbord. Trekk: fasetterte innervegger, mørkt og tomt tak, ingen takkonsoll |
+| Arbeidsflyt | 25 | 15 | 16 | Plassene og settingen gir mening, mannskapet klar av stolpene i de fleste bildene. Trekk (A): setteren står inne i teinestabelen i `teiner_sett`; sprut som svever over dekket (`garn_sett`); line og garn fra haleren til stamp og kar vises ikke; garnrulla brukes aldri |
+| Utforming av dekk | 20 | 15 | 14 | Logiske plasser, trinn og gang. Trekk (A): teinestabelen 0,18 m fra setteporten; aktermasta midt foran porten; få dekksdetaljer |
+| **Sum** | 100 | **71** | **71** | |
+
+**Rettet etter sensuren (12.11.2026), ikke sensurert på nytt:** den sagtakkede kanten var rutenettet denne runden la på styrhusveggene (solidify og vinduskuttene ga hakk ned akterhjørnet om babord); styrhusskallet er tre ringer igjen. Rustrennene er dempet (0,30, 0,18, 0,11 med 0,55 i stedet for lys rust med 0,80). Begge er eksportert på nytt og vist i `rend_K3p`, `rend_c_free`; arkene og bildene fra spillet er tatt før rettingen.
+
+**Det som mangler til 75 (fire poeng), og hvor det ligger:**
+
+- **Teinestabelen og setteren (A, modellen og felles kode):** stabelen står på OB16s plass foran setteporten (x 0,67, y −0,40, ringen fra y −1,13 til 0,33), og spillet stiller setteren 0,45 m til styrbord for midten over hekken (`deckcrew.js` `setOver`), altså inne i ringen. Styrbord låring er prøvd og felt av `potshot` (10.9), babord låring stenges av maskinkassa og pullerten. Løsningen er en egen setterplass i modellen som spillet leser når teiner settes (`kit.setter`), eller at `potshot`s unntak regnes fra skrogets virkelige side; begge rører felles kode (`deckcrew.js`, `tests/potshot.py`), som OB10 runde 4 eier nå.
+- **Dødveden og propellbrønnen (modellen):** avrundet overgang fra kjølen til akterstevnen og brønnens forkant, så det ikke leses som en kloss.
+- **Styrhuset inne (modellen):** innervegger uten fasetter (fler ringer uten vinduskuttene som ga hakk), en takkonsoll med radio og lys.
+- **Akterdekket (modellen):** aktermasta står midt foran setteporten (0,25 m fra stampenes vei); garnrulla over hekken har ingen rolle i spillet. Begge er tegningens.
+- **Felles kode:** sprut over dekket (`garn_sett`), line og garn som ikke vises fra haleren til stamp og kar, dekkslyset under gange (`spill_natt_akter`), og flaggstanga som i perspektiv tegnes over folk ved hekken (den står nå rett opp på galgen; det som står igjen, er kameraets vinkel).

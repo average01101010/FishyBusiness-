@@ -3086,3 +3086,10 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	crewclip	FEIL	29	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 10
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	lanterntest	OK	18	lite	samtidig	
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	regmarktest	OK	10	lite	samtidig	
+2026-11-12 11:23	claude/ob11-r4-breisjark	f4ce485+	vesseltest	OK	22	lite	samtidig	
+2026-11-12 14:23	claude/ob11-r4-breisjark	35d99f6+	crewclip	FEIL	22	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 14:35	claude/ob11-r4-breisjark	35d99f6+	potshot	OK	741	3d	alene	

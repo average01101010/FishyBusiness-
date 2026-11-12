@@ -1,0 +1,40 @@
+OK   deplasement 21.80 t ved tegningens vannlinje (kjølen med) mot 20.0 t i VESSELS; 20.0 t gir vannlinja 0.06 m lavere (største snitt 3.53 m2)
+OK   den tomme båten (spillets vannlinje WLE, 0.06 m under tegningens): 20.05 t mot 20.0 t i VESSELS (valg 18 A: disp er den tomme båten); malingen står ved tegningens vannlinje
+OK   sidene er like under ripa: største forskjell mellom styrbord og babord halvbredde 0.0000 m (pchip-feilen ga 0,1 m ved stevnen på kyst15; ripa om styrbord er lav en meter lenger akter, valg 32)
+OK   AVVIK lengde over alt 11.22 m (fenderlista over speilet til stevnens topp; skroget alene 11.20, baugrulla til 11.03) mot 10.99: 2 % for lang, og det står (stasjonene er målt på tegningen med 1 m mellom, og hver plass om bord er regnet mot dem; spillet regner med lengden 10.99)
+OK   største bredde 4.08 m ved ripa, 4.12 over fenderlista, mot 4.20 (vannlinja 3.51 m, 86 %)
+OK   dypgang 1.92 m med kjølen, 2.00 med skoen, mot 2.00 i VESSELS
+OK   fribord midtskips 1.58 m til ripa, 3.32 til lyets tak; ved stevnen 2.57, ved speilet 2.38; dekket 0.88 over vannet
+OK   den hvite rundtlysende 3.53 m over sidelanternene (vedlegg I 2(d): minst 1 m)
+OK   sidelanternene 1.78 m over skroget, den hvite 5.88 (vedlegg I 2(g): sidene høyst tre firedeler så høyt, 4.41)
+OK   fiskelysene rødt over hvitt 1.07 m fra hverandre (vedlegg I 2(i), under 20 m: minst 1 m), det hvite 2.17 m over sidelanternene (2(j): minst to ganger avstanden, 2.14)
+OK   masta med den hvite står 7.1 m fra flaggstanga og over den: spillet gir vimpel (båten har mast)
+OK   propellen Ø 1.06: 0.09 m klaring til skroget over, 0.20 til skoen under, 0.34 til akterstevnen forut, 0.23 til roret akter
+OK   styrehuset: 1.87 m under taket over dørken (midt på, med dekkets bue; brotest 1.8 for den som står, dekkskartet 1.85)
+OK   øyet 0.86 m over frontvinduenes underkant, 0.10 under overkanten
+OK   dashbordet 46 grader under øyet, vinduets overkant 3 over (hp -0.35 rad og fov 60: synsfeltet går fra 10 ned til 50 grader)
+OK   rattet 0.40 m forut for skipperen (han står bak det, ikke i det), setet 0.46 m bak ham
+OK   lyets tak 2.38 m over dekket (fri høyde over arbeidsdekket, minst 1.85; for høyt til å bli dekk, over 1.6)
+OK   styrhustaket 1.92 m over gangen på bakken ved siden av (et tak over et rom: roofOver)
+OK   casingens tak 1.13 m over dekket (under 1.6: en kasse dekkskartet kan knytte til dekket, som før)
+OK   gangen om styrbord ved styrhuset 0.45 m bred mellom huset og skansen (dekkskartet: to celler, 0.4)
+OK   navnefeltene på sidene 0.38-0.74 m under fenderlista fra x 7.40 til 8.70, merket forut for x 9.2 (maletest: aldri oppå hverandre)
+OK   vessel3d: skroget i båndet -0.3 til 1.5 m er 11.10 m langt (lengden 10.99, -6 % til +3 %) og 4.12 m bredt (bredden 4.20, ±5 %)
+OK   vannlinjene jevne: største endring i stigningen 0.010 m per 6 cm-steg (ved x 9.66, z 0.80; en bule synes over rundt 0,02)
+OK   haleren 0.97 m over dørken der den som haler står (x 5.27, y -1.43; spillet sender ham inn over 1,2 m: F24, før 1,25), 0.30 over ripa
+OK   blødekaret x 4.02-5.22 rett akter for haleren (5.47), 0.01 m fra skansens fot og 0.37 m fra luka (den som bløgger står imellom)
+OK   sløyebordet x 3.20-4.10 ved babord ripe under lyet; den som sløyer står y 1.03, 0.12 m fra luka, nummer to 0,7 m forut (F19); stampene og garnkaret står ikke lenger forut for bordet
+OK   stampeblokken med åtte x 1.78-3.92, y -0.91 til -0.01 akter for luka (3.96) under takets akterkant (2.20): 0.14 m til aktermasta, 1.21 m til stigen, 0.27 til lasteplassen
+OK   garnkaret x 2.09-3.41, y -0.93 til 0.19 samme sted (aldri om bord samtidig med stampene): 0.55 m til luka, 1.09 til stigen
+OK   setteporten i hekken: y -0.78 til 0.78 mellom galgens stolper (0.85), terskelen 0.58 m over dekket, rullens topp 2.94; redskapet går ut ved y -0.45 i 3.02 (skansens topp ellers 3.76: før gikk det gjennom den), under garnrulla (4.27)
+OK   setteren står 0.105 m fra galgestolpens innside (stolpene y ±0.85, han står y -0.45 og -0.05 med skuldrene 0.25 ut; runde 3: 0,025, før det i stolpen; krever 0,10)
+OK   mannskapets arbeidsplasser mot stolpene: 13 plasser, 6 stolper (lyets akterstolpe bb, lyets vegg akter for åpningen sb, åpningens forkant sb, galgestolpe bb, galgestolpe sb, aktermasta); nærmeste 0.29 m fra skuldra til stolpen (setteren y -0.45 ved galgestolpe sb; krever 0.25)
+OK   mannskapets plasser i pausen og ryddingen mot stolpene: 12 plasser, 6 stolper (lyets akterstolpe bb, lyets vegg akter for åpningen sb, åpningens forkant sb, galgestolpe bb, galgestolpe sb, aktermasta); nærmeste 0.08 m fra skuldra til stolpen (kaffe sb forut for lyets vegg ved lyets vegg akter for åpningen sb; krever 0.05)
+OK   flaggstanga på galgen (x -0.58, y 0.92), rett opp (toppen 0.00 m akter for foten; runde 3: 0,16 skrått akterover), toppen 3.89 m over dekket: et flagg på 1,2 m henger aldri lavere enn 2.69 m over dekket (hodene 1,8; før 1,5 over setteren)
+OK   stigen til lyets tak om babord over casingen (trinnene på casingens akterside, x 0.87, y 1.42): 1.09 m fra stampene og garnkaret (før 0,05 og 0,03), utenfor redskapets vei
+OK   redskapets vei til setteporten: fra garnkaret 0.32 m klar av aktermasta, fra stampene 0.25 m; ikke gjennom casingen eller stigen (før: fra babord under lyet på skrå over hele akterdekket)
+OK   teinestabelen (seks) x 0.67 y -0.40 på det åpne akterdekket: 0.18 m fra speilet, fri for casingen, masta, pullertene og skansen, akter for takkanten; teina tømmes ved x 3.15, y -1.11 i den åpne sida akter for blødekaret (0.09 m til karet, 0.03 til skansen, 0.20 til lukas hjørne)
+OK   teinestabelen 0.18 m fra setteportens åpning (styrbord låring, 0,76 m fra porten, er prøvd: potshot finner ikke gulv til ringen der)
+OK   potplaces.json har de samme plassene som skriptet (python3 tools/boats/potplaces.py skriver dem ellers over)
+OK   juksaplassene sb 3.66, sb 2.40: 2 (jukseMax i VESSELS er det, valg 32: to); ripa der 0.71 m over dekket (akterskansen 1.46: for høy å jukse over), fri for akterskansen, lyets hjørne, blødekaret og haleren
+OK   taket med bremmen: dryppkanten 1.90 m over gangen på bakken, bremmen 0.16 m ut fra veggene og 0.11 inn opp til takkanten
