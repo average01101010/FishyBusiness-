@@ -38,7 +38,12 @@ export default function (t){
   { const P = anchorsOf('boat-hs11.b64').kit.pots.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.sjarkny.gearMax.teine, 'sjarkny: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabler)'); }
   // (the kyst21, OB13: four stacks, three across the working deck forward of the hatch and one on the hatch, as many as gearMax.teine)
   { const P = anchorsOf('boat-kyst21.b64').kit.pots.at; t.eq([P.length, P.reduce((a, q) => a + q[4], 0)], [4, VESSELS.kyst21.gearMax.teine], 'kyst21: gearMax.teine er det modellens fire stabler rommer');
-    t.ok(P.every((q, i) => P.every((r, j) => i === j || Math.hypot(q[0] - r[0], q[2] - r[2]) >= 1.45)), 'kyst21: stablene (ring 1,45 m) står fri av hverandre'); }
+    t.ok(P.every((q, i) => P.every((r, j) => i === j || Math.hypot(q[0] - r[0], q[2] - r[2]) >= 1.45)), 'kyst21: stablene (ring 1,45 m) står fri av hverandre');
+    // (OB13 round 2: her own place where a hauled pot is emptied, aft of the bleeding tub and inboard of the table, the ring clear of
+    // the tub, the table and the stacks; without it the game's default stood on the tub and the table)
+    const A = anchorsOf('boat-kyst21.b64'), S = A.kit.pots.spot, W = A.work, far = (c, hx, hz) => Math.hypot(Math.max(Math.abs(S[0] - c[0]) - hx, 0), Math.max(Math.abs(S[2] - c[2]) - hz, 0));
+    t.ok(Array.isArray(S) && far(W.tub, 0.36, 0.54) > 0.725 && far(W.table, 0.29, 1.0) > 0.725 && P.every(q => Math.hypot(q[0] - S[0], q[2] - S[2]) >= 1.45) && S[2] > W.tub[2],
+      'kyst21: teina tømmes på modellens egen plass akter for karet, fri av karet, bordet og stablene (kit.pots.spot ' + JSON.stringify(S) + ')'); }
   // (the breisjark, OB11: one stack on the open aft deck, and the place where a hauled pot is emptied is the model's own)
   { const KP = anchorsOf('boat-malo36.b64').kit.pots, P = KP.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.breisjark.gearMax.teine, 'breisjark: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabel)');
     t.ok(Array.isArray(KP.spot) && KP.spot[0] > 0.5 && KP.spot[2] > 1.2, 'breisjark: teina tømmes på modellens egen plass i den åpne sida (kit.pots.spot ' + JSON.stringify(KP.spot) + ')'); }
