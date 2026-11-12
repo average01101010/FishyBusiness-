@@ -55,6 +55,27 @@ const upPrice = (pc, min) => Math.max(min || 5000, Math.round(VESSELS[S.boat.typ
 // a bigger engine (Jonas 08.10.2026): +10 % and +20 % power, so a tenth or a fifth of the speed at most; it drinks more and the engine
 // service costs more (svc), so it saves nothing the Trim boosts (+50 to +100 %) do. What it gives is a lasting, modest gain.
 const ENGUP = [{p:0.1, pc:0.06, h:12, svc:1.2}, {p:0.2, pc:0.11, h:24, svc:1.5}];
+// the propeller (OPP3 of docs/planer/oppgraderinger.md; Jonas 07.11.2026: «propellene må også gi en reell økning i farten på båten, men
+// ikke så mye at det blir uattraktivt å kjøpe trim-boost for ekte penger», «nivåene burde være fra 10-30% økning», and on the hull speed
+// «Ja, skill på dem som du foreslo»): a better propeller from the yard in three steps, per boat (b.propLv; a save without the field has
+// none), not on an outboard (the skiff has the 90 hp outboard) and not on the ocean vessels. Each step is its whole gain over the boat's
+// own (principle 1): top and cruising speed (pl planing, dp displacement), the burn (fuel, off) and the acceleration (acc); the price a
+// share of the boat's price with a floor (pc, min)
+const PROPUP = [{pl:0.10, dp:0.05, fuel:0.05, acc:0.05, pc:0.02, min:2500, no:'Polert propell med justert stigning', en:'Polished propeller, pitch adjusted'},
+  {pl:0.20, dp:0.10, fuel:0.10, acc:0.10, pc:0.04, min:4000, no:'Ny propell tilpasset båten', en:'A new propeller matched to the boat'},
+  {pl:0.30, dp:0.15, fuel:0.15, acc:0.15, pc:0.07, min:6500, no:'Skreddersydd propell for skrog og motor', en:'A propeller made for her hull and engine'}];
+const propFits = V => !!V && !V.outboard && V.cls !== 'hav';
+const propLvOf = b => b && propFits(VESSELS[b.type || 'skiff']) ? clamp(Math.round(+b.propLv || 0), 0, PROPUP.length) : 0;
+const propSpeed = (st, planing) => st ? (planing ? st.pl : st.dp) : 0;
+// the speed as a sum, never a product (Jonas 07.11.2026, point 7: «Om det står 10% økning feks, så betyr det at økningen er 10% opp fra
+// grunnnivået båten eller utstyret hadde»): the propeller, the yard's engine (speedOfPower − 1) and a trim (T.x − 1) each add their share
+// of the boat's own top speed, so a trim gives the same knots with or without a propeller and «dobbel fart» is double the boat's own.
+// sp: top and cruising speed, acc: acceleration, fuel: the burn's share (+0.4 per share of power, less the propeller's). V: the boat as
+// she is before them (VESSELS with the equipment's boosts), T: the trim on (BOOSTS) or null
+function speedSum(b, V, T){
+  const lv = propLvOf(b), st = lv ? PROPUP[lv - 1] : null, P = powerX(b), eng = b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0, t = T ? T.x - 1 : 0;
+  return {sp:propSpeed(st, V.planing) + (speedOfPower(P, V.planing) - 1) + t, acc:(st ? st.acc : 0) + 0.3 * eng + t, fuel:0.4 * (P - 1) - (st ? st.fuel : 0)};
+}
 const svcCostOf = b => { const V = VESSELS[b.type || 'skiff']; return Math.round(V.svcCost * (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].svc : 1)); };
 // the rest of the yard's upgrades, all about the boat itself (never the fishing gear), each in steps, priced as a share of the boat's
 // price (upPrice) and fitted by what the boat has: cabins, galley and drying room only where there are bunks (berths), the hold and
@@ -172,9 +193,9 @@ function applyVessel(){
   const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
   BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);
   const V0 = VESSELS[b.type || 'skiff']; BOAT.gutMachine = V0.gutMachine || fx.gut || 0; BOAT.iceMaker = V0.iceMaker || fx.maker || 0;   // the machines: the boat's own, or the yard's (UPGS gut, ice)
-  const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing);
-    BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
-  const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }
+  // the propeller, the engine and a trim as one sum of the boat's own numbers (speedSum), worked out once
+  const P = powerX(b), T = canBoost(BOAT) && trimOn(b), X = speedSum(b, BOAT, T);
+  BOAT.vmax *= 1 + X.sp; BOAT.vcruise *= 1 + X.sp; BOAT.accel *= 1 + X.acc; BOAT.fuelK *= 1 + X.fuel; if (P > 1) BOAT.hp = Math.round(BOAT.hp * P);
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
   speedPin();
 }
@@ -504,6 +525,15 @@ const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = ()
 // litres put in at a price keep the tank's average price per litre (b.fuelKrL), which the trip's fuel is priced at
 function fuelUse(b, l){ const u = Math.min(b.fuel, Math.max(0, l)); b.fuel -= u; if (u > 0 && typeof tripOf === 'function') tripOf(b).fuelL += u; return u; }
 function fuelAdd(b, l, kr0){ const f0 = Math.max(0, b.fuel || 0), p0 = b.fuelKrL || fuelPrice(); b.fuel = f0 + l; if (l > 0) b.fuelKrL = (p0 * f0 + (kr0 || 0)) / (f0 + l); }
+// the boat you follow with another step from the yard laid over her (o: {propLv} or {engLv}): her top and cruising speed, and the litres
+// an hour at speed v (knots; her cruising speed now when none is given) in calm water, by the same sum as applyVessel. The yard's cards
+// and «Båten og utstyret» show now and the next step with it; the litres at the same speed are what the propeller saves
+function boatWith(o, v){
+  const b = S.boat, T = canBoost(BOAT) && trimOn(b), X0 = speedSum(b, BOAT, T), X1 = speedSum(Object.assign({}, b, o), BOAT, T), at = v != null ? v : BOAT.vcruise;
+  const vmax = BOAT.vmax / (1 + X0.sp) * (1 + X1.sp), vcruise = BOAT.vcruise / (1 + X0.sp) * (1 + X1.sp), fk = BOAT.fuelK / (1 + X0.fuel) * (1 + X1.fuel);
+  const now = fuelLph(at, 0), lph = now / (fuelBase(at, BOAT.vmax, BOAT.planing) * BOAT.fuelK) * fuelBase(at, vmax, BOAT.planing) * fk;
+  return {vmax, vcruise, lph, at};
+}
 function fuelLph(v, W){ const base = fuelBase(v, BOAT.vmax, BOAT.planing); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * ((typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? 1.5 : 1); }
 function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed() * (typeof hullSpeed === 'function' ? hullSpeed() : 1); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 
