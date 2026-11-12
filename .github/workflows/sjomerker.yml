@@ -51,6 +51,24 @@ jobs:
         run: |
           gh release view sjomerker-kilde >/dev/null 2>&1 || gh release create sjomerker-kilde --target "${{ github.sha }}" --title "Sjømerkene, kilden" --notes "Geofabriks Norge-utdrag filtrert på seamark-taggene (osmium), alle taggene, OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere). Til arbeidet med tools/map/sjomerker.py i en økt; byttes ved hver kjøring."
           gh release upload sjomerker-kilde out/sjomerker-kilde.geojsonseq.gz --clobber
+      # Kystverket's navigation installations (WFS, NLOD 2.0; the host is closed to the sessions): the capabilities, and each feature
+      # type over Bjørnøya and Jan Mayen, so a session can see what is there before the converter takes it in
+      - if: inputs.kilde == true
+        name: Kystverket over the islands
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p kv && cd kv
+          W='https://maps.kystverket.cloudgis.no/enterprise/services/PROD/nfs_sistop_ekstern_prod/MapServer/WFSServer'
+          curl -sS --retry 3 -o caps.xml "$W?service=WFS&request=GetCapabilities" || true
+          for t in $(grep -o '<wfs:Name>[^<]*</wfs:Name>\|<Name>[^<]*</Name>' caps.xml | sed 's/<[^>]*>//g' | sort -u); do
+            n=$(echo "$t" | tr ':/' '__')
+            curl -sS --retry 2 -o "desc_$n.xml" "$W?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=$t" || true
+            curl -sS --retry 2 -o "bjorn_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=74.2,18.6,74.6,19.5,EPSG:4326" || true
+            curl -sS --retry 2 -o "janm_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=70.7,-9.2,71.2,-7.8,EPSG:4326" || true
+            curl -sS --retry 2 -o "senja_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=69.2,17.9,69.3,18.1,EPSG:4326" || true
+          done
+          ls -la; cd .. && tar czf out/sjomerker-kv.tar.gz kv && gh release upload sjomerker-kilde out/sjomerker-kv.tar.gz --clobber
       # the next free number after the newest sjomerker-N (not the run number: runs that stopped at seen.py count too, and the plan
       # names the release after the last one, sjomerker-7 then sjomerker-8)
       - if: steps.seen.outputs.skip != 'true' && inputs.kilde != true
