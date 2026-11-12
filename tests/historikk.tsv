@@ -3152,3 +3152,10 @@
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	hopptest	OK	8	lite	samtidig	
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	trip2	OK	32	lite	samtidig	
 2026-11-12 13:28	plan/2026-11-12-88	c9bac8aa	boottest	OK	24	lite	alene	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	calib	LES	14	lite	samtidig	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	simday	LES	13	lite	samtidig	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	progweek	LES	34	lite	samtidig	
+2026-11-12 15:28	plan/2026-11-12-88	3a8ac2d6	mobshot	FEIL	602	3d	alene	FEIL 3. etterpå: ingenting igjen, og båten i vugga (drawSafety)  {"person": 1, "buoy": 0, "light": 0, "smoke": 14, "boat": "out", "holder": 0}
+2026-11-12 15:43	plan/2026-11-12-88	3a8ac2d6	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 15:52	plan/2026-11-12-88	3a8ac2d6	jigshot	OK	550	3d	alene	
+2026-11-12 16:48	plan/2026-11-12-88	3a8ac2d6+	mobshot	OK	687	3d	alene	

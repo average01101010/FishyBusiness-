@@ -351,6 +351,18 @@ Steg 88 runde 4, arbeidsrutinen på grenen `plan/2026-11-12-88` (PR #69), etter 
 
 **Ikke gjort i runden (punkt 4 i 10.12):** den som hviler, står fortsatt ved ripa, og redskapet hopper fra haleren til akterdekket; «kast loss» viser nå henne ved kaia mens trossene tas inn, men ingen ses ved trossene: kameraet står om styrbord og kaia er om babord, og om hendene står ved klampene der, er ikke målt (opptaket skriver ikke ut fortøyningsrollene).
 
+**Resten av porten (12.11.2026, arbeidsrutinens andre kjøring på grenen, hele kysten i bygget):**
+- `h3dshot` del 4 (lossingen fra snøkrabbebåtens tanker ved mottaket i Båtsfjord, som `view3d/09-landing-deck.js` nå tegner utstyret under) er grønn i begge formater: 8 OK, ingen GL-feil, sidefeil `[]`. Bildet `loss_kar` viser teinestablene, bordet og kranen på dekket mens kranen løfter karet.
+  - Bildet `loss_dekk` dekkes av kortet «Mens du var borte». Ett skjermbilde tok rundt 4,5 minutter i SwiftShader, den felles klokka gikk 45 spillminutter, og lossingen ble ferdig før bildet (`catchUp`, ti minutter eller mer). Det er testmaskinens fart, ikke spillet.
+  - Del 1–3, 5 og 6 er ikke kjørt: de har ingen lossing, og `drawDeck` er bare endret når `b.land` står.
+- `tral3d` er grønn kjørt direkte: 19 OK, også sjarkny-modellen. Den går ut på tid i `run.py` (900 s) også på andre grener, før sjarkny.
+- `jigshot` 4 OK. `calib`, `simday` og `progweek` har ingen feil.
+- `mobshot` var rød én gang: sjekk 3 leste rammen før `S.mob` ble tømt. Den var grønn på arbeidsgrenens bygg og grønn på dette bygget kjørt på nytt. Feilen var i testen: `frames()` talte forsøk, ikke rammer, og ventet bare 1,5 s. Rettet til å vente på to `requestAnimationFrame`.
+- Ikke kjørt:
+  - `sea3d` og `hull3d`: `STAB_AT` er bare endret med stampenes plass, 6 cm, i én båt.
+  - `trytest` og `oppshot`: ingen lossing.
+  - `workshot`: går ut på tid på arbeidsgrenen fra før, og arbeidet på dekk er dekket av `ombord.py`.
+
 ### 10.14 Karakteren etter runde 4: 75/100, ferdig
 
 Satt 12.11.2026 av en ny uavhengig underagent med samme grunnlag som i runde 3: 26 ark fra arbeidet om bord (tre bilder per operasjon i begge formater, det endelige bygget), 14 bilder fra spillet (`tests/hs11shot.py`, `TAG=etter`), 30 rendringer (`qa/hs11_wle.py` og `qa/hs11_uv.py`), `check()`-utskriften (46 linjer, alle OK) og skalaen. Den fikk ikke tidligere karakterer eller denne teksten.
