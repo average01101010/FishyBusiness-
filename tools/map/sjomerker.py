@@ -3,8 +3,15 @@
 # (OpenSeaMap; in Norway mostly from Kystverket's data), in the game's national frame (km), in the format of src/data/seamarks.json:
 #   lights [x, y, height m, range nm, sequence (+ on, - off, seconds), sectors [[from°, to°, 'w'|'r'|'g'|'y']], 'M'|'m', name]
 #           the sectors' bearings are true and from seaward (towards the light), as OpenSeaMap has them; an all-round light [[0, 360, c]]
-#   marks  [x, y, type, category]: M lighthouse, m minor light, P pile or post, D stake (a danger or special mark), L lateral beacon,
-#           B buoy, C cardinal buoy, S cardinal beacon, K cairn; category port/starb or north/east/south/west
+#   marks  [x, y, type, category(, arrow)]: M lighthouse, m minor light, P pile or post, K cairn, L lateral beacon and B lateral buoy
+#           (category port or starb; w a white one of the inland waterways, '' none known: never drawn as port), C cardinal buoy and
+#           S cardinal beacon (north, east, south, west), and from sjomerker-8 (Ø13 K3, IALA region A, 12.11.2026):
+#           D a stake or beacon that is no IALA mark (the iron rods, jernstenger, mostly beacon_isolated_danger of the shape stake in
+#             Kystverket's data, 11 600 of 13 234; category '' a stake, tower, lattice, ball for a ball on top),
+#           I isolated danger buoy and i beacon (black with a red band, two balls: the colours black;red;black or the topmark 2 spheres),
+#           A safe water buoy and a beacon (red and white upright stripes, one red ball),
+#           Y special mark buoy and y beacon (yellow, a cross; Y's category: its colour y, w or r, s spherical, x the cross on top).
+#           The fifth field, when there, is the arrow on top (viser, krekse; seamark:topmark:orientation): its bearing, true, in degrees
 #   rocks  [x, y]
 # From Geofabrik's extract of Norway (with its waters), filtered by osmium; Overpass timed out on the coast's bands (504, 05.10.2026)
 # and is kept as a fallback. Both are closed to the cloud session and open in Actions (.github/workflows/sjomerker.yml, started by a
@@ -12,6 +19,7 @@
 # and tools/map/game.py puts into each tile's chart pack as its 'marks' entry.
 #   python3 tools/map/sjomerker.py pbf norway-latest.osm.pbf out/sjomerker.json    from the extract (osmium-tool on the path)
 #   python3 tools/map/sjomerker.py fetch out/sjomerker.json                         the bands over the frame from Overpass
+#   python3 tools/map/sjomerker.py geojson sjomerker-kilde.geojsonseq.gz out/sjomerker.json   from the source a release keeps
 import os, sys, re, json, time, gzip
 import requests
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -65,11 +73,15 @@ def seq_of(t, k):
     return [0.5, -round(max(0.5, p - 0.5), 2)]
 def colour(v): return COL.get((v or 'white').split(';')[0].strip(), 'w')
 
+# a light that only lights up the mark (seamark:light:N:category=floodlight; on 2 075 lateral beacons a yellow F beside the red or
+# green, Ø11.8's control 9.3) is no signal, and is left out
+FLOOD = ('floodlight', 'floodlit')
 def light_of(t, x, y, kind):
     secs, rng, hgt, sq = [], [], [], None
     for i in range(1, 40):
         k = f'seamark:light:{i}:'
         if not any(key.startswith(k) for key in t): continue
+        if (t.get(k + 'category') or '').split(';')[0] in FLOOD: continue
         a, b = num(t.get(k + 'sector_start')), num(t.get(k + 'sector_end'))
         if a is None or b is None or abs((b - a) % 360) < 1e-6: a, b = 0, 360   # no sector, or all round
         else: a, b = round(a % 360, 1), round(b % 360, 1)
@@ -78,7 +90,8 @@ def light_of(t, x, y, kind):
         if num(t.get(k + 'height')) is not None: hgt.append(num(t.get(k + 'height')))
         if sq is None and (t.get(k + 'character') or t.get(k + 'sequence')): sq = seq_of(t, k)
     if not secs:
-        if not any(key.startswith('seamark:light:') for key in t): return None
+        if not any(key.startswith('seamark:light:') and not re.match(r'seamark:light:\d+:', key) for key in t): return None
+        if (t.get('seamark:light:category') or '').split(';')[0] in FLOOD: return None
         secs = [[0, 360, colour(t.get('seamark:light:colour'))]]
     k = 'seamark:light:'
     if num(t.get(k + 'range')) is not None: rng.append(num(t.get(k + 'range')))
@@ -86,6 +99,41 @@ def light_of(t, x, y, kind):
     if sq is None: sq = seq_of(t, k)
     name = t.get('seamark:name') or t.get('name') or ''
     return [x, y, round(hgt[0] if hgt else 6.0, 1), round(max(rng) if rng else 3.0, 1), sq, secs, kind, name]
+
+def first(v): return (v or '').split(';')[0].strip()
+LAT = {'starboard': 'starb', 'preferred_channel_port': 'starb', 'port': 'port', 'preferred_channel_starboard': 'port'}
+# a mark's kind, category and arrow from its tags (the format above). A lateral mark without a category of its own takes it from its
+# colour (red port, green starboard in region A); white is w, anything else '' (Ø11.8: 21 such beacons were drawn red)
+def mark_of(t, ty):
+    g = lambda k: t.get(f'seamark:{ty}:{k}') or ''
+    shape, col, top = g('shape'), g('colour'), t.get('seamark:topmark:shape') or ''
+    arrow = None
+    if top == 'arrow':
+        a = num(t.get('seamark:topmark:orientation'))
+        if a is not None: arrow = int(round(a)) % 360
+    if ty == 'light_major': return 'M', '', None
+    if ty in ('light_minor', 'light_vessel'): return 'm', '', None
+    if ty == 'pile': return 'P', '', None
+    if ty in ('beacon_lateral', 'buoy_lateral', 'light_float'):
+        cat = LAT.get(g('category'), '')
+        if not cat: cat = {'red': 'port', 'green': 'starb', 'white': 'w'}.get(first(col), '')
+        return ('L' if ty == 'beacon_lateral' else 'B'), cat, arrow if ty == 'beacon_lateral' else None
+    if ty in ('buoy_cardinal', 'beacon_cardinal'):
+        cat = g('category'); return ('C' if ty == 'buoy_cardinal' else 'S'), cat if cat in ('north', 'east', 'south', 'west') else '', None
+    if ty == 'buoy_isolated_danger': return 'I', '', None
+    if ty == 'buoy_safe_water': return 'A', '', None
+    if ty == 'beacon_safe_water': return 'a', '', None
+    if ty == 'buoy_special_purpose':
+        c = {'yellow': 'y', 'white': 'w', 'red': 'r'}.get(first(col), 'y')
+        return 'Y', c + ('s' if shape == 'spherical' else '') + ('x' if top in ('x-shape', 'cross') else ''), None
+    if ty in ('beacon_isolated_danger', 'beacon_special_purpose'):
+        cs = set(c.strip() for c in col.split(';') if c.strip())
+        if ty == 'beacon_isolated_danger' and ({'black', 'red'} <= cs or top == '2 spheres'): return 'i', '', None
+        if ty == 'beacon_special_purpose' and (first(col) == 'yellow' or top in ('x-shape', 'cross')): return 'y', '', None
+        # the rest are Norway's stakes and beacons by their shape, with the arrow they carry
+        return 'D', {'tower': 'tower', 'lattice': 'lattice'}.get(shape, 'ball' if top == 'sphere' and shape in ('', 'stake') else ''), arrow
+    if ty == 'landmark' and re.search(r'cairn', t.get('seamark:landmark:category', '')): return 'K', '', None
+    return None, '', None
 
 def convert(els):
     lights, marks, rocks, seen = [], [], [], set()
@@ -99,20 +147,8 @@ def convert(els):
         X, Y = to_nat(lon, lat); x, y = round(float(X), 4), round(float(Y), 4)
         ty = t.get('seamark:type', '')
         if ty == 'rock': rocks.append([x, y]); continue
-        cat = ''
-        if ty == 'light_major': mk = 'M'
-        elif ty in ('light_minor', 'light_vessel'): mk = 'm'
-        elif ty == 'pile': mk = 'P'
-        elif ty == 'beacon_lateral': mk = 'L'; cat = t.get('seamark:beacon_lateral:category', '')
-        elif ty in ('buoy_lateral', 'light_float'): mk = 'B'; cat = t.get('seamark:buoy_lateral:category', '')
-        elif ty == 'buoy_cardinal': mk = 'C'; cat = t.get('seamark:buoy_cardinal:category', '')
-        elif ty == 'beacon_cardinal': mk = 'S'; cat = t.get('seamark:beacon_cardinal:category', '')
-        elif ty in ('beacon_isolated_danger', 'beacon_special_purpose', 'beacon_safe_water'): mk = 'D'
-        elif ty in ('buoy_isolated_danger', 'buoy_special_purpose', 'buoy_safe_water'): mk = 'B'
-        elif ty == 'landmark': mk = 'K' if re.search(r'cairn', t.get('seamark:landmark:category', '')) else None
-        else: mk = None
-        cat = {'starboard': 'starb', 'preferred_channel_port': 'starb', 'port': 'port', 'preferred_channel_starboard': 'port'}.get(cat, cat if cat in ('north', 'east', 'south', 'west') else '')
-        if mk: marks.append([x, y, mk, cat])
+        mk, cat, arrow = mark_of(t, ty)
+        if mk: marks.append([x, y, mk, cat] + ([arrow] if arrow is not None else []))
         L = light_of(t, x, y, 'M' if ty == 'light_major' else 'm')
         if L: lights.append(L)
     return {'lights': lights, 'marks': marks, 'rocks': rocks}
@@ -124,8 +160,12 @@ def from_pbf(pbf):
     tmp = tempfile.mkdtemp(); flt = os.path.join(tmp, 'sm.osm.pbf'); gj = os.path.join(tmp, 'sm.geojsonseq')
     subprocess.run(['osmium', 'tags-filter', pbf, 'nwr/seamark:type', 'n/seamark:light:colour', 'n/seamark:light:1:colour', '-o', flt, '--overwrite'], check=True)
     subprocess.run(['osmium', 'export', flt, '-f', 'geojsonseq', '-o', gj, '--overwrite', '--add-unique-id=type_id', '-x', 'print_record_separator=false'], check=True)
+    return from_geojsonseq(gj)
+# the same from such GeoJSON lines (gzipped or not): sjomerker.yml keeps them in the release as sjomerker-kilde.geojsonseq.gz, so a
+# session, where Geofabrik is closed, can run the converter on what the release was made from
+def from_geojsonseq(gj):
     els = []
-    for line in open(gj, encoding='utf-8'):
+    for line in (gzip.open(gj, 'rt', encoding='utf-8') if gj.endswith('.gz') else open(gj, encoding='utf-8')):
         line = line.strip().lstrip('\x1e')
         if not line: continue
         f = json.loads(line); g = f.get('geometry') or {}; c = g.get('coordinates')
@@ -141,9 +181,25 @@ def from_pbf(pbf):
         els.append({'type': {'n': 'node', 'w': 'way', 'r': 'relation', 'a': 'way'}.get(uid[:1], 'node'), 'id': uid, 'lat': lat, 'lon': lon, 'tags': f.get('properties') or {}})
     return els
 
+# The control of Ø11.8 (docs/systemer/sjofart-og-lover.md 9.3) counted on a sjomerker.json: the buoys and beacons drawn as port that are
+# not port marks (a lateral mark without a side: the 3D view and the chart draw it white since K3), the lateral marks with a yellow light (the floodlight read as a light), and each kind of mark
+def check(f):
+    from collections import Counter
+    d = json.load(open(f)); M = d['marks']
+    at = {(round(m[0], 4), round(m[1], 4)): m for m in M}
+    lat_y = sum(1 for L in d['lights'] if (lambda m: m and m[2] in 'LB' and any(c[2] == 'y' for c in L[5]))(at.get((round(L[0], 4), round(L[1], 4)))))
+    out = {'marks': len(M), 'lights': len(d['lights']),
+           'lateral_no_side': sum(1 for m in M if m[2] in ('L', 'B') and m[3] not in ('port', 'starb')),   # sjomerker-7 drew these red
+           'buoys_no_kind': sum(1 for m in M if m[2] == 'B' and not m[3]),
+           'lateral_yellow_light': lat_y,
+           'kinds': Counter(m[2] + (':' + m[3] if m[3] else '') for m in M).most_common(),
+           'arrows': sum(1 for m in M if len(m) > 4)}
+    print(json.dumps(out, ensure_ascii=False)); return out
+
 if __name__ == '__main__':
-    if len(sys.argv) >= 4 and sys.argv[1] == 'pbf':
-        out = sys.argv[3]; els = from_pbf(sys.argv[2]); print('extract', len(els), flush=True); src = 'Geofabrik\'s Norway extract'
+    if len(sys.argv) >= 3 and sys.argv[1] == 'check': check(sys.argv[2]); sys.exit(0)
+    if len(sys.argv) >= 4 and sys.argv[1] in ('pbf', 'geojson'):
+        out = sys.argv[3]; els = (from_pbf if sys.argv[1] == 'pbf' else from_geojsonseq)(sys.argv[2]); print('extract', len(els), flush=True); src = 'Geofabrik\'s Norway extract'
         isl = lambda e: any(b[0] <= e['lat'] <= b[1] and b[2] <= e['lon'] <= b[3] for b in ISLANDS)
         n = sum(1 for e in els if isl(e)); print('on the islands in the extract', n, flush=True)
         if n < 20:   # the extract has not got Svalbard and Jan Mayen: Overpass for them
@@ -162,7 +218,7 @@ if __name__ == '__main__':
         for b in BANDS:
             e = query(*[b[0], b[2], b[1], b[3]]); print('band', b, len(e), flush=True); els += e; time.sleep(10)
         d = convert(els); d['src'] = 'OpenStreetMap (ODbL) seamark tags via Overpass, ' + time.strftime('%Y-%m-%d')
-    else: sys.exit('python3 tools/map/sjomerker.py pbf norway-latest.osm.pbf out/sjomerker.json | fetch out/sjomerker.json')
+    else: sys.exit('python3 tools/map/sjomerker.py pbf norway-latest.osm.pbf out/sjomerker.json | geojson kilde.geojsonseq.gz out/sjomerker.json | fetch out/sjomerker.json')
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     json.dump(d, open(out, 'w'), separators=(',', ':'), ensure_ascii=False)
     with gzip.open(out + '.gz', 'wt', encoding='utf-8') as g: json.dump(d, g, separators=(',', ':'), ensure_ascii=False)
