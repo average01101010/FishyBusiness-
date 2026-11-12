@@ -45,6 +45,13 @@ export default function (t){
   t.ok(TP.equip.kniv === 3 && TP.equip.hott === 2 && tw.equip.kniv === 3 && tw.equip.hott === 2 && K.equipLv('kniv', tw.equip, 'sjark') === 3 && K.equipLv('hott', tw.equip, 'sjark') === 2,
     'kniv trinn 3 er trinn 3 hos kjøperen, og høtt trinn 2 er trinn 2', {pack:TP.equip, got:tw.equip});
   t.ok(old.equip.kniv === 2 && old.equip.hott === 3 && hv && hv.equip.kniv == null && hv.equip.hott == null, 'en gammel pakke med true er trinn 2, for høyt er trinn 3, og havbåten får ingen', {old:old.equip, hav:hv && hv.equip});
+  // the propeller is the hull's (OPP3): its step goes with her to the buyer; a sale from before has none, too high is step 3, an outboard
+  // and an ocean vessel get none
+  { const pv = newVesselObj('hurtigsjark', S.boat.port); pv.boat.propLv = 3; pv.boat.engLv = 2;
+    const PP = mbPack(pv, ny), pw = mbUnpack(JSON.parse(JSON.stringify(PP)), yard.id), p0 = mbUnpack({type:'sjark'}, yard.id), p9 = mbUnpack({type:'sjark', propLv:9}, yard.id),
+      ps = mbUnpack({type:'skiff', propLv:2}, yard.id), ph = mbUnpack({type:'autoliner', propLv:2}, yard.id);
+    t.ok(PP.propLv === 3 && pw.boat.propLv === 3 && pw.boat.engLv === 2, 'propell trinn 3 følger båten til kjøperen (som motoren)', {pack:PP.propLv, got:pw.boat.propLv});
+    t.ok(p0.boat.propLv == null && p9.boat.propLv === 3 && ps.boat.propLv == null && ph && ph.boat.propLv == null, 'et salg fra før har ingen propell, for høyt er trinn 3, påhengsmotor og havbåt får ingen', {old:p0.boat.propLv, hi:p9.boat.propLv, skiff:ps.boat.propLv, hav:ph && ph.boat.propLv}); }
   for (const x of [tv, tw, old, hv]) if (x && S.fleet.includes(x)) S.fleet.splice(S.fleet.indexOf(x), 1);
   // with a right: it follows the boat, and so does the year's catch on it (B8)
   const O = LIC_OFFERS.find(o => o.id === 'h9'), lv = newVesselObj('sjark', S.boat.port, {id:O.id, hl:O.hl, kpk:O.kpk, coop:{id:'h9', y:2027}}); lv.quota = {y:2027, torsk:1200};

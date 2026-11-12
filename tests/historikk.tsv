@@ -3244,11 +3244,18 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
+2026-11-12 17:55	ccr-013bxxie-opp3	2a6ed57+	heattest	OK	395	3d	alene	
+2026-11-12 17:56	ccr-013bxxie-opp3	2a6ed57+	routetest	FEIL	48	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
 2026-11-12 16:49	ccr-013bxxie-s107	519771e+	farttest	FEIL	0	lite	alene	avsluttet med kode 1
 2026-11-12 16:58	ccr-013bxxie-s107	519771e+	farttest	FEIL	545	lite	alene	FEIL sør for staken med viser mot nord: stripa sier «feil side av merket»  [(605, ''), (594, ''), (583, ''), (573, ''), (562, ''), (551, ''), (541, ''), (530, '
 2026-11-12 17:10	ccr-013bxxie-s107	519771e+	farttest	OK	547	lite	alene	
 2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
 2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
+2026-11-12 18:10	ccr-013bxxie-opp3	f05c900	unittest	OK	769	3d	alene	
+2026-11-12 18:11	ccr-013bxxie-opp3	f05c900	boottest	OK	34	lite	samtidig	
+2026-11-12 18:11	ccr-013bxxie-opp3	f05c900	yardupgtest	OK	15	lite	samtidig	
+2026-11-12 18:12	ccr-013bxxie-opp3	f05c900	opptest	OK	79	lite	samtidig	
+2026-11-12 18:12	ccr-013bxxie-opp3	f05c900	vesseltest	OK	25	lite	samtidig	
 2026-11-12 15:50	ccr-e7efd74c-rioki0	d1cce6c9	fasittest	OK	31	lite	samtidig	
 2026-11-12 15:52	ccr-e7efd74c-rioki0	d1cce6c9	kjoptest	OK	170	lite	samtidig	
 2026-11-12 15:52	ccr-e7efd74c-rioki0	d1cce6c9	guesttest	OK	99	lite	samtidig	
@@ -3289,3 +3296,8 @@
 2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a	hoppshot	OK	1383	3d	alene	
 2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a+	admintest	OK	10	lite	alene	
 2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a+	admintest	OK	10	lite	alene	
+2026-11-12 18:13	ccr-013bxxie-opp3	02f1dbf+	yardupgtest	OK	13	lite	alene	
+2026-11-12 18:13	ccr-013bxxie-opp3	02f1dbf+	yardupgtest	FEIL	15	lite	alene	FEIL the Trim app promises the top speed each trim gives, on the speed sjark with propeller 3 and engine 2 [[46, 53.7, 61.4], [41.7, 47.2, 52.7]]
+2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	docktest	OK	63	lite	samtidig	
+2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	skiptest	OK	17	lite	samtidig	
+2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	boostklokke	OK	49	lite	samtidig	
