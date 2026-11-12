@@ -30,7 +30,8 @@ function hopWhy(){
   if (pl.ops || pl.p2) return ['Driftsplanen styrer båten. Hopp går bare på en rute du har lagt selv.', 'The operations plan runs the boat. A hop is only possible on a route you set yourself.'];
   if (pl.halt || pl.replan) return ['Båten stopper eller finner en vei rundt. Vent til hun går videre.', 'The boat is stopping or finding a way round. Wait until she goes on.'];
   if (b.anch || b.hove) return ['Båten ligger for anker eller ligger bi.', 'The boat is at anchor or lying to.'];
-  if (typeof helmOn === 'function' && helmOn()) return ['Du har roret selv.', 'You have the helm.'];
+  if (pl.mob || S.mob) return ['Ikke mens noen er i sjøen.', 'Not while someone is in the water.'];
+  if (S.ptowH && S.ptowH.st === 'tow') return ['Ikke mens du sleper en annen båt.', 'Not while you tow another boat.'];
   if (S.tut) return ['Ikke på første tur.', 'Not on the first trip.'];
   if (S.turer && (S.turer.act || []).some(m => m.vid === S.cur)) return ['Ikke mens et turoppdrag er i gang med denne båten.', 'Not while a trip mission is under way with this boat.'];
   return null;
@@ -42,18 +43,19 @@ function hopWhy(){
 function hopRun(paid){
   const b = S.boat, pl = S.plan, iS = hopStop(pl);
   if (iS < 0) return {why:['Ruta har ikke noe mål.', 'The route has no end.']};
-  const save = {pos:b.pos, v:b.v, heading:b.heading, idx:pl.idx}, T = trimOn(b), tEnd = T ? trimUntil(b) : -1;
+  const save = {pos:b.pos, v:b.v, heading:b.heading, idx:pl.idx, speed:pl.speed, dspeed:S.draftSpeed, trim:b.trim}, T = trimOn(b), tEnd = T ? trimUntil(b) : -1;
   const auto = !!(S.settings && S.settings.autoOn), limW = windLim(), limS = seaLim();
-  let m = 0, fuel = 0, trimMin = 0, wx = null, why = null, heading = b.heading; const track = [];
+  let m = 0, fuel = 0, trimMin = 0, wx = null, why = null, heading = b.heading, ended = false; const track = [];
   try {
     while (pl.idx <= iS){
       if (m >= HOP.maxMin){ why = ['Ruta er for lang til å regne ut her.', 'The route is too long to work out here.']; break; }
       const H = (S.t + m + 1) / 60, W = windAt(H), hs = hsAt(b.pos, H);
       if (m % 60 === 0) track.push({x:b.pos.x, y:b.pos.y});
       if (!wx && (riskLevel(W, hs) > 0 || (auto && (W > limW || hs > limS)))){ wx = {W, hs}; if (!paid) break; }
+      // (the trim runs out where it would: trimEnd as vesselStep calls it, the top speed and the route's speed down; put back below)
+      if (T && !ended && S.t + m >= tEnd){ trimEnd(); ended = true; }
+      if (T && !ended) trimMin++;
       let v; try { v = sailV(H, hs); } catch (e){ v = Math.min(pl.speed || BOAT.vcruise, speedCap(hs)); }
-      const trimmed = T && S.t + m < tEnd; if (T && !trimmed) v = Math.min(v, speedCap(hs) / T.x);
-      if (trimmed) trimMin++;
       b.v = v; fuel += fuelLph(v, W) / 60;
       let left = v * NM / 60 * gridScale(b.pos);
       while (left > 1e-9 && pl.idx <= iS){
@@ -64,7 +66,8 @@ function hopRun(paid){
     }
     heading = b.heading;
   } catch (e){ console.warn('hopRun', e); why = why || ['Turen kunne ikke regnes ut herfra.', 'The trip could not be worked out from here.']; }
-  finally { b.pos = save.pos; b.v = save.v; b.heading = save.heading; pl.idx = save.idx; }
+  finally { b.pos = save.pos; b.v = save.v; b.heading = save.heading; pl.idx = save.idx;
+    if (ended){ b.trim = save.trim; applyVessel(); pl.speed = save.speed; S.draftSpeed = save.dspeed; } }
   if (!why && wx && !paid) why = ['Været på veien er for hardt for et hopp: ' + fmt(wx.W, 0) + ' m/s og ' + fmt(wx.hs, 1) + ' m sjø. Hopp går ikke forbi været.', 'The weather on the way is too hard for a hop: ' + fmt(wx.W, 0) + ' m/s and ' + fmt(wx.hs, 1) + ' m of sea. A hop does not get past the weather.'];
   if (!why && !paid && fuel > (b.fuel || 0)) why = ['For lite diesel til å komme fram: turen bruker ' + Math.ceil(fuel) + ' l, tanken har ' + Math.floor(b.fuel || 0) + ' l.', 'Too little diesel to get there: the trip burns ' + Math.ceil(fuel) + ' l, the tank has ' + Math.floor(b.fuel || 0) + ' l.'];
   if (!why && !paid && m < GAME_RATE) why = ['Båten er nesten fremme.', 'The boat is nearly there.'];
@@ -78,37 +81,52 @@ function hopEnergy(e, s, n, rate){
   for (let i = 0; i < n; i++){ if (s > 0){ if (--s === 0) e = ENERGY.wake; continue; } e = clamp(e + rate, 0, 100); if (e <= 0) s = ENERGY.sleep; }
   return {e, s};
 }
+// minutes as «1 t 20 min» (rounded to the whole minute first, so never «60 min»)
+function hopSaved(real, en){ const tm = Math.max(1, Math.round(real)), h = Math.floor(tm / 60), m = tm % 60; return (h ? h + (en ? ' h' : ' t') + (m ? ' ' : '') : '') + (m || !h ? m + ' min' : ''); }
 // The hop itself, on the dry run q: what the trip would have used and done, and then she is at the stop
 function hopDo(q){
-  const b = S.boat, pl = S.plan, n = q.min, H0 = S.t / 60;
+  const b = S.boat, pl = S.plan, n = q.min, T0 = S.t, p0 = b.pos;
   fuelUse(b, q.fuel);
   b.engH = (b.engH || 0) + n / 60;
   if (q.trimMin && b.trim) b.trim.until = trimUntil(b) - q.trimMin;   // (run out: vesselStep ends it and says so)
-  // the catch, each minute where she would have been
-  for (let m = 0; m < n; m++) holdMinute(H0 + (m + 1) / 60, q.track[Math.min(q.track.length - 1, Math.floor(m / 60))] || b.pos);
-  // you, if you are aboard, and the crew aboard (no sea hours to their experience: that is earned by sailing)
-  if (meAboard() && !energyOff() && !skipOn()){
-    const bunk = typeof resting === 'function' && resting(), r = hopEnergy(S.energy == null ? 100 : S.energy, S.sleep ? Math.max(0, S.sleep.until - S.t) : 0, n, bunk ? restRate(b) : -ENERGY.sea);
+  // Skippertak is used for the minutes as the trim is: while it holds, you and the crew stay rested (energyMinute, crewTick)
+  let skipM = 0; if (skipOn()){ skipM = Math.min(n, S.skip.until - S.t); S.skip.until -= skipM; }
+  // the crew's share of work this minute (the helm, the galley: workAssign, 13-work.js), as crewTick counts it from the minutes worked
+  const A = typeof workAssign === 'function' ? workAssign() : [], wf = c => { const a = A.find(x => x.c === c); return a && WORK_ALL.includes(a.st) ? 1 : 0; };
+  const crew = crewAboard(), fat = new Map(crew.map(c => [c, skipM > 0 ? 0 : (c.fatigue || 0)]));
+  // each minute where she would have been: the catch, the provisions, the crew's fatigue; each hour the trip's hours at sea, the
+  // autoline's hooks and the live snow crab in the tanks (vesselStep and step, minute and hour)
+  try {
+    for (let m = 0; m < n; m++){
+      const t = T0 + m + 1, H = t / 60, p = q.track[Math.min(q.track.length - 1, Math.floor(m / 60))] || p0, hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
+      b.pos = p; holdMinute(H, p); provMinute();
+      if (m >= skipM) for (const c of crew) fat.set(c, clamp(fat.get(c) + crewSeaFat(c, false, wf(c), night) / 60, 0, 100));
+      if (t % 60 === 0){ autoFixHour(); tripHour(); if (BOAT.tank) snoTankHour(H); }
+    }
+  } finally { b.pos = p0; }
+  for (const c of crew) c.fatigue = fat.get(c);
+  // you, if you are aboard: rested through the Skippertak minutes, then down at sea or up in a bunk, asleep at nought
+  if (meAboard() && !energyOff() && n > skipM){
+    const bunk = typeof resting === 'function' && resting(), was = !!S.sleep, r = hopEnergy(skipM ? 100 : (S.energy == null ? 100 : S.energy), S.sleep && !skipM ? Math.max(0, S.sleep.until - S.t) : 0, n - skipM, bunk ? restRate(b) : -ENERGY.sea);
     S.energy = r.e;
-    if (r.s > 0){ const v = myVessel(); S.sleep = Object.assign(S.sleep || {v:v ? v.id : S.cur, alone:!crewAboard().length}, {t0:S.t - (ENERGY.sleep - r.s), until:S.t + r.s}); }
+    if (r.s > 0){ const v = myVessel(), lag = !crewAboard().length && typeof lagOf === 'function' && lagOf();
+      S.sleep = Object.assign(S.sleep || {v:v ? v.id : S.cur, alone:!crewAboard().length && !lag}, {t0:S.t - (ENERGY.sleep - r.s), until:S.t + r.s});
+      if (!was){ if (S.equip && S.equip.brovakt) S.sleep.alarmAt = S.sleep.t0 + BNWAS.after; log('Du sovnet av utmattelse underveis.', 'You fell asleep from exhaustion on the way.'); } }
     else if (S.sleep) S.sleep = null;
-  }
-  if (!skipOn()) for (const c of crewAboard()){
-    let f = 0; for (let h = 0; h < n / 60; h++){ const hr = gDate(H0 + h).getUTCHours(); f += crewSeaFat(c, false, 0, hr >= 22 || hr < 6) * Math.min(1, n / 60 - h); }
-    c.fatigue = clamp((c.fatigue || 0) + f, 0, 100);
-  }
-  // there
-  const w = pl.wps[q.stop], pt = w.port && portById(w.port), hh = Math.floor(q.real / 60), mm = Math.round(q.real % 60);
-  const saved = (hh ? hh + ' t ' : '') + mm + ' min', to = pt ? pt.name : null;
+  } else if (skipM && meAboard()) S.energy = 100;
+  // there: the points passed go into the track (the way home and the chart read it, as arrive does each one), then the stop
+  for (let i = pl.idx; i < q.stop; i++){ const w = pl.wps[i]; S.trail.push({x:w.x, y:w.y, port:w.port || null}); }
+  const w = pl.wps[q.stop], pt = w.port && portById(w.port), to = pt ? pt.name : null;
   b.pos = {x:w.x, y:w.y}; b.heading = q.heading; b.v = 0; pl.idx = q.stop;
-  log('Hoppet ' + (to ? 'til ' + to : 'til neste stopp på ruta') + '. Spart ' + saved + '.', 'Hopped ' + (to ? 'to ' + to : 'to the next stop on the route') + '. Saved ' + saved.replace(' t ', ' h ') + '.', 'nav');
+  log('Hoppet ' + (to ? 'til ' + to : 'til neste stopp på ruta') + '. Spart ' + hopSaved(q.real) + '.', 'Hopped ' + (to ? 'to ' + to : 'to the next stop on the route') + '. Saved ' + hopSaved(q.real, true) + '.', 'nav');
   arrive(w);
   return true;
 }
 // a hop now: the map at the stop first (a block not in is an error, not a value), then the dry run again on the world as it is by then
 async function hopGo(paid){
   let q = hopWhy() ? {why:hopWhy()} : hopRun(!!paid); if (q.why) return q;
-  try { if (typeof mapNeed === 'function') await mapNeed({x:q.w.x, y:q.w.y}, MAPD.simR); } catch (e){ console.warn('hopGo map', e); }
+  try { if (typeof mapNeed === 'function') await mapNeed({x:q.w.x, y:q.w.y}, MAPD.simR); }
+  catch (e){ console.warn('hopGo map', e); return {why:['Kartet ved målet kom ikke. Prøv igjen om litt.', 'The chart at the stop did not come. Try again in a little while.'], map:true}; }
   q = hopWhy() ? {why:hopWhy()} : hopRun(!!paid); if (q.why) return q;
   hopDo(q); return q;
 }

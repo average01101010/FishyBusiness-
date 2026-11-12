@@ -10,14 +10,13 @@ const hopShown = () => { const b = S.boat, pl = S.plan;
   return !!(S.adm && S.adm.hopp && typeof adminOk === 'function' && adminOk() && typeof G3 !== 'undefined' && G3.isActive() && pl && !pl.ops && !pl.p2 && b.status === 'sailing' && !(typeof helmOn === 'function' && helmOn())); };
 // each frame (08-actions.js tick): the button only while a route is under way
 function hopUi(){ const btn = $('hopBtn'); if (!btn) return; const on = hopShown() || HOPUI.busy; if (btn.hidden === on) btn.hidden = !on; }
-function hopTime(min){ const h = Math.floor(min / 60), m = Math.max(1, Math.round(min - h * 60)); return (h ? h + (S.lang === 'en' ? ' h ' : ' t ') : '') + m + ' min'; }
 function hopOpen(){
   if (HOPUI.busy) return;
   const L = (no, en) => S.lang === 'en' ? en : no, esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'})[c]), q = hopQuote();
   let h = '<h3>' + L('Hopp over resten av ruta', 'Skip the rest of the route') + '</h3>';
   if (q.why){ modal(h + '<p>' + esc(L(q.why[0], q.why[1])) + '</p><div class="btns"><button class="btn primary" data-close>' + L('Lukk', 'Close') + '</button></div>'); return; }
   const w = q.w, pt = w.port && portById(w.port), np = pt ? null : nearestPlace(w), to = pt ? pt.name : L(np.no, np.en);
-  h += '<p>' + L('Til ', 'To ') + '<b>' + esc(to) + '</b>' + (w.port ? '' : L(' (neste stopp på ruta)', ' (the next stop on the route)')) + '. ' + L('Du sparer ', 'You save ') + '<b>' + hopTime(q.real) + '</b>' + L(' og er fremme med en gang.', ' and are there at once.') + '</p>' +
+  h += '<p>' + L('Til ', 'To ') + '<b>' + esc(to) + '</b>' + (w.port ? '' : L(' (neste stopp på ruta)', ' (the next stop on the route)')) + '. ' + L('Du sparer ', 'You save ') + '<b>' + hopSaved(q.real, S.lang === 'en') + '</b>' + L(' og er fremme med en gang.', ' and are there at once.') + '</p>' +
     '<p>' + L('Dieselen, fisken, isen og folkene om bord går som om dere seilte. Fartstid og distanse får du bare ved å seile.', 'The diesel, the fish, the ice and the people aboard go as if you had sailed. Sea time and miles come only from sailing.') + '</p>' +
     '<p class="hop-kr">' + (typeof realKr === 'function' ? realKr(q.kr) : '\u{1F48E} ' + q.kr + ' kr') + '</p>' +
     '<p class="hop-test">' + L('Testmodus: hoppet er gratis til kjøpet er på plass.', 'Test mode: the hop is free until the purchase is in place.') + '</p>' +

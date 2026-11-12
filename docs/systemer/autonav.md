@@ -279,19 +279,22 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
 - **Hvor hoppet går** (`hopStop` i `core/06j-hopp.js`): til neste stopp på ruta, altså en havn, en fiskeplass, redskapsarbeid, en ankring eller rutas siste punkt (`wpStop`, `w.anchor`). Ved målet gjør `arrive(w)` det samme som når båten seiler fram: legger til kai, begynner å fiske, setter eller trekker redskapet, eller ligger stille.
 - **Klokka står stille.** Verdens klokke flytter seg ikke, så alt annet enn tida går som om båten seilte (Jonas: «Ja, med vilkår»):
   - **Tørrkjøringen** (`hopRun`) seiler resten av veien minutt for minutt som `sail()`. Den bruker `sailV` for farten, med fartsgrensene, bremsingen inn mot stoppet og sjøen, og trimmen til den går ut. Vind og sjø er der båten er hvert minutt (`windAt`, `hsAt`), og dieselen regnes med `fuelLph`. Ingenting i spillet endres: plassen, farten, kursen og rutas indeks settes tilbake.
+  - **En trim som går ut underveis** går ut i tørrkjøringen der den ville gått ut (`trimEnd`, med toppfarten og rutas fart ned som i `vesselStep`), og settes tilbake etterpå.
   - **Hoppet** (`hopDo`):
     - trekker dieselen (`fuelUse`, også på turens felleskostnader) og legger til motortimene
-    - tar trimmen for minuttene den ville gått (`b.trim.until`)
-    - lar fangsten holde seg og hendene på dekk sløye og ise hvert minutt der båten ville vært (`holdMinute`, trukket ut av `vesselStep` i `core/05-vessels.js`)
-    - gir energien din som `energyMinute` ville gitt (`hopEnergy`: ned på sjøen, opp i køya, søvn ved null)
-    - gir mannskapet om bord slitasjen for timene (`crewSeaFat`, trukket ut av `crewTick` i `core/04-crew.js`, med natta etter klokka)
-- **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** ingen fartstid (`fsMinute`), ingen distanse (`tatAdd('nm')`), ingen merker (`achMinute`) og ingen sjøtimer til mannskapets erfaring. Ingen av dem kalles.
+    - tar trimmen og Skippertak for minuttene de ville gått (`b.trim.until`, `S.skip.until`)
+    - hvert minutt der båten ville vært: lar fangsten holde seg og hendene på dekk sløye og ise (`holdMinute`, trukket ut av `vesselStep` i `core/05-vessels.js`), bruker provianten (`provMinute`) og gir mannskapet om bord slitasjen (`crewSeaFat`, trukket ut av `crewTick` i `core/04-crew.js`, med natta etter klokka og arbeidsandelen fra `workAssign`: den ved roret og i byssa arbeider hele tida)
+    - hver time: turens timer på sjøen (`tripHour`), autolinas kroker (`autoFixHour`) og den levende snøkrabben i tankene (`snoTankHour`)
+    - gir energien din som `energyMinute` ville gitt (`hopEnergy`: ned på sjøen, opp i køya, søvn ved null, brovakta som når du sovner)
+    - legger punktene båten passerer, i sporet (`S.trail`, som `arrive` gjør for hvert), så veien hjem og kartet følger ruta
+- **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** ingen fartstid (`fsMinute`), ingen distanse (`tatAdd('nm')`), ingen merker for vær, natt eller spillere møtt (`achMinute`) og ingen sjøtimer til mannskapets erfaring. Ingen av dem kalles. Det som kommer av å legge til kai, kommer som ved enhver ankomst: «Havner besøkt» (`achVisitPort`) og tatoveringen for en trygg tur (`tatTripEnd`) i `dock`.
 - **Nektet før kjøpet** (`hopWhy`, så `hopRun`), med en grunn og uten at noe endres:
   - ingen rute som seiles
   - Driftsplanen (`pl.ops`, `pl.p2`)
   - båten stopper eller finner en vei rundt
   - ankeret er ute, eller båten ligger bi
-  - hånda på roret
+  - noen er i sjøen (`S.mob`, Autonav mot den: `pl.mob`)
+  - du sleper en annen spiller (`S.ptowH.st === 'tow'`; på vei til en som trenger slep går hoppet)
   - første tur
   - et turoppdrag i gang med denne båten
   - været på veien over båtens risiko (`riskLevel` > 0) eller over grensa for Autonav når den står på (`windLim`, `seaLim`)
@@ -299,6 +302,7 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
   - nesten fremme (under ett ekte minutt)
 - **Betalt** (`hopGo(true)`, HO3) går hoppet uansett vær, diesel og nesten fremme (Jonas: «uavhengig av været eller andre ting»).
 - **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
-- **Kartet ved målet** lastes før hoppet (`hopGo`: `mapNeed` ved stoppet, så tørrkjøringen på nytt med verden slik den er da).
+- **Kartet ved målet** lastes før hoppet (`hopGo`: `mapNeed` ved stoppet, så tørrkjøringen på nytt med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
 - **Ikke med i HO1:** knappen og kortet (HO2), kjøpet (HO3), lekkasjer og lensepumpa underveis (`hullMinute` kalles ikke) og maskinhavari i grov sjø (`risk`: hoppet går ikke i vær over risikogrensa).
-- **Testene:** `tests/unit/hopp.test.mjs` (35 sjekker: prisstigen, neste stopp, nektingene, energien og mannskapets slitasje) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, trimmen, nektingene og betalt hopp).
+- **Testene:** `tests/unit/hopp.test.mjs` (prisstigen, neste stopp, nektingene, tida i ord, energien, mannskapets slitasje og det de andre ser) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, med og uten en hånd om bord, trim som varer og trim som går ut underveis, et stopp midt på ruta, nektingene og betalt hopp).
+- **Kontrollen** (`/kontroll`, 12.11.2026) fant at sporet manglet de hoppede punktene, at proviant, snøkrabbe i tankene, turens timer, mannskapets arbeidsandel og Skippertak ikke gikk som om båten seilte, at mann over bord og slep av en annen spiller ikke ble nektet, at en trim som gikk ut underveis ga et for raskt og billig hopp, at et kart som ikke kom ble hoppet til likevel, og «1 t 60 min» i loggen. Alt er rettet med tester.

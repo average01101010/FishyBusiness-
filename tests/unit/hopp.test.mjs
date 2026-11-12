@@ -36,8 +36,16 @@ export default function (t){
   sailing(); S.tut = {v:2}; t.ok(!!hopWhy(), 'første tur: ' + (hopWhy() || [''])[0]);
   sailing(); S.plan.halt = true; t.ok(!!hopWhy(), 'mens båten stopper: ' + (hopWhy() || [''])[0]);
   sailing(); S.boat.anch = {}; t.ok(!!hopWhy(), 'mens ankeret er ute: ' + (hopWhy() || [''])[0]); S.boat.anch = null;
+  sailing(); S.mob = {id:'m1'}; t.ok(!!hopWhy(), 'mann over bord: ' + (hopWhy() || [''])[0]); S.mob = null;
+  sailing(); S.plan.mob = true; t.ok(!!hopWhy(), 'Autonav mot den som er i sjøen: ' + (hopWhy() || [''])[0]);
+  sailing(); S.ptowH = {id:'x', st:'tow'}; t.ok(!!hopWhy(), 'mens du sleper en annen spiller: ' + (hopWhy() || [''])[0]);
+  sailing(); S.ptowH = {id:'x', st:'come'}; t.eq(hopWhy(), null, 'på vei til en som trenger slep: hoppet går (hjelpen kommer fortere)'); S.ptowH = null;
   sailing(); const before = JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx]); hopWhy(); t.eq(JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx]), before, 'hopWhy endrer ingenting');
 
+  // the time saved in words, rounded to the whole minute first (never «1 t 60 min»)
+  const {hopSaved} = K;
+  for (const [m, w] of [[119.6, '2 t'], [60, '1 t'], [75, '1 t 15 min'], [0.3, '1 min'], [27.2, '27 min'], [59.6, '1 t']]) t.eq(hopSaved(m), w, m + ' min: «' + w + '»');
+  t.eq(hopSaved(75, true), '1 h 15 min', 'på engelsk: «1 h 15 min»');
   // 4. your energy over the minutes skipped, as energyMinute has it: down at sea, asleep at nought for ENERGY.sleep, awake at ENERGY.wake
   t.near(hopEnergy(80, 0, 60, -ENERGY.sea).e, 80 - 60 * ENERGY.sea, 1e-9, 'en time på sjøen: ' + (60 * ENERGY.sea).toFixed(2) + ' % ned');
   let r = hopEnergy(10, 0, 600, -ENERGY.sea); const m0 = Math.ceil(10 / ENERGY.sea);
