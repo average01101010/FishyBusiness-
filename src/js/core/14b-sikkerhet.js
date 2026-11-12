@@ -433,6 +433,8 @@ const MOBLEARN = {
 };
 // (Ø11.8: over the speed limit, and a cardinal mark on the wrong side)
 MOBLEARN.fart = ['I havna går du sakte. Farten skal avpasses så bølgene dine ikke skader folk, båter og kaier.', 'In harbour you go slowly. The speed is to be such that your wash harms neither people, boats nor quays.', 'Forskrift om fartsgrenser på sjøen § 2', 'Regulation on speed limits at sea § 2'];
+// (steg 107: the arrow on a stake; Kystverket's guidelines for aids to navigation, s. 25: «Viser skal peke mot farbart farvann»)
+MOBLEARN.stake = ['Viseren på toppen av staken peker mot seilbart farvann: hold deg på den siden av staken.', 'The arrow on top of the beacon points to navigable water: keep to that side of it.', 'Kystverket, retningslinjer for navigasjonsinnretninger', 'Kystverket, the guidelines for aids to navigation'];
 MOBLEARN.merke = ['Kardinalmerket sier hvor det er trygt: nord for et nordmerke, øst for et østmerke, sør for et sørmerke og vest for et vestmerke.', 'A cardinal mark names the safe side: north of a north mark, east of an east mark, south of a south mark and west of a west mark.', 'IALA region A, kardinalmerkene', 'IALA region A, the cardinal marks'];
 const MOBGEAR = {line:['lina', 'the line'], garn:['garnet', 'the net'], teine:['teinetauet', 'the pot rope']};
 // the card's rows, newest first: {t, k, x, y, vid, what:[no, en], learn:[no, en, src no, src en]}
@@ -454,10 +456,11 @@ function mobSafeRows(max){
       else w = ['Svarte på MAYDAY fra «' + r.boat + '» og sto bi til ' + r.name + ' var oppe.', 'Answered the MAYDAY from the «' + r.boat + '» and stood by until ' + r.name + ' was up.'];
       L = MOBLEARN.sos; }
     if (w) out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:w, learn:L}); }
-  // (Ø11.8, core/05e-sjovei.js farvRec: over the speed limit, and a cardinal mark on the wrong side)
+  // (Ø11.8, core/05e-sjovei.js farvRec: over the speed limit, a cardinal mark on the wrong side, and a stake with its arrow, steg 107)
   for (const r of S.farv || []){
     if (r.k === 'fart'){ const v = String(r.v).replace('.', ','), wh = r.name ? ' (' + r.name + ')' : ''; out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Gikk ' + v + ' knop der fartsgrensa er ' + r.kn + ' knop' + wh + '.', 'Made ' + r.v + ' knots where the speed limit is ' + r.kn + ' knots' + wh + '.'], learn:MOBLEARN.fart}); }
-    else if (r.k === 'merke'){ const W = FARV_WORD[r.cat] || FARV_WORD.north; out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Passerte et ' + W[0] + 'merke på feil side.', 'Passed ' + W[2] + ' cardinal mark on the wrong side.'], learn:MOBLEARN.merke}); } }
+    else if (r.k === 'merke'){ const W = FARV_WORD[r.cat] || FARV_WORD.north; out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Passerte et ' + W[0] + 'merke på feil side.', 'Passed ' + W[2] + ' cardinal mark on the wrong side.'], learn:MOBLEARN.merke}); }
+    else if (r.k === 'stake'){ const P = farvPt(r.brg); out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Passerte en stake på feil side. Viseren pekte mot ' + P[0] + '.', 'Passed a beacon on the wrong side. Its arrow pointed ' + P[1] + '.'], learn:MOBLEARN.stake}); } }
   out.sort((a, b) => b.t - a.t); return max ? out.slice(0, max) : out;
 }
 

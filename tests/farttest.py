@@ -4,7 +4,8 @@ Bergen, Stavanger and Tromsø, the chart plotter with no line, ring or sign, Aut
 outside, down to the limit inside), the minute step's speed (sailV, as with the game closed), and by hand at full speed through the same
 water: the strip's third line says «Fartsgrense», and the passage is a line in the log and a row in the Sikkerhet card, once. Then a
 north cardinal mark passed close on its south side by hand: «Feil side av merket», the log and the card; passed on its north side: nothing.
-Prints OK or FEIL."""
+And an iron stake whose arrow (viser) points north (steg 107): passed on its south side by hand, the same; on its north side, or on
+Autonav, nothing. Prints OK or FEIL."""
 from _env import GAME, boot
 import asyncio, json
 from playwright.async_api import async_playwright
@@ -158,6 +159,38 @@ async def main():
                     check(len(X['log']) == 1 and 'nordmerke' in X['log'][0] and X['mobs'] == 1, 'én linje i dagboka og én rad i Sikkerhet-kortet', X)
                 else:
                     check(len(near) > 2 and all(s['w'] != 'merke' for s in T) and X['n'] == 0 and not X['log'], 'nord for nordmerket: ikke noe varsel og ingen rad', X)
+        # 7. an iron stake with its arrow (viser) pointing true north, in open water away from the cardinal mark (steg 107): passed
+        # 80 m south of it by hand (the side the arrow points away from: the bearing from the stake to her more than 90 degrees from the
+        # arrow's), «Feil side av merket», one line in the log and one row in the card; 80 m north of it, nothing; on Autonav on the wrong
+        # side, nothing
+        D = await pg.evaluate("""async ([C, K]) => { const gs = C.gs, g = gridGamma(C.st) * Math.PI / 180, cm = K && K.m; let m = null;
+          for (let a = 10; a < 370 && !m; a += 20) for (const k of [3, 4, 5, 6]){ const q = {x:C.p.x + Math.sin(a * Math.PI / 180) * k * gs, y:C.p.y - Math.cos(a * Math.PI / 180) * k * gs}; await mapNeed(q, MAPD.simR);
+            if (cm && dist(q, cm) < 1.6 * gs) continue;
+            const w = {x:q.x - 0.8 * gs, y:q.y}, e = {x:q.x + 0.8 * gs, y:q.y}; let free = !isLand(q) && !fartAt(q, S.t / 60) && !groundCheck({x:w.x, y:w.y - 0.15}, {x:e.x, y:e.y - 0.15}) && !groundCheck({x:w.x, y:w.y + 0.15}, {x:e.x, y:e.y + 0.15});
+            if (free && !marksNear('marks', q.x, q.y, 1).some(mk => (mk[2] === 'C' || mk[2] === 'S' || typeof mk[4] === 'number') && dist({x:mk[0], y:mk[1]}, q) < 0.8)){ m = q; break; } }
+          if (!m) return null; SEAMARKS.marks.push([m.x, m.y, 'D', '', 0]); MARKS.near.clear();
+          const E = Math.PI / 2 - g, ex = Math.sin(E), ey = -Math.cos(E), sx = -ey, sy = ex;
+          const leg = o => ({p:m, gs, hd:E, st:{x:m.x - ex * 0.6 * gs + sx * o * gs, y:m.y - ey * 0.6 * gs + sy * o * gs}, end:{x:m.x + ex * 0.6 * gs + sx * o * gs, y:m.y + ey * 0.6 * gs + sy * o * gs}});
+          return {m, south:leg(0.08), north:leg(-0.08)}; }""", [C, K])
+        check(bool(D), 'en stake med viser mot nord er satt ut i åpent vann', D and D['m'])
+        if D:
+            for side, how, want in (('south', 'hand', True), ('north', 'hand', False), ('south', 'auto', False)):
+                n1 = await pg.evaluate("() => ({t:S.t, mobs:(S.farv || []).length, n:FART.nMk})")
+                await pg.evaluate(PLACE, [D[side], 6])
+                if how == 'hand':
+                    await pg.evaluate("() => { FART.mk.clear(); helmTake(); S.helm.thr = 1; S.helm.rud = 0; }")
+                else:
+                    await pg.evaluate("(C) => { FART.mk.clear(); S.plan = {wps:[{x:C.end.x, y:C.end.y, port:null, fish:0}], idx:0, speed:6, returning:false, unsafe:[false]}; }", D[side])
+                T = await sail(pg, D[side], 90, how == 'hand')
+                near = [s for s in T if s['d'] < 150]
+                X = await pg.evaluate("(n1) => ({log:S.log.filter(l => l.t >= n1.t && /på feil side/.test(l.no)).map(l => l.no), rows:mobSafeRows(25).filter(r => r.t >= n1.t && r.k === 'stake').map(r => [r.what[0], r.learn[2]]), mobs:(S.farv || []).slice(n1.mobs).filter(r => r.k === 'stake').length, n:FART.nMk - n1.n})", n1)
+                if want:
+                    check(len(near) > 2 and any(s['w'] == 'stake' for s in near) and any('Feil side av merket' in s['l3'] or 'feil side av merket' in s['hud'] for s in near), 'sør for staken med viser mot nord: stripa sier «feil side av merket»', next((s['l3'] for s in near if s['w'] == 'stake'), [(s['d'], s['w']) for s in T][:8]))
+                    check(len(X['log']) == 1 and 'stake' in X['log'][0] and 'nord' in X['log'][0] and X['mobs'] == 1 and len(X['rows']) == 1 and 'Kystverket' in X['rows'][0][1], 'én linje i dagboka og én rad i Sikkerhet-kortet, med kilden', X)
+                elif how == 'hand':
+                    check(len(near) > 2 and all(s['w'] not in ('stake', 'merke') for s in T) and X['n'] == 0 and not X['log'], 'nord for staken (der viseren peker): ikke noe varsel og ingen rad', X)
+                else:
+                    check(len(near) > 2 and all(not s['w'] for s in T) and X['n'] == 0 and not X['log'], 'på Autonav sør for staken: ikke noe varsel og ingen rad', ([(s['d'], s['w']) for s in T if s['w']][:4], X))
         cash2 = await pg.evaluate("S.cash")
         check(cash == cash2, 'ingen bot: kassa er urørt (V1 A)', (cash, cash2))
         print('sidefeil', errs)

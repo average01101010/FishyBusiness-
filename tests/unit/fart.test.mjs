@@ -75,7 +75,21 @@ export default function (t){
   t.ok(K.farvWrongSide(off(90, 100), mk('west')), 'vestmerke: øst for det er feil side');
   t.eq(K.farvWrongSide(off(270, 100), mk('west')), null, 'vestmerke: vest for det er riktig side');
   t.ok(K.farvWrongSide(off(180, 100), [[c.x, c.y, 'S', 'north']]), 'en kardinalstake (S) dømmes som bøya');
-  t.eq(K.farvWrongSide(off(180, 100), [[c.x, c.y, 'B', 'port'], [c.x, c.y, 'L', 'starb'], [c.x, c.y, 'D', '']]), null, 'lateralmerker og staker dømmes ikke');
+  t.eq(K.farvWrongSide(off(180, 100), [[c.x, c.y, 'B', 'port'], [c.x, c.y, 'L', 'starb'], [c.x, c.y, 'D', '']]), null, 'lateralmerker og staker uten viser dømmes ikke');
+  // ---- the stakes with an arrow (viser, steg 107): the arrow points to navigable water (true degrees, the fifth field); the wrong side
+  // is the bearing from the stake to her more than 90 degrees from it, within 200 m ----
+  const st = (a, ty) => [[c.x, c.y, ty || 'D', '', a]], h = Math.max(0.3, Math.abs(gd) / 2);
+  t.ok(K.farvWrongSide(off(180, 100), st(0)), 'stake med viser mot nord: rett sør for den er feil side');
+  t.eq(K.farvWrongSide(off(0, 100), st(0)), null, 'stake med viser mot nord: nord for den er riktig side');
+  t.eq(K.farvWrongSide(off(90 - h, 100), st(0)), null, 'stake med viser mot nord: litt nord for rett øst er riktig side (sann retning, ' + h.toFixed(1) + '°)');
+  t.ok(K.farvWrongSide(off(90 + h, 100), st(0)), 'stake med viser mot nord: litt sør for rett øst er feil side (sann retning)');
+  t.eq(K.farvWrongSide(off(180, 250), st(0)), null, 'stake med viser: 250 m unna er utenfor rekkevidden (200 m)');
+  t.ok(K.farvWrongSide(off(20, 100), st(225)), 'viser mot sørvest: nordnordøst for den er feil side');
+  t.eq(K.farvWrongSide(off(200, 100), st(225)), null, 'viser mot sørvest: sørsørvest for den er riktig side');
+  t.ok(K.farvWrongSide(off(270, 100), st(90, 'L')), 'en lateralstake med viser dømmes etter viseren');
+  t.eq(K.farvWrongSide(off(90, 100), st(90, 'L')), null, 'lateralstaken: der viseren peker, er riktig side');
+  { const nm = [c.x, c.y, 'C', 'north'], fs = [c.x + 0.05 * gsc, c.y, 'D', '', 0]; const r = K.farvWrongSide(off(180, 120), [fs, nm]);
+    t.ok(r === nm, 'kardinalmerket går foran en nærmere stake (ingenting endres for kardinalmerkene)'); }
 
   // ---- the words ----
   const S = K.get('S'); S.lang = 'no';
@@ -83,11 +97,17 @@ export default function (t){
   t.ok(/Fartsgrense 5 knop: du går 8[.,]2/.test(K.farvSay({k:'fart', kn:5, v:8.2}, 'strip')), 'stripa og boksen sier farten');
   t.eq(K.farvSay({k:'merke', cat:'north'}, 'tiny'), 'Feil side av merket', 'merket, kort');
   t.eq(K.farvSay({k:'merke', cat:'east'}, 'strip'), 'Du går på feil side av merket: hold øst for det', 'merket, langt');
+  t.eq(K.farvSay({k:'stake', brg:315}, 'tiny'), 'Feil side av merket', 'staken, kort');
+  t.eq(K.farvSay({k:'stake', brg:315}, 'strip'), 'Du går på feil side av merket: viseren peker mot nordvest', 'staken, langt');
+  t.eq([0, 22, 23, 90, 180, 200, 337, 359].map(K.farvPoint), ['nord', 'nord', 'nordøst', 'øst', 'sør', 'sør', 'nordvest', 'nord'].map(w => w), 'peilingen som ett av åtte strek');
   // the Sikkerhet card's rows
-  S.farv = [{t:10, k:'fart', kn:5, v:8.2, name:'Husøy', x:1, y:1, vid:0}, {t:20, k:'merke', cat:'south', x:1, y:1, vid:0}];
+  S.farv = [{t:10, k:'fart', kn:5, v:8.2, name:'Husøy', x:1, y:1, vid:0}, {t:20, k:'merke', cat:'south', x:1, y:1, vid:0}, {t:30, k:'stake', brg:225, x:1, y:1, vid:0}];
   const rows = K.mobSafeRows(10);
-  t.eq(rows.map(q => q.k), ['merke', 'fart'], 'Sikkerhet-kortet har radene, nyeste først');
+  t.eq(rows.map(q => q.k), ['stake', 'merke', 'fart'], 'Sikkerhet-kortet har radene, nyeste først');
+  t.eq(rows[0].what[0], 'Passerte en stake på feil side. Viseren pekte mot sørvest.', 'raden for staken');
+  t.ok(/Kystverket/.test(rows[0].learn[2]), 'staken har Kystverket som kilde');
+  rows.shift();
   t.eq(rows[1].what[0], 'Gikk 8,2 knop der fartsgrensa er 5 knop (Husøy).', 'raden for farten');
   t.eq(rows[0].what[0], 'Passerte et sørmerke på feil side.', 'raden for merket');
-  t.ok(rows.every(q => q.learn && q.learn.length === 4 && q.learn[2]), 'begge har en setning og en kilde');
+  t.ok(K.mobSafeRows(10).every(q => q.learn && q.learn.length === 4 && q.learn[2]), 'alle har en setning og en kilde');
 }

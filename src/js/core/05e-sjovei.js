@@ -1070,15 +1070,16 @@ function sjvSweep(n, A, H, gs, on){
 // Autonav holds the limit (sjvCapV for the manoeuvring model, 05-vessels.js sailV for the minute step, so with the game closed too: the
 // shared clock); by hand the strip says so when she is over, and a passage well over it is a line in the log and a row in the Sikkerhet
 // card (V1 A: no fines). The cardinal marks (IALA region A): by hand, close by a cardinal mark on the side it warns of, the strip says
-// «Du går på feil side av merket». The lateral marks are not judged: the direction of buoyage is not in the data.
+// «Du går på feil side av merket». So does an iron stake (or a lateral beacon) with its arrow (viser), on the side the arrow points away
+// from (steg 107). The lateral marks are not judged by their colour: the direction of buoyage is not in the data (9.2).
 const FART_D = /*@include(data/fart.json)*/null;
 const FART = {R:null, cell:null, n:-1, last:null,   // the areas' runs (null not read yet, false never), the harbours by 1 km cell, the last answer
-  w:null,                   // what the strip says now: {k:'fart', kn, v, name} or {k:'merke', cat}
+  w:null,                   // what the strip says now: {k:'fart', kn, v, name}, {k:'merke', cat} or {k:'stake', brg}
   over:null, done:null,     // over the limit now: {id (vessel|zone), H1 (a knot over since), peak}; the visit already written (vessel|zone)
-  mk:new Map(),             // the cardinal marks said: 'x,y' -> H
+  mk:new Map(),             // the cardinal marks and the stakes said: 'x,y' -> H
   rows:0, nMk:0,            // rows written since the page was opened (tests/farttest.py)
   TOL:0.5, REC:1, HOLD:30 / 3600,   // over by this much (knots) the strip says so; by this much for this long (game hours) it is written
-  MKR:0.2, MKV:2};          // a cardinal mark's reach (true km) and the least speed (knots)
+  MKR:0.2, MKV:2};          // a cardinal mark's (and a stake's) reach (true km) and the least speed (knots)
 // the date at H as month * 100 + day (501 is 1 May), as the areas' periods are
 function fartMd(H){ try { const d = gDate(H); return (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); } catch (e){ return 0; } }
 // in the period [from, to] (month * 100 + day, over the new year when from > to; none: the whole year)
@@ -1148,14 +1149,24 @@ function fartCapMs(){
 // a cardinal mark's safe side, as the bearing from the mark (true, radians): north of a north mark, and so on
 const FARV_CARD = {north:0, east:Math.PI / 2, south:Math.PI, west:-Math.PI / 2};
 // on the wrong side of a cardinal mark: within reach of it, in the quarter opposite its name (the bearing from the mark to her within
-// 45 degrees of the side it warns of). p and mk in grid km, the bearing made true with the grid's convergence. The mark, or null
+// 45 degrees of the side it warns of). Or, with no cardinal mark, of a stake with its arrow (viser, the fifth field: true degrees, on the
+// iron stakes D and the lateral beacons L; steg 107): within the same reach, the bearing from the stake to her more than 90 degrees from
+// the arrow's, which points to navigable water (Kystverket, «Viser skal peke mot farbart farvann»). The source has no double arrow (one
+// pointing both ways), so every arrow is one way. p and mk in grid km, the bearing made true with the grid's convergence. The mark, or null
 function farvWrongSide(p, marks){
-  const gs = gridScale(p), g = gridGamma(p) * Math.PI / 180; let best = null, bd = FART.MKR * gs;
-  for (const mk of marks){ if ((mk[2] !== 'C' && mk[2] !== 'S') || FARV_CARD[mk[3]] == null) continue;
-    const dx = p.x - mk[0], dy = p.y - mk[1], d = Math.hypot(dx, dy); if (d >= bd || d < 1e-6) continue;
-    if (Math.abs(sjvWrap(Math.atan2(dx, -dy) + g - FARV_CARD[mk[3]] - Math.PI)) < Math.PI / 4){ bd = d; best = mk; } }
-  return best;
+  const gs = gridScale(p), g = gridGamma(p) * Math.PI / 180, R = FART.MKR * gs; let best = null, bd = R, st = null, sd = R;
+  for (const mk of marks){ const card = (mk[2] === 'C' || mk[2] === 'S') && FARV_CARD[mk[3]] != null, arrow = !card && typeof mk[4] === 'number';
+    if (!card && !arrow) continue;
+    const dx = p.x - mk[0], dy = p.y - mk[1], d = Math.hypot(dx, dy); if (d >= (card ? bd : sd) || d < 1e-6) continue;
+    const brg = Math.atan2(dx, -dy) + g;   // (from the mark to her, true)
+    if (card){ if (Math.abs(sjvWrap(brg - FARV_CARD[mk[3]] - Math.PI)) < Math.PI / 4){ bd = d; best = mk; } }
+    else if (Math.abs(sjvWrap(brg - mk[4] * Math.PI / 180)) > Math.PI / 2){ sd = d; st = mk; } }
+  return best || st;   // (a cardinal mark first: nothing changes for them)
 }
+// a true bearing (degrees) as one of the eight points, in Norwegian (farvPoint) and English (FARV_PT)
+const FARV_PT = [['nord', 'north'], ['nordøst', 'north-east'], ['øst', 'east'], ['sørøst', 'south-east'], ['sør', 'south'], ['sørvest', 'south-west'], ['vest', 'west'], ['nordvest', 'north-west']];
+const farvPt = b => FARV_PT[((Math.round((((+b || 0) % 360) + 360) % 360 / 45)) % 8)];
+const farvPoint = b => farvPt(b)[0];
 // one look (from sjvEval, a real second apart): only with the game open and the skipper steering herself (prinsipp 4; Autonav holds
 // the limit and finds its own way by the depths), under way. The strip's words while it lasts; a passage over the limit by a knot for
 // thirty game seconds is written once a visit, a cardinal mark once a game hour
@@ -1178,11 +1189,15 @@ function farvLook(H){
     } else FART.over = null;
     if (!FART.w && v >= FART.MKV && typeof marksNear === 'function'){
       const mk = farvWrongSide(p, marksNear('marks', p.x, p.y, 0.5));
-      if (mk){ FART.w = {k:'merke', cat:mk[3]}; const key = mk[0] + ',' + mk[1], was = FART.mk.get(key);
+      if (mk){ const card = FARV_WORD[mk[3]] && (mk[2] === 'C' || mk[2] === 'S'), brg = card ? 0 : Math.round(mk[4]);
+        FART.w = card ? {k:'merke', cat:mk[3]} : {k:'stake', brg}; const key = mk[0] + ',' + mk[1], was = FART.mk.get(key);
         if (was == null || H - was > 1){ if (FART.mk.size > 200) FART.mk.clear(); FART.mk.set(key, H); FART.nMk++;
-          const W = FARV_WORD[mk[3]];
-          log('Passerte et ' + W[0] + 'merke på feil side. Det er trygt ' + W[0] + ' for merket.', 'Passed ' + W[2] + ' cardinal mark on the wrong side. The safe water is ' + W[1] + ' of it.');
-          farvRec({k:'merke', cat:mk[3]}); } }
+          if (card){ const W = FARV_WORD[mk[3]];
+            log('Passerte et ' + W[0] + 'merke på feil side. Det er trygt ' + W[0] + ' for merket.', 'Passed ' + W[2] + ' cardinal mark on the wrong side. The safe water is ' + W[1] + ' of it.');
+            farvRec({k:'merke', cat:mk[3]}); }
+          else { const W = farvPt(brg);
+            log('Passerte en stake på feil side. Viseren peker mot seilbart farvann, mot ' + W[0] + '.', 'Passed a beacon on the wrong side. Its arrow points to navigable water, to the ' + W[1] + '.');
+            farvRec({k:'stake', brg}); } } }
     }
   } catch (e){ FART.w = null; }
 }
@@ -1196,6 +1211,8 @@ function farvSay(w, how){
   const no = S.lang !== 'en', tiny = how === 'tiny';
   if (w.k === 'fart') return tiny ? (no ? 'Fartsgrense ' + w.kn + ' kn' : 'Speed limit ' + w.kn + ' kn')
     : (no ? 'Fartsgrense ' + w.kn + ' knop: du går ' + fmtC(w.v, 1) : 'Speed limit ' + w.kn + ' knots: you make ' + fmtC(w.v, 1));
+  if (tiny) return no ? 'Feil side av merket' : 'Wrong side of the mark';
+  if (w.k === 'stake'){ const P = farvPt(w.brg); return no ? 'Du går på feil side av merket: viseren peker mot ' + P[0] : 'You are on the wrong side of the mark: its arrow points ' + P[1]; }
   const W = FARV_WORD[w.cat] || FARV_WORD.north;
-  return tiny ? (no ? 'Feil side av merket' : 'Wrong side of the mark') : (no ? 'Du går på feil side av merket: hold ' + W[0] + ' for det' : 'You are on the wrong side of the mark: keep ' + W[1] + ' of it');
+  return no ? 'Du går på feil side av merket: hold ' + W[0] + ' for det' : 'You are on the wrong side of the mark: keep ' + W[1] + ' of it';
 }
