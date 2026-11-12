@@ -254,6 +254,8 @@ K0 har målt (kapittel 5, «K0: målingen»); anslaget under er det planen sto m
 - **Skjermbilder:** kartplotteren og 3D ved ett kardinalmerke, ett lateralmerke og ett isolert faremerke, før og etter, begge formater.
 - **Stikkprøver:** Oslofjorden eller Kristiansand, Bergen, Bodø, Tromsø og Hammerfest (de samme som Ø11.8), pluss Longyearbyen, Bjørnøya og Jan Mayen.
 
+- **Bygd 12.11.2026** (Jonas' økt, grenen `claude/k3-sjomerker-33d`). Kilden ble lagt i releasen `sjomerker-kilde` først (Geofabrik er stengt i øktene), og taggene avgjorde typene: de 13 234 `beacon_isolated_danger` er nesten alle norske jernstenger med viser og blir værende `D`. Tallene før og etter står i 9.3 i `sjofart-og-lover.md`. Bjørnøya og Jan Mayen: ingen merker i OpenStreetMap og 0 objekter i Kystverkets navigasjonsinstallasjoner (WFS, NLOD 2.0, spurt fra Actions), så punktet strykes. Pinnen `"sjomerker"` i `kart-release.json`; releasen får neste ledige nummer (kjøringsnummeret var 17). Gammel side: `mapStale` i `01b-mapdata.js` og `maptest`.
+
 ### K4 (steg 33e). Skjærene i 3D
 
 - **Gjør:** skjærene fra `marksNear('rocks', …)` som lave berg med tang og rur etter eksponeringen, tørre ved lavvann og overskylt ved høyvann, og brenning over dem i sjø; trinnvis etter `QUAL`, av-bryter i adressen. Først sjekkes det at de virkelig ikke tegnes (denne planen fant dem bare ikke med `grep`).
@@ -316,7 +318,7 @@ Rekkefølgen: K0, K1, K2; K3 når Ø11.8 er ferdig; K4 når det passer. N3 (steg
 - G10: «strendene og stupene» er bygd (`kart-16`, `kart-18`); statusen i øktplanen og grafikkplanen er rettet her, backloggen 10.5 bør følge.
 - `kart-33` og `kart-34` er releaser fra gamle grener og nyere enn den pinnede; `release.py` uten pinnen ville tatt feil release.
 - `trees.yml` uten `seen.py` (kapittel 10).
-- Gammel side og ny release gir 404 på pakker til oppdateringsstripa kommer (kapittel 2), rettes i K3.
+- Gammel side og ny release gir 404 på pakker til oppdateringsstripa kommer (kapittel 2), rettet i K3 (12.11.2026).
 
 ## Status
 

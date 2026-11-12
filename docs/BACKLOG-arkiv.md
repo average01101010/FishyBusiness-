@@ -2,6 +2,10 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (steg 33d, Ø13 K3: sjømerkene mot IALA region A, gren `claude/k3-sjomerker-33d`)
+
+- ~~**Sjømerkene mot IALA region A (tabellen i 9.3).** **Åpent fordi:** annen økt: Ø13 K3, steg 33d, eier `tools/map/sjomerker.py` og `markInto`; lukkes av den (hel startmelding i `start/33d.md`). kardinalmerkene tegnes alle som sørmerket i 3D (svart nederst, gult øverst) og uten toppmerker, og som en gul prikk uten kvadrant i kartet; 696 bøyer for isolert fare, trygt farvann og spesialmerke tegnes røde som babord; 2 075 lateralstaker med indirekte belysning får en gul lyssektor (flomlyset lest som lys); lateralmerkene har ingen toppmerker; 21 lateralstaker uten kategori tegnes røde. Lateralfargene og lysene (rødt babord, grønt styrbord) og kardinalmerkenes hvite lys med riktig rytme stemmer.~~ Rettet i steg 33d 12.11.2026 (`sjomerker-8`, `markInto`, `markSvg`; tallene før og etter i 9.3 i `sjofart-og-lover.md`; `marktest`).
+
 ## Strøket 12.11.2026 (steg 28, Ø5 rest a: M5-resten og M9-resten, gren `ccr-5e1ba2f4-pusvyd`, b5138622; kortet i PR #68)
 
 - ~~**M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).~~ Gjort i steg 28 12.11.2026 (fylkene fra Kartverket, `tools/regions/fylke.py`; bildene av `tests/mediekortshot.py`; «M9-resten» i `docs/systemer/handel-og-steder.md`).

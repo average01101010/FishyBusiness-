@@ -388,9 +388,11 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
 - **Kilden** er OpenStreetMaps seamark-tagger (OpenSeaMap; i Norge for det meste fra Kystverkets data), hentet med Overpass. Overpass er stengt for skyøkta, men åpen i Actions.
   - `tools/map/sjomerker.py fetch` henter i ni bånd langs kysten og gjør dem om til den nasjonale rammen (km), i formatet til `src/data/seamarks.json`:
     - **lykter** `[x, y, høyde m, rekkevidde nm, rytme (+ på, − av, sekunder), sektorer [[fra°, til°, farge]], 'M'|'m', navn]`. Sektorene er sanne peilinger fra sjøen mot lykta, som OpenSeaMap har dem. Rytmen kommer fra `sequence`, ellers fra karakter og periode (Fl, LFl, Oc, Iso, Q, VQ, F).
-    - **merker** `[x, y, type, kategori]`: M fyr, m lykt, P påle, D stake (fare eller spesialmerke), L lateralstake, B bøye, C kardinalbøye, S kardinalstake, K varde. Kategorien er port/starb eller north/east/south/west.
+    - **merker** `[x, y, type, kategori(, viser)]`: M fyr, m lykt, P påle, D stake eller annet fast merke som ikke er et IALA-merke (jernstengene; kategorien `tower`, `lattice`, `ball` eller tom), L lateralstake, B lateralbøye (port/starb; `w` hvit eller tom uten side, tegnes hvit), C kardinalbøye, S kardinalstake (north/east/south/west), K varde, og fra `sjomerker-8` (Ø13 K3, 12.11.2026) I/i isolert fare (bøye/stake), A/a trygt farvann, Y/y spesialmerke (Y-kategorien: fargen `y`, `w` eller `r`, `s` kuleformet, `x` kryss på toppen). Femte felt er viseren på toppen: sann peiling mot seilbart farvann. Tallene og grunnene står i 9.3 i `sjofart-og-lover.md`.
+    - Lys med `seamark:light:N:category=floodlight` (flomlyset på en stake) leses ikke som lys (K3).
     - **skjær** `[x, y]` (`seamark:type=rock`).
-  - `.github/workflows/sjomerker.yml` startes av en endring i `tools/map/sjomerker.json` eller `sjomerker.py`, og legger `sjomerker.json.gz` i releasen `sjomerker-N`.
+  - `.github/workflows/sjomerker.yml` startes av en endring i `tools/map/sjomerker.json` eller `sjomerker.py`, og legger `sjomerker.json.gz` i releasen `sjomerker-N` (fra K3: neste ledige nummer, ikke kjøringens; og kilden, `sjomerker-kilde.geojsonseq.gz`, alle objektene med alle taggene, så en økt kan kjøre konverteren selv: `sjomerker.py geojson <kilde> <ut>`, og telle med `sjomerker.py check <fil>`). Kjørt for hånd med `kilde: true` legger den bare kilden og Kystverkets svar over Bjørnøya og Jan Mayen i releasen `sjomerker-kilde`.
+  - **Pinnen** (K3): `tools/map/kart-release.json` har `"sjomerker": "sjomerker-8"`; `release.py` (`marks_tag`) og `game.py` tar den, ellers den nyeste. Tilbake er én linje (`sjomerker-7`).
   - **Kilden i Actions** er Geofabriks `norway-latest.osm.pbf` (1,4 GB), filtrert med osmium (`sjomerker.py pbf`). Overpass ga 504 på det første båndet langs kysten, og beholdes som reserve (`fetch`).
   - **`sjomerker-2`** (05.10.2026) har 7 809 lykter, 23 878 merker og 98 056 skjær, 1,16 MB komprimert. Merkene fordeler seg slik:
     - 13 520 staker (D)
@@ -404,17 +406,17 @@ Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av n
 
     Sjøkartpakkene vokste fra 9,6 til 10,8 MB.
 - **I kartpakkene:**
-  - `tools/map/release.py` henter den nyeste `sjomerker-N` sammen med kartreleasen.
+  - `tools/map/release.py` henter den pinnede `sjomerker-N` sammen med kartreleasen.
   - `tools/map/game.py` (`marks_by_tile`) legger hver flis' merker inn i flisas sjøkartpakke som oppføringen `marks` (JSON, raw deflate, ved flisas første blokk).
   - Sjøkartpakkene er med i artifacten, så sjømerkene er det også. En ny release endrer bare sjøkartpakkene.
 - **I spillet** (`core/01e-marks.js`):
   - `marksAdd` leser en flis' merker når pakkens kyst bygges (`coastDone`). Det skjer rundt alle båter og sett (simuleringens sperre), over kartplotterens vindu, langs Autonav-veien og rundt 3D-visningen.
-  - Inne i Senjas gamle rute gjelder de innebygde `SEAMARKS`.
+  - Inne i Senjas gamle rute gjelder de innebygde `SEAMARKS`. De er de samme OSM-objektene, og når en flis med merker der lastes, tar hvert innebygd merke typen, kategorien og viseren fra merket på samme sted (`marksSenja`, K3); 3D-visningen tegner dem i et eget nett som bygges på nytt da (`marksStatics`).
   - `marksNear(kind, x, y, R)` gir lyktene, merkene eller skjærene fra `SEAMARKS` og flisene innen R km.
   - `rocksIn` tar med flisenes skjær per 1 km-celle (`marksRocksIn`). Dermed teller de for grunnstøting og for Autonav (`leiaRocks` bruker nå `rocksIn` over rutenettets boks).
   - Kartplotteren tegner lykter og merker fra `marksNear`.
   - Hindringene for rutene (`11b-obstacles.js`) tar med merkene, og indeksen bygges på nytt når `MARKS.ver` endres.
-  - **3D:** `markInto` bygger et merke som før. Kystens merker får et nett per flis (`marksStatics`) når flisas terreng er lastet. Lyktene blinker etter `lightLP`: Senjas fase er som før etter rekkefølgen, og kystens etter posisjonen. De tegnes fra `marksNear` rundt øyet (sektorlys innen 50 km, lys som lyser opp innen 5 km og fyrstråler innen 26 km).
+  - **3D:** `markInto` bygger et merke etter IALA region A (K3): kardinalmerkenes bånd og to kjegler per kvadrant, sylinder og kjegle på lateralmerkene, isolert fare, trygt farvann og spesialmerker med toppmerke, jernstengene som tynne stenger med viseren. Kartplotteren tegner symbolet fra `markSvg` (`01e-marks.js`). Kystens merker får et nett per flis (`marksStatics`) når flisas terreng er lastet. Lyktene blinker etter `lightLP`: Senjas fase er som før etter rekkefølgen, og kystens etter posisjonen. De tegnes fra `marksNear` rundt øyet (sektorlys innen 50 km, lys som lyser opp innen 5 km og fyrstråler innen 26 km).
   - **Lysets høyde** (07.10.2026, `lightY`): høyden i dataene er lysets høyde over havet, så lyset tegnes der, men aldri lavere enn 4 m over terrenget. Før ble høyden lagt oppå bakken, og et fyr på en knaus hadde lyset langt over tårnet.
   - **Fyrene** (07.10.2026): de 134 fyrene i `src/data/fyr.json` (se 4.26) får et rundt tårn i 3D (`fyrInto`): hvitt med rødt bånd under gangen, mørk gang med rekkverk, lanterne og rødt tak. Lanternen står der lyset er, så tårnet er så høyt som det trengs over terrenget (høyst 40 m). Der et fyr fra registeret står, tegnes ikke kassetårnet til merket `M`.
 - **Testene** er `tests/marktest.py` (Tromsø: flisas merker lest, sektorer og rytme, ingen inne i Senja-ruta, skjær i `rocksIn`, hindringene og kartplotteren) og `tests/coast3d.py` (lyktene utenfor Tromsø om natta).
