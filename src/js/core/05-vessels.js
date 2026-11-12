@@ -1,14 +1,13 @@
 // ---------- other vessels (deterministic, so every player sees the same traffic) ----------
-const NPC_ROUTES = {"coastal":[[35.025,82.275],[41.875,68.925],[43.025,67.925],[56.525,59.825],[57.425,58.775],[56.275,55.625],[55.575,54.775],[55.725,54.525],[55.625,52.775],[56.275,45.125],[60.325,40.925],[60.725,39.775],[60.475,37.425],[62.125,28.775],[63.025,28.025],[78.375,19.375]],"coastalStop":7,"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
-for (const k of ['coastal', 'ferry']) NPC_ROUTES[k] = NPC_ROUTES[k].map(LGa); NPC_ROUTES.sjark = NPC_ROUTES.sjark.map(r => r.map(LGa));   // legacy km into the game's frame
+const NPC_ROUTES = {"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
+NPC_ROUTES.ferry = NPC_ROUTES.ferry.map(LGa); NPC_ROUTES.sjark = NPC_ROUTES.sjark.map(r => r.map(LGa));   // legacy km into the game's frame
 function prepRoute(r){ const pts = r.map(q => ({x:q[0], y:q[1]})), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(pts[i - 1], pts[i])); return {pts, cum, len:cum[cum.length - 1]}; }
 function atRoute(R, s){
   s = clamp(s, 0, R.len); let i = 1; while (i < R.pts.length - 1 && R.cum[i] < s) i++;
   const a = R.pts[i - 1], b = R.pts[i], seg = (R.cum[i] - R.cum[i - 1]) || 1, u = clamp((s - R.cum[i - 1]) / seg, 0, 1);
   return {p:{x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}, hd:Math.atan2(b.x - a.x, -(b.y - a.y))};
 }
-const NPCR = {coastal:prepRoute(NPC_ROUTES.coastal), coastalRev:prepRoute(NPC_ROUTES.coastal.slice().reverse()), ferry:prepRoute(NPC_ROUTES.ferry), ferryRev:prepRoute(NPC_ROUTES.ferry.slice().reverse()), sjark:NPC_ROUTES.sjark.map(prepRoute), sjarkRev:NPC_ROUTES.sjark.map(r => prepRoute(r.slice().reverse()))};
-NPCR.stopS = NPCR.coastal.cum[NPC_ROUTES.coastalStop]; NPCR.stopSRev = NPCR.coastal.len - NPCR.stopS;
+const NPCR = {ferry:prepRoute(NPC_ROUTES.ferry), ferryRev:prepRoute(NPC_ROUTES.ferry.slice().reverse()), sjark:NPC_ROUTES.sjark.map(prepRoute), sjarkRev:NPC_ROUTES.sjark.map(r => prepRoute(r.slice().reverse()))};
 const FLEET = [{"n":"Havørn","home":"husoy","hp":[43.838,19.863],"L":10.99,"B":4.2,"T":1.8,"cs":"LK4417","reg":"T-54-BG","own":"Havørn Fiskeri AS","rt":[[[43.838,19.863],[43.825,19.925],[43.825,19.975],[43.812,20.013],[43.788,20.038],[43.763,20.038],[43.738,20.038],[43.713,20.038],[43.675,20.075],[43.475,19.875],[42.071,17.429]],[[43.838,19.863],[43.825,19.925],[43.825,19.975],[43.812,20.013],[43.788,20.038],[43.763,20.038],[43.738,20.038],[43.713,20.038],[43.675,20.075],[43.475,19.875],[43.175,19.275],[42.125,13.525],[42.125,13.375],[42.225,13.325],[44.688,13.463],[44.775,13.525],[45.725,15.175],[47.853,19.464]]]},{"n":"Mefjordingen","home":"senjahopen","hp":[36.662,25.316],"L":14.9,"B":6.0,"T":2.6,"cs":"LM2291","reg":"T-21-BG","own":"Mefjord Kystfiske AS","rt":[[[36.662,25.316],[37.125,24.975],[37.025,23.075],[36.425,22.525],[34.675,21.475],[32.775,20.475],[31.075,20.025],[29.925,19.775],[29.725,19.825],[25.375,24.475],[25.275,24.875],[26.325,28.475],[28.375,30.425],[29.225,30.875],[32.675,31.875],[34.125,31.775],[34.155,31.715]],[[36.662,25.316],[37.125,24.975],[36.875,20.325],[35.657,19.103]]]},{"n":"Grylle","home":"gryllefjord","hp":[19.888,39.688],"L":10.7,"B":3.9,"T":1.6,"cs":"LJ6604","reg":"T-8-TK","own":"Grylle Fiskeri AS","rt":[[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.875,39.575],[18.575,39.925],[17.362,41.742]],[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[14.462,41.561]]]},{"n":"Botnværing","home":"botnhamn","hp":[53.208,23.505],"L":12.2,"B":4.6,"T":2.0,"cs":"LG3308","reg":"T-112-LK","own":"Botnværing AS","rt":[[[53.208,23.505],[53.275,23.475],[53.338,23.463],[53.338,23.438],[53.363,23.413],[53.388,23.438],[53.388,23.488],[53.363,23.513],[53.375,23.475],[53.525,23.625],[51.681,26.334]],[[53.208,23.505],[53.225,23.475],[55.54,21.199]]]},{"n":"Senjaværing","home":"finnsnes","hp":[55.838,54.288],"L":10.99,"B":4.4,"T":1.9,"cs":"LK9052","reg":"T-37-LK","own":"Gisund Sjark AS","rt":[[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[55.975,56.625],[57.215,57.878]],[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[56.075,57.075],[57.275,58.325],[57.375,58.725],[57.589,60.492]]]},{"n":"Nordstjerna","home":"Torsken","hp":[21.338,42.788],"L":14.5,"B":5.8,"T":2.4,"cs":"LM5170","reg":"T-15-TK","own":"Nordstjerna Fiskeri AS","rt":[[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[17.738,43.138]],[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[20.025,42.625],[17.919,40.182]]]},{"n":"Kvitholmen","home":"Torsken","hp":[21.338,42.788],"L":9.9,"B":3.6,"T":1.5,"cs":"LJ2788","reg":"T-40-TK","own":"Kvitholmen Fiske AS","rt":[[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[17.562,42.972]],[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[20.025,42.625],[17.88,40.107]]]},{"n":"Bergsfjord","home":"Skaland","hp":[29.263,30.763],"L":10.4,"B":3.8,"T":1.7,"cs":"LG7741","reg":"T-66-BG","own":"Bergsfjord Sjark AS","rt":[[[29.263,30.763],[29.312,30.763],[29.312,30.788],[29.338,30.812],[29.363,30.788],[29.363,30.763],[29.375,30.775],[29.413,30.763],[29.438,30.788],[29.475,30.825],[32.019,32.066]],[[29.263,30.763],[29.263,30.788],[29.225,30.825],[29.175,30.825],[25.648,29.782]]]},{"n":"Tindvær","home":"Mefjordvær","hp":[34.988,22.288],"L":20.9,"B":7.2,"T":3.4,"cs":"LNQE","reg":"T-3-BG","own":"Tindvær Havfiske AS","rt":[[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[36.023,19.454]],[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[35.025,21.775],[34.675,21.475],[32.104,19.56]]]},{"n":"Sølvtind","home":"Mefjordvær","hp":[34.988,22.288],"L":10.99,"B":4.3,"T":1.8,"cs":"LK1360","reg":"T-88-BG","own":"Sølvtind Fiskeri AS","rt":[[[34.988,22.288],[34.988,22.263],[35.013,22.288],[35.038,22.263],[35.062,22.288],[35.087,22.263],[36.575,22.575],[38.003,24.042]],[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[35.776,19.329]]]},{"n":"Hamnvær","home":"Hamn","hp":[24.213,33.788],"L":9.5,"B":3.5,"T":1.4,"cs":"LJ4029","reg":"T-19-BG","own":"Hamnvær Fiske AS","rt":[[[24.213,33.788],[24.175,33.775],[24.125,33.775],[24.075,33.775],[24.013,33.812],[24.038,33.812],[24.062,33.837],[24.062,33.863],[24.013,33.913],[23.975,33.875],[23.925,33.875],[23.875,33.875],[23.825,33.875],[21.225,33.325],[21.179,33.267]],[[24.213,33.788],[24.175,33.775],[24.125,33.775],[24.075,33.775],[24.013,33.812],[24.038,33.812],[24.062,33.837],[24.062,33.863],[24.013,33.913],[23.975,33.875],[23.925,33.875],[23.875,33.875],[23.825,33.825],[23.825,33.775],[23.825,33.225],[23.838,33.163],[23.838,33.163],[23.875,33.125],[23.913,33.163],[23.938,33.163],[23.963,33.138],[23.963,33.113],[23.925,33.075],[23.963,33.038],[23.925,33.025],[23.925,32.825],[23.925,32.775],[23.975,32.725],[23.975,32.675],[23.975,32.525],[24.025,32.475],[24.038,32.438],[24.075,32.425],[24.138,32.413],[24.163,32.388],[24.138,32.363],[24.138,32.363],[24.125,32.325],[24.163,31.963],[24.163,31.938],[24.138,31.913],[24.113,31.913],[24.075,31.875],[24.025,31.825],[24.025,31.775],[24.025,31.175],[23.975,31.125],[23.925,31.075],[23.925,31.025],[23.925,30.975],[23.975,30.925],[23.975,30.875],[23.975,30.825],[23.975,30.775],[23.975,30.725],[23.975,30.575],[23.975,30.525],[23.975,30.475],[23.975,30.425],[23.975,30.375],[23.975,30.325],[23.975,30.275],[23.975,30.225],[23.229,28.647]]]},{"n":"Vesterfjord","home":"Skrolsvik","hp":[19.662,71.888],"L":12.8,"B":5.0,"T":2.1,"cs":"LM8453","reg":"T-27-TN","own":"Vesterfjord Kystfiske AS","rt":[[[19.662,71.888],[19.675,71.925],[19.525,72.325],[18.988,72.463],[18.825,72.625],[18.312,72.663],[18.288,72.688],[18.225,72.675],[16.363,72.232]],[[19.662,71.888],[19.675,71.925],[19.125,73.325],[18.175,74.625],[18.109,75.476]]]},{"n":"Laukvik","home":"gryllefjord","hp":[19.888,39.688],"L":14.9,"B":6.2,"T":2.7,"cs":"LG5519","reg":"T-61-TK","own":"Laukvik Havfiske AS","rt":[[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.425,39.575],[16.997,41.025]],[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.875,39.575],[18.575,39.925],[18.425,40.475],[18.725,41.325],[19.975,42.525],[20.575,42.775],[21.791,43.013]]]},{"n":"Solbris","home":"finnsnes","hp":[55.838,54.288],"L":8.9,"B":3.2,"T":1.3,"cs":"LJ9964","reg":"T-97-LK","own":"Solbris Sjark AS","rt":[[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[55.925,56.375],[57.491,57.903]],[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[56.075,57.075],[57.275,58.325],[57.375,58.725],[57.401,60.545]]]}];
 for (const f of FLEET){ f.hp = LGa(f.hp); f.rt = f.rt.map(r => r.map(LGa)); }   // legacy km into the game's frame
 const HOMES = {"finnsnes":[55.838,54.288],"botnhamn":[53.208,23.505],"husoy":[43.838,19.863],"senjahopen":[36.662,25.316],"gryllefjord":[19.888,39.688],"Torsken":[21.338,42.788],"Skaland":[29.263,30.763],"Mefjordv\u00e6r":[34.988,22.288],"Hamn":[24.213,33.788],"Skrolsvik":[19.662,71.888]};
@@ -107,9 +106,10 @@ function fleetState0(i, H){
 // goes. They take no fish from the simulation's stock (only FLEET's do, which every player has).
 const AIS_KM = 15;
 // what the AIS shows (the chart, the 3D plotter): the coast's boats are already only those within AIS_KM (coastNear); Senja's own fleet,
-// the coastal ship and the ferry are sailed everywhere (their fishing takes from the stock, 03-simulation.js), but shown only within
-// AIS_KM of the boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»)
-const aisShown = n => !(n.fleet || n.id === 'ferje' || n.id === 'kystn' || n.id === 'kysts') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
+// Senja's ferry are sailed everywhere (the fleet's fishing takes from the stock, 03-simulation.js), but shown only within AIS_KM of the
+// boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»); the coastal
+// route's ships are only those within AIS_KM already (ferjeNear, 05b-ferje.js)
+const aisShown = n => !(n.fleet || n.id === 'ferje') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
 const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
 // the way from a coast boat's berth out to the harbour mouth m0 (and back): straight where that leg is clear of the piers, docks, marks
 // (obsSegHit, 3 m) and land, else straight out from the face first, 25 or 60 m, and on to m0; as before when neither is clear. Kept per
@@ -504,17 +504,10 @@ function coastNear(H, only){
   return out;
 }
 function npcStates(H, only){
-  const out = [], d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600;
-  const ago = start => ((hod - start) % 24 + 24) % 24;
-  // coastal ship: northbound in the evening, southbound at night, 15 kn, 30 min at the Finnsnes quay
-  const v = 15 * NM;
-  for (const [R, start, stop, dir] of [[NPCR.coastal, 17.5, NPCR.stopS, 'n'], [NPCR.coastalRev, 2.5, NPCR.stopSRev, 's']]){
-    if (only && only !== 'kyst' + dir) continue;
-    const e = ago(start), t1 = stop / v; let s;
-    if (e < t1) s = e * v; else if (e < t1 + 0.5) s = stop; else s = stop + (e - t1 - 0.5) * v;
-    if (s < R.len){ const a = atRoute(R, s); out.push({id:'kyst' + dir, name:'MS Kystpilen', type:'coastal', p:berthShift(a.p, 'kyst', true), hd:a.hd, v:(e >= t1 && e < t1 + 0.5) ? 0 : 15}); }
-  }
-  // the car ferries: Senja's own (Botnhamn - Brensholmen, the summer season) and the coast's within AIS range, by the timetable (05b-ferje.js)
+  const out = [];
+  // the coastal route's ships (Bergen - Kirkenes, one each way every day, by Entur's timetable; Senja's «MS Kystpilen» is one of them),
+  // the car ferries, express boats and passenger ferries: Senja's own ferry (Botnhamn - Brensholmen, the summer season) and the coast's
+  // within AIS range, by the timetable (05b-ferje.js)
   for (const n of ferjeNear(H, only)) out.push(n);
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
   const fb = !only && S && S.boat && S.boat.pos;
@@ -694,21 +687,24 @@ function step(){
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
   fsMinute();                         // sea time with you aboard (09e-fartstid.js)
 }
+// the catch's minute aboard: the fish keeps (KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen; live
+// crab by its own rates), the ice maker makes ice, and the hands on deck gut and ice. vesselStep each minute, and the hop over the rest
+// of a route (06j-hopp.js) for each minute she would have sailed, with H and p where she would have been
+function holdMinute(H, p){
+  const kar = S.equip && S.equip.krabbekar; let rrs = null;
+  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) / 60); continue; }
+    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
+    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, p);
+    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) / 1440)); }
+  iceMinute(); deckMinute();
+}
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){
   const b = S.boat;
   // a trim that has run its time (core BOOSTS): the speed goes back
   if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; trimEnd(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
-  const clean = 1;
   const WA = workMinute();
-  const kar = S.equip && S.equip.krabbekar;
-  // (live crab by its own rates; the fish as KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen)
-  let rrs = null;
-  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) * clean / 60); continue; }
-    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
-    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
-    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) * clean / 1440)); }
-  iceMinute(); deckMinute();
+  holdMinute(H, b.pos);
   if (S.t % 60 === 0 && BOAT.tank) snoTankHour(H);   // the live snow crab in the tanks (10e-krabbefabrikk.js, H3b)
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();

@@ -8,11 +8,13 @@
 // (STEDER_D, the places' data, is read in 06b-coastports.js, so the ocean fleet's plants can keep their distance to them)
 (() => {
   if (!STEDER_D || !STEDER_D.r) return;
-  const used = {};
+  const used = {}, nearTown = (x, y) => { let best = null, bd = Infinity; for (const q of PORTS) if (q.mottak && !q.sted && q.xy){ const d = Math.hypot(q.xy[0] - x, q.xy[1] - y); if (d < bd){ bd = d; best = q; } } return best ? best.name : ''; };
   for (const r of STEDER_D.r){
     const [x, y, a, len, depth, kind, town] = r, k = kind ? 'verft' : 'utstyrsbutikk';
     const id = (kind ? 'sv' : 'sb') + Math.round(x * 1000) + '_' + Math.round(y * 1000);
-    let name = (town || (kind ? 'Verft' : 'Butikk')) + ' ' + k;
+    // a place with no postal town in Kartverket's register (one yard on the Varanger peninsula, 12.11.2026: «Verft verft», against
+    // «navn etter stedet»): the town of the nearest plant, whose names come from the same register (06b-coastports.js, before this)
+    let name = (town || nearTown(x, y) || (kind ? 'Verft' : 'Butikk')) + ' ' + k;
     // a second one of the same kind in one town: by the side of the first it lies on (the grid's x east, y south)
     if (used[name]){ const f = used[name], dx = x - f[0], dy = y - f[1]; name += Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? ' øst' : ' vest') : (dy > 0 ? ' sør' : ' nord'); for (let n = 2; used[name]; n++) name = name.replace(/ \d+$/, '') + ' ' + n; }
     used[name] = [x, y];

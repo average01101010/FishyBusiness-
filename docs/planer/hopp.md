@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **HO1 pågår (steg 104)**, HO2 og HO3 venter i køen (steg 105 og 106).
+Status: **HO1 og HO2 er bygd og rullet ut til testutgaven (12.11.2026, steg 104 og 105)**; spoleknappen står bak Admin-appens testbryter til kjøpet er bygd. HO3 (steg 106, kjøpet) er neste.
 
 ## Hva Jonas ba om
 
@@ -90,7 +90,7 @@ Hver fase er én økt.
 ### HO2 Knappen, meteret og hoppet i 3D
 
 - **Hva:**
-  - Knappen i hjørnet mens en rute seiles, i kartet og i 3D.
+  - Spoleknappen (⏩) i 3D til høyre, rett under kamera- og kinoknappen, bare mens en rute seiles (Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»).
   - Kortet med meteret: nm og timer igjen, prisen med 💎, og grunnen når hoppet ikke kan gjøres.
   - Hoppet med lasting av kartet ved målet (`mapNeed`) og en enkel overgang mens 3D laster.
   - De andre spillerne ser båten gå ut av AIS ved avgangen og komme inn igjen ved målet, uten forklaring og uten nytt felt i `pos_put`.
@@ -137,4 +137,5 @@ Hver fase er én økt.
 
 ## Status
 
-- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen; HO1 pågår.
+- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen.
+- 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n. Neste: HO3 (steg 106).

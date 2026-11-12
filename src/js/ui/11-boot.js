@@ -281,7 +281,7 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
   } }
 { const d = newState(); for (const k of ['equip', 'crew', 'loan', 'member', 'msgs', 'sales', 'order', 'owned', 'stock', 'marks', 'jobs', 'prep', 'tripBuff', 'draftDep', 'navrows', 'company', 'boatName', 'tut', 'incidents', 'lore', 'tattoos', 'tat', 'sets', 'gseq', 'ops', 'lic', 'qseed', 'haill', 'pubE', 'target', 'streak', 'clothes', 'orders', 'rep', 'bors', 'cevt', 'workLog']) if (S[k] === undefined || (k === 'stock' && !S[k])) S[k] = d[k];
   if (!S.fm) S.fm = fmInit();   // blad B from the landing notes kept, and at once for a company that already has a closed-group right
-  if (!adminOk()){ S.mult = 1; if (S.adm) S.adm.noEnergy = false; }
+  if (!adminOk()){ S.mult = 1; if (S.adm){ S.adm.noEnergy = false; S.adm.hopp = false; } }   // (the fast-forward test switch too, HO2)
   // one clock for everyone (core/01-world.js): no pace of one's own, and the world's seed for the quota years, stocks and sellers
   if (WCLOCK.on){ S.mult = 1; S.qseed = WORLD_SEED; }   // the Admin app's pace and energy are only Jonas's (cloud adminOk)
   if (!S.boat.type) S.boat.type = 'trebat'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }

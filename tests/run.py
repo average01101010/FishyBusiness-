@@ -35,6 +35,7 @@ LITE = ['stromtest', 'skagtest', 'sor62test', 'gatetest', 'jukseboot', 'kotest',
 # the session hooks and the deny list in .claude/ (Ø17, 06.11.2026): no browser, about a second. On a line of its own, so the sessions
 # that add tests to LITE above do not meet it in a merge
 LITE += ['hooktest']
+LITE += ['hopptest']   # hopp over resten av ruta, kjernen (HO1, steg 104)
 # OPP1 (07.11.2026): the knives and the gaff in tiers at the tackle shop
 LITE += ['opptest']
 SOLO = ['routetest', 'heattest', 'landtest', 'charttest', 'driftsplan2test']
@@ -137,6 +138,9 @@ LITE += ['mobtest']
 # steg 16 R (09.11.2026): round or gutted per boat, the switch and the landing note
 LITE += ['rundshot']
 COVER['tests/rundshot.py'] = ['rundshot']
+COVER['src/js/core/06j-hopp.js'] = ['hopptest']; COVER['tests/hopptest.py'] = ['hopptest']
+COVER['src/js/ui/10u-hopp.js'] = ['hopptest', 'hoppshot']; COVER['tests/hoppshot.py'] = ['hoppshot']; COVER['src/js/core/06j-hopp.js'] += ['hoppshot']
+D3 += ['hoppshot']   # spoleknappen, kortet og hoppet i 3D i begge formater (HO2, steg 105)
 for _f in ('src/js/ui/07-guide.js', 'src/js/ui/08-actions.js', 'src/js/ui/05d-plan2.js'): COVER.setdefault(_f, []).append('rundshot')
 D3 += ['mobshot']
 COVER['src/js/core/14b-sikkerhet.js'] = ['mobtest', 'seaworktest']
@@ -253,6 +257,8 @@ for _f in ('tools/server/gate/gate.py', 'tests/gatetest.py', 'tests/savestest.py
 LITE += ['ferrytest']
 COVER['tests/ferrytest.py'] = ['ferrytest']; COVER['tests/unit/ferje.test.mjs'] = []
 COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npctest', 'boottest']; COVER['src/data/ferje.json'] = ['ferrytest', 'boottest']
+D3 += ['kystshot', 'kystshot_st']; COVER['tests/kystshot.py'] = ['kystshot', 'kystshot_st']; COVER['tests/kystshot_st.py'] = ['kystshot_st']   # (Ø15 N4: the coastal route's ship and an express boat at their quays in 3D)
+COVER['src/data/ferje.json'] += ['kystshot', 'kystshot_st']; COVER['src/js/core/05b-ferje.js'] += ['kystshot', 'kystshot_st']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
 # fin.test.mjs (unit) the reading. finshot is pictures for the eye (before and after), run by hand
 COVER['tests/fintest.py'] = ['fintest']; COVER['tests/finshot.py'] = []; COVER['tools/map/fin.py'] = []; COVER['tests/unit/fin.test.mjs'] = []
