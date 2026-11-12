@@ -1029,7 +1029,6 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `oppdrag()` i `ui/phone/02-havn-last-agn-ordre.js` (linje 33, `salg('best')`) kalles ikke lenger: bestillingene tas i dokka (Bygd, Oppdrag), og Salgslaget har ikke fanen. Funnet i Ø2 05.11.2026 da `ordtest` ble skrevet om.
 
 - **M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).
-- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, og utkastet fra juni 2022 ble lest 07.11.2026; målingen og rapporten etter det ble bygd i steg 66 08.11.2026 (over).
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
 

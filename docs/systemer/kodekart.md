@@ -1953,7 +1953,7 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 356 `mktDeliver(vid, to)`
   - 362 `mktHour(H)`
 
-## `src/js/core/09l-sponsor.js` (31 linjer)
+## `src/js/core/09l-sponsor.js` (71 linjer)
 
 Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
 
@@ -1962,6 +1962,11 @@ Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real
   - 16 `spOf(kind, target)`
   - 18 `spSponsors()`
   - 20 `spUrl(site)`
+- **21** a partner's paint design (M8 F5, steg 44 11.11.2026): a placement 'look' on 'paint' is a whole paint for the boat, free, marked
+  - 29 `spPaintLiv(r, type)`
+  - 48 `spWorn(L)`
+  - 50 `spPaintIn(s)`
+  - 56 `spPaintLogo(r)`
 
 ## `src/js/core/09m-kystkart.js` (38 linjer)
 
@@ -3529,16 +3534,16 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 332 `shopClaim()`
   - 386 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (225 linjer)
+## `src/js/ui/10j-paint.js` (249 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 180 `logoSet(L)`
-  - 188 `logoCheck()`
-  - 199 `cosSrv(owned)`
-  - 205 `giveCos(k)`
-  - 220 `regSet(n)`
+  - 204 `logoSet(L)`
+  - 212 `logoCheck()`
+  - 223 `cosSrv(owned)`
+  - 229 `giveCos(k)`
+  - 244 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
@@ -3546,12 +3551,12 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (105 linjer)
+## `src/js/ui/10r-sponsor.js` (115 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
-- **57** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
+- **67** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
 
 ## `src/js/ui/10s-broker.js` (133 linjer)
 
@@ -3668,7 +3673,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1696 linjer)
+## `src/js/vessel3d.js` (1701 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3727,72 +3732,72 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 608 `geoOf(type)`
 - **612** the paint shop (ui/10j-paint.js; Jonas 06.10.2026): the hull colours a player can paint their own boat in, in VC's scale. A boat's
   - 631 `modelLiv(L)`
-  - 638 `hullLiv(b)`
-  - 639 `livKey(liv)`
-  - 641 `livGeo(liv)`
-  - 646 `livStr(b)`
-  - 657 `livPen(s)`
-  - 659 `livMark(s)`
-  - 660 `livParse(s)`
-- **665** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 669 `topsides(type)`
-  - 687 `designLines(TS, liv)`
-  - 696 `glbDesign(type, part, liv)`
-  - 730 `designFits(type, k)`
-  - 737 `kitLiv(liv)`
-- **739** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **788** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 799 `logoCanvas(cv, L, img)`
-  - 815 `logoStrips(type)`
-  - 836 `stripBare(type, st)`
-  - 851 `logoStr(L)`
-  - 852 `logoParse(s)`
-  - 856 `flagCanvas(cv, code, shape, logo)`
-  - 868 `flagOf(L)`
-- **869** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 878 `hullTris(type)`
-  - 895 `sideStrip(type, frac, hMax, aspect, drop, band)`
-  - 935 `nameStrips(type)`
-  - 971 `stripProud(type, st)`
-  - 994 `stripPaint(type, st)`
-  - 1015 `markStrips(type)`
-  - 1028 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1053 `callStrips(type)`
-  - 1059 `callRGB(type, liv)`
-  - 1062 `anchorLen(bw)`
-  - 1065 `markRGB(type, liv)`
-  - 1074 `hullRGB(type, liv)`
-- **1084** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1095 `facingTris(P, dir, keep)`
-  - 1110 `rayZ(T, x, y, dir, za, zb)`
-  - 1121 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1132 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1143 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1154 `houseFront(type, P, Gl, V)`
-  - 1197 `transom(type, P, V)`
-  - 1232 `namePlaces(type)`
-  - 1250 `placeRGB(type, p, liv)`
-  - 1258 `nameInkLight(rgb)`
-  - 1262 `npcKit(L, B)`
-  - 1265 `npcModel(type, lod, liv)`
-  - 1267 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1279** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1298 `vestKit(K)`
-  - 1313 `wkPart(name, kit)`
-  - 1323 `wkPut(B, o, ax, s, at)`
-  - 1333 `wkLimb(B, o, A, E, r)`
-  - 1340 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1362 `vesselSVG(type, w, h)`
-- **1400** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1407 `deckMap(type)`
-  - 1552 `deckPass(M, k, q)`
-  - 1557 `passLine(M, A, B)`
-  - 1559 `linkPass(M, k, q)`
-  - 1563 `deckComp(M)`
-  - 1572 `deckPath(M, a, b)`
-- **1603** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1616 `lanterns(G, V, st)`
-  - 1655 `deckPoints(type)`
+  - 640 `hullLiv(b)`
+  - 641 `livKey(liv)`
+  - 643 `livGeo(liv)`
+  - 648 `livStr(b)`
+  - 660 `livPen(s)`
+  - 662 `livMark(s)`
+  - 663 `livParse(s, type)`
+- **669** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 673 `topsides(type)`
+  - 691 `designLines(TS, liv)`
+  - 700 `glbDesign(type, part, liv)`
+  - 734 `designFits(type, k)`
+  - 741 `kitLiv(liv)`
+- **743** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **792** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 803 `logoCanvas(cv, L, img)`
+  - 819 `logoStrips(type)`
+  - 840 `stripBare(type, st)`
+  - 855 `logoStr(L)`
+  - 856 `logoParse(s)`
+  - 860 `flagCanvas(cv, code, shape, logo)`
+  - 872 `flagOf(L)`
+- **873** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 882 `hullTris(type)`
+  - 899 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 939 `nameStrips(type)`
+  - 975 `stripProud(type, st)`
+  - 998 `stripPaint(type, st)`
+  - 1019 `markStrips(type)`
+  - 1032 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1057 `callStrips(type)`
+  - 1063 `callRGB(type, liv)`
+  - 1066 `anchorLen(bw)`
+  - 1069 `markRGB(type, liv)`
+  - 1078 `hullRGB(type, liv)`
+- **1088** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1099 `facingTris(P, dir, keep)`
+  - 1114 `rayZ(T, x, y, dir, za, zb)`
+  - 1125 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1136 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1147 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1158 `houseFront(type, P, Gl, V)`
+  - 1201 `transom(type, P, V)`
+  - 1236 `namePlaces(type)`
+  - 1254 `placeRGB(type, p, liv)`
+  - 1262 `nameInkLight(rgb)`
+  - 1266 `npcKit(L, B)`
+  - 1270 `npcModel(type, lod, liv)`
+  - 1272 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1284** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1303 `vestKit(K)`
+  - 1318 `wkPart(name, kit)`
+  - 1328 `wkPut(B, o, ax, s, at)`
+  - 1338 `wkLimb(B, o, A, E, r)`
+  - 1345 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1367 `vesselSVG(type, w, h)`
+- **1405** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1412 `deckMap(type)`
+  - 1557 `deckPass(M, k, q)`
+  - 1562 `passLine(M, A, B)`
+  - 1564 `linkPass(M, k, q)`
+  - 1568 `deckComp(M)`
+  - 1577 `deckPath(M, a, b)`
+- **1608** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1621 `lanterns(G, V, st)`
+  - 1660 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (879 linjer)
 
@@ -3999,7 +4004,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 362 `drawWorkCones(VP, eye, t, BMrel, VG)`
   - 398 `drawChunkLights(VP, eye)`
 
-## `src/js/view3d/07-harbour-unit.js` (248 linjer)
+## `src/js/view3d/07-harbour-unit.js` (271 linjer)
 
 ---------- the harbour unit (tools/harbour/kaimottak.py): quay, fish plant, crane, forklift, ice silo and bunker station in one ----------
 
@@ -4016,12 +4021,13 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 109 `siteModel(k)`
   - 119 `drawSites(eye, VP, near, far)`
 - **128** sponsors' signs (M7, docs/planer/butikker-og-sponsorer.md F2 and 4.4)
-  - 152 `signTex(sp)`
-  - 166 `signSeen(M, F, VP, eye)`
-  - 178 `drawSigns(eye, VP)`
-  - 214 `signOcc(VP)`
-  - 233 `signUi(ok, M, F, VP, now)`
-  - 247 `signTake()`
+  - 158 `signFlag(t)`
+  - 173 `signTex(sp)`
+  - 187 `signSeen(M, F, VP, eye)`
+  - 199 `drawSigns(eye, VP)`
+  - 237 `signOcc(VP)`
+  - 256 `signUi(ok, M, F, VP, now)`
+  - 270 `signTake()`
 
 ## `src/js/view3d/08-plants.js` (505 linjer)
 
@@ -4216,7 +4222,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (573 linjer)
+## `src/js/view3d/13-instruments.js` (583 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4235,27 +4241,28 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 130 `logoTexOf(L, img)`
   - 138 `logoQ(t)`
   - 139 `drawLogo(t, M, VP, L, img)`
-  - 142 `markQ(t)`
-  - 143 `drawMark(t, M, VP, liv)`
-  - 147 `callQ(t)`
-  - 148 `drawCall(t, M, VP, liv)`
-  - 152 `nameCanvas(cv, nm, light)`
-  - 167 `nameTex(nm, light, aspect, mark)`
-  - 175 `drawNPCNames(kit, VP)`
-  - 186 `paintHand()`
-  - 195 `limbM(A, B, r)`
-  - 201 `armTo(BMrel, W, Sw, Hw, sd, sp)`
-  - 211 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 400 `drawSkiffGlass(BMrel, VP)`
-  - 410 `jigRail(t, G)`
-  - 443 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 476 `drawGlass(m, BMrel, VP)`
-  - 495 `drawDrops(m, BMrel, VP, t)`
-  - 506 `buildBoat()`
-  - 532 `buildFlag()`
-  - 544 `flagTex()`
-  - 557 `mastTop(G)`
-  - 561 `updateFlag(t, appW)`
+  - 144 `imgCors(src)`
+  - 148 `markQ(t)`
+  - 149 `drawMark(t, M, VP, liv)`
+  - 153 `callQ(t)`
+  - 154 `drawCall(t, M, VP, liv)`
+  - 158 `nameCanvas(cv, nm, light)`
+  - 173 `nameTex(nm, light, aspect, mark)`
+  - 181 `drawNPCNames(kit, VP)`
+  - 193 `paintHand()`
+  - 202 `limbM(A, B, r)`
+  - 208 `armTo(BMrel, W, Sw, Hw, sd, sp)`
+  - 218 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 407 `drawSkiffGlass(BMrel, VP)`
+  - 417 `jigRail(t, G)`
+  - 450 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 483 `drawGlass(m, BMrel, VP)`
+  - 502 `drawDrops(m, BMrel, VP, t)`
+  - 513 `buildBoat()`
+  - 539 `buildFlag()`
+  - 551 `flagTex()`
+  - 564 `mastTop(G)`
+  - 568 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (572 linjer)
 
@@ -4521,7 +4528,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (460 linjer)
+## `src/js/view3d/20-trawl-seine.js` (461 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4545,19 +4552,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 268 `npcKB(t, lod, liv)`
-  - 271 `npcMesh(n, lod)`
-  - 285 `npcWarm(eye)`
-  - 300 `seineAnch(G)`
-  - 310 `npcClock(Hf)`
-  - 318 `npcHead(n, t)`
-  - 333 `npcFollow(n, t)`
-  - 347 `npcPhase(id)`
-  - 352 `kvDraw(n, eye, t)`
-  - 360 `kvRibDraw(n, R, G, M, eye, t)`
-  - 386 `npcFrame(H)`
-  - 387 `drawNPC(eye, t, H, VP)`
-  - 439 `npcCrewDraw(n, K, eye, t)`
+  - 269 `npcKB(t, lod, liv)`
+  - 272 `npcMesh(n, lod)`
+  - 286 `npcWarm(eye)`
+  - 301 `seineAnch(G)`
+  - 311 `npcClock(Hf)`
+  - 319 `npcHead(n, t)`
+  - 334 `npcFollow(n, t)`
+  - 348 `npcPhase(id)`
+  - 353 `kvDraw(n, eye, t)`
+  - 361 `kvRibDraw(n, R, G, M, eye, t)`
+  - 387 `npcFrame(H)`
+  - 388 `drawNPC(eye, t, H, VP)`
+  - 440 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
