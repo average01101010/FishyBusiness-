@@ -462,7 +462,7 @@ function lifeHail(H){
 function alumniReturn(B){
   for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
     const c = crewDerive(Object.assign(a.c, {ask:lotR(lotMigrate(a.c).ask - LOTT.step), morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
-    delete c.opp; delete c.avt; delete c.hiredT; c.noProve = true;   // a new agreement when signing on again, without probation (§ 3-2 (3), Ø11.9)
+    delete c.opp; delete c.avt; delete c.hiredT; c.noProve = true;   // a new agreement when signing on again, without probation (Ø11.9; a game choice in the spirit of § 3-2 (3))
     if (c.life){ c.life.notice = null; c.life.goal = 'ro'; c.life.saved = Math.round(c.life.target * 0.3); c.life.day = -1; lifeStory(c, 'Solgte «' + a.boat + '» og søker hyre igjen.', 'Sold the «' + a.boat + '» and looks for a berth again.'); }
     B.pool.push(c); }
 }

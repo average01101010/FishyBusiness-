@@ -2934,3 +2934,22 @@
 2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	selfcrew	OK	8	lite	samtidig	
 2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	crewtest	OK	15	lite	samtidig	
 2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	avtaleshot	OK	12	lite	alene	
+2026-11-12 04:40	claude/o11-9-arbeidsavtalen	0914db8	lotttest	OK	15	lite	samtidig	
+2026-11-12 04:40	claude/o11-9-arbeidsavtalen	0914db8	skiptest	OK	25	lite	samtidig	
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	fleet2test	FEIL	33	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	opsowntest	OK	52	lite	samtidig	
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	worktest	FEIL	31	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	opptest	FEIL	72	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	skattetest	OK	9	lite	samtidig	
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	boktest	OK	10	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	docktest	OK	67	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	vesseltest	FEIL	20	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	krabbefabrikktest	OK	19	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	fabrikktest	OK	14	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	turtest	OK	20	lite	samtidig	
+2026-11-12 04:44	claude/o11-9-arbeidsavtalen	0914db8	trip2	OK	37	lite	samtidig	
+2026-11-12 04:46	claude/o11-9-arbeidsavtalen	0914db8	saytest	OK	128	3d	alene	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	worktest	OK	26	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	avtaleshot	OK	14	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	crewlifetest	OK	7	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	selfcrew	OK	7	lite	samtidig	

@@ -52,6 +52,27 @@ export default function (t){
   t.ok(S.crew.includes(B) && B.opp && B.opp.gr === 'trivsel', 'trivselen under grensa i 37 timer: oppsigelse med frist, ikke i land i havna', B.opp);
   t.eq(day(B.opp.end), '20.1.2028', 'og fristen er én måned');
 
+  // ---- prinsipp 4 again through crewTick with fish in the hold: the notice runs out at sea with the game closed (catchUp runs crewTick
+  // every hour); at the quay she goes, and the cash changes by her share of the catch aboard, the settlement she was owed, and nothing else ----
+  globalThis.kr = v => Math.round(v) + ' kr';   // (the settlement's log line formats with ui/02-format-state.js kr, which the core in Node has not loaded)
+  const F = mk('Siri Fangst'), G = mk('Geir Fangst'); F.hiredT = G.hiredT = at(2027, 3, 1); delete F.avt; delete G.avt; S.crew = [F, G]; F.morale = G.morale = 60;
+  S.t = at(2028, 0, 2); F.opp = {t:at(2027, 11, 2), end:at(2028, 0, 2, 9), gr:'trivsel'}; b.status = 'fishing'; b.pos = {x:pt.p.x, y:pt.p.y};
+  S.hold = [{sp:'torsk', kg:400, fresh:1, hook:true, t:S.t}]; F.trip = G.trip = 1;   // (as addCatch leaves them: 05-vessels.js; its log line needs the UI)
+  t.ok(K.holdNet() > 0, 'fisk i rommet, og hun var om bord da den ble tatt', K.holdNet());
+  for (let h = 0; h < 6; h++){ S.t += 60; K.crewTick(S.t / 60); }
+  t.ok(S.crew.includes(F), 'fristen er ute mens båten er på sjøen og spillet lukket: om bord til havna');
+  b.status = 'port'; b.port = 'finnsnes'; const cash1 = S.cash, led1 = (S.ledger || []).length; S.t += 60; K.crewTick(S.t / 60);
+  const set1 = (S.ledger || []).slice(led1).filter(e => /^Oppgjør med Siri/.test(e.no)).reduce((a, e) => a + e.kr, 0);
+  t.ok(!S.crew.includes(F) && S.crew.includes(G), 'første time ved kaia: hun går i land, han blir');
+  t.ok(set1 < 0, 'hun får lotten sin av fangsten om bord', set1);
+  t.eq(Math.round(S.cash - cash1), Math.round(set1), 'og kassa endres bare med det oppgjøret (ingen bot, ingen avgift)', {d:S.cash - cash1, set1});
+
+  delete globalThis.kr;
+
+  // ---- «La gå nå» for one going to a boat of their own: to the boat, not just ashore ----
+  const E = mk('Eli Egen'); E.hiredT = at(2027, 3, 1); delete E.avt; S.crew = [E, G]; K.crewLife(E); E.life.goal = 'egenbat'; E.life.saved = E.life.target; E.opp = {t:S.t, end:S.t + 30 * D, gr:'egenbat'};
+  S.alumni = []; K.crewLetGo(E); t.ok(!S.crew.includes(E) && S.alumni.some(a => a.id === E.id), '«La gå nå» for den som skal kjøpe egen båt: hun får båten sin (blant de gamle om bord)');
+
   // ---- asking them to stay (by agreement, § 5-2 (6)): only when the mood has come back; a boat of their own does not turn back ----
   B.morale = 30; t.eq(K.crewStay(B), 'mood', 'trivselen under 45: hun blir ikke');
   B.morale = 55; t.eq(K.crewStay(B), null, 'trivselen er tilbake: hun trekker oppsigelsen'); t.ok(!B.opp, 'og oppsigelsen er borte');
