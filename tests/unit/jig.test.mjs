@@ -46,6 +46,16 @@ export default function (t){
     // of the slice, which on her flared side is the shelter deck's cap 1.5 m higher, and put two of the four on the strake under the sill)
     const bad = J.filter(q => !(q.length >= 4 && Math.abs(q[3] - A.gw) < 0.02 && q[2] * q[0] > A.haulerFoot[0] + 0.1 && q[2] * q[0] < A.side));
     t.ok(!bad.length, 'kyst15: hver juksaplass er et punkt på terskelen (ripa ' + A.gw + ' m), innenfor ytterhuden' + (bad.length ? ': ' + JSON.stringify(bad) : '')); }
+  // (and the kyst21, OB13: eight places from the model, four to port along the open working deck and four to starboard along the side
+  // deck by the house, a metre or more between two on a side, each a point on the bulwark's cap. Before, the places were searched along
+  // the rails: three stood shoulder to shoulder to starboard forward of the wheelhouse and one between the gallows' legs, F21)
+  { const A = anchorsOf('boat-kyst21.b64'), J = A.jigZ || [], n = J.length, side = sd => J.filter(q => q[0] === sd).map(q => q[1]).sort((a, b) => a - b);
+    const gaps = [1, -1].flatMap(sd => { const zs = side(sd); return zs.slice(1).map((z, i) => z - zs[i]); }), gap = gaps.length ? Math.min(...gaps) : 0;
+    t.ok(n === 8 && V.kyst21.jukseMax === 8, 'kyst21: plass til ' + V.kyst21.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen');
+    t.ok(side(1).length === 4 && side(-1).length === 4, 'kyst21: fire juksaplasser på hver side (styrbord ' + side(1).length + ', babord ' + side(-1).length + ')');
+    t.ok(gap >= 1.0, 'kyst21: minst en meter mellom to juksaplasser på samme side (' + gap.toFixed(2) + ' m)');
+    const hz = A.hauler ? A.hauler[2] : 0, bad = J.filter(q => !(q.length >= 4 && q[3] > A.deck.y + 0.35 && q[3] < A.deck.y + 1.3 && q[2] * q[0] > A.side - 0.5 && q[2] * q[0] < A.side && !(q[0] === 1 && Math.abs(q[1] - hz) < 1.5)));
+    t.ok(!bad.length, 'kyst21: hver juksaplass er et punkt på ripa (0,35–1,3 m over dekket), og ingen ved haleren' + (bad.length ? ': ' + JSON.stringify(bad) : '')); }
   // ---- the tiers' money back when a boat takes fewer reels than a save has (OB12, the kyst15 from eight to four; ui/11-boot.js): a tier
   // that gives nothing at the new count for every reel it was bought for, the tiers she keeps for the reels that go ashore ----
   t.eq(K.jigTierBack('kyst15', 8, 3), {lv:2, kr:24000 * 8 + 12000 * 4}, 'kyst15 med åtte maskiner på trinn 3: trinn 3 tilbake for alle åtte, trinn 2 for de fire som går i land');

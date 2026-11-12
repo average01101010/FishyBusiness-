@@ -476,10 +476,25 @@
       else if (e.kind === 'bleed' && e.deckF && age >= 0.3){ e.chained = true; const i = DKDECK.indexOf(e.deckF); if (i >= 0) DKDECK.splice(i, 1); } }
     for (let i = DKDECK.length - 1; i >= 0; i--) if (now - DKDECK[i].t > 24) DKDECK.splice(i, 1);
   }
+  // the deck wet where the hose's jet lands (OB14, F12: «vannet synes på dørken»): the spots of the last WET_S seconds in the boat's own
+  // frame (she moves under them), each on the first of her under the jet (the deck, the table, a tub; a jet over the side leaves none),
+  // the water running out from it and thinning as it goes. Drawn with the jet's points (DKWATER), on her own boat only.
+  const DKWET = [], WET_S = 14; let DKBM = null;
+  function dkWet(bp, hr){ const now = performance.now() / 1000; if (DKWET.length && now - DKWET[DKWET.length - 1].t < 0.35) return;
+    const x = bp[0] + Math.sin(hr) * 1.35, z = bp[2] - Math.cos(hr) * 1.35, fy = typeof CREW3D !== 'undefined' && CREW3D.dropY ? CREW3D.dropY([x, bp[1] + 1.1, z]) : bp[1];
+    if (fy == null || fy < bp[1] - 0.25) return; DKWET.push({x, y:fy, z, t:now}); if (DKWET.length > 40) DKWET.shift(); }
+  // (straight into the point buffers, nothing made a frame)
+  function dkWetDraw(VP){ if (!DKWET.length || !DKBM) return false; const now = performance.now() / 1000; while (DKWET.length && now - DKWET[0].t > WET_S) DKWET.shift(); let n = 0;
+    for (let i = 0; i < DKWET.length; i++){ const w = DKWET[i], u = (now - w.t) / WET_S, s0 = Math.floor(w.t * 97) % 1000, al = 0.5 * (1 - u) * (1 - u), m = DKBM;
+      for (let j = 0; j < 6; j++){ const a = hash(s0 + j * 3) * 6.283, r = (0.08 + 0.6 * u) * (0.35 + 0.65 * hash(s0 + j * 7 + 1)), x = w.x + Math.cos(a) * r, y = w.y + 0.03, z = w.z + Math.sin(a) * r;
+        PB[n * 3] = m[0] * x + m[4] * y + m[8] * z + m[12]; PB[n * 3 + 1] = m[1] * x + m[5] * y + m[9] * z + m[13]; PB[n * 3 + 2] = m[2] * x + m[6] * y + m[10] * z + m[14]; PA[n] = al; n++; } }
+    if (n) drawPts(n, gl.POINTS, VP, [0.7, 0.8, 0.9], 30, true, null, 16); return n > 0; }
   function dkBloodDraw(VP){
     // the blood of the bleeding, the water of the deck hose and the smoke of a cigarette (drawWorker), as points after the people
+    // (the water on the deck first and small, a glint of the sky in it; the jet over it)
+    const wet = dkWetDraw(VP);
     const pts = (L, col, sz) => { if (!L.length) return; let n = 0; for (const q of L){ if (n >= 300) break; PB[n * 3] = q[0]; PB[n * 3 + 1] = q[1]; PB[n * 3 + 2] = q[2]; PA[n] = q[3] == null ? 1 : q[3]; n++; } L.length = 0; drawPts(n, gl.POINTS, VP, col, sz, true); };
-    if (!DKBLOOD.length && !DKWATER.length && !DKSMOKE.length) return;
+    if (!DKBLOOD.length && !DKWATER.length && !DKSMOKE.length){ if (wet) nSetup(VP); return; }
     pts(DKBLOOD, [0.42, 0.02, 0.03], 60); pts(DKWATER, [0.8, 0.88, 0.95], 70); pts(DKSMOKE, [0.78, 0.78, 0.76], 34); nSetup(VP); }
   // the gear as it lies on deck (the user's wish 19.10.2026, tools/deck/rigg.py): the nets heaped in a 1000 l tub as high as the share
   // of them aboard; the line coiled in its tubs, side by side, the hooks hung on the rim while it is baited; the old box and tubs where

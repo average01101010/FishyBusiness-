@@ -1092,11 +1092,12 @@ function fish(H, W, hs){
   // the player to move; the boat is not stopped (the soft crab's way, sk5). The landing takes what is over (landConf)
   { const fs = S.fsess, k = got > 0 ? bycHere('juksa') : null;
     if (k){ fs.zk = (fs.zk || 0) + got; fs.zc = (fs.zc || 0) + (S.fcod || 0);
-      if (!fs.zTold && fs.zk >= 20 && fs.zc > RU_BYC[k].share * fs.zk){ fs.zTold = 1; const pc = Math.round(fs.zc / fs.zk * 100), R = RU_BYC[k];
-        const no = 'Det er ' + pc + ' % torsk i fangsten her. I Skagerrak utenfor grunnlinjen kan torsk bare være bifangst, høyst 5 % i hver fangst og ved levering. Flytt til et sted med mindre torsk. All fangst skal landes, og torsken over 5 % blir inndratt ved levering.',
-          en = 'There is ' + pc + '% cod in the catch here. In the Skagerrak outside the baseline cod may only be a bycatch, at most 5% in each catch and at the landing. Move to a place with less cod. All catch must be landed, and the cod over 5% is confiscated at the landing.';
-        log(no, en); msg('Regler', no + ' (' + R.ref + '; høstingsforskriften § 51)', en + ' (' + R.ref + '; høstingsforskriften § 51)');
-        if (typeof toast === 'function' && !VTAG) toast(S.lang === 'no' ? pc + ' % torsk i fangsten: over bifangstgrensen på 5 %. Flytt.' : pc + '% cod in the catch: over the 5% bycatch limit. Move.', 8000); } } }
+      // (Ø10c: the word and the share are the zone's, 03e-rules.js ruBycWarn: the Skagerrak 5 %, the North Sea 15 % once its 3 tonnes are
+      // fished; nothing where the cod goes on a cap)
+      const pc = Math.round(fs.zc / fs.zk * 100), R = !fs.zTold && fs.zk >= 20 ? ruBycWarn(k, pc) : null;
+      if (R && fs.zc > R.share * fs.zk){ fs.zTold = 1;
+        log(R.no, R.en); msg('Regler', R.no + ' (' + R.ref + '; høstingsforskriften § 51)', R.en + ' (' + R.ref + '; høstingsforskriften § 51)');
+        if (typeof toast === 'function' && !VTAG) toast(S.lang === 'no' ? R.tNo : R.tEn, 8000); } } }
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
   // has fallen to half the crew move on to the next place, taking the hours left with them
   { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
@@ -1106,7 +1107,9 @@ function fish(H, W, hs){
       else if (r < 0.5 * fs.r1){ const nx = pl.wps.slice(pl.idx).find(q => q.jc && q.fish > 0);
         if (nx){ nx.fish = Math.round((nx.fish + Math.max(0, (b.fishUntil - S.t) / 60)) * 10) / 10; log('Fangsten faller. Flytter til neste juksplass.', 'The catch is falling. Moving on to the next jig place.'); endFishing('move'); return; } } } }
   // cod quota: warn once a day when the cod on board already fills what is left
-  const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
+  // (Ø10c: the cod taken south of 62° N is not on this quota, 03d-quota.js sorCodAboard; the North Sea's 3 tonnes say so themselves, once a day)
+  const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0) - sorCodAboard();
+  if (bycHere('juksa') === 'nsjo' && sorAcc() !== 'none' && sorLeft('nsjo') <= 0 && (S.sorWarn || -1e9) < S.t - 1440){ S.sorWarn = S.t; log('Maksimalkvoten på 3 tonn torsk i Nordsjøen er full. Torsk kan bare være bifangst nå, høyst 15 % av fangsten.', 'The maximum quota of 3 tonnes of cod in the North Sea is full. Cod may only be a bycatch now, at most 15% of the catch.'); }
   if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
 }
 function endFishing(why){
