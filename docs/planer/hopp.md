@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **venter på valgene og «kjør på»**. Ingenting er bygd.
+Status: **HO1 pågår (steg 104)**, HO2 og HO3 venter i køen (steg 105 og 106).
 
 ## Hva Jonas ba om
 
@@ -13,7 +13,7 @@ Det er ekte penger, så alt i butikken går som PR til Jonas og rulles ikke ut f
 ## Reglene den må holde
 
 - **Betalingen korter ned en ekte avstand** (`docs/engasjement.md`): seilingen er ekte, og hoppet er trim tatt helt ut. Ingen ventetid legges inn eller forlenges for å selge hopp.
-- **Alt annet enn tida går som om båten seilte:** dieselen, motortimene og slitasjen, isen og fisken i rommet, og mannskapets timer. Ellers blir hoppet billigere enn å seile, og fisken kommer ferskere fram. Da kjøper man mer enn tid.
+- **Alt annet enn tida går som om båten seilte:** dieselen, motortimene og slitasjen, isen og fisken i rommet, mannskapets timer, og trimmen: står trim på, brukes den tida turen ville tatt med trim, opp. Ellers blir hoppet billigere enn å seile, og fisken kommer ferskere fram. Da kjøper man mer enn tid.
 - **Ikke forbi været:** ville båten ha ligget bi eller gått i havn på ruta, nektes hoppet.
 - **Ikke i turoppdrag og løp:** turoppdragenes belønning er satt etter seilingstida uten trim (`turPay`). Kappløpene får egne regler (`docs/engasjement.md`, «Vurderes senere»).
 - **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** fartstid (`09e-fartstid.js`: «Fartstid selges aldri, og ingenting som øker den direkte»), lykter passert i Kystkartet (`09m-kystkart.js`), distansen i statistikken og merkene som telles i nm.
@@ -30,23 +30,47 @@ Det er ekte penger, så alt i butikken går som PR til Jonas og rulles ikke ut f
 - **Trim** (`BOOSTS` i `core/03-simulation.js:89`): 29/39/49 kr for ×1,5/1,75/2 fart i 24/48/72 spilltimer (4/8/12 ekte timer). Seiler båten hele tida trimmen varer, sparer den 2, 6 og 12 ekte timer, altså 14,5, 6,5 og 4,1 kr per spart time.
 - **Butikken:** `shop_quote(product)` gir prisen fra `products`, og `shop-checkout` lager Stripe-økta med `price_data` (`supabase/functions/shop-checkout/index.ts`). `stripe-webhook` gir `grants`, og `shopGive` (`ui/10i-shop.js`) leverer i spillet. Haill står i en beholdning i Kaiboden (`S.haillInv`) til den aktiveres.
 
-## Prisen: taksameteret
+## Prisen: spart tid
 
-Startverdiene, som justeres i spilltesting:
+Jonas 12.11.2026 (V1): «Kan det være bedre å bare ta betalt for tiden spart i totale minutter eller sekunder?» Svaret ble ja: tida inneholder alt farten, og nm-delen la ikke noe til. Startverdiene, som justeres i spilltesting:
 
-**pris = 0,10 kr per nm igjen + 20 kr per ekte time spart, minst 19 kr, rundet til hele kroner.**
+**Prisstigen, trinnvis som skattetrinn: 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr, rundet til hele kroner. Ingen tak** (Jonas 12.11.2026, V2: «Ingen tak»).
 
-Timene er ETA-en spilleren ser i GPS-boksen, med trim hvis den står på. Prisen låses når knappen trykkes og står i kjøpet (`purchases`). Mens båten seiler, går meteret ned, uten nedtelling eller ord om at prisen haster.
+Jonas 12.11.2026 om stigen: «Hva tenker du om en dynamisk prisstige som blir billigere jo lengere ruten er? På den måten er korte tidsbesparelser litt dyre, men de lengre oppleves rimeligere.» Han valgte A (75/50/25 øre) samme dag. Trinnene gjelder minuttene i rekkefølge, så totalprisen øker alltid med tida og snittet per minutt faller. En pris per minutt som hang på rutas samlede lengde, kunne gjort en lengre rute billigere enn en kortere og gitt omveier.
 
-| Tur | Igjen | Ekte timer | Pris | Per spart time |
-|---|---|---|---|---|
-| Sjark 10 kn til feltet | 10 nm | 0,17 | 19 kr | minsteprisen |
-| Sjark 10 kn | 60 nm | 1,0 | 26 kr | 26 kr |
-| Hurtigsjark 25 kn | 200 nm | 1,3 | 47 kr | 35 kr |
-| Trebåten 7 kn | 200 nm | 4,8 | 115 kr | 24 kr |
-| Hurtigsjark 25 kn, Lindesnes–Nordkapp (anslått 1 300 nm) | 1 300 nm | 8,7 | 303 kr | 35 kr |
+Minsteprisen og minuttprisen: først 25 kr i timen og minst 19 kr. Jonas 12.11.2026: «Jeg tenker vi ikke skal ha noe minstegrense på 19kr, det er for høyt. Jeg tenker kanskje 5kr, og at kostnaden per minutt spart er 0,5kr, altså 50øre?», og om minsteprisen: «Jeg synes det er litt viktig at minsteprisen er så lav som mulig for at det skal se billig ut.» Økta anbefalte 5 kr og 50 øre: 1 kr minuttet dobler prisen på de lange hoppene, der bruken og pengene er, og løser ikke kortgebyret, som er fast per kjøp. Stripes laveste beløp i NOK er etter alt å dømme 3 kr (ikke sett i Stripes egen tabell).
 
-Per spart time er hoppet dyrere enn alle tre trimmene (4–15 kr), slik Jonas satte som vilkår. Delen per nm gjør at en rask båt betaler for avstanden og en sakte båt for tida, som et taksameter.
+Timene er ETA-en spilleren ser i GPS-boksen, med trim hvis den står på. Prisen låses når knappen trykkes, sammen med målet, og står i kjøpet (`purchases`). Mens båten seiler, går prisen ned, uten nedtelling eller ord om at den haster. Alt under 7 minutter koster minsteprisen.
+
+| Tur | Igjen | Ekte minutter | Pris |
+|---|---|---|---|
+| Sjark 10 kn ut til feltet | 10 nm | 10 | 8 kr |
+| Sjark 10 kn | 60 nm | 60 | 45 kr |
+| Hurtigsjark 25 kn | 200 nm | 80 | 55 kr |
+| Trebåten 7 kn | 200 nm | 286 | 147 kr |
+| Hurtigsjark 25 kn, Lindesnes–Nordkapp (anslått 1 300 nm) | 1 300 nm | 520 | 205 kr |
+| Trebåten 7 kn, Lindesnes–Nordkapp | 1 300 nm | 1 857 | 539 kr |
+
+Det laveste trinnet, 25 øre minuttet, er 15 kr per spart time og dermed dyrere enn alle tre trimmene (4–15 kr per spart time), slik Jonas satte som vilkår.
+
+**Mot trimmen** (Jonas 12.11.2026: «Vi må huske at det skal koste litt ekstra å spare tiden man vinner på å teleportere ved å skippe reisen»). Trimmen sparer tid i alt som seiles i 4, 8 eller 12 ekte timer, høyst en tredel, tre sjudeler eller halvparten av turen. Hoppet tar bort én tur helt. Brukt fullt ut koster trimmen 0,24 kr (pumpa), 0,11 kr (ladeluftkjølingen) og 0,07 kr (turboen) per spart minutt. Hoppet koster 0,75, 0,50 og 0,25 kr, altså rundt tre ganger pumpa den første timen og fire ganger turboen på de lange turene.
+
+| Tur (ekte minutter) | Billigste trim bare for denne turen | Hoppet |
+|---|---|---|
+| 10 | pumpa 29 kr, sparer 3 min (8,70 kr/min) | 8 kr, sparer 10 (0,80 kr/min) |
+| 60 | pumpa 29 kr, sparer 20 min (1,45 kr/min) | 45 kr, sparer 60 (0,75 kr/min) |
+| 286 | pumpa 29 kr, sparer 95 min (0,30 kr/min) | 147 kr, sparer 286 (0,51 kr/min) |
+| 520 | ladeluftkjølingen 39 kr, sparer 223 min (0,18 kr/min) | 205 kr, sparer 520 (0,39 kr/min) |
+| 1 857 | turboen 49 kr, sparer 720 min (0,07 kr/min) | 539 kr, sparer 1 857 (0,29 kr/min) |
+
+For én tur under rundt to og en halv time er hoppet billigere per spart minutt enn trim kjøpt bare for den turen, fordi trimmen varer i timer og er laget for mye seiling. Skal hoppet være dyrere også der, må minsteprisen opp mot trimmens 29 kr. Over det er hoppet dyrere per minutt for alle turer. Trim og hopp sammen er lovlig: står turboen på når trebåten hopper Lindesnes–Nordkapp, er det 1 137 minutter igjen, og hoppet koster 359 kr. Turboens tolv timer er da brukt opp (regelen over), så til sammen 408 kr.
+
+**Det som er igjen per kjøp** etter MVA (25 %) og Stripes 2,4 % + 2,00 kr for norske og EØS-kort: 1,88 kr av 5 kr, 4,21 kr av 8 kr, 32,92 kr av 45 kr. Gebyret er fast per kjøp, så de minste hoppene gir nesten ingenting; de er verdt det som en lav terskel for første kjøp. Andelen hopp til minsteprisen måles etter lanseringen, og prisen kan endres på serveren uten ny versjon av spillet.
+
+**Når betalingen har gått gjennom** (Jonas 12.11.2026, V3: «Så lenge betalingen har gått gjennom skal spillerene kunne teleportere seg frem til målet, uavhengig av været eller andre ting. De betaler fortsatt for tiden de har spart.»):
+- Været, dieselen og turoppdraget sjekkes bare før kjøpet.
+- Når betalingen er kommet fram, flyttes båten til målet som sto da kjøpet ble gjort, uansett vær eller endret rute.
+- Bare hvis båten alt er framme når betalingen kommer, fordi kassen tar et par minutter, er det ingen tid å spare. Da legges hoppet i Kaiboden som ett hopp til neste rute, uten utløpsdato. Dette er øktas forslag og kan snus i PR-en for HO3.
 
 ## Fasene
 
@@ -55,12 +79,12 @@ Hver fase er én økt.
 ### HO1 Kjernen (uten betaling)
 
 - **Hva:** en ny fil `core/06j-hopp.js` (inn i malen etter `06i-plan2-sno.js` og i `COVER` i `run.py`) med tre rene funksjoner:
-  - `hopQuote(b)`: nm og ekte timer igjen av ruta, prisen og taket.
-  - `hopCheck(b)`: grunnen til at hoppet ikke kan gjøres. Grunnene er ingen rute, båten i havn, et turoppdrag i gang, været langs ruta over båtens grenser ved minuttet den er der, for lite diesel, over taket, og at det er en annen båt i flåten enn den spilleren følger.
-  - `hopDo(b)`: båten flyttes til målet (`arrive`), dieselen trekkes (`fuelUse`), motortimer og slitasje legges til, fisken eldes og isen smelter med de spilte timene, og mannskapet får timene som om de seilte. Ingen fartstid, ingen lykter og ingen distanse telles.
+  - `hopQuote(b)`: ekte minutter igjen av ruta, målet og prisen etter stigen.
+  - `hopCheck(b)`: grunnen til at hoppet ikke kan gjøres. Grunnene er ingen rute, båten i havn, et turoppdrag i gang, været langs ruta over båtens grenser ved minuttet den er der, for lite diesel, og at det er en annen båt i flåten enn den spilleren følger.
+  - `hopDo(b)`: båten flyttes til målet (`arrive`), dieselen trekkes (`fuelUse`), motortimer og slitasje legges til, trimmen brukes for den tida turen ville tatt med trim, fisken eldes og isen smelter med de spilte timene, og mannskapet får timene som om de seilte. Ingen fartstid, ingen lykter og ingen distanse telles.
 - **Tilgang:** bare i testene og i admin («Gi hopp»), ikke i butikken.
 - **Filer:** `core/06j-hopp.js`, `src/index.html`, `tests/run.py`, `tests/unit/hopp.test.mjs`.
-- **Tester:** enhetstestene (prisen i tabellen over, hver grunn i `hopCheck`, diesel og ferskhet like etter et hopp som etter seilingen i `catchUp`, sett røde først), `node tests/unit/run.mjs`, `python3 tests/run.py changed`.
+- **Tester:** enhetstestene (prisene i tabellen over, hver grunn i `hopCheck`, diesel og ferskhet like etter et hopp som etter seilingen i `catchUp`, sett røde først), `node tests/unit/run.mjs`, `python3 tests/run.py changed`.
 - **Måles:** diesel, ferskhet og is etter et hopp mot etter den samme ruta seilt i `catchUp`, med juksa, garn og fisk i rommet.
 
 ### HO2 Knappen, meteret og hoppet i 3D
@@ -78,39 +102,30 @@ Hver fase er én økt.
 ### HO3 Kjøpet
 
 - **Hva:**
-  - Produktet `hopp` i `products` med prisen fra `shop_quote(product, nm, timer)` etter formelen og taket. Serveren regner prisen, men stoler på klientens nm og timer, slik den stoler på posisjonen i dag.
-  - `purchases.data` med nm, timer og pris.
+  - Produktet `hopp` i `products` med prisen fra `shop_quote(product, minutter)` etter formelen. Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
+  - `purchases.data` med minuttene, målet og prisen.
   - `shopGive` gir hoppet når betalingen kommer fram.
-  - Er ruta endret eller båten framme før betalingen kommer, se valg V3.
+  - Hoppet gjøres til målet i kjøpet, uansett vær og endret rute; er båten alt framme, legges det i Kaiboden (se «Når betalingen har gått gjennom»).
   - `shopThanks` sier hva som skjedde.
 - **Filer:** `supabase/migrations/` (ny), `supabase/functions/shop-checkout/index.ts`, `ui/10i-shop.js`, Kaiboden i `ui/phone/`.
 - **Ekte penger:** PR til Jonas, ingen utrulling før han har sett den. Migreringen kjøres av Jonas på testprosjektet først.
-- **Tester:** `sqltest` (prisen fra serveren og taket), `kjoptest` (kjøpet i testmodus til hoppet er gjort), `python3 tests/run.py changed`.
+- **Tester:** `sqltest` (prisen fra serveren), `kjoptest` (kjøpet i testmodus til hoppet er gjort), `python3 tests/run.py changed`.
 
-## Valgene
+## Valgene (tatt 12.11.2026)
 
-**V1 Prisformelen**
-- **A (anbefalt): taksameter med nm og timer** (0,10 kr per nm + 20 kr per ekte time, minst 19 kr). Det er det Jonas beskrev: en rask båt betaler for avstanden, en sakte for tida.
-- B: bare etter spart tid (25 kr per ekte time, minst 19 kr). Enklest å forklare.
-- C: faste trinn (opptil 1, 3, 6 og 12 ekte timer, for eksempel 19, 49, 99 og 179 kr). Ligner trimmen, men man betaler opp til neste trinn.
-
-**V2 Taket per hopp**
-- A: 24 ekte timer (rundt 600 kr for trebåten).
-- **B (anbefalt): 12 ekte timer** (rundt 250–300 kr). Det holder ett kjøp innenfor det en ung spiller kan bruke uten å spørre hjemme, og en lang tur må seiles et stykke før den kan hoppes.
-- C: ingen tak.
-
-**V3 Når hoppet ikke kan gjøres når betalingen kommer fram** (ruta endret, båten framme, været snudd)
-- **A (anbefalt):** hoppet legges i Kaiboden som «Hopp opptil N timer» og kan brukes én gang på en senere rute, uten utløpsdato. Det virker som haillen i beholdningen.
-- B: pengene går automatisk tilbake gjennom Stripe. Det er renest for kjøperen, men gebyret er tapt og koden er mer.
+- **V1 Prisen:** bare spart tid (Jonas: «Kan det være bedre å bare ta betalt for tiden spart i totale minutter eller sekunder?»), som prisstigen 75/50/25 øre per minutt, minst 5 kr (sitert over). Taksameteret med nm og timer og den flate prisen er lagt bort.
+- **V2 Taket:** ingen tak (Jonas: «Ingen tak»).
+- **V3 Etter betalingen:** hoppet gjøres uansett vær og andre ting (Jonas, sitert over). Er båten alt framme, legges hoppet i Kaiboden (øktas forslag).
 
 ## Det som er antatt eller usikkert
 
-- **Tallene i formelen** er startverdier. Ingen vet hva spillerne betaler før butikken er i ekte modus.
+- **Tallene i stigen** (75/50/25 øre per minutt, minst 5 kr) er startverdier. Hvor mange flere som kjøper lange hopp når prisen nesten halveres, vet ingen før butikken er i ekte modus. Ingen vet hva spillerne betaler før butikken er i ekte modus.
 - **Lindesnes–Nordkapp er anslått** til 1 300 nm langs leia, ikke regnet med ruteplanleggeren (hele kysten er ikke i dette bygget).
 - **«Som om båten seilte»** kan bygges på to måter. Enten spilles båtens egne prosesser (diesel, is, fisk, mannskap) av minutt for minutt langs ruta, eller de regnes samlet med formler. HO1 velger etter målingen mot `catchUp`. Det første er tryggest, men går mot verdens klokke for alt annet.
 - **Mannskapets timer:** krav om hviletid ble fjernet 11.10.2026 (`docs/systemer/folk-om-bord.md` 5.19), og arbeidsavtalen (Ø11.9) er ny. HO1 må sjekke hva seilingen gjør med mannskapet i dag, og gjøre det samme.
 - **De andre spillerne kan gjette** at hoppet er kjøpt når båten forsvinner og dukker opp langt unna. Det kan ikke skjules uten å vise noe falskt.
 - **3D-lastingen** etter et langt hopp er ikke målt på en vanlig telefon.
+- **Uten tak** kan ett kjøp bli over 700 kr for en sakte båt på en lang tur. Spillere fra 13 år kan kjøpe. Det er Jonas' valg, og det står her så det ses igjen når butikken er i ekte modus.
 
 ## Det planen ikke gjør
 
@@ -122,4 +137,4 @@ Hver fase er én økt.
 
 ## Status
 
-- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Venter på V1–V3 og «kjør på».
+- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen; HO1 pågår.
