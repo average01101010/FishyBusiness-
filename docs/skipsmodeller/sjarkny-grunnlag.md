@@ -283,3 +283,25 @@ Spurt om kranen (som nå, tilbake, eller bomstøtte) og utsparingen i taket (beh
 
 - **Kranen står som nå**, foldet med den lave enden mot speilet og den høye forover (`CRANE_RY` π, `CRANE_X` 0,78). Ikke rør den i runde 3.
 - **Utsparingen i taket over haleporten beholdes** (`ROOF_CUT`), som et godkjent avvik fra tegningen.
+
+### 10.11 Runde 3 (12.11.2026): det fellesøktene rettet, og det som er rettet i modellen
+
+Steg 88 runde 3, arbeidsrutinen på grenen `plan/2026-11-11-88` (PR #66), etter startmeldingen i `docs/planer/start/88.md`. Før-bildene er tatt på nytt med modellen fra runde 2 og dagens kode (OB14 er ute), etter-bildene med den nye; alle 25 operasjonene `tests/ombord.py sjarkny` nå har (`felles_kulde` er ny siden runde 2), begge formater, ingen droppet. Skrogformen, kranen (valg 38), utsparingen i taket (valg 39), vannlinja, `jukseMax` 4 og de to teinestablene er ikke rørt.
+
+**Det OB14 og de andre øktene har rettet av fellesfunnene i 10.8 og backloggen, sett i før-bildene og i det opptaket skriver ut:**
+- **Ledige folk står ikke lenger stive.** Når sløyingen er ferdig, spyler én dekket og en annen koster (`spyl:hose`, `kost:sweep` i `felles_rydd`, `felles_is` og `felles_loss`), og de som ikke har noe å gjøre i kulda, slår floke (`frys:cold`). Ved lossing og ising er alle fire i arbeid (kranen, kroken, luka, slangen).
+- **Hvile er ikke lenger bare å stå:** i `felles_hvile` sitter de på en balje ved rekka med matpakka.
+- **Den som har pause, sitter ikke lenger i teinestabelen** i noen av de 50 før-opptakene (punkt 2 i 10.8).
+- **Står fortsatt, og er felles kode:** teina som svinges inn fra davitens blokk (`teiner_trekk`), tre tett i styrbord akterhjørne når line og garn settes (`line_sett`, `garn_sett`), flagget som henger i den som jukser akterst (`juksa_maskin`, `juksa_jig`), tre ledige mens lina settes, og mottakets kranbom over taket ved lossing.
+
+**Rettet i modellen (`tools/boats/hs11.py`):**
+
+| Det sensoren trakk for i 10.9 | Før | Nå |
+|---|---|---|
+| «Ingen slitasje å se» | `wear` endret fargen 3–5 %, og ingenting syntes i spillet | **Rustrenner** nedover sida under hver lensport og under lenseutløpet, og over den hvite lista der de krysser den; **mørke renner** under klampene på ripa; **skrubb** på lista og ripa; **sot** rundt eksosen i speilet (et eget felt 3 mm utenpå speilet i skrogets farge og malingssone, mørkt inn mot røret); **groe** i et bånd over vannlinjestripa og øverst på bunnstoffet; gelcoaten **krittet** midtskips der fenderne ligger; skitt langs skansens fot innenbords og litt rust rundt lensportene. Alt er farge per hjørne (`TINT`), ingen nye flater unntatt sotfeltet. Skroget har stasjoner hver 6. cm, så rennene blir striper. Dempet to ganger etter bildene fra spillet: rusten på sida fra 0,80 til 0,55 (for mye for en båt spillet selger som ny i 2027), og rusten innenbords fra 0,45 til 0,22 (syntes som en oransje flekk bak sløyebenken) |
+| «Dekket uten struktur» | Gripefeltene var mørkere enn dørken (0,31 mot 0,40) og hadde farge bare i hjørnene på ruter på 45 cm | Feltene er **lysere enn dørken** (0,47) og har **opphøyde knaster** i kryssmønster (56 × 15 mm, 4 mm høye, 11 cm imellom, rundt 740 stykker): de skrå sidene fanger lyset, og feltene leses som sklisikring i spillet. Rutene er 15 cm, så slitasjen der de står og arbeider (ved haleren, ved benken, ved stampene) går mykt over feltet. En raskere støy ga flekker i et mønster og er tatt ut |
+| Styrhuset «mørkt og nakent inne» | Skyggen som bakes inn (`bake_ao`), gjorde rommet til en mørk boks: veggene 0,86 ble rundt 0,35 i spillet | Alt inne i styrhuset er **løftet 1,6 ganger** i `wear` (`in_wh`, `WH_LIFT`), og taket har fått en himling inne. Den bakte skyggen ligger fortsatt oppå, så hjørnene er mørkere enn veggene. **Gasshendelen** sto på konsollens side mot midten og **VHF-en** i taket ved døra, begge utenfor bildet fra roret i begge formater; nå står hendelen på dashbordet mellom ekkoloddet og motorpanelet, og VHF-en er felt inn i dashbordet over den, med mikrofonen på en klips ved siden av. Motorpanelet er flyttet 10 cm mot babord for å gi plass, kompasset 5 cm |
+| To rendringer ubrukelige | `c_work` sto over det lange taket og så bare tak; `c_shelter` sto 0,8 m fra dekkshusets aktervegg | `c_work` fra babord låring over speilet inn over arbeidsdekket; `c_shelter` fra akterkant av taket forover langs haleplassen mot styrhusdøra |
+| Den hvite på mastetoppen utenfor nattbildet | `tests/hs11shot.py` tok nattbildene fra 13 m | Fra 22 m, så hele masta er med |
+
+**Ellers:** `check()` grønn. `qa/flatnorm.py` som etter runde 1 og 2 (to flater på den runde mastesøylen, 20,6° mot grensen 20; ingen på vegger). `qa/clip_hs11.py` 0. Modellen er 68 684 trekanter nær (63 974 før; taket er rundt 300 000), fjernmodellen 2 613. Enhetstestene 3 345 OK.
