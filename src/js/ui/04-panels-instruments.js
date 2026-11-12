@@ -42,7 +42,7 @@ function nextEvent(){
   if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
   if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
   if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
-  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
+  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsFreight() ? (S.jobs.every(j => j.out) ? L('Lasta er i land', 'Freight ashore') : S.jobs.some(j => j.out) ? L('Lasta er på plass', 'Freight in place') : L('Lasta er om bord', 'Freight aboard')) : jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));   // (freight alone says so: «Mannskapet er ferdig» said nothing of what they did, feedback #2 from the test edition)
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
     for (let i = S.plan.idx; i < wps.length; i++){ km += kmTrue(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
