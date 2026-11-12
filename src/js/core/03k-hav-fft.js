@@ -106,6 +106,28 @@ function hfftFrame(T, t, out, W, outD){
   hfftMips(out, N);
   return [ms / n2, Math.sqrt(mt / n2), mh / n2];
 }
+// B3 (12.11.2026, sea3d): where the crests break, the sum of both tiles' trace in standard deviations (and a little grain) is compared with a
+// threshold for the share W of Monahan's cover. One tile is one draw of the sea, and its own distribution strays from the normal one out
+// in the tail where the threshold lies (0.7 to 1.3 times the cover at 12-25 m/s with the normal quantile). So the threshold is fitted
+// to this frame's tiles: n sums of each tile read at a random place (they never line up, being incommensurate) plus the grain's spread
+// (gs), sorted, read at nine shares and fitted as th = a + b z + c z^2 against the normal quantile z of the share. Returns [a, b, c].
+function hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n){
+  const sd = Math.max(Math.hypot(s1, s2), 1e-9), v = new Float32Array(n); let r = 12345;
+  const rnd = () => { r = (Math.imul(r, 1103515245) + 12345) >>> 0; return (r + 0.5) / 4294967296; };
+  // (read as the shaders and fftTrH read them, bilinear between the texels at a random place: the shortest waves, two or three texels
+  // long, lose much of their spread to that, so read at the texels the threshold was a third too high)
+  const bil = (o, N) => { const u = rnd() * N, w = rnd() * N, i0 = Math.floor(u), j0 = Math.floor(w), fu = u - i0, fw = w - j0, i1 = (i0 + 1) % N, j1 = (j0 + 1) % N;
+    return (o[(j0 * N + i0) * 4 + 2] * (1 - fu) + o[(j0 * N + i1) * 4 + 2] * fu) * (1 - fw) + (o[(j1 * N + i0) * 4 + 2] * (1 - fu) + o[(j1 * N + i1) * 4 + 2] * fu) * fw; };
+  for (let i = 0; i < n; i++){ const a = bil(o1, n1), b = bil(o2, n2), g = Math.sqrt(-2 * Math.log(rnd())) * Math.cos(6.2831853 * rnd()); v[i] = (a + b) / sd + g * gs; }
+  v.sort();
+  const W = [0.3, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001], zq = w => { let z = Math.sqrt(-2 * Math.log(w)); return z - (2.515517 + 0.802853 * z + 0.010328 * z * z) / (1 + 1.432788 * z + 0.189269 * z * z + 0.001308 * z * z * z); };
+  let S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, T0 = 0, T1 = 0, T2 = 0;
+  for (const w of W){ const z = zq(w), y = v[Math.min(n - 1, Math.floor(n * (1 - w)))]; S0++; S1 += z; S2 += z * z; S3 += z * z * z; S4 += z * z * z * z; T0 += y; T1 += y * z; T2 += y * z * z; }
+  // (least squares by the normal equations, 3 x 3, Cramer)
+  const det = (a, b, c, d, e, f, g, h, k) => a * (e * k - f * h) - b * (d * k - f * g) + c * (d * h - e * g), D = det(S0, S1, S2, S1, S2, S3, S2, S3, S4);
+  if (!(Math.abs(D) > 1e-12)) return [0, 1, 0];
+  return [det(T0, S1, S2, T1, S2, S3, T2, S3, S4) / D, det(S0, T0, S2, S1, T1, S3, S2, T2, S4) / D, det(S0, S1, T0, S1, S2, T1, S2, S3, T2) / D];
+}
 // the mip levels after level 0 in the same array, each the mean of the four cells under it (the tile wraps, so the levels do too)
 function hfftMips(out, N){
   let src = 0, n = N;

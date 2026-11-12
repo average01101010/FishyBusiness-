@@ -731,7 +731,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
 - **159** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
   - 162 `kmBuyWhy(item, to, kr0)`
 
-## `src/js/core/03k-hav-fft.js` (119 linjer)
+## `src/js/core/03k-hav-fft.js` (141 linjer)
 
 ---------- the short sea as a wave field: FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -744,7 +744,8 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 55 `hfft2(p, re, im)`
   - 61 `hfftSpec(T, P)`
   - 88 `hfftFrame(T, t, out, W, outD)`
-  - 110 `hfftMips(out, N)`
+  - 114 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
+  - 132 `hfftMips(out, N)`
 
 ## `src/js/core/04-crew.js` (717 linjer)
 
@@ -3854,7 +3855,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (838 linjer)
+## `src/js/view3d/01-shaders.js` (840 linjer)
 
 ---------- shaders ----------
 
@@ -3864,19 +3865,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **380** the boat's own foam, when she has way on
 - **388** where a slam and the spray land (F3b): four patches, fixed names
 - **390** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 731 `cloudStep(dt)`
-  - 738 `skyFrame(u, Hh, tn, bv)`
-  - 753 `glsl3(src, fs)`
-  - 766 `progStart(vs, fs, attrs, nm = '?')`
-  - 774 `progEnd(P)`
-  - 784 `program(vs, fs, attrs, nm = '?')`
-  - 786 `progWait(list)`
-  - 792 `programA(vs, fs, attrs, nm)`
-  - 793 `buf(data, target, usage)`
-  - 798 `airSet(u, terr)`
-  - 813 `sunT0()`
-  - 820 `attr(loc, b, size)`
-  - 836 `upload(pos, col, idx)`
+  - 733 `cloudStep(dt)`
+  - 740 `skyFrame(u, Hh, tn, bv)`
+  - 755 `glsl3(src, fs)`
+  - 768 `progStart(vs, fs, attrs, nm = '?')`
+  - 776 `progEnd(P)`
+  - 786 `program(vs, fs, attrs, nm = '?')`
+  - 788 `progWait(list)`
+  - 794 `programA(vs, fs, attrs, nm)`
+  - 795 `buf(data, target, usage)`
+  - 800 `airSet(u, terr)`
+  - 815 `sunT0()`
+  - 822 `attr(loc, b, size)`
+  - 838 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4332,24 +4333,24 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 643 `seaHFast(x, z, t)`
   - 645 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (167 linjer)
+## `src/js/view3d/14b-fft.js` (176 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
 - **1** the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026)
   - 13 `fftWorker()`
-  - 31 `fftOff(why)`
-  - 36 `fftInit()`
-  - 56 `fftParams(t)`
-  - 64 `fftGot(D)`
-  - 83 `fftKeep(a)`
-  - 91 `fftKeepS(bufs)`
-  - 98 `fftTrH(x, z)`
-  - 111 `fftAt(x, z)`
-  - 123 `fftA0()`
-  - 126 `fftSyncAt(tw)`
-  - 134 `fftStep(t)`
-  - 149 `fftBind(u, eye)`
+  - 32 `fftOff(why)`
+  - 37 `fftInit()`
+  - 57 `fftParams(t)`
+  - 65 `fftGot(D)`
+  - 86 `fftKeep(a)`
+  - 94 `fftKeepS(bufs)`
+  - 101 `fftTrH(x, z)`
+  - 114 `fftAt(x, z)`
+  - 126 `fftA0()`
+  - 129 `fftSyncAt(tw)`
+  - 137 `fftStep(t)`
+  - 152 `fftBind(u, eye)`
 
 ## `src/js/view3d/15-env-mooring.js` (226 linjer)
 

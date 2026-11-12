@@ -2952,6 +2952,31 @@
 2026-11-12 03:08	ccr-899a9674-q3gjp0	a275b3b	dbg23o	OK	38	3d	alene	
 2026-11-12 03:07	ccr-899a9674-q3gjp0	5a77fac+	hull3d	OK	2267	3d	alene	
 2026-11-12 03:26	ccr-899a9674-q3gjp0	922a215+	dbg23o	OK	48	3d	alene	
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152	crewclip	FEIL	23	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152	walktest	FEIL	16	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 10
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152	crewwalk	OK	10	lite	samtidig	
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152+	lanterntest	OK	21	lite	samtidig	
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152+	maletest	OK	29	lite	samtidig	
+2026-11-12 05:04	claude/ob13-kyst21-runde2	4bfc152+	regmarktest	OK	12	lite	samtidig	
+2026-11-12 05:05	claude/ob13-kyst21-runde2	4bfc152+	docktest	OK	71	lite	samtidig	
+2026-11-12 05:05	claude/ob13-kyst21-runde2	4bfc152+	stabtest	OK	19	lite	samtidig	
+2026-11-12 05:05	claude/ob13-kyst21-runde2	4bfc152+	trip2	OK	45	lite	samtidig	
+2026-11-12 05:06	claude/ob13-kyst21-runde2	4bfc152+	crewclip	FEIL	24	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 06:52	claude/ob13-kyst21-runde2	6405cc9+	crewclip	FEIL	35	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 06:52	claude/ob13-kyst21-runde2	6405cc9+	walktest	FEIL	27	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 68
+2026-11-12 06:52	claude/ob13-kyst21-runde2	6405cc9+	crewwalk	OK	17	lite	samtidig	
+2026-11-12 06:52	claude/ob13-kyst21-runde2	6405cc9+	lanterntest	OK	24	lite	samtidig	
+2026-11-12 06:53	claude/ob13-kyst21-runde2	6405cc9+	docktest	OK	87	lite	samtidig	
+2026-11-12 06:53	claude/ob13-kyst21-runde2	6405cc9+	stabtest	OK	20	lite	samtidig	
+2026-11-12 06:53	claude/ob13-kyst21-runde2	6405cc9+	trip2	OK	60	lite	samtidig	
+2026-11-12 07:06	claude/ob13-kyst21-runde2	6405cc9+	crewwalk	OK	12	lite	samtidig	
+2026-11-12 07:06	claude/ob13-kyst21-runde2	6405cc9+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 37
+2026-11-12 07:07	claude/ob13-kyst21-runde2	6405cc9+	crewclip	FEIL	28	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 07:07	claude/ob13-kyst21-runde2	6405cc9+	lanterntest	OK	21	lite	samtidig	
+2026-11-12 07:15	claude/ob13-kyst21-runde2	6405cc9+	maletest	OK	17	lite	samtidig	
+2026-11-12 07:15	claude/ob13-kyst21-runde2	6405cc9+	regmarktest	OK	7	lite	samtidig	
+2026-11-12 07:21	claude/ob13-kyst21-runde2	a748e2e	vesseltest	FEIL	18	lite	alene	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 07:36	claude/ob13-kyst21-runde2	a748e2e	tral3d	FEIL	900	3d	alene	gikk ut på tid
 2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	crewclip	FEIL	35	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
 2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	walktest	FEIL	25	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 19
 2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	lanterntest	OK	27	lite	samtidig	
@@ -3048,5 +3073,15 @@
 2026-11-12 05:11	ccr-013bxxid-18b	3b52223	vesseltest	FEIL	39	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	opptest	OK	73	lite	samtidig	
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	vesseltest	OK	38	lite	samtidig	
+2026-11-12 07:09	ccr-899a9674-q3gjp0	3550e83	dbg23o	OK	46	3d	alene	
+2026-11-12 07:57	ccr-899a9674-q3gjp0	d37bf3c+	sea3d	FEIL	2694	3d	alene	FEIL the whitecap threshold gives Monahan's cover within a factor of two (8-25 m/s)
+2026-11-12 08:35	ccr-899a9674-q3gjp0	d37bf3c+	dbg23o	OK	46	3d	alene	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	boottest	OK	50	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	crewwalk	OK	14	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	lanterntest	OK	24	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	maletest	OK	25	lite	samtidig	
 2026-11-12 07:49	claude/ob11-r3-breisjark	817ab3e	boottest	OK	30	lite	samtidig	
 2026-11-12 07:50	claude/ob11-r3-breisjark	817ab3e	docktest	OK	63	lite	samtidig	
+2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	boottest	OK	33	lite	samtidig	
+2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
+2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]

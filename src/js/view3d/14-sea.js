@@ -424,7 +424,7 @@
     if (t != null) shoalBind(u, t);   // (the sea by the shore, F4)
     if (u.uFoamOn == null) return; const on = foamLive(); gl.uniform1f(u.uFoamOn, on ? 1 : 0); if (!on) return;
     gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, FOAM.tex[FOAM.r]); gl.uniform1i(u.uFoam, 7); gl.activeTexture(gl.TEXTURE0);
-    gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
+    if (u.uFoamN != null) gl.uniform1f(u.uFoamN, FOAM.N); gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / FOAM.M, FOAM.M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
     gl.uniform2f(u.uFoamG, NF.D[0] - FOAM.G[0], NF.D[1] - FOAM.G[1]); gl.uniform2f(u.uFoamW, NF.D[0] - FOAM.C[0], NF.D[1] - FOAM.C[1]); if (u.uFoamCw != null) gl.uniform2f(u.uFoamCw, FOAM.CwT[0], FOAM.CwT[1]);
   }
   // The whitecaps as the near sea shader finds them close by (WCAPS in 01-shaders.js, F3), on the CPU: at the rest point (x, z) at
@@ -434,7 +434,7 @@
   // share of Monahan's cover (WCAP.k). For the tests (sea3d's share against Monahan) and for spray from the breaking crests.
   const FRC = x => x - Math.floor(x), HS3 = (x, y) => { let a = FRC(x * 0.1031), b = FRC(y * 0.1031), c = FRC(x * 0.1031); const d = a * (b + 33.33) + b * (c + 33.33) + c * (a + 33.33); a += d; b += d; c += d; return FRC((a + b) * c); };
   const NS3 = (x, y) => { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy); return (HS3(ix, iy) * (1 - ux) + HS3(ix + 1, iy) * ux) * (1 - uy) + (HS3(ix, iy + 1) * (1 - ux) + HS3(ix + 1, iy + 1) * ux) * uy; };
-  FOAM.capK = WCAP.k; FOAM.wcap = WCAP;   // (WCAP for the tests: sea3d's share, and a threshold set wrong on purpose to see it red)
+  FOAM.wcap = WCAP; Object.defineProperty(FOAM, 'capK', {get:() => typeof fftFoam === 'function' && fftFoam() ? WCAP.F.k : WCAP.k});   // (capK: the crests' share of Monahan in use, the tiles' with them on)   // (WCAP for the tests: sea3d's share, and a threshold set wrong on purpose to see it red)
   // the wind waves' groups (grpW in 01-shaders.js) and the swell's (grpOf), as the shaders have them
   function grpAt(i, c, x, z, t){
     const a = c.Dx * x + c.Dz * z, g = c.Dz * x - c.Dx * z, tw = t + WV.dT;
@@ -465,7 +465,7 @@
       const crS = (yL + fs * T[1]) / Math.sqrt(saL + (sq[0][2] + sq[1][2]) * fs * fs), F = WCAP.F, fz = T[0] / sz;
       // (the tiles' crests are the share F.k of Monahan's cover: a crest that runs on with the waves leaves a longer tail than the old ones did)
       const Wf = clamp(Wc * (kk === WCAP.k ? F.k : kk), 1e-5, 0.5); let zf = Math.sqrt(-2 * Math.log(Wf)); zf -= (2.515517 + 0.802853 * zf + 0.010328 * zf * zf) / (1 + 1.432788 * zf + 0.189269 * zf * zf + 0.001308 * zf * zf * zf);
-      return {fv:fz * F.a + crS * F.c + (g - 0.5) * F.g, gate, js:fz, th:WCAP.thF[0] + WCAP.thF[1] * zf + WCAP.thF[2] * zf * zf, jn:fz, J, crest:crS, g, Wc, fft:1}; }
+      return {fv:fz * F.a + crS * F.c + (g - 0.5) * F.g, gate, js:fz, th:(FFT.cq || [0, 1, 0])[0] + (FFT.cq || [0, 1, 0])[1] * zf + (FFT.cq || [0, 1, 0])[2] * zf * zf, jn:fz, J, crest:crS, g, Wc, fft:1}; }
     return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g - (1 - gate) * 1.5, gate, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
   };
 
