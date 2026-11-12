@@ -2750,12 +2750,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1549 linjer)
+## `src/js/ui/phone/07-patch.js` (1551 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1537 `patch()`
+  - 1539 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3607,7 +3607,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
 - **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/11-boot.js` (403 linjer)
+## `src/js/ui/11-boot.js` (407 linjer)
 
 ---------- boot ----------
 
@@ -3640,8 +3640,9 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 192 `bootDataLate()`
   - 207 `modelsLabel()`
   - 214 `bootMapLoad()`
-  - 242 `bootGame()`
-  - 385 `bootFail(e)`
+  - 245 `chart0Load()`
+  - 246 `bootGame()`
+  - 389 `bootFail(e)`
 
 ## `src/js/ui/11b-watchdog.js` (89 linjer)
 
