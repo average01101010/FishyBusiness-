@@ -25,6 +25,8 @@ async def take(pg, name, cap, ok, what, extra=''):
     """the picture as it is now, to docs/sponsor/format-<name>.jpg (960 px wide), when the page shows what it should"""
     check(ok, what, extra)
     if not ok: return
+    # (no message or tip over the picture: a sponsor sees the format, not the game's news)
+    await pg.evaluate("(() => { if (typeof toastClear === 'function') toastClear(); const t = document.getElementById('toast'); if (t) t.style.visibility = 'hidden'; })()")
     raw = os.path.join(os.getcwd(), 'mediekort_%s.png' % name)
     try: await pg.screenshot(path=raw, timeout=150000)
     except Exception as e: print('FEIL skjermbildet %s kom ikke: %s' % (name, str(e)[:80])); return
