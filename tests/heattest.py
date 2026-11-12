@@ -70,11 +70,11 @@ async def tutorial(pg):
       S.stock = initStock(); S.tut = tutNew(); S.haill = {type:'luksus', t0:0, how:'shop'};
       const H = (Date.UTC(2027, 2, 1, 9) - EPOCH) / 36e5, heat = q => 30 * SP.reduce((a, sp) => a + density(sp, q, H), 0);
       const R = {ring:heat(g.p), edge:heat({x:g.p.x + g.r, y:g.p.y})};
-      S.t = Math.round(H * 60); S.hold = []; S.facc = {}; S.fnext = {}; S.haill.t0 = S.t; b.gear = true; b.ice = 150; S.equip.jukse = 0; S.settings.deckFirst = false;
+      S.t = Math.round(H * 60); S.hold = []; S.facc = {}; S.fnext = {}; S.haill.t0 = S.t; R.lk = luck(); b.gear = true; b.ice = 150; S.equip.jukse = 0; S.settings.deckFirst = false;
       b.status = 'fishing'; b.pos = {...g.p}; b.fishUntil = S.t + 120; window.TUTTOP = 0;
       const st0 = {...S.stock}, base = (() => { let d = 0, t = 0; for (const sp of SP){ d += density(sp, g.p, H); t += tutBonus(sp, g.p); } return (d - t) / d; })();
       for (let i = 0; i < 400 && b.status === 'fishing'; i++){ S.t++; fish(S.t / 60, 4, 0.4); deckMinute(); }   // deck stops add minutes
-      R.hold = holdTotal(); R.top = window.TUTTOP; R.removed = [...new Set(Object.keys(st0).concat(Object.keys(S.stock)))].reduce((a, k) => a + (stkGet(st0, k) - stkGet(S.stock, k)), 0) * STK.K; R.want = (R.hold - R.top) * base;
+      R.hold = holdTotal(); R.top = window.TUTTOP; R.removed = [...new Set(Object.keys(st0).concat(Object.keys(S.stock)))].reduce((a, k) => a + (stkGet(st0, k) - stkGet(S.stock, k)), 0) * STK.K; R.want = (R.hold - R.top) * base / R.lk;   // (without the luksushaill's extra: step 103, the haill's fish is not the stock's)
       S.tut.catch = false; R.after = heat(g.p);
       S.tut = keep.tut; S.haill = keep.haill; b.status = 'port'; S.hold = []; S.stock = initStock();
       return R; })())"""))
@@ -84,7 +84,7 @@ async def tutorial(pg):
     check(r['after'] < r['ring'] * 0.45, 'når garantien er over, er feltet vanlig igjen (under 45 % av ringen)', round(r['after'], 1))
     check(r['hold'] >= 349, 'to timer på feltet gir full last (350 kg)', round(r['hold'], 1))
     check(r['top'] / r['hold'] < 0.35, 'påfyllingen er bare et sikkerhetsnett (under 35 % av fangsten)', round(r['top'] / r['hold'], 3))
-    check(abs(r['removed'] - r['want']) < 0.05 * r['want'] + 1, 'bare bestandens egen andel trekkes fra bestanden, ikke skreiflekken eller påfyllingen', {k: round(r[k], 1) for k in ('removed', 'want', 'hold')})
+    check(abs(r['removed'] - r['want']) < 0.05 * r['want'] + 1, 'bare bestandens egen andel trekkes fra bestanden, ikke skreiflekken, påfyllingen eller det luksushaillen gir ekstra (steg 103)', {k: round(r[k], 1) for k in ('removed', 'want', 'hold', 'lk')})
 
 
 SETUP = """(([tier, chart, mo, gi, echo, sonar]) => { const b = S.boat, g = GROUNDS[gi];
