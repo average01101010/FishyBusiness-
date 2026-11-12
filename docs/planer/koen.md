@@ -52,6 +52,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
+- `ccr-5e1ba2f4-pusvyd`: TB1, sammenstøtet med tråleren under Autonav (tilbakemelding #1; Jonas' økt, 12.11.2026). Eier `core/05e-sjovei.js`, `tests/unit/sjovei.test.mjs`, `tests/colregtest.py`. Deler `ui/phone/07-patch.js` (flettes).
 - `ccr-360badbd-1zzqz7`: steg 44 Ø5 rest c, M7/M8-resten: sponsede design, flagget som vaier, `anchors.sign` (Jonas' økt, 11.11.2026 23:05 UTC). Eier `ui/10j-paint.js`, `core/09l-sponsor.js`, `view3d/07-harbour-unit.js` (bare flagget og `signF`), `tools/harbour/butikk.py`, `steder.py`, `kaimottak.py`, `src/data/harbour-*.b64`, `src/admin/index.html` (plasseringstypen), `tests/sponsor2test.py`. Deler `src/index.html`, `tests/run.py` og `ui/phone/07-patch.js` (flettes).
 - `plan/2026-11-11-88`: steg 88 OB10 runde 3, den nye hurtigsjarken (arbeidsrutinen, 11.11.2026 23:35 UTC). Eier `tools/boats/hs11.py`, `src/data/boat-hs11*`, `tools/boats/qa/hs11_*.py`, `tests/hs11shot.py`, `docs/skipsmodeller/sjarkny-grunnlag.md` og `sjarkny-bygging.md`. Deler `src/index.html`, `vessel3d.js` og `ui/phone/07-patch.js` (flettes).
 

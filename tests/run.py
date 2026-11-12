@@ -80,7 +80,7 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
   'src/js/view3d/17f-near.js':['dbg23o', 'lifeshot'], 'src/data/naer.b64':['lifeshot'],
   'src/js/view3d/17e-life.js':['dbg23o', 'lifeshot'], 'src/data/dyr.b64':['lifeshot'], 'src/data/fuglefjell.json':['lifeshot'],
   'src/js/view3d/17d-vind.js':['dbg23o', 'vindshot'], 'src/data/vind.b64':['vindshot'], 'src/data/vind.json':['vindshot'],
-  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot', 'skumkant', 'stromshot'], 'tests/stromshot.py':['stromshot'], 'tests/stromtest.py':['stromtest'], 'tests/skumkant.py':['skumkant'],
+  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot', 'skumkant', 'stromshot'], 'src/js/view3d/14b-fft.js':['dbg23o', 'sea3d'], 'src/js/core/03k-hav-fft.js':['dbg23o'], 'tests/stromshot.py':['stromshot'], 'tests/stromtest.py':['stromtest'], 'tests/skumkant.py':['skumkant'],
   'src/js/view3d/13-instruments.js':['heattest', 'dbg23o', 'wetshot'],
   'src/js/view3d/12-skiff.js':['dbg23o', 'deckshot', 'wetshot'],
   'src/js/view3d/11-bunker.js':['bunkertest'],
