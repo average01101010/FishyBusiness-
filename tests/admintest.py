@@ -87,6 +87,13 @@ async def main():
         check(j1['keep'] == 0 and 'Står, sett' in j1['rows'][0] and j1['clr'] == 2 and j2['clr'] == 1 and 'Fjernet' in j2['rows'][0] and 'Slå av' in j3['sw'] and any('På' in k for k in j3['kpi']),
               '«La stå» marks the row as seen, «Fjern merket» takes the mark away, and the switch turns after a question', {'keep': j1['keep'], 'clr': [j1['clr'], j2['clr']], 'sw': j3['sw'], 'kpi': j3['kpi']})
         check('Meldt av spillet' in ok_ and ok_.count('meldt av spillet') >= 2, "the economy's numbers are marked as reported by the game")
+        # Kvotemarkedet (KM5): the sales a week against the takst, players against the register per group, the first bid, the events
+        await pg.click('nav button[data-t="okonomi"]'); await pg.wait_for_timeout(400); km = await pg.evaluate("document.querySelector('main').innerText")
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(150); await pg.screenshot(path='admin_kvotemarkedet.png', full_page=True)
+        kmw = await pg.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        check(all(h in km for h in ('Kvotemarkedet: salg per uke', 'Median mot taksten', 'Kjøpt fra spillere mot registeret', 'Andel fra spillere', 'Tid til første bud', 'Målingen', 'Kjøpt fra registeret'))
+              and '96,2 %' in km and '10–10,9 m' in km and 'user_' not in km and kmw,
+              'Økonomi i spillet has Kvotemarkedet: sales a week with the median against the takst, players against the register per group, the hours to the first bid and the events, never who', km[km.find('Kvotemarkedet'):][:300])
         # with keys: the sign-in comes first, nothing is fetched before it
         await pg.add_init_script("")
         raw = await (await pg.request.get(BASE + 'admin/')).text()

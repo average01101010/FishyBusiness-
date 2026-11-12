@@ -173,6 +173,23 @@ function pressLand(local){
     body:rest.length ? [['Også store landinger det siste døgnet: ' + rest.map(l => pressWho(l)[0] + ' med ' + fmt(l.kg, 0) + ' kg til ' + portById(l.port).name).join(', ') + '.', 'Other big landings in the last day: ' + rest.map(l => pressWho(l)[1] + ' with ' + fmt(l.kg, 0) + ' kg at ' + portById(l.port).name).join(', ') + '.']] : []});
   return out;
 }
+// ---- «Kvoteprisen denne uka» (KM5, steg 64): once a game week on the front page, the quota price (kpkAt in 03d-quota.js, the same
+// in every game) and where it went since last week, and from the server last week's quota sales between players: how many and the
+// median against the takst (ui/05g-press.js pressKvoteFetch, km_week; numbers, never who). Without a sale, or without the cloud, only the price
+function pressKvote(){
+  const H = S.t / 60, wk = typeof weekOf === 'function' ? weekOf(H) : -1; if (wk < 1 || typeof kpkAt !== 'function') return [];
+  const H0 = wk * 168, k = kpkAt(H0), k1 = kpkAt(H0 - 168), ch = Math.round((k / k1 - 1) * 1000) / 10, R = PRESS.kq && PRESS.kq.wk === wk - 1 ? PRESS.kq.r : null;
+  const mv = Math.abs(ch) < 0.5 ? ['uendret fra forrige uke', 'unchanged from last week'] : ch > 0 ? ['opp ' + fmt(ch, 1) + ' % fra forrige uke', 'up ' + fmt(ch, 1) + '% from last week'] : ['ned ' + fmt(-ch, 1) + ' % fra forrige uke', 'down ' + fmt(-ch, 1) + '% from last week'];
+  const body = [];
+  if (R && R.n > 0 && R.med != null){ const pc = Math.round(R.med * 100), w = [R.right ? (R.right === 1 ? 'én hjemmel' : R.right + ' hjemler') : null, R.struct ? (R.struct === 1 ? 'én strukturkvote' : R.struct + ' strukturkvoter') : null].filter(Boolean),
+      we = [R.right ? (R.right === 1 ? 'one right' : R.right + ' rights') : null, R.struct ? (R.struct === 1 ? 'one structure quota' : R.struct + ' structure quotas') : null].filter(Boolean);
+    body.push(['I Kvotemarkedet ble det solgt ' + w.join(' og ') + ' forrige uke. Mediansalget lå på ' + pc + ' % av taksten.', 'In the quota market, ' + we.join(' and ') + ' sold last week. The median sale was ' + pc + '% of the valuation.']); }
+  body.push(['Taksten følger torskeprisen og kvoteutsiktene: kvoterådet for neste år kommer i juni og totalkvoten i oktober.', 'The valuation follows the cod price and the quota outlook: the advice for next year comes in June and the total quota in October.']);
+  body.push(['Registeret selger hjemler til taksten og kjøper dem tilbake til 90 % av den. Hjemlene og strukturkvotene til salgs står under Kvote → Marked.', 'The register sells rights at the valuation and buys them back at 90% of it. The rights and structure quotas for sale are under Quota → Market.']);
+  return [{key:'kq' + wk, t:Math.min(S.t, H0 * 60), kind:'kvotepris', x:null, y:null, me:false, big:false, img:null,
+    h:['Kvoteprisen denne uka: ' + k + ' kr/kg', 'The quota price this week: NOK ' + k + '/kg'],
+    ing:['Taksten for torskekvote i lukket gruppe er ' + k + ' kr/kg, ' + mv[0] + '.', 'The valuation of cod quota in the closed group is NOK ' + k + '/kg, ' + mv[1] + '.'], body}];
+}
 // ---- the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser») ----
 // The coast's price index for a species on a day is the market price and the supply of 03-simulation.js (marketPrice, supplyFactor),
 // the same in every game on the shared clock, so a record comes on the same day for everyone; the kroner are those of the plants near
@@ -223,6 +240,7 @@ function pressList(local){
   for (const s of pressLand(local)) out.push(s);
   for (const s of pressSkrei()) if (!local || near(s)) out.push(s);
   const top = local ? [] : pressTop(); for (const s of top) out.push(s);
+  if (!local) for (const s of pressKvote()) out.push(s);
   for (const s of pressBygde()) if (!local || near(s)) out.push(s);
   const day = Math.floor(S.t / 1440);
   // a partner's advertisement (M8, F4; docs/planer/butikker-og-sponsorer.md): one in each day's paper at the most, on the front page,
