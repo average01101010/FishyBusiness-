@@ -49,6 +49,13 @@ export default function (t){
     t.ok(k.filter(x => x === 'trekk').length === 2 && !k.some(x => x.startsWith('sett')), 'lasten full: begge lenkene trekkes inn på magasinene, ingenting settes (' + k.join(' ') + ')');
     t.ok(d.steps.filter(s => s.k === 'trekk').every(s => s.t >= s.due - 1e-9), 'også da står lenkene ståtida ut');
     t.ok(/turen er over: lasten/.test(d.why[0]), 'dagen sier hvorfor: «' + d.why[0] + '»'); }
+  // «Til ankers nær havna» on an ocean vessel (o.anchor, o.homeA from plan2Make): she comes home only when the gear is fetched, and then
+  // goes to the anchorage, not the quay (the backlog's Ø12 C list: not tried since anchortest part 3 went with the old plan)
+  { const {PORTS, portById} = K, hm = PORTS.find(p => p.mottak), pm = PORTS.find(p => p.mottak && p.id !== hm.id && Math.hypot(p.p.x - hm.p.x, p.p.y - hm.p.y) > 5), hA = {x:hm.p.x + 0.3, y:hm.p.y};
+    const d = planDayAuto(o({fetch:true, home:hm.id, M:pm.id, homeA:hA}), H0, st({at:{p:{...portById(pm.id).p}, port:pm.id}, hold:50000, sets:[]})), k = ks(d), h = d.steps.find(s => s.k === 'hjem');
+    t.ok(k[0] === 'lever' && h && h.anchor && h.port === hm.id, 'redskapet hentet, ved mottaket i ' + pm.name + ': leverer og går hjem til ankers ved ' + hm.name + ' (' + k.join(' ') + ', anker ' + (h && h.anchor) + ')');
+    const d2 = planDayAuto(o({fetch:true, home:hm.id, M:pm.id, homeA:null}), H0, st({at:{p:{...portById(pm.id).p}, port:pm.id}, hold:50000, sets:[]})), h2 = d2.steps.find(s => s.k === 'hjem');
+    t.ok(h2 && !h2.anchor, 'uten ankerplass hjemme: hjem til kaia (anker ' + (h2 && h2.anchor) + ')'); }
   t.ok(DRP2.hav.wx.normal.wind === 18 && DRP2.hav.wx.normal.hs === 5, 'arbeidsgrensen «Vanlig» for havbåten er 18 m/s og 5 m');
 
   // ===== the snow crab vessel on Driftsplan 2 (H3c, 06i-plan2-sno.js): the strings, the loop, the trip's end, the close season, the
