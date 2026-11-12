@@ -68,6 +68,8 @@ async def main():
         # theory says, Ks = sqrt(cg0 / cg) per wave from the exact dispersion (worked out here, not by the game), within 8 %, and is
         # more than 1.08 times (the plan's Green's law from L/4 said 1.3-1.5, linear theory less: 5.20i). (c) Over 1 m in a stiff
         # breeze the height stays under McCowan's limit, 0.78 h. Seen red before F4 (no WV.shoal: all three FEIL).
+        # (the McCowan check over 600 s, B4 12.11.2026: the waves run on the world's clock, so 60 s was a different stretch every run, and with a
+        # few long waves in groups its 4 sigma strayed by 10-15 % from run to run; 0.92 against 0.86 in one run)
         await pg.evaluate("WX_FORCE = {w:6, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
         F4 = await pg.evaluate("""(() => { const D = G3._debug, sh = D.WV.shoal; if (!sh) return null; const SU = sh.SURF, bx = D.bv.x, bz = D.bv.z, out = {w:SU.w};
           let dmax = 0; for (let k = 0; k < 40; k++){ const x = bx + (k % 7 - 3) * 40, z = bz + (Math.floor(k / 7) - 3) * 40, t = 50 + k * 0.37;
@@ -97,7 +99,7 @@ async def main():
             gin = F4['i3'] / F4['i20']
             print(ok(abs(gin / want - 1) < 0.15), 'running in towards the shore, the energy that goes into the surf keeps the height (3 m against 20 m)', round(gin, 3), 'want', round(want, 3))
             await pg.evaluate("WX_FORCE = {w:13, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
-            h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
+            h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 600; t += 0.5){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
             print(ok(h1[0] <= 0.78 * 1.0 * 1.1 and h1[1] > 1.5), "over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h)", [round(v, 2) for v in h1])
             await pg.evaluate("WX_FORCE = {w:5, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
         stage('the sea by the shore (F4) done')

@@ -3084,3 +3084,4 @@
 2026-11-12 07:50	claude/ob11-r3-breisjark	817ab3e	docktest	OK	63	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	boottest	OK	33	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
+2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
