@@ -2778,3 +2778,33 @@
 2026-11-12 00:57	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	progweek	LES	34	lite	samtidig	
 2026-11-12 00:59	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	boottest	OK	20	lite	alene	
 2026-11-12 01:00	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	charttest	OK	43	lite	alene	
+2026-11-11 23:37	ccr-360badbd-1zzqz7	1465f33+	signtest	OK	1373	3d	alene	
+2026-11-11 23:52	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 00:11	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	1087	3d	alene	FEIL i frisk bris (9 m/s) står flagget ut fra stanga og bølger  {"droop": 0.06, "amp": 0.121, "wind": 7.1, "z": 0.11539775133132935, "tip": 0.0354}
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	sponsor2test	OK	18	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	maletest	OK	18	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	regmarktest	OK	6	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	regnrtest	OK	11	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	vesseltest	FEIL	20	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	sponsortest	OK	14	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	admintest	OK	8	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	stedertest	OK	4	lite	samtidig	
+2026-11-12 00:13	ccr-360badbd-1zzqz7	1465f33+	dbg23o	OK	44	3d	alene	
+2026-11-12 00:19	ccr-360badbd-1zzqz7	1465f33+	sponsor2test	OK	19	lite	samtidig	
+2026-11-12 00:19	ccr-360badbd-1zzqz7	1465f33+	maletest	OK	21	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	regmarktest	OK	8	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	regnrtest	OK	11	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	sponsortest	OK	9	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	admintest	OK	8	lite	samtidig	
+2026-11-12 00:47	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	1611	3d	alene	sidefeil: ['e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not
+2026-11-12 00:53	ccr-360badbd-1zzqz7	32bf994	signcoast	OK	377	3d	alene	
+2026-11-12 00:58	ccr-360badbd-1zzqz7	32bf994	sitetest	FEIL	322	3d	alene	FEIL at a home along the coast (Reine) the naust stands there and no shop beside it (Father's naust is only a home), and the boat lies at the naust {'kinds': ['
+2026-11-12 01:08	ccr-360badbd-1zzqz7	5191085	yardtest	OK	579	3d	alene	
+2026-11-12 01:15	ccr-360badbd-1zzqz7	5191085+	unittest	OK	441	3d	alene	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	sqltest	OK	42	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	sponsor2test	OK	14	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	maletest	OK	18	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	regmarktest	OK	5	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	admintest	OK	8	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	boottest	OK	27	lite	samtidig	
+2026-11-12 01:49	ccr-360badbd-1zzqz7	5191085+	sp44shot	FEIL	1800	3d	alene	gikk ut på tid
