@@ -159,6 +159,10 @@ async def main():
         await J("() => rescue(true)"); await J(SAIL, {'n': 2, 'untilEnd': True}); r = await J(RUN)
         h0 = r['hist'][0] if r['hist'] else {}
         check(r['st'] is None and h0.get('st') == 'dnf' and h0.get('how') == 'slep', '6. slep fra Redningsselskapet: forsøket er brutt', h0)
+        # a tow called from the quay as she casts off (rescue() docks her at once, no 'tow' is ever seen): broken too
+        await J(AT, {'k': 0}); await J("() => lopStart()"); await J(ROUTE, 1); await J("() => depart()")
+        q = await J("() => { const st = S.boat.status; rescue(true); const h = S.lop.hist[0] || {}; return {st, run:!!S.lop.run, how:h.how, id:h.id}; }")
+        check(q['st'] == 'unmooring' and not q['run'] and q['how'] == 'slep', '6. slep kalt mens hun kaster loss: forsøket er brutt', q)
         check(r['legsN'] == 3, '6. etappene som er seilt (Bergen, Rørvik og mållinja), teller på merket: ' + str(r['legsN']))
         # 8. an ocean vessel finds the way Rørvik–Bodø (leg 4): before KL1a no route in one piece (11-route.js leiaSplit)
         h = await J("""async () => { const b = S.boat, ty = b.type; b.type = 'autoliner'; applyVessel(); const A = portById(LOP.cps[2].port), B = portById(LOP.cps[3].port);

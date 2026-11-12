@@ -1359,6 +1359,7 @@ function rescueAis(H){
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
+  if (lopOn() && S.lop.run.st === 'run') lopEnd('slep');   // a tow ends the race (09o-kapplop.js), also from the quay, where no 'tow' is seen
   // the first is free, with the catch kept (core/09f-merker.js freeFirst; Jonas 07.10.2026: learn without the consequences)
   const first = !S.member && freeFirst('tow'); if (first) keepCatch = true;
   // the tow goes to the nearest yard, where the hull is mended (Jonas 08.10.2026: a tow to a plant left a player stuck there, #48);

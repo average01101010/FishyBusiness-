@@ -67,8 +67,9 @@ function lopWeek(ms){
   const t0 = mon - lopOslo(mon - 3 * 3600000) * 3600000, nx = mon + 7 * 86400000, t1 = nx - lopOslo(nx - 3 * 3600000) * 3600000;
   return {id:y + '-W' + String(w).padStart(2, '0'), y, w, t0, t1};
 }
-// the least possible time for nm nautical miles at the type's top speed vmax (knots) with the trim factor trim (1 without), less the
-// margin: game hours. The server checks each leg against the same rule in KL3
+// the least possible time for nm nautical miles at the top speed vmax (knots) with the trim factor trim (1 without), less the margin:
+// game hours. vmax is the boat's own with her equipment (the 90 hp outboard gives the skiff 30 kn, applyVessel), not the type's: the
+// class is the type's (V4 A), the speed the boat's. The server checks each leg against the same rule in KL3
 function lopMinH(nm, vmax, trim){ const v = (+vmax || 0) * Math.max(1, +trim || 1); return v > 0 && nm > 0 ? nm / v * LOP.margin : 0; }
 // the attempt's time in game minutes, at `now` if not finished: one clock from casting off (V2 A), with the penalties added and the help
 // taken off (when the help is over); the split at each checkpoint is the time on the clock there (with what was added and taken off by then)
@@ -147,8 +148,8 @@ function lopDock(pid){
   if (typeof cloudEv === 'function') cloudEv('lop_leg', {cls:r.cls, leg:next, min:Math.round(T.min)});
 }
 // the finish: the move from a to c crosses the line due north of the cape in the chart's grid (constant x; it parts from the true
-// meridian by the grid's convergence, some 8° here, and is the line the chart will draw in KL2), either way. vmax: a move longer
-// than a minute at twice that speed (and 200 m) is a jump, not sailing («Sitter båten fast?» moves her up to 4 km), and never crosses
+// meridian by the grid's convergence, some 8° here, and is the line the chart will draw in KL2), either way. vmax: the boat's top
+// speed now (BOAT.vmax: her equipment and the trim); a move longer than a minute at twice that speed (and 200 m) is a jump, not sailing («Sitter båten fast?» moves her up to 4 km), and never crosses
 function lopCross(a, c, vmax){ const G = LOP.goal, X = G.p.x; if (!a || !c || (a.x - X) * (c.x - X) > 0 || a.x === c.x) return false;
   if (vmax && dist(a, c) > 0.2 + 2 * vmax * NM / 60 * gridScale(c)) return false;
   const y = a.y + (c.y - a.y) * (X - a.x) / (c.x - a.x); return y <= G.p.y + 0.3 && y >= G.p.y - G.north; }
@@ -166,12 +167,14 @@ function lopSosNow(){
 }
 // where the race boat is going now: the next checkpoint, or the cape after the last
 const lopNext = r => r.legs.length < LOP.cps.length ? LOP.cps[r.legs.length].p : LOP.goal.p;
-// the help over: the time it took, less the way it made towards the next checkpoint at her type's top speed (she gets back the time
-// she lost, never more: a call answered and left while she sails on gives nothing, and help that took her back adds the way back)
+// the help over: the time it took, less the way it made towards the checkpoint she was bound for when she answered (she gets back the
+// time she lost, never more). The way made forward is counted at the type's cruising speed, the slowest she would sail the race at,
+// so a call answered and left while she sails on gives nothing (sailing slower than that costs her as much as it takes off); the way
+// back at her top speed now, the fastest she could have come back (BOAT.vmax with her equipment and the trim, the type's when unbound)
 function lopSosEnd(r, t, p){
   const s = r.sos; if (!s) return; r.sos = null;
-  const V = VESSELS[r.type] || {}, to = lopNext(r), v = Math.max(1, +V.vmax || 6);
-  const gain = p && s.p ? (kmTrue(s.p, to) - kmTrue(p, to)) / NM / v * 60 : 0, min = Math.max(0, Math.round(t - s.t - gain));
+  const V = VESSELS[r.type] || {}, to = s.to || lopNext(r), vc = Math.max(1, +V.vcruise || +V.vmax || 6), vm = Math.max(1, +V.vmax || 6, r.vid === S.cur ? +BOAT.vmax || 0 : 0);
+  const made = p && s.p ? (kmTrue(s.p, to) - kmTrue(p, to)) / NM : 0, gain = made / (made >= 0 ? vc : vm) * 60, min = Math.max(0, Math.round(t - s.t - gain));
   if (!min) return;
   r.ded.push({t0:s.t, t1:t, k:s.id[0], min});
   const hm = lopHm(min);
@@ -194,10 +197,10 @@ function lopMinute(){
   for (const x of S.nearMiss || []) if (!x.lop && x.vid === r.vid && (x.give === 'a' || x.give === 'both') && x.t >= r.t0){ x.lop = 1; r.pen.push({t:x.t, k:'vik', min:LOP.pen.vik}); }
   // the help: from the answer to its end, less the way made
   const sid = lopSosNow();
-  if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here};
-  else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here}; }
+  if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here, to:lopNext(r)};
+  else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here, to:lopNext(r)}; }
   // the finish line, after the last checkpoint
-  if (r.legs.length === LOP.cps.length && lopCross(r.lp, here, (VESSELS[r.type] || {}).vmax || 30)){ r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
+  if (r.legs.length === LOP.cps.length && lopCross(r.lp, here, Math.max(BOAT.vmax || 0, (VESSELS[r.type] || {}).vmax || 0) || 30)){ r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
   r.lp = here;
 }
 // once a minute from step, outside the vessels: a race boat no longer in the fleet (sold) ends the attempt; else her minute
