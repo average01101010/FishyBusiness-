@@ -840,7 +840,7 @@ crew: people with skills, habits and moods
   - 707 `flyOut(c)`
   - 715 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1424 linjer)
+## `src/js/core/05-vessels.js` (1427 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -901,54 +901,54 @@ crew: people with skills, habits and moods
   - 673 `step()`
   - 693 `holdMinute(H, p)`
   - 702 `vesselStep(H)`
-  - 794 `plantFuel(b)`
-  - 797 `sailV(H, hs)`
-  - 813 `sail(H, W, hs)`
-  - 845 `sailWaiting()`
-  - 846 `sailReplan(pl, b, gp)`
-  - 874 `iceWhy(p, tried)`
-  - 876 `sailStop(pl, b, why)`
-  - 884 `haltPlan(need)`
-  - 894 `arrive(w)`
-  - 912 `unstuckWhy()`
-  - 918 `unstuckSpot()`
-  - 925 `unstuck()`
-- **939** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 947 `moorPhase(b)`
-  - 962 `dock(pid, berth)`
-  - 989 `catchFactors(H, W, hs)`
-  - 1002 `stockDev(p, sp)`
-  - 1008 `fish(H, W, hs)`
-  - 1114 `endFishing(why)`
-  - 1135 `bycHere(how)`
-  - 1139 `bycAdd(sp, kg, how)`
-  - 1143 `bycConf()`
-  - 1146 `addCatch(sp, kg, cls, hook, opt)`
-- **1168** work on deck: gutting and icing take hands and time
-  - 1184 `deckHands()`
-  - 1187 `deckPending()`
-  - 1188 `deckEta(hands)`
-  - 1193 `moveKg(x, kg, patch)`
-  - 1201 `iceMinute()`
-  - 1208 `iceOut(out)`
-  - 1214 `deckMinute()`
-- **1239** lying to in a storm (H1b R8, 05.11.2026)
-  - 1256 `quayFar(b)`
-  - 1260 `lieTo(W, hs)`
-  - 1267 `lieToStep(W, hs)`
-  - 1277 `risk(W, hs)`
-  - 1305 `hullRepair()`
-  - 1308 `svcOverdue()`
-- **1309** the rescue boat (plan E3, 05.10.2026)
-  - 1335 `rescueBases()`
-  - 1344 `rescueBase(p)`
-  - 1351 `rescueAis(H)`
-  - 1355 `rescue(keepCatch)`
-  - 1379 `towSea(p)`
-  - 1384 `towRoutes(b)`
-  - 1395 `towStep(H)`
-  - 1407 `towDone(t)`
-  - 1413 `towPose(frac)`
+  - 797 `plantFuel(b)`
+  - 800 `sailV(H, hs)`
+  - 816 `sail(H, W, hs)`
+  - 848 `sailWaiting()`
+  - 849 `sailReplan(pl, b, gp)`
+  - 877 `iceWhy(p, tried)`
+  - 879 `sailStop(pl, b, why)`
+  - 887 `haltPlan(need)`
+  - 897 `arrive(w)`
+  - 915 `unstuckWhy()`
+  - 921 `unstuckSpot()`
+  - 928 `unstuck()`
+- **942** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 950 `moorPhase(b)`
+  - 965 `dock(pid, berth)`
+  - 992 `catchFactors(H, W, hs)`
+  - 1005 `stockDev(p, sp)`
+  - 1011 `fish(H, W, hs)`
+  - 1117 `endFishing(why)`
+  - 1138 `bycHere(how)`
+  - 1142 `bycAdd(sp, kg, how)`
+  - 1146 `bycConf()`
+  - 1149 `addCatch(sp, kg, cls, hook, opt)`
+- **1171** work on deck: gutting and icing take hands and time
+  - 1187 `deckHands()`
+  - 1190 `deckPending()`
+  - 1191 `deckEta(hands)`
+  - 1196 `moveKg(x, kg, patch)`
+  - 1204 `iceMinute()`
+  - 1211 `iceOut(out)`
+  - 1217 `deckMinute()`
+- **1242** lying to in a storm (H1b R8, 05.11.2026)
+  - 1259 `quayFar(b)`
+  - 1263 `lieTo(W, hs)`
+  - 1270 `lieToStep(W, hs)`
+  - 1280 `risk(W, hs)`
+  - 1308 `hullRepair()`
+  - 1311 `svcOverdue()`
+- **1312** the rescue boat (plan E3, 05.10.2026)
+  - 1338 `rescueBases()`
+  - 1347 `rescueBase(p)`
+  - 1354 `rescueAis(H)`
+  - 1358 `rescue(keepCatch)`
+  - 1382 `towSea(p)`
+  - 1387 `towRoutes(b)`
+  - 1398 `towStep(H)`
+  - 1410 `towDone(t)`
+  - 1416 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (189 linjer)
 
@@ -1289,24 +1289,29 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06j-hopp.js` (164 linjer)
+## `src/js/core/06j-hopp.js` (153 linjer)
 
 ---------- Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026) ----------
 
 - **1** Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026)
-  - 15 `hopPrice(realMin)`
-  - 21 `hopStop(pl)`
-  - 28 `hopCatching()`
-  - 31 `hopWait()`
-  - 34 `hopCovers(paidMin, realMin)`
-  - 36 `hopWhy()`
-  - 58 `hopRun(paid)`
-  - 96 `hopMatch(to)`
-  - 101 `hopQuote()`
-  - 104 `hopEnergy(e, s, n, rate)`
-  - 109 `hopSaved(real, en)`
-  - 111 `hopDo(q)`
-  - 153 `hopGo(paid, maxMin)`
+  - 23 `hopHoldOn()`
+  - 25 `hopHoldOff()`
+  - 27 `hopHeld(b)`
+  - 30 `hopHoldFor(d)`
+  - 32 `hopPrice(realMin)`
+  - 38 `hopStop(pl)`
+  - 45 `hopCatching()`
+  - 48 `hopWait()`
+  - 51 `hopCoverMax(paidMin)`
+  - 52 `hopCovers(paidMin, realMin)`
+  - 54 `hopMinWords(n)`
+  - 56 `hopWhy()`
+  - 74 `hopRun(paid)`
+  - 107 `hopMatch(to)`
+  - 113 `hopQuote(paid)`
+  - 115 `hopSaved(real, en)`
+  - 117 `hopDo(q)`
+  - 141 `hopGo(paid, maxMin)`
 
 ## `src/js/core/06e-anchor.js` (235 linjer)
 
@@ -2337,7 +2342,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (775 linjer)
+## `src/js/core/16b-dyn.js` (776 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -2388,27 +2393,27 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 499 `dynState(b)`
   - 510 `dynWrite(b, d)`
   - 515 `dynCan()`
-  - 520 `dynLive()`
-  - 525 `dynPose()`
-  - 534 `dynRest()`
-  - 535 `dynLivePose(frac)`
-  - 537 `dynHaltNeed()`
-- **538** the tick
-  - 539 `dynTick(dt)`
-  - 552 `dynMinute(H, W)`
-- **559** by hand (16-helm.js): the throttle and the rudder into the model
-  - 560 `dynHelm(d, dtG)`
-- **581** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
-  - 583 `dynLineBuild(pl, dep)`
-  - 603 `dynLineAt(T, s)`
-  - 609 `dynSeg(T, s)`
-  - 610 `dynSegHd(T, i)`
-  - 611 `dynLineProj(T, x, z, s0, back = 30)`
-  - 621 `dynLineHd(T, s, r0)`
-  - 628 `dynGroundAhead(T, s, look)`
-- **637** the autopilot
-  - 638 `dynAuto(d, dtG)`
-  - 774 `dynTrackView()`
+  - 521 `dynLive()`
+  - 526 `dynPose()`
+  - 535 `dynRest()`
+  - 536 `dynLivePose(frac)`
+  - 538 `dynHaltNeed()`
+- **539** the tick
+  - 540 `dynTick(dt)`
+  - 553 `dynMinute(H, W)`
+- **560** by hand (16-helm.js): the throttle and the rudder into the model
+  - 561 `dynHelm(d, dtG)`
+- **582** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
+  - 584 `dynLineBuild(pl, dep)`
+  - 604 `dynLineAt(T, s)`
+  - 610 `dynSeg(T, s)`
+  - 611 `dynSegHd(T, i)`
+  - 612 `dynLineProj(T, x, z, s0, back = 30)`
+  - 622 `dynLineHd(T, s, r0)`
+  - 629 `dynGroundAhead(T, s, look)`
+- **638** the autopilot
+  - 639 `dynAuto(d, dtG)`
+  - 775 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (149 linjer)
 
@@ -2666,7 +2671,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (351 linjer)
+## `src/js/ui/04-panels-instruments.js` (352 linjer)
 
 ---------- estimates ----------
 
@@ -2686,12 +2691,12 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 152 `renderHud()`
   - 219 `liveFrac()`
   - 220 `livePose(frac)`
-  - 243 `vnoise2(x, y, s)`
-  - 249 `microBottom(p, d)`
-- **251** instruments: GPS and echo sounder
-  - 335 `hudCardOpen(on)`
-  - 342 `hudClasses(stripOn, cardOn)`
-  - 346 `hudFold(which)`
+  - 244 `vnoise2(x, y, s)`
+  - 250 `microBottom(p, d)`
+- **252** instruments: GPS and echo sounder
+  - 336 `hudCardOpen(on)`
+  - 343 `hudClasses(stripOn, cardOn)`
+  - 347 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2798,7 +2803,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 34 `innst()`
   - 72 `admin()`
 
-## `src/js/ui/phone/06-render.js` (69 linjer)
+## `src/js/ui/phone/06-render.js` (67 linjer)
 
   - 1 `show(on, a)`
   - 2 `status()`
@@ -2809,8 +2814,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 21 `dact(cur, a, d)`
 - **27** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
   - 32 `trim()`
-- **50** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
-  - 54 `skipApp()`
+- **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
+  - 52 `skipApp()`
 
 ## `src/js/ui/phone/07-patch.js` (1601 linjer)
 
@@ -3547,7 +3552,7 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (419 linjer)
+## `src/js/ui/10i-shop.js` (429 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
@@ -3574,9 +3579,9 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 230 `srvImport(st)`
   - 243 `shopClaim4()`
   - 259 `srvApply(st)`
-  - 344 `shopWords(gifts, thanks)`
-  - 351 `shopClaim()`
-  - 405 `shopStart()`
+  - 349 `shopWords(gifts, thanks)`
+  - 356 `shopClaim()`
+  - 410 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (249 linjer)
 
@@ -3671,20 +3676,19 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **109** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
 - **140** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/10u-hopp.js` (113 linjer)
+## `src/js/ui/10u-hopp.js` (143 linjer)
 
----------- Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md) ----------
+---------- Hopp over resten av ruta: the fast-forward button, the card and the purchase (HO2–HO3, steg 105–106; docs/planer/hopp.md) ----------
 
-- **1** Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md)
-  - 21 `hopUi()`
-  - 26 `hopOpen()`
-  - 32 `hopCard(h, q)`
-  - 60 `hopPress(paid, id, min)`
-  - 83 `hopSpend(id, min)`
-  - 88 `hopFate(d)`
-  - 96 `hopKeptWords(why, min)`
-  - 100 `hopKept(why, min)`
-  - 103 `hopDeliver(id, d)`
+- **1** Hopp over resten av ruta: the fast-forward button, the card and the purchase (HO2–HO3, steg 105–106; docs/planer/hopp.md)
+  - 24 `hopUi()`
+  - 29 `hopOpen()`
+  - 38 `hopCard(h, q)`
+  - 63 `hopHoldTick()`
+  - 82 `hopPress(paid, id, min, quiet)`
+  - 103 `hopUse(id)`
+  - 115 `hopVoid(id, why)`
+  - 127 `hopDeliver(id, d)`
 
 ## `src/js/ui/11-boot.js` (408 linjer)
 

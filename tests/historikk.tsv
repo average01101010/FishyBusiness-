@@ -3284,3 +3284,5 @@
 2026-11-12 18:02	ccr-e7efd74c-rioki0	156ecf33+	skiptest	OK	18	lite	samtidig	
 2026-11-12 18:03	ccr-e7efd74c-rioki0	156ecf33+	boostklokke	OK	49	lite	samtidig	
 2026-11-12 18:03	ccr-e7efd74c-rioki0	156ecf33+	trip2	OK	38	lite	samtidig	
+2026-11-12 18:04	ccr-e7efd74c-rioki0	fd50994b	hopptest	OK	8	lite	samtidig	
+2026-11-12 18:04	ccr-e7efd74c-rioki0	fd50994b	fasittest	OK	38	lite	samtidig	
