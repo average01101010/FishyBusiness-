@@ -431,7 +431,9 @@ function lifeOffTick(c){ if (c.offUntil && S.t >= c.offUntil){ c.off = false; de
 // out of their home port and come back to the exchange after a year or two
 function lifeDepart(c){
   const L = crewLife(c), hp = c.homePort && portById(c.homePort), used = new Set((S.alumni || []).map(a => a.boat)), boat = LIFE_BOATS.find(b => !used.has(b)) || LIFE_BOATS[Math.floor(Math.random() * LIFE_BOATS.length)];
-  const laer = !!(c.laer && !c.laer.done); if (laer) c.laer.done = S.t;   // the apprentice at the end of his time (laerHour)
+  // the apprentice at the end of his time (laerHour's notice); one who leaves before it (unhappy, with the savings) goes as any other and
+  // is no apprentice any more (no badge, and back in the exchange in a year or two like the rest)
+  const laer = !!(c.laer && !c.laer.done && c.opp && c.opp.gr === 'laer'); if (laer) c.laer.done = S.t; else delete c.laer;
   lifeStory(c, 'Kjøpte egen båt, «' + boat + '».', 'Bought a boat of their own, the «' + boat + '».');
   let lk = null; try { lk = typeof lookOf === 'function' && typeof lookKey === 'function' ? lookKey(lookOf(c)) : null; } catch (e){}
   const snap = JSON.parse(JSON.stringify(Object.assign({}, c, {wk:undefined, grudge:{}, earn:[], off:false, offUntil:undefined, trip:undefined, sleepW:undefined, low:0})));
@@ -586,10 +588,11 @@ function alumniReturn(B){
 // clock and LAER.minQ answers) he gives notice by the law (crewNotice 'laer', Ø11.9), goes ashore to a boat of his own (lifeDepart), a
 // named skipper among S.alumni with the apprentice's mark who fishes near his home and hails you, and you get «Læremester» (ACHL 'laer').
 // No line in Kystposten this round: no news kind fits without a migration (docs/planer/oppdrag-2.md). All numbers are start values.
-//   fs: years at sea; p: the chance a day; stay: days in the exchange; days: the apprenticeship; gap: minutes between questions; life: an
+//   fs: years at sea; p: the chance a day; stay: days in the exchange; days: the apprenticeship; maxDays: he goes then also with fewer
+//   than minQ answers (the player seldom aboard, or nothing he could ask about); gap: minutes between questions; life: an
 //   unanswered question runs out; cur: a stream of half a knot (curAt); tide: the tide rising or falling 0.25 m an hour, 70 % of the stream
 //   biteF and targetF (03-simulation.js, 03f-fiske.js) take as full; gale: liten kuling, Bft 6 (10.8 m/s); fcH: the forecast's hours ahead
-const LAER = {fs:10, p:0.25, stay:5, age:[18, 22], days:90, minQ:2, gap:1440, life:1440, up:[0.3, 0.1], cur:0.5 * 1852 / 3600, tide:0.25, gale:10.8, fcH:12};
+const LAER = {fs:10, p:0.25, stay:5, age:[18, 22], days:90, maxDays:180, minQ:2, gap:1440, life:1440, up:[0.3, 0.1], cur:0.5 * 1852 / 3600, tide:0.25, gale:10.8, fcH:12};
 // the questions, each with the answer that is right by the game's own rules first (the card shows them in an order of their own):
 //   strom: the cod bite best at slack water (biteF, after Reubens et al.), the halibut too (targetF); the stream carries food to the edges
 //   garn, line: the fish on a net or a line that stands over a day loses its freshness, and the price with it (finishHaul in 10-gear.js:
@@ -624,7 +627,8 @@ function laerTaken(B){
 function laerMake(){
   const c = genCrew(), r = Math.random;
   c.age = LAER.age[0] + Math.floor(r() * (LAER.age[1] - LAER.age[0] + 1)); c.yrs = 0; c.bi = false; c.biDays = null;
-  Object.assign(c.attr, {erf:1, sjo:r15(1 + r() * 0.8)}); Object.assign(c.gear, {juksa:r15(1.5 + r() * 0.8), line:1, garn:1, teiner:1, sloy:r15(1 + r() * 0.8), is:r15(1 + r() * 0.8), sort:1});
+  const peak = 1 - Math.abs(c.age - 34) / 45, rn = () => r() - 0.5;   // (strength and stamina for his own age, as genCrew draws them)
+  Object.assign(c.attr, {erf:1, sjo:r15(1 + r() * 0.8), styrke:r15(2 + 3 * peak + rn() * 1.5), uth:r15(1.8 + 2.6 * peak + rn() * 1.6)}); Object.assign(c.gear, {juksa:r15(1.5 + r() * 0.8), line:1, garn:1, teiner:1, sloy:r15(1 + r() * 0.8), is:r15(1 + r() * 0.8), sort:1});
   c.traits = c.traits.filter(t => t !== 'grinebiter'); if (!c.traits.length) c.traits = ['laerevillig'];
   c.ask = c.share = LOTT.appr[0]; c.laer = {t0:null, q:[], n:0}; c.until = S.t + LAER.stay * 1440;
   return crewDerive(c);
@@ -648,7 +652,7 @@ function laerSkill(k){ if (k === 'kuling') return ['attr', 'sjo']; if (k === 'ga
 // a running stream where she lies: the tide turning fast (as biteF reads it), or the current of the sounds and the coast
 function laerStream(p, H){
   try { if (Math.abs(tideH(H + 0.5, p) - tideH(H - 0.5, p)) >= LAER.tide) return true; } catch (e){}
-  try { if (typeof curAt === 'function' && curEff(curAt(p, H)).m >= LAER.cur) return true; } catch (e){}
+  try { if (typeof curBoat === 'function' && curBoat(S.boat, H).m >= LAER.cur) return true; } catch (e){}   // (the boat's own, cached for the hour)
   return false;
 }
 // a gale (liten kuling or more) in the forecast for the next hours, and fair weather now
@@ -683,7 +687,7 @@ function laerHour(H){
   for (const c of (S.crew || []).slice()){ if (!laerOn(c)) continue;
     const E = c.laer, prev = E.st; E.st = b.status === 'port' ? 'port:' + b.port : b.status;
     // the apprenticeship is over: notice by the law, ashore at the first harbour after it (crewOppTick, lifeDepart)
-    if (!c.opp && S.t - E.t0 >= LAER.days * 1440 && (E.n || 0) >= LAER.minQ){ if (E.ask) delete E.ask; crewNotice(c, 'laer'); continue; }
+    if (!c.opp && S.t - E.t0 >= LAER.days * 1440 && ((E.n || 0) >= LAER.minQ || S.t - E.t0 >= LAER.maxDays * 1440)){ if (E.ask) delete E.ask; const o = crewNotice(c, 'laer'); if (o) crewLife(c).notice = o.end; continue; }
     if (E.ask){ if (S.t - E.ask.t0 >= LAER.life || c.off || c.opp || c.mobOff){ laerEv('lapse', E.ask.k); delete E.ask; } continue; }
     if (S.tut || (typeof FS_AWAY !== 'undefined' && FS_AWAY) || (typeof lagOf === 'function' && lagOf()) || !meAboard() || c.off || c.opp || c.fly || c.mobOff) continue;
     if (E.qT != null && S.t - E.qT < LAER.gap) continue;
