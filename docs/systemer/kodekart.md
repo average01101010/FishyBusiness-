@@ -3807,29 +3807,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (785 linjer)
+## `src/js/view3d/01-shaders.js` (792 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **131** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-- **248** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **346** the boat's own foam, when she has way on
-- **354** where a slam and the spray land (F3b): four patches, fixed names
-- **356** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 678 `cloudStep(dt)`
-  - 685 `skyFrame(u, Hh, tn, bv)`
-  - 700 `glsl3(src, fs)`
-  - 713 `progStart(vs, fs, attrs, nm = '?')`
-  - 721 `progEnd(P)`
-  - 731 `program(vs, fs, attrs, nm = '?')`
-  - 733 `progWait(list)`
-  - 739 `programA(vs, fs, attrs, nm)`
-  - 740 `buf(data, target, usage)`
-  - 745 `airSet(u, terr)`
-  - 760 `sunT0()`
-  - 767 `attr(loc, b, size)`
-  - 783 `upload(pos, col, idx)`
+- **138** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+- **255** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **353** the boat's own foam, when she has way on
+- **361** where a slam and the spray land (F3b): four patches, fixed names
+- **363** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 685 `cloudStep(dt)`
+  - 692 `skyFrame(u, Hh, tn, bv)`
+  - 707 `glsl3(src, fs)`
+  - 720 `progStart(vs, fs, attrs, nm = '?')`
+  - 728 `progEnd(P)`
+  - 738 `program(vs, fs, attrs, nm = '?')`
+  - 740 `progWait(list)`
+  - 746 `programA(vs, fs, attrs, nm)`
+  - 747 `buf(data, target, usage)`
+  - 752 `airSet(u, terr)`
+  - 767 `sunT0()`
+  - 774 `attr(loc, b, size)`
+  - 790 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
