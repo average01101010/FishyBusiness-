@@ -500,7 +500,11 @@ async def main():
             print(ok(len(A['stats']['days']) == 3 and len(B['stats']['days']) == 3 and abs(kgA - kgB) <= 0.02 * max(1, kgA) and abs(krA - krB) <= 0.03 * max(1, krA)), 'S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little between two runs)', [(kgA, krA), (kgB, krB)])
             # the kg a set gives differs a little between the runs (the density reads the sim tiles as they come in between the frames of an open run), so the minutes are compared, not the kg
             gA = [g[:2] for g in A['gearLogAll']]; gB = [g[:2] for g in B['gearLogAll']]
-            print(ok(same_ev and gA == gB and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps in the same order within five minutes, the same gear set and hauled at the same minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', gA == gB, A['fin'], B['fin']])
+            # (the gear within five minutes too, as the steps: two open runs from the same state set a minute apart now and then, before
+            # anything is closed, D1 05:32 and 05:33 on 12.11.2026 on the working branch's build as well; the open run's frames are not seeded)
+            near = lambda x, y: (x is None) == (y is None) and (x is None or abs(tm(x) - tm(y)) <= 5)
+            same_g = len(gA) == len(gB) and all(near(a[0], c[0]) and near(a[1], c[1]) for a, c in zip(gA, gB))
+            print(ok(same_ev and same_g and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps in the same order within five minutes, the same gear set and hauled within five minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', same_g, A['fin'], B['fin']])
             print('  ni døgn lukket:', C)
             print(ok(C['wall_s'] < 20 and C['trips'] >= 8 and C['on'] and not C['stop'] and C['days'] >= 9), 'S9 nine days closed: played in under 20 s (8 s alone, more with other tests beside it), with a landing every day and the plan still on', [C['wall_s'], C['trips'], C['days']])
             print('  borte:', L['away'])
