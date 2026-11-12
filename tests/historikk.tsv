@@ -3099,3 +3099,4 @@
 2026-11-12 10:47	ccr-e7efd74c-rioki0	d28df95+	hopptest	FEIL	14	lite	alene	FEIL 1. seilt med tida: ved kaia i Vangshamn etter 2000 spillminutter {"st": "sailing", "port": null}
 2026-11-12 11:00	ccr-e7efd74c-rioki0	9ac5cb9	hoppshot	OK	749	3d	alene	
 2026-11-12 11:02	ccr-e7efd74c-rioki0	9ac5cb9+	hopptest	FEIL	7	lite	alene	FEIL 3d. mannskapets slitasje: hoppet 3.13, seilingen 6.19 (innenfor en times slitasje, 3.04)
+2026-11-12 11:04	ccr-e7efd74c-rioki0	3203789+	hopptest	FEIL	6	lite	alene	FEIL 2f. energien din: 77.36 % mot 88.68 % (tapet innenfor 5 %)

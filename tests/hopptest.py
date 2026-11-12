@@ -39,7 +39,7 @@ SETUP = """async (fra) => {
 # the same start each time: the clock, the boat out of the harbour on the route, the tank, the hold, you aboard and awake
 START = """(o) => { const trim = o && o.trim, crew = o && o.crew, fishAt = o && o.fishAt;
   const b = S.boat, H = window.__H, A = portById(H.A);
-  S.t = H.t0; S.tut = 0; S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; S.skip = null; WX_FORCE = {w:3, d:180};   // still weather: the comparison is the hop's, the weather's refusal is checked in 4
+  S.t = H.t0 - H.t0 % 60 + 17; S.tut = 0;   // (17 minutes past the hour: a start on the hour would have crewTick count the hour before the trip in the sailing) S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; S.skip = null; WX_FORCE = {w:3, d:180};   // still weather: the comparison is the hop's, the weather's refusal is checked in 4
   if (S.turer) S.turer.act = [];
   b.status = 'sailing'; b.port = null; b.pos = {x:A.p.x, y:A.p.y}; b.v = 0; b.anch = null; b.hove = null; b.damage = 0;
   delete b.trim; if (trim) b.trim = {k:'turbo', t0:S.t, until:S.t + trim}; applyVessel();

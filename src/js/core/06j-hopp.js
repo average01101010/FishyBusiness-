@@ -93,16 +93,17 @@ function hopDo(q){
   let skipM = 0; if (skipOn()){ skipM = Math.min(n, S.skip.until - S.t); S.skip.until -= skipM; }
   // the crew: the minutes each works (the helm, the galley, the deck: workAssign, 13-work.js, as workMinute counts them in c.wk), and
   // at each whole hour of the clock their fatigue for it as crewTick counts it (Skippertak holds it at nought)
-  const crew = crewAboard(), worked = new Map(crew.map(c => [c, Object.values(c.wk || {}).reduce((a, x) => a + x, 0)]));
+  // (no c.wk yet: crewTick counts the hour as worked, and so does this until the first hour is counted or a minute worked)
+  const crew = crewAboard(), worked = new Map(crew.map(c => [c, Object.values(c.wk || {}).reduce((a, x) => a + x, 0)])), wkSeen = new Set(crew.filter(c => c.wk));
   // each minute where she would have been: the catch, the provisions, the crew's fatigue; each hour the trip's hours at sea, the
   // autoline's hooks and the live snow crab in the tanks (vesselStep and step, minute and hour)
   try {
     for (let m = 0; m < n; m++){
       const t = T0 + m + 1, H = t / 60, p = q.track[Math.min(q.track.length - 1, Math.floor(m / 60))] || p0, hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
       b.pos = p; holdMinute(H, p); provMinute();
-      if (crew.length){ const A = workAssign(); for (const c of crew) if (A.some(x => x.c === c && WORK_ALL.includes(x.st))) worked.set(c, worked.get(c) + 1); }
+      if (crew.length){ const A = workAssign(); for (const c of crew) if (A.some(x => x.c === c && WORK_ALL.includes(x.st))){ worked.set(c, worked.get(c) + 1); wkSeen.add(c); } }
       if (t % 60 === 0){ autoFixHour(); tripHour(); if (BOAT.tank) snoTankHour(H);
-        for (const c of crew){ c.fatigue = m < skipM ? 0 : clamp((c.fatigue || 0) + crewSeaFat(c, false, clamp(worked.get(c) / 60, 0, 1), night), 0, 100); worked.set(c, 0); c.wk = {}; } }
+        for (const c of crew){ c.fatigue = m < skipM ? 0 : clamp((c.fatigue || 0) + crewSeaFat(c, false, wkSeen.has(c) ? clamp(worked.get(c) / 60, 0, 1) : 1, night), 0, 100); worked.set(c, 0); c.wk = {}; wkSeen.add(c); } }
     }
   } finally { b.pos = p0; }
   for (const c of crew){ const w = worked.get(c); c.wk = w > 0 ? {hop:w} : {}; }   // (the hour begun: the next crewTick counts it, as after sailing in)
