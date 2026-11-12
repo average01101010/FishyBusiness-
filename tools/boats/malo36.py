@@ -318,11 +318,14 @@ def wear(p, m, n):
         return [c[i] * g for i in range(3)]
     if nm in ('white', 'roof', 'inner', 'mast', 'cap'):
         # (round 3; the sensor: «slitasjen finnes, men er svak»): a stronger grey-brown grime in patches, darker at the feet of what
-        # stands on the decks or the caps (the splash and the boots), and a little green-grey where the water runs off the roofs' edges
+        # stands on the decks or the caps (the splash and the boots), and grey just under the shelter roof's edge
         v = 0.93 + 0.07 * n3(x * 5.0, y * 5.0, z * 5.0)
-        foot = z_cap(x, side) if abs(y) > ybw(x, side) - 0.12 else dk(x)
+        # (the foot: the deck, or the cap for what stands on it outboard of the bulwark's inside: the shelter's walls; the bulwarks'
+        # own inner faces keep the deck as their foot, so the splash zone runs up from the deck)
+        zd_ = dk(x); foot = zd_
+        if nm != 'inner' and z - zd_ > 0.30 and abs(y) > 1.2 and abs(y) > ycap(x, side) - 0.01: foot = z_cap(x, side)
         v -= (0.20 if nm == 'inner' else 0.13) * ss(0.30, 0.0, z - foot) * (0.7 + 0.5 * n3(x * 8.0, y * 8.0, 4.0))
-        if nm == 'white' and z > SH_TOP - 0.25 and x < SH_X1: v -= 0.06 * ss(0.3, 0.8, n3(x * 13.0, y * 3.0, 2.0))
+        if nm == 'white' and SH_TOP - 0.10 < z < SH_TOP + 0.05 and x < SH_X1: v -= 0.06 * ss(0.3, 0.8, n3(x * 13.0, y * 3.0, 2.0))   # (grey under the roof's edge)
         c = toward(m, (0.55, 0.42, 0.28), 0.22 * ss(0.45, 0.9, n3(x * 7.0, y * 7.0, z * 7.0 + 0.5)))
         return [c[i] * v for i in range(3)]
     if nm in ('deck', 'nonslip'):
@@ -902,7 +905,7 @@ def helm(A, G, fine=True):
     abox(A, 6.17, 7.13, yi - 0.09, yi - 0.006, z0 + 0.50, z0 + 0.92, C['cush'])
     abox(A, 7.30, 7.95, 0.75, yi - 0.004, z0, z0 + 0.82, C['inner']); abox(A, 7.32, 7.93, 0.77, yi - 0.006, z0 + 0.82, z0 + 0.85, C['wood'])
     # (round 3; the sensor: «innsiden er ellers glatt (ingen radio, brytere, listverk)») the VHF on the shelf between the dash and the
-    # windscreen over the engine's panel, its handset on the shelf beside it, the AIS over the plotter; a row of switches with their pilot
+    # windscreen over the engine's panel, its handset on the shelf beside it (the VHF comes with her, VESSELS std; an AIS is bought, so none is modelled in); a row of switches with their pilot
     # lights along the dash's foot; a wooden list round the walls under the roof
     xs0 = DASH[1][0] + 0.02; zs = DASH[1][1]
     def unit(y0_, y1_, h, scr):
@@ -913,7 +916,6 @@ def helm(A, G, fine=True):
     unit(-0.72, -0.50, 0.08, C['lampG'])
     abox(A, xs0 + 0.01, xs0 + 0.19, -0.465, -0.41, zs, zs + 0.045, C['black'])                                 # the handset
     F.atorus(A, (xs0 + 0.04, -0.44, zs + 0.012), (0, 0, 1), 0.03, 0.006, lambda a_: C['black'], seg=12, rseg=4) # its cord
-    unit(-1.15, -0.93, 0.07, C['lampW'])
     pa, pb = dash_pt(0.02, -0.76), dash_pt(0.14, -0.08); pc = (pa + pb) / 2
     obox(A, pc + n * 0.004, V((0, (pb.y - pa.y) / 2, 0)), (dash_pt(1, 0) - dash_pt(0, 0)).normalized() * 0.036, n * 0.004, C['switch'])
     for k in range(10):
@@ -1231,7 +1233,6 @@ def profile_rudder(U, fine=True):
 def underwater(fine=True):
     U = Acc('under')
     abox(U, -0.36, X_KA + 0.06, -0.06, 0.06, -0.62, -0.53, C['af'])                                 # the shoe, from the keel to the rudder's heel (G)
-    acyl(U, (RX_ + 0.02, 0, -0.53), (RX_ + 0.02, 0, -0.47), 0.03, lambda q: C['steel'], seg=10)
     profile_rudder(U, fine)
     acyl(U, (RX_, 0, 0.97), (RX_, 0, z_low(RX_) + 0.08), 0.045, lambda q: C['steel'], seg=10)
     px, py, pz = PROP
@@ -1509,7 +1510,7 @@ def check():
     out.append(('fiskelysene rødt over hvitt %.2f m fra hverandre (vedlegg I 2(i), under 20 m: minst 1 m), det hvite %.2f m over sidelanternene (2(j): minst to ganger avstanden, %.2f)' % (sp, FISH_W - sz, 2 * sp),
                 sp >= 1.0 and FISH_W - sz >= 2 * sp))
     px, py = POLE
-    out.append(('masta med den hvite står %.1f m fra flaggstanga og over den: spillet gir vimpel (båten har mast)' % math.hypot(FM[0] - px, FM[1] - py), math.hypot(FM[0] - px, FM[1] - py) > 1.0 and wz > z_cap(XA) + 1.3))
+    out.append(('masta med den hvite står %.1f m fra flaggstanga og over den: spillet gir vimpel (båten har mast)' % math.hypot(FM[0] - px, FM[1] - py), math.hypot(FM[0] - px, FM[1] - py) > 1.0 and wz > pole_top()[2] + 0.3))
     tip = PROP[2] + PR; low = PROP[2] - PR
     out.append(('propellen Ø %.2f: %.2f m klaring til skroget over, %.2f til skoen under, %.2f til akterstevnen forut, %.2f til roret akter' % (2 * PR, z_low(PROP[0] + 0.1) - tip, low + 0.53, X_KA - PROP[0] - 0.08, PROP[0] - 0.08 - (RX_ + 0.27)),
                 z_low(PROP[0] + 0.1) - tip > 0.05 and low + 0.53 > 0.05 and X_KA - PROP[0] - 0.08 > 0.1 and PROP[0] - 0.08 - (RX_ + 0.27) > 0.1))
