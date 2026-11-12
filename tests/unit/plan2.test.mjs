@@ -61,4 +61,11 @@ export default function (t){
     t.ok(/til kl\. 16:00 /.test(T[0][1]), 'samme dag: «til kl. 16:00» (' + T[0][1] + ')');
     t.ok(/til i morgen kl\. 16:05/.test(T[1][1]) && /until tomorrow at 16:05/.test(T[1][2]), 'etter midnatt: «til i morgen kl. 16:05» (' + T[1][1] + ')');
     t.ok(T[2][1] === 'Dagen er 14 t.' && T[2][2] === 'The day is 14 h.', 'siste linje: «Dagen er 14 t.» (' + T[2][1] + ')'); if (!had) delete globalThis.fmt; }
+  // nets need two aboard (GEAR.garn.crewMin; found in geartest at Ø12 C 08.11.2026: a net plan with you alone went out and could not haul):
+  // the plan waits before it leaves, with the reason, and a line or jig plan goes as before
+  { const {newState, plan2CrewWhy, applyVessel, GEAR} = K; K.set('S', newState()); const S = K.get('S'); S.boat.type = 'sjark'; applyVessel(); S.crew = []; S.me = S.cur;
+    const w = plan2CrewWhy({rig:'garn'});
+    t.ok(w && w.wait && w.k === 'nets' && /to om bord/.test(w.no), 'garnplan, du alene om bord: planen venter med grunnen (' + (w && w.no) + ')');
+    t.ok(plan2CrewWhy({rig:'line'}) === null && plan2CrewWhy({rig:'juksa'}) === null, 'lineplan og juksplan, du alene: går som før');
+    t.ok(GEAR.garn.crewMin === 2, 'garn krever ' + GEAR.garn.crewMin + ' om bord'); }
 }

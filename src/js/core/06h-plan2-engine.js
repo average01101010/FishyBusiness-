@@ -115,6 +115,8 @@ function plan2Start(o){
 function plan2Resume(o){ o.held = null; o.hold = 0; if (o.run){ o.run.wait = null; o.run.trip = null; o.run.replan = true; } }
 // who sails her: null when she can go; {wait} when she waits; else what is missing. The watch asleep in the bunks counts as aboard
 function plan2CrewWhy(o){
+  // nets need two aboard (GEAR.garn.crewMin, 10-gear.js): you alone, the plan waits in port rather than go out and not haul (Ø12 D)
+  if (meAboard() && p2Kind(o) === 'garn' && handsAboard() < GEAR.garn.crewMin) return {wait:true, k:'nets', no:'Garn krever minst to om bord: deg og én til. Planen venter til det er to om bord.', en:'Nets need at least two aboard: you and one more. The plan waits until there are two aboard.'};
   if (meAboard() || p2Lag()) return null;   // (the ocean vessel's teams have a skipper and a mate on the bridge, a watch each, H2b)
   const V = VESSELS[S.boat.type];
   if ((V.crewMax || 0) < 2) return {wait:true, k:'one', no:'Båten har plass til bare én i mannskapet, så planen går bare når du er om bord. Mens du er i land, venter den.', en:'The boat has room for only one crew, so the plan runs only when you are aboard. While you are ashore, it waits.'};
@@ -367,7 +369,8 @@ function plan2Trip(o, D, i0){
 function plan2Go(o, H, i0){
   const r = o.run, D = r.day, b = S.boat;
   const cw = plan2CrewWhy(o); if (cw){ if (cw.wait) plan2Wait(o, cw.k, cw.no, cw.en, H + 1); else plan2Stop(o, cw.k, cw.no, cw.en, cw.fix); return; }
-  if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsFreight() ? 'Lasta tas om bord eller i land. Går kl. ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet på kaia. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsFreight() ? 'The freight goes aboard or ashore. Leaving at ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'The crew finish the work at the quay. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
+  // (the crew's own jobs at anchor too: a string of nets mended while she rests is back aboard before she sets, 10b-gearcare.js)
+  if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsFreight() ? 'Lasta tas om bord eller i land. Går kl. ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet ' + (S.boat.status === 'port' ? 'på kaia' : 'om bord') + '. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsFreight() ? 'The freight goes aboard or ashore. Leaving at ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'The crew finish the work ' + (S.boat.status === 'port' ? 'at the quay' : 'aboard') + '. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
   if (!p2Sno(o)){ const st = plan2RulesWhy(o, H); if (st){   // (the snow crab's day keeps the season and the rules itself: a string held by the ice must still come in, H3c)
       if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, H); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24), at); return; } }
       plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }

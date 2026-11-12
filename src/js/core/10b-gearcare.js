@@ -242,7 +242,8 @@ function careTick(){
   if (!(S.crew || []).length) return;   // only a crew does this by itself; alone, it is yours to order
   // at sea the crew works while it is free, also on a standing plan (Driftsplan 2; Jonas 10.10.2026). Baiting, hooks, line and pot repairs
   // take nothing out of what the next set uses (an unbaited tub is not set anyway), so they go on. Mending takes a string of nets off the
-  // boat until it is done, and the plan's next set may name that string: on a net plan the nets are mended in port
+  // boat until it is done, and the plan's next set may name that string: on a net plan the nets are mended in port, or at anchor while she
+  // rests between days (S.plan is not the plan's then), and the plan's departure waits for the job (06h-plan2-engine.js plan2Go)
   const planOn = !!(S.plan && S.plan.ops), netPlan = planOn && rigOf() === 'garn';
   if (b.status !== 'port'){ if (crewBusyAtSea()) return;
     // at sea the crew also baits the tubs that are ready for it, with the bait aboard
