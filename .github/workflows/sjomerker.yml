@@ -63,10 +63,10 @@ jobs:
           curl -sS --retry 3 -o caps.xml "$W?service=WFS&request=GetCapabilities" || true
           for t in $(grep -o '<wfs:Name>[^<]*</wfs:Name>\|<Name>[^<]*</Name>' caps.xml | sed 's/<[^>]*>//g' | sort -u); do
             n=$(echo "$t" | tr ':/' '__')
-            curl -sS --retry 2 -o "desc_$n.xml" "$W?service=WFS&version=2.0.0&request=DescribeFeatureType&typeNames=$t" || true
-            curl -sS --retry 2 -o "bjorn_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=74.2,18.6,74.6,19.5,EPSG:4326" || true
-            curl -sS --retry 2 -o "janm_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=70.7,-9.2,71.2,-7.8,EPSG:4326" || true
-            curl -sS --retry 2 -o "senja_$n.xml" "$W?service=WFS&version=1.1.0&request=GetFeature&typeName=$t&srsName=EPSG:4326&bbox=69.2,17.9,69.3,18.1,EPSG:4326" || true
+            curl -sS --retry 2 -G -o "desc_$n.xml" "$W" --data-urlencode "typeNames=$t" -d "service=WFS" -d "version=2.0.0" -d "request=DescribeFeatureType" || true
+            curl -sS --retry 2 -G -o "bjorn_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=74.2,18.6,74.6,19.5,EPSG:4326" || true
+            curl -sS --retry 2 -G -o "janm_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=70.7,-9.2,71.2,-7.8,EPSG:4326" || true
+            curl -sS --retry 2 -G -o "senja_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=69.2,17.9,69.3,18.1,EPSG:4326" || true
           done
           ls -la; cd .. && tar czf out/sjomerker-kv.tar.gz kv && gh release upload sjomerker-kilde out/sjomerker-kv.tar.gz --clobber
       # the next free number after the newest sjomerker-N (not the run number: runs that stopped at seen.py count too, and the plan
