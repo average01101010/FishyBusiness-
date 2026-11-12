@@ -248,7 +248,7 @@
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
-    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawCall(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...ownLogo()); }
+    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawCall(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...hullLogo()); }
     gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within

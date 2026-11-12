@@ -149,6 +149,27 @@
   SIGNF.mottak = {x0:-24.0, x1:-20.2, y0:QTOP + 3.4, y1:QTOP + 5.3, z:-(10.0 - 0.08)}; SIGNF.y = {x0:43.0, x1:46.8, y0:QTOP + 2.0, y1:QTOP + 3.9, z:-6.0};
   // a model's own place for it (anchors.sign = [x0, x1, y0, y1, z] in the game's frame, from the next export of the buildings), else the one here
   const signF = (M, k) => { const A = M && M.A && M.A.sign; return Array.isArray(A) && A.length === 5 ? {x0:A[0], x1:A[1], y0:A[2], y1:A[3], z:A[4]} : SIGNF[k]; };
+  // the partner's flag (data.flag): a cloth of 1.8 x 1.2 m in 18 x 10 cells, the hoist at the pole and its top at the origin, waving as
+  // the boat's own ensign does (13-instruments.js updateFlag, with the wave longer and slower for a cloth three times the size): it
+  // hangs along the pole in a calm, lifts from 1.5 m/s and flies straight out from 8, and the wave grows with the wind (env.wind) out
+  // toward the fly. Drawn turned downwind (env.windDir). One mesh for every flag in the frame: the wind is the same over a harbour.
+  // The banner's picture and its measure (SPM) are not touched: the flag was never counted
+  const SFL = {W:1.8, H:1.2, nx:18, ny:10, m:null, t:-1, ph:0, droop:0, amp:0};
+  function signFlag(t){
+    const nx = SFL.nx, ny = SFL.ny, FWm = SFL.W, FHm = SFL.H;
+    if (!SFL.m){ const uv = []; for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++){ const u0 = i / nx, u1 = (i + 1) / nx, v0 = 1 - j / ny, v1 = 1 - (j + 1) / ny; uv.push(u0, v0, u1, v0, u1, v1, u0, v0, u1, v1, u0, v1); }
+      const ubF = buf(new Float32Array(uv)); SFL.m = {pb:buf(new Float32Array(nx * ny * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), ub:ubF, ubF, ubB:buf(new Float32Array(uv.map((v, i) => i % 2 ? v : 1 - v))), n:nx * ny * 6, pos:new Float32Array(nx * ny * 18)}; }
+    if (SFL.t === t) return SFL.m;
+    // the wave's phase adds up frame by frame (t * om would jump with every small change of the wind once t is large)
+    const w = env.wind || 0, droop = SFL.droop = (1 - sstep(1.5, 8, w)) * 1.25, amp = SFL.amp = 0.06 + 0.2 * sstep(2, 16, w), cd = Math.cos(droop), sd = Math.sin(droop);
+    SFL.ph += (3 + w * 0.8) * (SFL.t < 0 ? 0 : Math.min(0.5, Math.max(0, t - SFL.t))); SFL.t = t;
+    const a = SFL.m.pos, ph = SFL.ph, QI = [0, 1, 1, 0, 1, 0], QJ = [0, 0, 1, 0, 1, 1]; let k = 0;   // (a cell's two triangles: its corners 00, 10, 11, 00, 11, 01)
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) for (let q = 0; q < 6; q++){
+      const u = (i + QI[q]) / nx * FWm, v = (j + QJ[q]) / ny * FHm;
+      a[k++] = u * cd; a[k++] = v - FHm - u * sd; a[k++] = amp * (u / FWm) * Math.sin(u * 3.7 - ph + v * 1.1); }
+    gl.bindBuffer(gl.ARRAY_BUFFER, SFL.m.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, a);
+    return SFL.m;
+  }
   function signTex(sp){
     const key = sp.id; if (SIGNV.tex[key]) return SIGNV.tex[key].t;
     const cv = document.createElement('canvas'); cv.width = cv.height = 256; const g = cv.getContext('2d');
@@ -191,8 +212,10 @@
       if (PM && PM.wire){ nSetup(VP); for (const x of [F.x0 + 0.2, F.x1 - 0.2]) drawN(PM.wire, limbM(W([x, QTOP, F.z - 0.06]), W([x, F.y1 + 0.05, F.z - 0.06]), 0.05)); }
       // the partner's flag on a pole of its own beside the banner (data.flag): 7 m, the flag 1.8 x 1.2 m from the pole's top
       if (L.sp.data && L.sp.data.flag){ const px = F.x1 + 1.2, top = QTOP + 7.0; if (PM && PM.wire){ nSetup(VP); drawN(PM.wire, limbM(W([px, QTOP, F.z]), W([px, top, F.z]), 0.06)); }
-        const fk = 'f' + key; if (!SIGNV.q[fk]) SIGNV.q[fk] = texQuad([px + 0.08, top - 1.25, F.z], [px + 1.88, top - 1.25, F.z], [px + 1.88, top - 0.05, F.z], [px + 0.08, top - 0.05, F.z]);
-        drawTexQuad(SIGNV.q[fk], signTex(L.sp), L.M, VP, true, [0, 0, 1]); SIGNV.flags = (SIGNV.flags || 0) + 1; }
+        // the cloth waves downwind from the pole's top (signFlag; it was a stiff plate along the shop's front until steg 44)
+        // (the name reads the right way from both sides: seen from behind, the picture is turned)
+        const fp = W([px, top - 0.05, F.z]), wd = env.windDir || [0, -1], FM = model(fp[0], fp[1], fp[2], Math.PI / 2 - Math.atan2(wd[0], -wd[1]), 0, 0), fm = signFlag(now / 1000), back = FM[8] * FM[12] + FM[9] * FM[13] + FM[10] * FM[14] > 0;
+        fm.ub = back ? fm.ubB : fm.ubF; drawTexQuad(fm, signTex(L.sp), FM, VP, true, [0, 0.6, 0]); SIGNV.flags = (SIGNV.flags || 0) + 1; SFL.back = back; }
       if (Math.hypot(L.o[0] - eye[0], L.o[1] - eye[2]) > 150) continue;
       const ok = L.sp.id + '@' + key + ':' + Math.round(L.o[0]) + ',' + Math.round(L.o[1]); SIGNV.cur.push({id:L.sp.id, ok, F, M:L.M, key});
       // hidden behind something (a boat, the tank, a shed): the occlusion query of the last frames says (signOcc); under the UI (the

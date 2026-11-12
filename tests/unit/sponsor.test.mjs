@@ -18,5 +18,16 @@ export default function (t){
   t.eq(spOf('item', 'vhf').sponsor.logo, null, 'og en logo som ikke er https');
   t.eq(spUrl('https://example.org/side?a=1'), 'https://example.org/side?a=1&fra=detstorebla', 'lenken ut sier hvor den kom fra');
   t.eq(spUrl('http://example.org'), null, 'og bare til https');
+  // a partner's paint design (steg 44): look on paint, worn as b.liv.sp over the boat's own paint, only the paint shop's own colours
+  const {spPaints, spPaintOf, spPaintLiv, spWorn, spPaintIn, spPaintLogo} = K;
+  spSet(SP_TEST);
+  t.eq(spPaints().length, 1, 'testsponsoren har ett malingsdesign'); t.eq(spOf('look', 'top').data.tp, 'oilskin', 'og jakka i Garderoben er en annen plassering');
+  t.eq(spWorn({hull:'rod', sp:-9}).id, -9, 'et design båten har på, finnes mens avtalen er aktiv'); t.eq(spWorn({hull:'rod'}), null, 'ingen uten sp'); t.eq(spWorn({sp:-5}), null, 'en annen plassering er ikke et malingsdesign');
+  t.eq(spPaintOf(null), null, 'uten nummer: ingen'); t.eq(spPaintOf(''), null, 'tomt nummer: ingen'); t.eq(spPaintOf('-9').id, -9, 'nummeret som tekst (fra knappen)');
+  t.eq(spPaintIn('h:rod;m:T.1.LK;x:-9').id, -9, 'de andres kode: x:-9'); t.eq(spPaintIn('h:rod;x:-99'), null, 'et ukjent nummer gir ingenting'); t.eq(spPaintIn('h:rod;xx:-9'), null, 'og bare nøkkelen x');
+  t.eq(spPaintLogo(spPaintOf(-9)).kind, 'g', 'uten logo_url: det lagde merket');
+  // (the colours themselves are checked against the paint shop's palette in tests/sponsor2test.py: the palette is vessel3d.js', not the core's)
+  spSet([{id:6, kind:'look', target:'paint', data:{name:'X', hull:'#ff00ff'}, sponsor:{name:'X'}}]); t.eq(spPaints().length, 0, 'et design uten en eneste farge er ikke et design'); t.eq(spWorn({sp:6}), null, 'og kan ikke stå på en båt');
+  t.eq(spSet([]), 0, 'avtalen slutter'); t.eq(spWorn({hull:'rod', sp:-9}), null, 'og designet er borte fra båten');
   t.eq(spSet(null), 0, 'en tom liste fjerner alt');
 }

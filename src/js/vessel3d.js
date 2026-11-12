@@ -635,7 +635,9 @@ function modelLiv(L){
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (!v) continue; if (k === 'lakk'){ o.lakk = true; any = true; } else { const c = palRGB(v); if (c){ o[k] = c; any = true; } } }
   return any ? o : null;
 }
-function hullLiv(b){ return modelLiv(PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv); }
+// (a partner's design worn over her own paint, core/09l-sponsor.js spWorn: the paint is the design's while its agreement is active)
+// (a design that gives this type nothing leaves her in her own paint)
+function hullLiv(b){ const L = PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv, W = typeof spWorn === 'function' ? spWorn(L) : null; return (W && modelLiv(spPaintLiv(W, b.type))) || modelLiv(L); }
 function livKey(liv){ return liv ? ['hull', 'house', 'deck', ...DESIGNS].map(k => liv[k] ? (liv[k] === true ? 1 : liv[k].join(',')) : '').join('|') : ''; }
 // the designs that cut the hull's triangles (a change of these is a new shape; the others are only colours)
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
@@ -644,20 +646,22 @@ function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]
 const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
-  const L = (b && b.liv) || {}, out = [];
+  const L0 = (b && b.liv) || {}, W = typeof spWorn === 'function' ? spWorn(L0) : null, L = W ? Object.assign(spPaintLiv(W, b.type), {flag:L0.flag}) : L0, out = [];   // (a partner's design: its colours for a game from before it, and 'x:<id>' for the rest)
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
-  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
+  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') && !(W && spPaintLogo(W)) ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
+  if (W) out.push('x:' + W.id);
   return out.join(';');
 }
 // another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)
 function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); return m ? +m[1] : 0; }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
-function livParse(s){
+function livParse(s, type){
+  const W = typeof spPaintIn === 'function' ? spPaintIn(s) : null, WL = W && modelLiv(spPaintLiv(W, type)); if (WL) return WL;   // a partner's design, from the list of the active ones, as her type wears it
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
     if (k === 'hull') L.hull = v; else if (k === 'house' || k === 'deck') L[k] = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
@@ -1249,7 +1253,8 @@ function nameInkLight(rgb){
 function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
 const NPCMOD = {};
 // liv: one of LIVERY for the local fleet, or another player's paint as it came with her position (livStr)
-function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, typeof liv === 'string' ? livParse(liv) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+// (a paint code with a partner's design, 'x:<id>', is read against the list of active agreements, so the model is kept apart by whether it was found: a list that comes later, or an agreement that ends, gives a new model)
+function npcModel(type, lod, liv){ const str = typeof liv === 'string', k = type + '|' + lod + '|' + liv + (str && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : ''); if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, str ? livParse(liv, type) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit, kit){
   if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)

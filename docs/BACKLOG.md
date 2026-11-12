@@ -4,6 +4,14 @@
 
 ## Spillarbeid som venter (26.10.2026)
 
+- **Ø5 rest c, M7/M8-resten (steg 44, 11.11.2026, Jonas' økt, grenen `ccr-360badbd-1zzqz7`; «M7/M8-resten (steg 44)» i `docs/systemer/handel-og-steder.md`, statusen i `docs/planer/butikker-og-sponsorer.md`):** sponsede design i Malerverkstedet, flagget som vaier og `anchors.sign` i byggene er bygd; CSV-importen er lagt bort. Ingenting av det synes uten en avtale (bare med `#sptest`). Det som er antatt, svakt eller ikke prøvd:
+  - **Sponsorens logo fra `logo_url` på skroget er ikke prøvd med et ekte bilde.** Testsponsoren har ingen logo, så testene ser det lagde merket (`sym`, `txt`). Bildet hentes med CORS som bannerets; en logo fra en server uten CORS-hoder tegnes ikke, verken på banneret eller på skroget, og det sies ikke fra noe sted. Før første avtale: legg logoen et sted som sender `Access-Control-Allow-Origin`, og se den i spillet.
+  - **En annen spillers båt med designet er ikke sett i 3D.** `sponsor2test` leser koden (`x:<id>`) tilbake til maling og merke, men to klienter ved siden av hverandre er ikke prøvd. At `pos_put` slipper `x:` gjennom, er lest i migreringen (20261105140000_liv_owned.sql: ukjente nøkler beholdes), ikke prøvd mot databasen.
+  - **Båtens eget flagg kan hoppe når vinden endrer seg** (funnet i gjennomgangen av steg 44, ikke rettet: utenfor steget): `updateFlag` i `view3d/13-instruments.js` regner bølgens fase som `t * om`, der `om` følger vinden, så en liten endring i vinden ganges med tida siden start og gir et hopp i duken. Sponsorflagget legger sammen fasen bilde for bilde (`SFL.ph`); det samme bør gjøres der, og de to nettene kan dele én funksjon.
+  - **Designet gir gratis det som ellers koster** (ripestripe, totone, vannlinjestripe, lakk) så lenge avtalen varer, og bare i partnerens farger. Det er planens V7 (sponsede plagg gratis) lest for maling; Jonas bør vite det før en avtale prises.
+  - **Admin har ikke eget skjema for designet:** data skrives som JSON i det tredje feltet («Klær og maling», målet `paint`). Admin nekter en farge utenfor paletten og et design uten farger; listen over fargene står to steder (`HULLPAL` i `vessel3d.js` og i `src/admin/index.html`) og må holdes lik for hånd.
+  - **Flaggets bølge er øyemål** (18 × 10 ruter, bølgelengde rundt 1,7 m, utslag 6–26 cm etter vinden), ikke målt mot noe. Vinden er spillets vind ved båten (`env.wind`, `env.windDir`), ikke ved stanga; i en havn med le står flagget som ute på fjorden. Flaggstanga på kaia ved butikken (modellens eget norske flagg) er fortsatt en stiv plate.
+  - **Byggene er eksportert uten kontrollbilder** (`fast`): modellene er sett i spillet (bildene i `docs/okter/2026-11-11-44/`), ikke i Blender-rendringene. `lod0` har noen titalls punkter færre eller flere enn før (skyggen som bakes).
 - **Ø13 K1, `hgt10` i spillet på Senja (steg 33b, 11.11.2026, Jonas' økt, grenen `claude/zen-curie-qoa35d`; rullet ut til testutgaven 11.11.2026, bare Senja; Jonas: «vi tar det med alikevell. jeg synes forskjellen er merkbar»; K2 venter på målingen hans på nettbrettet; `docs/planer/kartrelease-o13.md` kap. 5 «K1», `kart-og-terreng.md` 4.6f, `3d-verden.md` 4.11a2):** laget `fin` er bygd og virker, men bildene fra Husøy, Finnsnes, Bøvær og Vangshamn viser ingen forskjell fra båten (`docs/okter/2026-11-11-33b/`).
   - **Ikke prøvd:** lavt sollys og snø (små former synes best der), et nettbrett eller en telefon (alt er målt på PC med programvare-GPU), Ultra, og spillet selv på testutgaven (manifestet der har laget og de fire pakkene, og pakken svarer; ingen har spilt det der ennå).
   - **Nærnettet koster 3,5 ms mer per nett på Høy** (37 → 40–41 ms for høydene), litt over grensa på 3 ms i startmeldingen. Ikke trappet ned til bare Ultra, fordi steget stoppet; tas i K2 om Jonas svarer B.
@@ -992,13 +1000,16 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - `oppdrag()` i `ui/phone/02-havn-last-agn-ordre.js` (linje 33, `salg('best')`) kalles ikke lenger: bestillingene tas i dokka (Bygd, Oppdrag), og Salgslaget har ikke fanen. Funnet i Ø2 05.11.2026 da `ordtest` ble skrevet om.
 
 - **M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).
-- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, og utkastet fra juni 2022 ble lest 07.11.2026; målingen og rapporten etter det ble bygd i steg 66 08.11.2026 (over).
 - **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
 
 
 - **`S.owned.push` i `addVessel` (`core/03-simulation.js:42`)** er dødt (Ø7 06.11.2026): `S.owned` er bare merket migreringen i `11-boot.js` leser, og kjøpet i telefonen legger ikke lenger til. Tas bort når H2 er ferdig med fila.
 - **To ting heter `inFrame`** (Ø7 06.11.2026): verdens `inFrame(p)` (`core/01-world.js`, har kartet noe der) og hendenes `inFrame(Fr, v)` i G3 (`view3d/09-landing-deck.js`, brukt i `08-plants.js`), som skygger for den første i hele 3D-koden. `paintPlotter` bruker nå `inMapFrame`. Når H2 er ferdig med `09-landing-deck.js`: gi hendenes et eget navn (`toFrame`) og ta bort `inMapFrame`.
+
+## Strøket 11.11.2026 (steg 44, Ø5 rest c: M7/M8-resten, gren `ccr-360badbd-1zzqz7`)
+
+- **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, og utkastet fra juni 2022 ble lest 07.11.2026; målingen og rapporten etter det ble bygd i steg 66 08.11.2026 (over). **Gjort 11.11.2026 i steg 44:** sponsede design i Malerverkstedet (plasseringen `look` på `paint`), flagget som vaier, og byggene eksportert på nytt med `anchors.sign`. CSV-importen er lagt bort til Jonas vil ha meglerbåter igjen (planen 10.6). Det som er antatt og ikke prøvd, står øverst under «Ø5 rest c».
 
 ## Strøket 11.11.2026 (Ø14 F3, feltnavnene i teksten)
 
