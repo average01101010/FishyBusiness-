@@ -65,8 +65,9 @@ function crewSim(src){
     // (OB10 runde 4, 12.11.2026: the gear out of the map as the model's own things are, vessel3d.js deckMap: a cell is barred where
     // anything stands in it, not only where its middle is. With 6 cm about the box and cells of DM_C, 0.2 m, the crew walked and stood
     // with their middles 6 cm off the tubs and half the body in them, in every boat (crewclip, kitHits). The last number is the padding,
-    // so kitHits and kitAt measure against the gear itself)
-    const GP = tight ? 0.06 : 0.06 + DM_C / 2, G = ST.G, K = G.kit || {}, V = VESSELS[ST.type] || {}, box = (x, z, w, l, ry) => out.push([x, z, w / 2 + GP, l / 2 + GP, ry || 0, GP, 1]);
+    // so kitHits and kitAt measure against the gear itself. Under 9 m, the open boats, the tight padding: on the snekke the gutting
+    // station is the only place left for the one setting, and the tubs fill her deck; the breaks keep out of the gear there, kitAt)
+    const GP = tight || (VESSELS[ST.type] || {}).len < 9 ? 0.06 : 0.06 + DM_C / 2, G = ST.G, K = G.kit || {}, V = VESSELS[ST.type] || {}, box = (x, z, w, l, ry) => out.push([x, z, w / 2 + GP, l / 2 + GP, ry || 0, GP, 1]);
     // (OB4: the plant's tubs set out on her deck while she lands, landSlots)
     if (!noLand && landPlant()) for (const q of landSlots()) out.push([q[0], q[2], 0.56, 0.66, q[3] || 0, 0.06, 1]);   // (the hands work at them, close, by design: their padding as before)
     if (!src && S.pgear){ const g = rigGear();
@@ -232,7 +233,10 @@ function crewSim(src){
       for (const kind of ['line', 'garn']){ const O = setOver(kind); if (O && O.man) need.push(O.man.k); }
       if (need.some(k => MT.ok(k) && !ST.M.ok(k))){ ST.KB = KT; ST.M = MT; }
       // (and while she sets: the one setting has a place with the wide padding, or the tight one stands)
-      else { const gs = S.pgear ? rigGear().set : null; if (gs && !setPlace(gs, '-')){ const MW = ST.M, KW = ST.KB; ST.M = MT; ST.KB = KT; if (!setPlace(gs, '-')){ ST.M = MW; ST.KB = KW; } } } }
+      // (a place of his own: on the snekke the only one the wide padding left was the gutting station, and he stood looking on while
+      // someone gutted there)
+      else { const gs = S.pgear ? rigGear().set : null, stn = need.map(k => ST.M0.at(k)), own = q => !!q && !stn.some(w => { const u = ST.M0.at(q.k); return Math.hypot(w[0] - u[0], w[2] - u[2]) < SEP; });
+        if (gs && !own(setPlace(gs, '-'))){ const MW = ST.M, KW = ST.KB; ST.M = MT; ST.KB = KT; if (!own(setPlace(gs, '-'))){ ST.M = MW; ST.KB = KW; } } } }
     for (const a of A) a.path = null;   // (the ways are found again over the new map)
   }
 
@@ -348,9 +352,9 @@ function crewSim(src){
     return null; }
   // the cold: where his break has him standing, beating his arms and rubbing his hands, when that is clear of everything there
   // (else at the nearest rail place where it is: he does not stand still and freeze because a stay is in the way of his arm)
-  function frysPlace(p, ctx){ const g = idleGoal(p, ctx); if (!g || g.inside || !STILL3[g.task]) return g; if (!poseHits('cold', g.k, g.h, g.rail, g.off)){ g.task = 'cold'; return g; }
+  function frysPlace(p, ctx){ const g = idleGoal(p, ctx); if (!g || g.inside || !STILL3[g.task]) return g; if (!poseHits('cold', g.k, g.h, g.rail, g.off) && !kitAt(g.k, g.off)){ g.task = 'cold'; return g; }
     const id = p.c ? 'c' + p.c.id : 'me', M = ST.M, p0 = M.at(g.k), L = (ST.PT.lean || []).filter(l => M.ok(l.k) && livePart(l.k) && free(l.k, id)).sort((a, b) => { const A1 = M.at(a.k), B1 = M.at(b.k); return Math.hypot(A1[0] - p0[0], A1[2] - p0[2]) - Math.hypot(B1[0] - p0[0], B1[2] - p0[2]); });
-    for (const q of L) for (const way of [false, true]){ const f = fitPlace('cold', q, way); if (!poseHits('cold', q.k, f.h, f.rail, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off, task:'cold', until:1e12, idle:true}; }
+    for (const q of L) for (const way of [false, true]){ const f = fitPlace('cold', q, way); if (!poseHits('cold', q.k, f.h, f.rail, f.off) && !kitAt(q.k, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off, task:'cold', until:1e12, idle:true}; }
     return g; }
   const STILL3 = {look:1, lean:1, back:1};
   // what a hand at the quay work does this moment (the place is the same through the lifts; the pose follows the hook)
@@ -660,7 +664,7 @@ function crewSim(src){
     if (!M.live){ M.live = new Set(); for (const [nm, v] of Object.entries(ST.PT)) if (nm !== 'lean') for (const q of [].concat(v)) if (q && q.k != null && M.ok(q.k)) M.live.add(C[q.k]); }
     return M.live.has(C[k]); }
   function idleGoal(p, ctx, force){
-    const PT = ST.PT, T = p.c && p.c.traits || [], id = p.c ? 'c' + p.c.id : 'me', leans = (PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!leans.length) return PT.sloy ? {k:PT.sloy.k, h:0, task:'look'} : null;
+    const PT = ST.PT, T = p.c && p.c.traits || [], id = p.c ? 'c' + p.c.id : 'me', leans = (PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!leans.length) return PT.sloy ? {k:clearOfKit(PT.sloy.k, id), h:0, task:'look'} : null;
     if (!force && p.idle){ const k0 = p.idle, PL = places(), k = k0 === 'quay' ? 'chat' : k0 === 'worry' ? 'look' : k0;
       if (k === 'gear'){ const q = PL.tubAt ? at(PL.tubAt(0), 1.2) : null; if (q && !poseHits('gear', q.k, q.h || 0)){ q.task = 'gear'; q.idle = true; q.until = 1e12; return q; } }
       // under way a smoker stands aft (the aftmost places on the rail), out of the wind of her own speed
@@ -700,7 +704,7 @@ function crewSim(src){
     if (!M.ok(g.k) || !free(g.k, id)){ const p = ST.M0.at(g.k); let best = -1, bd = 1.0;
       const i0 = g.k % M.nx, j0 = (g.k - i0) / M.nx, R = Math.ceil(1.0 / M.c);
       for (let dj = -R; dj <= R; dj++) for (let di = -R; di <= R; di++){ const i = i0 + di, j = j0 + dj; if (i < 0 || j < 0 || i >= M.nx || j >= M.nz) continue; const k = j * M.nx + i; if (!M.ok(k)) continue;
-        const q = M.at(k), d = Math.hypot(q[0] - p[0], q[2] - p[2]); if (d < bd && free(k, id)){ bd = d; best = k; } }
+        const q = M.at(k), d = Math.hypot(q[0] - p[0], q[2] - p[2]) + (kitAt(k) ? 0.5 : 0); if (d < bd && free(k, id)){ bd = d; best = k; } }   // (a cell with gear in the body last, OB10 runde 4)
       if (best >= 0) g.k = best; }
     TAKEN.set(g.k, id); return g;
   }
@@ -722,9 +726,18 @@ function crewSim(src){
       // over the rail at 23 knots for a minute and a half, as if jigging)
       const keep = g && a.kind === kind && !(g.idle && g.until < t) && !(g.idle && ctx.underway && !ctx.open) &&!(g.inside === 'in' && g.until && g.until < t && p.st === 'pause' && !ctx.underway) && !(ctx.away && g) && (g.inside || ST.M.ok(g.k));
       if (keep){ if (a.slot >= 0) (used[kind] || (used[kind] = new Set())).add(a.slot); if (!g.inside) TAKEN.set(g.k, id); } else pend.push([p, a, kind]); }
+    // (OB10 runde 4: the one setting chooses first, and the gutter yields where the two places are one: on the snekke the only place
+    // for the one setting line, with the tubs' true width, is the gutting station, and he stood looking on while someone gutted there)
+    const si = pend.findIndex(([p]) => p.role === 'sett'), yieldA = si >= 0 ? A.filter(a => a.st === 'sloy' && a.goal && !a.goal.inside && !pend.some(q => q[1] === a)) : [];
+    if (si > 0) pend.unshift(pend.splice(si, 1)[0]);
+    for (const a of yieldA) if (TAKEN.get(a.goal.k) === a.id) TAKEN.delete(a.goal.k);
     for (const [p, a, kind] of pend){ let n = 0; const U = used[kind] || (used[kind] = new Set()); while (U.has(n)) n++; U.add(n);
       const was = a.goal, there = was && a.mode !== 'walk' && !a.sub && a.cell === was.k;
       a.goal = fitWork(claim(goalOf(p, ctx, n), a.id), a.id); a.kind = kind; a.slot = n; a.path = null; a.sub = null; a.door = 0;
+      if (p.role === 'sett' && yieldA.length){ const G0 = a.goal && !a.goal.inside ? ST.M.at(a.goal.k) : null;
+        for (const b of yieldA.splice(0)){ const B = ST.M.at(b.goal.k), bp = ctx.WA.find(q => (q.c ? 'c' + q.c.id : 'me') === b.id);
+          if (G0 && bp && Math.hypot(B[0] - G0[0], B[2] - G0[2]) < SEP){ b.goal = fitWork(claim(goalOf(bp, ctx, b.slot >= 0 ? b.slot : 0), b.id), b.id); b.path = null; b.sub = null; }
+          else TAKEN.set(b.goal.k, b.id); } }
       if (there && PROP[was.task] && a.mode === 'at' && a.blend > 0.6 && !(a.goal && a.goal.task === was.task)) a.put = {task:was.task, t0:t, g:was};
       if (there && relieves(was) && (a.mode === 'at' || a.mode === 'helm')) a.was = was; else a.was = null; }
     // the old one stays at the hauler or the helm until the one taking over is there (or for 25 s at most)
@@ -872,6 +885,16 @@ function crewSim(src){
     return n; }
   // (and one place: the body there, moved off by off, in the kit; for the breaks, idlePlace)
   function kitAt(k, off){ if (src || !ST.M0.ok(k)) return false; const p = ST.M0.at(k); return inKit(p[0] + (off ? off[0] : 0), p[2] + (off ? off[1] : 0)) > 0; }
+  // (the nearest free cell to k, a short walk from it, with no gear in the body: the place to stand when the rail has none, OB10 runde 4;
+  // on the snekke with her nets aboard the gutting station stood 8 cm from the net tub)
+  // (and clear of the work: 0.7 m from the stations, and while she sets 1.3 m from where the gear goes over, so it never takes the work's place)
+  function clearOfKit(k, id){ if (!kitAt(k)) return k; const M = ST.M, p = ST.M0.at(k), PT = ST.PT || {}; let best = k, bd = 1.6;
+    const work = ['haling', 'is', 'door'].map(nm => PT[nm]).filter(q => q && q.k != null && ST.M0.ok(q.k)).map(q => ST.M0.at(q.k)), gs = S.pgear && !src ? rigGear().set : null;
+    const O = gs ? setOver(gs) : null;   // (while she sets, the whole place he works in: 1.3 m round where the gear goes over)
+    for (let c = 0; c < M.nx * M.nz; c++){ if (!M.ok(c) || kitAt(c) || !free(c, id)) continue; const q = M.at(c); if (work.some(w => Math.hypot(w[0] - q[0], w[2] - q[2]) < 0.7)) continue;
+      if (O && Math.hypot(O.ov[0] - q[0], O.ov[2] - q[2]) < 1.3) continue;
+      const d = Math.hypot(q[0] - p[0], q[2] - p[2]) + Math.abs(q[1] - p[1]) * 2; if (d < bd){ bd = d; best = c; } }
+    return best; }
   function kitHits(){ if (!ready() || src) return null; const out = [];
     for (const a of visible()){ const o = walkOff(a), n = inKit(a.x + o[0], a.z + o[1]); if (n) out.push({id:a.id, mode:a.mode, task:a.task || (a.goal && a.goal.task) || null, n}); }
     return out; }
@@ -881,7 +904,7 @@ function crewSim(src){
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
   return {tick, agents, visible, anchorOf, on, setPlan, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
     // (for the view: nothing of the boat between two points in her frame, and the first thing of her under a point, its height)
-    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the
