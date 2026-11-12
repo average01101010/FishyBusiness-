@@ -15,7 +15,7 @@ WANT = [('nord', 69.65, 18.96), ('ost', 67.28, 14.37), ('sor', 60.39, 5.32), ('v
 FORMATS = [('staaende', 800, 1280), ('liggende', 1280, 800)]
 if os.environ.get('KYST_MERKE_FMT'): FORMATS = [f for f in FORMATS if f[0] == os.environ['KYST_MERKE_FMT']]
 if os.environ.get('KYST_MERKE_ONLY'):   # one kind in one format, to look at the framing
-    WANT = [w for w in WANT if w[0] == os.environ['KYST_MERKE_ONLY']]; FORMATS = FORMATS[1:]
+    WANT = [w for w in WANT if w[0] == os.environ['KYST_MERKE_ONLY']]; FORMATS = FORMATS[-1:]
 
 async def main():
     async with async_playwright() as p:
@@ -50,7 +50,7 @@ async def main():
                   S.t = Math.round((Date.UTC(2027, 6, 14, 0) + 12.5 * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }""", mk)
                 await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(15000)
                 await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
-                await pg.evaluate("(y) => { const c = G3._debug.cam; c.helm = false; c.dist = 10; c.pitch = 0.1; c.yaw = y; }", 0.55 if W > H else 0.28)   # upright the view is narrow; await pg.wait_for_timeout(6000)
+                await pg.evaluate("([d, y]) => { const c = G3._debug.cam; c.helm = false; c.dist = d; c.pitch = 0.1; c.yaw = y; }", [10, 0.55] if W > H else [24, 0.3])   # upright the view is narrow: farther back; await pg.wait_for_timeout(6000)
                 await pg.screenshot(path=os.path.join(OUT, f'merke_{TAG}_{fname}_{k}_3d.png'), timeout=300000)
                 # the chart plotter on the mark, about 600 m across
                 await pg.evaluate("openPlotter()"); await pg.wait_for_timeout(2000)
