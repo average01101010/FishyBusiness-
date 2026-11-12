@@ -2,8 +2,11 @@
 listings of M4 are gone), so without other players' boats the page is empty and says the yard sells new ones at full price (B5, B6); the
 yard's Båthandel says the same and sells every type new as before; the moment a boat is bought (M5) is unchanged; Rederi puts a boat out
 for sale and has her delivered by the yard's skipper; an old save's commission listing (M4) is withdrawn with a line in the log. The sales
-between players themselves are megletest's. Pictures in both formats (megler_*.png, kjop_*.png). Prints OK or FEIL."""
-from _env import boot
+between players themselves are megletest's. Pictures in both formats (megler_*.png, kjop_*.png). Prints OK or FEIL.
+Steg 28 (12.11.2026): on the boat you are on, the moment paints her name onto the hull letter by letter and hoists her ensign in the 3D
+model while the camera turns round her, and the card keeps the type, the year and the quay (G3.buying, BUYM.in3d). That part opens its
+own page with 3D (also under KYST_LITE: run.py has markettest in DRAWS3D, so it runs alone), kjop3d_*.png in both formats."""
+from _env import boot, GAME_TUT
 import asyncio, json
 from playwright.async_api import async_playwright
 
@@ -14,6 +17,49 @@ def check(ok, what, extra=''):
 
 FIT = """(() => { const d = document.querySelector('%s'); if (!d) return ['none']; const r = d.getBoundingClientRect();
   return [...d.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 1 && !e.closest('svg'); }).map(e => e.tagName + '.' + e.className).slice(0, 5); })()"""
+
+
+BM = """(() => { const e = document.getElementById('buyMoment'); if (!e) return null; const n = e.querySelector('.bm-name'), sub = (e.querySelector('.bm-sub') || {}).textContent || '';
+  return {name:n ? n.getAttribute('aria-label') : null, letters:e.querySelectorAll('.bm-name span').length, flag:!!e.querySelector('.bm-flag svg'), skip:!!e.querySelector('.bm-skip'),
+    drawer:document.getElementById('drawer').hidden, in3d:BUYM.in3d, label:e.getAttribute('aria-label'), sub:/ · \\d{4}/.test(sub) && sub.indexOf(VESSELS[S.boat.type].name.no) === 0 ? sub : ''}; })()"""
+
+
+async def until(pg, cond, ms):
+    try: await pg.wait_for_function(cond, timeout=ms); return True
+    except Exception: return False
+
+
+async def moment3d(br, errs):
+    """the moment on the boat you are on, in 3D: the name on the hull letter by letter, the ensign up its pole, the camera round her"""
+    for fmt, vp in (('liggende', {'width': 1280, 'height': 800}), ('staaende', {'width': 800, 'height': 1280})):
+        pg = await br.new_page(viewport=vp); pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME_TUT + '#notut')
+        await pg.evaluate("(() => { S.boat.status = 'port'; S.unnamed = false; S.boatName = 'Havbris'; G3.show(true); })()")
+        await until(pg, "G3.isActive()", 60000); await pg.wait_for_timeout(3000)
+        # (the card's own 15 s are held off here, and the moment's clock is held by G3.buyFix: SwiftShader takes seconds over a frame, and
+        # a screenshot longer; the 15 s and «Hopp over» on time are checked without 3D above)
+        await pg.evaluate("(() => { const st = window.setTimeout; window.setTimeout = (f, ms, ...r) => ms === BUYM.DUR ? 0 : st(f, ms, ...r); BUYM.show(); window.setTimeout = st; })()"); await pg.wait_for_timeout(200)
+        a = await pg.evaluate("({card:document.getElementById('buyMoment') ? true : false, in3d:BUYM.in3d, painting:G3.painting, b:G3.buying})")
+        bm = await pg.evaluate(BM)
+        check(a['in3d'] and a['painting'] and a['b'] is not None and bm and not bm['letters'] and not bm['flag'] and bm['sub'] and 'ved kaia i' in bm['sub'],
+              '3D, %s: kjøpsøyeblikket på båten du er om bord i tegner i modellen, kameraet går rundt henne, og kortet har typen, året og kaia' % fmt, [a, bm])
+        # half-way through the name (its clock held there, and two frames drawn): some letters on, not all; the flag still down the pole
+        n = a['b']['len'] if a['b'] else 8
+        async def at(s):
+            await pg.evaluate("G3.buyFix(%f)" % s); f0 = await pg.evaluate("G3.buying ? G3.buying.frame : 0")
+            await until(pg, "G3.buying && G3.buying.frame >= %d" % (f0 + 2), 60000); return await pg.evaluate("G3.buying")
+        m = await at(0.6 + 0.22 * n * 0.5)
+        await pg.screenshot(path='kjop3d_navn_%s.png' % fmt)
+        check(bool(m) and 0 < m['drawn'] < m['len'] and m['fy'] is not None and m['fy'] < -0.5,
+              '3D, %s: navnet males på skroget bokstav for bokstav (%s av %s), flagget nede på stanga' % (fmt, m and round(m['drawn'], 1), m and m['len']), m)
+        # the name on, and the flag at the top of its pole
+        e = await at(0.6 + 0.22 * n + 0.4 + 3.2)
+        await pg.screenshot(path='kjop3d_flagg_%s.png' % fmt)
+        check(bool(e) and e['drawn'] == e['len'] and e['fy'] == 0, '3D, %s: hele navnet står på skroget, og flagget er oppe' % fmt, e)
+        await pg.evaluate("(() => { const b = document.querySelector('#buyMoment .bm-skip'); if (b) b.click(); })()"); await pg.wait_for_timeout(200)
+        z = await pg.evaluate("({card:!!document.getElementById('buyMoment'), b:G3.buying, painting:G3.painting})")
+        check(not z['card'] and z['b'] is None and not z['painting'], '3D, %s: «Hopp over» lukker med en gang og gir kameraet tilbake' % fmt, z)
+        await pg.close()
 
 
 async def main():
@@ -53,9 +99,11 @@ async def main():
         check(btn and af['type'] == 'snekke' and af['n'] == b0['n'] and af['paid'] > 0, 'verftet selger nytt til full pris, med den gamle båten i bytte', [btn, af])
         # the moment (M5): the name painted on, the flag, the camera round her, and «Hopp over»
         await pg.wait_for_timeout(400)
-        bm = await pg.evaluate("(() => { const e = document.getElementById('buyMoment'); return e ? {name:e.querySelector('.bm-name').getAttribute('aria-label'), letters:e.querySelectorAll('.bm-name span').length, flag:!!e.querySelector('.bm-flag svg'), skip:!!e.querySelector('.bm-skip'), drawer:document.getElementById('drawer').hidden} : null; })()")
-        check(bm and bm['name'] == await pg.evaluate("S.boatName") and bm['letters'] == len(bm['name']) and bm['flag'] and bm['skip'] and bm['drawer'],
-              'kjøpsøyeblikket: navnet males bokstav for bokstav, flagget, skuffen lukket', bm)
+        bm = await pg.evaluate(BM)
+        nm0 = await pg.evaluate("S.boatName")
+        # (with the 3D view up the name and the flag are in the model, the 3D part below; without it the card has them, as before)
+        check(bm and bm['skip'] and bm['drawer'] and bm['sub'] and (bm['name'] == nm0 and bm['letters'] == len(nm0) and bm['flag'] if not bm['in3d'] else not bm['letters'] and nm0 in bm['label']),
+              'kjøpsøyeblikket: navnet males bokstav for bokstav, flagget, typen, året og kaia, skuffen lukket', bm)
         await pg.wait_for_timeout(5500); await pg.screenshot(path='kjop_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(600); await pg.screenshot(path='kjop_staaende.png')
         fitm = await pg.evaluate(FIT % '#buyMoment')
@@ -64,6 +112,11 @@ async def main():
         check(not fitm and await pg.evaluate("!document.getElementById('buyMoment')"), '«Hopp over» lukker det med en gang, og ingenting stikker ut stående', fitm)
         await pg.evaluate("BUYM.show()"); await pg.wait_for_timeout(15600)
         check(await pg.evaluate("!document.getElementById('buyMoment')"), 'kjøpsøyeblikket lukker seg selv etter 15 sekunder')
+        # a boat bought for the fleet (not the one you are on): the card as before, the name and the flag on it, nothing in 3D
+        fl = await pg.evaluate("""(() => { const v = newVesselObj('skiff', S.boat.port); BUYM.show(v); const e = document.getElementById('buyMoment');
+          const r = {in3d:BUYM.in3d, letters:e.querySelectorAll('.bm-name span').length, name:vget(v, 'boatName'), flag:!!e.querySelector('.bm-flag svg'), b:typeof G3 !== 'undefined' ? G3.buying : null};
+          BUYM.close(true); return r; })()""")
+        check(not fl['in3d'] and fl['letters'] == len(fl['name']) and fl['flag'] and not fl['b'], 'et kjøp til flåten viser kortet som før: navnet bokstav for bokstav og flagget på kortet', fl)
 
         # your other boat in Rederi: «Legg ut til salgs» and delivery to where you are
         r = await pg.evaluate("""(() => { const yard = PORTS.find(p => portServices(p).verft && p.id !== S.boat.port && dist(p.p, S.boat.pos) / NM < 150 && dist(p.p, S.boat.pos) / NM > 10);
@@ -83,7 +136,10 @@ async def main():
         await pg.screenshot(path='megler_rederi_staaende.png')
         fit4 = await pg.evaluate(FIT % '#phone')
         check(not fit4, 'Rederi-appen får plass stående', fit4)
-        print('sidefeil', errs)
         await br.close()
+        b3 = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
+        await moment3d(b3, errs)
+        print('sidefeil', errs)
+        await b3.close()
 
 asyncio.run(main())
