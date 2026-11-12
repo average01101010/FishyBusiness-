@@ -26,7 +26,7 @@ LOGS = os.path.join(HERE, 'out', 'logs')
 os.makedirs(LOGS, exist_ok=True)
 
 # draw 3D: they look at the 3D view itself (frames, camera, quays, cranes, pumps)
-D3 = ['fintest', 'seabedtest', 'sunshot', 'havshot', 'kaishot', 'signcoast', 'signtest', 'sp44shot', 'trytest', 'gfxtest', 'benchshot', 'profshot', 'f1test', 'havnshot', 'lifeshot', 'wetshot', 'vindshot', 'treeshot', 'wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'skoddeshot', 'deckshot', 'workshot', 'brotest', 'svalbardtest', 'qdowntest', 'h2dshot', 'hull3d', 'h3dshot', 'skumkant', 'stromshot']
+D3 = ['fellessjo', 'fintest', 'seabedtest', 'sunshot', 'havshot', 'kaishot', 'signcoast', 'signtest', 'sp44shot', 'trytest', 'gfxtest', 'benchshot', 'profshot', 'f1test', 'havnshot', 'lifeshot', 'wetshot', 'vindshot', 'treeshot', 'wakeshot', 'anchor3d', 'skytest', 'jigshot', 'naust3dtest', 'pubtest', 'helmjit', 'anchorlight3d', 'saytest', 'yardtest', 'dbg23o', 'trackfollow', 'tral3d', 'seatrytest', 'sitetest', 'coast3d', 'ultratest', 'camtest', 'moortest', 'landtest', 'bunkertest', 'heattest', 'vessel3d', 'unittest', 'sea3d', 'teleport3d', 'lighttest', 'kinotest', 'haultest', 'vectest', 'potshot', 'aurorashot', 'skoddeshot', 'deckshot', 'workshot', 'brotest', 'svalbardtest', 'qdowntest', 'h2dshot', 'hull3d', 'h3dshot', 'skumkant', 'stromshot']
 LITE = ['stromtest', 'skagtest', 'sor62test', 'gatetest', 'jukseboot', 'kotest', 'driftsplan2kyst', 'megletest', 'kvotemarkedtest', 'boostklokke', 'draftlooptest', 'bootgtest', 'skipdrift', 'haillplass', 'colregtest', 'rttest', 'istest', 'lybtest', 'havtur', 'snokrabbetest', 'krabbefabrikktest', 'autolinetest', 'fabrikktest', 'havplantest', 'sonetest', 'uketest', 'kystkarttest', 'havflaate', 'etikett', 'sponsor2test', 'sponsortest', 'markettest', 'nettest', 'itemcardtest', 'kystvakttest', 'lagtest', 'eventtest', 'boktest', 'lotttest', 'skattetest', 'driftsplan2test', 'driftsplan2ui', 'driftsplan2map', 'driftsplan2gui', 'slidertest', 'anchorswing', 'selfcrew', 'crewclip', 'regmarktest', 'dockrow', 'hulltest', 'dyntest', 'crewlifetest', 'crewwalk', 'walktest', 'tabtest', 'navbarshot', 'skiptest', 'synctest', 'installtest', 'looktest', 'hbtest', 'naustclear', 'rectest', 'ptowtest', 'seaworktest', 'hailtest', 'gbtest', 'sharetest', 'friendtest', 'searchtest', 'savestest', 'caretest', 'yardupgtest', 'jigalongtest', 'heatgeartest', 'anchortest', 'plantsaytest', 'cashfxtest', 'autonavtest', 'placetest', 'sidetab', 'guidetest', 'stedertest', 'icestep', 'heatpick', 'peergear', 'turtest', 'posttest', 'merketest', 'fartstidtest', 'maletest', 'climtest', 'sqltest', 'cloudtest', 'errtest', 'guesttest', 'kjoptest', 'regnrtest', 'r4test', 'tutdrift', 'tutfull', 'worldtest', 'pushtest', 'feedbacktest', 'hudtest', 'obstest', 'marktest', 'rorbutest', 'admintest', 'tut', 'starttest', 'seasontest', 'uishots', 'quotatest', 'rulestest', 'npctest', 'havntest', 'keeptest', 'tidetest', 'trip2', 'docktest', 'booktest', 'decktest', 'geartest', 'loretest', 'tattest', 'towtest', 'airtest', 'fleet2test', 'fleet3test', 'opsowntest', 'routetest', 'naustleia',
         'shoptest', 'selltest', 'timetest', 'worktest', 'vesseltest', 'adminbuytest', 'fuelcal', 'bunktest', 'lanterntest', 'streaktest', 'fixtest', 'hailltest', 'harbourtest', 'simday', 'calib', 'kvtest', 'progweek', 'seatest', 'stabtest', 'projtest', 'boottest', 'maptest', 'mig2test', 'charttest', 'helmtest', 'soundtest', 'sleeptest', 'pwatest', 'bktest', 'ordtest', 'kartlegging', 'roetest', 'mannskapshot']
 # they measure milliseconds, so they run alone at the end, when nothing else takes the CPU
@@ -43,7 +43,11 @@ READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seate
 # (teleport3d: twelve places since H1b R3, minutes each at 0.3 frames a second in SwiftShader; 900 s reached six, Ø2 05.11.2026)
 LONG = {'stromshot': 2400, 'stromtest': 1500, 'havplantest': 2400, 'driftsplan2kyst': 1800, 'teleport3d': 3600, 'driftsplan2gui': 1200, 'signcoast': 1800, 'signtest': 1500, 'sp44shot': 2700, 'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 4500, 'sea3d': 4500, 'vectest': 1500, 'svalbardtest': 1800, 'havntest': 1500, 'lybtest': 1500, 'havtur': 4800, 'havshot': 3000, 'kinotest': 1500, 'heattest': 3600, 'trackfollow': 3300, 'vindshot': 2400, 'wetshot': 2400, 'treeshot': 1500, 'lifeshot': 2400, 'havnshot': 2400, 'wakeshot': 1500, 'hull3d': 3300, 'skumkant': 1500}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
-DRAWS3D = {'tut'}
+DRAWS3D = {'tut', 'markettest'}   # (markettest: the moment a boat is bought, in 3D on its own page; steg 28)
+# steg 28: the counties of the ports for the media card (tools/regions/fylke.py, tests/unit/regions.test.mjs) and the pictures of the
+# formats (tests/mediekortshot.py, a tool run by hand against the demo build, so in none of the lists), which build.mjs puts in the admin page
+COVER_28 = {'tools/regions/fylke.py':['admintest'], 'tools/regions/fylke.json':['admintest'], 'tests/unit/regions.test.mjs':['admintest'], 'tests/mediekortshot.py':[],
+            'docs/sponsor/format.json':['admintest'], **{'docs/sponsor/format-%s.jpg' % _n:['admintest'] for _n in ('banner', 'design', 'vare', 'annonse', 'jakke')}, 'src/js/view3d/25-controls.js':['markettest'], 'src/js/view3d/13-instruments.js':['markettest'], 'src/js/view3d/24-cinema.js':['markettest'], 'build.mjs':['admintest']}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py':['legmemotest'], 'tests/bootgtest.py':['bootgtest'], 
@@ -80,7 +84,7 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
   'src/js/view3d/17f-near.js':['dbg23o', 'lifeshot'], 'src/data/naer.b64':['lifeshot'],
   'src/js/view3d/17e-life.js':['dbg23o', 'lifeshot'], 'src/data/dyr.b64':['lifeshot'], 'src/data/fuglefjell.json':['lifeshot'],
   'src/js/view3d/17d-vind.js':['dbg23o', 'vindshot'], 'src/data/vind.b64':['vindshot'], 'src/data/vind.json':['vindshot'],
-  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot', 'skumkant', 'stromshot'], 'src/js/view3d/14b-fft.js':['dbg23o', 'sea3d'], 'src/js/core/03k-hav-fft.js':['dbg23o'], 'tests/stromshot.py':['stromshot'], 'tests/stromtest.py':['stromtest'], 'tests/skumkant.py':['skumkant'],
+  'src/js/view3d/14-sea.js':['sea3d', 'seatrytest', 'wakeshot', 'skumkant', 'stromshot'], 'src/js/view3d/14b-fft.js':['dbg23o', 'sea3d', 'fellessjo'], 'tests/fellessjo.py':['fellessjo'], 'src/js/core/03k-hav-fft.js':['dbg23o'], 'tests/stromshot.py':['stromshot'], 'tests/stromtest.py':['stromtest'], 'tests/skumkant.py':['skumkant'],
   'src/js/view3d/13-instruments.js':['heattest', 'dbg23o', 'wetshot'],
   'src/js/view3d/12-skiff.js':['dbg23o', 'deckshot', 'wetshot'],
   'src/js/view3d/11-bunker.js':['bunkertest'],
@@ -186,6 +190,7 @@ COVER['supabase/migrations/20261111120000_shop_back.sql'] = ['sqltest', 'kjoptes
 # its own address without no3d and drew every 3D frame; with no3d under KYST_LITE it takes 150 s)
 COVER['supabase/migrations/20261111140000_haill_srv.sql'] = ['sqltest', 'fasittest']; COVER['tests/unit/haillfasit.test.mjs'] = []
 LITE += ['fasittest']
+for _f, _t in COVER_28.items(): COVER[_f] = COVER.get(_f, []) + [x for x in _t if x not in COVER.get(_f, [])]
 COVER['tests/fasittest.py'] = ['fasittest']; COVER['tests/kjoptest.py'] = COVER.get('tests/kjoptest.py', ['kjoptest']) + ['fasittest']
 for _f in ('src/js/ui/09-hand-fishing.js', 'src/js/ui/09b-pub.js', 'src/js/ui/10j-paint.js', 'src/js/core/09f-merker.js', 'src/js/ui/10i-shop.js'): COVER[_f] = COVER.get(_f, []) + ['fasittest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
@@ -256,6 +261,9 @@ COVER['src/js/view3d/02-mesh-terrain.js'] = COVER.get('src/js/view3d/02-mesh-ter
 COVER['src/js/core/01b-mapdata.js'] = COVER.get('src/js/core/01b-mapdata.js', []) + ['fintest']
 # Ø11.8 (11.11.2026): the speed limits and the cardinal marks (core/05e-sjovei.js fartAt, farvLook; the chart's layer in ui/03a-chart.js)
 LITE += ['farttest']
+LITE += ['avtaleshot']   # Ø11.9 the employment agreement in the Mannskap app (steg 27)
+COVER['tests/avtaleshot.py'] = ['avtaleshot']; COVER['tests/unit/arbeidsavtale.test.mjs'] = []
+for _f in ('src/js/ui/phone/13-mannskap-bank-meld.js', 'src/js/core/04-crew.js', 'src/js/ui/phone/14-act.js'): COVER[_f] = COVER.get(_f, []) + ['avtaleshot']
 COVER['tests/farttest.py'] = ['farttest']; COVER['src/data/fart.json'] = ['farttest']; COVER['src/data/fart-r.b64'] = ['farttest']; COVER['tools/fart/fart.py'] = []; COVER['src/js/ui/03a-chart.js'] = COVER.get('src/js/ui/03a-chart.js', []) + ['farttest']
 for _f in ('src/js/core/05e-sjovei.js', 'src/js/core/14b-sikkerhet.js', 'src/js/ui/03-map.js', 'src/js/ui/04-panels-instruments.js'): COVER[_f] = COVER.get(_f, []) + ['farttest']
 
