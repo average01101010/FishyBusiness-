@@ -1611,7 +1611,7 @@ CLOSE = [('c_helm', (6.15, -0.45, WFL() + 1.72), (7.5, -0.85, WFL() + 1.05), 30,
          ('c_deck', (11.0, -0.01, 19.0), (11.0, 0, 4.5), 30, False, False),
          ('K6p', (XM + 55.0, 42.0, 7.0), (XM, 0, 5.0), 100, True, True),
          # (round 2: the whole boat at night with her mast's top in the frame, from the bow and from astern, the work lights on; and the table)
-         ('K6n', (XM + 34.0, -26.0, 8.0), (XM + 0.5, 0, 7.4), 50, True, True), ('K6a', (XA - 26.0, 19.0, 8.0), (XM - 1.0, 0, 7.2), 50, True, True),
+         ('K6n', (XM + 34.0, -26.0, 8.0), (XM + 0.5, 0, 7.4), 50, True, True), ('K6a', (XA - 26.0, 19.0, 8.0), (XM - 1.0, 0, 7.2), 50, True, True), ('K6b', (XM + 30.0, 30.0, 8.0), (XM + 0.5, 0, 7.4), 50, True, True),
          ('c_table', (11.6, -0.5, _zc + 1.65), (9.3, -3.0, _zc + 0.75), 26, False, False), ('c_pen', (3.0, 2.6, _zc + 3.4), (0.5, -0.4, _zc), 26, True, False)]
 NIGHT_SUN = 0.06
 NIGHT_FLOODS = [((WXF + LEAN + 0.24, y, WR() - 0.08), (1, 0, -0.9)) for y in (-1.1, 1.1)] + [((MX - 0.24, -0.22, 9.5), (-1, -0.2, -0.8)), ((FUN[0] - 0.60, 0.0, BD() + 1.75), (-1, 0, -0.8)),
