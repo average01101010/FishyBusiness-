@@ -66,6 +66,7 @@ export default function (t){
   { const {newState, plan2CrewWhy, applyVessel, GEAR} = K; K.set('S', newState()); const S = K.get('S'); S.boat.type = 'sjark'; applyVessel(); S.crew = []; S.me = S.cur;
     const w = plan2CrewWhy({rig:'garn'});
     t.ok(w && w.wait && w.k === 'nets' && /to om bord/.test(w.no), 'garnplan, du alene om bord: planen venter med grunnen (' + (w && w.no) + ')');
+    t.ok(plan2CrewWhy({rig:'garn'}, false) === null, 'garnplan, du alene, ingen garn igjen å sette eller trekke i dag (hjem, til mottaket): går som før');
     t.ok(plan2CrewWhy({rig:'line'}) === null && plan2CrewWhy({rig:'juksa'}) === null, 'lineplan og juksplan, du alene: går som før');
     t.ok(GEAR.garn.crewMin === 2, 'garn krever ' + GEAR.garn.crewMin + ' om bord'); }
 }
