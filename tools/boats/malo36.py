@@ -311,7 +311,6 @@ def wear(p, m, n):
         # streaky, strongest just under the strake and fading toward the water
         c = [g, g, g]; ru = 0.0
         for x0, l in FREE: ru = max(ru, run_under(x, z, x0, l, z_deck(x) + 0.03, 0.95, side))
-        ru = max(ru, 0.8 * run_under(x, z, 10.0, 0.5, z_rub(x) + 0.1, 0.70, side))
         if ru > 0: c = toward(m, (0.30, 0.18, 0.11), min(1.0, 0.55 * ru)); c = [c[i] * g for i in range(3)]   # (dull: a bright rust read as a lamp at night, the sensor)
         return c
     if nm == 'af':
@@ -859,13 +858,15 @@ def wheelhouse(fine=True):
         nn = V((1.0, 0.0, -LEAN)).normalized()
         P_ = lambda u, v, o: V((8.45 + LEAN * v, WH_YC + u, WH_SILL + v)) + nn * o
         for u in (-0.74, 0.0, 0.74):
-            piv = P_(u, 1.09, 0.012); end = P_(u + 0.13, 0.30, 0.03); ax = (end - piv); L_ = ax.length; ax.normalize(); cr = nn.cross(ax).normalized()
-            acyl(A, piv - nn * 0.012, piv + nn * 0.035, 0.028, lambda q: C['black'], seg=10)                       # the spindle's boss
-            acyl(A, piv + nn * 0.035, piv + nn * 0.05, 0.014, lambda q: C['steel'], seg=8)                          # its nut
-            obox(A, piv + nn * 0.042 + ax * (L_ * 0.5), ax * (L_ * 0.5), cr * 0.013, nn * 0.006, C['steel'])       # the arm (stainless: a black one is lost against the dark glass)
-            bc = piv + ax * (L_ * 0.58) + nn * 0.018
-            obox(A, bc, ax * (L_ * 0.40), cr * 0.011, nn * 0.010, C['steel'])                                       # the blade's frame
-            obox(A, bc - nn * 0.014, ax * (L_ * 0.40), cr * 0.004, nn * 0.006, C['rubber'])                          # its rubber on the glass
+            # (the pane sits 0.03 m in from the wall's face inside its frame, 0.026 proud: the arm leaves the wall over the frame and
+            # runs down to the glass, the blade's rubber on it)
+            piv = P_(u, 1.09, 0.040); end = P_(u + 0.13, 0.30, -0.004); ax = (end - piv); L_ = ax.length; ax.normalize(); cr = nn.cross(ax).normalized()
+            acyl(A, piv - nn * 0.040, piv + nn * 0.012, 0.028, lambda q: C['black'], seg=10)                       # the spindle's boss
+            acyl(A, piv + nn * 0.004, piv + nn * 0.016, 0.014, lambda q: C['steel'], seg=8)                         # its nut
+            obox(A, piv + ax * (L_ * 0.5), ax * (L_ * 0.5), cr * 0.013, nn * 0.006, C['steel'])                    # the arm (stainless: a black one is lost against the dark glass)
+            bc = piv + ax * (L_ * 0.58) - nn * 0.012
+            obox(A, bc, ax * (L_ * 0.40), cr * 0.011, nn * 0.008, C['steel'])                                       # the blade's frame
+            obox(A, bc - nn * 0.013, ax * (L_ * 0.40), cr * 0.004, nn * 0.005, C['rubber'])                          # its rubber on the glass
     objs.append(A.done(35, tint=wear))
     return objs, glass, crown
 
@@ -1041,7 +1042,7 @@ def forecastle(A, fine=True):
     for x, y in ((9.75, 0.82), (9.75, -0.82)): bitts(A, x, y, z_bk(x) + camber(x, y))
     for x in (6.95, 8.75):
         for sg in (1, -1): F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.26, C['steel'])
-    for y in (0.25, -0.90): vent(A, (9.55, y, z_bk(9.55) + camber(9.55, y) + 0.004))
+    for x, y in ((9.55, 0.25), (9.35, -0.90)): vent(A, (x, y, z_bk(x) + camber(x, y) + 0.004))   # (round 4: the starboard one 0.2 m aft, clear of the bitts' foot plate at 9.61)
     # the steps up from the walkway beside the wheelhouse to the forecastle, to starboard: three treads on brackets against the house
     x0, x1, y0, y1 = STEPS; zd0, zd1 = z_deck(6.0), z_bk(X_BAKK)
     for k in (1, 2, 3):
@@ -1191,7 +1192,7 @@ def rig(A, crown, fine=True):
     # the cross beams between the side beams' inner faces, a little shallower than them (round 3: they ran through the side beams with
     # their tops in the same plane, which showed black squares at the corners), and one at the aft mast, which the side beams reach
     for x in (-0.66, 0.28, ax - 0.02): abox(A, x - 0.042, x + 0.042, -GANT_Y + 0.044, GANT_Y - 0.044, GZ - 0.046, GZ + 0.046, m)
-    # the flag staff in its socket on the outside of the port beam (POLE; round 3, off the transom's cap), raked aft, a truck on top
+    # the flag staff in its socket on the outside of the port beam (POLE; round 3, off the transom's cap; round 4 straight up), a truck on top
     px, py = POLE; pt = pole_top()
     abox(A, px - 0.05, px + 0.05, GANT_Y + 0.044, py - 0.028, GZ - 0.04, GZ + 0.04, C['steel'])
     acyl(A, (px, py, GZ - 0.07), (px, py, GZ + 0.10), 0.03, s, seg=10 if fine else 5)
@@ -1601,7 +1602,7 @@ def posts():
         out.append(('lyets akterstolpe ' + ('bb' if sg > 0 else 'sb'), (px - 0.03, px + 0.03, py - 0.03, py + 0.03)))
     out.append(('lyets vegg akter for åpningen sb', (SH_X0, HAUL[0], -sh_y(SH_X0), -sh_y(SH_X0) + SHT)))
     out.append(('åpningens forkant sb', (HAUL[1], SH_X1, -sh_y(HAUL[1]), -sh_y(HAUL[1]) + SHT)))
-    for sy in (GANT_Y, -GANT_Y): out.append(('galgestolpe ' + ('bb' if sy > 0 else 'sb'), (xp - 0.045, xp + 0.045, sy - 0.045, sy + 0.045)))
+    for sy in (GANT_Y, -GANT_Y): out.append(('galgestolpe ' + ('bb' if sy > 0 else 'sb'), (xp - 0.07, xp + 0.07, sy - 0.07, sy + 0.07)))   # (with its foot plate on the cap)
     out.append(('aktermasta', (AM[0] - 0.08, AM[0] + 0.08, AM[1] - 0.08, AM[1] + 0.08)))
     return out
 # where the game set the crew in the scenes of tests/ombord.py (12.11.2026, CREW3D.visible() with mode 'at', on its 0.2 m grid; a

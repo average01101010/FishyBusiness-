@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from _env import boot, HERE
 ROOT = os.path.dirname(HERE)
 from playwright.async_api import async_playwright
-SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, scene === 'teiner' ? 7 : 2, 12, hour) - EPOCH) / 6e4);
+SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, scene === 'teiner' || scene === 'teinetrekk' ? 7 : 2, 12, hour) - EPOCH) / 6e4);
   const md = document.getElementById('modal'); if (md) md.hidden = true;
   S.settings.hudMin = true; S.settings.plotMin = true; S.settings.hudOff = true; if (typeof renderHud === 'function') renderHud();
   b.type = t; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; delete S.unnamed; S.equip = {}; S.jobs = []; S.cargo = []; b.gop = null; S.sets = []; S.hold = []; S.pgear = newPGear(); b.rig = 'juksa';
