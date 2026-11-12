@@ -787,6 +787,14 @@ body.v3d.helm #helmThr,body.v3d.helm #helmJoy{display:block}
 .ov.kino.on{background:#c0392b!important;color:#fff;border-color:#fff}
 .ov.kino2{top:calc(env(safe-area-inset-top,0px) + 114px);right:10px;height:34px;padding:0 12px;border-radius:12px;font:700 13px var(--sans)}
 .ov.kino2[hidden],body.vplot .ov.kino,body.vplot .ov.kino2{display:none}
+/* hopp over resten av ruta (HO2, ui/10u-hopp.js): the fast-forward button under the camera and the cinema, only while a route is sailed;
+   not in the chart, the cinema's clean view, or while the cinema's own button is in its place */
+.ov.hop{top:calc(env(safe-area-inset-top,0px) + 114px);right:10px;width:46px;height:46px;border-radius:14px}
+.ov.hop[hidden],body.vplot .ov.hop,body.kino-clean .ov.hop,#kinoHud:not([hidden])~.ov.hop{display:none}
+#hopFade{position:fixed;inset:0;background:#05101a;opacity:0;pointer-events:none;z-index:30;transition:opacity .35s ease}
+#hopFade.on{opacity:1;pointer-events:auto}
+#modal .hop-kr{font:700 22px var(--sans);margin:12px 0 4px}
+#modal .hop-test{font-size:12px;opacity:.7;margin-top:0}
 body.kino-clean #hud,body.kino-clean #gps3d,body.kino-clean #miniPlot,body.kino-clean #plotMin,body.kino-clean #compass3d,body.kino-clean #dock,body.kino-clean #dockInfo,body.kino-clean #dockFan,body.kino-clean #phoneFab,body.kino-clean #logbook,body.kino-clean #camBtn,body.kino-clean #helmThr,body.kino-clean #helmJoy,body.kino-clean #helmAct,body.kino-clean #modeBtn,body.kino-clean #instrBtn,body.kino-clean #labels,body.kino-clean .attr{display:none!important}
 body.kino-clean .ov.kino,body.kino-clean .ov.kino2{opacity:.35}
 /* Kystposten's lighthouse picture (ui/05f-turer.js): the shutter at the right side's middle, its flash, and the measuring board */
@@ -1722,8 +1730,8 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
    bli forvirrende for spillerne om knappene er helt borte»; «Svake, trykk virker»): they stand where they stood and a tap on one works
    at once (the touch that wakes the calm is taken first, ui/10c-dock.js calmTouch). The strip, the little chart, the compass, the phone
    and the deck log's tab are not touched */
-#dock > .dk-b,.ov.cam,.ov.kino,.ov.kino2{transition:opacity .25s ease}
-body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov.cam,body.calm .ov.kino,body.calm .ov.kino2{opacity:.2;transition:opacity .6s ease}
+#dock > .dk-b,.ov.cam,.ov.kino,.ov.kino2,.ov.hop{transition:opacity .25s ease}
+body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov.cam,body.calm .ov.kino,body.calm .ov.kino2,body.calm .ov.hop{opacity:.2;transition:opacity .6s ease}
 /* «Båten og utstyret» (OPP4, ui/phone/10-fartoy.js kitCard; Jonas 07.11.2026 on the first version: «så mye tekst … Det må gjøres mer
    intuitivt»): a row per ladder with the picture, the name and the dots, one short gain in green, and the price as the button to the
    page it is bought on (away from the place only the price; full a tick); where it is bought once per place; two tiles of numbers */

@@ -543,15 +543,12 @@ function sjvNearMiss(n, R, clr){
   if (S.nearMiss.length > 40) S.nearMiss.splice(0, S.nearMiss.length - 40);
 }
 
-// the coastal ship's length, beam and draught (m), as her AIS card has them (03-map.js aisInfo); a ferry carries her own (L, B and T
-// by her crossing's size class, 05b-ferje.js)
-const SJV_SIZE = {coastal:[121.8, 21.0, 4.9]};
 // npcStates' one call (05-vessels.js): the classes, a look now and then, and the NPCs that give way where they are now. A track or a
 // single boat asked for (only) is the shared course as the clock has it
 function colregNpc(H, out, only){
   if (only || !S || !S.boat || !S.boat.pos) return out;
   const gear = new Set(); for (const g of NPCGEAR) gear.add(g.id);
-  for (const n of out) if (!n.cls){ if (n.L == null && SJV_SIZE[n.type]){ const q = SJV_SIZE[n.type]; n.L = q[0]; n.B = q[1]; n.T = q[2]; }
+  for (const n of out) if (!n.cls){   // (the coastal route's ships and the ferries carry their own length, beam and draught, 05b-ferje.js)
     if (n.coast && !n.kv && n.st === 'fishing' && gear.has(n.id)) n.gear = true; n.cls = colregCls(n); }
   const live = sjvLive();
   if (live && (H - SJV.at >= 0.0015 || H < SJV.at - 0.01)) sjvEval(H, out);

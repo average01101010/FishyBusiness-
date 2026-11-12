@@ -703,8 +703,14 @@ function stockAt(p, sp, H){
   if (!S || !S.stock) return b; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return b * v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
-// the other players (the shared world V2)
+// the other players (the shared world V2).
+// The haill's extra fish is not the sea's (step 103, Jonas 12.11.2026, «Bare bestanden»: «Haill-fisken trekkes ikke fra ruta, slik den
+// garanterte første fangsten gjør i dag. Kjøperen får det samme som før»): every player's catch that comes here was multiplied by
+// luck(sp) where it was taken (fish() in 05-vessels.js, the jig game's bites in ui/10-rod-acts.js, soakHour in 10-gear.js with the
+// fish in the crab pots, snoSoak in 10d-snokrabbe.js, all in the same minute or hour as this, so luck reads the same), and the stock, the layers of their own and the cells that go to the others (wq().c) give only
+// the catch without it. A new caller whose catch has no luck in it passes npc or divides by nothing; tests/unit/haillbestand.test.mjs
 function takeStock(p, kg, sp, npc){
+  if (!npc) kg /= luck(sp);
   // (a species with a layer of its own first: the Greenland halibut, and the snow crab with stkK, H3a)
   if (sp && SPECIES[sp].stk){ const n = SPECIES[sp].stk; if (!S[n]) S[n] = {}; const k = stockIdx(p); stkSet(S[n], k, Math.max(0.1, stkGet(S[n], k) - kg / (STK.K * (SPECIES[sp].stkK || 0.4)))); return; }
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }

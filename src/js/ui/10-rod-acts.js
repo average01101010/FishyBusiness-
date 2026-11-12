@@ -42,6 +42,10 @@ window.JIGG = (() => {
       const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp:f.sp, kg, t:performance.now()});
     }
     debt = Math.min(0, left); got = {n, m, kg:kgSum}; S.jigN = (S.jigN || 0) + 1;
+    // the bites are the sea's fish, as the jig's own are (step 103, Jonas 12.11.2026: «A: Jukse-spillet trekkes»; before, they were taken
+    // from nothing): from the stock by takeStock (which leaves out the haill's extra), only the stock's own share as fish() takes it (not
+    // the guide's skrei patch), so they also go to the others and count in the catch the server holds the landings against (catch_put, HS5)
+    if (kgSum > 0){ const p = S.boat.pos; let D = 0, T = 0; for (const sp of SP){ D += density(sp, p, H); T += tutBonus(sp, p); } takeStock(p, kgSum * (D > 0 ? Math.max(0, (D - T) / D) : 1)); }
   }
   function set(s2, now){ st = s2; t0 = now; }
   // not with jigging machines aboard: then you tend them (Jonas 06.10.2026)
@@ -74,7 +78,8 @@ window.JIGG = (() => {
   function start(){ if (on || !ok()) return; on = true; window.jigActive = true; el.hidden = false; due = 0; debt = 0; got = null; miss = 0; set('jig', performance.now()); schedule(performance.now()); last = 0; raf = requestAnimationFrame(loop); render(performance.now()); }
   function stop(){ on = false; window.jigActive = false; el.hidden = true; if (raf) cancelAnimationFrame(raf); raf = 0; }
   return {start, stop, toggle(){ on ? stop() : start(); }, ok, state:() => ({on, st, due, debt, mult, got}), grade, kgps,
-    _bite(){ tNext = 0; }, _hit(off){ if (st !== 'bite') return null; due = due || 10; mult = grade(off); land(mult); set('res', performance.now()); return got; }};
+    _bite(){ tNext = 0; }, _hit(off){ if (st !== 'bite') return null; due = due || 10; mult = grade(off); land(mult); set('res', performance.now()); return got; },
+    _land(m, kg){ due = kg; debt = 0; land(m); return got; }};   // (tests: a bite worth kg landed with the hit m, docktest)
 })();
 hooks.onView = on => { if (on && SETM) setModeEnd(false, true); setBodyView(on); if (on) loaderGone(); $('view3d').textContent = on ? t('view_chart') : '3D'; if (!on){ tab = 'route'; renderPanel(); applyView(); renderStatic(); renderDyn(); } $('legend').hidden = !S.settings.plotter || on; updateMapButtons(); panelDirty = true; };
 $('modeBtn').onclick = () => {

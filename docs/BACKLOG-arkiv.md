@@ -2,6 +2,18 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (steg 105, HO2 hopp over ruta, lukkerunden; gren `ccr-e7efd74c-rioki0`)
+
+Verftet nærmest Båtsfjord (`sv1305146_156500`, uten poststed i Kartverkets adresseregister) heter nå «Båtsfjord verft»: et sted uten poststed får navn etter nærmeste mottak (`core/06c-steder.js` `nearTown`), og `src/data/port-regions.json` er skrevet på nytt av `KYST_WRITE=1 node tests/unit/run.mjs regions`. Testen er `tests/unit/stedsnavn.test.mjs` (sett rød før rettingen). De tre punktene som sto:
+
+- ~~**Verftet nærmest Båtsfjord heter «Verft verft»:** raden (1305,146, 156,5) i `src/data/steder.json` er den eneste av 194 uten stedsnavn, og `06c-steder.js` setter da «Verft» + «verft». Rettes i rørledningen for stedene (`docs/systemer/datarorledninger.md`), ikke for hånd.~~
+- ~~**Funnet:** verftet ved 70,52° N 30,05° Ø (nærmest Båtsfjord) heter «Verft verft» i spillet (stedet har intet navn); ikke undersøkt.~~
+- ~~**Funnet i stikkprøven 07.11.2026:** verftet nærmest Båtsfjord (9,3 nm, id `sv1305146_156500`) heter «Verft verft»: stedet mangler poststed i `src/data/steder.json`, og `core/06c-steder.js` setter da «Verft» foran. Bodø har verft (0,9 nm fra mottaket), men nærmeste utstyrsbutikk er Givær, 15,1 nm. Ikke rettet (data, `tools/steder/`).~~
+
+## Strøket 12.11.2026 (engangsrunden mot testutgaven, gren `ccr-a2be6984-8sygjs`)
+
+- ~~**`fleet2test` (to linjer) og `vesseltest` (trim på skiffen) er røde på arbeidsgrenens bygg også** (kjørt mot `origin/ccr-5e1ba2f4-pusvyd` 11.11.2026), ikke av KM4: `fleet2test` «both vessels went out, at the same time» og «quotas kept apart» har vært røde de fem siste kjøringene i `tests/historikk.tsv`; `vesseltest` venter at skiffen ikke tar trim, og trim virker på alle båter fra 11.11.2026.~~ Grønne igjen: begge ble rettet i steg 18b (`3b52223+` i `tests/historikk.tsv`), og 12.11.2026 var `fleet2test` 16 OK og `vesseltest` 37 OK mot testutgaven (versjon `97b13cec726d`; «Engangsrunden mot testutgaven» i `docs/systemer/testing.md`).
+
 ## Strøket 12.11.2026 (steg 28, Ø5 rest a: M5-resten og M9-resten, gren `ccr-5e1ba2f4-pusvyd`, b5138622; kortet i PR #68)
 
 - ~~**M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).~~ Gjort i steg 28 12.11.2026 (fylkene fra Kartverket, `tools/regions/fylke.py`; bildene av `tests/mediekortshot.py`; «M9-resten» i `docs/systemer/handel-og-steder.md`).
