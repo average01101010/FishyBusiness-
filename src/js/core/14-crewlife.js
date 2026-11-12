@@ -28,7 +28,7 @@ const SKILL_WHAT = {juksa:['jukse', 'at jigging'], line:['fiske med line', 'at l
 // factor is a start value, assumed): from 2 to 2.5, the step to «fiskekaker», about 17 hours at the stove for one of 30, some five weeks
 const LEARN_ST = {kokk:3};
 function learnHour(c){
-  const wk = c.wk || {}, f = 0.012 * ageLearn(c.age) * moraleLearn(c.morale) * (c.traits.includes('laerevillig') ? 2 : 1) * errandLearn(c);   // (a little faster the week after an errand, ERR)
+  const wk = c.wk || {}, f = 0.012 * ageLearn(c.age) * moraleLearn(c.morale) * (c.traits.includes('laerevillig') ? 2 : 1) * errandLearn(c);   // (a little faster the week after an errand, ERRAND)
   for (const st in wk){
     const sk = stationSkill(st), m = Math.min(60, wk[st]); if (!sk || m <= 0) continue;
     const o = c[sk[0]], v0 = o[sk[1]] || 1, v1 = Math.min(5, v0 + f * (LEARN_ST[st] || 1) * (1 - v0 / 5.5) * m / 60); o[sk[1]] = v1;
@@ -461,13 +461,13 @@ function lifeHail(H){
 // ===== the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md) =====
 // One aboard asks for something that belongs to their life while the boat is out: in by their home harbour, a short call at a harbour
 // on the way, or a day off. Jonas 30.10.2026: «de må være kontekstualiserte slik at han ikke spør om å dra hjem til feks botnhamn hvis
-// båten ligger i kirkenes»: home only when it is within ERR.nm of the boat, a call only where the boat is (ERR.min at her cruising speed),
+// båten ligger i kirkenes»: home only when it is within ERRAND.nm of the boat, a call only where the boat is (ERRAND.min at her cruising speed),
 // and a day off says home only when home is that near. Never money, never a wait, never a deadline with a cost (CLAUDE.md, «Engasjement og
 // inntekt»): «Ikke nå» does nothing but keep them from asking again for a week; «Ja» and the errand done gives a line in their story and
 // a week of learning a little faster (learnHour). At most one open errand aboard (c.err on the one who asked), one ask per person per week, not in their
 // first week aboard, not on the first trip, not in a gale. All the numbers are start values for the play test.
-const ERR = {nm:40, min:20, week:7 * 1440, life:1440, learn:1.05, p:0.006, h0:8, h1:20, gale:13.9};
-const ERR_WHY = {
+const ERRAND = {nm:40, min:20, week:7 * 1440, life:1440, learn:1.05, p:0.006, h0:8, h1:20, gale:13.9};
+const ERRAND_WHY = {
   home:[['Søstera mi har en pakke til meg.', 'My sister has a parcel for me.'], ['Mor fyller år, og jeg vil stikke innom med blomster.', 'Mum has her birthday, and I would like to drop in with flowers.'], ['Jeg har glemt medisinen min hjemme.', 'I left my medicine at home.']],
   stop:[['Jeg må på apoteket og hente medisin.', 'I need the chemist for my medicine.'], ['Jeg har en pakke som venter på posten der.', 'I have a parcel waiting at the post office there.'], ['Telefonen min er knust, og de har en butikk der.', 'My phone is broken, and there is a shop there.']],
   offHome:[['Jeg vil hjem en dag, det er dåp i familien.', 'I would like a day at home, there is a christening in the family.'], ['Ungen min har avslutning på skolen.', 'My youngest has the end-of-term show at school.'], ['Jeg vil hjem og hjelpe far med båtnaustet.', 'I would like to go home and help Dad with the boathouse.']],
@@ -480,24 +480,24 @@ function errandLine(c){
   const goal = L.goal === 'egenbat' ? ['Fortalte om båten ' + first + ' sparer til.', 'Told about the boat ' + first + ' is saving for.'] : L.goal === 'skipper' ? ['Fortalte at ' + first + ' vil føre båt en dag.', 'Told that ' + first + ' wants to skipper a boat one day.'] : ['Fortalte om det rolige livet ' + first + ' vil ha.', 'Told about the quiet life ' + first + ' wants.'];
   return crewRand() < 0.5 ? fam : goal;
 }
-// the boat's cruising speed in km a minute, for the call on the way (ERR.min)
+// the boat's cruising speed in km a minute, for the call on the way (ERRAND.min)
 const errKmMin = () => Math.max(4, BOAT.vcruise || 6) * NM / 60;
 // may this person ask now (not who is picked, nor where): aboard, settled in, not on notice or off, a week since the last ask
 function errandMay(c){
   if (!c || !c.attr || c.off || c.opp || c.fly || c.mobOff) return false; const L = crewLife(c);
-  return S.t - (c.hiredT || 0) >= ERR.week && S.t - (L.errT == null ? -1e12 : L.errT) >= ERR.week;
+  return S.t - (c.hiredT || 0) >= ERRAND.week && S.t - (L.errT == null ? -1e12 : L.errT) >= ERRAND.week;
 }
-// what this person could ask for where the boat is now, or null: {k:'home'|'stop'|'off', port, why:[no, en]}. Home only within ERR.nm of
-// the boat; a call at a harbour within ERR.min at her cruising speed; a day off only in a harbour or on the way in
+// what this person could ask for where the boat is now, or null: {k:'home'|'stop'|'off', port, why:[no, en]}. Home only within ERRAND.nm of
+// the boat; a call at a harbour within ERRAND.min at her cruising speed; a day off only in a harbour or on the way in
 function errandPick(c, r = crewRand){
   const b = S.boat; if (!b || !b.pos) return null;
   const sea = b.status === 'sailing' || b.status === 'fishing' || b.status === 'idle', inPort = b.status === 'port', goingIn = sea && !!(S.plan && S.plan.returning);
-  const hp = c.homePort ? portById(c.homePort) : null, near = hp && hp.p && dist(hp.p, b.pos) <= ERR.nm * NM && portFits(hp, b.type) ? hp : null;
+  const hp = c.homePort ? portById(c.homePort) : null, near = hp && hp.p && dist(hp.p, b.pos) <= ERRAND.nm * NM && portFits(hp, b.type) ? hp : null;
   const pick = a => a[Math.floor(r() * a.length) % a.length], opts = [];
-  if (sea && near && near.id !== b.port) opts.push({k:'home', port:near.id, why:pick(ERR_WHY.home)});
-  if (sea && !opts.length){ const R = errKmMin() * ERR.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && pt.id !== (hp && hp.id) && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
-    if (q) opts.push({k:'stop', port:q.id, why:pick(ERR_WHY.stop)}); }
-  if (inPort || goingIn) opts.push({k:'off', port:null, why:pick(near ? ERR_WHY.offHome : ERR_WHY.off)});
+  if (sea && near && near.id !== b.port) opts.push({k:'home', port:near.id, why:pick(ERRAND_WHY.home)});
+  if (sea && !opts.length){ const R = errKmMin() * ERRAND.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && pt.id !== (hp && hp.id) && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
+    if (q) opts.push({k:'stop', port:q.id, why:pick(ERRAND_WHY.stop)}); }
+  if (inPort || goingIn) opts.push({k:'off', port:null, why:pick(near ? ERRAND_WHY.offHome : ERRAND_WHY.off)});
   return opts.length ? opts[Math.floor(r() * opts.length) % opts.length] : null;
 }
 // the question, in their own words and dialect
@@ -516,12 +516,12 @@ function errandHour(H){
     if (c0.off || c0.opp){ errEv('lapse', E); delete c0.err; return; }   // ashore for other reasons, or on notice: no more of it
     if (E.k !== 'off' && at && b.port === E.port) return errandDone(c0);   // they called in where asked (also with no answer given: she did it)
     if (E.k === 'off' && E.ok && at) return errandDone(c0);                 // the day off, once in a harbour
-    if (S.t - E.t0 >= ERR.life || (E.k !== 'off' && at && b.port !== E.port && S.t - E.t0 > 60)){ errEv('lapse', E); delete c0.err; }   // a day gone, or in a harbour elsewhere: no more, and no harm
+    if (S.t - E.t0 >= ERRAND.life || (E.k !== 'off' && at && b.port !== E.port && S.t - E.t0 > 60)){ errEv('lapse', E); delete c0.err; }   // a day gone, or in a harbour elsewhere: no more, and no harm
     return; }
   if (S.tut || (typeof lagOf === 'function' && lagOf()) || !meAboard()) return;
-  const hr = gDate(H).getUTCHours(); if (hr < ERR.h0 || hr >= ERR.h1) return;
-  if (windAt(H, b.pos) >= ERR.gale) return;   // never in a gale (Bft 7 and over)
-  for (const c of crewAboard(H)){ if (!errandMay(c) || crewRand() >= ERR.p) continue;
+  const hr = gDate(H).getUTCHours(); if (hr < ERRAND.h0 || hr >= ERRAND.h1) return;
+  if (windAt(H, b.pos) >= ERRAND.gale) return;   // never in a gale (Bft 7 and over)
+  for (const c of crewAboard(H)){ if (!errandMay(c) || crewRand() >= ERRAND.p) continue;
     const P = errandPick(c); if (!P) continue;
     crewLife(c).errT = S.t; c.err = Object.assign({t0:S.t, ok:false}, P);
     const tx = errandAskText(c, c.err); msg(c.name, crewDialect(c, tx[0]) + ' Svar på kortet under Mannskap.', tx[1] + ' Answer on the card under Crew.');
@@ -543,10 +543,10 @@ function errandDone(c){
   if (E.k === 'off') lifeOff(c, 1, 'Takk for fridagen. Jeg er tilbake i morgen.', 'Thanks for the day off. I am back tomorrow.', 'Fikk en fridag. ' + ln[0], 'Had a day off. ' + ln[1]);
   else { lifeStory(c, (E.k === 'home' ? 'Var innom hjemme i ' : 'Fikk gå i land i ') + (pt ? pt.name : '') + '. ' + ln[0], (E.k === 'home' ? 'Called in at home in ' : 'Went ashore at ') + (pt ? pt.name : '') + '. ' + ln[1]);
     msg(c.name, crewDialect(c, 'Tusen takk for at vi gikk innom. Det betydde mye.'), 'Thank you so much for calling in. It meant a lot.'); }
-  L.errUp = S.t + ERR.week; errEv('done', E);
+  L.errUp = S.t + ERRAND.week; errEv('done', E);
 }
 // learning a little faster for a week after an errand done (learnHour)
-const errandLearn = c => (c.life && c.life.errUp > S.t) ? ERR.learn : 1;
+const errandLearn = c => (c.life && c.life.errUp > S.t) ? ERRAND.learn : 1;
 // back to the exchange after the years with a boat of their own: a smaller share asked, and the story goes on
 function alumniReturn(B){
   for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);

@@ -53,6 +53,31 @@ async def main():
           let hurt = 0; const r = Math.random; Math.random = () => 0; lifeInjury(c, 3.5); Math.random = r; hurt = c.off && c.offUntil > S.t + 13 * 1440; return {off1, off2, off3, hurt, story:c.life.story.map(q => q[1]).slice(-1)}; })()""")
         check(r6['off1'] and r6['off2'] and not r6['off3'], 'two days off run out by themselves', r6)
         check(r6['hurt'] and any('Skadet' in q for q in r6['story']), 'a fall on deck in a 3.5 m sea puts the hand ashore for two weeks or more', r6)
+        # the small errands (steg 45a, errandHour): he asks (the message and the card's buttons in Mannskap), she says yes, puts in where he
+        # asked, and the line is in his story with a week of learning a little faster; «Ikke nå» does no harm, and no asking again that week
+        r7 = await pg.evaluate("""(() => { const b = S.boat, hp = portById('husoy'); S.alumni = []; S.cevt = null; S.tut = 0; S.settings.autoOn = false;
+          const mk = () => Object.assign(genCrew(), {bi:false, biDays:null, off:false, fatigue:0, age:35, yrs:10, homePort:'husoy', home:'Husøy', hiredT:S.t - 30 * 1440});
+          const A = mk(), B = mk(); delete A.opp; delete B.opp; S.crew = [A, B]; crewLife(A); crewLife(B);
+          b.status = 'fishing'; b.port = null; b.pos = {x:hp.p.x + 6, y:hp.p.y + 3}; S.plan = null; S.me = S.cur;
+          const D0 = Math.floor(S.t / 1440) * 1440; S.t = D0 + 1440 + 10 * 60 - (S.t % 60); S.t = Math.floor(S.t / 60) * 60; S.msgs = [];
+          window.CREW_SEED = 7; const p0 = ERRAND.p; ERRAND.p = 1; WX_FORCE = {w:5, d:180}; crewTick(S.t / 60); ERRAND.p = p0; WX_FORCE = null;
+          const who = S.crew.find(c => c.err); return {asked:!!who, k:who && who.err.k, id:who && who.id, other:who && S.crew.find(c => c !== who).id, msg:S.msgs.filter(m => who && m.from === who.name).map(m => m.no)}; })()""")
+        check(r7['asked'] and r7['k'] in ('home', 'stop') and any('Mannskap' in m for m in r7['msg']), 'errand: one aboard asks, with a message saying where to answer', r7)
+        await pg.evaluate("PHONE.open('mannskap')"); await pg.wait_for_timeout(400)
+        btn = await pg.evaluate("id => [...document.querySelectorAll('[data-pa=cerr][data-id=\"' + id + '\"]')].map(e => e.dataset.o + ':' + e.innerText)", r7['id'])
+        check(btn == ['yes:Ja', 'no:Ikke nå'], 'errand: the card in Mannskap has «Ja» and «Ikke nå»', btn)
+        await pg.click('[data-pa=cerr][data-o=yes]'); await pg.wait_for_timeout(300)
+        r8 = await pg.evaluate("""id => { const c = crewById(id), E = c.err, n0 = c.life.story.length, note = [...document.querySelectorAll('.ph-err')].map(e => e.innerText).join(' ');
+          const b = S.boat, pt = portById(E.port); b.status = 'port'; b.port = E.port; b.pos = {x:pt.p.x, y:pt.p.y}; S.t += 60; crewTick(S.t / 60);
+          const L = c.life; return {ok:E.ok, note, done:!c.err, line:L.story.length > n0 ? L.story[L.story.length - 1][1] : null, up:Math.round((L.errUp - S.t) / 1440), learn:errandLearn(c)}; }""", r7['id'])
+        check(r8['ok'] and 'Legg til' in r8['note'] and r8['done'] and r8['line'] and ('innom' in r8['line'] or 'land' in r8['line']) and r8['up'] == 7 and abs(r8['learn'] - 1.05) < 1e-9,
+              'errand: yes, the boat puts in where he asked, the line is in his story and he learns a little faster for seven days', r8)
+        r9 = await pg.evaluate("""id => { const c = crewById(id), m0 = c.morale; c.err = {k:'off', port:null, why:['Ryggen trenger en dag uten løft.', 'x'], t0:S.t, ok:false}; crewLife(c).errT = S.t; PHONE.render(); return m0; }""", r7['other'])
+        await pg.wait_for_timeout(300)
+        r10 = await pg.evaluate("""([id, _]) => { const c = crewById(id), m0 = c.morale, b0 = document.querySelector('[data-pa=cerr][data-o=no][data-id="' + id + '"]'); if (b0) b0.click();   // (clicked here, so no game minute runs between)
+          const gone = !c.err, m1 = c.morale; const p0 = ERRAND.p; ERRAND.p = 1; WX_FORCE = {w:5, d:180}; S.boat.status = 'fishing'; S.boat.port = null;
+          for (let h = 0; h < 48; h++){ S.t += 60; errandHour(S.t / 60); } ERRAND.p = p0; WX_FORCE = null; return {clicked:!!b0, gone, same:m1 === m0, again:!!c.err, btns:document.querySelectorAll('[data-pa=cerr]').length}; }""", [r7['other'], r9])
+        check(r10['clicked'] and r10['gone'] and r10['same'] and not r10['again'], 'errand: «Ikke nå» costs nothing, and he does not ask again within the week', r10)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')

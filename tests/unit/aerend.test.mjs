@@ -4,7 +4,7 @@
 // «Ikke nå» costs nothing; done, a line in the story and a week of learning a little faster.
 export default function (t){
   const K = t.K; K.set('S', K.newState());
-  const S = K.get('S'), NM = K.NM, D = 1440, ERR = K.ERR;
+  const S = K.get('S'), NM = K.NM, D = 1440, ERR = K.ERRAND;
   const b = S.boat; b.type = 'sjark'; K.applyVessel(); S.boatName = 'Havgull';
   K.set('crewRand', Math.random);   // (the picks below are drawn many times, so every branch is seen)
   const port = re => K.get('PORTS').find(p => re.test(p.name) && p.mottak);
@@ -24,9 +24,9 @@ export default function (t){
   t.ok(atKirk.filter(p => p.k === 'stop').every(p => K.dist(K.portById(p.port).p, b.pos) <= K.errKmMin() * ERR.min + 1e-9), 'et anløp er innen 20 minutter med båtens fart');
   put(bug, 'port'); const offK = picks(A);
   t.ok(offK.length && offK.every(p => p.k === 'off'), 'i havn i Bugøynes: bare fridagen', offK[0]);
-  t.ok(offK.every(p => !K.ERR_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Bugøynes er ikke «hjem en dag» (hjemme er langt unna)', offK[0] && offK[0].why);
+  t.ok(offK.every(p => !K.ERRAND_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Bugøynes er ikke «hjem en dag» (hjemme er langt unna)', offK[0] && offK[0].why);
   put(botn, 'port'); const offB = picks(A);
-  t.ok(offB.length && offB.every(p => K.ERR_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Botnhamn er hjemme', offB[0] && offB[0].why);
+  t.ok(offB.length && offB.every(p => K.ERRAND_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Botnhamn er hjemme', offB[0] && offB[0].why);
 
   // ---- near home: «home» is asked ----
   put(botn, 'fishing', 8);
