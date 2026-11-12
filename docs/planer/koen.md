@@ -54,6 +54,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 - `ccr-e7efd74c-rioki0` (Jonas' økt): steg 104 HO1 hopp over ruta. Eier `core/06j-hopp.js`, `src/index.html` (én linje), `tests/run.py` (COVER), `tests/unit/hopp.test.mjs`, `tests/hopptest.py`, `core/04-crew.js` (bare slitasjen på sjøen).
 - `plan/2026-11-12-88` (arbeidsrutinen): steg 88 OB10 runde 4. Eier `tools/boats/hs11.py`, `src/data/boat-hs11*`, `tools/boats/qa/hs11_*.py`, `tests/hs11shot.py`, `docs/skipsmodeller/sjarkny-grunnlag.md`, og for det felles: `deckcrew.js`, `view3d/09-landing-deck.js`, `view3d/10-gear.js`, `tests/ombord.py`.
+- `ccr-899a9674-q3gjp0` (Jonas' økt): steg 43 F6 sjøen (B1–B4 ute; 3D-testene `hull3d` og `sea3d` går). Eier `core/03b-sea.js`, `core/16c-hull.js`, `core/14-crewlife.js`, `view3d/14-sea.js`, `view3d/01-shaders.js`, `view3d/14b-fft.js`.
 
 
 ## Valg som venter på Jonas
