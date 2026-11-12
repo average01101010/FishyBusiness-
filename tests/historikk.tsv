@@ -3085,6 +3085,31 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	boottest	OK	33	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
+2026-11-12 10:11	ccr-e7efd74c-rioki0	e0f5977+	hopptest	OK	7	lite	alene	
+2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	keeptest	OK	17	lite	samtidig	
+2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	decktest	OK	16	lite	samtidig	
+2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	crewlifetest	OK	7	lite	samtidig	
+2026-11-12 10:13	ccr-e7efd74c-rioki0	e0f5977+	worktest	OK	29	lite	samtidig	
+2026-11-12 10:13	ccr-e7efd74c-rioki0	b95faf4	trip2	OK	38	lite	samtidig	
+2026-11-12 10:14	ccr-e7efd74c-rioki0	b95faf4	csptest	OK	91	lite	samtidig	
+2026-11-12 10:18	ccr-e7efd74c-rioki0	b95faf4+	hopptest	OK	7	lite	alene	
+2026-11-12 10:30	ccr-e7efd74c-rioki0	7e286dc	hoppshot	OK	728	3d	alene	
+2026-11-12 10:33	ccr-e7efd74c-rioki0	d28df95	hopptest	OK	7	lite	alene	
+2026-11-12 10:45	ccr-e7efd74c-rioki0	d28df95	hoppshot	FEIL	724	3d	alene	FEIL liggende: 1b. på ruta står spoleknappen rett under kino-knappen, like stor {"cam": {"x": 1224, "y": 10, "w": 46, "h": 46, "shown": true}, "kino": {"x": 122
+2026-11-12 10:47	ccr-e7efd74c-rioki0	d28df95+	hopptest	FEIL	14	lite	alene	FEIL 1. seilt med tida: ved kaia i Vangshamn etter 2000 spillminutter {"st": "sailing", "port": null}
+2026-11-12 11:00	ccr-e7efd74c-rioki0	9ac5cb9	hoppshot	OK	749	3d	alene	
+2026-11-12 11:02	ccr-e7efd74c-rioki0	9ac5cb9+	hopptest	FEIL	7	lite	alene	FEIL 3d. mannskapets slitasje: hoppet 3.13, seilingen 6.19 (innenfor en times slitasje, 3.04)
+2026-11-12 11:04	ccr-e7efd74c-rioki0	3203789+	hopptest	FEIL	6	lite	alene	FEIL 2f. energien din: 77.36 % mot 88.68 % (tapet innenfor 5 %)
+2026-11-12 11:05	ccr-e7efd74c-rioki0	c49e9b3+	hopptest	OK	6	lite	alene	
+2026-11-12 11:10	ccr-e7efd74c-rioki0	8eb63ca	admintest	OK	9	lite	samtidig	
+2026-11-12 11:11	ccr-e7efd74c-rioki0	8eb63ca	docktest	OK	63	lite	samtidig	
+2026-11-12 11:11	ccr-e7efd74c-rioki0	8eb63ca	adminbuytest	OK	9	lite	samtidig	
+2026-11-12 11:11	ccr-e7efd74c-rioki0	8eb63ca	trip2	OK	33	lite	samtidig	
+2026-11-12 11:12	ccr-e7efd74c-rioki0	8eb63ca	csptest	OK	92	lite	samtidig	
+2026-11-12 11:12	ccr-e7efd74c-rioki0	8eb63ca	hopptest	OK	8	lite	samtidig	
+2026-11-12 11:24	ccr-e7efd74c-rioki0	c2127f3	hopptest	OK	7	lite	alene	
+2026-11-12 11:39	ccr-e7efd74c-rioki0	c2127f3	hoppshot	FEIL	892	3d	alene	avsluttet med kode 1
+2026-11-12 12:20	ccr-e7efd74c-rioki0	8766b5e	hoppshot	OK	854	3d	alene	
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
 2026-11-12 11:42	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	18	lite	alene	FEIL Hasvik–Øksfjord (nord, Finnmark): sambandet og en avgang finnes i fila  {'nodep': True}
 2026-11-12 11:43	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	17	lite	alene	FEIL alle leggene i landet, også hurtigbåtenes og kystrutas, holder seg på vann i spillets kart (hver 10. m)  (1038, ['Træna - Sanna 1'])
@@ -3114,3 +3139,36 @@
 2026-11-12 14:14	ccr-013bxxie-n4kyst	2fd7a6db	kystshot	FEIL	719	3d	alene	FEIL finnsnes_liggende: MS Sundbrisen (123.3 m) ligger stille ved kaia i Finnsnes (kyst3d_finnsnes_liggende.png)  {'id': 'kyst8', 'name': 'MS Sundbrisen', 'L': 
 2026-11-12 14:15	ccr-013bxxie-n4kyst	2fd7a6db+	kystshot	FEIL	44	3d	alene	avsluttet med kode 1
 2026-11-12 14:28	ccr-013bxxie-n4kyst	2fd7a6db+	kystshot	OK	758	3d	alene	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	docktest	OK	63	lite	samtidig	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	haillplass	OK	7	lite	samtidig	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	turlinjetest	OK	7	lite	samtidig	
+2026-11-12 11:46	ccr-013bxxic-haill1	177a4af+	tut	OK	1240	lite	alene	
+2026-11-12 11:47	ccr-013bxxic-haill1	177a4af+	geartest	FEIL	37	lite	alene	FEIL big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)
+2026-11-12 11:52	ccr-013bxxic-haill1	177a4af+	heattest	OK	319	3d	alene	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	geartest	OK	32	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	haillplass	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	tutfull	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	skattetest	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	9500d4b+	lotttest	OK	10	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	9500d4b+	boktest	OK	10	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	keeptest	OK	18	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	decktest	OK	17	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	simday	LES	14	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	calib	LES	16	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	vesseltest	OK	22	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	fuelcal	OK	19	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	tidetest	OK	24	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	climtest	OK	16	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	bktest	OK	7	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	yardupgtest	OK	15	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	snokrabbetest	OK	12	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	autolinetest	OK	10	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	turtest	OK	21	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	booktest	OK	29	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	caretest	OK	16	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	jigalongtest	OK	20	lite	samtidig	
+2026-11-12 11:58	ccr-013bxxic-haill1	79607b0	opptest	OK	62	lite	samtidig	
+2026-11-12 11:08	ccr-899a9674-q3gjp0	e91502e	hull3d	OK	2341	3d	alene	
+2026-11-12 11:56	ccr-899a9674-q3gjp0	306f83f	sea3d	OK	2832	3d	alene	
+2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	hopptest	OK	8	lite	samtidig	
+2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	trip2	OK	32	lite	samtidig	

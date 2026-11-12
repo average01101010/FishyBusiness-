@@ -687,21 +687,24 @@ function step(){
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
   fsMinute();                         // sea time with you aboard (09e-fartstid.js)
 }
+// the catch's minute aboard: the fish keeps (KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen; live
+// crab by its own rates), the ice maker makes ice, and the hands on deck gut and ice. vesselStep each minute, and the hop over the rest
+// of a route (06j-hopp.js) for each minute she would have sailed, with H and p where she would have been
+function holdMinute(H, p){
+  const kar = S.equip && S.equip.krabbekar; let rrs = null;
+  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) / 60); continue; }
+    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
+    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, p);
+    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) / 1440)); }
+  iceMinute(); deckMinute();
+}
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){
   const b = S.boat;
   // a trim that has run its time (core BOOSTS): the speed goes back
   if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; trimEnd(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
-  const clean = 1;
   const WA = workMinute();
-  const kar = S.equip && S.equip.krabbekar;
-  // (live crab by its own rates; the fish as KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen)
-  let rrs = null;
-  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) * clean / 60); continue; }
-    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
-    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
-    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) * clean / 1440)); }
-  iceMinute(); deckMinute();
+  holdMinute(H, b.pos);
   if (S.t % 60 === 0 && BOAT.tank) snoTankHour(H);   // the live snow crab in the tanks (10e-krabbefabrikk.js, H3b)
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();
