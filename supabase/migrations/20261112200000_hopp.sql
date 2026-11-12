@@ -13,6 +13,8 @@
 --   hop_use(id)            the hop is a grant that is unused until a hop is made with it
 --   shop_state()           as in 20261111140000_haill_srv.sql, with the hop grants: delivered by the call (new the first time) and
 --                          answered while unused
+--   shop_refund(pi)        as in 20261110180000_haill_use.sql, and a hop or a «Ferdig nå» (the yard done now) delivered and not used is
+--                          taken back too, as a haill is (the kontroll of HO3: one left after a refund could be used); one used stays
 -- Nothing that shares anything with other players reads these.
 
 insert into public.products (id, kind, name_no, name_en, price_nok, data) values
@@ -75,6 +77,19 @@ begin
       union select g.product_id from grants g where g.player_id = p and g.revoked_at is null and g.data ->> 'give' = 'cos') x), '[]'::jsonb),
     'pub', (select jsonb_build_object('e', r.e, 'k', r.k) from pub_rounds r where r.player_id = p order by r.e desc limit 1));
 end $$;
+
+create or replace function public.shop_refund(pi text) returns void
+language plpgsql security definer set search_path = public as $$
+declare u purchases;
+begin
+  update purchases set status = 'refunded', refunded_at = now() where payment_intent = shop_refund.pi and status = 'paid' returning * into u;
+  if u.id is not null then
+    update grants set revoked_at = now() where purchase_id = u.id and (done_at is null or (data ->> 'give' in ('haill', 'yard', 'hopp') and used_at is null));
+    delete from entitlements where player_id = u.player_id and product_id = u.product_id and source = 'stripe:' || u.id;
+  end if;
+end $$;
+revoke all on function public.shop_refund(text) from public, anon, authenticated;
+grant execute on function public.shop_refund(text) to service_role;
 
 revoke all on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.shop_state() from public, anon, authenticated;
 grant execute on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.shop_state() to authenticated;

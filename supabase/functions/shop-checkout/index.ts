@@ -42,9 +42,10 @@ serveReported('shop-checkout', async (req) => {
   const URL_ = Deno.env.get('SUPABASE_URL')!;
   const user = createClient(URL_, Deno.env.get('SUPABASE_ANON_KEY')!, {global: {headers: {Authorization: auth}}, auth: {persistSession: false}});
   // the hop over the rest of a route (HO3, 12.11.2026; supabase/migrations/20261112200000_hopp.sql): the price for the whole real minutes
-  // saved, worked out by the server from the ladder; the stop it goes to kept on the purchase (numbers and a harbour id only)
+  // saved, worked out by the server from the ladder; the stop it goes to kept on the purchase (numbers, and a harbour id as the game has
+  // it: a quay place is 'hs:' + a hash, a plant can be 'mØF50'; only control characters are dropped, it is kept as JSON and shown nowhere)
   const hop = product === 'hopp', min = Math.round(Number(body.min)), to = body.to || {};
-  const stop = hop ? {x: Math.round(Number(to.x) * 1e4) / 1e4, y: Math.round(Number(to.y) * 1e4) / 1e4, port: to.port ? String(to.port).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) : null} : null;
+  const stop = hop ? {x: Math.round(Number(to.x) * 1e4) / 1e4, y: Math.round(Number(to.y) * 1e4) / 1e4, port: to.port ? String(to.port).replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 64) : null} : null;
   if (hop && (!Number.isFinite(min) || !Number.isFinite(stop!.x) || !Number.isFinite(stop!.y))) return json({error: 'bad request'}, 400);
   const {data: q, error} = hop ? await user.rpc('shop_quote_hop', {minutes: min}) : await user.rpc('shop_quote', {product});
   if (error || !q){ if (error) console.error('shop_quote', error.message); return json({error: 'unavailable'}, 400); }

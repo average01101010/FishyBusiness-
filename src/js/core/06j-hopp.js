@@ -23,6 +23,15 @@ function hopStop(pl){
   for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; if (wpStop(w) || w.anchor || i === pl.wps.length - 1) return i; }
   return -1;
 }
+// the time the game was closed, not yet played in: the world's clock ahead of S.t, or the minutes the tick has still to play
+// (ui/08-actions.js CATCH_LEFT, not there before the UI's files have run)
+function hopCatching(){ return (WCLOCK.on && worldT() - S.t > 1) || (typeof CATCH_LEFT !== 'undefined' && CATCH_LEFT > 0); }
+// a hop paid for waits, rather than going to Kaiboden, for what passes by itself (HO3, the kontroll: back from Stripe the page plays in
+// the minutes it was away): the time away played in, Autonav's way round shallow water
+function hopWait(){ const pl = S.plan; return !!(pl && S.boat.status === 'sailing' && (pl.replan || hopCatching())); }
+// the minutes paid for cover the trip made: the wind may have freshened since the purchase (a tenth and two minutes more is covered),
+// never a trip far longer than was paid for
+function hopCovers(paidMin, realMin){ return realMin <= Math.ceil(paidMin * 1.1) + 2; }
 // why a hop cannot be had now, before anything is run (null: it may, the weather and the diesel are the dry run's)
 function hopWhy(){
   const b = S.boat, pl = S.plan;
@@ -32,7 +41,7 @@ function hopWhy(){
   if (pl.replan) return ['Autonav finner en vei rundt grunt vann. Vent til båten går videre.', 'Autonav is finding a way round shallow water. Wait until the boat goes on.'];
   // the time the game was closed, not yet played in (the world's clock ahead of S.t, ui/08-actions.js CATCH_LEFT): the hop would count
   // minutes the catch-up sails anyway, and the time saved and the price would be too high
-  if (WCLOCK.on && worldT() - S.t > 1) return ['Spillet henter fortsatt inn tida det var lukket. Vent litt.', 'The game is still catching up on the time it was closed. Wait a little.'];
+  if (hopCatching()) return ['Spillet henter fortsatt inn tida det var lukket. Vent litt.', 'The game is still catching up on the time it was closed. Wait a little.'];
   if (b.anch || b.hove) return ['Båten ligger for anker eller ligger bi.', 'The boat is at anchor or lying to.'];
   // a leak is not hopped past: the water rises minute by minute and the pump may not keep up (hullMinute, 16c-hull.js)
   if (b.dmg && (b.dmg.A > 0 || b.dmg.w > 0)) return ['Båten tar inn vann. Hopp går ikke forbi en lekkasje.', 'The boat is taking in water. A hop does not get past a leak.'];
@@ -82,10 +91,11 @@ function hopRun(paid){
   return {why, stop:iS, w:pl.wps[iS], min:m, real:m / GAME_RATE, realMin, kr:hopPrice(realMin), fuel, trimMin, track, heading};
 }
 // the stop of a hop bought (HO3: the purchase keeps {x, y, port}) is the next stop on the route sailed now: the same harbour, or within
-// 100 m; else the route has changed since, and the hop waits in Kaiboden
+// 100 m of it (the place decides too, so a harbour id kept with a character lost on the way is the same stop); else the route has
+// changed since, and the hop waits in Kaiboden
 function hopMatch(to){
   const pl = S.plan, iS = hopStop(pl); if (!to || iS < 0) return false;
-  const w = pl.wps[iS]; return to.port ? w.port === to.port : dist(w, to) < 0.1;
+  const w = pl.wps[iS]; return (!!to.port && w.port === to.port) || dist(w, to) < 0.1;
 }
 // what a hop from here would cost and save, or why it cannot be had (the price is shown before anything is bought)
 function hopQuote(){ const why = hopWhy(); return why ? {why} : hopRun(false); }
@@ -139,8 +149,8 @@ function hopDo(q){
   return true;
 }
 // a hop now: the map at the stop first (a block not in is an error, not a value; a fetch that hangs is given up after HOP.mapMs), then
-// the one dry run on the world as it is by then
-async function hopGo(paid){
+// the one dry run on the world as it is by then. maxMin: the real minutes a hop bought covers (hopCovers), checked on that run
+async function hopGo(paid, maxMin){
   let why = hopWhy(); if (why) return {why};
   const pl = S.plan, iS = hopStop(pl); if (iS < 0) return {why:['Ruta har ikke noe mål.', 'The route has no end.']};
   const w = pl.wps[iS];
@@ -148,5 +158,6 @@ async function hopGo(paid){
   catch (e){ console.warn('hopGo map', e); return {why:['Kartet ved målet kom ikke. Prøv igjen om litt.', 'The chart at the stop did not come. Try again in a little while.'], map:true}; }
   why = hopWhy(); if (why) return {why};
   const q = hopRun(!!paid); if (q.why) return q;
+  if (maxMin != null && !hopCovers(maxMin, q.realMin)) return {why:['Turen er lengre enn hoppet ble kjøpt for: ' + q.realMin + ' minutter i virkeligheten, hoppet dekker ' + maxMin + '.', 'The trip is longer than the hop was bought for: ' + q.realMin + ' real minutes, the hop covers ' + maxMin + '.'], over:true};
   hopDo(q); return q;
 }

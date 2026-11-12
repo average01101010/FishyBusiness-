@@ -47,13 +47,15 @@ function shopLabel(nok){
   const m = shopMode();
   return m === 'live' ? shopL('Kjøp · ', 'Buy · ') + realKr(nok) : m === 'test' ? shopL('Kjøp (test, ingen betaling)', 'Buy (test, no payment)') : shopL('Snart i salg', 'On sale soon');
 }
-// what a key is and costs, for the consent and the receipt in the log
-function shopWhat(k){
+// what a key is and costs, for the consent and the receipt in the log (g: the grant, for a price that is the purchase's own: the hop)
+function shopWhat(k, g){
   if (HAILL[k]) return {name:HAILL[k][S.lang === 'en' ? 'en' : 'no'], nok:HAILL[k].nok};
   if (BOOSTS[k]) return {name:'Trim: ' + BOOSTS[k][S.lang === 'en' ? 'en' : 'no'], nok:BOOSTS[k].nok};
   if (/^sk_/.test(k) && SKIP[k.slice(3)]){ const X = SKIP[k.slice(3)]; return {name:X[S.lang === 'en' ? 'en' : 'no'], nok:X.nok}; }   // Skippertak (core/15-energy.js)
   if (/^des_/.test(k)){ const N = PAINT.DNAME[k.slice(4)] || ['', '']; return {name:(k === 'des_flagg' || k === 'des_reg' ? '' : shopL('Malingsdesign: ', 'Paint design: ')) + shopL(N[0], N[1]), nok:PAINT.nok(k.slice(4))}; }
-  if (k === 'hopp'){ const q = SHOP.hopQ; return {name:shopL('Hopp over resten av ruta', 'Skip the rest of the route') + (q ? ' (' + q.realMin + ' min)' : ''), nok:q ? q.kr : HOP.min}; }
+  // (back from Stripe the card's SHOP.hopQ is gone with the page: the grant has the minutes and the price paid)
+  if (k === 'hopp'){ const d = g && g.data || {}, q = d.kr != null ? {kr:d.kr, realMin:d.min} : SHOP.hopQ;
+    return {name:shopL('Hopp over resten av ruta', 'Skip the rest of the route') + (q && q.realMin ? ' (' + q.realMin + ' min)' : ''), nok:q ? q.kr : HOP.min}; }
   return {name:shopL('Verftet ferdig nå', 'The yard done now'), nok:YARD_NOW_NOK};
 }
 // a buy button: at once in a test, straight to Stripe when the shop is live (Jonas 05.10.2026: «Gjør dette på en intuitiv måte som tar
@@ -114,7 +116,7 @@ function shopGive(g, srv){
 // so, without a price. It waits while another window is open
 function shopThanks(rc){
   const L = shopL, gift = rc.every(r => (r.g.data || {}).comp);
-  const its = rc.map(r => { const k = Object.keys(SHOP_PRODUCT).find(x => SHOP_PRODUCT[x] === r.g.product), w = k ? shopWhat(k) : null;
+  const its = rc.map(r => { const k = Object.keys(SHOP_PRODUCT).find(x => SHOP_PRODUCT[x] === r.g.product), w = k ? shopWhat(k, r.g) : null;
     return {nm:w ? w.name : String(r.g.product || ''), nok:(r.g.data || {}).comp ? 0 : w ? w.nok : 0, no:r.no, en:r.en}; });
   const head = gift ? ['En gave fra Det Store Blå', 'A gift from Det Store Blå'] : ['Takk for kjøpet!', 'Thank you for your purchase!'];
   const lead = gift ? ['Vi har gitt deg dette, og det er levert i spillet:', 'We have given you this, and it is delivered in the game:'] : ['Betalingen er gjennomført, og kjøpet er levert i spillet:', 'The payment went through, and the purchase is delivered in the game:'];
@@ -305,17 +307,19 @@ function srvApply(st){
           en = n ? 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.' : 'The job on the «' + S.boatName + '» was done before the purchase came. «Done now» is kept and finishes the next yard job at once.';
         log(no, en); say(g, no, en); names.push(shopL('Verftet er ferdig', 'The yard is done')); }); } }
   // 5b. the hop over the rest of a route (HO3, ui/10u-hopp.js): the grants not used are the hops kept in Kaiboden. One that came now is
-  // made at once when the boat it was bought for sails the route to the stop it was bought for (hopMatch), whatever the weather (Jonas
-  // 12.11.2026: «uavhengig av været eller andre ting»); else it is kept, for one later route of at most its minutes. S.hopQ: used here,
-  // and the server not yet told (hop_use)
+  // made when the boat it was bought for sails the route to the stop it was bought for (hopFate, hopMatch), whatever the weather (Jonas
+  // 12.11.2026: «uavhengig av været eller andre ting»), at once or as soon as the time away is played in (hopDeliver, hopWait); else it is
+  // kept, for one later route of at most its minutes, and the words say why. S.hopQ: used here, and the server not yet told (hop_use).
+  // SHOP.hopFresh: the server has said which are unused this session (only those are offered from Kaiboden)
   { const q = S.hopQ || (S.hopQ = []); for (let i = q.length - 1; i >= 0; i--) if (!list.some(g => g.id === q[i])) q.splice(i, 1);
     const hs = list.filter(g => g.held && (g.data || {}).give === 'hopp' && !q.includes(g.id));
-    S.hopSrv = hs.map(g => ({id:g.id, min:g.data.min, kr:g.data.kr, boat:g.data.boat}));
-    for (const g of hs) if (isNew(g)){ given.push(g.id); seen[g.id] = wn; const d = g.data, can = d.boat === S.cur && hopMatch(d.to) && !hopWhy();
-      const no = can ? 'Hoppet gjøres nå: båten er fremme om et øyeblikk.' : 'Båten var ikke lenger på vei til stoppet hoppet ble kjøpt for. Hoppet ligger i Kaiboden og kan brukes én gang på en senere rute på høyst ' + d.min + ' minutter.',
-        en = can ? 'The hop is made now: the boat is there in a moment.' : 'The boat was no longer on her way to the stop the hop was bought for. The hop is kept in Kaiboden for one later route of at most ' + d.min + ' minutes.';
-      say(g, no, en); names.push(shopL('Hopp over ruta', 'Skip the route')); if (!can) log(no, en);
-      if (can && typeof hopSpend === 'function') setTimeout(() => hopSpend(g.id), 0); }
+    S.hopSrv = hs.map(g => ({id:g.id, min:g.data.min, kr:g.data.kr, boat:g.data.boat})); SHOP.hopFresh = true;
+    for (const g of hs) if (isNew(g)){ given.push(g.id); seen[g.id] = wn; const d = g.data, why = typeof hopFate === 'function' ? hopFate(d) : ['', ''];
+      const kw = why && typeof hopKeptWords === 'function' ? hopKeptWords(why, d.min) : null, wait = !why && hopWait();
+      const no = kw ? kw[0] : wait ? 'Hoppet gjøres om et øyeblikk, når båten er klar.' : 'Hoppet gjøres nå: båten er fremme om et øyeblikk.',
+        en = kw ? kw[1] : wait ? 'The hop is made in a moment, when the boat is ready.' : 'The hop is made now: the boat is there in a moment.';
+      say(g, no, en); names.push(shopL('Hopp over ruta', 'Skip the route')); if (why) log(no, en);
+      else if (typeof hopDeliver === 'function') setTimeout(() => hopDeliver(g.id, d), 0); }
     for (const id of q) cloudRpc('hop_use', {id}).catch(e => console.error(e)); }
   // 6. the paid paint designs: the account's entitlements, never the save's own list
   if (Array.isArray(st.owned)){ CLOUD.owned = st.owned.slice(); if (typeof cosSrv === 'function') cosSrv(st.owned); }
