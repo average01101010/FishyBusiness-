@@ -843,7 +843,7 @@ crew: people with skills, habits and moods
   - 722 `flyOut(c)`
   - 730 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1427 linjer)
+## `src/js/core/05-vessels.js` (1429 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -902,56 +902,56 @@ crew: people with skills, habits and moods
   - 669 `nearestPort(p)`
   - 671 `nearestYard(p)`
   - 673 `step()`
-  - 693 `holdMinute(H, p)`
-  - 702 `vesselStep(H)`
-  - 797 `plantFuel(b)`
-  - 800 `sailV(H, hs)`
-  - 816 `sail(H, W, hs)`
-  - 848 `sailWaiting()`
-  - 849 `sailReplan(pl, b, gp)`
-  - 877 `iceWhy(p, tried)`
-  - 879 `sailStop(pl, b, why)`
-  - 887 `haltPlan(need)`
-  - 897 `arrive(w)`
-  - 915 `unstuckWhy()`
-  - 921 `unstuckSpot()`
-  - 928 `unstuck()`
-- **942** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 950 `moorPhase(b)`
-  - 965 `dock(pid, berth)`
-  - 992 `catchFactors(H, W, hs)`
-  - 1005 `stockDev(p, sp)`
-  - 1011 `fish(H, W, hs)`
-  - 1117 `endFishing(why)`
-  - 1138 `bycHere(how)`
-  - 1142 `bycAdd(sp, kg, how)`
-  - 1146 `bycConf()`
-  - 1149 `addCatch(sp, kg, cls, hook, opt)`
-- **1171** work on deck: gutting and icing take hands and time
-  - 1187 `deckHands()`
-  - 1190 `deckPending()`
-  - 1191 `deckEta(hands)`
-  - 1196 `moveKg(x, kg, patch)`
-  - 1204 `iceMinute()`
-  - 1211 `iceOut(out)`
-  - 1217 `deckMinute()`
-- **1242** lying to in a storm (H1b R8, 05.11.2026)
-  - 1259 `quayFar(b)`
-  - 1263 `lieTo(W, hs)`
-  - 1270 `lieToStep(W, hs)`
-  - 1280 `risk(W, hs)`
-  - 1308 `hullRepair()`
-  - 1311 `svcOverdue()`
-- **1312** the rescue boat (plan E3, 05.10.2026)
-  - 1338 `rescueBases()`
-  - 1347 `rescueBase(p)`
-  - 1354 `rescueAis(H)`
-  - 1358 `rescue(keepCatch)`
-  - 1382 `towSea(p)`
-  - 1387 `towRoutes(b)`
-  - 1398 `towStep(H)`
-  - 1410 `towDone(t)`
-  - 1416 `towPose(frac)`
+  - 694 `holdMinute(H, p)`
+  - 703 `vesselStep(H)`
+  - 798 `plantFuel(b)`
+  - 801 `sailV(H, hs)`
+  - 817 `sail(H, W, hs)`
+  - 849 `sailWaiting()`
+  - 850 `sailReplan(pl, b, gp)`
+  - 878 `iceWhy(p, tried)`
+  - 880 `sailStop(pl, b, why)`
+  - 888 `haltPlan(need)`
+  - 898 `arrive(w)`
+  - 916 `unstuckWhy()`
+  - 922 `unstuckSpot()`
+  - 929 `unstuck()`
+- **943** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 951 `moorPhase(b)`
+  - 966 `dock(pid, berth)`
+  - 994 `catchFactors(H, W, hs)`
+  - 1007 `stockDev(p, sp)`
+  - 1013 `fish(H, W, hs)`
+  - 1119 `endFishing(why)`
+  - 1140 `bycHere(how)`
+  - 1144 `bycAdd(sp, kg, how)`
+  - 1148 `bycConf()`
+  - 1151 `addCatch(sp, kg, cls, hook, opt)`
+- **1173** work on deck: gutting and icing take hands and time
+  - 1189 `deckHands()`
+  - 1192 `deckPending()`
+  - 1193 `deckEta(hands)`
+  - 1198 `moveKg(x, kg, patch)`
+  - 1206 `iceMinute()`
+  - 1213 `iceOut(out)`
+  - 1219 `deckMinute()`
+- **1244** lying to in a storm (H1b R8, 05.11.2026)
+  - 1261 `quayFar(b)`
+  - 1265 `lieTo(W, hs)`
+  - 1272 `lieToStep(W, hs)`
+  - 1282 `risk(W, hs)`
+  - 1310 `hullRepair()`
+  - 1313 `svcOverdue()`
+- **1314** the rescue boat (plan E3, 05.10.2026)
+  - 1340 `rescueBases()`
+  - 1349 `rescueBase(p)`
+  - 1356 `rescueAis(H)`
+  - 1360 `rescue(keepCatch)`
+  - 1384 `towSea(p)`
+  - 1389 `towRoutes(b)`
+  - 1400 `towStep(H)`
+  - 1412 `towDone(t)`
+  - 1418 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (189 linjer)
 
@@ -1108,7 +1108,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 1194 `farvWarn()`
   - 1195 `farvSay(w, how)`
 
-## `src/js/core/06-services.js` (348 linjer)
+## `src/js/core/06-services.js` (349 linjer)
 
 ---------- services behind the phone ----------
 
@@ -1132,15 +1132,15 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **200** standing operations plan: a hired skipper runs a saved route on set days, lands the catch and restocks
   - 202 `autoRestock()`
   - 210 `depart()`
-  - 242 `yardStale(j, b)`
-  - 250 `finishJob(j)`
-  - 282 `fitHours(k)`
-  - 285 `jobOk(j)`
-  - 290 `queueJob(j)`
-  - 294 `jobsDone()`
-  - 300 `shelterReturn(W, hsOver)`
-  - 326 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **346** CORE END
+  - 243 `yardStale(j, b)`
+  - 251 `finishJob(j)`
+  - 283 `fitHours(k)`
+  - 286 `jobOk(j)`
+  - 291 `queueJob(j)`
+  - 295 `jobsDone()`
+  - 301 `shelterReturn(W, hsOver)`
+  - 327 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **347** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1293,7 +1293,7 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06j-hopp.js` (153 linjer)
+## `src/js/core/06j-hopp.js` (156 linjer)
 
 ---------- Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026) ----------
 
@@ -1310,12 +1310,12 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 52 `hopCovers(paidMin, realMin)`
   - 54 `hopMinWords(n)`
   - 56 `hopWhy()`
-  - 74 `hopRun(paid)`
-  - 107 `hopMatch(to)`
-  - 113 `hopQuote(paid)`
-  - 115 `hopSaved(real, en)`
-  - 117 `hopDo(q)`
-  - 141 `hopGo(paid, maxMin)`
+  - 77 `hopRun(paid)`
+  - 110 `hopMatch(to)`
+  - 116 `hopQuote(paid)`
+  - 118 `hopSaved(real, en)`
+  - 120 `hopDo(q)`
+  - 144 `hopGo(paid, maxMin)`
 
 ## `src/js/core/06e-anchor.js` (235 linjer)
 
@@ -2042,6 +2042,32 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 15 `ukeSum(w)`
   - 34 `ukeDue()`
   - 40 `ukeLast()`
+
+## `src/js/core/09o-kapplop.js` (211 linjer)
+
+Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
+
+- **1** Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
+  - 46 `lopState()`
+  - 48 `lopCls(V)`
+  - 57 `lopLastSun(y, m)`
+  - 58 `lopOslo(ms)`
+  - 61 `lopWeek(ms)`
+  - 72 `lopMinH(nm, vmax, trim)`
+  - 75 `lopTime(run, now)`
+  - 84 `lopOn(vid)`
+  - 87 `lopCpOf(pid)`
+  - 92 `lopWhyNot()`
+  - 101 `lopStart()`
+  - 112 `lopEnd(how)`
+  - 131 `lopHm(min)`
+  - 134 `lopDepart()`
+  - 141 `lopDock(pid)`
+  - 152 `lopCross(a, c, vmax)`
+  - 157 `lopSosNow()`
+  - 171 `lopSosEnd(r, t, p)`
+  - 181 `lopMinute()`
+  - 204 `lopTick()`
 
 ## `src/js/core/11-route.js` (664 linjer)
 
