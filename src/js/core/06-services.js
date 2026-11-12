@@ -249,7 +249,7 @@ function yardStale(j, b){
 }
 function finishJob(j){
   const b = S.boat;
-  if (['eng', 'hold', 'upg', 'prop'].includes(j.kind) && j.ty && yardStale(j, b)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: ' + (j.no || ''), 'Paid back: ' + (j.en || ''));
+  if (['eng', 'hold', 'upg', 'prop'].includes(j.kind) && (j.ty || j.kind === 'prop') && yardStale(j, b)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: ' + (j.no || ''), 'Paid back: ' + (j.en || ''));
     log((j.no || 'Jobben') + ' passer ikke denne båten lenger. Verftet betalte tilbake ' + kr(back) + '.', (j.en || 'The job') + ' no longer suits this vessel. The yard paid back ' + kr(back) + '.'); return; }
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
@@ -259,10 +259,8 @@ function finishJob(j){
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
-  // the propeller (OPP3); a job for another boat or a step no longer the next is paid back above (yardStale)
-  else if (j.kind === 'prop'){ const V = VESSELS[b.type];
-    if (yardStale(j, b)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: propell', 'Paid back: propeller'); log('Propellen passer ikke denne båten. Verftet betalte tilbake ' + kr(back) + '.', 'The propeller does not suit this vessel. The yard paid back ' + kr(back) + '.'); }
-    else { b.propLv = j.lv; applyVessel(); const st = PROPUP[j.lv - 1]; log('Ny propell montert, trinn ' + j.lv + ': ' + st.no.toLowerCase() + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', 'New propeller fitted, step ' + j.lv + ': ' + st.en.toLowerCase() + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); } }
+  // the propeller (OPP3); a job for another boat or a step no longer the next was paid back above (yardStale)
+  else if (j.kind === 'prop'){ b.propLv = j.lv; applyVessel(); const st = PROPUP[j.lv - 1]; log('Ny propell montert, trinn ' + j.lv + ': ' + st.no.toLowerCase() + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', 'New propeller fitted, step ' + j.lv + ': ' + st.en.toLowerCase() + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); if (BOAT.karN) log('Plass til ett fiskekar til: ' + BOAT.karN + ' kar, ' + fmt(BOAT.holdCap, 0) + ' kg.', 'Room for one more fish tub: ' + BOAT.karN + ' tubs, ' + fmt(BOAT.holdCap, 0) + ' kg.'); else log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }

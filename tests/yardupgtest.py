@@ -76,6 +76,11 @@ async def main():
           // the engine ordered and the boat traded in while it waited (the kontroll 12.11.2026: the new boat got step 2 for nothing)
           b.type = 'sjark'; delete b.engLv; delete b.propLv; applyVessel(); S.jobs = []; const c3 = S.cash; PHONE.dact('utstyr', 'engup', {}); const j4 = S.jobs.find(x => x.kind === 'eng'); const paid4 = c3 - S.cash;
           b.type = 'snekke'; applyVessel(); if (j4) finishJob(j4); S.jobs = []; R.engTrade = {paid:paid4, kr:j4 && j4.kr, back:S.cash - (c3 - paid4), lv:b.engLv || 0};
+          // the trade-in itself (switchVessel): the old hull's yard jobs, also one from before OPP3 without j.kr, are paid back and taken off
+          // the queue, so the new boat can order her own (the code review 12.11.2026)
+          b.type = 'sjark'; delete b.engLv; delete b.propLv; delete b.holdLv; applyVessel(); S.jobs = []; const c5 = S.cash; buy(); S.jobs.push({kind:'hold', lv:1, h:YARD_H, no:'Ombygging av lasterommet', en:'Rebuilding the hold'});
+          const paid5 = c5 - S.cash, holdKr = upPrice(HOLDUP[0].pc, HOLDUP[0].min); PHONE.switchVessel('snekke'); if (typeof BUYM !== 'undefined' && BUYM.close) setTimeout(() => BUYM.close(), 100);
+          R.swap = {paid:paid5, back:S.cash - (c5 - paid5), holdKr, jobs:(S.jobs || []).filter(x => ['eng', 'hold', 'upg', 'prop'].includes(x.kind)).length, type:b.type, lv:b.propLv || 0};
           // the trim on top: the same knots with and without the propeller
           const add = lv => { b.type = 'hurtigsjark'; b.propLv = lv; delete b.trim; applyVessel(); const v = BOAT.vmax; trimSet('turbo'); const d = BOAT.vmax - v; trimEnd(); return d; };
           R.trim = [add(0), add(3)];
@@ -90,6 +95,8 @@ async def main():
         print(ok(pr['wait'] and pr['paid2'] == 46000 and pr['back'][0] == pr['back'][1]), 'step 2 (46 000 kr) cancelled before it starts: the price comes back', [pr['wait'], pr['back']])
         print(ok(pr['trade']['cash'] == pr['trade']['c2'] and pr['trade']['paid'] < pr['trade']['c2'] and pr['trade']['lv'] == 0), 'a boat traded in while the job waited: the yard pays it back and fits nothing', pr['trade'])
         print(ok(pr['engTrade']['paid'] > 0 and pr['engTrade']['kr'] == pr['engTrade']['paid'] and pr['engTrade']['back'] == pr['engTrade']['paid'] and pr['engTrade']['lv'] == 0), 'a bigger engine ordered and the boat traded in while it waited: the yard pays it back, the new boat keeps her own engine', pr['engTrade'])
+        sw = pr['swap']
+        print(ok(sw['paid'] == 23000 and sw['back'] == 23000 + sw['holdKr'] and sw['jobs'] == 0 and sw['type'] == 'snekke' and sw['lv'] == 0), 'the trade-in pays back the old hull\'s propeller job (23 000 kr) and an old hold job without a price (priced on the old boat), and takes them off the queue', sw)
         print(ok(abs(pr['trim'][0] - pr['trim'][1]) < 1e-9 and pr['trim'][0] > 21.9), 'turbo trim gives as many knots with propeller 3 as without (22 kn, the boat\'s own)', pr['trim'])
         print(ok(not errs), 'no page errors', errs[:2])
         await b.close()

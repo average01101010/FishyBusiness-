@@ -183,6 +183,13 @@
     // the yard's work is the old hull's and stays with her (OPP3; before 12.11.2026 the new boat took over the bigger engine, the rebuilt
     // hold and the rebuilds for nothing): the engine, the propeller, the hold and UPGS start from the new boat's own
     if (b.engLv || b.propLv || b.holdLv || (b.upg && Object.keys(b.upg).length)) log('Verftets arbeid ble med ' + old.name.no + ' (motor, propell, lasterom og ombygginger). Den nye båten er som levert.', 'The yard\'s work went with the ' + old.name.en + ' (engine, propeller, hold and rebuilds). The new boat is as delivered.');
+    // (and the yard's jobs on the old hull that wait or run: paid back and taken off the queue, so the new boat can order her own; a job
+    // from before OPP3 has no j.kr and is priced on the old boat, which S.boat still is here)
+    const hullJobs = (S.jobs || []).filter(j => ['eng', 'hold', 'upg', 'prop'].includes(j.kind));
+    for (const j of hullJobs){ const st = j.kind === 'eng' ? ENGUP[j.lv - 1] : j.kind === 'hold' ? HOLDUP[j.lv - 1] : j.kind === 'prop' ? PROPUP[j.lv - 1] : UPGS[j.u] && UPGS[j.u].steps[j.lv - 1];
+      const back = j.kr > 0 ? j.kr : st ? upPrice(st.pc, st.min) : 0; if (back > 0) book('verft', back, 'Tilbakebetalt: ' + (j.no || ''), 'Paid back: ' + (j.en || ''));
+      log((j.no || 'Jobben') + ' var bestilt til ' + old.name.no + '. Verftet betalte tilbake ' + kr(back) + '.', (j.en || 'The job') + ' was ordered for the ' + old.name.en + '. The yard paid back ' + kr(back) + '.'); }
+    if (hullJobs.length) S.jobs = S.jobs.filter(j => !hullJobs.includes(j));
     delete b.engLv; delete b.propLv; delete b.holdLv; delete b.upg;
     b.type = k; delete b.liv; delete b.call; for (const q of Object.keys(EQUIP)) if (!EQUIP[q].tiers && !equipFits(q, k)) S.equip[q] = EQUIP[q].multi ? Math.min(S.equip[q] || 0, VESSELS[k].jukseMax || 0) : false; applyVessel(); loreNewBoat(S.boatName);
     S.equip.jukse = Math.min(S.equip.jukse, BOAT.jukseMax); b.fuel = BOAT.fuelCap * 0.4; b.ice = 0; b.engH = 0; b.svcAt = 0; S.svcTold = false;

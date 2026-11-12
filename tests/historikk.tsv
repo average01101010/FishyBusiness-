@@ -3229,3 +3229,5 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
+2026-11-12 17:55	ccr-013bxxie-opp3	2a6ed57+	heattest	OK	395	3d	alene	
+2026-11-12 17:56	ccr-013bxxie-opp3	2a6ed57+	routetest	FEIL	48	lite	alene	FEIL Autonav over hele kysten: Finnsnes–Tromsø, Bodø–Reine og Bergen–Florø gir en vei fri for land, grunner og skjær, med høyst 40 punkter, eller ett per 2 km d
