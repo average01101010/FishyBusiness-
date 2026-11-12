@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 // Sponsorer (M6, core/09l-sponsor.js): only what the list says, cleaned; an unsafe link is dropped; the link out is marked; a sponsored item
 // has the same numbers as the generic one (the EQUIP item is not touched).
 export default function (t){
@@ -18,5 +19,25 @@ export default function (t){
   t.eq(spOf('item', 'vhf').sponsor.logo, null, 'og en logo som ikke er https');
   t.eq(spUrl('https://example.org/side?a=1'), 'https://example.org/side?a=1&fra=detstorebla', 'lenken ut sier hvor den kom fra');
   t.eq(spUrl('http://example.org'), null, 'og bare til https');
+  // a partner's paint design (steg 44): look on paint, worn as b.liv.sp over the boat's own paint, only the paint shop's own colours
+  const {spPaints, spPaintOf, spPaintLiv, spWorn, spPaintIn, spPaintLogo} = K;
+  spSet(SP_TEST);
+  t.eq(spPaints().length, 1, 'testsponsoren har ett malingsdesign'); t.eq(spOf('look', 'top').data.tp, 'oilskin', 'og jakka i Garderoben er en annen plassering');
+  t.eq(spWorn({hull:'rod', sp:-9}).id, -9, 'et design båten har på, finnes mens avtalen er aktiv'); t.eq(spWorn({hull:'rod'}), null, 'ingen uten sp'); t.eq(spWorn({sp:-5}), null, 'en annen plassering er ikke et malingsdesign');
+  t.eq(spPaintOf(null), null, 'uten nummer: ingen'); t.eq(spPaintOf(''), null, 'tomt nummer: ingen'); t.eq(spPaintOf('-9').id, -9, 'nummeret som tekst (fra knappen)');
+  t.eq(spPaintIn('h:rod;m:T.1.LK;x:-9').id, -9, 'de andres kode: x:-9'); t.eq(spPaintIn('h:rod;x:-99'), null, 'et ukjent nummer gir ingenting'); t.eq(spPaintIn('h:rod;xx:-9'), null, 'og bare nøkkelen x');
+  t.eq(spPaintLogo(spPaintOf(-9)).kind, 'g', 'uten logo_url: det lagde merket');
+  // (the colours themselves are checked against the paint shop's palette in tests/sponsor2test.py: the palette is vessel3d.js', not the core's)
+  spSet([{id:6, kind:'look', target:'paint', data:{name:'X', hull:'#ff00ff'}, sponsor:{name:'X'}}]); t.eq(spPaints().length, 0, 'et design uten en eneste farge er ikke et design'); t.eq(spWorn({sp:6}), null, 'og kan ikke stå på en båt');
+  // admin's list of colours for a paint design is the paint shop's own palette (vessel3d.js HULLPAL, without 'orig' and the earned one)
+  { const root = new URL('../../', import.meta.url), V = fs.readFileSync(new URL('src/js/vessel3d.js', root), 'utf8'), A = fs.readFileSync(new URL('src/admin/index.html', root), 'utf8');
+    const hp = V.slice(V.indexOf('const HULLPAL = ['), V.indexOf('const palOk')), keys = [...hp.matchAll(/\['([a-z]+)', '[^']+', '[^']+', \[[^\]]+\](, 'ach')?\]/g)].filter(m => !m[2]).map(m => m[1]);
+    const pal = JSON.parse((/const PAL = (\[[^\]]+\])/.exec(A) || [])[1].replace(/'/g, '"'));
+    t.ok(keys.length >= 16, 'paletten er lest fra vessel3d.js (' + keys.length + ' farger)'); t.eq(pal.join(','), keys.join(','), 'admin kjenner de samme fargene som Malerverkstedet'); }
+  t.eq(spSet([]), 0, 'avtalen slutter'); t.eq(spWorn({hull:'rod', sp:-9}), null, 'et design uten sine farger lagret er borte fra båten');
+  // Jonas 12.11.2026, «Fargene blir»: the colours kept with it stay, without a sponsor (no mark); the others ask the cloud once
+  const E = spWorn({hull:'rod', sp:-9, spd:{hull:'petrol', ripe:'gul', site:'x'}}); t.eq(E && E.ended, true, 'med fargene lagret står designet etter avtalen'); t.eq(E.sponsor, null, 'uten sponsor'); t.eq(spPaintLogo(E), null, 'og uten merke'); t.eq(E.data.site, undefined, 'bare fargene og navnet tas vare på');
+  t.eq(spPaintIn('h:rod;x:55'), null, 'de andre: et ukjent design gir ingenting ennå'); t.ok(K.SPN.want.has(55), 'og det spørres etter');
+  K.SPN.old[55] = {hull:'petrol'}; t.eq(spPaintIn('h:rod;x:55').ended, true, 'når skyen har svart, er fargene der'); K.SPN.old[56] = false; t.eq(spPaintIn('x:56'), null, 'et nummer skyen ikke kjenner, gir ingenting'); K.SPN.want.clear();
   t.eq(spSet(null), 0, 'en tom liste fjerner alt');
 }
