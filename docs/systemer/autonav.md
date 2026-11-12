@@ -323,25 +323,46 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
   - **Knappen** vises der butikken selger (`shopMode()` er `live` eller `test`, ikke `off`: ingen sky på et offentlig nettsted, eller butikken stengt for kontoen, P5). Admin-bryteren gir fortsatt et gratis hopp for testing.
   - **Kortets knapp er kjøpet:** «Kjøp · 💎 N kr» med vilkårslinja (`shopLabel`, `shopFine`). Gjester får registreringsspørsmålet (`payBuy`).
   - **Prisen** regnes på hele ekte minutter (`q.realMin`), og serveren regner den samme (`hop_price`, `shop_quote_hop`). `shop-checkout` sender beløpet til Stripe som `price_data` og lagrer minuttene, stoppet (`{x, y, port}`), båten og prisen i kjøpet (`purchases.data`).
-  - **Leveringen:** grantet fra webhooken har de samme dataene. `srvApply` (`ui/10i-shop.js`, 5b) spør `hopFate` (`ui/10u-hopp.js`):
-    - Seiler båten ruta til stoppet i kjøpet (`hopMatch`: samme havn, eller innen 100 m), gjøres hoppet (`hopDeliver`, `hopPress`, `hopGo(true, minutter)`), uansett vær. Først ventes det, høyst `HOPUI.waitMs` = 3 min, på det som går over av seg selv (`hopWait`: tida fra et lukket spill spilles inn, `hopCatching`, også `CATCH_LEFT`; eller Autonav finner en vei rundt). Det skjer typisk rett etter retur fra Stripe.
-    - Serveren får beskjed (`hop_use`, `S.hopQ` til den har svart). Svarer den `false`, var hoppet alt brukt på en annen enhet; det telles (`hop_twice`).
-    - Turen må være dekket av minuttene i kjøpet (`hopCovers`: en tidel og to minutter mer er lov, for vær som har endret seg). Et kjøp for færre minutter enn turen blir liggende.
-    - Kvitteringen (`shopThanks`, `shopWhat(k, g)`) har prisen og minuttene fra grantet, ikke fra kortet, som er borte når siden kommer tilbake fra Stripe.
-  - **Kaiboden:** ellers blir grantet liggende ubrukt der (`S.hopSrv`), og loggen og kvitteringen sier den ekte grunnen (`hopKeptWords`): båten var fremme, en annen båt, en annen rute, spillet åpent et annet sted (`TAB`), turen er lengre enn kjøpet, eller grunnen fra `hopWhy`. Trim-fanen viser det, og kortet tilbyr det på en senere rute det dekker («Bruk hoppet fra Kaiboden», uten ny betaling). Det tilbys bare når serveren har sagt i denne økta at det er ubrukt (`SHOP.hopFresh`), så en lagring fra en annen enhet ikke kan bruke et hopp to ganger. Avviket fra planens «uansett endret rute» står i `docs/planer/hopp.md`, «Når hoppet ikke kan gjøres».
+  - **Holdet** (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden»; `hopHoldOn`, `hopHeld`, `b.hopHold = {t0, until, to, pay}`):
+    - ⏩ fryser båten før kortet vises. `vesselStep` (`core/05-vessels.js`) og `dynCan` (`core/16b-dyn.js`) lar henne ligge der hun er: ingen fart, ingen diesel, ingen værvending og ingen motortrøbbel.
+    - Verdens klokke, fisken og mannskapet går som før.
+    - Holdet står i lagringen, så det varer mens siden er hos Stripe og mens tida borte spilles inn.
+    - Holdet slutter ved hoppet, ved «Avbryt», ved `?kjop=avbrutt` (`shopStart`), når ruta endres (`hopMatch` mot stoppet), når siden skjules med kortet åpent, når betalingssida ikke ble åpnet (gjest, feil i `shopGo`: `hopHoldTick`), og etter `HOP.holdReal` = 35 ekte minutter.
+    - Stripe-økta for et hopp utløper etter 31 minutter (`shop-checkout` `expires_at`).
+  - **Leveringen:** grantet fra webhooken har de samme dataene. `srvApply` (`ui/10i-shop.js`, 5b) gjør hoppet når båten det ble kjøpt for, ligger holdt for det samme stoppet (`hopHoldFor`):
+    - Det skjer med `hopDeliver` → `hopPress` → `hopGo(true, minutter)`, uansett vær. Er tida borte ikke spilt inn ennå, eller kom ikke kartet ved målet, ventes det i høyst `HOPUI.waitMs` = 3 min (`hopWait`: `hopCatching`, også `CATCH_LEFT`).
+    - Serveren får beskjed med `hopUse` (`hop_use`), én gang om gangen. Id-en står i `S.hopQ` til serveren har svart. Svarer den `false`, var hoppet alt brukt, og det telles (`hop_twice`).
+    - Turen må være dekket av minuttene i kjøpet (`hopCovers`, `hopCoverMax`: en tidel og to minutter mer er lov).
+    - Kvitteringen (`shopThanks`, `shopWhat(k, g)`) har prisen og minuttene fra grantet.
+    - Ingenting er tilgode etter hoppet (Jonas 12.11.2026: «Når spilleren har kommet fram til endepunktet av ruten ved hjelp av hoppet er tjenesten levert og spilleren skal ikke ha noe "hopp" tilgode»), og hopp selges bare ved ⏩ («Hopp skal ikke selges i kaiboden»). Kaiboden-ordningen er tatt bort.
+  - **Et kjøp som ikke kan gjøres** blir merket for refusjon (`hopVoid`, `S.hopVoid`, hendelsen `hop_void` for admin), og loggen, Meldinger og skjermen sier det én gang. Det gjelder når holdet var sluppet da betalingen kom, når turen er tydelig lengre enn kjøpet, og når noe i `hopWhy` gjelder. Grantet blir liggende ubrukt på serveren til Jonas refunderer i Stripe, og da tar `shop_refund` det tilbake. En side som har mistet spillet (`TAB`), leverer ingenting; den som har spillet, gjør det.
   - **Refusjonen:** `shop_refund` tar tilbake et hopp og en «Ferdig nå» som er levert og ikke brukt, som en haill. Et brukt hopp står.
   - **Havne-id-en** i kjøpet beholdes som spillet har den (en kaiplass er `'hs:'` + en hash, et mottak kan hete `mØF50`); `shop-checkout` stryker bare kontrolltegn.
   - **Testene:**
     - `tests/sqltest.py` HO3 sjekker `hop_price`, `shop_quote_hop`, grantet i `shop_state`, `hop_use` og refusjonen.
     - `tests/kjoptest.py` steg j og k (kjør med `fasittest`) sjekker:
+      - at ⏩ stopper båten
       - kjøpet fra kortet og `shop-checkout` med minuttene og stoppet
-      - at hoppet gjøres når spilleren er tilbake fra Stripe, og at kvitteringen har prisen og minuttene
-      - Kaiboden
-      - at hoppet venter på innhentingen
+      - at båten ligger stille etter retur fra Stripe, også når tida borte er spilt inn
+      - at hoppet gjøres fra holdet når betalingen kommer, og at kvitteringen har prisen og minuttene
+      - at et grant for en båt som ikke er holdt, merkes for refusjon én gang, uten noe i Kaiboden
+      - at hoppet venter på innhentingen (`CATCH_LEFT`)
       - at et kjøp for 1 minutt ikke gjøres på en tur på 15
-    - `tests/hoppshot.py` 4d og 4e tar skjermbilder av kortet slik spillerne ser det, «Kjøp · 💎 N kr» med vilkårslinja, og av hoppet i Kaiboden på ruta og i Trim-fanen, i begge formater.
-    - `tests/unit/hopp.test.mjs` sjekker `hopWait`, `hopCovers` og `hopMatch` med en id uten kolon.
-  - **Kontrollen av HO3** (12.11.2026) fant kvitteringens pris, kaiplass-id-en, minuttene som ikke ble sjekket, refusjonen, at hoppet gikk til Kaiboden under innhentingen med en melding som ikke stemte, at et gammelt `S.hopSrv` kunne tilbys, og «60 minutter» rett over «Tida er spilltid». Alt er rettet med tester som ble sett røde først.
+      - at et avbrutt kjøp slipper båten
+    - `tests/hopptest.py` 4d sjekker at båten står stille i 30 spillminutter uten diesel, og at holdet slutter når ruta endres og etter 35 ekte minutter.
+    - `tests/hoppshot.py` 4d tar skjermbildet av kortet slik spillerne ser det, «Kjøp · 💎 N kr» med vilkårslinja, i begge formater. 4e sjekker at ⏩ stopper båten og at «Avbryt» slipper henne.
+    - `tests/unit/hopp.test.mjs` sjekker holdet, `hopWait`, `hopCovers`, `hopMatch` med en id uten kolon og `TAB`.
+  - **Kontrollene av HO3** (12.11.2026) fant blant annet:
+    - kvitteringens pris
+    - kaiplass-id-en
+    - at minuttene ikke ble sjekket
+    - at refusjonen ikke tok hopp tilbake
+    - at et betalt hopp kunne komme mens tida borte ble spilt inn
+    - at grunnene i meldingene ikke stemte
+    - at `hop_use` ble sendt to ganger
+    - at en fane som hadde mistet spillet, kunne hoppe
+
+    Alt er rettet med tester som ble sett røde først. Den andre kontrollen kom før Jonas bestemte holdet; holdet har fått en egen kontroll.
 - **Ikke med:** maskinhavari i grov sjø (`risk`: hoppet går ikke i vær over risikogrensa), og måltidene underveis (`mealMinute` går etter klokka, som står stille; de verken serveres eller telles som hoppet over, og i havn spiser mannskapet i land).
 - **Testene:** `tests/unit/hopp.test.mjs` (prisstigen, neste stopp, nektingene, tida i ord, energien, mannskapets slitasje og det de andre ser) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, med og uten en hånd om bord, trim som varer og trim som går ut underveis, et stopp midt på ruta, nektingene og betalt hopp).
 - **Kontrollen** (`/kontroll`, 12.11.2026) fant at sporet manglet de hoppede punktene, at proviant, snøkrabbe i tankene, turens timer, mannskapets arbeidsandel og Skippertak ikke gikk som om båten seilte, at mann over bord og slep av en annen spiller ikke ble nektet, at en trim som gikk ut underveis ga et for raskt og billig hopp, at et kart som ikke kom ble hoppet til likevel, og «1 t 60 min» i loggen. Alt er rettet med tester.

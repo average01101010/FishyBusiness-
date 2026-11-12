@@ -70,20 +70,20 @@ For én tur under rundt to og en halv time er hoppet billigere per spart minutt 
 **Når betalingen har gått gjennom** (Jonas 12.11.2026, V3: «Så lenge betalingen har gått gjennom skal spillerene kunne teleportere seg frem til målet, uavhengig av været eller andre ting. De betaler fortsatt for tiden de har spart.»):
 - Været, dieselen og turoppdraget sjekkes bare før kjøpet.
 - Når betalingen er kommet fram, flyttes båten til målet som sto da kjøpet ble gjort, uansett vær eller endret rute.
-- Bare hvis båten alt er framme når betalingen kommer, fordi kassen tar et par minutter, er det ingen tid å spare. Da legges hoppet i Kaiboden som ett hopp til neste rute, uten utløpsdato. Dette er øktas forslag og kan snus i PR-en for HO3.
+- (Erstattet samme dag: hoppet legges ikke i Kaiboden. Båten fryses når ⏩ trykkes, se «Holdet og leveringen» under.)
 
-**Når hoppet ikke kan gjøres** (bygd i HO3 etter kontrollen, 12.11.2026; øktas valg, kan snus i PR-en, `ui/10u-hopp.js` `hopFate`):
-- **Været stopper det aldri.** Et betalt hopp går med `hopGo(true)`, uansett vind, sjø og Autonav-grensene.
-- **Det som går over av seg selv, ventes på** (`hopWait`, høyst tre minutter). Rett etter retur fra Stripe spiller siden inn tida den var borte, og Autonav kan holde på å finne en vei rundt grunt vann. Hoppet gjøres når det er ferdig, og kvitteringen sier «om et øyeblikk».
-- **Hoppet legges i Kaiboden, og loggen og kvitteringen sier den ekte grunnen,** når:
-  - båten er fremme (`status` er ikke `sailing`)
-  - spilleren er om bord i en annen båt
-  - båten seiler en annen rute, slik at stoppet i kjøpet ikke er neste stopp innen 100 m
-  - spillet er åpent på en annen enhet
-  - noe i `hopWhy` gjelder: lekkasje, mann over bord, slep av en annen spiller, anker eller ligger bi, «Stopp båten», Driftsplanen, første tur eller et turoppdrag med båten
-  - turen er lengre enn hoppet ble kjøpt for (`hopCovers`: minuttene i kjøpet, pluss en tidel og to minutter for vær som har endret seg)
-- **Fra Kaiboden** brukes hoppet med ett trykk på ⏩ på en senere rute det dekker, uten ny betaling. Kortet tilbyr det bare når serveren har sagt i denne økta at det er ubrukt (`SHOP.hopFresh`).
-- **Avviket fra ordlyden over:** «uansett endret rute» er ikke bygd. Et hopp til et stopp som ikke lenger er på ruta, ville flyttet båten dit spilleren har valgt bort, og hoppet beholder hele verdien i Kaiboden. Vil Jonas heller at båten flyttes til stoppet i kjøpet også da, er det en endring i `hopFate` og `hopGo` (ruta dit legges med `leiaRoute` før tørrkjøringen).
+**Holdet og leveringen** (Jonas 12.11.2026, etter at HO3 var bygd og kontrollert; bygd samme dag):
+- «Hopp skal ikke selges i kaiboden, det skal kun selges per minutt når man trykker på knappen under seilas.»
+- «For at et hopp skal kunne kjøpes og brukes må en rute mellom A og B være startet. Når spilleren har kommet fram til endepunktet av ruten ved hjelp av hoppet er tjenesten levert og spilleren skal ikke ha noe "hopp" tilgode.»
+- Spurt om hva som skal skje når båten har kommet fram ved å seile mens betalingen går: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden, det løser problemet.»
+
+Det er bygd slik (`core/06j-hopp.js` `hopHoldOn`, `hopHeld`, `hopHoldFor`; `ui/10u-hopp.js`; `ui/10i-shop.js` 5b):
+- **⏩ fryser båten** der hun er, før kortet vises (`b.hopHold`). Hun har ingen fart, bruker ingen diesel, blir ikke snudd av været og får ingen motortrøbbel (`vesselStep`, `dynCan`). Prisen og stoppet på kortet er derfor det betalingen gjelder.
+- **Verdens klokke går som før.** Fisken, isen, mannskapet og du går som på en båt som ligger stille.
+- **Holdet varer mens siden er hos Stripe og mens tida borte spilles inn.** Det står i lagringen, så en annen enhet som har spillet, gjør hoppet der.
+- **Holdet slutter** ved hoppet, ved «Avbryt», når kjøpet avbrytes hos Stripe, når ruta endres, når siden skjules med kortet åpent, og senest etter 35 ekte minutter. Stripe-økta for et hopp utløper etter 31 minutter (`shop-checkout` `expires_at`), så ingen betaling kommer etter at holdet er sluppet.
+- **Når betalingen kommer, hopper båten fra holdet til endepunktet**, uansett vær (`hopGo(true)`), med en gang eller så snart tida borte er spilt inn (`hopWait`). Da er tjenesten levert. Ingenting er tilgode, og hoppet står ikke i Kaiboden.
+- **Et kjøp som likevel ikke kan gjøres, merkes for refusjon** (`hopVoid`, hendelsen `hop_void`), og loggen, Meldinger og skjermen sier det én gang. Det gjelder når holdet var sluppet da betalingen kom, når turen er tydelig lengre enn det som ble betalt for (`hopCovers`), og når noen er i sjøen. Jonas refunderer i Stripe, og `shop_refund` tar da grantet tilbake. Med holdet skal dette nesten aldri skje.
 
 ## Fasene
 
@@ -118,7 +118,7 @@ Hver fase er én økt.
   - Produktet `hopp` i `products` med prisen fra `shop_quote_hop(minutter)` etter formelen (`hop_price`). Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
   - `purchases.data` med minuttene, målet og prisen.
   - `shopGive` gir hoppet når betalingen kommer fram.
-  - Hoppet gjøres til målet i kjøpet, uansett vær og endret rute; er båten alt framme, legges det i Kaiboden (se «Når betalingen har gått gjennom»).
+  - Hoppet gjøres fra holdet til målet i kjøpet, uansett vær (se «Holdet og leveringen»).
   - `shopThanks` sier hva som skjedde.
 - **Filer:** `supabase/migrations/` (ny), `supabase/functions/shop-checkout/index.ts`, `ui/10i-shop.js`, Kaiboden i `ui/phone/`.
 - **Ekte penger:** PR til Jonas, ingen utrulling før han har sett den. Migreringen kjøres av Jonas på testprosjektet først.
@@ -128,7 +128,7 @@ Hver fase er én økt.
 
 - **V1 Prisen:** bare spart tid (Jonas: «Kan det være bedre å bare ta betalt for tiden spart i totale minutter eller sekunder?»), som prisstigen 75/50/25 øre per minutt, minst 5 kr (sitert over). Taksameteret med nm og timer og den flate prisen er lagt bort.
 - **V2 Taket:** ingen tak (Jonas: «Ingen tak»).
-- **V3 Etter betalingen:** hoppet gjøres uansett vær og andre ting (Jonas, sitert over). Er båten alt framme, legges hoppet i Kaiboden (øktas forslag).
+- **V3 Etter betalingen:** hoppet gjøres uansett vær og andre ting (Jonas, sitert over). Båten fryses når ⏩ trykkes, og ingenting er tilgode etter hoppet (Jonas 12.11.2026, «Holdet og leveringen»).
 
 ## Det som er antatt eller usikkert
 
@@ -152,4 +152,5 @@ Hver fase er én økt.
 
 - 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen.
 - 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n.
-- 12.11.2026: HO3 (kjøpet) bygd i samme økt (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»): `shop_quote_hop`, `hop_price`, `hop_use`, `shop_state` med hoppene, `shop_refund` som tar tilbake et ubrukt hopp, `shop-checkout` med minuttene og stoppet, leveringen i `srvApply` og Kaiboden. Uavhengig kontroll; funnene rettet (kvitteringens pris, kaiplass-id-en, minuttene i kjøpet, refusjonen, ventingen på innhentingen, grunnen i Kaiboden). Avviket fra «uansett endret rute» står under «Når hoppet ikke kan gjøres».
+- 12.11.2026: HO3 (kjøpet) bygd i samme økt (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»): `shop_quote_hop`, `hop_price`, `hop_use`, `shop_state` med hoppene, `shop_refund` som tar tilbake et ubrukt hopp, `shop-checkout` med minuttene og stoppet, leveringen i `srvApply` og Kaiboden. Uavhengig kontroll; funnene rettet (kvitteringens pris, kaiplass-id-en, minuttene i kjøpet, refusjonen, ventingen på innhentingen, grunnen i Kaiboden). Hvordan holdet og leveringen virker, står under «Holdet og leveringen».
+- 12.11.2026: Jonas: hopp selges bare ved ⏩, ingenting tilgode, og båten fryses når knappen trykkes. Kaiboden-ordningen er tatt bort og holdet bygd (`b.hopHold`), med tester og en ny uavhengig kontroll.

@@ -67,7 +67,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 
 **Kappløp og tidsløp** (Jonas 12.11.2026; plan med valg bestilt samme dag: «Plan med valg nå», `docs/planer/kapplop.md`; valgene tatt samme dag: tidsløp med én klokke, alltid åpent med ny tavle hver ekte uke, klasser etter toppfarten, faste oppgaver og én overraskelse, premie i spillets kroner, trim vises ikke; steg 116–119): den raskeste tida Lindesnes–Nordkapp med små oppdrag langs veien. Hopp over ruta er ikke lov i løpet. Trim er lov (Jonas: «Trim skal være lov. Tanken er at oppgavene som kommer underveis i løpet kan være x-faktoren som gjør det mer spennende og balanserer spillet.»).
 
-**Hopp over resten av ruta** (Jonas 12.11.2026, plan i `docs/planer/hopp.md`): HO1–HO3 er bygd og ute på testutgaven (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»). Kjøpet er ekte penger og venter på at Jonas ser PR-en før slippet.
+**Hopp over resten av ruta** (Jonas 12.11.2026, plan i `docs/planer/hopp.md`): HO1–HO3 er bygd og ute på testutgaven (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»). Kjøpet er ekte penger og venter på at Jonas ser PR-en før slippet. Det selges bare ved ⏩ under seilas, båten fryses til betalingen er kommet, og ingenting er tilgode etter hoppet (Jonas 12.11.2026).
 
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
