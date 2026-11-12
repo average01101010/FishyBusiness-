@@ -639,7 +639,7 @@ function crewSim(src){
   function idlePlace(k, L, id){
     const n0 = hashStr(id + k + Math.floor(S.t / 12)), ways = BOTH[k] ? [!!IDLE_IN[k], !IDLE_IN[k]] : [!!IDLE_IN[k]];
     for (const way of ways) for (let i = 0; i < L.length; i++){ const q = L[(n0 + i) % L.length], f = fitPlace(k, q, way);
-      if (!poseHits(k, q.k, f.h, f.rail, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off}; }
+      if (!poseHits(k, q.k, f.h, f.rail, f.off) && !kitAt(q.k, f.off)) return {k:q.k, h:f.h, rail:f.rail, off:f.off}; }
     return null; }
   // the parts of the deck the crew live on: those with a station, the door or the wheel; a place on the rail of a part only a wall away
   // (behind the house, the stern behind a bulkhead) is no place for a break
@@ -851,6 +851,10 @@ function crewSim(src){
   // (OB10 runde 4) the bodies standing in the kit: the kit is out of the walking map (kitBoxes), but the map holds only where a body's
   // middle may be, so one at the edge of the tubs stood with half his body in them, and nothing caught it (poseHits and bodyHits see
   // the model only). A body here is a ring of 0.15 m round its middle on its own deck, the cells the kit took out of the map
+  // (and one place: the body there, moved off by off, in the kit; for the breaks, idlePlace)
+  function kitAt(k, off){ const M = ST.M, M0 = ST.M0; if (src || M === M0 || !M0.ok(k)) return false; const p = M0.at(k), x = p[0] + (off ? off[0] : 0), z = p[2] + (off ? off[1] : 0);
+    for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, c = M0.cellOf(x + Math.cos(u) * 0.15, z + Math.sin(u) * 0.15); if (M0.ok(c) && !M.ok(c) && Math.abs(M0.at(c)[1] - p[1]) < 0.3) return true; }
+    return false; }
   function kitHits(){ if (!ready() || src) return null; const M = ST.M, M0 = ST.M0, out = []; if (M === M0) return out;
     for (const a of visible()){ const o = walkOff(a), x = a.x + o[0], z = a.z + o[1]; let n = 0;
       for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, k = M0.cellOf(x + Math.cos(u) * 0.15, z + Math.sin(u) * 0.15); if (M0.ok(k) && !M.ok(k) && Math.abs(M0.at(k)[1] - a.y) < 0.3) n++; }
