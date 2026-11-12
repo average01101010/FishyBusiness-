@@ -91,20 +91,21 @@ function hopDo(q){
   if (q.trimMin && b.trim) b.trim.until = trimUntil(b) - q.trimMin;   // (run out: vesselStep ends it and says so)
   // Skippertak is used for the minutes as the trim is: while it holds, you and the crew stay rested (energyMinute, crewTick)
   let skipM = 0; if (skipOn()){ skipM = Math.min(n, S.skip.until - S.t); S.skip.until -= skipM; }
-  // the crew's share of work this minute (the helm, the galley: workAssign, 13-work.js), as crewTick counts it from the minutes worked
-  const A = typeof workAssign === 'function' ? workAssign() : [], wf = c => { const a = A.find(x => x.c === c); return a && WORK_ALL.includes(a.st) ? 1 : 0; };
-  const crew = crewAboard(), fat = new Map(crew.map(c => [c, skipM > 0 ? 0 : (c.fatigue || 0)]));
+  // the crew: the minutes each works (the helm, the galley, the deck: workAssign, 13-work.js, as workMinute counts them in c.wk), and
+  // at each whole hour of the clock their fatigue for it as crewTick counts it (Skippertak holds it at nought)
+  const crew = crewAboard(), worked = new Map(crew.map(c => [c, Object.values(c.wk || {}).reduce((a, x) => a + x, 0)]));
   // each minute where she would have been: the catch, the provisions, the crew's fatigue; each hour the trip's hours at sea, the
   // autoline's hooks and the live snow crab in the tanks (vesselStep and step, minute and hour)
   try {
     for (let m = 0; m < n; m++){
       const t = T0 + m + 1, H = t / 60, p = q.track[Math.min(q.track.length - 1, Math.floor(m / 60))] || p0, hr = gDate(H).getUTCHours(), night = hr >= 22 || hr < 6;
       b.pos = p; holdMinute(H, p); provMinute();
-      if (m >= skipM) for (const c of crew) fat.set(c, clamp(fat.get(c) + crewSeaFat(c, false, wf(c), night) / 60, 0, 100));
-      if (t % 60 === 0){ autoFixHour(); tripHour(); if (BOAT.tank) snoTankHour(H); }
+      if (crew.length){ const A = workAssign(); for (const c of crew) if (A.some(x => x.c === c && WORK_ALL.includes(x.st))) worked.set(c, worked.get(c) + 1); }
+      if (t % 60 === 0){ autoFixHour(); tripHour(); if (BOAT.tank) snoTankHour(H);
+        for (const c of crew){ c.fatigue = m < skipM ? 0 : clamp((c.fatigue || 0) + crewSeaFat(c, false, clamp(worked.get(c) / 60, 0, 1), night), 0, 100); worked.set(c, 0); c.wk = {}; } }
     }
   } finally { b.pos = p0; }
-  for (const c of crew) c.fatigue = fat.get(c);
+  for (const c of crew){ const w = worked.get(c); c.wk = w > 0 ? {hop:w} : {}; }   // (the hour begun: the next crewTick counts it, as after sailing in)
   // you, if you are aboard: rested through the Skippertak minutes, then down at sea or up in a bunk, asleep at nought
   if (meAboard() && !energyOff() && n > skipM){
     const bunk = typeof resting === 'function' && resting(), was = !!S.sleep, r = hopEnergy(skipM ? 100 : (S.energy == null ? 100 : S.energy), S.sleep && !skipM ? Math.max(0, S.sleep.until - S.t) : 0, n - skipM, bunk ? restRate(b) : -ENERGY.sea);

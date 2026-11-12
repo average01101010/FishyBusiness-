@@ -57,7 +57,9 @@ STATE = """() => { const b = S.boat, kg = S.hold.reduce((a, x) => a + x.kg, 0);
     energy:S.energy, fs:(S.fs && S.fs.p) || 0, nm:(S.tat && S.tat.nm) || 0, engH:b.engH || 0, trimUntil:b.trim ? trimUntil(b) : null,
     ice:b.ice || 0, fat:(S.crew || []).reduce((a, c) => a + (c.fatigue || 0), 0), gut:kg ? S.hold.filter(x => x.gut).reduce((a, x) => a + x.kg, 0) / kg : null,
     trail:(S.trail || []).length, vmax:BOAT.vmax, speed:S.plan ? S.plan.speed : null}; }"""
-SAIL = """() => { for (let i = 0; i < 2000 && S.boat.status === 'sailing'; i++) playMinutes(1, true); return S.boat.status; }"""
+# sailed as catchUp sails it (ui/08-actions.js): the manoeuvring model off, the minute step; a way round shallow water found by Autonav
+# is waited for, as playMinutes does with the game closed (sailWaiting)
+SAIL = """async () => { for (let i = 0; i < 4000 && S.boat.status === 'sailing'; i++){ DYN.on = false; playMinutes(1, true); while (sailWaiting()) await new Promise(r => setTimeout(r, 30)); } return S.boat.status; }"""
 
 async def main():
     async with async_playwright() as p:
