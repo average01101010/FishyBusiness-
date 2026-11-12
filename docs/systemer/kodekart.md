@@ -746,7 +746,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 88 `hfftFrame(T, t, out, W, outD)`
   - 110 `hfftMips(out, N)`
 
-## `src/js/core/04-crew.js` (631 linjer)
+## `src/js/core/04-crew.js` (713 linjer)
 
 crew: people with skills, habits and moods
 
@@ -807,19 +807,29 @@ crew: people with skills, habits and moods
   - 468 `holdNet()`
   - 477 `crewSettle(c)`
   - 486 `crewQuit(c, why, whyEn)`
-- **488** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
-  - 498 `namedAge(n, H)`
-  - 499 `namedMake(n)`
-  - 504 `namedTaken(nid)`
-  - 505 `namedTick(B)`
-  - 514 `borsTick(H)`
-  - 523 `crewRumour()`
-  - 525 `crewTick(H)`
-  - 593 `codRoom(H)`
-- **595** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 609 `flyIn(c)`
-  - 618 `flyOut(c)`
-  - 626 `flyTick()`
+- **488** Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102
+  - 499 `avtAddMonths(t, n)`
+  - 504 `crewAvt(c)`
+  - 511 `crewPos(c)`
+  - 514 `crewFrist(c, t = S.t)`
+  - 525 `crewNotice(c, gr)`
+  - 534 `crewOppTick(c)`
+  - 542 `crewStay(c)`
+  - 550 `crewGrunn(c)`
+  - 558 `crewLetGo(c)`
+- **568** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
+  - 578 `namedAge(n, H)`
+  - 579 `namedMake(n)`
+  - 584 `namedTaken(nid)`
+  - 585 `namedTick(B)`
+  - 594 `borsTick(H)`
+  - 603 `crewRumour()`
+  - 605 `crewTick(H)`
+  - 675 `codRoom(H)`
+- **677** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 691 `flyIn(c)`
+  - 700 `flyOut(c)`
+  - 708 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1428 linjer)
 
@@ -2174,13 +2184,13 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 406 `lifeEarn(c, sum)`
   - 408 `lifeOff(c, days, no, en, sno, sen)`
   - 410 `lifeDay(c, H)`
-  - 426 `lifeInjury(c, hs)`
-  - 429 `lifeOffTick(c)`
-  - 432 `lifeDepart(c)`
-  - 444 `alumniGround(a)`
-  - 449 `alumniStates(H)`
-  - 456 `lifeHail(H)`
-  - 463 `alumniReturn(B)`
+  - 425 `lifeInjury(c, hs)`
+  - 428 `lifeOffTick(c)`
+  - 431 `lifeDepart(c)`
+  - 443 `alumniGround(a)`
+  - 448 `alumniStates(H)`
+  - 455 `lifeHail(H)`
+  - 462 `alumniReturn(B)`
 
 ## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
@@ -2770,12 +2780,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1560 linjer)
+## `src/js/ui/phone/07-patch.js` (1564 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1548 `patch()`
+  - 1552 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2852,7 +2862,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 136 `careAboard(inPort, p)`
   - 163 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (182 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (189 linjer)
 
 --- crew
 
@@ -2861,17 +2871,18 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **5** the crew, person by person
   - 9 `traitChips(c, all)`
   - 11 `lifeHtml(c)`
-  - 16 `personCard(c, cand)`
-  - 23 `bors()`
-  - 38 `mannskap()`
-- **64** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
-  - 71 `ledger()`
-  - 82 `accounts()`
-  - 105 `bank()`
-- **155** messages
-  - 156 `meld()`
-- **163** actions
-  - 170 `switchVessel(k)`
+  - 18 `avtHtml(c, lottKv)`
+  - 23 `personCard(c, cand)`
+  - 30 `bors()`
+  - 45 `mannskap()`
+- **71** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
+  - 78 `ledger()`
+  - 89 `accounts()`
+  - 112 `bank()`
+- **162** messages
+  - 163 `meld()`
+- **170** actions
+  - 177 `switchVessel(k)`
 
 ## `src/js/ui/phone/13b-nettet.js` (148 linjer)
 
@@ -2918,7 +2929,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (333 linjer)
+## `src/js/ui/phone/14-act.js` (335 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
