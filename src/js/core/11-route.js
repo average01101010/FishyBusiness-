@@ -511,7 +511,41 @@ async function leiaRoute(a, b, aPort, bPort, opt){
     // (a boat with an ice class is told the limit of her class, H3c)
     const c = Math.round(seaIceAt(b) / 10), k = BOAT.iceClass, L = Math.round(seaIceLim() / 10);
     return {why:k ? ['Målet ligger i drivisen (' + c + '/10). Isklassen ' + k + ' går opp til ' + L + '/10.', 'The goal lies in the drift ice (' + c + '/10). Ice class ' + k + ' goes up to ' + L + '/10.'] : ['Målet ligger i drivisen (' + c + '/10). Båten har ikke isklasse.', 'The goal lies in the drift ice (' + c + '/10). The boat has no ice class.']}; }
-  try { const r = await leiaRoute0(a, b, aPort, bPort, false, opt); if (r && r.st){ r.st.tide = +credit.toFixed(2); if (LEIA_ICE.on) r.st.ice = {cap:Math.round(LEIA_ICE.cap)}; } return r; } finally { back(); }
+  try { let r = await leiaRoute0(a, b, aPort, bPort, false, opt);
+    // a long way that found none: split at a point on open, deep water out towards the goal (leiaSplit), only now, so a way found
+    // today is the same
+    if (r && r.why && !(opt && opt.noSplit) && kmTrue(a, b) >= LEIA_SPLIT.min){ const r2 = await leiaSplit(a, b, aPort, bPort, opt, r); if (r2) r = r2; }
+    if (r && r.st){ r.st.tide = +credit.toFixed(2); if (LEIA_ICE.on) r.st.ice = {cap:Math.round(LEIA_ICE.cap)}; } return r; } finally { back(); }
+}
+// A long way among the islands with no route in one piece (KL1a 12.11.2026: an autoliner from Rørvik to Bodø, 3.8 m draught. The
+// fairway network's lane goes through a sound charted at 3.6 m, and the grid's coarse search for a way that long starts in a basin
+// among the islands that its 400 m cells shut in, and expands 16 cells; from Rørvik to Sklinna the fine grid finds the way out, and
+// from Sklinna on the coarse search runs over open sea). The way is tried in two pieces through a point on open water (2 km and more
+// from land, the boat's safe depth) 30 to 60 km out from one end towards the other, the nearest the goal first, a few at most. Only
+// when the whole way found none, so nothing that is found today changes
+const LEIA_SPLIT = {min:60, rings:[30, 45, 60], turn:[0, 25, -25, 50, -50, 80, -80], clear:2, tries:4};
+async function leiaSplit(a, b, aPort, bPort, opt, r0){
+  const sd = safeDepth(), cands = [];
+  for (const [p, q] of [[a, b], [b, a]]){
+    const brg = Math.atan2(q.x - p.x, -(q.y - p.y));
+    for (const R of LEIA_SPLIT.rings) for (const t of LEIA_SPLIT.turn){
+      const g = brg + t * Math.PI / 180, w = {x:p.x + Math.sin(g) * R, y:p.y - Math.cos(g) * R};
+      if (dist(w, q) < 20) continue;
+      try { await mapNeed(w, 1); if (isLandFar(w) || coastDistFar(w) < LEIA_SPLIT.clear || depthF(w) < sd) continue; } catch (e){ continue; }
+      cands.push({w, end:p === a ? 'a' : 'b', d:dist(w, q)});
+    }
+  }
+  cands.sort((u, v) => u.d - v.d);
+  const tried = []; let n = 0;
+  for (const c of cands){
+    if (n >= LEIA_SPLIT.tries * 2) break;
+    if (tried.some(w => dist(w, c.w) < 10)) continue; tried.push(c.w); n++;
+    const r1 = await leiaRoute0(a, c.w, aPort, null, false, opt); if (!r1 || r1.why) continue;
+    const r2 = await leiaRoute0(c.w, b, null, bPort, false, opt); if (!r2 || r2.why) continue;
+    const st = Object.assign({}, r2.st, {split:{x:+c.w.x.toFixed(3), y:+c.w.y.toFixed(3), end:c.end, tried:n}, firstWhy:r0.why, by:'split'});
+    return {wps:r1.wps.concat(r2.wps), nm:r1.nm + r2.nm, st};
+  }
+  return null;
 }
 // Step 1 of the coast-wide Autonav (08.10.2026): the way from a point by the shore, in a narrow basin or among islets, out to
 // water where the 100 m search can take over (or to where goal(q) says, within km), found on the 25 m mask (the fine coast decides what is land): breadth-first through

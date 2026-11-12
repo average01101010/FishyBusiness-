@@ -220,6 +220,10 @@ Planen og Jonas' valg: `docs/planer/kapplop.md` (V1 A tidsløp, V2 A én klokke,
 | Ekte timer, været nå | 29,0 | 19,5 | 17,2 | 9,2 |
 | Bunkringsstopp uten / med turbo | 1 / 5 | 0 / 0 | 0 / 0 | 0 / 1–2 |
 
+Målt i tillegg samme dag, etter kontrollen:
+- **Aluminiumsbåten** (rask, 24 kn, 90 liter tank): 1 107 nm. Den bruker 8,2 ekte timer, eller 4,2 med turbo, og bunkrer én gang per etappe uten trim (seks i alt) og to til tre ganger med turbo (14 i alt).
+- **Autolineren** (havfartøy, 13 kn): 1 117 nm og 14,7 ekte timer, eller 7,5 med turbo, uten bunkring. Den fant ingen rute Rørvik–Bodø i ett stykke før `leiaSplit` (`autonav.md` 4.12g).
+
 En etappe tar 2,0–5,6 ekte timer for trebåten (med og uten turbo) og 0,6–1,7 for hurtigsjarken. Bunkringen er regnet med full tank ved hvert sjekkpunkt; trebåten bruker 37–61 av 60 liter per etappe uten trim, så hun bunkrer på etappe 5 og med turbo på nesten hver etappe. Tida oppgavene tar, måles i 116b.
 
 Testene: `tests/unit/kapplop.test.mjs` (klassene, uka over skiftene, klokka, `lopMinH`, mållinja, hoppet, salget) og `tests/kapplop.py` (LITE, hele kysten: påmelding, etappe 1 sør seilt minutt for minutt med tillegg og hoppet nektet, klokka i havn og ved bunkring, etappe 3 midt spilt som med spillet lukket, etappe 6 nord over mållinja, slep bryter).

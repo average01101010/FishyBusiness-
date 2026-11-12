@@ -10,6 +10,7 @@
      a hop is allowed again after the finish
   6. a tow from the rescue boat on the way breaks the attempt (dnf, «slep»)
   7. no page errors
+  8. an ocean vessel finds the way Rørvik–Bodø (11-route.js leiaSplit, KL1a)
 KYST_LOP_MAAL=1 measures instead (kapplop.md «Løypa og tidene»): each leg's length with leiaRoute, and the time per leg and for the
 whole course for the trebåt, the havsjark, the kystbåt 15 m and the hurtigsjark (KYST_LOP_TYPER=skiff,autoliner: other types), with and without the turbo trim, in still weather and in
 the weather now, with a dry run as hopRun; the bunkering stops; portWhy at each checkpoint for every type.
@@ -159,6 +160,11 @@ async def main():
         h0 = r['hist'][0] if r['hist'] else {}
         check(r['st'] is None and h0.get('st') == 'dnf' and h0.get('how') == 'slep', '6. slep fra Redningsselskapet: forsøket er brutt', h0)
         check(r['legsN'] == 3, '6. etappene som er seilt (Bergen, Rørvik og mållinja), teller på merket: ' + str(r['legsN']))
+        # 8. an ocean vessel finds the way Rørvik–Bodø (leg 4): before KL1a no route in one piece (11-route.js leiaSplit)
+        h = await J("""async () => { const b = S.boat, ty = b.type; b.type = 'autoliner'; applyVessel(); const A = portById(LOP.cps[2].port), B = portById(LOP.cps[3].port);
+          await mapNeed(A.p, 2); const r = await leiaRoute({x:A.p.x, y:A.p.y}, {x:B.p.x, y:B.p.y}, A.id, B.id); b.type = ty; applyVessel();
+          return r.why ? {why:r.why[0]} : {nm:+r.nm.toFixed(1), by:r.st && r.st.by, split:r.st && r.st.split}; }""")
+        check(not h.get('why') and h.get('nm', 0) > 150, '8. et havfartøy (autolineren) finner ruta Rørvik–Bodø', h)
         check(errs == [], '7. ingen sidefeil', errs[:3])
         await br.close()
     print('KAPPLOP ' + ('OK' if not FAIL else 'FEIL: ' + '; '.join(FAIL)))
