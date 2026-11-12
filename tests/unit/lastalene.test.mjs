@@ -10,8 +10,19 @@ export default function (t){
     for (let m = 1; m <= 240; m++){ S.t++; const A = workAssign(); const me = A.find(p => !p.c); S.mySt = me ? me.st : null; if (jobMinute(j, A)) return m; }
     return null; };
   for (const [e, kg, h] of [[94, 80, 12], [31, 80, 18], [31, 80, 1], [12, 80, 18], [60, 30, 12], [31, 500, 18]]){
-    const m = run(e, kg, h); t.ok(m != null && m <= 60, 'alene om bord, energi ' + e + ', ' + kg + ' kg, kl. ' + h + ': lasta kommer om bord (' + m + ' min)'); }
+    const m = run(e, kg, h); t.ok(m != null && m <= cargoMin(kg) + 1, 'alene om bord, energi ' + e + ', ' + kg + ' kg, kl. ' + h + ': lasta kommer om bord (' + m + ' min)'); }
+  // with hands aboard, all worn out: as many as the job has places for go, so it takes the time it was sized for; one asleep on her
+  // watch below is never on it, and a hand already on the job is left to it
+  const crew = (n, fat) => { S.crew = [...Array(n).keys()].map(() => Object.assign(K.genCrew(), {bi:false, off:false, sleepW:false, fatigue:fat, morale:62, traits:[]})); };
+  crew(2, 85); let m3 = run(12, 500, 18); t.ok(m3 != null && m3 <= cargoMin(500) + 2, 'tre utslitte om bord, 500 kg: ferdig på tida jobben er satt til (' + m3 + ' min, cargoMin ' + cargoMin(500) + ')');
+  crew(1, 85); S.crew[0].sleepW = true; S.energy = 12; S.mySt = 'pause'; S.jobs = []; queueJob({kind:'last', crew:true, h:0.2}); S.t++;
+  let A = workAssign(); t.eq(A.map(p => (p.c ? 'c' : 'me') + ':' + p.st).join(' '), 'me:last', 'den som sover på frivakt, tas ikke; den våkne går');
+  crew(1, 10); S.energy = 94; S.mySt = 'pause'; S.jobs = []; queueJob({kind:'last', crew:true, h:1}); S.t++; A = workAssign();
+  t.ok(A.some(p => p.st === 'last' && p.why !== 'need'), 'uthvilt mannskap tar jobben av seg selv, som før', A.map(p => p.st + ':' + p.why));
+  // loading and landing are told apart on the job (09g-turer.js cargoJob), for the status line
+  S.crew = []; S.jobs = []; K.cargoJob(80, 'Lossing av post', 'Landing the mail', true); K.cargoJob(80, 'Lasting av post', 'Loading the mail');
+  t.eq(S.jobs.map(j => j.kind + ':' + (j.out ? 1 : 0)).join(' '), 'last:1 last:0', 'lossejobben er merket (out), lastejobben ikke');
   // the status line can tell freight from the crew's other work, and landing from loading (ui/04-panels-instruments.js)
-  S.jobs = [{kind:'last', crew:true, h:0.1}]; t.ok(K.jobsFreight() && !S.jobs.every(j => j.out), 'bare frakt i køen: statuslinja sier «Lasta er om bord»');
+  S.jobs = [{kind:'last', crew:true, h:0.1}]; t.ok(K.jobsFreight(), 'bare frakt i køen: statuslinja sier at det er lasta');
   S.jobs.push({kind:'egn', crew:true, h:1}); t.ok(!K.jobsFreight(), 'frakt og egning sammen: «Mannskapet er ferdig» som før');
 }
