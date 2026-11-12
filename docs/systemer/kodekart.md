@@ -757,7 +757,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 114 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
   - 132 `hfftMips(out, N)`
 
-## `src/js/core/04-crew.js` (720 linjer)
+## `src/js/core/04-crew.js` (721 linjer)
 
 crew: people with skills, habits and moods
 
@@ -837,11 +837,11 @@ crew: people with skills, habits and moods
   - 607 `crewRumour()`
   - 611 `crewSeaFat(c, fishing, workF, night)`
   - 612 `crewTick(H)`
-  - 682 `codRoom(H)`
-- **684** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 698 `flyIn(c)`
-  - 707 `flyOut(c)`
-  - 715 `flyTick()`
+  - 683 `codRoom(H)`
+- **685** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 699 `flyIn(c)`
+  - 708 `flyOut(c)`
+  - 716 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1427 linjer)
 
@@ -2184,7 +2184,7 @@ work aboard: stations, and how the crew share them
   - 434 `workTeam(st, g, as)`
   - 440 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (470 linjer)
+## `src/js/core/14-crewlife.js` (559 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -2231,7 +2231,15 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 443 `alumniGround(a)`
   - 448 `alumniStates(H)`
   - 455 `lifeHail(H)`
-  - 462 `alumniReturn(B)`
+- **461** the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md)
+  - 476 `errandLine(c)`
+  - 486 `errandMay(c)`
+  - 492 `errandPick(c, r = crewRand)`
+  - 504 `errandAskText(c, E)`
+  - 513 `errandHour(H)`
+  - 531 `errandAnswer(id, yes)`
+  - 541 `errandDone(c)`
+  - 551 `alumniReturn(B)`
 
 ## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
@@ -2821,12 +2829,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1601 linjer)
+## `src/js/ui/phone/07-patch.js` (1607 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1589 `patch()`
+  - 1595 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2903,7 +2911,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 149 `careAboard(inPort, p)`
   - 176 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (200 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (206 linjer)
 
 --- crew
 
@@ -2912,18 +2920,19 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **5** the crew, person by person
   - 9 `traitChips(c, all)`
   - 11 `lifeHtml(c)`
-  - 18 `avtHtml(c, lottKv)`
-  - 23 `personCard(c, cand)`
-  - 30 `bors()`
-  - 45 `mannskap()`
-- **71** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
-  - 78 `ledger()`
-  - 89 `accounts()`
-  - 112 `bank()`
-- **162** messages
-  - 163 `meld()`
-- **170** actions
-  - 177 `switchVessel(k)`
+  - 17 `errHtml(c)`
+  - 24 `avtHtml(c, lottKv)`
+  - 29 `personCard(c, cand)`
+  - 36 `bors()`
+  - 51 `mannskap()`
+- **77** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
+  - 84 `ledger()`
+  - 95 `accounts()`
+  - 118 `bank()`
+- **168** messages
+  - 169 `meld()`
+- **176** actions
+  - 183 `switchVessel(k)`
 
 ## `src/js/ui/phone/13b-nettet.js` (148 linjer)
 
@@ -2970,7 +2979,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (345 linjer)
+## `src/js/ui/phone/14-act.js` (347 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
