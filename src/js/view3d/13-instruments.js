@@ -129,7 +129,7 @@
   function curLogo(){ return PAINTPRE && PAINTPRE.logo !== undefined ? PAINTPRE.logo : COSOWN('logo') ? S.logo : null; }
   function logoTexOf(L, img){
     if (!L) return null; const ready = L.kind !== 'u' || (img && img.complete && img.naturalWidth); if (!ready) return null;
-    const k = L.kind === 'u' ? 'u:' + img.src.length + ':' + img.src.slice(-24) : logoStr(L); let e = LTX.get(k);
+    const k = L.kind === 'u' ? (L.url ? 'x:' + L.url : 'u:' + img.src.length + ':' + img.src.slice(-24)) : logoStr(L); let e = LTX.get(k);   // (a partner's picture by its whole address)
     if (!e){ if (LTX.size >= 8){ let old = null; for (const [kk, v] of LTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); LTX.delete(old[0]); }
       if (!LCV){ LCV = document.createElement('canvas'); LCV.width = LCV.height = 256; } logoCanvas(LCV, L, img); e = {tex:mkTex(), cv:null}; upTex(e.tex, LCV); LTX.set(k, e); }
     e.used = performance.now(); return e.tex;
@@ -138,6 +138,12 @@
   function logoQ(t){ if (!(t in LOGOQ)){ const st = logoStrips(t); LOGOQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return LOGOQ[t]; }
   function drawLogo(t, M, VP, L, img){ const q = L && logoQ(t), tex = q && logoTexOf(L, img); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   const ownLogo = () => { const L = curLogo(); return [L, L && L.kind === 'u' ? imgOf(L.img) : null]; };
+  // a partner's design (core/09l-sponsor.js, steg 44) has its own mark on the hull: the sponsor's picture (fetched with CORS, so it
+  // can go into a texture; one that does not load is not drawn) or the made one. On the own boat it takes the company logo's place
+  // on the hull while the design is worn (the house flag is still the company's)
+  function imgCors(src){ let im = LOGOIMG['c:' + src]; if (!im){ im = LOGOIMG['c:' + src] = new Image(); im.crossOrigin = 'anonymous'; im.src = src; } return im; }
+  const spLogo = W => { const L = W && typeof spPaintLogo === 'function' ? spPaintLogo(W) : null; return L ? [L, L.kind === 'u' ? imgCors(L.url) : null] : null; };
+  const hullLogo = () => { const W0 = typeof spWorn === 'function' ? spWorn(PAINTPRE || S.boat.liv) : null, W = W0 && modelLiv(spPaintLiv(W0, S.boat.type)) ? W0 : null; return (W && spLogo(W)) || ownLogo(); };   // (a design without a mark leaves the company's logo)
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
@@ -176,10 +182,11 @@
     const near = []; for (const n of kit){ if (!n.name || !n.K || !n.K.glass) continue; n.dd = Math.hypot(n.M[12], n.M[14]); if (n.dd < 250) near.push(n); }
     if (!near.length) return; near.sort((a, b) => a.dd - b.dd); gl.disableVertexAttribArray(2);
     for (const n of near.slice(0, 6)){
-      const t = npcType(n), lv = n.player ? livParse(n.liv) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
+      const t = npcType(n), lv = n.player ? livParse(n.liv, t) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
       drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n));
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
-      const lg = n.player && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
+      const sl = n.player && typeof spPaintIn === 'function' ? spPaintIn(n.liv) : null, sq = sl && spLogo(sl); if (sq) drawLogo(t, M, VP, sq[0], sq[1]);
+      const lg = n.player && !sq && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
     }
   }
   // the hand-steered boat's paint (vessel3d.js hullLiv): the hull's colours uploaded again when it changes
@@ -390,7 +397,7 @@
     // screens and name boards up close
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
     if (!S.unnamed) drawNames(SK.hullT || vtype(), BMrel, VP, hullLiv(S.boat), S.boatName, ownPort());   // an unnamed boat has her mark only
-    drawMark(SK.hullT || vtype(), BMrel, VP); drawCall(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
+    drawMark(SK.hullT || vtype(), BMrel, VP); drawCall(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...hullLogo());
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }
       if (now - SK.tG > 90){ paintGauges((now - SK.tG) / 1000); SK.tG = now; }
@@ -560,7 +567,10 @@
     return [top[0], top[1] + 0.3, top[2]]; }
   function updateFlag(t, appW){
     const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
-    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - t * om + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
+    // the wave's phase adds up frame by frame (steg 44: t * om jumped with every small change of the wind once t was large, so the cloth
+    // snapped to a new shape when the apparent wind moved)
+    FLAGM.ph = (FLAGM.ph || 0) + om * (FLAGM.t0 == null ? 0 : Math.min(0.5, Math.max(0, t - FLAGM.t0))); FLAGM.t0 = t; const ph = FLAGM.ph;
+    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - ph + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
     const a = FLAGM.pos; let k = 0;
     for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++){
       const u0 = i / FW * FLAG_W, u1 = (i + 1) / FW * FLAG_W, v0 = j / FH * FLAG_H, v1 = (j + 1) / FH * FLAG_H;

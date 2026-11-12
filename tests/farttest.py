@@ -1,6 +1,6 @@
 """The fairway (Ø11.8, core/05e-sjovei.js; docs/systemer/sjofart-og-lover.md kap. 9): the speed limits and the cardinal marks, without 3D.
-The fixed limit in the harbours (V4 A, src/data/fart.json): the lookup at a harbour and off it, the chart plotter (no ring round the harbours; an area of a data set as its dashed
-line and sign), Autonav through a harbour's water without stopping there (the manoeuvring model: at her cruising speed
+The fixed limit in the harbours (V4 A, src/data/fart.json) and Kystverket's areas (fart-r): the lookup at a harbour, off it and in
+Bergen, Stavanger and Tromsø, the chart plotter with no line, ring or sign, Autonav through a harbour's water without stopping there (the manoeuvring model: at her cruising speed
 outside, down to the limit inside), the minute step's speed (sailV, as with the game closed), and by hand at full speed through the same
 water: the strip's third line says «Fartsgrense», and the passage is a line in the log and a row in the Sikkerhet card, once. Then a
 north cardinal mark passed close on its south side by hand: «Feil side av merket», the log and the card; passed on its north side: nothing.
@@ -64,19 +64,21 @@ async def main():
         check(L['d']['havn']['kn'] == 5 and L['at'] and L['at']['kn'] == 5 and L['at']['k'] == 'havn' and L['off'] is None, 'fartsgrensa: 5 knop i havna (Husøy), ingen tre kilometer til havs', (L['at'], L['off']))
         check(L['all'] == 0 and L['n'] > 100, 'alle havnene langs kysten har grensa', (L['n'], L['all']))
 
-        # 2. the chart plotter: no ring round the harbours (Jonas 12.11.2026: «Jeg hater den ringen i kartet da»); an area of a data
-        # set, when there is one, is drawn as its dashed line with the sign
+        # 2. Kystverket's areas (fart-r, fetched late as the models) and the chart plotter: no line, no ring, no sign anywhere (Jonas
+        # 12.11.2026: «Jeg hater den ringen i kartet da», and «enig» to no line for the areas either)
+        await pg.wait_for_function("fartRuns() !== null", timeout=120000)
+        G = await pg.evaluate("""() => { const H = (Date.UTC(2027, 10, 10, 12) - EPOCH) / 3.6e6, f = (la, lo) => fartAt(P(la, lo), H), tr = PORTS.find(q => /^Tromsø/.test(q.name));
+          return {n:(fartRuns() || []).length, bergen:f(60.3968, 5.3205), stavanger:f(58.9735, 5.7290), tromso:fartAt({x:tr.p.x, y:tr.p.y}, H)}; }""")
+        check(G['n'] >= 70 and G['bergen'] and G['bergen']['kn'] == 5 and G['bergen']['k'] == 'omr' and G['stavanger'] and G['stavanger']['kn'] == 8 and G['tromso'] and G['tromso']['k'] == 'havn',
+              'Kystverkets områder er lastet: Vågen i Bergen 5 knop, Stavanger havnebasseng 8, Tromsø havnas 5', G)
         await pg.evaluate("() => { S.settings.plotter = false; openPlotter(); renderBase(); }")
         await pg.wait_for_function("document.body.classList.contains('vplot')", timeout=60000)
-        await pg.evaluate("() => { const pt = PORTS.find(q => q.id === 'husoy'); view.cx = pt.p.x; view.cy = pt.p.y; view.z = MAP_H / 3; applyView(); renderStatic(); }")
-        await pg.wait_for_timeout(600)
-        G = await pg.evaluate("() => ({rings:document.querySelectorAll('circle.fart-h').length, signs:document.querySelectorAll('g.fart-s').length, paths:document.querySelectorAll('path.fart-o').length})")
-        check(G['rings'] == 0 and G['signs'] == 0 and G['paths'] == 0, 'kartplotteren tegner ingen ring og ikke noe skilt rundt havna', G)
-        G = await pg.evaluate("""() => { const pt = PORTS.find(q => q.id === 'husoy'), ll = natLL({x:pt.p.x, y:pt.p.y - 1.5}), d = 0.004;
-          FART_D.omr = [{n:'Prøvesundet', kn:8, m:null, p:[[ll.lat, ll.lon], [ll.lat, ll.lon + 3 * d], [ll.lat + d, ll.lon + 3 * d], [ll.lat + d, ll.lon], [ll.lat, ll.lon]]}]; FART.omr = null; FART.last = null; renderStatic();
-          const r = {paths:document.querySelectorAll('path.fart-o').length, dash:(document.querySelector('path.fart-o') || {getAttribute:() => ''}).getAttribute('stroke-dasharray'), signs:[...document.querySelectorAll('g.fart-s text')].map(e => e.textContent), at:fartAt(P(ll.lat + d / 2, ll.lon + d), S.t / 60)};
-          FART_D.omr = []; FART.omr = null; FART.last = null; renderStatic(); r.after = document.querySelectorAll('path.fart-o').length; return r; }""")
-        check(G['paths'] == 1 and G['dash'] and G['signs'] == ['8'] and G['at'] and G['at']['kn'] == 8 and G['after'] == 0, 'et område fra et datasett tegnes som en stiplet linje med skiltet (8), og oppslaget gir grensa der', G)
+        seen = []
+        for la, lo, hh in ((60.3968, 5.3205, 3), (59.05, 10.40, 12), (0, 0, 3)):
+            await pg.evaluate("async ([la, lo, hh]) => { const c = la ? P(la, lo) : PORTS.find(q => q.id === 'husoy').p; await mapNeed(c, 2); view.cx = c.x; view.cy = c.y; view.z = MAP_H / hh; applyView(); renderStatic(); }", [la, lo, hh])
+            await pg.wait_for_timeout(600)
+            seen.append(await pg.evaluate("() => document.querySelectorAll('.fart-o, .fart-s, .fart-h').length + (typeof fartSvg === 'function' ? 100 : 0)"))
+        check(seen == [0, 0, 0], 'kartplotteren tegner ingen linje, ring eller skilt for fartsgrensene (Bergen, Færder, Husøy)', seen)
         await pg.evaluate("() => { if (typeof closePlotter === 'function') closePlotter(); else document.body.classList.remove('vplot'); }")
 
         C = await pg.evaluate(CHORD, None)
@@ -101,6 +103,20 @@ async def main():
           const at = k => { b.pos = {x:C.st.x + (C.end.x - C.st.x) * k, y:C.st.y + (C.end.y - C.st.y) * k}; b.v = BOAT.vcruise; let v = 0; for (let i = 0; i < 6; i++){ v = sailV(S.t / 60, 0.2); b.v = v; } return v; };
           const r = {out:at(0.05), mid:at(0.5), vc:BOAT.vcruise}; b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; return r; }""", C)
         check(M['mid'] <= 5 and M['out'] > 5.5, 'minuttsteget (sailV): 5 knop i havnas vann, marsjfart utenfor', M)
+
+        # 4b. the minute step in one of Kystverket's 5-knot areas, away from the harbours: inside, she is at the limit; 100 m west of its
+        # edge, heading east into it, she is down to it before she comes in (fartLegKn); the time away is played the same way
+        K5 = await pg.evaluate("""async () => { const D = FART_D, RR = fartRuns(), H = S.t / 60, b = S.boat, keep = {pos:b.pos, v:b.v, st:b.status, plan:S.plan, hd:b.heading};
+          const far = q => PORTS.every(pt => dist(pt.p, q) > 1.5);
+          for (let i = 0; i < D.omr.length; i++){ const a = D.omr[i]; if (a.kn !== 5 || a.s) continue; const T = RR[i];
+            for (let y = 0; y < a.H; y += 7) for (let k = T.row[y]; k < T.row[y + 1]; k++){ const x0 = T.run[k * 2], x1 = T.run[k * 2 + 1]; if (x1 - x0 < 15) continue;
+              const cy = (a.y0 + y + 0.5) * D.R / 1000, inP = {x:(a.x0 + (x0 + x1) / 2) * D.R / 1000, y:cy}, edge = {x:(a.x0 + x0) * D.R / 1000, y:cy}, out = {x:edge.x - 0.1, y:cy};
+              if (!far(inP) || !far(out)) continue; await mapNeed(inP, 0); if (isLand(inP) || isLand(out) || fartAt(out, H)) continue;
+              const v = p => { b.pos = {x:p.x, y:p.y}; b.v = BOAT.vcruise; b.status = 'sailing'; S.plan = {wps:[{x:p.x + 1, y:p.y, port:null, fish:0}], idx:0, speed:BOAT.vcruise, returning:false, unsafe:[false]}; let r = 0; for (let n = 0; n < 4; n++){ r = sailV(H, 0.2); b.v = r; } return r; };
+              const r = {name:a.n, inside:v(inP), before:v(out), open:(() => { b.pos = {x:out.x - 1.5, y:cy}; return fartAt(b.pos, H); })(), vc:BOAT.vcruise};
+              b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; b.heading = keep.hd; return r; } }
+          b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; return null; }""")
+        check(bool(K5) and K5['vc'] > 5.5 and K5['inside'] <= 5 and K5['before'] <= 5, 'minuttsteget i et av Kystverkets 5-knopsområder: 5 inne, og nede i 5 alt 100 m før kanten', K5)
 
         # 5. by hand at full speed through the same water: the strip says so, and the passage is written once
         n0 = await pg.evaluate("() => ({t:S.t, mobs:(S.farv || []).length})")   # (the log is trimmed by age: its lines are found by their time)

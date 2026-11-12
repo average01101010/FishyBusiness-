@@ -21,6 +21,12 @@ async def main():
         await boot(pg)
         r = await pg.evaluate("({ad:pressList(false).some(s => s.kind === 'annonse'), br:SPN.list.some(x => x.kind === 'broker'), gift:!!(S.spGift && Object.keys(S.spGift).length)})")
         check(not r['ad'] and not r['br'] and not r['gift'], 'uten avtale: ingen annonse, ingen meglerbåt, ingen gave', r)
+        # a partner's paint design (steg 44): without an agreement no card in the paint shop, and a design left on a boat shows nothing
+        n = await pg.evaluate("""(() => { S.boat.status = 'port'; S.boat.liv = {hull:'rod', sp:-9}; DOCK.open('maler');
+          const r = {fn:typeof spPaints, n:typeof spPaints === 'function' ? spPaints().length : -1, card:document.querySelectorAll('#drawerBody .pnt-sp').length, hull:(hullLiv(S.boat) || {}).hull, str:livStr(S.boat)};
+          delete S.boat.liv; DOCK.close(); return r; })()""")
+        check(n['fn'] == 'function' and n['n'] == 0 and n['card'] == 0 and n['hull'] and abs(n['hull'][0] - 0.7) < 0.01 and 'x:' not in n['str'] and 'h:rod' in n['str'],
+              'uten avtale: ingen sponset design i Malerverkstedet, og et design som sto på båten, vises ikke (hennes egen maling)', n)
         await pg.close()
 
         pg = await br.new_page(viewport={'width': 1280, 'height': 800})
@@ -57,6 +63,72 @@ async def main():
         await pg.screenshot(path='m8_garderobe_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(400); await pg.screenshot(path='m8_garderobe_staaende.png')
         await pg.evaluate("WARD.close ? WARD.close() : null")
+        # the partner's paint design in the paint shop (steg 44): beside the shop's own designs, free, marked, looks only, shown to the
+        # others by its id, and gone when the agreement is
+        await pg.set_viewport_size({'width': 1280, 'height': 800})
+        d = await pg.evaluate("""(async () => { const q = s => document.querySelector('#drawerBody ' + s), wait = () => new Promise(r => setTimeout(r, 120));
+          S.boat.status = 'port'; S.cash = 50000; S.boat.liv = {hull:'rod'}; DOCK.open('maler'); await wait();
+          const card = q('.pnt-sp'), base = () => JSON.stringify(Object.assign({}, S.boat, {liv:0})), b0 = base(), cos0 = JSON.stringify(S.cos || {}), cash0 = S.cash;
+          const r = {card:!!card, txt:card ? card.textContent : '', buy:card ? card.querySelectorAll('[data-pa=pntbuy]').length : -1, link:card && card.querySelector('a.ic-sp-link') ? card.querySelector('a.ic-sp-link').rel : '',
+            before:!!card && !!card.nextElementSibling && [...document.querySelectorAll('#drawerBody .pnt-h')].some(h => card.compareDocumentPosition(h) & 4)};
+          q('[data-pa=pntsp]').click(); await wait(); r.tried = {sp:PAINTPRE && PAINTPRE.sp, hull:(hullLiv(S.boat) || {}).hull, ripe:(hullLiv(S.boat) || {}).ripe, go:q('[data-pa=pntgo]').textContent, dis:q('[data-pa=pntgo]').disabled, own:S.boat.liv};
+          q('.pnt-sw[data-pa=pntsel][data-k=kobolt]').click(); await wait(); r.own = {sp:PAINTPRE.sp, hull:PAINTPRE.hull};   // choosing the own paint takes the design off the try
+          q('.pnt-sw[data-pa=pntsel][data-k=rod]').click(); await wait(); q('[data-pa=pntsp]').click(); await wait(); q('[data-pa=pntgo]').click(); await wait();
+          r.on = {liv:S.boat.liv, paid:cash0 - S.cash, same:base() === b0, cos:JSON.stringify(S.cos || {}) === cos0, str:livStr(S.boat), hull:(hullLiv(S.boat) || {}).hull, now:q('.pnt-sp .pnt-own').textContent};
+          r.peer = {x:livParse('h:rod;x:-9'), none:livParse('h:rod;x:-99'), logo:spPaintLogo(spPaintIn('x:-9'))};
+          return r; })()""")
+        check(d['card'] and 'Samarbeid' in d['txt'] and 'Nordlys Utstyr' in d['txt'] and 'gratis' in d['txt'] and 'Bare utseende' in d['txt'] and d['buy'] == 0 and '💎' not in d['txt'] and 'sponsored' in d['link'] and d['before'],
+              'Malerverkstedet har partnerens design ved siden av de vanlige: gratis, merket «Samarbeid», uten kjøpsknapp', {k: d[k] for k in ('card', 'buy', 'link', 'before', 'txt')})
+        t = d['tried']
+        check(t['sp'] == -9 and t['hull'] and abs(t['hull'][1] - 0.32) < 0.01 and t['ripe'] and 'Bruk designet' in t['go'] and not t['dis'] and t['own'] == {'hull': 'rod'} and d['own'].get('sp') is None and d['own']['hull'] == 'kobolt',
+              'designet prøves på båten før det tas på, og et eget fargevalg tar det av prøven', [t, d['own']])
+        o = d['on']
+        check(o['liv'].get('hull') == 'rod' and o['liv'].get('sp') == -9 and (o['liv'].get('spd') or {}).get('hull') == 'petrol' and o['paid'] == 0 and o['same'] and o['cos'] and abs(o['hull'][1] - 0.32) < 0.01 and 'På båten' in o['now'],
+              'tatt på: gratis, bare utseende (båten ellers uendret, ingen design gitt), og hennes egen maling ligger under', o)
+        pr = d['peer']
+        check('x:-9' in o['str'] and 'h:petrol' in o['str'] and pr['x'] and abs(pr['x']['hull'][1] - 0.32) < 0.01 and pr['x'].get('ripe') and abs(pr['none']['hull'][0] - 0.7) < 0.01 and pr['logo'] and pr['logo']['kind'] == 'g',
+              'de andre ser designet fra koden (x:-9) mot lista over aktive avtaler, med merket; et ukjent nummer gir bare hennes egen farge', [o['str'], pr])
+        await pg.screenshot(path='m8_design_liggende.png')
+        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(400)
+        await pg.evaluate("document.querySelector('#drawerBody .pnt-sp').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200); await pg.screenshot(path='m8_design_staaende.png')
+        await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(300)
+        # the agreement ends (Jonas 12.11.2026, «Fargene blir»): the mark goes, the colours stay on her, for her and for the others
+        # (from the cloud's sp_paint, here put straight into SPN.old as it would come); she can take them off and is in her own paint
+        g2 = await pg.evaluate("""(async () => { const wait = () => new Promise(r => setTimeout(r, 120)), keep = SPN.list.slice(), q = s => document.querySelector('#drawerBody ' + s);
+          spSet(keep.filter(r => !(r.kind === 'look' && r.target === 'paint'))); DOCK.open('maler'); DOCK.redraw(); await wait();
+          const card = q('.pnt-sp'), r = {card:document.querySelectorAll('#drawerBody .pnt-sp').length, txt:card ? card.textContent : '', link:card ? !!card.querySelector('a') : null, hull:(hullLiv(S.boat) || {}).hull, ripe:!!(hullLiv(S.boat) || {}).ripe,
+            str:livStr(S.boat), logo:spPaintLogo(spWorn(S.boat.liv)), peer0:livParse('h:rod;x:-9').hull};
+          SPN.old[-9] = spPaintData((keep.find(x => x.id === -9) || {}).data); r.peer = livParse('h:rod;x:-9'); delete SPN.old[-9];
+          q('[data-pa=pntsp]').click(); await wait(); q('[data-pa=pntgo]').click(); await wait(); r.off = {liv:S.boat.liv, hull:(hullLiv(S.boat) || {}).hull, str:livStr(S.boat), card:document.querySelectorAll('#drawerBody .pnt-sp').length};
+          spSet(keep); DOCK.close(); return r; })()""")
+        check(g2['card'] == 1 and 'Samarbeidet er slutt' in g2['txt'] and 'Samarbeid levert' not in g2['txt'] and not g2['link'] and abs(g2['hull'][1] - 0.32) < 0.01 and g2['ripe'] and 'x:-9' in g2['str'] and 'h:petrol' in g2['str'] and g2['logo'] is None,
+              'avtalen slutter: fargene blir på båten, merket og lenken går, og kortet sier at fargene er hennes', g2)
+        check(abs(g2['peer0'][0] - 0.7) < 0.01 and g2['peer'] and abs(g2['peer']['hull'][1] - 0.32) < 0.01 and g2['peer'].get('ripe'),
+              'de andre ser fargene og stripene når skyen har gitt dem (sp_paint), og hennes egne farger til da', [g2['peer0'], g2['peer']])
+        check(g2['off']['liv'] == {'hull': 'rod'} and abs(g2['off']['hull'][0] - 0.7) < 0.01 and 'x:' not in g2['off']['str'] and g2['off']['card'] == 0, 'designet tas av, og den egne malingen er der', g2['off'])
+        pal = await pg.evaluate("""(() => { const keep = SPN.list.slice(); spSet([{id:5, kind:'look', target:'paint', data:{hull:'#ff00ff', house:'kystfisker', ripe:'gul', lakk:1}, sponsor:{name:'X', logo:'https://x.example/l.png'}}]);
+          const M = spPaintLiv(spPaintOf(5)), r = {hull:M.hull || null, house:M.house || null, ripe:M.d.ripe, lakk:M.d.lakk, logo:spPaintLogo(spPaintOf(5))}; spSet(keep); return r; })()""")
+        check(pal['hull'] is None and pal['house'] is None and pal['ripe'] == 'gul' and pal['lakk'] == 1 and pal['logo'] == {'kind': 'u', 'url': 'https://x.example/l.png'},
+              'bare Malerverkstedets egne farger kan males (ikke en fri farge, ikke den som må fortjenes), og med logo_url er merket sponsorens bilde', pal)
+        # (from the review of steg 44) a choice that is refused does not take the tried design off; a design that paints nothing is not
+        # one; the zones as the boat's model has them; the others' model is kept apart by whether the design was found
+        rv = await pg.evaluate("""(() => { const keep = SPN.list.slice(), t = S.boat.type, r9 = spPaintOf(-9), R = {};
+          DOCK.open('maler'); PAINT.act('pntsp', {k:'-9'}); R.refused = [PAINT.act('pntz', {d:'finnesikke', k:'hvit'}), PAINT.act('pntsel', {k:'finnesikke'}), PAINTPRE.sp];
+          R.taken = [PAINT.act('pntsel', {k:'rod'}), PAINTPRE.sp === undefined];
+          PAINT.act('pntsel', {k:'kobolt'}); PAINT.act('pntsp', {k:'-9'}); R.pending = [PAINTPRE.hull || null, (S.boat.liv || {}).hull || null]; DOCK.close();
+          spSet([{id:7, kind:'look', target:'paint', data:{name:'Y', stripe:'gul'}, sponsor:{name:'Y'}}]); const fits = designFits(t, 'stripe'), b0 = S.boat.liv; S.boat.liv = {hull:'rod', sp:7};
+          R.nofit = {fits, str:livStr(S.boat), hull:(hullLiv(S.boat) || {}).hull}; S.boat.liv = b0; spSet(keep);
+          R.zone = [!!spPaintLiv(r9, t).house, !!glbZones(t)[3], !!spPaintLiv(r9).house];
+          R.k1 = npcModel('sjark', 0.3, 'h:rod;x:-9') === npcModel('sjark', 0.3, 'h:rod;x:-9');
+          const m1 = npcModel('sjark', 0.3, 'h:rod;x:-9'); spSet(keep.filter(r => r.id !== -9)); R.k2 = npcModel('sjark', 0.3, 'h:rod;x:-9') !== m1;
+          spSet([{id:6, kind:'look', target:'paint', data:{hull:'#ff00ff', name:'X'}, sponsor:{name:'X'}}]); R.none = [spPaints().length, spPaintOf(6), spWorn({sp:6})];
+          spSet(keep); return R; })()""")
+        check(rv['refused'] == [False, False, -9] and rv['taken'] == [True, True], 'et valg som avvises, tar ikke designet av prøven; et eget fargevalg gjør det', rv)
+        check(rv['pending'][0] == rv['pending'][1], 'å prøve et design starter fra båtens egen maling: en farge valgt før blir ikke liggende under og betalt usett', rv['pending'])
+        nf = rv['nofit']
+        check(nf['fits'] or ('x:' not in nf['str'] and 'h:rod' in nf['str'] and abs(nf['hull'][0] - 0.7) < 0.01), 'et design som ikke gir båttypen noe, lar henne stå i sin egen maling også for de andre', nf)
+        check(rv['zone'][0] == rv['zone'][1] and rv['zone'][2] and rv['k1'] and rv['k2'] and rv['none'] == [0, None, None],
+              'overbygget males bare der modellen har sonen; de andres modell bygges på nytt når avtalen slutter; et design uten en farge fra paletten er ikke et design', rv)
         # the signs' measure after IAB 2.0 (steg 66, ui/10r-sponsor.js SPM), fed frames as view3d drawSigns feeds them, on placements of
         # its own (9001-9006) so the game's own banners do not mix in. o: what the frame saw
         M = await pg.evaluate("""(() => {

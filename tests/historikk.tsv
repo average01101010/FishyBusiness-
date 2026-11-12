@@ -2846,8 +2846,65 @@
 2026-11-12 00:57	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	progweek	LES	34	lite	samtidig	
 2026-11-12 00:59	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	boottest	OK	20	lite	alene	
 2026-11-12 01:00	claude/o14-f3-rest-fiskeplasser-74t7wv	7a758e47+	charttest	OK	43	lite	alene	
+2026-11-11 23:37	ccr-360badbd-1zzqz7	1465f33+	signtest	OK	1373	3d	alene	
+2026-11-11 23:52	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 00:11	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	1087	3d	alene	FEIL i frisk bris (9 m/s) står flagget ut fra stanga og bølger  {"droop": 0.06, "amp": 0.121, "wind": 7.1, "z": 0.11539775133132935, "tip": 0.0354}
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	sponsor2test	OK	18	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	maletest	OK	18	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	regmarktest	OK	6	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	regnrtest	OK	11	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	vesseltest	FEIL	20	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	sponsortest	OK	14	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	admintest	OK	8	lite	samtidig	
+2026-11-12 00:12	ccr-360badbd-1zzqz7	1465f33+	stedertest	OK	4	lite	samtidig	
+2026-11-12 00:13	ccr-360badbd-1zzqz7	1465f33+	dbg23o	OK	44	3d	alene	
+2026-11-12 00:19	ccr-360badbd-1zzqz7	1465f33+	sponsor2test	OK	19	lite	samtidig	
+2026-11-12 00:19	ccr-360badbd-1zzqz7	1465f33+	maletest	OK	21	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	regmarktest	OK	8	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	regnrtest	OK	11	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	sponsortest	OK	9	lite	samtidig	
+2026-11-12 00:20	ccr-360badbd-1zzqz7	1465f33+	admintest	OK	8	lite	samtidig	
+2026-11-12 00:47	ccr-360badbd-1zzqz7	1465f33+	sp44shot	FEIL	1611	3d	alene	sidefeil: ['e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not defined', 'e is not
+2026-11-12 00:53	ccr-360badbd-1zzqz7	32bf994	signcoast	OK	377	3d	alene	
+2026-11-12 00:58	ccr-360badbd-1zzqz7	32bf994	sitetest	FEIL	322	3d	alene	FEIL at a home along the coast (Reine) the naust stands there and no shop beside it (Father's naust is only a home), and the boat lies at the naust {'kinds': ['
+2026-11-12 01:08	ccr-360badbd-1zzqz7	5191085	yardtest	OK	579	3d	alene	
+2026-11-12 01:15	ccr-360badbd-1zzqz7	5191085+	unittest	OK	441	3d	alene	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	sqltest	OK	42	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	sponsor2test	OK	14	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	maletest	OK	18	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	regmarktest	OK	5	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	admintest	OK	8	lite	samtidig	
+2026-11-12 01:19	ccr-360badbd-1zzqz7	5191085+	boottest	OK	27	lite	samtidig	
+2026-11-12 01:49	ccr-360badbd-1zzqz7	5191085+	sp44shot	FEIL	1800	3d	alene	gikk ut på tid
 2026-11-12 01:13	ccr-c987b885-ap4668	6bc15f8	boottest	OK	23	lite	alene	
 2026-11-12 01:23	ccr-899a9674-q3gjp0	3c5462b+	dbg23o	OK	44	3d	alene	
+2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	farttest	OK	385	lite	samtidig	
+2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	trip2	OK	36	lite	samtidig	
+2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	docktest	OK	59	lite	samtidig	
+2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	csptest	OK	88	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	colregtest	OK	603	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	npctest	OK	7	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	autonavtest	OK	20	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	hudtest	OK	82	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	havflaate	OK	10	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	hulltest	OK	69	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	lanterntest	OK	13	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	driftsplan2map	OK	12	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	placetest	OK	4	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	sidetab	OK	11	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	etikett	OK	169	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	legmemotest	OK	15	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	mobtest	OK	203	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	hbtest	OK	15	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-12 02:10	ccr-c987b885-ap4668	8c8ce446	anchorlight3d	FEIL	79	3d	alene	avsluttet med kode 1
+2026-11-12 02:19	ccr-c987b885-ap4668	71903e50	vectest	OK	522	3d	alene	
+2026-11-12 02:28	ccr-c987b885-ap4668	c2bfe5bd	vindshot	OK	523	3d	alene	
+2026-11-12 02:29	ccr-c987b885-ap4668	c2bfe5bd	routetest	OK	42	lite	alene	
+2026-11-12 02:29	ccr-c987b885-ap4668	c2bfe5bd	charttest	OK	45	lite	alene	
+2026-11-12 02:36	ccr-c987b885-ap4668	c2bfe5bd	farttest	OK	383	lite	alene	
+2026-11-12 02:37	ccr-c987b885-ap4668	c2bfe5bd	anchorlight3d	FEIL	57	3d	alene	avsluttet med kode 1
+2026-11-12 02:11	ccr-899a9674-q3gjp0	9366a40+	dbg23o	OK	42	3d	alene	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
@@ -2866,3 +2923,37 @@
 2026-11-12 04:15	plan/2026-11-11-88	c4841603+	docktest	FEIL	69	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
 2026-11-12 04:16	plan/2026-11-11-88	c4841603+	docktest	OK	66	lite	alene	
 2026-11-12 04:18	plan/2026-11-11-88	c4841603+	docktest	OK	64	lite	alene	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	hulltest	OK	76	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	autonavtest	OK	24	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	colregtest	OK	733	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	autonavtest	OK	25	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	hulltest	OK	71	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	autonavtest	FEIL	39	lite	samtidig	sidefeil: ['map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)', 'map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)']
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sqltest	FEIL	40	lite	samtidig	FEIL sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing swit
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sponsor2test	FEIL	14	lite	samtidig	FEIL bare Malerverkstedets egne farger kan males (ikke en fri farge, ikke den som må fortjenes), og med logo_url er merket sponsorens bilde  {"hull": null, "hou
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	maletest	OK	14	lite	samtidig	
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	boottest	OK	23	lite	samtidig	
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	admintest	OK	8	lite	samtidig	
+2026-11-12 01:54	ccr-360badbd-1zzqz7	7dcc1a0+	sqltest	FEIL	41	lite	samtidig	FEIL HS4: a guest's grants moved to an account that has had its own are taken back (the chapter's haill, the imported ones, a pub haill from an evening the acco
+2026-11-12 01:54	ccr-360badbd-1zzqz7	7dcc1a0+	sponsor2test	OK	14	lite	samtidig	
+2026-11-12 01:58	ccr-360badbd-1zzqz7	7dcc1a0+	sqltest	OK	40	lite	alene	
+2026-11-12 02:28	ccr-360badbd-1zzqz7	1cda355	sp44shot	FEIL	1800	3d	alene	gikk ut på tid
+2026-11-12 03:00	ccr-360badbd-1zzqz7	b5fbc76	sp44shot	OK	1889	3d	alene	
+2026-11-12 02:15	ccr-899a9674-q3gjp0	d38b476	dbg23o	OK	45	3d	alene	
+2026-11-12 02:29	ccr-899a9674-q3gjp0	7fc7409	dbg23o	OK	39	3d	alene	
+2026-11-12 02:58	ccr-c987b885-ap4668	c814d03e	boottest	OK	27	lite	samtidig	
+2026-11-12 03:04	ccr-c987b885-ap4668	c814d03e	farttest	OK	384	lite	samtidig	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	boottest	OK	31	lite	samtidig	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	sponsor2test	OK	16	lite	samtidig	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	maletest	OK	17	lite	samtidig	
+2026-11-12 03:04	ccr-c987b885-ap4668	198c1e6f	boottest	OK	26	lite	alene	
+2026-11-12 03:08	ccr-899a9674-q3gjp0	a275b3b	dbg23o	OK	38	3d	alene	
+2026-11-12 03:07	ccr-899a9674-q3gjp0	5a77fac+	hull3d	OK	2267	3d	alene	
+2026-11-12 03:26	ccr-899a9674-q3gjp0	922a215+	dbg23o	OK	48	3d	alene	
+2026-11-12 03:56	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	46	3d	alene	
+2026-11-12 04:20	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	57	3d	alene	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	colregtest	OK	732	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	autonavtest	OK	42	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	hulltest	OK	71	lite	samtidig	

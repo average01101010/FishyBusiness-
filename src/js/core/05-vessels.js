@@ -807,9 +807,12 @@ function sailV(H, hs){
   // brake before the next stop (a harbour or a fishing spot) or the route's end along the route, not when leaving
   let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w) || i === pl.wps.length - 1){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
-  tgt = Math.min(tgt, fartKn(b.pos, H));   // the speed limit where she is (Ø11.8, 05e-sjovei.js fartAt)
+  // the speed limit where she is and along the minute ahead at the speed she has (Ø11.8, 05e-sjovei.js fartAt): she is down to it
+  // when she comes in, not a minute after, and a belt narrower than a minute's way is not crossed at speed
+  // (inside the limit she is at it at once: a boat at these speeds stops her way in seconds, the minute's braking is for the harbour)
+  const lim = fartLegKn(pl, b.pos, Math.max(b.v || 0, tgt) * NM / 60 * gridScale(b.pos), H), limHere = fartKn(b.pos, H); if (lim < tgt) tgt = lim;
   const acc = BOAT.accel || 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
-  return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);
+  return Math.min(limHere, tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5));
 }
 function sail(H, W, hs){
   const b = S.boat, pl = S.plan;
