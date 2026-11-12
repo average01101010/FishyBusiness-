@@ -104,7 +104,7 @@ Kortet starter med «Påmeldt i Lindesnes» krysset av, så ingenting starter p�
 
 **Reglene i løpet** (spillets egne regler, ikke valg for Jonas; tallene er startverdier):
 - **Trim er lov** (Jonas). Skippertak og «Ferdig nå» på verftet følger samme regel: de korter ned en ekte friksjon.
-- **Hopp er ikke lov** fra påmeldingen til mål, eller til forsøket er brutt. `hopWhy` sier «Ikke i kappløpet». Hopp **til startstreken** og **hjem fra mål** er lov.
+- **Hopp er ikke lov** fra påmeldingen til mål, eller til forsøket er brutt (Jonas 12.11.2026, etter at han hadde sagt at ingenting skal hindre kjøp av hopp: «Nei i løpet». Det er den eneste nektingen utenom det en rute under seiling krever). `hopWhy` sier «Ikke i kappløpet». Hopp **til startstreken** og **hjem fra mål** er lov.
 - **Slep fra Redningsselskapet eller en annen spiller bryter forsøket.** Det er hjelp utenfra, som i ekte kappseilas. Det samme gjør salg av båten. Etappene som er seilt, teller på merket.
 - **Hjelpeplikten** (sjøloven § 135): svarer spilleren på havsnød (`sosMinute`) eller et nødanrop, trekkes tida fra svaret til hun er tilbake på ruta. Kappseilingsreglene gjør det samme (World Sailing, Racing Rules of Sailing, regel 1.1 og 62.1 c, lest i sammendrag). Sosialt er additivt: å hjelpe koster ingen plass.
 - **Regelbrudd for hånd** gir tidstillegg:
@@ -385,3 +385,4 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 
 - 12.11.2026: planen skrevet i Jonas' økt (bare dokument). Ingenting er bygd.
 - 12.11.2026: Jonas svarte på V1–V7 (V2 A og V3 B, ikke de anbefalte). Planen skrevet om etter svarene; KL1–KL4 lagt i køen som steg 116–119 under lanseringslinja, KL5 utgår; hel startmelding for KL1 i `start/116.md`.
+- 12.11.2026: Jonas: hopp nektes i løpet («Nei i løpet»), selv om ingenting ellers hindrer kjøp av hopp (`docs/planer/hopp.md`).
