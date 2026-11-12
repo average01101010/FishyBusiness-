@@ -10,7 +10,7 @@
 //   - no hop from the registration to the finish (Jonas: «Nei i løpet»; 06j-hopp.js hopWhy); a hop to the start and home after is allowed
 //   - 15 game minutes added for each passing over a speed limit by hand (farvRec, 05e-sjovei.js) and each near miss where she had to
 //     give way (S.nearMiss), with her as the race boat
-//   - answering a call for help (sjøloven § 135: S.sos, a man overboard from another boat, the tow after a PAN-PAN, another player's
+//   - answering a call for help (sjøloven § 135 third paragraph, read on Lovdata 12.11.2026: S.sos, a man overboard from another boat, the tow after a PAN-PAN, another player's
 //     call for a tow) takes the time from the answer until it is over, and the way back to where she answered at her own top speed, off
 //     the clock: helping costs no place
 //   - a tow (the rescue boat, b.status 'tow', or another player, 'ptow') and selling the boat end the attempt (dnf); the legs sailed

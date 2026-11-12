@@ -190,3 +190,36 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
   - Røyktestet med MCP i en transaksjon som ble rullet tilbake: to rader på samme tid ble slått sammen til 45 kg, 10 kg og hyse kom ikke med.
 - **Ikke laget:** saker om nye mottak (Jonas: det kommer ingen nye fiskemottak langs kysten). Ingen push for første skrei ennå.
 - **Frakta venter ikke på at noen har lyst** (12.11.2026, tilbakemelding #2 fra testutgaven: alene og sliten ble pakken fra Frovåg aldri lastet, og båten lå fast): står en lastejobb (`last`) uten noen på seg i havn, går den minst slitne av de våkne om bord på den, også når hun er utslitt (`workAssign` i `core/13-work.js`). Før tapte en liten jobb mot hvilen (`restScore`) så snart energien var under rundt 40, og jobben ventet for alltid. De som sover eller hviler på land, tas ikke. Statuslinja sier «Lasta er om bord» eller «Lasta er i land» når køen bare har frakt (`jobsFreight`, `out` på lossejobben). Egning, bøting og stell venter fortsatt på en som orker; det er ikke endret. Testen: `tests/unit/lastalene.test.mjs`.
+
+## 4.28 Kappløpet Lindesnes–Nordkapp (12.11.2026, KL1a, steg 116a)
+
+Planen og Jonas' valg: `docs/planer/kapplop.md` (V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten). Koden: `core/09o-kapplop.js`. Ingen skjerm ennå (KL2), ingen tavle i skyen (KL3), ingen premie (KL4); oppgavene underveis er steg 116b.
+
+- **Løypa (`LOP`):** start ved kaia i Lindesnes (en havn innen 4 km fra mottaket `mVA2`), sjekkpunktene Bergen (5 km rundt, målt til `Bergen verft`), Ålesund (`mM317`), Rørvik (`mNT169`), Bodø (`mN905`) og Tromsø (6 km, `Tromsdalen` `mT212`), og mållinja: meridianen gjennom Nordkappplatået (71° 10′ 7″ N, 25° 47′ 2″ E), fra stupet og 40 km nordover i rutenettet, krysset den ene eller andre veien. Magerøya ligger sør for stupet, så veien gjennom Magerøysundet til Honningsvåg krysser den ikke. Hvert sjekkpunkt er hvilken som helst havn innen radiusen, så hver klasse finner en kai som tar imot henne: målt 12.11.2026 med `portWhy` har alle 15 båttypene minst én kai ved start og hvert sjekkpunkt (havfartøyene én i Lindesnes og Tromsø, to ellers).
+- **Klassene (`lopCls`):** fra typens egne felt, aldri navnet: `cls: 'hav'` er havfartøy; ellers under 9 knop sakte (trebåten, snekka, plastsjarken), 9–14 middels (havsjarken, breisjarken, den nye hurtigsjarken på 12 kn, kystbåtene på 15 og 21 m), fra 14 rask (den brukte hurtigsjarken, aluminiumsbåten). Klassen er den båten hadde ved påmeldingen.
+- **Påmeldingen (`lopStart`)** ved kaia i Lindesnes; klokka starter når hun kaster loss (`lopDepart` i `depart`). Én båt i løpet om gangen per rederi.
+- **Én klokke (`lopTime`):** fra hun kaster loss til mållinja, også i havn, ved bunkring og med spillet lukket (S.t følger verdens klokke, og `catchUp` seiler videre). Mellomtida ved hvert sjekkpunkt er klokka da. Sjekkpunktene teller i rekkefølge (`lopDock` i `dock`).
+- **Uka (`lopWeek`):** et fullført forsøk teller i den ekte uka det ble fullført i, mandag 00:00 til søndag 24:00 norsk tid, med sommertid fra siste søndag i mars til siste søndag i oktober kl. 01:00 UTC (EU-regelen som Norge følger). Uka heter etter ISO-uka (`2026-W47`). Den beste tida per uke står i `S.lop.best`.
+- **Reglene (startverdier):** hopp nektes fra påmeldingen til mål (`hopWhy`: «Ikke i kappløpet»; Jonas 12.11.2026: «Nei i løpet»), og er lov til startstreken og hjem etter mål. 15 spillminutter legges til for hver passering over fartsgrensa som `farvRec` skriver ned (`k: 'fart'`), og for hver nærpassering der hun hadde vikeplikt (`S.nearMiss`, `give` `a` eller `both`); hver post telles én gang (merket `lop`). Svarer hun på havsnød (sjøloven § 135 tredje ledd, lest på Lovdata 12.11.2026: hjelp til enhver i havsnød så langt det kan skje uten særlig fare for skipet), trekkes tida fra svaret til hjelpen er over, pluss veien tilbake til der hun svarte i typens toppfart: mann over bord fra en annen båt, slepet etter PAN-PAN (turoppdraget med `sos`) og en annen spillers anrop om slep (`S.ptowH`). Slep fra Redningsselskapet (`b.status` `tow`) eller fra en annen spiller (`ptow`) og salg av båten bryter forsøket; etappene som er seilt, telles i `S.lop.legsN` (det langsiktige merket, KL4).
+- **Den minste mulige tida (`lopMinH`):** sjøveien delt på toppfarten ganger trimmen, minus 10 %: regelen serveren får i KL3.
+- **Hendelsene:** `cloudEv` `lop_start`, `lop_leg`, `lop_done`, `lop_dnf` (med hvorfor). Tavla og admin kommer i KL3.
+
+**Målt 12.11.2026** (`KYST_LOP_MAAL=1 python3 tests/kapplop.py`, hele kysten, `leiaRoute` for hver type og en tørrkjøring som `hopRun` på toppfart; «nå» er været i testens spillklokke, tidlig i oktober). Rutene er 12 % lengre enn rett linje (988 nm):
+
+| Etappe | Trebåten | Havsjarken | Kystbåten 15 m | Hurtigsjarken |
+|---|---|---|---|---|
+| 1 Lindesnes–Bergen | 194 nm | 194 nm | 194 nm | 194 nm |
+| 2 Bergen–Ålesund | 157 nm | 157 nm | 172 nm | 157 nm |
+| 3 Ålesund–Rørvik | 210 nm | 210 nm | 210 nm | 210 nm |
+| 4 Rørvik–Bodø | 175 nm | 175 nm | 175 nm | 175 nm |
+| 5 Bodø–Tromsø | 192 nm | 191 nm | 191 nm | 191 nm |
+| 6 Tromsø–mållinja | 179 nm | 181 nm | 181 nm | 181 nm |
+| **Sum** | **1 107 nm** | **1 107 nm** | **1 122 nm** | **1 107 nm** |
+| Ekte timer, stille vær | 27,1 | 19,0 | 16,9 | 8,9 |
+| med turbo hele veien | 13,7 | 9,6 | 8,7 | 4,6 |
+| Ekte timer, været nå | 29,0 | 19,5 | 17,2 | 9,2 |
+| Bunkringsstopp uten / med turbo | 1 / 5 | 0 / 0 | 0 / 0 | 0 / 1–2 |
+
+En etappe tar 1,3–5,6 ekte timer for trebåten og 0,6–1,7 for hurtigsjarken. Bunkringen er regnet med full tank ved hvert sjekkpunkt; trebåten bruker 47–61 av 60 liter per etappe uten trim, så hun bunkrer på etappe 5 og med turbo på nesten hver etappe. Tida oppgavene tar, måles i 116b.
+
+Testene: `tests/unit/kapplop.test.mjs` (klassene, uka over skiftene, klokka, `lopMinH`, mållinja, hoppet, salget) og `tests/kapplop.py` (LITE, hele kysten: påmelding, etappe 1 sør seilt minutt for minutt med tillegg og hoppet nektet, klokka i havn og ved bunkring, etappe 3 midt spilt som med spillet lukket, etappe 6 nord over mållinja, slep bryter).
