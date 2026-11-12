@@ -41,9 +41,12 @@ async def held(pg, a, ms):
 
 
 async def frames(pg, n=3):
+    # (n frames the game has drawn, then 1.5 s for the motion: two requestAnimationFrame in a row put at least one whole frame of the
+    # game's own loop, view3d/24-cinema.js, between the call and the reading. Before, a counter here went up on every poll, not on
+    # every frame, so this waited 1.5 s only, and when SwiftShader took longer for a frame, check 3 read the frame before S.mob was
+    # cleared: red on plan/2026-11-12-88 once, 12.11.2026, green on the same build run again)
     for i in range(n):
-        try: await pg.wait_for_function("(k) => G3._debug.fps !== undefined && (window.__f = (window.__f || 0) + 1) > k", arg=0, timeout=60000)
-        except Exception: pass
+        await pg.evaluate("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))")
         await pg.wait_for_timeout(1500)
 
 
