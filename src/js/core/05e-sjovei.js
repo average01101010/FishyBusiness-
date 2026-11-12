@@ -34,7 +34,7 @@ const SJV = {
   ms:0,             // the time the last look took (ms)
   // the warning's window (game minutes to the CPA; 6 game minutes is a minute of real time), the NPCs' and Autonav's reach (km),
   // the near miss (m clear), how long a manoeuvre lasts at most (game hours)
-  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25,
+  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
   // Ø11.2: restricted visibility under 2 nautical miles (km; the rules give no figure, 3 l names fog, snow and heavy rain), and for the
   // vessels not in sight in it (rule 19) the window, the warning's and the manoeuvres' reach and the time to the CPA they start at
   FOG:2 * NM, TWF:10, RWF:5, RNPCF:1.6, ROWNF:1.8, TSF:12,
@@ -287,7 +287,8 @@ function sjvBackClear(M, Q, lim, gs){
 }
 // how early a manoeuvre must begin (game minutes to the CPA) for the one giving way at v knots to stand off as far as she needs (sjvStart:
 // 1.5 times the limit) at the turn's rate, twice that and a minute (rule 8 a: «i god tid»; 16: «så tidlig som mulig»). The reach in km
-// (SJV.RNPC, ROWN) is enough between two boats at sjark speeds; against a ship at 12 knots it was not (TB1, 12.11.2026: Autonav at 6
+// (SJV.RNPC, ROWN) is enough between two boats at sjark speeds; it begins by the time within 2.4 km (SJV.RLEAD: a manoeuvre ends beyond
+// 2.5 km, and one begun further off ended, began again and sounded its signal each look); against a ship at 12 knots it was not (TB1, 12.11.2026: Autonav at 6
 // knots began at 1.2 km with under 3 minutes left, stood 300 of 600 m off, and passed 86-170 m from a trawler, the limit 190 m)
 function sjvLead(R, v){ const want = Math.max(1.5 * R.lim, R.lim + 60) / 1000, rate = Math.max(2, v || 0) * NM * Math.tan(SJV_TH); return 2 * want / rate * 60 + 1; }
 // the way back for an NPC (n0 as the clock has her, n as she is shown): her own course with the offset she stands at; slackened off, from
@@ -475,7 +476,7 @@ function sjvEval(H, list){
       // (in sight she sounds her manoeuvre, 34 a: one short to starboard, two to port, three when she takes the way off)
       const closeK = (Math.hypot(R.vx, R.vy) / gsA) / 60;   // km a game minute between them
       let M = null;
-      if ((R.give === 'b' || R.give === 'both') && (R.rng <= (f19 ? SJV.RNPCF : SJV.RNPC) * 1000 || (R.tcpa <= sjvLead(R, n0.v) && R.rng <= RW * 1000)) && R.tcpa <= TS) M = sjvStart(n0, R, H, 'b', R.sit, false);
+      if ((R.give === 'b' || R.give === 'both') && (R.rng <= (f19 ? SJV.RNPCF : SJV.RNPC) * 1000 || (R.tcpa <= sjvLead(R, n0.v) && R.rng <= SJV.RLEAD * 1000)) && R.tcpa <= TS) M = sjvStart(n0, R, H, 'b', R.sit, false);
       else if (R.give === 'a' && R.rng <= Math.max(350, closeK * 1000) && R.tcpa <= 1.5 && R.cpa < 0.7 * R.lim) M = sjvStart(n0, R, H, 'b', '17', false);
       // 34 d: the one to stand on is in doubt that you give way, «minst fem korte støt med fløyten raskt etter hverandre», once
       else if (R.give === 'a' && sight && s && !s.d5 && !(SJV.own && SJV.own.id === n0.id) && R.rng <= 1500 && R.tcpa <= 2.5 && R.cpa < 0.8 * R.lim){ s.d5 = true; sjvSig(n0.id, 'SSSSS', n.p, n.L, false); }
@@ -485,7 +486,7 @@ function sjvEval(H, list){
     if (auto && !harb && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
       const O = SJV.own;
       if (O){ if (O.t1 == null && ((R.tcpa <= 0 && R.rng > R.lim && sjvBackClear(sjvBackOwn(A, O), n, R.lim, gsA)) || R.rng > 2500 || H - O.t0 > SJV.TMAX)) O.t1 = H; }
-      else if ((R.give === 'a' || R.give === 'both') && R.risk && (R.rng <= (f19 ? SJV.ROWNF : SJV.ROWN) * 1000 || (R.tcpa <= sjvLead(R, A.v) && R.rng <= RW * 1000)) && R.tcpa <= TS){ SJV.own = sjvStart(A, R, H, 'a', R.sit, true, n0.id); if (sight) sjvSig('_own', sjvManPat(SJV.own.side, SJV.own.slow), A.p, A.L, true); }
+      else if ((R.give === 'a' || R.give === 'both') && R.risk && (R.rng <= (f19 ? SJV.ROWNF : SJV.ROWN) * 1000 || (R.tcpa <= sjvLead(R, A.v) && R.rng <= SJV.RLEAD * 1000)) && R.tcpa <= TS){ SJV.own = sjvStart(A, R, H, 'a', R.sit, true, n0.id); if (sight) sjvSig('_own', sjvManPat(SJV.own.side, SJV.own.slow), A.p, A.L, true); }
     }
     // 19 e: a fog signal heard apparently forward of her beam from a vessel not in sight, or one forward of the beam she cannot keep out
     // of close quarters with: down to the minimum steerage speed, stopped when she is as close as the limit, «inntil faren for sammenstøt
@@ -605,7 +606,8 @@ function sjvSail(pl, b, left){
   const to = {x:b.pos.x + Math.sin(hd) * L, y:b.pos.y - Math.cos(hd) * L};
   let gp = null; try { gp = groundCheck(b.pos, to); } catch (e){ gp = to; }
   if (gp){ O.slow = true; return false; }
-  b.pos = to; b.heading = hd; if (f < 0.999) b.v = Math.round(v0 * f * 10) / 10; return true;
+  const k = O.slow || O.ease ? 0.4 : 1;   // (the speed the rules read is the one she goes: sail sets it again each minute)
+  b.pos = to; b.heading = hd; if (f * k < 0.999) b.v = Math.round(v0 * f * k * 10) / 10; return true;
 }
 // the minute along the leg at the slower speed (L grid km, v knots): not into a stop's last half kilometre (the harbour's own speed
 // takes her there), and ground ahead leaves it to the minute step's own check (the way round). True when this moved her

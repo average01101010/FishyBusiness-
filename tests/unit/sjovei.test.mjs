@@ -227,6 +227,13 @@ export default function (t){
     t.ok(lead > 5 && lead < 6, 'regel 8 a: trebåten i 6 knop må begynne over 5 spillminutter før CPA for å stå 1,5 grenser ut', +lead.toFixed(2));
     t.ok(lead * 18 * NM / 60 > 2.5, 'møtende med tråleren (18 knop sammen) er det over 2,5 km, ikke 1,2', +(lead * 18 * NM / 60).toFixed(2));
     t.ok(lead2 * 11 * NM / 60 < 1.2, 'to sjarker på kryss (11 knop sammen): innenfor 1,2 km, som før', +(lead2 * 11 * NM / 60).toFixed(2));
+    t.ok(K.SJV.RLEAD < 2.5, 'ledetida starter en manøver innenfor 2,4 km, under de 2,5 km en manøver slutter ved (ellers start, slutt og nytt signal hvert blikk)', K.SJV.RLEAD);
+    // sjvBackNpc: her own course from the clock with the offset she stands at now; slackened off, from where she is at 1.3 times her speed
+    const E = {nx, ny, tgt:off, rate, t0:0, t1:null, slow:false, side:1}, n0 = V(base.x, base.y, hd, 12, {L:60.3}), Hh = off / rate + 0.01;
+    const bn = K.sjvBackNpc(n0, shown, E, Hh);
+    t.ok(bn.x === base.x && bn.cog === hd * R && bn.v === 12 && bn.ox === nx && Math.abs(bn.off - off) < 1e-9 && bn.rate === rate, 'sjvBackNpc: hennes egen kurs og fart, med avviket hun står på nå', bn);
+    const Es = {slow:true, t0:0, t1:null, f:0.35}, bs = K.sjvBackNpc(n0, shown, Es, 0.02);
+    t.ok(bs.off === 0 && bs.x === shown.p.x && Math.abs(bs.v - 12 * 1.3) < 1e-9, 'sjvBackNpc: avslakket fra der hun er, i 1,3 ganger farten mens hun tar igjen tida', bs);
     // 8 e: the trawler crossing ahead from starboard at 12 knots, the trebåt at 6 north, meeting in 3 minutes: no parallel offset within
     // 600 m opens the CPA to 1.5 limits (the relative motion runs along it), so Autonav takes the way off her too (sjvStart: ease);
     // head-on it does
