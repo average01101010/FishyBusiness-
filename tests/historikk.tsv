@@ -3412,3 +3412,4 @@
 2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	fasittest	FEIL	37	lite	samtidig	FEIL HS4: «Aktiver» tells the server once with haill_on and the haill stays aboard; one switched on with no network that the server has taken back meanwhile is 
 2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	fasittest	OK	40	lite	samtidig	
 2026-11-12 21:32	ccr-e7efd74c-rioki0	d1068007+	kjoptest	OK	139	lite	samtidig	
+2026-11-12 21:55	plan/2026-11-12-45b	023beed7	boottest	OK	25	lite	alene	
