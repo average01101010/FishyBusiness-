@@ -467,11 +467,13 @@ function lifeHail(H){
 // a week of learning a little faster (learnHour). At most one open errand aboard (c.err on the one who asked), one ask per person per week, not in their
 // first week aboard, not on the first trip, not in a gale. All the numbers are start values for the play test.
 const ERRAND = {nm:40, min:20, week:7 * 1440, life:1440, learn:1.05, p:0.006, h0:8, h1:20, gale:13.9};
+// the reasons, each with whom and where it fits (c the person, w {port:true in a harbour}); none fits, and the first is used
 const ERRAND_WHY = {
-  home:[['Søstera mi har en pakke til meg.', 'My sister has a parcel for me.'], ['Mor fyller år, og jeg vil stikke innom med blomster.', 'Mum has her birthday, and I would like to drop in with flowers.'], ['Jeg har glemt medisinen min hjemme.', 'I left my medicine at home.']],
+  home:[['Søstera mi har en pakke til meg.', 'My sister has a parcel for me.'], ['Mor fyller år, og jeg vil stikke innom med blomster.', 'Mum has her birthday, and I would like to drop in with flowers.', c => (c.age || 30) < 60], ['Jeg har glemt medisinen min hjemme.', 'I left my medicine at home.']],
   stop:[['Jeg må på apoteket og hente medisin.', 'I need the chemist for my medicine.'], ['Jeg har en pakke som venter på posten der.', 'I have a parcel waiting at the post office there.'], ['Telefonen min er knust, og de har en butikk der.', 'My phone is broken, and there is a shop there.']],
-  offHome:[['Jeg vil hjem en dag, det er dåp i familien.', 'I would like a day at home, there is a christening in the family.'], ['Ungen min har avslutning på skolen.', 'My youngest has the end-of-term show at school.'], ['Jeg vil hjem og hjelpe far med båtnaustet.', 'I would like to go home and help Dad with the boathouse.']],
-  off:[['Jeg trenger en dag på land for å ringe hjem og sove ut.', 'I need a day ashore to call home and sleep in.'], ['Jeg vil gå en tur i fjellet her i morgen.', 'I would like a walk in the hills here tomorrow.'], ['Ryggen trenger en dag uten løft.', 'My back needs a day without lifting.']]};
+  offHome:[['Jeg vil hjem en dag, det er dåp i familien.', 'I would like a day at home, there is a christening in the family.'], ['Ungen min har avslutning på skolen.', 'My youngest has the end-of-term show at school.', c => crewLife(c).fam === 'kids'], ['Jeg vil hjem og hjelpe far med båtnaustet.', 'I would like to go home and help Dad with the boathouse.', c => (c.age || 30) < 55]],
+  off:[['Jeg trenger en dag på land for å ringe hjem og sove ut.', 'I need a day ashore to call home and sleep in.'], ['Jeg vil gå en tur i fjellet mens vi ligger her.', 'I would like a walk in the hills while we lie here.', (c, w) => w.port], ['Ryggen trenger en dag uten løft.', 'My back needs a day without lifting.']]};
+const errWhy = (k, c, w, r) => { const a = ERRAND_WHY[k].filter(x => !x[2] || x[2](c, w)), q = a.length ? a : ERRAND_WHY[k].slice(0, 1); const x = q[Math.floor(r() * q.length) % q.length]; return [x[0], x[1]]; };
 // what they tell about themselves when it is done (lifeStory): by their family and their dream
 function errandLine(c){
   const L = crewLife(c), first = c.name.split(' ')[0];
@@ -495,11 +497,12 @@ function errandPick(c, r = crewRand){
   const sea = b.status === 'sailing' || b.status === 'fishing' || b.status === 'idle', inPort = b.status === 'port', goingIn = sea && !!(S.plan && S.plan.returning && S.plan.opsK !== 'ly');
   // never the harbour she just left (b.errFrom, the last one she lay in): asking to call in there an hour out makes no sense
   const hp = c.homePort ? portById(c.homePort) : null, near = hp && hp.p && dist(hp.p, b.pos) <= ERRAND.nm * NM && portFits(hp, b.type) ? hp : null;
-  const pick = a => a[Math.floor(r() * a.length) % a.length], opts = [];
-  if (sea && near && near.id !== b.errFrom) opts.push({k:'home', port:near.id, why:pick(ERRAND_WHY.home)});
-  if (sea && !opts.length){ const R = errKmMin() * ERRAND.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && pt.id !== (hp && hp.id) && pt.id !== b.errFrom && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
-    if (q) opts.push({k:'stop', port:q.id, why:pick(ERRAND_WHY.stop)}); }
-  if (inPort || goingIn) opts.push({k:'off', port:null, why:pick(near ? ERRAND_WHY.offHome : ERRAND_WHY.off)});
+  const pick = a => a[Math.floor(r() * a.length) % a.length], opts = [], w = {port:inPort};
+  if (sea && near && near.id !== b.errFrom) opts.push({k:'home', port:near.id, why:errWhy('home', c, w, r)});
+  // a call at a harbour or a plant, not at a shop or a yard of 06c-steder.js («Ålesund utstyrsbutikk»; the filter of placeAt in 01-world.js)
+  if (sea && !opts.length){ const R = errKmMin() * ERRAND.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && !(pt.sted && pt.coastal && !pt.mottak) && pt.id !== (hp && hp.id) && pt.id !== b.errFrom && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
+    if (q) opts.push({k:'stop', port:q.id, why:errWhy('stop', c, w, r)}); }
+  if (inPort || goingIn) opts.push({k:'off', port:null, why:errWhy(near ? 'offHome' : 'off', c, w, r)});
   return opts.length ? pick(opts) : null;
 }
 // the question, in their own words and dialect
@@ -525,7 +528,8 @@ function errandHour(H){
     // a day gone (three for a day off said yes to, on the way in), or in a harbour elsewhere: no more, and no harm
     if (S.t - E.t0 >= ERRAND.life * (E.k === 'off' && E.ok ? 3 : 1) || (E.k !== 'off' && at && b.port !== E.port && S.t - E.t0 > 60)) errLapse(c0, E);
     return; }
-  if (S.tut || (typeof lagOf === 'function' && lagOf()) || !meAboard()) return;
+  // no new question while the time away is played (catchUp, FS_AWAY in 09e-fartstid.js): nobody could answer it, and the funnel would count it
+  if (S.tut || (typeof FS_AWAY !== 'undefined' && FS_AWAY) || (typeof lagOf === 'function' && lagOf()) || !meAboard()) return;
   const hr = gDate(H).getUTCHours(); if (hr < ERRAND.h0 || hr >= ERRAND.h1) return;
   if (windAt(H, b.pos) >= ERRAND.gale) return;   // never in a gale (Bft 7 and over)
   for (const c of crewAboard(H)){ if (!errandMay(c) || crewRand() >= ERRAND.p) continue;

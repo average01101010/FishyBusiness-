@@ -28,15 +28,31 @@ export default function (t){
   put(botn, 'port'); const offB = picks(A);
   t.ok(offB.length && offB.every(p => K.ERRAND_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Botnhamn er hjemme', offB[0] && offB[0].why);
 
+  // off Bugøynes (the nearest plant to Kirkenes, 1.8 km out): a call there, never home to Botnhamn
+  put(bug, 'fishing', 1.8); b.errFrom = null; const atBug = picks(A);
+  t.ok(atBug.length && atBug.every(p => p.k === 'stop' && K.portById(p.port).mottak), 'utenfor Bugøynes: et anløp ved et mottak, ikke hjem', atBug.slice(0, 2));
+
   // ---- near home: «home» is asked ----
   put(botn, 'fishing', 8);
   const nearHome = picks(A);
   t.ok(nearHome.some(p => p.k === 'home' && p.port === 'botnhamn'), 'innen 40 nm av Botnhamn: «Kan vi gå innom Botnhamn?»', nearHome[0]);
 
   // ---- the coast (stikkprøven): Bergen, Bodø, Båtsfjord with the man from Botnhamn ----
-  for (const re of [/^Bergen/, /^Bodø/, /^Båtsfjord/]){ const pt = port(re) || K.get('PORTS').find(p => re.test(p.name)); if (!pt){ t.ok(false, 'fant ikke ' + re); continue; }
+  // (Bergen has only its yard in the game: the plant nearest to it is the place)
+  const near1 = re => { const y = K.get('PORTS').find(p => re.test(p.name)); return y && K.get('PORTS').filter(p => p.mottak).sort((a, c) => K.dist(a.p, y.p) - K.dist(c.p, y.p))[0]; };
+  for (const re of [/^Bergen/, /^Bodø/, /^Båtsfjord/]){ const pt = port(re) || near1(re); if (!pt){ t.ok(false, 'fant ikke ' + re); continue; }
     put(pt, 'fishing', 2); const P = picks(A, 150);
-    t.ok(P.every(p => p.k !== 'home' && (!p.port || K.dist(K.portById(p.port).p, b.pos) <= ERR.nm * NM)), pt.name + ': ingen hjem til Botnhamn, bare noe som passer der båten er', P.slice(0, 2).map(p => p.k + ' ' + p.port)); }
+    t.ok(P.length && P.every(p => p.k !== 'home' && (!p.port || K.dist(K.portById(p.port).p, b.pos) <= ERR.nm * NM)), pt.name + ': ingen hjem til Botnhamn, bare noe som passer der båten er', P.slice(0, 2).map(p => p.k + ' ' + p.port)); }
+
+  // ---- a call is at a harbour or a plant, never a shop or a yard («Ålesund utstyrsbutikk»): the whole coast, 1.8 km off each shop and yard ----
+  { let n = 0, bad = []; for (const pt of K.get('PORTS').filter(q => q.sted && q.coastal && !q.mottak)){ put(pt, 'fishing', 1.8); b.errFrom = null; for (const p of picks(A, 20)) if (p.k === 'stop'){ n++; const q = K.portById(p.port); if (q.sted && q.coastal && !q.mottak) bad.push(q.name); } }
+    t.ok(!bad.length, 'ingen anløp i en butikk eller et verft (' + n + ' anløp prøvd langs kysten)', bad.slice(0, 4)); }
+
+  // ---- the reason fits the person: the school show only with children, Mum's birthday not at 70, the hills only in a harbour ----
+  { put(botn, 'port'); const C = mk('botnhamn'); C.age = 70; C.life.fam = 'single'; const w = picks(C, 300).map(p => p.why[0]);
+    t.ok(w.length && !w.some(x => /avslutning|fyller år|hjelpe far/.test(x)), 'en enslig på 70: ikke ungen, ikke mor, ikke far', [...new Set(w)]);
+    put(kirk, 'fishing', 3); S.plan = {returning:true, wps:[]}; const w2 = picks(C, 300).map(p => p.why[0]); S.plan = null;
+    t.ok(w2.length && !w2.some(x => /fjellet/.test(x)), 'på vei inn: ikke «tur i fjellet mens vi ligger her»', [...new Set(w2)]); }
 
   // ---- the ask through crewTick's hour: by day, fair weather, aboard; one open, then none for a week from the same person ----
   put(botn, 'fishing', 8); K.set('meAboard', () => true); K.set('windAt', () => 5); S.tut = null; S.msgs = [];
@@ -56,6 +72,8 @@ export default function (t){
   put(botn, 'port'); K.errandHour(S.t / 60 | 0);
   t.ok(!A.err && A.life.story.length === n0 + 1 && /Botnhamn/.test(A.life.story[A.life.story.length - 1][1]), 'lagt til i Botnhamn: linja står i historien hans', A.life.story.slice(-1));
   t.near(K.errandLearn(A), ERR.learn, 1e-9, 'han lærer litt raskere');
+  { const c1 = mk('husoy'), c2 = mk('husoy'); for (const c of [c1, c2]){ c.age = 30; c.morale = 60; c.traits = []; c.gear.juksa = 2; c.wk = {fiske:60}; } c1.life.errUp = S.t + D; delete c2.life.errUp;
+    K.learnHour(c1); K.learnHour(c2); t.near((c1.gear.juksa - 2) / (c2.gear.juksa - 2), ERR.learn, 1e-6, 'learnHour: det han lærer på en time er 5 % mer uka etter ærendet'); }
   S.t += 7 * D + 1; t.eq(K.errandLearn(A), 1, 'i sju døgn, ikke lenger');
 
   // ---- never the harbour she just left; done only with the skipper and him aboard; a yes that comes to nothing is said ----
@@ -83,5 +101,6 @@ export default function (t){
   K.set('windAt', () => 5); S.tut = {v:2}; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke på første tur'); S.tut = null;
   B.hiredT = S.t - 2 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke den første uka om bord');
   B.hiredT = S.t - 30 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 22); t.ok(!B.err, 'ikke om kvelden (22)');
+  K.set('FS_AWAY', true); K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke mens tida du var borte spilles av (catchUp)'); K.set('FS_AWAY', false);
   K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!!B.err, 'om dagen, i godt vær, etter første uka: ja');
 }

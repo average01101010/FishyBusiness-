@@ -561,6 +561,7 @@ function crewGrunn(c){
 // the settlement for the catch aboard (Jonas 12.11.2026, valg 40 A); the others' mood by how they got on with them. The ground's words
 function crewLetGo(c){
   const i = S.crew.indexOf(c); if (i < 0) return null; const g = crewGrunn(c), own = !!c.opp, [end, len] = crewFrist(c);
+  if (c.err && typeof errEv === 'function'){ errEv('lapse', c.err); delete c.err; }   // an errand left open (14-crewlife.js) ends with them
   // one who had given notice and has the boat of their own within reach goes to it (the alumni, the AIS, back in a year or two)
   if (own && crewDream(c) && typeof lifeDepart === 'function') lifeDepart(c); else { crewSettle(c); flyOut(c); S.crew.splice(i, 1); }
   for (const o of S.crew){ o.morale = clamp(o.morale + (compat(o, c) < 0 ? 4 : -4), 0, 100); if (o.grudge) delete o.grudge[c.id]; }
