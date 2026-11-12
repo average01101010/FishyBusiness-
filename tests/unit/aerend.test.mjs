@@ -58,6 +58,17 @@ export default function (t){
   t.near(K.errandLearn(A), ERR.learn, 1e-9, 'han lærer litt raskere');
   S.t += 7 * D + 1; t.eq(K.errandLearn(A), 1, 'i sju døgn, ikke lenger');
 
+  // ---- never the harbour she just left; done only with the skipper and him aboard; a yes that comes to nothing is said ----
+  b.errFrom = 'botnhamn'; put(botn, 'fishing', 8); t.ok(picks(A).every(p => p.port !== 'botnhamn'), 'ikke havna båten nettopp gikk fra (b.errFrom)');
+  b.errFrom = null; S.plan = {returning:true, opsK:'ly', wps:[]}; t.ok(picks(A).every(p => p.k !== 'off'), 'ingen fridag mens båten søker ly (Driftsplan 2s «ly»)');
+  S.plan = {returning:true, wps:[]}; t.ok(picks(A).some(p => p.k === 'off'), 'men på vei inn til havn: fridagen kan bes om'); S.plan = null;
+  A.err = {k:'home', port:'botnhamn', why:['x', 'x'], t0:S.t, ok:true}; K.set('meAboard', () => false); put(botn, 'port'); const n1 = A.life.story.length; K.errandHour(S.t / 60 | 0);
+  t.ok(A.err && A.life.story.length === n1, 'båten legger til uten deg om bord: ikke gjort');
+  K.set('meAboard', () => true); A.bi = true; A.biDays = [0, 0, 0, 0, 0, 0, 0]; K.errandHour(S.t / 60 | 0); t.ok(A.err && A.life.story.length === n1, 'han er ikke om bord i dag (biyrke): ikke gjort'); A.bi = false; A.biDays = null;
+  S.msgs = []; put(kirk, 'fishing', 3); S.t += D; K.errandHour(S.t / 60 | 0);
+  t.ok(!A.err && S.msgs.some(m => m.from === A.name && /ikke noe av/.test(m.no)), 'et ja som ikke blir noe av: han sier det, og det er borte', S.msgs.map(m => m.no));
+  b.errFrom = null;
+
   // ---- not answered and nothing done: it runs out after a day, with no harm ----
   put(kirk, 'fishing', 3); A.err = {k:'stop', port:bug.id, why:['x', 'x'], t0:S.t, ok:false}; const m1 = A.morale;
   S.t += D; K.errandHour(S.t / 60 | 0); t.ok(!A.err && A.morale === m1, 'etter ett døgn løper det ut uten følge');
@@ -67,7 +78,7 @@ export default function (t){
   t.ok(K.errandAnswer(A.id, true) && A.off && A.offUntil === S.t + D && !A.err, 'fridagen: i land ett døgn med en gang', {off:A.off, u:A.offUntil - S.t});
 
   // ---- never in a gale, never on the first trip, never in their first week aboard ----
-  const B = mk('botnhamn'); S.crew = [B]; put(botn, 'fishing', 8);
+  const B = mk('botnhamn'); S.crew = [B]; put(botn, 'fishing', 8); b.errFrom = null;
   K.set('windAt', () => 15); K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke i kuling');
   K.set('windAt', () => 5); S.tut = {v:2}; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke på første tur'); S.tut = null;
   B.hiredT = S.t - 2 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke den første uka om bord');

@@ -491,14 +491,16 @@ function errandMay(c){
 // the boat; a call at a harbour within ERRAND.min at her cruising speed; a day off only in a harbour or on the way in
 function errandPick(c, r = crewRand){
   const b = S.boat; if (!b || !b.pos) return null;
-  const sea = b.status === 'sailing' || b.status === 'fishing' || b.status === 'idle', inPort = b.status === 'port', goingIn = sea && !!(S.plan && S.plan.returning);
+  // on the way in: back to a harbour, not the run for shelter (Driftsplan 2's «ly», 06h-plan2-engine.js, is returning too)
+  const sea = b.status === 'sailing' || b.status === 'fishing' || b.status === 'idle', inPort = b.status === 'port', goingIn = sea && !!(S.plan && S.plan.returning && S.plan.opsK !== 'ly');
+  // never the harbour she just left (b.errFrom, the last one she lay in): asking to call in there an hour out makes no sense
   const hp = c.homePort ? portById(c.homePort) : null, near = hp && hp.p && dist(hp.p, b.pos) <= ERRAND.nm * NM && portFits(hp, b.type) ? hp : null;
   const pick = a => a[Math.floor(r() * a.length) % a.length], opts = [];
-  if (sea && near && near.id !== b.port) opts.push({k:'home', port:near.id, why:pick(ERRAND_WHY.home)});
-  if (sea && !opts.length){ const R = errKmMin() * ERRAND.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && pt.id !== (hp && hp.id) && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
+  if (sea && near && near.id !== b.errFrom) opts.push({k:'home', port:near.id, why:pick(ERRAND_WHY.home)});
+  if (sea && !opts.length){ const R = errKmMin() * ERRAND.min, q = PORTS.filter(pt => pt.p && !pt.rorbu && pt.id !== (hp && hp.id) && pt.id !== b.errFrom && dist(pt.p, b.pos) <= R && portFits(pt, b.type)).sort((x, y) => dist(x.p, b.pos) - dist(y.p, b.pos))[0];
     if (q) opts.push({k:'stop', port:q.id, why:pick(ERRAND_WHY.stop)}); }
   if (inPort || goingIn) opts.push({k:'off', port:null, why:pick(near ? ERRAND_WHY.offHome : ERRAND_WHY.off)});
-  return opts.length ? opts[Math.floor(r() * opts.length) % opts.length] : null;
+  return opts.length ? pick(opts) : null;
 }
 // the question, in their own words and dialect
 function errandAskText(c, E){
@@ -509,14 +511,19 @@ function errandAskText(c, E){
 const errEv = (k, E) => { if (typeof cloudEv === 'function') cloudEv('crew_errand', {k, e:E.k}); };
 // the open errand aboard, on the one who asked (c.err; a crew member's own field, so it goes with the vessel when the fleet ticks, eachVessel)
 const errOpen = () => (S.crew || []).find(c => c.err) || null;
-// once an hour (crewTick, for each vessel in turn): an open errand is done or runs out; else, by day and in fair weather, one aboard may ask
+// an errand that comes to nothing: the event, and a word when it had been said yes to, so a promise is not just gone
+function errLapse(c, E){ errEv('lapse', E); delete c.err;
+  if (E.ok && S.crew.includes(c)) msg(c.name, crewDialect(c, E.k === 'off' ? 'Det ble ingen fridag denne gangen. Det går fint.' : 'Det ble ikke noe av å gå innom denne gangen. Det går fint.'), E.k === 'off' ? 'No day off this time. That is all right.' : 'We did not call in this time. That is all right.'); }
+// once an hour (crewTick, for each vessel in turn): an open errand is done or runs out; else, by day and in fair weather, one aboard may ask.
+// Done only with you aboard and them aboard (the skipper made the call; a part-timer on his day ashore was not there)
 function errandHour(H){
-  const b = S.boat, c0 = errOpen();
-  if (c0){ const E = c0.err, at = b.status === 'port';
-    if (c0.off || c0.opp){ errEv('lapse', E); delete c0.err; return; }   // ashore for other reasons, or on notice: no more of it
-    if (E.k !== 'off' && at && b.port === E.port) return errandDone(c0);   // they called in where asked (also with no answer given: she did it)
-    if (E.k === 'off' && E.ok && at) return errandDone(c0);                 // the day off, once in a harbour
-    if (S.t - E.t0 >= ERRAND.life || (E.k !== 'off' && at && b.port !== E.port && S.t - E.t0 > 60)){ errEv('lapse', E); delete c0.err; }   // a day gone, or in a harbour elsewhere: no more, and no harm
+  const b = S.boat, c0 = errOpen(); if (b.status === 'port' && b.port) b.errFrom = b.port;
+  if (c0){ const E = c0.err, at = b.status === 'port', here = meAboard() && crewAboard(H, true).includes(c0);
+    if (c0.off || c0.opp || c0.fly || c0.mobOff) return errLapse(c0, E);   // ashore for other reasons, or on notice: no more of it
+    if (E.k !== 'off' && at && b.port === E.port && here) return errandDone(c0);   // they called in where asked (also with no answer given: she did it)
+    if (E.k === 'off' && E.ok && at) return errandDone(c0);                          // the day off, once in a harbour
+    // a day gone (three for a day off said yes to, on the way in), or in a harbour elsewhere: no more, and no harm
+    if (S.t - E.t0 >= ERRAND.life * (E.k === 'off' && E.ok ? 3 : 1) || (E.k !== 'off' && at && b.port !== E.port && S.t - E.t0 > 60)) errLapse(c0, E);
     return; }
   if (S.tut || (typeof lagOf === 'function' && lagOf()) || !meAboard()) return;
   const hr = gDate(H).getUTCHours(); if (hr < ERRAND.h0 || hr >= ERRAND.h1) return;

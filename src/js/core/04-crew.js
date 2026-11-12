@@ -483,7 +483,8 @@ function crewSettle(c){
   log(c.name + ' fikk ' + kr(sum) + ' i lott for fangsten om bord.', c.name + ' was paid ' + kr(sum) + ' as the share of the catch aboard.');
   return sum;
 }
-function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
+function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; if (c.err && typeof errEv === 'function'){ errEv('lapse', c.err); delete c.err; }   // an errand left open (14-crewlife.js) ends with them
+  crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
 // ===== Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102 =====
 // § 3-1: a written agreement no later than when the work aboard starts; § 3-2: «Prøvetid på inntil seks måneder kan avtales skriftlig»;
