@@ -1074,21 +1074,25 @@ def underwater(fine=True):
 # the deckhouse; a fire extinguisher, a junction box with its conduit and the door's kick plate and hinges on its starboard face; the deck
 # wash hose coiled on its peg on the after face; fairlead cleats on the transom's cap, lifting eyes and anodes on the transom; the draft
 # marks on the quarters. Nothing stands out more than 9 cm but the fire extinguisher (13 cm, at chest height on the deckhouse wall), and nothing on the deck where the game sets its own kit
+GRIP_PT = 0.11               # the studs' pitch on the grip fields (details())
 GRIP = [(0.22, 0.82, -1.92, 1.42), (0.95, 3.02, -1.95, -0.86), (1.28, 3.04, 0.86, 1.42), (2.50, 3.04, -0.60, 0.60), (3.30, 5.74, -1.96, -0.72)]   # (x0, x1, y0, y1)
 def details(A):
     s = lambda q: C['steel']
     for x0, x1, y0, y1 in GRIP:
-        nx = max(1, round((x1 - x0) / 0.15)); ny = max(1, round((y1 - y0) / 0.15))      # (0.45 before: finer, so the wear's stains run across a field)
+        # the field in cells one stud pitch square (0.45 before: finer, so the wear's stains run across a field), their corners on the
+        # lines BETWEEN the studs below: a corner under a stud bakes black (bake_ao) and smears a dark blot over the cell round it, which
+        # the game showed as spots in a grid (OB10 round 3)
+        nodes = lambda a, b: [a] + [a + 0.02 + k * GRIP_PT for k in range(1, int((b - a - 0.04) / GRIP_PT) + 1) if a + 0.02 + k * GRIP_PT < b - 0.03] + [b]
         zf = lambda x, y: ZMD + camber(x, y) + 0.005
-        for i in range(nx):
-            for j in range(ny):
-                xa, xb = x0 + (x1 - x0) * i / nx, x0 + (x1 - x0) * (i + 1) / nx; ya, yb_ = y0 + (y1 - y0) * j / ny, y0 + (y1 - y0) * (j + 1) / ny
+        XS, YS = nodes(x0, x1), nodes(y0, y1)
+        for xa, xb in zip(XS, XS[1:]):
+            for ya, yb_ in zip(YS, YS[1:]):
                 A.poly([(xa, ya, zf(xa, ya)), (xb, ya, zf(xb, ya)), (xb, yb_, zf(xb, yb_)), (xa, yb_, zf(xa, yb_))], C['grip'], (0, 0, 1))
         for (xa, ya), (xb, yb_), nr in (((x0, y0), (x1, y0), (0, -1, 0)), ((x1, y0), (x1, y1), (1, 0, 0)), ((x1, y1), (x0, y1), (0, 1, 0)), ((x0, y1), (x0, y0), (-1, 0, 0))):
             A.poly([(xa, ya, zf(xa, ya)), (xb, yb_, zf(xb, yb_)), (xb, yb_, zf(xb, yb_) - 0.008), (xa, ya, zf(xa, ya) - 0.008)], C['grip'], nr)
     # (OB10 round 3: «struktur på dørken som leses i spillets lys». The fields are studded like moulded non-slip: raised lozenges in
     # crossed pairs, 4 mm high, lighter than the field, their sloping faces catching the light; fittings.tread_plate's, on the camber)
-    PT, LL, LW, LH = 0.11, 0.056, 0.015, 0.004
+    PT, LL, LW, LH = GRIP_PT, 0.056, 0.015, 0.004
     for x0, x1, y0, y1 in GRIP:
         for i in range(int((x1 - x0 - 0.04) / PT)):
             for j in range(int((y1 - y0 - 0.04) / PT)):
