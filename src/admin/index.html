@@ -34,6 +34,7 @@ svg text{fill:var(--dim);font-size:10px}
 .sprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sptw{overflow-x:auto}.sptw table{min-width:980px}.spbk{display:flex;height:10px;border-radius:5px;overflow:hidden;min-width:90px;background:var(--line)}.spbk i{display:block}.sprow input,.sprow select{min-width:140px}
 @media print{header,nav,#mkPrint,.demo{display:none!important}.mk .card{break-inside:avoid}}
 .mk-l{margin:4px 0 0 18px;padding:0}.mk-l li{margin:3px 0}
+.mk-img{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.mk-img figure{margin:0}.mk-img img{width:100%;height:auto;border-radius:8px;display:block}.mk-img figcaption{font-size:12px;opacity:.8;margin-top:4px}
 </style>
 </head>
 <body>
@@ -341,27 +342,33 @@ function lgDemo(){
 }
 // ---------- the media card (M9, docs/planer/butikker-og-sponsorer.md 4.6 and docs/sponsor/mediekort.md): one page with what a
 // prospective partner asks for, from the dashboard's own numbers (the chosen period at the top), the funnel and the sponsors' report;
-// printed or saved as PDF from the browser. The home ports by part of the coast come from src/data/port-regions.json (build.mjs)
+// printed or saved as PDF from the browser. The home ports by county and part of the coast come from src/data/port-regions.json
+// ({id: [name, landsdel, fylke]}; the counties from Kartverket by tools/regions/fylke.py, steg 28), put in by build.mjs, and so do the
+// pictures of the formats (docs/sponsor/format-*.jpg, taken from the demo build by tests/mediekortshot.py), as data: addresses
 const REGIONS = /*@regions*/null;
+const MKIMG = /*@mkimg*/null;
 const LDN = {nord:'Nord-Norge', midt:'Midt-Norge', vest:'Vestlandet', sor:'Sørlandet og Oslofjorden'};
 VIEW.mediekort = D => {
   if (!FN){ fnLoad(); } if (!SPR){ sprLoad(); }
   const o = D.overview || {}, daily = D.daily || [], days = daily.length || 1, sess = daily.reduce((a, d) => a + (d.sessions || 0), 0) / days, hrs = daily.reduce((a, d) => a + (d.hours || 0), 0) / days;
-  const homes = (D.geo && D.geo.homes) || {}, reg = {}; let homeN = 0;
-  for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; homeN += n; }
+  const homes = (D.geo && D.geo.homes) || {}, reg = {}, fyl = {}; let homeN = 0;
+  for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent', f = r && r[2] ? r[2] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; fyl[f] = (fyl[f] || 0) + n; homeN += n; }
+  const regTxt = Object.entries(reg).sort((a, b) => b[1] - a[1]).map(([k, n]) => esc(k) + ' ' + nf(n, 0)).join(', ');
   const top = Object.entries(homes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => [(REGIONS && REGIONS[id] ? REGIONS[id][0] : id), n]);
   const fa = FN && !FN.err && FN.all, land = fa && fa.start ? fa.land1 / fa.start : null, reg3 = fa && fa.start ? fa.land3 / fa.start : null;
   const sp = Array.isArray(SPR) ? SPR : [], spImp = sp.reduce((a, r) => a + (+r.imp || 0), 0), spSec = sp.reduce((a, r) => a + (+r.sec || 0), 0), spCl = sp.reduce((a, r) => a + (+r.clicks || 0), 0), spMeas = sp.reduce((a, r) => a + (+r.imp || 0) + (+r.nonview || 0), 0);
   const pct = v => v == null ? '–' : nf(v * 100, 0) + ' %';
   return '<div class="mk"><div class="card mk-head"><h2>Det Store Blå · mediekort</h2><p class="note">Et kystfiskespill langs hele norskekysten, med én felles verden og én felles klokke. Tallene gjelder ' + (DAYS === 1 ? 'siste døgn' : 'siste ' + DAYS + ' dager') + ', hentet ' + new Date().toLocaleDateString('nb-NO') + '. Bare spillere som deler statistikk, telles.</p><button id="mkPrint">Skriv ut eller lagre som PDF</button></div>' +
     '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0)) + kpi('Aktive siste 30 dager', nf(o.mau, 0)) + kpi('Aktive per dag (snitt)', nf(o.dau, 0)) + kpi('Økter per dag', nf(sess, 0)) + kpi('Snitt økt', nf(o.avg_min, 0) + ' min') + kpi('Spilletimer per dag', nf(hrs, 0) + ' t') + '</div>' +
-    card('Hjemhavn etter landsdel', bars(reg), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '.' : 'Ingen hjemhavner ennå.') +
+    card('Hjemhavn etter fylke', bars(fyl), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Etter landsdel: ' + regTxt + '. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '. Fylkene: Kartverket (CC BY 4.0).' : 'Ingen hjemhavner ennå.') +
     card('Flåten i spillet', bars(D.boats || {}), 'Båter per type blant spillerne.') +
     card('Hva spillerne gjør', '<div class="grid">' + kpi('Har levert fisk', pct(land)) + kpi('Har levert tre ganger', pct(reg3)) + kpi('Turer i perioden', nf((D.trips || {}).count, 0)) + '</div>', 'Andelen av dem som åpnet spillet de siste åtte ukene (trakten).') +
     card('Sponsede plasseringer', sp.length ? '<div class="grid">' + kpi('Synlige visninger', nf(spImp, 0)) + kpi('Synlig andel', pct(spMeas ? spImp / spMeas : null), 'av de målte') + kpi('Sekunder sett', nf(spSec, 0)) + kpi('Klikk ut', nf(spCl, 0)) + '</div>' : '<p class="note">Ingen sponsede plasseringer ennå. Formatene kan vises i demobygget (KYST_DEMO=1).</p>',
       'En synlig visning: minst 1,5 % av skjermen, under 55°, minst halvparten synlig og ikke skjult av spillets vinduer, i sikt og ikke om natta, i ett sekund i strekk, høyst én per banner og økt (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, utkastet fra juni 2022). Ubestemte visninger (WebGL 1) er ikke med i andelen.') +
     card('Formatene', '<ul class="mk-l"><li>Merkevare på utstyr i butikken: samme pris og virkning som det usponsede, merket «Samarbeid».</li><li>Banner og flagg ved butikker, mottak og verft langs hele kysten.</li><li>Annonse i Kystposten, høyst én per utgave, merket «Annonse».</li><li>Ekstra premie på sesonghendelser som Lofotfisket.</li><li>Arbeidsklær i Garderoben, gratis for spillerne.</li><li>Meglerens egne båter i bruktmarkedet, med lenke til den ekte båten.</li><li>Gave til nye spillere.</li></ul>',
-      'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') + '</div>';
+      'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') +
+    (Array.isArray(MKIMG) && MKIMG.length ? card('Slik ser det ut', '<div class="mk-img">' + MKIMG.map(m => '<figure><img src="' + m.src + '" alt="' + esc(m.cap) + '"><figcaption>' + esc(m.cap) + '</figcaption></figure>').join('') + '</div>',
+      'Fra demobygget med en oppdiktet partner, «Nordlys Utstyr».') : '') + '</div>';
 };
 // ---------- sponsors (M6, supabase/migrations/20261102130000_sponsors.sql; docs/planer/butikker-og-sponsorer.md) ----------
 // A partner comes in only with a written agreement (CLAUDE.md): the reference to it is required. A placement says where it shows: kind
@@ -658,7 +665,7 @@ function demo(){
     economy:{gini_cash:0.62, gini_fleet:0.55, cash_p50:84000, cash_p90:1450000},
     money:{revenue_nok:18450, payers:61, arpu:98.1, conversion:0.032, repurchase:0.28, ttfp_days:4.5, refund_rate:0.01, abandon_rate:0.22, boosters:{}, log:[{at:new Date().toISOString(), player:'user_01H1004', product:'skin-rodt-skrog', nok:49, status:'paid', id:'cs_test_a1'}]},
     tech:{errors:[{msg:'TypeError: Cannot read properties of null', n:12, last:new Date().toISOString(), versions:['p15']}], fps:[{platform:'android', quality:'auto', fps:41.2, low:18, drops:3.1, n:220}, {platform:'windows', quality:'high', fps:58.9, low:44, drops:0.2, n:140}], browsers:{chrome:1100, samsung:450, safari:250, firefox:40}, platforms:{android:1200, windows:380, ios:220, mac:40}},
-    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80}}};
+    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80, mN69:42, mF201:21, mM317:18, mSF98:9, mR40:6}}};
 }
 render(); setInterval(() => { if (DATA && (DEMO || SES) && TAB !== 'tilbake' && TAB !== 'agent') { DATA = null; load(); } }, 60000);
 </script>

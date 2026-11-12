@@ -43,7 +43,11 @@ READ = {'selltest', 'hailltest', 'simday', 'calib', 'kvtest', 'progweek', 'seate
 # (teleport3d: twelve places since H1b R3, minutes each at 0.3 frames a second in SwiftShader; 900 s reached six, Ø2 05.11.2026)
 LONG = {'stromshot': 2400, 'stromtest': 1500, 'havplantest': 2400, 'driftsplan2kyst': 1800, 'teleport3d': 3600, 'driftsplan2gui': 1200, 'signcoast': 1800, 'signtest': 1500, 'sp44shot': 2700, 'tut': 3600, 'deckshot': 2400, 'workshot': 1800, 'vessel3d': 4500, 'sea3d': 4500, 'vectest': 1500, 'svalbardtest': 1800, 'havntest': 1500, 'lybtest': 1500, 'havtur': 4800, 'havshot': 3000, 'kinotest': 1500, 'heattest': 3600, 'trackfollow': 3300, 'vindshot': 2400, 'wetshot': 2400, 'treeshot': 1500, 'lifeshot': 2400, 'havnshot': 2400, 'wakeshot': 1500, 'hull3d': 3300, 'skumkant': 1500}   # SwiftShader can take ~40 s for one 3D screenshot; sea3d takes 27
 # not in D3, but they draw 3D all the same (tut.py plays the first trip with the 3D view), so they run in the 3D lane
-DRAWS3D = {'tut'}
+DRAWS3D = {'tut', 'markettest'}   # (markettest: the moment a boat is bought, in 3D on its own page; steg 28)
+# steg 28: the counties of the ports for the media card (tools/regions/fylke.py, tests/unit/regions.test.mjs) and the pictures of the
+# formats (tests/mediekortshot.py, a tool run by hand against the demo build, so in none of the lists), which build.mjs puts in the admin page
+COVER_28 = {'tools/regions/fylke.py':['admintest'], 'tools/regions/fylke.json':['admintest'], 'tests/unit/regions.test.mjs':['admintest'], 'tests/mediekortshot.py':[],
+            'docs/sponsor/format.json':['admintest'], **{'docs/sponsor/format-%s.jpg' % _n:['admintest'] for _n in ('banner', 'design', 'vare', 'annonse', 'jakke')}, 'src/js/view3d/25-controls.js':['markettest'], 'src/js/view3d/13-instruments.js':['markettest'], 'src/js/view3d/24-cinema.js':['markettest'], 'build.mjs':['admintest']}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py':['legmemotest'], 'tests/bootgtest.py':['bootgtest'], 
@@ -186,6 +190,7 @@ COVER['supabase/migrations/20261111120000_shop_back.sql'] = ['sqltest', 'kjoptes
 # its own address without no3d and drew every 3D frame; with no3d under KYST_LITE it takes 150 s)
 COVER['supabase/migrations/20261111140000_haill_srv.sql'] = ['sqltest', 'fasittest']; COVER['tests/unit/haillfasit.test.mjs'] = []
 LITE += ['fasittest']
+for _f, _t in COVER_28.items(): COVER[_f] = COVER.get(_f, []) + [x for x in _t if x not in COVER.get(_f, [])]
 COVER['tests/fasittest.py'] = ['fasittest']; COVER['tests/kjoptest.py'] = COVER.get('tests/kjoptest.py', ['kjoptest']) + ['fasittest']
 for _f in ('src/js/ui/09-hand-fishing.js', 'src/js/ui/09b-pub.js', 'src/js/ui/10j-paint.js', 'src/js/core/09f-merker.js', 'src/js/ui/10i-shop.js'): COVER[_f] = COVER.get(_f, []) + ['fasittest']
 for _f in ('src/js/core/04-crew.js', 'src/js/core/05-vessels.js', 'src/js/core/10-gear.js', 'src/js/ui/07-guide.js', 'src/js/ui/08-actions.js'):
@@ -256,6 +261,9 @@ COVER['src/js/view3d/02-mesh-terrain.js'] = COVER.get('src/js/view3d/02-mesh-ter
 COVER['src/js/core/01b-mapdata.js'] = COVER.get('src/js/core/01b-mapdata.js', []) + ['fintest']
 # Ø11.8 (11.11.2026): the speed limits and the cardinal marks (core/05e-sjovei.js fartAt, farvLook; the chart's layer in ui/03a-chart.js)
 LITE += ['farttest']
+LITE += ['avtaleshot']   # Ø11.9 the employment agreement in the Mannskap app (steg 27)
+COVER['tests/avtaleshot.py'] = ['avtaleshot']; COVER['tests/unit/arbeidsavtale.test.mjs'] = []
+for _f in ('src/js/ui/phone/13-mannskap-bank-meld.js', 'src/js/core/04-crew.js', 'src/js/ui/phone/14-act.js'): COVER[_f] = COVER.get(_f, []) + ['avtaleshot']
 COVER['tests/farttest.py'] = ['farttest']; COVER['src/data/fart.json'] = ['farttest']; COVER['src/data/fart-r.b64'] = ['farttest']; COVER['tools/fart/fart.py'] = []; COVER['src/js/ui/03a-chart.js'] = COVER.get('src/js/ui/03a-chart.js', []) + ['farttest']
 for _f in ('src/js/core/05e-sjovei.js', 'src/js/core/14b-sikkerhet.js', 'src/js/ui/03-map.js', 'src/js/ui/04-panels-instruments.js'): COVER[_f] = COVER.get(_f, []) + ['farttest']
 

@@ -203,10 +203,9 @@ function autoRestock(){
   // only what the harbour sells: ice down the plant's chute (where she lies at the plant's quay), then fuel at the bunker quay,
   // which takes her over there and runs the pump
   const b = S.boat, pt = portById(b.port) || {};
-  const st = driftStock();
-  if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= spendable()){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
-  if (st.fuel && pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && spendable() > 0) startFueling(true);
-  if (st.gear && !b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
+  if (pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= spendable()){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
+  if (pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && spendable() > 0) startFueling(true);
+  if (!b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
 }
 function depart(){
   const b = S.boat;

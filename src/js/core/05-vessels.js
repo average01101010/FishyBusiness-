@@ -731,7 +731,7 @@ function vesselStep(H){
   else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
   provMinute();   // an ocean vessel's provisions (04-crew.js, H2b)
   if (S.t % 60 === 0 && b.status !== 'port'){ autoFixHour(); tripHour(); }   // the autoline's hooks changed aboard (10b-gearcare.js) and the trip's limits (04-crew.js), H2b
-  opsStep(H);
+  plan2Step(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
     const W0 = windAt(H);
@@ -747,7 +747,7 @@ function vesselStep(H){
       if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; DYN.dep = {bp, pid, naust:kind === 'naust'}; DYN.line = null; }
       b.castT = S.t;   // (the fenders and the lines are taken in and coiled on her way out, moorPhase 'stow')
       helmCastDone(pid, kind); } return; }
-  if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
+  if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; plan2Landed(pid); } return; }
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
   const W = windAt(H), hs = hsAt(b.pos, H);
@@ -765,10 +765,10 @@ function vesselStep(H){
   // turning back by itself only when the wind rises over the limit while she is out (b.windArm: it has been under the limit since she
   // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
   // (Vannareid 08.10.2026: in a steady gale every start, Stopp and «Sitter båten fast?» was turned straight back to the plant)
-  // (a trip on the operations plan has the plan's own limits for wind and sea, 06d-drift.js)
+  // (a trip on the operations plan has the plan's own limits for wind and sea, plan2Wx in 06h-plan2-engine.js)
   // (an ocean vessel on her own trip works to her own limits, windLim and seaLim, and over them lies to at sea, as does any boat whose
   // nearest quay is far: lieTo)
-  const wl = driftWx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
+  const wl = plan2Wx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
   if (W <= limW && !seaOver) b.windArm = true;
   // (an ocean vessel on the operations plan, on a trip or waiting at sea, lies to over her own limits too, whatever the coast setting:
   // the plan's limits are for the gear, 06h-plan2-engine.js plan2Wx, H2c)
@@ -900,7 +900,7 @@ function arrive(w){
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
   if (w.port){ dock(w.port, w.berth); return true; }
   pl.idx++;
-  if (w.anchor){ S.plan = null; b.status = 'idle'; b.v = 0; if (!dropAnchor(true)) log('Fant ikke grunn å ankre på her.', 'Found no ground to anchor on here.'); return true; }   // a rest at anchor (06d-drift.js)
+  if (w.anchor){ S.plan = null; b.status = 'idle'; b.v = 0; if (!dropAnchor(true)) log('Fant ikke grunn å ankre på her.', 'Found no ground to anchor on here.'); return true; }   // a rest at anchor, or home at an anchorage (06h-plan2-engine.js)
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (S.plan && S.plan.p2 && typeof plan2ActWhy === 'function') plan2ActWhy(w, why); if (!(w.fish > 0)) b.status = 'sailing'; }
@@ -985,8 +985,8 @@ function dock(pid, berth){
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   // (Driftsplan 2 is told at a rorbu too: a rorbu is often the plan's home, and a call it was not told of made the day again at once,
-  // out again every quarter of an hour all night (GUI review F2, 05.11.2026); the old plan never landed at a rorbu)
-  if (wasOps && (!port.rorbu || DRIFT2)){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  // out again every quarter of an hour all night (GUI review F2, 05.11.2026))
+  if (wasOps){ plan2Landed(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
@@ -1252,7 +1252,7 @@ function deckMinute(){
 //    Iceland to Fosnavåg 675 nm, 68 h)
 // Lying to she keeps her head to the sea at steerage way: she holds her place (no drift), burns the fuel of RIDE.kn knots, the sea's
 // danger is a step lower (risk), and she goes on with her route when it has been under the limits (the wind RIDE.ease m/s under)
-// for RIDE.calm minutes. A trip on the operations plan keeps the plan's own limits and shelter (06d-drift.js, 06h-plan2-engine.js).
+// for RIDE.calm minutes. A trip on the operations plan keeps the plan's own limits and shelter (06h-plan2-engine.js).
 const RIDE = {h:8, kn:4, calm:60, ease:2};
 const oceanBoat = () => BOAT.cls === 'hav';
 const windLim = () => oceanBoat() ? Math.max(S.settings.autoW, BOAT.risk[2]) : S.settings.autoW;

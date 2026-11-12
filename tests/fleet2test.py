@@ -54,10 +54,12 @@ async def main():
           const rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0], end = rt[rt.length - 1];
           const mk = () => plan2New({home:'husoy', rig:'juksa', jig:true, places:[{id:'a', k:'juks', x:end[0], y:end[1]}], dep:5, wx:{wind:16, hs:3.5}, land:{mode:'near', port:null, when:'trip'}});   // (Driftsplan 2 since Ø12 C 08.11.2026)
           const hand = () => Object.assign(genCrew(), {bi:false, off:false}); const v1 = curVessel();
-          // the first boat has room for one hand, so it runs the plan with you aboard; the snekke has its skipper and mate
-          S.crew = [hand()]; S.hold = []; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = BOAT.fuelCap; S.boat.gear = true; S.me = v1.id;
+          // the first boat has room for one hand, so it runs the plan with you aboard, from home (Husøy: you rest in the boathouse between
+          // the days; away from home with no rorbu and no bunk the plan waits for your rest, rightly); the second boat is the first with a
+          // right that has room for a skipper and a mate (the snekke has room for one hand since the boats' crews were set; red from 10.11.2026)
+          S.home = 'husoy'; S.crew = [hand()]; S.hold = []; S.boat.status = 'port'; S.boat.port = 'husoy'; S.boat.pos = {...portById('husoy').p}; S.boat.fuel = BOAT.fuelCap; S.boat.gear = true; S.me = v1.id;
           S.ops = mk(); const e1 = await new Promise(r => plan2Make(S.ops, r)); S.ops.on = true;
-          const O = LIC_OFFERS.find(o => o.id === 'u7'), v2 = newVesselObj('snekke', 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
+          const O = LIC_OFFERS.find(o => (VESSELS[o.ves].crewMax || 0) >= 2), v2 = newVesselObj(O.ves, 'husoy', {id:O.id, hl:O.hl, cod:O.cod, hyse:O.hyse, sei:O.sei, kpk:O.kpk});
           const o2 = withVessel(v2, () => { S.crew = [hand(), hand()]; setSkipper(S.crew[0].id); setMate(S.crew[1].id); S.boat.gear = true; return S.ops = mk(); });
           const e2 = await new Promise(r => withVessel(v2, () => plan2Make(o2, r))); o2.on = true;
           const log0 = S.log.length; let onLand = 0, maxAtSea = 0;
@@ -71,7 +73,7 @@ async def main():
         p1, p2 = week['per']
         print(ok(week['onLand'] == 0), 'no vessel on land during the week')
         print(ok(p1['trips'] > 0 and p2['trips'] > 0 and week['maxAtSea'] == 2), 'both vessels went out, at the same time')
-        print(ok(p1['torsk'] == 0 and p1['landed'] > 0 and p2['landed'] > 0 and p2['torsk'] > 0 and p2['byCod'] == 0), 'quotas kept apart: the first boat has no access (the closed-group vessel in the fleet takes the open group), the snekke lands on its own quota')
+        print(ok(p1['torsk'] == 0 and p1['landed'] > 0 and p2['landed'] > 0 and p2['torsk'] > 0 and p2['byCod'] == 0), 'quotas kept apart: the first boat has no access (the closed-group vessel in the fleet takes the open group), the second boat lands on its own quota')
 
         # 3. the fleet buttons, clicked for real
         btn = await pg.evaluate("""(()=>{
