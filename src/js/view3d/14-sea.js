@@ -277,6 +277,7 @@
     gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); if (u.uNFL != null) gl.uniform2f(u.uNFL, NF.L[0], NF.L[1]); gl.uniform1f(u.uWind, env.seaWind || env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
+    if (typeof fftBind === 'function') fftBind(u, [bv.x, 0, bv.z]);   // (B3: the tiles for the crests that break)
     const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, NF.ph); gl.uniform1fv(u.uNFg, NF.gp);
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
@@ -383,10 +384,11 @@
   }
   FOAM.capAt = (x, z, t, fine = 1, U = env.seaWind || env.wind || 0, kk = WCAP.k, mid = 1) => {
     const S = ssAt(x, z), dv = S[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05)), Qw = seaQ(S, ren);
-    let y = 0, sa = 1e-6, jxx = 0, jxz = 0, jtr = 0, jv = 1e-8, jsc = 0, jsv = 1e-8;
+    let y = 0, sa = 1e-6, jxx = 0, jxz = 0, jtr = 0, jv = 1e-8, jsc = 0, jsv = 1e-8, yL = 0, saL = 1e-6, fe2 = 0;
     for (let i = 0; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const am = S[0] * (dv * c.wo + (1 - dv) * c.wy) * ren;
       const gr = grpAt(i, c, x, z, t);
       const sn = Math.sin(c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i]), wa = c.k * am * gr, jw = Qw * wa * sn;
+      if (i === 4){ yL = y; saL = sa; } if (i >= 4) fe2 += am * am;
       y += am * gr * sn; sa += am * am * 0.228; jxx += jw * c.Dx * c.Dx; jxz += jw * c.Dx * c.Dz; jtr += jw; jv += (Qw * c.k * am) ** 2 * 0.228; if (i >= 4){ jsc += jw; jsv += (Qw * c.k * am) ** 2 * 0.228; } }
     const jzz = jtr - jxx, J = (1 - jxx) * (1 - jzz) - jxz * jxz, jn = (1 - J) / Math.sqrt(jv), crest = y / Math.sqrt(sa);
     const w = env.windDir || [0, 1], px = x - RO.x - NF.D[0], pz = z - RO.z - NF.D[1], a = px * w[0] + pz * w[1], b = px * -w[1] + pz * w[0];
@@ -396,6 +398,12 @@
     const dws = sstep(0.45, 1.73, S[3]), Wc = clamp(3.84e-6 * Math.pow(Math.max(U, 0.3), 3.41) * dws, 1e-5, 0.5), gate = 1, W = clamp(Wc * kk, 1e-5, 0.5);   // (no gate since capBr, 12.11.2026)
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
+    // B3 (14b-fft.js): with the FFT tiles on, the crests break where the tiles' surface is compressed most, as the shaders have it (capFf)
+    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = Math.max(Math.hypot(sq[0][1], sq[1][1]), 1e-6);
+      const crS = (yL + fs * T[1]) / Math.sqrt(saL + (sq[0][2] + sq[1][2]) * fs * fs), F = WCAP.F, fz = T[0] / sz;
+      // (the tiles' crests are the share F.k of Monahan's cover: a crest that runs on with the waves leaves a longer tail than the old ones did)
+      const Wf = clamp(Wc * (kk === WCAP.k ? F.k : kk), 1e-5, 0.5); let zf = Math.sqrt(-2 * Math.log(Wf)); zf -= (2.515517 + 0.802853 * zf + 0.010328 * zf * zf) / (1 + 1.432788 * zf + 0.189269 * zf * zf + 0.001308 * zf * zf * zf);
+      return {fv:fz * F.a + crS * F.c + (g - 0.5) * F.g, gate, js:fz, th:WCAP.thF[0] + WCAP.thF[1] * zf + WCAP.thF[2] * zf * zf, jn:fz, J, crest:crS, g, Wc, fft:1}; }
     return {fv:jn * WCAP.j + js * WCAP.s + crest * WCAP.c + (g - 0.5) * WCAP.g - (1 - gate) * 1.5, gate, js, th:WCAP.th[0] + WCAP.th[1] * zt + WCAP.th[2] * zt * zt, jn, J, crest, g, Wc};
   };
 

@@ -69,7 +69,7 @@
     for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]);
       let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; } }
     gl.activeTexture(gl.TEXTURE0);
-    fftKeep(new Float32Array(D.bufs[2]));
+    fftKeep(new Float32Array(D.bufs[2])); fftKeepS(D.bufs);
     FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++;
     FFT.ms = FFT.ms ? FFT.ms * 0.9 + D.ms * 0.1 : D.ms; FFT.up = FFT.up ? FFT.up * 0.9 + (performance.now() - t1) * 0.1 : performance.now() - t1;
     // how far ahead to ask: the time a request takes to come back, as the waves' clock counts it
@@ -86,6 +86,23 @@
     const len = n * n * 4 + (n >> 1) * (n >> 1) * 4;
     if (!FFT.cpu || FFT.cpu.length !== len) FFT.cpu = new Float32Array(len);
     FFT.cpu.set(a.subarray(o, o + len)); FFT.cpuL = l0;
+  }
+  // B3: the two tiles' trace and height at level 0 (tr, h per cell), for FOAM.capAt (the spray from the crests that break, sea3d)
+  function fftKeepS(bufs){
+    if (!FFT.cs) FFT.cs = FFTT.map(T => new Float32Array(T.N * T.N * 2));
+    for (let k = 0; k < 2; k++){ const a = new Float32Array(bufs[k]), c = FFT.cs[k], n2 = FFTT[k].N * FFTT[k].N; for (let i = 0; i < n2; i++){ c[i * 2] = a[i * 4 + 2]; c[i * 2 + 1] = a[i * 4 + 3]; } }
+  }
+  const fftFoam = () => FFT.on && FFT.ok && FFT.have && !!FFT.cs;
+  // the sum of both tiles' (tr, h) at a world point, bilinear at level 0 as the shaders read them up close
+  const FFT_S = [0, 0];
+  function fftTrH(x, z){
+    FFT_S[0] = FFT_S[1] = 0; const qx = x - RO.x - NF.D[0], qz = z - RO.z - NF.D[1];
+    for (let k = 0; k < 2; k++){ const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k];
+      let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
+      const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
+      for (let q = 0; q < 2; q++){ const a = A[(j0 * n + i0) * 2 + q], b = A[(j0 * n + i1) * 2 + q], c = A[(j1 * n + i0) * 2 + q], d = A[(j1 * n + i1) * 2 + q];
+        FFT_S[q] += (a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv; } }
+    return FFT_S;
   }
   // is the shape from the tile on (the vertex shader takes it only with textures there, the full sea, and data)
   const fftShape = () => FFT.on && FFT.ok && FFT.have && FFT.cpu && SST_VS && PS && !PS.lite && !PS.basic && !PS.far;
