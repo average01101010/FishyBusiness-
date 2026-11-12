@@ -65,7 +65,7 @@ function crewSim(src){
     // (OB10 runde 4, 12.11.2026: the gear out of the map as the model's own things are, vessel3d.js deckMap: a cell is barred where
     // anything stands in it, not only where its middle is. With 6 cm about the box and cells of DM_C, 0.2 m, the crew walked and stood
     // with their middles 6 cm off the tubs and half the body in them, in every boat (crewclip, kitHits). The last number is the padding,
-    // so kitHits and kitAt measure against the gear itself. Under 9 m, the open boats, the tight padding: on the snekke the gutting
+    // so kitHits and kitAt measure against the gear itself. Under 9 m the tight padding (by her length, VESSELS.len; today the snekke): on the snekke the gutting
     // station is the only place left for the one setting, and the tubs fill her deck; the breaks keep out of the gear there, kitAt)
     const GP = tight || (VESSELS[ST.type] || {}).len < 9 ? 0.06 : 0.06 + DM_C / 2, G = ST.G, K = G.kit || {}, V = VESSELS[ST.type] || {}, box = (x, z, w, l, ry) => out.push([x, z, w / 2 + GP, l / 2 + GP, ry || 0, GP, 1]);
     // (OB4: the plant's tubs set out on her deck while she lands, landSlots)
@@ -672,13 +672,13 @@ function crewSim(src){
     if (!M.live){ M.live = new Set(); for (const [nm, v] of Object.entries(ST.PT)) if (nm !== 'lean') for (const q of [].concat(v)) if (q && q.k != null && M.ok(q.k)) M.live.add(C[q.k]); }
     return M.live.has(C[k]); }
   function idleGoal(p, ctx, force){
-    const PT = ST.PT, T = p.c && p.c.traits || [], id = p.c ? 'c' + p.c.id : 'me', leans = (PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!leans.length) return PT.sloy ? {k:clearOfKit(PT.sloy.k, id), h:0, task:'look'} : null;
+    const PT = ST.PT, T = p.c && p.c.traits || [], id = p.c ? 'c' + p.c.id : 'me', leans = (PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k) && free(l.k, id)); if (!leans.length) return lookClear(id);
     if (!force && p.idle){ const k0 = p.idle, PL = places(), k = k0 === 'quay' ? 'chat' : k0 === 'worry' ? 'look' : k0;
       if (k === 'gear'){ const q = PL.tubAt ? at(PL.tubAt(0), 1.2) : null; if (q && !poseHits('gear', q.k, q.h || 0)){ q.task = 'gear'; q.idle = true; q.until = 1e12; return q; } }
       // under way a smoker stands aft (the aftmost places on the rail), out of the wind of her own speed
       const L = k === 'smoke' && ctx.underway ? leans.slice().sort((a, b) => ST.M.at(b.k)[2] - ST.M.at(a.k)[2]).slice(0, 3) : leans;
       // the first place where the pose is clear; none, then standing and looking out where that is clear
-      const g1 = idlePlace(k === 'gear' ? 'look' : k, L, id), g = g1 || idlePlace('look', leans, id); if (!g) return null;
+      const g1 = idlePlace(k === 'gear' ? 'look' : k, L, id), g = g1 || idlePlace('look', leans, id); if (!g) return lookClear(id);
       return {k:g.k, h:g.h, rail:g.rail, off:g.off, task:g1 && k !== 'gear' ? k : 'look', until:1e12, idle:true, with:p.with || null}; }
     let act = force || IDLE[Math.floor(rnd() * IDLE.length)];
     if (!force){ if (T.includes('makelig') && rnd() < 0.5) act = rnd() < 0.5 ? 'lean' : 'coffee'; if ((T.includes('arbeidsjern') || T.includes('perfeksjonist')) && rnd() < 0.5) act = 'sweep';
@@ -686,7 +686,7 @@ function crewSim(src){
     if (act === 'sit') act = 'lean';
     // sweeping is done with the back to the rail, over the deck: facing out the broom went over the side (Jonas 21.10.2026, #81 and
     // #84; the coiling went 02.11.2026: no rope to coil, and it looked like jigging); a place where the pose is clear of everything
-    const g1 = idlePlace(act, leans.slice(Math.floor(rnd() * leans.length)).concat(leans), id), g = g1 || idlePlace('look', leans, id); if (!g) return null;
+    const g1 = idlePlace(act, leans.slice(Math.floor(rnd() * leans.length)).concat(leans), id), g = g1 || idlePlace('look', leans, id); if (!g) return lookClear(id);
     return {k:g.k, h:g.h, rail:g.rail, off:g.off, task:g1 ? act : 'look', until:nowS() + 30 + rnd() * 60, idle:true};
   }
   // ---- the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
@@ -900,6 +900,9 @@ function crewSim(src){
   // (the nearest free cell to k, a short walk from it, with no gear in the body: the place to stand when the rail has none, OB10 runde 4;
   // on the snekke with her nets aboard the gutting station stood 8 cm from the net tub)
   // (and clear of the work: 0.7 m from the stations, and while she sets 1.3 m from where the gear goes over, so it never takes the work's place)
+  // (standing and looking on, clear of the gear, by the gutting station: where no place at the rail is clear of everything, so nobody
+  // goes out of sight, found in the check of OB10 runde 4 once the breaks kept out of the gear)
+  function lookClear(id){ const PT = ST.PT; return PT && PT.sloy ? {k:clearOfKit(PT.sloy.k, id), h:0, task:'look'} : null; }
   function clearOfKit(k, id){ if (!kitAt(k)) return k; const M = ST.M, p = ST.M0.at(k), PT = ST.PT || {}; let best = k, bd = 1.6;
     const work = ['haling', 'is', 'door'].map(nm => PT[nm]).filter(q => q && q.k != null && ST.M0.ok(q.k)).map(q => ST.M0.at(q.k)), gs = S.pgear && !src ? rigGear().set : null;
     const O = gs ? setOver(gs) : null;   // (while she sets, the whole place he works in: 1.3 m round where the gear goes over)

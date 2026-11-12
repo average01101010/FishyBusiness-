@@ -292,7 +292,7 @@ async def record(o, fmt, outdir):
             # (OB10 runde 4: her own crane moves at most 0.2 s of its motion a frame, drawCrane, and SwiftShader draws a frame in some
             # seconds here, so the three pictures were all taken while it still stood folded; they wait now until it stands unfolded)
             # (on the slow clock while it waits, so the freight job, a fixed game time, does not end first: found in the review)
-            if op in ('kran', 'krann'):
+            if op in ('kran', 'krann') and await pg.evaluate("(t) => !!((geoOf(t).kit || {}).crane)", o['boat']):   # (a ship's crane, the ocean vessels', has no kit crane to wait for)
                 await pg.evaluate("__TK.set(0.1)")
                 try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
                 except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)

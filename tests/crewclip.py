@@ -87,10 +87,11 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
       if (kind === 'line'){ pg.lines.hyse.n = Math.min(24, GM.stamp || 4); pg.lines.hyse.baited = Math.round(pg.lines.hyse.n / 2); }
       else { const n = Math.min(60, GM.garn || 6); pg.nets = []; for (let i = 0; i < n; i += 6) pg.nets.push({id:'n' + i, mesh:180, ty:'bunn', n:Math.min(6, n - i), cond:1}); }
       b.rig = kind; b.gop = null; b.status = 'idle'; b.port = null; b.pos = {...g}; S.hold = []; b.deckStop = false; b.deckT = null; S.meal = null; S.jobs = [];
-      CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt)); settle(); const hits = [];
+      CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt)); settle(); const hits = []; let gone = 0;
       for (let i = 0; i < 300; i++){ if (i % 30 === 0){ FORCE = [breaks[(i / 30) % breaks.length], breaks[(i / 30 + 4) % breaks.length], breaks[(i / 30 + 9) % breaks.length]]; S.t += 13; CREW3D._st.lastSim = S.t; }
-        CREW3D.tick(0.1); for (const h of (CREW3D.kitHits ? CREW3D.kitHits() || [] : [{task:'ingen kitHits'}])) hits.push(h.mode + ':' + h.task); }
-      FORCE = null; r.kit[kind] = hits.length ? hits.length + ' ' + [...new Set(hits)].slice(0, 6).join(',') : 0; }
+        CREW3D.tick(0.1); for (const h of (CREW3D.kitHits ? CREW3D.kitHits() || [] : [{task:'ingen kitHits'}])) hits.push(h.mode + ':' + h.task);
+        gone += CREW3D.agents().filter(a => !a.goal).length; }   /* (nobody without a place: a break that finds none clear of the gear stands and looks on, lookClear) */
+      FORCE = null; r.kit[kind] = hits.length ? hits.length + ' ' + [...new Set(hits)].slice(0, 6).join(',') : 0; if (gone) (r.gone = r.gone || {})[kind] = gone; }
     S.pgear = pg0; b.rig = rig0;
     b.gop = null; CREW3D.reset(); CREW3D.on(); CREW3D.setJig(G3._debug.jigRail(vt));
     // walking between them: the breaks changing every three seconds for a minute, the bodies tested every tenth of a second
@@ -143,6 +144,8 @@ async def main():
         # 15 m and the 21 m boats, the snow crab vessel and the trawler; seen red on the build from before)
         print(ok(not near), 'two at the same table or tub stand side by side, 0.55 m or more between their middles (F19; every boat; no pair to measure: %s)' % (unm or '-'), near)
         kit = {vt: r['kit'] for vt, r in R.items() if r and any(v for v in r.get('kit', {}).values())}
+        gone = {vt: r['gone'] for vt, r in R.items() if r and r.get('gone')}
+        print(ok(not gone), 'rigged with all of it, everyone has a place on deck or inside (nobody without one; OB10 runde 4)', gone)
         print(ok(not kit and sum(len(r.get('kit', {})) for r in R.values() if r) >= 10), 'rigged with all the line or the nets she carries, nobody stands in the gear on deck (the tubs, the nets, the pots), at a break or on the way (kitHits; OB10 runde 4)', kit)
         walk = {vt: [r['walk'], r['walked'], r.get('walkAt')] for vt, r in R.items() if r and r['walk']}
         print(ok(not walk and all(r['walked'] > 50 for r in R.values() if r)), 'nor a body on the way between them (shoulders, chest and back, every tenth of a second)', walk)
