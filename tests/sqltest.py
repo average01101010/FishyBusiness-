@@ -534,7 +534,9 @@ def main():
             sql("insert into public.haill_once (player_id, what) values ('%s', 'ach1'), ('%s', 'import')" % (w, w))
             sql("insert into public.grants (player_id, product_id, data, done_at) select '%s', pr.id, pr.data, now() from public.products pr where pr.id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % w)
             sql("insert into public.pub_rounds (player_id, e, k, grant_id) select '%s', case g.product_id when 'pub_haill' then 7 else 8 end, g.data ->> 'type', g.id from public.grants g where g.player_id = '%s' and g.product_id like 'pub\\_%%'" % (w, w))
-        mv = lambda a, b: (sql("update public.grants set player_id = '%s' where player_id = '%s'" % (b, a)), sql("select string_agg(product_id || ':' || (revoked_at is null), ',' order by product_id) from public.grants where player_id = '%s' and product_id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill') and done_at > now() - interval '1 minute' and used_at is null" % b))[1]
+        # (only the grants that were moved are read: the account's own pub round earlier in the test is drawn with random() and may be
+        # a luxury haill of its own, which made the line red now and then, steg 44 12.11.2026)
+        mv = lambda a, b: (ids := sql("select coalesce(string_agg(id::text, ','), '0') from public.grants where player_id = '%s'" % a), sql("update public.grants set player_id = '%s' where player_id = '%s'" % (b, a)), sql("select string_agg(product_id || ':' || (revoked_at is null), ',' order by product_id) from public.grants where player_id = '%s' and id in (%s) and product_id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % (b, ids)))[2]
         Q['mvb'] = mv('user_01HS4c', 'user_01HS4b'); Q['mvd'] = mv('user_01HS4c2', 'user_01HS4d')
         Q['mvonce'] = sql("select string_agg(what, ',' order by what) from public.haill_once where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4b' and e in (7, 8)")
         Q['mvd2'] = js(5000, 'ach_haill(1)', {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok'), js(5000, "haill_import('{\"haill\":2}')", {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok')
@@ -579,7 +581,7 @@ def main():
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
         # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
         # the registration mark and the pennants are free
-        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2;x:-9')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
         R['livOwn'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
@@ -600,6 +602,10 @@ def main():
         R['spNow'] = json.loads(sql("select public.sp_now()", {'role': 'anon'}, 'anon'))
         sql("select public.sp_admin_on('p', %s, false)" % plid, AD2, 'authenticated'); R['spOff'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
         sql("select public.sp_admin_on('p', %s, true)" % plid, AD2, 'authenticated'); sql("select public.sp_admin_on('s', %s, false)" % spid, AD2, 'authenticated'); R['spOffS'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
+        # steg 44 (20261112020000_sp_paint.sql): a paint design's colours, active or not, to anyone; no sponsor, no logo; never another kind
+        pdid = sql("select public.sp_admin_place(%s, 'look', 'paint', '{\"name\": \"Drakt\", \"hull\": \"petrol\", \"ripe\": \"gul\", \"sym\": \"stjerne\", \"site\": \"x\"}')" % spid, AD2, 'authenticated')
+        R['spPaint'] = json.loads(sql("select public.sp_paint(array[%s, %s, 999999]::bigint[])" % (pdid, plid), {'role': 'anon'}, 'anon'))
+        R['spPaintPid'] = pdid
         R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
@@ -767,10 +773,12 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 2 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         si = (R['spIab'] or [{}])[0]
+        print(ok(R['spPaint'] == {str(R['spPaintPid']): {'name': 'Drakt', 'hull': 'petrol', 'ripe': 'gul'}}),
+              "a partner's paint design: sp_paint gives anyone its colours and name, also when the sponsor is switched off (steg 44: «Fargene blir»), never the mark, the link or another kind", R['spPaint'])
         print(ok(len(R['spIab']) == 1 and si.get('imp') == 2 and si.get('nonview') == 1 and si.get('undet') == 1 and si.get('rendered') == 4 and si.get('measured') == 0.75
                  and abs((si.get('viewable') or 0) - 0.667) < 0.001 and si.get('re') == 3 and si.get('sec') == 14.8 and si.get('med') == 7.0 and si.get('mean') == 7.0 and si.get('players') == 2),
               'the sponsors\' report after IAB 2.0: one viewable impression per session and placement, the three buckets (viewable, not viewable, undetermined), the measured and viewable shares, re-views, and the median and mean seconds of a viewable session', si)
@@ -780,8 +788,8 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
-              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;m:T.1.LK;p:2;x:-9'),
+              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark, the pennants and a partner's design (x:<id>, steg 44) always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
         print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})
@@ -1461,8 +1469,8 @@ def main():
         RY['anonTab'] = [sql("select count(*) from public.%s" % tb, {}, 'anon', expect_err=True)[0] for tb in ('berths', 'cash_flags', 'sponsors', 'sponsor_placements')]
         RY['anonYes'] = sql("select jsonb_typeof(public.sp_now())", {}, 'anon')
         print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
-                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
-              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
+                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,sp_paint,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
+              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf, sp_now and sp_paint (a paint design's colours, steg 44) (Ø6 funn 9, 10, 12)", RY)
         # Ø16 (20261105160000_rt_ticket.sql): the real-time relay's ticket. Without the secret in Vault it refuses; with it, a ticket of
         # «1.<id>.<guest>.<expiry>.<nonce>.<hmac>» signed with the secret (checked here as the relay checks it), the public id pos_world
         # gives, the guest flag for a guest, 60 s, a new nonce each time; anon cannot ask, nor a player who is not there

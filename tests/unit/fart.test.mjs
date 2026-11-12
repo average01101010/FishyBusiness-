@@ -1,12 +1,13 @@
-// The speed limits and the cardinal marks (Ø11.8, core/05e-sjovei.js fartAt, farvWrongSide; src/data/fart.json): the fixed limit round a
-// harbour point (V4 A) with its edge in true metres, an area from a data set with its months and the lowest limit where two lie over
-// each other, an area going before the harbour, and the quarter of a cardinal mark that is the wrong side.
+// The speed limits and the cardinal marks (Ø11.8, core/05e-sjovei.js fartAt, farvWrongSide; src/data/fart.json and fart-r.b64): the
+// fixed limit round a harbour point (V4 A) with its edge in true metres, Kystverket's areas read from their runs (real places: Vågen in
+// Bergen, Stavanger's harbour, a summer belt), the period by date, the lowest where two lie over each other, an area going before the
+// harbour, and the quarter of a cardinal mark that is the wrong side.
+export const data = true;
 export default function (t){
   const K = t.K; K.set('S', K.newState());
   const D = K.FART_D, hv = D.havn, H = 24 * 200;
   t.ok(D && hv && hv.kn > 0 && hv.r > 0, 'fart.json har havnas faste grense');
   t.eq(hv.kn, 5, 'den faste grensa i havnene er 5 knop (V4 A)');
-  const reset = () => { K.FART.omr = null; K.FART.last = null; };
 
   // ---- the harbours: inside the radius, at its edge (true metres over the grid's scale), outside, and far from any harbour ----
   const pt = K.PORTS.find(q => q.id === 'husoy'), gs = K.gridScale(pt.p), r = hv.r * gs;
@@ -18,34 +19,42 @@ export default function (t){
   t.eq(K.fartKn({x:pt.p.x, y:pt.p.y - 3}, H), 1e9, 'fartKn uten grense er 1e9 (så Math.min ikke binder)');
   t.eq(K.fartKn(pt.p, H), 5, 'fartKn i havna');
   // every harbour the game has gets the limit (the game is national: no list by hand)
-  t.ok(K.PORTS.every(q => { const g = K.fartAt({x:q.p.x, y:q.p.y}, H); return g && g.kn === 5; }), 'alle havnepunktene i PORTS har grensa (' + K.PORTS.length + ')');
+  { const L = K.PORTS.map(q => K.fartAt({x:q.p.x, y:q.p.y}, H)), hi = L.filter(g => g && g.kn > 5).map(g => g.name + ' ' + g.kn);
+    t.ok(L.every(g => g), 'alle havnepunktene i PORTS har en grense (' + K.PORTS.length + ')');
+    t.ok(L.every(g => g.k === 'omr' || g.kn === 5), 'havnepunktene uten statlig område har havnas 5 knop');
+    t.note(hi.length + ' havnepunkter ligger i et statlig område med høyere grense enn 5 (forskriften gjelder der): ' + [...new Set(hi)].join(', ')); }
   // the nearest harbour names it where two reach the same water
   const two = K.PORTS.map(a => [a, K.PORTS.find(b => b !== a && K.dist(a.p, b.p) < 0.9 * hv.r)]).find(q => q[1]);
   if (two){ f = K.fartAt({x:two[0].p.x, y:two[0].p.y}, H); t.eq(f.name, two[0].name, 'to havner om samme vann: den nærmeste gir navnet'); }
   else t.note('ingen to havnepunkter nærmere hverandre enn ' + Math.round(0.9 * hv.r * 1000) + ' m');
 
-  // ---- the months ----
-  t.eq([K.fartInSeason(null, 7), K.fartInSeason([5, 8], 5), K.fartInSeason([5, 8], 8), K.fartInSeason([5, 8], 9), K.fartInSeason([5, 8], 4)], [true, true, true, false, false], 'måneder 5–8: mai og august inne, april og september ute');
-  t.eq([K.fartInSeason([11, 2], 12), K.fartInSeason([11, 2], 1), K.fartInSeason([11, 2], 3), K.fartInSeason([11, 2], 10)], [true, true, false, false], 'måneder over nyttår (11–2)');
-  const mo = K.fartMonth(H); t.ok(mo >= 1 && mo <= 12, 'fartMonth gir 1–12');
+  // ---- the periods (month * 100 + day) ----
+  t.eq([K.fartInSeason(null, 701), K.fartInSeason([501, 831], 501), K.fartInSeason([501, 831], 831), K.fartInSeason([501, 831], 901), K.fartInSeason([501, 831], 430)], [true, true, true, false, false], 'perioden 1.5–31.8: endene inne, 30.4 og 1.9 ute');
+  t.eq([K.fartInSeason([1101, 215], 1224), K.fartInSeason([1101, 215], 110), K.fartInSeason([1101, 215], 301)], [true, true, false], 'en periode over nyttår');
+  const Hjul = (Date.UTC(2027, 6, 10, 12) - K.EPOCH) / 3.6e6, Hnov = (Date.UTC(2027, 10, 10, 12) - K.EPOCH) / 3.6e6;
+  t.eq([K.fartMd(Hjul), K.fartMd(Hnov)], [710, 1110], 'fartMd: 10. juli og 10. november');
 
-  // ---- areas (as a data set would give them): a square of 0.02 degrees in the open sea west of Senja, in lat/lon ----
-  const sq = (la, lo, d) => [[la, lo], [la, lo + d * 2.5], [la + d, lo + d * 2.5], [la + d, lo], [la, lo]];
-  D.omr = [{n:'Prøvesundet', kn:8, m:null, p:sq(69.60, 16.50, 0.02)}, {n:'Indre prøvesund', kn:5, m:null, p:sq(69.605, 16.51, 0.01)},
-    {n:'Sommerbukta', kn:5, m:[mo === 12 ? 1 : mo + 1, mo === 12 ? 2 : mo + 1], p:sq(69.70, 16.50, 0.02)}, {n:'Nå-bukta', kn:3, m:[mo, mo], p:sq(69.80, 16.50, 0.02)}];
-  reset();
-  const A = K.fartAreas(); t.eq(A.length, 4, 'fire områder lest');
-  f = K.fartAt(K.P(69.602, 16.505), H); t.eq([f && f.kn, f && f.k, f && f.name], [8, 'omr', 'Prøvesundet'], 'inne i området: 8 knop');
-  f = K.fartAt(K.P(69.61, 16.52), H); t.eq([f && f.kn, f && f.name], [5, 'Indre prøvesund'], 'to områder over hverandre: den laveste grensa');
-  t.eq(K.fartAt(K.P(69.59, 16.52), H), null, 'rett sør for området: ingen grense');
-  t.eq(K.fartAt(K.P(69.63, 16.52), H), null, 'rett nord for området: ingen grense');
-  t.eq(K.fartAt(K.P(69.71, 16.52), H), null, 'et område utenfor månedene sine gjelder ikke');
-  f = K.fartAt(K.P(69.81, 16.52), H); t.eq(f && f.kn, 3, 'et område i måneden sin gjelder');
-  // an area over a harbour goes before the harbour's fixed limit
-  const ll = K.natLL(pt.p); D.omr = [{n:'Havnebassenget', kn:8, m:null, p:sq(ll.lat - 0.01, ll.lon - 0.025, 0.02)}]; reset();
-  f = K.fartAt({x:pt.p.x, y:pt.p.y}, H); t.eq([f && f.kn, f && f.k], [8, 'omr'], 'området går foran havnas faste grense');
-  D.omr = []; reset();
-  f = K.fartAt({x:pt.p.x, y:pt.p.y}, H); t.eq([f && f.kn, f && f.k], [5, 'havn'], 'uten området: havnas grense igjen');
+  // ---- Kystverket's areas (fart-r.b64) ----
+  const RR = K.fartRuns(); t.ok(RR && RR.length === D.omr.length && D.omr.length >= 70, 'rutene er lest for alle områdene (' + (RR ? RR.length : RR) + ')');
+  // a cell well inside an area: the middle of its longest run (some areas are a few small parts far apart, so all rows), in grid km
+  const inside = i => { const a = D.omr[i], T = RR[i]; let best = null;
+    for (let y = 0; y < a.H; y++) for (let k = T.row[y]; k < T.row[y + 1]; k++){ const L = T.run[k * 2 + 1] - T.run[k * 2]; if (!best || L > best.L) best = {L, x:(a.x0 + (T.run[k * 2] + T.run[k * 2 + 1]) / 2) * D.R / 1000, y:(a.y0 + y + 0.5) * D.R / 1000}; }
+    return best; };
+  let bad = 0; for (let i = 0; i < D.omr.length; i++){ const q = inside(i), a = D.omr[i]; if (!q) { bad++; continue; } const H = a.s ? Hjul : Hnov, f = K.fartAt(q, H); if (!f || f.k !== 'omr' || f.kn > a.kn) bad++; }
+  t.eq(bad, 0, 'et punkt inne i hvert område gir et område med den grensa eller lavere');
+  // real places (the points are on the water in the game's chart; the limits from the regulation, 2.9 in sjofart-og-lover.md)
+  const at = (la, lo, H) => K.fartAt(K.P(la, lo), H || Hnov);
+  let f2 = at(60.3968, 5.3205); t.eq([f2 && f2.kn, f2 && f2.k, f2 && f2.name], [5, 'omr', 'Bergen'], 'Vågen i Bergen: 5 knop (§ 7-2)');
+  f2 = at(58.9735, 5.7290); t.eq([f2 && f2.kn, f2 && f2.k], [8, 'omr'], 'havnebassenget i Stavanger: 8 knop (§ 8-6), høyere enn havnas 5');
+  const tr = K.PORTS.find(q => /^Tromsø/.test(q.name)); f2 = K.fartAt({x:tr.p.x, y:tr.p.y}, Hnov); t.eq([f2 && f2.kn, f2 && f2.k], [5, 'havn'], 'Tromsø har ingen statlig grense: havnas 5 knop');
+  // a summer belt: in July its limit, in November not
+  const si = D.omr.findIndex(a => a.s && a.s[0] === 501 && a.n === 'Lindesnes'), sq = inside(si);
+  const fj = K.fartAt(sq, Hjul), fn = K.fartAt(sq, Hnov);
+  t.ok(fj && fj.k === 'omr' && fj.kn === 5 && (!fn || fn.k !== 'omr' || fn.id !== fj.id), 'sommerbeltet i Lindesnes gjelder 1.5–31.8 og ikke i november', [fj, fn]);
+  // without the runs (not come yet): the harbours alone, and the answer is not kept from before
+  const keep = K.FART.R; K.FART.R = false; K.FART.last = null;
+  f2 = at(58.9735, 5.7290); t.ok(!f2 || f2.k === 'havn', 'uten rutene: bare havnene', f2); K.FART.R = keep; K.FART.last = null;
+  t.eq(K.fartRunsFrom(new Uint8Array([1, 2, 3])), false, 'bytes som ikke passer fart.json, gir false');
 
   // ---- the cardinal marks (IALA region A): the wrong side is the quarter opposite the mark's name ----
   const c = {x:pt.p.x, y:pt.p.y - 20}, R = Math.PI / 180, gd = K.gridGamma(c), g = gd * R, gsc = K.gridScale(c);
