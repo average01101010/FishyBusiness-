@@ -75,7 +75,7 @@ export default function (t){
   t.eq(K.farvSay({k:'merke', cat:'north'}, 'tiny'), 'Feil side av merket', 'merket, kort');
   t.eq(K.farvSay({k:'merke', cat:'east'}, 'strip'), 'Du går på feil side av merket: hold øst for det', 'merket, langt');
   // the Sikkerhet card's rows
-  S.mobs = [{t:10, k:'fart', kn:5, v:8.2, name:'Husøy', x:1, y:1, vid:0}, {t:20, k:'merke', cat:'south', x:1, y:1, vid:0}];
+  S.farv = [{t:10, k:'fart', kn:5, v:8.2, name:'Husøy', x:1, y:1, vid:0}, {t:20, k:'merke', cat:'south', x:1, y:1, vid:0}];
   const rows = K.mobSafeRows(10);
   t.eq(rows.map(q => q.k), ['merke', 'fart'], 'Sikkerhet-kortet har radene, nyeste først');
   t.eq(rows[1].what[0], 'Gikk 8,2 knop der fartsgrensa er 5 knop (Husøy).', 'raden for farten');

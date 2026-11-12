@@ -962,7 +962,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1120 linjer)
+## `src/js/core/05e-sjovei.js` (1128 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -1002,64 +1002,66 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 335 `sjvDark(H, p)`
   - 339 `sjvSig(id, pat, p, L, own)`
   - 347 `sjvFogSigs(H, list, A, gs, vis, dark)`
-  - 365 `sjvCapV()`
-- **371** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
-  - 372 `sjvEval(H, list)`
-  - 493 `sjvNearMiss(n, R, clr)`
-  - 504 `colregNpc(H, out, only)`
-  - 518 `sjvTrack(list)`
-- **520** Autonav
-  - 524 `sjvFresh(model)`
-  - 534 `sjvAuto(d, h, ds, T)`
-  - 549 `sjvSail(pl, b, left)`
-  - 566 `sjvCreep(pl, b, L, v)`
-- **575** the warning's words (the strip, the box and the card, the chart plotter)
-  - 577 `sjvSay(W, how)`
-  - 614 `sjvWhen(W)`
-  - 616 `sjvWarn()`
-- **618** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
-  - 643 `sjvHullPts(X, Z, psi, L, B)`
-  - 647 `sjvInPoly(P, x, z)`
-  - 654 `sjvSat(A, B)`
-  - 675 `sjvSatC(A, cx, cz, r)`
-  - 684 `sjvMass(n)`
-  - 685 `sjvOwnMass(b = S.boat)`
-  - 688 `sjvKnEq(kn, mA, mB)`
-  - 690 `sjvValue(L)`
-  - 695 `sjvMatOf(n)`
-  - 698 `sjvOtherCost(kn, L, mat, P)`
-  - 708 `sjvOwnLoss(b, c)`
-  - 714 `sjvCpa(a, b, gs)`
-  - 719 `sjvTrailAdd(id, e)`
-  - 737 `sjvFault(T, X)`
-  - 804 `sjvFaultWord(w, no)`
-  - 815 `sjvFaultSay(F, name, lang)`
-  - 826 `sjvSettle(b, F, c, oth, name)`
-  - 837 `sjvPaySay(M, F, name, lang)`
-  - 845 `sjvKr(x, no)`
-  - 847 `sjvFrom()`
-  - 851 `sjvTo()`
-  - 858 `sjvVhf(n, rec)`
-  - 872 `sjvStandBy(n, H)`
-  - 883 `sjvBlow(n, kn, E, H, pre)`
-- **915** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 918 `sjvClock()`
-  - 925 `sjvNear(H, X, Z)`
-  - 944 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 955 `sjvTouch(b, d, P)`
-- **988** the look's sweep (sjvEval), when the model does not have her
-  - 991 `sjvSweep(n, A, H, gs, on)`
-- **1017** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
-  - 1034 `fartMonth(H)`
-  - 1035 `fartAreas()`
-  - 1043 `fartInSeason(m, mo)`
-  - 1044 `fartInRing(xs, ys, x, y)`
-  - 1047 `fartAt(p, H)`
-  - 1064 `fartCapMs()`
-  - 1075 `farvWrongSide(p, marks)`
-  - 1085 `farvLook(H)`
-  - 1112 `farvWarn()`
-  - 1113 `farvSay(w, how)`
+  - 365 `sjvFogCapV()`
+  - 372 `sjvCapV()`
+- **374** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
+  - 375 `sjvEval(H, list)`
+  - 496 `sjvNearMiss(n, R, clr)`
+  - 507 `colregNpc(H, out, only)`
+  - 521 `sjvTrack(list)`
+- **523** Autonav
+  - 527 `sjvFresh(model)`
+  - 537 `sjvAuto(d, h, ds, T)`
+  - 552 `sjvSail(pl, b, left)`
+  - 569 `sjvCreep(pl, b, L, v)`
+- **578** the warning's words (the strip, the box and the card, the chart plotter)
+  - 580 `sjvSay(W, how)`
+  - 617 `sjvWhen(W)`
+  - 619 `sjvWarn()`
+- **621** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 646 `sjvHullPts(X, Z, psi, L, B)`
+  - 650 `sjvInPoly(P, x, z)`
+  - 657 `sjvSat(A, B)`
+  - 678 `sjvSatC(A, cx, cz, r)`
+  - 687 `sjvMass(n)`
+  - 688 `sjvOwnMass(b = S.boat)`
+  - 691 `sjvKnEq(kn, mA, mB)`
+  - 693 `sjvValue(L)`
+  - 698 `sjvMatOf(n)`
+  - 701 `sjvOtherCost(kn, L, mat, P)`
+  - 711 `sjvOwnLoss(b, c)`
+  - 717 `sjvCpa(a, b, gs)`
+  - 722 `sjvTrailAdd(id, e)`
+  - 740 `sjvFault(T, X)`
+  - 807 `sjvFaultWord(w, no)`
+  - 818 `sjvFaultSay(F, name, lang)`
+  - 829 `sjvSettle(b, F, c, oth, name)`
+  - 840 `sjvPaySay(M, F, name, lang)`
+  - 848 `sjvKr(x, no)`
+  - 850 `sjvFrom()`
+  - 854 `sjvTo()`
+  - 861 `sjvVhf(n, rec)`
+  - 875 `sjvStandBy(n, H)`
+  - 886 `sjvBlow(n, kn, E, H, pre)`
+- **918** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 921 `sjvClock()`
+  - 928 `sjvNear(H, X, Z)`
+  - 947 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 958 `sjvTouch(b, d, P)`
+- **991** the look's sweep (sjvEval), when the model does not have her
+  - 994 `sjvSweep(n, A, H, gs, on)`
+- **1020** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
+  - 1037 `fartMonth(H)`
+  - 1038 `fartAreas()`
+  - 1046 `fartInSeason(m, mo)`
+  - 1047 `fartInRing(xs, ys, x, y)`
+  - 1050 `fartAt(p, H)`
+  - 1067 `fartCapMs()`
+  - 1078 `farvWrongSide(p, marks)`
+  - 1088 `farvLook(H)`
+  - 1117 `farvRec(r)`
+  - 1120 `farvWarn()`
+  - 1121 `farvSay(w, how)`
 
 ## `src/js/core/06-services.js` (333 linjer)
 
@@ -2158,7 +2160,7 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 456 `lifeHail(H)`
   - 463 `alumniReturn(B)`
 
-## `src/js/core/14b-sikkerhet.js` (591 linjer)
+## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
 Ø11.6: man overboard (SK2 the risk, SK3 the event; docs/planer/lover-regler-sikkerhet.md kap. 6, docs/systemer/sjofart-og-lover.md kap. 6)
 
@@ -2217,20 +2219,20 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 400 `mobScan()`
   - 414 `mobSafeTrip(t0)`
   - 439 `mobSafeRows(max)`
-- **462** L8 distress near by (sjøloven § 135 «Havsnød», kapittel 6 «Skipsføreren»; the text is read only in summary on Lovdata, kap. 2.2)
-  - 477 `sosCan()`
-  - 482 `sosMinute(W, hs)`
-  - 491 `sosPlace(k)`
-  - 500 `sosRadio(no, en)`
-  - 502 `sosCall(k, p)`
-  - 521 `sosStep(Q)`
-  - 526 `sosSweep()`
-  - 528 `sosOther(Q)`
-  - 534 `sosDecline()`
-  - 536 `sosAnswer()`
-  - 550 `sosMobStart(Q, eta)`
-  - 563 `sosMobEnd(M, out, how)`
-  - 587 `sosNpc()`
+- **464** L8 distress near by (sjøloven § 135 «Havsnød», kapittel 6 «Skipsføreren»; the text is read only in summary on Lovdata, kap. 2.2)
+  - 479 `sosCan()`
+  - 484 `sosMinute(W, hs)`
+  - 493 `sosPlace(k)`
+  - 502 `sosRadio(no, en)`
+  - 504 `sosCall(k, p)`
+  - 523 `sosStep(Q)`
+  - 528 `sosSweep()`
+  - 530 `sosOther(Q)`
+  - 536 `sosDecline()`
+  - 538 `sosAnswer()`
+  - 552 `sosMobStart(Q, eta)`
+  - 565 `sosMobEnd(M, out, how)`
+  - 589 `sosNpc()`
 
 ## `src/js/core/15-energy.js` (188 linjer)
 

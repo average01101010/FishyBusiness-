@@ -28,7 +28,7 @@ CHORD = """async (ids) => { S.t = Math.round((Date.UTC(2027, 5, 15, 11, 0) - EPO
       return {id:pt.id, name:pt.name, p:pt.p, st, end, hd:th, r, gs}; } }
   return null; }"""
 PLACE = """([C, v]) => { acc = 0; const b = S.boat; b.port = null; b.anch = null; b.hove = null; b.gop = null; b.pos = {x:C.st.x, y:C.st.y}; b.heading = C.hd; b.v = v; b.status = 'sailing'; b.dyn = null; DYN.line = null; DYN.dep = null;
-  S.plan = null; S.trail = []; if (S.helm) S.helm.on = false; FART.over = null; FART.w = null; SJV.at = -1; return 1; }"""
+  S.plan = null; S.trail = []; if (S.helm) S.helm.on = false; FART.over = null; FART.done = null; FART.w = null; SJV.at = -1; return 1; }"""
 # one sample: where she is against the harbour point (true m), her speed over the ground, the limit there, the warning and the strip
 SAMPLE = """(C) => { const live = dynLive(), q = live ? dynPose() : null, p = q ? {x:q.x, y:q.y} : S.boat.pos, v = q ? q.sog / KN_MS : S.boat.v, f = fartAt(p, S.t / 60), w = farvWarn();
   const nx = document.querySelector('#hud .st.nx');
@@ -103,7 +103,7 @@ async def main():
         check(M['mid'] <= 5 and M['out'] > 5.5, 'minuttsteget (sailV): 5 knop i havnas vann, marsjfart utenfor', M)
 
         # 5. by hand at full speed through the same water: the strip says so, and the passage is written once
-        n0 = await pg.evaluate("() => ({t:S.t, mobs:(S.mobs || []).length})")   # (the log is trimmed by age: its lines are found by their time)
+        n0 = await pg.evaluate("() => ({t:S.t, mobs:(S.farv || []).length})")   # (the log is trimmed by age: its lines are found by their time)
         await pg.evaluate(PLACE, [C, 6])
         ok = await pg.evaluate("() => { S.settings.manual = true; const t = helmTake(); S.helm.thr = 1; S.helm.rud = 0; return [t, helmOn()]; }")
         Hd = await sail(pg, C, 150, True)
@@ -112,7 +112,7 @@ async def main():
         check(any(s['w'] == 'fart' for s in fast) and any('Fartsgrense 5' in s['l3'] or 'Fartsgrense 5' in s['hud'] for s in fast), 'stripa sier «Fartsgrense 5 …» mens hun er over', next((s['l3'] for s in fast if s['w'] == 'fart'), None))
         # (the look is a real second apart: the words may stand that long after the edge)
         check(all(s['w'] != 'fart' for s in Hd if s['d'] > R + 40), 'utenfor havnas vann er det ikke noe varsel', [(s['d'], s['w']) for s in Hd if s['d'] > R + 40 and s['w']][:4])
-        W = await pg.evaluate("""(n0) => { const lg = S.log.filter(l => l.t >= n0.t && /fartsgrensa/.test(l.no)), mb = (S.mobs || []).slice(n0.mobs).filter(r => r.k === 'fart'), rows = mobSafeRows(25).filter(r => r.k === 'fart');
+        W = await pg.evaluate("""(n0) => { const lg = S.log.filter(l => l.t >= n0.t && /fartsgrensa/.test(l.no)), mb = (S.farv || []).slice(n0.mobs).filter(r => r.k === 'fart'), rows = mobSafeRows(25).filter(r => r.k === 'fart');
           return {log:lg.map(l => l.no), en:lg.map(l => l.en), mobs:mb, rows:rows.map(r => [r.what[0], r.learn[2]]), n:FART.rows}; }""", n0)
         check(len(W['log']) == 1 and 'der fartsgrensa er 5 knop' in W['log'][0] and C['name'] in W['log'][0], 'én linje i dagboka om passeringen, med havna', W['log'])
         check(len(W['mobs']) == 1 and W['mobs'][0]['kn'] == 5 and W['mobs'][0]['v'] > 6 and len(W['rows']) >= 1 and '§ 2' in W['rows'][0][1], 'én rad i Sikkerhet-kortet med farten, grensa og kilden', (W['mobs'], W['rows'][:1]))
@@ -131,12 +131,12 @@ async def main():
         check(bool(K), 'et nordmerke er satt ut i åpent vann', K and K['m'])
         if K:
             for side, want in (('south', True), ('north', False)):
-                n1 = await pg.evaluate("() => ({t:S.t, mobs:(S.mobs || []).length, n:FART.nMk})")
+                n1 = await pg.evaluate("() => ({t:S.t, mobs:(S.farv || []).length, n:FART.nMk})")
                 await pg.evaluate(PLACE, [K[side], 6])
                 await pg.evaluate("() => { FART.mk.clear(); helmTake(); S.helm.thr = 1; S.helm.rud = 0; }")
                 T = await sail(pg, K[side], 90, True)
                 near = [s for s in T if s['d'] < 150]
-                X = await pg.evaluate("(n1) => ({log:S.log.filter(l => l.t >= n1.t && /merke på feil side/.test(l.no)).map(l => l.no), mobs:(S.mobs || []).slice(n1.mobs).filter(r => r.k === 'merke').length, n:FART.nMk - n1.n})", n1)
+                X = await pg.evaluate("(n1) => ({log:S.log.filter(l => l.t >= n1.t && /merke på feil side/.test(l.no)).map(l => l.no), mobs:(S.farv || []).slice(n1.mobs).filter(r => r.k === 'merke').length, n:FART.nMk - n1.n})", n1)
                 if want:
                     check(len(near) > 2 and any(s['w'] == 'merke' for s in near) and any('Feil side av merket' in s['l3'] or 'feil side av merket' in s['hud'] for s in near), 'sør for nordmerket: stripa sier «feil side av merket»', next((s['l3'] for s in near if s['w'] == 'merke'), [s['d'] for s in T][:8]))
                     check(len(X['log']) == 1 and 'nordmerke' in X['log'][0] and X['mobs'] == 1, 'én linje i dagboka og én rad i Sikkerhet-kortet', X)

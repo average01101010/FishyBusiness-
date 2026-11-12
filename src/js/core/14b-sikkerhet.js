@@ -448,14 +448,16 @@ function mobSafeRows(max){
       L = r.how === 'boat' ? MOBLEARN.mobB : MOBLEARN.mob; }
     else if (r.k === 'stop'){ const G = MOBGEAR[r.gear] || MOBGEAR.line; w = [first(r.name) + ' hang seg fast i ' + G[0] + ', og haleren ble stoppet med nødstoppen i tide.', first(r.name) + ' was caught in ' + G[1] + ', and the hauler was stopped with the emergency stop in time.']; L = MOBLEARN.stop; }
     else if (r.k === 'ground'){ w = ['Autonav stoppet før grunt vann forut.', 'Autonav stopped short of shallow water ahead.']; L = MOBLEARN.ground; }
-    else if (r.k === 'fart'){ const v = String(r.v).replace('.', ','), wh = r.name ? ' (' + r.name + ')' : ''; w = ['Gikk ' + v + ' knop der fartsgrensa er ' + r.kn + ' knop' + wh + '.', 'Made ' + r.v + ' knots where the speed limit is ' + r.kn + ' knots' + wh + '.']; L = MOBLEARN.fart; }
-    else if (r.k === 'merke'){ const W = FARV_WORD[r.cat] || FARV_WORD.north; w = ['Passerte et ' + W[0] + 'merke på feil side.', 'Passed ' + W[2] + ' cardinal mark on the wrong side.']; L = MOBLEARN.merke; }
     else if (r.k === 'sea'){ w = ['Tok inn sjø over ripa.', 'Shipped a sea over the rail.']; L = MOBLEARN.sea; }
     else if (r.k === 'sos'){ if (r.sk === 'eng') w = ['Svarte på PAN-PAN fra «' + r.boat + '» og slepte henne i havn.', 'Answered the PAN-PAN from the «' + r.boat + '» and towed her in.'];
       else if (r.out === 'own') w = ['Svarte på MAYDAY fra «' + r.boat + '» og tok ' + r.name + ' opp etter ' + r.min + ' min.', 'Answered the MAYDAY from the «' + r.boat + '» and picked ' + r.name + ' up after ' + r.min + ' min.'];
       else w = ['Svarte på MAYDAY fra «' + r.boat + '» og sto bi til ' + r.name + ' var oppe.', 'Answered the MAYDAY from the «' + r.boat + '» and stood by until ' + r.name + ' was up.'];
       L = MOBLEARN.sos; }
     if (w) out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:w, learn:L}); }
+  // (Ø11.8, core/05e-sjovei.js farvRec: over the speed limit, and a cardinal mark on the wrong side)
+  for (const r of S.farv || []){
+    if (r.k === 'fart'){ const v = String(r.v).replace('.', ','), wh = r.name ? ' (' + r.name + ')' : ''; out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Gikk ' + v + ' knop der fartsgrensa er ' + r.kn + ' knop' + wh + '.', 'Made ' + r.v + ' knots where the speed limit is ' + r.kn + ' knots' + wh + '.'], learn:MOBLEARN.fart}); }
+    else if (r.k === 'merke'){ const W = FARV_WORD[r.cat] || FARV_WORD.north; out.push({t:r.t, k:r.k, x:r.x, y:r.y, vid:r.vid, what:['Passerte et ' + W[0] + 'merke på feil side.', 'Passed ' + W[2] + ' cardinal mark on the wrong side.'], learn:MOBLEARN.merke}); } }
   out.sort((a, b) => b.t - a.t); return max ? out.slice(0, max) : out;
 }
 
