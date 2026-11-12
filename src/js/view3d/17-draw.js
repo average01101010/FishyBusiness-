@@ -232,6 +232,9 @@
       gl.drawElements(gl.TRIANGLES, FARQ.n, gl.UNSIGNED_SHORT, 0);
     }
   }
+  // (where the near pass's sea ends inside the near terrain's square, drawSea: a cell of that grid and 2 m, past its outer row; 60 m
+  // left the shallow bed of the near terrain bare in the band, a dark line on the water by an islet)
+  const nearIn = () => NEARM ? NEARM.sx / Math.max(1, (NEARM.gn || 256) - 1) + 2 : 2;
   function drawSea(VP, eye, t, far, drop){
     { const np = QUAL.lvl === 3 && UINT ? 300 : 150; if (np !== NP){ NP = np; buildPatch(); } }   // the wave patch: 2 m on ultra
     const P = far && (drop === undefined || !QUAL.lvl) ? PSF : PS; gl.useProgram(P.p); const u = P.u;   // low quality: the far shader right up to the wave patch
@@ -252,7 +255,7 @@
     gl.uniform1f(u.uLSOn, LMTEX && LMON && LRECT ? 1 : 0); if (LMTEX && LMON && LRECT){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0); gl.uniform4fv(u.uLRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]); }
     fftBind(u, eye);   // the short sea's FFT tiles (14b-fft.js)
     // the near terrain's square from the eye, where the far pass takes over: the near pass's tiles go over into roughness towards it
-    if (u.uNearE != null){ if (NEARM){ const b = Math.max(150, Math.min(NEARM.sx, NEARM.sz) * 0.08); gl.uniform4f(u.uNearE, NEARM.x0 - eye[0], NEARM.z0 - eye[2], NEARM.x0 + NEARM.sx - eye[0], NEARM.z0 + NEARM.sz - eye[2]); gl.uniform1f(u.uNearB, b); }
+    if (u.uNearE != null){ if (NEARM){ const NEAR_IN = nearIn(), b = Math.max(150, Math.min(NEARM.sx, NEARM.sz) * 0.08); gl.uniform4f(u.uNearE, NEARM.x0 + NEAR_IN - eye[0], NEARM.z0 + NEAR_IN - eye[2], NEARM.x0 + NEARM.sx - NEAR_IN - eye[0], NEARM.z0 + NEARM.sz - NEAR_IN - eye[2]); gl.uniform1f(u.uNearB, b); }
       else { gl.uniform4f(u.uNearE, -1e7, -1e7, 1e7, 1e7); gl.uniform1f(u.uNearB, 1); } }
     seaShared(u, t);   // the gusts, the cat's paws and the ripples in the shared sea's place and time (B4, 14b-fft.js)
     gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX) gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]);
@@ -262,12 +265,12 @@
       // less the wave patch around the boat
       const y = -eye[1] - (drop || 0) + (env.tide || 0);
       if (drop === undefined){ const ox = TERR ? TERR.cx : bv.x, oz = TERR ? TERR.cz : bv.z, sc = TERRW.span / 2 + 40000;
-        seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0 + 22, NEARM.z0 + 22, NEARM.x0 + NEARM.sx - 22, NEARM.z0 + NEARM.sz - 22] : null); }
+        seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0 + 80, NEARM.z0 + 80, NEARM.x0 + NEARM.sx - 80, NEARM.z0 + NEARM.sz - 80] : null); }
       else {
-        // (the near pass's sea ends 2 m inside the near terrain's square and the far pass's goes 22 m in under it, 12.11.2026: it went
-        // 20 m out over the far pass's land, where the near pass has no depth, and drew a dark line along the square on the land seen
-        // from high up)
-        let R; if (NEARM) R = [NEARM.x0 + 2, NEARM.z0 + 2, NEARM.x0 + NEARM.sx - 2, NEARM.z0 + NEARM.sz - 2];
+        // (the near pass's sea ends NEAR_IN m inside the near terrain's square and the far pass's goes 80 m in under it, 12.11.2026: it
+        // went 20 m out over the far pass's land, where the near pass has no depth, and drew a dark line along the square on the land
+        // seen from high up; 2 m inside, a hairline was left where the near terrain's outer row slopes down to its edge)
+        let R; const NEAR_IN = nearIn(); if (NEARM) R = [NEARM.x0 + NEAR_IN, NEARM.z0 + NEAR_IN, NEARM.x0 + NEARM.sx - NEAR_IN, NEARM.z0 + NEARM.sz - NEAR_IN];
         else { const ox = Math.round(eye[0] / 100) * 100, oz = Math.round(eye[2] / 100) * 100, sc = far * 1.15; R = [ox - sc, oz - sc, ox + sc, oz + sc]; }
         const st = 2 * HALF / NP, px = Math.round(bv.x / st) * st, pz = Math.round(bv.z / st) * st, hh = HALF * 0.97;
         seaRing(u, eye, y, R, [px - hh, pz - hh, px + hh, pz + hh]);
