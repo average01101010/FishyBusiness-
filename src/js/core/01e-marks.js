@@ -74,7 +74,8 @@ function markSvg(mk, u){
   const card = c => { if (c === 'north'){ cone(t0, true, 'k'); cone(t0 - 2.3 * r, true, 'k'); } else if (c === 'south'){ cone(t0 - 2 * r, false, 'k'); cone(t0 - 4.3 * r, false, 'k'); }
     else if (c === 'east'){ cone(t0 - 2 * r, false, 'k'); cone(t0 - 2.3 * r, true, 'k'); } else if (c === 'west'){ cone(t0, true, 'k'); cone(t0 - 4.3 * r, false, 'k'); } };
   if (ty === 'C' || ty === 'S'){ body(MARK_BANDS[cat] || 'y'); card(cat); }
-  else if (ty === 'L' || ty === 'B'){ const st = cat === 'starb'; body(st ? 'g' : cat === 'port' ? 'r' : 'w'); if (st) cone(t0, true, 'g'); else if (cat === 'port') out.push('<rect x="' + f(x - r) + '" y="' + f(t0 - 2 * r) + '" width="' + f(2 * r) + '" height="' + f(2 * r) + '" fill="' + C.r + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>'); }
+  // (a fixed lateral mark white with the band, as Kystverket sets them; a buoy in its colour)
+  else if (ty === 'L' || ty === 'B'){ const st = cat === 'starb', c = st ? 'g' : cat === 'port' ? 'r' : 'w'; body(ty === 'L' && c !== 'w' ? 'w' + c + 'w' : c); if (st) cone(t0, true, 'g'); else if (cat === 'port') out.push('<rect x="' + f(x - r) + '" y="' + f(t0 - 2 * r) + '" width="' + f(2 * r) + '" height="' + f(2 * r) + '" fill="' + C.r + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>'); }
   else if (ty === 'I' || ty === 'i'){ body('krk'); ball(t0 - r, 'k'); ball(t0 - 3.1 * r, 'k'); }
   else if (ty === 'A' || ty === 'a'){ out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="#fff"/>'); for (const k of [0, 2]) out.push('<rect x="' + f(x0 + k * W / 4 + W / 8) + '" y="' + f(top) + '" width="' + f(W / 4) + '" height="' + f(H) + '" fill="' + C.r + '"/>');
     out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="none" stroke="#555" stroke-width="' + f(0.4 * u) + '"/>'); ball(t0 - r, 'r'); }

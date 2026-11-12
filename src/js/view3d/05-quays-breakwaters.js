@@ -56,6 +56,17 @@
     m.tri(at(L * 0.35, w, 0), tip, at(L * 0.35, -w, 0), k); m.tri(at(L * 0.35, -w, 0), tip, at(L * 0.35, w, 0), k);
     m.quad(at(-L * 0.5, 0, -hy), at(L * 0.35, 0, -hy), at(L * 0.35, 0, hy), at(-L * 0.5, 0, hy), k);
   }
+  // the reflector figure on a fixed lateral mark: a square (port) or a triangle point up (starboard) on a short stalk, as two crossed
+  // plates so it reads from every side (4 or 8 triangles)
+  function figInto(m, x, y, z, square, k){
+    if (m.trace) m.trace.push(m.p.length);
+    const s = 0.28, b = y + 0.15; m.box(x, y, z, 0.08, 0.15, 0.08, MK_K, 0);
+    for (const [ux, uz] of [[1, 0], [0, 1]]){
+      const P = (u, v) => [x + ux * u, b + v, z + uz * u];
+      if (square) m.quad(P(-s, 0), P(s, 0), P(s, 2 * s), P(-s, 2 * s), k);
+      else m.tri(P(-s, 0), P(s, 0), P(0, 2 * s), k);
+    }
+  }
   // a body in horizontal bands, bottom first (a box of w across from y0 to y1)
   function bandsInto(m, x, y0, z, w, y1, ks){ const h = (y1 - y0) / ks.length; ks.forEach((k, i) => m.box(x, y0 + i * h, z, w, h, w, k, 0)); }
   // the topmark over y: two cones for the cardinals, a cylinder or a cone for the laterals, balls, a cross
@@ -86,8 +97,11 @@
       else { const w = cat === 'lattice' ? 0.7 : 0.18, h = cat === 'lattice' ? 5 : 4.5; m.box(x, base, z, w, h, w, MK_I, 0);
         if (mk[4] != null) arrowInto(m, x, base + h, z, mk[4], MK_I); else if (cat === 'ball') ballInto(m, x, base + h + 0.3, z, 0.3, MK_K); } }
     // a lateral mark without a side in the data (the inland waterways' white ones, a few with no colour): white, no topmark, never red
-    else if (ty === 'L'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, base, z, 0.45, 4, 0.45, k, 0);
-      if (mk[4] != null) arrowInto(m, x, base + 4, z, mk[4], k); else if (cat === 'port' || cat === 'starb') topInto(m, x, base + 4, z, 1, cat); }
+    // a fixed lateral mark as Kystverket sets them («Retningslinjer for utforming, tekniske krav til og plassering av
+    // navigasjonsinnretninger», 2.2, s. 10): white with a red band to port and a green one to starboard, the reflector figure on top a
+    // red square to port and a green triangle to starboard (the topmarks, can and cone, are the floating marks')
+    else if (ty === 'L'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; if (k === MK_W) m.box(x, base, z, 0.45, 4, 0.45, MK_W, 0); else { m.box(x, base, z, 0.45, 2.4, 0.45, MK_W, 0); m.box(x, base + 2.4, z, 0.45, 1, 0.45, k, 0); m.box(x, base + 3.4, z, 0.45, 0.6, 0.45, MK_W, 0); }
+      if (mk[4] != null) arrowInto(m, x, base + 4, z, mk[4], k); else if (cat === 'port' || cat === 'starb') figInto(m, x, base + 4, z, cat === 'port', k); }
     else if (ty === 'B'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, -0.6, z, 1.1, 2.1, 1.1, k, 0.5); if (cat === 'port' || cat === 'starb') topInto(m, x, 1.5, z, 1, cat); }
     else if (ty === 'C'){ const ks = MK_CARD[cat] || [MK_Y]; bandsInto(m, x, -0.6, z, 1.1, 1.8, ks); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); if (MK_CARD[cat]) topInto(m, x, 2.3, z, 1.2, cat); }
     else if (ty === 'S'){ const ks = MK_CARD[cat] || [MK_Y]; bandsInto(m, x, base, z, 0.5, base + 3.5, ks); if (MK_CARD[cat]) topInto(m, x, base + 3.5, z, 1, cat); }

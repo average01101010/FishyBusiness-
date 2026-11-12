@@ -57,7 +57,7 @@ async def main():
             const top = tris.slice(T0), ax = [], ring = new Set();
             for (const t of top) for (const q of t.v){ const rr = Math.hypot(q[0], q[2]); if (rr < 1e-6) ax.push(+q[1].toFixed(3)); else if (rr > 0.2) ring.add(+q[1].toFixed(3)); }
             const cones = []; for (const ry of [...ring].sort((a, b) => a - b)){ const tip = ax.find(a => Math.abs(Math.abs(a - ry) - 0.66) < 0.02 || Math.abs(Math.abs(a - ry) - 0.55) < 0.02); if (tip != null) cones.push(tip > ry ? 'up' : 'down'); }
-            o.cones = cones.join(','); o.topCol = [...new Set(top.map(t => t.c))].join('');
+            o.cones = cones.join(','); o.topTris = top.length; o.topCol = [...new Set(top.map(t => t.c))].join('');
             const svg = markSvg([10, 10, mk[2], mk[3]], 0.01); o.svg = (svg.match(/fill="(#[0-9a-f]+)"/g) || []).map(s => s.slice(6, -1)).join(' ');
             o.svgCones = (svg.match(/<path d="M[^"]*z"/g) || []).map(d => { const n = d.match(/-?[0-9.]+/g).map(Number); return n[5] < n[1] ? 'up' : 'down'; }).join(',');
           }
@@ -77,9 +77,14 @@ async def main():
             check(bool(o) and o.get('bands') == want_b and o.get('cones') == cones, f'the {q} cardinal buoy: {bands} from the top, its two cones {cones} (bottom first)', o)
             card = {'north': '#1a1a1a #e0b000 #1a1a1a #1a1a1a', 'south': '#e0b000 #1a1a1a #1a1a1a #1a1a1a'}
             check(bool(o) and o.get('svgCones') == cones and o.get('svg', '').startswith(' '.join({'k': '#1a1a1a', 'y': '#e0b000'}[c] for c in bands.split('|'))), f'the chart plotter shows the {q} cardinal\'s bands and its cones', {'svg': o.get('svg'), 'cones': o.get('svgCones')})
-        for q, col, top in (('port', 'r', 'r'), ('starb', 'g', 'g'), ('portL', 'r', 'r'), ('starbL', 'g', 'g')):
+        for q, col, top in (('port', 'r', 'r'), ('starb', 'g', 'g')):
             o = r.get(q) or {}
-            check(bool(o) and o.get('bands') == col and top in (o.get('topCol') or '') and (o.get('cones') == ('up' if 'starb' in q else '')), f'the {q} lateral mark is {col} with its topmark ({"a cone" if "starb" in q else "a can"})', o)
+            check(bool(o) and o.get('bands') == col and top in (o.get('topCol') or '') and (o.get('cones') == ('up' if 'starb' in q else '')), f'the {q} lateral buoy is {col} with its topmark ({"a cone" if "starb" in q else "a can"})', o)
+        # the fixed lateral marks as Kystverket sets them (retningslinjene 2.2, s. 10): white with a red or green band, a red square or a
+        # green triangle on top (two crossed plates: 4 or 2 triangles, and the stalk's 12)
+        for q, col, ntop in (('portL', 'r', 16), ('starbL', 'g', 14)):
+            o = r.get(q) or {}
+            check(bool(o) and o.get('bands') == 'w|' + col + '|w' and col in (o.get('topCol') or '') and o.get('topTris') == ntop and ('#ffffff #' in o.get('svg', '')), f'the {q} fixed lateral mark is white with a {col} band and its {"square" if col == "r" else "triangle"}', o)
         o = r.get('isol') or {}
         check(bool(o) and o.get('bands') == 'k|r|k' and o.get('topCol') == 'k' and o.get('tris', 0) > 30, 'an isolated danger buoy: black with a red band, two black balls', o)
         o = r.get('safe') or {}
