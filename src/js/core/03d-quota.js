@@ -361,7 +361,11 @@ const HPK = {torsk:KPK, hyse:Math.round(KPK * 20 / 42), sei:Math.round(KPK * 20 
 //    to 1, so a right's value (its quota × the price) hardly moves at the new year.
 // A pure function of the clock: WORLD_SEED's stock (or the server's, WSH.stock, B4), never anything from the save. The same every hour of a
 // calendar day (UTC), in whole kroner. The index is an assumption (no source publishes quota prices; docs/planer/kvotemarkedet.md kap. 7)
-const KPKL = {lo:0.7, hi:1.4, days:28, adv:[6, 26], tac:[10, 17]};
+// The start (Jonas 12.11.2026: «Glid inn over fire uker»): the price stood at 260 until KM5, and the living one was 303 kr/kg at the
+// time it came (October 2027 in the game, the total quota for 2028 above the year's). So it stays 260 up to 15 November 2027 on the shared
+// clock (about 18 November 2026 in real time), whenever the release comes before that, and glides from 260 to the living price over four
+// game weeks from there. A release after that date gives a part of the jump at once; then move start.
+const KPKL = {lo:0.7, hi:1.4, days:28, adv:[6, 26], tac:[10, 17], start:Date.UTC(2027, 10, 15), glide:28};
 const kpkLukket = tac => codChain(norQuota('torsk', tac)).lukket;
 // the outlook for year y's quota as known at H: 1 before 26 June, and for a day of the year before (the new year's quota is known then)
 function kpkOut(H, y){
@@ -381,7 +385,8 @@ function kpkAt(H){
   const D = Math.floor((EPOCH + H * 36e5) / 864e5); if (KPKC.v[D] != null) return KPKC.v[D];
   const H0 = (D * 864e5 - EPOCH) / 36e5 + 12; let s = 0;
   for (let k = 0; k < KPKL.days; k++) s += kpkCodIx(H0 - 24 * k);
-  KPKC.n++; return KPKC.v[D] = Math.round(KPK * clamp(s / KPKL.days * kpkOut(H0, yearH(H0)), KPKL.lo, KPKL.hi));
+  const m = clamp(s / KPKL.days * kpkOut(H0, yearH(H0)), KPKL.lo, KPKL.hi), w = clamp((D * 864e5 - KPKL.start) / 864e5 / KPKL.glide, 0, 1);
+  KPKC.n++; return KPKC.v[D] = Math.round(KPK * (1 - w + w * m));
 }
 // the permit an ocean vessel type needs (null for a coast boat)
 function havLicFor(type){ for (const id in HAVLIC) if (HAVLIC[id].ves.includes(type)) return id; return null; }

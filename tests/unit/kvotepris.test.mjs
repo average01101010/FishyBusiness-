@@ -18,6 +18,15 @@ export default function (t){
   for (let H = Hd(2026, 1, 1); H < Hd(2034, 1, 1); H += 24){ const v = kpkAt(H); n++; if (!(v >= 0.7 * KPK && v <= 1.4 * KPK) || v !== Math.round(v)) bad++; lo = Math.min(lo, v); hi = Math.max(hi, v); }
   t.eq(bad, 0, 'kvoteprisen er hele kroner mellom ' + 0.7 * KPK + ' og ' + 1.4 * KPK + ' kr/kg hver dag 2026–2033 (' + n + ' dager: ' + lo + '–' + hi + ')');
   t.ok(hi - lo >= 10, 'og den flytter seg (spennet er ' + (hi - lo) + ' kr/kg)');
+  // the start (Jonas 12.11.2026: «Glid inn over fire uker»): 260 kr/kg up to 15 November 2027 in the game, then from 260 to the living
+  // price over four game weeks, the same for everyone on the shared clock
+  { const st = Hd(2027, 11, 15), live = H => { const y = yearH(H), D = Hd(+new Date(K.EPOCH + H * 36e5).toISOString().slice(0, 4), +new Date(K.EPOCH + H * 36e5).toISOString().slice(5, 7), +new Date(K.EPOCH + H * 36e5).toISOString().slice(8, 10)); let s = 0;
+      for (let k = 0; k < 28; k++) s += kpkCodIx(D - 24 * k); return KPK * Math.min(1.4, Math.max(0.7, s / 28 * kpkOut(D, yearH(D)))); };
+    t.ok(kpkAt(Hd(2027, 3, 1)) === KPK && kpkAt(Hd(2027, 10, 20)) === KPK && kpkAt(st - 24) === KPK, 'fast 260 kr/kg til 15. november 2027 i spillet (mars, oktober og 14. november: ' + [kpkAt(Hd(2027, 3, 1)), kpkAt(Hd(2027, 10, 20)), kpkAt(st - 24)].join(', ') + ')');
+    const mid = st + 14 * 24, end = st + 28 * 24, want = KPK + (live(mid) - KPK) * 14 / 28;
+    t.ok(Math.abs(kpkAt(mid) - want) <= 1, `halvveis etter to uker: ${kpkAt(mid)} kr/kg (260 mot ${live(mid).toFixed(0)}: ${want.toFixed(0)})`);
+    t.eq(kpkAt(end), Math.round(live(end)), 'og den levende prisen fra fire uker etter (' + kpkAt(end) + ' kr/kg)');
+    let up = 0; for (let H = st; H < end; H += 24) up = Math.max(up, Math.abs(kpkAt(H + 24) - kpkAt(H))); t.ok(up <= 6, 'ingen dag i glidningen flytter prisen mer enn 6 kr/kg (største: ' + up + ')'); }
   // the limits hold when the raw index goes far outside them (a stock from the server with a collapse or a boom)
   { const W = K.get('WSH'), keep = W.stock, y = yearH(Hd(2030, 3, 1));
     W.stock = [['torsk', y, 300000, 285000, 285000], ['torsk', y + 1, 900000, 900000, 900000]];
