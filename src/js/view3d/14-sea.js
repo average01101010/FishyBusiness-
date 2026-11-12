@@ -541,16 +541,21 @@
   // (SH: the sea by the shore at the point, F4, as SEA_VS_WAVE and SEA_VS_SURF have it; seaH looks it up once for its three calls)
   function seaDisp(x, z, t, S, fade, SH){
     let dx = 0, dy = 0, dz = 0, dn = 0, Et = 0, Eu = 0, Es = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP, Qw = seaQ(S, ren);
-    if (!SH) SH = shoalHere(x, z); const sg = SHG;
+    if (!SH) SH = shoalHere(x, z); const sg = SHG, fsh = typeof fftShape === 'function' && fftShape(); let fe2 = 0;
     for (let i = 0; i < WV.list.length; i++){
       const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell));
       const am0 = c.swell ? S[1] * c.wo : S[0] * (S[2] * c.wo + (1 - S[2]) * c.wy) * ren, Q = c.swell ? 0.3 : Qw;
       const grp = grpAt(i, c, x, z, t);
       shW(c, SH, sg); const e2 = (am0 * sg[0] * grp) ** 2; if (c.swell) Eu += e2; else Et += e2; Es += e2 * sg[2];
+      if (fsh && i >= 4 && i < 10){ const a1 = am0 * sg[0] * Math.sqrt(Math.max(1 - sg[2], 0)); fe2 += a1 * a1; continue; }   // (B2: the FFT tile, below)
       if (att <= 0) continue;
       const am = am0 * sg[0] * Math.sqrt(Math.max(1 - sg[2], 0)) * grp * att * fade, f = c.k * (c.Dx * x + c.Dz * z) - c.om * t + c.ph - NF.ph[i], co = Math.cos(f), h = am * Math.sin(f);
       dx += Q * sg[1] * am * c.Dx * co; dz += Q * sg[1] * am * c.Dz * co; dy += h; if (i >= 4 && i < 10) dn += h;
     }
+    // B2 (14b-fft.js): waves 4-9's shape from the first FFT tile, as the vertex shader draws it (scaled to the sea here as fe2 / A0,
+    // sharpened by the place's Q held under the tile's limit), and counted with the short waves that ride with her (dn)
+    if (fsh && fe2 > 0){ const fs = Math.sqrt(fe2 / fftA0()), lam = Math.min(Qw, 0.27 / Math.max(fs * Math.hypot(FFT.st[0][1], FFT.st[1][1]), 1e-4)), D = fftAt(x, z), k = fs * fade;
+      dx -= lam * k * D[0]; dz -= lam * k * D[1]; dy += k * D[2]; dn += k * D[2]; }
     if (SH[0] < 78){
       if (Es > 1e-8 && SURF.w > 0){ const As = Math.sqrt(Es), ks = surfK(SH[0]), f = -(SURF.w * t + SURF.p0) - SURF.w * SH[1], w = Math.hypot(SH[2], SH[3]), att = sstep(2.5, 5, 2 * Math.PI / (ks * cell)), a = As * att * fade, Qs = Math.min(0.6, 0.6 / (ks * As + 1e-4)), co = Math.cos(f);
         dx += Qs * a * SH[2] / w * co; dz += Qs * a * SH[3] / w * co; dy += a * Math.sin(f); }

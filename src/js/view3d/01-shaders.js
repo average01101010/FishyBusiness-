@@ -241,17 +241,23 @@
   // speed through it; the long waves (0-3) and the swell too away from land (09.11.2026), and in the world within 0.4 km of the shore.
   // The frame shift is a phase offset per wave (uNFp, and uNFg for its group); the ripples and the crests' grain take the shifted
   // position P-uNFD. The foam that lies in the water (the wake's, the whitecaps', the streaks) stays in the world (Jonas 09.11.2026).
-  const SEA_VS_WAVE = i => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=' + (i < 10 ? 'grpW(wxz-' + (i < 4 ? 'uNFL' : 'uNFD') + ',a,b,' + i + '.0)' : 'grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0))*gr*att;' +
+  const SEA_VS_WAVE = (i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*uCell));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=' + (i < 10 ? 'grpW(wxz-' + (i < 4 ? 'uNFL' : 'uNFD') + ',a,b,' + i + '.0)' : 'grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F ? 'fe2+=am*am;am*=1.0-uFvP.z;' : '') + 'am*=gr*att;' +
     'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);d.x+=Q*sg.y*am*a.x*c;d.z+=Q*sg.y*am*a.y*c;d.y+=am*sin(f);}';
   // after the waves, by the shore (F4): the surf wave from the energy they brought in, and the whole capped where it would pass
   // McCowan's limit (the crests cut: what breaks has gone into foam)
   const SEA_VS_SURF = '\n{float cap=min(1.0,0.78*SH.x/max(2.83*sqrt(Et+Eu),1e-4));if(Es>1e-8&&uSurf.y>0.0){float As=sqrt(Es);float ks=surfK(SH.x);float f=surfF(SH);vec2 n=SH.zw/length(SH.zw);float att=smoothstep(2.5,5.0,6.2832/(ks*uCell));float Qs=min(0.6,0.6/(ks*As+1e-4));float c=cos(f);' +
     'd.x+=Qs*As*att*n.x*c;d.z+=Qs*As*att*n.y*c;d.y+=As*att*sin(f);}d*=cap;}';
+  // B2 (Bølgene, 12.11.2026): waves 4-9's shape from the first FFT tile (14b-fft.js), where the vertex shader can read textures (not
+  // NOSST: the phone keeps the Gerstner shape). The displacement and height at the mip level whose texel is a grid cell (uFvO.z), scaled
+  // to the sea here as the fragment shader scales the light (fe2 / A0), the crest sharpened as the waves are (x - Q D, Q held under the
+  // tile's limit). uFv*: the vertex stage's own names (the phone that would link no sea had trouble with uniforms shared by both stages).
+  const FFT_VS_U = '\n#ifndef NOSST\nuniform sampler2D uFftD;uniform vec4 uFvO;uniform vec4 uFvP;uniform vec4 uFvQ;\n#else\nconst vec4 uFvP=vec4(0.0);\n#endif\n';
+  const FFT_VS = '\n#ifndef NOSST\nif(uFvP.z>0.5){float fs=sqrt(fe2/uFvP.w);vec4 D=texture2DLod(uFftD,(wxz-uNFD-uFvO.xy)*uFvP.x,uFvO.z);float lam=min(Qw,0.27/max(fs*uFvQ.z,1e-4));d.x-=lam*fs*D.x;d.z-=lam*fs*D.y;d.y+=fs*D.z;}\n#endif\n';
   const seaVS = lite => 'precision highp float;attribute vec2 aXZ;uniform mat4 uVP;uniform vec2 uOrigin;uniform vec3 uOriginRel;uniform float uTime;uniform float uHalf;uniform float uFlat;uniform vec2 uScale;uniform float uCell;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform vec2 uNFL;varying vec3 vW;varying vec2 vXZ;' + SEA_STATE + SHOAL + (lite ? '' : WAKE_GLSL) +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform vec2 uNFL;varying vec3 vW;varying vec2 vXZ;' + SEA_STATE + SHOAL + (lite ? '' : WAKE_GLSL + FFT_VS_U) +
     'void main(){vec2 lxz=aXZ*uScale;vec2 wxz=uOrigin+lxz;vec3 d=vec3(0.0);' +
-    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);vec4 S=seaAt(wxz);float Qw=qOf(S);vec4 SH=shoalAt(wxz);float Et=0.0;float Eu=0.0;float Es=0.0;' +
-    (lite ? [0, 1, 2, 3, 10, 11, 12] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).map(SEA_VS_WAVE).join('') + SEA_VS_SURF + 'd*=fade;' + (lite ? '' : 'd.y+=wakeH(wxz,0.0)*uWk3.z;') + '}' +
+    'if(uFlat<0.5){float fade=1.0-smoothstep(0.6,1.0,max(abs(aXZ.x),abs(aXZ.y))/uHalf);vec4 S=seaAt(wxz);float Qw=qOf(S);vec4 SH=shoalAt(wxz);float Et=0.0;float Eu=0.0;float Es=0.0;float fe2=0.0;' +
+    (lite ? [0, 1, 2, 3, 10, 11, 12] : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).map(i => SEA_VS_WAVE(i, !lite && i >= 4 && i < 10)).join('') + (lite ? '' : FFT_VS) + SEA_VS_SURF + 'd*=fade;' + (lite ? '' : 'd.y+=wakeH(wxz,0.0)*uWk3.z;') + '}' +
     'vec3 rel=uOriginRel+vec3(lxz.x,0.0,lxz.y)+d;vW=rel;vXZ=wxz;gl_Position=uVP*vec4(rel,1.0);}';
   const SEA_VS = seaVS(false), SEA_VS_LITE = seaVS(true);
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
