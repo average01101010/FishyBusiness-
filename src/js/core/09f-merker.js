@@ -88,6 +88,8 @@ const ACHL = [
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},
   {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')},
+  // «Læremester» (core/14-crewlife.js laerDone, docs/planer/oppdrag-2.md punkt 8, steg 45b): apprentices who went from your deck to a boat of their own
+  {id:'laer', n:['Læremester: lærlinger med egen båt', 'Master of the trade: apprentices with a boat of their own'], tiers:[1, 3, 10], unit:'', v:() => achC('laer')},
   {id:'lagw', n:['Fiskarlaget: uker med levering', 'The fishing club: weeks with a landing'], tiers:[1, 4, 12, 26, 52], unit:'', v:() => Object.keys((S.pubSoc || {}).lagWk || {}).length}   // (ui/09c-pubsoc.js lagWeek, docs/planer/oppdrag-2.md F2)
 ];
 const achOf = id => ACH.find(a => a.id === id);

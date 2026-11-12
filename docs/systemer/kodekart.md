@@ -757,91 +757,91 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 115 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
   - 133 `hfftMips(out, N)`
 
-## `src/js/core/04-crew.js` (723 linjer)
+## `src/js/core/04-crew.js` (735 linjer)
 
 crew: people with skills, habits and moods
 
 - **1** crew: people with skills, habits and moods
-  - 9 `crewHome()`
-  - 31 `pickW(pairs)`
-  - 32 `crewAge()`
-  - 34 `skreiSeason(H)`
-  - 35 `crewDerive(c)`
-  - 36 `genCrew()`
-  - 51 `deckSkills(ex)`
-  - 53 `crewUpgrade(c)`
-- **54** the share system of the coastal fleet (Økonomi 2, Ø2, 27.10.2026; docs/planer/okonomi/02-design.md)
-  - 107 `lotMigrate(c)`
-  - 117 `oppgPct(T, n, len)`
-  - 129 `lottFishery(b = S.boat)`
-  - 132 `lottM(n, len, fishery = 'juksa')`
-  - 143 `tripOf(b = S.boat)`
-  - 144 `tripAdd(b, k, kr0)`
-  - 145 `tripCost(b = S.boat)`
-- **148** the trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md, Jonas
-  - 158 `tripSum(T)`
-  - 174 `tripWhy(W)`
-- **218** the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
-  - 224 `tripHome(b = S.boat)`
-  - 229 `tripLeft(b = S.boat)`
-  - 246 `tripHour()`
-- **256** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
-  - 269 `lagOf()`
-  - 279 `lagPeople()`
-  - 296 `lagOnDeck(H, under)`
-  - 301 `lagMeal()`
-  - 304 `lagLanded(kr)`
-- **318** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
-  - 327 `provOf(b = S.boat)`
-  - 328 `provFill()`
-  - 334 `provMinute()`
-  - 336 `crewHireWhy()`
-  - 339 `lottParty()`
-  - 349 `lottSplit(D)`
-  - 353 `payMates()`
-  - 358 `weekKr(len)`
-  - 359 `lotWeek(c, H = S.t / 60)`
-  - 364 `crewAboard(H, all)`
-  - 367 `biDaysTxt(c)`
-  - 370 `crewBiOff(H)`
-  - 372 `crewEff(c, H, hs, g = 'juksa')`
-- **379** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
-  - 385 `crewDrive(c, H, hs)`
-  - 406 `crewEffort(c, H, hs)`
-- **413** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
-  - 418 `crewTeam()`
-  - 423 `teamHour(H, on, hs, food)`
-  - 442 `teamLine()`
-  - 450 `teamEff(team, me = true, g = 'juksa')`
-  - 452 `compat(a, b)`
-  - 465 `crewById(id)`
-  - 468 `holdNet()`
-  - 477 `crewSettle(c)`
-  - 486 `crewQuit(c, why, whyEn)`
-- **489** Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102
-  - 500 `avtAddMonths(t, n)`
-  - 506 `crewAvt(c)`
-  - 513 `crewPos(c)`
-  - 516 `crewFrist(c, t = S.t)`
-  - 527 `crewNotice(c, gr)`
-  - 536 `crewOppTick(c)`
-  - 544 `crewStay(c)`
-  - 554 `crewGrunn(c)`
-  - 562 `crewLetGo(c)`
-- **574** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
-  - 584 `namedAge(n, H)`
-  - 585 `namedMake(n)`
-  - 590 `namedTaken(nid)`
-  - 591 `namedTick(B)`
-  - 600 `borsTick(H)`
-  - 609 `crewRumour()`
-  - 613 `crewSeaFat(c, fishing, workF, night)`
-  - 614 `crewTick(H)`
-  - 685 `codRoom(H)`
-- **687** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 701 `flyIn(c)`
-  - 710 `flyOut(c)`
-  - 718 `flyTick()`
+  - 12 `crewHome()`
+  - 34 `pickW(pairs)`
+  - 35 `crewAge()`
+  - 37 `skreiSeason(H)`
+  - 40 `crewDerive(c)`
+  - 41 `genCrew()`
+  - 56 `deckSkills(ex)`
+  - 58 `crewUpgrade(c)`
+- **59** the share system of the coastal fleet (Økonomi 2, Ø2, 27.10.2026; docs/planer/okonomi/02-design.md)
+  - 113 `lotMigrate(c)`
+  - 123 `oppgPct(T, n, len)`
+  - 135 `lottFishery(b = S.boat)`
+  - 138 `lottM(n, len, fishery = 'juksa')`
+  - 149 `tripOf(b = S.boat)`
+  - 150 `tripAdd(b, k, kr0)`
+  - 151 `tripCost(b = S.boat)`
+- **154** the trip's line on the landing note and in the deck log (Ø8b S2, V2 A and V4 A in docs/planer/spillbarhet-fangst.md, Jonas
+  - 164 `tripSum(T)`
+  - 180 `tripWhy(W)`
+- **224** the trip's limits on an ocean vessel (H2b of docs/planer/havsteget-h2-autoline.md, 05.11.2026). The fuel, the bait, the hooks for
+  - 230 `tripHome(b = S.boat)`
+  - 235 `tripLeft(b = S.boat)`
+  - 252 `tripHour()`
+- **262** the ocean vessel's crew as anonymous teams (H2b of docs/planer/havsteget-h2-autoline.md, V3 A; Jonas 05.11.2026: the teams
+  - 275 `lagOf()`
+  - 285 `lagPeople()`
+  - 302 `lagOnDeck(H, under)`
+  - 307 `lagMeal()`
+  - 310 `lagLanded(kr)`
+- **324** the provisions of an ocean vessel (H2b; Jonas 05.11.2026: «Fylles ved avgang»): the ship's chandler fills the stores aboard when she
+  - 333 `provOf(b = S.boat)`
+  - 334 `provFill()`
+  - 340 `provMinute()`
+  - 342 `crewHireWhy()`
+  - 345 `lottParty()`
+  - 355 `lottSplit(D)`
+  - 359 `payMates()`
+  - 364 `weekKr(len)`
+  - 365 `lotWeek(c, H = S.t / 60)`
+  - 370 `crewAboard(H, all)`
+  - 373 `biDaysTxt(c)`
+  - 376 `crewBiOff(H)`
+  - 378 `crewEff(c, H, hs, g = 'juksa')`
+- **385** what lifts or drags a person's effort just now, besides what they can and who they are (Jonas 23.10.2026: «dette skal være dynamisk
+  - 391 `crewDrive(c, H, hs)`
+  - 412 `crewEffort(c, H, hs)`
+- **419** samhold: how the crew aboard pull together (Jonas 23.10.2026: «Samhold ja, men det må gjøres intuitivt»), 0-100 per vessel (S.team,
+  - 424 `crewTeam()`
+  - 429 `teamHour(H, on, hs, food)`
+  - 448 `teamLine()`
+  - 456 `teamEff(team, me = true, g = 'juksa')`
+  - 458 `compat(a, b)`
+  - 471 `crewById(id)`
+  - 474 `holdNet()`
+  - 483 `crewSettle(c)`
+  - 492 `crewQuit(c, why, whyEn)`
+- **495** Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102
+  - 506 `avtAddMonths(t, n)`
+  - 512 `crewAvt(c)`
+  - 519 `crewPos(c)`
+  - 522 `crewFrist(c, t = S.t)`
+  - 535 `crewNotice(c, gr)`
+  - 544 `crewOppTick(c)`
+  - 552 `crewStay(c)`
+  - 564 `crewGrunn(c)`
+  - 572 `crewLetGo(c)`
+- **584** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
+  - 594 `namedAge(n, H)`
+  - 595 `namedMake(n)`
+  - 600 `namedTaken(nid)`
+  - 601 `namedTick(B)`
+  - 610 `borsTick(H)`
+  - 620 `crewRumour()`
+  - 624 `crewSeaFat(c, fishing, workF, night)`
+  - 625 `crewTick(H)`
+  - 697 `codRoom(H)`
+- **699** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 713 `flyIn(c)`
+  - 722 `flyOut(c)`
+  - 730 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1427 linjer)
 
@@ -1576,29 +1576,29 @@ Fartstid: years at sea, 0 to 40 (Jonas 07.10.2026; docs/engasjement.md, arbeidsl
   - 53 `fsLand(total)`
   - 55 `fsRested(realMs)`
 
-## `src/js/core/09f-merker.js` (229 linjer)
+## `src/js/core/09f-merker.js` (231 linjer)
 
 Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
 
 - **1** Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/engasjement.md, arbeidslista 1.5 and 3)
   - 25 `achVisits()`
   - 26 `achVisitPort(pid)`
-  - 94 `achState()`
-  - 110 `achAdd(k, n)`
-  - 111 `achSale(total, sps)`
-  - 112 `achCatch(sp, cls)`
-  - 114 `achMinute()`
-  - 125 `achTripEnd(bad)`
-- **130** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
-  - 132 `achPool(scale)`
-  - 156 `achDraw(key, scale)`
-  - 164 `achGive(key, scale, title)`
-- **173** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
-  - 175 `achCheck(quiet)`
-  - 203 `achChapter(ch)`
-  - 216 `achSeed()`
-- **227** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
-  - 228 `freeFirst(k)`
+  - 96 `achState()`
+  - 112 `achAdd(k, n)`
+  - 113 `achSale(total, sps)`
+  - 114 `achCatch(sp, cls)`
+  - 116 `achMinute()`
+  - 127 `achTripEnd(bad)`
+- **132** the gifts: what fits the player now, in three tiers (seven in ten common, two good, one rare), bigger in later chapters
+  - 134 `achPool(scale)`
+  - 158 `achDraw(key, scale)`
+  - 166 `achGive(key, scale, title)`
+- **175** checking: each milestone in an open chapter, the chapters' own rewards, and the long badges
+  - 177 `achCheck(quiet)`
+  - 205 `achChapter(ch)`
+  - 218 `achSeed()`
+- **229** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
+  - 230 `freeFirst(k)`
 
 ## `src/js/core/09g-turer.js` (1008 linjer)
 
@@ -2184,7 +2184,7 @@ work aboard: stations, and how the crew share them
   - 434 `workTeam(st, g, as)`
   - 440 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (570 linjer)
+## `src/js/core/14-crewlife.js` (703 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -2225,22 +2225,35 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 406 `lifeEarn(c, sum)`
   - 408 `lifeOff(c, days, no, en, sno, sen)`
   - 410 `lifeDay(c, H)`
-  - 425 `lifeInjury(c, hs)`
-  - 428 `lifeOffTick(c)`
-  - 431 `lifeDepart(c)`
-  - 443 `alumniGround(a)`
-  - 448 `alumniStates(H)`
-  - 455 `lifeHail(H)`
-- **461** the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md)
-  - 478 `errandLine(c)`
-  - 488 `errandMay(c)`
-  - 494 `errandPick(c, r = crewRand)`
-  - 509 `errandAskText(c, E)`
-  - 518 `errLapse(c, E)`
-  - 522 `errandHour(H)`
-  - 542 `errandAnswer(id, yes)`
-  - 552 `errandDone(c)`
-  - 562 `alumniReturn(B)`
+  - 426 `lifeInjury(c, hs)`
+  - 429 `lifeOffTick(c)`
+  - 432 `lifeDepart(c)`
+  - 451 `alumniGround(a)`
+  - 456 `alumniStates(H)`
+  - 463 `lifeHail(H)`
+- **470** the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md)
+  - 487 `errandLine(c)`
+  - 497 `errandMay(c)`
+  - 503 `errandPick(c, r = crewRand)`
+  - 518 `errandAskText(c, E)`
+  - 527 `errLapse(c, E)`
+  - 531 `errandHour(H)`
+  - 551 `errandAnswer(id, yes)`
+  - 561 `errandDone(c)`
+  - 571 `alumniReturn(B)`
+- **580** the apprentice (Oppdrag 2, punkt 8; steg 45b, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md)
+  - 622 `laerTaken(B)`
+  - 627 `laerMake()`
+  - 637 `laerBors(B)`
+  - 645 `laerSign(c)`
+  - 651 `laerSkill(k)`
+  - 653 `laerStream(p, H)`
+  - 659 `laerGale(p, H)`
+  - 661 `laerSaw(c, H, prev)`
+  - 668 `laerAsk(c, k)`
+  - 675 `laerAnswer(id, i)`
+  - 685 `laerHour(H)`
+  - 698 `laerDone(c, boat, hp)`
 
 ## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
@@ -2830,12 +2843,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1614 linjer)
+## `src/js/ui/phone/07-patch.js` (1618 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1602 `patch()`
+  - 1606 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2912,7 +2925,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 149 `careAboard(inPort, p)`
   - 176 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (206 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (219 linjer)
 
 --- crew
 
@@ -2922,18 +2935,19 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 9 `traitChips(c, all)`
   - 11 `lifeHtml(c)`
   - 17 `errHtml(c)`
-  - 24 `avtHtml(c, lottKv)`
-  - 29 `personCard(c, cand)`
-  - 36 `bors()`
-  - 51 `mannskap()`
-- **77** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
-  - 84 `ledger()`
-  - 95 `accounts()`
-  - 118 `bank()`
-- **168** messages
-  - 169 `meld()`
-- **176** actions
-  - 183 `switchVessel(k)`
+  - 25 `laerHtml(c)`
+  - 33 `avtHtml(c, lottKv)`
+  - 38 `personCard(c, cand)`
+  - 45 `bors()`
+  - 61 `mannskap()`
+- **90** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
+  - 97 `ledger()`
+  - 108 `accounts()`
+  - 131 `bank()`
+- **181** messages
+  - 182 `meld()`
+- **189** actions
+  - 196 `switchVessel(k)`
 
 ## `src/js/ui/phone/13b-nettet.js` (148 linjer)
 
@@ -2980,7 +2994,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (347 linjer)
+## `src/js/ui/phone/14-act.js` (350 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one

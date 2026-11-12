@@ -3353,6 +3353,59 @@
 2026-11-12 19:23	plan/2026-11-12-45a	4e07f0de	boottest	OK	27	lite	alene	
 2026-11-12 19:30	plan/2026-11-12-45a	3c95c84f+	lybtest	OK	18	lite	alene	
 2026-11-12 20:27	ccr-899a9674-q3gjp0	7da359b2	dbg23o	OK	45	3d	alene	
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	crewlifetest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	merketest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	lotttest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	crewlifetest	FEIL	11	lite	samtidig	FEIL after the years away the old hand is back at the exchange for a smaller share, and the story says the boat was sold {"back": true, "left": 1, "ask": 1, "as
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	merketest	OK	17	lite	samtidig	
+2026-11-12 20:39	plan/2026-11-12-45b	7db5585f+	lotttest	OK	9	lite	samtidig	
+2026-11-12 21:10	plan/2026-11-12-45b	7db5585f+	crewlifetest	OK	8	lite	samtidig	
+2026-11-12 21:10	plan/2026-11-12-45b	7db5585f+	merketest	OK	13	lite	samtidig	
+2026-11-12 21:10	plan/2026-11-12-45b	7db5585f+	lotttest	OK	8	lite	samtidig	
+2026-11-12 21:12	plan/2026-11-12-45b	139a4f46+	laerlingshot	OK	12	lite	alene	
+2026-11-12 21:12	plan/2026-11-12-45b	139a4f46+	laerlingshot	OK	13	lite	samtidig	
+2026-11-12 21:12	plan/2026-11-12-45b	139a4f46+	crewlifetest	OK	9	lite	samtidig	
+2026-11-12 21:20	plan/2026-11-12-45b	e3f5d935	krabbefabrikktest	OK	17	lite	samtidig	
+2026-11-12 21:20	plan/2026-11-12-45b	e3f5d935	fabrikktest	OK	13	lite	samtidig	
+2026-11-12 21:20	plan/2026-11-12-45b	e3f5d935	lotttest	OK	8	lite	samtidig	
+2026-11-12 21:20	plan/2026-11-12-45b	e3f5d935	skiptest	OK	16	lite	samtidig	
+2026-11-12 21:20	plan/2026-11-12-45b	e3f5d935	fleet2test	OK	31	lite	samtidig	
+2026-11-12 21:21	plan/2026-11-12-45b	e3f5d935+	opsowntest	OK	40	lite	samtidig	
+2026-11-12 21:21	plan/2026-11-12-45b	e3f5d935+	worktest	OK	21	lite	samtidig	
+2026-11-12 21:21	plan/2026-11-12-45b	e3f5d935+	crewlifetest	OK	9	lite	samtidig	
+2026-11-12 21:21	plan/2026-11-12-45b	e3f5d935+	selfcrew	OK	6	lite	samtidig	
+2026-11-12 21:21	plan/2026-11-12-45b	e3f5d935+	lybtest	OK	19	lite	samtidig	
+2026-11-12 21:24	plan/2026-11-12-45b	67b570c2	krabbefabrikktest	OK	17	lite	samtidig	
+2026-11-12 21:24	plan/2026-11-12-45b	67b570c2	fabrikktest	OK	12	lite	samtidig	
+2026-11-12 21:24	plan/2026-11-12-45b	67b570c2	lotttest	OK	8	lite	samtidig	
+2026-11-12 21:25	plan/2026-11-12-45b	67b570c2	skiptest	OK	15	lite	samtidig	
+2026-11-12 21:25	plan/2026-11-12-45b	67b570c2	fleet2test	OK	30	lite	samtidig	
+2026-11-12 21:25	plan/2026-11-12-45b	67b570c2	opsowntest	OK	41	lite	samtidig	
+2026-11-12 21:25	plan/2026-11-12-45b	67b570c2	worktest	OK	24	lite	samtidig	
+2026-11-12 21:26	plan/2026-11-12-45b	67b570c2	crewlifetest	OK	8	lite	samtidig	
+2026-11-12 21:26	plan/2026-11-12-45b	67b570c2	selfcrew	OK	6	lite	samtidig	
+2026-11-12 21:26	plan/2026-11-12-45b	67b570c2	lybtest	OK	19	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	mobtest	OK	203	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	turlinjetest	OK	5	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	avtaleshot	OK	10	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	merketest	OK	11	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	fartstidtest	OK	14	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	trip2	OK	33	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	fasittest	OK	35	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	opptest	OK	77	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	mannskapshot	OK	15	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	aerendshot	OK	14	lite	samtidig	
+2026-11-12 21:29	plan/2026-11-12-45b	67b570c2	laerlingshot	OK	13	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	docktest	OK	62	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	skattetest	OK	6	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	boktest	OK	8	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	vesseltest	OK	18	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	turtest	OK	13	lite	samtidig	
+2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	adminbuytest	OK	9	lite	samtidig	
+2026-11-12 21:31	plan/2026-11-12-45b	67b570c2	megletest	OK	22	lite	samtidig	
+2026-11-12 21:32	plan/2026-11-12-45b	67b570c2	saytest	OK	99	3d	alene	
+2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	teleport3d	OK	1200	3d	alene	
+2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	seasontest	OK	5	lite	alene	
 2026-11-12 21:28	ccr-e7efd74c-rioki0	d1068007+	sqltest	FEIL	55	lite	samtidig	FEIL HS4: shop_state answers the server's minute, that the import is done, the last round at the pub, the haill switched on last with its minute, the paint desi
 2026-11-12 21:28	ccr-e7efd74c-rioki0	d1068007+	fasittest	FEIL	45	lite	samtidig	FEIL HS4: (the save is written in: 50 haill, 10 luksus, a fresh luksus aboard, a turbo trim, Skippertak Max, 9 credits, two designs)  {"stock": {"haill": 55, "l
 2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	sqltest	OK	48	lite	samtidig	
@@ -3362,3 +3415,4 @@
 2026-11-12 22:53	ccr-013bxxig-n7skip	7ff341e+	vesseltest	OK	24	lite	samtidig	
 2026-11-12 22:53	ccr-013bxxig-n7skip	7ff341e+	ferrytest	OK	22	lite	samtidig	
 2026-11-12 22:54	ccr-013bxxig-n7skip	7ff341e+	trip2	OK	31	lite	alene	
+2026-11-12 21:55	plan/2026-11-12-45b	023beed7	boottest	OK	25	lite	alene	
