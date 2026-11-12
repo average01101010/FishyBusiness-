@@ -7,7 +7,7 @@ under the camera and the cinema on the right, «kontekstuell og kun komme opp n�
      the time it took (the map at the stop loaded) printed
   4. at the quay, no button; with the switch off, no button on a route either
   5. no page errors
-Screenshots: tests/out/hopp-{knapp,nei,kort,etter,kjop,kaiboden,trim}-{staaende,liggende}.png. The spot check along the coast: KYST_HOPP_FRA and
+Screenshots: tests/out/hopp-{knapp,nei,kort,etter,kjop}-{staaende,liggende}.png. The spot check along the coast: KYST_HOPP_FRA and
 KYST_HOPP_TIL name the harbours, in one format, with nothing loaded along the way (the hop loads the map and the 3D packs at the stop). python3 tests/hoppshot.py (3D). Prints OK or FEIL lines."""
 import asyncio, json, os
 from _env import boot
@@ -102,23 +102,24 @@ async def one(p, name, vw, vh):
     c4 = await J("() => ({lab:document.getElementById('hopGo').textContent, mode:shopMode()})")
     await J("() => { document.getElementById('modal').hidden = true; }")
     check(c4['mode'] == 'test' and c4['lab'] == 'Kjøp (test, ingen betaling)', name + ': 4c. der butikken selger, står knappen uten testbryteren, og kortets knapp er kjøpet', c4)
-    # 4d. (HO3) the card as the players see it where the shop is live: «Kjøp · 💎 N kr» and the line under it; and a hop kept in Kaiboden
-    # offered on the route, and shown in the Trim tab (shopMode stubbed to live: no payment is started, the button is not pressed)
+    # 4d. (HO3) the card as the players see it where the shop is live: «Kjøp · 💎 N kr» and the line under it
+    # (shopMode stubbed to live: no payment is started, «Kjøp» is not pressed)
     await J("() => { window.__sm = shopMode; shopMode = () => 'live'; }")
     await pg.click('#hopBtn'); await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
     c5 = await J("() => { const m = document.getElementById('modal'); return {lab:document.getElementById('hopGo').textContent, fine:!!m.querySelector('.shop-fine'), text:m.innerText, kr:hopQuote().kr}; }")
     await pg.screenshot(path=os.path.join(OUT, 'hopp-kjop-' + name + '.png'))
     await J("() => { document.getElementById('modal').hidden = true; }")
     check(c5['lab'] == 'Kjøp · 💎 %d kr' % c5['kr'] and c5['fine'] and 'angreretten' in c5['text'], name + ': 4d. der butikken er åpen: «Kjøp · 💎 %d kr» og linja om levering og angrerett' % c5['kr'], {'lab': c5['lab'], 'fine': c5['fine']})
-    await J("() => { S.hopSrv = [{id:999, min:60, kr:45, boat:S.cur}]; SHOP.hopFresh = true; }")
-    await pg.click('#hopBtn'); await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
-    c6 = await J("() => ({lab:document.getElementById('hopGo').textContent, text:document.getElementById('modal').innerText})")
-    await pg.screenshot(path=os.path.join(OUT, 'hopp-kaiboden-' + name + '.png'))
-    await J("() => { document.getElementById('modal').hidden = true; PHONE.open('trim'); }"); await pg.wait_for_timeout(800)
-    t6 = await J("() => document.getElementById('phone').innerText")
-    await pg.screenshot(path=os.path.join(OUT, 'hopp-trim-' + name + '.png'))
-    await J("() => { PHONE.show(false); S.hopSrv = []; shopMode = window.__sm; }")
-    check(c6['lab'] == 'Bruk hoppet fra Kaiboden' and 'i virkeligheten' in c6['text'] and '\U0001F48E' not in c6['text'] and 'høyst 60 minutter i virkeligheten' in t6, name + ': 4e. et hopp i Kaiboden tilbys på ruta uten pris (det er betalt), og Trim-fanen viser det med ekte minutter', {'lab': c6['lab']})
+    # 4e. (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden») the button stops
+    # the boat at once and she lies still while the card is open; «Avbryt» lets her go and she sails on
+    await pg.click('#hopBtn'); p0 = await J("() => JSON.stringify([S.boat.pos, S.plan.idx])")
+    await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000); await pg.wait_for_timeout(2500)
+    e1 = await J("(p0) => ({hold:!!S.boat.hopHold, v:S.boat.v, still:JSON.stringify([S.boat.pos, S.plan.idx]) === p0, text:document.getElementById('modal').innerText})", p0)
+    await pg.click('#modal [data-close]'); await pg.wait_for_timeout(2500)
+    e2 = await J("(p0) => ({hold:!!S.boat.hopHold, moved:JSON.stringify([S.boat.pos, S.plan.idx]) !== p0})", p0)
+    await J("() => { shopMode = window.__sm; }")
+    check(e1['hold'] and e1['v'] == 0 and e1['still'] and 'ligger stille' in e1['text'] and not e2['hold'] and e2['moved'],
+          name + ': 4e. spoleknappen stopper båten med en gang, og hun ligger stille mens kortet er åpent; «Avbryt» slipper henne, og hun seiler videre', {'open': {k: e1[k] for k in ('hold', 'v', 'still')}, 'after': e2})
     check(not errs, name + ': 5. ingen sidefeil', errs[:3])
     await br.close()
 

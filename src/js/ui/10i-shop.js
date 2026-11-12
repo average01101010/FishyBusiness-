@@ -263,7 +263,7 @@ function srvApply(st){
   const ev = (what, x) => { if (typeof cloudEv === 'function') cloudEv('srv_fix', Object.assign({what}, x)); };
   // (new: delivered by this very answer, or within the last minutes and not confirmed here yet, should that answer have been lost)
   const isNew = g => !!g.held && !given.includes(g.id) && (g.new === true || wn - ms(g) < 120000);
-  const snap = () => JSON.stringify([S.haillSrv, S.haillInv, S.haill, S.skip, S.yardSrv, S.yardCredit, S.hopSrv, S.cos, S.pubE, (S.fleet || []).map(v => (v.id === S.cur ? S.boat : v.boat || {}).trim || null)]), was = snap();
+  const snap = () => JSON.stringify([S.haillSrv, S.haillInv, S.haill, S.skip, S.yardSrv, S.yardCredit, S.hopVoid, S.cos, S.pubE, (S.fleet || []).map(v => (v.id === S.cur ? S.boat : v.boat || {}).trim || null)]), was = snap();
   let thanks = 0, gifts = 0;
   // 1. the haill in store: the server's unused, never one switched on here. The game's own numbers are gone (srvImport)
   const had = S.haillSrv || []; S.haillSrv = haillMirror(list.filter(g => g.held), S.haillUsed); S.haillInv = {haill:0, luksus:0}; S.haillOld = [];
@@ -306,21 +306,23 @@ function srvApply(st){
         const no = n ? 'Verftet gjorde ' + (n > 1 ? n + ' jobber' : 'jobben') + ' på «' + S.boatName + '» ferdig med én gang.' : 'Jobben på «' + S.boatName + '» ble ferdig før kjøpet kom fram. «Ferdig nå» ligger klar og gjør neste verftsjobb ferdig med én gang.',
           en = n ? 'The yard finished ' + (n > 1 ? n + ' jobs' : 'the job') + ' on the «' + S.boatName + '» straight away.' : 'The job on the «' + S.boatName + '» was done before the purchase came. «Done now» is kept and finishes the next yard job at once.';
         log(no, en); say(g, no, en); names.push(shopL('Verftet er ferdig', 'The yard is done')); }); } }
-  // 5b. the hop over the rest of a route (HO3, ui/10u-hopp.js): the grants not used are the hops kept in Kaiboden. One that came now is
-  // made when the boat it was bought for sails the route to the stop it was bought for (hopFate, hopMatch), whatever the weather (Jonas
-  // 12.11.2026: «uavhengig av været eller andre ting»), at once or as soon as the time away is played in (hopDeliver, hopWait); else it is
-  // kept, for one later route of at most its minutes, and the words say why. S.hopQ: used here, and the server not yet told (hop_use).
-  // SHOP.hopFresh: the server has said which are unused this session (only those are offered from Kaiboden)
+  // 5b. the hop over the rest of a route (HO3, ui/10u-hopp.js): a grant not used is a hop paid for and not made yet. It is made when the
+  // boat it was bought for lies held for it (hopHoldFor: the fast-forward button stopped her, and the hold is in the save, so another
+  // device holding the game makes it too), whatever the weather (Jonas 12.11.2026: «uavhengig av været eller andre ting»), at once or
+  // as soon as the time away is played in (hopDeliver, hopWait). Nothing is owed in the game after it (Jonas: «skal ikke ha noe "hopp"
+  // tilgode»): one that can not be made is marked for a refund (hopVoid). S.hopQ: used here, and the server not yet told (hop_use).
+  // Not on a page that has lost the game (TAB): the one that has it delivers
   { const q = S.hopQ || (S.hopQ = []); for (let i = q.length - 1; i >= 0; i--) if (!list.some(g => g.id === q[i])) q.splice(i, 1);
-    const hs = list.filter(g => g.held && (g.data || {}).give === 'hopp' && !q.includes(g.id));
-    S.hopSrv = hs.map(g => ({id:g.id, min:g.data.min, kr:g.data.kr, boat:g.data.boat})); SHOP.hopFresh = true;
-    for (const g of hs) if (isNew(g)){ given.push(g.id); seen[g.id] = wn; const d = g.data, why = typeof hopFate === 'function' ? hopFate(d) : ['', ''];
-      const kw = why && typeof hopKeptWords === 'function' ? hopKeptWords(why, d.min) : null, wait = !why && hopWait();
-      const no = kw ? kw[0] : wait ? 'Hoppet gjøres om et øyeblikk, når båten er klar.' : 'Hoppet gjøres nå: båten er fremme om et øyeblikk.',
-        en = kw ? kw[1] : wait ? 'The hop is made in a moment, when the boat is ready.' : 'The hop is made now: the boat is there in a moment.';
-      say(g, no, en); names.push(shopL('Hopp over ruta', 'Skip the route')); if (why) log(no, en);
-      else if (typeof hopDeliver === 'function') setTimeout(() => hopDeliver(g.id, d), 0); }
-    for (const id of q) cloudRpc('hop_use', {id}).catch(e => console.error(e)); }
+    const hs = list.filter(g => g.held && (g.data || {}).give === 'hopp' && !q.includes(g.id)), gone = typeof hopTabGone === 'function' && hopTabGone();
+    for (const g of hs){ if (gone) break; if ((S.hopVoid || []).includes(g.id)) continue;   // (marked for a refund: never made after all)
+      const d = g.data, fresh = isNew(g), held = typeof hopHoldFor === 'function' && hopHoldFor(d);
+      if (fresh){ given.push(g.id); seen[g.id] = wn; }
+      if (held){ if (fresh){ say(g, 'Hoppet gjøres nå: båten er fremme om et øyeblikk.', 'The hop is made now: the boat is there in a moment.'); names.push(shopL('Hopp over ruta', 'Skip the route')); }
+        if (typeof hopDeliver === 'function') setTimeout(() => hopDeliver(g.id, d), 0); }
+      else if (typeof hopVoid === 'function'){ const why = ['Båten lå ikke lenger stille på ruta da betalingen kom.', 'The boat was no longer lying still on the route when the payment came.'];
+        if (fresh) say(g, 'Hoppet ble ikke gjort: ' + why[0] + ' Kjøpet er merket, og pengene betales tilbake.', 'The hop was not made: ' + why[1] + ' The purchase is marked, and the money is paid back.');
+        hopVoid(g.id, why); } }
+    if (!gone) for (const id of q) if (typeof hopUse === 'function') hopUse(id); }
   // 6. the paid paint designs: the account's entitlements, never the save's own list
   if (Array.isArray(st.owned)){ CLOUD.owned = st.owned.slice(); if (typeof cosSrv === 'function') cosSrv(st.owned); }
   // 7. what is still open: a paint design, given as before and the server told (shop_done); one this game does not know is left there
@@ -406,7 +408,11 @@ function shopStart(){
   const q = new URLSearchParams(location.search), k = q.get('kjop');
   if (k){ SHOP.ret = k; q.delete('kjop'); history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '') + location.hash); }
   fetch(shopFn(), {cache:'no-store'}).then(r => r.ok ? r.json() : {ready:false}).then(j => { SHOP.ready = !!j.ready; if (typeof PHONE !== 'undefined' && PHONE.isOpen()) PHONE.render(); }).catch(() => { SHOP.ready = false; });
-  if (SHOP.ret === 'avbrutt'){ toast(shopL('Kjøpet ble avbrutt. Ingenting er trukket.', 'The purchase was cancelled. Nothing was charged.')); SHOP.ret = null; }
+  // (a hop's hold ends when its purchase is cancelled; back with no answer at all, the browser's back button, the boat lies still till
+  // the payment comes or the hold ends: said, with the way out. ui/10u-hopp.js)
+  const hh = S.boat && S.boat.hopHold;
+  if (SHOP.ret === 'avbrutt'){ toast(shopL('Kjøpet ble avbrutt. Ingenting er trukket.', 'The purchase was cancelled. Nothing was charged.')); SHOP.ret = null; if (hh && typeof hopHoldOff === 'function') hopHoldOff(); }
+  else if (!SHOP.ret && hh && hh.pay) toast(shopL('Båten ligger stille og venter på betalingen for hoppet. Vil du seile videre, trykk ⏩ og «Avbryt».', 'The boat lies still, waiting for the payment for the hop. To sail on, tap ⏩ and «Cancel».'));
   const tries = SHOP.ret ? [0, 3000, 8000, 20000, 45000] : [0];
   if (SHOP.ret) toast(shopL('Takk! Henter det du kjøpte …', 'Thank you! Fetching what you bought …'));
   for (const ms of tries) setTimeout(() => { if (ms && !SHOP.ret) return; shopClaim().then(n => { if (n) SHOP.ret = null; }); }, ms);

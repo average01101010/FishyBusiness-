@@ -72,6 +72,20 @@ export default function (t){
   t.ok(hopCovers(27, 27) && hopCovers(27, 20), 'et hopp for 27 min dekker en tur på 27 og på 20 min');
   t.ok(hopCovers(27, 31), 'litt mer vind siden kjøpet (31 min): dekket');
   t.ok(!hopCovers(1, 60) && !hopCovers(27, 40), 'et hopp kjøpt for 1 min dekker ikke en tur på 60, og 27 min ikke 40');
+  // the hold (Jonas 12.11.2026: «stopper båten momentant som om den var fryst i tiden»): at the stop the card prices, for the purchase of
+  // that stop only, and gone when the route no longer leads there, the end has passed, or she is not sailing
+  { const {hopHoldOn, hopHeld, hopHoldFor, hopHoldOff} = K; sailing(); S.cur = 'v1'; const h = hopHoldOn();
+    t.ok(!!h && hopHeld(S.boat) && h.to.port === 'p1' && S.boat.v === 0, 'holdet: ved stoppet ruta går til, og ingen fart');
+    t.ok(hopHoldFor({boat:'v1', to:{x:2, y:2, port:'p1'}}), 'et kjøp for samme stopp og båt: hoppet gjøres fra holdet');
+    t.ok(!hopHoldFor({boat:'v2', to:{x:2, y:2, port:'p1'}}) && !hopHoldFor({boat:'v1', to:{x:9, y:9, port:'p9'}}), 'en annen båt eller et annet stopp: ikke dette holdet');
+    S.plan.wps[1] = w({x:7, y:7, port:'p7'}); t.ok(!hopHeld(S.boat) && !S.boat.hopHold, 'ruta endret: holdet er borte');
+    sailing(); hopHoldOn(); S.t = S.boat.hopHold.until; t.ok(!hopHeld(S.boat), 'etter ' + K.HOP.holdReal + ' ekte minutter: holdet er borte'); S.t = 0;
+    sailing(); hopHoldOn(); hopHoldOff(); t.ok(!S.boat.hopHold, 'sluppet: ingen hold');
+    sailing(); S.boat.status = 'port'; S.boat.hopHold = {t0:0, until:999, to:{x:2, y:2, port:'p1'}}; t.ok(!hopHeld(S.boat), 'ikke på sjøen: ikke holdt'); }
+  // another page or device has the game (TAB): no hop here
+  { globalThis.TAB = {lost:true}; sailing(); t.ok(/annet sted/.test((hopWhy() || [''])[0]), 'spillet åpent et annet sted: ' + (hopWhy() || [''])[0]); delete globalThis.TAB; }
+  // the cover's words: never «1 minutter»
+  t.eq(K.hopMinWords(1)[0], '1 minutt', '«1 minutt»'); t.eq(K.hopCoverMax(27), 32, 'et hopp for 27 min dekker høyst 32');
   sailing(); const before = JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx]); hopWhy(); t.eq(JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx]), before, 'hopWhy endrer ingenting');
 
   // the time saved in words, rounded to the whole minute first (never «1 t 60 min»)

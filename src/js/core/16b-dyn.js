@@ -514,6 +514,7 @@ function dynWrite(b, d){
 // the model has the boat: the tick runs it, the minute step leaves her be (sail), the chart and the 3D view draw its pose
 function dynCan(){
   const b = S.boat; if (!DYN.on || typeof SIMREADY === 'undefined' || !SIMREADY || simRate() > 12 || b.status !== 'sailing' || b.anch) return false;   // (at anchor she lies to it until it is up: 06e-anchor.js)
+  if (b.hopHold && hopHeld(b)) return false;   // (held for a hop, core/06j-hopp.js: she does not move)
   if (helmOn()) return !sleepAlone();
   return !!(S.plan && S.plan.wps.length > S.plan.idx);
 }

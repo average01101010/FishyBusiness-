@@ -746,6 +746,9 @@ function vesselStep(H){
   if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; plan2Landed(pid); } return; }
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
+  // held for a hop (core/06j-hopp.js hopHeld; Jonas 12.11.2026: «stopper båten momentant som om den var fryst i tiden»): she stays where
+  // she is, with no way, no diesel and no weather turning her, until the hop or the end of the hold
+  if (hopHeld(b)){ b.v = 0; return; }
   const W = windAt(H), hs = hsAt(b.pos, H);
   // lying to (lieTo): the player taking her (a route, the helm) ends it; else she holds on till it eases
   if (b.hove){ if (b.status !== 'idle' || S.plan || helmOn()) b.hove = null; else lieToStep(W, hs); }

@@ -3263,3 +3263,12 @@
 2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	skiptest	OK	19	lite	samtidig	
 2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	boostklokke	OK	46	lite	samtidig	
 2026-11-12 16:52	ccr-e7efd74c-rioki0	308d71e0+	fasittest	OK	29	lite	alene	
+2026-11-12 17:08	ccr-e7efd74c-rioki0	4a0b32fe+	hoppshot	FEIL	900	3d	alene	FEIL liggende: 1c. i roen dempes spoleknappen som kino-knappen {"hop": 0.773837, "kino": 0.773837}
+2026-11-12 17:18	ccr-e7efd74c-rioki0	4a0b32fe+	fasittest	OK	41	lite	samtidig	
+2026-11-12 17:21	ccr-e7efd74c-rioki0	4a0b32fe+	kjoptest	OK	177	lite	samtidig	
+2026-11-12 17:21	ccr-e7efd74c-rioki0	4a0b32fe+	hopptest	OK	10	lite	samtidig	
+2026-11-12 17:21	ccr-e7efd74c-rioki0	4a0b32fe+	guesttest	OK	106	lite	samtidig	
+2026-11-12 17:21	ccr-e7efd74c-rioki0	4a0b32fe+	skiptest	OK	16	lite	samtidig	
+2026-11-12 17:22	ccr-e7efd74c-rioki0	4a0b32fe+	boostklokke	OK	51	lite	samtidig	
+2026-11-12 17:25	ccr-e7efd74c-rioki0	4a0b32fe+	dyntest	FEIL	260	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-12 17:25	ccr-e7efd74c-rioki0	4a0b32fe+	trip2	OK	35	lite	samtidig	

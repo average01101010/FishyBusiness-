@@ -5,7 +5,8 @@
 -- out from the minutes the game sends, as it trusts the game's position today; the minutes, the stop and the price are kept on the purchase
 -- (shop-checkout), and the grant stripe-webhook makes of it has them. Once paid, the hop is made to the stop in the purchase whatever the
 -- weather (Jonas: «uavhengig av været eller andre ting»); when it cannot be made there (the boat was there before the payment came, another
--- route, someone in the water), the grant waits unused and the game offers it from Kaiboden on a later route of at most its minutes.
+-- route, someone in the water), the grant waits unused and the game offers it by the fast-forward button on a later route of at most its minutes, and nowhere else
+-- (Jonas 12.11.2026: «Hopp skal ikke selges i kaiboden, det skal kun selges per minutt når man trykker på knappen under seilas»).
 --
 --   hop_price(min)         kr for the real minutes saved (tests/unit/hopp.test.mjs and tests/sqltest.py check it against hopPrice)
 --   shop_quote_hop(min)    as shop_quote (signed in, not a guest, the shop open to the account, at most 30 purchases an hour) for the

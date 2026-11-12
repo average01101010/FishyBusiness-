@@ -155,71 +155,87 @@ async def hs4(br, handle, st, calls, errs):
     h = await pg.evaluate("(async () => { const s0 = haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill, ask = achHaillAsk(); await new Promise(r => setTimeout(r, 50)); await shopClaim(); await shopClaim(); const s1 = haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill, ask2 = achHaillAsk(); await new Promise(r => setTimeout(r, 50)); await shopClaim(); await shopClaim(); return {ask, got:s1 - s0, ask2, got2:haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill - s1, inv:(S.haillInv || {}).haill || 0, left:S.achH || 0}; })()")
     ach = len([c_ for c_ in calls if c_[0] == 'ach_haill'])
     check(h == {'ask': True, 'got': 1, 'ask2': True, 'got2': 0, 'inv': 0, 'left': 0} and ach == 2, 'HS4: the haill of chapter 2 is the server\'s grant, in the store once; asked for again, the server gives none', {'r': h, 'calls': ach})
-    # j. the hop over the rest of a route (HO3, ui/10u-hopp.js, 20261112200000_hopp.sql): on a route the card's «Kjøp» shows the price for
-    # the minutes and asks shop-checkout for the hop with the minutes and the stop; back from Stripe the grant is made into the hop at once
-    # (the boat at the quay at the stop, hop_use told); a hop that came when the boat was already in, is kept in Kaiboden (the Trim tab
-    # says so) and used on the next route it covers, with no new payment
+    # j. the hop over the rest of a route (HO3, ui/10u-hopp.js, 20261112200000_hopp.sql). Jonas 12.11.2026: «Når brukeren trykker på
+    # hopp-knappen stopper båten momentant som om den var fryst i tiden», «Når spilleren har kommet fram til endepunktet av ruten ved hjelp
+    # av hoppet er tjenesten levert og spilleren skal ikke ha noe "hopp" tilgode», «Hopp skal ikke selges i kaiboden». The button stops the
+    # boat (the hold), the card's «Kjøp» asks shop-checkout for the hop with the minutes and the stop, the boat lies still while the page
+    # is at Stripe and after it is back (the time away played in), and the grant hops her from there; a grant for a boat no longer held
+    # is not made and is marked for a refund, once, with nothing owed in the game
     ROUTE = """async (back) => { const b = S.boat; S.tut = 0; S.settings.autoOn = false; WX_FORCE = {w:3, d:180}; if (S.turer) S.turer.act = [];
       const A = portById(b.port) || PORTS.find(p => dist(p.p, b.pos) < 1);
       const B = back ? portById(back) : PORTS.filter(p => p.id !== A.id && !p.naust && dist(p.p, A.p) > 8 && dist(p.p, A.p) < 30).sort((p, q) => dist(p.p, A.p) - dist(q.p, A.p))[0];
       const r = await leiaRoute({x:A.p.x, y:A.p.y}, {x:B.p.x, y:B.p.y}, A.id, B.id); for (const w of r.wps) await mapNeed(w, 1);
-      b.status = 'sailing'; b.port = null; b.pos = {x:r.wps[0].x, y:r.wps[0].y}; b.v = 6; b.fuel = BOAT.fuelCap;
+      b.status = 'sailing'; b.port = null; b.pos = {x:r.wps[0].x, y:r.wps[0].y}; b.v = 6; b.fuel = BOAT.fuelCap; b.hopHold = null;
       S.plan = {wps:r.wps.slice(1), idx:0, speed:BOAT.vcruise || BOAT.vmax * 0.8, returning:false, depAt:null, unsafe:r.wps.slice(1).map(() => false)}; S.plan.wps[S.plan.wps.length - 1].port = B.id;
       return {A:A.id, B:B.id}; }"""
-    CARD = """(async () => { hopOpen(); for (let i = 0; i < 100 && !document.getElementById('hopGo'); i++) await new Promise(r => setTimeout(r, 50));
-      const q = hopQuote(), m = document.getElementById('modal'); return {lab:(document.getElementById('hopGo') || {}).textContent, fine:!!m.querySelector('.shop-fine'), min:q.realMin, kr:q.kr, text:m.innerText}; })()"""
+    POS = "JSON.stringify([S.boat.pos, S.plan && S.plan.idx])"
+    CARD = """(async () => { hopOpen(); const p0 = """ + POS + """; for (let i = 0; i < 100 && !document.getElementById('hopGo'); i++) await new Promise(r => setTimeout(r, 50));
+      await new Promise(r => setTimeout(r, 2500)); const q = hopQuote(), m = document.getElementById('modal');
+      return {lab:(document.getElementById('hopGo') || {}).textContent, fine:!!m.querySelector('.shop-fine'), min:q.realMin, kr:q.kr, text:m.innerText, pos:p0, still:p0 === """ + POS + """, v:S.boat.v, hold:!!S.boat.hopHold}; })()"""
     rt = await pg.evaluate(ROUTE, None); c1 = await pg.evaluate(CARD); n0 = len(calls)
+    check(c1['hold'] and c1['still'] and c1['v'] == 0, 'HO3: the fast-forward button stops the boat at once: with the card open for 2,5 s she has not moved', {k: c1[k] for k in ('hold', 'still', 'v')})
     async with pg.expect_navigation(url='**/checkout.stripe.test/**', timeout=45000):
         await pg.evaluate("document.getElementById('hopGo').click()")
     co = [c[1] for c in calls[n0:] if c[0] == 'checkout']; co = co[-1] if co else {}
     check(c1['lab'] == 'Kjøp · 💎 %d kr' % c1['kr'] and c1['fine'] and co.get('product') == 'hopp' and co.get('min') == c1['min'] and (co.get('to') or {}).get('port') == rt['B'] and co.get('boat') == cur,
           'HO3: on a route the card\'s «Kjøp» shows the price for the minutes and asks shop-checkout for the hop with the whole minutes, the stop and the boat, straight to Stripe', {'card': {k: c1[k] for k in ('lab', 'fine', 'min', 'kr')}, 'checkout': co})
-    st['grants'].append({'id': 80, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': co.get('min'), 'to': co.get('to'), 'kr': c1['kr']}})
     pg2 = await ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e))); await pg.close(); pg = pg2
     pg.set_default_timeout(120000); await pg.goto(url('kjop=cs_test_hop'))
-    await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true && (S.shopGiven || []).includes(80)", timeout=120000)
+    await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true && typeof SIMREADY !== 'undefined' && SIMREADY", timeout=120000)
+    await pg.wait_for_timeout(3000)
+    j0 = await pg.evaluate("({st:S.boat.status, hold:S.boat.hopHold, pos:" + POS + "})")
+    check(j0['st'] == 'sailing' and j0['hold'] and j0['hold'].get('pay') and j0['pos'] == c1['pos'], 'HO3: back from Stripe, before the payment is confirmed, the boat lies where the button stopped her (the time away played in)', {'st': j0['st'], 'hold': j0['hold'], 'same': j0['pos'] == c1['pos']})
+    st['grants'].append({'id': 80, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': co.get('min'), 'to': co.get('to'), 'kr': c1['kr']}})
+    await pg.evaluate("shopClaim()")
     try: await pg.wait_for_function("S.boat.status === 'port' && !HOPUI.busy && !(S.hopQ || []).length", timeout=60000)
     except Exception: pass
-    j1 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, kept:(S.hopSrv || []).length, q:(S.hopQ || []).slice(), log:S.log.slice(-6).map(e => e.no).join(' | ')})")
-    check(j1['st'] == 'port' and j1['port'] == rt['B'] and j1['kept'] == 0 and st['hop'] == [80] and 'Hoppet til' in j1['log'],
-          'HO3: back from Stripe the hop is made at once to the stop it was bought for (the boat at the quay there), and the server is told once (hop_use)', {'r': j1, 'hop_use': st['hop']})
-    # (the kontroll of HO3: the receipt has the price paid and the minutes, from the purchase, not from the card the page had before Stripe)
+    j1 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, hold:S.boat.hopHold || null, q:(S.hopQ || []).slice(), log:S.log.slice(-6).map(e => e.no).join(' | ')})")
+    check(j1['st'] == 'port' and j1['port'] == rt['B'] and j1['hold'] is None and st['hop'] == [80] and 'Hoppet til' in j1['log'],
+          'HO3: the payment confirmed, the boat is hopped from where she lay to the quay at the end of the route, the hold is gone and the server is told once (hop_use)', {'r': j1, 'hop_use': st['hop']})
+    # (the receipt has the price paid and the minutes, from the purchase, not from the card the page had before Stripe)
     try: await pg.wait_for_function("(() => { const m = document.getElementById('modal'); return !m.hidden && /Takk for kjøpet/.test(m.innerText); })()", timeout=15000)
     except Exception: pass
     rc = await pg.evaluate("(() => { const m = document.getElementById('modal'); return m.hidden ? '' : m.innerText; })()")
     check(c1['kr'] != 5 and ('\U0001F48E %d kr' % c1['kr']) in rc and ('(%d min)' % c1['min']) in rc, 'HO3: the receipt says the hop with its minutes and the price paid (%d kr, %d min)' % (c1['kr'], c1['min']), {'text': rc[:300]})
     await pg.evaluate("document.getElementById('modal').hidden = true")
+    # a grant for a boat not held (here she is at the quay): not made, marked for a refund, said once, and nothing in Kaiboden
     st['grants'].append({'id': 81, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': 60, 'to': {'x': 0, 'y': 0, 'port': 'et-annet-sted'}, 'kr': 45}})
-    j2 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 400)); document.getElementById('modal').hidden = true; PHONE.open('trim'); await new Promise(r => setTimeout(r, 300)); const t = document.getElementById('phone').innerText; PHONE.show(false); return {kept:(S.hopSrv || []).map(x => x.id), st:S.boat.status, trim:/Hopp over resten av ruta/.test(t) && /60 minutter/.test(t), msg:S.log.slice(-4).map(e => e.no).join(' | ')}; })()")
-    await pg.evaluate(ROUTE, rt['A']); c2 = await pg.evaluate(CARD)
-    await pg.evaluate("document.getElementById('hopGo').click()")
-    try: await pg.wait_for_function("S.boat.status === 'port' && !HOPUI.busy && !(S.hopQ || []).length", timeout=60000)
-    except Exception: pass
-    j3 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, kept:(S.hopSrv || []).length})")
-    check(j2['kept'] == [81] and j2['st'] == 'port' and j2['trim'] and 'Kaiboden' in j2['msg'] and c2['lab'] == 'Bruk hoppet fra Kaiboden' and j3 == {'st': 'port', 'port': rt['A'], 'kept': 0} and st['hop'] == [80, 81],
-          'HO3: a hop that came when the boat was already in is kept in Kaiboden (the Trim tab shows it), and the next route it covers uses it with no new payment (hop_use told)', {'kept': j2, 'card': c2['lab'], 'after': j3, 'hop_use': st['hop']})
-    # k. (the kontroll of HO3) a hop paid for while the time the game was closed is still played in (hopWait, held true here) waits, and
-    # is made when that is done; one paid for far fewer minutes than the trip is kept in Kaiboden, and says so
+    j2 = await pg.evaluate("""(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 400)); document.getElementById('modal').hidden = true; await shopClaim(); await new Promise(r => setTimeout(r, 400));
+      document.getElementById('modal').hidden = true; PHONE.open('trim'); await new Promise(r => setTimeout(r, 300)); const t = document.getElementById('phone').innerText; PHONE.show(false);
+      const L = S.log.map(e => e.no).filter(x => /Hoppet ble ikke gjort/.test(x)); return {st:S.boat.status, void:(S.hopVoid || []).slice(), n:L.length, last:L[L.length - 1] || '', trim:/Hopp over resten av ruta/.test(t)}; })()""")
+    check(j2['st'] == 'port' and j2['void'] == [81] and j2['n'] == 1 and 'pengene betales tilbake' in j2['last'] and not j2['trim'] and st['hop'] == [80],
+          'HO3: a grant for a boat not held is not made: it is marked for a refund and said once (log, Meldinger), nothing is owed and nothing is in Kaiboden', {'r': j2, 'hop_use': st['hop']})
+    # k. a hop paid for while the time the game was closed is still played in (hopWait, held true here) waits for it, the boat still held,
+    # and is made when that is done; the time away played in is what hopWait waits for (CATCH_LEFT); one paid for far fewer minutes
+    # than the trip is not made and is marked for a refund; a purchase cancelled at Stripe lets the boat go
     STOP = "(() => { const pl = S.plan, w = pl.wps[hopStop(pl)]; return {x:w.x, y:w.y, port:w.port, min:hopQuote().realMin}; })()"
-    await pg.evaluate("document.getElementById('modal').hidden = true"); await pg.evaluate(ROUTE, rt['B']); k0 = await pg.evaluate(STOP)
-    await pg.evaluate("() => { window.__hw = true; window.__hwReal = typeof hopWait === 'function' ? hopWait : null; hopWait = () => window.__hw || (window.__hwReal ? window.__hwReal() : false); }")
+    await pg.evaluate(ROUTE, rt['A']); k0 = await pg.evaluate(STOP)
+    kc = await pg.evaluate("() => { const was = CATCH_LEFT; CATCH_LEFT = 5; const w = hopWait(); CATCH_LEFT = was; return w; }")
+    await pg.evaluate("() => { hopHoldOn(); S.boat.hopHold.pay = true; window.__hw = true; window.__hwReal = hopWait; hopWait = () => window.__hw || window.__hwReal(); }")
+    kp = await pg.evaluate(POS)
     st['grants'].append({'id': 82, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': k0['min'], 'to': {'x': k0['x'], 'y': k0['y'], 'port': k0['port']}, 'kr': 9}})
-    k1 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 2500)); return {st:S.boat.status, hop:(S.hopQ || []).includes(82)}; })()")
+    k1 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 2500)); return {st:S.boat.status, hop:(S.hopQ || []).includes(82), still:" + POS + " === " + json.dumps(kp) + "}; })()")
     await pg.evaluate("() => { window.__hw = false; }")
     try: await pg.wait_for_function("S.boat.status === 'port' && !HOPUI.busy && !(S.hopQ || []).length", timeout=60000)
     except Exception: pass
-    k2 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, kept:(S.hopSrv || []).map(x => x.id)})")
-    check(k1['st'] == 'sailing' and not k1['hop'] and k2 == {'st': 'port', 'port': rt['B'], 'kept': []} and st['hop'][-1:] == [82],
-          'HO3: a hop paid for while the time the game was closed is played in waits for it, and is made when it is done (hop_use told)', {'waiting': k1, 'after': k2, 'hop_use': st['hop']})
-    await pg.evaluate("() => { document.getElementById('modal').hidden = true; if (window.__hwReal) hopWait = window.__hwReal; }")
-    await pg.evaluate(ROUTE, rt['A']); k3s = await pg.evaluate(STOP)
+    k2 = await pg.evaluate("({st:S.boat.status, port:S.boat.port})")
+    check(kc is True and k1['st'] == 'sailing' and k1['still'] and not k1['hop'] and k2 == {'st': 'port', 'port': rt['A']} and st['hop'][-1:] == [82],
+          'HO3: a hop paid for while the time away is played in (CATCH_LEFT makes hopWait true) waits for it with the boat held, and is made when it is done (hop_use told)', {'catch': kc, 'waiting': k1, 'after': k2, 'hop_use': st['hop']})
+    await pg.evaluate("() => { document.getElementById('modal').hidden = true; hopWait = window.__hwReal; }")
+    await pg.evaluate(ROUTE, rt['B']); k3s = await pg.evaluate(STOP); await pg.evaluate("() => { hopHoldOn(); S.boat.hopHold.pay = true; }")
     st['grants'].append({'id': 83, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': 1, 'to': {'x': k3s['x'], 'y': k3s['y'], 'port': k3s['port']}, 'kr': 5}})
-    k3 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 500)); for (let i = 0; i < 200 && HOPUI.busy; i++) await new Promise(r => setTimeout(r, 100)); await new Promise(r => setTimeout(r, 600)); document.getElementById('modal').hidden = true; return {st:S.boat.status, kept:(S.hopSrv || []).map(x => x.id), log:S.log.slice(-4).map(e => e.no).join(' | ')}; })()")
-    check(k3s['min'] > 4 and k3['st'] == 'sailing' and 83 in k3['kept'] and 'Kaiboden' in k3['log'] and 83 not in st['hop'],
-          'HO3: a hop paid for 1 minute is not made on a trip of %d minutes: it is kept in Kaiboden, and the log says why' % k3s['min'], {'r': k3, 'hop_use': st['hop']})
-    # (back at the quay in A by a hop, as after j, for the steps after: the pub needs a harbour)
-    k4 = await pg.evaluate("(async () => { const q = await hopGo(true); S.hopSrv = []; return {why:q && q.why, st:S.boat.status, port:S.boat.port}; })()")
-    if k4 != {'why': None, 'st': 'port', 'port': rt['A']}: print('(back at the quay in A: ' + json.dumps(k4, ensure_ascii=False) + ')')
+    k3 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 500)); for (let i = 0; i < 200 && (HOPUI.busy || HOPUI.pend.size); i++) await new Promise(r => setTimeout(r, 100)); await new Promise(r => setTimeout(r, 600)); document.getElementById('modal').hidden = true; return {st:S.boat.status, hold:!!S.boat.hopHold, void:(S.hopVoid || []).slice(), log:S.log.slice(-4).map(e => e.no).join(' | ')}; })()")
+    check(k3s['min'] > 4 and k3['st'] == 'sailing' and not k3['hold'] and 83 in k3['void'] and 'lengre enn hoppet ble kjøpt for' in k3['log'] and 'pengene betales tilbake' in k3['log'] and 83 not in st['hop'],
+          'HO3: a hop paid for 1 minute is not made on a trip of %d minutes: marked for a refund, the log says why, and the boat sails on' % k3s['min'], {'r': k3, 'hop_use': st['hop']})
+    await pg.evaluate("() => { hopHoldOn(); S.boat.hopHold.pay = true; save(); }")
+    pg2 = await ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e))); await pg.close(); pg = pg2
+    pg.set_default_timeout(120000); await pg.goto(url('kjop=avbrutt'))
+    await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && typeof SIMREADY !== 'undefined' && SIMREADY", timeout=120000); await pg.wait_for_timeout(1500)
+    k5 = await pg.evaluate("({st:S.boat.status, hold:S.boat.hopHold || null})")
+    check(k5 == {'st': 'sailing', 'hold': None}, 'HO3: a purchase cancelled at Stripe lets the boat go: she sails on', k5)
+    # (in a harbour by a hop, for the steps after: the pub needs a harbour)
+    k4 = await pg.evaluate("(async () => { const q = await hopGo(true); return {why:q && q.why, st:S.boat.status}; })()")
+    if k4 != {'why': None, 'st': 'port'}: print('(in a harbour: ' + json.dumps(k4, ensure_ascii=False) + ')')
     # i. a server from before the migration (the new functions answer 404): the game as after HS3, all of it. What is in the save stands,
     # the pub draws itself, and the chapter's haill is the game's own
     st['hs4'] = False

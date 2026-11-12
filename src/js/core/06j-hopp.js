@@ -10,7 +10,23 @@
 // diesel, on the operations plan, on a trip mission with this boat, or on the first trip. Once paid (HO3), it goes whatever the weather
 // (Jonas: «uavhengig av været eller andre ting»). The price is a ladder by the real minutes saved, like tax steps, so the total always
 // rises with the time and nobody gains by a detour (Jonas 12.11.2026, A: «75 / 50 / 25 øre»; at least 5 kr, no cap).
-const HOP = {steps:[[60, 0.75], [240, 0.50], [Infinity, 0.25]], min:5, maxMin:14 * 1440, mapMs:20000};
+const HOP = {steps:[[60, 0.75], [240, 0.50], [Infinity, 0.25]], min:5, maxMin:14 * 1440, mapMs:20000, holdReal:35};
+// The hold (HO3, Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden, det løser
+// problemet», and «Når spilleren har kommet fram til endepunktet av ruten ved hjelp av hoppet er tjenesten levert og spilleren skal ikke
+// ha noe "hopp" tilgode»): the fast-forward button stops the boat where she is, with no way on, no diesel, no weather turning her and no
+// engine trouble (vesselStep, dynCan), so the price and the stop on the card stay what the payment pays for, also while the page is at
+// Stripe and the time away is played in. The world's clock goes on; the catch aboard, the crew and you go on as on a boat lying still.
+// It ends with the hop, when the card is closed with no purchase, when the purchase is cancelled at Stripe, when the route is changed,
+// or after HOP.holdReal real minutes (Stripe's checkout runs out after 30, shop-checkout expires_at, so no payment comes after it).
+// b.hopHold = {t0, until (game minutes), to:{x, y, port} the stop}
+function hopHoldOn(){ const b = S.boat, pl = S.plan, iS = hopStop(pl); if (!pl || b.status !== 'sailing' || iS < 0) return null; const w = pl.wps[iS];
+  b.hopHold = {t0:S.t, until:S.t + HOP.holdReal * GAME_RATE, to:{x:w.x, y:w.y, port:w.port || null}}; b.v = 0; return b.hopHold; }
+function hopHoldOff(){ if (S.boat) S.boat.hopHold = null; }
+// she is held now (an end passed, a route changed or ended, or she not sailing: the hold is gone)
+function hopHeld(b){ const h = b && b.hopHold; if (!h) return false;
+  if (S.t >= h.until || b.status !== 'sailing' || b !== S.boat || !hopMatch(h.to)){ b.hopHold = null; return false; } return true; }
+// the boat held for a hop bought for the stop `to` (the grant's data: the boat it was bought for, aboard now)
+function hopHoldFor(d){ const b = S.boat; return !!(d && d.boat === S.cur && hopHeld(b) && d.to && (d.to.port && b.hopHold.to.port === d.to.port || dist(b.hopHold.to, d.to) < 0.1)); }
 // kr for the real minutes saved
 function hopPrice(realMin){
   let kr = 0, m0 = 0;
@@ -26,16 +42,21 @@ function hopStop(pl){
 // the time the game was closed, not yet played in: the world's clock ahead of S.t, or the minutes the tick has still to play
 // (ui/08-actions.js CATCH_LEFT, not there before the UI's files have run)
 function hopCatching(){ return (WCLOCK.on && worldT() - S.t > 1) || (typeof CATCH_LEFT !== 'undefined' && CATCH_LEFT > 0); }
-// a hop paid for waits, rather than going to Kaiboden, for what passes by itself (HO3, the kontroll: back from Stripe the page plays in
+// a hop paid for waits, rather than for a later route, for what passes by itself (HO3, the kontroll: back from Stripe the page plays in
 // the minutes it was away): the time away played in, Autonav's way round shallow water
 function hopWait(){ const pl = S.plan; return !!(pl && S.boat.status === 'sailing' && (pl.replan || hopCatching())); }
 // the minutes paid for cover the trip made: the wind may have freshened since the purchase (a tenth and two minutes more is covered),
-// never a trip far longer than was paid for
-function hopCovers(paidMin, realMin){ return realMin <= Math.ceil(paidMin * 1.1) + 2; }
+// never a trip far longer than was paid for. hopCoverMax is the longest trip a hop bought for paidMin covers, the number the words say
+function hopCoverMax(paidMin){ return Math.ceil(paidMin * 1.1) + 2; }
+function hopCovers(paidMin, realMin){ return realMin <= hopCoverMax(paidMin); }
+// real minutes in words (never «1 minutter»)
+function hopMinWords(n){ return [n === 1 ? '1 minutt' : n + ' minutter', n === 1 ? '1 minute' : n + ' minutes']; }
 // why a hop cannot be had now, before anything is run (null: it may, the weather and the diesel are the dry run's)
 function hopWhy(){
   const b = S.boat, pl = S.plan;
   if (!pl || b.status !== 'sailing' || !(pl.idx < pl.wps.length)) return ['Hopp går bare mens båten seiler en rute.', 'A hop is only possible while the boat sails a route.'];
+  // (the game is another page's or device's, ui/02-format-state.js TAB: nothing is hopped or used here; asked again after the map)
+  if (typeof TAB !== 'undefined' && TAB && (TAB.lost || TAB.held)) return ['Spillet er åpent et annet sted.', 'The game is open somewhere else.'];
   if (pl.ops || pl.p2) return ['Driftsplanen styrer båten. Hopp går bare på en rute du har lagt selv.', 'The operations plan runs the boat. A hop is only possible on a route you set yourself.'];
   if (pl.halt) return ['Båten stopper.', 'The boat is stopping.'];
   if (pl.replan) return ['Autonav finner en vei rundt grunt vann. Vent til båten går videre.', 'Autonav is finding a way round shallow water. Wait until the boat goes on.'];
@@ -92,13 +113,14 @@ function hopRun(paid){
 }
 // the stop of a hop bought (HO3: the purchase keeps {x, y, port}) is the next stop on the route sailed now: the same harbour, or within
 // 100 m of it (the place decides too, so a harbour id kept with a character lost on the way is the same stop); else the route has
-// changed since, and the hop waits in Kaiboden
+// changed since, and the hop waits for a later route
 function hopMatch(to){
   const pl = S.plan, iS = hopStop(pl); if (!to || iS < 0) return false;
   const w = pl.wps[iS]; return (!!to.port && w.port === to.port) || dist(w, to) < 0.1;
 }
 // what a hop from here would cost and save, or why it cannot be had (the price is shown before anything is bought)
-function hopQuote(){ const why = hopWhy(); return why ? {why} : hopRun(false); }
+// (paid: for a hop paid for and waiting, which the weather does not stop either)
+function hopQuote(paid){ const why = hopWhy(); return why ? {why} : hopRun(!!paid); }
 // your energy over n minutes (e %, s minutes of sleep left, rate a minute: down at sea, up in a bunk), as energyMinute has it: at nought
 // you sleep ENERGY.sleep minutes and wake at ENERGY.wake
 function hopEnergy(e, s, n, rate){
@@ -110,6 +132,7 @@ function hopSaved(real, en){ const tm = Math.max(1, Math.round(real)), h = Math.
 // The hop itself, on the dry run q: what the trip would have used and done, and then she is at the stop
 function hopDo(q){
   const b = S.boat, pl = S.plan, n = q.min, T0 = S.t, p0 = b.pos;
+  b.hopHold = null;   // (the service is delivered: nothing is owed after it)
   fuelUse(b, q.fuel);
   b.engH = (b.engH || 0) + n / 60;
   if (q.trimMin && b.trim) b.trim.until = trimUntil(b) - q.trimMin;   // (run out: vesselStep ends it and says so)
@@ -158,6 +181,7 @@ async function hopGo(paid, maxMin){
   catch (e){ console.warn('hopGo map', e); return {why:['Kartet ved målet kom ikke. Prøv igjen om litt.', 'The chart at the stop did not come. Try again in a little while.'], map:true}; }
   why = hopWhy(); if (why) return {why};
   const q = hopRun(!!paid); if (q.why) return q;
-  if (maxMin != null && !hopCovers(maxMin, q.realMin)) return {why:['Turen er lengre enn hoppet ble kjøpt for: ' + q.realMin + ' minutter i virkeligheten, hoppet dekker ' + maxMin + '.', 'The trip is longer than the hop was bought for: ' + q.realMin + ' real minutes, the hop covers ' + maxMin + '.'], over:true};
+  if (maxMin != null && !hopCovers(maxMin, q.realMin)){ const a = hopMinWords(q.realMin), c = hopMinWords(hopCoverMax(maxMin));
+    return {why:['Turen er lengre enn hoppet ble kjøpt for: ' + a[0] + ' i virkeligheten, og hoppet dekker ' + c[0] + '.', 'The trip is longer than the hop was bought for: ' + a[1] + ' in real time, and the hop covers ' + c[1] + '.'], over:true}; }
   hopDo(q); return q;
 }

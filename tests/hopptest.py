@@ -134,6 +134,20 @@ async def main():
         check(bool(r['why']) and 'Været' in r['why'] and r['risk'] == 0, '4b2. over grensa for Autonav (4 m/s satt, 6 m/s på veien, under båtens risiko): ' + str(r['why']), r)
         r = await J("async () => { const q = await hopGo(true); const out = {why:q.why, st:S.boat.status, port:S.boat.port}; WX_FORCE = null; return out; }")
         check(not r.get('why') and r['st'] == 'port', '4c. betalt (hopGo(true)) går hoppet uansett været', r)
+        # 4d. (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden») held for a
+        # hop, she stands still through the minute steps, with the time away played in too (playMinutes(…, true)), and uses no diesel;
+        # the route changed, the hold ends; let go, she sails on; and the hold ends by itself after HOP.holdReal real minutes
+        await J(START, {})
+        r = await J("""async () => { const b = S.boat, at = () => JSON.stringify([b.pos, S.plan.idx]), f0 = b.fuel; const h = hopHoldOn(), p0 = at();
+          for (let i = 0; i < 30; i++){ DYN.on = false; playMinutes(1, true); while (sailWaiting()) await new Promise(r => setTimeout(r, 20)); }
+          const held = {same:at() === p0, fuel:+(f0 - b.fuel).toFixed(4), v:b.v, st:b.status, on:!!b.hopHold, until:h && h.until - h.t0};
+          hopHoldOff(); for (let i = 0; i < 3; i++){ DYN.on = false; playMinutes(1, true); while (sailWaiting()) await new Promise(r => setTimeout(r, 20)); }
+          const after = {moved:at() !== p0, v:b.v};
+          hopHoldOn(); const keep = S.plan.wps; S.plan.wps = S.plan.wps.slice(0, Math.max(1, hopStop(S.plan))); const moved = !hopHeld(b) && !b.hopHold; S.plan.wps = keep;
+          hopHoldOn(); S.t = b.hopHold.until; const ends = !hopHeld(b) && !b.hopHold; return {held, after, moved, ends}; }""")
+        check(r['held']['same'] and r['held']['fuel'] == 0 and r['held']['v'] == 0 and r['held']['st'] == 'sailing' and r['held']['on'] and r['held']['until'] == 35 * 6
+              and r['after']['moved'] and r['moved'] and r['ends'],
+              '4d. holdt for et hopp står båten stille i 30 spillminutter uten diesel, seiler videre når hun slippes, og holdet slutter når ruta endres og etter 35 ekte minutter', r)
         check(not errs, '5. ingen sidefeil', errs[:3])
         await br.close()
     print('FEIL: ' + str(len(FAIL)) if FAIL else 'Alle OK')

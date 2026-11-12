@@ -66,6 +66,9 @@ serveReported('shop-checkout', async (req) => {
     cancel_url: back + '?kjop=avbrutt',
   };
   if (MANAGED) params.managed_payments = {enabled: true}; else if (TAX) params.automatic_tax = {enabled: true};
+  // a hop's page runs out after 31 minutes (Stripe's shortest is 30 from its own clock; the boat is held for it 35, core/06j-hopp.js HOP.holdReal): a payment never
+  // comes for a boat no longer held, Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden»
+  if (hop) params.expires_at = Math.floor(Date.now() / 1000) + 31 * 60;
   let s: Stripe.Checkout.Session;
   try { s = await stripe.checkout.sessions.create(params); }
   // what went wrong stays in the function's log; the player is told only that the payment is not available (no keys or ids shown)
