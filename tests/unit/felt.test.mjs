@@ -70,10 +70,11 @@ export default function (t){
       if (new Set(keys).size < keys.length) twice.push(g.f.nf); }
     t.ok(GG.length > 0.99 * nf && empty.length === 0, `ingen fiskeplass med form er uten et punkt inne i seg (${GG.length} med form, ${empty.length} uten${empty.slice(0, 4).map(n => ' «' + n + '»').join('')})`);
     t.eq(twice.length, 0, `ingen fiskeplass har samme ring to ganger${twice.slice(0, 4).map(n => ' «' + n + '»').join('')}`);
-    t.ok(own > 0.97 * GG.length, `feltets eget punkt ligger inne i flata etter partallsregelen på ${own} av ${GG.length}`);
+    // (from 12.11.2026 also where the outer ring's middle fell in a hole of the ground's own: 4 553 of 4 645 before the point was moved)
+    t.ok(own > 0.985 * GG.length, `feltets eget punkt ligger inne i flata etter partallsregelen på ${own} av ${GG.length}`);
     // the source's own holes (an island, or water the fishermen left out) are read too: a ring inside another ring of the same
     // ground is a hole, and its middle is outside the ground. Seen red against the data of the commit before (the exteriors only):
-    // 4 grounds with a hole, now over 100.
+    // 5 grounds with a hole, now over 100.
     let holes = 0, holeOut = 0, holeG = 0;
     for (const g of GG){ if (g.R.length < 2) continue; let any = false;
       for (const r of g.R){ if (g.R.filter(o => o !== r && inRing(o, r[0], r[1])).length % 2 === 0) continue; any = true;   // (inside an odd number of the others: a hole; a part inside a hole is ground again)

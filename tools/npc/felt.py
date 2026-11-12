@@ -394,7 +394,7 @@ def zz(v): return (v << 1) if v >= 0 else ((-v << 1) - 1)
 def main():
     G = []                         # [name, x, y, area, gear kinds, kind, lines, rings, short name]
     for layer, (kind, gk) in LAYERS.items():
-        s = fetch(layer); n0 = len(G); nl = 0
+        s = fetch(layer); n0 = len(G); nl = 0; nmoved = 0
         for m in s.split('<wfs:member>')[1:]:
             nm = re.search(r':stedsnavn>([^<]*)<', m)
             n, short = wash(nm.group(1) if nm else None)
@@ -402,9 +402,16 @@ def main():
             rs = rings(m)
             if not rs: continue
             parts = [label_point(P[0]) for P in rs]; a = sum(p[0] for p in parts); big = max(parts, key=lambda p: p[0])
+            # (the point is found from the outer ring; where it falls in a hole of the polygon's own, it is moved to a point inside
+            # the surface. The ground keeps its place in the order, and so its index, by the point as it was: key)
+            key = (big[1], big[2]); P = rs[parts.index(big)]
+            if any(inside(h, big[1], big[2]) for h in P[1:]):
+                g = Polygon(P[0], P[1:]); g = g if g.is_valid else make_valid(g)
+                q = max((x for x in getattr(g, 'geoms', [g]) if x.geom_type == 'Polygon'), key=lambda x: x.area, default=None)
+                if q is not None: rp = q.representative_point(); big = (big[0], rp.x, rp.y); nmoved += 1
             L = species_lines(m, kind); nl += len(L) > 0
-            G.append([n, big[1], big[2], a, gk, kind, L, rs, short])
-        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows')
+            G.append([n, big[1], big[2], a, gk, kind, L, rs, short, key])
+        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows, {nmoved} with the point moved out of a hole')
     print('the washing (names changed per rule):', json.dumps(WASH, ensure_ascii=False))
     # one ground per name and kind within MERGE_KM: the largest polygon keeps its point; the gear kinds, the lines and the shapes are
     # joined. A ground without a name (a position for a name) is never joined.
@@ -413,7 +420,7 @@ def main():
         key = (g[5], g[0].lower()); hit = None
         if g[0]:
             for o in byname.get(key, []):
-                if math.hypot(o[1] - g[1], o[2] - g[2]) < MERGE_KM: hit = o; break
+                if math.hypot(o[9][0] - g[9][0], o[9][1] - g[9][1]) < MERGE_KM: hit = o; break
         if hit:
             if g[4] not in hit[4]: hit[4] += g[4]
             hit[3] += g[3]; hit[6] = hit[6] + g[6]; hit[7] = hit[7] + g[7]; continue
@@ -425,7 +432,7 @@ def main():
           f'{kvst["dup_spot"]} for another name on the same spot, {kvst["noname"]} without an approved name, {kvst["nopoint"]} without a point')
     # the sea names stand after all the grounds, so a ground's index (which the game draws its pull from, 03j-felt.js feltGeo) is
     # the same with and without them
-    out.sort(key=lambda g: (g[2], g[1])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
+    out.sort(key=lambda g: (g[9][1], g[9][0])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
     p = []; px = py = 0
     for g in out:
         x, y = round(g[1] / UNIT), round(g[2] / UNIT); p += [x - px, y - py]; px, py = x, y

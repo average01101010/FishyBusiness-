@@ -24,7 +24,10 @@ PLAY = r"""(async ([every, days, hours]) => {
   const O = LIC_OFFERS[0], price = VESSELS[O.ves].price + licValue(O), rows = [], first = {};
   const net = () => Math.round(S.cash + S.fleet.reduce((a, v) => a + vesselValue(v), 0) - debt());
   const until = (t, f) => { let n = 0; while (S.t < t && !(f && f())){ step(); n++; } return n; };
-  let trips = 0, lastTrip = -99, nextAt = 0;
+  let trips = 0, lastTrip = -99, nextAt = 0, rerouted = 0; const stuck = [];
+  // (while the bot waits for the route finder, the game's own tick is held as for a page that does not have the game, TAB.held: let in,
+  // it played the world's clock on by itself, and the boat ran out of fuel and gathered years of sea time in the wait)
+  const held = async pr => { const h = TAB.held; TAB.held = true; try { return await pr; } finally { TAB.held = h; } };
   for (let d = 0; d < days; d++){
     until(Math.round((Date.UTC(Y, 2, 1 + d, 5) - EPOCH) / 6e4));
     // the player's call: the waves on the ground and the wind over the trip, within what the boat handles safely
@@ -38,8 +41,14 @@ PLAY = r"""(async ([every, days, hours]) => {
       S.plan = {wps:route(), idx:0, speed:BOAT.vcruise || 16, returning:false, depAt:null, unsafe:[]}; depart();
       // (Autonav's way round shallow water ahead is found off this loop (plan.replan): the bot lets it in, or the boat stood still with
       // «Grunt vann forut» for the rest of the run, the skipper fell asleep from exhaustion, and the first pace ended at 12 trips where
-      // it has 17, 12.11.2026 and at F2 08.11.2026)
-      { const T = S.t + 22 * 60; while (S.t < T && !(b.status === 'port' && !S.plan)){ step(); if (S.plan && S.plan.replan) await new Promise(r => setTimeout(r, 30)); } }
+      // it has 17, 12.11.2026 and at F2 08.11.2026; the wait is for the answer, not for a time)
+      // When Autonav finds no way round after three tries it stops the boat and asks for a new route (sailStop): the bot does what a
+      // player would, a new route home from where she lies. A trip that still does not end in port is said in the result (stuck).
+      { const T = S.t + 22 * 60; while (S.t < T && !(b.status === 'port' && !S.plan)){ step(); while (S.plan && S.plan.replan) await held(new Promise(r => setTimeout(r, 20)));
+          if (b.status === 'idle' && !S.plan && !b.port){ let res = null; try { res = await held(leiaRoute({x:b.pos.x, y:b.pos.y}, {x:HP.p.x, y:HP.p.y}, null, 'husoy')); } catch (e){}
+            if (res && res.wps && res.wps.length && !res.why){ S.plan = {wps:res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0})).concat([{x:HP.p.x, y:HP.p.y, port:'husoy', fish:0}]), idx:0, speed:BOAT.vcruise || 16, returning:false, depAt:null, unsafe:[]}; b.status = 'sailing'; rerouted++; }
+            else break; } }
+        if (b.status !== 'port') stuck.push({day:d + 1, trip:trips + 1, st:b.status, log:S.log.slice(-3).map(l => l.no || l.text || '')}); }
       until(S.t + 300, () => { if (!b.land && !b.shift && holdTotal() > 0.5) startLanding(false); return !b.land && !b.shift && holdTotal() < 0.5; });
       if (b.status === 'port') restStart();
       trips++; nextAt = d + every;
@@ -51,7 +60,7 @@ PLAY = r"""(async ([every, days, hours]) => {
     if (d % 7 === 6 || d === days - 1) rows.push({day:d + 1, trips, cash:Math.round(S.cash), net:net(), cod:Math.round(q.torsk || 0), codMax:Math.round(codLimitNow(S.t / 60)), fm:[S.fm.n, Math.round(S.fm.kr)], reels:S.equip.jukse, eqNeed:Math.round(x.eqNeed)});
   }
   const kg = S.sales.reduce((a, s) => a + s.kg, 0), kr0 = S.sales.reduce((a, s) => a + s.total, 0);
-  return {rows, first, perTrip:{kg:Math.round(kg / Math.max(1, S.sales.length)), kr:Math.round(kr0 / Math.max(1, S.sales.length))}, price, sales:S.sales.length};
+  return {rows, first, perTrip:{kg:Math.round(kg / Math.max(1, S.sales.length)), kr:Math.round(kr0 / Math.max(1, S.sales.length))}, price, sales:S.sales.length, rerouted, stuck};
 })"""
 
 PROFILES = [('en tur hver tredje dag', 3), ('en tur annenhver dag', 2), ('hver dag været tillater (driftsplan med deg om bord)', 1)]
@@ -68,6 +77,7 @@ async def main():
             print('==', name)
             for row in r['rows']: print('  dag %(day)2d: %(trips)2d turer, kasse %(cash)9d, netto %(net)9d, torsk %(cod)5d / %(codMax)5d kg, blad B %(fm)s, juksamaskiner %(reels)d, egenkapital som trengs %(eqNeed)d' % row)
             print('  per tur: %d kg, %d kr; inngangen koster %d kr' % (r['perTrip']['kg'], r['perTrip']['kr'], r['price']))
+            if r['rerouted'] or r['stuck']: print('  ny rute hjem etter «Autonav fant ingen trygg vei»: %d · turer som ikke endte i havn: %s' % (r['rerouted'], json.dumps(r['stuck'], ensure_ascii=False)))
             f = r['first']; print('  blad B:', f.get('b'), '· inngangen innen rekkevidde:', f.get('entry'))
             print('  til kalibreringen, når egenkapitalen ville holdt med 5 / 10 / 15 % av prisen:', f.get('eq0.05'), '/', f.get('eq0.1'), '/', f.get('eq0.15'))
             await pg.close()
