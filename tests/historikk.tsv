@@ -3404,3 +3404,5 @@
 2026-11-12 21:30	plan/2026-11-12-45b	67b570c2	adminbuytest	OK	9	lite	samtidig	
 2026-11-12 21:31	plan/2026-11-12-45b	67b570c2	megletest	OK	22	lite	samtidig	
 2026-11-12 21:32	plan/2026-11-12-45b	67b570c2	saytest	OK	99	3d	alene	
+2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	teleport3d	OK	1200	3d	alene	
+2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	seasontest	OK	5	lite	alene	
