@@ -414,6 +414,8 @@ Etter `/blender` og `docs/skipsmodeller/leseliste.md`. Ingen merkenavn eller log
 
 ### Ø11.9 Arbeidsavtalen (L7)
 
+**Bygd 12.11.2026 (steg 27, Jonas' økt, grenen `claude/o11-9-arbeidsavtalen`) etter valg 40 A: lovens frister i ekte tid.** Det som gjelder, står i kap. 10 i `docs/systemer/sjofart-og-lover.md`.
+
 - **Avtalen:** skriftlig når noen mønstrer på (§ 3-1), med lott, stilling og båt i Mannskap-appen.
 - **Prøvetid** inntil seks måneder (§ 3-2).
 - **Oppsigelse:** fristene i § 5-2 og saklig grunn (§ 5-6).

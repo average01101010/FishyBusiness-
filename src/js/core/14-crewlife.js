@@ -411,11 +411,10 @@ function lifeDay(c, H){
   const L = crewLife(c), day = Math.floor(H / 24); if (L.day === day) return; const fresh = L.day === -1; L.day = day; if (fresh) return;
   const d = gDate(H), doy = Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5);
   if (doy === L.bday){ c.age = (c.age || 30) + 1; msg(c.name, crewDialect(c, 'Jeg fyller ' + c.age + ' i dag. Kaka står i byssa.'), 'I turn ' + c.age + ' today. The cake is in the galley.'); lifeStory(c, 'Fylte ' + c.age + ' år om bord.', 'Turned ' + c.age + ' aboard.'); for (const o of S.crew) if (o !== c) o.morale = Math.min(100, o.morale + 2); }
-  if (L.notice){ if (S.t >= L.notice && S.boat.status === 'port') lifeDepart(c); return; }
+  if (L.notice && !c.opp){ if (S.t >= L.notice && S.boat.status === 'port') lifeDepart(c); return; }   // (a week's notice from a save before Ø11.9)
   if (c.off && c.offUntil) return;
-  if (L.goal === 'egenbat' && L.saved >= L.target){ L.notice = S.t + 7 * 1440;
-    msg(c.name, crewDialect(c, 'Jeg har spart nok til egen båt nå. Jeg går i land om ei uke, og takker for tiden om bord.'), 'I have saved enough for a boat of my own now. I go ashore in a week, and thank you for the time aboard.');
-    lifeStory(c, 'Sa opp for å kjøpe egen båt.', 'Gave notice to buy a boat of their own.'); return; }
+  // the dream within reach: notice by the law (Ø11.9, crewNotice in 04-crew.js), ashore at the first harbour after it (crewOppTick)
+  if (L.goal === 'egenbat' && L.saved >= L.target && !c.opp){ const o = crewNotice(c, 'egenbat'); if (o) L.notice = o.end; return; }
   if (L.goal === 'skipper' && !L.saidSkip && c.attr.erf >= 4.5 && c.attr.sjo >= 4){ L.saidSkip = true; msg(c.name, crewDialect(c, 'Jeg er klar til å føre en båt for deg den dagen du får en til.'), 'I am ready to skipper a boat for you the day you get another.'); }
   const r = Math.random();
   if (L.fam === 'partner' && c.age < 50 && r < 0.0012){ lifeOff(c, 3, 'Jeg gifter meg på lørdag! Jeg tar tre dager fri.', 'I am getting married on Saturday! I take three days off.', 'Giftet seg.', 'Got married.'); for (const o of S.crew) o.morale = Math.min(100, o.morale + 3); }
@@ -463,6 +462,7 @@ function lifeHail(H){
 function alumniReturn(B){
   for (const a of (S.alumni || []).slice()){ if (a.back > S.t || !a.c || B.pool.length >= 6) continue; S.alumni.splice(S.alumni.indexOf(a), 1);
     const c = crewDerive(Object.assign(a.c, {ask:lotR(lotMigrate(a.c).ask - LOTT.step), morale:62, fatigue:0, known:[true, true], grudge:{}, earn:[], off:false, until:S.t + 5 * 1440})); c.share = c.ask; if (c.cpen) delete c.cpen;
+    delete c.opp; delete c.avt; delete c.hiredT; c.noProve = true;   // a new agreement when signing on again, without probation (Ø11.9; a game choice in the spirit of § 3-2 (3))
     if (c.life){ c.life.notice = null; c.life.goal = 'ro'; c.life.saved = Math.round(c.life.target * 0.3); c.life.day = -1; lifeStory(c, 'Solgte «' + a.boat + '» og søker hyre igjen.', 'Sold the «' + a.boat + '» and looks for a berth again.'); }
     B.pool.push(c); }
 }

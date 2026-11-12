@@ -1,5 +1,5 @@
 """The life of the crew (core/14-crewlife.js del 2; docs/mannskap-plan.md): every hired person gets a family, a dream, savings that
-start above nought and grow with what is earned, and a story; one whose savings reach the target gives a week's notice, goes ashore
+start above nought and grow with what is earned, and a story; one whose savings reach the target gives notice by skipsarbeidsloven § 5-2 (Ø11.9: 14 days on probation, else a month), goes ashore
 in port to a boat of their own (S.alumni), fishes out of the home port on the AIS (alumniStates) and is back at the exchange after a
 year or two for a smaller share; time off with a date runs out by itself; a fall in a heavy sea puts someone ashore for weeks.
 Without 3D. Prints OK or FEIL."""
@@ -30,12 +30,13 @@ async def main():
         # the dream within reach: the week's notice on the next morning, the departure in port when it is up
         r3 = await pg.evaluate("""(() => { const c = S.crew[0]; c.life.goal = 'egenbat'; c.life.saved = c.life.target; c.life.fam = 'single'; const id = c.id, name = c.name;
           S.t += 1440; crewTick(S.t / 60); const notice = c.life.notice, n1 = S.crew.length;   // the morning after: the notice
-          S.t += 6 * 1440; crewTick(S.t / 60); const n2 = S.crew.length;   // six days on: still aboard
-          S.boat.status = 'sailing'; S.t += 1440; crewTick(S.t / 60); const n3 = S.crew.length;   // the day it is up, but at sea: stays till port
+          const end = c.opp && c.opp.end, frist = end && Math.round((end - S.t) / 1440);   // (Ø11.9: the notice of § 5-2)
+          S.t = end - 1440; crewTick(S.t / 60); const n2 = S.crew.length;   // the day before it is up: still aboard
+          S.boat.status = 'sailing'; S.t = end + 1; crewTick(S.t / 60); const n3 = S.crew.length;   // it is up, but at sea: stays till port
           S.boat.status = 'port'; S.t += 60; crewTick(S.t / 60);
-          const a = (S.alumni || []).find(x => x.id === id); return {notice:notice != null && notice > 0, n1, n2, n3, n4:S.crew.length, gone:!S.crew.some(x => x.id === id), alum:a && {boat:a.boat, hp:a.homePort, back:a.back > S.t + 300 * 1440, hasC:!!a.c, story:a.c && a.c.life && a.c.life.story.map(q => q[1])},
+          const a = (S.alumni || []).find(x => x.id === id); return {notice:notice != null && notice > 0 && notice === end, frist, n1, n2, n3, n4:S.crew.length, gone:!S.crew.some(x => x.id === id), alum:a && {boat:a.boat, hp:a.homePort, back:a.back > S.t + 300 * 1440, hasC:!!a.c, story:a.c && a.c.life && a.c.life.story.map(q => q[1])},
             msgs:S.msgs.slice(-4).map(m => m.from + ': ' + m.no)}; })()""")
-        check(r3['notice'] and r3['n1'] == 2 and r3['n2'] == 2 and r3['n3'] == 2 and r3['n4'] == 1 and r3['gone'], 'the week\'s notice is given, and the hand goes ashore to a boat of their own in port when it is up, not at sea', r3)
+        check(r3['notice'] and r3['frist'] in (14, 28, 29, 30, 31) and r3['n1'] == 2 and r3['n2'] == 2 and r3['n3'] == 2 and r3['n4'] == 1 and r3['gone'], 'the notice of § 5-2 is given (14 days on probation, else a month), and the hand goes ashore to a boat of their own in port when it is up, not at sea', r3)
         check(r3['alum'] and r3['alum']['boat'] and r3['alum']['back'] and r3['alum']['hasC'] and any('egen båt' in q for q in (r3['alum']['story'] or [])), 'the alumnus has a boat with a name, a return date a year or more on, and the story says so', r3['alum'])
         # the alumnus fishes out of the home port on the AIS (Senja grounds), and is quiet on Sunday (the hours by the clock: the game's
         # hour 0 is 06:00, EPOCH_HR)
