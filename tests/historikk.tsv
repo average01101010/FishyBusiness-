@@ -3191,3 +3191,8 @@
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	hopptest	OK	8	lite	samtidig	
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	trip2	OK	32	lite	samtidig	
 2026-11-12 14:31	ccr-013bxxie-n4kyst	cc7530ac	ferrytest	OK	17	lite	alene	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	marktest	OK	9	lite	samtidig	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	maptest	OK	46	lite	samtidig	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	boottest	OK	40	lite	samtidig	
+2026-11-12 16:00	claude/k3-sjomerker-33d	7a69d7b	trip2	OK	35	lite	samtidig	
+2026-11-12 16:01	claude/k3-sjomerker-33d	7a69d7b	charttest	OK	51	lite	alene	
