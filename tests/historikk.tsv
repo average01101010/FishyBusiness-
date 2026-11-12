@@ -3406,3 +3406,9 @@
 2026-11-12 21:32	plan/2026-11-12-45b	67b570c2	saytest	OK	99	3d	alene	
 2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	teleport3d	OK	1200	3d	alene	
 2026-11-12 21:52	plan/2026-11-12-45b	b9f7308c	seasontest	OK	5	lite	alene	
+2026-11-12 21:28	ccr-e7efd74c-rioki0	d1068007+	sqltest	FEIL	55	lite	samtidig	FEIL HS4: shop_state answers the server's minute, that the import is done, the last round at the pub, the haill switched on last with its minute, the paint desi
+2026-11-12 21:28	ccr-e7efd74c-rioki0	d1068007+	fasittest	FEIL	45	lite	samtidig	FEIL HS4: (the save is written in: 50 haill, 10 luksus, a fresh luksus aboard, a turbo trim, Skippertak Max, 9 credits, two designs)  {"stock": {"haill": 55, "l
+2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	sqltest	OK	48	lite	samtidig	
+2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	fasittest	FEIL	37	lite	samtidig	FEIL HS4: «Aktiver» tells the server once with haill_on and the haill stays aboard; one switched on with no network that the server has taken back meanwhile is 
+2026-11-12 21:30	ccr-e7efd74c-rioki0	d1068007+	fasittest	OK	40	lite	samtidig	
+2026-11-12 21:32	ccr-e7efd74c-rioki0	d1068007+	kjoptest	OK	139	lite	samtidig	
