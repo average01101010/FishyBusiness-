@@ -167,6 +167,7 @@ async def main():
           sea('idle'); S.energy = 25.02; S.enWarn = false; step(); step(); R.warn = !!S.enWarn; addCatch('torsk', 10, null, true); R.slow = workTeam('sloy', 'sloy').sum;
           // alone at 0: asleep, the jig stops and the boat drifts; the screen goes black with a countdown
           sea('fishing'); b.fishUntil = S.t + 600; S.energy = 0.01; step(); R.asleep = asleep(); R.alone = !!(S.sleep && S.sleep.alone); const p0 = {...b.pos};
+          energyUi(); R.count0 = document.getElementById('slTime').textContent;   /* (the countdown as he falls asleep: alone at sea the bridge watch alarm takes the screen later, Ø11) */
           for (let i = 0; i < 60; i++) step(); R.caught = holdTotal(); R.drift = Math.round(dist(p0, b.pos) * 1000); R.st = b.status;
           energyUi(); R.black = !document.getElementById('sleep').hidden; R.count = document.getElementById('slTime').textContent;
           R.work = workAssign().length; for (let i = 0; i < 430 && asleep(); i++) step(); R.woke = {asleep:asleep(), e:Math.round(S.energy)}; energyUi(); R.blackGone = document.getElementById('sleep').hidden;
@@ -180,7 +181,7 @@ async def main():
         print(ok(abs(r['seaHour'] - 100 / 24) < 0.02 and abs(r['quayHour'] - 12.5) < 0.05 and r['openQuay'] == 0 and abs(r['bunks'] - 12.5) < 0.05), 'energy: −100/24 an hour at sea, +100/8 resting in the naust or aboard a boat with bunks, nothing in an open boat at a plant\'s quay')
         print(ok(r['warn'] and abs(r['slow'] - 0.75) < 1e-6), 'at 25 % you are warned and work at three quarters of your pace')
         print(ok(r['asleep'] and r['alone'] and r['caught'] == 0 and (r['drift'] > 5 or r['st'] == 'aground') and r['work'] == 0), 'alone at 0 % you sleep: no fishing, and the boat drifts with the wind (or grounds)')
-        print(ok(r['black'] and 'om' in r['count'] and not r['woke']['asleep'] and r['woke']['e'] == 60 and r['blackGone']), 'asleep the screen is black with a countdown; after eight hours you wake with 60 %')
+        print(ok(r['black'] and 'om' in r['count0'] and (r['count'] == r['count0'] or 'ACK' in r['count']) and not r['woke']['asleep'] and r['woke']['e'] == 60 and r['blackGone']), 'asleep the screen is black with a countdown; after eight hours you wake with 60 %')
         print(ok(r['crewTrip']['asleep'] and r['crewTrip']['moved'] > 100 and r['crewTrip']['st'] == 'sailing' and len(r['crewTrip']['helm']) == 1 and r['crewTrip']['helm'][0] >= 4.5), 'with crew the trip goes on while you sleep, the best seaman at the helm')
         print(ok(r['vign'] > 0.4 and r['vignOff'] == 0), 'under 15 % the edges of the screen darken')
 
