@@ -13,7 +13,7 @@ Jonas 07.11.2026 ba om at arbeidet i planene går av seg selv, økt etter økt: 
 - **Når et steg starter:** sett `pågår (hvem, gren, tid)` i raden og én linje under «Øktene som kjører» (grenen, steget, filene det eier), og push bare det til arbeidsgrenen, så andre ser at steget er tatt.
 - **Når et steg er ferdig:** raden får `ferdig (…)` med commit, dato og versjon (som utrullingslogg), linja under «Øktene som kjører» tas bort, og startmeldingen for neste steg på sporet skrives i `docs/planer/start/`. Ingen statuslogg her: commit-meldingen og raden er statusen. Det som ble avgjort, står i planfila og systemdokumentet. **Koordinatoren** (`tools/plan/KOORDINATOR.md`) flytter ferdige rader, besvarte valg og ferdige startmeldinger til arkivet, så økta slipper.
 - **Jonas styrer rekkefølgen** ved å flytte rader, ved å svare på valgene, eller i en økt («ta U2-7 før U2-4»). Portstegene (P1–P6) tas først, så stegene over lanseringslinja. Rutinen stoppes med `Rutinen: av` på linje 3, eller ved å sette den planlagte oppgaven på pause.
-- **Arbeidsrutinen** (`tools/plan/RUTINE.md`) og **egne økter** følger de samme reglene; `docs/BACKLOG.md` er fortsatt den ene lista over feil og antakelser.
+- **Arbeidsrutinen** (`tools/plan/RUTINE.md`) og **egne økter** følger de samme reglene; `docs/BACKLOG.md` er fortsatt den ene lista over feil, men en økt lukker det den åpner (lukkerunden i `CLAUDE.md`, 12.11.2026): et nytt punkt der har `**Åpent fordi:**`.
 
 ## Porten for de første brukerne (Jonas 10.11.2026)
 
