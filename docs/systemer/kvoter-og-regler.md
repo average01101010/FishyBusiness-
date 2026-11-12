@@ -475,7 +475,7 @@ Jonas 08.11.2026 (valg 12): «Valg 12: fangsten kan ikke holde torsken ute, det 
 
 ## 5.28e Sør for 62° N: gyteområdene, oppvekstområdene, Nordsjøen og takene på 3 tonn (Ø10c, steg 68, 11.11.2026)
 
-Bestillingen (steg 68 i `docs/planer/koen.md`, fra backloggen «Regelmotoren sør for 62° N, det som står igjen etter Ø10»): det kildene avgjør sør for 62° N. Bygd på grenen `ccr-49289d8b-v7t3dk`. Rullet ut til testutgaven 11.11.2026 i e1ca159 (versjon 71508b0ed753).
+Bestillingen (steg 68 i `docs/planer/koen.md`, fra backloggen «Regelmotoren sør for 62° N, det som står igjen etter Ø10»): det kildene avgjør sør for 62° N. Bygd på grenen `ccr-49289d8b-v7t3dk`. Rullet ut til testutgaven 11.11.2026 i e1ca159 (versjon 71508b0ed753). Oppfølgingen rullet ut samme kveld i 8791a82 (versjon 3bcf1cda0cbc).
 
 **Regelverket** (lest ordrett 11.11.2026 hos Fiskeridirektoratet, fiskeridir.no/yrkesfiske/j-meldinger; Lovdata svarte 405 på øktas forespørsler, så J-meldingene er kilden, og de gjengir forskriftene i sin helhet):
 - **J-229-2025, forskrift om forbud mot fiske i gyteområder for torsk i Norges økonomiske sone sør for 62° i 2026** (fastsatt 19.12.2025, gjelder 1.1–31.12.2026, erstatter J-2-2025). § 1: «Forskriften gjelder for norske og utenlandske fartøy.» § 2: «Det er forbudt å fiske i Norges økonomiske sone i følgende avgrensede områder tidsperioder»: Stanhope ground «1. januar – 30. april», Coral edge «1. desember – 28. februar», Egersundbanken «1. desember – 31. mars», Vestbanken «1. januar - 15. mars», Revet «1. januar-15. Mars». For Stanhope ground og Revet: «Denne forskriften gjelder området som ligger i Norges økonomiske sone.» § 3: «Forbudet i § 2 gjelder ikke fiske med ringnot og pelagisk trål.»
