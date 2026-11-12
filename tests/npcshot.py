@@ -23,12 +23,12 @@ SETUP = """async ([kind, mode, dark, K]) => { const F = ferjeInit(); WX_FORCE = 
   else { const s = F.s.find(s => (s.y || 0) === K[0] && (K[1] == null || s.k === K[1]) && s.pats.some(P => P.q.some(q => F.q[q].name.startsWith(K[2]))));
     if (!s) return {err:'no crossing'}; list = H => ferjeStates(s, H); Q = [...new Set(s.pats.flatMap(P => P.q))].map(q => F.q[q]); }
   // the first minute from noon (by day) or 17:00 (at night) with one of hers at a quay for the next half hour, or under way 250 m from
-  // every quay and for four minutes more (the clock runs on at six times real time while the 3D view settles; a short crossing has no more) (for the coastal ship at Bergen: from 15:00 at the quay, from 20:40 under way)
-  const m0 = kind === 'kystrute' ? (mode === 'kai' ? 15 * 60 : 20 * 60 + 40) : dark ? 17 * 60 : 12 * 60;
+  // every quay and for four minutes more (the clock runs on at six times real time while the 3D view settles; a short crossing has no more) (for the coastal ship at Bergen: from 15:00 at the quay, from 20:32 under way, out of Bergen after 20:30)
+  const m0 = kind === 'kystrute' ? (mode === 'kai' ? (dark ? 17 * 60 : 15 * 60) : 20 * 60 + 32) : dark ? 17 * 60 : 12 * 60;
   let found = null;
   for (let m = m0; m < m0 + 600 && !found; m++){
     for (const n of list((day + m) / 60)){
-      if (kind === 'kystrute' && Q.every(q => dist(q.p, n.p) > (mode === 'kai' ? 0.4 : 3))) continue;
+      if (kind === 'kystrute' && Q.every(q => dist(q.p, n.p) > (mode === 'kai' ? 0.4 : 5))) continue;
       const later = k => list((day + m + k) / 60).find(q => q.id === n.id);
       if (mode === 'kai' ? n.v === 0 && [5, 10, 20, 30].every(k => { const q = later(k); return q && q.v === 0 && dist(q.p, n.p) < 0.01; })
                          : n.v > 3 && Q.every(q => dist(q.p, n.p) > 0.25) && [2, 4].every(k => { const q = later(k); return q && q.v > 3; })){ found = {n, m}; break; } } }
