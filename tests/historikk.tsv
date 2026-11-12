@@ -3098,3 +3098,6 @@
 2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	installtest	OK	51	lite	samtidig	
 2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	boottest	OK	34	lite	samtidig	
 2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	trip2	OK	45	lite	samtidig	
+2026-11-12 11:46	claude/k3-sjomerker-33d	e21c9a4	lighttest	OK	390	3d	alene	
+2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	routetest	OK	43	lite	alene	
+2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	charttest	OK	51	lite	alene	
