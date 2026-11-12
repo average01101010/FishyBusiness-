@@ -33,6 +33,9 @@
     const b = S.boat, V = VESSELS[b.type], on = trimOn(b), h = ['<div class="ph-c">'], hrs = x => fmt(x, 0) + L(' timer', ' hours');
     h.push('<div class="ph-card"><h4>«' + S.boatName + '» · ' + V.name[S.lang] + '</h4>' + kv(L('Toppfart', 'Top speed'), fmt(BOAT.vmax, 1) + ' kn') + kv(L('Med lasten og skroget nå', 'With the load and hull now'), fmt(speedCap(0.3), 1) + ' kn') +
       (on ? kv(L('På nå', 'On now'), '<b>' + on[S.lang] + ' +' + Math.round((on.x - 1) * 100) + ' %</b>') + kv(L('Går ut om', 'Ends in'), hrs(trimLeft(b))) : '') + '</div>');
+    // a hop over the rest of a route kept in Kaiboden (HO3, ui/10u-hopp.js): the boat was elsewhere when the payment came;
+    // first, under the boat, since it is paid for and waits for a route
+    for (const x of S.hopSrv || []) h.push('<div class="ph-card haillc"><h4>' + L('Hopp over resten av ruta', 'Skip the rest of the route') + '</h4><p>' + L('Ligger klar for én rute som tar høyst ' + x.min + ' minutter i virkeligheten. Trykk spoleknappen (⏩) på ruta, så brukes det uten ny betaling.', 'Kept for one route of at most ' + x.min + ' real minutes. Tap the fast-forward button (⏩) on the route, and it is used with no new payment.') + '</p></div>');
     // (on every boat, also one with an outboard: Jonas 11.11.2026, core canBoost)
     for (const [k, B] of Object.entries(BOOSTS)){ const v1 = BOAT.vmax / (on ? on.x : 1) * B.x;
       h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + (k === 'turbo' ? kbBest() : '') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
@@ -41,8 +44,6 @@
         (!on ? '' : on === B ? '<p class="ph-note">' + L('Legger ' + B.h + ' timer til den som er på: ' + hrs(trimLeft(b) + B.h) + ' i alt.', 'Adds ' + B.h + ' hours to the one on: ' + hrs(trimLeft(b) + B.h) + ' in all.') + '</p>'
           : '<p class="ph-note' + (trimPend === k ? ' bad' : '') + '">' + L('Erstatter ' + on.no.toLowerCase() + ', som har ' + hrs(trimLeft(b)) + ' igjen.' + (trimPend === k ? ' Den tida faller bort. Trykk «Kjøp» igjen for å bytte.' : ''), 'Replaces the ' + on.en.toLowerCase() + ', which has ' + hrs(trimLeft(b)) + ' left.' + (trimPend === k ? ' That time is lost. Tap «Buy» again to switch.' : '')) + '</p>') +
         '<button class="ph-btn p" data-pa="trimbuy" data-k="' + k + '">' + shopLabel(B.nok) + '</button>' + (trimPend === k ? '<button class="ph-btn alt" data-pa="trim0">' + L('Avbryt', 'Cancel') + '</button>' : '') + shopFine() + '</div>'); }
-    // a hop over the rest of a route kept in Kaiboden (HO3, ui/10u-hopp.js): the boat was elsewhere when the payment came
-    for (const x of S.hopSrv || []) h.push('<div class="ph-card haillc"><h4>' + L('Hopp over resten av ruta', 'Skip the rest of the route') + '</h4><p>' + L('Ligger klar for én rute som tar høyst ' + x.min + ' minutter i virkeligheten. Trykk spoleknappen (⏩) på ruta, så brukes det uten ny betaling.', 'Kept for one route of at most ' + x.min + ' real minutes. Tap the fast-forward button (⏩) on the route, and it is used with no new payment.') + '</p></div>');
     h.push('<p class="ph-note">' + L('Trim gjelder båten du er om bord i. Tida er spilltid: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten. Mer fart bruker mer diesel.',
       'Tuning goes with the boat you are aboard. The time is game time: 24 hours in the game is ' + fmt(24 / GAME_RATE, 0) + ' hours in real life. More speed burns more diesel.') + '</p></div>');
     return h.join('');
