@@ -345,8 +345,8 @@ def wear(p, m, n):
         v = 0.97 + 0.03 * n3(x * 5.0, y * 5.0, z * 5.0)
         if nm == 'inner' and x < X_STEP and z < ZMD + 0.8:
             r = 0.0
-            for x0, l in FREE[side]: r = max(r, ss(0.16, 0.0, max(abs(x - x0 - l / 2) - l / 2, 0.0) + max(z - ZMD - 0.02 - FREE_H, 0.0)))
-            t = mix(base, (GRIME, 0.30 * ss(0.30, 0.0, z - dk(x)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 4.0, side, 5.0)))), (RUST, 0.45 * r))
+            for x0, l in FREE[side]: r = max(r, ss(0.09, 0.0, max(abs(x - x0 - l / 2) - l / 2, 0.0) + max(z - ZMD - 0.02 - FREE_H, 0.0)))
+            t = mix(base, (GRIME, 0.30 * ss(0.30, 0.0, z - dk(x)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 4.0, side, 5.0)))), (RUST, 0.22 * r))
             return [t[i] * v for i in range(3)]
         return [v, v, v]
     if nm in ('deck', 'nonslip', 'grip', 'stud'):
