@@ -267,6 +267,11 @@ function workAssign(as){
   for (const p of free()) put(p, 'pause', 'nowork');
   // fish waiting and nobody at it (all on a break): the least tired goes, unless everyone is worn out
   for (const k of ['sloy', 'is']) if (ctx[k] && !cnt(k) && left[k] > 0.01 && (k !== 'is' || iceOpen())){ const q = P.filter(p => p.st === 'pause' && pTired(p) < 0.85).sort((a, b) => pTired(a) - pTired(b))[0]; if (q) put(q, k, 'need'); }
+  // alone aboard on the fishing ground, you stand at the rail, tired or not (feedback #4 from the test edition, 12.11.2026: with the
+  // energy at 25 % the rest won over the jig, nobody fished, the jig took nothing, and «Jukse selv» was gone). A break at sea gives no
+  // rest (only the bunk does: 15-energy.js restRate), and your energy has its own rule there: slower under 25 %, asleep at 0, and then
+  // you are not on deck (P is empty). With hands aboard the tired skipper may still take a breather while they fish, as before
+  if (ctx.fiske && P.length === 1 && !P[0].c && P[0].st === 'pause' && room('fiske')) put(P[0], 'fiske', 'skipper');
   // freight waiting on the quay and nobody on it (all on a break, or the one aboard alone is tired): the boat lies there until it is
   // aboard or ashore, so the least tired of those awake goes, worn out or not (feedback #2 from the test edition, 12.11.2026: alone and
   // tired, the parcel was never loaded and the boat never got away; a small job never weighed up for the rest, restScore)

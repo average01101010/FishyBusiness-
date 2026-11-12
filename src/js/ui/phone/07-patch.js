@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['p159', '12.11.2026', 'Juksa når du er sliten', 'The jig when you are tired', [
+       ['Alene om bord står du ved rekka og jukser også når energien er lav. Før tok du pause, og juksa fisket ingenting til du kom i land.', 'Alone aboard, you stay at the rail and jig even when your energy is low. Before, you took a break, and the jig caught nothing until you got ashore.'],
+       ['«Jukse selv» vises også når du tar en pust i bakken mens mannskapet jukser.', '«Jig yourself» also shows while you take a breather and the crew jig.']]],
     ['sjarkny4-121126', '12.11.2026', 'Den nye hurtigsjarken og arbeidet ved kaia', 'The new speed sjark and the work at the quay', [
        ['Under lossingen står kranen, sløyebenken, livbøyene og flåten der de hører hjemme på dekket. Før forsvant de mens mottaket løftet fangsten.', 'While she lands, the crane, the gutting bench, the life buoys and the raft stay where they belong on deck. Before, they vanished while the plant lifted the catch.'],
        ['Mannskapet står ikke lenger med halve kroppen inne i linestampene, garnkarene eller teinestablene når båten har mye redskap om bord, og på båtene fra 9 meter går de heller ikke gjennom dem.', 'The crew no longer stand half inside the line tubs, the net tubs or the pot stacks when the boat has a lot of gear aboard, and on the boats from 9 metres they no longer walk through them either.'],
