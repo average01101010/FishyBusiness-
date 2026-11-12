@@ -265,6 +265,14 @@ function workAssign(as){
   for (const p of free()) put(p, 'pause', 'nowork');
   // fish waiting and nobody at it (all on a break): the least tired goes, unless everyone is worn out
   for (const k of ['sloy', 'is']) if (ctx[k] && !cnt(k) && left[k] > 0.01 && (k !== 'is' || iceOpen())){ const q = P.filter(p => p.st === 'pause' && pTired(p) < 0.85).sort((a, b) => pTired(a) - pTired(b))[0]; if (q) put(q, k, 'need'); }
+  // freight waiting on the quay and nobody on it (all on a break, or the one aboard alone is tired): the boat lies there until it is
+  // aboard or ashore, so the least tired of those awake goes, worn out or not (feedback #2 from the test edition, 12.11.2026: alone and
+  // tired, the parcel was never loaded and the boat never got away; a small job never weighed up for the rest, restScore)
+  // (as many as the job has places for, since its work was sized for all the hands aboard, jobW; one dozing on a break is left alone
+  // unless nobody else can go: the independent check 12.11.2026)
+  if (ctx.s === 'port') for (const j of jobs) if (j.kind === 'last' && !(jn.get(j) > 0)){ const doze = p => !!(p.c && p.c.idle === 'sleep');
+    const Q = P.filter(p => p.st === 'pause').sort((a, b) => (doze(a) ? 1 : 0) - (doze(b) ? 1 : 0) || pTired(a) - pTired(b));
+    for (const q of Q){ if (jn.get(j) >= jobPlaces(j) || (doze(q) && jn.get(j) > 0)) break; put(q, 'last', 'need'); q.jw = j; jn.set(j, jn.get(j) + 1); } }
   // a meal is due: the best cook among those awake on a break, else one who jigs or works on the gear (they stop for it), however well
   // they cook (Ø8b M2: before only 3 or more, and with nobody that good it was dry bread; 14-crewlife.js cookPick)
   if (ctx.kokk && !cnt('kokk')){ const q = cookPick(P);

@@ -8,11 +8,19 @@ Code environment, which sessions use without seeing it; it is never written anyw
     python3 tools/feedback/agent.py note ID --score 6 --status seen --note "..." [--reply "..."]
     python3 tools/feedback/agent.py run --report RAPPORT.md [--pr URL "title"]... [--n 12]
     python3 tools/feedback/agent.py tech [--days 7] [--out DIR]                 the errors and the frame rate by device to DIR/tech.json
+    python3 tools/feedback/agent.py --test list ...                             the same against the test project (what Jonas sends from
+                                                                                test.detstorebla.no); use another --out than production's
 """
 import argparse, base64, json, os, sys, tempfile, urllib.error, urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-URL = json.load(open(os.path.join(ROOT, 'src', 'data', 'cloud.json')))['supabaseUrl'].rstrip('/') + '/functions/v1/feedback-agent'
+CLOUD = json.load(open(os.path.join(ROOT, 'src', 'data', 'cloud.json')))
+URL = CLOUD['supabaseUrl'].rstrip('/') + '/functions/v1/feedback-agent'
+
+
+def agent_url(test):
+    # --test: the test project, where what is sent from test.detstorebla.no lands (the «test» block in cloud.json)
+    return (CLOUD['test']['supabaseUrl'] if test else CLOUD['supabaseUrl']).rstrip('/') + '/functions/v1/feedback-agent'
 
 
 def call(op, **kw):
@@ -37,7 +45,9 @@ def call(op, **kw):
 
 
 def main():
+    global URL
     ap = argparse.ArgumentParser()
+    ap.add_argument('--test', action='store_true', help='the test project (feedback sent from test.detstorebla.no), not production')
     sub = ap.add_subparsers(dest='cmd', required=True)
     a = sub.add_parser('list'); a.add_argument('--lim', type=int, default=40); a.add_argument('--out', default=os.path.join(tempfile.gettempdir(), 'dsb-feedback'))
     a.add_argument('--imgs', action='store_true')
@@ -47,6 +57,7 @@ def main():
     r = sub.add_parser('run'); r.add_argument('--report', required=True); r.add_argument('--pr', nargs=2, action='append', metavar=('URL', 'TITLE'), default=[])
     r.add_argument('--n', type=int, default=0)
     o = ap.parse_args()
+    URL = agent_url(o.test)
     if o.cmd == 'list':
         d = call('list', lim=o.lim)
         if os.path.abspath(o.out).startswith(ROOT + os.sep):

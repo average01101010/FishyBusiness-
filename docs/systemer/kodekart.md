@@ -1078,7 +1078,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 1120 `farvWarn()`
   - 1121 `farvSay(w, how)`
 
-## `src/js/core/06-services.js` (333 linjer)
+## `src/js/core/06-services.js` (334 linjer)
 
 ---------- services behind the phone ----------
 
@@ -1106,10 +1106,10 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 268 `fitHours(k)`
   - 271 `jobOk(j)`
   - 276 `queueJob(j)`
-  - 279 `jobsDone()`
-  - 285 `shelterReturn(W, hsOver)`
-  - 311 `startReturn(auto, W, home, hsOver, opsKeep)`
-- **331** CORE END
+  - 280 `jobsDone()`
+  - 286 `shelterReturn(W, hsOver)`
+  - 312 `startReturn(auto, W, home, hsOver, opsKeep)`
+- **332** CORE END
 
 ## `src/js/core/06b-coastports.js` (166 linjer)
 
@@ -1627,7 +1627,7 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
 - **811** taking, doing and finishing
   - 812 `turTake(id)`
   - 840 `turDrop(id)`
-  - 845 `cargoJob(kg, no, en)`
+  - 845 `cargoJob(kg, no, en, out)`
   - 846 `turLoad(m)`
   - 855 `turSpawn(m)`
   - 874 `turEnd(m, ok, why, how)`
@@ -2078,7 +2078,7 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 124 `heatAt(p)`
   - 127 `schoolDrift(sp, p, H)`
 
-## `src/js/core/13-work.js` (444 linjer)
+## `src/js/core/13-work.js` (452 linjer)
 
 work aboard: stations, and how the crew share them
 
@@ -2108,23 +2108,23 @@ work aboard: stations, and how the crew share them
   - 186 `jobMinute(j, A)`
   - 196 `jobWait(j)`
   - 201 `workAssign(as)`
-- **284** the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
-  - 292 `quayRoles(P, ctx)`
-- **305** the deck washed down, the packed lunch and the cold, as roles on those on a break (OB14, 11.11.2026, docs/planer/om-bord.md F12,
-  - 319 `washMin()`
-  - 321 `deckWash()`
-  - 323 `lunchNow()`
-  - 324 `deckRoles(P, ctx)`
-  - 341 `deckDoing(p)`
-- **343** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
-  - 359 `crewVice(c)`
-  - 361 `idleEnv()`
-  - 369 `idleWeights(p, ctx, E, mates)`
-  - 392 `idleAssign(P, ctx)`
-  - 406 `idleText(p)`
-  - 414 `workDoing(p)`
-  - 424 `workTeam(st, g, as)`
-  - 430 `workMinute()`
+- **292** the boat's own hands at the quay (OB4, 11.11.2026, docs/planer/om-bord.md F10, F11, F23; Jonas 09.11.2026: «at arbeidet ombord
+  - 300 `quayRoles(P, ctx)`
+- **313** the deck washed down, the packed lunch and the cold, as roles on those on a break (OB14, 11.11.2026, docs/planer/om-bord.md F12,
+  - 327 `washMin()`
+  - 329 `deckWash()`
+  - 331 `lunchNow()`
+  - 332 `deckRoles(P, ctx)`
+  - 349 `deckDoing(p)`
+- **351** what a person does on a break (Jonas 23.10.2026: «La det også stå hva de gjør når de ikke har en aktiv arbeidsoppgave som feks: lener
+  - 367 `crewVice(c)`
+  - 369 `idleEnv()`
+  - 377 `idleWeights(p, ctx, E, mates)`
+  - 400 `idleAssign(P, ctx)`
+  - 414 `idleText(p)`
+  - 422 `workDoing(p)`
+  - 432 `workTeam(st, g, as)`
+  - 438 `workMinute()`
 
 ## `src/js/core/14-crewlife.js` (470 linjer)
 
@@ -2765,12 +2765,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1556 linjer)
+## `src/js/ui/phone/07-patch.js` (1558 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1544 `patch()`
+  - 1546 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

@@ -842,7 +842,7 @@ function turDrop(id){
   turEnd(m, false, turL('Gav fra deg oppdraget.', 'Gave up the mission.'), 'drop');
 }
 // the crew's job of getting the freight aboard or ashore (cargoMin, 03-simulation.js): the boat stays at the quay until it is done
-function cargoJob(kg, no, en){ if (typeof queueJob !== 'function' || S.boat.status !== 'port') return; queueJob({kind:'last', crew:true, h:cargoMin(kg) / 60, no, en}); }
+function cargoJob(kg, no, en, out){ if (typeof queueJob !== 'function' || S.boat.status !== 'port') return; queueJob({kind:'last', crew:true, h:cargoMin(kg) / 60, no, en, ...(out ? {out:1} : {})}); }   // (out: landing, for the status line)
 function turLoad(m){
   if (cargoRoom() < m.kg){ log('Lasta til ' + portById(m.to).name + ' venter på kaia. Det er ikke plass på dekk eller i lasterommet.', 'The freight for ' + portById(m.to).name + ' waits on the quay. There is no room on deck or in the hold.'); return false; }
   const onDeck = cargoKg() + m.kg <= (BOAT.deckCargo || 0);
@@ -901,7 +901,7 @@ function turDock(pid){
   const T = S.turer; if (!T || !T.act.length) return;
   for (const m of T.act.slice()){ if (m.k !== 'frakt' || m.vid !== S.cur) continue;
     if (m.stage === 'pick' && pid === m.from) turLoad(m);
-    else if (m.stage === 'go' && pid === m.to){ S.cargo = (S.cargo || []).filter(c => c.tur !== m.id); cargoJob(m.kg, 'Lossing av ' + m.what[0], 'Landing the ' + m.what[1]);
+    else if (m.stage === 'go' && pid === m.to){ S.cargo = (S.cargo || []).filter(c => c.tur !== m.id); cargoJob(m.kg, 'Lossing av ' + m.what[0], 'Landing the ' + m.what[1], true);
       const n = turRepN(m.to), mem = n === 2 ? [' Tredje lasta du kommer med hit. Folk på kaia vet hvem du er nå.', ' The third load you bring here. People on the quay know who you are now.'] : n >= 5 ? [' Som vanlig, trygt levert.', ' As usual, safely landed.'] : ['', ''];
       turPayOut(m, portById(pid).name, 'Takk for at du kom med ' + m.what[0] + '.' + mem[0], 'Thank you for bringing the ' + m.what[1] + '.' + mem[1]); } }
   for (const m of T.act.slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){

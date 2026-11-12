@@ -276,6 +276,7 @@ function jobOk(j){
 function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; if (crewJob(j)) jobW(j); return true; }
 // true when everything queued is the crew's own work (baiting, mending, hooks) and not the yard's: the labels then say so
 const jobsCrewOnly = () => !!(S.jobs && S.jobs.length) && S.jobs.every(crewJob);
+const jobsFreight = () => !!(S.jobs && S.jobs.length) && S.jobs.every(j => j.kind === 'last');   // only freight going aboard or ashore (09g-turer.js cargoJob)
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
 // in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas
