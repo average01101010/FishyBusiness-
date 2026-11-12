@@ -3129,6 +3129,27 @@
 2026-11-12 12:03	claude/k3-sjomerker-33d	eb02255	coast3d	FEIL	900	3d	alene	FEIL by Gryllefjord the rorbu stands on the map's own ground in 3D (its floor over it, lifted 2.5 m; no bank of its own since 01.11.2026) in its colour (r), wit
 2026-11-12 12:23	claude/k3-sjomerker-33d	df76988	marktest	OK	7	lite	alene	
 2026-11-12 12:36	claude/k3-sjomerker-33d	df76988	coast3d	OK	762	3d	alene	
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	quotatest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	megletest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	kvotemarkedtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	admintest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	markettest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 11:28	ccr-dd09444c-km5	950be53+	quotatest	OK	16	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	megletest	OK	24	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	kvotemarkedtest	OK	25	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	admintest	OK	10	lite	samtidig	
+2026-11-12 11:37	ccr-dd09444c-km5	257d089	markettest	OK	509	lite	alene	
+2026-11-12 11:38	ccr-dd09444c-km5	257d089	kvotemarkedtest	FEIL	24	lite	alene	FEIL Kystposten «Kvoteprisen denne uka» på forsiden, én i uka: prisen, endringen fra forrige uke, ukas salg fra km_week (antall og median mot taksten); uten sal
+2026-11-12 11:38	ccr-dd09444c-km5	257d089+	kvotemarkedtest	FEIL	25	lite	alene	FEIL Kystposten «Kvoteprisen denne uka» på forsiden, én i uka: prisen, endringen fra forrige uke, ukas salg fra km_week (antall og median mot taksten); uten sal
+2026-11-12 11:39	ccr-dd09444c-km5	257d089+	kvotemarkedtest	OK	25	lite	alene	
+2026-11-12 11:44	ccr-dd09444c-km5	741a1f0	kvotemarkedtest	OK	27	lite	alene	
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	crewclip	FEIL	29	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	walktest	FEIL	20	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 10
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	lanterntest	OK	18	lite	samtidig	
+2026-11-12 11:22	claude/ob11-r4-breisjark	f4ce485+	regmarktest	OK	10	lite	samtidig	
+2026-11-12 11:23	claude/ob11-r4-breisjark	f4ce485+	vesseltest	OK	22	lite	samtidig	
+2026-11-12 14:23	claude/ob11-r4-breisjark	35d99f6+	crewclip	FEIL	22	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 14:35	claude/ob11-r4-breisjark	35d99f6+	potshot	OK	741	3d	alene	
 2026-11-12 11:42	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	18	lite	alene	FEIL Hasvik–Øksfjord (nord, Finnmark): sambandet og en avgang finnes i fila  {'nodep': True}
 2026-11-12 11:43	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	17	lite	alene	FEIL alle leggene i landet, også hurtigbåtenes og kystrutas, holder seg på vann i spillets kart (hver 10. m)  (1038, ['Træna - Sanna 1'])
 2026-11-12 11:45	ccr-013bxxie-n4kyst	831e90b+	ferrytest	OK	17	lite	alene	
@@ -3196,3 +3217,15 @@
 2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	boottest	OK	40	lite	samtidig	
 2026-11-12 16:00	claude/k3-sjomerker-33d	7a69d7b	trip2	OK	35	lite	samtidig	
 2026-11-12 16:01	claude/k3-sjomerker-33d	7a69d7b	charttest	OK	51	lite	alene	
+2026-11-12 14:46	claude/ob11-r4-breisjark	7cec133	vesseltest	OK	22	lite	samtidig	
+2026-11-12 14:47	claude/ob11-r4-breisjark	7cec133	docktest	OK	65	lite	samtidig	
+2026-11-12 14:47	claude/ob11-r4-breisjark	7cec133	boottest	OK	33	lite	samtidig	
+2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	crewclip	FEIL	25	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	regmarktest	OK	8	lite	samtidig	
+2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	lanterntest	OK	14	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	kvotemarkedtest	OK	32	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	quotatest	OK	20	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	admintest	OK	10	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
+2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
+2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	

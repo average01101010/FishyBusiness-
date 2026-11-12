@@ -109,6 +109,12 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 - Under «Økonomi i spillet» står det øverst at tallene er meldt av spillet, og median og 90-persentil kasse er merket «meldt av spillet».
 - Hva et merke er, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Testen er `tests/admintest.py`.
 
+## Admin: Kvotemarkedet under «Økonomi i spillet» (KM5, 12.11.2026)
+
+- Fire kort fra `admin_km` (KM2) og `admin_km5` (`supabase/migrations/20261112130000_km5.sql`): salg per uke, slag og hjemmelslengde med medianprisen og medianen mot taksten; kjøpt fra spillere mot registeret per gruppe med spillernes andel av hjemlene (fra `admin_share`); timene fra oppføring til første bud; og målingen (hendelsene med median prosent av taksten).
+- Bare summer, aldri hvem. Kjøp fra registeret (`km_reg`) kommer bare fra spillere som har sagt ja til målingen; salgene mellom spillere er alle.
+- Leses av to ekte uker etter at KM5 er hos spillerne, før noe justeres (`docs/BACKLOG.md` 10.5). Testen er `tests/admintest.py` (demoen, `admin_kvotemarkedet.png`).
+
 ## 5.25c Admin: åpningen på nytt (05.10.2026)
 
 Admin-appen (bare Jonas' konto) har kortet «Åpningen»: «Vis brevet» spiller brevscenen igjen uten å endre noe, og «Start nytt spill» spør først og begynner så helt på nytt (lagringen i skyen også), med brevet, båtnavnet og «Første tur».

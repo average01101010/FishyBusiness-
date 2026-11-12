@@ -21,7 +21,8 @@ PLAY = r"""(async ([every, days, hours]) => {
   const W = q => ({x:q.x, y:q.y, port:null, fish:0}), rt = FLEET.find(f => f.home === 'husoy' && f.L < 15).rt[0].slice(1).map(q => ({x:q[0], y:q[1]})), G = rt[rt.length - 1];
   const route = () => { const w = exitWps(HP, rt[0]).map(W).concat(rt.map((q, i) => ({x:q.x, y:q.y, port:null, fish:i === rt.length - 1 ? hours : 0}))); rt.slice(0, -1).reverse().forEach(q => w.push(W(q)));
     entryWps(HP, rt[0]).forEach(q => w.push(W(q))); w.push({x:HP.p.x, y:HP.p.y, port:'husoy', fish:0}); return w; };
-  const O = LIC_OFFERS[0], price = VESSELS[O.ves].price + licValue(O), rows = [], first = {};
+  // (the entry's price is the boat and the quota at the quota price of the day: it lives since KM5, kpkAt)
+  const O = LIC_OFFERS[0], priceAt = () => VESSELS[O.ves].price + licValue(O), price0 = priceAt(), rows = [], first = {}, kpks = []; let price = price0;
   const net = () => Math.round(S.cash + S.fleet.reduce((a, v) => a + vesselValue(v), 0) - debt());
   const until = (t, f) => { let n = 0; while (S.t < t && !(f && f())){ step(); n++; } return n; };
   let trips = 0, lastTrip = -99, nextAt = 0, rerouted = 0; const stuck = [];
@@ -53,6 +54,7 @@ PLAY = r"""(async ([every, days, hours]) => {
       if (b.status === 'port') restStart();
       trips++; nextAt = d + every;
     }
+    price = priceAt(); kpks.push(kpkAt(S.t / 60));
     const q = quotaState(), x = deal(price, vesselValue(curVessel()), innOK()), reach = bladB() && x.ok;
     if (bladB() && first.b == null) first.b = {day:d + 1, trips};
     if (reach && first.entry == null) first.entry = {day:d + 1, trips, cash:Math.round(S.cash)};
@@ -60,7 +62,7 @@ PLAY = r"""(async ([every, days, hours]) => {
     if (d % 7 === 6 || d === days - 1) rows.push({day:d + 1, trips, cash:Math.round(S.cash), net:net(), cod:Math.round(q.torsk || 0), codMax:Math.round(codLimitNow(S.t / 60)), fm:[S.fm.n, Math.round(S.fm.kr)], reels:S.equip.jukse, eqNeed:Math.round(x.eqNeed)});
   }
   const kg = S.sales.reduce((a, s) => a + s.kg, 0), kr0 = S.sales.reduce((a, s) => a + s.total, 0);
-  return {rows, first, perTrip:{kg:Math.round(kg / Math.max(1, S.sales.length)), kr:Math.round(kr0 / Math.max(1, S.sales.length))}, price, sales:S.sales.length, rerouted, stuck};
+  return {rows, first, perTrip:{kg:Math.round(kg / Math.max(1, S.sales.length)), kr:Math.round(kr0 / Math.max(1, S.sales.length))}, price:price0, priceEnd:price, kpk:[Math.min(...kpks), Math.max(...kpks)], sales:S.sales.length, rerouted, stuck};
 })"""
 
 PROFILES = [('en tur hver tredje dag', 3), ('en tur annenhver dag', 2), ('hver dag været tillater (driftsplan med deg om bord)', 1)]
@@ -76,7 +78,7 @@ async def main():
             r = await pg.evaluate(PLAY, [every, 56, 6])
             print('==', name)
             for row in r['rows']: print('  dag %(day)2d: %(trips)2d turer, kasse %(cash)9d, netto %(net)9d, torsk %(cod)5d / %(codMax)5d kg, blad B %(fm)s, juksamaskiner %(reels)d, egenkapital som trengs %(eqNeed)d' % row)
-            print('  per tur: %d kg, %d kr; inngangen koster %d kr' % (r['perTrip']['kg'], r['perTrip']['kr'], r['price']))
+            print('  per tur: %d kg, %d kr; inngangen koster %d kr ved start og %d kr ved slutt (kvoteprisen %d–%d kr/kg)' % (r['perTrip']['kg'], r['perTrip']['kr'], r['price'], r['priceEnd'], r['kpk'][0], r['kpk'][1]))
             if r['rerouted'] or r['stuck']: print('  ny rute hjem etter «Autonav fant ingen trygg vei»: %d · turer som ikke endte i havn: %s' % (r['rerouted'], json.dumps(r['stuck'], ensure_ascii=False)))
             f = r['first']; print('  blad B:', f.get('b'), '· inngangen innen rekkevidde:', f.get('entry'))
             print('  til kalibreringen, når egenkapitalen ville holdt med 5 / 10 / 15 % av prisen:', f.get('eq0.05'), '/', f.get('eq0.1'), '/', f.get('eq0.15'))

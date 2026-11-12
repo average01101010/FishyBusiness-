@@ -139,7 +139,7 @@ const VIEW = {
   bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
-  okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards(),
+  okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards() + kmCards(),
   penger: D => { const m = D.money; return sgCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
@@ -202,6 +202,40 @@ function havCards(){
       '<p><select id="havSp"><option>torsk</option><option>hyse</option><option>sei</option><option>blakveite</option></select> <input id="havY" type="number" value="' + (HAVY + 1) + '" style="width:5em"> ' +
       '<input id="havSsb" type="number" placeholder="gytebestand t" style="width:9em"> <input id="havTac" type="number" placeholder="totalkvote t" style="width:9em"> <input id="havAdv" type="number" placeholder="råd t" style="width:8em"> <button id="havSet">Lagre år</button></p>',
       'Når bryteren er på, bruker alle spill denne bestanden og totalkvoten for årene som står her, i stedet for hver lagrings egen modell. Legg inn årene før den slås på.');
+}
+// ---------- Kvotemarkedet (KM5, steg 64; supabase/migrations/20261108230000_kvotemarked.sql admin_km and 20261112130000_km5.sql
+// admin_km5): the sales a week against the takst, what players bought from players against from the register per group, the hours to
+// the first bid, the players' share of the register per group (admin_share above), and the measuring events. Sums only, never who.
+// Read it after two real weeks before anything is adjusted (docs/planer/kvotemarkedet.md, KM5)
+let KMA = null;
+const KM_GRP = {u7:'u11', h7:'u11', h8:'u11', h9:'u11', h10:'u11', h14:'g11', h20:'g15'}, KM_GN = {u11:'under 11 m', g11:'11–14,99 m', g15:'15–20,99 m', g21:'21 m og over'};
+const KM_HL = {u7:'under 7 m', h7:'7–7,9 m', h8:'8–8,9 m', h9:'9–9,9 m', h10:'10–10,9 m', h14:'14–14,9 m', h20:'20–20,9 m'};
+async function kmaLoad(){ await null; try { KMA = DEMO ? kmaDemo() : {sales:await rpc('admin_km', {weeks:8}), more:await rpc('admin_km5', {weeks:8})}; } catch (e){ KMA = {err:e.message}; } if (TAB === 'okonomi') render(); }
+function kmCards(){
+  if (!KMA){ KMA = {loading:true}; kmaLoad(); return card('Kvotemarkedet', '<p class="note">Henter …</p>'); }
+  if (KMA.loading) return card('Kvotemarkedet', '<p class="note">Henter …</p>');
+  if (KMA.err) return card('Kvotemarkedet', '<p class="warn">' + esc(KMA.err) + '</p>', 'Er migreringen supabase/migrations/20261112130000_km5.sql kjørt?');
+  const sales = (KMA.sales || []).filter(r => r.kind !== 'boat'), M = KMA.more || {}, wk = v => esc(new Date(v).toLocaleDateString('nb-NO', {day:'numeric', month:'short'}));
+  const held = {}; for (const id in (HAV && HAV.reg_total) || {}){ const g = KM_GRP[id]; if (!g) continue; const h = held[g] || (held[g] = {grp:g, total:0, players:0}); h.total += HAV.reg_total[id]; h.players += HAV.reg_total[id] - ((HAV.reg || {})[id] || 0); }
+  const grp = (M.grp || []).map(g => Object.assign({held:held[g.grp] ? held[g.grp].players / Math.max(1, held[g.grp].total) : null, mkt:g.players + g.register ? g.players / (g.players + g.register) : null}, g));
+  const EVN = {km_put:'Lagt ut', km_bid:'Bud', km_buy:'Kjøp nå', km_quick:'Solgt til registeret', km_view:'Sett på', km_wish:'Ønsket hjemmel', km_move:'Hjemmel flyttet', km_reg:'Kjøpt fra registeret', mb_put:'Båt lagt ut (hjemmelen)'};
+  const SUB = {right:'hjemmel', struct:'strukturkvote', free:'til ledig', boat:'til båt', with:'følger med', moved:'flyttet', none:'uten'};
+  return card('Kvotemarkedet: salg per uke', table(sales, [['wk', 'Uke', wk], ['kind', 'Vare', v => SUB[v] || esc(v)], ['id', 'Hjemmelslengde', v => KM_HL[v] || esc(v)], ['put', 'Lagt ut'], ['sold', 'Solgt'], ['unsold', 'Ikke solgt'], ['cancelled', 'Trukket'],
+      ['median', 'Medianpris', v => nf(v, 0) + ' kr'], ['vs_takst', 'Median mot taksten', v => pct(v)]]),
+      'Taksten er spillets (kmTakst med kvoteprisen den dagen). Registeret selger til taksten og kjøper tilbake til 90 %, så hjemlene havner mellom 90 og 100 %; strukturkvotene er ikke bundet av det.') +
+    card('Kjøpt fra spillere mot registeret (8 uker)', table(grp, [['grp', 'Gruppe', v => KM_GN[v] || esc(v)], ['players', 'Fra spillere'], ['register', 'Fra registeret'], ['mkt', 'Andel fra spillere', v => pct(v)], ['held', 'Spillernes andel av hjemlene', v => pct(v)]]),
+      'Fra registeret er hendelsen km_reg (struktur og båt med hjemmel på verftet), sendt bare fra spillere som har sagt ja til målingen; salgene mellom spillere er alle. Andelen av hjemlene er registeret over (hos spillere mot alle).') +
+    card('Tid til første bud', table(M.bid || [], [['wk', 'Uke', wk], ['kind', 'Vare', v => SUB[v] || esc(v)], ['n', 'Avsluttet'], ['none', 'Uten bud'], ['h', 'Median timer til første bud', v => nf(v, 1)]]), 'Fra oppføringen ble lagt ut til første bud eller «Kjøp nå», for oppføringer som er avsluttet.') +
+    card('Målingen', table(M.ev || [], [['wk', 'Uke', wk], ['k', 'Hendelse', v => EVN[v] || esc(v)], ['sub', 'Slag', v => SUB[v] || esc(v)], ['n', 'Antall'], ['pc', 'Median % av taksten', v => v == null ? '–' : nf(v, 0) + ' %']]),
+      'Hendelsene spillet sender (cloudEv), i prosent av taksten og aldri hvem. Les av etter to ekte uker før noe justeres: volumet, andelen kjøpt av spillere og prisene mot taksten.');
+}
+function kmaDemo(){
+  const w = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10), w2 = new Date().toISOString().slice(0, 10);
+  return {sales:[{wk:w2, kind:'right', id:'h10', put:3, sold:2, unsold:1, cancelled:0, median:6950000, vs_takst:0.962}, {wk:w2, kind:'struct', id:'h14', put:1, sold:1, unsold:0, cancelled:0, median:3100000, vs_takst:1.05},
+      {wk:w, kind:'right', id:'h14', put:2, sold:1, unsold:0, cancelled:1, median:11800000, vs_takst:0.94}],
+    more:{grp:[{grp:'g11', players:2, register:5}, {grp:'g15', players:0, register:1}, {grp:'u11', players:2, register:9}],
+      bid:[{wk:w2, kind:'right', n:3, none:1, h:5.5}, {wk:w2, kind:'struct', n:1, none:0, h:20}],
+      ev:[{wk:w2, k:'km_view', sub:'', n:41, pc:null}, {wk:w2, k:'km_put', sub:'right', n:3, pc:80}, {wk:w2, k:'km_bid', sub:'right', n:6, pc:91}, {wk:w2, k:'km_reg', sub:'right', n:9, pc:null}, {wk:w2, k:'km_quick', sub:'', n:2, pc:90}, {wk:w2, k:'mb_put', sub:'with', n:4, pc:85}]}};
 }
 function havWire(){
   const sw = $('#havSw'); if (sw) sw.onclick = async () => { sw.disabled = true; try { if (!DEMO) await rpc('admin_cfg_set', {ck:'stock_server', cv:!(HAV.cfg && HAV.cfg.stock_server)}); else HAV.cfg.stock_server = !HAV.cfg.stock_server; HAV = DEMO ? HAV : null; } catch (e){ alert(e.message); } render(); };

@@ -4,7 +4,7 @@
 // from the year, the factor times the group's quota unit, which is the same for every player (WORLD_SEED and the stock from the server).
 // So a sale only moves who fishes; the sum of the quota factors stays (bar the 10 % cut when a right is structured, which goes back to
 // the group as in life). One national market (V5 A: no landsdel). The price band, the 2 % step, the durations and the 5 % commission are
-// B's (MB in 09k-market.js); the takst is the year's cod quota at KPK (fixed until KM5, V4 B). The register sells as today (V3 A).
+// B's (MB in 09k-market.js); the takst is the year's cod quota at the quota price (kpkAt, which lives since KM5, V4 B). The register sells as today (V3 A).
 // This file is pure, so the unit tests can run it (tests/unit/kvotemarked.test.mjs): what can be put out (kmWhy), what a buyer may take
 // and on which boat (kmBuyWhy), the goods as they travel (kmPack), the seller's side (kmOut) and the buyer's (kmApply), and the free
 // right a company keeps without a boat (S.licFree). The server is KM2, the pages KM3, the boat with or without the right KM4.
@@ -36,14 +36,14 @@ const kmLeft = (s, H) => clamp(s.until - kmYear(H), 0, STRUCT.years);
 function kmKf(item){ if (!item || !HJ[item.id]) return 0; if (item.kind === 'struct') return +item.kf || 0; return HJ[item.id].kf + (item.st || []).reduce((a, s) => a + s.kf, 0); }
 // the year's cod quota on a good, kg (factor × the group's unit for the year: the same for every save with WORLD_SEED)
 function kmCod(item, H){ const R = item && HJ[item.id]; if (!R) return 0; return Math.round(kmKf(item) * yearQuota(yearH(H == null ? S.t / 60 : H)).unit[R.grp] * 1000); }
-// the takst: a right is the year's cod quota at KPK; a structure quota the same for its factor, times the years left over 20 (linear:
+// the takst: a right is the year's cod quota at the quota price (kpkAt); a structure quota the same for its factor, times the years left over 20 (linear:
 // the time limit came so the quota could be written off over the period, høringsnotatet 26.03.2026 kap. 6.1; an assumption). A right
 // with structure quotas carries them, each at its own takst
 function kmTakst(item, H){
   H = H == null ? S.t / 60 : H; const R = item && HJ[item.id]; if (!R) return 0; const unit = yearQuota(yearH(H)).unit[R.grp] * 1000;
-  const st = s => s.kf * unit * KPK * kmLeft(s, H) / STRUCT.years;
+  const k = kpkAt(H), st = s => s.kf * unit * k * kmLeft(s, H) / STRUCT.years;
   if (item.kind === 'struct') return Math.round(st(item));
-  return structPrice(item.id, H) + Math.round((item.st || []).reduce((a, s) => a + st(s), 0));   // (the own part as the register's price: licQ at KPK)
+  return structPrice(item.id, H) + Math.round((item.st || []).reduce((a, s) => a + st(s), 0));   // (the own part as the register's price: licQ at kpkAt)
 }
 // the price band: the start price from 40 % and buy-now up to 160 % of the takst, the next bid 2 % over (B's limits, MB)
 // (mbPriceWhy and mbNext in 09k-market.js serve the market as they are)
@@ -127,7 +127,7 @@ function kmApply(item, to, H){
   if (to.how === 'put'){
     if (item.kind !== 'right' || vget(v, 'lic')) return null;
     const ov = openVesselId(); if (ov) openUsedSave(vget(vesselById(ov), 'quota'));   // (the open group's catch follows the owner, § 29, as at the yard)
-    const lic = {id:item.id, hl:HJ[item.id].hl, kpk:KPK, since:y, from:'', st:(item.st || []).map(s => ({...s}))}; if (item.landY != null) lic.landY = item.landY; licExtra(lic);
+    const lic = {id:item.id, hl:HJ[item.id].hl, kpk:kpkAt(H), since:y, from:'', st:(item.st || []).map(s => ({...s}))}; if (item.landY != null) lic.landY = item.landY; licExtra(lic);
     const fished = withVessel(v, () => { S.lic = lic; const q = freshQuota();
       if (used){ q.torsk = used.torsk || 0; q.hyse = used.hyse || 0; q.sei = used.sei || 0; } else q.torsk = Math.round(licQ(lic, H).torsk * sellerCod(lic.id, H));
       q.seller = q.torsk; return q.torsk; });

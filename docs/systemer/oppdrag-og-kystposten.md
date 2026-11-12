@@ -176,6 +176,11 @@ Jonas: «båtnavn eller rederiene til andre brukere må komme offentlig i avisen
   - Kronene i saken er leserens egne: snittet hos de ti mottakene nærmest hjemhavna, hvem som betaler best, endringen siden for en måned siden, og om været har holdt båtene i havn (`supplyFactor ≥ 1,02`).
   - Dagens rekord varsles i spillet én gang (`pressDay`, hver spilltime fra `05-vessels.js`; `S.press.told`).
   - Ordet «rekord» gjelder altså det høyeste på et år, og ingressen sier det.
+- **Kvoteprisen denne uka** (`pressKvote`, `pressKvoteFetch`; KM5, 12.11.2026, `docs/planer/kvotemarkedet.md`):
+  - Én sak i uka på forsiden (type `kvotepris`, «Marked»), datert ukas start (`weekOf`): taksten per kilo torskekvote (`kpkAt`, den samme i alle spill) og endringen fra uka før.
+  - Fra serveren forrige spilluke sine kvotesalg mellom spillere (`km_week`, `supabase/migrations/20261112130000_km5.sql`): antall hjemler og strukturkvoter og medianen mot taksten, aldri hvem. Hentes med de andre sakene, én gang i uka (og på nytt det første spilldøgnet om svaret var tomt).
+  - Uten salg, uten skyen eller før migreringen er kjørt: bare taksten og hva den følger. Ingen ny `kind` på serveren: saken regnes i hvert spill.
+  - Test: `tests/kvotemarkedtest.py` (8d, med skjermbildene `kystposten_kvotepris_*.png`).
 - **Årets første skrei** (`pressSkrei`, `pressSkreiFetch`):
   - `news_first(since)` (`supabase/migrations/20261007190000_news_skrei.sql`) gir de ti første torskelandingene i 30 spilldøgn fra skreisesongens første dag (`SEASON_EV` skrei, `seasonDoy`). En landing er en spillers rader på samme tid og havn, minst 30 kg torsk, i åpen eller lukket gruppe, aldri en gjest, med båtnavnet og rederiet i lukket gruppe.
   - Klienten tar den første ved en havn nord for 62° N (Stad, `natLL`). Havneregisteret er likt for alle, så det blir samme båt for alle.
