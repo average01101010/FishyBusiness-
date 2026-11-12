@@ -115,4 +115,14 @@ export default function (t){
   // the model the game steers by reaches the top speed with the propeller (dynCalOf reads BOAT.vmax; 16b-dyn.js unchanged)
   for (const type of ['trebat', 'hurtigsjark']){ const b = boat(type, {propLv:3, engLv:2}), v = top(calOf(b).P);
     t.near(v / K.BOAT.vmax, 1, 0.03, type + ' propell 3 og motor 2: modellen når toppfarten (' + v.toFixed(2) + ' av ' + K.BOAT.vmax.toFixed(2) + ' kn)'); }
+  // the Trim app's promise (trimVmax, ui/phone/06-render.js): the top speed a trim gives is the one it gives, with a propeller and an engine
+  // step (the kontroll 12.11.2026: the app took BOAT.vmax / on.x × B.x, the product, and promised 57,2 kn for 50,6)
+  for (const o of [{}, {propLv:3}, {engLv:2}, {propLv:3, engLv:2}]) for (const k of Object.keys(K.BOOSTS)){
+    boat('hurtigsjark', o); const p0 = K.trimVmax(k); K.trimSet(k); t.near(p0, K.BOAT.vmax, 1e-9, 'Trim-appen lover ' + p0.toFixed(1) + ' kn for ' + k + ' (' + JSON.stringify(o) + ') og gir ' + K.BOAT.vmax.toFixed(1));
+    const other = Object.keys(K.BOOSTS).find(x => x !== k), p1 = K.trimVmax(other); K.trimSet(other); t.near(p1, K.BOAT.vmax, 1e-9, 'med ' + k + ' på lover den ' + p1.toFixed(1) + ' kn for ' + other + ' og gir det'); }
+  // a yard job on the hull for a boat that is no longer the one (yardStale, core/06-services.js): traded in, or not the next step
+  { const b = boat('sjark'), J = (kind, lv, o = {}) => Object.assign({kind, lv, ty:'sjark'}, o);
+    t.ok(!K.yardStale(J('eng', 1), b) && !K.yardStale(J('hold', 1), b) && !K.yardStale(J('upg', 1, {u:'cabin'}), b) && !K.yardStale(J('prop', 1), b), 'jobbene for neste trinn på samme båt står');
+    b.type = 'snekke'; t.ok(['eng', 'hold', 'prop'].every(k => K.yardStale(J(k, 1), b)), 'byttet inn mens de ventet: motor, lasterom og propell betales tilbake');
+    b.type = 'sjark'; b.engLv = 1; t.ok(K.yardStale(J('eng', 1), b) && !K.yardStale(J('eng', 2), b), 'motortrinn 1 på en båt som har det, er ikke lenger neste trinn'); }
 }

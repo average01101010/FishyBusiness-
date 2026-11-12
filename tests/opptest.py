@@ -320,13 +320,19 @@ async def opp3(pg, J):
     await pg.evaluate("DOCK.close(); S.boat.type = 'kyst15'; S.boat.propLv = 1; applyVessel(); S.cash = 2e6; DOCK.open('utstyr')"); await pg.wait_for_timeout(400)
     await pg.evaluate("(e => e && e.click())(document.querySelector('#drawerBody [data-pa=propup]'))"); await pg.wait_for_timeout(300)
     c1 = json.loads(await J(PC)); r1 = json.loads(await J("{n:(S.jobs || []).filter(j => j.kind === 'prop').length, cash:S.cash}"))
-    await pg.evaluate("const e = document.querySelector('#drawerBody [data-card=prop]'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
-    await pg.screenshot(path='opp3_bekreft_liggende.png')
-    await pg.evaluate("(e => e && e.click())(document.querySelector('#drawerBody [data-pa=propup]'))"); await pg.wait_for_timeout(300)
+    await pg.evaluate("(e => e && e.click())(document.querySelector('#drawerBody [data-pa=propup]'))"); await pg.wait_for_timeout(300)   # (at once: the confirmation's window is short, IC_CONFIRM_MS)
     r2 = json.loads(await J("{j:(S.jobs || []).filter(j => j.kind === 'prop').map(j => ({lv:j.lv, kr:j.kr})), cash:S.cash}"))
     check(c1 and 'Bekreft · 720 000 kr' in c1['btn'] and c1['x'] and r1 == {'n': 0, 'cash': 2000000} and r2['j'] == [{'lv': 2, 'kr': 720000}] and r2['cash'] == 2000000 - 720000,
           'kystbåten på 15 m: trinn 2 for 720 000 kr spør «Bekreft · 720 000 kr» med ✕ først, og det andre trykket bestiller', {'card': c1 and c1['btn'], 'r1': r1, 'r2': r2})
     await pg.evaluate("for (let i = 0; i < 400 && (S.jobs || []).some(j => j.kind === 'prop'); i++) step()")
+    # the picture of the confirmation: step 3 asked for, then cancelled with ✕
+    await pg.evaluate("DOCK.close(); DOCK.open('utstyr')"); await pg.wait_for_timeout(300)
+    await pg.evaluate("(e => e && e.click())(document.querySelector('#drawerBody [data-pa=propup]'))"); await pg.wait_for_timeout(300)
+    await pg.evaluate("const e = document.querySelector('#drawerBody [data-card=prop]'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
+    await pg.screenshot(path='opp3_bekreft_liggende.png')
+    await pg.evaluate("(e => e && e.click())(document.querySelector('#drawerBody [data-pa=shop0]'))"); await pg.wait_for_timeout(200)
+    r = json.loads(await J("{lv:S.boat.propLv, n:(S.jobs || []).length}"))
+    check(r == {'lv': 2, 'n': 0}, 'trinn 2 er montert, og ✕ på bekreftelsen for trinn 3 bestiller ingenting', r)
     # portrait: the card and the page fit the drawer
     await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(500)
     await pg.evaluate("DOCK.close(); DOCK.open('utstyr')"); await pg.wait_for_timeout(400)

@@ -534,6 +534,12 @@ function boatWith(o, v){
   const now = fuelLph(at, 0), lph = now / (fuelBase(at, BOAT.vmax, BOAT.planing) * BOAT.fuelK) * fuelBase(at, vmax, BOAT.planing) * fk;
   return {vmax, vcruise, lph, at};
 }
+// the top speed with trim k on the boat you follow, instead of the one on (or none): her own speed times one plus the sum with that trim
+// (speedSum). The Trim app's «Toppfart med den» (ui/phone/06-render.js trim) asks this, so what it promises is what the trim gives
+function trimVmax(k){
+  const b = S.boat, T0 = canBoost(BOAT) && trimOn(b), X0 = speedSum(b, BOAT, T0), X1 = speedSum(b, BOAT, BOOSTS[k] || null);
+  return BOAT.vmax / (1 + X0.sp) * (1 + X1.sp);
+}
 function fuelLph(v, W){ const base = fuelBase(v, BOAT.vmax, BOAT.planing); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * ((typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? 1.5 : 1); }
 function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed() * (typeof hullSpeed === 'function' ? hullSpeed() : 1); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 

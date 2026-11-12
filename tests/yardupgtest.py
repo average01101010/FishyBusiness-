@@ -73,6 +73,9 @@ async def main():
           // a boat traded in while it waited: the yard pays it back, nothing is fitted
           b.status = 'port'; b.propLv = 1; applyVessel(); const c2 = S.cash; buy(); const j3 = S.jobs.find(x => x.kind === 'prop'); b.type = 'snekke'; delete b.propLv; applyVessel();
           if (j3) finishJob(j3); S.jobs = S.jobs.filter(x => x !== j3); R.trade = {paid:c2 - (j3 ? j3.kr : 0), cash:S.cash, c2, lv:b.propLv || 0};
+          // the engine ordered and the boat traded in while it waited (the kontroll 12.11.2026: the new boat got step 2 for nothing)
+          b.type = 'sjark'; delete b.engLv; delete b.propLv; applyVessel(); S.jobs = []; const c3 = S.cash; PHONE.dact('utstyr', 'engup', {}); const j4 = S.jobs.find(x => x.kind === 'eng'); const paid4 = c3 - S.cash;
+          b.type = 'snekke'; applyVessel(); if (j4) finishJob(j4); S.jobs = []; R.engTrade = {paid:paid4, kr:j4 && j4.kr, back:S.cash - (c3 - paid4), lv:b.engLv || 0};
           // the trim on top: the same knots with and without the propeller
           const add = lv => { b.type = 'hurtigsjark'; b.propLv = lv; delete b.trim; applyVessel(); const v = BOAT.vmax; trimSet('turbo'); const d = BOAT.vmax - v; trimEnd(); return d; };
           R.trim = [add(0), add(3)];
@@ -86,6 +89,7 @@ async def main():
         print(ok(pr['lv'] == 1 and abs(pr['v'][1] - pr['v'][0] * 1.05) < 1e-9), 'the job finishes and sets step 1: the havsjark goes 5 % faster', [pr['lv'], pr['v']])
         print(ok(pr['wait'] and pr['paid2'] == 46000 and pr['back'][0] == pr['back'][1]), 'step 2 (46 000 kr) cancelled before it starts: the price comes back', [pr['wait'], pr['back']])
         print(ok(pr['trade']['cash'] == pr['trade']['c2'] and pr['trade']['paid'] < pr['trade']['c2'] and pr['trade']['lv'] == 0), 'a boat traded in while the job waited: the yard pays it back and fits nothing', pr['trade'])
+        print(ok(pr['engTrade']['paid'] > 0 and pr['engTrade']['kr'] == pr['engTrade']['paid'] and pr['engTrade']['back'] == pr['engTrade']['paid'] and pr['engTrade']['lv'] == 0), 'a bigger engine ordered and the boat traded in while it waited: the yard pays it back, the new boat keeps her own engine', pr['engTrade'])
         print(ok(abs(pr['trim'][0] - pr['trim'][1]) < 1e-9 and pr['trim'][0] > 21.9), 'turbo trim gives as many knots with propeller 3 as without (22 kn, the boat\'s own)', pr['trim'])
         print(ok(not errs), 'no page errors', errs[:2])
         await b.close()
