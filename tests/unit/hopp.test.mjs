@@ -51,4 +51,14 @@ export default function (t){
   const c = {attr:{uth:2}}; const F = BOAT.fac || {};
   t.near(crewSeaFat(c, false, 0, false), 3 * 0.4 * (1.4 - 0.32) * ((BOAT.fx && BOAT.fx.fat) || 1) * (F.house === 'open' ? 1.1 : 1), 1e-9, 'seiling uten arbeid: ' + crewSeaFat(c, false, 0, false).toFixed(2) + ' i timen');
   t.near(crewSeaFat(c, true, 1, true) / crewSeaFat(c, false, 0, false), 2 * (1 / 0.4) * 1.25, 1e-9, 'fiske, fullt arbeid og natt: 6,25 ganger');
+
+  // 6. what the others see (HO2): a report far from the last one is jumped, not glided to (PT_SNAP), so the boat goes out at the start
+  // and comes in at the stop; nothing new in pos_put
+  const {ptTake, PT_SNAP} = K, now = 5e6;
+  ptTake({id:'hop1', at:now - 3000, x:100, y:100, hd:0, st:'sailing', v:8}, now - 3000);
+  const T1 = ptTake({id:'hop1', at:now, x:100 + 2 * PT_SNAP, y:100, hd:0, st:'port', v:0}, now);
+  t.eq(T1.off, null, 'et hopp på ' + 2 * PT_SNAP + ' km: de andre ser båten forsvinne og dukke opp ved målet, uten å gli dit');
+  ptTake({id:'hop2', at:now - 3000, x:100, y:100, hd:0, st:'sailing', v:8}, now - 3000);
+  const T2 = ptTake({id:'hop2', at:now, x:100.05, y:100, hd:0, st:'sailing', v:8}, now);
+  t.ok(!!T2.off && T2.off.dur > 0, 'en vanlig rapport 50 m unna glir som før (kontroll av testen: ' + (T2.off ? Math.round(T2.off.dur) + ' ms' : 'ingen glidning') + ')');
 }

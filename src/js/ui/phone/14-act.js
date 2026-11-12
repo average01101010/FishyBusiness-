@@ -86,6 +86,7 @@
     else if (a === 'admEnergy'){ S.adm = S.adm || {}; S.adm.noEnergy = !S.adm.noEnergy;
       if (S.adm.noEnergy){ S.sleep = null; S.energy = 100; S.drowsy = false; S.enWarn = false; log('Admin: energien er skrudd av. Du blir ikke sliten og sovner ikke.', 'Admin: energy is off. You do not tire or fall asleep.'); }
       else log('Admin: energien er skrudd på igjen.', 'Admin: energy is on again.'); }
+    else if (a === 'admHopp'){ S.adm = S.adm || {}; S.adm.hopp = !S.adm.hopp; log(S.adm.hopp ? 'Admin: spoleknappen er på (test, hoppet er gratis).' : 'Admin: spoleknappen er av.', S.adm.hopp ? 'Admin: the fast-forward button is on (test, the hop is free).' : 'Admin: the fast-forward button is off.'); }
     else if (a === 'admFuel'){ const b = S.boat, add = Math.max(0, BOAT.fuelCap - b.fuel); b.fuel = BOAT.fuelCap; if (b.status === 'adrift' && add > 0) b.status = 'idle'; log('Admin: tanken fylt (' + fmt(add) + ' L).', 'Admin: the tank filled (' + fmt(add) + ' L).'); }
     else if (a === 'hbshow'){ HBUI.show(d.id); return; }   // «Vis meg» in Håndboka: the phone closes and the tip points (07c-handbook.js)
     else if (a === 'hbskip'){ HBUI.toggle(+d.ch); }

@@ -8,8 +8,9 @@ harbour 8-30 km away on an Autonav route, with fish in the hold and you aboard:
   3. the trim: with a turbo trim on, the hop takes the minutes it would have run off it (Jonas: «som om båten seilte»)
   4. refused, nothing changed: too little diesel, and the weather over the boat's risk (WX_FORCE); paid (hopGo(true)) it goes anyway
   5. no page errors
-KYST_LITE=1 python3 tests/hopptest.py. Prints OK or FEIL lines."""
-import asyncio, json
+KYST_LITE=1 python3 tests/hopptest.py. Prints OK or FEIL lines. KYST_HOPP_FRA=<havn> starts from that harbour instead
+(the spot check along the coast; the build must have the whole coast)."""
+import asyncio, json, os
 from _env import boot
 from playwright.async_api import async_playwright
 
@@ -18,8 +19,12 @@ def check(ok, what, info=None):
     print(('OK ' if ok else 'FEIL ') + what + ('' if info is None else ' ' + json.dumps(info, ensure_ascii=False)[:600]))
     if not ok: FAIL.append(what)
 
-SETUP = """async () => {
-  const b = S.boat, A = portById(b.port) || PORTS.find(p => dist(p.p, b.pos) < 1);
+SETUP = """async (fra) => {
+  const b = S.boat;
+  // the spot check along the coast (/stikkprove): KYST_HOPP_FRA names the harbour to start from (the build must have the whole coast)
+  if (fra){ const F = PORTS.find(p => p.name === fra) || PORTS.find(p => p.name.startsWith(fra)); if (!F) return {err:'no harbour ' + fra};
+    await mapNeed(F.p, 4); b.status = 'port'; b.port = F.id; b.pos = {x:F.p.x, y:F.p.y}; S.plan = null; }
+  const A = portById(b.port) || PORTS.find(p => dist(p.p, b.pos) < 1);
   const B = PORTS.filter(p => p.id !== A.id && !p.naust && dist(p.p, A.p) > 8 && dist(p.p, A.p) < 30).sort((p, q) => dist(p.p, A.p) - dist(q.p, A.p))[0];
   if (!B) return {err:'no harbour 8-30 km from ' + A.name};
   const r = await leiaRoute({x:A.p.x, y:A.p.y}, {x:B.p.x, y:B.p.y}, A.id, B.id); if (r.why) return {err:r.why[0]};
@@ -55,7 +60,7 @@ async def main():
         await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY && S.boat.status === 'port'", timeout=90000)
         pg.set_default_timeout(600000)
         J = lambda js, *a: pg.evaluate(js, *a)
-        s = await J(SETUP)
+        s = await J(SETUP, os.environ.get('KYST_HOPP_FRA') or None)
         check(not s.get('err'), 'en Autonav-rute mellom to havner på Senja', s)
         if s.get('err'): print(errs); await br.close(); return
         # 1. sailed with the clock

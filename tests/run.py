@@ -139,6 +139,8 @@ LITE += ['mobtest']
 LITE += ['rundshot']
 COVER['tests/rundshot.py'] = ['rundshot']
 COVER['src/js/core/06j-hopp.js'] = ['hopptest']; COVER['tests/hopptest.py'] = ['hopptest']
+COVER['src/js/ui/10u-hopp.js'] = ['hopptest', 'hoppshot']; COVER['tests/hoppshot.py'] = ['hoppshot']; COVER['src/js/core/06j-hopp.js'] += ['hoppshot']
+D3 += ['hoppshot']   # spoleknappen, kortet og hoppet i 3D i begge formater (HO2, steg 105)
 for _f in ('src/js/ui/07-guide.js', 'src/js/ui/08-actions.js', 'src/js/ui/05d-plan2.js'): COVER.setdefault(_f, []).append('rundshot')
 D3 += ['mobshot']
 COVER['src/js/core/14b-sikkerhet.js'] = ['mobtest', 'seaworktest']

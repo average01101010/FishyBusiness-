@@ -3090,3 +3090,6 @@
 2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	decktest	OK	16	lite	samtidig	
 2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	crewlifetest	OK	7	lite	samtidig	
 2026-11-12 10:13	ccr-e7efd74c-rioki0	e0f5977+	worktest	OK	29	lite	samtidig	
+2026-11-12 10:13	ccr-e7efd74c-rioki0	b95faf4	trip2	OK	38	lite	samtidig	
+2026-11-12 10:14	ccr-e7efd74c-rioki0	b95faf4	csptest	OK	91	lite	samtidig	
+2026-11-12 10:18	ccr-e7efd74c-rioki0	b95faf4+	hopptest	OK	7	lite	alene	
