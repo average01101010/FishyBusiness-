@@ -286,7 +286,7 @@ FREE = {1: [(1.45, 0.38), (2.48, 0.38)], -1: [(0.34, 0.38), (1.18, 0.38), (2.05,
 FREE_H = 0.15                # their height, from 2 cm over the deck (the strake's top is under it)
 EXH = (-0.62, 1.58); EXH_R = 0.06                             # the wet exhaust in the transom (y, z)
 BILGE = (5.20, -1, WLL + 0.45); BILGE_R = 0.02                 # the bilge pump's outlet
-RUST = (0.40, 0.21, 0.09); GRIME = (0.10, 0.10, 0.09); SLIME = (0.16, 0.20, 0.10)
+RUST = (0.50, 0.25, 0.09); GRIME = (0.10, 0.10, 0.09); SLIME = (0.16, 0.20, 0.10)
 CLEATS = (8.30, 3.95, 0.35)
 WH_LIFT = 1.6
 def in_wh(p): return WX0 + 0.02 < p[0] < WXF + 0.45 and abs(p[1]) < WY - 0.02 and ZWH - 0.02 < p[2] < WR + 0.005
@@ -324,7 +324,7 @@ def wear(p, m, n):
         for xc in CLEATS: k = max(k, run_under(x, z, xc - 0.10, 0.20, z_sh(xc), 0.55, side))
         chalk = ss(0.10, 0.45, n3(x * 1.9, z * 2.6, side * 5.0 + 9.0)) * ss(Z_BT + 0.25, 1.45, z) * ss(z_kn(x) + 0.02, z_kn(x) - 0.15, z) * ss(1.2, 2.4, x) * ss(9.4, 8.2, x)
         slime = ss(0.20, 0.0, z - paint_line(x, Z_BT)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 6.0, side, 2.0)))
-        t = mix(base, ((0.30, 0.50, 0.52), 0.30 * chalk), (SLIME, 0.45 * slime), (GRIME, 0.55 * k), (RUST, 0.62 * r))
+        t = mix(base, ((0.30, 0.50, 0.52), 0.45 * chalk), (SLIME, 0.60 * slime), (GRIME, 0.60 * k), (RUST, 0.80 * r))
         return [t[i] * g for i in range(3)]
     if nm == 'strake':
         v = 0.95 + 0.05 * n3(x * 4.0, z * 9.0, side)
