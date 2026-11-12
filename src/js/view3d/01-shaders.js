@@ -257,8 +257,8 @@
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
   // (W: also the three sums of the Jacobian of the horizontal shift, for the whitecaps, F3: jxx, jxz and the trace jtr, with the
   // variance of the compression jv, as sa is the crest's; and the short waves' own compression jsc, 4-9, with its variance jsv)
-  const SEA_WAVE = (W, i) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=' + (i < 10 ? 'grpW(P-' + (i < 4 ? 'uNFL' : 'uNFD') + ',a,b,' + i + '.0)' : 'grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' +
-    'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*sg.y*am*gr;N.x-=a.x*wa*c*att;N.z-=a.y*wa*c*att;N.y-=Q*wa*s*att;lost+=wa*wa*(1.0-att);' +
+  const SEA_WAVE = (W, i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=' + (i < 10 ? 'grpW(P-' + (i < 4 ? 'uNFL' : 'uNFD') + ',a,b,' + i + '.0)' : 'grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F && i >= 4 ? 'fe2+=am*am;' : '') +
+    'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*sg.y*am*gr;' + (F && i >= 4 ? 'float wn=wa*(1.0-uFftP.z);' : 'float wn=wa;') + 'N.x-=a.x*wn*c*att;N.z-=a.y*wn*c*att;N.y-=Q*wn*s*att;lost+=wn*wn*(1.0-att);' +
     (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;float jw=Q*wa*s*att;jxx+=jw*a.x*a.x;jxz+=jw*a.x*a.y;jtr+=jw;float qk=Q*a.z*sg.y*am*att;jv+=qk*qk*0.228;' + (i >= 4 ? 'jsc+=jw;jsv+=qk*qk*0.228;' : '') : '') + '}';
   // The fragment shader reads the waves from copies of its own (uFWa, uFWb, uFGp): the same uniform array in both stages is the only
   // thing the sea has that no other program has, and the one guess left for the phone that would link none of its variants
@@ -399,8 +399,19 @@
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));vec3 col=mix(body,sky,fr)+uSunCol*pow(max(dot(R,uSun),0.0),220.0)*0.9;' +
     'gl_FragColor=vec4(fin(col,vW),1.0);}');
   // FAR (the far pass beyond the near terrain): the four longest wind waves and the swell, the rest of the wind sea only as roughness, no ripples
+  // The short sea's light from the FFT tiles (Bølgene B1, 14b-fft.js, core/03k-hav-fft.js), in place of waves 4-9's: the tiles are
+  // read in the near field's frame (P - uNFD, as the short waves ride), each with its mip levels; fs scales them from Hs = 1 at the boat's
+  // spectrum to the sea here (the Gerstner amplitudes of waves 4-9 here against at the boat, fe2 / A0, so the height, how grown the sea
+  // is, the shoaling and the stream all follow); the second tile's short waves feel the gusts (half as much as the ripples). The normal
+  // is (-hx, 1 - Q tr, -hz) as the Gerstner waves give it, Q the place's sharpness held so that three standard deviations of the
+  // compression stay under 0.27 of the normal; what the mip level has averaged away comes back as roughness (lost, twice the mean square
+  // slope as the waves count it), the share from the slope spectrum's even spread over the octaves: log2 of the pixel over the texel,
+  // over the octaves the tile holds. yF: the tiles' height, for the glow through the crests.
+  const FFT_FS = 'if(uFftP.z>0.5){fs=sqrt(fe2/uFftP.w);vec2 q=P-uNFD;vec4 f1=texture2D(uFft1,(q-uFftO.xy)*uFftP.x);vec4 f2=texture2D(uFft2,(q-uFftO.zw)*uFftP.y);float g2=0.5+0.805*gust;' +
+    'float l1=clamp(log2(max(px,1e-3)/1.3516)/3.5510,0.0,1.0);float l2=clamp(log2(max(px,1e-3)/0.3859)/3.2805,0.0,1.0);vec4 f=f1+f2*g2;float lam=min(Qw,0.27/max(fs*uFftQ.z,1e-4));' +
+    'N.x-=fs*f.x;N.z-=fs*f.y;N.y-=lam*fs*f.z;lost+=2.0*fs*fs*(uFftQ.x*l1+uFftQ.y*g2*g2*l2);yF=fs*f.w;}';
   const SEA_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
-    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform vec2 uNFL;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;uniform vec2 uFoamCw;' + PLG +
+    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform vec2 uNFL;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;uniform vec2 uFoamCw;uniform sampler2D uFft1;uniform sampler2D uFft2;uniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;' + PLG +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + SWELLG + WCAPS + SURFF +
     AIR + 'void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // the sea by the shore (F4); the far pass is as before
@@ -410,10 +421,10 @@
     // gusts: slow patches of rougher and calmer water break up any repetition; they drift downwind (they went upwind before, 5.61)
     'vec2 Q=P-w*uTime*1.2;float gust=0.62+0.2*sin(dot(Q,vec2(0.0021,0.0013)))*sin(dot(Q,vec2(-0.0009,0.0024))+1.3)+0.12*sin(dot(Q,vec2(0.0047,-0.0031))+2.1)+0.08*sin(dot(Q,vec2(0.0019,0.0067))+4.0);' +
     // y and sa: the wind sea's height here and its variance, so the crest is in standard deviations whatever the spectrum
-    'vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;' +
-    [0, 1, 2, 3].map(i => SEA_WAVE(true, i)).join('') +
+    'vec3 N=vec3(0.0,1.0,0.0);float y=0.0;float sa=1e-6;float lost=0.0;float Qw=qOf(S);float jxx=0.0;float jxz=0.0;float jtr=0.0;float jv=1e-8;float jsc=0.0;float jsv=1e-8;float fe2=0.0;float yF=0.0;float fs=0.0;' +
+    [0, 1, 2, 3].map(i => SEA_WAVE(true, i, true)).join('') + 'float yL=y;float saL=sa;' +
     '\n#ifdef FAR\n' + [4, 5, 6, 7, 8, 9].map(i => '{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float wa=a.z*ampOf(a,b,S);lost+=wa*wa*0.456;}').join('') +
-    '\n#else\n' + [4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i)).join('') + '\n#endif\n' +
+    '\n#else\n' + [4, 5, 6, 7, 8, 9].map(i => SEA_WAVE(true, i, true)).join('') + FFT_FS + '\n#endif\n' +
     [10, 11, 12].map(i => SEA_WAVE(false, i)).join('') +
     // by the shore (F4): the surf wave's slopes, and everything capped where it would pass McCowan's limit (as the vertex shader)
     '\n#ifndef FAR\n{float cap=min(1.0,0.78*SH.x/max(2.83*sqrt(Et+Eu),1e-4));if(Es>1e-8&&uSurf.y>0.0){float As=sqrt(Es);float ks=surfK(SH.x);float f=surfF(SH);vec2 n=SH.zw/length(SH.zw);float att=smoothstep(2.0,7.0,6.2832/(ks*px));float wa=ks*As;float Qs=min(0.6,0.6/(wa+1e-4));' +
@@ -424,16 +435,16 @@
     // sea shows every slope in its reflections and the sub-second ripples looked like the water shivering (the user, 03.10.2026)
     // (the paws drift downwind at 2 m/s; before, upwind at 38, 0.5 / 0.013, 5.61)
     'float paw=mix(smoothstep(0.45,0.75,ns(P*0.013-w*uTime*0.026)),1.0,smoothstep(1.6,4.0,uWind));float ra=(0.0015+0.0042*min(uWind,2.0)+0.0034*max(uWind-2.0,0.0))*gust*paw;\n#ifdef FAR\nlost+=ra*ra*6.0;\n#else\n' +
-    'for(int j=0;j<8;j++){float fj=float(j);float ang=(fj-3.5)*0.36+sin(fj*2.3)*0.2;vec2 dir=w*cos(ang)+wp*sin(ang);float L=1.1+fj*0.42+fract(fj*0.618)*0.9;float k=6.2832/L;float att=smoothstep(2.0,7.0,L/px);' +
+    'ra*=1.0-uFftP.z*smoothstep(2.0,6.0,uWind);for(int j=0;j<8;j++){float fj=float(j);float ang=(fj-3.5)*0.36+sin(fj*2.3)*0.2;vec2 dir=w*cos(ang)+wp*sin(ang);float L=1.1+fj*0.42+fract(fj*0.618)*0.9;float k=6.2832/L;float att=smoothstep(2.0,7.0,L/px);' +
     'float f=k*dot(dir,P-uNFD)-sqrt(9.81*k+0.074*k*k*k/1025.0)*uTime+fj*1.9;float sl=ra*cos(f);N.x-=dir.x*sl*att;N.z-=dir.y*sl*att;lost+=sl*sl*(1.0-att)*0.5+ra*ra*0.5*(1.0-att);}\n#endif\n' +
     // the boat's own waves: their slopes (the short ones too, as shading), and the bow wave and the stern wave breaking white when steep
     'float wh=0.0;\n#ifndef FAR\nif(uFlat<0.5&&uWk3.w>0.5){wh=wakeH(P,1.0);float wx=wakeH(P+vec2(0.2,0.0),1.0);float wz=wakeH(P+vec2(0.0,0.2),1.0);float wl=smoothstep(1.0,4.0,6.2832/(uWk1.x*px));N.x-=(wx-wh)*5.0*wl;N.z-=(wz-wh)*5.0*wl;}\n#endif\n' +
-    'N=normalize(N);float crest=y*inversesqrt(sa);float ndv=max(dot(N,V),0.0);float fr=0.02+0.98*pow(1.0-ndv,5.0);vec3 R=reflect(-V,N);R.y=abs(R.y);' +
+    'N=normalize(N);float crest=y*inversesqrt(sa);float crS=uFftP.z>0.5?(yL+yF)*inversesqrt(saL+uFftQ.w*fs*fs):crest;float ndv=max(dot(N,V),0.0);float fr=0.02+0.98*pow(1.0-ndv,5.0);vec3 R=reflect(-V,N);R.y=abs(R.y);' +
     'vec3 sky=mix(uHor,uZen,pow(clamp(R.y,0.0,1.0),0.5));' +
     'vec3 body=uDeep*(uAmb*1.7+uSunCol*0.3*max(dot(N,uSun),0.0));' +
     // (the glow through a thin crest is seen across it, low against the sun; from above it is gone, else it drew the short crests as long
     // turquoise lines in a regular row, 09.11.2026)
-    'float sss=pow(max(dot(V,normalize(vec3(-uSun.x,0.3,-uSun.z))),0.0),3.0)*smoothstep(0.05,0.8,crest*0.25)*(1.0-smoothstep(0.55,0.9,V.y));body+=vec3(0.02,0.19,0.17)*sss*(uSunCol*0.9+uAmb*0.35);' +
+    'float sss=pow(max(dot(V,normalize(vec3(-uSun.x,0.3,-uSun.z))),0.0),3.0)*smoothstep(0.05,0.8,crS*0.25)*(1.0-smoothstep(0.55,0.9,V.y));body+=vec3(0.02,0.19,0.17)*sss*(uSunCol*0.9+uAmb*0.35);' +
     'vec3 col=mix(body,sky,fr);' +
     // sun glitter: sharp where the surface is resolved, a wider glitter path where the waves have become roughness
     'float rough=clamp(0.0015+lost,0.0015,0.25);float sp=clamp(2.0/rough,8.0,1200.0);float rs=max(dot(R,uSun),0.0);vec3 Hh=normalize(V+uSun);float Fs=0.02+0.98*pow(1.0-max(dot(Hh,V),0.0),5.0);' +

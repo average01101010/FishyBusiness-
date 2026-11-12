@@ -52,7 +52,8 @@
     // the wind sea grows over the fetch to WMO's open-sea height; its spectrum goes from a young sea (1 km of fetch) to the grown one
     const U = Math.max(0.3, WV.W), Fc = Math.max(1.01, fetchCap(U)), L0 = T => 9.81 * T * T / (2 * Math.PI);
     WV.C = 0.0016 * U * Math.sqrt(1000 / 9.81); WV.cap = hsWMO(U); WV.lnFcap = Math.log(Fc);
-    const wo = specW(L0(Math.max(0.5, tpWind(U, Fc)))), wy = specW(L0(Math.max(0.5, tpWind(U, 1))));
+    WV.L0o = L0(Math.max(0.5, tpWind(U, Fc))); WV.L0y = L0(Math.max(0.5, tpWind(U, 1)));   // (the two peaks, for the FFT tiles, 14b-fft.js)
+    const wo = specW(WV.L0o), wy = specW(WV.L0y);
     // the Gerstner sharpness (F3): one Q for all the wind waves at a place, so their summed compression sum(Q k a) never passes the
     // limit, which is near the cusp (0.85) in a young sea in a stiff wind and 0.6 of it in a grown one (the shaders' qOf, seaDisp);
     // KO and KY: sum(k w) of the grown and the young spectrum, for that sum where the wave heights are known
