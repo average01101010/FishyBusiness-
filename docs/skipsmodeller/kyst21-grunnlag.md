@@ -191,7 +191,7 @@ skala, med det sensoren pekte på i kap. 9, i den rekkefølgen startmeldingen gi
 | 5 | Lanternene om natta | Nattbilder fra spillet til sjøs (seilas: topplanterne, sidelanternene, hekklanterna; fiske: rødt over hvitt), egne nattrendringer `K6n` og `K6a` med hele masta i bildet, flomlysene tent og svakt måneskinn (`shots.py`: valgfrie `NIGHT_FLOODS` og `NIGHT_SUN` i skriptet) | Den felles `K6` klipper mastetoppen ut (100 mm linse), derfor de egne |
 | 6 | Grove deler | Lastevinsjen (trommel med vaier, flenser, bremsetrommel med bånd og spak, clutchspak, varphoder, motorhus med slanger), lys skott bak bakkdøra (ingen innredning), sløyebordet som trau (lepper, skjørt, tre skjærebrett, avstivning, gitterhylle, avløp, dyser på spylerøret; ingen kniver, de er kjøpbart redskap) | Rendringene `c_fore`, `c_break`, `c_table` |
 
-Nærmodellen er 147 756 trekanter (før 141 982). Døra til styrhuset er 2,05 m over terskelen. `qa/flatnorm.py`: de samme tre små flatene som i runde 1, ingen i styrhuset.
+Nærmodellen er 147 722 trekanter (før 141 982). Døra til styrhuset er 2,05 m over terskelen. `qa/flatnorm.py`: de samme tre små flatene som i runde 1, ingen i styrhuset.
 
 ### 12.2 Det som ikke er modellens
 

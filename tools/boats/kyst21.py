@@ -580,15 +580,17 @@ def wh_ring(z):
 ADOOR = (-1.50, -0.80)       # the wheelhouse's door in its aft wall to starboard, onto the boat deck (y), hooked open
 BRIM_O = 0.16; BRIM_I = 0.11   # the roof's brim: its lower edge out from the walls, how far its face slopes in (valg 26)
 def crown(x, y): return WR() + 0.12 + 0.05 * (1 - min(1.0, (y / 1.9) ** 2))
+MULL, FSIDE = 0.035, 0.025      # the posts between the front's panes, and from the front's outer panes to the front's corner (round 2)
+def front_pane(): return (2 * WFY - 2 * FSIDE - 2 * MULL) / 3
 def wh_faces():
     """(name, origin, u, v, windows): three panes in the front, one in each corner, three a side, one aft beside the door"""
     vl = (LEAN / (WR() - WS()), 0, 1.0); vlen = math.hypot(vl[0], 1.0); s = lambda z: (z - WS()) * vlen
     wz = (s(WS() + 0.03) + s(WH() - 0.03)) / 2; wh_ = s(WH() - 0.03) - s(WS() + 0.03); Fc = []
-    pw = (2 * WFY - 0.05 - 2 * 0.035) / 3          # (round 2: mullions of 3.5 cm and 2.5 cm to the corners; before 6 and 5)
-    Fc.append(('front', (WXF, 0, WS()), (0, 1, 0), vl, [rrect(u, wz, pw, wh_, 0.035, 3) for u in (-(pw + 0.035), 0.0, pw + 0.035)]))
+    pw = front_pane()                               # (round 2: mullions of 3.5 cm and 2.5 cm to the corners; before 6 and 5)
+    Fc.append(('front', (WXF, 0, WS()), (0, 1, 0), vl, [rrect(u, wz, pw, wh_, 0.035, 3) for u in (-(pw + MULL), 0.0, pw + MULL)]))
     for nm, a, b in (('corner_s', (WXS, -WY), (WXF, -WFY)), ('corner_p', (WXF, WFY), (WXS, WY))):
         u = (b[0] - a[0], b[1] - a[1], 0); mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, WS()); Lf = math.hypot(u[0], u[1])
-        Fc.append((nm, mid, u, vl, [rrect(0.0, wz, Lf - 0.07, wh_, 0.035, 3)]))
+        Fc.append((nm, mid, u, vl, [rrect(0.0, wz, Lf - 2 * MULL, wh_, 0.035, 3)]))
     zc = (WS() + WH()) / 2; hz = WH() - WS() - 0.06
     for sg, nm in ((1, 'side_p'), (-1, 'side_s')):
         for k, (x0, x1) in enumerate(((5.16, 5.86), (5.94, 6.64), (6.72, 7.36))):
@@ -859,9 +861,9 @@ def decks(A, G, fine=True):
             yk = ty0 + 0.07 + (ty1 - ty0 - 0.14) * k / 8; abox(A, tx0 + 0.07, tx1 - 0.07, yk - 0.008, yk + 0.008, zs + 0.015, zs + 0.035, C['galv'])
         for x0_, x1_ in ((tx0 + 0.07, (tx0 + tx1) / 2 - 0.02), ((tx0 + tx1) / 2 + 0.02, tx1 - 0.07)):
             beam(A, (x0_, ty1 - 0.05, mdeck(x0_, ty1) + 0.08), (x1_, ty1 - 0.05, zt2 - 0.12), 0.02, 0.02, C['steel'])          # the braces
-        for x in (tx0 + 0.06,):                                                                                             # the drain at its aft end
-            acyl(A, (x + 0.08, ty0 + 0.12, zt2 - 0.05), (x + 0.08, ty0 + 0.12, mdeck(x, ty0) + 0.10), 0.03, lambda q: C['steel'], seg=8)
-            acyl(A, (x + 0.08, ty0 + 0.12, mdeck(x, ty0) + 0.10), (x + 0.08, ty0 + 0.02, mdeck(x, ty0) + 0.03), 0.03, lambda q: C['steel'], seg=8)
+        x = tx0 + 0.06                                                                                                      # the drain at its aft end
+        acyl(A, (x + 0.08, ty0 + 0.12, zt2 - 0.05), (x + 0.08, ty0 + 0.12, mdeck(x, ty0) + 0.10), 0.03, lambda q: C['steel'], seg=8)
+        acyl(A, (x + 0.08, ty0 + 0.12, mdeck(x, ty0) + 0.10), (x + 0.08, ty0 + 0.02, mdeck(x, ty0) + 0.03), 0.03, lambda q: C['steel'], seg=8)
         # the wash pipe over the table's middle on three stands (and so the table's top is no deck to walk on in the game's deck map)
         ym = (ty0 + ty1) / 2
         F.pipe(A, [(tx0 + 0.06, ym, zt2 + 0.42), (tx1 - 0.06, ym, zt2 + 0.42)], 0.014, C['galv'], 6)
@@ -965,6 +967,7 @@ FUN = (4.05, 0.0)            # the funnel on the boat deck aft of the wheelhouse
 AM = (2.95, 0.0)             # the mizzen on the boat deck aft
 def am_top(): return BD() + 5.6
 def stern_l(): return (XA + 0.42, 0.0, z_cap(XA + 0.42) + 0.62)      # the stern light on the staff's foot at the taffrail
+TL_Z = 12.05                 # the derrick's topping lift's block on the mast, over the topped-up boom's tip
 def boom():
     """her derrick's heel (the gooseneck on the mast's after side, a little to port, clear of the mast's steps) and its tip: topped up
     along the mast's after side as it is stowed at sea, aft of the mast's steps (OB13 round 2: laid aft over the hatch it stood across the
@@ -995,12 +998,12 @@ def rig(A, fine=True):
     hl, tip = boom(); gz = hl.z
     abox(A, MX - 0.33, MX - 0.12, -0.08, 0.02, gz - 0.08, gz + 0.08, C['steel'])                       # the gooseneck's bracket on the mast
     acyl(A, hl, tip, 0.085, cm, seg=8 if fine else 5, r1=0.06)
-    acyl(A, (MX, 0, 11.3), tip + V((0, 0, 0.06)), 0.011, d, seg=4)                                       # the topping lift, hove short
+    acyl(A, (MX - 0.06, 0, TL_Z), tip + V((0, 0, 0.06)), 0.011, d, seg=4)                                # the topping lift from its block over the tip, hove short
     if fine:
         F.atorus(A, (MX - 0.04, 0.0, tip.z - 0.25), (0, 0, 1), 0.13, 0.014, lambda a: C['steel'], seg=14, rseg=4)   # the band that holds her to the mast
         acyl(A, tip + V((0.04, -0.02, -0.25)), (MX - 0.11, 0.06, tip.z - 0.25), 0.02, s, seg=6)
-        acyl(A, tip, hl + V((-0.10, -0.02, 0.55)), 0.009, d, seg=4)                                        # the cargo runner down the boom to its hook at the heel
-        F.atorus(A, hl + V((-0.10, -0.02, 0.47)), (0, 1, 0), 0.05, 0.012, lambda a: C['steel'], seg=12, rseg=4, a0=0.0, a1=4.4)
+        acyl(A, tip + V((-0.11, 0, 0)), hl + V((-0.19, -0.03, 0.55)), 0.009, d, seg=4)                                        # the cargo runner down the boom to its hook at the heel
+        F.atorus(A, hl + V((-0.19, -0.03, 0.47)), (0, 1, 0), 0.05, 0.012, lambda a: C['steel'], seg=12, rseg=4, a0=0.0, a1=4.4)
         # the shrouds to the bulwark's cap, the forestay to the stem
         for sg in (1, -1):
             cx = MX - 0.25; acyl(A, (MX, sg * 0.05, 10.3), (cx, sg * gunwale_y(cx, sg), z_cap(cx) + 0.02), 0.008, d, seg=4)
@@ -1172,9 +1175,8 @@ def details(A, G):
     acyl(A, (wx - 0.06, -0.47, wz + 0.14), (wx - 0.30, -0.47, zc_ + 0.40), 0.016, lambda q: C['steel'], seg=6)             # the clutch's lever
     acyl(A, (wx - 0.30, -0.47, zc_ + 0.40), (wx - 0.32, -0.47, zc_ + 0.50), 0.022, lambda q: C['red'], seg=8)
     for sg, y0 in ((-1, -0.50), (1, 0.38)): acyl(A, (wx, y0, zc_), (wx, y0 + sg * 0.20, zc_), 0.085, lambda q: C['steel'], seg=14, r1=0.12)   # the warping heads
-    abox(A, wx - 0.33, wx - 0.03, 0.30, 0.54, wz + 0.14, wz + 0.42, C['red'])                                              # the motor's housing on the bed
-    acyl(A, (wx - 0.18, 0.30, zc_), (wx - 0.18, 0.22, zc_), 0.07, lambda q: C['dark'], seg=12)
-    for dz in (0.06, 0.14): F.pipe(A, [(wx - 0.33, 0.42, wz + 0.14 + dz), (wx - 0.42, 0.42, wz + 0.14 + dz), (wx - 0.45, 0.42, wz + 0.004)], 0.012, C['rubber'], 6)   # the hoses down through the deck
+    abox(A, wx + 0.14, wx + 0.34, 0.34, 0.56, wz + 0.14, wz + 0.42, C['red'])                                              # the motor's housing on the bed
+    for dz in (0.06, 0.14): F.pipe(A, [(wx + 0.34, 0.45, wz + 0.14 + dz), (wx + 0.42, 0.45, wz + 0.14 + dz), (wx + 0.45, 0.45, wz + 0.004)], 0.012, C['rubber'], 6)   # the hoses down through the deck
     acyl(A, (wx, -0.05, zc_ + 0.10), (MX + 0.10, 0.0, 9.9), 0.008, lambda q: C['dark'], seg=4)
     # the mast's steps up its after side to the cross-tree, the ship's bell on its bracket under the forecastle's edge
     for k in range(18):
@@ -1244,7 +1246,7 @@ def details(A, G):
         d_ = (V((MX, sg * 0.05, 10.3)) - V((cx, y, zc + 0.02))).normalized()
         acyl(A, V((cx, y, zc + 0.04)) + d_ * 0.05, V((cx, y, zc + 0.04)) + d_ * 0.38, 0.016, lambda q: C['galv'], seg=6)
     hl, tip = boom()
-    for q in (tip + V((0.06, 0, 0.12)), V((MX - 0.02, 0, 11.22))):
+    for q in (tip + V((0.06, 0, 0.12)), V((MX - 0.08, 0, TL_Z - 0.08))):
         acyl(A, q + V((0, -0.035, 0)), q + V((0, 0.035, 0)), 0.075, lambda z: C['dark'], seg=12); abox(A, q.x - 0.012, q.x + 0.012, q.y - 0.05, q.y + 0.05, q.z - 0.11, q.z + 0.11, C['steel'])
     # the hatch's lashings: two wires across the tarpaulin to eye plates on the coaming
     hx0, hx1, hy0, hy1 = HATCH; zt = z_md((hx0 + hx1) / 2) + HATCH_H
@@ -1275,11 +1277,11 @@ def deck_seams():
         for y in (1.55, 3.0):
             for x0, x1 in ((XA + 0.5, DH0 - 0.02), (DH1 + 0.02, X_FC - 0.06)):
                 n = max(2, int((x1 - x0) / 0.35)); pts = [(x0 + (x1 - x0) * k / n, sg * y) for k in range(n + 1)]
-                pts = [p for p in pts if abs(p[1]) < ybi(p[0]) - 0.05 and not (HATCH[0] - 0.05 < p[0] < HATCH[1] + 0.05 and abs(p[1]) < HATCH[3] + 0.05)]
+                pts = [p for p in pts if abs(p[1]) < ybi(p[0]) - 0.05]
                 if len(pts) > 1: out.append(pts)
     return out
 def round2(A, G):
-    md = mdeck; up = lambda p: V((0, 0, 1))
+    up = lambda p: V((0, 0, 1)); md = mdeck
     for line in deck_seams(): F.seam(A, [V((x, y, md(x, y) + 0.0008)) for x, y in line], up, C['deck'], w=0.02, h=0.004)
     # the non-slip where they stand: a darker field with a raised tread in it (checker plate's bars, alternating), 3 mm proud
     for x0, x1, y0, y1 in NONSLIP:
@@ -1463,14 +1465,14 @@ def check():
     out.append(('rattet %.2f m forut for skipperen, setet %.2f m bak ham; baugen fra øyet: bakkens ripe ligger %.1f grader under vannrett' % (WHEEL[0] - SKIP[0], SKIP[0] - SEAT[0], math.degrees(math.atan2(ey - (z_cap(XF - 0.3) + RAIL_H - FCB), XF - 0.3 - SKIP[0]))),
                 0.3 <= WHEEL[0] - SKIP[0] <= 0.55 and SKIP[0] - SEAT[0] >= 0.35 and ey > z_cap(XF - 0.3) + RAIL_H - FCB))
     # (OB13 round 2) the view from the wheel: the derrick out of the panes, the posts between them; the sea over the forecastle
-    pw = (2 * WFY - 0.05 - 2 * 0.035) / 3; hl, tp = boom(); E = V((SKIP[0], SKIP[1], ey)); hits = []
+    pw = front_pane(); hl, tp = boom(); E = V((SKIP[0], SKIP[1], ey)); hits = []
     for k in range(41):
         P = hl + (tp - hl) * (k / 40); t = (WXF - E.x) / (P.x - E.x); yy, zz = E.y + (P.y - E.y) * t, E.z + (P.z - E.z) * t
         ym = E.y + (0.0 - E.y) * (WXF - E.x) / (MX - E.x)          # (the mast seen on the same pane)
         if WS() < zz < WH() and -WFY < yy < WFY: hits.append((yy, yy - ym))
     out.append(('utsikten fra roret: lastebommen toppet opp langs masta, %s; masta midt i styrbord frontrute (y %.2f; midtruta %.2f til %.2f); stolpene (det som synes, karmene ligger på dem) %.3f m mellom frontrutene og %.3f mot hjørnerutene (runde 1: 0,06 og 0,13)'
                 % ('i frontrutene ved y %.2f til %.2f, høyst %.2f m ved siden av masta' % (min(h[0] for h in hits), max(h[0] for h in hits), max(abs(h[1]) for h in hits)) if hits else 'utenfor frontrutene', ym, -pw / 2, pw / 2,
-                   0.035, 0.025 + 0.035), all(abs(h[1]) < 0.03 for h in hits) and ym < -pw / 2))
+                   MULL, FSIDE + MULL), all(abs(h[1]) < 0.03 for h in hits) and ym < -pw / 2))
     # the lanterns (FOR-1975-12-01-5 vedlegg I, read on Lovdata; 20 m and over): 'the hull' is the uppermost continuous deck, the main deck
     hull = z_md(MX); wz = white_z(); sz = side_z()
     out.append(('topplanterna %.2f m over skroget (hoveddekket ved masta; vedlegg I 2(a)(i), 20 m og over: minst 6 m, og minst bredden %.1f m når den er over 6 m, høyst 12)' % (wz - hull, BEAM), wz - hull >= min(12.0, max(6.0, BEAM))))
@@ -1614,7 +1616,7 @@ CLOSE = [('c_helm', (6.15, -0.45, WFL() + 1.72), (7.5, -0.85, WFL() + 1.05), 30,
          ('K6n', (XM + 34.0, -26.0, 8.0), (XM + 0.5, 0, 7.4), 50, True, True), ('K6a', (XA - 26.0, 19.0, 8.0), (XM - 1.0, 0, 7.2), 50, True, True), ('K6b', (XM + 30.0, 30.0, 8.0), (XM + 0.5, 0, 7.4), 50, True, True),
          ('c_table', (11.6, -0.5, _zc + 1.65), (9.3, -3.0, _zc + 0.75), 26, False, False), ('c_pen', (3.0, 2.6, _zc + 3.4), (0.5, -0.4, _zc), 26, True, False)]
 NIGHT_SUN = 0.06
-NIGHT_FLOODS = [((WXF + LEAN + 0.24, y, WR() - 0.08), (1, 0, -0.9)) for y in (-1.1, 1.1)] + [((MX - 0.24, -0.22, 9.5), (-1, -0.2, -0.8)), ((FUN[0] - 0.60, 0.0, BD() + 1.75), (-1, 0, -0.8)),
+NIGHT_FLOODS = [((WXF + LEAN + 0.24, y, WR() - 0.08), (1, 0, -0.9)) for y in (-1.1, 1.1)] + [((MX - 0.24, -0.22, 9.5), (-1, -0.2, -0.8)), ((FUN[0] - 0.60, 0.0, BD() + 1.86), (-1, 0, -0.8)),
                 ((WX0 - 0.22, 0.6, WR() - 0.10), (-1, 0, -0.9)), ((DH0 - 0.20, 0.0, BD() - 0.20), (-1, 0, -1.1))]
 
 
