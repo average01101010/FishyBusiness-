@@ -2750,3 +2750,26 @@
 2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	trip2	OK	40	lite	samtidig	
 2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	boottest	OK	37	lite	samtidig	
 2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	sor62test	OK	69	lite	samtidig	
+2026-11-12 01:22	ccr-e16ec9aa-rdf1k2	8b01b9a+	posttest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 01:22	ccr-e16ec9aa-rdf1k2	8b01b9a+	turtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 01:25	ccr-e16ec9aa-rdf1k2	40a94c8+	posttest	OK	24	lite	samtidig	
+2026-11-12 01:25	ccr-e16ec9aa-rdf1k2	40a94c8+	turtest	OK	17	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	fixtest	OK	32	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	fleet3test	OK	14	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	opsowntest	OK	39	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	seasontest	OK	6	lite	samtidig	
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	autonavtest	FEIL	8	lite	samtidig	FEIL 6. Autonav Vannareid → Honningsvåg: 100 m-celler, ingen etappe grunnstøter  {'n': 25, 'nm': 167.1, 'ms': 130, 'cell': 0.2, 'maxSlice': 8.3, 'mended': 0, 'b
+2026-11-12 01:26	ccr-e16ec9aa-rdf1k2	40a94c8+	trip2	OK	32	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	booktest	OK	25	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	worktest	FEIL	19	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	decktest	OK	13	lite	samtidig	
+2026-11-12 01:27	ccr-e16ec9aa-rdf1k2	40a94c8+	selfcrew	OK	6	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	turtest	OK	17	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	selfcrew	OK	6	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	worktest	FEIL	24	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	decktest	OK	15	lite	samtidig	
+2026-11-12 01:28	ccr-e16ec9aa-rdf1k2	1218b49	mannskapshot	OK	14	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	hudtest	OK	84	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	skipdrift	OK	18	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	trip2	OK	31	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	boottest	OK	29	lite	samtidig	
