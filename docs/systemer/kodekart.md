@@ -1953,7 +1953,7 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 356 `mktDeliver(vid, to)`
   - 362 `mktHour(H)`
 
-## `src/js/core/09l-sponsor.js` (71 linjer)
+## `src/js/core/09l-sponsor.js` (72 linjer)
 
 Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
 
