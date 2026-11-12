@@ -302,6 +302,12 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
   - for lite diesel
   - nesten fremme (under ett ekte minutt)
 - **Været nekter aldri hoppet** (Jonas 12.11.2026: «uavhengig av været eller andre ting», og om kortet som sa nei for 11 m/s på testutgaven: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»). Tørrkjøringen regner vinden og sjøen for farten og dieselen, men nekter ikke for dem. **Betalt** (`hopGo(true)`, HO3) går hoppet også med for lite diesel og nesten fremme.
+- **Ingen hindringer, og bare fisken merker tida** (Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp". Det er dårlig business. Det eneste som taper seg med tiden som forsvinner er kvaliteten på fisken i lasterommet.»):
+  - `hopWhy` nekter bare når ingen rute seiles, under Driftsplanen (der står ingen knapp), når spillet er åpent et annet sted (`TAB`), og mens tida borte spilles inn. Det siste venter kortet på, i høyst 15 s.
+  - `hopRun` nekter bare en rute som er for lang til å regne ut (`HOP.maxMin`).
+  - `hopDo` lar fisken og isen i lasterommet eldes minutt for minutt langs sporet (`holdMinute`), og snøkrabben i tankene hver time (`snoTankHour`). Ingenting annet blir rørt: dieselen, motortimene, trimmen, Skippertak, energien, mannskapet og provianten er som før.
+  - Et anker, «ligger bi» og «Stopp båten» tas bort ved stoppet.
+  - Det som står under om diesel, energi, mannskap og trim i hoppet, gjaldt HO1 og HO2 til 12.11.2026.
 - **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
 - **Kartet ved målet** lastes før hoppet (`hopGo`: stoppet fra ruta, `mapNeed` der med en tidsgrense på `HOP.mapMs` = 20 s, så én tørrkjøring med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
 - **Spoleknappen og kortet** (HO2, steg 105, `ui/10u-hopp.js`; Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»):

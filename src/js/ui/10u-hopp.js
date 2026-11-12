@@ -15,9 +15,10 @@ const HOPUI = {busy:false, ms:null, open:0, pend:new Set(), waitMs:180000};
 // the game is another page's or device's (ui/02-format-state.js TAB): nothing paid for is used here
 const hopTabGone = () => typeof TAB !== 'undefined' && !!(TAB.lost || TAB.held);
 const hopAdm = () => !!(S.adm && S.adm.hopp && typeof adminOk === 'function' && adminOk());   // the Admin app's free hop
-// (not while she stops or Autonav finds a way round, nor while the time the game was closed is still being played in: CATCH_LEFT)
+// (not while the time the game was closed is still being played in, CATCH_LEFT, a few seconds; Jonas 12.11.2026: «Ingenting skal være
+// en hindring for å kjøpe "hopp"»: it stands while she stops and while Autonav finds a way round too)
 const hopShown = () => { const b = S.boat, pl = S.plan;
-  return !!((hopAdm() || (typeof shopMode === 'function' && shopMode() !== 'off')) && typeof G3 !== 'undefined' && G3.isActive() && pl && !pl.ops && !pl.p2 && !pl.halt && !pl.replan &&
+  return !!((hopAdm() || (typeof shopMode === 'function' && shopMode() !== 'off')) && typeof G3 !== 'undefined' && G3.isActive() && pl && !pl.ops && !pl.p2 &&
     b.status === 'sailing' && !(typeof helmOn === 'function' && helmOn()) && !(typeof CATCH_LEFT !== 'undefined' && CATCH_LEFT > 0)); };
 // each frame (08-actions.js tick): the button only while a route is under way
 function hopUi(){ hopHoldTick(); const btn = $('hopBtn'); if (!btn) return; const on = hopShown() || HOPUI.busy; if (btn.hidden === on) btn.hidden = !on; }
@@ -30,7 +31,9 @@ function hopOpen(){
   hopHoldOn(); HOPUI.card = true; HOPUI.payAt = 0;   // (the boat stops at once, before the card: the price is for where she stands)
   const n = ++HOPUI.open, title = '<h3>' + hopL('Hopp over resten av ruta', 'Skip the rest of the route') + '</h3>';
   modal(title + '<p class="hop-calc">' + hopL('Regner ut turen …', 'Working out the trip …') + '</p>');
-  setTimeout(() => { if (n !== HOPUI.open || $('modal').hidden) return; hopCard(title, hopQuote(false)); }, 30);
+  // (the time away still being played in: the card waits for it, a few seconds, rather than say no)
+  const t0 = Date.now(), go = () => { if (n !== HOPUI.open || $('modal').hidden) return; if (hopCatching() && Date.now() - t0 < 15000) return setTimeout(go, 400); hopCard(title, hopQuote(false)); };
+  setTimeout(go, 30);
 }
 function hopCard(h, q){
   // (no hop to be had: the boat goes on at once, so the card is never a free stop in a storm)
@@ -38,7 +41,7 @@ function hopCard(h, q){
   const w = q.w, pt = w.port && portById(w.port), np = pt ? null : nearestPlace(w);
   h += '<p>' + (pt ? hopL('Til ', 'To ') + '<b>' + hopEsc(pt.name) + '</b>. ' : hopL('Til neste stopp på ruta, ', 'To the next stop on the route, ') + '<b>' + hopEsc(hopL(np.no, np.en)) + '</b>. ') +
     hopL('Du sparer ', 'You save ') + '<b>' + hopSaved(q.real, S.lang === 'en') + '</b>' + hopL(' og er fremme med en gang.', ' and are there at once.') + '</p>' +
-    '<p>' + hopL('Båten ligger stille mens du bestemmer deg. Dieselen, fisken, isen og folkene om bord går som om dere seilte. Fartstid og distanse får du bare ved å seile.', 'The boat lies still while you decide. The diesel, the fish, the ice and the people aboard go as if you had sailed. Sea time and miles come only from sailing.') + '</p>' +
+    '<p>' + hopL('Båten ligger stille mens du bestemmer deg. Fisken i lasterommet eldes som om dere seilte; dieselen, mannskapet og du er som før. Fartstid og distanse får du bare ved å seile.', 'The boat lies still while you decide. The fish in the hold age as if you had sailed; the diesel, the crew and you are as before. Sea time and miles come only from sailing.') + '</p>' +
     '<p class="hop-kr">' + (typeof realKr === 'function' ? realKr(q.kr) : '\u{1F48E} ' + q.kr + ' kr') + '</p>';
   let btn;
   if (hopAdm()){ h += '<p class="hop-test">' + hopL('Admin: hoppet er gratis med testbryteren.', 'Admin: the hop is free with the test switch.') + '</p>'; btn = hopL('Hopp', 'Hop'); }

@@ -2,11 +2,13 @@
 harbour 8-30 km away on an Autonav route, with fish in the hold and you aboard:
   1. sailed: the route played as catchUp plays it (playMinutes) until she is at the quay; the diesel, the fish's freshness, your energy,
      the minutes, the sea time (S.fs.p) and the miles (S.tat.nm) before and after
-  2. hopped: the same start (the clock put back), hopGo(): she is at the same quay at once, and the diesel, the freshness and the energy
-     are within 5 % of the sailing; the sea time and the miles are unchanged, and the game minutes the hop counted are close to the
-     sailing's
-  3. the trim: with a turbo trim on, the hop takes the minutes it would have run off it (Jonas: «som om båten seilte»)
-  4. refused, nothing changed: too little diesel; the weather never refuses it (WX_FORCE 30 m/s, Jonas 12.11.2026), and the hop goes in it
+  2. hopped: the same start (the clock put back), hopGo(): she is at the same quay at once; the fish's freshness is within 5 % of the
+     sailing's, and the diesel, your energy and the engine hours are as they were (Jonas 12.11.2026: «Det eneste som taper seg med tiden
+     som forsvinner er kvaliteten på fisken i lasterommet»); the sea time and the miles are unchanged, and the game minutes the hop
+     counted are close to the sailing's
+  3. the trim: with a turbo trim on, the trip is shorter (and dearer saved by less), and the trim is as it was after the hop
+  4. nothing refuses it (Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp"»): not a tank nearly empty, not the weather
+     (WX_FORCE 30 m/s), and the hop goes in it
   5. no page errors
 The comparisons run in still weather (WX_FORCE 3 m/s), the same for the sailing and the hop; in weather over the boat's risk the
 hop is refused, and that is checked in 4.
@@ -89,18 +91,18 @@ async def main():
         check(not q.get('why') and h1['st'] == 'port' and h1['port'] == a1['port'], '2a. hoppet: ved den samme kaia med en gang, og klokka sto stille (' + str(hop['clock']) + ' min)', {'why': q.get('why'), 'st': h1['st']})
         check(hop['clock'] == 0, '2b. verdens klokke flyttet seg ikke')
         check(near(hop['min'], sail['min'], 0.10), '2c. hoppet regnet ' + str(hop['min']) + ' spillminutter, seilingen tok ' + str(sail['min']) + ' (innenfor 10 %)')
-        check(near(hop['fuel'], sail['fuel']), '2d. dieselen: hoppet ' + str(round(hop['fuel'], 2)) + ' l, seilingen ' + str(round(sail['fuel'], 2)) + ' l (innenfor 5 %)')
+        check(hop['fuel'] == 0 and sail['fuel'] > 0, '2d. dieselen er urørt av hoppet (seilingen brukte ' + str(round(sail['fuel'], 2)) + ' l)')
         check(near(100 - hop['fresh'], 100 - sail['fresh']), '2e. fisken eldet like mye: ferskhet ' + str(round(hop['fresh'], 2)) + ' mot ' + str(round(sail['fresh'], 2)) + ' (tapet innenfor 5 %)')
-        check(near(90 - hop['energy'], 90 - sail['energy']), '2f. energien din: ' + str(round(hop['energy'], 2)) + ' % mot ' + str(round(sail['energy'], 2)) + ' % (tapet innenfor 5 %)')
-        check(near(hop['engH'], sail['engH']), '2g. motortimene: ' + str(round(hop['engH'], 3)) + ' mot ' + str(round(sail['engH'], 3)))
+        check(hop['energy'] == 90 and sail['energy'] < 90, '2f. energien din er urørt av hoppet: ' + str(hop['energy']) + ' % (seilingen: ' + str(round(sail['energy'], 2)) + ' %)')
+        check(hop['engH'] == 0 and sail['engH'] > 0, '2g. motortimene er urørt av hoppet (seilingen: ' + str(round(sail['engH'], 3)) + ' t)')
         check(hop['fs'] == 0 and hop['nm'] == 0 and sail['nm'] > 0, '2h. ingen fartstid og ingen distanse for hoppet (seilingen ga ' + str(round(sail['fs'])) + ' poeng og ' + str(round(sail['nm'], 1)) + ' nm)')
         check(isinstance(q.get('kr'), int) and q['kr'] >= 5, '2i. prisen: ' + str(q.get('kr')) + ' kr for ' + str(round(q.get('real') or 0, 1)) + ' ekte minutter')
         # 3. the trim is used for the minutes it would have run
         await J(START, {'trim': 72 * 60}); t0 = await J(STATE)
         q3 = await J("async () => { const q = await hopGo(); return {why:q.why, min:q.min, trimMin:q.trimMin}; }")
         t1 = await J(STATE)
-        check(not q3.get('why') and q3['trimMin'] > 0 and t0['trimUntil'] - t1['trimUntil'] == q3['trimMin'] and q3['min'] < hop['min'],
-              '3. med turbotrim: kortere tur (' + str(q3.get('min')) + ' mot ' + str(hop['min']) + ' min), og trimmen er ' + str(q3.get('trimMin')) + ' min kortere etterpå', q3)
+        check(not q3.get('why') and q3['trimMin'] > 0 and t0['trimUntil'] == t1['trimUntil'] and q3['min'] < hop['min'],
+              '3. med turbotrim: kortere tur (' + str(q3.get('min')) + ' mot ' + str(hop['min']) + ' min), og trimmen er som før etter hoppet', q3)
         # 3b. a trim that runs out on the way (40 game minutes left): the hop as the sailing, and the dry run puts the trim back
         await J(START, {'trim': 40}); u0 = await J(STATE); await J(SAIL); u1 = await J(STATE)
         await J(START, {'trim': 40}); v0 = await J(STATE)
@@ -108,14 +110,14 @@ async def main():
         check(dq['vmax'] == v0['vmax'] and dq['speed'] == v0['speed'] and dq['on'], '3b. tørrkjøringen setter trimmen, toppfarten og rutas fart tilbake', dq)
         q4 = await J("async () => { const q = await hopGo(); return {why:q.why, min:q.min, trimMin:q.trimMin}; }"); v1 = await J(STATE)
         tu, tv = u1['t'] - u0['t'], q4.get('min') or 0
-        check(not q4.get('why') and q4['trimMin'] == 40 and near(tv, tu, 0.10) and near(v0['fuel'] - v1['fuel'], u0['fuel'] - u1['fuel']),
-              '3c. trimmen går ut underveis: hoppet ' + str(tv) + ' min og ' + str(round(v0['fuel'] - v1['fuel'], 2)) + ' l, seilingen ' + str(tu) + ' min og ' + str(round(u0['fuel'] - u1['fuel'], 2)) + ' l', q4)
+        check(not q4.get('why') and q4['trimMin'] == 40 and near(tv, tu, 0.10) and v0['fuel'] == v1['fuel'],
+              '3c. trimmen går ut underveis: hoppet regnet ' + str(tv) + ' min, seilingen tok ' + str(tu) + ', og dieselen er urørt', q4)
         # 3d. one hand aboard: the crew's fatigue and the gutting as the sailing (crewTick counts whole hours, so within one hour's fatigue)
         await J(START, {'crew': True}); c0 = await J(STATE); await J(SAIL); c1 = await J(STATE)
         await J(START, {'crew': True}); d0 = await J(STATE); await J("async () => { await hopGo(); }"); d1 = await J(STATE)
         hourF = await J("() => { const c = JSON.parse(window.__C); return crewSeaFat(c, false, 1, false); }")
         print('MANNSKAP seilt ' + json.dumps({'fat': c1['fat'] - c0['fat'], 'gut': c1['gut'], 'ice': c1['ice'], 'fresh': c1['fresh']}) + ' hoppet ' + json.dumps({'fat': d1['fat'] - d0['fat'], 'gut': d1['gut'], 'ice': d1['ice'], 'fresh': d1['fresh']}))
-        check(abs((d1['fat'] - d0['fat']) - (c1['fat'] - c0['fat'])) <= hourF + 1e-6, '3d. mannskapets slitasje: hoppet ' + str(round(d1['fat'] - d0['fat'], 2)) + ', seilingen ' + str(round(c1['fat'] - c0['fat'], 2)) + ' (innenfor en times slitasje, ' + str(round(hourF, 2)) + ')')
+        check(d1['fat'] == d0['fat'] and c1['fat'] > c0['fat'], '3d. mannskapets slitasje er urørt av hoppet (seilingen: +' + str(round(c1['fat'] - c0['fat'], 2)) + ', en times slitasje ' + str(round(hourF, 2)) + ')')
         check(abs((d1['gut'] or 0) - (c1['gut'] or 0)) <= 0.05 and near(100 - d1['fresh'], 100 - c1['fresh'], 0.10) and abs(d1['ice'] - c1['ice']) <= 0.05 * max(1, c1['ice']),
               '3e. sløyingen, ferskheten og isen med en hånd om bord: sløyd ' + str(round(d1['gut'] or 0, 3)) + ' mot ' + str(round(c1['gut'] or 0, 3)) + ', is ' + str(round(d1['ice'], 1)) + ' mot ' + str(round(c1['ice'], 1)))
         # 3f. a fishing stop on the way: the hop goes there, fishing, and the points passed are in the track (the way home reads it)
@@ -123,10 +125,11 @@ async def main():
         await J(START, {'fishAt': mid}); f0 = await J(STATE)
         q5 = await J("async () => { const q = await hopGo(); return {why:q.why, stop:q.stop}; }"); f1 = await J(STATE)
         check(not q5.get('why') and f1['st'] == 'fishing' and f1['trail'] - f0['trail'] == q5['stop'] + 1, '3f. til fiskeplassen midt på ruta: fisker der, og sporet har de ' + str(f1['trail'] - f0['trail']) + ' punktene båten passerte', {'q': q5, 'st': f1['st'], 'trail': f1['trail']})
-        # 4. refused, nothing changed; paid, it goes
+        # 4. nothing refuses it, and the dry run changes nothing
         await J(START, {})
         r = await J("() => { S.boat.fuel = 0.2; const p0 = JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx, S.t]); const q = hopQuote(); return {why:q.why && q.why[0], same:p0 === JSON.stringify([S.boat.pos, S.boat.fuel, S.plan.idx, S.t])}; }")
-        check(bool(r['why']) and 'diesel' in r['why'] and r['same'], '4a. for lite diesel: ' + str(r['why']), r)
+        # (Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp"»: no diesel used, so none is asked for)
+        check(not r['why'] and r['same'], '4a. med nesten tom tank nektes ikke hoppet, og tørrkjøringen endrer ingenting', r)
         await J(START, {})
         r = await J("() => { WX_FORCE = {w:30, d:200}; const p0 = JSON.stringify([S.boat.pos, S.plan.idx]); const q = hopQuote(); const out = {why:q.why && q.why[0], same:p0 === JSON.stringify([S.boat.pos, S.plan.idx])}; return out; }")
         # (Jonas 12.11.2026: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»: the weather never refuses it)

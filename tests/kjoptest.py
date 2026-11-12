@@ -174,8 +174,9 @@ async def hs4(br, handle, st, calls, errs):
       return {lab:(document.getElementById('hopGo') || {}).textContent, fine:!!m.querySelector('.shop-fine'), min:q.realMin, kr:q.kr, text:m.innerText, pos:p0, still:p0 === """ + POS + """, v:S.boat.v, hold:!!S.boat.hopHold}; })()"""
     rt = await pg.evaluate(ROUTE, None)
     # (the kontroll: a card that says no lets the boat go at once, so it is never a free stop in a storm)
-    cn = await pg.evaluate("(async () => { const f = S.boat.fuel; S.boat.fuel = 0.2; hopOpen(); for (let i = 0; i < 100 && !/diesel/.test(document.getElementById('modal').innerText); i++) await new Promise(r => setTimeout(r, 50)); const out = {why:/diesel/.test(document.getElementById('modal').innerText), hold:!!S.boat.hopHold}; document.getElementById('modal').hidden = true; S.boat.fuel = f; return out; })()")
-    check(cn == {'why': True, 'hold': False}, 'HO3: a card that says no (too little diesel) does not hold the boat', cn)
+    # (the only no left on a route under way: the game held by another page or device, TAB)
+    cn = await pg.evaluate("(async () => { TAB.held = true; hopOpen(); for (let i = 0; i < 100 && !/annet sted/.test(document.getElementById('modal').innerText); i++) await new Promise(r => setTimeout(r, 50)); const out = {why:/annet sted/.test(document.getElementById('modal').innerText), hold:!!S.boat.hopHold}; document.getElementById('modal').hidden = true; TAB.held = false; return out; })()")
+    check(cn == {'why': True, 'hold': False}, 'HO3: a card that says no (the game open somewhere else) does not hold the boat', cn)
     c1 = await pg.evaluate(CARD); n0 = len(calls)
     lp = await pg.evaluate("(() => { const q = livePose(0.9), b = S.boat; return Math.round(dist(q.p, b.pos) * 1e6) / 1e3; })()")
     check(c1['hold'] and c1['still'] and c1['v'] == 0 and lp == 0, 'HO3: the fast-forward button stops the boat at once: with the card open for 2,5 s she has not moved, and the pose the chart and the 3D view draw is where she lies (%s m)' % lp, {k: c1[k] for k in ('hold', 'still', 'v')})
