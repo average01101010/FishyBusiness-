@@ -2,6 +2,11 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (steg 28, Ø5 rest a: M5-resten og M9-resten, gren `ccr-5e1ba2f4-pusvyd`, b5138622; kortet i PR #68)
+
+- ~~**M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).~~ Gjort i steg 28 12.11.2026 (fylkene fra Kartverket, `tools/regions/fylke.py`; bildene av `tests/mediekortshot.py`; «M9-resten» i `docs/systemer/handel-og-steder.md`).
+- ~~**M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).~~ Gjort i steg 28 12.11.2026 («M5-resten» i `docs/systemer/handel-og-steder.md`; `ui/10q-buymoment.js` som PR til Jonas).
+
 ## Strøket 12.11.2026 (steg 18b, Ø12 D, gren `ccr-013bxxid-18b`)
 
 Videresendingene og `DRIFT2` ute i 1b8a63d (kallene går rett til `plan2Step`, `plan2Landed`, `plan2Wx`; `opsSkipper` heter `actingSkipper` i `13-work.js`; `driftStock` borte); garnplanen med deg alene venter i havna (12403bb); den svelgede linja i `plan2Ops` (fd323cd); havbåten hjem til ankers prøvd (f923c4c); bøtingen til ankers: `plan2Go` venter på jobben (12403bb); garnsjekken stopper ikke hjemturen (funnet av `/kontroll`, b16b070); `driftsplan2test` S1 og S5 tåler en tapt line (0c95442) og S9 sammenligner redskapet innenfor fem minutter som stegene (018c9ab; rød også på arbeidsgrenens bygg før); `fleet2test` har et oppsett som stemmer (3cc10c6). Se «Ø12 D» i `docs/systemer/driftsplan.md`.
