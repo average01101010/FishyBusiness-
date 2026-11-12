@@ -90,7 +90,7 @@ Hver fase er én økt.
 ### HO2 Knappen, meteret og hoppet i 3D
 
 - **Hva:**
-  - Knappen i hjørnet mens en rute seiles, i kartet og i 3D.
+  - Spoleknappen (⏩) i 3D til høyre, rett under kamera- og kinoknappen, bare mens en rute seiles (Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»).
   - Kortet med meteret: nm og timer igjen, prisen med 💎, og grunnen når hoppet ikke kan gjøres.
   - Hoppet med lasting av kartet ved målet (`mapNeed`) og en enkel overgang mens 3D laster.
   - De andre spillerne ser båten gå ut av AIS ved avgangen og komme inn igjen ved målet, uten forklaring og uten nytt felt i `pos_put`.
