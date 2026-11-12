@@ -175,11 +175,11 @@ export default function (t){
       t.ok(W1.some(w => /ligger over hverandre/.test(w)) && !W2.some(w => /ligger over hverandre/.test(w)), 'to felt 3 km fra hverandre: lenkene ligger over hverandre (advarsel); 30 km fra hverandre: ingen'); }
     // the large ocean vessels go round the clock only (Jonas 07.11.2026: «På de store havbåtene skal forresten mannskapet kun gå
     // døgndrift. Det skal ikke være et alternativ med dagdrift.»): a new plan, and an old one read with day trips
-    { const S0 = K.get('S'), b = S0.boat, t0 = b.type, ops0 = S0.ops, D2 = K.get('DRIFT2'); K.set('DRIFT2', true);
+    { const S0 = K.get('S'), b = S0.boat, t0 = b.type, ops0 = S0.ops;
       for (const ty of Object.keys(K.VESSELS).filter(k => K.VESSELS[k].cls === 'hav')){ b.type = ty; K.applyVessel(); S0.lag = null;
         const o = K.plan2New({}); S0.ops = Object.assign(K.plan2New({}), {rhythm:'day'}); const o2 = K.plan2Ops();
         t.ok(o.rhythm === 'watch' && o2 && o2.rhythm === 'watch', ty + ': døgndrift i en ny plan og i en gammel med dagdrift (' + o.rhythm + ', ' + (o2 && o2.rhythm) + ')'); }
-      b.type = t0; K.applyVessel(); S0.ops = ops0; S0.lag = null; K.set('DRIFT2', D2); }
+      b.type = t0; K.applyVessel(); S0.ops = ops0; S0.lag = null; }
     for (const nm in keep) K.set(nm, keep[nm]);
   }
 }

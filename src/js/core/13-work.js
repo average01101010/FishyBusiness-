@@ -59,14 +59,16 @@ const GUT_FEE = 0.30;
 const gutFeeKg = x => !x.gut && !x.frozen && (x.sp === 'hyse' || x.sp === 'sei') ? GUT_FEE : 0;
 function catchIce(){ return S.settings.ice !== false; }
 // ---- the mate (Jonas 23.10.2026: «vi må kunne definere 1 fra mannskapet til å være styrmann ombord»): one of the crew, the same one
-// who with the skipper runs the boat on the operations plan when you are not aboard (06d-drift.js); at the helm and in charge on deck when you sleep or are not aboard
+// who with the skipper runs the boat on the operations plan when you are not aboard (Driftsplan 2, 06h-plan2-engine.js); at the helm and in charge on deck when you sleep or are not aboard
 const crewMate = () => (S.crew || []).find(c => c.mate) || null;
 function setMate(id){
   for (const c of S.crew || []){ if (c.id === id){ c.mate = true; delete c.sk; } else delete c.mate; }
 }
 // ---- the skipper (Jonas 23.10.2026: «når jeg/brukeren ikke er ombord må det utnevnes en skipper og en styrmann ombord»): one of the crew,
-// who runs the boat and the operations plan when you are not aboard (06d-drift.js). Aboard you are the skipper; the mate is someone else.
+// who runs the boat and the operations plan when you are not aboard (Driftsplan 2, 06h-plan2-engine.js). Aboard you are the skipper; the mate is someone else.
 const crewSkipper = () => (S.crew || []).find(c => c.sk) || null;
+// who sails her: none of the crew when you are aboard (you are), else the crew's skipper
+function actingSkipper(){ return meAboard() ? null : crewSkipper(); }
 function setSkipper(id){
   for (const c of S.crew || []){ if (c.id === id){ c.sk = true; delete c.mate; } else delete c.sk; }
 }
@@ -213,7 +215,7 @@ function workAssign(as){
   if (ctx.fiske && !ctx.stop && typeof window !== 'undefined' && window.jigActive){ const me = P.find(p => !p.c); if (me) put(me, 'fiske', 'jig'); }
   const free = () => P.filter(p => !p.st), bestOf = (L, k) => L.slice().sort((a, b) => workScore(b, k, ctx, 1) - workScore(a, k, ctx, 1))[0];
   // the helm, while she is driven: you, else the mate, else the skipper, else the best seaman
-  if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = typeof opsSkipper === 'function' && opsSkipper(), o = sk && P.find(p => p.c === sk);
+  if (ctx.ror){ const me = P.find(p => !p.c), m = P.find(p => p.c && p.c.mate), sk = actingSkipper(), o = sk && P.find(p => p.c === sk);
     const who = me || m || o || P.slice().sort((a, b) => b.c.attr.sjo - a.c.attr.sjo)[0]; put(who, 'ror', me ? 'skipper' : m ? 'mate' : o ? 'opsk' : 'seaman'); }
   // the cook who has started the meal stays at the stove until it is served (14-crewlife.js mealMinute; before, the deck could take her
   // to the table between two minutes, another started over, and the meal came late: mannskapshot.py)

@@ -3,7 +3,7 @@
 // hour to try again, never «three failures and stop». A trip is the steps from where she lies to the next port call, sailed on the legs
 // kept when the plan was made (plan2Make: the plant, the anchorages, every leg between home, the plant, the places and each place's
 // shelter port, found with leiaRoute and checked with the sailing's own groundCheck). Nothing here searches while the plan runs, so the
-// day plays the same with the game closed (catchUp) as open. The gates are in 06d-plan-felles.js (opsStep, opsLanded, driftWx) and 04-crew.js, 07-harbours.js.
+// day plays the same with the game closed (catchUp) as open. The gates are in 05-vessels.js (plan2Step, plan2Landed, plan2Wx) and 04-crew.js, 07-harbours.js.
 const P2_PORTCALL = {lever:1, agn:1, hjem:1, hvile:1};
 function plan2Key(o){ return JSON.stringify([o.home, !!o.anchor, o.rig, o.places.map(q => [q.k, +q.x.toFixed(3), +q.y.toFixed(3)]), o.rhythm, o.land ? [o.land.mode, o.land.port] : null, S.boat.type]); }
 const plan2Made = o => !!(o && o.made && o.made.key === plan2Key(o));
@@ -192,7 +192,7 @@ function plan2RulesWhy(o, H, placesOnly){
   return null;
 }
 function plan2RulesOpenAt(o, H){ for (let k = 1; k <= 31; k++) if (!plan2RulesWhy(o, H + 24 * k, true)) return H + 24 * k; return null; }
-// ---- the engine: each minute, on each vessel (06d-plan-felles.js opsStep hands over)
+// ---- the engine: each minute, on each vessel (05-vessels.js calls it)
 let P2_DEPTH = 0;
 function plan2Step(H){
   const o = plan2Ops(), b = S.boat; if (!o || !o.on) return;
@@ -479,7 +479,7 @@ function plan2WorkWait(o, H, wx, pts, port){
   plan2Wait(o, 'wx', (port ? 'Venter i havn på været: ' : 'Venter ved redskapet på været: ') + why[0] + '. ' + (at != null ? 'Går igjen kl. ' : 'Ser på det igjen kl. ') + c + more[0] + '.', (port ? 'Waiting in port for the weather: ' : 'Waiting by the gear for the weather: ') + why[1] + '. ' + (at != null ? 'Going again at ' : 'Looking again at ') + c + more[1] + '.', until);
   if (o.run) o.run.replan = true;
 }
-// she has come in (05-vessels.js dock, through opsLanded): the port call's own step runs next, and a port that is not the step's means the day is made again from here
+// she has come in (05-vessels.js dock): the port call's own step runs next, and a port that is not the step's means the day is made again from here
 function plan2Landed(pid, k){
   const o = plan2Ops(); if (!o || !o.run) return; const r = o.run, tr = r.trip; r.trip = null;
   if (tr) r.i = tr.to;
