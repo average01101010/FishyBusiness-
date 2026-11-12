@@ -246,7 +246,7 @@ Jonas (video fra Tufjord, 04.11.2026): «Båter går gjennom landmassen i autona
 
 ## 4.12l Autonav viker (Ø11.1, 06.11.2026)
 
-Autonav (og Driftsplan, som seiler med den) viker for fartøy båten du følger har vikeplikt for etter sjøveisreglene, innen 1,2 km: et avvik til styrbord fra linja som autopiloten styrer etter (`sjvAuto`, ett kall i `dynAuto`), eller 35° fra etappen i minuttsteget (`sjvSail`, ett kall i `sail`), og tilbake til ruta når de er klare. Ved et stopp, når hun rygger eller snur fra land, og når grunnsjekken finner grunn foran, går avviket tilbake og hun slakker av i stedet. Bare med spillet åpent; i `catchUp` viker ingen. Se `docs/systemer/sjofart-og-lover.md`, kap. 3.3.
+Autonav (og Driftsplan, som seiler med den) viker for fartøy båten du følger har vikeplikt for etter sjøveisreglene, innen 1,2 km: et avvik til styrbord fra linja som autopiloten styrer etter (`sjvAuto`, ett kall i `dynAuto`), eller 35° fra etappen i minuttsteget (`sjvSail`, ett kall i `sail`), og tilbake til ruta når de er klare. Ved et stopp, når hun rygger eller snur fra land, og når grunnsjekken finner grunn foran, går avviket tilbake og hun slakker av i stedet. Bare med spillet åpent; i `catchUp` viker ingen. Fra 12.11.2026 (TB1) også tidligere mot raske fartøy (`sjvLead`), med avslakking når avviket alene ikke holder, og tilbake til ruta først når veien dit holder klar av den andre (`sjvBackClear`, regel 8 d). Se `docs/systemer/sjofart-og-lover.md`, kap. 3.3 og 5.10.
 
 ## 4.12m Ut fra kaia: fars naust, feltet på første tur og de forseglede havnene (08.11.2026)
 

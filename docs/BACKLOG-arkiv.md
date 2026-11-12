@@ -2,6 +2,9 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (TB1, sammenstøtet med tråleren under Autonav, gren `ccr-5e1ba2f4-pusvyd`)
+
+- **Sammenstøt med en tråler under Autonav (tilbakemelding #1 fra testutgaven, 11.11.2026):** spilt av med hele kysten ved 69,545 N 18,642 Ø på verdens klokke (t 317277): «Bankhavet» (bunntråler, 60 m, 12 knop på vei inn). NPC-en og Autonav gikk tilbake til kursen så snart TCPA var null sett midt i svingen, og svingte tilbake mot den andre (35–84 m); Autonav begynte for sent mot et raskt skip. Rettet med `sjvBackClear` (regel 8 d), `sjvLead` (8 a) og avslakking når avviket ikke holder (8 e); `colregtest` har møtet. Kap. 5.10 i `docs/systemer/sjofart-og-lover.md`.
 ## Strøket 11.11.2026 (steg 44, Ø5 rest c: M7/M8-resten, gren `ccr-360badbd-1zzqz7`)
 
 - **M7 og M8 står igjen** (02.11.2026): sponsede design i Malerverkstedet, et flagg som vaier (nå en stiv plate), CSV-import av meglerens oppføringer (`tools/broker/import.py`), og at byggene eksporteres med `anchors.sign` (står i skriptene; bpy 4.5.4 finnes ikke for Python 3.13 her). IAB-tersklene er sjekket mot IAB UK og AdExchanger, og utkastet fra juni 2022 ble lest 07.11.2026; målingen og rapporten etter det ble bygd i steg 66 08.11.2026 (over). **Gjort 11.11.2026 i steg 44:** sponsede design i Malerverkstedet (plasseringen `look` på `paint`), flagget som vaier, og byggene eksportert på nytt med `anchors.sign`. CSV-importen er lagt bort til Jonas vil ha meglerbåter igjen (planen 10.6). Det som var antatt, er lukket i økta (`docs/systemer/handel-og-steder.md`, «M7/M8-resten (steg 44)»); Jonas svarte 12.11.2026 på de tre valgene (gratis, merket på skroget, fargene blir).
