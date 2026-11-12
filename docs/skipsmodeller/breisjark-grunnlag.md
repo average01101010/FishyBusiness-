@@ -303,3 +303,60 @@ Steg 89 på nytt, Jonas' økt på grenen `claude/zen-babbage-aixu88`, etter star
 - **Detaljer på nært hold:** dørhåndtak og hengsler som synes, sveisesømmer eller lister i skjøtene, fester for fendere, gapet der skråstaget møter galgebjelken, sterkere slitasje på hvite flater, radio og brytere på broa.
 - **Skroget:** roret som et profilror med hæl i stedet for en plate, og en mykere overgang der ripa går ned til midtskipet (formen er tegningens; en mykere overgang er et avvik Jonas må ville ha). Lengden står (2 %).
 - **Bildene:** nattbilde der hele masta er med (den hvite rundtlysende), og ett mens hun fisker (rødt over hvitt); `teiner_sett` tatt mens det står teiner om bord; rendringene lysere under lyet.
+
+### 10.10 Runde 3 (12.11.2026): 71, fortsatt ikke 75
+
+Steg 89 på nytt, Jonas' økt på grenen `claude/ob11-r3-breisjark`, etter startmeldingen «Runde 3» i `docs/planer/start/89.md`. Valg 32, bredden og navnet og merket står urørt. Bildene, arkene og `check.txt` står i `docs/okter/2026-11-12-ob11-r3/`.
+
+**Før-bildene på nytt etter OB14 (steg 92), hva som er rettet av punktene fra 10.9** (`ombord.py breisjark`, 24 operasjoner, begge formater, `clipcheck` tom i alle):
+
+- **Den ledige på setterenna:** borte. I `garn_riggfull` står ingen lenger ute på renna.
+- **Han som står på skrå ved galgestolpen:** fortsatt. I `felles_hvile` står én ved styrbord galgestolpe og ser ut.
+- **To i samme hjørne:** fortsatt under settingen. I `line_sett` står tre tett ved porten: setteren og to som ser på.
+- **Hvile som bare er å stå:** fortsatt. De som har pause, står.
+
+Alt dette er felles kode (`deckcrew.js`, `core/13-work.js`) og er ikke rørt her.
+
+**Det som er gjort i modellen:**
+
+| Punkt fra 10.9 | Gjort | Målt (`check()`) |
+|---|---|---|
+| Setteren for nær styrbord galgestolpe | Setteporten (`SPORT`) og galgen (`GANT_Y`) 10 cm bredere på hver side: porten ±0,70, stolpene ±0,77 | setteren 0,025 m fra stolpens innside på begge plassene (y −0,45 uten linesetter, −0,05 med); før −0,075, altså i stolpen. Ny linje, rød med de gamle målene |
+| Flagget henger inn over setteren | Flaggstanga flyttet fra ripa på babord hjørne av speilet opp på galgen: en hylse på utsida av babord galgebjelke, stanga skrått akterover med knott (`POLE`, `pole_top()`, `anchors.pole`) | flagget henger aldri lavere enn 2,69 m over dekket (før 1,48). Ny linje, rød med den gamle stanga |
+| Stigen til lyets tak i veien mot porten | Stigen flyttet til babord over casingen: tre trinn på casingens akterside med håndtak over taket, og en kort leider fra casingtaket opp forbi takets akterkant. Rekka på taket er åpen der. Ventilen på casingens akterside er flyttet til innsida akter for døra | 1,09 m fra stampene og garnkaret (før 0,05 og 0,03). Ny linje, krever minst 0,25 |
+| Gapet der skråstaget møter galgebjelken | Staget går inn i bjelken og står i et øre med bolt; tverrbjelkene går mellom sidebjelkenes innsider litt lavere (de svarte firkantene i hjørnene var sammenfallende flater), og en tverrbjelke ved aktermasta, som sidebjelkene før endte i lufta ved | sett i `rend_c_aftdeck` |
+| Dørhåndtak og hengsler | Styrhusdøra: låsskilt, håndtak på 17 cm, to hengsler med blad og en mørk tetningslist rundt bladet. Casingdøra: to hengsler | `rend_c_wh` |
+| Lister i skjøtene | Stållist rundt styrhusets fot på bakken og langs lyets vegger der de står på ripa | `clip_malo36` 0 |
+| Fester for fendere | Fenderøyer på ripa, fire på hver side (x 0,70, 1,75, 7,35, 8,35) | — |
+| Slitasje på de hvite flatene | Sterkere: grått-brunt i flekker, mørkere ved føttene, grått der hender og tau går over ripa, grønngrått under takkantene | per hjørne, se under |
+| Radio, brytere og list på broa | VHF med håndsett på hylla mellom dashbordet og vinduene (en AIS sto der også i bildene sensoren så, og er tatt ut etter kontrollen: AIS kjøpes, og kjøpbart utstyr modelleres ikke inn), ti brytere med kontrollamper langs dashbordets fot, treliste rundt veggene under taket | `spill_bro`, `rend_c_helm` |
+| Roret som en plate | Profilror NACA 0018 (før 11 %), korden 0,60 m oppe og 0,50 nede, avrundet fot, kobling med fire bolter der stammen møter bladet, og hæl med lagerhus på skoens akterende | `rend_c_under` |
+
+**Bildene:** nattbilde med hele masta (`spill_natt`, den hvite rundtlysende på toppen), nattbilde mens hun fisker (`spill_fiskenatt`, rødt over hvitt), teinesettingen med stabelen om bord (`spill_teiner`), og navnet på i alle (`tests/ma36shot.py` sletter `S.unnamed`, lukker «Mens du var borte» og skjuler kartet og statusboksen; `MA36_ONLY=teiner` tar bare teinene). `teiner_sett` i `ombord.py` viser fortsatt ingen stabel (alle seks er satt før bildet), og testen er ikke denne øktas.
+
+**Testene i runde 3.** `check()` 38 av 38 (tre nye linjer, sett røde mot de gamle målene), `flatnorm` 0, `clip_malo36` 0 (202 punkter i de første listene i `alu` og en lås for dypt; rettet), enhetstestene 3 564 OK, `lanterntest` og `regmarktest` grønne, `crewclip` (breisjarken `jig 2/2`; rød bare for `snokrabbe` som før), `walktest` (breisjarken OK; rød bare for autolineren som før), `vesseltest` grønn etter at den kjente sjekken fra HS3 er rettet. 3D-testene står i commit-meldingen.
+
+**Karakteren i runde 3: 71/100, ikke ferdig.** Satt 12.11.2026 av en uavhengig underagent som bare fikk mappa og skalaen (kap. 2 i `om-bord.md` uten tabellen med karakterene). Den fikk ikke grunnlaget, ikke forrige karakter og ingen vurdering fra økta.
+
+| Punkt | Vekt | Runde 2 | Runde 3 | Sensorens begrunnelse (forkortet) |
+|---|---|---|---|---|
+| Skrogutforming | 20 | 15 | 16 | Vekt, like sider og jevne vannlinjer; spranget og fenderlista fine. Trekk: 2 % for lang, roret leses fortsatt som en flat plate og hælen som en plate, kjølen er en kasse, speilet og stevnen er kantete |
+| Detaljer | 20 | 13 | 13 | Mye beslag. Trekk: nesten ingen synlig slitasje eller rennemerker, grove sopplufter og pullerter, ikke noe anker i baugrulla, ingen vindusviskere sett, dekket ser stilisert ut |
+| Lanterner | 5 | 4 | 4 | Rødt og grønt riktig, rødt over hvitt mens hun fisker. Trekk: akterlanternen er ikke vist, lysene er små punkter uten glød, og i rendringen er alle tent samtidig |
+| Styrhus | 10 | 8 | 8 | Dashbordet troverdig med radioene. Trekk: tykk midtstolpe, grovt pikslede skjermer i spillet, tomt tak |
+| Arbeidsflyt | 25 | 16 | 15 | Porten, plassene og rekkefølgen gir mening. Trekk (lest som alvor A): mannen i blått i `spill_teiner` står i den tynne stolpen under lyets akterkant om styrbord, mannen i rødt i `teiner_trekk` i en stolpe, setteren 2,5 cm fra galgestolpen, og flaggstanga ser ut til å gå gjennom setteren i fem ark (sett ovenfra akter: stanga står på galgen 5 m opp, men den skrår akterover mot kameraet) |
+| Utforming av dekk | 20 | 15 | 15 | Planen henger sammen. Trekk: casingen tar hele babord akterhjørne, gangen om styrbord er 0,45 m, centimetermarginer der teina tømmes, lyets akterstolper står i arbeidssonen |
+| **Sum** | 100 | **71** | **71** | |
+
+**Etter kontrollen (`/kontroll` og `/code-review`, 12.11.2026), rettet og eksportert på nytt:** AIS-en på dashbordet er tatt ut (AIS kjøpes, og kjøpbart utstyr modelleres ikke inn; VHF-en følger båten), slitasjen på skansens innside går igjen opp fra dekket (den nye regelen ga hele innsida samme mørke), mastelinja i `check()` regnes mot den nye flaggstanga, det gamle hælpinnet er borte, og patchnotatet sier hva som er endret, ikke hvorfor. Sensoren så bildene med AIS-en, så «Styrhus» kan være satt et halvt poeng for høyt. `spill_bro` og rendringene av broa er tatt på nytt uten den. GL-feilene i `potshot` (1282) er der også på bygget fra før endringen og er ikke modellens (backloggen, 10.6).
+
+**Det som mangler til 75 (fire poeng), og hvor det ligger:**
+
+- **Stolpene under lyets akterkant og folkene** (modellen og felles kode): den om styrbord står ved x 2,30 på ripa, og juksaplassen ved 2,64 og plassene under teinetrekkingen kommer inntil den. Prøv å flytte stolpen lenger akter eller inn, og legg en sjekk i `check()` for avstanden fra hver mannskapsplass til hver stolpe (minst 0,25 m til skuldra). Mannen i stolpen i `teiner_trekk` må finnes med et bilde ovenfra.
+- **Setteren og galgen:** 2,5 cm er for lite til at det leser fritt. 10–15 cm til, og flaggstanga rett opp eller på aktermasta, så den ikke ser ut til å gå gjennom folk sett ovenfra akter.
+- **Roret og hælen:** profilen synes ikke fra siden. Avrundet forkant som synes, tykkere hæl med overgang til kjølen.
+- **Slitasjen** synes ikke på de store hvite boksene (farge bare i hjørnene). Uten teksturer: flere hjørner der slitasjen skal synes, eller en tekstur (spørsmål for grafikkplanen).
+- **Anker i baugrulla, vindusviskere som synes, finere sopplufter og pullerter.**
+- **Akterlanternen vist om natta** (et nattbilde rett akterfra).
+- **Felles kode (ikke modellen):** han som står ved styrbord galgestolpe i pausen, tre tett ved porten under settingen, og hvile som bare er å stå.
+

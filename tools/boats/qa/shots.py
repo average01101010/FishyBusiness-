@@ -26,7 +26,7 @@ def look(night=False):
     sc.view_settings.exposure = -1.0
     if night:
         bg.inputs['Color'].default_value = (0.01, 0.012, 0.02, 1); bg.inputs['Strength'].default_value = 0.15
-        bpy.data.objects['sun'].data.energy = 0.0
+        bpy.data.objects['sun'].data.energy = getattr(B, 'NIGHT_SUN', 0.0)   # (a script's faint moon, so the hull shows round its lights: kyst21, OB13 round 2)
         for m in bpy.data.materials:
             if m.name.startswith(('lamp', 'lred', 'lgreen', 'lwhite')) and m.node_tree:
                 b = m.node_tree.nodes.get('Principled BSDF'); rgb = m.get('rgb', (1, 1, 1))
@@ -59,9 +59,20 @@ SH = [  # name, camera, target, lens or ortho, water, night
 ]
 if eye: SH.append(('helm', eye, (eye[0] + 3, eye[1] - 0.2, eye[2] - 0.55), 28, True, False))
 for extra in getattr(B, 'CLOSE', []): SH.append(extra)
+FLOODS = []
+def floods(on):
+    """a script's work lights lit in its night views (B.NIGHT_FLOODS: [(point, aim)], OB13 round 2): a spot light at each, so the deck
+    shows as the crew sees it working at night; none in the day views"""
+    while FLOODS: bpy.data.objects.remove(FLOODS.pop())
+    if not on: return
+    for i, (p, aim) in enumerate(getattr(B, 'NIGHT_FLOODS', [])):
+        ld = bpy.data.lights.new('flood%d' % i, 'SPOT'); ld.energy = 260.0; ld.spot_size = math.radians(110); ld.spot_blend = 0.6; ld.color = (1.0, 0.93, 0.80)
+        ob = bpy.data.objects.new('flood%d' % i, ld); sc.collection.objects.link(ob); ob.location = p
+        ob.rotation_euler = (-mathutils.Vector(aim)).to_track_quat('Z', 'Y').to_euler(); FLOODS.append(ob)
+import mathutils
 for nm, cam, tgt, lens, wat, night in SH:
     if only and nm not in only: continue
-    look(night); W.hide_render = not wat
+    look(night); floods(night); W.hide_render = not wat
     gl_ = bpy.data.objects.get('GLASS0')       # the views from inside a wheelhouse: the glass (opaque in the render) out, so the daylight comes in
     if gl_: gl_.hide_render = nm in ('helm',) or nm.startswith('c_helm')
     if isinstance(lens, tuple): camera(cam, tgt, ortho=lens[1])
