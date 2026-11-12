@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **HO1 og HO2 er bygd og rullet ut til testutgaven (12.11.2026, steg 104 og 105)**; spoleknappen står bak Admin-appens testbryter til kjøpet er bygd. HO3 (steg 106, kjøpet) er neste.
+Status: **HO1, HO2 og HO3 er bygd (12.11.2026, steg 104–106) og rullet ut til testutgaven.** Kjøpet er ekte penger: PR-en venter på Jonas, og migreringen `20261112200000_hopp.sql` kjører han på testprosjektet når det har `shop-checkout` og Stripe-webhooken (L1a). Til da er butikken i testmodus på testutgaven (bare for admin, ingen betaling).
 
 ## Hva Jonas ba om
 
@@ -72,6 +72,19 @@ For én tur under rundt to og en halv time er hoppet billigere per spart minutt 
 - Når betalingen er kommet fram, flyttes båten til målet som sto da kjøpet ble gjort, uansett vær eller endret rute.
 - Bare hvis båten alt er framme når betalingen kommer, fordi kassen tar et par minutter, er det ingen tid å spare. Da legges hoppet i Kaiboden som ett hopp til neste rute, uten utløpsdato. Dette er øktas forslag og kan snus i PR-en for HO3.
 
+**Når hoppet ikke kan gjøres** (bygd i HO3 etter kontrollen, 12.11.2026; øktas valg, kan snus i PR-en, `ui/10u-hopp.js` `hopFate`):
+- **Været stopper det aldri.** Et betalt hopp går med `hopGo(true)`, uansett vind, sjø og Autonav-grensene.
+- **Det som går over av seg selv, ventes på** (`hopWait`, høyst tre minutter). Rett etter retur fra Stripe spiller siden inn tida den var borte, og Autonav kan holde på å finne en vei rundt grunt vann. Hoppet gjøres når det er ferdig, og kvitteringen sier «om et øyeblikk».
+- **Hoppet legges i Kaiboden, og loggen og kvitteringen sier den ekte grunnen,** når:
+  - båten er fremme (`status` er ikke `sailing`)
+  - spilleren er om bord i en annen båt
+  - båten seiler en annen rute, slik at stoppet i kjøpet ikke er neste stopp innen 100 m
+  - spillet er åpent på en annen enhet
+  - noe i `hopWhy` gjelder: lekkasje, mann over bord, slep av en annen spiller, anker eller ligger bi, «Stopp båten», Driftsplanen, første tur eller et turoppdrag med båten
+  - turen er lengre enn hoppet ble kjøpt for (`hopCovers`: minuttene i kjøpet, pluss en tidel og to minutter for vær som har endret seg)
+- **Fra Kaiboden** brukes hoppet med ett trykk på ⏩ på en senere rute det dekker, uten ny betaling. Kortet tilbyr det bare når serveren har sagt i denne økta at det er ubrukt (`SHOP.hopFresh`).
+- **Avviket fra ordlyden over:** «uansett endret rute» er ikke bygd. Et hopp til et stopp som ikke lenger er på ruta, ville flyttet båten dit spilleren har valgt bort, og hoppet beholder hele verdien i Kaiboden. Vil Jonas heller at båten flyttes til stoppet i kjøpet også da, er det en endring i `hopFate` og `hopGo` (ruta dit legges med `leiaRoute` før tørrkjøringen).
+
 ## Fasene
 
 Hver fase er én økt.
@@ -102,7 +115,7 @@ Hver fase er én økt.
 ### HO3 Kjøpet
 
 - **Hva:**
-  - Produktet `hopp` i `products` med prisen fra `shop_quote(product, minutter)` etter formelen. Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
+  - Produktet `hopp` i `products` med prisen fra `shop_quote_hop(minutter)` etter formelen (`hop_price`). Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
   - `purchases.data` med minuttene, målet og prisen.
   - `shopGive` gir hoppet når betalingen kommer fram.
   - Hoppet gjøres til målet i kjøpet, uansett vær og endret rute; er båten alt framme, legges det i Kaiboden (se «Når betalingen har gått gjennom»).
@@ -138,4 +151,5 @@ Hver fase er én økt.
 ## Status
 
 - 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen.
-- 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n. Neste: HO3 (steg 106).
+- 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n.
+- 12.11.2026: HO3 (kjøpet) bygd i samme økt (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»): `shop_quote_hop`, `hop_price`, `hop_use`, `shop_state` med hoppene, `shop_refund` som tar tilbake et ubrukt hopp, `shop-checkout` med minuttene og stoppet, leveringen i `srvApply` og Kaiboden. Uavhengig kontroll; funnene rettet (kvitteringens pris, kaiplass-id-en, minuttene i kjøpet, refusjonen, ventingen på innhentingen, grunnen i Kaiboden). Avviket fra «uansett endret rute» står under «Når hoppet ikke kan gjøres».

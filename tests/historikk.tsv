@@ -3246,3 +3246,20 @@
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
 2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
 2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
+2026-11-12 15:50	ccr-e7efd74c-rioki0	d1cce6c9	fasittest	OK	31	lite	samtidig	
+2026-11-12 15:52	ccr-e7efd74c-rioki0	d1cce6c9	kjoptest	OK	170	lite	samtidig	
+2026-11-12 15:52	ccr-e7efd74c-rioki0	d1cce6c9	guesttest	OK	99	lite	samtidig	
+2026-11-12 15:52	ccr-e7efd74c-rioki0	d1cce6c9	skiptest	OK	19	lite	samtidig	
+2026-11-12 15:52	ccr-e7efd74c-rioki0	868e5038	boostklokke	OK	47	lite	samtidig	
+2026-11-12 15:52	ccr-e7efd74c-rioki0	868e5038	hopptest	OK	7	lite	samtidig	
+2026-11-12 16:07	ccr-e7efd74c-rioki0	308d71e0	hoppshot	FEIL	852	3d	alene	FEIL liggende: 1c. i roen dempes spoleknappen som kino-knappen {"hop": 0.773837, "kino": 0.773837}
+2026-11-12 16:43	ccr-e7efd74c-rioki0	308d71e0+	kjoptest	OK	139	lite	alene	
+2026-11-12 16:43	ccr-e7efd74c-rioki0	308d71e0+	fasittest	FEIL	27	lite	alene	FEIL HO3: the receipt says the hop with its minutes and the price paid (14 kr, 18 min)  {"text": "Det Store Blå\n\nTakk for kjøpet!\n\nBetalingen er gjennomført
+2026-11-12 16:48	ccr-e7efd74c-rioki0	308d71e0+	sqltest	OK	50	lite	samtidig	
+2026-11-12 16:48	ccr-e7efd74c-rioki0	308d71e0+	fasittest	FEIL	29	lite	samtidig	FEIL HS4: against a server from before the migration the game is as after HS3: what is in the save stands, the pub draws itself and the chapter's haill is the g
+2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	kjoptest	OK	161	lite	samtidig	
+2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	hopptest	OK	6	lite	samtidig	
+2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	guesttest	OK	99	lite	samtidig	
+2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	skiptest	OK	19	lite	samtidig	
+2026-11-12 16:51	ccr-e7efd74c-rioki0	308d71e0+	boostklokke	OK	46	lite	samtidig	
+2026-11-12 16:52	ccr-e7efd74c-rioki0	308d71e0+	fasittest	OK	29	lite	alene	

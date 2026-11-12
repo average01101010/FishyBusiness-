@@ -1289,20 +1289,24 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06j-hopp.js` (145 linjer)
+## `src/js/core/06j-hopp.js` (164 linjer)
 
 ---------- Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026) ----------
 
 - **1** Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026)
   - 15 `hopPrice(realMin)`
   - 21 `hopStop(pl)`
-  - 27 `hopWhy()`
-  - 49 `hopRun(paid)`
-  - 83 `hopQuote()`
-  - 86 `hopEnergy(e, s, n, rate)`
-  - 91 `hopSaved(real, en)`
-  - 93 `hopDo(q)`
-  - 135 `hopGo(paid)`
+  - 28 `hopCatching()`
+  - 31 `hopWait()`
+  - 34 `hopCovers(paidMin, realMin)`
+  - 36 `hopWhy()`
+  - 58 `hopRun(paid)`
+  - 96 `hopMatch(to)`
+  - 101 `hopQuote()`
+  - 104 `hopEnergy(e, s, n, rate)`
+  - 109 `hopSaved(real, en)`
+  - 111 `hopDo(q)`
+  - 153 `hopGo(paid, maxMin)`
 
 ## `src/js/core/06e-anchor.js` (235 linjer)
 
@@ -2794,7 +2798,7 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 34 `innst()`
   - 72 `admin()`
 
-## `src/js/ui/phone/06-render.js` (67 linjer)
+## `src/js/ui/phone/06-render.js` (69 linjer)
 
   - 1 `show(on, a)`
   - 2 `status()`
@@ -2805,8 +2809,8 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 21 `dact(cur, a, d)`
 - **27** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
   - 32 `trim()`
-- **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
-  - 52 `skipApp()`
+- **50** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
+  - 54 `skipApp()`
 
 ## `src/js/ui/phone/07-patch.js` (1601 linjer)
 
@@ -3543,36 +3547,36 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 273 `rtTurn(B)`
   - 307 `worldStart()`
 
-## `src/js/ui/10i-shop.js` (400 linjer)
+## `src/js/ui/10i-shop.js` (419 linjer)
 
 THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
 
 - **1** THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/functions/shop-checkout and stripe-webhook)
-  - 37 `shopMode()`
-  - 43 `realKr(nok)`
-  - 45 `shopLabel(nok)`
-  - 50 `shopWhat(k)`
-  - 60 `payBuy(k, give)`
-  - 68 `shopFine()`
-  - 71 `shopGo(k)`
-  - 87 `shopYard()`
-  - 91 `shopGive(g, srv)`
-  - 113 `shopThanks(rc)`
-  - 132 `shopBack(list)`
-  - 161 `haillProbe()`
-  - 169 `haillTell(now)`
-  - 175 `haillTell1()`
-- **197** HS4: the server is the truth
-  - 201 `srvOnly()`
-  - 204 `pubAsk()`
-  - 211 `achHaillAsk()`
-  - 216 `yardUsed()`
-  - 226 `srvImport(st)`
-  - 239 `shopClaim4()`
-  - 255 `srvApply(st)`
-  - 325 `shopWords(gifts, thanks)`
-  - 332 `shopClaim()`
-  - 386 `shopStart()`
+  - 38 `shopMode()`
+  - 44 `realKr(nok)`
+  - 46 `shopLabel(nok)`
+  - 51 `shopWhat(k, g)`
+  - 64 `payBuy(k, give, extra)`
+  - 72 `shopFine()`
+  - 75 `shopGo(k, extra)`
+  - 91 `shopYard()`
+  - 95 `shopGive(g, srv)`
+  - 117 `shopThanks(rc)`
+  - 136 `shopBack(list)`
+  - 165 `haillProbe()`
+  - 173 `haillTell(now)`
+  - 179 `haillTell1()`
+- **201** HS4: the server is the truth
+  - 205 `srvOnly()`
+  - 208 `pubAsk()`
+  - 215 `achHaillAsk()`
+  - 220 `yardUsed()`
+  - 230 `srvImport(st)`
+  - 243 `shopClaim4()`
+  - 259 `srvApply(st)`
+  - 344 `shopWords(gifts, thanks)`
+  - 351 `shopClaim()`
+  - 405 `shopStart()`
 
 ## `src/js/ui/10j-paint.js` (249 linjer)
 
@@ -3667,15 +3671,20 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **109** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
 - **140** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/10u-hopp.js` (56 linjer)
+## `src/js/ui/10u-hopp.js` (113 linjer)
 
 ---------- Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md) ----------
 
 - **1** Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md)
-  - 14 `hopUi()`
-  - 19 `hopOpen()`
-  - 25 `hopCard(h, q)`
-  - 40 `hopPress()`
+  - 21 `hopUi()`
+  - 26 `hopOpen()`
+  - 32 `hopCard(h, q)`
+  - 60 `hopPress(paid, id, min)`
+  - 83 `hopSpend(id, min)`
+  - 88 `hopFate(d)`
+  - 96 `hopKeptWords(why, min)`
+  - 100 `hopKept(why, min)`
+  - 103 `hopDeliver(id, d)`
 
 ## `src/js/ui/11-boot.js` (408 linjer)
 
