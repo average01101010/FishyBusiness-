@@ -42,8 +42,9 @@ url = lambda q='': BASE + (('&' if '?' in BASE else '?') + q if q else '') + '#n
 
 # 10. (HS4) the server is the truth for haill and everything bought: a new game in its own context, against the stand-in with shop_state
 async def hs4(br, handle, st, calls, errs):
-    st.update({'ready': True, 'grants': [], 'hs': True, 'hs3': True, 'hs4': True, 'imp': True, 'offline': False, 'owned': [], 'pubhad': False, 'ach': False}); st['used'].clear(); st['yard'].clear(); st['impcalls'].clear()
+    st.update({'ready': True, 'grants': [], 'hs': True, 'hs3': True, 'hs4': True, 'imp': True, 'offline': False, 'owned': [], 'pubhad': False, 'ach': False, 'hop': []}); st['used'].clear(); st['yard'].clear(); st['impcalls'].clear()
     ctx = await br.new_context(viewport={'width': 1100, 'height': 800}); await ctx.add_init_script(STUB); await ctx.route('https://sb.test/**', handle)
+    await ctx.route('https://checkout.stripe.test/**', lambda r: r.fulfill(status=200, content_type='text/html', body='<title>Stripe</title><p>Stripe Checkout</p>'))
     pg = await ctx.new_page(); pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg, url()); await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true", timeout=120000)
     ago = lambda h: (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=h)).isoformat()
@@ -154,6 +155,44 @@ async def hs4(br, handle, st, calls, errs):
     h = await pg.evaluate("(async () => { const s0 = haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill, ask = achHaillAsk(); await new Promise(r => setTimeout(r, 50)); await shopClaim(); await shopClaim(); const s1 = haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill, ask2 = achHaillAsk(); await new Promise(r => setTimeout(r, 50)); await shopClaim(); await shopClaim(); return {ask, got:s1 - s0, ask2, got2:haillStock(S.haillInv, S.haillSrv, S.haillUsed).haill - s1, inv:(S.haillInv || {}).haill || 0, left:S.achH || 0}; })()")
     ach = len([c_ for c_ in calls if c_[0] == 'ach_haill'])
     check(h == {'ask': True, 'got': 1, 'ask2': True, 'got2': 0, 'inv': 0, 'left': 0} and ach == 2, 'HS4: the haill of chapter 2 is the server\'s grant, in the store once; asked for again, the server gives none', {'r': h, 'calls': ach})
+    # j. the hop over the rest of a route (HO3, ui/10u-hopp.js, 20261112200000_hopp.sql): on a route the card's «Kjøp» shows the price for
+    # the minutes and asks shop-checkout for the hop with the minutes and the stop; back from Stripe the grant is made into the hop at once
+    # (the boat at the quay at the stop, hop_use told); a hop that came when the boat was already in, is kept in Kaiboden (the Trim tab
+    # says so) and used on the next route it covers, with no new payment
+    ROUTE = """async (back) => { const b = S.boat; S.tut = 0; S.settings.autoOn = false; WX_FORCE = {w:3, d:180}; if (S.turer) S.turer.act = [];
+      const A = portById(b.port) || PORTS.find(p => dist(p.p, b.pos) < 1);
+      const B = back ? portById(back) : PORTS.filter(p => p.id !== A.id && !p.naust && dist(p.p, A.p) > 8 && dist(p.p, A.p) < 30).sort((p, q) => dist(p.p, A.p) - dist(q.p, A.p))[0];
+      const r = await leiaRoute({x:A.p.x, y:A.p.y}, {x:B.p.x, y:B.p.y}, A.id, B.id); for (const w of r.wps) await mapNeed(w, 1);
+      b.status = 'sailing'; b.port = null; b.pos = {x:r.wps[0].x, y:r.wps[0].y}; b.v = 6; b.fuel = BOAT.fuelCap;
+      S.plan = {wps:r.wps.slice(1), idx:0, speed:BOAT.vcruise || BOAT.vmax * 0.8, returning:false, depAt:null, unsafe:r.wps.slice(1).map(() => false)}; S.plan.wps[S.plan.wps.length - 1].port = B.id;
+      return {A:A.id, B:B.id}; }"""
+    CARD = """(async () => { hopOpen(); for (let i = 0; i < 100 && !document.getElementById('hopGo'); i++) await new Promise(r => setTimeout(r, 50));
+      const q = hopQuote(), m = document.getElementById('modal'); return {lab:(document.getElementById('hopGo') || {}).textContent, fine:!!m.querySelector('.shop-fine'), min:q.realMin, kr:q.kr, text:m.innerText}; })()"""
+    rt = await pg.evaluate(ROUTE, None); c1 = await pg.evaluate(CARD); n0 = len(calls)
+    async with pg.expect_navigation(url='**/checkout.stripe.test/**', timeout=45000):
+        await pg.evaluate("document.getElementById('hopGo').click()")
+    co = [c[1] for c in calls[n0:] if c[0] == 'checkout']; co = co[-1] if co else {}
+    check(c1['lab'] == 'Kjøp · 💎 %d kr' % c1['kr'] and c1['fine'] and co.get('product') == 'hopp' and co.get('min') == c1['min'] and (co.get('to') or {}).get('port') == rt['B'] and co.get('boat') == cur,
+          'HO3: on a route the card\'s «Kjøp» shows the price for the minutes and asks shop-checkout for the hop with the whole minutes, the stop and the boat, straight to Stripe', {'card': {k: c1[k] for k in ('lab', 'fine', 'min', 'kr')}, 'checkout': co})
+    st['grants'].append({'id': 80, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': co.get('min'), 'to': co.get('to'), 'kr': c1['kr']}})
+    pg2 = await ctx.new_page(); pg2.on('pageerror', lambda e: errs.append(str(e))); await pg.close(); pg = pg2
+    pg.set_default_timeout(120000); await pg.goto(url('kjop=cs_test_hop'))
+    await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true && (S.shopGiven || []).includes(80)", timeout=120000)
+    try: await pg.wait_for_function("S.boat.status === 'port' && !HOPUI.busy && !(S.hopQ || []).length", timeout=60000)
+    except Exception: pass
+    j1 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, kept:(S.hopSrv || []).length, q:(S.hopQ || []).slice(), log:S.log.slice(-6).map(e => e.no).join(' | ')})")
+    check(j1['st'] == 'port' and j1['port'] == rt['B'] and j1['kept'] == 0 and st['hop'] == [80] and 'Hoppet til' in j1['log'],
+          'HO3: back from Stripe the hop is made at once to the stop it was bought for (the boat at the quay there), and the server is told once (hop_use)', {'r': j1, 'hop_use': st['hop']})
+    await pg.evaluate("document.getElementById('modal').hidden = true")
+    st['grants'].append({'id': 81, 'product': 'hopp', 'data': {'give': 'hopp', 'boat': cur, 'min': 60, 'to': {'x': 0, 'y': 0, 'port': 'et-annet-sted'}, 'kr': 45}})
+    j2 = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 400)); document.getElementById('modal').hidden = true; PHONE.open('trim'); await new Promise(r => setTimeout(r, 300)); const t = document.getElementById('phone').innerText; PHONE.show(false); return {kept:(S.hopSrv || []).map(x => x.id), st:S.boat.status, trim:/Hopp over resten av ruta/.test(t) && /60 minutter/.test(t), msg:S.log.slice(-4).map(e => e.no).join(' | ')}; })()")
+    await pg.evaluate(ROUTE, rt['A']); c2 = await pg.evaluate(CARD)
+    await pg.evaluate("document.getElementById('hopGo').click()")
+    try: await pg.wait_for_function("S.boat.status === 'port' && !HOPUI.busy && !(S.hopQ || []).length", timeout=60000)
+    except Exception: pass
+    j3 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, kept:(S.hopSrv || []).length})")
+    check(j2['kept'] == [81] and j2['st'] == 'port' and j2['trim'] and 'Kaiboden' in j2['msg'] and c2['lab'] == 'Bruk hoppet fra Kaiboden' and j3 == {'st': 'port', 'port': rt['A'], 'kept': 0} and st['hop'] == [80, 81],
+          'HO3: a hop that came when the boat was already in is kept in Kaiboden (the Trim tab shows it), and the next route it covers uses it with no new payment (hop_use told)', {'kept': j2, 'card': c2['lab'], 'after': j3, 'hop_use': st['hop']})
     # i. a server from before the migration (the new functions answer 404): the game as after HS3, all of it. What is in the save stands,
     # the pub draws itself, and the chapter's haill is the game's own
     st['hs4'] = False
@@ -199,7 +238,7 @@ async def main():
                 await route.fulfill(status=200, content_type='application/json', body=json.dumps(bool(g))); return
             # (HS4: the server as the truth. The server's game minute runs with the real clock, 6 game minutes a minute; the page's own
             # clock is the game's, so only the age of a minute counts there, core srvToT)
-            if fn in ('shop_state', 'haill_on', 'yard_use', 'haill_import', 'pub_spin', 'ach_haill'):
+            if fn in ('shop_state', 'haill_on', 'yard_use', 'haill_import', 'pub_spin', 'ach_haill', 'hop_use'):
                 if not st['hs4']: await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}'); return
                 if st['offline']: await route.abort(); return
                 gm = 100000 + (now - st['t0']).total_seconds() / 10; give = lambda g: g['data'].get('give')
@@ -207,10 +246,10 @@ async def main():
                 if fn == 'shop_state':
                     fresh = []
                     for g in G:
-                        if not g.get('done') and not g.get('gone') and give(g) in ('haill', 'trim', 'skip', 'yard'): g['done'] = True; g['done_at'] = now.isoformat(); fresh.append(g['id'])
+                        if not g.get('done') and not g.get('gone') and give(g) in ('haill', 'trim', 'skip', 'yard', 'hopp'): g['done'] = True; g['done_at'] = now.isoformat(); fresh.append(g['id'])
                     wk = lambda g: g.get('done_at') and (now - datetime.datetime.fromisoformat(g['done_at'])).total_seconds() < 7 * 86400
                     lst = [dict({'id': g['id'], 'product': g['product'], 'data': g['data']}, **({'held': True, 'done_at': g.get('done_at') or (now - datetime.timedelta(hours=1)).isoformat()} if g.get('done') else {}), **({'new': True} if g['id'] in fresh else {}))
-                           for g in G if not g.get('gone') and (not g.get('done') or (give(g) in ('haill', 'yard') and not g.get('used')) or (give(g) in ('trim', 'skip') and wk(g)))]
+                           for g in G if not g.get('gone') and (not g.get('done') or (give(g) in ('haill', 'yard', 'hopp') and not g.get('used')) or (give(g) in ('trim', 'skip') and wk(g)))]
                     used = [g for g in G if isH(g) and g.get('used') and not g.get('gone') and g.get('t0') is not None]; on = max(used, key=lambda g: (g['t0'], g['id'])) if used else None
                     r = {'v': 4, 't': gm, 'list': lst, 'on': {'id': on['id'], 'type': on['data']['type'], 't0': on['t0']} if on else None, 'imp': st['imp'], 'owned': st['owned'], 'pub': None}
                 elif fn == 'haill_on':
@@ -218,6 +257,10 @@ async def main():
                     if g and not g.get('used'): g['used'] = g['done'] = True; g.setdefault('done_at', now.isoformat()); g['t0'] = min(t0, gm) if isinstance(t0, (int, float)) else gm; r = {'ok': True}
                     else: r = {'ok': False, 'why': 'used' if g else 'gone'}
                     if body.get('id'): st['used'].append((body.get('id'), r['ok']))
+                elif fn == 'hop_use':   # (HO3, 20261112200000_hopp.sql: the hop's grant is unused until a hop is made with it)
+                    g = next((g for g in G if g['id'] == body.get('id') and give(g) == 'hopp' and not g.get('used') and not g.get('gone')), None)
+                    if g: g['used'] = g['done'] = True
+                    st['hop'].append(body.get('id')); r = bool(g)
                 elif fn == 'yard_use':
                     g = next((g for g in G if g['id'] == body.get('id') and give(g) == 'yard' and not g.get('used') and not g.get('gone')), None)
                     if g: g['used'] = g['done'] = True

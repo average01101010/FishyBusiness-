@@ -32,7 +32,7 @@ serveReported('shop-checkout', async (req) => {
   if (!SK) return json({error: 'the shop is not set up yet'}, 503);
   const auth = req.headers.get('Authorization') || '';
   if (!/^Bearer \S+$/.test(auth)) return json({error: 'not signed in'}, 401);
-  let body: {product?: string, boat?: string, lang?: string, back?: string} = {};
+  let body: {product?: string, boat?: string, lang?: string, back?: string, min?: number, to?: {x?: number, y?: number, port?: string}} = {};
   try { body = await req.json(); } catch (_e){ return json({error: 'bad request'}, 400); }
   const product = String(body.product || '').slice(0, 40), boat = String(body.boat || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40), en = body.lang === 'en';
   // back to the page the player came from, if it is one of the game's (the app at detstorebla.no, or the PWA on GitHub Pages)
@@ -41,14 +41,19 @@ serveReported('shop-checkout', async (req) => {
 
   const URL_ = Deno.env.get('SUPABASE_URL')!;
   const user = createClient(URL_, Deno.env.get('SUPABASE_ANON_KEY')!, {global: {headers: {Authorization: auth}}, auth: {persistSession: false}});
-  const {data: q, error} = await user.rpc('shop_quote', {product});
+  // the hop over the rest of a route (HO3, 12.11.2026; supabase/migrations/20261112200000_hopp.sql): the price for the whole real minutes
+  // saved, worked out by the server from the ladder; the stop it goes to kept on the purchase (numbers and a harbour id only)
+  const hop = product === 'hopp', min = Math.round(Number(body.min)), to = body.to || {};
+  const stop = hop ? {x: Math.round(Number(to.x) * 1e4) / 1e4, y: Math.round(Number(to.y) * 1e4) / 1e4, port: to.port ? String(to.port).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40) : null} : null;
+  if (hop && (!Number.isFinite(min) || !Number.isFinite(stop!.x) || !Number.isFinite(stop!.y))) return json({error: 'bad request'}, 400);
+  const {data: q, error} = hop ? await user.rpc('shop_quote_hop', {minutes: min}) : await user.rpc('shop_quote', {product});
   if (error || !q){ if (error) console.error('shop_quote', error.message); return json({error: 'unavailable'}, 400); }
 
   const stripe = new Stripe(SK, {httpClient: Stripe.createFetchHttpClient()});
   const params: Stripe.Checkout.SessionCreateParams = {
     mode: 'payment',
     line_items: [{quantity: 1, price_data: {currency: 'nok', unit_amount: q.price_nok * 100, tax_behavior: 'inclusive',
-      product_data: {name: en ? q.name_en : q.name_no, tax_code: TAX_CODE, metadata: {product: q.id}}}}],
+      product_data: {name: (en ? q.name_en : q.name_no) + (hop ? ' (' + min + ' min)' : ''), tax_code: TAX_CODE, metadata: {product: q.id}}}}],
     client_reference_id: q.pid,
     metadata: {product: q.id, boat},
     payment_intent_data: {metadata: {product: q.id}},
@@ -66,7 +71,7 @@ serveReported('shop-checkout', async (req) => {
   catch (e){ console.error('stripe', (e as Error).message); return json({error: 'unavailable'}, 502); }
 
   const admin = createClient(URL_, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {auth: {persistSession: false}});
-  const {error: e2} = await admin.from('purchases').insert({id: s.id, player_id: q.pid, product_id: q.id, amount_nok: q.price_nok, currency: 'nok', status: 'open', data: boat ? {boat} : {}});
+  const {error: e2} = await admin.from('purchases').insert({id: s.id, player_id: q.pid, product_id: q.id, amount_nok: q.price_nok, currency: 'nok', status: 'open', data: hop ? {boat, min, to: stop, kr: q.price_nok} : boat ? {boat} : {}});
   if (e2){ console.error('purchases', e2.message); return json({error: 'unavailable'}, 500); }
   return json({url: s.url});
 });

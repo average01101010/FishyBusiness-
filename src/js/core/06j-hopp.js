@@ -77,7 +77,15 @@ function hopRun(paid){
   if (!why && wx && !paid) why = ['Været på veien er for hardt for et hopp: ' + fmt(wx.W, 0) + ' m/s og ' + fmt(wx.hs, 1) + ' m sjø. Hopp går ikke forbi været.', 'The weather on the way is too hard for a hop: ' + fmt(wx.W, 0) + ' m/s and ' + fmt(wx.hs, 1) + ' m of sea. A hop does not get past the weather.'];
   if (!why && !paid && fuel > (b.fuel || 0)) why = ['For lite diesel til å komme fram: turen bruker ' + Math.ceil(fuel) + ' l, tanken har ' + Math.floor(b.fuel || 0) + ' l.', 'Too little diesel to get there: the trip burns ' + Math.ceil(fuel) + ' l, the tank has ' + Math.floor(b.fuel || 0) + ' l.'];
   if (!why && !paid && m < GAME_RATE) why = ['Båten er nesten fremme.', 'The boat is nearly there.'];
-  return {why, stop:iS, w:pl.wps[iS], min:m, real:m / GAME_RATE, kr:hopPrice(m / GAME_RATE), fuel, trimMin, track, heading};
+  // (the price on the whole real minutes, as the server works it out: supabase/migrations/20261112200000_hopp.sql hop_price)
+  const realMin = Math.max(1, Math.round(m / GAME_RATE));
+  return {why, stop:iS, w:pl.wps[iS], min:m, real:m / GAME_RATE, realMin, kr:hopPrice(realMin), fuel, trimMin, track, heading};
+}
+// the stop of a hop bought (HO3: the purchase keeps {x, y, port}) is the next stop on the route sailed now: the same harbour, or within
+// 100 m; else the route has changed since, and the hop waits in Kaiboden
+function hopMatch(to){
+  const pl = S.plan, iS = hopStop(pl); if (!to || iS < 0) return false;
+  const w = pl.wps[iS]; return to.port ? w.port === to.port : dist(w, to) < 0.1;
 }
 // what a hop from here would cost and save, or why it cannot be had (the price is shown before anything is bought)
 function hopQuote(){ const why = hopWhy(); return why ? {why} : hopRun(false); }

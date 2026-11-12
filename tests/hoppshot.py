@@ -78,7 +78,7 @@ async def one(p, name, vw, vh):
     await pg.click('#hopBtn')
     await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
     c = await J("() => { const m = document.getElementById('modal'); return {shown:!m.hidden, text:m.innerText, go:!!document.getElementById('hopGo')}; }")
-    check(c['shown'] and c['go'] and '\U0001F48E' in c['text'] and 'Du sparer' in c['text'] and 'Testmodus' in c['text'], name + ': 2. kortet: målet, tida spart, prisen med 💎 og testmodus', {'text': c['text'][:300]})
+    check(c['shown'] and c['go'] and '\U0001F48E' in c['text'] and 'Du sparer' in c['text'] and 'Admin' in c['text'], name + ': 2. kortet: målet, tida spart, prisen med 💎 og at admin-hoppet er gratis', {'text': c['text'][:300]})
     await pg.screenshot(path=os.path.join(OUT, 'hopp-kort-' + name + '.png'))
     await pg.click('#hopGo')
     await pg.wait_for_function("!HOPUI.busy", timeout=240000)
@@ -89,9 +89,18 @@ async def one(p, name, vw, vh):
     await pg.screenshot(path=os.path.join(OUT, 'hopp-etter-' + name + '.png'), timeout=600000)
     r = await J(RECT)
     check(not r['hop']['shown'], name + ': 4a. ved kaia er spoleknappen borte', r['hop'])
-    await J(GO, False); await pg.wait_for_timeout(1500)
+    # 4b. the shop closed (shopMode off: no cloud on a public site, or closed for the account, P5): no button, not on a route either
+    await J(GO, False); await J("() => { window.__sm = shopMode; shopMode = () => 'off'; }"); await pg.wait_for_timeout(1500)
     r = await J(RECT)
-    check(not r['hop']['shown'], name + ': 4b. med testbryteren av står ingen spoleknapp, heller ikke på ruta', r['hop'])
+    check(not r['hop']['shown'], name + ': 4b. når butikken er stengt, står ingen spoleknapp, heller ikke på ruta', r['hop'])
+    # 4c. the shop selling (here in test mode, as on the test machine): the button, and the card's button is the purchase
+    await J("() => { shopMode = window.__sm; }")
+    try: await pg.wait_for_function("(() => { const e = document.getElementById('hopBtn'); return e && !e.hidden && getComputedStyle(e).display !== 'none'; })()", timeout=60000)
+    except Exception: pass
+    await pg.click('#hopBtn'); await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
+    c4 = await J("() => ({lab:document.getElementById('hopGo').textContent, mode:shopMode()})")
+    await J("() => { document.getElementById('modal').hidden = true; }")
+    check(c4['mode'] == 'test' and c4['lab'] == 'Kjøp (test, ingen betaling)', name + ': 4c. der butikken selger, står knappen uten testbryteren, og kortets knapp er kjøpet', c4)
     check(not errs, name + ': 5. ingen sidefeil', errs[:3])
     await br.close()
 

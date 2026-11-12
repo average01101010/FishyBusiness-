@@ -14,6 +14,9 @@ export default function (t){
   const trimBest = Math.max(...Object.values(K.BOOSTS).map(B => B.nok / (B.h / 6 * (B.x - 1))));
   t.ok(HOP.steps[HOP.steps.length - 1][1] * 60 > trimBest, 'laveste trinn ' + HOP.steps[HOP.steps.length - 1][1] * 60 + ' kr/t er dyrere enn den dyreste trimmen per spart time (' + trimBest.toFixed(1) + ' kr/t)');
 
+  // the server's ladder (supabase/migrations/20261112200000_hopp.sql hop_price) on whole minutes: the edges of the steps, the same
+  // numbers tests/sqltest.py asks the database for
+  for (const [m, kr] of [[1, 5], [6, 5], [7, 5], [59, 44], [61, 46], [239, 135], [241, 135], [3360, 915]]) t.eq(hopPrice(m), kr, m + ' min: ' + kr + ' kr (som hop_price i databasen)');
   // 2. the next stop: a harbour, fishing, gear work, an anchor, or the route's end
   const w = (o) => Object.assign({x:0, y:0, port:null, fish:0}, o);
   t.eq(hopStop({idx:0, wps:[w(), w(), w({port:'p1'})]}), 2, 'rett til havna');
@@ -23,6 +26,15 @@ export default function (t){
   t.eq(hopStop({idx:0, wps:[w(), w({anchor:true}), w()]}), 1, 'til ankringen');
   t.eq(hopStop({idx:0, wps:[w(), w(), w()]}), 2, 'til siste punkt når ruta ikke har noe stopp');
 
+  // the stop of a hop bought (HO3): the same harbour, or within 100 m of the next stop on the route sailed now
+  { const {hopMatch} = K, S0 = newState(); K.set('S', S0); S0.boat.status = 'sailing';
+    S0.plan = {idx:0, wps:[w({x:1, y:1}), w({x:5, y:5, port:'p1'})]};
+    t.ok(hopMatch({x:9, y:9, port:'p1'}), 'samme havn: hoppet går dit');
+    t.ok(!hopMatch({x:5, y:5, port:'p2'}), 'en annen havn: hoppet venter i Kaiboden');
+    S0.plan = {idx:0, wps:[w({x:1, y:1}), w({x:5, y:5, fish:1})]};
+    t.ok(hopMatch({x:5.05, y:5, port:null}), 'et fiskestopp 50 m unna: samme stopp');
+    t.ok(!hopMatch({x:5.3, y:5, port:null}), 'et fiskestopp 300 m unna: ruta er endret');
+    t.ok(!hopMatch(null), 'uten stopp i kjøpet: ingen hopp'); }
   // 3. refused before anything is run, and nothing changed
   const S = newState(); K.set('S', S); S.cur = S.cur || 'v1';
   const sailing = () => { S.boat.status = 'sailing'; S.boat.port = null; S.plan = {idx:0, wps:[w({x:1, y:1}), w({x:2, y:2, port:'p1'})], speed:8}; S.tut = null; S.turer = null; };
