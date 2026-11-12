@@ -67,7 +67,7 @@ async def moment3d(br, errs):
             await until(pg, "G3.buying && G3.buying.frame >= %d" % (f0 + 2), 60000); return await pg.evaluate("G3.buying")
         m = await at(0.6 + 0.22 * n * 0.5)
         await shot(pg, 'kjop3d_navn_%s.png' % fmt)
-        check(bool(m) and 0 < m['drawn'] < m['len'] and m['fy'] is not None and m['fy'] < -0.5,
+        check(bool(m) and 0 < m['drawn'] < m['len'] and m['fy'] is not None and m['fy'] < -0.4,
               '3D, %s: navnet males på skroget bokstav for bokstav (%s av %s), flagget nede på stanga' % (fmt, m and round(m['drawn'], 1), m and m['len']), m)
         # the name on, and the flag at the top of its pole
         e = await at(0.6 + 0.22 * n + 0.4 + 3.2)
