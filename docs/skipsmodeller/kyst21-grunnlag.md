@@ -43,6 +43,10 @@ x −1,6 (rundgattens spiss) til 19,4 (stevnens topp). Spillets midtskips er x 8
 | B10 | Kranen | Spillets, på bakkdekket om babord akterkant; hun legger babord til (`quay: -1`) | F22. Modellen kan ikke gjøre kranen eldre (M16): den er spillets felles kran. Hennes egen lastebom med vinsj står på masta |
 | B11 | Lanternene | Topplanterna på mastetoppen, fiskelysene på armer under den, sidelanternene på skjermer ved båtdekkets forkant | Vedlegg I for 20 m og over, kap. 5 |
 | B12 | Dekkshusets indre | En mørk flate en meter over dekket inne i huset | Spillets gangkart fant et rom med ståhøyde under båtdekket og satte rorplassen der |
+| B13 | Garnbingen (runde 2) | Lave bord (0,17 m) på stolper rundt de fire karene spillet setter på akterdekket, ingen åpning: en går over | Under gangkartets 0,25 m og karenes prøve på 0,2 m, så `netTubs` får fire kar som før |
+| B14 | Styrhusdørken (runde 2) | 0,30 m over båtdekket, terskel 0,15 og trinn utenfor døra; innvendig 1,97 m til taket | Øyet ser bakkens ripe 2,3° under vannrett (før 0,9°); silhuetten er 0,11 m høyere |
+| B15 | Lastebommen (runde 2) | Toppet opp langs mastas akterkant og holdt med et bånd, slik den stues til sjøs | Lagt akterover sto den på skrå over skipperens ruter |
+| B16 | Tømmestedet for teinene (runde 2) | `kit.pots.spot` akter for blødekaret og innenfor bordet, x 9,40, y −1,95 | Spillets eget sted sto oppå karet og bordet. Folkene står der `deckcrew.js` setter dem uansett (kap. 12) |
 
 ## 4. Gjennomgang før endring: avvikslista
 
@@ -97,6 +101,8 @@ Modellens x fra rorstammen, y babord +. Alle er regnet i `check()` mot spillets 
 | Den som iser (`work.pack`) | ved lukas styrbord karm x 10,2 | 0,49 m fra karmen |
 | Luka | x 9,40–11,80, 2,2 m bred, karm 0,6 m | – |
 | Stampene (`kit.stamps`) | blokken med åtte om babord for luka, x 9,53–11,67 | 0,92 m gang til luka, 0,55 m til skansekledningen |
+| Tømmestedet (`kit.pots.spot`, runde 2) | akter for karet og innenfor bordet, x 9,40, y −1,95 | ringen fri av karet (0,54), lukas karm (0,12), bordet (0,20), stablene og folkene ved haleren |
+| Garnbingen (runde 2) | x 0,05–1,47, y −2,24 til 2,20, 0,17 m høy | de fire karene spillet setter (`netTubs`), 0,91 m gang forut, setterullen 1,63 m akter |
 | Teinestablene (`kit.pots`, `potplaces.json`) | tre på tvers forut for luka (x 13,0; y −0,75, 0,75 og 2,25) og én på luka: 8 + 8 + 7 + 7 = 30 | fri av haleren, karet, bordet, stampene og hverandre |
 | Lasteenhetene (`kit.cargo`) | fire mellom huset og luka, én på lukas akterkant | fri av bordet, stampene og stabelen på luka |
 | Akterdekket | x −1,6 til 2,40 | – |
@@ -168,3 +174,29 @@ var 48 på den gamle skalaen med åtte punkter, så tallene kan ikke trekkes fra
 
 - Et bilde av en stålbåt på 18–25 m fra 60- eller 70-tallet med bakk og rundgatt, sett ovenfra eller aktenfra (akterdekket er eget valg).
 - Skal styrhuset løftes en halv etasje, slik at skipperen ser over bakken? Det endrer silhuetten.
+
+## 12. Runde 2 (12.11.2026)
+
+Steg 91, Jonas' økt, grenen `claude/ob13-kyst21-runde2`. Startmeldingen: `docs/planer/start/91.md`. Målet: fra 70 til minst 75 på Jonas'
+skala, med det sensoren pekte på i kap. 9, i den rekkefølgen startmeldingen gir.
+
+### 12.1 Det som er gjort
+
+| # | Hva | Gjort | Regnet eller sett |
+|---|---|---|---|
+| 1 | Teinetrekket | Eget tømmested (B16, `kit.pots.spot`, også i `potplaces.json`) | `check()`: ringen fri av karet, luka, bordet og stablene, og av folkene ved haleren slik `deckcrew.js` setter dem (målt i spillet: de tre som sorterer, står på rad ved x 10,4–11,6, y −2,1 til −2,5, minst 0,72 m fra hverandre, før og etter). Den bakerste som sorterer, står 0,28 m fra ringen. Spillets krabbekar (`tankAt`) havner ved siden av, og teina tippes over det |
+| 2 | Utsikten fra roret | Bommen toppet opp (B15), stolpene 5,9 cm mellom frontrutene og 8,4 cm mot hjørnene med karmene (før 11 og 13), dørken 0,30 m høyere (B14) | `check()`: bommen ligger bak masta sett fra øyet (0,00 m ved siden av), baugens ripe 2,3° under vannrett. `helm`-bildet før og etter |
+| 3 | Dekket | Sveisesømmer i platene (skjøter på tvers hver 1,8 m, to langsgående strøk på hver side), sklisikre felt med riflet mønster der de står (ved setteren, på begge sider av luka, utenfor husets dører) | Ingenting over 0,004 m |
+| 4 | Akterdekket | Garnbingen (B13), seks øyebolter for karenes surringer, to klamper på skansekledningen, arbeidslys under båtdekkets akterkant (`anchors.lights` `work`) | `check()`; `netTubs` gir fire kar som før (lest i spillet) |
+| 5 | Lanternene om natta | Nattbilder fra spillet til sjøs (seilas: topplanterne, sidelanternene, hekklanterna; fiske: rødt over hvitt), egne nattrendringer `K6n` og `K6a` med hele masta i bildet, flomlysene tent og svakt måneskinn (`shots.py`: valgfrie `NIGHT_FLOODS` og `NIGHT_SUN` i skriptet) | Den felles `K6` klipper mastetoppen ut (100 mm linse), derfor de egne |
+| 6 | Grove deler | Lastevinsjen (trommel med vaier, flenser, bremsetrommel med bånd og spak, clutchspak, varphoder, motorhus med slanger), lys gang bak bakkdøra (taklampe, oljehyre, støvler), sløyebordet som trau (lepper, skjørt, tre skjærebrett, avstivning, gitterhylle, avløp, knivholder, dyser på spylerøret) | Rendringene `c_fore`, `c_break`, `c_table` |
+
+Nærmodellen er 147 913 trekanter (før 141 982). `qa/flatnorm.py`: de samme tre små flatene som i runde 1, ingen i styrhuset.
+
+### 12.2 Det som ikke er modellens
+
+- **Folkene i teinetrekket:** `deckcrew.js` setter dem som sorterer, på rad ved haleren med ansiktet mot ripa (`places().pot` og `beside`),
+  uansett hvor teina tømmes. Teina svinges rett fra blokka til tømmestedet i skulderhøyde (`10-gear.js` `drawPots`, u 0,55–0,62), så
+  den går forbi dem som står imellom. Begge filene var bare til lesing i denne økta; i backloggen.
+- Kranen (M16), ryddingen (F12), ingen ved teinene under setting (F4) og de hvite flekkene bak båten står som før.
+
