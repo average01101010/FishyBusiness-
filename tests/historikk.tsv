@@ -3084,6 +3084,13 @@
 2026-11-12 07:50	claude/ob11-r3-breisjark	817ab3e	docktest	OK	63	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	boottest	OK	33	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	stabtest	OK	25	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	crewwalk	OK	21	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	selfcrew	OK	17	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	docktest	OK	95	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	worktest	OK	43	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	vesseltest	OK	35	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	trip2	OK	55	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:11	ccr-e7efd74c-rioki0	e0f5977+	hopptest	OK	7	lite	alene	
 2026-11-12 10:12	ccr-e7efd74c-rioki0	e0f5977+	keeptest	OK	17	lite	samtidig	
@@ -3111,6 +3118,24 @@
 2026-11-12 11:39	ccr-e7efd74c-rioki0	c2127f3	hoppshot	FEIL	892	3d	alene	avsluttet med kode 1
 2026-11-12 12:20	ccr-e7efd74c-rioki0	8766b5e	hoppshot	OK	854	3d	alene	
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:09	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 11:10	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	40	lite	alene	avsluttet med kode 1
+2026-11-12 11:11	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	39	lite	alene	FEIL a pack gone from a new manifest (404): the page sees it at once and the update bar comes (7044 ms, map: chart0-0-0-41c737483bb5.wasm 404)
+2026-11-12 11:19	claude/k3-sjomerker-33d	f618eda+	marktest	FEIL	7	lite	alene	FEIL the 3D view's markInto can be asked (G3._debug)
+2026-11-12 11:20	claude/k3-sjomerker-33d	4ff948f+	marktest	FEIL	8	lite	samtidig	FEIL no buoy or beacon without a side drawn as port: the lateral marks without one are few and drawn white  {"noside": 57, "kinds": "ABCDIKLMPYmy"}
+2026-11-12 11:21	claude/k3-sjomerker-33d	4ff948f+	maptest	OK	37	lite	samtidig	
+2026-11-12 11:30	claude/k3-sjomerker-33d	4ff948f+	marktest	OK	7	lite	alene	
+2026-11-12 11:33	claude/k3-sjomerker-33d	285918c+	obstest	OK	9	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	farttest	OK	388	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	installtest	OK	51	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	boottest	OK	34	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	trip2	OK	45	lite	samtidig	
+2026-11-12 11:46	claude/k3-sjomerker-33d	e21c9a4	lighttest	OK	390	3d	alene	
+2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	routetest	OK	43	lite	alene	
+2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	charttest	OK	51	lite	alene	
+2026-11-12 12:03	claude/k3-sjomerker-33d	eb02255	coast3d	FEIL	900	3d	alene	FEIL by Gryllefjord the rorbu stands on the map's own ground in 3D (its floor over it, lifted 2.5 m; no bank of its own since 01.11.2026) in its colour (r), wit
+2026-11-12 12:23	claude/k3-sjomerker-33d	df76988	marktest	OK	7	lite	alene	
+2026-11-12 12:36	claude/k3-sjomerker-33d	df76988	coast3d	OK	762	3d	alene	
 2026-11-12 11:27	ccr-dd09444c-km5	950be53+	quotatest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-12 11:27	ccr-dd09444c-km5	950be53+	megletest	FEIL	0	lite	samtidig	avsluttet med kode 1
 2026-11-12 11:27	ccr-dd09444c-km5	950be53+	kvotemarkedtest	FEIL	0	lite	samtidig	avsluttet med kode 1
@@ -3193,7 +3218,20 @@
 2026-11-12 11:56	ccr-899a9674-q3gjp0	306f83f	sea3d	OK	2832	3d	alene	
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	hopptest	OK	8	lite	samtidig	
 2026-11-12 12:32	ccr-e7efd74c-rioki0	010926b	trip2	OK	32	lite	samtidig	
+2026-11-12 13:28	plan/2026-11-12-88	c9bac8aa	boottest	OK	24	lite	alene	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	calib	LES	14	lite	samtidig	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	simday	LES	13	lite	samtidig	
+2026-11-12 15:18	plan/2026-11-12-88	3a8ac2d6	progweek	LES	34	lite	samtidig	
+2026-11-12 15:28	plan/2026-11-12-88	3a8ac2d6	mobshot	FEIL	602	3d	alene	FEIL 3. etterpå: ingenting igjen, og båten i vugga (drawSafety)  {"person": 1, "buoy": 0, "light": 0, "smoke": 14, "boat": "out", "holder": 0}
+2026-11-12 15:43	plan/2026-11-12-88	3a8ac2d6	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 15:52	plan/2026-11-12-88	3a8ac2d6	jigshot	OK	550	3d	alene	
+2026-11-12 16:48	plan/2026-11-12-88	3a8ac2d6+	mobshot	OK	687	3d	alene	
 2026-11-12 14:31	ccr-013bxxie-n4kyst	cc7530ac	ferrytest	OK	17	lite	alene	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	marktest	OK	9	lite	samtidig	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	maptest	OK	46	lite	samtidig	
+2026-11-12 15:59	claude/k3-sjomerker-33d	7a69d7b	boottest	OK	40	lite	samtidig	
+2026-11-12 16:00	claude/k3-sjomerker-33d	7a69d7b	trip2	OK	35	lite	samtidig	
+2026-11-12 16:01	claude/k3-sjomerker-33d	7a69d7b	charttest	OK	51	lite	alene	
 2026-11-12 14:46	claude/ob11-r4-breisjark	7cec133	vesseltest	OK	22	lite	samtidig	
 2026-11-12 14:47	claude/ob11-r4-breisjark	7cec133	docktest	OK	65	lite	samtidig	
 2026-11-12 14:47	claude/ob11-r4-breisjark	7cec133	boottest	OK	33	lite	samtidig	
@@ -3204,3 +3242,7 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	quotatest	OK	20	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	admintest	OK	10	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
+2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
+2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
+2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
+2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
