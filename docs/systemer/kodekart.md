@@ -977,7 +977,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1159 linjer)
+## `src/js/core/05e-sjovei.js` (1205 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -1002,83 +1002,87 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 235 `sjvRoom(n, nx, ny, k)`
   - 248 `sjvRoomOn(n, E, H)`
   - 261 `sjvRoomOwn(a, nx, ny, k)`
-  - 269 `sjvStart(n, R, H, mover, why, own, id)`
-- **280** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
-  - 284 `sjvLampNm(k, L)`
-  - 295 `sjvLightNm(D0, vis)`
-  - 302 `sjvSeenKm(L, vis, dark)`
-  - 304 `sjvHearNm(L)`
-  - 309 `sjvFogPat(c, v, L)`
-  - 318 `sjvManPat(side, slow)`
-  - 323 `sjvLanternSt(n)`
-  - 325 `sjvMinKn()`
-  - 328 `sjvSafeMs(dM)`
-  - 334 `sjvVisAt(H, p)`
-  - 335 `sjvDark(H, p)`
-  - 339 `sjvSig(id, pat, p, L, own)`
-  - 347 `sjvFogSigs(H, list, A, gs, vis, dark)`
-  - 365 `sjvFogCapV()`
-  - 372 `sjvCapV()`
-- **374** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
-  - 375 `sjvEval(H, list)`
-  - 496 `sjvNearMiss(n, R, clr)`
-  - 507 `colregNpc(H, out, only)`
-  - 521 `sjvTrack(list)`
-- **523** Autonav
-  - 527 `sjvFresh(model)`
-  - 537 `sjvAuto(d, h, ds, T)`
-  - 552 `sjvSail(pl, b, left)`
-  - 569 `sjvCreep(pl, b, L, v)`
-- **578** the warning's words (the strip, the box and the card, the chart plotter)
-  - 580 `sjvSay(W, how)`
-  - 617 `sjvWhen(W)`
-  - 619 `sjvWarn()`
-- **621** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
-  - 646 `sjvHullPts(X, Z, psi, L, B)`
-  - 650 `sjvInPoly(P, x, z)`
-  - 657 `sjvSat(A, B)`
-  - 678 `sjvSatC(A, cx, cz, r)`
-  - 687 `sjvMass(n)`
-  - 688 `sjvOwnMass(b = S.boat)`
-  - 691 `sjvKnEq(kn, mA, mB)`
-  - 693 `sjvValue(L)`
-  - 698 `sjvMatOf(n)`
-  - 701 `sjvOtherCost(kn, L, mat, P)`
-  - 711 `sjvOwnLoss(b, c)`
-  - 717 `sjvCpa(a, b, gs)`
-  - 722 `sjvTrailAdd(id, e)`
-  - 740 `sjvFault(T, X)`
-  - 807 `sjvFaultWord(w, no)`
-  - 818 `sjvFaultSay(F, name, lang)`
-  - 829 `sjvSettle(b, F, c, oth, name)`
-  - 840 `sjvPaySay(M, F, name, lang)`
-  - 848 `sjvKr(x, no)`
-  - 850 `sjvFrom()`
-  - 854 `sjvTo()`
-  - 861 `sjvVhf(n, rec)`
-  - 875 `sjvStandBy(n, H)`
-  - 886 `sjvBlow(n, kn, E, H, pre)`
-- **918** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 921 `sjvClock()`
-  - 928 `sjvNear(H, X, Z)`
-  - 947 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 958 `sjvTouch(b, d, P)`
-- **991** the look's sweep (sjvEval), when the model does not have her
-  - 994 `sjvSweep(n, A, H, gs, on)`
-- **1020** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
-  - 1040 `fartMd(H)`
-  - 1042 `fartInSeason(s, md)`
-  - 1044 `fartRunsFrom(b)`
-  - 1054 `fartRuns()`
-  - 1064 `fartInArea(i, cx, cy)`
-  - 1070 `fartAt(p, H)`
-  - 1089 `fartLegKn(pl, p, L, H)`
-  - 1098 `fartCapMs()`
-  - 1109 `farvWrongSide(p, marks)`
-  - 1119 `farvLook(H)`
-  - 1148 `farvRec(r)`
-  - 1151 `farvWarn()`
-  - 1152 `farvSay(w, how)`
+  - 278 `sjvBackClear(M, Q, lim, gs)`
+  - 294 `sjvLead(R, v)`
+  - 297 `sjvBackNpc(n0, n, E, H)`
+  - 304 `sjvBackOwn(A, O)`
+  - 310 `sjvStart(n, R, H, mover, why, own, id)`
+- **323** Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them)
+  - 327 `sjvLampNm(k, L)`
+  - 338 `sjvLightNm(D0, vis)`
+  - 345 `sjvSeenKm(L, vis, dark)`
+  - 347 `sjvHearNm(L)`
+  - 352 `sjvFogPat(c, v, L)`
+  - 361 `sjvManPat(side, slow)`
+  - 366 `sjvLanternSt(n)`
+  - 368 `sjvMinKn()`
+  - 371 `sjvSafeMs(dM)`
+  - 377 `sjvVisAt(H, p)`
+  - 378 `sjvDark(H, p)`
+  - 382 `sjvSig(id, pat, p, L, own)`
+  - 390 `sjvFogSigs(H, list, A, gs, vis, dark)`
+  - 408 `sjvFogCapV()`
+  - 415 `sjvCapV()`
+- **417** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
+  - 418 `sjvEval(H, list)`
+  - 540 `sjvNearMiss(n, R, clr)`
+  - 551 `colregNpc(H, out, only)`
+  - 565 `sjvTrack(list)`
+- **567** Autonav
+  - 571 `sjvFresh(model)`
+  - 581 `sjvAuto(d, h, ds, T)`
+  - 596 `sjvSail(pl, b, left)`
+  - 615 `sjvCreep(pl, b, L, v)`
+- **624** the warning's words (the strip, the box and the card, the chart plotter)
+  - 626 `sjvSay(W, how)`
+  - 663 `sjvWhen(W)`
+  - 665 `sjvWarn()`
+- **667** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 692 `sjvHullPts(X, Z, psi, L, B)`
+  - 696 `sjvInPoly(P, x, z)`
+  - 703 `sjvSat(A, B)`
+  - 724 `sjvSatC(A, cx, cz, r)`
+  - 733 `sjvMass(n)`
+  - 734 `sjvOwnMass(b = S.boat)`
+  - 737 `sjvKnEq(kn, mA, mB)`
+  - 739 `sjvValue(L)`
+  - 744 `sjvMatOf(n)`
+  - 747 `sjvOtherCost(kn, L, mat, P)`
+  - 757 `sjvOwnLoss(b, c)`
+  - 763 `sjvCpa(a, b, gs)`
+  - 768 `sjvTrailAdd(id, e)`
+  - 786 `sjvFault(T, X)`
+  - 853 `sjvFaultWord(w, no)`
+  - 864 `sjvFaultSay(F, name, lang)`
+  - 875 `sjvSettle(b, F, c, oth, name)`
+  - 886 `sjvPaySay(M, F, name, lang)`
+  - 894 `sjvKr(x, no)`
+  - 896 `sjvFrom()`
+  - 900 `sjvTo()`
+  - 907 `sjvVhf(n, rec)`
+  - 921 `sjvStandBy(n, H)`
+  - 932 `sjvBlow(n, kn, E, H, pre)`
+- **964** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 967 `sjvClock()`
+  - 974 `sjvNear(H, X, Z)`
+  - 993 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 1004 `sjvTouch(b, d, P)`
+- **1037** the look's sweep (sjvEval), when the model does not have her
+  - 1040 `sjvSweep(n, A, H, gs, on)`
+- **1066** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
+  - 1086 `fartMd(H)`
+  - 1088 `fartInSeason(s, md)`
+  - 1090 `fartRunsFrom(b)`
+  - 1100 `fartRuns()`
+  - 1110 `fartInArea(i, cx, cy)`
+  - 1116 `fartAt(p, H)`
+  - 1135 `fartLegKn(pl, p, L, H)`
+  - 1144 `fartCapMs()`
+  - 1155 `farvWrongSide(p, marks)`
+  - 1165 `farvLook(H)`
+  - 1194 `farvRec(r)`
+  - 1197 `farvWarn()`
+  - 1198 `farvSay(w, how)`
 
 ## `src/js/core/06-services.js` (334 linjer)
 
@@ -2770,12 +2774,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1561 linjer)
+## `src/js/ui/phone/07-patch.js` (1564 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1549 `patch()`
+  - 1552 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

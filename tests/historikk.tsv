@@ -2908,6 +2908,14 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	hulltest	OK	76	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	autonavtest	OK	24	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	colregtest	OK	733	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	autonavtest	OK	25	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	hulltest	OK	71	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	autonavtest	FEIL	39	lite	samtidig	sidefeil: ['map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)', 'map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)']
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sqltest	FEIL	40	lite	samtidig	FEIL sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing swit
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sponsor2test	FEIL	14	lite	samtidig	FEIL bare Malerverkstedets egne farger kan males (ikke en fri farge, ikke den som må fortjenes), og med logo_url er merket sponsorens bilde  {"hull": null, "hou
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	maletest	OK	14	lite	samtidig	
@@ -2931,3 +2939,6 @@
 2026-11-12 03:26	ccr-899a9674-q3gjp0	922a215+	dbg23o	OK	48	3d	alene	
 2026-11-12 03:56	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	46	3d	alene	
 2026-11-12 04:20	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	57	3d	alene	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	colregtest	OK	732	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	autonavtest	OK	42	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	hulltest	OK	71	lite	samtidig	
