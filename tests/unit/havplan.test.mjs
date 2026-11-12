@@ -179,6 +179,11 @@ export default function (t){
       for (const ty of Object.keys(K.VESSELS).filter(k => K.VESSELS[k].cls === 'hav')){ b.type = ty; K.applyVessel(); S0.lag = null;
         const o = K.plan2New({}); S0.ops = Object.assign(K.plan2New({}), {rhythm:'day'}); const o2 = K.plan2Ops();
         t.ok(o.rhythm === 'watch' && o2 && o2.rhythm === 'watch', ty + ': døgndrift i en ny plan og i en gammel med dagdrift (' + o.rhythm + ', ' + (o2 && o2.rhythm) + ')'); }
+    // an old plan with the jig and a landing every trip (made before H2c, or on a coastal boat's answers): no jig on an ocean vessel, and
+    // a landing other than every trip; the two lines sat after a comment in plan2Ops until Ø12 D (12.11.2026)
+    for (const ty of Object.keys(K.VESSELS).filter(k => K.VESSELS[k].cls === 'hav')){ b.type = ty; K.applyVessel(); S0.lag = null;
+      const o0 = K.plan2New({}); S0.ops = Object.assign(o0, {jig:true, land:Object.assign({}, o0.land, {when:'trip'})}); const o2 = K.plan2Ops();
+      t.ok(o2 && !o2.jig && o2.land.when !== 'trip', ty + ': en gammel plan med juksa og levering hver tur får ingen juksa og leverer ' + (o2 && o2.land.when) + ' (jig ' + (o2 && o2.jig) + ')'); }
       b.type = t0; K.applyVessel(); S0.ops = ops0; S0.lag = null; }
     for (const nm in keep) K.set(nm, keep[nm]);
   }
