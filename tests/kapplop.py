@@ -11,7 +11,7 @@
   6. a tow from the rescue boat on the way breaks the attempt (dnf, «slep»)
   7. no page errors
 KYST_LOP_MAAL=1 measures instead (kapplop.md «Løypa og tidene»): each leg's length with leiaRoute, and the time per leg and for the
-whole course for the trebåt, the havsjark, the kystbåt 15 m and the hurtigsjark, with and without the turbo trim, in still weather and in
+whole course for the trebåt, the havsjark, the kystbåt 15 m and the hurtigsjark (KYST_LOP_TYPER=skiff,autoliner: other types), with and without the turbo trim, in still weather and in
 the weather now, with a dry run as hopRun; the bunkering stops; portWhy at each checkpoint for every type.
 KYST_LITE=1 python3 tests/kapplop.py. Prints OK or FEIL lines."""
 import asyncio, json, os
@@ -55,8 +55,8 @@ SAIL = """async (o) => { const t0 = S.t, step = o.closed ? 60 : 1; let idle = 0;
     if (S.boat.status === 'port' && S.boat.port && !o.n && !o.untilEnd) break; if (o.untilEnd && !(S.lop && S.lop.run)) break; }
   return {st:S.boat.status, port:S.boat.port, min:S.t - t0, idle}; }"""
 
-MAAL = """async () => {
-  const types = ['trebat', 'sjark', 'kyst15', 'hurtigsjark'], out = {legs:[], types:{}, ports:{}}, b = S.boat;
+MAAL = """async (TYPER) => {
+  const types = TYPER, out = {legs:[], types:{}, ports:{}}, b = S.boat;
   const ends = [LOP.start].concat(LOP.cps).map(c => portById(c.port));
   // portWhy at each checkpoint for every type: is there a quay within r that takes her
   for (const k in VESSELS){ out.ports[k] = [LOP.start].concat(LOP.cps).map(c => { const ok = PORTS.filter(p => dist(p.p, c.p) <= c.r && !p.naust && p.pier !== false && !portWhy(p, k));
@@ -94,7 +94,7 @@ async def main():
         pg.set_default_timeout(1800000)
         J = lambda js, *a: pg.evaluate(js, *a)
         if os.environ.get('KYST_LOP_MAAL') == '1':
-            m = await J(MAAL)
+            m = await J(MAAL, (os.environ.get('KYST_LOP_TYPER') or 'trebat,sjark,kyst15,hurtigsjark').split(','))
             print('MAAL ' + json.dumps(m, ensure_ascii=False))
             check(all(not l.get('err') for t in m['types'].values() for l in t['legs']), 'alle etappene har en rute for alle fire typene')
             await br.close(); return
@@ -146,6 +146,15 @@ async def main():
         check(hw is None, '5. etter mål er hoppet lov igjen (hjem til Honningsvåg)', hw)
         # 6. a tow breaks the attempt
         a = await J(AT, {'k': 0}); await J("() => lopStart()"); rt = await J(ROUTE, 1); await J("() => depart()"); await J(SAIL, {'n': 30})
+        # the race boat sails on by Autonav while you are aboard another boat in the fleet (lopTick binds her: onVessel); a passing over a
+        # limit and a near miss where she had to give way are counted on her, a near miss where the other gave way is not
+        o = await J("""async () => { const rid = S.cur, rb = S.boat, p0 = {x:rb.pos.x, y:rb.pos.y}, v2 = newVesselObj('skiff', LOP.start.port);
+          storeVessel(curVessel()); bindVessel(v2); S.me = v2.id; const n0 = S.lop.run.pen.length;
+          S.farv = (S.farv || []).concat([{t:S.t, vid:rid, k:'fart', kn:5, v:8}]); S.nearMiss = (S.nearMiss || []).concat([{t:S.t, vid:rid, give:'a', m:30}, {t:S.t, vid:rid, give:'b', m:30}]);
+          let idle = 0; const t0 = S.t; while (S.t - t0 < 60 && idle < 400){ const t1 = S.t; playMinutes(1, true); CATCH_LEFT = 0; if (S.t === t1){ idle++; await new Promise(r => setTimeout(r, 50)); } }
+          const vr = vesselById(rid), b = vget(vr, 'boat'), R = {cur:S.cur, moved:+dist(p0, b.pos).toFixed(2), st:S.lop.run && S.lop.run.st, pen:S.lop.run ? S.lop.run.pen.slice(n0).map(x => x.k) : null};
+          storeVessel(curVessel()); bindVessel(vr); S.me = rid; S.fleet = S.fleet.filter(x => x.id !== v2.id); return R; }""")
+        check(o['moved'] > 3 and o['st'] == 'run' and o['pen'] == ['fart', 'vik'], '6. løpsbåten seiler videre på Autonav mens du er om bord i en annen båt, og tilleggene telles på henne', o)
         await J("() => rescue(true)"); await J(SAIL, {'n': 2, 'untilEnd': True}); r = await J(RUN)
         h0 = r['hist'][0] if r['hist'] else {}
         check(r['st'] is None and h0.get('st') == 'dnf' and h0.get('how') == 'slep', '6. slep fra Redningsselskapet: forsøket er brutt', h0)

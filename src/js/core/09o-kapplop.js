@@ -32,7 +32,7 @@ const LOP = {
     {name:'Rørvik', p:P(64.8620, 11.2400), r:5, port:'mNT169'},
     {name:'Bodø', p:P(67.2830, 14.3800), r:5, port:'mN905'},
     {name:'Tromsø', p:P(69.6500, 18.9600), r:6, port:'mT212'}],
-  // the finish: the meridian of the North Cape plateau (71° 10′ 7″ N, 25° 47′ 2″ E), from the cliff and 40 km north (grid), crossed
+  // the finish: a line due north in the chart's grid from the North Cape plateau (71° 10′ 7″ N, 25° 47′ 2″ E), 40 km out, crossed
   // either way. Magerøya lies south of the cliff, so the way through Magerøysundet to Honningsvåg does not cross it
   goal:{name:'Nordkapp', p:P(71.1685, 25.7838), north:40, home:'mTF23'},
   // the classes by the type's top speed without trim (V4 A): knots, below the first is slow, from the second fast; the ocean vessels
@@ -71,21 +71,22 @@ function lopWeek(ms){
 // margin: game hours. The server checks each leg against the same rule in KL3
 function lopMinH(nm, vmax, trim){ const v = (+vmax || 0) * Math.max(1, +trim || 1); return v > 0 && nm > 0 ? nm / v * LOP.margin : 0; }
 // the attempt's time in game minutes, at `now` if not finished: one clock from casting off (V2 A), with the penalties added and the help
-// taken off; the split at each checkpoint is the time on the clock there (with what was added and taken off by then)
+// taken off (when the help is over); the split at each checkpoint is the time on the clock there (with what was added and taken off by then)
 function lopTime(run, now){
   if (!run || run.t0 == null) return {min:0, raw:0, pen:0, ded:0, splits:[]};
   const end = run.t1 != null ? run.t1 : now != null ? now : run.t0, at = t => {
     const pen = (run.pen || []).filter(x => x.t <= t).reduce((a, x) => a + x.min, 0);
-    const ded = (run.ded || []).reduce((a, x) => a + Math.max(0, Math.min(x.min, x.t1 != null && x.t1 <= t ? x.min : Math.max(0, t - x.t0))), 0);
+    const ded = (run.ded || []).filter(x => x.t1 <= t).reduce((a, x) => a + x.min, 0);   // (help is taken off when it is over: lopSosEnd)
     return {raw:t - run.t0, pen, ded, min:Math.max(0, t - run.t0 + pen - ded)}; };
   const r = at(end); r.splits = (run.legs || []).map(l => at(l.t).min); return r;
 }
 // the race boat now, registered or under way (vid: the vessel asked about, S.cur when left out)
 function lopOn(vid){ const L = S.lop, r = L && L.run; return !!(r && (r.st === 'reg' || r.st === 'run') && r.vid === (vid === undefined ? S.cur : vid)); }
-// the checkpoint a port is in (-1: none): the start is 0, the checkpoints 1..cps.length
+// the checkpoint a port is in (-1: none): the start is 0, the checkpoints 1..cps.length; any port within r true km (kmTrue: the grid's
+// scale grows towards the north), so each class finds a quay that takes her
 function lopCpOf(pid){ const pt = portById(pid); if (!pt) return -1;
-  if (dist(pt.p, LOP.start.p) <= LOP.start.r) return 0;
-  for (let i = 0; i < LOP.cps.length; i++) if (dist(pt.p, LOP.cps[i].p) <= LOP.cps[i].r) return i + 1;
+  if (kmTrue(pt.p, LOP.start.p) <= LOP.start.r) return 0;
+  for (let i = 0; i < LOP.cps.length; i++) if (kmTrue(pt.p, LOP.cps[i].p) <= LOP.cps[i].r) return i + 1;
   return -1; }
 // why she cannot register now (null: she can)
 function lopWhyNot(){
@@ -101,28 +102,31 @@ function lopStart(){
   const why = lopWhyNot(); if (why) return {why};
   const L = lopState(), b = S.boat, V = VESSELS[b.type];
   L.run = {id:LOP.id + '-' + (++L.seq), vid:S.cur, type:b.type, cls:lopCls(V), name:S.boatName || '', reg:S.t, t0:null, t1:null, legs:[], pen:[], ded:[], sos:null, lp:null, st:'reg'};
+  b.lop = L.run.id;   // the boat herself carries the attempt: a boat bought later under the same vessel id does not
   log('Påmeldt til kappløpet ' + LOP.name[0] + ' i klassen ' + lopClsName(L.run.cls) + '. Klokka går når du kaster loss.', 'Registered for the race ' + LOP.name[1] + ' in the class ' + lopClsName(L.run.cls, true) + '. The clock starts when you cast off.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('lop_start', {cls:L.run.cls, type:b.type});
   return L.run;
 }
-// the attempt ends: 'maal' (over the line), or broken ('slep', 'salg', 'avbrutt': given up by the player). A finished time goes to the
+// the attempt ends: 'maal' (over the line), or broken ('slep', 'salg', 'bytte': another type on the vessel, 'avbrutt': given up by the player). A finished time goes to the
 // week it was finished in; the legs sailed count either way
 function lopEnd(how){
   const L = lopState(), r = L.run; if (!r) return null;
+  // registered and never off: the registration is struck, nothing kept or counted
+  if (r.t0 == null){ L.run = null; log('Påmeldingen til kappløpet er strøket.', 'The registration for the race is struck off.', 'nav'); return null; }
   if (r.sos) lopSosEnd(r, S.t, r.lp);
   r.t1 = S.t; r.st = how === 'maal' ? 'done' : 'dnf'; r.how = how;
   const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id;
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
   L.hist.unshift(e); if (L.hist.length > LOP.hist) L.hist.length = LOP.hist;
-  if (r.st === 'done' && r.t0 != null && !(L.best[wk] != null && L.best[wk] <= T.min)) L.best[wk] = T.min;
+  if (r.st === 'done' && !(L.best[wk] != null && L.best[wk] <= T.min)) L.best[wk] = T.min;
   L.run = null;
   const hm = lopHm(T.min);
   if (r.st === 'done') log('Over mållinja ved ' + LOP.goal.name + '! Tida er ' + hm[0] + '.', 'Over the finish line at ' + LOP.goal.name + '! The time is ' + hm[1] + '.', 'nav');
-  else if (r.t0 != null) log('Kappløpet er brutt (' + lopHowWords(how)[0] + '). ' + r.legs.length + ' av ' + (LOP.cps.length + 1) + ' etapper er seilt.', 'The race is broken off (' + lopHowWords(how)[1] + '). ' + r.legs.length + ' of ' + (LOP.cps.length + 1) + ' legs sailed.', 'nav');
+  else log('Kappløpet er brutt (' + lopHowWords(how)[0] + '). ' + r.legs.length + ' av ' + (LOP.cps.length + 1) + ' etapper er seilt.', 'The race is broken off (' + lopHowWords(how)[1] + '). ' + r.legs.length + ' of ' + (LOP.cps.length + 1) + ' legs sailed.', 'nav');
   if (typeof cloudEv === 'function') cloudEv(r.st === 'done' ? 'lop_done' : 'lop_dnf', {cls:r.cls, type:r.type, min:Math.round(T.min), legs:r.legs.length, how});
   return e;
 }
-const lopHowWords = how => how === 'slep' ? ['slep', 'a tow'] : how === 'salg' ? ['båten er solgt', 'the boat is sold'] : ['avbrutt', 'given up'];
+const lopHowWords = how => how === 'slep' ? ['slep', 'a tow'] : how === 'salg' ? ['båten er solgt', 'the boat is sold'] : how === 'bytte' ? ['båten er byttet', 'the boat is traded'] : ['avbrutt', 'given up'];
 // game minutes as «2 d 4 t 12 min» (the clock runs days on the long course)
 function lopHm(min){ const m = Math.max(0, Math.round(min)), d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), mm = m % 60;
   const no = (d ? d + ' d ' : '') + (d || h ? h + ' t ' : '') + mm + ' min', en = (d ? d + ' d ' : '') + (d || h ? h + ' h ' : '') + mm + ' min'; return [no, en]; }
@@ -142,8 +146,11 @@ function lopDock(pid){
   log('Sjekkpunkt ' + LOP.cps[k - 1].name + ': etappe ' + next + ' av ' + (LOP.cps.length + 1) + '. Klokka står på ' + hm[0] + '.', 'Checkpoint ' + LOP.cps[k - 1].name + ': leg ' + next + ' of ' + (LOP.cps.length + 1) + '. The clock is at ' + hm[1] + '.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('lop_leg', {cls:r.cls, leg:next, min:Math.round(T.min)});
 }
-// the finish: the move from a to c crosses the meridian of the cape north of the cliff (grid x; either way)
-function lopCross(a, c){ const G = LOP.goal, X = G.p.x; if (!a || !c || (a.x - X) * (c.x - X) > 0 || a.x === c.x) return false;
+// the finish: the move from a to c crosses the line due north of the cape in the chart's grid (constant x; it parts from the true
+// meridian by the grid's convergence, some 8° here, and is the line the chart will draw in KL2), either way. vmax: a move longer
+// than a minute at twice that speed (and 200 m) is a jump, not sailing («Sitter båten fast?» moves her up to 4 km), and never crosses
+function lopCross(a, c, vmax){ const G = LOP.goal, X = G.p.x; if (!a || !c || (a.x - X) * (c.x - X) > 0 || a.x === c.x) return false;
+  if (vmax && dist(a, c) > 0.2 + 2 * vmax * NM / 60 * gridScale(c)) return false;
   const y = a.y + (c.y - a.y) * (X - a.x) / (c.x - a.x); return y <= G.p.y + 0.3 && y >= G.p.y - G.north; }
 // the help under way (sjøloven § 135): the distress call answered with this boat, the man from the other boat in the water, the tow
 // after a PAN-PAN (a trip mission with sos), another player's call for a tow taken. The id of the one going on now, or null
@@ -152,38 +159,52 @@ function lopSosNow(){
   if (S.mob && S.mob.other && S.mob.other.sos && S.mob.vid === vid) return 'm' + S.mob.other.sos;
   if (S.sos && S.sos.ans && S.sos.vid === vid) return 'm' + S.sos.id;
   const m = S.turer && (S.turer.act || []).find(x => x.sos && x.vid === vid); if (m) return 's' + m.sos;
-  if (S.ptowH && S.ptowH.id) return 'p' + S.ptowH.id;
+  // (another player's call: only while the line is fast and she tows, not on the way there, and with you aboard the race boat:
+  // S.ptowH is the company's, not a boat's)
+  if (S.ptowH && S.ptowH.id && S.ptowH.st === 'tow' && S.me === vid) return 'p' + S.ptowH.id;   // (the boat you are aboard tows, 10o-ptow.js)
   return null;
 }
-// the help over: the time from the answer, and the way back to where she answered at her type's top speed, taken off
+// where the race boat is going now: the next checkpoint, or the cape after the last
+const lopNext = r => r.legs.length < LOP.cps.length ? LOP.cps[r.legs.length].p : LOP.goal.p;
+// the help over: the time it took, less the way it made towards the next checkpoint at her type's top speed (she gets back the time
+// she lost, never more: a call answered and left while she sails on gives nothing, and help that took her back adds the way back)
 function lopSosEnd(r, t, p){
   const s = r.sos; if (!s) return; r.sos = null;
-  const V = VESSELS[r.type] || {}, back = p && s.p ? kmTrue(p, s.p) / NM / Math.max(1, +V.vmax || 6) * 60 : 0;
-  r.ded.push({t0:s.t, t1:t, k:s.id[0], min:Math.round(t - s.t + back)});
-  const hm = lopHm(t - s.t + back);
+  const V = VESSELS[r.type] || {}, to = lopNext(r), v = Math.max(1, +V.vmax || 6);
+  const gain = p && s.p ? (kmTrue(s.p, to) - kmTrue(p, to)) / NM / v * 60 : 0, min = Math.max(0, Math.round(t - s.t - gain));
+  if (!min) return;
+  r.ded.push({t0:s.t, t1:t, k:s.id[0], min});
+  const hm = lopHm(min);
   log('Kappløpet: ' + hm[0] + ' er trukket fra tida for hjelpen til sjøs.', 'The race: ' + hm[1] + ' taken off the time for the help at sea.', 'nav');
 }
 // one minute of the race, for the race boat (05-vessels.js step, the vessel bound): the finish, the penalties, the help, a tow
 function lopMinute(){
-  const L = S.lop, r = L && L.run; if (!r || r.vid !== S.cur || r.st !== 'run') return;
+  const L = S.lop, r = L && L.run; if (!r || r.vid !== S.cur) return;
   const b = S.boat, here = {x:b.pos.x, y:b.pos.y};
+  // registered, and gone from the quay in Lindesnes some other way than by casting off: the registration is struck
+  if (r.st === 'reg'){ if (!(b.status === 'port' && lopCpOf(b.port) === 0)) lopEnd('avbrutt'); return; }
+  if (r.st !== 'run') return;
+  // another type on the same vessel (traded at the yard): another boat, another class
+  if (b.type !== r.type){ lopEnd('bytte'); return; }
   // a tow ends the attempt: help from outside, as in a real race
   if (b.status === 'tow' || b.status === 'ptow'){ lopEnd('slep'); return; }
   // the penalties: each passing written down with this boat since the start, once (marked lop on the record: the lists are cut at 20
   // and 40 from the front, so neither their length nor an index tells what is new)
   for (const x of S.farv || []) if (!x.lop && x.vid === r.vid && x.k === 'fart' && x.t >= r.t0){ x.lop = 1; r.pen.push({t:x.t, k:'fart', min:LOP.pen.fart}); }
   for (const x of S.nearMiss || []) if (!x.lop && x.vid === r.vid && (x.give === 'a' || x.give === 'both') && x.t >= r.t0){ x.lop = 1; r.pen.push({t:x.t, k:'vik', min:LOP.pen.vik}); }
-  // the help: from the answer to its end, and the way back
+  // the help: from the answer to its end, less the way made
   const sid = lopSosNow();
   if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here};
   else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here}; }
   // the finish line, after the last checkpoint
-  if (r.legs.length === LOP.cps.length && lopCross(r.lp, here)){ r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
+  if (r.legs.length === LOP.cps.length && lopCross(r.lp, here, (VESSELS[r.type] || {}).vmax || 30)){ r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
   r.lp = here;
 }
 // once a minute from step, outside the vessels: a race boat no longer in the fleet (sold) ends the attempt; else her minute
 function lopTick(){
   const L = S.lop, r = L && L.run; if (!r) return;
-  const v = vesselById(r.vid); if (!v){ lopEnd('salg'); return; }
-  if (r.st === 'run' && r.vid !== S.cur) onVessel(v, lopMinute); else lopMinute();
+  // (sold: gone from the fleet, or the vessel id taken by a boat bought since: ids are 'v' + the next number, so the boat herself carries
+  // the attempt's id, b.lop; a renamed boat is the same boat)
+  const v = vesselById(r.vid), bt = v && vget(v, 'boat'); if (!v || !bt || bt.lop !== r.id){ lopEnd('salg'); return; }
+  if (r.vid !== S.cur) onVessel(v, lopMinute); else lopMinute();
 }

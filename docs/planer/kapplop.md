@@ -108,7 +108,7 @@ Kortet starter med «Påmeldt i Lindesnes» krysset av, så ingenting starter p�
 - **Trim er lov** (Jonas). Skippertak og «Ferdig nå» på verftet følger samme regel: de korter ned en ekte friksjon.
 - **Hopp er ikke lov** fra påmeldingen til mål, eller til forsøket er brutt (Jonas 12.11.2026, etter at han hadde sagt at ingenting skal hindre kjøp av hopp: «Nei i løpet». Det er den eneste nektingen utenom det en rute under seiling krever). `hopWhy` sier «Ikke i kappløpet». Hopp **til startstreken** og **hjem fra mål** er lov.
 - **Slep fra Redningsselskapet eller en annen spiller bryter forsøket.** Det er hjelp utenfra, som i ekte kappseilas. Det samme gjør salg av båten. Etappene som er seilt, teller på merket.
-- **Hjelpeplikten** (sjøloven § 135): svarer spilleren på havsnød (`sosMinute`) eller et nødanrop, trekkes tida fra svaret til hun er tilbake på ruta. Kappseilingsreglene gjør det samme (World Sailing, Racing Rules of Sailing, regel 1.1 og 62.1 c, lest i sammendrag). Sosialt er additivt: å hjelpe koster ingen plass.
+- **Hjelpeplikten** (sjøloven § 135): svarer spilleren på havsnød (`sosMinute`) eller et nødanrop, trekkes tida fra svaret til hun er tilbake på ruta. *(KL1a 12.11.2026: regnet som tida hjelpen tok minus veien hun kom nærmere neste sjekkpunkt i toppfart, så et anrop som besvares og ignoreres ikke gir gratis tid; `oppdrag-og-kystposten.md` 4.28.)* Kappseilingsreglene gjør det samme (World Sailing, Racing Rules of Sailing, regel 1.1 og 62.1 c, lest i sammendrag). Sosialt er additivt: å hjelpe koster ingen plass.
 - **Regelbrudd for hånd** gir tidstillegg:
   - en passering over fartsgrensa som `farvRec` skriver ned: 15 spillminutter
   - en passering der spilleren hadde vikeplikt (`S.nearMiss`): 15 spillminutter
