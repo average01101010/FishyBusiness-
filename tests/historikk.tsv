@@ -3081,3 +3081,10 @@
 2026-11-12 07:50	claude/ob11-r3-breisjark	817ab3e	docktest	OK	63	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	boottest	OK	33	lite	samtidig	
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	stabtest	OK	25	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	crewwalk	OK	21	lite	samtidig	
+2026-11-12 09:53	plan/2026-11-12-88	621fb2bc+	selfcrew	OK	17	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	docktest	OK	95	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	worktest	OK	43	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	vesseltest	OK	35	lite	samtidig	
+2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	trip2	OK	55	lite	samtidig	
