@@ -3086,3 +3086,12 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:42	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	18	lite	alene	FEIL Hasvik–Øksfjord (nord, Finnmark): sambandet og en avgang finnes i fila  {'nodep': True}
+2026-11-12 11:43	ccr-013bxxie-n4kyst	831e90b+	ferrytest	FEIL	17	lite	alene	FEIL alle leggene i landet, også hurtigbåtenes og kystrutas, holder seg på vann i spillets kart (hver 10. m)  (1038, ['Træna - Sanna 1'])
+2026-11-12 11:45	ccr-013bxxie-n4kyst	831e90b+	ferrytest	OK	17	lite	alene	
+2026-11-12 11:45	ccr-013bxxie-n4kyst	831e90b+	npctest	OK	9	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxie-n4kyst	4ea3f99	colregtest	OK	731	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxie-n4kyst	4ea3f99	hulltest	OK	73	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxie-n4kyst	4ea3f99	boottest	OK	27	lite	samtidig	
+2026-11-12 12:10	ccr-013bxxie-n4kyst	4ea3f99+	kystshot	OK	762	3d	alene	
+2026-11-12 12:25	ccr-013bxxie-n4kyst	4ea3f99+	kystshot	FEIL	900	3d	alene	FEIL finnsnes_liggende: MS Sundbrisen (123.3 m) ligger stille ved kaia i Finnsnes (kyst3d_finnsnes_liggende.png)  {'id': 'kyst8', 'name': 'MS Sundbrisen', 'L': 
