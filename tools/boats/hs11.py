@@ -878,6 +878,47 @@ def helm(A, G, fine=True):
     abox(A, 6.42, 7.30, 1.40, yi - 0.004, z0, z0 + 0.42, C['inner']); abox(A, 6.44, 7.28, 1.42, yi - 0.006, z0 + 0.42, z0 + 0.50, C['cush'])
     abox(A, 6.44, 7.28, yi - 0.09, yi - 0.006, z0 + 0.50, z0 + 0.92, C['cush'])
     abox(A, 7.45, 7.95, 1.25, yi - 0.004, z0, z0 + 0.86, C['inner']); abox(A, 7.47, 7.93, 1.27, yi - 0.006, z0 + 0.86, z0 + 0.88, C['dark'])
+    overhead(A, fine)
+
+
+def overhead(A, fine=True):
+    """(OB10 round 4: «innvendige flater nakne», the ceiling empty) the overhead console over the skipper's head forward, between him
+    and the front panes' top, its face sloped down toward him: the switch panel for the lights and the pumps with their lamps, the
+    searchlight's handle and the steering compass in its bracket, read from the seat looking up; and the ceiling's battens. All above
+    the eye from the seat (EYE_H) and aft of the panes' top, so the view ahead is as before"""
+    zc = WR - 0.005; x0, x1 = 7.55, 7.95; y0, y1 = -1.62, -0.35
+    abox(A, x0, x1, y0, y1, zc - 0.035, zc, C['inner'])                                        # its back plate on the ceiling
+    # the sloped face: its top forward at the ceiling, its foot aft 0.17 lower
+    fz = lambda t: zc - 0.035 - 0.15 * t; fx = lambda t: x1 - (x1 - x0) * t
+    P = [V((fx(0), y0, fz(0))), V((fx(1), y0, fz(1))), V((fx(1), y1, fz(1))), V((fx(0), y1, fz(0)))]
+    n = (P[1] - P[0]).cross(P[3] - P[0]).normalized()
+    if n.x > 0: n = -n                                                                           # (facing aft and down, to the seat)
+    for y_ in (y0, y1):
+        A.poly([V((x1, y_, zc - 0.035)), V((fx(1), y_, fz(1))), V((x1, y_, zc - 0.035 - 0.15))][:3], C['dark'], V((0, 1 if y_ > -1 else -1, 0)))
+    A.poly(P, C['dark'], n)
+    A.poly([V((x1, y0, fz(1))), V((x1, y1, fz(1))), V((fx(1), y1, fz(1))), V((fx(1), y0, fz(1)))], C['dark'], V((0, 0, -1)))
+    A.poly([V((x1, y0, zc - 0.035)), V((x1, y1, zc - 0.035)), V((x1, y1, fz(1))), V((x1, y0, fz(1)))], C['dark'], V((1, 0, 0)))
+    at = lambda t, y: V((fx(t), y, fz(t))) + n * 0.002
+    # the switch panel: two rows of rockers with a lamp over each, the pumps' and the lights' (green on, one red: the bilge alarm)
+    for row, t in enumerate((0.30, 0.62)):
+        for k in range(8):
+            y_ = -1.52 + 0.075 * k
+            obox(A, at(t, y_) + n * 0.006, V((0, 0.016, 0)), (P[1] - P[0]).normalized() * 0.022, n * 0.006, C['switch'])
+            obox(A, at(t - 0.13, y_) + n * 0.003, V((0, 0.006, 0)), (P[1] - P[0]).normalized() * 0.006, n * 0.003, C['lampR'] if (row, k) == (0, 7) else C['lampG'])
+    # the label strip under each row
+    for t in (0.42, 0.74): A.poly([at(t, -1.56) + n * 0.001, at(t, -0.94) + n * 0.001, at(t + 0.04, -0.94) + n * 0.001, at(t + 0.04, -1.56) + n * 0.001], C['white'], n)
+    # the steering compass in its bracket, on the console's middle where he reads it from the wheel
+    cc = at(0.55, -0.72) + n * 0.03
+    acyl(A, at(0.55, -0.72), cc, 0.07, lambda q: C['dark'], seg=16 if fine else 8)
+    A.poly([cc + V((0, 0.055 * math.cos(2 * math.pi * k / 16), 0)) + (P[1] - P[0]).normalized() * 0.055 * math.sin(2 * math.pi * k / 16) + n * 0.001 for k in range(16)], C['white'], n)
+    obox(A, cc + n * 0.003, V((0, 0.004, 0)), (P[1] - P[0]).normalized() * 0.045, n * 0.002, C['red'])          # the lubber line
+    HELM_EXTRA.append(sphere('compass_oh', cc + n * 0.004, 0.06, C['glass'], (1, 1, 0.45)))
+    # the searchlight's handle through the roof, aft of the console
+    acyl(A, (7.42, -0.55, WR + 0.01), (7.42, -0.55, WR - 0.22), 0.016, lambda q: C['steel'], seg=8)
+    acyl(A, (7.42, -0.55, WR - 0.22), (7.30, -0.55, WR - 0.26), 0.014, lambda q: C['black'], seg=8)
+    # the ceiling's battens across the wheelhouse, aft of the console
+    for x_ in (6.55, 6.95, 7.35):
+        abox(A, x_ - 0.02, x_ + 0.02, -(WY - WT) + 0.02, (WY - WT) - 0.02, WR - 0.025, WR - 0.002, C['inner'])
 
 
 # ---------- the decks' fittings: the rails round the foredeck, the windlass and the bow roller, bitts and cleats, vents, the hauling port's
@@ -931,8 +972,10 @@ def decks(A, fine=True):
     hy_o = -(ysh(HXR, -1) + 0.01); hy_i = -(ycap(HXR, -1) - 0.01)
     F.hauling_roller(A, HP0 + 0.08, HP1 - 0.08, hy_o, hy_i, z_cap(HXR, -1) + 0.012, C['steel'], C['rubber'], R=0.05)
     # the stem bar: a half-round stainless strip up the stem from the forefoot to the head
-    stem = [(x, 0.0, z_keel(x)) for x in [10.5 + (XF - 0.008 - 10.5) * k / 20 for k in range(21)]]
-    for a, b in zip(stem, stem[1:]): acyl(A, (a[0] + 0.006, 0, a[2]), (b[0] + 0.006, 0, b[2]), 0.022, lambda z: C['steel'] if z > WLL + 0.1 else C['af'], seg=6, cap=False)
+    # (OB10 round 4: «stevnjernet et løst rør utenpå stevnen»: it was a hexagonal pipe 44 mm across in loose lengths on a stem that is
+    # only a few centimetres wide. Now a half-round strip 50 mm wide and 12 mm proud, one piece, its back let into the stem, laid along
+    # the stem's own line by arc length, so the plumb part has as many points as the forefoot's curve)
+    stem_bar(A)
     # the bitts on the foredeck, the cleats on the caps, two mushroom vents, the grab rails on the wheelhouse's front
     for y in (0.75, -0.75): F.bitts(A, 9.56, y, z_bk(9.56) + camber(9.56, y), C['steel'])
     for x in CLEATS:
@@ -1056,12 +1099,27 @@ def nozzle(U, fine=True):
     F.loft(U, [ring(x, rr) for x, rr in outer], lambda i: C['af'], cap0=False, cap1=False)
     F.loft(U, [ring(x, rr) for x, rr in [outer[-1]] + inner + [outer[0]]], lambda i: C['af'], cap0=False, cap1=False, out=lambda mid, cc: cc - mid)
     zt = z_keel(px) - 0.005; zo = pz + r + 0.08
-    beam(U, (px + 0.05, 0, zo - 0.02), (px + 0.05, 0, zt), 0.30, 0.06, C['af'], up=(0, 1, 0))                    # the strut to the hull
-    abox(U, RX_ - 0.10, X_SA + 0.05, -0.06, 0.06, Z_SKEG, Z_SKEG + 0.07, C['af'])                                 # the keel's shoe under it to the rudder's heel
-    beam(U, (px + 0.05, 0, Z_SKEG + 0.06), (px + 0.05, 0, pz - r - 0.06), 0.24, 0.06, C['af'], up=(0, 1, 0))
+    # (OB10 round 4: «kjølen og skoen bokser»: the struts are foils now and the shoe a rounded bar, tapered aft to the rudder's heel)
+    F.foil_rudder(U, (px + 0.20, 0.0), zo - 0.06, zt + 0.02, 0.30, C['af'], thick=0.20, n=10 if fine else 4, rows=2)       # the strut to the hull
+    F.foil_rudder(U, (px + 0.17, 0.0), Z_SKEG + 0.03, pz - r - 0.03, 0.24, C['af'], thick=0.22, n=10 if fine else 4, rows=2)
+    shoe(U, fine)
+def shoe(U, fine=True):
+    """the keel's shoe: a steel bar under the skeg from its heel aft to the rudder's heel, its section a rounded oblong 0.12 wide and
+    0.07 deep, narrowing to 0.07 under the rudder's heel and rounded off at its after end (OB10 round 4)"""
+    x0, x1 = RX_ - 0.10, X_SA + 0.05; n = 10 if fine else 4; rings = []
+    for k in range(9):
+        t = k / 8; x = x0 + (x1 - x0) * t; w = 0.035 + 0.025 * ss(0.0, 0.35, t); h = 0.035 * (0.6 + 0.4 * ss(0.0, 0.2, t))
+        zc = Z_SKEG + 0.035; rr = min(w, h) * 0.85
+        ring = []
+        for q in range(4 * n):
+            a = 2 * math.pi * q / (4 * n); c, s_ = math.cos(a), math.sin(a)
+            ring.append((x, math.copysign(abs(c) ** 0.55, c) * w, zc + math.copysign(abs(s_) ** 0.55, s_) * h))
+        rings.append(ring)
+    F.loft(U, rings, lambda i: C['af'], cap0=True, cap1=True, out=lambda mid, cc: V((0, mid.y - cc.y, mid.z - cc.z)))
 def underwater(fine=True):
     U = Acc('under')
-    F.foil_rudder(U, (RX_, 0.0), Z_SKEG + 0.07, 0.0, 0.44, C['af'], thick=0.14, top=lambda x: z_keel(max(x, 0.0)) - 0.03, n=12 if fine else 5, rows=6 if fine else 2)
+    # (OB10 round 4: «roret en flat kloss»: thicker at the stock, 0.18 of the chord, so the foil reads, and a cap plate at its head)
+    F.foil_rudder(U, (RX_, 0.0), Z_SKEG + 0.07, 0.0, 0.44, C['af'], thick=0.18, top=lambda x: z_keel(max(x, 0.0)) - 0.03, n=14 if fine else 5, rows=6 if fine else 2)
     acyl(U, (RX_ - 0.04, 0, Z_SKEG + 0.07), (RX_ - 0.04, 0, z_keel(RX_) + 0.06), 0.035, lambda q: C['steel'], seg=10)
     acyl(U, (RX_ - 0.04, 0, z_keel(RX_) - 0.05), (RX_ - 0.04, 0, z_keel(RX_) + 0.01), 0.065, lambda q: C['prop'], seg=12)
     nozzle(U, fine)
@@ -1210,6 +1268,23 @@ def name_strips(G):
     return out
 
 CARGO = (0.51, 0.74)         # the cargo unit (0.8 x 1.2 m, turned athwartships) aft of the hatch to port, inboard of the locker and under the crane
+def stem_bar(A, n=40):
+    """the stem bar's strip (decks()): along the stem's line (x, z_keel(x)) from the forefoot to under the head, by arc length"""
+    xs = [10.45 + (XF - 0.004 - 10.45) * (k / 400) ** 0.5 for k in range(401)]
+    P = [(x, z_keel(x)) for x in xs]; L = [0.0]
+    for a, b in zip(P, P[1:]): L.append(L[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    pts = []; j = 0
+    for k in range(n + 1):
+        t = L[-1] * k / n
+        while j < len(L) - 2 and L[j + 1] < t: j += 1
+        u = (t - L[j]) / max(1e-9, L[j + 1] - L[j]); pts.append((P[j][0] + (P[j + 1][0] - P[j][0]) * u, P[j][1] + (P[j + 1][1] - P[j][1]) * u))
+    rings = []
+    for k, (x, z) in enumerate(pts):
+        a = pts[max(0, k - 1)]; b = pts[min(n, k + 1)]; tx, tz = b[0] - a[0], b[1] - a[1]; l = math.hypot(tx, tz) or 1; tx, tz = tx / l, tz / l
+        nx, nz = tz, -tx                                      # out of the stem: forward on the plumb part, down under the forefoot
+        ring = [(x + nx * (0.018 * math.sin(math.pi * q / 8) - 0.006), 0.025 * math.cos(math.pi * q / 8), z + nz * (0.018 * math.sin(math.pi * q / 8) - 0.006)) for q in range(9)]
+        rings.append(ring)
+    F.loft(A, rings, lambda i: C['steel'] if pts[i][1] > WLL + 0.1 else C['af'], cap0=True, cap1=True, out=lambda mid, cc: mid - cc)
 def kit_places(G):
     """the places where the game sets the deck kit (nothing that can be bought is modelled in, only its place, 19.10.2026): the liferaft
     on the roof's after part where it floats free; two ring buoys on the deckhouse's after wall, either side of its window; the dome on its bracket forward of the mast, the open array on the platform; the net tub in the starboard quarter, where the

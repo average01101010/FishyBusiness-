@@ -194,11 +194,13 @@ OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22
 OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
 QUAYOPS = {'kast', 'inn', 'loss', 'lossn', 'is', 'isn', 'kran', 'krann'}
 
-# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck)
+# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck;
+# and, OB10 runde 4, bodies standing in the kit on deck, kitHits)
 CLIP = """(() => { if (!CREW3D.on()) return null; const M = CREW3D._st.M;
   return {clip:(CREW3D.clipNow() || []).filter(x => x.n > 0).map(x => x.id + ':' + x.task + ':' + x.n + '[' + (x.segs || []).join('.') + ']'),
     walk:(CREW3D.bodyHits() || []).map(x => x.id + ':' + x.which + ':' + x.mode),
-    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : []}; })()"""
+    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : [],
+    kit:CREW3D.kitHits ? (CREW3D.kitHits() || []).map(x => x.id + ':' + x.mode + ':' + x.task + ':' + x.n) : null}; })()"""
 
 STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.task || '')), n:JSON.parse(JSON.stringify(G3._debug.dk.n || {})),
   anim:(G3._debug.SK && G3._debug.SK.anim) ? G3._debug.SK.anim.st : null, gop:S.boat.gop ? S.boat.gop.op + ':' + S.boat.gop.kind : null, status:S.boat.status,

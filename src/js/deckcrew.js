@@ -848,13 +848,21 @@ function crewSim(src){
   // the last steps to a place stood off its cell (a step back from a close rail, the back at the rail) go to where the person will stand
   // (the place still held: the break's, while its thing is put away, the station, until relieved)
   const holds = a => a.relief ? a.relief.g : a.put ? a.put.g : a.goal;
+  // (OB10 runde 4) the bodies standing in the kit: the kit is out of the walking map (kitBoxes), but the map holds only where a body's
+  // middle may be, so one at the edge of the tubs stood with half his body in them, and nothing caught it (poseHits and bodyHits see
+  // the model only). A body here is a ring of 0.15 m round its middle on its own deck, the cells the kit took out of the map
+  function kitHits(){ if (!ready() || src) return null; const M = ST.M, M0 = ST.M0, out = []; if (M === M0) return out;
+    for (const a of visible()){ const o = walkOff(a), x = a.x + o[0], z = a.z + o[1]; let n = 0;
+      for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, k = M0.cellOf(x + Math.cos(u) * 0.15, z + Math.sin(u) * 0.15); if (M0.ok(k) && !M.ok(k) && Math.abs(M0.at(k)[1] - a.y) < 0.3) n++; }
+      if (n) out.push({id:a.id, mode:a.mode, task:a.task || (a.goal && a.goal.task) || null, n}); }
+    return out; }
   function walkOff(a){ const g = holds(a), o = g && g.off; if (!o) return [0, 0]; if (a.mode === 'at') return [o[0] * (a.blend == null ? 1 : a.blend), o[1] * (a.blend == null ? 1 : a.blend)];
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
   function clipWhy(k){ if (!ready()) return null; const M = ST.M; return (ST.PT.lean || []).filter(l => M.ok(l.k)).map(q => { const f = fitPlace(k, q), p = M.at(q.k), F = [Math.sin(f.h), -Math.cos(f.h)], Rv = [Math.cos(f.h), Math.sin(f.h)], o = f.off || [0, 0];
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
   return {tick, agents, visible, anchorOf, on, setPlan, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
     // (for the view: nothing of the boat between two points in her frame, and the first thing of her under a point, its height)
-    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the
