@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **HO1 og HO2 er bygd og rullet ut til testutgaven (12.11.2026, steg 104 og 105)**; spoleknappen står bak Admin-appens testbryter til kjøpet er bygd. HO3 (steg 106, kjøpet) er neste.
+Status: **HO1, HO2 og HO3 er bygd (12.11.2026, steg 104–106) og rullet ut til testutgaven (versjon 43121243e739).** Hopp selges bare ved ⏩ under seilas, båten fryses til betalingen er kommet, ingenting hindrer kjøpet, og bare fisken i lasterommet merker tida (Jonas 12.11.2026). Kjøpet er ekte penger: slippet til detstorebla.no venter på merkelappen `jonas-har-sett`, og migreringen `20261112200000_hopp.sql` kjører Jonas på testprosjektet når det har `shop-checkout` og Stripe-webhooken (L1a). Til da er butikken i testmodus på testutgaven (bare for admin, ingen betaling).
 
 ## Hva Jonas ba om
 
@@ -13,8 +13,8 @@ Det er ekte penger, så alt i butikken går som PR til Jonas og rulles ikke ut f
 ## Reglene den må holde
 
 - **Betalingen korter ned en ekte avstand** (`docs/engasjement.md`): seilingen er ekte, og hoppet er trim tatt helt ut. Ingen ventetid legges inn eller forlenges for å selge hopp.
-- **Alt annet enn tida går som om båten seilte:** dieselen, motortimene og slitasjen, isen og fisken i rommet, mannskapets timer, og trimmen: står trim på, brukes den tida turen ville tatt med trim, opp. Ellers blir hoppet billigere enn å seile, og fisken kommer ferskere fram. Da kjøper man mer enn tid.
-- **Ikke forbi været:** ville båten ha ligget bi eller gått i havn på ruta, nektes hoppet.
+- **Bare fisken i lasterommet merker tida** (Jonas 12.11.2026: «Det eneste som taper seg med tiden som forsvinner er kvaliteten på fisken i lasterommet»; før: «Alt annet enn tida går som om båten seilte»). Fisken og isen eldes minutt for minutt som om båten seilte; dieselen, motortimene, trimmen, Skippertak, energien, mannskapet og provianten er som før.
+- **Været nekter aldri hoppet** (endret 12.11.2026; før: «Ikke forbi været»). Jonas, da han så kortet si nei for 11 m/s på testutgaven: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?» Hoppet går i all slags vær, før og etter kjøpet. Maskinhavari og sjø over ripa i grov sjø hoppes over, som resten av turen.
 - **Ikke i turoppdrag og løp:** turoppdragenes belønning er satt etter seilingstida uten trim (`turPay`). Kappløpene får egne regler (`docs/engasjement.md`, «Vurderes senere»).
 - **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** fartstid (`09e-fartstid.js`: «Fartstid selges aldri, og ingenting som øker den direkte»), lykter passert i Kystkartet (`09m-kystkart.js`), distansen i statistikken og merkene som telles i nm.
 - **Lik pris for alle:** prisen regnes bare av ruta og farten, aldri av hvem som kjøper. Den står i kroner med 💎 før kjøpet, og det er ingen nedtelling. Gjester kan ikke kjøpe.
@@ -70,7 +70,20 @@ For én tur under rundt to og en halv time er hoppet billigere per spart minutt 
 **Når betalingen har gått gjennom** (Jonas 12.11.2026, V3: «Så lenge betalingen har gått gjennom skal spillerene kunne teleportere seg frem til målet, uavhengig av været eller andre ting. De betaler fortsatt for tiden de har spart.»):
 - Været, dieselen og turoppdraget sjekkes bare før kjøpet.
 - Når betalingen er kommet fram, flyttes båten til målet som sto da kjøpet ble gjort, uansett vær eller endret rute.
-- Bare hvis båten alt er framme når betalingen kommer, fordi kassen tar et par minutter, er det ingen tid å spare. Da legges hoppet i Kaiboden som ett hopp til neste rute, uten utløpsdato. Dette er øktas forslag og kan snus i PR-en for HO3.
+- (Erstattet samme dag: hoppet legges ikke i Kaiboden. Båten fryses når ⏩ trykkes, se «Holdet og leveringen» under.)
+
+**Holdet og leveringen** (Jonas 12.11.2026, etter at HO3 var bygd og kontrollert; bygd samme dag):
+- «Hopp skal ikke selges i kaiboden, det skal kun selges per minutt når man trykker på knappen under seilas.»
+- «For at et hopp skal kunne kjøpes og brukes må en rute mellom A og B være startet. Når spilleren har kommet fram til endepunktet av ruten ved hjelp av hoppet er tjenesten levert og spilleren skal ikke ha noe "hopp" tilgode.»
+- Spurt om hva som skal skje når båten har kommet fram ved å seile mens betalingen går: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden, det løser problemet.»
+
+Det er bygd slik (`core/06j-hopp.js` `hopHoldOn`, `hopHeld`, `hopHoldFor`; `ui/10u-hopp.js`; `ui/10i-shop.js` 5b):
+- **⏩ fryser båten** der hun er, før kortet vises (`b.hopHold`). Hun har ingen fart, bruker ingen diesel, blir ikke snudd av været og får ingen motortrøbbel (`vesselStep`, `dynCan`). Prisen og stoppet på kortet er derfor det betalingen gjelder.
+- **Verdens klokke går som før.** Fisken, isen, mannskapet og du går som på en båt som ligger stille.
+- **Holdet varer mens siden er hos Stripe og mens tida borte spilles inn.** Det står i lagringen, så en annen enhet som har spillet, gjør hoppet der.
+- **Holdet slutter** ved hoppet, ved «Avbryt», når kjøpet avbrytes hos Stripe, når ruta endres, når siden skjules med kortet åpent, og senest etter 35 ekte minutter. Stripe-økta for et hopp utløper etter 31 minutter (`shop-checkout` `expires_at`), så ingen betaling kommer etter at holdet er sluppet.
+- **Når betalingen kommer, hopper båten fra holdet til endepunktet**, uansett vær (`hopGo(true)`), med en gang eller så snart tida borte er spilt inn (`hopWait`). Da er tjenesten levert. Ingenting er tilgode, og hoppet står ikke i Kaiboden.
+- **Et kjøp som likevel ikke kan gjøres, merkes for refusjon** (`hopVoid`, hendelsen `hop_void`), og loggen, Meldinger og skjermen sier det én gang. Det gjelder når holdet var sluppet da betalingen kom, når turen er tydelig lengre enn det som ble betalt for (`hopCovers`), og når noen er i sjøen. Jonas refunderer i Stripe, og `shop_refund` tar da grantet tilbake. Med holdet skal dette nesten aldri skje.
 
 ## Fasene
 
@@ -102,10 +115,10 @@ Hver fase er én økt.
 ### HO3 Kjøpet
 
 - **Hva:**
-  - Produktet `hopp` i `products` med prisen fra `shop_quote(product, minutter)` etter formelen. Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
+  - Produktet `hopp` i `products` med prisen fra `shop_quote_hop(minutter)` etter formelen (`hop_price`). Serveren regner prisen, men stoler på klientens minutter, slik den stoler på posisjonen i dag.
   - `purchases.data` med minuttene, målet og prisen.
   - `shopGive` gir hoppet når betalingen kommer fram.
-  - Hoppet gjøres til målet i kjøpet, uansett vær og endret rute; er båten alt framme, legges det i Kaiboden (se «Når betalingen har gått gjennom»).
+  - Hoppet gjøres fra holdet til målet i kjøpet, uansett vær (se «Holdet og leveringen»).
   - `shopThanks` sier hva som skjedde.
 - **Filer:** `supabase/migrations/` (ny), `supabase/functions/shop-checkout/index.ts`, `ui/10i-shop.js`, Kaiboden i `ui/phone/`.
 - **Ekte penger:** PR til Jonas, ingen utrulling før han har sett den. Migreringen kjøres av Jonas på testprosjektet først.
@@ -115,7 +128,7 @@ Hver fase er én økt.
 
 - **V1 Prisen:** bare spart tid (Jonas: «Kan det være bedre å bare ta betalt for tiden spart i totale minutter eller sekunder?»), som prisstigen 75/50/25 øre per minutt, minst 5 kr (sitert over). Taksameteret med nm og timer og den flate prisen er lagt bort.
 - **V2 Taket:** ingen tak (Jonas: «Ingen tak»).
-- **V3 Etter betalingen:** hoppet gjøres uansett vær og andre ting (Jonas, sitert over). Er båten alt framme, legges hoppet i Kaiboden (øktas forslag).
+- **V3 Etter betalingen:** hoppet gjøres uansett vær og andre ting (Jonas, sitert over). Båten fryses når ⏩ trykkes, og ingenting er tilgode etter hoppet (Jonas 12.11.2026, «Holdet og leveringen»).
 
 ## Det som er antatt eller usikkert
 
@@ -138,4 +151,8 @@ Hver fase er én økt.
 ## Status
 
 - 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen.
-- 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n. Neste: HO3 (steg 106).
+- 12.11.2026: HO1 (kjernen) og HO2 (spoleknappen, kortet, hoppet i 3D) bygd i samme økt (Jonas: «Kjør på HO2 med spoleknappen»), begge med uavhengig kontroll og alt kontrollen fant rettet. Stikkprøven i sør, midt og nord (Kristiansand–Bergen, Kristiansund–Ålesund, Tromsø–Hammerfest, og LITE i Kristiansand, Kristiansund og Båtsfjord). Det som er bygd, står i `docs/systemer/autonav.md` 4.12n.
+- 12.11.2026: HO3 (kjøpet) bygd i samme økt (Jonas: «Gjør helt ferdig og rull ut på test med en gang.»): `shop_quote_hop`, `hop_price`, `hop_use`, `shop_state` med hoppene, `shop_refund` som tar tilbake et ubrukt hopp, `shop-checkout` med minuttene og stoppet, leveringen i `srvApply` og Kaiboden. Uavhengig kontroll; funnene rettet (kvitteringens pris, kaiplass-id-en, minuttene i kjøpet, refusjonen, ventingen på innhentingen, grunnen i Kaiboden). Hvordan holdet og leveringen virker, står under «Holdet og leveringen».
+- 12.11.2026: Jonas: hopp selges bare ved ⏩, ingenting tilgode, og båten fryses når knappen trykkes. Kaiboden-ordningen er tatt bort og holdet bygd (`b.hopHold`), med tester og en ny uavhengig kontroll.
+- 12.11.2026: været tatt helt ut av hoppet (Jonas: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»). Kortet nekter bare for diesel, nesten fremme og grunnene i `hopWhy`.
+- 12.11.2026: Jonas: «Ingenting skal være en hindring for å kjøpe "hopp". Det er dårlig business. Det eneste som taper seg med tiden som forsvinner er kvaliteten på fisken i lasterommet.» Bygd samme dag: kortet nekter bare når ingen rute seiles (og under Driftsplanen, når spillet er åpent et annet sted, og i sekundene tida borte spilles inn, som kortet venter på). Diesel, «nesten fremme», anker, «Stopp båten», omkjøring, lekkasje, mann over bord, slep, første tur og turoppdrag hindrer ikke lenger. Under hoppet eldes bare fisken og isen i lasterommet (og snøkrabben i tankene); dieselen, motortimene, trimmen, Skippertak, energien din, mannskapet og provianten er som før (`hopDo`).
