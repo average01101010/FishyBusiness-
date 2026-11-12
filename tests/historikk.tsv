@@ -3293,6 +3293,9 @@
 2026-11-12 18:03	ccr-e7efd74c-rioki0	156ecf33+	trip2	OK	38	lite	samtidig	
 2026-11-12 18:04	ccr-e7efd74c-rioki0	fd50994b	hopptest	OK	8	lite	samtidig	
 2026-11-12 18:04	ccr-e7efd74c-rioki0	fd50994b	fasittest	OK	38	lite	samtidig	
+2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a	hoppshot	OK	1383	3d	alene	
+2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a+	admintest	OK	10	lite	alene	
+2026-11-12 18:28	ccr-e7efd74c-rioki0	4cf17e6a+	admintest	OK	10	lite	alene	
 2026-11-12 18:13	ccr-013bxxie-opp3	02f1dbf+	yardupgtest	OK	13	lite	alene	
 2026-11-12 18:13	ccr-013bxxie-opp3	02f1dbf+	yardupgtest	FEIL	15	lite	alene	FEIL the Trim app promises the top speed each trim gives, on the speed sjark with propeller 3 and engine 2 [[46, 53.7, 61.4], [41.7, 47.2, 52.7]]
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	docktest	OK	63	lite	samtidig	
@@ -3312,3 +3315,6 @@
 2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	crewlifetest	OK	8	lite	samtidig	
 2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	selfcrew	OK	7	lite	samtidig	
 2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	lybtest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
+2026-11-12 18:39	ccr-e7efd74c-rioki0	ee013930	hopptest	OK	8	lite	samtidig	
+2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	fasittest	OK	38	lite	samtidig	
+2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	admintest	OK	10	lite	samtidig	
