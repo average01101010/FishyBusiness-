@@ -172,8 +172,13 @@ async def hs4(br, handle, st, calls, errs):
     CARD = """(async () => { hopOpen(); const p0 = """ + POS + """; for (let i = 0; i < 100 && !document.getElementById('hopGo'); i++) await new Promise(r => setTimeout(r, 50));
       await new Promise(r => setTimeout(r, 2500)); const q = hopQuote(), m = document.getElementById('modal');
       return {lab:(document.getElementById('hopGo') || {}).textContent, fine:!!m.querySelector('.shop-fine'), min:q.realMin, kr:q.kr, text:m.innerText, pos:p0, still:p0 === """ + POS + """, v:S.boat.v, hold:!!S.boat.hopHold}; })()"""
-    rt = await pg.evaluate(ROUTE, None); c1 = await pg.evaluate(CARD); n0 = len(calls)
-    check(c1['hold'] and c1['still'] and c1['v'] == 0, 'HO3: the fast-forward button stops the boat at once: with the card open for 2,5 s she has not moved', {k: c1[k] for k in ('hold', 'still', 'v')})
+    rt = await pg.evaluate(ROUTE, None)
+    # (the kontroll: a card that says no lets the boat go at once, so it is never a free stop in a storm)
+    cn = await pg.evaluate("(async () => { const f = S.boat.fuel; S.boat.fuel = 0.2; hopOpen(); for (let i = 0; i < 100 && !/diesel/.test(document.getElementById('modal').innerText); i++) await new Promise(r => setTimeout(r, 50)); const out = {why:/diesel/.test(document.getElementById('modal').innerText), hold:!!S.boat.hopHold}; document.getElementById('modal').hidden = true; S.boat.fuel = f; return out; })()")
+    check(cn == {'why': True, 'hold': False}, 'HO3: a card that says no (too little diesel) does not hold the boat', cn)
+    c1 = await pg.evaluate(CARD); n0 = len(calls)
+    lp = await pg.evaluate("(() => { const q = livePose(0.9), b = S.boat; return Math.round(dist(q.p, b.pos) * 1e6) / 1e3; })()")
+    check(c1['hold'] and c1['still'] and c1['v'] == 0 and lp == 0, 'HO3: the fast-forward button stops the boat at once: with the card open for 2,5 s she has not moved, and the pose the chart and the 3D view draw is where she lies (%s m)' % lp, {k: c1[k] for k in ('hold', 'still', 'v')})
     async with pg.expect_navigation(url='**/checkout.stripe.test/**', timeout=45000):
         await pg.evaluate("document.getElementById('hopGo').click()")
     co = [c[1] for c in calls[n0:] if c[0] == 'checkout']; co = co[-1] if co else {}
@@ -192,6 +197,11 @@ async def hs4(br, handle, st, calls, errs):
     j1 = await pg.evaluate("({st:S.boat.status, port:S.boat.port, hold:S.boat.hopHold || null, q:(S.hopQ || []).slice(), log:S.log.slice(-6).map(e => e.no).join(' | ')})")
     check(j1['st'] == 'port' and j1['port'] == rt['B'] and j1['hold'] is None and st['hop'] == [80] and 'Hoppet til' in j1['log'],
           'HO3: the payment confirmed, the boat is hopped from where she lay to the quay at the end of the route, the hold is gone and the server is told once (hop_use)', {'r': j1, 'hop_use': st['hop']})
+    # (the kontroll: an answer read before hop_use came, still listing the hop, never marks a hop made here for a refund: S.hopDone)
+    st['hopStale'] = True
+    js = await pg.evaluate("(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 300)); return {void:(S.hopVoid || []).slice(), done:(S.hopDone || []).slice()}; })()")
+    st['hopStale'] = False
+    check(js['void'] == [] and 80 in js['done'] and not st.get('voidc'), 'HO3: an answer from before the server was told still lists the hop made here: it is not marked for a refund', {'r': js, 'hop_void': st.get('voidc')})
     # (the receipt has the price paid and the minutes, from the purchase, not from the card the page had before Stripe)
     try: await pg.wait_for_function("(() => { const m = document.getElementById('modal'); return !m.hidden && /Takk for kjøpet/.test(m.innerText); })()", timeout=15000)
     except Exception: pass
@@ -203,8 +213,9 @@ async def hs4(br, handle, st, calls, errs):
     j2 = await pg.evaluate("""(async () => { await shopClaim(); await new Promise(r => setTimeout(r, 400)); document.getElementById('modal').hidden = true; await shopClaim(); await new Promise(r => setTimeout(r, 400));
       document.getElementById('modal').hidden = true; PHONE.open('trim'); await new Promise(r => setTimeout(r, 300)); const t = document.getElementById('phone').innerText; PHONE.show(false);
       const L = S.log.map(e => e.no).filter(x => /Hoppet ble ikke gjort/.test(x)); return {st:S.boat.status, void:(S.hopVoid || []).slice(), n:L.length, last:L[L.length - 1] || '', trim:/Hopp over resten av ruta/.test(t)}; })()""")
-    check(j2['st'] == 'port' and j2['void'] == [81] and j2['n'] == 1 and 'pengene betales tilbake' in j2['last'] and not j2['trim'] and st['hop'] == [80],
-          'HO3: a grant for a boat not held is not made: it is marked for a refund and said once (log, Meldinger), nothing is owed and nothing is in Kaiboden', {'r': j2, 'hop_use': st['hop']})
+    j2b = await pg.evaluate("(async () => { S.hopVoid = []; await shopClaim(); await new Promise(r => setTimeout(r, 300)); document.getElementById('modal').hidden = true; return S.log.map(e => e.no).filter(x => /Hoppet ble ikke gjort/.test(x)).length; })()")
+    check(j2['st'] == 'port' and j2['void'] == [81] and j2['n'] == 1 and j2b == 1 and 'pengene betales tilbake' in j2['last'] and not j2['trim'] and st['hop'] == [80] and st.get('voidc') == [81],
+          'HO3: a grant for a boat not held is not made: it is marked for a refund on the server (hop_void) and said once, also with the save\'s own list lost; nothing is owed and nothing is in Kaiboden', {'r': j2, 'again': j2b, 'hop_use': st['hop'], 'hop_void': st.get('voidc')})
     # k. a hop paid for while the time the game was closed is still played in (hopWait, held true here) waits for it, the boat still held,
     # and is made when that is done; the time away played in is what hopWait waits for (CATCH_LEFT); one paid for far fewer minutes
     # than the trip is not made and is marked for a refund; a purchase cancelled at Stripe lets the boat go
@@ -281,7 +292,7 @@ async def main():
                 await route.fulfill(status=200, content_type='application/json', body=json.dumps(bool(g))); return
             # (HS4: the server as the truth. The server's game minute runs with the real clock, 6 game minutes a minute; the page's own
             # clock is the game's, so only the age of a minute counts there, core srvToT)
-            if fn in ('shop_state', 'haill_on', 'yard_use', 'haill_import', 'pub_spin', 'ach_haill', 'hop_use'):
+            if fn in ('shop_state', 'haill_on', 'yard_use', 'haill_import', 'pub_spin', 'ach_haill', 'hop_use', 'hop_void'):
                 if not st['hs4']: await route.fulfill(status=404, content_type='application/json', body='{"code":"PGRST202"}'); return
                 if st['offline']: await route.abort(); return
                 gm = 100000 + (now - st['t0']).total_seconds() / 10; give = lambda g: g['data'].get('give')
@@ -292,7 +303,8 @@ async def main():
                         if not g.get('done') and not g.get('gone') and give(g) in ('haill', 'trim', 'skip', 'yard', 'hopp'): g['done'] = True; g['done_at'] = now.isoformat(); fresh.append(g['id'])
                     wk = lambda g: g.get('done_at') and (now - datetime.datetime.fromisoformat(g['done_at'])).total_seconds() < 7 * 86400
                     lst = [dict({'id': g['id'], 'product': g['product'], 'data': g['data']}, **({'held': True, 'done_at': g.get('done_at') or (now - datetime.timedelta(hours=1)).isoformat()} if g.get('done') else {}), **({'new': True} if g['id'] in fresh else {}))
-                           for g in G if not g.get('gone') and (not g.get('done') or (give(g) in ('haill', 'yard', 'hopp') and not g.get('used')) or (give(g) in ('trim', 'skip') and wk(g)))]
+                           for g in G if not g.get('gone') and (not g.get('done') or (give(g) in ('haill', 'yard', 'hopp') and not g.get('used')) or (give(g) in ('trim', 'skip') and wk(g))
+                               or (st.get('hopStale') and give(g) == 'hopp'))]   # (hopStale: an answer read before hop_use came, still listing the hop)
                     used = [g for g in G if isH(g) and g.get('used') and not g.get('gone') and g.get('t0') is not None]; on = max(used, key=lambda g: (g['t0'], g['id'])) if used else None
                     r = {'v': 4, 't': gm, 'list': lst, 'on': {'id': on['id'], 'type': on['data']['type'], 't0': on['t0']} if on else None, 'imp': st['imp'], 'owned': st['owned'], 'pub': None}
                 elif fn == 'haill_on':
@@ -304,6 +316,10 @@ async def main():
                     g = next((g for g in G if g['id'] == body.get('id') and give(g) == 'hopp' and not g.get('used') and not g.get('gone')), None)
                     if g: g['used'] = g['done'] = True
                     st['hop'].append(body.get('id')); r = bool(g)
+                elif fn == 'hop_void':   # (HO3: a hop the game could not make, marked for a refund on the server)
+                    g = next((g for g in G if g['id'] == body.get('id') and give(g) == 'hopp' and not g.get('used') and not g.get('gone') and 'void' not in g['data']), None)
+                    if g: g['data'] = dict(g['data'], void=body.get('why'))
+                    st.setdefault('voidc', []).append(body.get('id')); r = bool(g)
                 elif fn == 'yard_use':
                     g = next((g for g in G if g['id'] == body.get('id') and give(g) == 'yard' and not g.get('used') and not g.get('gone')), None)
                     if g: g['used'] = g['done'] = True

@@ -298,10 +298,10 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
   - første tur
   - tida fra et lukket spill er ikke spilt inn ennå (`WCLOCK.on` og `worldT()` foran `S.t`): hoppet ville talt minutter innhentingen seiler uansett
   - et turoppdrag i gang med denne båten
-  - været på veien over båtens risiko (`riskLevel` > 0) eller over grensa for Autonav når den står på (`windLim`, `seaLim`)
+  - (før 12.11.2026: været på veien; nå nekter været aldri, se under)
   - for lite diesel
   - nesten fremme (under ett ekte minutt)
-- **Betalt** (`hopGo(true)`, HO3) går hoppet uansett vær, diesel og nesten fremme (Jonas: «uavhengig av været eller andre ting»).
+- **Været nekter aldri hoppet** (Jonas 12.11.2026: «uavhengig av været eller andre ting», og om kortet som sa nei for 11 m/s på testutgaven: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»). Tørrkjøringen regner vinden og sjøen for farten og dieselen, men nekter ikke for dem. **Betalt** (`hopGo(true)`, HO3) går hoppet også med for lite diesel og nesten fremme.
 - **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
 - **Kartet ved målet** lastes før hoppet (`hopGo`: stoppet fra ruta, `mapNeed` der med en tidsgrense på `HOP.mapMs` = 20 s, så én tørrkjøring med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
 - **Spoleknappen og kortet** (HO2, steg 105, `ui/10u-hopp.js`; Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»):
@@ -363,6 +363,6 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
     - at en fane som hadde mistet spillet, kunne hoppe
 
     Alt er rettet med tester som ble sett røde først. Den andre kontrollen kom før Jonas bestemte holdet; holdet har fått en egen kontroll.
-- **Ikke med:** maskinhavari i grov sjø (`risk`: hoppet går ikke i vær over risikogrensa), og måltidene underveis (`mealMinute` går etter klokka, som står stille; de verken serveres eller telles som hoppet over, og i havn spiser mannskapet i land).
+- **Ikke med:** maskinhavari og sjø over ripa i grov sjø (`risk`): hoppet går i all slags vær, og det som kunne ha skjedd underveis, hoppes over, og måltidene underveis (`mealMinute` går etter klokka, som står stille; de verken serveres eller telles som hoppet over, og i havn spiser mannskapet i land).
 - **Testene:** `tests/unit/hopp.test.mjs` (prisstigen, neste stopp, nektingene, tida i ord, energien, mannskapets slitasje og det de andre ser) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, med og uten en hånd om bord, trim som varer og trim som går ut underveis, et stopp midt på ruta, nektingene og betalt hopp).
 - **Kontrollen** (`/kontroll`, 12.11.2026) fant at sporet manglet de hoppede punktene, at proviant, snøkrabbe i tankene, turens timer, mannskapets arbeidsandel og Skippertak ikke gikk som om båten seilte, at mann over bord og slep av en annen spiller ikke ble nektet, at en trim som gikk ut underveis ga et for raskt og billig hopp, at et kart som ikke kom ble hoppet til likevel, og «1 t 60 min» i loggen. Alt er rettet med tester.

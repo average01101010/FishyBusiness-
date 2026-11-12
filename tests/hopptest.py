@@ -6,7 +6,7 @@ harbour 8-30 km away on an Autonav route, with fish in the hold and you aboard:
      are within 5 % of the sailing; the sea time and the miles are unchanged, and the game minutes the hop counted are close to the
      sailing's
   3. the trim: with a turbo trim on, the hop takes the minutes it would have run off it (Jonas: «som om båten seilte»)
-  4. refused, nothing changed: too little diesel, and the weather over the boat's risk (WX_FORCE); paid (hopGo(true)) it goes anyway
+  4. refused, nothing changed: too little diesel; the weather never refuses it (WX_FORCE 30 m/s, Jonas 12.11.2026), and the hop goes in it
   5. no page errors
 The comparisons run in still weather (WX_FORCE 3 m/s), the same for the sailing and the hop; in weather over the boat's risk the
 hop is refused, and that is checked in 4.
@@ -129,11 +129,12 @@ async def main():
         check(bool(r['why']) and 'diesel' in r['why'] and r['same'], '4a. for lite diesel: ' + str(r['why']), r)
         await J(START, {})
         r = await J("() => { WX_FORCE = {w:30, d:200}; const p0 = JSON.stringify([S.boat.pos, S.plan.idx]); const q = hopQuote(); const out = {why:q.why && q.why[0], same:p0 === JSON.stringify([S.boat.pos, S.plan.idx])}; return out; }")
-        check(bool(r['why']) and 'Været' in r['why'] and r['same'], '4b. hardt vær på veien: ' + str(r['why']), r)
+        # (Jonas 12.11.2026: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»: the weather never refuses it)
+        check(not r['why'] and r['same'], '4b. hardt vær på veien (30 m/s) nekter ikke hoppet, og tørrkjøringen endrer ingenting', r)
         r = await J("() => { WX_FORCE = {w:6, d:200}; S.settings.autoOn = true; S.settings.autoW = 4; const q = hopQuote(); const out = {why:q.why && q.why[0], risk:riskLevel(6, hsAt(S.boat.pos, S.t / 60))}; S.settings.autoOn = false; WX_FORCE = {w:30, d:200}; return out; }")
-        check(bool(r['why']) and 'Været' in r['why'] and r['risk'] == 0, '4b2. over grensa for Autonav (4 m/s satt, 6 m/s på veien, under båtens risiko): ' + str(r['why']), r)
-        r = await J("async () => { const q = await hopGo(true); const out = {why:q.why, st:S.boat.status, port:S.boat.port}; WX_FORCE = null; return out; }")
-        check(not r.get('why') and r['st'] == 'port', '4c. betalt (hopGo(true)) går hoppet uansett været', r)
+        check(not r['why'], '4b2. over grensa for Autonav (4 m/s satt, 6 m/s på veien) nekter ikke hoppet heller', r)
+        r = await J("async () => { const q = await hopGo(false); const out = {why:q.why, st:S.boat.status, port:S.boat.port}; WX_FORCE = null; return out; }")
+        check(not r.get('why') and r['st'] == 'port', '4c. hoppet (hopGo) går i 30 m/s', r)
         # 4d. (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden») held for a
         # hop, she stands still through the minute steps, with the time away played in too (playMinutes(…, true)), and uses no diesel;
         # the route changed, the hold ends; let go, she sails on; and the hold ends by itself after HOP.holdReal real minutes

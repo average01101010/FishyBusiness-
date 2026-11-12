@@ -4,14 +4,18 @@
 -- minutes are whole minutes, so the game's price and this one are the same to the øre (multiples of 0.25 kr). The server works the price
 -- out from the minutes the game sends, as it trusts the game's position today; the minutes, the stop and the price are kept on the purchase
 -- (shop-checkout), and the grant stripe-webhook makes of it has them. Once paid, the hop is made to the stop in the purchase whatever the
--- weather (Jonas: «uavhengig av været eller andre ting»); when it cannot be made there (the boat was there before the payment came, another
--- route, someone in the water), the grant waits unused and the game offers it by the fast-forward button on a later route of at most its minutes, and nowhere else
--- (Jonas 12.11.2026: «Hopp skal ikke selges i kaiboden, det skal kun selges per minutt når man trykker på knappen under seilas»).
+-- weather (Jonas: «uavhengig av været eller andre ting»). The fast-forward button holds the boat where she is until the payment comes
+-- (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden»), and nothing is owed
+-- after the hop («skal ikke ha noe "hopp" tilgode»; a hop is sold only by the button, «ikke i kaiboden»). One the game could not make
+-- after all is marked here for a refund (hop_void) and listed for the admin (admin_hop_void), who refunds it at Stripe.
 --
 --   hop_price(min)         kr for the real minutes saved (tests/unit/hopp.test.mjs and tests/sqltest.py check it against hopPrice)
 --   shop_quote_hop(min)    as shop_quote (signed in, not a guest, the shop open to the account, at most 30 purchases an hour) for the
 --                          product 'hopp', at the price for the minutes (1 to 3 360: the longest route the game works out, 14 game days)
---   hop_use(id)            the hop is a grant that is unused until a hop is made with it
+--   hop_use(id)            the hop is a grant that is unused until a hop is made with it (never one marked void)
+--   hop_void(id, why)      the player's own unused hop, which the game could not make: marked (data.void, data.void_at), never made
+--                          after it; shop_refund takes it back when it is refunded
+--   admin_hop_void()       the hops marked void and not refunded yet, for the admin page (Penger), with the Stripe session to refund
 --   shop_state()           as in 20261111140000_haill_srv.sql, with the hop grants: delivered by the call (new the first time) and
 --                          answered while unused
 --   shop_refund(pi)        as in 20261110180000_haill_use.sql, and a hop or a «Ferdig nå» (the yard done now) delivered and not used is
@@ -47,9 +51,30 @@ declare p text := pid(); n int;
 begin
   if p is null then raise exception 'not signed in'; end if;
   update grants g set used_at = now(), done_at = coalesce(g.done_at, now())
-   where g.id = hop_use.id and g.player_id = p and g.data ->> 'give' = 'hopp' and g.used_at is null and g.revoked_at is null;
+   where g.id = hop_use.id and g.player_id = p and g.data ->> 'give' = 'hopp' and g.used_at is null and g.revoked_at is null and not (g.data ? 'void');
   get diagnostics n = row_count;
   return n > 0;
+end $$;
+
+create or replace function public.hop_void(id bigint, why text) returns boolean
+language plpgsql security definer set search_path = public as $$
+declare p text := pid(); n int;
+begin
+  if p is null then raise exception 'not signed in'; end if;
+  update grants g set data = g.data || jsonb_build_object('void', left(coalesce(why, ''), 200), 'void_at', now())
+   where g.id = hop_void.id and g.player_id = p and g.data ->> 'give' = 'hopp' and g.used_at is null and g.revoked_at is null and not (g.data ? 'void');
+  get diagnostics n = row_count;
+  return n > 0;
+end $$;
+
+create or replace function public.admin_hop_void() returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not is_admin() then raise exception 'admin only'; end if;
+  return coalesce((select jsonb_agg(jsonb_build_object('id', g.id, 'at', g.data ->> 'void_at', 'why', g.data ->> 'void', 'kr', (g.data ->> 'kr')::numeric,
+      'min', (g.data ->> 'min')::numeric, 'session', g.purchase_id, 'pi', u.payment_intent) order by g.data ->> 'void_at' desc)
+    from grants g left join purchases u on u.id = g.purchase_id
+    where g.data ->> 'give' = 'hopp' and g.data ? 'void' and g.revoked_at is null), '[]'::jsonb);
 end $$;
 
 -- (as in 20261111140000_haill_srv.sql, with 'hopp' among the kinds the call delivers and answers while unused)
@@ -92,5 +117,5 @@ end $$;
 revoke all on function public.shop_refund(text) from public, anon, authenticated;
 grant execute on function public.shop_refund(text) to service_role;
 
-revoke all on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.shop_state() from public, anon, authenticated;
-grant execute on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.shop_state() to authenticated;
+revoke all on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.hop_void(bigint, text), public.admin_hop_void(), public.shop_state() from public, anon, authenticated;
+grant execute on function public.hop_price(int), public.shop_quote_hop(int), public.hop_use(bigint), public.hop_void(bigint, text), public.admin_hop_void(), public.shop_state() to authenticated;

@@ -6,9 +6,10 @@
 // and the sea where she would be), the trim used for the minutes it would have run, the catch keeping and the hands on deck gutting and
 // icing (holdMinute, 05-vessels.js), your energy (hopEnergy, as energyMinute has it) and the crew's fatigue (crewSeaFat, 04-crew.js).
 // Nothing earned by sailing is earned by a hop: no sea time (fsMinute), no miles (tatAdd), no badges (achMinute), none of it called.
-// It is refused, before it is bought, when the weather on the way is over the Autonav limit or the boat's own risk, with too little
-// diesel, on the operations plan, on a trip mission with this boat, or on the first trip. Once paid (HO3), it goes whatever the weather
-// (Jonas: «uavhengig av været eller andre ting»). The price is a ladder by the real minutes saved, like tax steps, so the total always
+// It is refused, before it is bought, with too little diesel, on the operations plan, on a trip mission with this boat, or on the first
+// trip. The weather never refuses it, before the purchase or after (Jonas 12.11.2026: «Så lenge betalingen har gått gjennom skal
+// spillerene kunne teleportere seg frem til målet, uavhengig av været eller andre ting», and, shown the card that said no for 11 m/s:
+// «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»). The price is a ladder by the real minutes saved, like tax steps, so the total always
 // rises with the time and nobody gains by a detour (Jonas 12.11.2026, A: «75 / 50 / 25 øre»; at least 5 kr, no cap).
 const HOP = {steps:[[60, 0.75], [240, 0.50], [Infinity, 0.25]], min:5, maxMin:14 * 1440, mapMs:20000, holdReal:35};
 // The hold (HO3, Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden, det løser
@@ -42,7 +43,7 @@ function hopStop(pl){
 // the time the game was closed, not yet played in: the world's clock ahead of S.t, or the minutes the tick has still to play
 // (ui/08-actions.js CATCH_LEFT, not there before the UI's files have run)
 function hopCatching(){ return (WCLOCK.on && worldT() - S.t > 1) || (typeof CATCH_LEFT !== 'undefined' && CATCH_LEFT > 0); }
-// a hop paid for waits, rather than for a later route, for what passes by itself (HO3, the kontroll: back from Stripe the page plays in
+// a hop paid for waits for what passes by itself (HO3, the kontroll: back from Stripe the page plays in
 // the minutes it was away): the time away played in, Autonav's way round shallow water
 function hopWait(){ const pl = S.plan; return !!(pl && S.boat.status === 'sailing' && (pl.replan || hopCatching())); }
 // the minutes paid for cover the trip made: the wind may have freshened since the purchase (a tenth and two minutes more is covered),
@@ -74,20 +75,19 @@ function hopWhy(){
 }
 // The dry run: the rest of the way to the next stop sailed minute by minute as sail() would (sailV for the speed, with the speed limits,
 // the braking into the stop and the sea; the trim until it runs out), with the wind and the sea where she is each minute. Nothing in the
-// game is changed: the boat's place, way and heading and the route's index are put back. paid: the weather does not stop it (HO3).
+// game is changed: the boat's place, way and heading and the route's index are put back. The weather never stops it (Jonas 12.11.2026);
+// paid: neither does the diesel or the boat nearly there (HO3).
 // Returns {why, stop, w, min (game minutes), real, kr, fuel (l), trimMin, track (where she is each hour), heading}
 function hopRun(paid){
   const b = S.boat, pl = S.plan, iS = hopStop(pl);
   if (iS < 0) return {why:['Ruta har ikke noe mål.', 'The route has no end.']};
   const save = {pos:b.pos, v:b.v, heading:b.heading, idx:pl.idx, speed:pl.speed, dspeed:S.draftSpeed, trim:b.trim}, T = trimOn(b), tEnd = T ? trimUntil(b) : -1;
-  const auto = !!(S.settings && S.settings.autoOn), limW = windLim(), limS = seaLim();
-  let m = 0, fuel = 0, trimMin = 0, wx = null, why = null, heading = b.heading, ended = false; const track = [];
+  let m = 0, fuel = 0, trimMin = 0, why = null, heading = b.heading, ended = false; const track = [];
   try {
     while (pl.idx <= iS){
       if (m >= HOP.maxMin){ why = ['Ruta er for lang til å regne ut her.', 'The route is too long to work out here.']; break; }
       const H = (S.t + m + 1) / 60, W = windAt(H), hs = hsAt(b.pos, H);
       if (m % 60 === 0) track.push({x:b.pos.x, y:b.pos.y});
-      if (!wx && (riskLevel(W, hs) > 0 || (auto && (W > limW || hs > limS)))){ wx = {W, hs}; if (!paid) break; }
       // (the trim runs out where it would: trimEnd as vesselStep calls it, the top speed and the route's speed down; put back below)
       if (T && !ended && S.t + m >= tEnd){ trimEnd(); ended = true; }
       if (T && !ended) trimMin++;
@@ -104,7 +104,6 @@ function hopRun(paid){
   } catch (e){ console.warn('hopRun', e); why = why || ['Turen kunne ikke regnes ut herfra.', 'The trip could not be worked out from here.']; }
   finally { b.pos = save.pos; b.v = save.v; b.heading = save.heading; pl.idx = save.idx;
     if (ended){ b.trim = save.trim; applyVessel(); pl.speed = save.speed; S.draftSpeed = save.dspeed; } }
-  if (!why && wx && !paid) why = ['Været på veien er for hardt for et hopp: ' + fmt(wx.W, 0) + ' m/s og ' + fmt(wx.hs, 1) + ' m sjø. Hopp går ikke forbi været.', 'The weather on the way is too hard for a hop: ' + fmt(wx.W, 0) + ' m/s and ' + fmt(wx.hs, 1) + ' m of sea. A hop does not get past the weather.'];
   if (!why && !paid && fuel > (b.fuel || 0)) why = ['For lite diesel til å komme fram: turen bruker ' + Math.ceil(fuel) + ' l, tanken har ' + Math.floor(b.fuel || 0) + ' l.', 'Too little diesel to get there: the trip burns ' + Math.ceil(fuel) + ' l, the tank has ' + Math.floor(b.fuel || 0) + ' l.'];
   if (!why && !paid && m < GAME_RATE) why = ['Båten er nesten fremme.', 'The boat is nearly there.'];
   // (the price on the whole real minutes, as the server works it out: supabase/migrations/20261112200000_hopp.sql hop_price)
@@ -113,7 +112,7 @@ function hopRun(paid){
 }
 // the stop of a hop bought (HO3: the purchase keeps {x, y, port}) is the next stop on the route sailed now: the same harbour, or within
 // 100 m of it (the place decides too, so a harbour id kept with a character lost on the way is the same stop); else the route has
-// changed since, and the hop waits for a later route
+// changed since, and the hop is not made (it is marked for a refund, ui/10u-hopp.js hopVoid)
 function hopMatch(to){
   const pl = S.plan, iS = hopStop(pl); if (!to || iS < 0) return false;
   const w = pl.wps[iS]; return (!!to.port && w.port === to.port) || dist(w, to) < 0.1;

@@ -28,7 +28,7 @@ create schema vault; create table vault.decrypted_secrets (id uuid primary key d
 """
 
 
-WHO_USED = 'haill_import,haill_on,haill_use,hop_use,shop_pending,shop_refund,shop_state,yard_use'   # the functions that read grants.used_at (HS2–HS4, HO3)
+WHO_USED = 'haill_import,haill_on,haill_use,hop_use,hop_void,shop_pending,shop_refund,shop_state,yard_use'   # the functions that read grants.used_at (HS2–HS4, HO3)
 
 
 def main():
@@ -1669,6 +1669,12 @@ def main():
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_h2', 'user_01HO3', 'hopp', 8, 'open', '{\"boat\":\"v1\",\"min\":10,\"to\":{\"x\":1,\"y\":1,\"port\":\"hs:ab12\"},\"kr\":8}'), ('cs_h3', 'user_01HO3', 'verft_na', 19, 'open', '{\"boat\":\"v1\"}')")
         sql("select public.shop_paid('cs_h2', 'pi_h2')"); sql("select public.shop_paid('cs_h3', 'pi_h3')")
         rid = {k: int(sql("select id from public.grants where purchase_id = '%s'" % k)) for k in ('cs_h2', 'cs_h3')}
+        # (a hop the game could not make: marked void by the player alone, once; never used after it; listed for the admin only)
+        hv = rid['cs_h2']
+        HO['void'] = [sql("select public.hop_void(%d, 'held no more')" % hv, P2, 'authenticated'), sql("select public.hop_void(%d, 'held no more')" % hv, P1, 'authenticated'),
+                      sql("select public.hop_void(%d, 'again')" % hv, P1, 'authenticated'), sql("select public.hop_use(%d)" % hv, P1, 'authenticated'),
+                      sql("select data ->> 'void' from public.grants where id = %d" % hv)]
+        HO['voidAdm'] = [g.get('session') for g in json.loads(sql("select public.admin_hop_void()", AD2, 'authenticated'))], sql("select public.admin_hop_void()", P1, 'authenticated', expect_err=True)[0]
         HO['refundHad'] = sorted(g['id'] for g in json.loads(sql("select public.shop_state()", P1, 'authenticated'))['list'] if g['id'] in rid.values() and g.get('held'))
         for pi in ('pi_h1', 'pi_h2', 'pi_h3'): sql("select public.shop_refund('%s')" % pi)
         HO['refund'] = [sorted(g['id'] for g in json.loads(sql("select public.shop_state()", P1, 'authenticated'))['list'] if g['id'] in rid.values()),
@@ -1678,8 +1684,9 @@ def main():
         print(ok(HO['run'] == 0 and HO['price'] == '5,5,5,8,44,45,46,55,135,135,147,205,539,915' and HO['quote'] == ['hopp', 20, {'give': 'hopp', 'min': 27}] and all(HO['bad'])
                  and HO['guest'] == [True, True] and HO['anon'] and HO['st'][:2] == [1, True] and HO['st'][2] == {'give': 'hopp', 'boat': 'v1', 'min': 27, 'to': {'x': 867.8, 'y': 366.1, 'port': 'vangshamn'}, 'kr': 20}
                  and HO['st'][3:] == [1, None, True, []] and HO['use'] == ['f', 't', 'f'] and HO['after'] == [] and HO['anonUse']
-                 and HO['refundHad'] == sorted(rid.values()) and HO['refund'] == [[], '2', 'true,true']),
-              'HO3: hop_price is the ladder (5 kr at least, 75/50/25 øre a minute), shop_quote_hop prices 27 min at 20 kr and refuses 0, 3 361 and no minutes, a guest and anon; the paid grant has the minutes, the stop and the price, shop_state delivers it (new the first time) and answers it while unused, never to another player; hop_use takes the player\'s own once; a refund takes back a hop and a «Ferdig nå» delivered and not used, and leaves a hop used', HO)
+                 and HO['refundHad'] == sorted(rid.values()) and HO['refund'] == [[], '2', 'true,true']
+                 and HO['void'] == ['f', 't', 'f', 'f', 'held no more'] and HO['voidAdm'][0] == ['cs_h2'] and HO['voidAdm'][1]),
+              'HO3: hop_price is the ladder (5 kr at least, 75/50/25 øre a minute), shop_quote_hop prices 27 min at 20 kr and refuses 0, 3 361 and no minutes, a guest and anon; the paid grant has the minutes, the stop and the price, shop_state delivers it (new the first time) and answers it while unused, never to another player; hop_use takes the player\'s own once; a refund takes back a hop and a «Ferdig nå» delivered and not used, and leaves a hop used; hop_void marks the player\'s own unused hop once, hop_use refuses it after, and admin_hop_void lists it for the admin only', HO)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

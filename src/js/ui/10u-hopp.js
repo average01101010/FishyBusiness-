@@ -33,7 +33,8 @@ function hopOpen(){
   setTimeout(() => { if (n !== HOPUI.open || $('modal').hidden) return; hopCard(title, hopQuote(false)); }, 30);
 }
 function hopCard(h, q){
-  if (q.why){ modal(h + '<p>' + hopEsc(hopL(q.why[0], q.why[1])) + '</p><div class="btns"><button class="btn primary" data-close>' + hopL('Lukk', 'Close') + '</button></div>'); return; }
+  // (no hop to be had: the boat goes on at once, so the card is never a free stop in a storm)
+  if (q.why){ hopHoldOff(); modal(h + '<p>' + hopEsc(hopL(q.why[0], q.why[1])) + '</p><div class="btns"><button class="btn primary" data-close>' + hopL('Lukk', 'Close') + '</button></div>'); return; }
   const w = q.w, pt = w.port && portById(w.port), np = pt ? null : nearestPlace(w);
   h += '<p>' + (pt ? hopL('Til ', 'To ') + '<b>' + hopEsc(pt.name) + '</b>. ' : hopL('Til neste stopp på ruta, ', 'To the next stop on the route, ') + '<b>' + hopEsc(hopL(np.no, np.en)) + '</b>. ') +
     hopL('Du sparer ', 'You save ') + '<b>' + hopSaved(q.real, S.lang === 'en') + '</b>' + hopL(' og er fremme med en gang.', ' and are there at once.') + '</p>' +
@@ -60,7 +61,12 @@ function hopHoldTick(){
   const hd = S.boat && S.boat.hopHold; if (!hd || HOPUI.busy) { if (HOPUI.card && $('modal').hidden) HOPUI.card = false; return; }
   if (HOPUI.card && $('modal').hidden){ HOPUI.card = false; if (!hd.pay) hopHoldOff(); }
   else if (hd.pay && HOPUI.payAt && !SHOP.busy && Date.now() - HOPUI.payAt > 1500){ HOPUI.payAt = 0; hopHoldOff(); }
+  // (paid for and waiting for the payment's answer: asked every 20 s while the page is shown, a webhook slower than shopStart's tries)
+  else if (hd.pay && !HOPUI.payAt && document.visibilityState === 'visible' && Date.now() - (HOPUI.askAt || 0) > 20000 && typeof shopClaim === 'function'){ HOPUI.askAt = Date.now(); shopClaim(); }
 }
+// back from Stripe by the browser's own back button with the page kept (bfcache): the payment page was left, the purchase not made
+window.addEventListener('pageshow', e => { if (!e.persisted) return; if (typeof SHOP !== 'undefined') SHOP.busy = false;
+  const hd = S.boat && S.boat.hopHold; if (hd && hd.pay && HOPUI.payAt){ HOPUI.payAt = 0; toast(hopL('Båten ligger stille og venter på betalingen for hoppet. Vil du seile videre, trykk ⏩ og «Avbryt».', 'The boat lies still, waiting for the payment for the hop. To sail on, tap ⏩ and «Cancel».')); } });
 document.addEventListener('visibilitychange', () => { const hd = S.boat && S.boat.hopHold;
   if (document.visibilityState === 'hidden' && hd && !hd.pay && !HOPUI.busy){ hopHoldOff(); if (HOPUI.card){ HOPUI.card = false; $('modal').hidden = true; } } });
 // the hop: the screen goes dark first (two frames, so the dark is drawn before the work; a timer too, since a hidden page draws no
@@ -93,16 +99,20 @@ async function hopPress(paid, id, min, quiet){
 HOPUI.fly = new Set();
 function hopUse(id){
   const Q = S.hopQ || (S.hopQ = []); if (!Q.includes(id)) Q.push(id);
+  const D = S.hopDone || (S.hopDone = []); if (!D.includes(id)){ D.push(id); if (D.length > 50) D.splice(0, D.length - 50); }
   if (HOPUI.fly.has(id) || typeof cloudRpc !== 'function') return; HOPUI.fly.add(id);
   cloudRpc('hop_use', {id}).then(ok => { const i = (S.hopQ || []).indexOf(id); if (i >= 0){ S.hopQ.splice(i, 1); if (typeof save === 'function') save(); }
     if (ok === false){ console.warn('hop_use: used before', id); if (typeof cloudEv === 'function') cloudEv('hop_twice', {id}); } })
     .catch(e => console.error(e)).finally(() => HOPUI.fly.delete(id));
 }
 // a hop paid for that could not be made (the hold ended before the payment came, the route changed, someone in the water): nothing is
-// owed in the game; the purchase is marked for a refund (the grant stays unused on the server, hop_void in the events for the admin,
-// who refunds it at Stripe; shop_refund then takes the grant back), and the log, Meldinger and the screen say so. Once per grant
+// owed in the game; the purchase is marked for a refund on the server (hop_void: the grant is never made after it, and the admin page
+// lists it, admin_hop_void, for a refund at Stripe; shop_refund then takes it back), and the log, Meldinger and the screen say so. Once
+// per grant; never one made here (S.hopDone)
 function hopVoid(id, why){
+  if ((S.hopDone || []).includes(id)) return;
   const V = S.hopVoid || (S.hopVoid = []); if (V.includes(id)) return; V.push(id); if (V.length > 50) V.splice(0, V.length - 50);
+  if (typeof cloudRpc === 'function') cloudRpc('hop_void', {id, why:why[1]}).catch(e => console.error(e));
   const no = 'Hoppet ble ikke gjort: ' + why[0] + ' Kjøpet er merket, og pengene betales tilbake.', en = 'The hop was not made: ' + why[1] + ' The purchase is marked, and the money is paid back.';
   log(no, en); toast(hopL(no, en)); if (typeof msg === 'function') msg('Det Store Blå', no, en);
   if (typeof cloudEv === 'function') cloudEv('hop_void', {id, why:why[1]});
@@ -121,6 +131,7 @@ async function hopDeliver(id, d){
       const q = hopHoldFor(d) ? await hopPress(true, id, d.min, true) : {why:not};
       if (q && !q.why) return;
       if ((!q || q.map || hopWait()) && left()){ await new Promise(r => setTimeout(r, 3000)); continue; }
+      if (hopTabGone()) return;
       hopVoid(id, q && q.why || not); hopHoldOff(); return;
     }
   } finally { HOPUI.pend.delete(id); }

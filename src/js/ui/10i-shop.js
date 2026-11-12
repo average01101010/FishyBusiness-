@@ -314,14 +314,17 @@ function srvApply(st){
   // Not on a page that has lost the game (TAB): the one that has it delivers
   { const q = S.hopQ || (S.hopQ = []); for (let i = q.length - 1; i >= 0; i--) if (!list.some(g => g.id === q[i])) q.splice(i, 1);
     const hs = list.filter(g => g.held && (g.data || {}).give === 'hopp' && !q.includes(g.id)), gone = typeof hopTabGone === 'function' && hopTabGone();
-    for (const g of hs){ if (gone) break; if ((S.hopVoid || []).includes(g.id)) continue;   // (marked for a refund: never made after all)
+    // (marked for a refund, here or on the server, or made here and the server not told yet: never made, nor marked, again)
+    for (const g of hs){ if (gone) break; if ((S.hopVoid || []).includes(g.id) || (S.hopDone || []).includes(g.id) || (g.data || {}).void) continue;
       const d = g.data, fresh = isNew(g), held = typeof hopHoldFor === 'function' && hopHoldFor(d);
       if (fresh){ given.push(g.id); seen[g.id] = wn; }
       if (held){ if (fresh){ say(g, 'Hoppet gjøres nå: båten er fremme om et øyeblikk.', 'The hop is made now: the boat is there in a moment.'); names.push(shopL('Hopp over ruta', 'Skip the route')); }
         if (typeof hopDeliver === 'function') setTimeout(() => hopDeliver(g.id, d), 0); }
       else if (typeof hopVoid === 'function'){ const why = ['Båten lå ikke lenger stille på ruta da betalingen kom.', 'The boat was no longer lying still on the route when the payment came.'];
         if (fresh) say(g, 'Hoppet ble ikke gjort: ' + why[0] + ' Kjøpet er merket, og pengene betales tilbake.', 'The hop was not made: ' + why[1] + ' The purchase is marked, and the money is paid back.');
-        hopVoid(g.id, why); } }
+        hopVoid(g.id, why);
+        // (bought for another boat in the fleet, held still: she is let go)
+        const v = d.boat !== S.cur && (S.fleet || []).find(x => x.id === d.boat); if (v && typeof withVessel === 'function') withVessel(v, () => { if (S.boat.hopHold) S.boat.hopHold = null; }); } }
     if (!gone) for (const id of q) if (typeof hopUse === 'function') hopUse(id); }
   // 6. the paid paint designs: the account's entitlements, never the save's own list
   if (Array.isArray(st.owned)){ CLOUD.owned = st.owned.slice(); if (typeof cosSrv === 'function') cosSrv(st.owned); }
@@ -411,6 +414,7 @@ function shopStart(){
   // (a hop's hold ends when its purchase is cancelled; back with no answer at all, the browser's back button, the boat lies still till
   // the payment comes or the hold ends: said, with the way out. ui/10u-hopp.js)
   const hh = S.boat && S.boat.hopHold;
+  if (hh && !hh.pay && typeof hopHoldOff === 'function') hopHoldOff();   // (the card was open when the page went: no payment on its way)
   if (SHOP.ret === 'avbrutt'){ toast(shopL('Kjøpet ble avbrutt. Ingenting er trukket.', 'The purchase was cancelled. Nothing was charged.')); SHOP.ret = null; if (hh && typeof hopHoldOff === 'function') hopHoldOff(); }
   else if (!SHOP.ret && hh && hh.pay) toast(shopL('Båten ligger stille og venter på betalingen for hoppet. Vil du seile videre, trykk ⏩ og «Avbryt».', 'The boat lies still, waiting for the payment for the hop. To sail on, tap ⏩ and «Cancel».'));
   const tries = SHOP.ret ? [0, 3000, 8000, 20000, 45000] : [0];
