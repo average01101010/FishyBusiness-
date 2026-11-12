@@ -13,7 +13,7 @@ Det er ekte penger, så alt i butikken går som PR til Jonas og rulles ikke ut f
 ## Reglene den må holde
 
 - **Betalingen korter ned en ekte avstand** (`docs/engasjement.md`): seilingen er ekte, og hoppet er trim tatt helt ut. Ingen ventetid legges inn eller forlenges for å selge hopp.
-- **Alt annet enn tida går som om båten seilte:** dieselen, motortimene og slitasjen, isen og fisken i rommet, og mannskapets timer. Ellers blir hoppet billigere enn å seile, og fisken kommer ferskere fram. Da kjøper man mer enn tid.
+- **Alt annet enn tida går som om båten seilte:** dieselen, motortimene og slitasjen, isen og fisken i rommet, mannskapets timer, og trimmen: står trim på, brukes den tida turen ville tatt med trim, opp. Ellers blir hoppet billigere enn å seile, og fisken kommer ferskere fram. Da kjøper man mer enn tid.
 - **Ikke forbi været:** ville båten ha ligget bi eller gått i havn på ruta, nektes hoppet.
 - **Ikke i turoppdrag og løp:** turoppdragenes belønning er satt etter seilingstida uten trim (`turPay`). Kappløpene får egne regler (`docs/engasjement.md`, «Vurderes senere»).
 - **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** fartstid (`09e-fartstid.js`: «Fartstid selges aldri, og ingenting som øker den direkte»), lykter passert i Kystkartet (`09m-kystkart.js`), distansen i statistikken og merkene som telles i nm.
@@ -53,6 +53,18 @@ Timene er ETA-en spilleren ser i GPS-boksen, med trim hvis den står på. Prisen
 
 Det laveste trinnet, 25 øre minuttet, er 15 kr per spart time og dermed dyrere enn alle tre trimmene (4–15 kr per spart time), slik Jonas satte som vilkår.
 
+**Mot trimmen** (Jonas 12.11.2026: «Vi må huske at det skal koste litt ekstra å spare tiden man vinner på å teleportere ved å skippe reisen»). Trimmen sparer tid i alt som seiles i 4, 8 eller 12 ekte timer, høyst en tredel, tre sjudeler eller halvparten av turen. Hoppet tar bort én tur helt. Brukt fullt ut koster trimmen 0,24 kr (pumpa), 0,11 kr (ladeluftkjølingen) og 0,07 kr (turboen) per spart minutt. Hoppet koster 0,75, 0,50 og 0,25 kr, altså rundt tre ganger pumpa den første timen og fire ganger turboen på de lange turene.
+
+| Tur (ekte minutter) | Billigste trim bare for denne turen | Hoppet |
+|---|---|---|
+| 10 | pumpa 29 kr, sparer 3 min (8,70 kr/min) | 8 kr, sparer 10 (0,80 kr/min) |
+| 60 | pumpa 29 kr, sparer 20 min (1,45 kr/min) | 45 kr, sparer 60 (0,75 kr/min) |
+| 286 | pumpa 29 kr, sparer 95 min (0,30 kr/min) | 147 kr, sparer 286 (0,51 kr/min) |
+| 520 | ladeluftkjølingen 39 kr, sparer 223 min (0,18 kr/min) | 205 kr, sparer 520 (0,39 kr/min) |
+| 1 857 | turboen 49 kr, sparer 720 min (0,07 kr/min) | 539 kr, sparer 1 857 (0,29 kr/min) |
+
+For én tur under rundt to og en halv time er hoppet billigere per spart minutt enn trim kjøpt bare for den turen, fordi trimmen varer i timer og er laget for mye seiling. Skal hoppet være dyrere også der, må minsteprisen opp mot trimmens 29 kr. Over det er hoppet dyrere per minutt for alle turer. Trim og hopp sammen er lovlig: står turboen på når trebåten hopper Lindesnes–Nordkapp, er det 1 137 minutter igjen, og hoppet koster 359 kr. Turboens tolv timer er da brukt opp (regelen over), så til sammen 408 kr.
+
 **Det som er igjen per kjøp** etter MVA (25 %) og Stripes 2,4 % + 2,00 kr for norske og EØS-kort: 1,88 kr av 5 kr, 4,21 kr av 8 kr, 32,92 kr av 45 kr. Gebyret er fast per kjøp, så de minste hoppene gir nesten ingenting; de er verdt det som en lav terskel for første kjøp. Andelen hopp til minsteprisen måles etter lanseringen, og prisen kan endres på serveren uten ny versjon av spillet.
 
 **Når betalingen har gått gjennom** (Jonas 12.11.2026, V3: «Så lenge betalingen har gått gjennom skal spillerene kunne teleportere seg frem til målet, uavhengig av været eller andre ting. De betaler fortsatt for tiden de har spart.»):
@@ -69,7 +81,7 @@ Hver fase er én økt.
 - **Hva:** en ny fil `core/06j-hopp.js` (inn i malen etter `06i-plan2-sno.js` og i `COVER` i `run.py`) med tre rene funksjoner:
   - `hopQuote(b)`: ekte minutter igjen av ruta, målet og prisen etter stigen.
   - `hopCheck(b)`: grunnen til at hoppet ikke kan gjøres. Grunnene er ingen rute, båten i havn, et turoppdrag i gang, været langs ruta over båtens grenser ved minuttet den er der, for lite diesel, og at det er en annen båt i flåten enn den spilleren følger.
-  - `hopDo(b)`: båten flyttes til målet (`arrive`), dieselen trekkes (`fuelUse`), motortimer og slitasje legges til, fisken eldes og isen smelter med de spilte timene, og mannskapet får timene som om de seilte. Ingen fartstid, ingen lykter og ingen distanse telles.
+  - `hopDo(b)`: båten flyttes til målet (`arrive`), dieselen trekkes (`fuelUse`), motortimer og slitasje legges til, trimmen brukes for den tida turen ville tatt med trim, fisken eldes og isen smelter med de spilte timene, og mannskapet får timene som om de seilte. Ingen fartstid, ingen lykter og ingen distanse telles.
 - **Tilgang:** bare i testene og i admin («Gi hopp»), ikke i butikken.
 - **Filer:** `core/06j-hopp.js`, `src/index.html`, `tests/run.py`, `tests/unit/hopp.test.mjs`.
 - **Tester:** enhetstestene (prisene i tabellen over, hver grunn i `hopCheck`, diesel og ferskhet like etter et hopp som etter seilingen i `catchUp`, sett røde først), `node tests/unit/run.mjs`, `python3 tests/run.py changed`.
