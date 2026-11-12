@@ -2781,12 +2781,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1579 linjer)
+## `src/js/ui/phone/07-patch.js` (1585 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1567 `patch()`
+  - 1573 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3557,7 +3557,7 @@ THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a butto
   - 229 `giveCos(k)`
   - 244 `regSet(n)`
 
-## `src/js/ui/10q-buymoment.js` (36 linjer)
+## `src/js/ui/10q-buymoment.js` (44 linjer)
 
 The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
@@ -3855,29 +3855,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (840 linjer)
+## `src/js/view3d/01-shaders.js` (854 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **159** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-- **282** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **380** the boat's own foam, when she has way on
-- **388** where a slam and the spray land (F3b): four patches, fixed names
-- **390** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 733 `cloudStep(dt)`
-  - 740 `skyFrame(u, Hh, tn, bv)`
-  - 755 `glsl3(src, fs)`
-  - 768 `progStart(vs, fs, attrs, nm = '?')`
-  - 776 `progEnd(P)`
-  - 786 `program(vs, fs, attrs, nm = '?')`
-  - 788 `progWait(list)`
-  - 794 `programA(vs, fs, attrs, nm)`
-  - 795 `buf(data, target, usage)`
-  - 800 `airSet(u, terr)`
-  - 815 `sunT0()`
-  - 822 `attr(loc, b, size)`
-  - 838 `upload(pos, col, idx)`
+- **162** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+- **285** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **383** the boat's own foam, when she has way on
+- **391** where a slam and the spray land (F3b): four patches, fixed names
+- **393** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 745 `cloudStep(dt)`
+  - 752 `skyFrame(u, Hh, tn, bv)`
+  - 767 `glsl3(src, fs)`
+  - 780 `progStart(vs, fs, attrs, nm = '?')`
+  - 790 `progEnd(P)`
+  - 800 `program(vs, fs, attrs, nm = '?')`
+  - 802 `progWait(list)`
+  - 808 `programA(vs, fs, attrs, nm)`
+  - 809 `buf(data, target, usage)`
+  - 814 `airSet(u, terr)`
+  - 829 `sunT0()`
+  - 836 `attr(loc, b, size)`
+  - 852 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4333,7 +4333,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 643 `seaHFast(x, z, t)`
   - 645 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (176 linjer)
+## `src/js/view3d/14b-fft.js` (191 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -4351,6 +4351,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 129 `fftSyncAt(tw)`
   - 137 `fftStep(t)`
   - 152 `fftBind(u, eye)`
+  - 181 `seaShared(u, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
@@ -4399,7 +4400,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (276 linjer)
+## `src/js/view3d/17-draw.js` (277 linjer)
 
 ---------- drawing ----------
 
