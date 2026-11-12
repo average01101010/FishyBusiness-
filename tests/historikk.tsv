@@ -2957,3 +2957,11 @@
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	colregtest	OK	732	lite	samtidig	
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	autonavtest	OK	42	lite	samtidig	
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	hulltest	OK	71	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	boottest	OK	32	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	lanterntest	OK	17	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	maletest	OK	20	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	regmarktest	OK	7	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	vesseltest	FEIL	17	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:30	plan/2026-11-11-88	0f86c6a2	docktest	OK	63	lite	samtidig	
+2026-11-12 04:30	plan/2026-11-11-88	0f86c6a2	trip2	OK	32	lite	samtidig	
+2026-11-12 04:31	plan/2026-11-11-88	0f86c6a2	dbg23o	OK	44	3d	alene	

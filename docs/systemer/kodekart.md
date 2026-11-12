@@ -2774,12 +2774,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1564 linjer)
+## `src/js/ui/phone/07-patch.js` (1568 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1552 `patch()`
+  - 1556 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3677,7 +3677,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1701 linjer)
+## `src/js/vessel3d.js` (1705 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3801,7 +3801,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 1577 `deckPath(M, a, b)`
 - **1608** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
   - 1621 `lanterns(G, V, st)`
-  - 1660 `deckPoints(type)`
+  - 1664 `deckPoints(type)`
 
 ## `src/js/deckcrew.js` (879 linjer)
 
