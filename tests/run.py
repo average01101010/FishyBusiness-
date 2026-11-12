@@ -268,6 +268,9 @@ COVER['src/js/view3d/02-mesh-terrain.js'] = COVER.get('src/js/view3d/02-mesh-ter
 COVER['src/js/core/01b-mapdata.js'] = COVER.get('src/js/core/01b-mapdata.js', []) + ['fintest']
 # Ø11.8 (11.11.2026): the speed limits and the cardinal marks (core/05e-sjovei.js fartAt, farvLook; the chart's layer in ui/03a-chart.js)
 LITE += ['farttest']
+LITE += ['aerendshot']   # the small errands in the Mannskap app (steg 45a)
+COVER['tests/aerendshot.py'] = ['aerendshot']; COVER['tests/unit/aerend.test.mjs'] = []
+for _f in ('src/js/ui/phone/13-mannskap-bank-meld.js', 'src/js/ui/phone/14-act.js', 'src/js/core/14-crewlife.js'): COVER[_f] = COVER.get(_f, []) + ['aerendshot']
 LITE += ['avtaleshot']   # Ø11.9 the employment agreement in the Mannskap app (steg 27)
 COVER['tests/avtaleshot.py'] = ['avtaleshot']; COVER['tests/unit/arbeidsavtale.test.mjs'] = []
 for _f in ('src/js/ui/phone/13-mannskap-bank-meld.js', 'src/js/core/04-crew.js', 'src/js/ui/phone/14-act.js'): COVER[_f] = COVER.get(_f, []) + ['avtaleshot']

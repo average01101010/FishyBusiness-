@@ -63,7 +63,9 @@ TRIP = """async () => {
   const ev = (a, d) => PHONE.dact('mannskap', a, d);
   ev('cfire', {id:out.id}); R.outGone = !S.crew.includes(out); R.paidOut = Math.round(c0 - S.cash);
   borsTick(S.t / 60); if (!S.bors.pool.length){ const c = genCrew(); c.until = S.t + 2880; S.bors.pool.push(c); }
-  const cand = S.bors.pool[0], c1 = S.cash; ev('bhire', {id:cand.id});
+  // (full-time: a part-timer on his day ashore is rightly not aboard after the flight either, and about one in nine drawn is one (10.8 %, genCrew); seen 12.11.2026
+  // as «[False, False]» when the draws moved, 3 of 40 in a probe, every one a part-timer on a day off)
+  const cand = S.bors.pool[0], c1 = S.cash; cand.bi = false; cand.biDays = null; ev('bhire', {id:cand.id});
   R.hired = S.crew.includes(cand); R.paidIn = Math.round(c1 - S.cash); R.flying = !!cand.fly; R.aboardAtOnce = crewAboard().includes(cand);
   // an hour before the plane is in: still not aboard; the hour after: aboard
   for (let i = 0; i < 2; i++){ S.t += 60; crewTick(S.t / 60); } R.aboard2h = crewAboard().includes(cand);

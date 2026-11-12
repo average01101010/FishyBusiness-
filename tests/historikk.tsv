@@ -3242,6 +3242,13 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	quotatest	OK	20	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	admintest	OK	10	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
+2026-11-12 18:14	ccr-899a9674-q3gjp0	59cd7805+	dbg23o	OK	45	3d	alene	
+2026-11-12 18:19	ccr-899a9674-q3gjp0	59cd7805+	seatrytest	OK	308	3d	alene	
+2026-11-12 19:22	ccr-899a9674-q3gjp0	2988f121	ultratest	OK	193	3d	alene	
+2026-11-12 20:03	ccr-899a9674-q3gjp0	2988f121	hull3d	OK	2464	3d	alene	
+2026-11-12 20:11	ccr-899a9674-q3gjp0	2988f121	fellessjo	OK	473	3d	alene	
+2026-11-12 20:21	ccr-899a9674-q3gjp0	2988f121+	dbg23o	OK	44	3d	alene	
+2026-11-12 20:26	ccr-899a9674-q3gjp0	2988f121+	seatrytest	OK	299	3d	alene	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
 2026-11-12 17:55	ccr-013bxxie-opp3	2a6ed57+	heattest	OK	395	3d	alene	
@@ -3301,6 +3308,48 @@
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	docktest	OK	63	lite	samtidig	
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	skiptest	OK	17	lite	samtidig	
 2026-11-12 18:15	ccr-013bxxie-opp3	02f1dbf+	boostklokke	OK	49	lite	samtidig	
+2026-11-12 18:36	plan/2026-11-12-45a	348297ce+	crewlifetest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 18:36	plan/2026-11-12-45a	348297ce+	crewlifetest	FEIL	7	lite	alene	FEIL errand: «Ikke nå» costs nothing, and he does not ask again within the week {"gone": true, "same": false, "again": false, "btns": 0}
+2026-11-12 18:36	plan/2026-11-12-45a	348297ce+	crewlifetest	OK	6	lite	alene	
+2026-11-12 18:40	plan/2026-11-12-45a	b55784d9+	crewlifetest	OK	7	lite	alene	
+2026-11-12 18:45	plan/2026-11-12-45a	c6f56c43	krabbefabrikktest	OK	17	lite	samtidig	
+2026-11-12 18:45	plan/2026-11-12-45a	c6f56c43	fabrikktest	OK	14	lite	samtidig	
+2026-11-12 18:45	plan/2026-11-12-45a	c6f56c43	lotttest	OK	8	lite	samtidig	
+2026-11-12 18:45	plan/2026-11-12-45a	c6f56c43	skiptest	OK	17	lite	samtidig	
+2026-11-12 18:45	plan/2026-11-12-45a	c6f56c43	fleet2test	OK	37	lite	samtidig	
+2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	opsowntest	OK	47	lite	samtidig	
+2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	worktest	OK	25	lite	samtidig	
+2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	crewlifetest	OK	8	lite	samtidig	
+2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	selfcrew	OK	7	lite	samtidig	
+2026-11-12 18:46	plan/2026-11-12-45a	c6f56c43+	lybtest	FEIL	0	lite	samtidig	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py)
 2026-11-12 18:39	ccr-e7efd74c-rioki0	ee013930	hopptest	OK	8	lite	samtidig	
 2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	fasittest	OK	38	lite	samtidig	
 2026-11-12 18:40	ccr-e7efd74c-rioki0	ee013930	admintest	OK	10	lite	samtidig	
+2026-11-12 18:54	plan/2026-11-12-45a	4e07f0de	krabbefabrikktest	OK	17	lite	samtidig	
+2026-11-12 18:54	plan/2026-11-12-45a	4e07f0de	fabrikktest	OK	13	lite	samtidig	
+2026-11-12 18:54	plan/2026-11-12-45a	4e07f0de	lotttest	OK	8	lite	samtidig	
+2026-11-12 18:55	plan/2026-11-12-45a	4e07f0de	skiptest	OK	17	lite	samtidig	
+2026-11-12 18:55	plan/2026-11-12-45a	4e07f0de	fleet2test	OK	37	lite	samtidig	
+2026-11-12 18:55	plan/2026-11-12-45a	4e07f0de	opsowntest	OK	46	lite	samtidig	
+2026-11-12 18:55	plan/2026-11-12-45a	4e07f0de	worktest	OK	25	lite	samtidig	
+2026-11-12 18:55	plan/2026-11-12-45a	4e07f0de	crewlifetest	OK	7	lite	samtidig	
+2026-11-12 18:56	plan/2026-11-12-45a	4e07f0de	selfcrew	OK	7	lite	samtidig	
+2026-11-12 18:56	plan/2026-11-12-45a	4e07f0de	lybtest	FEIL	20	lite	samtidig	FEIL om bord etter reisetida (3 t 25 min), ikke før [False, False]
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	mobtest	OK	204	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	turlinjetest	OK	5	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	avtaleshot	OK	11	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	opptest	OK	93	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	mannskapshot	OK	14	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	aerendshot	OK	12	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	docktest	OK	61	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	skattetest	OK	7	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	boktest	OK	8	lite	samtidig	
+2026-11-12 18:59	plan/2026-11-12-45a	4e07f0de	vesseltest	OK	21	lite	samtidig	
+2026-11-12 19:00	plan/2026-11-12-45a	4e07f0de	turtest	OK	23	lite	samtidig	
+2026-11-12 19:00	plan/2026-11-12-45a	4e07f0de	adminbuytest	OK	10	lite	samtidig	
+2026-11-12 19:00	plan/2026-11-12-45a	4e07f0de	megletest	OK	23	lite	samtidig	
+2026-11-12 19:02	plan/2026-11-12-45a	4e07f0de	saytest	OK	103	3d	alene	
+2026-11-12 19:22	plan/2026-11-12-45a	4e07f0de	teleport3d	OK	1241	3d	alene	
+2026-11-12 19:23	plan/2026-11-12-45a	4e07f0de	boottest	OK	27	lite	alene	
+2026-11-12 19:30	plan/2026-11-12-45a	3c95c84f+	lybtest	OK	18	lite	alene	
+2026-11-12 20:27	ccr-899a9674-q3gjp0	7da359b2	dbg23o	OK	45	3d	alene	

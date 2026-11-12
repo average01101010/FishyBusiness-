@@ -255,6 +255,8 @@
     else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } else delete c.offTrip; } }
     // lott or hyre (E3): the day wage is the one asked for when the agreement is changed
     else if (a === 'cfire'){ if (!crewAshore()){ toast(L('Mannskap kan bare sies opp når båten ligger til kai.', 'Crew can only be let go with the boat at a quay.')); return; } const c = crewById(d.id); if (c){ const own = !!c.opp, g = crewLetGo(c); if (g) toast(own ? L(c.name.split(' ')[0] + ' har gått i land, etter avtale.', c.name.split(' ')[0] + ' has gone ashore, by agreement.') : L(c.name.split(' ')[0] + ' er sagt opp: ' + g[0] + '.', c.name.split(' ')[0] + ' has been let go: ' + g[1] + '.')); } }
+    // the answer to an errand (steg 45a, core/14-crewlife.js errandAnswer): yes, or not now, which costs nothing
+    else if (a === 'cerr'){ if (!errandAnswer(d.id, d.o === 'yes')) return; }
     // ask one who gave notice to stay (Ø11.9, crewStay): by agreement, when the mood has come back
     else if (a === 'cstay'){ const c = crewById(d.id); if (!c) return; const w = crewStay(c); if (w === 'mood') toast(L(c.name.split(' ')[0] + ' vil ikke. Trivselen må opp først.', c.name.split(' ')[0] + ' will not. The mood has to come up first.')); else if (w === 'egenbat') toast(L(c.name.split(' ')[0] + ' skal kjøpe egen båt.', c.name.split(' ')[0] + ' is buying a boat of their own.')); }
     else if (a === 'cres'){ const ev = S.cevt; if (!ev) return; const A = crewById(ev.a), Bc = crewById(ev.b), o = d.o, g = (x, y, v) => { if (x && y){ x.grudge = x.grudge || {}; x.grudge[y.id] = (x.grudge[y.id] || 0) + v; } };
