@@ -1,25 +1,16 @@
-// ===== The plan's shared parts (Ø12 C, 08.11.2026). The old operations plan (core/06d-drift.js and ui/05c-drift.js, 23.10.2026) was
+// ===== The plan's shared parts (Ø12 C, 08.11.2026). The old operations plan (23.10.2026: its engine and its page, DRIFTUI) was
 // taken out when Driftsplan 2 had replaced it (Jonas 05.11.2026: «Ja, rydd bort den gamle»). What Driftsplan 2 (06g-plan2.js,
 // 06h-plan2-engine.js, ui/05d-plan2.js, ui/03g-planmap.js) and the rest of the game still use from it is kept here: the clock, the legs
-// between the places found along the fairways, the crew's rest, the rules at the places, the player's own catch marks, and who sails her.
+// between the places found along the fairways, the crew's rest, the rules at the places and the player's own catch marks.
 // A save with a plan of v3 or older is switched off with a word by plan2Ops (06g-plan2.js); the gear in the sea stays where it is.
-// Hand-overs (one line each): the files that call them were held by other sessions on 08.11.2026 (05-vessels.js opsStep, opsLanded,
-// driftWx; 03-simulation.js and 13-work.js opsSkipper; 10-gear.js and 06-services.js driftStock). They go when those calls are made
-// straight to plan2Step, plan2Landed and plan2Wx.
+// The callers go straight to Driftsplan 2 (plan2Step, plan2Landed, plan2Wx); who sails her when you are not aboard is actingSkipper in
+// 13-work.js (Ø12 D, 12.11.2026).
 const DRP = {bigLen:24, legsMax:240};
 const PLAN_KIND = {line:'line', garn:'garn', teiner:'teine'};
 const drKind = o => PLAN_KIND[o.rig] || null;
 const drJig = o => !drKind(o) || !!o.jig;
 const driftHod = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60; };
 const driftClock = h => { const x = ((h % 24) + 24) % 24, hh = Math.floor(x), mm = Math.round((x - hh) * 60); return String(mm === 60 ? (hh + 1) % 24 : hh).padStart(2, '0') + ':' + String(mm === 60 ? 0 : mm).padStart(2, '0'); };
-// who sails her: you when you are aboard, else the crew's skipper (13-work.js)
-function opsSkipper(){ return meAboard() ? null : crewSkipper(); }
-// the hand-overs to Driftsplan 2 (06h-plan2-engine.js, 06g-plan2.js)
-function opsStep(H){ plan2Step(H); }
-function opsLanded(pid, k){ plan2Landed(pid, k); }
-function driftWx(){ return plan2Wx(); }
-// the bunker and ice at the plant: all of it (a plan has no stock choices since 23.10.2026)
-function driftStock(){ return {ice:true, fuel:true, gear:true, bait:true}; }
 
 // ---- what a place gives: only what the player knows (Jonas 09.10.2026: the plan shows no expected catch; where the fish stand is found by
 // fishing). His own catch marks near the place (S.marks: the jig's kg an hour, the gear's kg a unit and its soak) from the last PLAN_MEMO

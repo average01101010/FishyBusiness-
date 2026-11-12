@@ -201,7 +201,7 @@ function effortOf(people, jk, hand, per = jigPer()){ return Math.max(0, people -
 function fishEffort(){
   // the people at the rail: those whose chain has them fishing (as if the boat were jigging where it lies)
   const hand = S.boat && S.boat.gear ? JIG.hand : 0, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * jigPer());
-  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
+  if (S.plan && S.plan.ops && !meAboard()){ const sk = actingSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
   return effortOf(people, jk, hand) * F.eff;
 }
 // your own share of the effort when you jig by hand at the rail (the jig game takes it over, ui/10-rod-acts.js): 0 when you are not

@@ -9,7 +9,7 @@ from _env import boot, HERE
 ROOT = os.path.dirname(HERE)
 from playwright.async_api import async_playwright
 SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, 2, 12, hour) - EPOCH) / 6e4);
-  b.type = t; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; S.equip = {}; S.jobs = []; S.cargo = []; b.gop = null; S.hold = []; S.pgear = newPGear(); b.rig = 'juksa';
+  b.type = t; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; b.fuel = VESSELS[t].fuelCap;   // (a full tank each scene: a slow run emptied it by the night pictures) S.equip = {}; S.jobs = []; S.cargo = []; b.gop = null; S.hold = []; S.pgear = newPGear(); b.rig = 'juksa';
   if (scene === 'dekk'){ const g = GROUNDS[0].p; S.crew = [Object.assign(genCrew(), {bi:false, off:false}), Object.assign(genCrew(), {bi:false, off:false})];
     b.rig = 'line'; S.pgear.lines.bank.n = 6; S.pgear.lines.bank.baited = 4; if (equipFits('linehaler', t)) S.equip.linehaler = true;
     S.hold = [{sp:'torsk', kg:260, gut:true, iced:true}, {sp:'torsk', kg:40, gut:false, iced:false}, {sp:'hyse', kg:30, gut:true, iced:true}];
@@ -40,14 +40,16 @@ async def main():
             # K2: the port stern quarter, higher, into the cockpit
             await pg.evaluate("(() => { const c = G3._debug.cam; c.dist = 11; c.pitch = 0.34; c.yaw = -0.7; })()"); await pg.wait_for_timeout(4000)
             await pg.screenshot(path=shot('akter', f), timeout=400000)
-            await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(4000)
+            # (the scene again before the helm: on a slow run the boat had reached the waypoint by the shore and lay still against the land)
+            await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.evaluate("G3.setHelm(true)"); await pg.wait_for_timeout(4000)
             await pg.screenshot(path=shot('bro', f), timeout=400000)
             await pg.evaluate("G3.setHelm(false)")
             # the work at sea: fishing on the ground, two hands, line rig, the catch
             await pg.evaluate(SET, [TYPE, 'dekk', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 8.5; c.pitch = 0.62; c.yaw = 0.9; })()"); await pg.wait_for_timeout(6000)
             await pg.screenshot(path=shot('dekk', f), timeout=400000)
-            # K6: K1 at night
-            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 13; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
+            # K6: K1 at night, from further off so the whole mast is in the picture and the white all-round light over it shows (OB10
+            # round 3: at 13 m the picture cut the mast, and the judge could not see the white)
+            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 22; c.pitch = 0.12; c.yaw = 2.5; })()"); await pg.wait_for_timeout(6000)
             await pg.screenshot(path=shot('natt', f), timeout=400000)
             # K6 from the port bow too: the red and the white, the green screened off
             await pg.evaluate("(() => { const c = G3._debug.cam; c.yaw = -2.5; })()"); await pg.wait_for_timeout(4000)

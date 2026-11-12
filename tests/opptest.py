@@ -246,16 +246,18 @@ async def opp2(pg, J, card):
     # the web shop's equipment still has the haulers (the tiers are bought at the counter)
     await pg.evaluate("DOCK.close(); PHONE.show(true); PHONE.open('home'); document.querySelector('#phone .ph-app[data-a=nett]').click(); document.querySelector('#phone .net-tile[data-s=shop]').click()"); await pg.wait_for_timeout(300)
     await pg.evaluate("const e = document.querySelector('#phone [data-pa=nettab][data-s=eq]'); if (e) e.click()"); await pg.wait_for_timeout(300)
-    r = json.loads(await J("{ks:[...document.querySelectorAll('#phone .ph-card.ic')].map(c => c.dataset.ic), txt:document.getElementById('phone').textContent}"))
-    check('garnhaler' in r['ks'] and 'teinehaler' in r['ks'] and not any(k in r['ks'] for k in ('jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv')) and 'NaN' not in r['txt'] and 'undefined' not in r['txt'], 'nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined', r['ks'])
+    # (the pot hauler only on a boat with room for pots: the one buy logic, buyGate and equipFits; the plastsjark here has none)
+    r = json.loads(await J("{ks:[...document.querySelectorAll('#phone .ph-card.ic')].map(c => c.dataset.ic), txt:document.getElementById('phone').textContent, pots:(VESSELS[S.boat.type].rigs || []).includes('teiner')}"))
+    check('garnhaler' in r['ks'] and ('teinehaler' in r['ks']) == r['pots'] and not any(k in r['ks'] for k in ('jukseLv', 'juksesett', 'linehalerLv', 'garnhalerLv')) and 'NaN' not in r['txt'] and 'undefined' not in r['txt'], 'nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined', r['ks'])
     await pg.evaluate("PHONE.show(false)")
 
     # pictures: the havsjark (room for five reels) with the hauler cards at tiers 1, 2 and 3 and the reels at tier 2, then «aboard»
     await pg.evaluate("""const b = S.boat; b.type = 'sjark'; S.equip = {jukse:5, jukseLv:2, linehaler:true, garnhaler:true, garnhalerLv:2, teinehaler:true, teinehalerLv:3, linesetter:true, linesetterLv:2, garnrenne:true, plotter:true, vhf:true, kniv:2, hott:3, juksesett:2}; S.jobs = []; applyVessel(); DOCK.open('fiske')"""); await pg.wait_for_timeout(400)
     cs = {k: json.loads(await card(k)) for k in ('linehalerLv', 'garnhalerLv', 'teinehalerLv', 'jukseLv', 'linesetterLv', 'juksesett')}
+    pots = json.loads(await J("(VESSELS[S.boat.type].rigs || []).includes('teiner')"))   # (the havsjark has no room for pots: no pot hauler card, whatever an old save holds)
     check(cs['linehalerLv'] and 'trinn 1 / 3' in cs['linehalerLv']['name'] and cs['garnhalerLv'] and 'trinn 2 / 3' in cs['garnhalerLv']['name'] and '3,2 min mot 4,0 (−20 %)' in cs['garnhalerLv']['fx'] and '95 000' in cs['garnhalerLv']['btn']
-      and cs['teinehalerLv'] and 'det beste' in cs['teinehalerLv']['have'] and '0,96 min mot 1,2' in cs['teinehalerLv']['fx'] and cs['jukseLv'] and 'Kjøp trinn 3' in cs['jukseLv']['btn'] and '120 000' in cs['jukseLv']['btn']
-      and cs['linesetterLv'] and 'det beste' in cs['linesetterLv']['have'] and cs['juksesett'] and 'det beste' in cs['juksesett']['have'], 'havsjarken: halerne på trinn 1, 2 og 3, juksamaskinene «Kjøp trinn 3 · 120 000 kr» for fem, linesetteren og juksasettene på øverste trinn', cs)
+      and ((cs['teinehalerLv'] and 'det beste' in cs['teinehalerLv']['have'] and '0,96 min mot 1,2' in cs['teinehalerLv']['fx']) if pots else cs['teinehalerLv'] is None) and cs['jukseLv'] and 'Kjøp trinn 3' in cs['jukseLv']['btn'] and '120 000' in cs['jukseLv']['btn']
+      and cs['linesetterLv'] and 'det beste' in cs['linesetterLv']['have'] and cs['juksesett'] and 'det beste' in cs['juksesett']['have'], 'havsjarken: halerne på trinn 1, 2 og 3 (teinehaleren bare med plass til teiner), juksamaskinene «Kjøp trinn 3 · 120 000 kr» for fem, linesetteren og juksasettene på øverste trinn', cs)
     await pg.evaluate("document.querySelector('#drawerBody [data-ic=jukseLv]').scrollIntoView({block:'start'})"); await pg.wait_for_timeout(200)
     await pg.screenshot(path='opp2_kort_liggende.png')
     await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
