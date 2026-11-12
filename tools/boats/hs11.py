@@ -1440,7 +1440,8 @@ def check():
     out.append(('haleporten %.2f m over dekket (%.2f-%.2f), ripa ellers %.2f' % (sill, HP0, HP1, z_sh(HXR) - ZMD), 0.4 <= sill <= 0.7))
     out.append(('haleren under det lange taket (%.2f-%.2f) ved x %.2f, %.2f m akter for styrhuset; karet %.2f m akter for haleren; dekkshuset %.2f m fra haleporten' % (X_SH, WX0, HXR, WX0 - HP1, HXR - TUB[0], -BOX[1] - 0.0),
                 X_SH < HP0 and WX0 - HP1 > 0.2 and HXR - TUB[0] > 0.5))
-    # the places against the game's own boxes (deckcrew.js kitBoxes, each padded 6 cm: the tub 0.72 x 1.08, the bench 0.62 x 1.6, the line
+    # the places against the game's own boxes (deckcrew.js kitBoxes, each padded 6 cm; the gear, the tubs, the nets and the cargo, 16 cm
+    # in the walking map from 9 m, OB10 round 4, checked for the way aft below: the tub 0.72 x 1.08, the bench 0.62 x 1.6, the line
     # tubs' block with eight aboard 1.02 x 2.02, the crane's foot 0.9 x 0.9, the net tub 1.0 x 1.2, a cargo unit 0.8 x 1.2), R a body's half width
     R = 0.25; bx = (TABLE[0] - 0.86, TABLE[0] + 0.86); by = (TABLE[1] - 0.37, TABLE[1] + 0.37); lx0, lx1, ld = LOCKER; lyi = min(ybw(lx0), ybw(lx1)) - 0.01 - ld
     tx = (TUB[0] - 0.60, TUB[0] + 0.60); ty = (TUB[1] - 0.42, TUB[1] + 0.42); sx0, sx1, sy0, sy1 = stamp_box(); gy = by[0] - R - 0.02
@@ -1457,6 +1458,10 @@ def check():
     sr0 = sy0 + 0.06 + 0.02                                  # the outer tubs' outside (the box is 1 cm wider than the tubs, and padded 6 cm)
     out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f langs lukas styrbord side akter for taket: %.2f m fra speilet, %.2f m dørk fra stampene til skansens fot (gangen akterut), ekte kar %.2f m fra lukekarmen; garnkaret og stampene står aldri om bord samtidig' % (sx0, sx1, sy1, sy0, sx0 - TT, ybw(1.2, -1) + sr0, -(sy1 - 0.07) - HOLD[3]),
                 sx0 > TT and sx1 < X_SH and ybw(1.2, -1) + sr0 >= 0.55 and -(sy1 - 0.07) - HOLD[3] >= 0.0))
+    # (and in the game's walking map, where the gear has 0.06 m and half a cell, 0.1, round it from 9 m (deckcrew.js gearBoxes): a row of
+    # cells of 0.2 m, its middles 0.1 m off the bulwark, must be left beside the tubs, or the way aft is shut; found in the review)
+    wg = ybw(1.2, -1) + sr0 - 0.16
+    out.append(('gangen akterut i spillets gangkart: %.2f m mellom stampene med polstringen (0,16 m) og skansens fot, minst 0,30 (en rad celler og skansens margin)' % wg, wg >= 0.30))
     out.append(('blødekaret x %.2f-%.2f, %.2f m fra skansens fot; dørken akter for det er fri langs styrbord ripe (taket ender ved x %.2f, karet ved %.2f: %.2f m under tak), og der legges og tømmes teina (ring 1,45 m ved x %.2f, y %.2f: %.2f m til dekkshuset, %.2f til skansen, %.2f til karet)' % (tx[0], tx[1], ybw(TUB[0], -1) + ty[0], X_SH, tx[0], tx[0] - X_SH, POT_SPOT[0], POT_SPOT[1], (-POT_SPOT[1] - 0.725) - (-BOX[1]), ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725, tx[0] - POT_SPOT[0] - 0.725),
                 ybw(TUB[0], -1) + ty[0] > 0.0 and (-POT_SPOT[1] - 0.725) - (-BOX[1]) > 0.0 and ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725 > 0.05 and tx[0] - POT_SPOT[0] - 0.725 > 0.0))
     out.append(('takstolpene på styrbord kappe ved x %.2f og %.2f (ingen på dørken): %.2f m fra blødekarets ende' % (POSTS[0], POSTS[1], POSTS[1] - tx[0]), all(not (HP0 - 0.1 < x < HP1 + 0.1) for x in POSTS)))

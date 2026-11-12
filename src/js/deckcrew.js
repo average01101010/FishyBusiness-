@@ -228,15 +228,23 @@ function crewSim(src){
     if (sig === ST.kitSig) return; ST.kitSig = sig; ST.KB = kitBoxes(); ST.M = overlay(ST.M0, ST.KB); ST.PL = null;
     // (the gear's wider padding, gearBoxes, may not take a work place: where the place the gear is set from, or a station, was clear
     // with the tight padding and is not with the wide, the tight one stands for this boat and gear: the snekke's tubs fill her deck)
+    // (and the stations and the place over the rail stay joined by a way over the deck as they were: the wider padding may not close a
+    // gangway, the way aft beside the tubs, found in the review)
     if (ST.M !== ST.M0 && !src){ const KT = fixedBoxes().concat(gearBoxes([], false, true)), MT = overlay(ST.M0, KT), PT = ST.PT || {};
-      const need = ['sloy', 'is', 'haling', 'door'].map(nm => PT[nm]).filter(q => q && q.k != null).map(q => q.k);
+      const stk = ['sloy', 'is', 'haling', 'door'].map(nm => PT[nm]).filter(q => q && q.k != null).map(q => q.k), need = stk.slice();
       for (const kind of ['line', 'garn']){ const O = setOver(kind); if (O && O.man) need.push(O.man.k); }
-      if (need.some(k => MT.ok(k) && !ST.M.ok(k))){ ST.KB = KT; ST.M = MT; }
+      const CT = deckComp(MT), CW = deckComp(ST.M), jt = need.filter(k => MT.ok(k)), apart = jt.some(k => !ST.M.ok(k) || (CT[k] === CT[jt[0]]) !== (CW[k] === CW[jt[0]]));
+      if (apart){ ST.KB = KT; ST.M = MT; }
       // (and while she sets: the one setting has a place with the wide padding, or the tight one stands)
       // (a place of his own: on the snekke the only one the wide padding left was the gutting station, and he stood looking on while
       // someone gutted there)
-      else { const gs = S.pgear ? rigGear().set : null, stn = need.map(k => ST.M0.at(k)), own = q => !!q && !stn.some(w => { const u = ST.M0.at(q.k); return Math.hypot(w[0] - u[0], w[2] - u[2]) < SEP; });
-        if (gs && !own(setPlace(gs, '-'))){ const MW = ST.M, KW = ST.KB; ST.M = MT; ST.KB = KT; if (!own(setPlace(gs, '-'))){ ST.M = MW; ST.KB = KW; } } } }
+      // (the stations only, not the place over the rail itself: setPlace gives that first where there is one; and without the crew's
+      // present places, TAKEN, so the choice is the deck's and not where they happened to stand)
+      else { const gs = S.pgear ? rigGear().set : null, stn = stk.map(k => ST.M0.at(k)), own = q => !!q && !stn.some(w => { const u = ST.M0.at(q.k); return Math.hypot(w[0] - u[0], w[2] - u[2]) < SEP; });
+        if (gs){ const T0 = new Map(TAKEN); TAKEN.clear();
+          if (!own(setPlace(gs, '-'))){ const MW = ST.M, KW = ST.KB; ST.M = MT; ST.KB = KT; if (!own(setPlace(gs, '-'))){ ST.M = MW; ST.KB = KW; } }
+          for (const [k, v] of T0) TAKEN.set(k, v); } } }
+    ST.KC = null;   // (the cells with gear in a body there, kitAt, worked out again for this map)
     for (const a of A) a.path = null;   // (the ways are found again over the new map)
   }
 
@@ -728,7 +736,7 @@ function crewSim(src){
       if (keep){ if (a.slot >= 0) (used[kind] || (used[kind] = new Set())).add(a.slot); if (!g.inside) TAKEN.set(g.k, id); } else pend.push([p, a, kind]); }
     // (OB10 runde 4: the one setting chooses first, and the gutter yields where the two places are one: on the snekke the only place
     // for the one setting line, with the tubs' true width, is the gutting station, and he stood looking on while someone gutted there)
-    const si = pend.findIndex(([p]) => p.role === 'sett'), yieldA = si >= 0 ? A.filter(a => a.st === 'sloy' && a.goal && !a.goal.inside && !pend.some(q => q[1] === a)) : [];
+    const si = pend.findIndex(([p]) => p.role === 'sett'), yieldA = si >= 0 ? A.filter(a => seen.has(a.id) && a.st === 'sloy' && a.goal && !a.goal.inside && !pend.some(q => q[1] === a)) : [];
     if (si > 0) pend.unshift(pend.splice(si, 1)[0]);
     for (const a of yieldA) if (TAKEN.get(a.goal.k) === a.id) TAKEN.delete(a.goal.k);
     for (const [p, a, kind] of pend){ let n = 0; const U = used[kind] || (used[kind] = new Set()); while (U.has(n)) n++; U.add(n);
@@ -884,7 +892,11 @@ function crewSim(src){
       for (const [cx, cz, hx, hz, ry, pd, gear] of B){ if (!gear) continue; const dx = px - cx, dz = pz - cz, c = Math.cos(ry), sn = Math.sin(ry); if (Math.abs(dx * c - dz * sn) < hx - (pd || 0) && Math.abs(dx * sn + dz * c) < hz - (pd || 0)){ n++; break; } } }
     return n; }
   // (and one place: the body there, moved off by off, in the kit; for the breaks, idlePlace)
-  function kitAt(k, off){ if (src || !ST.M0.ok(k)) return false; const p = ST.M0.at(k); return inKit(p[0] + (off ? off[0] : 0), p[2] + (off ? off[1] : 0)) > 0; }
+  // (without off it is looked up per cell, worked out once per map: clearOfKit and claim scan the whole deck, found in the review)
+  function kitAt(k, off){ if (src || !ST.M0.ok(k)) return false; const p = ST.M0.at(k);
+    if (off && (off[0] || off[1])) return inKit(p[0] + off[0], p[2] + off[1]) > 0;
+    const N = ST.M0.nx * ST.M0.nz; if (!ST.KC || ST.KC.length !== N){ ST.KC = new Int8Array(N).fill(-1); }
+    if (ST.KC[k] < 0) ST.KC[k] = inKit(p[0], p[2]) > 0 ? 1 : 0; return ST.KC[k] === 1; }
   // (the nearest free cell to k, a short walk from it, with no gear in the body: the place to stand when the rail has none, OB10 runde 4;
   // on the snekke with her nets aboard the gutting station stood 8 cm from the net tub)
   // (and clear of the work: 0.7 m from the stations, and while she sets 1.3 m from where the gear goes over, so it never takes the work's place)

@@ -889,6 +889,9 @@
     // buoys; before, all of it went away while she landed, and from above only the crew and the plant's tubs were left. The plant's tubs
     // are set down clear of all of it, deckcrew.js landSlots with fixedBoxes)
     if (b.status === 'aground') return;
+    // (only where the plant's tubs have places clear of the kit: a boat with no deck crew, or none found, sets them on the old fixed
+    // square, through the bench and the bleeding tub, and the kit stays out of the way as before; found in the review)
+    if (b.land && !b.land.own && b.land.kind === 'tub' && !(typeof CREW3D !== 'undefined' && CREW3D.on() && CREW3D.landSlots().length)) return;
     // where they stand: by the beam on the after deck, or where a detailed model says (the starter boat has a seat and a bench aft)
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;
     // a model with its own gutting table (work.own, the old wooden boat's across the gunwale) has it drawn already, the fish on its top;

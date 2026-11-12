@@ -291,9 +291,12 @@ async def record(o, fmt, outdir):
             except Exception: pass
             # (OB10 runde 4: her own crane moves at most 0.2 s of its motion a frame, drawCrane, and SwiftShader draws a frame in some
             # seconds here, so the three pictures were all taken while it still stood folded; they wait now until it stands unfolded)
+            # (on the slow clock while it waits, so the freight job, a fixed game time, does not end first: found in the review)
             if op in ('kran', 'krann'):
+                await pg.evaluate("__TK.set(0.1)")
                 try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
                 except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
+                await pg.evaluate("__TK.set(1)")
             # (the casting off is a game minute, 10 s, under one frame in ten at the game's own pace under SwiftShader: the pictures of it
             # on the slow clock, SLOWOPS, so the hands are seen walking to the cleats and taking the lines in)
             kk = SLOWOPS.get(op, 1.0) if o['bilder'] else 1.0
@@ -306,7 +309,7 @@ async def record(o, fmt, outdir):
                 for i, at in ((1, 0.15), (2, 0.5), (3, 0.85)):
                     left = sec * at - ran
                     if left > 0: await pg.wait_for_timeout(int(left * 1000 / kk)); ran += left
-                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += time.time() - t0
+                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += (time.time() - t0) * kk   # (in the page's seconds)
                     if i == 2: c1 = await pg.evaluate(CLIP)
                 t2 = time.time() - T0
                 b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
