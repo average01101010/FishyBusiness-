@@ -3251,3 +3251,8 @@
 2026-11-12 17:10	ccr-013bxxie-s107	519771e+	farttest	OK	547	lite	alene	
 2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
 2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
+2026-11-12 18:10	ccr-013bxxie-opp3	f05c900	unittest	OK	769	3d	alene	
+2026-11-12 18:11	ccr-013bxxie-opp3	f05c900	boottest	OK	34	lite	samtidig	
+2026-11-12 18:11	ccr-013bxxie-opp3	f05c900	yardupgtest	OK	15	lite	samtidig	
+2026-11-12 18:12	ccr-013bxxie-opp3	f05c900	opptest	OK	79	lite	samtidig	
+2026-11-12 18:12	ccr-013bxxie-opp3	f05c900	vesseltest	OK	25	lite	samtidig	
