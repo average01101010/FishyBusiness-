@@ -2947,3 +2947,16 @@
 2026-11-12 05:00	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	295	3d	alene	
 2026-11-12 05:06	ccr-899a9674-q3gjp0	455a897+	dbg23o	OK	48	3d	alene	
 2026-11-12 05:11	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	315	3d	alene	
+2026-11-12 05:32	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	149	3d	alene	avsluttet med kode 1
+2026-11-12 05:42	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	614	3d	alene	FEIL after she has glided back, the two pages have the same waves again where she stopped (within 2 cm) {'worst': 0.3141}
+2026-11-12 05:54	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	649	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 05:59	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	301	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 06:04	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	304	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': 0.00
+2026-11-12 06:13	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	500	3d	alene	FEIL after she has glided back, the two pages have the same waves again where she stopped (within 2 cm) {'worst': 0.0904}
+2026-11-12 06:23	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	607	3d	alene	FEIL after she has glided back, the two pages have the same waves again between the boats (within 2 cm) {'worst': 0.0559}
+2026-11-12 06:28	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	284	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 06:34	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	269	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, by more than half a metre in 10 s and no faster than 0.3 m/s (0.15 for the short tile) {'
+2026-11-12 06:42	ccr-899a9674-q3gjp0	38f6cad+	skumkant	OK	520	3d	alene	
+2026-11-12 06:51	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	OK	485	3d	alene	
+2026-11-12 07:04	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	OK	435	3d	alene	
+2026-11-12 07:06	ccr-899a9674-q3gjp0	38f6cad+	dbg23o	OK	45	3d	alene	

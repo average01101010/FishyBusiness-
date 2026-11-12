@@ -245,7 +245,7 @@
     // the waves' phases and their groups' phases at the render origin (wavePh), so the shaders work near zero
     const {ub, gp, gq} = wavePh(), nfp = new Float32Array(NF.ph);
     gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ub); gl.uniform1fv(u.uGp, gp); if (u.uFWa){ gl.uniform4fv(u.uFWa, WV.ua); gl.uniform4fv(u.uFWb, ub); gl.uniform1fv(u.uFGp, gp); } plSet(u);
-    if (u.uNFp){ gl.uniform1fv(u.uNFp, nfp); gl.uniform1fv(u.uNFg, gq); } if (u.uFNFp){ gl.uniform1fv(u.uFNFp, nfp); gl.uniform1fv(u.uFNFg, gq); } if (u.uNFD) gl.uniform2f(u.uNFD, NF.D[0], NF.D[1]); if (u.uNFL) gl.uniform2f(u.uNFL, NF.L[0], NF.L[1]);
+    if (u.uNFp){ gl.uniform1fv(u.uNFp, nfp); gl.uniform1fv(u.uNFg, gq); } if (u.uFNFp){ gl.uniform1fv(u.uFNFp, nfp); gl.uniform1fv(u.uFNFg, gq); } if (u.uNFD) gl.uniform2f(u.uNFD, NF.D[0], NF.D[1]);
     foamBind(u, t);   // the foam map (14-sea.js), in the near pass; and the sea by the shore (F4)
     gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u);
     gl.uniform3fv(u.uZen, env.zen); airSet(u); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.seaWind || env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);

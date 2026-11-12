@@ -4268,7 +4268,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 564 `mastTop(G)`
   - 568 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (629 linjer)
+## `src/js/view3d/14-sea.js` (647 linjer)
 
 ---------- sea ----------
 
@@ -4278,49 +4278,49 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **21** the waves: wind sea and swell from the sea model (03b-sea.js)
   - 35 `specW(L0)`
   - 42 `spreadSd(f, ia)`
-  - 48 `waveDTStep(dt)`
-  - 53 `updateWaves(dt, H)`
-- **121** the near field: the short sea rides with the boat
-  - 130 `nfStep()`
-- **168** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 175 `wakeTrack(x, z, fx, fz, ds)`
-  - 194 `wakeTU(u, ox, oz)`
-  - 195 `updateWake()`
-  - 221 `wakeHFast(x, z)`
-- **234** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 248 `foamFree()`
-  - 249 `foamInit()`
-  - 267 `wavePh()`
-  - 276 `foamStep(dt, t)`
-  - 344 `foamSplash(Dx, Dz)`
-  - 365 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 405 `foamBind(u, t)`
-  - 422 `grpAt(i, c, x, z, t)`
-- **454** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 469 `shoalPrep(J)`
-  - 470 `shoalCell(J, k, land, dd)`
-  - 474 `shoalSweep(J, end)`
-  - 488 `shoalPut(J)`
-  - 494 `shTex(u, v, out)`
-  - 501 `shoalAt(x, z)`
-  - 515 `shW(c, SH, out)`
-  - 521 `surfK(h)`
-  - 523 `surfStep(t)`
-  - 529 `shoalBind(u, t)`
-- **537** the sea state over the near terrain and the whole map
-  - 544 `ssLevel(n, unit)`
-  - 546 `ssRect(L)`
-  - 547 `ssWork(L, until)`
-  - 570 `ssStep(rdt)`
-  - 572 `ssBlend(L)`
-  - 574 `ssTex(L, x, z, out)`
-  - 581 `ssAt(x, z)`
-  - 591 `seaQ(S, ren)`
-  - 594 `seaDisp(x, z, t, S, fade, SH)`
-  - 618 `seaFade(x, z)`
-  - 619 `seaH(x, z, t)`
-  - 625 `seaHFast(x, z, t)`
-  - 627 `shoalHere(x, z)`
+  - 50 `waveDTStep(dt)`
+  - 56 `updateWaves(dt, H)`
+- **137** the near field: the short sea rides with the boat
+  - 146 `nfStep()`
+- **184** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 191 `wakeTrack(x, z, fx, fz, ds)`
+  - 210 `wakeTU(u, ox, oz)`
+  - 211 `updateWake()`
+  - 237 `wakeHFast(x, z)`
+- **250** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 264 `foamFree()`
+  - 265 `foamInit()`
+  - 283 `wavePh()`
+  - 293 `foamStep(dt, t)`
+  - 361 `foamSplash(Dx, Dz)`
+  - 382 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 422 `foamBind(u, t)`
+  - 439 `grpAt(i, c, x, z, t)`
+- **472** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 487 `shoalPrep(J)`
+  - 488 `shoalCell(J, k, land, dd)`
+  - 492 `shoalSweep(J, end)`
+  - 506 `shoalPut(J)`
+  - 512 `shTex(u, v, out)`
+  - 519 `shoalAt(x, z)`
+  - 533 `shW(c, SH, out)`
+  - 539 `surfK(h)`
+  - 541 `surfStep(t)`
+  - 547 `shoalBind(u, t)`
+- **555** the sea state over the near terrain and the whole map
+  - 562 `ssLevel(n, unit)`
+  - 564 `ssRect(L)`
+  - 565 `ssWork(L, until)`
+  - 588 `ssStep(rdt)`
+  - 590 `ssBlend(L)`
+  - 592 `ssTex(L, x, z, out)`
+  - 599 `ssAt(x, z)`
+  - 609 `seaQ(S, ren)`
+  - 612 `seaDisp(x, z, t, S, fade, SH)`
+  - 636 `seaFade(x, z)`
+  - 637 `seaH(x, z, t)`
+  - 643 `seaHFast(x, z, t)`
+  - 645 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (167 linjer)
 

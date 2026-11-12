@@ -24,7 +24,7 @@
   const WL = [96, 67, 49, 36.5, 27.5, 20.5, 15.3, 11.4, 8.6, 6.4], WOFF = [0, -0.75, 0.8, -1.2, 0.45, 1.25, -0.4, 1.4, -1.0, 0.6], WPH = [0, 2.1, 4.4, 1.3, 5.6, 3.2, 0.7, 4.9, 2.6, 5.9];
   // the swell: three long waves around its peak wavelength (deep water L = 1.56 T^2), from its own direction
   const SWL = [0.8, 1.0, 1.25], SWW = [0.55, 1, 0.6], SWOFF = [-0.14, 0, 0.17], SWPH = [1.7, 4.2, 0.4];
-  const WV = {G:new Float64Array(13), dT:0, dTi:false, A:[0, 0], hs:0.3, W:5, dir:0, swHs:0, swDir:0, swTp:10, init:false, list:[], ph:[], kd:[], ua:new Float32Array(52), ub:new Float32Array(52), C:0, cap:0, lnFcap:1, dot:1, steep:0.3, KO:0, KY:0, ia:1, loc:[0.3, 0, 1, 1]};
+  const WV = {G:new Float64Array(13), GU:new Float64Array(13), GV:new Float64Array(13), GS:new Float64Array(13), dT:0, dTi:false, A:[0, 0], hs:0.3, W:5, dir:0, swHs:0, swDir:0, swTp:10, init:false, list:[], ph:[], kd:[], ua:new Float32Array(52), ub:new Float32Array(52), C:0, cap:0, lnFcap:1, dot:1, steep:0.3, KO:0, KY:0, ia:1, loc:[0.3, 0, 1, 1]};
   // The wind sea's spectrum (Fysikk 4, F3, 07.11.2026; before, a log-normal bump 0.75 wide in ln L with a floor of 0.06 for the short
   // waves): JONSWAP (Hasselmann et al. 1973), S(w) ~ w^-5 exp(-5/4 (wp/w)^4) gamma^r, r = exp(-(w - wp)^2 / (2 sig^2 wp^2)), gamma
   // 3.3, sig 0.07 below the peak and 0.09 above. Each component carries the energy of its own band, a = sqrt(2 S(w) dw), dw from its
@@ -42,12 +42,15 @@
   function spreadSd(f, ia){ const s = f < 1.05 ? 6.97 * Math.pow(f, 4.06) : 9.77 * Math.pow(f, -2.33 - 1.45 * (clamp(ia, 0.6, 4) - 1.17)); return Math.sqrt(2 / (s + 1)); }
   const CURV = {on:!/cur0/.test(location.hash), t:-9, to:[0, 0], u:[0, 0], r:1, fix:null};   // (fix: [x, z] m/s everywhere, for sea3d)
   WV.cur = CURV;
-  // the world's clock in real seconds for the waves (B4): the view's seconds (t, from T0) plus WV.dT, eased toward worldNow() so that a
-  // correction from the server bends the waves' time by at most 2 % for a moment instead of jumping it (a first offset, or one over 30 s,
-  // is taken at once)
+  // the world's clock in real seconds for the waves (B4): the view's seconds (t, from T0) plus WV.dT, eased toward the shared clock so
+  // that a correction bends the waves' time by at most 5 % for a moment instead of jumping it (a first offset, or one over 30 s, is
+  // taken at once). The shared clock is the real-time relay's (RT.off, 10h-world.js: its own clock less the smallest delay seen, some
+  // tens of ms between devices) where it is connected; else worldNow(), the page's Date header, good to a second or two (the kontroll
+  // 12.11.2026: a second is a radian or more for the short waves)
   function waveDTStep(dt){
-    const tl = (performance.now() - T0) / 1000, tg = (typeof worldNow === 'function' ? worldNow() : Date.now()) / 1000 - tl;
-    if (!WV.dTi || Math.abs(tg - WV.dT) > 30){ WV.dT = tg; WV.dTi = true; } else WV.dT += clamp(tg - WV.dT, -0.02 * dt, 0.02 * dt);
+    const tl = (performance.now() - T0) / 1000, rt = typeof RT !== 'undefined' && RT && RT.off != null;
+    const tg = (rt ? performance.now() + RT.off : typeof worldNow === 'function' ? worldNow() : Date.now()) / 1000 - tl;
+    if (!WV.dTi || Math.abs(tg - WV.dT) > 30){ WV.dT = tg; WV.dTi = true; } else WV.dT += clamp(tg - WV.dT, -0.05 * dt, 0.05 * dt);
   }
   const waveT = () => (performance.now() - T0) / 1000 + WV.dT;
   function updateWaves(dt, H){
@@ -74,7 +77,7 @@
     WV.ia = fresh ? iaT : lerp(WV.ia, iaT, k); const wpB = 2 * Math.PI / Tb; WV.Tb = Tb;   // (Tb: the wind sea's peak period at the boat, for the surf, F4)
     const L = [];
     WL.forEach((Lw, i) => { const kk = 2 * Math.PI / Lw, ang = WV.dir + clamp(WOFF[i] * spreadSd(JW[i] / wpB, WV.ia), -1.25, 1.25); L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:wo[i], wy:wy[i], swell:0, om:Math.sqrt(9.81 * kk), ph0:WPH[i]}); });
-    const sn = Math.sqrt(SWW.reduce((a, c) => a + c * c, 0)) * 2.828, Tq = Math.max(1, Math.round(WV.swTp * 4) / 4), Ls = 1.56 * Tq * Tq;   // (B4: the swell's period in steps of 0.25 s, so its frequency is the same for everyone between the steps)
+    const sn = Math.sqrt(SWW.reduce((a, c) => a + c * c, 0)) * 2.828, Tq = Math.max(1, Math.round(WV.swTp * 100) / 100), Ls = 1.56 * Tq * Tq;   // (B4: the swell's period in steps of 0.01 s, so its frequency is the same for everyone between the steps; a step moves a crest 500 m off by some 0.04 rad)
     SWL.forEach((m, j) => { const kk = 2 * Math.PI / (Ls * m), ang = WV.swDir + SWOFF[j]; L.push({Dx:Math.sin(ang), Dz:-Math.cos(ang), k:kk, wo:SWW[j] / sn, wy:SWW[j] / sn, swell:1, om:Math.sqrt(9.81 * kk), ph0:SWPH[j]}); });
     // The stream on the waves (Fysikk 4, F8b, 11.11.2026): each wave keeps its frequency and takes the wavenumber and the height the
     // stream along its way gives it (curWave, 03b-sea.js: (om - k U)^2 = g k and the wave action), so a sea against the stream is shorter
@@ -99,18 +102,31 @@
     env.seaWind = WV.W * (CURV.on ? Math.pow(CURV.r, 0.6) : 1);
     // as a wave turns or lengthens, its phase is held where the boat is, so the sea does not slide past her (the map is 80 km across)
     // B4 (Bølgene, 12.11.2026): the same sea for everyone. Each wave's phase is G - w tw + k.x with tw the world's clock in real seconds
-    // (waveDT: the world's seconds less the view's, eased so a clock fetched from the server never jumps the waves), and the shared rule
-    // is G* = ph0 - k.A, A the corner of the 2 km cell the boat is in. G is held where the boat is when a wave turns or lengthens, as
-    // before (now also for its frequency, against the world's clock), and glides to G* the short way, no faster than 0.3 m/s or a tenth
-    // of the wave's speed, and only as she slows (NF.gl, nfStep): in full way she keeps her own sea, lying still she is in everyone's.
+    // (waveDT: the world's seconds less the view's), and its groups' are GU, GV (grpW, the wind waves) or GS (grpOf, the swell) the same
+    // way. The shared rule puts each at its value for the corner A of the 2 km cell the boat is in (G* = ph0 - k.A, and so on). Each is
+    // held where the boat is when the wave turns or its frequency changes (against the world's clock), so nothing jumps there, and glides
+    // to the shared rule the short way, no faster than 0.3 m/s or a tenth of the wave's speed, and only as she slows (NF.gl, nfStep): in
+    // full way she keeps her own sea, lying still she is in everyone's; crossing into a new cell moves the rule, never the sea. The near
+    // field's offsets of the frame (NF.ph, NF.gu, NF.gv, NF.gp: this frame's step under way) are folded in first, so one glide moves the
+    // whole of her own sea (the kontroll 12.11.2026: two glides on one phase could add up to 0.6 m/s and go the long way round).
     // c.ph is what the shaders and seaDisp add to k.x - w t (t, the view's seconds): G - w waveDT, worked out in doubles modulo 2 pi.
-    const A = WV.A = [Math.round(bv.x / 2000) * 2000, Math.round(bv.z / 2000) * 2000], tw = waveT(), TAU = 2 * Math.PI, md = v => ((v % TAU) + TAU) % TAU;
+    const A = WV.A = [Math.round(bv.x / 2000) * 2000, Math.round(bv.z / 2000) * 2000], tw = waveT(), TAU = 2 * Math.PI, md = (v, P = TAU) => ((v % P) + P) % P;
+    const glide = (v, tg, P, st) => { let d = md(tg - v, P); if (d > P / 2) d -= P; return md(v + clamp(d, -st, st), P); };
     // (a jump, a teleport or the first frame at a place: the shared sea at once, as nothing she saw is carried over)
     const jump = !WV.lb || Math.hypot(bv.x - WV.lb[0], bv.z - WV.lb[1]) > 300; WV.lb = [bv.x, bv.z];
+    const pn = performance.now() / 1000, rdt = WV.lt ? clamp(pn - WV.lt, 0, 30) : 0; WV.lt = pn;   // (the glide in real seconds: a slow frame glides as far as its time)
     if (jump){ NF.ph.fill(0); NF.gp.fill(0); NF.gu.fill(0); NF.gv.fill(0); NF.O.fill(0); }
-    L.forEach((c, i) => { const kx = c.k * c.Dx, kz = c.k * c.Dz, Gs = md(c.ph0 - kx * A[0] - kz * A[1]);
-      if (WV.kd[i] && !jump) WV.G[i] = md(WV.G[i] + (WV.kd[i][0] - kx) * bv.x + (WV.kd[i][1] - kz) * bv.z + (c.om - WV.kd[i][2]) * tw); else WV.G[i] = Gs;
-      { let d = md(Gs - WV.G[i]); if (d > Math.PI) d -= TAU; const st = c.k * Math.min(0.3, 0.1 * c.om / c.k) * dt * (NF.gl || 0); WV.G[i] = md(WV.G[i] + clamp(d, -st, st)); }
+    L.forEach((c, i) => { const kx = c.k * c.Dx, kz = c.k * c.Dz, ra = c.Dx * A[0] + c.Dz * A[1], rg = c.Dz * A[0] - c.Dx * A[1];
+      const Gs = md(c.ph0 - c.k * ra), GUs = md(-0.09 * c.k * ra + 1.7 * i, 2 * TAU), GVs = md(-0.19 * c.k * rg + 2.3 * i, 2 * TAU), GSs = md(-c.k * (0.083 * ra + 0.041 * rg) + 2.59 * i);
+      const K = WV.kd[i];
+      if (K && !jump){ const ax = K[0] - kx, az = K[1] - kz, dw = c.om - K[2], along = ax * bv.x + az * bv.z, across = az * bv.x - ax * bv.z;
+        WV.G[i] = md(WV.G[i] + along + dw * tw - NF.ph[i]);
+        WV.GU[i] = md(WV.GU[i] + 0.09 * along + 0.045 * dw * tw + NF.gu[i], 2 * TAU); WV.GV[i] = md(WV.GV[i] + 0.19 * across + NF.gv[i], 2 * TAU);
+        WV.GS[i] = md(WV.GS[i] + 0.083 * along + 0.041 * across + 0.0415 * dw * tw - NF.gp[i]);
+        const vm = Math.min(0.3, 0.1 * c.om / c.k) * rdt * (NF.gl || 0);
+        WV.G[i] = glide(WV.G[i], Gs, TAU, c.k * vm); WV.GU[i] = glide(WV.GU[i], GUs, 2 * TAU, 0.09 * c.k * vm); WV.GV[i] = glide(WV.GV[i], GVs, 2 * TAU, 0.19 * c.k * vm); WV.GS[i] = glide(WV.GS[i], GSs, TAU, 0.1 * c.k * vm); }
+      else { WV.G[i] = Gs; WV.GU[i] = GUs; WV.GV[i] = GVs; WV.GS[i] = GSs; }
+      NF.ph[i] = NF.gu[i] = NF.gv[i] = NF.gp[i] = 0;
       WV.kd[i] = [kx, kz, c.om]; c.ph = md(WV.G[i] - c.om * WV.dT); WV.ph[i] = c.ph; WV.ua.set([c.Dx, c.Dz, c.k, c.wo], i * 4); WV.ub.set([c.swell, c.om, c.ph, c.wy], i * 4); });
     WV.list = L;
     // the same at the boat: for the vertex shader on a GPU that cannot read textures there, and until the textures are ready
@@ -126,7 +142,7 @@
   // the foam (wrapped at 64 km, when she is slow). The long waves and the swell stand in the world, so land, buoys and other boats
   // still pass at the game's speed, and what passes the hull passes at her real speed through the water. «#nf0» in the address turns
   // it off, for the comparison.
-  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), gl:1, lt:0, D:new Float64Array(2), L:new Float64Array(2), lx:null, lz:null, R:0};
+  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
   function nfStep(){
     const TAU = 2 * Math.PI, now = performance.now() / 1000, dtr = NF.lt ? Math.max(0, now - NF.lt) : 0, dtn = Math.min(dtr, 0.25); NF.lt = now;
     const dx = NF.lx == null ? 0 : bv.px - NF.lx, dz = NF.lz == null ? 0 : bv.pz - NF.lz; NF.lx = bv.px; NF.lz = bv.pz;
@@ -136,7 +152,10 @@
     // through the water, 0.5 to 2.5 m/s), smoothly between, so there is never a moment the sea «changes»
     const vr = dtr > 0 && Math.hypot(dx, dz) < 300 ? Math.hypot(dx, dz) / dtr / Math.max(rate, 1) : 0; NF.gl = 1 - sstep(0.5, 2.5, vr);
     if (NF.R && Math.hypot(dx, dz) <= 300){   // (off, real time, or a jump (a teleport, a new place): the field stays)
-      const ex = dx * NF.R, ez = dz * NF.R;
+      // (B4: the near field only as she has way on, by the same smooth measure as the glide: a boat lying still and drifting with the wind
+      // and the stream is carried through the shared sea, else her drift, six times the real one, would push her own sea away from it
+      // faster than it glides back; the fresh test 12.11.2026)
+      const ex = dx * NF.R * (1 - NF.gl), ez = dz * NF.R * (1 - NF.gl);
       // the long waves (0-3) and the swell (10-12) too (09.11.2026: before, they stood in the world, so she met the swell six times too
       // fast, pitching every 4 s instead of 8 in a 150 m head swell and running away from it in a following one), but only away from
       // land: within 0.4 km of the shore they stand still in the world, from 1.5 km they go with the boat, so the surf on a beach never
@@ -148,18 +167,15 @@
         NF.ph[i] = (NF.ph[i] + c.k * a) % TAU; NF.gp[i] = (NF.gp[i] + c.k * (0.083 * a + 0.041 * g)) % TAU;
         // (the wind waves' groups, grpW: the same shift in their own two coordinates, folded modulo 4 pi)
         NF.gu[i] = (NF.gu[i] - 0.09 * c.k * a) % (2 * TAU); NF.gv[i] = (NF.gv[i] - 0.19 * c.k * g) % (2 * TAU); }
-      NF.D[0] += ex; NF.D[1] += ez; NF.L[0] += ex * lf; NF.L[1] += ez * lf;
+      NF.D[0] += ex; NF.D[1] += ez;
       // (the FFT tiles' own offsets, 14b-fft.js: the short sea rides with her in full, each tile's offset kept within half a tile)
       for (let k = 0; k < 2; k++){ const Lt = HFFT.tiles[k].L; NF.O[k * 2] += ex; NF.O[k * 2 + 1] += ez; for (let q = 0; q < 2; q++){ const o = k * 2 + q; NF.O[o] -= Lt * Math.round(NF.O[o] / Lt); } }
       for (let k = 0; k < 2; k++) if (Math.abs(NF.D[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.D[k]) > 120000)) NF.D[k] -= Math.sign(NF.D[k]) * 65536;
-      for (let k = 0; k < 2; k++) if (Math.abs(NF.L[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.L[k]) > 120000)) NF.L[k] -= Math.sign(NF.L[k]) * 65536;
     }
     // B4: the glide back to the shared sea, the short way, no faster than 0.3 m/s and a tenth of each wave's speed (0.15 m/s for the short
     // tile, whose waves are slow): a wave's phase, its group's two offsets, the swell's groups and the tiles' offsets
-    if (NF.gl > 0 && dtn > 0){ const g = NF.gl * dtn, wr = (v, P) => { v %= P; if (v > P / 2) v -= P; if (v < -P / 2) v += P; return v; }, tw = (v, st) => v > 0 ? Math.max(0, v - st) : Math.min(0, v + st);
-      for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const vm = Math.min(0.3, 0.1 * c.om / c.k) * g;
-        NF.ph[i] = tw(wr(NF.ph[i], TAU), c.k * vm); NF.gp[i] = tw(wr(NF.gp[i], TAU), 0.1 * c.k * vm);
-        NF.gu[i] = tw(wr(NF.gu[i], 2 * TAU), 0.09 * c.k * vm); NF.gv[i] = tw(wr(NF.gv[i], 2 * TAU), 0.19 * c.k * vm); }
+    // (the waves' and groups' own offsets are folded into WV.G and the rest each frame and glide there, updateWaves; here the tiles')
+    if (NF.gl > 0 && dtr > 0){ const g = NF.gl * Math.min(dtr, 30);
       for (let k = 0; k < 2; k++){ const vm = (k ? 0.15 : 0.3) * g, ox = NF.O[k * 2], oz = NF.O[k * 2 + 1], d = Math.hypot(ox, oz);
         if (d > 0){ const s = Math.max(0, d - vm) / d; NF.O[k * 2] = ox * s; NF.O[k * 2 + 1] = oz * s; } } }
   }
@@ -265,13 +281,14 @@
   // (B4: and the groups' offsets in the world's frame from the shared anchor and the world's clock, with the boat's own near-field
   // offsets: gp is the wind waves' grpW first offset, or the swell's whole group phase; gq the wind waves' second offset, 0 for the swell)
   function wavePh(){
-    const ub = WV.ub.slice(), gp = new Float32Array(13), gq = new Float32Array(13), TAU = 2 * Math.PI, A = WV.A, dT = WV.dT;
-    for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const a = c.Dx * RO.x + c.Dz * RO.z, ra = c.Dx * (RO.x - A[0]) + c.Dz * (RO.z - A[1]), rg = c.Dz * (RO.x - A[0]) - c.Dx * (RO.z - A[1]);
+    const ub = WV.ub.slice(), gp = new Float32Array(13), gq = new Float32Array(13), TAU = 2 * Math.PI, dT = WV.dT;
+    for (let i = 0; i < 13; i++){ const c = WV.list[i]; if (!c) continue; const a = c.Dx * RO.x + c.Dz * RO.z, g = c.Dz * RO.x - c.Dx * RO.z;
       ub[i * 4 + 2] = (c.ph + c.k * a) % TAU;
-      if (i < 10){ gp[i] = (0.09 * (c.k * ra - 0.5 * c.om * dT) + 1.7 * i + NF.gu[i]) % (2 * TAU); gq[i] = (0.19 * c.k * rg + 2.3 * i + NF.gv[i]) % (2 * TAU); }
-      else gp[i] = (i * 2.59 + c.k * (0.083 * ra + 0.041 * rg) - 0.0415 * c.om * dT - NF.gp[i]) % TAU; }
+      if (i < 10){ gp[i] = (0.09 * (c.k * a - 0.5 * c.om * dT) + WV.GU[i] + NF.gu[i]) % (2 * TAU); gq[i] = (0.19 * c.k * g + WV.GV[i] + NF.gv[i]) % (2 * TAU); }
+      else gp[i] = (c.k * (0.083 * a + 0.041 * g) - 0.0415 * c.om * dT + WV.GS[i] - NF.gp[i]) % TAU; }
     return {ub, gp, gq};
   }
+
   // one frame of the map: the window after the boat, the birth windows rolled, the old map shifted in and this frame's foam added
   function foamStep(dt, t){
     if (!FOAM.on) return; if (FOAM.ok && foamSize() !== FOAM.N) foamInit(); if (!FOAM.ok || !WV.list.length){ FOAM.spc = 0; return; }   // (no landings kept for later)
@@ -317,7 +334,7 @@
     gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, lon ? LMTEX : SSDUMMY); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0);
     if (lon) gl.uniform4fv(u.uLRect, [LRECT[0] - RO.x, LRECT[1] - RO.z, LRECT[2], LRECT[3]]);
     gl.uniform4fv(u.uFoamRect, [FOAM.ox - RO.x, FOAM.oz - RO.z, 1 / M, M]); gl.uniform4fv(u.uFoamT, [FOAM.now[0], FOAM.win[0], FOAM.tau[0], 0]); gl.uniform4fv(u.uFoamTc, [FOAM.now[1], FOAM.win[1], FOAM.tau[1], 0]);
-    gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); if (u.uNFL != null) gl.uniform2f(u.uNFL, NF.L[0], NF.L[1]); gl.uniform1f(u.uWind, env.seaWind || env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
+    gl.uniform1f(u.uTime, t); gl.uniform2f(u.uNFD, Dx, Dz); gl.uniform1f(u.uWind, env.seaWind || env.wind || 0); gl.uniform2fv(u.uWindDir, env.windDir || [0, 1]);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
     if (typeof fftBind === 'function') fftBind(u, [bv.x, 0, bv.z]);   // (B3: the tiles for the crests that break)
@@ -420,11 +437,12 @@
   FOAM.capK = WCAP.k; FOAM.wcap = WCAP;   // (WCAP for the tests: sea3d's share, and a threshold set wrong on purpose to see it red)
   // the wind waves' groups (grpW in 01-shaders.js) and the swell's (grpOf), as the shaders have them
   function grpAt(i, c, x, z, t){
-    const A = WV.A, rx = x - A[0], rz = z - A[1], a = c.Dx * rx + c.Dz * rz, g = c.Dz * rx - c.Dx * rz, tw = t + WV.dT;
-    if (i >= 10) return 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + i * 2.59 - NF.gp[i]);
-    const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + 1.7 * i + NF.gu[i], v = 0.19 * c.k * g + 2.3 * i + NF.gv[i];
+    const a = c.Dx * x + c.Dz * z, g = c.Dz * x - c.Dx * z, tw = t + WV.dT;
+    if (i >= 10) return 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + WV.GS[i] - NF.gp[i]);
+    const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + WV.GU[i] + NF.gu[i], v = 0.19 * c.k * g + WV.GV[i] + NF.gv[i];
     return 1.352 * Math.sin(u + 1.3 * Math.sin(0.5 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.5 * u + 2.1 * i));
   }
+
 
   FOAM.capAt = (x, z, t, fine = 1, U = env.seaWind || env.wind || 0, kk = WCAP.k, mid = 1) => {
     const S = ssAt(x, z), dv = S[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05)), Qw = seaQ(S, ren);
