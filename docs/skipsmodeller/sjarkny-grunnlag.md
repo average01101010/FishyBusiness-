@@ -350,3 +350,19 @@ Steg 88 runde 4, arbeidsrutinen på grenen `plan/2026-11-12-88` (PR #69), etter 
 **Fra gjennomgangen og kontrollen, rettet:** den brede polstringen stenger ingen gang (sammenhengen i gangkartet sjekkes, ellers gjelder den smale); en på pause som ikke finner en rekkeplass uten redskap, står ved sløyeplassen i stedet for å bli borte (`lookClear`, ny sjekk i `crewclip`, sett rød på plastsjarken); opptaket teller tida et bilde tar riktig på den langsomme klokka, og venter bare på kranen der båten har en kranplass. **Ikke rettet, med grunn:** `check()` krever nå 0,55 m gang målt til stampene selv (før 0,60 til en boks som sto 12 cm inne i stampene; den virkelige gangen var 0,63 og er 0,58), og stampene står inntil lukekarmen uten margin (rundt 6 mm til lokkets kant ved lokkets høyde); kranens foldede bom og utstyret over hekken er ikke med i `landSlots` (ingen av mottakets kar sto under dem i noen av bildene); pall- og gamle `box`-lossinger tegner nå utstyret (ingen pall-lossing på kystbåtene uten luke).
 
 **Ikke gjort i runden (punkt 4 i 10.12):** den som hviler, står fortsatt ved ripa, og redskapet hopper fra haleren til akterdekket; «kast loss» viser nå henne ved kaia mens trossene tas inn, men ingen ses ved trossene: kameraet står om styrbord og kaia er om babord, og om hendene står ved klampene der, er ikke målt (opptaket skriver ikke ut fortøyningsrollene).
+
+### 10.14 Karakteren etter runde 4: 75/100, ferdig
+
+Satt 12.11.2026 av en ny uavhengig underagent med samme grunnlag som i runde 3: 26 ark fra arbeidet om bord (tre bilder per operasjon i begge formater, det endelige bygget), 14 bilder fra spillet (`tests/hs11shot.py`, `TAG=etter`), 30 rendringer (`qa/hs11_wle.py` og `qa/hs11_uv.py`), `check()`-utskriften (46 linjer, alle OK) og skalaen. Den fikk ikke tidligere karakterer eller denne teksten.
+
+| Punkt | Vekt | Runde 3 | Runde 4 | Sensorens begrunnelse (kort) |
+|---|---|---|---|---|
+| Skrogutforming | 20 | 14 | 14 | Én flate, jevne linjer, dyse med sko, slingrekjøl og anoder. Trekk: roret leses fortsatt som en flat plate fra siden og stikker akter for speilet; baugen nesten halvrund ovenfra |
+| Detaljer | 20 | 12 | 16 | Rustrenner ved lensportene, dypgangsmerker, leider, sotring, haleport, pullerter, vinsj, riflet dørk. Trekk: ingen sveisesømmer eller buler, ingen fendere, slitasjen ensidig, dashbordets instrumenter flate felt |
+| Lanterner | 5 | 4 | 4 | Riktig fra hver baug, fiskelysene rødt over hvitt. Trekk: små i spillets nattbilder, hekklyset ikke vist om natta |
+| Styrhus | 10 | 7 | 8 | Store ruter, instrumenter, gass, ekkolodd og plotter, godt utsyn. Trekk: stående format viser én rute fra roret, brede stolper |
+| Arbeidsflyt | 25 | 13 | 18 | Operasjonene henger logisk sammen, haling, setting, teiner, juksa, sløying, lossing og is med kranen. Trekk: trangt, og i noen ark kan ikke sensoren avgjøre om figurene går i hverandre (`garn_sett`, `juksa_sloy`, `felles_kulde`, `felles_ryddn`); flagget i hekken i den akterste juksamannen |
+| Utforming av dekk | 20 | 13 | 15 | Tydelige plasser. Trekk: trangt (gangen forbi stampene 0,42 m i gangkartet), en teinestabel på luka, kort åpent akterdekk |
+| **Sum** | **100** | **63** | **75** | Godkjent, akkurat på grensen |
+
+**Min egen vurdering.** Opptaket skriver ut for hvert bilde om noen står gjennom modellen, i redskapet eller utenfor dekket, og ingen av de 52 klippene har noe av det ved de to målingene per klipp (midt i og på slutten); at figurene «kan se ut» til å gå i hverandre i `garn_sett`, `juksa_sloy` og `felles_kulde`, er det sensoren ikke kunne avgjøre i arkenes oppløsning, ikke noe sjekken fant. Det sensoren trakk for ellers, er kjent fra før og står i grunnlaget (roret sett fra siden, baugen, flagget i arbeidshjørnet, det trange dekket). Med 75 er steget ferdig etter Jonas' grense; det som kunne løfte henne videre, er listen over i prioritert rekkefølge, og det er ikke et nytt steg.
