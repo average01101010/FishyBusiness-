@@ -66,7 +66,7 @@ Alt bygges for hele kysten. Hver endring skal kunne leses av i trakten (punkt 9)
 
 **Kappløp og tidsløp** (Jonas 12.11.2026, ikke planlagt ennå): for eksempel den raskeste tida Lindesnes–Nordkapp med små oppdrag langs veien. Hopp over ruta er ikke lov i løpet. Trim er lov (Jonas: «Trim skal være lov. Tanken er at oppgavene som kommer underveis i løpet kan være x-faktoren som gjør det mer spennende og balanserer spillet.»).
 
-**Hopp over resten av ruta** (Jonas 12.11.2026, plan i `docs/planer/hopp.md`, venter på valgene og «kjør på»).
+**Hopp over resten av ruta** (Jonas 12.11.2026, plan i `docs/planer/hopp.md`, valgene tatt, venter på «kjør på»).
 
 **Vurderes senere:** fiskarlag per hjemhavn (felles ukemål og oppslag, aldri slik at én spillers fravær skader andre), innholdsutvidelser som havsteget med blåkveite (legitimt så lenge grunnspillet føles komplett), abonnement («Rederi-medlemskap») med bekvemmeligheter der ingenting går tapt ved oppsigelse (vent til betalingsviljen for kosmetikk er kjent).
 
