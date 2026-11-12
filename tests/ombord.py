@@ -283,6 +283,11 @@ async def record(o, fmt, outdir):
             try:
                 await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 3; }", arg=[o['boat'], n0], timeout=120000)
             except Exception: pass
+            # (OB10 runde 4: her own crane moves at most 0.2 s of its motion a frame, drawCrane, and SwiftShader draws a frame in some
+            # seconds here, so the three pictures were all taken while it still stood folded; they wait now until it stands unfolded)
+            if op in ('kran', 'krann'):
+                try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
+                except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             if o['bilder']:
                 # pictures only (--bilder): the game's own clock, a screenshot at 15, 50 and 85 % of the operation's seconds
