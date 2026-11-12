@@ -757,7 +757,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 114 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
   - 132 `hfftMips(out, N)`
 
-## `src/js/core/04-crew.js` (721 linjer)
+## `src/js/core/04-crew.js` (723 linjer)
 
 crew: people with skills, habits and moods
 
@@ -818,30 +818,30 @@ crew: people with skills, habits and moods
   - 468 `holdNet()`
   - 477 `crewSettle(c)`
   - 486 `crewQuit(c, why, whyEn)`
-- **488** Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102
-  - 499 `avtAddMonths(t, n)`
-  - 505 `crewAvt(c)`
-  - 512 `crewPos(c)`
-  - 515 `crewFrist(c, t = S.t)`
-  - 526 `crewNotice(c, gr)`
-  - 535 `crewOppTick(c)`
-  - 543 `crewStay(c)`
-  - 553 `crewGrunn(c)`
-  - 561 `crewLetGo(c)`
-- **572** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
-  - 582 `namedAge(n, H)`
-  - 583 `namedMake(n)`
-  - 588 `namedTaken(nid)`
-  - 589 `namedTick(B)`
-  - 598 `borsTick(H)`
-  - 607 `crewRumour()`
-  - 611 `crewSeaFat(c, fishing, workF, night)`
-  - 612 `crewTick(H)`
-  - 683 `codRoom(H)`
-- **685** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 699 `flyIn(c)`
-  - 708 `flyOut(c)`
-  - 716 `flyTick()`
+- **489** Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102
+  - 500 `avtAddMonths(t, n)`
+  - 506 `crewAvt(c)`
+  - 513 `crewPos(c)`
+  - 516 `crewFrist(c, t = S.t)`
+  - 527 `crewNotice(c, gr)`
+  - 536 `crewOppTick(c)`
+  - 544 `crewStay(c)`
+  - 554 `crewGrunn(c)`
+  - 562 `crewLetGo(c)`
+- **574** Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay
+  - 584 `namedAge(n, H)`
+  - 585 `namedMake(n)`
+  - 590 `namedTaken(nid)`
+  - 591 `namedTick(B)`
+  - 600 `borsTick(H)`
+  - 609 `crewRumour()`
+  - 613 `crewSeaFat(c, fishing, workF, night)`
+  - 614 `crewTick(H)`
+  - 685 `codRoom(H)`
+- **687** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 701 `flyIn(c)`
+  - 710 `flyOut(c)`
+  - 718 `flyTick()`
 
 ## `src/js/core/05-vessels.js` (1427 linjer)
 
@@ -2184,7 +2184,7 @@ work aboard: stations, and how the crew share them
   - 434 `workTeam(st, g, as)`
   - 440 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (559 linjer)
+## `src/js/core/14-crewlife.js` (570 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -2232,14 +2232,15 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 448 `alumniStates(H)`
   - 455 `lifeHail(H)`
 - **461** the small errands (Oppdrag 2, punkt 2; steg 45a, 12.11.2026; docs/planer/oppdrag-2.md, 5.6 in docs/systemer/folk-om-bord.md)
-  - 476 `errandLine(c)`
-  - 486 `errandMay(c)`
-  - 492 `errandPick(c, r = crewRand)`
-  - 504 `errandAskText(c, E)`
-  - 513 `errandHour(H)`
-  - 531 `errandAnswer(id, yes)`
-  - 541 `errandDone(c)`
-  - 551 `alumniReturn(B)`
+  - 478 `errandLine(c)`
+  - 488 `errandMay(c)`
+  - 494 `errandPick(c, r = crewRand)`
+  - 509 `errandAskText(c, E)`
+  - 518 `errLapse(c, E)`
+  - 522 `errandHour(H)`
+  - 542 `errandAnswer(id, yes)`
+  - 552 `errandDone(c)`
+  - 562 `alumniReturn(B)`
 
 ## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
