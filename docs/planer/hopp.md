@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **HO1, HO2 og HO3 er bygd (12.11.2026, steg 104–106) og rullet ut til testutgaven.** Kjøpet er ekte penger: PR-en venter på Jonas, og migreringen `20261112200000_hopp.sql` kjører han på testprosjektet når det har `shop-checkout` og Stripe-webhooken (L1a). Til da er butikken i testmodus på testutgaven (bare for admin, ingen betaling).
+Status: **HO1, HO2 og HO3 er bygd (12.11.2026, steg 104–106) og rullet ut til testutgaven (versjon 43121243e739).** Hopp selges bare ved ⏩ under seilas, båten fryses til betalingen er kommet, ingenting hindrer kjøpet, og bare fisken i lasterommet merker tida (Jonas 12.11.2026). Kjøpet er ekte penger: slippet til detstorebla.no venter på merkelappen `jonas-har-sett`, og migreringen `20261112200000_hopp.sql` kjører Jonas på testprosjektet når det har `shop-checkout` og Stripe-webhooken (L1a). Til da er butikken i testmodus på testutgaven (bare for admin, ingen betaling).
 
 ## Hva Jonas ba om
 
