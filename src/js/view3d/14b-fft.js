@@ -83,12 +83,13 @@
   // what the grid cannot hold is filtered out, as the Gerstner waves fade under 2.5 cells; seaDisp reads the same two levels from a copy
   // here, so the boat, the buoys and the gear lie in the waves that are drawn. The second tile (7.5-0.8 m) is below the grid: light only.
   const fvLod = () => Math.max(0, Math.log2((2 * HALF / NP) / (FFTT[0].L / FFTT[0].N)));
+  // (from level 0, since the fine patch round the boat reads the tile at its own cell's level, 0, and blends to the grid's: FFT.cpuL is
+  // the last level kept, the grid's and the one over it)
   function fftKeep(a){
-    const N = FFTT[0].N, l0 = Math.min(Math.floor(fvLod()), Math.log2(N) - 1); let o = 0, n = N;
-    for (let l = 0; l < l0; l++){ o += n * n * 4; n >>= 1; }
-    const len = n * n * 4 + (n >> 1) * (n >> 1) * 4;
+    const N = FFTT[0].N, l1 = Math.min(Math.floor(fvLod()) + 1, Math.log2(N)); let len = 0, n = N;
+    for (let l = 0; l <= l1; l++){ len += n * n * 4; n >>= 1; }
     if (!FFT.cpu || FFT.cpu.length !== len) FFT.cpu = new Float32Array(len);
-    FFT.cpu.set(a.subarray(o, o + len)); FFT.cpuL = l0;
+    FFT.cpu.set(a.subarray(0, len)); FFT.cpuL = l1;
   }
   // B3: the two tiles' trace and height at level 0 (tr, h per cell), for FOAM.capAt (the spray from the crests that break, sea3d)
   function fftKeepS(bufs){
@@ -111,10 +112,10 @@
   const fftShape = () => FFT.on && FFT.ok && FFT.have && FFT.cpu && SST_VS && PS && !PS.lite && !PS.basic && !PS.far;
   // the tile's (Dx, Dz, h) at a world point, trilinear between the two kept levels as the GPU samples them (FFT_D)
   const FFT_D = [0, 0, 0];
-  function fftAt(x, z){
-    const N = FFTT[0].N, L = FFTT[0].L, l0 = FFT.cpuL, f = clamp(fvLod() - l0, 0, 1), qx = x - NF.O[0], qz = z - NF.O[1], A = FFT.cpu;
-    FFT_D[0] = FFT_D[1] = FFT_D[2] = 0;
-    for (let q = 0; q < 2; q++){ const n = N >> (l0 + q), base = q ? (N >> l0) * (N >> l0) * 4 : 0, w = q ? f : 1 - f; if (w <= 0) continue;
+  function fftAt(x, z, lod){
+    const N = FFTT[0].N, L = FFTT[0].L, lv = clamp(lod === undefined ? fvLod() : lod, 0, FFT.cpuL), l0 = Math.min(Math.floor(lv), FFT.cpuL - 1), f = clamp(lv - l0, 0, 1), qx = x - NF.O[0], qz = z - NF.O[1], A = FFT.cpu;
+    FFT_D[0] = FFT_D[1] = FFT_D[2] = 0; let b0 = 0; for (let l = 0; l < l0; l++) b0 += (N >> l) * (N >> l) * 4;
+    for (let q = 0; q < 2; q++){ const n = N >> (l0 + q), base = b0 + (q ? (N >> l0) * (N >> l0) * 4 : 0), w = q ? f : 1 - f; if (w <= 0) continue;
       // (texel centres at (i + 0.5) L / n, as the GPU has them; the tile wraps)
       let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
       const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;

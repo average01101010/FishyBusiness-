@@ -236,7 +236,7 @@
     { const np = QUAL.lvl === 3 && UINT ? 300 : 150; if (np !== NP){ NP = np; buildPatch(); } }   // the wave patch: 2 m on ultra
     const P = far && (drop === undefined || !QUAL.lvl) ? PSF : PS; gl.useProgram(P.p); const u = P.u;   // low quality: the far shader right up to the wave patch
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uTime, t); gl.uniform1f(u.uHalf, HALF); gl.uniform1f(u.uFlat, far ? 1 : 0);
-    gl.uniform1f(u.uCell, 2 * HALF / NP); gl.uniform1f(u.uPx, 2 * Math.tan(curFov / 2) / Math.max(canvas.height, 1)); gl.uniform1f(u.uDbg, SEADBG ? 1 : 0);
+    gl.uniform1f(u.uCell, 2 * HALF / NP); if (u.uInner != null) gl.uniform4f(u.uInner, 0, 0, 1, 0); gl.uniform1f(u.uPx, 2 * Math.tan(curFov / 2) / Math.max(canvas.height, 1)); gl.uniform1f(u.uDbg, SEADBG ? 1 : 0);
     // the local sea: the textures on units 4 and 5 (a 1 x 1 stand-in until they are ready)
     gl.uniform4fv(u.uWk0, [WK.u0[0] - RO.x, WK.u0[1] - RO.z, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, RO.x, RO.z);
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
@@ -251,6 +251,9 @@
     gl.uniform3fv(u.uZen, env.zen); airSet(u); gl.uniform3fv(u.uHor, env.hor); gl.uniform3fv(u.uDeep, [0.035, 0.14, 0.18]); gl.uniform1f(u.uWind, env.seaWind || env.wind); gl.uniform2fv(u.uWindDir, env.windDir); gl.uniform1f(u.uSpec, env.spec);
     gl.uniform1f(u.uLSOn, LMTEX && LMON && LRECT ? 1 : 0); if (LMTEX && LMON && LRECT){ gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLandS, 6); gl.activeTexture(gl.TEXTURE0); gl.uniform4fv(u.uLRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]); }
     fftBind(u, eye);   // the short sea's FFT tiles (14b-fft.js)
+    // the near terrain's square from the eye, where the far pass takes over: the near pass's tiles go over into roughness towards it
+    if (u.uNearE != null){ if (NEARM){ const b = Math.max(150, Math.min(NEARM.sx, NEARM.sz) * 0.08); gl.uniform4f(u.uNearE, NEARM.x0 - eye[0], NEARM.z0 - eye[2], NEARM.x0 + NEARM.sx - eye[0], NEARM.z0 + NEARM.sz - eye[2]); gl.uniform1f(u.uNearB, b); }
+      else { gl.uniform4f(u.uNearE, -1e7, -1e7, 1e7, 1e7); gl.uniform1f(u.uNearB, 1); } }
     seaShared(u, t);   // the gusts, the cat's paws and the ripples in the shared sea's place and time (B4, 14b-fft.js)
     gl.uniform1f(u.uSOn, STEX ? 1 : 0); gl.uniform1f(u.uHOn, HTEX ? 1 : 0); gl.uniform1f(u.uTideL, env.tide || 0); if (HTEX){ gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, HTEX); gl.uniform1i(u.uHgt, 3); gl.activeTexture(gl.TEXTURE0); } if (STEX) gl.uniform4fv(u.uSRect, [SRECT[0] - eye[0], SRECT[1] - eye[2], SRECT[2], SRECT[3]]);
     gl.disableVertexAttribArray(1);
@@ -259,9 +262,12 @@
       // less the wave patch around the boat
       const y = -eye[1] - (drop || 0) + (env.tide || 0);
       if (drop === undefined){ const ox = TERR ? TERR.cx : bv.x, oz = TERR ? TERR.cz : bv.z, sc = TERRW.span / 2 + 40000;
-        seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0, NEARM.z0, NEARM.x0 + NEARM.sx, NEARM.z0 + NEARM.sz] : null); }
+        seaRing(u, eye, y, [ox - sc, oz - sc, ox + sc, oz + sc], NEARM ? [NEARM.x0 + 22, NEARM.z0 + 22, NEARM.x0 + NEARM.sx - 22, NEARM.z0 + NEARM.sz - 22] : null); }
       else {
-        let R; if (NEARM) R = [NEARM.x0 - 20, NEARM.z0 - 20, NEARM.x0 + NEARM.sx + 20, NEARM.z0 + NEARM.sz + 20];
+        // (the near pass's sea ends 2 m inside the near terrain's square and the far pass's goes 22 m in under it, 12.11.2026: it went
+        // 20 m out over the far pass's land, where the near pass has no depth, and drew a dark line along the square on the land seen
+        // from high up)
+        let R; if (NEARM) R = [NEARM.x0 + 2, NEARM.z0 + 2, NEARM.x0 + NEARM.sx - 2, NEARM.z0 + NEARM.sz - 2];
         else { const ox = Math.round(eye[0] / 100) * 100, oz = Math.round(eye[2] / 100) * 100, sc = far * 1.15; R = [ox - sc, oz - sc, ox + sc, oz + sc]; }
         const st = 2 * HALF / NP, px = Math.round(bv.x / st) * st, pz = Math.round(bv.z / st) * st, hh = HALF * 0.97;
         seaRing(u, eye, y, R, [px - hh, pz - hh, px + hh, pz + hh]);
@@ -269,7 +275,13 @@
     } else {
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step;
       gl.uniform2fv(u.uScale, [1, 1]); gl.uniform2fv(u.uOrigin, [ox - RO.x, oz - RO.z]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], -eye[1] + (env.tide || 0), oz - eye[2]]);
-      attr(0, PATCH.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PATCH.ib); gl.drawElements(gl.TRIANGLES, PATCH.n, PATCH.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
+      // the fine patch round the boat first (PIN, 14-sea.js), then the grid with its hole, pushed back a little in depth where the two
+      // overlap by a cell, so the fine one is the surface seen there and the two never flicker in turn
+      const pin = PIN_ON() && u.uInner != null;
+      if (pin){ gl.uniform4f(u.uInner, PIN_C, PIN.b0, PIN.b1, 0); if (u.uInB != null) gl.uniform2f(u.uInB, bv.x - ox, bv.z - oz); attr(0, PIN.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PIN.ib); gl.drawElements(gl.TRIANGLES, PIN.n, gl.UNSIGNED_SHORT, 0);
+        gl.uniform4f(u.uInner, 0, 0, 1, 0); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2); }
+      attr(0, PATCH.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, pin ? PATCH.ibH : PATCH.ib); gl.drawElements(gl.TRIANGLES, pin ? PATCH.nH : PATCH.n, PATCH.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
+      if (pin){ gl.disable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(0, 0); }
       drawRockFoam(VP, eye, t);   // the skerries' breakers (17i-rocks.js) on the sea just drawn
     }
   }

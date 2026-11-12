@@ -3204,3 +3204,5 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	quotatest	OK	20	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	admintest	OK	10	lite	samtidig	
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
+2026-11-12 18:14	ccr-899a9674-q3gjp0	59cd7805+	dbg23o	OK	45	3d	alene	
+2026-11-12 18:19	ccr-899a9674-q3gjp0	59cd7805+	seatrytest	OK	308	3d	alene	

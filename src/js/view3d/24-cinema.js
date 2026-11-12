@@ -665,7 +665,7 @@
     while (TRAIL.length && TRAIL[TRAIL.length - 1].age > 11) TRAIL.pop();
     if (TRAIL.length > 1 && WKB && !foamLive()){   // (the foam map draws the trail when it is on: 14-sea.js)
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step, tide = env.tide || 0;
-      const seaY = (x, z) => seaHFast(x, z, t) + wakeHFast(x, z) + 0.07;
+      const seaY = (x, z) => { SEA_OUTER = true; try { return seaHFast(x, z, t) + wakeHFast(x, z) + 0.07; } finally { SEA_OUTER = false; } };   // (the strips' corners are far apart: the grid's surface)
       const st = xf(BM, [0, 0, (GEO(vtype())).stern]), pts = (v > 1 ? [{x:st[0], z:st[2], age:0, v, u:wk.odo || 0, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}] : []).concat(TRAIL);
       let m = 0; const P = WKB.p, W = WKB.w, Sg = WKB.s, cap = 8900;
       const put = (x, z, y, u, vv, age, kind, str) => { if (m >= cap) return; P[m * 3] = x - eye[0]; P[m * 3 + 1] = y - eye[1]; P[m * 3 + 2] = z - eye[2]; W[m * 4] = u; W[m * 4 + 1] = vv; W[m * 4 + 2] = age; W[m * 4 + 3] = kind; Sg[m] = str; m++; };

@@ -90,8 +90,9 @@ function hfftFrame(T, t, out, W, outD){
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
     const c = j * N + i, ni = (N - i) % N, nj = (N - j) % N, cm = nj * N + ni;
     const n = i < N / 2 ? i : i - N, m = j < N / 2 ? j : j - N, kx = n * dk, kz = m * dk, k = Math.hypot(kx, kz);
-    const wt = S.w[c] * t, co = Math.cos(wt), si = Math.sin(wt), a = S.h0r[c], b = S.h0i[c], a2 = S.h0r[cm], b2 = -S.h0i[cm];
-    // h(k, t) = h0(k) e^{iwt} + conj(h0(-k)) e^{-iwt}, so the field is real
+    const wt = -S.w[c] * t, co = Math.cos(wt), si = Math.sin(wt), a = S.h0r[c], b = S.h0i[c], a2 = S.h0r[cm], b2 = -S.h0i[cm];
+    // h(k, t) = h0(k) e^{-iwt} + conj(h0(-k)) e^{iwt}, so the field is real and h0(k) e^{i(kx - wt)} travels along k, downwind as the
+    // spectrum lies (12.11.2026: with e^{+iwt} the tiles' waves travelled into the wind, Jonas' «se hvilken vei sjøen går»)
     const hr = a * co - b * si + a2 * co + b2 * si, hi = a * si + b * co + b2 * co - a2 * si;
     // (i kx h) + i (i kz h) and (k h) + i h
     re1[c] = -kx * hi - kz * hr; im1[c] = kx * hr - kz * hi; re2[c] = k * hr - hi; im2[c] = k * hi + hr;
