@@ -3101,3 +3101,4 @@
 2026-11-12 11:46	claude/k3-sjomerker-33d	e21c9a4	lighttest	OK	390	3d	alene	
 2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	routetest	OK	43	lite	alene	
 2026-11-12 11:47	claude/k3-sjomerker-33d	e21c9a4	charttest	OK	51	lite	alene	
+2026-11-12 12:03	claude/k3-sjomerker-33d	eb02255	coast3d	FEIL	900	3d	alene	FEIL by Gryllefjord the rorbu stands on the map's own ground in 3D (its floor over it, lifted 2.5 m; no bank of its own since 01.11.2026) in its colour (r), wit
