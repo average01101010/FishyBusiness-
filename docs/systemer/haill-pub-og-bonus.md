@@ -59,6 +59,7 @@ Jonas: energi som ny inntektskilde, «en fiktiv energidrikk som heter "Skipperta
 
 - **Haill selges kun for ekte penger.** Den er i testmodus nå, uten betaling. Kan også vinnes på puben.
 - **Haill gjelder hele rederiet,** alle båter. Jonas' begrunnelse: det koster ekte penger.
+- **Haill-fisken tas ikke fra den felles bestanden** (avgjort 12.11.2026, ikke bygd ennå: steg 103 i køen, `docs/planer/start/103.md`). Jonas svarte «Bare bestanden» på spørsmålet om hva som skal rettes, med dette i svaret han valgte: «Haill-fisken trekkes ikke fra ruta, slik den garanterte første fangsten gjør i dag. Kjøperen får det samme som før. Prisen som i dag.» Bakgrunnen: den ekstra fangsten ble trukket fra den felles 2 km-ruta (`takeStock`, `STK.K` 2 600 kg) og sendt til de andre (`wshTake`). Med juksa er det lite, men garn og line på større båter kan presse ei rute mot gulvet i uker for naboen. Hailla teller fortsatt på topplista (Jonas 06.10.2026), og prisen ved mottaket regnes av landingene som før. Et eget tall for metningen ville vært et haill-felt i `landings`, og det forbyr regelen om at haill aldri synes for andre.
 
 **Ny haill fra 04.10.2026** (Jonas' liste, `HAILL` i `03-simulation.js`). To typer, og kveithaillen er borte. En gammel kveithaill blir vanlig haill.
 
