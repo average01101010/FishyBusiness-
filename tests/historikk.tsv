@@ -3086,3 +3086,32 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	docktest	OK	63	lite	samtidig	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	haillplass	OK	7	lite	samtidig	
+2026-11-12 11:25	ccr-013bxxic-haill1	177a4af+	turlinjetest	OK	7	lite	samtidig	
+2026-11-12 11:46	ccr-013bxxic-haill1	177a4af+	tut	OK	1240	lite	alene	
+2026-11-12 11:47	ccr-013bxxic-haill1	177a4af+	geartest	FEIL	37	lite	alene	FEIL big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)
+2026-11-12 11:52	ccr-013bxxic-haill1	177a4af+	heattest	OK	319	3d	alene	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	geartest	OK	32	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	haillplass	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	tutfull	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	177a4af+	skattetest	OK	7	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	9500d4b+	lotttest	OK	10	lite	samtidig	
+2026-11-12 11:54	ccr-013bxxic-haill1	9500d4b+	boktest	OK	10	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	keeptest	OK	18	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	decktest	OK	17	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	simday	LES	14	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	calib	LES	16	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	vesseltest	OK	22	lite	samtidig	
+2026-11-12 11:55	ccr-013bxxic-haill1	79607b0	fuelcal	OK	19	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	tidetest	OK	24	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	climtest	OK	16	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	bktest	OK	7	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	yardupgtest	OK	15	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	snokrabbetest	OK	12	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	autolinetest	OK	10	lite	samtidig	
+2026-11-12 11:56	ccr-013bxxic-haill1	79607b0	turtest	OK	21	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	booktest	OK	29	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	caretest	OK	16	lite	samtidig	
+2026-11-12 11:57	ccr-013bxxic-haill1	79607b0	jigalongtest	OK	20	lite	samtidig	
+2026-11-12 11:58	ccr-013bxxic-haill1	79607b0	opptest	OK	62	lite	samtidig	
