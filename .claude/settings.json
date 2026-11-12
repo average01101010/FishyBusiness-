@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
+    "allow": [
+      "Bash(python3 tools/feedback/agent.py *)"
+    ],
     "deny": [
       "Bash(rm -rf *)",
       "Bash(rm -fr *)",
@@ -33,8 +36,12 @@
     ]
   },
   "modelSettings": {
-    "claude-opus-5-5": { "effortLevel": "high" },
-    "claude-fable-5-2": { "effortLevel": "medium" }
+    "claude-opus-5-5": {
+      "effortLevel": "high"
+    },
+    "claude-fable-5-2": {
+      "effortLevel": "medium"
+    }
   },
   "hooks": {
     "SessionStart": [
