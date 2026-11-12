@@ -84,6 +84,11 @@ async def main():
           // the trim on top: the same knots with and without the propeller
           const add = lv => { b.type = 'hurtigsjark'; b.propLv = lv; delete b.trim; applyVessel(); const v = BOAT.vmax; trimSet('turbo'); const d = BOAT.vmax - v; trimEnd(); return d; };
           R.trim = [add(0), add(3)];
+          // the Trim app's «Toppfart med den» (ui/phone/06-render.js) is what the trim gives, with propeller 3 and engine 2 (the kontroll
+          // 12.11.2026: it took the product, 57,2 kn promised for 50,6)
+          b.type = 'hurtigsjark'; b.propLv = 3; b.engLv = 2; delete b.trim; applyVessel(); const html = PHONE.page('trim') || '', nb = x => x.replace(/\u00a0|\u202f/g, ' ');
+          R.promise = [...nb(html).matchAll(/Toppfart med den<\/span><span><b>([\d ,]+) kn/g)].map(m => +m[1].replace(/ /g, '').replace(',', '.'));
+          R.gives = Object.keys(BOOSTS).map(k => { delete b.trim; applyVessel(); trimSet(k); const v = +BOAT.vmax.toFixed(1); return v; }); delete b.trim; delete b.engLv;
           delete b.propLv; delete b.trim; b.type = t0; S.jobs = []; applyVessel(); return R; })()""")
         print(json.dumps(pr, ensure_ascii=False))
         print(ok('skiff' in pr['nofit'] and all(k in pr['fits'] for k in ('trebat', 'snekke', 'sjark', 'hurtigsjark', 'sjarkny', 'kyst15', 'kyst21')) and not [k for k in pr['fits'] if k in ('autoliner',)]), 'the propeller fits every boat without an outboard outside the ocean fleet', pr['nofit'])
@@ -97,6 +102,7 @@ async def main():
         print(ok(pr['engTrade']['paid'] > 0 and pr['engTrade']['kr'] == pr['engTrade']['paid'] and pr['engTrade']['back'] == pr['engTrade']['paid'] and pr['engTrade']['lv'] == 0), 'a bigger engine ordered and the boat traded in while it waited: the yard pays it back, the new boat keeps her own engine', pr['engTrade'])
         sw = pr['swap']
         print(ok(sw['paid'] == 23000 and sw['back'] == 23000 + sw['holdKr'] and sw['jobs'] == 0 and sw['type'] == 'snekke' and sw['lv'] == 0), 'the trade-in pays back the old hull\'s propeller job (23 000 kr) and an old hold job without a price (priced on the old boat), and takes them off the queue', sw)
+        print(ok(len(pr['promise']) == 3 and pr['promise'] == pr['gives']), 'the Trim app promises the top speed each trim gives, on the speed sjark with propeller 3 and engine 2', [pr['promise'], pr['gives']])
         print(ok(abs(pr['trim'][0] - pr['trim'][1]) < 1e-9 and pr['trim'][0] > 21.9), 'turbo trim gives as many knots with propeller 3 as without (22 kn, the boat\'s own)', pr['trim'])
         print(ok(not errs), 'no page errors', errs[:2])
         await b.close()
