@@ -298,11 +298,19 @@ def mix(base, *layers):
     for rgb, k in layers:
         k = max(0.0, min(1.0, k)); c = [c[i] + (rgb[i] - c[i]) * k for i in range(3)]
     return [c[i] / max(base[i], 1e-3) for i in range(3)]
+def vary(x0, side, salt=0.0):
+    """0-1, fixed for one opening: (OB10 round 4: «rustrennene like kopier»; each run its own length and strength)"""
+    v = math.sin(x0 * 12.9898 + side * 78.233 + salt * 37.719) * 43758.5453
+    return v - math.floor(v)
 def run_under(x, z, x0, l, ztop, ln, side):
-    """0-1: a run down the side under an opening x0..x0+l whose foot is at ztop, ln long, in streaks (the stations stand 6 cm apart)"""
+    """0-1: a run down the side under an opening x0..x0+l whose foot is at ztop, ln long, in streaks (the stations stand 6 cm apart);
+    each opening's run its own length (0.45-1.0 of ln), strength (0.45-1.0) and width, one side of it heavier than the other"""
+    a, b_, c_ = vary(x0, side), vary(x0, side, 1.0), vary(x0, side, 2.0)
+    ln = ln * (0.45 + 0.55 * a); x0 = x0 + l * 0.18 * (c_ - 0.5); l = l * (0.65 + 0.35 * b_)
     u = (x - x0) / l
     if u < -0.2 or u > 1.2 or z > ztop + 0.03 or z < ztop - ln: return 0.0
-    return ss(-0.2, 0.05, u) * ss(1.2, 0.95, u) * (0.45 + 0.55 * ss(-0.35, 0.35, n3(x * 17.0, side * 3.1, 0.3))) * ss(ztop - ln, ztop - 0.02, z) ** 1.3
+    skew = 0.75 + 0.5 * ss(0.0, 1.0, u if c_ > 0.5 else 1.0 - u)
+    return (0.45 + 0.55 * b_) * skew * ss(-0.2, 0.05, u) * ss(1.2, 0.95, u) * (0.45 + 0.55 * ss(-0.35, 0.35, n3(x * 17.0, side * 3.1 + x0, 0.3))) * ss(ztop - ln, ztop - 0.02, z) ** 1.3
 def wear(p, m, n):
     """(OB10 round 3, 11.11.2026: a boat in use, and it has to show at close range in the game:
     the judge of round 2 found «ingen slitasje å se».) Rust runs down the side under the freeing ports and the bilge outlet, dark runs
@@ -324,17 +332,21 @@ def wear(p, m, n):
             if side == BILGE[1]: r = max(r, 1.2 * run_under(x, z, BILGE[0] - 0.07, 0.14, BILGE[2], 0.42, side))
         k = 0.0
         for xc in CLEATS: k = max(k, run_under(x, z, xc - 0.10, 0.20, z_sh(xc), 0.55, side))
-        chalk = ss(0.10, 0.45, n3(x * 1.9, z * 2.6, side * 5.0 + 9.0)) * ss(Z_BT + 0.25, 1.45, z) * ss(z_kn(x) + 0.02, z_kn(x) - 0.15, z) * ss(1.2, 2.4, x) * ss(9.4, 8.2, x)
+        # (OB10 round 4: «lyse firkantflekker på sida»: the noise across z, sampled at the section's few points, came out as squares;
+        # now only a slow wash along her where the fenders rub, even up and down the band)
+        chalk = (0.55 + 0.45 * ss(-0.4, 0.4, n3(x * 0.55, side * 5.0 + 9.0, 0.0))) * ss(Z_BT + 0.35, 1.30, z) * ss(z_kn(x) - 0.02, z_kn(x) - 0.30, z) * ss(1.2, 2.6, x) * ss(9.2, 7.8, x)
         slime = ss(0.20, 0.0, z - paint_line(x, Z_BT)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 6.0, side, 2.0)))
-        t = mix(base, ((0.30, 0.50, 0.52), 0.45 * chalk), (SLIME, 0.60 * slime), (GRIME, 0.55 * k), (RUST, 0.55 * r))
+        t = mix(base, ((0.30, 0.50, 0.52), 0.22 * chalk), (SLIME, 0.60 * slime), (GRIME, 0.55 * k), (RUST, 0.55 * r))
         return [t[i] * g for i in range(3)]
     if nm == 'strake':
-        v = 0.95 + 0.05 * n3(x * 4.0, z * 9.0, side)
-        scuff = ss(0.02, 0.42, n3(x * 6.5, z * 14.0, side * 2.0 + 4.0)) * (0.55 if z > ZMD + 0.4 else 1.0)
+        # (OB10 round 4: «lista gnidd og uskarp» on close range: the fast scuff noise across the strake's height smeared its edges.
+        # Now a few dark scuffs along her where she lies against quays, each the strake's full height, so the edges stay sharp)
+        v = 0.97 + 0.03 * n3(x * 1.5, side, 0.0)
+        scuff = ss(0.25, 0.55, n3(x * 1.1, side * 2.0 + 4.0, 0.0)) * (0.55 if z > ZMD + 0.4 else 1.0)
         r = 0.0
         if z < ZMD + 0.05:
             for x0, l in FREE[side]: r = max(r, run_under(x, z, x0, l, ZMD + 0.03, 0.95, side))
-        t = mix(base, (GRIME, 0.50 * scuff), (RUST, 0.60 * r))
+        t = mix(base, (GRIME, 0.30 * scuff), (RUST, 0.60 * r))
         return [t[i] * v for i in range(3)]
     if nm == 'boot':
         v = 0.95 + 0.06 * n3(x * 4.0, z * 9.0, side)
@@ -1239,10 +1251,11 @@ def bower(G):
 # and against the tub), the crane on its locker aft of it and the cargo inboard of the locker
 TABLE = (2.25, 1.84)         # the gutting bench's middle (x, y): 1.39-3.11 with its padding, between the locker and the deckhouse
 TUB = (4.85, -1.80)          # the bleeding tub just aft of the hauler (x, y)
-STAMP0 = (2.00, -0.80)       # the line tubs' first row (kit.stamps): two across and up to four rows aft
+STAMP0 = (2.00, -0.86)       # the line tubs' first row (kit.stamps): two across and up to four rows aft (OB10 round 4: -0.80 put the inner
+                             # tubs 6 cm onto the hatch's coaming, which the block's old width, 0.78, hid; now they stand against it)
 def stamp_box(rows=4):
     """the line tubs' block as the game keeps it out of the walking map (deckcrew.js kitBoxes, eight aboard): x0, x1, y0, y1"""
-    cx = STAMP0[0] - (rows - 1) * 0.25; hl = (rows * 0.5 + 0.02) / 2 + 0.06; cy = STAMP0[1] - 0.26; hw = 0.78 / 2 + 0.06
+    cx = STAMP0[0] - (rows - 1) * 0.25; hl = (rows * 0.5 + 0.02) / 2 + 0.06; cy = STAMP0[1] - 0.26; hw = 1.02 / 2 + 0.06      # (OB10 round 4: 1.02, the two tubs' footprint; 0.78 before)
     return cx - hl, cx + hl, cy - hw, cy + hw
 POT_SPOT = (round(XM - _PJ['spot'][2], 3), round(-_PJ['spot'][0], 3))     # (3.50, -1.30, from potplaces.json) where a hauled pot is laid, tipped and emptied (kit.pots.spot): on the free deck under the roof aft of the tub
 # the jigging places on the starboard rail, in the order the machines are bolted on (anchors.jigZ, F21; after havsjark35.py and
@@ -1353,7 +1366,7 @@ def check():
     out.append(('haleren under det lange taket (%.2f-%.2f) ved x %.2f, %.2f m akter for styrhuset; karet %.2f m akter for haleren; dekkshuset %.2f m fra haleporten' % (X_SH, WX0, HXR, WX0 - HP1, HXR - TUB[0], -BOX[1] - 0.0),
                 X_SH < HP0 and WX0 - HP1 > 0.2 and HXR - TUB[0] > 0.5))
     # the places against the game's own boxes (deckcrew.js kitBoxes, each padded 6 cm: the tub 0.72 x 1.08, the bench 0.62 x 1.6, the line
-    # tubs' block with eight aboard 0.78 x 2.02, the crane's foot 0.9 x 0.9, the net tub 1.0 x 1.2, a cargo unit 0.8 x 1.2), R a body's half width
+    # tubs' block with eight aboard 1.02 x 2.02, the crane's foot 0.9 x 0.9, the net tub 1.0 x 1.2, a cargo unit 0.8 x 1.2), R a body's half width
     R = 0.25; bx = (TABLE[0] - 0.86, TABLE[0] + 0.86); by = (TABLE[1] - 0.37, TABLE[1] + 0.37); lx0, lx1, ld = LOCKER; lyi = min(ybw(lx0), ybw(lx1)) - 0.01 - ld
     tx = (TUB[0] - 0.60, TUB[0] + 0.60); ty = (TUB[1] - 0.42, TUB[1] + 0.42); sx0, sx1, sy0, sy1 = stamp_box(); gy = by[0] - R - 0.02
     cgx = (CARGO[0] - 0.40, CARGO[0] + 0.40); cgy = (CARGO[1] - 0.60, CARGO[1] + 0.60); crf = (lyi + ld / 2) - 0.45      # (the unit itself, and the inboard edge of the crane's foot)
@@ -1361,8 +1374,14 @@ def check():
     two = [x for x in (TABLE[0] - 0.7, TABLE[0] + 0.7) if x - R > lx1 and x + R < BOX[0]]
     out.append(('sløyebenken x %.2f-%.2f ved babord ripe tvers av luka (luka %.2f-%.2f), %.2f m forut for kista og %.2f m akter for dekkshuset, %.2f m fra skansens fot; den som sløyer står y %.2f med %.2f m dørk mellom benken og luka, nummer to 0,7 m %s' % (bx[0], bx[1], HOLD[0], HOLD[1], bx[0] - lx1, BOX[0] - bx[1], ybw(TABLE[0]) - by[1], gy, by[0] - HOLD[3] - 0.05, 'forut eller akter' if len(two) == 2 else 'akter' if two and two[0] < TABLE[0] else 'forut' if two else 'INGEN PLASS'),
                 bx[0] > lx1 and bx[1] < BOX[0] and ybw(TABLE[0]) - by[1] > 0.0 and by[0] - HOLD[3] - 0.05 >= 2 * R + 0.2 and len(two) >= 1))
-    out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f langs lukas styrbord side akter for taket: %.2f m fra speilet, %.2f m til ripa (gangen og juksaplassene), ekte kar %.2f m fra lukekarmen; garnkaret og stampene står aldri om bord samtidig' % (sx0, sx1, sy1, sy0, sx0 - TT, ybw(1.2, -1) + sy0, -(sy1 - 0.06) - HOLD[3]),
-                sx0 > TT and sx1 < X_SH and ybw(1.2, -1) + sy0 >= 0.60 and -(sy1 - 0.06) - HOLD[3] > 0.02))
+    # (OB10 round 4: the gangway is measured to the tubs themselves now, as the game draws them (0.52 between their middles, 0.24 over
+    # the rim): with the block's true width there is 0.57 m of deck between the tubs and the bulwark's foot, which is the way aft to the
+    # stern while she has line aboard (the jigging places there are used only when she is rigged for jigging, and then no tub is aboard).
+    # Before, 0.60 was asked of the padded 0.78 box, which stood 12 cm inside the outer tubs; the real way was then 0.63 and the inner
+    # tubs 6 cm onto the coaming. The tubs may stand against the coaming, not on it)
+    sr0 = sy0 + 0.06 + 0.02                                  # the outer tubs' outside (the box is 1 cm wider than the tubs, and padded 6 cm)
+    out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f langs lukas styrbord side akter for taket: %.2f m fra speilet, %.2f m dørk fra stampene til skansens fot (gangen akterut), ekte kar %.2f m fra lukekarmen; garnkaret og stampene står aldri om bord samtidig' % (sx0, sx1, sy1, sy0, sx0 - TT, ybw(1.2, -1) + sr0, -(sy1 - 0.07) - HOLD[3]),
+                sx0 > TT and sx1 < X_SH and ybw(1.2, -1) + sr0 >= 0.55 and -(sy1 - 0.07) - HOLD[3] >= 0.0))
     out.append(('blødekaret x %.2f-%.2f, %.2f m fra skansens fot; dørken akter for det er fri langs styrbord ripe (taket ender ved x %.2f, karet ved %.2f: %.2f m under tak), og der legges og tømmes teina (ring 1,45 m ved x %.2f, y %.2f: %.2f m til dekkshuset, %.2f til skansen, %.2f til karet)' % (tx[0], tx[1], ybw(TUB[0], -1) + ty[0], X_SH, tx[0], tx[0] - X_SH, POT_SPOT[0], POT_SPOT[1], (-POT_SPOT[1] - 0.725) - (-BOX[1]), ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725, tx[0] - POT_SPOT[0] - 0.725),
                 ybw(TUB[0], -1) + ty[0] > 0.0 and (-POT_SPOT[1] - 0.725) - (-BOX[1]) > 0.0 and ybw(POT_SPOT[0], -1) + POT_SPOT[1] - 0.725 > 0.05 and tx[0] - POT_SPOT[0] - 0.725 > 0.0))
     out.append(('takstolpene på styrbord kappe ved x %.2f og %.2f (ingen på dørken): %.2f m fra blødekarets ende' % (POSTS[0], POSTS[1], POSTS[1] - tx[0]), all(not (HP0 - 0.1 < x < HP1 + 0.1) for x in POSTS)))
