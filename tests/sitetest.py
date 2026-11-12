@@ -71,15 +71,20 @@ async def main():
         await pg.wait_for_timeout(6000); await pg.screenshot(path='site_start.png')
         # a home along the coast in 3D: the naust and the shop by it, the shop's yard at the ground's height
         cz = await pg.evaluate("""(async () => { const pt = PORTS.find(q => q.coastal && /Reine/.test(q.name)) || PORTS.find(q => q.coastal); const b = S.boat; await chooseStart(pt);
-          b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; return {id:pt.id, name:pt.name}; })()""")
+          b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; return {id:pt.id, name:pt.name, map:mapSimAt(pt.p)}; })()""")
         await pg.wait_for_timeout(15000)
-        cs2 = await pg.evaluate("""(() => { const L = G3._debug.sitesNow(), n = L.find(s => s.k === 'naust'), sh = L.find(s => s.k === 'shop' && s.near);
-          const yard = sh ? [[0, 15], [-12, 20], [12, 24]].map(([x, y]) => +(G3._debug.terrH(sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y) - sh.lev).toFixed(2)) : null;
-          return {kinds:L.map(s => s.k + (s.near ? '+' : '')), d:n && sh ? Math.round(Math.hypot(n.o[0] - sh.o[0], n.o[1] - sh.o[1])) : null, lev:sh ? +sh.lev.toFixed(1) : null, yard, berth:berthKind(S.boat)}; })()""")
-        print(json.dumps(cs2, ensure_ascii=False))
-        print(ok('naust' in cs2['kinds'] and 'shop+' not in cs2['kinds'] and cs2['berth'] == 'naust'), 'at a home along the coast (%s) the naust stands there and no shop beside it (Father\'s naust is only a home), and the boat lies at the naust' % cz['name'], cs2)
-        await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 70; c.pitch = 0.3; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.3; })()""")
-        await pg.wait_for_timeout(6000); await pg.screenshot(path='site_coast.png')
+        # (the naust is placed from the map round the harbour, 07c-naust.js naustSite: a build with only Senja's packs has no map at a
+        # home further along the coast, so there is nothing to check there; the whole coast is in the build after tools/map/release.py)
+        if not cz['map']:
+            print('HOPPET OVER: bygget har ikke kartet ved %s (bare Senja), så naustet ved et hjem langs kysten kan ikke sjekkes her' % cz['name'])
+        else:
+            cs2 = await pg.evaluate("""(() => { const L = G3._debug.sitesNow(), n = L.find(s => s.k === 'naust'), sh = L.find(s => s.k === 'shop' && s.near);
+              const yard = sh ? [[0, 15], [-12, 20], [12, 24]].map(([x, y]) => +(G3._debug.terrH(sh.o[0] + sh.u[0] * x - sh.n[0] * y, sh.o[1] + sh.u[1] * x - sh.n[1] * y) - sh.lev).toFixed(2)) : null;
+              return {kinds:L.map(s => s.k + (s.near ? '+' : '')), d:n && sh ? Math.round(Math.hypot(n.o[0] - sh.o[0], n.o[1] - sh.o[1])) : null, lev:sh ? +sh.lev.toFixed(1) : null, yard, berth:berthKind(S.boat)}; })()""")
+            print(json.dumps(cs2, ensure_ascii=False))
+            print(ok('naust' in cs2['kinds'] and 'shop+' not in cs2['kinds'] and cs2['berth'] == 'naust'), 'at a home along the coast (%s) the naust stands there and no shop beside it (Father\'s naust is only a home), and the boat lies at the naust' % cz['name'], cs2)
+            await pg.evaluate("""(() => { const c = G3._debug.cam; c.helm = false; c.dist = 70; c.pitch = 0.3; const n = G3._debug.sitesNow().find(s => s.k === 'naust'), b = S.boat; c.yaw = Math.atan2(-n.n[0], n.n[1]) - b.heading + 0.3; })()""")
+            await pg.wait_for_timeout(6000); await pg.screenshot(path='site_coast.png')
         print('errors:', errs[:3]); await b.close()
 
 asyncio.run(main())

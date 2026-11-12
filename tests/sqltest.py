@@ -579,7 +579,7 @@ def main():
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
         # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
         # the registration mark and the pennants are free
-        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2;x:-9')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
         R['livOwn'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
@@ -600,6 +600,10 @@ def main():
         R['spNow'] = json.loads(sql("select public.sp_now()", {'role': 'anon'}, 'anon'))
         sql("select public.sp_admin_on('p', %s, false)" % plid, AD2, 'authenticated'); R['spOff'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
         sql("select public.sp_admin_on('p', %s, true)" % plid, AD2, 'authenticated'); sql("select public.sp_admin_on('s', %s, false)" % spid, AD2, 'authenticated'); R['spOffS'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
+        # steg 44 (20261112020000_sp_paint.sql): a paint design's colours, active or not, to anyone; no sponsor, no logo; never another kind
+        pdid = sql("select public.sp_admin_place(%s, 'look', 'paint', '{\"name\": \"Drakt\", \"hull\": \"petrol\", \"ripe\": \"gul\", \"sym\": \"stjerne\", \"site\": \"x\"}')" % spid, AD2, 'authenticated')
+        R['spPaint'] = json.loads(sql("select public.sp_paint(array[%s, %s, 999999]::bigint[])" % (pdid, plid), {'role': 'anon'}, 'anon'))
+        R['spPaintPid'] = pdid
         R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
@@ -771,6 +775,8 @@ def main():
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         si = (R['spIab'] or [{}])[0]
+        print(ok(R['spPaint'] == {str(R['spPaintPid']): {'name': 'Drakt', 'hull': 'petrol', 'ripe': 'gul'}}),
+              "a partner's paint design: sp_paint gives anyone its colours and name, also when the sponsor is switched off (steg 44: «Fargene blir»), never the mark, the link or another kind", R['spPaint'])
         print(ok(len(R['spIab']) == 1 and si.get('imp') == 2 and si.get('nonview') == 1 and si.get('undet') == 1 and si.get('rendered') == 4 and si.get('measured') == 0.75
                  and abs((si.get('viewable') or 0) - 0.667) < 0.001 and si.get('re') == 3 and si.get('sec') == 14.8 and si.get('med') == 7.0 and si.get('mean') == 7.0 and si.get('players') == 2),
               'the sponsors\' report after IAB 2.0: one viewable impression per session and placement, the three buckets (viewable, not viewable, undetermined), the measured and viewable shares, re-views, and the median and mean seconds of a viewable session', si)
@@ -780,8 +786,8 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
-              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;m:T.1.LK;p:2;x:-9'),
+              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark, the pennants and a partner's design (x:<id>, steg 44) always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
         print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})

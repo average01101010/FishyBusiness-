@@ -646,7 +646,7 @@ function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]
 const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
-  const L0 = (b && b.liv) || {}, W = typeof spWorn === 'function' ? spWorn(L0) : null, L = W ? Object.assign(spPaintLiv(W, b.type), {flag:L0.flag}) : L0, out = [];   // (a partner's design: its colours for a game from before it, and 'x:<id>' for the rest)
+  const L0 = (b && b.liv) || {}, W0 = typeof spWorn === 'function' ? spWorn(L0) : null, W = W0 && modelLiv(spPaintLiv(W0, b.type)) ? W0 : null, L = W ? Object.assign(spPaintLiv(W, b.type), {flag:L0.flag}) : L0, out = [];   // (a partner's design: its colours for a game from before it, and 'x:<id>' for the rest)
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }

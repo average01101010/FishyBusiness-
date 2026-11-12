@@ -1923,7 +1923,7 @@ Kystmegleren: boat sales between players (B1–B8 in docs/planer/etter-tonys-tes
   - 356 `mktDeliver(vid, to)`
   - 362 `mktHour(H)`
 
-## `src/js/core/09l-sponsor.js` (61 linjer)
+## `src/js/core/09l-sponsor.js` (71 linjer)
 
 Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real name, logo or product only with a written
 
@@ -1934,7 +1934,9 @@ Sponsorer (M6 in docs/planer/butikker-og-sponsorer.md 4 and 5; CLAUDE.md: a real
   - 20 `spUrl(site)`
 - **21** a partner's paint design (M8 F5, steg 44 11.11.2026): a placement 'look' on 'paint' is a whole paint for the boat, free, marked
   - 29 `spPaintLiv(r, type)`
-  - 46 `spPaintLogo(r)`
+  - 48 `spWorn(L)`
+  - 50 `spPaintIn(s)`
+  - 56 `spPaintLogo(r)`
 
 ## `src/js/core/09m-kystkart.js` (38 linjer)
 
@@ -3502,16 +3504,16 @@ THE SHOP (05.10.2026; supabase/migrations/20261006040000_shop.sql, supabase/func
   - 332 `shopClaim()`
   - 386 `shopStart()`
 
-## `src/js/ui/10j-paint.js` (245 linjer)
+## `src/js/ui/10j-paint.js` (249 linjer)
 
 THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
 
 - **1** THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a button of its own under Verft. Your own boat lies
-  - 200 `logoSet(L)`
-  - 208 `logoCheck()`
-  - 219 `cosSrv(owned)`
-  - 225 `giveCos(k)`
-  - 240 `regSet(n)`
+  - 204 `logoSet(L)`
+  - 212 `logoCheck()`
+  - 223 `cosSrv(owned)`
+  - 229 `giveCos(k)`
+  - 244 `regSet(n)`
 
 ## `src/js/ui/10q-buymoment.js` (36 linjer)
 
@@ -3519,12 +3521,12 @@ The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the to
 
 - **1** The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
-## `src/js/ui/10r-sponsor.js` (105 linjer)
+## `src/js/ui/10r-sponsor.js` (115 linjer)
 
 Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
 
 - **1** Sponsorer in the game (M6, core/09l-sponsor.js): the list from the cloud, the sponsored item card, the link out and the
-- **57** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
+- **67** the signs' measure, the rules (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, the draft of 14.06.2022;
 
 ## `src/js/ui/10s-broker.js` (133 linjer)
 
@@ -4190,7 +4192,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (580 linjer)
+## `src/js/view3d/13-instruments.js` (583 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4482,7 +4484,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (460 linjer)
+## `src/js/view3d/20-trawl-seine.js` (461 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4506,19 +4508,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 268 `npcKB(t, lod, liv)`
-  - 271 `npcMesh(n, lod)`
-  - 285 `npcWarm(eye)`
-  - 300 `seineAnch(G)`
-  - 310 `npcClock(Hf)`
-  - 318 `npcHead(n, t)`
-  - 333 `npcFollow(n, t)`
-  - 347 `npcPhase(id)`
-  - 352 `kvDraw(n, eye, t)`
-  - 360 `kvRibDraw(n, R, G, M, eye, t)`
-  - 386 `npcFrame(H)`
-  - 387 `drawNPC(eye, t, H, VP)`
-  - 439 `npcCrewDraw(n, K, eye, t)`
+  - 269 `npcKB(t, lod, liv)`
+  - 272 `npcMesh(n, lod)`
+  - 286 `npcWarm(eye)`
+  - 301 `seineAnch(G)`
+  - 311 `npcClock(Hf)`
+  - 319 `npcHead(n, t)`
+  - 334 `npcFollow(n, t)`
+  - 348 `npcPhase(id)`
+  - 353 `kvDraw(n, eye, t)`
+  - 361 `kvRibDraw(n, R, G, M, eye, t)`
+  - 387 `npcFrame(H)`
+  - 388 `drawNPC(eye, t, H, VP)`
+  - 440 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 

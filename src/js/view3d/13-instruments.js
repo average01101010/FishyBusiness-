@@ -143,7 +143,7 @@
   // on the hull while the design is worn (the house flag is still the company's)
   function imgCors(src){ let im = LOGOIMG['c:' + src]; if (!im){ im = LOGOIMG['c:' + src] = new Image(); im.crossOrigin = 'anonymous'; im.src = src; } return im; }
   const spLogo = W => { const L = W && typeof spPaintLogo === 'function' ? spPaintLogo(W) : null; return L ? [L, L.kind === 'u' ? imgCors(L.url) : null] : null; };
-  const hullLogo = () => { const W = typeof spWorn === 'function' ? spWorn(PAINTPRE || S.boat.liv) : null; return (W && spLogo(W)) || ownLogo(); };   // (a design without a mark leaves the company's logo)
+  const hullLogo = () => { const W0 = typeof spWorn === 'function' ? spWorn(PAINTPRE || S.boat.liv) : null, W = W0 && modelLiv(spPaintLiv(W0, S.boat.type)) ? W0 : null; return (W && spLogo(W)) || ownLogo(); };   // (a design without a mark leaves the company's logo)
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
@@ -567,7 +567,10 @@
     return [top[0], top[1] + 0.3, top[2]]; }
   function updateFlag(t, appW){
     const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
-    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - t * om + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
+    // the wave's phase adds up frame by frame (steg 44: t * om jumped with every small change of the wind once t was large, so the cloth
+    // snapped to a new shape when the apparent wind moved)
+    FLAGM.ph = (FLAGM.ph || 0) + om * (FLAGM.t0 == null ? 0 : Math.min(0.5, Math.max(0, t - FLAGM.t0))); FLAGM.t0 = t; const ph = FLAGM.ph;
+    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - ph + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
     const a = FLAGM.pos; let k = 0;
     for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++){
       const u0 = i / FW * FLAG_W, u1 = (i + 1) / FW * FLAG_W, v0 = j / FH * FLAG_H, v1 = (j + 1) / FH * FLAG_H;

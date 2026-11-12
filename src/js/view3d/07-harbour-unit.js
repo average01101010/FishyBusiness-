@@ -211,10 +211,10 @@
       const W = p => [L.M[0] * p[0] + L.M[4] * p[1] + L.M[8] * p[2] + L.M[12], L.M[1] * p[0] + L.M[5] * p[1] + L.M[9] * p[2] + L.M[13], L.M[2] * p[0] + L.M[6] * p[1] + L.M[10] * p[2] + L.M[14]];
       if (PM && PM.wire){ nSetup(VP); for (const x of [F.x0 + 0.2, F.x1 - 0.2]) drawN(PM.wire, limbM(W([x, QTOP, F.z - 0.06]), W([x, F.y1 + 0.05, F.z - 0.06]), 0.05)); }
       // the partner's flag on a pole of its own beside the banner (data.flag): 7 m, the flag 1.8 x 1.2 m from the pole's top
-      if (L.sp.data && L.sp.data.flag){ const px = F.x1 + 1.2, top = QTOP + 7.0; if (PM && PM.wire){ nSetup(VP); drawN(PM.wire, limbM(W([px, QTOP, F.z]), W([px, top, F.z]), 0.06)); }
+      if (L.sp.data && L.sp.data.flag){ const px = F.x1 + 1.2, top = QTOP + 7.0, pz = F.z + 2.0; if (PM && PM.wire){ nSetup(VP); drawN(PM.wire, limbM(W([px, QTOP, pz]), W([px, top, pz]), 0.06)); }   // (the pole 2 m out from the banner's plane: at the plants the banner is on the wall, and the cloth turns with the wind)
         // the cloth waves downwind from the pole's top (signFlag; it was a stiff plate along the shop's front until steg 44)
         // (the name reads the right way from both sides: seen from behind, the picture is turned)
-        const fp = W([px, top - 0.05, F.z]), wd = env.windDir || [0, -1], FM = model(fp[0], fp[1], fp[2], Math.PI / 2 - Math.atan2(wd[0], -wd[1]), 0, 0), fm = signFlag(now / 1000), back = FM[8] * FM[12] + FM[9] * FM[13] + FM[10] * FM[14] > 0;
+        const fp = W([px, top - 0.05, pz]), wd = env.windDir || [0, -1], FM = model(fp[0], fp[1], fp[2], Math.PI / 2 - Math.atan2(wd[0], -wd[1]), 0, 0), fm = signFlag(now / 1000), back = FM[8] * FM[12] + FM[9] * FM[13] + FM[10] * FM[14] > 0;
         fm.ub = back ? fm.ubB : fm.ubF; drawTexQuad(fm, signTex(L.sp), FM, VP, true, [0, 0.6, 0]); SIGNV.flags = (SIGNV.flags || 0) + 1; SFL.back = back; }
       if (Math.hypot(L.o[0] - eye[0], L.o[1] - eye[2]) > 150) continue;
       const ok = L.sp.id + '@' + key + ':' + Math.round(L.o[0]) + ',' + Math.round(L.o[1]); SIGNV.cur.push({id:L.sp.id, ok, F, M:L.M, key});

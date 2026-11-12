@@ -46,7 +46,32 @@ async def main():
         await pg.wait_for_timeout(8000); await shot(pg, 'design_liggende.png')
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.evaluate("document.querySelector('#drawerBody .pnt-sp').scrollIntoView({block:'center'})"); await pg.wait_for_timeout(8000); await shot(pg, 'design_staaende.png')
         await pg.set_viewport_size({'width': 1280, 'height': 800})
-        await pg.evaluate("DOCK.close(); G3.signAt('front', 14)")
+        # the mark from the sponsor's own picture (logo_url): fetched as the game fetches it (with CORS) and put on the hull. The picture
+        # here is drawn in the page and given as a data address, which the same path takes
+        lg = await pg.evaluate("""(async () => { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, 128, 128); g.fillStyle = '#c8102e'; g.beginPath(); g.arc(64, 64, 46, 0, 7); g.fill();
+          g.fillStyle = '#ffffff'; g.font = 'bold 44px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('NU', 64, 66); spPaintOf(-9).sponsor.logo = cv.toDataURL();
+          const L = spPaintLogo(spPaintOf(-9)); return {kind:L.kind, url:String(L.url).slice(0, 22)}; })()""")
+        logos = []
+        for _ in range(20):
+            await pg.wait_for_timeout(2000); logos = (await pg.evaluate("G3.signs"))['logos']
+            if 'x:' in logos: break
+        check(lg['kind'] == 'u' and 'x:' in logos, 'med logo_url er merket på skroget sponsorens bilde (hentet og lagt i en tekstur)', [lg, logos])
+        await pg.wait_for_timeout(4000); await shot(pg, 'design_logo_liggende.png')
+        # the design is put on, and another player's boat beside her wears it too: read from her paint code against the list
+        pe = await pg.evaluate("""(async () => { document.querySelector('#drawerBody [data-pa=pntgo]').click(); await new Promise(r => setTimeout(r, 300)); DOCK.close();
+          const b = S.boat; PEERS.length = 0; PEERS.push({id:'cccccccccc', boat:'Fjordbris', vtype:'sjark', x:b.pos.x + 0.025, y:b.pos.y + 0.01, hd:1.2, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now(), liv:'h:rod;x:-9'});
+          return {own:b.liv, str:livStr(b)}; })()""")
+        mods = []
+        for _ in range(25):
+            await pg.wait_for_timeout(2000); await pg.evaluate("PEERS.forEach(q => q.at = Date.now())")
+            mods = await pg.evaluate("Object.keys(NPCMOD).filter(k => /x:-9/.test(k))")
+            if mods: break
+        check(pe['own'].get('sp') == -9 and 'x:-9' in pe['str'] and any(k.endswith('|x') for k in mods), 'en annen spillers båt med designet i malingskoden bygges i 3D med designets maling', [pe, mods])
+        await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 30; c.pitch = 0.2; c.yaw = -1.9; })()")
+        await pg.wait_for_timeout(8000); await shot(pg, 'design_andre_liggende.png')
+        e1 = (await pg.evaluate("G3.signs"))['ensign']['ph']; await pg.wait_for_timeout(3000); e2 = (await pg.evaluate("G3.signs"))['ensign']['ph']
+        check(e2 > e1 >= 0, 'båtens eget flagg: bølgens fase legges sammen bilde for bilde', [e1, e2])
+        await pg.evaluate("G3.signAt('front', 14)")
         f = None
         for _ in range(60):
             await pg.wait_for_timeout(3000); f = (await pg.evaluate("G3.signs"))['flag']

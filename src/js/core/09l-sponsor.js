@@ -4,7 +4,7 @@
 // artifact, the tests) there are none, except the made-up test sponsor «Nordlys Utstyr» when the address asks for it (#sptest), so the
 // formats can be seen and tested. A placement: {id, kind, target, data, sponsor:{id, name, logo, site}}; kind 'item' with target an EQUIP
 // key and data {model, line}. Nothing here changes a number in the game: a sponsored item is the same EQUIP item with a name on it (V5).
-const SPN = {list:[], at:0};
+const SPN = {list:[], at:0, old:{}, want:new Set()};   // (old, want: the colours of paint designs no longer active, steg 44)
 const SP_KINDS = ['item', 'sign', 'event', 'press', 'look', 'broker', 'gift', 'link'];
 function spSet(rows){
   SPN.list = (Array.isArray(rows) ? rows : []).filter(r => r && SP_KINDS.includes(r.kind) && typeof r.target === 'string' && r.sponsor && typeof r.sponsor.name === 'string' && r.sponsor.name.trim())
@@ -38,13 +38,23 @@ function spPaintLiv(r, type){
 const spPaintAny = r => { const L = spPaintLiv(r); return !!(L.hull || L.house || L.deck || Object.keys(L.d).length); };
 const spPaints = () => SPN.list.filter(r => r.kind === 'look' && r.target === 'paint' && spPaintAny(r));
 const spPaintOf = id => (id == null || id === '' || isNaN(+id) ? null : spPaints().find(r => r.id === +id)) || null;
-// the design a paint wears (b.liv, or the one tried in the paint shop), while its agreement is active; else null
-const spWorn = L => L && L.sp != null ? spPaintOf(L.sp) : null;
-// the design in another player's paint code
-const spPaintIn = s => { const m = /(?:^|;)x:(-?\d{1,12})(?:;|$)/.exec(String(s || '')); return m ? spPaintOf(m[1]) : null; };
+// When the agreement ends, the mark goes and the colours stay (Jonas 12.11.2026, «Fargene blir»): the boat keeps the design's colours
+// in her own paint (b.liv.spd, put there with it), and the others get them from the cloud (sp_paint, supabase/migrations/
+// 20261112020000_sp_paint.sql) into SPN.old; such an ended design has no sponsor, so no mark and no link.
+const SP_PAINT_KEYS = ['name', 'name_en', 'hull', 'house', 'deck', 'ripe', 'totone', 'vann', 'stripe', 'lakk'];
+const spPaintData = D => { const o = {}; for (const k of SP_PAINT_KEYS) if (D && D[k] != null && D[k] !== '') o[k] = D[k]; return o; };
+const spEnded = (id, D) => ({id:+id, kind:'look', target:'paint', data:spPaintData(D), sponsor:null, ended:true});
+// the design a paint wears (b.liv, or the one tried in the paint shop): the active one, else its colours kept when it ended; else null
+function spWorn(L){ if (!L || L.sp == null || L.sp === '') return null; return spPaintOf(L.sp) || (L.spd && typeof L.spd === 'object' ? spEnded(L.sp, L.spd) : null); }
+// the design in another player's paint code: the active one, else an ended one's colours from the cloud (asked for once: SPN.want)
+function spPaintIn(s){
+  const m = /(?:^|;)x:(-?\d{1,12})(?:;|$)/.exec(String(s || '')); if (!m) return null; const id = +m[1];
+  const A = spPaintOf(id); if (A) return A; const D = SPN.old[id]; if (D) return spEnded(id, D);
+  if (D === undefined && id > 0) SPN.want.add(id); return null;
+}
 // its mark on the hull: the sponsor's picture {kind:'u', url}, else the made one, else none
 function spPaintLogo(r){
-  if (!r) return null; if (r.sponsor.logo) return {kind:'u', url:r.sponsor.logo};
+  if (!r || !r.sponsor) return null;   // (an ended design has no mark) if (r.sponsor.logo) return {kind:'u', url:r.sponsor.logo};
   const D = r.data || {}; return typeof D.sym === 'string' && D.sym ? {kind:'g', sym:D.sym, txt:String(D.txt || '').slice(0, 3), c1:D.c1, c2:D.c2} : null;
 }
 // the made-up sponsor for the tests and the demo build (never in the game's own data: only with #sptest in the address)

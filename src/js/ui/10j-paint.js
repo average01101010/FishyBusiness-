@@ -47,16 +47,18 @@ var PAINT = (() => {
   const spList = () => typeof spPaints === 'function' ? spPaints() : [];
   const spNow = L => { const W = typeof spWorn === 'function' ? spWorn(L) : null; return W ? W.id : null; };
   function spCard(b, r){
-    const D = r.data || {}, on = spNow(pre) === r.id, now = spNow(b.liv) === r.id, PL = spPaintLiv(r, b.type), url = spUrl(r.sponsor.site);
+    const D = r.data || {}, on = spNow(pre) === r.id, now = spNow(b.liv) === r.id, PL = spPaintLiv(r, b.type), url = r.sponsor ? spUrl(r.sponsor.site) : null, nm = L(D.name || (r.sponsor && r.sponsor.name) || 'Design', D.name_en || D.name || (r.sponsor && r.sponsor.name) || 'Design');
     const cols = [PL.hull, PL.house, PL.deck, PL.d.ripe, PL.d.totone, PL.d.vann, PL.d.stripe].filter(Boolean).filter((k, i, a) => a.indexOf(k) === i).map(k => HULLPAL.find(x => x[0] === k));
-    return '<div class="ph-card pnt-d pnt-sp" id="pnt-sp' + r.id + '"><h4>' + esc(L(D.name || r.sponsor.name, D.name_en || D.name || r.sponsor.name)) + '<span class="pnt-own">' + (now ? L('På båten', 'On the boat') : L('gratis', 'free')) + '</span></h4>' +
-      '<p class="ph-note"><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('levert av ', 'supplied by ') + esc(r.sponsor.name) + '. ' +
-        L('Bare utseende: fargene og merket på skroget. Båten går, fisker og selger som før.', 'Looks only: the colours and the mark on the hull. The boat sails, fishes and sells as before.') + '</p>' +
+    return '<div class="ph-card pnt-d pnt-sp" id="pnt-sp' + r.id + '"><h4>' + esc(nm) + '<span class="pnt-own">' + (now ? L('På båten', 'On the boat') : r.ended ? L('Din', 'Yours') : L('gratis', 'free')) + '</span></h4>' +
+      (r.ended ? '<p class="ph-note">' + L('Samarbeidet er slutt. Fargene er dine og blir på båten; merket er tatt av.', 'The partnership has ended. The colours are yours and stay on the boat; the mark is taken off.') + '</p>'
+        : '<p class="ph-note"><span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('levert av ', 'supplied by ') + esc(r.sponsor.name) + '. ' +
+          L('Bare utseende: fargene og merket på skroget. Båten går, fisker og selger som før.', 'Looks only: the colours and the mark on the hull. The boat sails, fishes and sells as before.') + '</p>') +
       '<div class="pnt-pal sm">' + cols.map(e => '<span class="pnt-sw" title="' + L(e[1], e[2]) + '" style="background:' + css(e) + ';cursor:default"></span>').join('') + '</div>' +
-      '<div class="pnt-row"><button class="ph-btn sm' + (on ? ' on' : '') + '" data-pa="pntsp" data-k="' + (on ? '' : r.id) + '">' + (on ? L('Ta av', 'Take off') : L('Prøv', 'Try')) + '</button></div>' +
+      '<div class="pnt-row"><button class="ph-btn sm' + (on ? ' on' : '') + '" data-pa="pntsp" data-k="' + (on ? '' : r.id) + '">' + (on ? L('Ta av', 'Take off') : r.ended ? L('Bruk igjen', 'Use again') : L('Prøv', 'Try')) + '</button></div>' +
       '<p class="ph-note">' + L('Din egen maling ligger under og er der igjen når du tar av designet.', 'Your own paint is under it, and is there again when you take the design off.') + '</p>' +
       (url ? '<p class="ic-sp-out"><a class="ic-sp-link" href="' + esc(url) + '" target="_blank" rel="noopener sponsored" data-pl="' + r.id + '">' + L('Se hos ' + esc(r.sponsor.name) + ' ↗', 'See at ' + esc(r.sponsor.name) + ' ↗') + '</a> <small>' + L('åpner utenfor spillet', 'opens outside the game') + '</small></p>' : '') + '</div>';
   }
+
   let pre = null, on = false;
   // the drawer page is open or not: the camera and the paint being tried go with it
   function live(want){
@@ -85,7 +87,8 @@ var PAINT = (() => {
       h.push('<div class="ph-card"><h4>' + L(z[2], z[3]) + '</h4><p class="ph-note">' + L(z[4], z[5]) + '</p><div class="pnt-pal">' + HULLPAL.filter(palOk).map(x => sw('pntz', z[0], x[0], v, now, x)).join('') + '</div>' +
         '<p class="pnt-name"><b>' + L(ez[1], ez[2]) + '</b> · ' + (v === now ? L('nå', 'now') : kr(pr)) + '</p></div>'); }
     // the partners' designs, beside the paint shop's own
-    for (const r of spList()) h.push(spCard(b, r));
+    for (const r of spList()) if (modelLiv(spPaintLiv(r, b.type))) h.push(spCard(b, r));   // (only a design that gives this boat something)
+    { const W = typeof spWorn === 'function' ? spWorn(b.liv) : null; if (W && W.ended) h.push(spCard(b, W)); }   // (an ended one she wears: hers to keep or take off)
     // the designs this boat can wear
     const ks = DESIGNS.filter(k => designFits(b.type, k));
     if (ks.length){
@@ -135,26 +138,27 @@ var PAINT = (() => {
     const s = pre.hull || 'orig', d = {}; for (const k of DESIGNS) if (owned(k) && pre.d[k] && designFits(b.type, k)) d[k] = pre.d[k];
     const liv = {}; if (s !== cur(b) || (b.liv && b.liv.hull)) liv.hull = s; if (Object.keys(d).length) liv.d = d;
     for (const z of ZONES){ const v = pre[z[0]]; if (zoneOk(b, z[0]) && v && v !== 'orig' && palRGB(v)) liv[z[0]] = v; }
-    if (spNow(pre) != null) liv.sp = spNow(pre);   // (a design whose agreement has ended is not kept)
+    { const W = typeof spWorn === 'function' ? spWorn(pre) : null; if (W){ liv.sp = W.id; liv.spd = spPaintData(W.data); } }   // (with its colours: they stay on her when the agreement ends, Jonas 12.11.2026 «Fargene blir»)
     const f = flagOf(flagOk(pre) ? pre : b.liv); if (f.code !== 'NO' || f.shape !== 'rekt') liv.flag = {c:f.code, s:f.shape};
     if (pre.logo !== undefined && owned('logo')) logoSet(pre.logo);
     if (Object.keys(liv).length) b.liv = liv; else delete b.liv;
   }
   function act(a, d){
     const b = S.boat; if (!pre) pre = copy(b.liv);
-    if (a === 'pntsp'){ if (d.k === '' || d.k == null){ delete pre.sp; PAINTPRE = pre; return true; } const r = typeof spPaintOf === 'function' ? spPaintOf(d.k) : null; if (!r) return false; pre.sp = r.id; PAINTPRE = pre; return true; }
-    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; delete pre.sp; PAINTPRE = pre; return true; }   // (the own paint is what is being chosen: a partner's design being tried goes off, so the choice shows)
-    if (a === 'pntz'){ if (!zoneOk(b, d.d) || !HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; if (d.k === 'orig') delete pre[d.d]; else pre[d.d] = d.k; delete pre.sp; PAINTPRE = pre; return true; }
+    if (a === 'pntsp'){ if (d.k === '' || d.k == null){ delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; } const r = typeof spPaintOf === 'function' ? spPaintOf(d.k) : null; pre = copy(b.liv); if (!r){ if (spNow(b.liv) !== +d.k) return false; PAINTPRE = pre; return true; }   // (an ended design she wears: put back on the try as she has it)
+      pre.sp = r.id; pre.spd = spPaintData(r.data); PAINTPRE = pre; return true; }   // (from the boat's own paint: a colour chosen before is not left under the design to be paid for unseen)
+    if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }   // (the own paint is what is being chosen: a partner's design being tried goes off, so the choice shows)
+    if (a === 'pntz'){ if (!zoneOk(b, d.d) || !HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; if (d.k === 'orig') delete pre[d.d]; else pre[d.d] = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }
     if (a === 'pntd'){ const k = d.d; if (!DESIGNS.includes(k)) return false;
       if (!d.k) delete pre.d[k]; else if (k === 'lakk') pre.d[k] = 1; else if (HULLPAL.some(x => x[0] === d.k && x[3])) pre.d[k] = d.k; else return false;
-      delete pre.sp; PAINTPRE = pre; return true; }
+      delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }
     if (a === 'pntf'){ if (!FLAGS[d.k] && d.k !== 'LOGO') return false; const f = flagOf(pre); pre.flag = {c:d.k, s:d.k === 'NO' && f.shape === 'splitt' ? 'rekt' : f.shape}; PAINTPRE = pre; return true; }
     if (a === 'pntfs'){ if (!FLAGSHAPES.includes(d.k)) return false; const f = flagOf(pre); if (f.code === 'NO' && d.k === 'splitt') return false; pre.flag = {c:f.code, s:d.k}; PAINTPRE = pre; return true; }
     if (a === 'pntlg' || a === 'pntlgc' || a === 'pntlgt'){ const cur0 = pre.logo !== undefined ? pre.logo : S.logo, g = Object.assign({kind:'g', sym:'anker', txt:initials(), c1:'marine', c2:'hvit'}, cur0 && cur0.kind === 'g' ? cur0 : {});
       if (a === 'pntlg'){ if (!LOGOSYM[d.k]) return false; g.sym = d.k; }
       else if (a === 'pntlgc'){ if (!['c1', 'c2'].includes(d.d) || !palRGB(d.k)) return false; g[d.d] = d.k; }
       else { const el = document.getElementById('pntLogoTxt'); g.txt = String(el ? el.value : '').toUpperCase().replace(/[^A-ZÆØÅ]/g, '').slice(0, 3); }
-      pre.logo = g; delete pre.sp; PAINTPRE = pre; return true; }
+      pre.logo = g; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }
     if (a === 'pntlgoff'){ pre.logo = null; if (flagOf(pre).code === 'LOGO') pre.flag = {c:'NO', s:'rekt'}; PAINTPRE = pre; return true; }
     if (a === 'pntreg'){ const r = regOf(b), el = document.getElementById('pntNum'), n = el ? Math.round(+el.value) : 0; if (!r) return false;
       if (!(n >= 1 && n <= 9999)){ toast(L('Velg et nummer fra 1 til 9999.', 'Choose a number from 1 to 9999.')); return false; }
@@ -170,7 +174,7 @@ var PAINT = (() => {
     if (a === 'pntgo'){
       if (b.status !== 'port') return false; const s = pre.hull || 'orig', free = !(b.liv && b.liv.hull) || (HULLPAL.find(x => x[0] === s) || [])[4] === 'ach', zc = zoneCost(b), cost = (s !== cur(b) && !free ? price(b) : 0) + zc; if (cost > spendable()) return false;
       const was = cur(b), sp0 = spNow(b.liv); if (cost) book('verft', -cost, 'Maling', 'Paint');
-      apply(b); if (spNow(b.liv) != null && spNow(b.liv) !== sp0 && typeof cloudEv === 'function') cloudEv('sp_look', {pl:spNow(b.liv)}); pre = copy(b.liv); PAINTPRE = pre;
+      apply(b); if (spNow(b.liv) != null && spNow(b.liv) !== sp0 && !spWorn(b.liv).ended && typeof cloudEv === 'function') cloudEv('sp_look', {pl:spNow(b.liv)}); pre = copy(b.liv); PAINTPRE = pre;
       if (s !== was){ const e = HULLPAL.find(x => x[0] === s);
         log((S.boatName || 'Båten') + ' er malt ' + (s === 'orig' ? 'tilbake i originalfargen' : e[1].toLowerCase()) + (cost ? ' for ' + fmt(cost) + ' kr' : '') + '.',
           (S.boatName || 'The boat') + ' is painted ' + (s === 'orig' ? 'back in her original colour' : e[2].toLowerCase()) + (cost ? ' for NOK ' + fmt(cost) : '') + '.'); }
@@ -188,7 +192,7 @@ var PAINT = (() => {
         g.drawImage(im, (256 - w) / 2, (256 - h) / 2, w, h); let url = cv.toDataURL('image/webp', 0.85); if (!/^data:image\/webp/.test(url) || url.length > 58000) url = cv.toDataURL('image/webp', 0.6);
         if (!/^data:image\/webp/.test(url)) url = cv.toDataURL('image/png'); if (url.length > 58000){ cv.width = cv.height = 160; cv.getContext('2d').drawImage(im, 0, 0, 160, 160); url = cv.toDataURL('image/png'); }
         if (url.length > 58000){ toast(L('Bildet er for stort. Prøv et enklere bilde.', 'The picture is too big. Try a simpler one.')); return; }
-        if (!pre) pre = copy(S.boat.liv); pre.logo = {kind:'u', img:url}; delete pre.sp; PAINTPRE = pre; if (typeof DOCK !== 'undefined') DOCK.redraw(); };
+        if (!pre) pre = copy(S.boat.liv); pre.logo = {kind:'u', img:url}; delete pre.sp; delete pre.spd; PAINTPRE = pre; if (typeof DOCK !== 'undefined') DOCK.redraw(); };
       im.src = fr.result; };
     fr.readAsDataURL(file);
   }

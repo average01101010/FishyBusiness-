@@ -265,11 +265,12 @@
   const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
   const NKB = {};
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
-  function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
+  const spX = liv => typeof liv === 'string' && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : '';   // (a partner's design found in the list or not: steg 44, as vessel3d.js npcModel)
+  function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv + spX(liv);
     if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
     return NKB[k]; }
   function npcMesh(n, lod){
-    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : n.kv ? npcType(n) : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
+    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
     const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
     const V = VESSELS[t] || (GLBM[t] && GLBM[t].ex) || {len:n.L, beam:n.B}, sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
