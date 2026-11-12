@@ -421,6 +421,7 @@ Samme arbeid som trebåten (over), på skiffens egne plasser (`skiff59.py` `anch
 - **Vannlinja:** `WLE` er den tomme båtens (6 cm under tegningens), `to_game` og ankrene regner fra den; malingen står ved tegningens. `STAB_AT.breisjark` er lest av modellen (`tests/unit/trim.test.mjs`).
 - **Bremmen** (`BRIM_O`, `BRIM_I`) og `shade(…, 5)` etter kuttene på styrhuset og lyets vegger (`qa/flatnorm.py`).
 - `JIG_Z.breisjark` i `view3d/13-instruments.js` brukes ikke lenger.
+- **Runde 3 (12.11.2026, grunnlaget 10.10):** setteporten og galgen er 10 cm bredere (`SPORT` ±0,70, `GANT_Y` 0,77), og `check()` måler setteren mot galgestolpen på begge plassene han står (`SETTER_Y`: over hekken og ved linesetteren). Flaggstanga står på galgen (`POLE`, `pole_top()` er `anchors.pole`; spillet tegner flagget fra toppen av den, og `check()` krever at et flagg på 1,2 m henger minst 2,0 m over dekket). Stigen til lyets tak står om babord over casingen (`LADDER`). På broa står bare det som følger båten (VHF-en, `VESSELS.breisjark.std`); en AIS ble tatt ut igjen fordi den kjøpes. Karakteren er 71/100; runde 4 står i `docs/planer/start/89.md`.
 
 ## Den nye hurtigsjarken om bord (OB10, 10.11.2026, `docs/planer/om-bord.md` 4.7)
 
