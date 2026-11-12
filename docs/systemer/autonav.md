@@ -271,3 +271,34 @@ Samme feil i rutepanelets landsjekk gjaldt **alle fire forseglede havner (Ålesu
 - **Etapper over en forseglet havns egen fylling** (`core/07-harbours.js` `quayLandLeg`, lest av `legClearMemo` i `core/01-world.js`, altså rutepanelets `estimate` og kartplotterens tegning): en etappe som berører sonen `pt.free` rundt havnepunktet, er klar når landet den krysser er `quayLand`, og den bare krysser kystlinja inne i sonen, samme regel som havnas egen vei ut. `pt.free` er kjent først når havnas vei inn er funnet, så `quayLandLeg` finner den for havnene innen 0,5 km av etappens ender først.
 
 **Ikke rettet, står i backloggen:** krasjene i kartvisningen (sju på to uker fra tre spillere, seks på iPhone; en ny spiller i Troms 06.11.2026 åpnet kartplotteren på steget `gps` og ble borte etter ett livstegn), Smøla nord uten rute fra mottakskaia til feltet 17.09.2027 (fra naustet går den via åpent vann), og oppstartens sjekk av planen (`ui/11-boot.js`, `legClear`), som ikke kjenner `quayLandLeg` (ikke sett feile i testen).
+
+## 4.12n Hopp over resten av ruta (HO1, steg 104, 12.11.2026)
+
+Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet som åpen en rute der det står en kostnad for å skippe resten av ruten, altså teleportere seg til målet.» Planen, valgene og prisene står i `docs/planer/hopp.md`. HO1 er kjernen uten knapp og betaling. Knappen er HO2 (steg 105), kjøpet HO3 (steg 106).
+
+- **Hvor hoppet går** (`hopStop` i `core/06j-hopp.js`): til neste stopp på ruta, altså en havn, en fiskeplass, redskapsarbeid, en ankring eller rutas siste punkt (`wpStop`, `w.anchor`). Ved målet gjør `arrive(w)` det samme som når båten seiler fram: legger til kai, begynner å fiske, setter eller trekker redskapet, eller ligger stille.
+- **Klokka står stille.** Verdens klokke flytter seg ikke, så alt annet enn tida går som om båten seilte (Jonas: «Ja, med vilkår»):
+  - **Tørrkjøringen** (`hopRun`) seiler resten av veien minutt for minutt som `sail()`. Den bruker `sailV` for farten, med fartsgrensene, bremsingen inn mot stoppet og sjøen, og trimmen til den går ut. Vind og sjø er der båten er hvert minutt (`windAt`, `hsAt`), og dieselen regnes med `fuelLph`. Ingenting i spillet endres: plassen, farten, kursen og rutas indeks settes tilbake.
+  - **Hoppet** (`hopDo`):
+    - trekker dieselen (`fuelUse`, også på turens felleskostnader) og legger til motortimene
+    - tar trimmen for minuttene den ville gått (`b.trim.until`)
+    - lar fangsten holde seg og hendene på dekk sløye og ise hvert minutt der båten ville vært (`holdMinute`, trukket ut av `vesselStep` i `core/05-vessels.js`)
+    - gir energien din som `energyMinute` ville gitt (`hopEnergy`: ned på sjøen, opp i køya, søvn ved null)
+    - gir mannskapet om bord slitasjen for timene (`crewSeaFat`, trukket ut av `crewTick` i `core/04-crew.js`, med natta etter klokka)
+- **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** ingen fartstid (`fsMinute`), ingen distanse (`tatAdd('nm')`), ingen merker (`achMinute`) og ingen sjøtimer til mannskapets erfaring. Ingen av dem kalles.
+- **Nektet før kjøpet** (`hopWhy`, så `hopRun`), med en grunn og uten at noe endres:
+  - ingen rute som seiles
+  - Driftsplanen (`pl.ops`, `pl.p2`)
+  - båten stopper eller finner en vei rundt
+  - ankeret er ute, eller båten ligger bi
+  - hånda på roret
+  - første tur
+  - et turoppdrag i gang med denne båten
+  - været på veien over båtens risiko (`riskLevel` > 0) eller over grensa for Autonav når den står på (`windLim`, `seaLim`)
+  - for lite diesel
+  - nesten fremme (under ett ekte minutt)
+- **Betalt** (`hopGo(true)`, HO3) går hoppet uansett vær, diesel og nesten fremme (Jonas: «uavhengig av været eller andre ting»).
+- **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
+- **Kartet ved målet** lastes før hoppet (`hopGo`: `mapNeed` ved stoppet, så tørrkjøringen på nytt med verden slik den er da).
+- **Ikke med i HO1:** knappen og kortet (HO2), kjøpet (HO3), lekkasjer og lensepumpa underveis (`hullMinute` kalles ikke) og maskinhavari i grov sjø (`risk`: hoppet går ikke i vær over risikogrensa).
+- **Testene:** `tests/unit/hopp.test.mjs` (35 sjekker: prisstigen, neste stopp, nektingene, energien og mannskapets slitasje) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, trimmen, nektingene og betalt hopp).
