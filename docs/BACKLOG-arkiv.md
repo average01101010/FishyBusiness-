@@ -2,6 +2,10 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (TB1, sammenstøtet med tråleren under Autonav, gren `ccr-5e1ba2f4-pusvyd`)
+
+- **Sammenstøt med en tråler under Autonav (tilbakemelding #1 fra testutgaven, 11.11.2026):** spilt av med hele kysten ved 69,545 N 18,642 Ø på verdens klokke (t 317277): «Bankhavet» (bunntråler, 60 m, 12 knop på vei inn). NPC-en og Autonav gikk tilbake til kursen så snart TCPA var null sett midt i svingen, og svingte tilbake mot den andre (35–84 m); Autonav begynte for sent mot et raskt skip. Rettet med `sjvBackClear` (regel 8 d), `sjvLead` (8 a) og avslakking når avviket ikke holder (8 e); `colregtest` har møtet. Kap. 5.10 i `docs/systemer/sjofart-og-lover.md`.
+
 ## Strøket 11.11.2026 (Ø14 F3, feltnavnene i teksten)
 
 - **Pubens rykte og Kystpostens «Tynt fiske» gjelder bare Senja** (funnet 07.11.2026 i Ø14-planen, `docs/planer/fangstfelt.md` 2.2): `rumour` i `ui/09-hand-fishing.js` (linje 13) velger alltid blant Senjas seks felt (`GROUNDS`) med prisen på Husøy, også når båten ligger i Bergen eller Båtsfjord; `newsForDay` i `core/06-services.js` (linje 121) bare blant Senjas fire. Rettes i Ø14 F3 (steg 31c). Sjekk: puben i Bergen nevner et felt nær Bergen. **Rettet 11.11.2026 i Ø14 F3 (steg 31c):** ryktet velger blant fiskeplassene innen 20 km av havna båten ligger i (`rumourAt`), og «Tynt fiske på» blant dem innen 20 km av hjemmehavna.
