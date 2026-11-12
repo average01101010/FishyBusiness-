@@ -6,7 +6,9 @@ Checks:
   1. the full sea with the FFT tiles is drawn (else this would measure the Gerstner waves);
   2. no side peak of the mean autocorrelation (four pictures 15 s apart, left and right of the boat; a tile is some 120 px here)
      stands 7 standard deviations over the ring of shifts it lies in (a lattice is a sharp spot, chance is not);
-  3. the picture is not flat (its spread over 4 grey levels), so a quiet picture cannot pass for one without a lattice.
+  3. the picture is not flat (its spread over 4 grey levels), so a quiet picture cannot pass for one without a lattice;
+  4. under way her own short sea (nfShift) moves smoothly: sailing 80 m in steps of 2 cm, no step changes the short tile's height (its two
+     reads alone) at five places more than 6 times the usual step, while with the offsets folded in the world, as before the kontroll, it jumps.
 Seen red before B6: 9.8 on the code before it, at a shift of (-33, 109) px, the tile at 24.7 m read once; some 5 after, with no
 place of its own. (The peak's height alone, 0.05, did not tell them apart: the few big flecks of foam give chance peaks as high.)
 Not covered: the long tile's 173 m (wider than the picture here), dusk and night, the phone (NOFFT).
@@ -58,6 +60,17 @@ async def main():
         print('the sharpest side peak of the mean autocorrelation:', round(v, 2), 'standard deviations over its ring, at a shift of', sh, 'px; spreads', sps)
         print(ok(v < 7), 'no side peak of the mean autocorrelation stands 7 standard deviations over its ring: no tile repeated', round(v, 2))
         print(ok(all(sp > 4 for sp in sps)), 'the pictures are not flat (spread over 4 grey levels)', sps)
+        # under way her own short sea moves with her (nfShift): its pattern must move smoothly, with no jump where its offsets are folded.
+        # Steps of 2 cm along 30 degrees for 80 m (past four folds), the short tile's height read at five places after each (no time between): a jump is a step whose
+        # change is many times the usual one. The same with the offsets folded in the world, as before the kontroll, must jump.
+        JUMP = '''(old) => { const D = G3._debug, N = D.nf, a = 0.52, P = [[0, 0], [7, 3], [-12, 9], [21, -15], [-30, -22]].map(([x, z]) => [D.bv.x + x, D.bv.z + z]);
+          const sv = [Array.from(N.O), Array.from(N.OA), Array.from(N.OB), Array.from(N.rp)]; N.O2W = [0, 0]; let prev = P.map(p => D.fftTrH(p[0], p[1], true)[1]); const d = [];
+          for (let i = 0; i < 4000; i++){ (old ? D.nfShiftOld : D.nfShift)(0.02 * Math.cos(a), 0.02 * Math.sin(a)); const v = P.map(p => D.fftTrH(p[0], p[1], true)[1]); d.push(Math.max(...v.map((x, k) => Math.abs(x - prev[k])))); prev = v; }
+          N.O.set(sv[0]); N.OA.set(sv[1]); N.OB.set(sv[2]); N.rp.set(sv[3]); const s = d.slice().sort((x, y) => x - y); return {max:s[s.length - 1], med:s[s.length >> 1]}; }'''
+        jn, jo = await pg.evaluate(JUMP, False), await pg.evaluate(JUMP, True)
+        rn, ro = jn['max'] / max(jn['med'], 1e-9), jo['max'] / max(jo['med'], 1e-9)
+        print('the largest step against the usual one, sailing 80 m:', round(rn, 1), '(with the offsets folded in the world as before:', round(ro, 1), ')')
+        print(ok(rn < 6 and ro > 2 * rn), 'under way the short sea moves smoothly, with no jump where its offsets fold (and the old fold does jump)', round(rn, 1), round(ro, 1))
         print('sidefeil:', errs[:3]); await b.close()
 
 if __name__ == "__main__": asyncio.run(main())

@@ -22,8 +22,9 @@ PLACE = "S.t = Math.round((Date.UTC(2026, 9, 11, 13, 38) - EPOCH) / 6e4); WX_FOR
 SAIL = "(() => { const b = S.boat, g = P(68.99, 17.118); S.mult = 1; S.plan = {wps:[{x:g.x, y:g.y + 0.9, port:null, fish:0}], idx:0, speed:6, returning:false}; b.status = 'sailing'; b.v = 6; })()"
 STOP = "(() => { const b = S.boat; S.mult = 0.00001; S.plan = null; b.status = 'idle'; b.v = 0; })()"   # (the game's clock all but stopped again, so she lies where she stopped and does not drift off at six times the speed)
 # her own sea against the shared one, in metres: each wave's held phase G against the rule ph0 - k.A (the largest of the 13), and the tiles' offsets
+# (the short tile's: each of its two reads' own, NF.OA and NF.OB, B6)
 OWN = """() => { const W = G3._debug.wv, N = G3._debug.nf, A = W.A; let g = 0; W.list.forEach((c, i) => { let d = (W.G[i] - (c.ph0 - c.k * (c.Dx * A[0] + c.Dz * A[1]))) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; g = Math.max(g, Math.abs(d) / c.k); });
-  return JSON.stringify({g, t1:Math.hypot(N.O[0], N.O[1]), t2:Math.hypot(N.O[2], N.O[3]), gl:N.gl, A, t:performance.now() / 1000, x:G3._debug.bv.x, z:G3._debug.bv.z}); }"""
+  return JSON.stringify({g, t1:Math.hypot(N.O[0], N.O[1]), t2:Math.max(Math.hypot(N.OA[0], N.OA[1]), Math.hypot(N.OB[0], N.OB[1])), gl:N.gl, A, t:performance.now() / 1000, x:G3._debug.bv.x, z:G3._debug.bv.z}); }"""
 PTS = [[0, 0], [12, -7], [-25, 18], [40, 33], [-55, -48]]
 HW = """(tw) => { const D = G3._debug, bx = D.bv.x, bz = D.bv.z; return %s.map(([a, c]) => D.seaHW(Math.round(bx / 10) * 10 + a, Math.round(bz / 10) * 10 + c, tw)); }""" % json.dumps(PTS)
 STATE = "JSON.stringify({fft:G3._debug.fft.have, one:G3._debug.seaOne, O:Array.from(G3._debug.nf.O).map(v => +v.toFixed(2)), gl:+G3._debug.nf.gl.toFixed(2), x:Math.round(G3._debug.bv.x), z:Math.round(G3._debug.bv.z)})"
@@ -63,7 +64,7 @@ async def main():
         await B.evaluate(SAIL); await B.wait_for_timeout(30000); await B.evaluate(STOP); await B.wait_for_timeout(8000)
         # (the software GPU draws a frame every few seconds and the boat gathers way slowly, so her own sea under way is small here: a known
         # offset is laid on her sea lying still instead, 1.2 rad on every wave's held phase and 40 m and 10 m on the tiles, and its glide measured)
-        await B.evaluate("(() => { const W = G3._debug.wv, N = G3._debug.nf; for (let i = 0; i < W.list.length; i++) W.G[i] = (W.G[i] + 1.2) % (2 * Math.PI); N.O[0] = 40; N.O[2] = 10; })()")
+        await B.evaluate("(() => { const W = G3._debug.wv, N = G3._debug.nf; for (let i = 0; i < W.list.length; i++) W.G[i] = (W.G[i] + 1.2) % (2 * Math.PI); N.O[0] = 40; N.OA[0] = 10; N.OB[1] = 10; })()")
         o0 = json.loads(await B.evaluate(OWN)); await B.wait_for_timeout(10000); o1 = json.loads(await B.evaluate(OWN))
         dt = o1['t'] - o0['t']; rate = {k: (o0[k] - o1[k]) / dt for k in ('g', 't1', 't2')}
         print('a known offset on her sea (m):', {k: round(o0[k], 2) for k in ('g', 't1', 't2')}, '->', {k: round(o1[k], 2) for k in ('g', 't1', 't2')}, 'over', round(dt, 1), 's, glide', round(o1['gl'], 2), 'cell', o0['A'], o1['A'], 'at', round(o1['x']), round(o1['z']))

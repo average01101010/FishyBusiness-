@@ -14,7 +14,7 @@
 // mean is the mean surface's slope). The functions are pure and self-contained, so the worker in view3d/14b-fft.js runs them as text
 // (as core/01c-vec.js does) and tests/unit/hfft.test.mjs checks them against a direct sum in Node.
 // The second tile is 23.18 m, not 24.7: 173 / 24.7 is 7.004, so the two lay down together every 173 m (Jonas' video 12.11.2026: «repiterende
-// geometriske mønstre»); 173 / 23.18 = 7.463, at least 0.058 from a whole number for every multiple up to 12 (and 0.023 up to 40). HFFT.mix: how the short tile is read (B6, 12.11.2026). It is read twice, turned +-rot
+// geometriske mønstre»); 173 / 23.18 = 7.463, at least 0.073 from a whole number for every multiple up to 12 (and 0.023 up to 40). HFFT.mix: how the short tile is read (B6, 12.11.2026). It is read twice, turned +-rot
 // radians about the world's origin and the second shifted by dB tiles, and the two are summed over sqrt 2 (the variance kept), so its
 // lattice never shows; and in the crests' measure (the trace that sets the whitecaps) it counts w2 of the long tile's, so the crests
 // that break are the long waves' with the short ones as their grain (the dominant waves break), not a 23 m lattice of flecks.
@@ -119,15 +119,15 @@ function hfftFrame(T, t, out, W, outD){
 // in the tail where the threshold lies (0.7 to 1.3 times the cover at 12-25 m/s with the normal quantile). So the threshold is fitted
 // to this frame's tiles: n sums of each tile read at a random place (they never line up, being incommensurate) plus the grain's spread
 // (gs), sorted, read at nine shares and fitted as th = a + b z + c z^2 against the normal quantile z of the share. Returns [a, b, c].
-function hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1){
-  // (w2: the short tile's weight in the crests' measure, HFFT.mix; it is read twice and summed over sqrt 2, as the shaders read it)
+function hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false){
+  // (w2: the short tile's weight in the crests' measure, HFFT.mix; two: it is read twice and summed over sqrt 2, as the shaders read it)
   const sd = Math.max(Math.hypot(s1, w2 * s2), 1e-9), v = new Float32Array(n); let r = 12345;
   const rnd = () => { r = (Math.imul(r, 1103515245) + 12345) >>> 0; return (r + 0.5) / 4294967296; };
   // (read as the shaders and fftTrH read them, bilinear between the texels at a random place: the shortest waves, two or three texels
   // long, lose much of their spread to that, so read at the texels the threshold was a third too high)
   const bil = (o, N) => { const u = rnd() * N, w = rnd() * N, i0 = Math.floor(u), j0 = Math.floor(w), fu = u - i0, fw = w - j0, i1 = (i0 + 1) % N, j1 = (j0 + 1) % N;
     return (o[(j0 * N + i0) * 4 + 2] * (1 - fu) + o[(j0 * N + i1) * 4 + 2] * fu) * (1 - fw) + (o[(j1 * N + i0) * 4 + 2] * (1 - fu) + o[(j1 * N + i1) * 4 + 2] * fu) * fw; };
-  for (let i = 0; i < n; i++){ const a = bil(o1, n1), b = w2 === 1 ? bil(o2, n2) : w2 * (bil(o2, n2) + bil(o2, n2)) * Math.SQRT1_2, g = Math.sqrt(-2 * Math.log(rnd())) * Math.cos(6.2831853 * rnd()); v[i] = (a + b) / sd + g * gs; }
+  for (let i = 0; i < n; i++){ const a = bil(o1, n1), b = w2 * (two ? (bil(o2, n2) + bil(o2, n2)) * Math.SQRT1_2 : bil(o2, n2)), g = Math.sqrt(-2 * Math.log(rnd())) * Math.cos(6.2831853 * rnd()); v[i] = (a + b) / sd + g * gs; }
   v.sort();
   const W = [0.3, 0.2, 0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001], zq = w => { let z = Math.sqrt(-2 * Math.log(w)); return z - (2.515517 + 0.802853 * z + 0.010328 * z * z) / (1 + 1.432788 * z + 0.189269 * z * z + 0.001308 * z * z * z); };
   let S0 = 0, S1 = 0, S2 = 0, S3 = 0, S4 = 0, T0 = 0, T1 = 0, T2 = 0;

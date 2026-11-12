@@ -61,7 +61,7 @@ export default function (t){
     const rnd = () => { r = (Math.imul(r, 1664525) + 1013904223) >>> 0; return (r + 0.5) / 4294967296; };
     const W = []; for (let q = 0; q < 96; q++){ const ang = rnd() * 6.2831853, kk = 2 * Math.PI * (2 + rnd() * 5) / n; W.push([Math.cos(ang) * kk, Math.sin(ang) * kk, rnd() * 6.2831853]); }
     for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){ let v = 0; for (const [kx, kz, p] of W) v += Math.sin(kx * i + kz * j + p); o2[(j * n + i) * 4 + 2] = v / Math.sqrt(48); }
-    const c = K.hfftCapFit(o1, 16, 0, o2, n, 1, 0, 40000, K.HFFT.mix.w2), rd1 = () => { const u = rnd() * n, w = rnd() * n, i0 = Math.floor(u), j0 = Math.floor(w), fu = u - i0, fw = w - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n, g = (a, b) => o2[(b * n + a) * 4 + 2];
+    const c = K.hfftCapFit(o1, 16, 0, o2, n, 1, 0, 40000, K.HFFT.mix.w2, true), rd1 = () => { const u = rnd() * n, w = rnd() * n, i0 = Math.floor(u), j0 = Math.floor(w), fu = u - i0, fw = w - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n, g = (a, b) => o2[(b * n + a) * 4 + 2];
       return (g(i0, j0) * (1 - fu) + g(i1, j0) * fu) * (1 - fw) + (g(i0, j1) * (1 - fu) + g(i1, j1) * fu) * fw; };
     const rd = []; for (let q = 0; q < 200000; q++) rd.push((rd1() + rd1()) * Math.SQRT1_2); rd.sort((a, b) => a - b);
     let worst = 0; for (const [Wq, z] of [[0.05, 1.645], [0.01, 2.326], [0.002, 2.878]]) worst = Math.max(worst, Math.abs(c[0] + c[1] * z + c[2] * z * z - rd[Math.floor(rd.length * (1 - Wq))]));

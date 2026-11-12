@@ -15,6 +15,7 @@ Fra `CLAUDE.md` 26.10.2026 (Jonas 07.10.2026, «Spør før hver test»: «Dekker
 | `heattest` | 30 min | varmekartet, ekkoloddet, sonaren eller fiskemodellen |
 | `vessel3d` | 24 min, over 40 min i skyen fra 30.10.2026, rundt 60 min 01.11.2026 (går ut på tid i `run.py`: kjør den direkte, `python3 -u tests/vessel3d.py`, eller med `tools/boats/qa/runtests.sh vessel3d`; for én båt `vessel3d.py <type>`, 4 min) | bildene av båtmodellene (tallene sjekker `node tests/unit/run.mjs vessel3d` på sekunder fra 01.11.2026; `vessel3d.py` trengs bare når noen skal se på bildene) |
 | `sea3d` | 65–75 min (målt 3 845–4 340 s i de seks kjøringene 08.–10.11.2026, `tests/historikk.tsv`; sto som 15 min) | havskyggeren eller sjøtilstanden |
+| `monster` | 12–15 min | FFT-flisene (`core/03k-hav-fft.js`, `view3d/14b-fft.js`), sjøskyggeren (`01-shaders.js`) eller nærfeltets forskyvninger (`14-sea.js` `nfShift`): et gjentatt mønster rett ovenfra (autokorrelasjonen) og hopp i den korte flisa under fart (5.20t) |
 | `trackfollow` | 30 min | styringen, Autonav, rutene, manøvreringsmodellen (`16b-dyn.js`) eller 3D-følgeren (`view3d/16-motion.js`); 1b og 2a holder tikket og stanser siden 22 s ved overgangene til modellen (tid hentet inn, kast loss), og målingene fra del 1 og stoppet i del 2 ligger i `tests/out/trackfollow-part1.json` og `-part2.json` (07.11.2026) |
 | `tral3d` | 12 min | trål eller not |
 | `vectest` | 11 min | vec-pakkene (bygg, veier, bruer, kaier) |

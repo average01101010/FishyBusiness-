@@ -364,8 +364,9 @@
     'float rst=tv*exp(-hfSq((back-lc)/(0.8+0.3*hb)))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
     'return iw;}';
   // B6 (12.11.2026, Jonas' video: the flecks of foam in a lattice): the short tile read twice, turned +-HFFT.mix.rot about the world's
-  // origin and the second shifted (uF2r, fftBind), its slopes turned back, summed over sqrt 2 so its variance is kept; bi: the mip bias
-  const FFT_T2 = (() => { const c = wc5(Math.cos(HFFT.mix.rot)), s = wc5(Math.sin(HFFT.mix.rot));
+  // origin and the second shifted (uF2r, fftBind), its slopes turned back, summed over sqrt 2 so its variance is kept; bi: the mip bias.
+  // q: the place from the render origin (P, not P - uNFD: the reads' offsets are their own, NF.OA and NF.OB)
+  const FFT_T2 = (() => { const c = Math.cos(HFFT.mix.rot).toFixed(8), s = Math.abs(Math.sin(HFFT.mix.rot)).toFixed(8);   // (8 places: the reads' turn as the CPU has it; rot > 0)
     return '\n#ifndef NOFFT\nvec4 fftT2(vec2 q,float bi){vec2 a=vec2(' + c + '*q.x-' + s + '*q.y,' + s + '*q.x+' + c + '*q.y)*uFftP.y+uF2r.xy;vec2 b=vec2(' + c + '*q.x+' + s + '*q.y,' + c + '*q.y-' + s + '*q.x)*uFftP.y+uF2r.zw;' +
       'vec4 A=texture2D(uFft2,a,bi);vec4 B=texture2D(uFft2,b,bi);A.xy=vec2(' + c + '*A.x+' + s + '*A.y,' + c + '*A.y-' + s + '*A.x);B.xy=vec2(' + c + '*B.x-' + s + '*B.y,' + s + '*B.x+' + c + '*B.y);return (A+B)*0.70711;}\n#endif\n'; })();
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
@@ -409,7 +410,7 @@
     '\nfloat crest=y*inversesqrt(sa);float dw2=smoothstep(0.45,1.73,fetchW(Pg,-w2,S.w));float Wc=clamp(3.84e-6*pow(max(uWind,0.3),3.41)*dw2,1e-5,0.5);' +
     'vec2 cq=vec2(dot(Pbg,w2),dot(Pbg,wp));float fv;float th;float Wq=min(Wc*(uFftP.z>0.5?' + wc5(WCAP.F.k) + ':' + wc5(WCAP.k) + '),0.5);' +
     // (B3: the tiles' compression, as the sea shader breaks the crests)
-    '\n#ifndef NOFFT\nif(uFftP.z>0.5){float fs=sqrt(fe2/uFftP.w);vec2 q=Pg-uNFD;vec4 f1=texture2D(uFft1,(q-uFftO.xy)*uFftP.x,-8.0);vec4 f2=fftT2(q,-8.0);float crS=(yL+fs*(f1.w+f2.w))*inversesqrt(saL+uFftQ.w*fs*fs);fv=capFf((f1.z+' + wc5(HFFT.mix.w2) + '*f2.z)/max(uFftQ2.w,1e-6),crS,capBr(cq,uTime,uWind,1.0,0.0));th=capThF(Wq);}' +
+    '\n#ifndef NOFFT\nif(uFftP.z>0.5){float fs=sqrt(fe2/uFftP.w);vec2 q=Pg-uNFD;vec4 f1=texture2D(uFft1,(q-uFftO.xy)*uFftP.x,-8.0);vec4 f2=fftT2(Pg,-8.0);float crS=(yL+fs*(f1.w+f2.w))*inversesqrt(saL+uFftQ.w*fs*fs);fv=capFf((f1.z+' + wc5(HFFT.mix.w2) + '*f2.z)/max(uFftQ2.w,1e-6),crS,capBr(cq,uTime,uWind,1.0,0.0));th=capThF(Wq);}' +
     // (the tiles at level 0, bias -8: the map's texels are 0.6-1.2 m, so the short tile's mip levels would have smoothed away the
     // spread the threshold is fitted to, and the tails came from a third to a half of the crests the sea draws; the kontroll 12.11.2026)
     'else\n#endif\n{fv=capFv(capJ(jxx,jxz,jtr,jv),jsc*inversesqrt(jsv),crest,capBr(cq,uTime,uWind,1.0,0.0));th=capTh(Wq);}ic=smoothstep(th-0.01,th+0.05,fv);}' +
@@ -455,7 +456,7 @@
   // the edge, as the far pass beyond has them (12.11.2026: the sky's reflection takes the resolved normal only, and the coarse levels'
   // slopes there made the near pass reflect less sky than the far pass, a darker square with a sharp edge seen from high up)
   const FFT_LV = '\n#ifndef NOFFT\nfloat fftLv(vec2 u){vec2 a=dFdx(u);vec2 b=dFdy(u);float p=length(a);float r=length(b);return log2(max(max(max(p,r)*0.25,min(p,r)),1e-4));}\n#endif\n';
-  const FFT_FS = '\n#ifndef NOFFT\nif(uFftP.z>0.5){fs=sqrt(fe2/uFftP.w);vec2 q=P-uNFD;vec4 f1=texture2D(uFft1,(q-uFftO.xy)*uFftP.x);vec4 f2=fftT2(q,0.0);float g2=0.5+0.805*gust;' +
+  const FFT_FS = '\n#ifndef NOFFT\nif(uFftP.z>0.5){fs=sqrt(fe2/uFftP.w);vec2 q=P-uNFD;vec4 f1=texture2D(uFft1,(q-uFftO.xy)*uFftP.x);vec4 f2=fftT2(P,0.0);float g2=0.5+0.805*gust;' +
     'vec2 u1=(q-uFftO.xy)*uFftP.x*128.0;vec2 u2=(q-uFftO.zw)*uFftP.y*64.0;float l1=clamp(fftLv(u1)/' + wc5(Math.log2(31.7 / (2 * HFFT.tiles[0].L / HFFT.tiles[0].N))) + ',0.0,1.0);float l2=clamp(fftLv(u2)/' + wc5(Math.log2(7.5 / (2 * HFFT.tiles[1].L / HFFT.tiles[1].N))) + ',0.0,1.0);vec4 f=f1+f2*g2;float lam=min(Qw,0.27/max(fs*uFftQ.z,1e-4));' +
     'vec2 ne=min(vW.xz-uNearE.xy,uNearE.zw-vW.xz);float ew=smoothstep(0.0,uNearB,min(ne.x,ne.y));N.x-=fs*f.x*ew;N.z-=fs*f.y*ew;N.y-=lam*fs*f.z*ew;lost+=2.0*fs*fs*(uFftQ.x*mix(1.0,l1,ew)+uFftQ.y*g2*g2*mix(1.0,l2,ew));yF=fs*(f1.w+f2.w);fT=(f1.z+' + wc5(HFFT.mix.w2) + '*f2.z)/max(uFftQ2.w,1e-6);}\n#endif\n';
   const SEA_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
