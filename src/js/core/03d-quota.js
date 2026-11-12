@@ -459,3 +459,63 @@ function bkNews(H){
   if (!(B.told & 2) && H >= s.notice && H < s.stop){ B.told |= 2; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite stoppes ' + dayStr(s.stop) + '. Redskapen skal være på land innen da.', 'The direct fishery for Greenland halibut stops ' + dayStr(s.stop) + '. The gear must be ashore by then.'); }
 }
 
+// ---- cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
+// regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026, read word for word in J-160-2026 at fiskeridir.no («Forskriften lyder
+// etter dette», in force from 1 October 2026). § 1: «Det er forbudt for norske fartøy å fiske og lande torsk» in the North Sea («Norges
+// territorialfarvann og økonomiske sone sør for 62° N avgrenset mot øst av en rett linje gjennom Hanstholmen fyr og Lindesnes fyr») and
+// in the Skagerrak outside the baseline. § 4 second paragraph: «Fartøy med adgang til å delta i åpen gruppe i fisket etter torsk for
+// fartøy med mindre enn 500m³ lasteromvolum som fisker med konvensjonelle redskap i Nordsjøen, kan maksimalt fiske og lande følgende
+// kvanta torsk i Nordsjøen»: 2 tonnes guaranteed and 3 tonnes maximum, the same for all three lengths. § 4 last paragraph: the jig
+// under 11 m on blad B in the Skagerrak, 1 April – 30 June, «maksimalt fiske og lande 3 tonn torsk». § 5: «inntil 15 % bifangst av torsk
+// i de enkelte fangster og ved landing» with conventional gear other than seine in the North Sea, 5 % in the Skagerrak, and «Når det
+// direkte fisket etter torsk er stoppet eller når det enkelte fartøy har fisket sin maksimalkvote, kan fartøy med adgang til å delta i et
+// direkte fiske etter torsk i Nordsjøen ha bifangst av torsk i fisket etter andre arter etter bestemmelsene i § 5». § 2: «Alle kvanta i
+// forskriften angis i rund vekt.»
+// The game has no closed group south of 62° N, so the player is counted in the open group there (a right north of 62° N is not one in
+// the North Sea). Who is in it is deltakerforskriften's (J-66-2026, read at fiskeridir.no 11.11.2026) § 16: «Når vilkårene for deltakelse
+// i lukket gruppe ikke er oppfylt, kan fartøy som oppfyller følgende vilkår delta i åpen gruppe»: registered and under 500 m³ (no length
+// limit, unlike north of 62° N), «eier av fartøyet og høvedsmann må være ført i fiskermanntallet» (the player is, as in the open group
+// north of 62° N), and «under utøvelse av fangst må eier selv være høvedsmann om bord i fartøyet» (S.tripOwner); and § 6: «Hvis eier av
+// fartøy som deltar i åpen gruppe eier 50 % eller mer i annet fartøy, kan ikke sistnevnte fartøy delta i åpen gruppe i samme fiskeri»,
+// so one vessel an owner: the first of the fleet to land cod on the cap in a year has it for that year (sorAcc). A vessel outside it
+// has the bycatch only. The caps are counted where the quotas north of 62° N are (quotaState(): q.nsjo and q.skag4, kg round weight landed on the cap
+// this year), from what the hold knows was taken in each zone (S.boat.byc, 05-vessels.js bycAdd, by 03e-rules.js ruByc).
+// The open group's fishing is not stopped in the game, because it was not in 2026: the group quota was not taken, and Fiskeridirektoratet
+// raised the closed group's maximum quotas three times instead (6 tonnes for the smallest in J-113-2026 of 26 June, 10 in J-135-2026 of
+// 27 August, 12.5 in J-160-2026 of 1 October), and no J-melding stops the fishery (the list for south of 62° N read 11.11.2026). So the
+// 3 tonnes hold all year, and the guaranteed 2 are said and never the limit. The bycatch share is taken of what was caught in the
+// zone, as in the Skagerrak (5.28d).
+// 'sorfri' is the cod taken inside the baseline east of the line (the coast of Sørlandet outside the Oslo fjord): § 1 names the North
+// Sea and the Skagerrak «utenfor den norske grunnlinjen» only, and the quotas of J-187-2026 are for north of 62° N, so no quota holds
+// there. It is counted so the landing keeps it off the quota north of 62° N, and nothing of it is taken
+const SORQ = {
+  nsjo:{max:3000, guar:2000, by:0.15, open:true, ref:'FOR-2025-12-19-2805 §§ 4 og 5', url:'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-160-2026'},
+  skag4:{max:3000, by:0.05, ref:'FOR-2025-12-19-2805 §§ 4 og 5', url:'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-160-2026'},
+  sorfri:{max:Infinity, by:1}};
+// the vessel's place in the open group in the North Sea (deltakerforskriften § 16 d and § 6, above): 'open' or 'none'
+function sorOpenId(){ const y = yearH(S.t / 60); for (const v of S.fleet || []){ const q = vget(v, 'quota'); if (q && q.y === y && q.nsjo > 0) return v.id; } return null; }
+function sorAcc(){ if (S.tripOwner === false) return 'none'; const id = sorOpenId(); return id == null || id === S.cur ? 'open' : 'none'; }
+// the cod aboard that was taken south of 62° N where it is counted (the caps, the free cod, the Skagerrak bycatch): not on the quota
+// north of 62° N. Never more than the cod in the hold
+function sorCodAboard(){ const c = (S.boat && S.boat.byc) || {}; let n = 0; for (const k in c) n += c[k].cod || 0;
+  return Math.min(n, (S.hold || []).reduce((a, x) => a + (x.sp === 'torsk' ? x.kg : 0), 0)); }
+// what is left of a cap for the vessel, kg round weight: q the year's count (quotaState()), acc her place in the open group (sorAcc())
+function sorRoom(k, q, acc){ const Q = SORQ[k]; if (!Q || (Q.open && acc === 'none')) return 0; return Math.max(0, Q.max - ((q && q[k]) || 0)); }
+// … and with the cod aboard from the zone taken off (the vessel now: what she may still catch on the cap)
+function sorLeft(k){ let q = null, acc = 'open'; try { q = quotaState(); acc = sorAcc(); } catch (e){}
+  const c = S.boat && S.boat.byc && S.boat.byc[k]; return Math.max(0, sorRoom(k, q, acc) - ((c && c.cod) || 0)); }
+// what a landing does with the cod counted in the zones with a cap. byc: the hold's count ({nsjo:{kg, cod}, skag4:{kg, cod}}, round
+// weight as caught), codHold: the cod aboard that is not already taken as bycatch elsewhere (kg as it lies, so gutted cod weighs less
+// than it was counted). Per zone: the cod goes on the cap while there is room, what is over may be a bycatch of the catch from the
+// zone (15 % or 5 %), and the rest is confiscated. Returns cod (the hold's kg these zones answer for), ok (round kg onto each cap),
+// by (hold kg confiscated per zone) and kg (their sum). Pure
+function sorConf(byc, codHold, q, acc){
+  const out = {cod:0, kg:0, ok:{}, by:{}}; if (!byc) return out;
+  const ks = Object.keys(SORQ).filter(k => byc[k] && byc[k].cod > 0), round = ks.reduce((a, k) => a + byc[k].cod, 0); if (!(round > 0)) return out;
+  const s = Math.min(1, Math.max(0, codHold) / round);   // hold kg per counted kg
+  for (const k of ks){ const c = byc[k], ok = Math.min(c.cod, sorRoom(k, q, acc)), conf = Math.max(0, c.cod - ok - SORQ[k].by * (c.kg || 0));
+    out.cod += c.cod * s; if (ok > 0) out.ok[k] = ok; if (conf > 0.001){ out.by[k] = conf * s; out.kg += conf * s; } }
+  return out;
+}
+// the landing is done: the cod that went on the caps is counted for the year
+function sorLanded(q, ok){ for (const k in (ok || {})) q[k] = (q[k] || 0) + ok[k]; }

@@ -56,7 +56,34 @@ export default function (t){
       if (R.some(r => inRing(r, f.x, f.y))) inside++;
       let d = 1e9; for (const r of R) for (let i = 0; i < r.length; i += 2) d = Math.min(d, Math.hypot(r[i] - f.x, r[i + 1] - f.y)); if (d < Math.max(2, f.r * 2)) near++; }
     t.ok(has > 0.99 * nf && inside > 0.97 * has && near > 0.995 * has && other === 0, `formene ligger rundt punktene: ${has} av ${nf} fiskeplasser har form, punktet inne i formen på ${inside}, nær den på ${near}; gyte- og oppvekstområdene ingen (${other})`);
-    FELT.S = S; const h = D.find(f => f.n === 'Ytre Mefjorden Sør'); t.ok(h && K.feltShape(h).length > 0, 'feltShape gir formen når fila er lest');
+    // Ø14 F3-rest (steg 31f, 12.11.2026): a ground's rings are one surface. The game reads them by the even-odd rule (feltSd), so a
+    // ground whose polygons were written as a list had nothing inside it where two of them were the same ring (Bjørnvika by Båtsfjord
+    // and 155 others), and a hole where two overlapped. Now tools/npc/felt.py writes their union: every ground with a shape has a
+    // point inside it (300 points spread over its box), its own point is inside by the same rule, and no ring stands twice. (From the same day the source's holes are written as well, below.)
+    // Seen red against the data before the union (the files of the commit before, 12.11.2026): 160 grounds without a point inside (156 with nothing inside at all, four more with so little that 300 points miss it), 179 with a ring twice, and the own point inside on 4 360 of 4 645.
+    FELT.S = S; const GG = K.feltGeo().filter(g => g.R), empty = [], twice = []; let own = 0;
+    for (const g of GG){ let hit = K.feltSd(g, g.f.x, g.f.y) > 0;   // (the ground's own point first: a long thin ground can lie between 300 points over its box)
+      for (let k = 0; k < 300 && !hit; k++) hit = K.feltSd(g, g.b[0] + (g.b[2] - g.b[0]) * K.hash(g.f.i * 613 + k * 2 + 1), g.b[1] + (g.b[3] - g.b[1]) * K.hash(g.f.i * 613 + k * 2 + 2)) > 0;
+      if (!hit) empty.push(g.f.nf);
+      if (K.feltSd(g, g.f.x, g.f.y) > 0) own++;
+      const keys = g.R.map(r => { const q = []; for (let i = 0; i < r.length; i += 2) q.push(Math.round(r[i] * 100) + ',' + Math.round(r[i + 1] * 100)); return q.sort().join(' '); });
+      if (new Set(keys).size < keys.length) twice.push(g.f.nf); }
+    t.ok(GG.length > 0.99 * nf && empty.length === 0, `ingen fiskeplass med form er uten et punkt inne i seg (${GG.length} med form, ${empty.length} uten${empty.slice(0, 4).map(n => ' «' + n + '»').join('')})`);
+    t.eq(twice.length, 0, `ingen fiskeplass har samme ring to ganger${twice.slice(0, 4).map(n => ' «' + n + '»').join('')}`);
+    // (from 12.11.2026 also where the outer ring's middle fell in a hole of the ground's own: 4 553 of 4 645 before the point was moved)
+    t.ok(own > 0.985 * GG.length, `feltets eget punkt ligger inne i flata etter partallsregelen på ${own} av ${GG.length}`);
+    // the source's own holes (an island, or water the fishermen left out) are read too: a ring inside another ring of the same
+    // ground is a hole, and its middle is outside the ground. Seen red against the data of the commit before (the exteriors only):
+    // 5 grounds with a hole, now over 100.
+    let holes = 0, holeOut = 0, holeG = 0;
+    for (const g of GG){ if (g.R.length < 2) continue; let any = false;
+      for (const r of g.R){ if (g.R.filter(o => o !== r && inRing(o, r[0], r[1])).length % 2 === 0) continue; any = true;   // (inside an odd number of the others: a hole; a part inside a hole is ground again)
+        let mx = 0, my = 0; for (let i = 0; i < r.length; i += 2){ mx += r[i]; my += r[i + 1]; } mx /= r.length / 2; my /= r.length / 2;
+        if (!inRing(r, mx, my)) continue; holes++; if (K.feltSd(g, mx, my) < 0) holeOut++; }
+      if (any) holeG++; }
+    // (not every one: a part of the ground can lie inside a hole, over its middle)
+    t.ok(holeG > 100 && holes > 100 && holeOut >= 0.98 * holes, `kildens egne hull er med: ${holeG} fiskeplasser har hull, og midten av hullet er utenfor feltet på ${holeOut} av ${holes}`);
+    const h = D.find(f => f.n === 'Ytre Mefjorden Sør'); t.ok(h && K.feltShape(h).length > 0, 'feltShape gir formen når fila er lest');
     FELT.S = false; t.eq(K.feltShape(h), false, 'og false for godt når fila ikke passer (ikke null, som betyr at den er på vei)'); FELT.S = null;
   }
   // 5. Senja's grounds as all the others (Jonas 08.11.2026): the grounds by GROUNDS are no longer left out

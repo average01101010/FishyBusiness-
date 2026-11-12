@@ -330,7 +330,7 @@ Jonas valgte dem fra lista (nr. 5 og 7).
   - Sild og hval i fjordene (rundt 10. november).
   - Julefiske (15. desember).
 - Hver sesong har tre kanaler:
-  - Kystradio over VHF: en melding på dagen, fra `seasonDay`, som går hver time. Kystradioen (`radio` i `06-services.js`) vises på skjermen i 15 sekunder og legges aldri i Meldinger (Jonas 21.10.2026: «De fyller innboksen totalt»). Det gjelder værmeldingene kl. 09, 12, 15, 18 og 21, kulingvarselet på VHF og sesongnyhetene. De siste 40 står i `S.radio`, og dekksdagboka henter dagens værmeldinger derfra. Kulingvarsel som SMS («Værvarsel», uten VHF) er fortsatt en melding. Gamle Kystradio-meldinger flyttes fra `S.msgs` til `S.radio` ved oppstart.
+  - Kystradio over VHF: en melding på dagen, fra `seasonDay`, som går hver time. Kystradioen (`radio` i `06-services.js`) vises på skjermen i 15 sekunder og legges aldri i Meldinger (Jonas 21.10.2026: «De fyller innboksen totalt»). Det gjelder værmeldingene kl. 09, 12, 15, 18 og 21, kulingvarselet på VHF og sesongnyhetene. De siste 40 står i `S.radio`, og dekksdagboka henter dagens værmeldinger derfra. Kulingvarsel som SMS («Værvarsel», uten VHF) er fortsatt en melding. Gamle Kystradio-meldinger flyttes fra `S.msgs` til `S.radio` ved oppstart. Det kystradioen sendte mens tiden borte ble spilt inn (`catchUp`, `LANDQ.away`), ble ikke hørt: det står bare i dekksdagboka og kommer ikke på skjermen (11.11.2026, tilbakemelding #119; før kom hver værmelding fra timene borte opp etter hverandre, 15 s hver, når spillet ble åpnet eller vekket).
   - Kystposten (`seasonNews` i `newsForDay`).
   - Praten på puben (`seasonTalk`).
 - Regelverkets egne datoer står også i kalenderen (`SEASON_FIXED`). Nyhetene om dem ligger fortsatt i `06-services.js`.
