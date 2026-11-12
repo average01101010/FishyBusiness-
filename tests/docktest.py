@@ -171,6 +171,9 @@ async def run(p, w, h, tag):
     await tap_el('#dock [data-dk=redskap]')
     check(await toast_has('nm unna'), 'et trykk på det grå Redskap sier hvor langt det er til blåsa')
     await pg.evaluate("(() => { const pg = S.pgear; S.equip.linehaler = true; S.boat.rig = 'line'; pg.lines.hyse.n = 2; pg.lines.hyse.baited = 2; btOf(pg.lines.hyse); pg.kits.n = 2; renderActs(); })()")
+    # (the rule motor's tip, «Ny regel her: Høyst 5 000 kroker», comes the first time the line rig's rule applies at sea, on its own
+    # tick: under load it landed just after the tap below and wrote over the toast this checks. The tips waiting are told first.)
+    await pg.evaluate("(() => { for (let i = 0; i < 40; i++) ruTips(); })()")
     await tap_el('#dock [data-dk=redskap]'); await fan_up()
     f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => [x.dataset.dk, x.classList.contains('off'), x.dataset.why || ''])")
     check([x[0] for x in f] == ['settut', 'taopp'] and not f[0][1] and f[1][1] and 'nm' in f[1][2], 'Redskap-vifta med line om bord: Sett ut lyser, Ta opp grå med avstanden til blåsa under', f)

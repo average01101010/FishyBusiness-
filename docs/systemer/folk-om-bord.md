@@ -21,14 +21,14 @@
   - Minus grov sjø, med ekstra straff for sjøsyke.
   - Trekkeffekter, nag × 5, brudd på hviletid −8, og uløst konflikt −10.
   - Driftshastighet 0,04 per time (0,07 for rastløse).
-- **Oppsigelse:** Under grensen i mer enn 36 timer fører til oppsigelse i neste havn. Grensen er 22, 30 for rastløse og 15 for grinebitere.
+- **Oppsigelse:** Under grensen i mer enn 36 timer fører til oppsigelse. Grensen er 22, 30 for rastløse og 15 for grinebitere. Fra Ø11.9 (12.11.2026, valg 40 A) med fristen i skipsarbeidsloven § 5-2 i ekte tid: 14 dager i prøvetida (seks måneder), ellers én måned; personen står fristen ut om bord og går i land i første havn etter, og kan be(s) om å bli når trivselen er 45 eller mer. Arbeidsavtalen står på kortet i Mannskap. Alt i kap. 10 i `docs/systemer/sjofart-og-lover.md`.
 - **Slitenhet:** +6 per time ved fiske og +3 ved seiling, skalert med utholdenhet og høyere om natta. Den som tar pause, blir mindre sliten: faktoren er 0,4 + 0,6 × andelen av timen personen jobbet. Den går ned med 8 per time i havn.
 - **Hviletid:** per person etter forskriften, se 5.19. Brudd gir en melding per døgn, 1,5 ganger raskere slitasje og −8 i trivsel.
 - **Kjemi** (`compat`): trekk, samme hjemsted, aldersforskjell over 30 år, og nag.
 - **Konflikter** (`S.cevt`):
   - Mellom mannskapet (`PAIR_TOPICS`): løses ved å snakke med dem, ta parti, gi fri eller si opp.
   - Med skipperen (`BOSS_TOPICS`): løses ved å høre på, stå på sitt eller si opp.
-  - Uløst etter 12 timer blir det verre, og etter 48 timer mønstrer noen av.
+  - Uløst etter 12 timer blir det verre, og etter 48 timer sier noen opp (fra Ø11.9 med lovens frist, før: i land med en gang). «Si opp» fra spilleren skriver grunnen og fristen i loggen (`crewLetGo`).
 - **Utvikling:** Ferdighetene vokser med stasjonen personen faktisk står på (5.19). Erfaring og sjømannskap vokser i tillegg hver 40. time på sjøen, dobbelt så fort for lærevillige. Skjulte trekk avsløres etter 12 timer på sjøen.
 - **Rettet 01.10.2026:** `crewQuit` avbrøt resten av `crewTick` den timen, og juksing trente feil redskap etter garn (`lastGear`). Begge er borte.
 - **Mann over bord** (Ø11.6, 07.11.2026; `docs/systemer/sjofart-og-lover.md` kap. 6): den som jobber på dekk, kan gå over bord i grov sjø (aldri skipperen). Den i sjøen er ikke om bord (`workAssign` → `mobDeck`). Opp i tide: slitenheten til 90. Tatt av redningen, eller opp etter grensa: sykmeldt 1–2 eller 3–5 dager (`c.off`, `offUntil`, Mannskap viser «er i land til …»), og tilbake om bord først når båten ligger til kai etter dagene (`c.mobOff`, `mobCrewHour` fra `crewTick`). En fra havbåtens lag holdes av dekket de dagene (`S.mobOff`). Historien (`lifeStory`) får linja.
