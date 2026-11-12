@@ -72,7 +72,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
   if (window.OB_IDLE) { window.idleAssign = window.OB_IDLE; window.OB_IDLE = null; }
   if (window.OB_COLD) { window.coldPen = window.OB_COLD; window.OB_COLD = null; }
-  window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
+  window.OB_GO = null; window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
   window.SEA = (st) => { const g = GROUNDS[__GI__].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
     b.fishUntil = st === 'fishing' ? S.t + 600 : null; G3.vesselChanged(); };
   window.FEEDON = (sp) => { clearInterval(window.FEED); window.FEED = setInterval(() => { const Q = window.CATCHQ || (window.CATCHQ = []);
@@ -90,7 +90,9 @@ OPS = {
       await new Promise(r => setTimeout(r, 2500)); const q = portById('husoy');
       const r = await leiaRoute({x:q.p.x, y:q.p.y}, {x:g.x, y:g.y}, 'husoy', null); if (r.why) return 'SKIP: ' + r.why;
       S.plan = {wps:r.wps.map(w => ({x:w.x, y:w.y, port:null, fish:0, leia:true})), idx:0, speed:BOAT.vcruise || 6, full:false, returning:false};
-      depart();""", (0.9, 0.42, 1.6), 14],
+      /* (OB10 runde 4: she casts off when the pictures begin, OB_GO in record(): the lines take a game minute, 10 s, and the frames
+         waited for before the pictures took some 30 s under SwiftShader, so she was already off the quay in the first one) */
+      window.OB_GO = () => depart();""", (0.9, 0.42, 1.6), 14],
   # out to the ground: the skipper at the wheel, the crew inside or on the open deck
   'ut': ['*', 'til feltet: skipperen ved roret, mannskapet inne eller på det åpne dekket', """b.status = 'sailing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 1.2; G3.vesselChanged();
       S.plan = {wps:[{x:b.pos.x + Math.sin(1.2) * 6, y:b.pos.y - Math.cos(1.2) * 6, port:null, fish:0}], idx:0, speed:BOAT.vcruise || 7, returning:false}; if (S.crew.length) CREW3D.reset();""",
@@ -290,6 +292,7 @@ async def record(o, fmt, outdir):
             if op in ('kran', 'krann'):
                 try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
                 except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
+            await pg.evaluate("(() => { if (window.OB_GO){ const f = window.OB_GO; window.OB_GO = null; f(); } })()")
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             if o['bilder']:
                 # pictures only (--bilder): the game's own clock, a screenshot at 15, 50 and 85 % of the operation's seconds
