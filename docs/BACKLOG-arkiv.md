@@ -2,6 +2,10 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (engangsrunden mot testutgaven, gren `ccr-a2be6984-8sygjs`)
+
+- ~~**`fleet2test` (to linjer) og `vesseltest` (trim på skiffen) er røde på arbeidsgrenens bygg også** (kjørt mot `origin/ccr-5e1ba2f4-pusvyd` 11.11.2026), ikke av KM4: `fleet2test` «both vessels went out, at the same time» og «quotas kept apart» har vært røde de fem siste kjøringene i `tests/historikk.tsv`; `vesseltest` venter at skiffen ikke tar trim, og trim virker på alle båter fra 11.11.2026.~~ Grønne igjen: begge ble rettet i steg 18b (`3b52223+` i `tests/historikk.tsv`), og 12.11.2026 var `fleet2test` 16 OK og `vesseltest` 37 OK mot testutgaven (versjon `97b13cec726d`; «Engangsrunden mot testutgaven» i `docs/systemer/testing.md`).
+
 ## Strøket 12.11.2026 (steg 28, Ø5 rest a: M5-resten og M9-resten, gren `ccr-5e1ba2f4-pusvyd`, b5138622; kortet i PR #68)
 
 - ~~**M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).~~ Gjort i steg 28 12.11.2026 (fylkene fra Kartverket, `tools/regions/fylke.py`; bildene av `tests/mediekortshot.py`; «M9-resten» i `docs/systemer/handel-og-steder.md`).
