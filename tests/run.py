@@ -261,6 +261,10 @@ LITE += ['ferrytest']
 COVER['tests/ferrytest.py'] = ['ferrytest']; COVER['tests/unit/ferje.test.mjs'] = []
 COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npctest', 'boottest']; COVER['src/data/ferje.json'] = ['ferrytest', 'boottest']
 D3 += ['kystshot', 'kystshot_st']; COVER['tests/kystshot.py'] = ['kystshot', 'kystshot_st']; COVER['tests/kystshot_st.py'] = ['kystshot_st']   # (Ø15 N4: the coastal route's ship and an express boat at their quays in 3D)
+D3 += ['npcshot', 'npcshot_st']; COVER['tests/npcshot.py'] = ['npcshot', 'npcshot_st']; COVER['tests/npcshot_st.py'] = ['npcshot_st']   # (Ø15 N7: the NPC fleet's ship models in 3D)
+for _k in ('ferje34', 'ferje64', 'ferje112', 'hurtig', 'passasjer', 'kystrute'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot', 'npcshot_st']; COVER['tools/ships/%s.py' % _k] = ['npcshot']
+COVER['tools/ships/shiplib.py'] = ['npcshot']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
+for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot']))
 COVER['src/data/ferje.json'] += ['kystshot', 'kystshot_st']; COVER['src/js/core/05b-ferje.js'] += ['kystshot', 'kystshot_st']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
 # fin.test.mjs (unit) the reading. finshot is pictures for the eye (before and after), run by hand
