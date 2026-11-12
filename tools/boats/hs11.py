@@ -277,7 +277,7 @@ def colours():
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
 
 
-# ---------- the wear: per corner, so it runs across faces (B16; 2009, gelcoat, 17 years) ----------
+# ---------- the wear: per corner, so it runs across faces (B16) ----------
 def n3(x, y, z=0.0): return noise.noise(V((x, y, z)))
 def toward(m, rgb, k):
     base = m['rgb']; return [1 + (rgb[i] / max(base[i], 1e-3) - 1) * k for i in range(3)]
@@ -302,7 +302,7 @@ def run_under(x, z, x0, l, ztop, ln, side):
     if u < -0.2 or u > 1.2 or z > ztop + 0.03 or z < ztop - ln: return 0.0
     return ss(-0.2, 0.05, u) * ss(1.2, 0.95, u) * (0.45 + 0.55 * ss(-0.35, 0.35, n3(x * 17.0, side * 3.1, 0.3))) * ss(ztop - ln, ztop - 0.02, z) ** 1.3
 def wear(p, m, n):
-    """(OB10 round 3, 11.11.2026: a boat from 2009 that has worked for seventeen years, and it has to show at close range in the game:
+    """(OB10 round 3, 11.11.2026: a boat in use, and it has to show at close range in the game:
     the judge of round 2 found «ingen slitasje å se».) Rust runs down the side under the freeing ports and the bilge outlet, dark runs
     under the cleats, a slimy band over the boot top, the gelcoat chalked where the fenders rub, the white strake and the caps scuffed
     dark, soot round the exhaust, the bulwarks' inside dirty at the deck, the deck stained where they work; and inside the wheelhouse
@@ -324,7 +324,7 @@ def wear(p, m, n):
         for xc in CLEATS: k = max(k, run_under(x, z, xc - 0.10, 0.20, z_sh(xc), 0.55, side))
         chalk = ss(0.10, 0.45, n3(x * 1.9, z * 2.6, side * 5.0 + 9.0)) * ss(Z_BT + 0.25, 1.45, z) * ss(z_kn(x) + 0.02, z_kn(x) - 0.15, z) * ss(1.2, 2.4, x) * ss(9.4, 8.2, x)
         slime = ss(0.20, 0.0, z - paint_line(x, Z_BT)) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 6.0, side, 2.0)))
-        t = mix(base, ((0.30, 0.50, 0.52), 0.45 * chalk), (SLIME, 0.60 * slime), (GRIME, 0.60 * k), (RUST, 0.80 * r))
+        t = mix(base, ((0.30, 0.50, 0.52), 0.45 * chalk), (SLIME, 0.60 * slime), (GRIME, 0.55 * k), (RUST, 0.55 * r))
         return [t[i] * g for i in range(3)]
     if nm == 'strake':
         v = 0.95 + 0.05 * n3(x * 4.0, z * 9.0, side)
@@ -350,7 +350,7 @@ def wear(p, m, n):
             return [t[i] * v for i in range(3)]
         return [v, v, v]
     if nm in ('deck', 'nonslip', 'grip', 'stud'):
-        v = 0.90 + 0.12 * n3(x * 3.0, y * 3.0, 1.0) + 0.05 * n3(x * 11.0, y * 11.0, 4.0)
+        v = 0.94 + 0.08 * n3(x * 1.3, y * 1.3, 1.0)                                     # (slow: sampled every 15 cm, anything faster shows as spots in a pattern)
         v *= 1 - 0.16 * ss(0.9, 0.0, math.hypot(x - HXR, y + 1.7)) - 0.12 * ss(0.8, 0.0, math.hypot(x - 3.0, y - 1.5)) - 0.10 * ss(0.7, 0.0, math.hypot(x - 1.0, y + 1.2))   # where they work
         if x < X_STEP: v *= 1 - 0.14 * ss(0.28, 0.0, ybw(x) - abs(y))                                                      # along the bulwarks' feet
         return [v, v, v]
