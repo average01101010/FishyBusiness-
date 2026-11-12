@@ -2879,3 +2879,5 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
 2026-11-12 02:15	ccr-899a9674-q3gjp0	d38b476	dbg23o	OK	45	3d	alene	
+2026-11-12 02:58	ccr-c987b885-ap4668	c814d03e	boottest	OK	27	lite	samtidig	
+2026-11-12 03:04	ccr-c987b885-ap4668	c814d03e	farttest	OK	384	lite	samtidig	
