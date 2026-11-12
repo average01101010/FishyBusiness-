@@ -3095,3 +3095,22 @@
 2026-11-12 11:57	ccr-013bxxie-n4kyst	4ea3f99	boottest	OK	27	lite	samtidig	
 2026-11-12 12:10	ccr-013bxxie-n4kyst	4ea3f99+	kystshot	OK	762	3d	alene	
 2026-11-12 12:25	ccr-013bxxie-n4kyst	4ea3f99+	kystshot	FEIL	900	3d	alene	FEIL finnsnes_liggende: MS Sundbrisen (123.3 m) ligger stille ved kaia i Finnsnes (kyst3d_finnsnes_liggende.png)  {'id': 'kyst8', 'name': 'MS Sundbrisen', 'L': 
+2026-11-12 12:50	ccr-013bxxie-n4kyst	1cd1a98	trip2	OK	38	lite	samtidig	
+2026-11-12 12:50	ccr-013bxxie-n4kyst	1cd1a98	keeptest	OK	18	lite	samtidig	
+2026-11-12 12:50	ccr-013bxxie-n4kyst	1cd1a98	towtest	OK	21	lite	samtidig	
+2026-11-12 12:50	ccr-013bxxie-n4kyst	1cd1a98	turtest	OK	21	lite	samtidig	
+2026-11-12 12:51	ccr-013bxxie-n4kyst	1cd1a98	autonavtest	OK	33	lite	samtidig	
+2026-11-12 12:51	ccr-013bxxie-n4kyst	1cd1a98	lanterntest	OK	20	lite	samtidig	
+2026-11-12 12:57	ccr-013bxxie-n4kyst	1cd1a98	farttest	OK	388	lite	samtidig	
+2026-11-12 12:57	ccr-013bxxie-n4kyst	1cd1a98	mobtest	OK	205	lite	samtidig	
+2026-11-12 13:04	ccr-013bxxie-n4kyst	1cd1a986	kystshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 13:31	ccr-013bxxie-n4kyst	503f41d4	tut	OK	2004	lite	alene	
+2026-11-12 13:31	ccr-013bxxie-n4kyst	503f41d4	routetest	OK	41	lite	alene	
+2026-11-12 13:32	ccr-013bxxie-n4kyst	503f41d4	charttest	OK	46	lite	alene	
+2026-11-12 13:47	ccr-013bxxie-n4kyst	503f41d4	kystshot	FEIL	900	3d	alene	FEIL finnsnes_liggende: MS Sundbrisen (123.3 m) ligger stille ved kaia i Finnsnes (kyst3d_finnsnes_liggende.png)  {'id': 'kyst8', 'name': 'MS Sundbrisen', 'L': 
+2026-11-12 13:53	ccr-013bxxie-n4kyst	503f41d4+	kystshot_st	OK	329	3d	alene	
+2026-11-12 13:58	ccr-013bxxie-n4kyst	503f41d4+	kystshot_st	OK	299	3d	alene	
+2026-11-12 14:02	ccr-013bxxie-n4kyst	503f41d4+	kystshot_st	OK	230	3d	alene	
+2026-11-12 14:14	ccr-013bxxie-n4kyst	2fd7a6db	kystshot	FEIL	719	3d	alene	FEIL finnsnes_liggende: MS Sundbrisen (123.3 m) ligger stille ved kaia i Finnsnes (kyst3d_finnsnes_liggende.png)  {'id': 'kyst8', 'name': 'MS Sundbrisen', 'L': 
+2026-11-12 14:15	ccr-013bxxie-n4kyst	2fd7a6db+	kystshot	FEIL	44	3d	alene	avsluttet med kode 1
+2026-11-12 14:28	ccr-013bxxie-n4kyst	2fd7a6db+	kystshot	OK	758	3d	alene	

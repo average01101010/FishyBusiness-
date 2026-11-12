@@ -13,7 +13,7 @@ def check(c, what, extra=''): print(('OK  ' if c else 'FEIL') + ' ' + what + (('
 SETUP = """async ([kind, dark]) => { const F = ferjeInit(); WX_FORCE = {w:4, d:200}; let T, pick;
   const day = Math.round(((dark ? Date.UTC(2027, 10, 17) : Date.UTC(2027, 5, 16)) - EPOCH) / 6e4);   // (June for daylight: Tromsø has the midnight sun; November for the dark)
   const port = kind === 'finnsnes' ? 'Finnsnes' : 'Tromsø';
-  if (kind === 'kyst' || kind === 'finnsnes'){ const K = F.k, i = K.P.q.findIndex(q => F.q[q].name === port); T = day + K.dep + (K.P.tm[2 * i - 2] + K.P.tm[2 * i - 1]) / 2; pick = n => n.type === 'coastal' && n.v === 0; }
+  if (kind === 'kyst' || kind === 'finnsnes'){ const K = F.k, i = K.P.q.findIndex(q => F.q[q].name === port); T = day + K.dep + K.P.tm[2 * i - 2] + 3;   /* (three minutes after she is in: the clock runs on while the 3D view loads, and at Finnsnes she lies 30 minutes) */ pick = n => n.type === 'coastal' && n.v === 0; }
   else { T = day + 180; pick = n => n.type === 'ferry' && n.ex === 1 && n.v === 0; }
   const tq = F.q.find(q => q.name === port), b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = []; b.pos = {x:tq.p.x + 0.5, y:tq.p.y}; b.v = 0;
   S.t = Math.floor(T); COASTM.k = ''; await mapNeed(tq.p, MAPD.simR);
