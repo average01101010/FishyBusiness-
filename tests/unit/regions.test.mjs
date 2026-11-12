@@ -21,8 +21,11 @@ export default function (t){
   const noF = PORTS.filter(p => !had[p.id] || !FYLKER.includes(had[p.id][2])).map(p => p.id);
   t.ok(!noF.length, 'alle havnene har fylke fra Kartverket (python3 tools/regions/fylke.py)' + (noF.length ? ': mangler ' + noF.slice(0, 8).join(', ') + (noF.length > 8 ? ' og ' + (noF.length - 8) + ' til' : '') : ''));
   // the point each county was asked for is where the port is now (a port moved in the core is asked again)
-  const moved = PORTS.filter(p => fy[p.id] && (Math.abs(fy[p.id].lat - pts[p.id][0]) > 1e-4 || Math.abs(fy[p.id].lon - pts[p.id][1]) > 1e-4)).map(p => p.id);
+  const moved = PORTS.filter(p => fy[p.id] && (Math.abs(fy[p.id].lat - pts[p.id][0]) > 1e-5 || Math.abs(fy[p.id].lon - pts[p.id][1]) > 1e-5)).map(p => p.id);
   t.ok(!moved.length, 'fylket er slått opp der havna ligger nå' + (moved.length ? ': flyttet ' + moved.slice(0, 8).join(', ') : ''));
+  // and the file the admin page gets has the counties fylke.json has (KYST_WRITE=1 after fylke.py)
+  const stale = PORTS.filter(p => had[p.id] && fy[p.id] && had[p.id][2] !== fy[p.id].fylke).map(p => p.id);
+  t.ok(!stale.length, 'port-regions.json har fylkene fra fylke.json' + (stale.length ? ': ulikt for ' + stale.slice(0, 8).join(', ') : ''));
   // the county agrees with the part of the coast: the ports in Nordland, Troms, Finnmark and Svalbard are all in the north (the north
   // begins at 65° N in landsdel, so two ports of Trøndelag by Leka are in it too, and stay so: the parts of the coast are left as they are)
   const odd = PORTS.filter(p => had[p.id] && ['Nordland', 'Troms', 'Finnmark', 'Svalbard'].includes(had[p.id][2]) && had[p.id][1] !== 'nord').map(p => p.id + ' ' + had[p.id][2] + '/' + had[p.id][1]);

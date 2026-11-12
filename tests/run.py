@@ -47,7 +47,7 @@ DRAWS3D = {'tut', 'markettest'}   # (markettest: the moment a boat is bought, in
 # steg 28: the counties of the ports for the media card (tools/regions/fylke.py, tests/unit/regions.test.mjs) and the pictures of the
 # formats (tests/mediekortshot.py, a tool run by hand against the demo build, so in none of the lists), which build.mjs puts in the admin page
 COVER_28 = {'tools/regions/fylke.py':['admintest'], 'tools/regions/fylke.json':['admintest'], 'tests/unit/regions.test.mjs':['admintest'], 'tests/mediekortshot.py':[],
-            'docs/sponsor/format.json':['admintest'], 'src/js/view3d/25-controls.js':['markettest'], 'src/js/view3d/13-instruments.js':['markettest'], 'src/js/view3d/24-cinema.js':['markettest'], 'build.mjs':['admintest']}
+            'docs/sponsor/format.json':['admintest'], **{'docs/sponsor/format-%s.jpg' % _n:['admintest'] for _n in ('banner', 'design', 'vare', 'annonse', 'jakke')}, 'src/js/view3d/25-controls.js':['markettest'], 'src/js/view3d/13-instruments.js':['markettest'], 'src/js/view3d/24-cinema.js':['markettest'], 'build.mjs':['admintest']}
 MUST = {'trip2': ('"st":"port"', 'ender ikke i havn'), 'tut': ('"tut": 0', 'veiledningen er ikke ferdig')}
 # which tests cover which file: «changed» runs these for the files in the diff. A file not listed runs trip2; texts and docs run nothing
 COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py':['legmemotest'], 'tests/bootgtest.py':['bootgtest'], 
