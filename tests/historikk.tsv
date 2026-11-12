@@ -2977,6 +2977,20 @@
 2026-11-12 07:15	claude/ob13-kyst21-runde2	6405cc9+	regmarktest	OK	7	lite	samtidig	
 2026-11-12 07:21	claude/ob13-kyst21-runde2	a748e2e	vesseltest	FEIL	18	lite	alene	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-12 07:36	claude/ob13-kyst21-runde2	a748e2e	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	crewclip	FEIL	35	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	walktest	FEIL	25	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 19
+2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	lanterntest	OK	27	lite	samtidig	
+2026-11-12 04:43	claude/ob11-r3-breisjark	314c22a+	regmarktest	OK	17	lite	samtidig	
+2026-11-12 04:44	claude/ob11-r3-breisjark	314c22a+	vesseltest	FEIL	30	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 06:27	claude/ob11-r3-breisjark	314c22a+	potshot	FEIL	723	3d	alene	FEIL bildene gjennom halte og satte teiner og stablene er tatt uten GL-feil  (1282, 12)
+2026-11-12 06:40	claude/ob11-r3-breisjark	314c22a+	brotest	FEIL	772	3d	alene	avsluttet med kode 1
+2026-11-12 06:48	claude/ob11-r3-breisjark	a364d8d	docktest	OK	67	lite	alene	
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	crewclip	FEIL	27	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	walktest	FEIL	18	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 60
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	lanterntest	OK	16	lite	samtidig	
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	regmarktest	OK	9	lite	samtidig	
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	vesseltest	OK	25	lite	samtidig	
+2026-11-12 07:13	claude/ob11-r3-breisjark	a364d8d+	worktest	OK	30	lite	samtidig	
 2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	driftsplan2ui	OK	38	lite	samtidig	
 2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	opsowntest	OK	49	lite	samtidig	
 2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	fleet2test	FEIL	35	lite	samtidig	FEIL both vessels went out, at the same time
@@ -3063,3 +3077,5 @@
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	crewwalk	OK	14	lite	samtidig	
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	lanterntest	OK	24	lite	samtidig	
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	maletest	OK	25	lite	samtidig	
+2026-11-12 07:49	claude/ob11-r3-breisjark	817ab3e	boottest	OK	30	lite	samtidig	
+2026-11-12 07:50	claude/ob11-r3-breisjark	817ab3e	docktest	OK	63	lite	samtidig	
