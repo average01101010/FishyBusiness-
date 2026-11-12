@@ -152,9 +152,9 @@ async def main():
         print(ok(R['rebuild']['nearMoved'] and R['rebuild']['alwaysNear'] and R['rebuild']['maxStep'] < 0.05), 'sailing 3 km the near sea map is rebuilt, and the sea at a fixed spot does not jump meanwhile')
         print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foam'])), 'the whitecap threshold gives Monahan\'s cover within a factor of two (8-25 m/s)')
         # (B3, 12.11.2026: the software GPU draws a frame every few seconds, so the crests' tails are hardly laid; the drawn foam is then
-        # mostly the crests themselves, the share capK of Monahan's cover, and at least half that must be drawn, at most twice Monahan)
+        # mostly the crests themselves, the share capK of Monahan's cover, and at least 0.8 of that must be drawn, at most twice Monahan)
         kk = R.get('capK', 1)
-        print(ok(all(0.5 * kk <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm (at least half the crests\' share, capK %.2f, at most twice Monahan)' % kk)
+        print(ok(all(0.8 * kk <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm (at least 0.8 of the crests\' share, capK %.2f, at most twice Monahan)' % kk)
         # 5. spindrift from a gale, haze from a strong gale
         await pg.evaluate("(()=>{const c = G3._debug.cam; c.dist = 34; c.pitch = 0.2; c.yaw = 2.6; })()")
         await pg.evaluate("WX_FORCE = {w:28, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
