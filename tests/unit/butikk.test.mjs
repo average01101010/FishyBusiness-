@@ -32,6 +32,9 @@ export default function (t){
     t.ok(!!P, k + ': produktet ' + (id || '?') + ' finnes i databasen');
     if (P) t.eq(nok, P.nok, k + ': prisen spillet viser er den databasen tar (' + nok + ' kr)');
   }
+  // the hop over the rest of a route (HO3): its price is the server's for the minutes (shop_quote_hop); the product's own price is the least
+  t.eq(DB.hopp && DB.hopp.nok, K.HOP.min, 'hopp: produktets pris i databasen er minsteprisen (' + K.HOP.min + ' kr); resten regnes etter minuttene');
+  t.eq(SP.hopp, 'hopp', 'hopp: kassen kjenner produktet');
   // and the other way: every product the database sells (not the thank-you, which is never bought) is one the game sells
   const sold = new Set(Object.values(SP));
   for (const id of Object.keys(DB).filter(id => !DB[id].data.reward)) t.ok(sold.has(id), id + ': databasens produkt selges i spillet');

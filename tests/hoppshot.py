@@ -7,7 +7,7 @@ under the camera and the cinema on the right, «kontekstuell og kun komme opp n�
      the time it took (the map at the stop loaded) printed
   4. at the quay, no button; with the switch off, no button on a route either
   5. no page errors
-Screenshots: tests/out/hopp-{knapp,nei,kort,etter}-{staaende,liggende}.png. The spot check along the coast: KYST_HOPP_FRA and
+Screenshots: tests/out/hopp-{knapp,nei,kort,etter,kjop}-{staaende,liggende}.png. The spot check along the coast: KYST_HOPP_FRA and
 KYST_HOPP_TIL name the harbours, in one format, with nothing loaded along the way (the hop loads the map and the 3D packs at the stop). python3 tests/hoppshot.py (3D). Prints OK or FEIL lines."""
 import asyncio, json, os
 from _env import boot
@@ -66,19 +66,21 @@ async def one(p, name, vw, vh):
     check(h['shown'] and h['x'] == k['x'] and h['w'] == k['w'] and h['h'] == k['h'] and h['y'] >= k['y'] + k['h'], name + ': 1b. på ruta står spoleknappen rett under kino-knappen, like stor', r)
     await pg.screenshot(path=os.path.join(OUT, 'hopp-knapp-' + name + '.png'))
     # 1c. the calm (U2-4): after a while untouched the button fades with the camera and the cinema
-    cm = await J("() => { document.body.classList.add('calm'); const o = id => +getComputedStyle(document.getElementById(id)).opacity; return new Promise(r => setTimeout(() => { const out = {hop:o('hopBtn'), kino:o('kinoBtn')}; document.body.classList.remove('calm'); r(out); }, 900)); }")
-    check(abs(cm['hop'] - cm['kino']) < 0.05 and cm['hop'] < 0.5, name + ': 1c. i roen dempes spoleknappen som kino-knappen', cm)
-    # 2a. a hop that cannot be had: the card says why (here: she takes in water)
-    await J("() => { S.boat.dmg = {A:0.002, w:0.1}; }"); await pg.click('#hopBtn')
-    await pg.wait_for_function("(() => { const m = document.getElementById('modal'); return !m.hidden && /vann/.test(m.innerText); })()", timeout=60000)
+    # (the fade is 0.6 s; SwiftShader may draw a frame a second, so it waits until the cinema button has come down, at most 8 s)
+    cm = await J("() => { document.body.classList.add('calm'); const o = id => +getComputedStyle(document.getElementById(id)).opacity, t0 = performance.now(); return new Promise(r => { const f = () => { if (o('kinoBtn') > 0.25 && performance.now() - t0 < 8000) return setTimeout(f, 200); const out = {hop:o('hopBtn'), kino:o('kinoBtn'), ms:Math.round(performance.now() - t0)}; document.body.classList.remove('calm'); r(out); }; setTimeout(f, 700); }); }")
+    check(abs(cm['hop'] - cm['kino']) < 0.05 and cm['hop'] < 0.3, name + ': 1c. i roen dempes spoleknappen som kino-knappen', cm)
+    # 2a. a hop that cannot be had: the card says why (the only no on a route under way: the game held by another page, TAB; a leak, the
+    # weather or the diesel never refuse it, Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp"»)
+    await J("() => { TAB.held = true; }"); await pg.click('#hopBtn')
+    await pg.wait_for_function("(() => { const m = document.getElementById('modal'); return !m.hidden && /annet sted/.test(m.innerText); })()", timeout=60000)
     c0 = await J("() => document.getElementById('modal').innerText")
-    check('tar inn vann' in c0 and 'Hopp' not in c0.split('\n')[-1], name + ': 2a. kortet sier hvorfor når hoppet ikke kan gjøres', {'text': c0[:200]})
+    check('annet sted' in c0 and 'Hopp' not in c0.split('\n')[-1], name + ': 2a. kortet sier hvorfor når hoppet ikke kan gjøres', {'text': c0[:200]})
     await pg.screenshot(path=os.path.join(OUT, 'hopp-nei-' + name + '.png'))
-    await J("() => { document.getElementById('modal').hidden = true; S.boat.dmg = null; }")
+    await J("() => { document.getElementById('modal').hidden = true; TAB.held = false; }")
     await pg.click('#hopBtn')
     await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
     c = await J("() => { const m = document.getElementById('modal'); return {shown:!m.hidden, text:m.innerText, go:!!document.getElementById('hopGo')}; }")
-    check(c['shown'] and c['go'] and '\U0001F48E' in c['text'] and 'Du sparer' in c['text'] and 'Testmodus' in c['text'], name + ': 2. kortet: målet, tida spart, prisen med 💎 og testmodus', {'text': c['text'][:300]})
+    check(c['shown'] and c['go'] and '\U0001F48E' in c['text'] and 'Du sparer' in c['text'] and 'Admin' in c['text'], name + ': 2. kortet: målet, tida spart, prisen med 💎 og at admin-hoppet er gratis', {'text': c['text'][:300]})
     await pg.screenshot(path=os.path.join(OUT, 'hopp-kort-' + name + '.png'))
     await pg.click('#hopGo')
     await pg.wait_for_function("!HOPUI.busy", timeout=240000)
@@ -89,9 +91,36 @@ async def one(p, name, vw, vh):
     await pg.screenshot(path=os.path.join(OUT, 'hopp-etter-' + name + '.png'), timeout=600000)
     r = await J(RECT)
     check(not r['hop']['shown'], name + ': 4a. ved kaia er spoleknappen borte', r['hop'])
-    await J(GO, False); await pg.wait_for_timeout(1500)
+    # 4b. the shop closed (shopMode off: no cloud on a public site, or closed for the account, P5): no button, not on a route either
+    await J(GO, False); await J("() => { window.__sm = shopMode; shopMode = () => 'off'; }"); await pg.wait_for_timeout(1500)
     r = await J(RECT)
-    check(not r['hop']['shown'], name + ': 4b. med testbryteren av står ingen spoleknapp, heller ikke på ruta', r['hop'])
+    check(not r['hop']['shown'], name + ': 4b. når butikken er stengt, står ingen spoleknapp, heller ikke på ruta', r['hop'])
+    # 4c. the shop selling (here in test mode, as on the test machine): the button, and the card's button is the purchase
+    await J("() => { shopMode = window.__sm; }")
+    try: await pg.wait_for_function("(() => { const e = document.getElementById('hopBtn'); return e && !e.hidden && getComputedStyle(e).display !== 'none'; })()", timeout=60000)
+    except Exception: pass
+    await pg.click('#hopBtn'); await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
+    c4 = await J("() => ({lab:document.getElementById('hopGo').textContent, mode:shopMode()})")
+    await J("() => { document.getElementById('modal').hidden = true; }")
+    check(c4['mode'] == 'test' and c4['lab'] == 'Kjøp (test, ingen betaling)', name + ': 4c. der butikken selger, står knappen uten testbryteren, og kortets knapp er kjøpet', c4)
+    # 4d. (HO3) the card as the players see it where the shop is live: «Kjøp · 💎 N kr» and the line under it
+    # (shopMode stubbed to live: no payment is started, «Kjøp» is not pressed)
+    await J("() => { window.__sm = shopMode; shopMode = () => 'live'; }")
+    await pg.click('#hopBtn'); await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000)
+    c5 = await J("() => { const m = document.getElementById('modal'); return {lab:document.getElementById('hopGo').textContent, fine:!!m.querySelector('.shop-fine'), text:m.innerText, kr:hopQuote().kr}; }")
+    await pg.screenshot(path=os.path.join(OUT, 'hopp-kjop-' + name + '.png'))
+    await J("() => { document.getElementById('modal').hidden = true; }")
+    check(c5['lab'] == 'Kjøp · 💎 %d kr' % c5['kr'] and c5['fine'] and 'angreretten' in c5['text'], name + ': 4d. der butikken er åpen: «Kjøp · 💎 %d kr» og linja om levering og angrerett' % c5['kr'], {'lab': c5['lab'], 'fine': c5['fine']})
+    # 4e. (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden») the button stops
+    # the boat at once and she lies still while the card is open; «Avbryt» lets her go and she sails on
+    await pg.click('#hopBtn'); p0 = await J("() => JSON.stringify([S.boat.pos, S.plan.idx])")
+    await pg.wait_for_function("!!document.getElementById('hopGo')", timeout=60000); await pg.wait_for_timeout(2500)
+    e1 = await J("(p0) => ({hold:!!S.boat.hopHold, v:S.boat.v, still:JSON.stringify([S.boat.pos, S.plan.idx]) === p0, text:document.getElementById('modal').innerText})", p0)
+    await pg.click('#modal [data-close]'); await pg.wait_for_timeout(2500)
+    e2 = await J("(p0) => ({hold:!!S.boat.hopHold, moved:JSON.stringify([S.boat.pos, S.plan.idx]) !== p0})", p0)
+    await J("() => { shopMode = window.__sm; }")
+    check(e1['hold'] and e1['v'] == 0 and e1['still'] and 'ligger stille' in e1['text'] and not e2['hold'] and e2['moved'],
+          name + ': 4e. spoleknappen stopper båten med en gang, og hun ligger stille mens kortet er åpent; «Avbryt» slipper henne, og hun seiler videre', {'open': {k: e1[k] for k in ('hold', 'v', 'still')}, 'after': e2})
     check(not errs, name + ': 5. ingen sidefeil', errs[:3])
     await br.close()
 

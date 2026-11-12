@@ -483,7 +483,8 @@ function crewSettle(c){
   log(c.name + ' fikk ' + kr(sum) + ' i lott for fangsten om bord.', c.name + ' was paid ' + kr(sum) + ' as the share of the catch aboard.');
   return sum;
 }
-function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
+function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; if (c.err && typeof errEv === 'function'){ errEv('lapse', c.err); delete c.err; }   // an errand left open (14-crewlife.js) ends with them
+  crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
 // ===== Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102 =====
 // § 3-1: a written agreement no later than when the work aboard starts; § 3-2: «Prøvetid på inntil seks måneder kan avtales skriftlig»;
@@ -560,6 +561,7 @@ function crewGrunn(c){
 // the settlement for the catch aboard (Jonas 12.11.2026, valg 40 A); the others' mood by how they got on with them. The ground's words
 function crewLetGo(c){
   const i = S.crew.indexOf(c); if (i < 0) return null; const g = crewGrunn(c), own = !!c.opp, [end, len] = crewFrist(c);
+  if (c.err && typeof errEv === 'function'){ errEv('lapse', c.err); delete c.err; }   // an errand left open (14-crewlife.js) ends with them
   // one who had given notice and has the boat of their own within reach goes to it (the alumni, the AIS, back in a year or two)
   if (own && crewDream(c) && typeof lifeDepart === 'function') lifeDepart(c); else { crewSettle(c); flyOut(c); S.crew.splice(i, 1); }
   for (const o of S.crew){ o.morale = clamp(o.morale + (compat(o, c) < 0 ? 4 : -4), 0, 100); if (o.grudge) delete o.grudge[c.id]; }
@@ -674,6 +676,7 @@ function crewTick(H){
   vitalsTalk(on);
   sayHour(H, on, hs);
   if (typeof lifeHail === 'function') lifeHail(H);
+  if (typeof errandHour === 'function') errandHour(H);   // the small errands (14-crewlife.js, steg 45a)
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }

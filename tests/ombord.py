@@ -72,7 +72,7 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
   if (window.OB_IDLE) { window.idleAssign = window.OB_IDLE; window.OB_IDLE = null; }
   if (window.OB_COLD) { window.coldPen = window.OB_COLD; window.OB_COLD = null; }
-  window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
+  window.OB_GO = null; window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
   window.SEA = (st) => { const g = GROUNDS[__GI__].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
     b.fishUntil = st === 'fishing' ? S.t + 600 : null; G3.vesselChanged(); };
   window.FEEDON = (sp) => { clearInterval(window.FEED); window.FEED = setInterval(() => { const Q = window.CATCHQ || (window.CATCHQ = []);
@@ -90,7 +90,9 @@ OPS = {
       await new Promise(r => setTimeout(r, 2500)); const q = portById('husoy');
       const r = await leiaRoute({x:q.p.x, y:q.p.y}, {x:g.x, y:g.y}, 'husoy', null); if (r.why) return 'SKIP: ' + r.why;
       S.plan = {wps:r.wps.map(w => ({x:w.x, y:w.y, port:null, fish:0, leia:true})), idx:0, speed:BOAT.vcruise || 6, full:false, returning:false};
-      depart();""", (0.9, 0.42, 1.6), 14],
+      /* (OB10 runde 4: she casts off when the pictures begin, OB_GO in record(): the lines take a game minute, 10 s, and the frames
+         waited for before the pictures took some 30 s under SwiftShader, so she was already off the quay in the first one) */
+      window.OB_GO = () => depart();""", (0.9, 0.42, 1.6), 14],
   # out to the ground: the skipper at the wheel, the crew inside or on the open deck
   'ut': ['*', 'til feltet: skipperen ved roret, mannskapet inne eller på det åpne dekket', """b.status = 'sailing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 1.2; G3.vesselChanged();
       S.plan = {wps:[{x:b.pos.x + Math.sin(1.2) * 6, y:b.pos.y - Math.cos(1.2) * 6, port:null, fish:0}], idx:0, speed:BOAT.vcruise || 7, returning:false}; if (S.crew.length) CREW3D.reset();""",
@@ -192,13 +194,17 @@ UNDER = {'jig': (-1.45, 0.10, 0.62, 0.20), 'maskin': (-1.45, 0.10, 0.62, 0.20), 
 OPS['lossn'] = [OPS['loss'][0], OPS['loss'][1] + ' (nært: den som hekter på, og den som gir tegn)', OPS['loss'][2] + " S.mult = 1; b.land.t0 -= LANDING.prep * 0.05 + LANDING.lift * 0.2; b.land.until -= LANDING.prep * 0.05 + LANDING.lift * 0.2;", (0.55, 1.22, 0.95), 16]
 OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22, 0.95), 12]
 OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
+# (OB10 runde 4) the operations whose pictures are taken on the slow clock (the game's time at k of real time) when only pictures are taken
+SLOWOPS = {'kast': 0.15}
 QUAYOPS = {'kast', 'inn', 'loss', 'lossn', 'is', 'isn', 'kran', 'krann'}
 
-# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck)
+# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck;
+# and, OB10 runde 4, bodies standing in the kit on deck, kitHits)
 CLIP = """(() => { if (!CREW3D.on()) return null; const M = CREW3D._st.M;
   return {clip:(CREW3D.clipNow() || []).filter(x => x.n > 0).map(x => x.id + ':' + x.task + ':' + x.n + '[' + (x.segs || []).join('.') + ']'),
     walk:(CREW3D.bodyHits() || []).map(x => x.id + ':' + x.which + ':' + x.mode),
-    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : []}; })()"""
+    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : [],
+    kit:CREW3D.kitHits ? (CREW3D.kitHits() || []).map(x => x.id + ':' + x.mode + ':' + x.task + ':' + x.n) : null}; })()"""
 
 STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.task || '')), n:JSON.parse(JSON.stringify(G3._debug.dk.n || {})),
   anim:(G3._debug.SK && G3._debug.SK.anim) ? G3._debug.SK.anim.st : null, gop:S.boat.gop ? S.boat.gop.op + ':' + S.boat.gop.kind : null, status:S.boat.status,
@@ -283,17 +289,31 @@ async def record(o, fmt, outdir):
             try:
                 await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 3; }", arg=[o['boat'], n0], timeout=120000)
             except Exception: pass
+            # (OB10 runde 4: her own crane moves at most 0.2 s of its motion a frame, drawCrane, and SwiftShader draws a frame in some
+            # seconds here, so the three pictures were all taken while it still stood folded; they wait now until it stands unfolded)
+            # (on the slow clock while it waits, so the freight job, a fixed game time, does not end first: found in the review)
+            if op in ('kran', 'krann') and await pg.evaluate("(t) => !!((geoOf(t).kit || {}).crane)", o['boat']):   # (a ship's crane, the ocean vessels', has no kit crane to wait for)
+                await pg.evaluate("__TK.set(0.1)")
+                try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
+                except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
+                await pg.evaluate("__TK.set(1)")
+            # (the casting off is a game minute, 10 s, under one frame in ten at the game's own pace under SwiftShader: the pictures of it
+            # on the slow clock, SLOWOPS, so the hands are seen walking to the cleats and taking the lines in)
+            kk = SLOWOPS.get(op, 1.0) if o['bilder'] else 1.0
+            if kk != 1.0: await pg.evaluate("(k) => __TK.set(k)", kk)
+            await pg.evaluate("(() => { if (window.OB_GO){ const f = window.OB_GO; window.OB_GO = null; f(); } })()")
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             if o['bilder']:
                 # pictures only (--bilder): the game's own clock, a screenshot at 15, 50 and 85 % of the operation's seconds
                 t1 = time.time() - T0; c1 = None; ran = 0.0
                 for i, at in ((1, 0.15), (2, 0.5), (3, 0.85)):
                     left = sec * at - ran
-                    if left > 0: await pg.wait_for_timeout(int(left * 1000)); ran += left
-                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += time.time() - t0
+                    if left > 0: await pg.wait_for_timeout(int(left * 1000 / kk)); ran += left
+                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += (time.time() - t0) * kk   # (in the page's seconds)
                     if i == 2: c1 = await pg.evaluate(CLIP)
                 t2 = time.time() - T0
                 b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
+                if kk != 1.0: await pg.evaluate("__TK.set(1)")
                 d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'kst': b.get('kst'), 'roles': b.get('roles'), 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
                 log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue

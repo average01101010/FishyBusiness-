@@ -20,7 +20,7 @@ const HIND = {C:250, idx:null, key:'', list:[], stamp:0, ctx:null, br:new WeakMa
 const obsAir = () => Math.min(16, Math.max(2, (BOAT.len || 8) * 0.35)) + 1;
 // how near a leg may pass (m): half the boat's beam and a margin
 const obsClr = () => (BOAT.beam || 3) / 2 + 6;
-const obsMarkR = {M:3, m:1, P:1, D:0.5, L:0.5, B:1, C:1, S:0.5, K:1.5};
+const obsMarkR = {M:3, m:1, P:1, D:0.5, L:0.5, B:1, C:1, S:0.5, K:1.5, I:1, i:0.5, A:1, a:0.5, Y:1, y:0.5};   // (I, A, Y and their beacons: Ø13 K3, 01e-marks.js)
 // a bridge's piers and deck pieces (as bridgeInto builds them), worked out once per bridge
 function obsBridge(br){
   let o = HIND.br.get(br); if (o) return o;

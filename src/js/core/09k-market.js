@@ -65,7 +65,7 @@ function mbPack(v, yard){
   for (const [k, n] of Object.entries(eq)) if (EQUIP[k] && n) E[k] = EQUIP[k].multi ? Math.max(0, Math.min(99, Math.round(+n || 0))) : EQUIP[k].tiers ? equipLv(k, eq, b.type) : true;
   const L0 = mbLicSold(lic);   // (no quota cooperation and no second quota from the special scheme; a boat sold «uten hjemmel» has none: mbMove first, KM4)
   return {type:b.type, name:String(vget(v, 'boatName') || V.name.no).replace(/[<>&"]/g, '').slice(0, 30), built:b.built || null, engH:Math.round(b.engH || 0), svcAt:Math.round(b.svcAt || 0),
-    foul:r3(b.foul), damage:r3(b.damage), engLv:b.engLv || 0, holdLv:b.holdLv || 0, upg:b.upg || null, gear:!!b.gear, kgear:!!b.kgear, equip:E, lic:L0,
+    foul:r3(b.foul), damage:r3(b.damage), engLv:b.engLv || 0, propLv:propLvOf(b), holdLv:b.holdLv || 0, upg:b.upg || null, gear:!!b.gear, kgear:!!b.kgear, equip:E, lic:L0,
     quota:L0 ? vget(v, 'quota') || null : null, pgear:vget(v, 'pgear') || null, at:yard ? mbPlace(yard) : ''};
 }
 // her state in a few numbers for the card (as M4's Tilstand): the hull by the weed and the damage, the engine by the hours since service
@@ -78,7 +78,8 @@ function mbUnpack(P, port){
   v.boatName = String(P.name || '').replace(/[<>&"]/g, '').slice(0, 30) || v.boatName;
   if (P.built) b.built = Math.round(+P.built) || undefined;
   b.engH = Math.max(0, Math.round(+P.engH || 0)); b.svcAt = Math.max(0, Math.round(+P.svcAt || 0)); b.foul = clamp(+P.foul || 0, 0, 1); if (+P.damage > 0) b.damage = clamp(+P.damage, 0, 1);
-  b.engLv = clamp(Math.round(+P.engLv || 0), 0, ENGUP.length); b.holdLv = V.cls === 'hav' ? 0 : clamp(Math.round(+P.holdLv || 0), 0, HOLDUP.length);
+  b.engLv = clamp(Math.round(+P.engLv || 0), 0, ENGUP.length); const pl = propFits(V) ? clamp(Math.round(+P.propLv || 0), 0, PROPUP.length) : 0; if (pl) b.propLv = pl;   // (the propeller is the hull's, OPP3; a sale from before has none)
+  b.holdLv = V.cls === 'hav' ? 0 : clamp(Math.round(+P.holdLv || 0), 0, HOLDUP.length);
   if (P.upg && typeof P.upg === 'object'){ const u = {}; for (const [k, n] of Object.entries(P.upg)) if (UPGS[k]) u[k] = clamp(Math.round(+n || 0), 0, UPGS[k].steps.length); b.upg = u; }
   b.gear = !!P.gear; if (P.kgear) b.kgear = true;
   for (const [k, x] of Object.entries(P.equip || {})) if (EQUIP[k] && x && equipFits(k, P.type)){

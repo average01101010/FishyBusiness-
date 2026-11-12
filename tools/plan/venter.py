@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Taket: how many steps wait for Jonas to look at them?
+"""Spill dette: how many steps wait for Jonas to look at them?
 
 Counts the files in docs/spill-dette/ (one per step; the coordinator moves the
 ones Jonas has seen to sett.md and deletes the file). Files first committed
-before FRA (12.11.2026, Jonas: «Tell fra i dag») are the old pile and do not
-count against the cap. Exits 1 when more than TAK new ones wait.
+before FRA (12.11.2026, Jonas: «Tell fra i dag») are the old pile. There is no
+cap: it was removed the same day (Jonas 12.11.2026: «Fjern taket på 7 steg. Det
+hindrer oss bare i arbeidet»), so the count stops nothing and the exit is 0.
 
-    python3 tools/plan/venter.py            # the count; exit 1 over the cap
+    python3 tools/plan/venter.py            # the count
     python3 tools/plan/venter.py --liste    # also writes docs/spill-dette/SAMLET.md,
                                             # every line sorted by where in the game
 """
@@ -18,7 +19,6 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DIR = os.path.join(ROOT, 'docs', 'spill-dette')
 FRA = '2026-11-12'
-TAK = 5
 ANNET = 'Annet, og det du skal si fra om'
 SKIP = {'README.md', 'sett.md', 'SAMLET.md'}
 STEDER = [
@@ -62,19 +62,14 @@ if '--liste' in sys.argv:
             buckets[s].append('- _%s_ (`%s`%s): %s' % (title, f, '' if f in old else ', ny', l[2:]))
     out = ['# Spill dette, samlet', '',
            'Skrevet av `python3 tools/plan/venter.py --liste`; rediger ikke for hånd. %d steg venter på at Jonas ser på dem: '
-           '%d fra før %s (tas i eget tempo) og %d nye (taket er %d). Sortert etter hvor i spillet det prøves.'
-           % (len(files), len(old), FRA, len(new), TAK), '']
+           '%d fra før %s og %d nye. Sortert etter hvor i spillet det prøves.'
+           % (len(files), len(old), FRA, len(new)), '']
     for s in [x for x, _ in STEDER] + [ANNET]:
         if buckets[s]:
             out += ['## ' + s, ''] + buckets[s] + ['']
     open(os.path.join(DIR, 'SAMLET.md'), 'w', encoding='utf-8').write('\n'.join(out))
     print('Skrev docs/spill-dette/SAMLET.md')
 
-print('Venter på at Jonas ser på dem: %d nye (taket er %d), %d fra før %s.' % (len(new), TAK, len(old), FRA))
+print('Venter på at Jonas ser på dem: %d nye, %d fra før %s (ingen tak).' % (len(new), len(old), FRA))
 if new:
     print('   nye: ' + ' '.join(new))
-if len(new) > TAK:
-    print('FEIL: over taket. Ingen ny runde og ingen steg spilleren merker før Jonas har sett på dem '
-          '(docs/spill-dette/SAMLET.md).')
-    sys.exit(1)
-print('OK under taket')

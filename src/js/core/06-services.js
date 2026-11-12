@@ -236,8 +236,21 @@ function depart(){
   return true;
 }
 // jobs: yard service, fitting equipment (the old «Klargjøring til neste tur» jobs, 'prep', were taken out 08.10.2026: the gear's own wear and service replace them)
+// a yard job on the hull (the engine, the hold, a rebuild, the propeller) that is no longer for this boat: she was traded in while it waited
+// (j.ty, the type it was ordered for; the yard's work is the hull's, OPP3, Jonas 12.11.2026: «A»), or its step is no longer the next.
+// The yard pays back what was paid (j.kr; a job from before has none, and an old one without j.ty is fitted as before)
+function yardStale(j, b){
+  if (j.ty && j.ty !== b.type) return true;
+  if (j.kind === 'eng') return VESSELS[b.type].outboard || (b.engLv || 0) !== j.lv - 1;
+  if (j.kind === 'hold') return (b.holdLv || 0) !== j.lv - 1;
+  if (j.kind === 'upg') return !UPGS[j.u] || upgLv(b, j.u) !== j.lv - 1 || !UPGS[j.u].fit(VESSELS[b.type]);
+  if (j.kind === 'prop') return !propFits(VESSELS[b.type]) || propLvOf(b) !== j.lv - 1;
+  return false;
+}
 function finishJob(j){
   const b = S.boat;
+  if (['eng', 'hold', 'upg', 'prop'].includes(j.kind) && (j.ty || j.kind === 'prop') && yardStale(j, b)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: ' + (j.no || ''), 'Paid back: ' + (j.en || ''));
+    log((j.no || 'Jobben') + ' passer ikke denne båten lenger. Verftet betalte tilbake ' + kr(back) + '.', (j.en || 'The job') + ' no longer suits this vessel. The yard paid back ' + kr(back) + '.'); return; }
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
@@ -246,6 +259,8 @@ function finishJob(j){
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
+  // the propeller (OPP3); a job for another boat or a step no longer the next was paid back above (yardStale)
+  else if (j.kind === 'prop'){ b.propLv = j.lv; applyVessel(); const st = PROPUP[j.lv - 1]; log('Ny propell montert, trinn ' + j.lv + ': ' + st.no.toLowerCase() + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', 'New propeller fitted, step ' + j.lv + ': ' + st.en.toLowerCase() + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); if (BOAT.karN) log('Plass til ett fiskekar til: ' + BOAT.karN + ' kar, ' + fmt(BOAT.holdCap, 0) + ' kg.', 'Room for one more fish tub: ' + BOAT.karN + ' tubs, ' + fmt(BOAT.holdCap, 0) + ' kg.'); else log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
@@ -258,7 +273,7 @@ function finishJob(j){
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
-const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'upg', 'repair'];
+const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'prop', 'upg', 'repair'];
 const YARD_NOW_NOK = 19;
 // «Ferdig nå» is offered only while a yard job has this many game minutes left (5 real minutes): with a minute left it was offered, the job
 // finished during the payment and the purchase finished nothing (the review 07.11.2026); one that still comes to nothing is kept as a

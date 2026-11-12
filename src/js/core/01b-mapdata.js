@@ -22,7 +22,7 @@
 // The layers are in the national frame (phase K4): a layer's cell (ix, iy) of size c covers x in [ix c, (ix + 1) c) km, the cells are
 // numbered from the frame's origin, and a layer has cells from (ix0, iy0) for nx by ny; blocks (bx, by) of n cells and tiles of
 // 50 km line up with the frame, so the packs of the whole coast fit together.
-const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, chart0:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0, gen:0};
+const MAPD = {man:null, L:{}, packs:[], byTile:new Map(), core:null, chart0:null, blk:new Map(), bytes:0, budget:96e6, simR:4, base:'map/', db:undefined, miss:0, fetched:0, cached:0, gen:0, stale:false, staleQ:null};
 function mapOnReady(f){ if (typeof document === 'undefined' || document.readyState !== 'loading') f(); else document.addEventListener('DOMContentLoaded', f); }
 // ---------- IndexedDB, by content ----------
 function mapIdb(){
@@ -41,12 +41,29 @@ async function mapFetch(pk){
   let buf = null, err = null;
   for (let t = 0; t < 5 && !buf; t++){
     if (t) await new Promise(res => setTimeout(res, 700 * t));
-    try { const r = await fetch(MAPD.base + pk.file, t ? {cache:'reload'} : undefined); if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status); const b = await r.arrayBuffer(); if (pk.bytes && b.byteLength !== pk.bytes) throw new Error('map: ' + pk.file + ' came as ' + b.byteLength + ' bytes, not ' + pk.bytes); buf = b; } catch (e){ err = e; }
+    try { const r = await fetch(MAPD.base + pk.file, t ? {cache:'reload'} : undefined);
+      if (r.status === 404 && await mapStale(pk)) throw Object.assign(new Error('map: ' + pk.file + ' is gone: a new version is out'), {stale:true});
+      if (!r.ok) throw new Error('map: ' + pk.file + ' ' + r.status); const b = await r.arrayBuffer(); if (pk.bytes && b.byteLength !== pk.bytes) throw new Error('map: ' + pk.file + ' came as ' + b.byteLength + ' bytes, not ' + pk.bytes); buf = b; } catch (e){ err = e; if (e.stale) break; }
   }
   if (!buf) throw err;
   MAPD.fetched++;
   idbDo('readwrite', s => s.put(buf, pk.hash));
   return new Uint8Array(buf);
+}
+// An old page and a new release (Ø13 K3, docs/planer/kartrelease-o13.md kap. 7 punkt 5): the packs have their hash in the name and a
+// publish removes the ones its manifest no longer lists (deploy.yml, rsync --delete-after), so a page that was open across a publish
+// asks for packs that are gone. A 404 fetches the manifest again (once a page); when it no longer lists the pack, the page is stale:
+// asking again does not help, so the fetch stops at once and the bar «En ny versjon av spillet er klar» (ui/10p-install.js UPDATE)
+// comes now, not after up to ten minutes. MAPD.stale is then true for the rest of the page's life
+function mapStale(pk){
+  if (MAPD.stale) return Promise.resolve(true);
+  if (!MAPD.staleQ) MAPD.staleQ = fetch(MAPD.base + 'manifest.json?t=' + Date.now(), {cache:'no-store'}).then(r => r.ok ? r.json() : null).then(m => {
+    const gone = !!(m && Array.isArray(m.packs) && !m.packs.some(q => q.file === pk.file));
+    if (!gone){ MAPD.staleQ = null; return false; }   // the pack is still listed: a hiccup on the server, asked again as before
+    MAPD.stale = true; try { if (typeof UPDATE !== 'undefined') UPDATE.bar(true); } catch (e){}
+    return true;
+  }, () => { MAPD.staleQ = null; return false; });
+  return MAPD.staleQ;
 }
 // ---------- the manifest and the packs ----------
 // what a cell's number is worth: the heights are kept as Int16 decimetres (phase K8), half the room of Float32, and the fine ground as
