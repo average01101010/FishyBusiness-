@@ -7,13 +7,13 @@
 // embedded SEAMARKS stay. A build without them (an older release) has Senja's alone.
 //   marksNear(kind, x, y, R)  the lights, marks or rocks of SEAMARKS and of the tiles within R km of x, y (km)
 //   rocksIn (01-world.js)     takes the tiles' rocks too, by 1 km cell
-const MARKS = {tiles:new Map(), ver:0, rk:new Map(), n:0, near:new Map(), senja:0};
+const MARKS = {tiles:new Map(), ver:0, rk:new Map(), n:0, near:new Map(), senja:0, senjaL:0};
 function marksAdd(pk){
   const k = pk.tile[0] + ':' + pk.tile[1]; if (MARKS.tiles.has(k)) return;
   const v = mapVec(pk, 'marks'); MARKS.tiles.set(k, null); if (!v) return;
   let J; try { J = JSON.parse(new TextDecoder().decode(v.b)); } catch (e){ console.error('marks ' + k, e); return; }
   const keep = a => (a || []).filter(q => !inSenja(q[0], q[1]));
-  marksSenja((J.marks || []).filter(q => inSenja(q[0], q[1])));
+  marksSenja((J.marks || []).filter(q => inSenja(q[0], q[1])), (J.lights || []).filter(q => inSenja(q[0], q[1])));
   const t = {k, tx:pk.tile[0], ty:pk.tile[1], lights:keep(J.lights), marks:keep(J.marks), rocks:keep(J.rocks)};
   for (const q of t.rocks){ q.o = ++MARKS.n; const g = gridKey(Math.floor(q[0]), Math.floor(q[1])); let a = MARKS.rk.get(g); if (!a) MARKS.rk.set(g, a = []); a.push(q); }
   MARKS.tiles.set(k, t); MARKS.ver++; MARKS.near.clear();
@@ -22,14 +22,21 @@ function marksAdd(pk){
 // used inside Senja's square. Where a tile's mark stands within 3 m of one, the embedded one takes its kind, category and arrow: 7 of
 // them were 'S' without a category (drawn as yellow cardinal posts) and are iron rods and towers, and 22 rods have their arrow.
 // MARKS.senja counts the marks changed, so the 3D view builds Senja's marks again (view3d/05-quays-breakwaters.js marksStatics)
-function marksSenja(list){
-  if (!list.length) return; const at = new Map(), key = (x, y) => Math.round(x * 200) + ':' + Math.round(y * 200);
-  for (const q of list) at.set(key(q[0], q[1]), q);
+// The lights the same way: an embedded light whose sectors have a yellow one the tile's light at the same place has not (the floodlight
+// read as a light, 33 at Senja's lateral beacons in seamarks.json) takes the tile's sectors
+function marksSenja(list, lights){
+  const near = (arr, m) => { const at = near.m.get(arr); let q = null;
+    for (let dx = -1; dx <= 1 && !q; dx++) for (let dy = -1; dy <= 1 && !q; dy++){ const c = at.get((Math.round(m[0] * 200) + dx) + ':' + (Math.round(m[1] * 200) + dy)); if (c && Math.hypot(c[0] - m[0], c[1] - m[1]) < 0.003) q = c; }
+    return q; };
+  near.m = new Map(); for (const arr of [list, lights || []]){ const at = new Map(); for (const q of arr) at.set(Math.round(q[0] * 200) + ':' + Math.round(q[1] * 200), q); near.m.set(arr, at); }
   let n = 0;
-  for (const m of SEAMARKS.marks){
-    let q = null; for (let dx = -1; dx <= 1 && !q; dx++) for (let dy = -1; dy <= 1 && !q; dy++){ const c = at.get((Math.round(m[0] * 200) + dx) + ':' + (Math.round(m[1] * 200) + dy)); if (c && Math.hypot(c[0] - m[0], c[1] - m[1]) < 0.003) q = c; }
-    if (!q || (m[2] === q[2] && m[3] === q[3] && m[4] === q[4])) continue;
+  if (list.length) for (const m of SEAMARKS.marks){
+    const q = near(list, m); if (!q || (m[2] === q[2] && m[3] === q[3] && m[4] === q[4])) continue;
     m[2] = q[2]; m[3] = q[3]; m.length = 4; if (q.length > 4) m[4] = q[4]; n++;
+  }
+  if (lights && lights.length) for (const L of SEAMARKS.lights){
+    if (!L[5].some(c => c[2] === 'y')) continue; const q = near(lights, L);
+    if (q && !q[5].some(c => c[2] === 'y')){ L[5] = q[5].map(c => c.slice()); MARKS.senjaL++; }
   }
   if (n){ MARKS.senja += n; MARKS.ver++; MARKS.near.clear(); }
 }
@@ -59,9 +66,9 @@ const MARK_COL = {r:'#c8231c', g:'#1f8a3c', y:'#e0b000', k:'#1a1a1a', w:'#ffffff
 const MARK_BANDS = {north:'ky', east:'kyk', south:'yk', west:'yky'};   // top first
 function markSvg(mk, u){
   const x = mk[0], y = mk[1], ty = mk[2], cat = mk[3], C = MARK_COL, f = v => v.toFixed(4), out = [];
-  const W = 2.6 * u, H = 4.2 * u, x0 = x - W / 2, top = y - H / 2;
+  const W = 4.4 * u, H = 7 * u, x0 = x - W / 2, top = y - H / 2;   // in screen pixels (u): about 7 by 11 px with the cones over it at dpr 2
   const body = bands => { const h = H / bands.length; for (let i = 0; i < bands.length; i++) out.push('<rect x="' + f(x0) + '" y="' + f(top + i * h) + '" width="' + f(W) + '" height="' + f(h + 0.02 * u) + '" fill="' + C[bands[i]] + '"/>'); out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="none" stroke="#fff" stroke-width="' + f(0.5 * u) + '"/>'); };
-  const r = 1.3 * u, t0 = top - 0.6 * u;   // the topmark's size and its foot
+  const r = 2 * u, t0 = top - 0.8 * u;   // the topmark's size and its foot
   const cone = (yb, up, k) => out.push('<path d="M' + f(x - r) + ',' + f(yb) + 'L' + f(x + r) + ',' + f(yb) + 'L' + f(x) + ',' + f(yb + (up ? -2 * r : 2 * r)) + 'z" fill="' + C[k] + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>');
   const ball = (cy, k) => out.push('<circle cx="' + f(x) + '" cy="' + f(cy) + '" r="' + f(r * 0.85) + '" fill="' + C[k] + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>');
   const card = c => { if (c === 'north'){ cone(t0, true, 'k'); cone(t0 - 2.3 * r, true, 'k'); } else if (c === 'south'){ cone(t0 - 2 * r, false, 'k'); cone(t0 - 4.3 * r, false, 'k'); }

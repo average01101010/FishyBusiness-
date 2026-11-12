@@ -93,6 +93,8 @@ const UPDATE = (() => {
     try { const r = await fetch('version.json?t=' + Date.now(), {cache:'no-store'}); if (!r.ok) return; const j = await r.json(); if (j && j.v && j.v !== mine()){ seen = j.v; bar(); } } catch (e){}
   }
   function start(){
+    // a map pack found gone while the page was starting (01b-mapdata.js mapStale): the bar was held back by booting(), so it comes now
+    try { if (typeof MAPD !== 'undefined' && MAPD.stale) bar(true); } catch (e){}
     if (mine() === 'dev') return;
     setInterval(check, 10 * 60e3); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(check, 1500); }); setTimeout(check, 90e3);
     if ('serviceWorker' in navigator){

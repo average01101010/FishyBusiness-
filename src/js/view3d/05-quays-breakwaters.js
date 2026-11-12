@@ -89,7 +89,7 @@
     else if (ty === 'L'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, base, z, 0.45, 4, 0.45, k, 0);
       if (mk[4] != null) arrowInto(m, x, base + 4, z, mk[4], k); else if (cat === 'port' || cat === 'starb') topInto(m, x, base + 4, z, 1, cat); }
     else if (ty === 'B'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, -0.6, z, 1.1, 2.1, 1.1, k, 0.5); if (cat === 'port' || cat === 'starb') topInto(m, x, 1.5, z, 1, cat); }
-    else if (ty === 'C'){ const ks = MK_CARD[cat] || [MK_K, MK_Y]; bandsInto(m, x, -0.6, z, 1.1, 1.8, ks); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); if (MK_CARD[cat]) topInto(m, x, 2.3, z, 1.2, cat); }
+    else if (ty === 'C'){ const ks = MK_CARD[cat] || [MK_Y]; bandsInto(m, x, -0.6, z, 1.1, 1.8, ks); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); if (MK_CARD[cat]) topInto(m, x, 2.3, z, 1.2, cat); }
     else if (ty === 'S'){ const ks = MK_CARD[cat] || [MK_Y]; bandsInto(m, x, base, z, 0.5, base + 3.5, ks); if (MK_CARD[cat]) topInto(m, x, base + 3.5, z, 1, cat); }
     else if (ty === 'I'){ bandsInto(m, x, -0.6, z, 1.1, 1.8, [MK_K, MK_R, MK_K]); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); topInto(m, x, 2.3, z, 1.2, 'isol'); }
     else if (ty === 'i'){ bandsInto(m, x, base, z, 0.5, base + 3.5, [MK_K, MK_R, MK_K]); topInto(m, x, base + 3.5, z, 1, 'isol'); }
@@ -108,7 +108,7 @@
   // marksSenja; Ø13 K3); before K3 they were part of the quays' mesh (buildStatics), built once
   const MKM = new Map(); let MKV = -1, MKS = -1;
   function marksStatics(){
-    if (STAT && MKS !== MARKS.senja){ const m = MB(); for (const mk of SEAMARKS.marks) markInto(m, mk, 'mkS', MKS < 0); MKM.set('senja', m.p.length ? m.mesh(mapMid()) : null); MKS = MARKS.senja; }
+    if (STAT && MKS !== MARKS.senja){ const old = MKM.get('senja'); if (old) freeMesh(old); const m = MB(); for (const mk of SEAMARKS.marks) markInto(m, mk, 'mkS', MKS < 0); MKM.set('senja', m.p.length ? m.mesh(mapMid()) : null); MKS = MARKS.senja; }
     if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;
     const Tk = T / 1000, fyrIn = t => typeof FYR !== 'undefined' && FYR ? FYR.filter(f => Math.floor(f[0] / Tk) === t.tx && Math.floor(f[1] / Tk) === t.ty && !inSenja(f[0], f[1])) : [];
     for (const t of MARKS.tiles.values()){

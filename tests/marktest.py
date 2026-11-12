@@ -62,8 +62,11 @@ async def main():
             o.svgCones = (svg.match(/<path d="M[^"]*z"/g) || []).map(d => { const n = d.match(/-?[0-9.]+/g).map(Number); return n[5] < n[1] ? 'up' : 'down'; }).join(',');
           }
           // Senja's embedded marks corrected from the tiles (marksSenja): no cardinal post without a quadrant is left, the rods have arrows
-          out.senja = {S0:SEAMARKS.marks.filter(m => (m[2] === 'S' || m[2] === 'C') && !m[3]).length, arrows:SEAMARKS.marks.filter(m => m.length > 4).length, up:MARKS.senja};
+          const latAt = L => SEAMARKS.marks.some(m => (m[2] === 'L' || m[2] === 'B') && Math.hypot(m[0] - L[0], m[1] - L[1]) < 0.003);
+          out.senja = {S0:SEAMARKS.marks.filter(m => (m[2] === 'S' || m[2] === 'C') && !m[3]).length, arrows:SEAMARKS.marks.filter(m => m.length > 4).length, up:MARKS.senja,
+            floodY:SEAMARKS.lights.filter(L => L[5].some(c => c[2] === 'y') && latAt(L)).length, upL:MARKS.senjaL};
           return out; })()""")
+        check(r['senja'].get('floodY') == 0, 'Senja\'s embedded lights at the lateral marks have no yellow sector from the floodlight any more', r['senja'])
         check(r['senja']['S0'] == 0 and r['senja']['arrows'] > 10, 'Senja\'s embedded marks take the kind and the arrow of the same mark in the coast\'s data (no yellow cardinal post without a quadrant)', r['senja'])
         exp = {'north': ('k|y', 'up,up'), 'east': ('k|y|k', 'down,up'), 'south': ('y|k', 'down,down'), 'west': ('y|k|y', 'up,down')}
         check(r['has'], 'the 3D view\'s markInto can be asked (G3._debug)')
