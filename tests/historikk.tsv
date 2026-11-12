@@ -3059,3 +3059,7 @@
 2026-11-12 05:11	ccr-013bxxid-18b	3b52223	vesseltest	FEIL	39	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	opptest	OK	73	lite	samtidig	
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	vesseltest	OK	38	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	boottest	OK	50	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	crewwalk	OK	14	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	lanterntest	OK	24	lite	samtidig	
+2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	maletest	OK	25	lite	samtidig	
