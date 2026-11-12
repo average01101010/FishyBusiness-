@@ -104,6 +104,20 @@ async def main():
           const r = {out:at(0.05), mid:at(0.5), vc:BOAT.vcruise}; b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; return r; }""", C)
         check(M['mid'] <= 5 and M['out'] > 5.5, 'minuttsteget (sailV): 5 knop i havnas vann, marsjfart utenfor', M)
 
+        # 4b. the minute step in one of Kystverket's 5-knot areas, away from the harbours: inside, she is at the limit; 100 m west of its
+        # edge, heading east into it, she is down to it before she comes in (fartLegKn); the time away is played the same way
+        K5 = await pg.evaluate("""async () => { const D = FART_D, RR = fartRuns(), H = S.t / 60, b = S.boat, keep = {pos:b.pos, v:b.v, st:b.status, plan:S.plan, hd:b.heading};
+          const far = q => PORTS.every(pt => dist(pt.p, q) > 1.5);
+          for (let i = 0; i < D.omr.length; i++){ const a = D.omr[i]; if (a.kn !== 5 || a.s) continue; const T = RR[i];
+            for (let y = 0; y < a.H; y += 7) for (let k = T.row[y]; k < T.row[y + 1]; k++){ const x0 = T.run[k * 2], x1 = T.run[k * 2 + 1]; if (x1 - x0 < 15) continue;
+              const cy = (a.y0 + y + 0.5) * D.R / 1000, inP = {x:(a.x0 + (x0 + x1) / 2) * D.R / 1000, y:cy}, edge = {x:(a.x0 + x0) * D.R / 1000, y:cy}, out = {x:edge.x - 0.1, y:cy};
+              if (!far(inP) || !far(out)) continue; await mapNeed(inP, 0); if (isLand(inP) || isLand(out) || fartAt(out, H)) continue;
+              const v = p => { b.pos = {x:p.x, y:p.y}; b.v = BOAT.vcruise; b.status = 'sailing'; S.plan = {wps:[{x:p.x + 1, y:p.y, port:null, fish:0}], idx:0, speed:BOAT.vcruise, returning:false, unsafe:[false]}; let r = 0; for (let n = 0; n < 4; n++){ r = sailV(H, 0.2); b.v = r; } return r; };
+              const r = {name:a.n, inside:v(inP), before:v(out), open:(() => { b.pos = {x:out.x - 1.5, y:cy}; return fartAt(b.pos, H); })(), vc:BOAT.vcruise};
+              b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; b.heading = keep.hd; return r; } }
+          b.pos = keep.pos; b.v = keep.v; b.status = keep.st; S.plan = keep.plan; return null; }""")
+        check(bool(K5) and K5['vc'] > 5.5 and K5['inside'] <= 5 and K5['before'] <= 5, 'minuttsteget i et av Kystverkets 5-knopsområder: 5 inne, og nede i 5 alt 100 m før kanten', K5)
+
         # 5. by hand at full speed through the same water: the strip says so, and the passage is written once
         n0 = await pg.evaluate("() => ({t:S.t, mobs:(S.farv || []).length})")   # (the log is trimmed by age: its lines are found by their time)
         await pg.evaluate(PLACE, [C, 6])

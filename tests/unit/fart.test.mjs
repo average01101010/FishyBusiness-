@@ -8,7 +8,6 @@ export default function (t){
   const D = K.FART_D, hv = D.havn, H = 24 * 200;
   t.ok(D && hv && hv.kn > 0 && hv.r > 0, 'fart.json har havnas faste grense');
   t.eq(hv.kn, 5, 'den faste grensa i havnene er 5 knop (V4 A)');
-  const reset = () => { K.FART.omr = null; K.FART.last = null; };
 
   // ---- the harbours: inside the radius, at its edge (true metres over the grid's scale), outside, and far from any harbour ----
   const pt = K.PORTS.find(q => q.id === 'husoy'), gs = K.gridScale(pt.p), r = hv.r * gs;

@@ -7,7 +7,8 @@
 #         5 knots where the regulation says nothing).
 #   omr   The state's speed limits for commercial vessels: Kystverket's «For næringsfartøy - statlige fartsgrenser på sjøen etter HFL»
 #         (FOR-2021-12-16-3622; Geonorge 27ff409b-29ad-49df-9d1c-f795c2e707b2, the WFS layer layer_723 on services.kystverket.no),
-#         Norsk lisens for offentlige data (NLOD) 2.0: the source is named in the handbook and on the sources page. 74 areas, 2.5 million
+#         Norsk lisens for offentlige data (NLOD) 2.0: the source is named in the handbook (ui/07c-handbook.js 'fart'); the sources page
+#         (src/legal/kilder.html) waits for Jonas. 74 areas, 2.5 million
 #         points in UTM 33 (EPSG:32633, the game's own projection: x = E + 250 km, y = 8 050 km - N). Too many to ship as rings, so each
 #         area is rasterised at R metres in the game's frame and kept as runs per row (the 50-200 m belts from land are 3-10 cells wide).
 #
@@ -56,9 +57,11 @@ def areas(path):
         xs = [q[0] for P in polys for q in P[0]]; ys = [q[1] for P in polys for q in P[0]]
         x0, y0 = math.floor(min(xs)), math.floor(min(ys)); W, H = math.ceil(max(xs)) - x0 + 1, math.ceil(max(ys)) - y0 + 1
         im = Image.new('1', (W, H), 0); dr = ImageDraw.Draw(im)
-        for P in polys:   # the outer ring filled, its holes (islands, mostly) cleared
-            dr.polygon([(x - x0, y - y0) for x, y in P[0]], fill=1)
-            for h in P[1:]: dr.polygon([(x - x0, y - y0) for x, y in h], fill=0)
+        # the outer ring filled, its holes (islands, mostly) cleared. PIL fills the pixels a polygon touches, its edge included, with
+        # pixel c at the point c: half a cell back, so pixel c is the cell whose centre is c + 0.5 (else every area grew a cell east and south)
+        for P in polys:
+            dr.polygon([(x - x0 - 0.5, y - y0 - 0.5) for x, y in P[0]], fill=1)
+            for h in P[1:]: dr.polygon([(x - x0 - 0.5, y - y0 - 0.5) for x, y in h], fill=0)
         px = im.load(); cells = 0
         for y in range(H):
             runs, x = [], 0

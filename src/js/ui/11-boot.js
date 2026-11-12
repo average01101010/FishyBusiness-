@@ -159,8 +159,9 @@ function dataEls(){ return [...document.querySelectorAll('script[type="applicati
 function dataEarly(){
   const ty = new Set(['trebat']);
   try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
-  // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js)
-  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || el.id === 'felt-s' || [...ty].some(t => el.id === 'glb-' + t);
+  // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js; and the speed
+  // limits' areas, Ø11.8: Autonav holds them in the time away played before the game opens, 05e-sjovei.js fartRuns)
+  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || el.id === 'felt-s' || el.id === 'fart-r' || [...ty].some(t => el.id === 'glb-' + t);
 }
 // The models' bytes as they came (04.11.2026, the memory: two crashes on Android that day with 462 and 647 MB of JS heap): kept here as
 // a Uint8Array per element id and read by glbData (vessel3d.js), the pub's and the naust's parse and the buildings' loader, instead of
@@ -185,7 +186,7 @@ async function bootData(){
   const early = dataEarly(), els = dataEls().filter(early);
   if (!dataEls().length){ MODELS.done = true; return; }   // (a one-file build: everything is in the page)
   // (the fishing grounds' shapes are not needed to play: a file that does not come is left out, and the grounds are circles, 03j-felt.js)
-  await Promise.all(els.map(el => el.id === 'felt-s' ? dataGet(el).catch(e => { MODELS.failed.push('felt-s'); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }) : dataGet(el)));
+  await Promise.all(els.map(el => el.id === 'felt-s' || el.id === 'fart-r' ? dataGet(el).catch(e => { MODELS.failed.push(el.id); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }) : dataGet(el)));
 }
 // the rest, after the map's first packs: three at a time; a file that does not come in four tries is told to the error list and left
 // out (its readers draw what they drew without it), so a bad connection never keeps the 3D view from coming

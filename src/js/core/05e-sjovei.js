@@ -1084,6 +1084,15 @@ function fartAt(p, H){
   FART.last = {x:p.x, y:p.y, H, f, np, R}; return f;
 }
 const fartKn = (p, H) => { const f = fartAt(p, H); return f ? f.kn : 1e9; };
+// the lowest limit along the route from p over L grid km (the minute step's way: the legs from the waypoint she is going to), at the
+// start and every 50 m (1e9 for none)
+function fartLegKn(pl, p, L, H){
+  let kn = fartKn(p, H), q = p, left = Math.max(0, L), i = pl ? pl.idx : 0;
+  while (left > 1e-6 && pl && i < pl.wps.length){ const w = pl.wps[i], d = dist(q, w), s = Math.min(d, left), n = Math.max(1, Math.ceil(s / 0.05));
+    for (let k = 1; k <= n; k++){ const u = d > 1e-9 ? s * k / n / d : 0; kn = Math.min(kn, fartKn({x:q.x + (w.x - q.x) * u, y:q.y + (w.y - q.y) * u}, H)); }
+    left -= s; if (s < d) break; q = w; i++; }
+  return kn;
+}
 // Autonav's speed under the limit (m/s, 1e9 for none): where she is and where she will be in twenty seconds (at least 60 m ahead), so
 // she is down to it when she comes in, not after
 function fartCapMs(){
