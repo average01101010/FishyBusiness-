@@ -48,6 +48,9 @@ async def main():
                   const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = []; b.pos = {x:q.x, y:q.y}; b.v = 0;
                   b.heading = Math.atan2(q0.x - q.x, -(q0.y - q.y));   // (radians, as 05-vessels.js has it)
                   S.t = Math.round((Date.UTC(2027, 6, 14, 0) + 12.5 * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }""", mk)
+                await pg.wait_for_timeout(1500); await pg.evaluate("TAB.held = true")   # (after the strip has the new place and time)
+                # (the game's tick is held, TAB.held as in maptest: with the clock running the boat drifted hundreds of metres from the
+                # mark while the 3D view loaded, so the mark was anywhere or out of the picture)
                 await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(15000)
                 await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
                 await pg.evaluate("([d, y]) => { const c = G3._debug.cam; c.helm = false; c.dist = d; c.pitch = 0.1; c.yaw = y; }", [12, 0.3] if W > H else [16, 0.2])   # upright the view is narrow: farther back; await pg.wait_for_timeout(6000)
@@ -56,7 +59,7 @@ async def main():
                 await pg.evaluate("openPlotter()"); await pg.wait_for_timeout(2000)
                 await pg.evaluate("""async (mk) => { view.cx = mk[0]; view.cy = mk[1]; view.z = MAP_H / 0.6; applyView(); scheduleStatic(); renderDyn(); await new Promise(r => setTimeout(r, 2500)); }""", mk)
                 await pg.screenshot(path=os.path.join(OUT, f'merke_{TAG}_{fname}_{k}_kart.png'), timeout=300000)
-                await pg.evaluate("() => { const c = document.getElementById('plotClose'); if (c && !c.hidden) c.click(); }"); await pg.wait_for_timeout(1500)
+                await pg.evaluate("() => { const c = document.getElementById('plotClose'); if (c && !c.hidden) c.click(); TAB.held = false; }"); await pg.wait_for_timeout(1500)
             gl = await pg.evaluate("G3._debug.glErr()")
             check(gl == 0, f'{fname}: no GL errors', gl)
             await pg.context.close()
