@@ -310,10 +310,14 @@ async def main():
           const g0 = GROUNDS[2].p; atSea(g0); b.rig = 'garn'; startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
           b.rig = 'line'; startSet('line', {lk:'hyse', n:2}, 0); hStep(300); b.status = 'idle';
           for (let k = 0; k < 18 * 60; k++) step();
-          const walk = id => { const s = S.sets.find(x => x.id === id), A = {n:0}; for (const sp in s.acc) A.n += s.acc[sp].kg; atSea(s.a); S.hold = []; startHaul(id); const g = b.gop, ups = []; let last = 0, k = 0;
+          // (the line's catch is set to at least 120 kg before the haul: the check is on how it comes aboard, not on how much the ground gave
+          // that day; with the 44 kg of 12.11.2026 only two of the first tub's six slices held a fish, and the check was red on every branch)
+          const walk = (id, min) => { const s = S.sets.find(x => x.id === id), A = {n:0}; let tot = 0; for (const sp in s.acc) tot += s.acc[sp].kg;
+            if (min && tot < min){ const f = min / Math.max(1, tot); if (tot > 0) for (const sp in s.acc){ s.acc[sp].kg *= f; s.acc[sp].n = Math.round(s.acc[sp].n * f); } else s.acc.hyse = {kg:min, n:Math.round(min / 1.2)}; }
+            for (const sp in s.acc) A.n += s.acc[sp].kg; atSea(s.a); S.hold = []; startHaul(id); const g = b.gop, ups = []; let last = 0, k = 0;
             while (b.gop && k++ < 900){ step(); const t = holdTotal(); if (t > last + 0.01){ ups.push({done:g.done, sub:g.sub, d:+(t - last).toFixed(1)}); last = t; } }
             return {sl:g.sl, n:g.n, ups:ups.length, firstUnit:ups.filter(u => u.done === 0).length, big:Math.max(0, ...ups.map(u => u.d)), kg:Math.round(holdTotal()), had:Math.round(A.n), left:Math.round(Object.values(s.acc).reduce((a, x) => a + Math.max(0, x.kg), 0))}; };
-          R.net = walk(S.sets.find(s => s.kind === 'garn').id); R.line = walk(S.sets.find(s => s.kind === 'line').id);
+          R.net = walk(S.sets.find(s => s.kind === 'garn').id); R.line = walk(S.sets.find(s => s.kind === 'line').id, 120);
           // the tub: 400 kg round (past the tub) with two aboard stops the fishing, unless it is switched on to gut on the way in
           const round = () => { S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:400, n:100, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.gop = null; b.deckStop = false; b.fishUntil = S.t + 300; b.deckEnd = null; };
           // the bleeding tub: up to half full the haul goes at full pace, then slower, to a fifth of it at a full tub (tilbakemelding #30)
