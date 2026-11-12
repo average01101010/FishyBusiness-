@@ -36,7 +36,10 @@ PLAY = r"""(async ([every, days, hours]) => {
       while (b.gear && (S.equip.jukse || 0) < (BOAT.jukseMax || 0) && S.cash >= EQUIP.jukse.price + 8000){ S.cash -= EQUIP.jukse.price; S.stats.costs += EQUIP.jukse.price; S.equip.jukse = (S.equip.jukse || 0) + 1; }
       autoRestock(); until(S.t + 240, () => !portBusy(b));
       S.plan = {wps:route(), idx:0, speed:BOAT.vcruise || 16, returning:false, depAt:null, unsafe:[]}; depart();
-      until(S.t + 22 * 60, () => b.status === 'port' && !S.plan);
+      // (Autonav's way round shallow water ahead is found off this loop (plan.replan): the bot lets it in, or the boat stood still with
+      // «Grunt vann forut» for the rest of the run, the skipper fell asleep from exhaustion, and the first pace ended at 12 trips where
+      // it has 17, 12.11.2026 and at F2 08.11.2026)
+      { const T = S.t + 22 * 60; while (S.t < T && !(b.status === 'port' && !S.plan)){ step(); if (S.plan && S.plan.replan) await new Promise(r => setTimeout(r, 30)); } }
       until(S.t + 300, () => { if (!b.land && !b.shift && holdTotal() > 0.5) startLanding(false); return !b.land && !b.shift && holdTotal() < 0.5; });
       if (b.status === 'port') restStart();
       trips++; nextAt = d + every;
