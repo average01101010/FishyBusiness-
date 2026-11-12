@@ -46,11 +46,11 @@ async def main():
                   for (const r of [0.02, 0.028, 0.04, 0.06, 0.09]){ for (let a = 0; a < 6.28 && !q; a += 0.26){ const c = {x:q0.x + Math.cos(a) * r, y:q0.y + Math.sin(a) * r}; if (!isLand(c) && depthF(c) > 2) q = c; } if (q) break; }
                   q = q || {x:q0.x, y:q0.y + 0.06};
                   const b = S.boat; b.status = 'idle'; b.port = null; S.plan = null; S.draft = []; b.pos = {x:q.x, y:q.y}; b.v = 0;
-                  b.heading = Math.atan2(q0.x - q.x, -(q0.y - q.y)) * 180 / Math.PI;
+                  b.heading = Math.atan2(q0.x - q.x, -(q0.y - q.y));   // (radians, as 05-vessels.js has it)
                   S.t = Math.round((Date.UTC(2027, 6, 14, 0) + 12.5 * 3.6e6 - EPOCH) / 6e4); if (!G3.isActive()) G3.show(true); }""", mk)
                 await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(15000)
                 await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
-                await pg.evaluate("([d, y]) => { const c = G3._debug.cam; c.helm = false; c.dist = d; c.pitch = 0.1; c.yaw = y; }", [10, 0.55] if W > H else [24, 0.3])   # upright the view is narrow: farther back; await pg.wait_for_timeout(6000)
+                await pg.evaluate("([d, y]) => { const c = G3._debug.cam; c.helm = false; c.dist = d; c.pitch = 0.1; c.yaw = y; }", [12, 0.3] if W > H else [16, 0.12])   # upright the view is narrow: farther back; await pg.wait_for_timeout(6000)
                 await pg.screenshot(path=os.path.join(OUT, f'merke_{TAG}_{fname}_{k}_3d.png'), timeout=300000)
                 # the chart plotter on the mark, about 600 m across
                 await pg.evaluate("openPlotter()"); await pg.wait_for_timeout(2000)
