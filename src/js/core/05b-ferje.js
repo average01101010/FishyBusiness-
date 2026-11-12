@@ -14,16 +14,33 @@
 //
 // Senja's own ferry «MF Senjasund» (Botnhamn - Brensholmen, May to September, every 90 minutes 07-21, 12 knots) is one crossing among
 // the others, with the route, the name, the id ('ferje') and the size she has always had.
+//
+// N4 (12.11.2026): the express boats (y 1, route type 1014) and the local passenger ferries (y 2, 1008) are crossings of the same kind,
+// with their own sizes, their own wind limits (an express boat stops in less) and «MS» names. They are type 'ferry' in the game (the
+// same ferry box in 3D and the same rules of the road till N7 has their models); the AIS card tells them apart by n.ex. The coastal
+// route Bergen - Kirkenes (data k) is one round journey with its calls and times from Entur, leaving Bergen every day: the departure
+// of day d is sailed by ship d mod n, so each ship goes round in n days (11) and is a pure function of the clock as the ferries are
+// (kystStates). Senja's hand-laid «MS Kystpilen» is gone: she is one of these ships, and at Finnsnes they call by the timetable.
 const FERJE_D = /*@include(data/ferje.json)*/null;
-// length, beam and draught (m) by the crossing's size class (ferje.json k: an estimate from the departures a day and the longest leg)
-const FERJE_SIZE = [[34.0, 9.6, 2.6], [64.0, 13.4, 3.4], [112.0, 17.5, 4.4]];
-// a departure is cancelled when the wind at the quay is this or more (m/s), by the size class: a strong gale stops the small ones,
-// a storm the large ones. The ferry then lies where she is till a journey leaves from that quay in weather she sails in.
-const FERJE_WIND = [20, 22, 25];
+// length, beam and draught (m) by the crossing's kind (ferje.json y: car ferry, express boat, passenger ferry) and size class (k: an
+// estimate from the departures a day and the longest leg, or for an express boat the longest journey)
+const FERJE_SIZE = [[[34.0, 9.6, 2.6], [64.0, 13.4, 3.4], [112.0, 17.5, 4.4]], [[27.0, 8.6, 1.3], [35.0, 10.5, 1.6]], [[19.9, 6.5, 1.9], [28.0, 8.0, 2.4]]];
+// a departure is cancelled when the wind at the quay is this or more (m/s), by the kind and the size class: a strong gale stops the
+// small car ferries, a storm the large ones; an express boat (a light catamaran at 25-35 knots) stops at the start of a strong gale,
+// a small passenger ferry a little after. The boat then lies where she is till a journey leaves from that quay in weather she sails in.
+const FERJE_WIND = [[20, 22, 25], [16, 16], [18, 18]];
+// the coastal route's ships: their made-up names (the first is Senja's old «MS Kystpilen»), call signs, the owner, and length, beam and
+// draught by turn (the ships of the route are 116-138 m)
+const KYST_NAMES = ['MS Kystpilen', 'MS Havbrisen', 'MS Fjordstjerna', 'MS Skumtoppen', 'MS Leiarvind', 'MS Nordvarden', 'MS Bølgeslag', 'MS Kystvarden', 'MS Sundbrisen', 'MS Fyrlykta', 'MS Morgenrøden', 'MS Havgløtt'];
+const KYST_CS = ['LAKY', 'LAKV', 'LAKT', 'LAKR', 'LAKP', 'LAKN', 'LAKL', 'LAKJ', 'LAKG', 'LAKE', 'LAKC', 'LAKA'];
+const KYST_OWN = 'Kystruta AS';
+const KYST_SIZE = [[121.8, 21.0, 4.9], [135.8, 21.5, 5.1], [123.3, 19.2, 4.7]];
 const FERJE_WEEK = 10080;
 const FERJE_N1 = ['Stor', 'Lang', 'Ytter', 'Inner', 'Nord', 'Sør', 'Vest', 'Aust', 'Blå', 'Grå', 'Kvit', 'Høg', 'Låg', 'Brei', 'Djup'];
 const FERJE_N2 = ['skjæret', 'båen', 'flua', 'straumen', 'leia', 'tangen', 'odden', 'taren', 'dønninga', 'bråttet', 'kavlen', 'fallet', 'røsta', 'drivet', 'draget'];
-const FERJE = {s:null, q:[], sum:null, legs:new Map()};
+// the express boats' second part (a fast bird or a wind), so «MS Yttertern» is not mistaken for a car ferry
+const FERJE_X2 = ['terna', 'svalen', 'lomen', 'skarven', 'spoven', 'krykkja', 'falken', 'pilen', 'vinden', 'brisen', 'kastet', 'sprøyten', 'glimtet', 'strålen', 'fløyten'];
+const FERJE = {s:null, q:[], sum:null, legs:new Map(), k:null};
 function ferjeInit(){
   if (FERJE.s) return FERJE;
   const D = FERJE_D || {q:[], l:[], s:[], meta:{}}, legs = FERJE.legs;
@@ -31,21 +48,26 @@ function ferjeInit(){
   for (const [a, b, f] of D.l){ const pts = [[f[0] / 1000, f[1] / 1000]]; let x = f[0], y = f[1]; for (let i = 2; i < f.length; i += 2){ x += f[i]; y += f[i + 1]; pts.push([x / 1000, y / 1000]); }
     legs.set(a + '|' + b, prepRoute(pts)); legs.set(b + '|' + a, prepRoute(pts.slice().reverse())); }
   const add = (o, pats) => {
-    const s = Object.assign({i:FERJE.s.length, ch:{}, names:{}}, o), z = o.sz || FERJE_SIZE[o.k]; s.L = z[0]; s.B = z[1]; s.T = z[2];
+    const s = Object.assign({i:FERJE.s.length, ch:{}, names:{}, y:0}, o), z = o.sz || FERJE_SIZE[s.y][o.k]; s.L = z[0]; s.B = z[1]; s.T = z[2];
     s.pats = pats.map((P, i) => ({i, q:P.q, tm:P.tm, R:P.R, dur:P.tm[P.tm.length - 1]}));
     let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const P of s.pats) for (const R of P.R) for (const p of R.pts){ x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
     s.box = [x0, y0, x1, y1]; s.key = [...new Set(s.pats.flatMap(P => P.q))].map(q => FERJE.q[q].name).join('|'); FERJE.s.push(s); return s;
   };
-  for (const e of D.s) add({k:e.k, w:e.w || null, s:e.s || null}, e.p.map(([q, tm]) => ({q, tm, R:q.slice(1).map((b, j) => legs.get(q[j] + '|' + b))})));
+  for (const e of D.s) add({k:e.k, y:e.y || 0, w:e.w || null, s:e.s || null}, e.p.map(([q, tm]) => ({q, tm, R:q.slice(1).map((b, j) => legs.get(q[j] + '|' + b))})));
   // Senja's ferry: the route laid by hand (NPC_ROUTES.ferry), 90 minutes between the departures from Botnhamn 07:00-20:30 and from
   // Brensholmen 45 minutes after, at 12 knots, in May to September; she lies as she always has (berthShift), with her bow out
   const qa = FERJE.q.push({name:'Botnhamn', p:NPCR.ferry.pts[0]}) - 1, qb = FERJE.q.push({name:'Brensholmen', p:NPCR.ferryRev.pts[0]}) - 1, tc = NPCR.ferry.len / (12 * NM) * 60;
   const day = [[420].concat(Array(9).fill(90)), [465].concat(Array(9).fill(90))];
   add({k:1, sz:[49.9, 12.4, 3.1], id:'ferje', name:'MF Senjasund', cs:'LMSB', own:'Senja Ferjedrift AS', m:[4, 8], lg:true, w:{d:[0, 0, 0, 0, 0, 0, 0], t:[day]}, s:null}, [{q:[qa, qb], tm:[tc], R:[NPCR.ferry]}, {q:[qb, qa], tm:[tc], R:[NPCR.ferryRev]}]);
+  // the coastal route: one round journey (a pattern like a crossing's), its ships each a crossing of one ship for ferjeAt
+  if (D.k){ const K = D.k, q = K.p, P = {i:0, q, tm:K.tm, R:q.slice(1).map((b, j) => legs.get(q[j] + '|' + b)), dur:K.tm[K.tm.length - 1]};
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const R of P.R) for (const p of R.pts){ x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); }
+    FERJE.k = {P, dep:K.dep, n:K.n, box:[x0, y0, x1, y1], v:{tr:[{t0:0, t1:P.dur, P}]}, ships:Array.from({length:K.n}, (_, i) => { const z = KYST_SIZE[i % KYST_SIZE.length];
+      return {i, name:KYST_NAMES[i] || 'MS Kystpilen ' + (i + 1), cs:KYST_CS[i % KYST_CS.length], L:z[0], B:z[1], T:z[2], pats:[P]}; })}; }
   return FERJE;
 }
-// the crossing that calls at both quays (by their names), or undefined
-function ferjeFind(a, b){ return ferjeInit().s.find(s => { const n = s.key.split('|'); return n.includes(a) && n.includes(b); }); }
+// the crossing of kind y (0 car ferry, 1 express boat, 2 passenger ferry) that calls at both quays (by their names), or undefined
+function ferjeFind(a, b, y = 0){ return ferjeInit().s.find(s => { const n = s.key.split('|'); return s.y === y && n.includes(a) && n.includes(b); }); }
 // the week's journeys dealt out to ferries: [{tr:[{t0, t1, P}, ...]}, ...], t0 and t1 in minutes after Monday 00:00. The deal is done
 // again from where the ferries lay at the week's end till it is the same week after week (four times at most), so a ferry begins
 // the week at the quay she ended it at wherever the timetable lets her.
@@ -57,6 +79,10 @@ function ferjeChain(s, W){
   for (let pass = 0; pass < 4; pass++){
     const was = V.map(v => v.q + ':' + v.free); V = V.map(v => ({q:v.q, free:v.free - FERJE_WEEK, tr:[]}));
     for (const tr of trips){ const q0 = tr.P.q[0]; let b = null; for (const v of V) if (v.q === q0 && v.free <= tr.t0 && (!b || v.free < b.free)) b = v;
+      // none at the quay: one lying at another quay of the crossing sails over empty in time, where a leg joins the two (N4: the
+      // express boats' and the passenger ferries' journeys often begin where the last one did not end: Arendal took 25 boats)
+      if (!b){ let hp = null; for (const v of V){ if (v.q === q0 || v.free > tr.t0) continue; const P = ferjeHop(s, v.q, q0); if (P && P.dur <= 60 && v.free + 2 + P.dur <= tr.t0 && (!b || v.free < b.free)){ b = v; hp = P; } }
+        if (b){ const t1 = tr.t0 - 2, t0 = t1 - hp.dur; b.tr.push({t0, t1, P:hp, empty:true}); } }
       if (!b){ b = {q:q0, free:-1e9, tr:[]}; V.push(b); } b.tr.push(tr); b.free = tr.t1; b.q = tr.P.q[tr.P.q.length - 1]; }
     if (pass && V.length === was.length && V.every((v, i) => v.q + ':' + v.free === was[i])) break;
   }
@@ -79,7 +105,7 @@ function ferjeHop(s, a, b){
 // from a quay she is not at because of it. Worked out once per ferry and week.
 function ferjeSailed(s, v, H0){
   const M = v.okm || (v.okm = new Map()); if (M.has(H0)) return M.get(H0); if (M.size > 3) M.clear();   // (this week and the next, for a track or a look ahead across Sunday night)
-  const lim = FERJE_WIND[s.k], ok = []; let q = v.tr[0].P.q[0];
+  const lim = FERJE_WIND[s.y][s.k], ok = []; let q = v.tr[0].P.q[0];
   for (const tr of v.tr){ const go = tr.P.q[0] === q && windAt(H0 + tr.t0 / 60, FERJE.q[q].p) < lim; ok.push(go); if (go) q = tr.P.q[tr.P.q.length - 1]; }
   M.set(H0, ok); return ok;
 }
@@ -110,7 +136,8 @@ function ferjeClock(H){
 function ferjeName(s, vi){
   if (s.name) return s.name; if (s.names[vi]) return s.names[vi];
   const used = new Set(Object.values(s.names)); let h = hashStr(s.key + '|' + vi), nm;
-  do { nm = 'MF ' + FERJE_N1[h % FERJE_N1.length] + FERJE_N2[Math.floor(h / FERJE_N1.length) % FERJE_N2.length]; h = (h + 7919) >>> 0; } while (used.has(nm));
+  const N2 = s.y === 1 ? FERJE_X2 : FERJE_N2;
+  do { nm = (s.y ? 'MS ' : 'MF ') + FERJE_N1[h % FERJE_N1.length] + N2[Math.floor(h / FERJE_N1.length) % N2.length]; h = (h + 7919) >>> 0; } while (used.has(nm));
   return s.names[vi] = nm;
 }
 // a crossing's ferries at hour H: [{id, name, type:'ferry', p, hd, v, L, B, T}], as the timetable has them (wx false) or with the
@@ -126,15 +153,33 @@ function ferjeStates(s, H, wx = true, C = ferjeClock(H), only){
     if (a.R && !s.lg){ const k = at.get(a.q) || 0; at.set(a.q, k + 1); if (k){ const d = Math.min(a.o + k * (s.L + 15) / 1000, a.R.len * 0.45), q = atRoute(a.R, a.end ? a.R.len - d : d); a.p = q.p; } }
     const id = s.id || 'j' + s.i + '.' + vi; if (only && only !== id) continue;
     const n = {id, name:ferjeName(s, vi), type:'ferry', p:s.lg ? berthShift(a.p, 'ferje', true) : a.p, hd:a.hd, v:a.v, L:s.L, B:s.B, T:s.T}; if (s.cs){ n.cs = s.cs; n.own = s.own; }   // (her made-up call sign and owner, for the AIS card)
+    if (s.y) n.ex = s.y;   // an express boat (1) or a passenger ferry (2), for the AIS card
     out.push(n);
   }
   return out;
 }
-// the ferries within AIS range of the boat you follow (Senja's own wherever she is, as before: aisShown hides her beyond the range),
-// or the one asked for
+// the coastal route's ships at hour H: [{id:'kyst<i>', name, type:'coastal', p, hd, v, L, B, T, cs, own}]. The departure from Bergen of
+// day d (the clock's own days, at the timetable's time) is sailed by ship d mod n; a ship is on the journey she began last, or lies at
+// Bergen till her next. She sails in all weather (the route's ships do; a call left out in a storm is not in the game).
+function kystStates(H, only){
+  const K = ferjeInit().k, out = []; if (!K) return out;
+  const t = gDate(H).getTime() / 60000, d0 = Math.floor((t - K.dep) / 1440), at = new Map();
+  for (const sh of K.ships){
+    const id = 'kyst' + sh.i; if (only && only !== id) continue;
+    const d = d0 - (((d0 - sh.i) % K.n) + K.n) % K.n, a = ferjeAt(sh, K.v, t - (d * 1440 + K.dep), null);
+    if (a.R){ const k = at.get(a.q) || 0; at.set(a.q, k + 1); if (k){ const dd = Math.min(a.o + k * (sh.L + 15) / 1000, a.R.len * 0.45), q = atRoute(a.R, a.end ? a.R.len - dd : dd); a.p = q.p; } }   // (two at one quay: one behind the other, as the ferries)
+    out.push({id, name:sh.name, type:'coastal', p:a.p, hd:a.hd, v:a.v, L:sh.L, B:sh.B, T:sh.T, cs:sh.cs, own:KYST_OWN});
+  }
+  return out;
+}
+// the ferries and the coastal route's ships within AIS range of the boat you follow (Senja's own ferry wherever she is, as before:
+// aisShown hides her beyond the range), or the one asked for
 function ferjeNear(H, only){
-  const out = []; if (only && only !== 'ferje' && only[0] !== 'j') return out;
+  const out = []; if (only && only !== 'ferje' && only[0] !== 'j' && only.indexOf('kyst') !== 0) return out;
   const F = ferjeInit(), pos = S && S.boat && S.boat.pos, C = ferjeClock(H), R = AIS_KM;
+  if (F.k && (only ? only.indexOf('kyst') === 0 : pos && pos.x >= F.k.box[0] - R && pos.x <= F.k.box[2] + R && pos.y >= F.k.box[1] - R && pos.y <= F.k.box[3] + R))
+    for (const n of kystStates(H, only)) if (only || dist(n.p, pos) <= R) out.push(n);
+  if (only && only.indexOf('kyst') === 0) return out;
   for (const s of F.s){
     if (only ? (s.id ? only !== s.id : only.indexOf('j' + s.i + '.') !== 0) : !s.lg && (!pos || pos.x < s.box[0] - R || pos.x > s.box[2] + R || pos.y < s.box[1] - R || pos.y > s.box[3] + R)) continue;
     for (const n of ferjeStates(s, H, true, C, only)) if (only || s.lg || dist(n.p, pos) <= R) out.push(n);

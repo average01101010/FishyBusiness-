@@ -38,7 +38,7 @@ async def one(p, lvl, extra=''):
     await pg.wait_for_timeout(5000)
     r = await pg.evaluate("""() => { const L = MAPD.L.fin; let nb = 0, by = 0; if (L) for (const [k, a] of MAPD.blk) if (k % 64 === L.id){ nb++; by += a.byteLength; }
       return {lag:!!L, lvl:G3._debug.qual ? G3._debug.qual() : null, finBlokker:nb, finMB:+(by / 1e6).toFixed(2), mapdMB:+(MAPD.bytes / 1e6).toFixed(1), jsMB:performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null,
-        finPakker:[...MAPD.byTile.values()].filter(pk => pk.kind === 'fin' && pk.buf).length, miss:MAPD.miss, hentet:MAPD.fetched}; }""")
+        finPakker:[...MAPD.byTile.values()].filter(pk => pk.kind === 'fin' && pk.buf).length, miss:MAPD.miss, hentet:MAPD.fetched, views:MAPD.packs.filter(pk => pk.kind === 'view').length}; }""")
     r['nett'] = {k: [v[0], round(v[1] / 1e6, 2)] for k, v in sorted(got.items())}; r['nettMB'] = round(sum(v[1] for v in got.values()) / 1e6, 2); r['feil'] = errs[:3]
     await b.close(); return r
 
@@ -51,7 +51,11 @@ async def main():
         for name in ('lav', 'middels', 'hoy_fin0'):
             r = R[name]; print(ok('fin' not in r['nett'] and r['finPakker'] == 0 and r['finBlokker'] == 0), name + ': ingen fin-pakke hentet og ingen fin blokk pakket ut', r['nett'].get('fin'), r['finBlokker'])
         r = R['hoy']; print(ok('fin' in r['nett'] and r['finPakker'] >= 1 and r['finBlokker'] >= 1), 'hoy: fin-pakken kom, og fine blokker er pakket ut rundt båten', r['nett'].get('fin'), r['finBlokker'], 'blokker', r['finMB'], 'MB')
-        print(ok(r['finBlokker'] <= 9), 'hoy: høyst ni fine blokker i minnet ved starten', r['finBlokker'])
+        # (the bound: nine in Senja's build, which has 4 view packs; 16 with the whole coast, where bridges, lakes, lights and the life
+        # up to 25 km off read the ground through the layer too: 15 blocks, 19.2 MB, at Finnsnes on the test edition 12.11.2026, and
+        # Jonas kept it so until K2 decides High or Ultra only, «A: Behold, K2 avgjør»; docs/planer/kartrelease-o13.md K1)
+        lim = 9 if r['views'] <= 4 else 16
+        print(ok(r['finBlokker'] <= lim), 'hoy: høyst %d fine blokker i minnet ved starten (%s)' % (lim, 'Senja-bygget' if lim == 9 else 'hele kysten'), r['finBlokker'], r['finMB'], 'MB')
         print(ok(all(x['miss'] == 0 for x in R.values())), 'ingen blokk telt som MAPD.miss', [x['miss'] for x in R.values()])
         same = lambda a, b: {k: v for k, v in a['nett'].items() if k != 'fin'} == {k: v for k, v in b['nett'].items() if k != 'fin'}
         print(ok(same(R['hoy'], R['hoy_fin0'])), 'hoy: de andre pakkene er de samme med og uten laget')

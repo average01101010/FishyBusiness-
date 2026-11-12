@@ -606,6 +606,9 @@ function borsTick(H){
 }
 function crewRumour(){ const B = S.bors; if (!B || Math.random() < 0.5) return null; const c = B.pool.find(x => !x.known[1] && x.traits.length > 1); if (!c) return null; c.known[1] = true; const T = TRAITS[c.traits[1]];
   return S.lang === 'no' ? 'Kjentfolk på puben sier at ' + c.name + ' fra Mannskapsbørsen er ' + T.no.toLowerCase() + '. ' + T.d.no : 'Locals at the pub say ' + c.name + ' from the crew exchange is ' + T.en.toLowerCase() + '. ' + T.d.en; }
+// a crew member's fatigue for an hour at sea: fishing tires more than sailing, the share of the hour worked, their stamina, the night,
+// and the boat's shelter (crewTick, and the hop over the rest of a route, 06j-hopp.js, which adds the hours she would have sailed)
+function crewSeaFat(c, fishing, workF, night){ const F = BOAT.fac || {}; return (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1) * (F.house === 'open' ? 1.1 : 1); }
 function crewTick(H){
   if (typeof mobCrewHour === 'function') mobCrewHour();   // back aboard at a quay after the sick leave from a fall overboard; an event left behind ended, also on a vessel with only teams (Ø11.6, 14b-sikkerhet.js)
   const b = S.boat; if (!S.crew || !S.crew.length){ S.workLog = []; return; }
@@ -629,7 +632,7 @@ function crewTick(H){
     if (typeof lifeDay === 'function'){ crewLife(c); lifeOffTick(c); lifeDay(c, H); if (!S.crew.includes(c)) continue; if (here && fishing) lifeInjury(c, hs); }   // del 2: their life beside the work (14-crewlife.js)
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
-    c.fatigue = skipOn() ? 0 : here ? clamp(c.fatigue + (fishing ? 6 : 3) * (0.4 + 0.6 * workF) * (1.4 - 0.16 * c.attr.uth) * (night ? 1.25 : 1) * ((BOAT.fx && BOAT.fx.fat) || 1) * (F.house === 'open' ? 1.1 : 1), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
+    c.fatigue = skipOn() ? 0 : here ? clamp(c.fatigue + crewSeaFat(c, fishing, workF, night), 0, 100) : clamp(c.fatigue - Math.max(8 * (night ? 1.5 : 1), restC), 0, 100);
     if (onIds.has(c.id) && b.status !== 'port') learnHour(c);
     c.wk = {};
     if (here){ c.seaH = (c.seaH || 0) + 1; const k = c.traits.includes('laerevillig') ? 2 : 1;
