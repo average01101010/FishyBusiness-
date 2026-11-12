@@ -275,7 +275,7 @@
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
   const spX = liv => typeof liv === 'string' && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : '';   // (a partner's design found in the list or not: steg 44, as vessel3d.js npcModel)
   function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv + spX(liv);
-    if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
+    if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null; }   // (a ship's windows are in her hull: no glass drawn)
     return NKB[k]; }
   function npcMesh(n, lod){
     const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : n.type === 'ferry' || n.type === 'coastal' ? npcType(n) + '|' + n.L + '|' + n.B : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
@@ -351,6 +351,19 @@
     const s1 = Math.hypot(E.vx, E.vz); E.w = s0 > 1 && s1 > 1 ? angDiff(h0, Math.atan2(E.vx, -E.vz)) / dt : 0;   // her turn rate (rad/s)
     E.px = X; E.pz = Z; E.t = t; return E;
   }
+  // A car ferry is double-ended (Ø15 N7, steg 36: tools/ships/ferje34.py, lukketferje.py): she does not turn at the quay. The clock
+  // (core/05b-ferje.js ferjeAt) has her lie with her bow in and turns her heading half round when she leaves; a ferry model is the same
+  // at both ends but not on both sides (the small one's saloon to one side, the middle one's funnel), so drawn by that heading her saloon
+  // jumped across at every departure (found by the step's check). Each car ferry keeps whether she is drawn the other way round: the
+  // clock's heading turning more than 150° at once flips it, and her model is drawn turned half round, so she goes on with her other end
+  // first and nothing moves; her lanterns are turned back to the way she goes (drawNPCLights, n.rev). The boxes beyond 1.5 km as before.
+  const NPCREV = new Map();
+  function npcRev(n){
+    const E = NPCREV.get(n.id), h = n.hd; if (!E){ NPCREV.set(n.id, {h, rev:false}); return false; }
+    if (Math.abs(angDiff(E.h, h)) > 2.6) E.rev = !E.rev; E.h = h;
+    if (NPCREV.size > 800) NPCREV.clear();
+    return E.rev;
+  }
   // a boat's own phase for her rocking (0 to 2π, fixed by her id)
   const NPHS = new Map();
   const NPCFS = new Map();   // the ferry box's scale by length and beam (drawNPC)
@@ -409,6 +422,7 @@
       n.ptow = null;
       if (n.player && bv.init && S.ptowH && S.ptowH.st === 'tow' && n.id === S.ptowH.pid){ const back = (GEO(vtype()).stern || 3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x - Math.sin(bv.head) * back) / 1000, y:(bv.z + Math.cos(bv.head) * back) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'tail'; }
       else if (n.player && bv.init && S.ptow && S.ptow.st === 'tow' && n.id === S.ptow.pid){ const fwd = -(GEO(vtype()).bow || -3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x + Math.sin(bv.head) * fwd) / 1000, y:(bv.z - Math.cos(bv.head) * fwd) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'head'; }
+      const rv = n.type === 'ferry' && !n.ex && !n.player ? npcRev(n) : false;   // (the clock's own heading, before the drawing's turns)
       let heel = 0;
       if (!n.player && !n.ptow && !(n.tur && n.st === 'tow')){
         const F = npcFollow(n, t), sp = Math.hypot(F.vx, F.vz), k = clamp((sp - 1) / 2, 0, 1);   // (m/s on the screen)
@@ -420,8 +434,9 @@
       // (the rocking's phase is the boat's own, from her id: it was her place in metres, so a boat under way at the game's pace, tens of
       // metres a second on the screen, pitched and rolled several times a second, a shudder; Jonas' video 03.11.2026)
       const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry' || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
-      n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, roll);
       const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav || shipT(n)) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
+      n.rev = !!(rv && n.K);   // a double-ended ferry's model drawn the other way round (npcRev), her heel with it
+      n.M = model(x - eye[0], y - eye[1], z - eye[2], -(n.hd + (n.rev ? Math.PI : 0)), big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, n.rev ? -roll : roll);
       // beyond the ship models' 1.5 km (or before they are in) a ferry, an express boat or a passenger ferry is the one ferry box (N.ferry,
       // 52 × 13 m) scaled to her own length and beam (N4, 12.11.2026: a passenger ferry of 20 m drawn 52 m long stuck 8 m into the quay);
       // her lanterns go with it (they are placed by n.M)
