@@ -114,9 +114,9 @@ async def main():
             check(s['rngMin'] >= 150 and s['devEnd'] <= 2, 'de passerer klar av hverandre (nærmest %d m), og ferja er tilbake på banen' % s['rngMin'], s['devEnd'])
         # ---- 19 e: in fog with neither turning (their reach set to nothing), the ferry's fog signal ahead takes Autonav down to the
         # minimum steerage speed, and she stops when the ferry is as close as the limit, till the danger is over ----
-        await pg.evaluate("() => { window.__vis = visibility; visibility = () => 0.5; window.__rn = [SJV.RNPCF, SJV.ROWNF]; SJV.RNPCF = 0; SJV.ROWNF = 0; }")
+        await pg.evaluate("() => { window.__vis = visibility; visibility = () => 0.5; window.__rn = [SJV.RNPCF, SJV.ROWNF]; SJV.RNPCF = 0; SJV.ROWNF = 0; window.__lead = sjvLead; sjvLead = () => -1; }")
         r = await run(pg, 'ferje', 'npc', 7, 4)
-        await pg.evaluate("() => { visibility = window.__vis; SJV.RNPCF = window.__rn[0]; SJV.ROWNF = window.__rn[1]; }")
+        await pg.evaluate("() => { visibility = window.__vis; SJV.RNPCF = window.__rn[0]; SJV.ROWNF = window.__rn[1]; sjvLead = window.__lead; }")
         if not r or 'S' not in r: check(False, '19 e (oppsettet)', r)
         else:
             s = summary(r); vm = await pg.evaluate("sjvMinKn()"); print('   19 e:', json.dumps(s), 'minste styrefart', vm)
@@ -158,9 +158,9 @@ async def main():
                 check(s['rngMin'] >= 100 and s['devEnd'] <= 2, 'de passerer klar (nærmest %d m), og hun tar det igjen og er på den felles banen etterpå' % s['rngMin'], s['devEnd'])
                 check(not s['own'], 'Autonav holder kurs og fart (rollene står mens møtet varer)', s['own'])
         # ---- 17 a ii: you give way and do not; the one that should stand on acts when it is clear you will not ----
-        await pg.evaluate("() => { window.__rown = SJV.ROWN; SJV.ROWN = 0; }")
+        await pg.evaluate("() => { window.__rown = SJV.ROWN; SJV.ROWN = 0; window.__lead = sjvLead; sjvLead = () => -1; }")   # (and no lead by the time, TB1)
         r = await run(pg, 'ferje', 'own', 8, 34)
-        await pg.evaluate("() => { SJV.ROWN = window.__rown; }")
+        await pg.evaluate("() => { SJV.ROWN = window.__rown; sjvLead = window.__lead; }")
         if not r or 'S' not in r: check(False, 'ferja holder kurs, spilleren viker ikke (oppsettet)', r)
         else:
             s = summary(r); print('   17 a ii:', json.dumps(s))

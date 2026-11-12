@@ -200,4 +200,32 @@ export default function (t){
   t.ok(by('far').length === 0 && by('quay').length === 0, 'utenfor hørevidden og ved kaia ingen signaler');
   t.ok(by('anch').length >= 2 && by('anch').every(p => p === 'bell'), 'til ankers klokka minst hvert minutt', by('anch'));
   t.ok(SJ.heard.has('near') && !SJ.heard.has('ship'), '19 e: tåkesignalet rett forut uten sikt huskes, skipet aktenfor tvers ikke');
+
+  // ---- TB1 (12.11.2026, tilbakemelding #1): the trawler at 12 knots giving way by rule 15 turned back as soon as the CPA was behind
+  // her while she stood off, though her own course still led into the boat on Autonav; rule 8 d: «passeres på trygg avstand … inntil
+  // det annet fartøy er endelig passert og klaret». As played back at 69.545 N 18.642 E: the trebåt at 6 knots on 200, the trawler's
+  // own course 245 (-115) at 12 knots meeting her 40 m off in 1.6 minutes, the trawler 450 m to starboard of it, still in her turn
+  // out (35 degrees, 14.6 knots over the ground) ----
+  {
+    const lim = K.colregLim(7, 60.3), tb = V(0, 0, 200, 6, {L:7}), m = 1.6, hd = -115, side = 1, off = 0.45;
+    const meet = at(0, 0, 200, 6, m), base = at(meet.x + 0.04 * Math.cos(hd * R), meet.y + 0.04 * Math.sin(hd * R), hd + 180, 12, m);
+    const nx = Math.cos(hd * R) * side, ny = Math.sin(hd * R) * side, shown = V(base.x + nx * off, base.y + ny * off, hd + 35, 12 / Math.cos(35 * R), {L:60.3});
+    const Rs = K.colregSit(tb, shown), Rb = K.colregSit(tb, V(base.x, base.y, hd, 12, {L:60.3}));
+    t.ok(Rs.tcpa <= 0 && Rs.rng > lim, 'TB1: sett der hun står på avviket i svingen ut er CPA bak henne og avstanden over grensa (den gamle betingelsen for å gå tilbake)', [Math.round(Rs.rng), +Rs.tcpa.toFixed(2), lim]);
+    t.ok(Rb.tcpa > 0 && Rb.cpa < lim, 'TB1: på sin egen kurs er det fortsatt fare (CPA under grensa og foran)', [Math.round(Rb.cpa), +Rb.tcpa.toFixed(2)]);
+    const rate = 12 * NM * Math.tan(35 * R), M = {x:base.x, y:base.y, cog:hd * R, v:12, ox:nx, oy:ny, off, rate};
+    t.eq(K.sjvBackClear(M, tb, lim, 1), false, 'regel 8 d: veien tilbake til kursen går for nær trebåten, så hun holder avviket');
+    // two minutes on, on her own course past the trebåt: the way back is clear
+    const tb2 = V(at(0, 0, 200, 6, m + 2).x, at(0, 0, 200, 6, m + 2).y, 200, 6, {L:7}), b2 = at(base.x, base.y, hd, 12, 2);
+    t.eq(K.sjvBackClear(Object.assign({}, M, {x:b2.x, y:b2.y}), tb2, lim, 1), true, 'regel 8 d: når de er forbi også på hennes egen kurs, går hun tilbake');
+    // Autonav's way back the same: her line with the offset she has, against the other on her course
+    const O = {nx:Math.cos(200 * R), ny:Math.sin(200 * R), side:1, slow:false, rate:6 * NM * Math.tan(35 * R)};
+    const own = K.sjvBackOwn({p:{x:0.25 * O.nx, y:0.25 * O.ny}, v:6}, Object.assign({mo:0.25}, O));
+    t.near(own.x, 0, 1e-6, 'Autonav: linja er der hun står minus avviket (øst-vest)'); t.near(own.cog, 200 * R - 2 * Math.PI, 1e-6, 'Autonav: linjas kurs fra retningen til avviket');
+    // in good time (8 a, 16): against the trawler the lead is several minutes, between two sjarks it is inside the 1.2 km reach as before
+    const lead = K.sjvLead({lim}, 6), lead2 = K.sjvLead({lim:K.colregLim(9, 10)}, 8);
+    t.ok(lead > 5 && lead < 6, 'regel 8 a: trebåten i 6 knop må begynne over 5 spillminutter før CPA for å stå 1,5 grenser ut', +lead.toFixed(2));
+    t.ok(lead * 18 * NM / 60 > 2.5, 'møtende med tråleren (18 knop sammen) er det over 2,5 km, ikke 1,2', +(lead * 18 * NM / 60).toFixed(2));
+    t.ok(lead2 * 11 * NM / 60 < 1.2, 'to sjarker på kryss (11 knop sammen): innenfor 1,2 km, som før', +(lead2 * 11 * NM / 60).toFixed(2));
+  }
 }
