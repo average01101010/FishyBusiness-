@@ -49,11 +49,14 @@ async def pots(pg, f, shot):
     why = await pg.evaluate(SET, [TYPE, 'teiner', 11]); print('teiner', why, flush=True)
     await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 9; c.pitch = 0.55; c.yaw = -0.9; })()"); await pg.wait_for_timeout(6000)
     await pg.screenshot(path=shot('teiner', f), timeout=400000)
-    await pg.evaluate("(() => { const c = G3._debug.cam; c.dist = 12; c.pitch = 1.32; c.yaw = -0.3; })()"); await pg.wait_for_timeout(5000)
+    # (from above, over the open aft deck: the roof over the shelter hides everyone under it from straight overhead)
+    await pg.evaluate("(() => { const c = G3._debug.cam; c.at = [0, 0.9, 3.9]; c.dist = 7.5; c.pitch = 1.2; c.yaw = -0.35; })()"); await pg.wait_for_timeout(5000)
     await pg.screenshot(path=shot('teiner_ovenfra', f), timeout=400000); print('teiner plassene', json.dumps(await pg.evaluate(POS)), flush=True)
     why = await pg.evaluate(SET, [TYPE, 'teinetrekk', 11]); print('teinetrekk', why, flush=True)
-    await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 12; c.pitch = 1.32; c.yaw = -0.3; })()"); await pg.wait_for_timeout(9000)
+    # (high over the starboard side, into the open side under the roof's edge where they haul, empty and tend the pots)
+    await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.at = [0, 0.9, 1.0]; c.dist = 7.5; c.pitch = 0.95; c.yaw = -1.45; })()"); await pg.wait_for_timeout(9000)
     await pg.screenshot(path=shot('teinetrekk_ovenfra', f), timeout=400000); print('teinetrekk plassene', json.dumps(await pg.evaluate(POS)), flush=True)
+    await pg.evaluate("(() => { G3._debug.cam.at = null; })()")
 TYPE = 'breisjark'
 async def main():
     async with async_playwright() as p:
@@ -90,8 +93,8 @@ async def main():
             await pg.evaluate(SET, [TYPE, 'fiskenatt', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 24; c.pitch = 0.10; c.yaw = 1.9; })()"); await pg.wait_for_timeout(6000)
             print('fiske-natt lys', json.dumps(await pg.evaluate("(() => { const b = S.boat; return {status:b.status, night:G3._debug.env ? G3._debug.env.night : null}; })()")), flush=True)
             await pg.screenshot(path=shot('fiskenatt', f), timeout=400000)
-            # (round 4) the stern light at night, from right astern
-            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.12; c.yaw = Math.PI; })()"); await pg.wait_for_timeout(6000)
+            # (round 4) the stern light at night, from right astern (yaw 0; π is the bow)
+            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.12; c.yaw = 0; })()"); await pg.wait_for_timeout(6000)
             await pg.screenshot(path=shot('natt_akter', f), timeout=400000)
             # the pots being set (the stack aboard), from the quarter and from above, and being hauled from above
             await pots(pg, f, shot)

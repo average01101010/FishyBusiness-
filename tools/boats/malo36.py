@@ -312,7 +312,7 @@ def wear(p, m, n):
         c = [g, g, g]; ru = 0.0
         for x0, l in FREE: ru = max(ru, run_under(x, z, x0, l, z_deck(x) + 0.03, 0.95, side))
         ru = max(ru, 0.8 * run_under(x, z, 10.0, 0.5, z_rub(x) + 0.1, 0.70, side))
-        if ru > 0: c = toward(m, (0.50, 0.25, 0.09), min(1.0, 0.80 * ru)); c = [c[i] * g for i in range(3)]
+        if ru > 0: c = toward(m, (0.30, 0.18, 0.11), min(1.0, 0.55 * ru)); c = [c[i] * g for i in range(3)]   # (dull: a bright rust read as a lamp at night, the sensor)
         return c
     if nm == 'af':
         v = 0.86 + 0.14 * n3(x * 2.5, z * 6.0, y * 2.0)
@@ -746,13 +746,6 @@ BRIM_O = 0.16; BRIM_I = 0.11                                   # the roof's brim
 def wh_ring(z):
     d = LEAN * max(0.0, z - WH_SILL)
     return [(WH_X0, WHY0, z), (7.97 + d, WHY0, z), (8.45 + d, -1.00, z), (8.45 + d, 1.26, z), (7.97 + d, WHY1, z), (WH_X0, WHY1, z)]
-def dense(ring, step):
-    """a closed ring with points put in along its sides, about step apart"""
-    out = []
-    for i, a in enumerate(ring):
-        b = ring[(i + 1) % len(ring)]; n = max(1, round(math.dist(a, b) / step))
-        out += [tuple(a[j] + (b[j] - a[j]) * k / n for j in range(3)) for k in range(n)]
-    return out
 def wh_inner(z, inset=WT):
     d = LEAN * max(0.0, z - WH_SILL)
     return [(WH_X0 + inset, WHY0 + inset), (7.97 + d, WHY0 + inset), (8.45 + d - inset, -1.00 + inset * 0.6), (8.45 + d - inset, 1.26 - inset * 0.6), (7.97 + d, WHY1 - inset), (WH_X0 + inset, WHY1 - inset)]
@@ -775,10 +768,9 @@ def wh_faces():
 
 def wheelhouse(fine=True):
     objs = []; glass = []; A = Acc('wh_fit')
-    # (round 4: the walls as a grid of about 0.15 m, so the wear per corner has corners to sit on; the sensor: «slitasjen synes ikke
-    # på de store hvite boksene». Each ring is a level slice of the walls, so the grid stays in their planes)
-    zr_ = [WH_FLOOR - 0.01] + [WH_FLOOR + (WH_SILL - WH_FLOOR) * k / 5 for k in range(1, 5)] + [WH_SILL + (WH_TOP - WH_SILL) * k / 8 for k in range(9)] if fine else [WH_FLOOR - 0.01, WH_SILL, WH_TOP]
-    shell = loft_rings('wheelhouse', [dense(wh_ring(z), 0.15 if fine else 9) for z in zr_], C['white'], cap0=False, cap1=False, angle=25)   # (open on top: the roof's underside closes it, so the ceiling is not WT lower)
+    # (round 4 tried the walls as a grid of 0.15 m for the wear: with the solidify and the windows' cuts it left a saw of dark notches
+    # down the after corner to port. The shell is the three rings again; the wear shows on the shelter's and the casing's grids)
+    shell = loft_rings('wheelhouse', [wh_ring(WH_FLOOR - 0.01), wh_ring(WH_SILL), wh_ring(WH_TOP)], C['white'], cap0=False, cap1=False, angle=25)   # (open on top: the roof's underside closes it, so the ceiling is not WT lower)
     shell.data.materials.append(C['inner']); solidify(shell, WT, 1); apply_all(shell)
     cuts = []
     def nrm_of(nm, u, vv):
@@ -1622,7 +1614,7 @@ CREW_WORK = [('ved teina og blødekaret', 4.5, -0.9), ('ved teina, nummer to', 3
              ('sløyer', 3.7, 0.9), ('sløyer, nummer to', 3.1, 0.9), ('setter (sett)', 0.3, 0.1), ('mater garnet', 3.5, -0.1)]
 CREW_REST = [('kaffe ved ripa sb', 2.5, -1.7), ('kaffe sb forut for lyets vegg', 3.3, -1.7), ('ser ut sb', 1.5, -1.5), ('ser ut bb akter', -0.1, 1.5),
              ('ser ut akter', -0.1, 0.5), ('telefonen sb akter', 0.7, -1.5), ('lener bb under lyet', 4.7, 1.7), ('slangen bb', 5.3, 1.1),
-             ('kosten', 3.3, -0.1)]
+             ('kosten', 3.3, -0.1), ('kikkert sb', 2.48, -1.7), ('telefonen bb akter', -0.12, 1.3), ('lener akter', -0.12, 0.3)]   # (the last three from ma36shot's pots, 12.11.2026)
 def crew_places(rest=False):
     if rest: return list(CREW_REST)
     out = list(CREW_WORK)
