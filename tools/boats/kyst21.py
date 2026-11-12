@@ -284,7 +284,7 @@ def wear(p, m, n):
         k = 0.22 * ss(0.55, 0.9, n3(x * 11.0, z * 9.0, side * 2.2))
         zf = z_md(x)
         for x0, l in FREE + FREE_A:
-            if x0 - 0.05 < x < x0 + l + 0.05 and z < zf: k += 0.55 * ss(1.5, 0.0, zf - z) * (0.5 + 0.5 * n3(x * 9.0, side * 3.7, 0.9))
+            if x0 - 0.05 < x < x0 + l + 0.05 and z < zf: k += 0.75 * ss(1.8, 0.0, zf - z) * (0.5 + 0.5 * n3(x * 9.0, side * 3.7, 0.9))
         k += 0.25 * ss(0.5, 0.9, n3(x * 5.5, side * 3.7, 0.9)) * ss(0.9, 0.0, zf - z) * (z < zf)
         for (xo, so, ho), kk in ((EXH_W, 0.25), (BILGE, 0.15)):
             if side == so and z < WL + ho: g *= 1 - kk * ss(0.02 + (WL + ho - z) * 0.04, 0.004, abs(x - xo)) * ss(WL, WL + 0.12, z)
@@ -302,7 +302,15 @@ def wear(p, m, n):
     if nm in ('deck', 'nonslip', 'sole'):
         v = 0.86 + 0.26 * n3(x * 3.0, y * 3.0, 0.2)
         v *= 1 - 0.14 * ss(1.0, 0.0, math.hypot(x - HX, y + 2.9)) - 0.10 * ss(1.0, 0.0, math.hypot(x - 9.3, y + 2.5))   # worn where they work
-        return [v, v, v * 0.97]
+        if nm != 'deck' or x > X_FC: return [v, v, v * 0.97]
+        # (round 2) the paint walked off to the steel along the ways (the side decks, round the hatch, the after deck's middle), the
+        # waterway under the bulwark rusty, larger patches of a lighter and a darker coat
+        yb = ybi(x); ay = abs(y)
+        way = max(ss(0.5, 0.0, abs(ay - (DHY + yb) / 2)) * (DH0 < x < DH1), ss(0.7, 0.0, abs(ay - 1.55)) * (DH1 < x < X_FC - 0.6), ss(0.9, 0.0, ay) * (x < DH0 - 0.3))
+        v *= 1 + 0.10 * n3(x * 0.7, y * 0.7, 3.3)
+        t = toward(m, (0.52, 0.50, 0.47), 0.55 * way * (0.6 + 0.4 * ss(-0.3, 0.4, n3(x * 4.0, y * 4.0, 1.7))))
+        r = 0.6 * ss(0.35, 0.05, yb - ay) * (0.5 + 0.5 * ss(-0.2, 0.5, n3(x * 6.0, y * 2.0, 0.4)))
+        t2 = toward(m, RUST, r); return [t[i] * t2[i] * v for i in range(3)]
     if nm == 'cream':
         return toward(m, RUST, 0.5 * ss(1.2, 0.0, z - z_md(x) - 0.2) * ss(0.3, 0.8, n3(x * 9.0, y * 9.0, z * 9.0)) + 0.12 * ss(0.6, 0.9, n3(x * 6.0, y * 6.0, z * 3.0)))
     if nm == 'teak':
@@ -445,7 +453,8 @@ def table_y(): return (-(min(ybi(TABLE[0]), ybi(TABLE[1])) - 0.03), -(min(ybi(TA
 
 
 # ---------- the openings: real holes, cut with a boolean and lined ----------
-PORTS = [(15.60, 6.22), (16.50, 6.38), (3.30, 3.82), (4.50, 3.76), (5.70, 3.72)]   # the portholes in the oxblood side (x, z), both sides: the forecastle's under the sheer line, the cabins' aft under the deck
+PORTS = [(15.60, 6.22), (16.50, 6.38), (3.30, 4.05), (4.50, 4.01), (5.70, 3.99)]   # (round 2: the cabins' 0.6 m over the water, under the fender; before 0.3)
+# the portholes in the oxblood side (x, z), both sides: the forecastle's under the sheer line, the cabins' aft under the deck
 PORT_R = 0.11
 HAWSE = (18.05, 6.72); HAWSE_R = 0.17        # the hawse pipes' mouths in the white whaleback (bower)
 EXH_R = 0.05; BILGE_R = 0.025
@@ -560,7 +569,7 @@ def dense(P, step):
     return out
 WX0, WXS, WXF = 5.00, 7.45, 7.80     # the wheelhouse: the aft wall, the sides' forward end, the front's middle facet (at the floor)
 WY, WFY = 1.75, 1.12                 # its half width, the front's middle facet's half width
-LEAN = 0.10                          # the front and its corners lean forward this much from the sill to the roof
+LEAN = 0.20                          # the front and its corners lean forward this much from the sill to the roof (round 2: 0.10 read as upright)
 WT = 0.06
 DF = 0.30                    # the wheelhouse's floor over the boat deck (OB13 round 2: the eye over the forecastle; a step up at the door)
 def WSL(): return BD() + 0.06                           # the boat deck's top: the wheelhouse's walls and its door stand on it
@@ -928,7 +937,7 @@ def decks(A, G, fine=True):
     for x, y in ((8.12, 2.3), (8.12, -0.9)):
         z0_ = mdeck(x, y); acyl(A, (x, y, z0_ - 0.004), (x, y, z0_ + 0.55), 0.04, lambda q: C['white'], seg=10); F.pipe(A, [(x, y, z0_ + 0.55), (x, y, z0_ + 0.63), (x + 0.10, y, z0_ + 0.65), (x + 0.15, y, z0_ + 0.58)], 0.04, C['white'], 10)
     # a coiled mooring rope on the forecastle, another on the after deck by the house
-    for cx, cy, zz in ((16.0, -0.9, fdeck(16.0, -0.9)), (1.95, 2.2, mdeck(1.95, 2.2))):
+    for cx, cy, zz in ((16.0, -0.9, fdeck(16.0, -0.9)), (2.05, 2.62, mdeck(2.05, 2.62))):
         for k in range(4): F.atorus(A, (cx, cy, zz + 0.02 + 0.04 * k), (0, 0, 1), 0.26 - 0.015 * k, 0.022, lambda a: C['rope2'], seg=20, rseg=5)
     # the flag staff in its socket at the taffrail, raked aft
     px, py = POLE; zp = z_cap(px) + 0.012
@@ -975,6 +984,16 @@ def boom():
     head height (a boom lower than 1.85 m over the deck takes the floor under it out of the game's deck map, potshot)"""
     gz = mdeck(MX, 0) + 2.15
     return V((MX - 0.36, -0.03, gz)), V((MX - 0.95, -0.09, gz + 4.55))     # (in the skipper's line past the mast: one upright, not two)
+def masthead_lantern(A, c, m_lens, m_body, R=0.045, H=0.09):
+    """the masthead light (round 2: it was an all-round lantern): the lens an arc from 112.5 degrees on one side of ahead round to the
+    other (225 degrees, COLREG annex I 9(a)), the housing closing it aft, base and cap"""
+    f = V((1, 0, 0)); s_ = V((0, 1, 0)); z = V((0, 0, 1)); c = V(c); seg = 16; half = math.radians(112.5)
+    arc = [f * math.cos(-half + 2 * half * k / seg) + s_ * math.sin(-half + 2 * half * k / seg) for k in range(seg + 1)]
+    lo = [A.v(c + d * R - z * (H / 2)) for d in arc]; hi = [A.v(c + d * R + z * (H / 2)) for d in arc]
+    for k in range(seg): A.f([lo[k], lo[k + 1], hi[k + 1], hi[k]], m_lens, arc[k] + arc[k + 1])
+    obox(A, c - f * (0.55 * R), f * (0.42 * R), s_ * (R * 0.95), z * (H / 2), m_body)
+    acyl(A, c - z * (H / 2 + 0.03), c - z * (H / 2), R + 0.006, lambda q: m_body, seg=16)
+    acyl(A, c + z * (H / 2), c + z * (H / 2 + 0.014), R + 0.008, lambda q: m_body, seg=16)
 def rig(A, fine=True):
     seg = 18 if fine else 6; m = C['cream']; s = lambda q: C['steel']; d = lambda q: C['dark']; cm = lambda q: C['cream']
     zm0 = mdeck(MX, 0)
@@ -986,7 +1005,7 @@ def rig(A, fine=True):
     for sg in (1, -1): acyl(A, (X_FC + 1.55, sg * 1.45, fdeck(X_FC + 1.55, 1.45) - 0.004), (MX + 0.04, sg * 0.05, 10.2), 0.075, cm, seg=8 if fine else 5)
     abox(A, MX - 0.035, MX + 0.035, -1.25, 1.25, 10.35, 10.42, m)                                   # the cross-tree
     acyl(A, (MX, 0, M_TOP), (MX, 0, white_z() - 0.04), 0.02, cm, seg=8)
-    if fine: F.allround_lantern(A, (MX, 0, white_z()), C['lampW'], C['frame'], R=0.045, H=0.09)
+    if fine: masthead_lantern(A, (MX, 0, white_z()), C['lampW'], C['frame'], R=0.045, H=0.09)
     else: acyl(A, (MX, 0, white_z() - 0.05), (MX, 0, white_z() + 0.05), 0.05, lambda q: C['lampW'], seg=6)
     for z, mt in ((FISH_R, C['lampR']), (FISH_W, C['lampW'])):
         abox(A, MX + 0.05, MX + LAMP_ARM - 0.03, -0.02, 0.02, z - 0.10, z - 0.07, m)
@@ -1196,7 +1215,7 @@ def details(A, G):
     cx, cy = 6.75, 0.0; zc = crown(cx, cy)
     acyl(A, (cx, cy, zc - 0.004), (cx, cy, zc + 0.52), 0.09, lambda q: C['teak'], seg=12, r1=0.075); acyl(A, (cx, cy, zc + 0.52), (cx, cy, zc + 0.60), 0.115, lambda q: C['brass'], seg=14)
     HELM_EXTRA.append(sphere('binnacle', (cx, cy, zc + 0.62), 0.105, C['brass'], (1, 1, 0.75)))
-    for sg in (1, -1): HELM_EXTRA.append(sphere('qsphere%d' % sg, (cx, cy + sg * 0.20, zc + 0.50), 0.055, C['red'] if sg > 0 else C['hose'])); acyl(A, (cx, cy + sg * 0.09, zc + 0.50), (cx, cy + sg * 0.16, zc + 0.50), 0.012, lambda q: C['brass'], seg=5)
+    for sg in (1, -1): HELM_EXTRA.append(sphere('qsphere%d' % sg, (cx, cy + sg * 0.20, zc + 0.50), 0.055, C['black'])); acyl(A, (cx, cy + sg * 0.09, zc + 0.50), (cx, cy + sg * 0.16, zc + 0.50), 0.012, lambda q: C['brass'], seg=5)
     # the gallows: knee braces to the legs, a roller on the beam's underside either side of the block, the lead block's eye plate
     yg0 = -(ybi(GAL[0]) - 0.16); zt = z_cap(GAL[0]) + 1.75; yg1 = -(ysh(GAL[0]) + 0.10)
     for x, dx in ((GAL[0], 0.30), (GAL[1], -0.30)):
@@ -1260,8 +1279,9 @@ def details(A, G):
 
 
 # ---------- round 2 of OB13 (12.11.2026): the deck's welds, its non-slip where they stand, the net pen aft, the passage in the forecastle ----------
-BINGE = (0.05, 1.47, -2.24, 2.20)     # the net pen's boards round the four net tubs the game sets across the after deck (deckcrew.js netTubs: x 0.15-1.35, y -2.11 to 2.07)
-BINGE_H = 0.17                         # low enough to step over and under what the game's deck map counts (0.25), and under its tubs' test (0.2)
+BINGE = (0.05, 1.70, -2.24, 2.20)     # the net pen's boards round the four net tubs the game sets across the after deck (deckcrew.js netTubs: x 0.15-1.35, y -2.11 to 2.07)
+BINGE_H = 0.17                         # the after board: low, the nets go out over it to the roller (and under the tubs' test in the game, 0.2)
+BINGE_HS = 0.55                        # the forward board, toward the house (round 2: a low edge all round did not read as a pen)
 NONSLIP = [(-1.05, 0.02, -1.25, 0.20), (9.45, 11.70, 1.18, 1.95), (9.60, 11.70, -2.50, -1.18), (6.40, 7.40, -3.30, -2.52), (6.40, 7.40, 2.52, 3.30)]   # (aft at the setter, the baiters' side and the packers' side of the hatch, outside the house's doors)
 def deck_seams():
     """the plate seams in the main deck: the butts across every 1.8 m and two strakes either side of the hatch; none under the house,
@@ -1299,10 +1319,11 @@ def round2(A, G):
         L_ = math.hypot(xb - xa, yb - ya); n = max(1, int(L_ / 0.5))
         for k in range(n):
             p0 = (xa + (xb - xa) * k / n, ya + (yb - ya) * k / n); p1 = (xa + (xb - xa) * (k + 1) / n, ya + (yb - ya) * (k + 1) / n)
-            for zz, hh in ((0.02, 0.07), (0.10, 0.07)):                                                                       # two boards, a gap between
-                beam(A, (p0[0], p0[1], md(*p0) + zz + hh / 2), (p1[0], p1[1], md(*p1) + zz + hh / 2), 0.035, hh, C['wood'])
+            aft_ = not (abs(xa - bx1) < 1e-6 and abs(xb - bx1) < 1e-6)     # (only the forward board high: by the sides the game's deck map shuts the cells the tubs are tried on)
+            for zz in ((0.02, 0.10) if aft_ else (0.02, 0.15, 0.28, 0.41)):                                                 # boards 0.11 high, a gap between
+                beam(A, (p0[0], p0[1], md(*p0) + zz + 0.055), (p1[0], p1[1], md(*p1) + zz + 0.055), 0.035, 0.11 if not aft_ or zz < 0.1 else 0.06, C['wood'])
         for k in range(n + 1):
-            q = (xa + (xb - xa) * k / n, ya + (yb - ya) * k / n); abox(A, q[0] - 0.03, q[0] + 0.03, q[1] - 0.03, q[1] + 0.03, md(*q) - 0.004, md(*q) + BINGE_H, C['galv'])
+            q = (xa + (xb - xa) * k / n, ya + (yb - ya) * k / n); abox(A, q[0] - 0.03, q[0] + 0.03, q[1] - 0.03, q[1] + 0.03, md(*q) - 0.004, md(*q) + (BINGE_HS if abs(q[0] - bx1) < 1e-6 else BINGE_H), C['galv'])
     for x, y in ((bx0 - 0.12, by0 + 0.3), (bx0 - 0.12, by1 - 0.3), (bx1 + 0.12, by0 + 0.3), (bx1 + 0.12, by1 - 0.3), (bx0 - 0.12, 0.0), (bx1 + 0.12, 0.0)):
         z = md(x, y); abox(A, x - 0.04, x + 0.04, y - 0.006, y + 0.006, z - 0.002, z + 0.05, C['steel'])
         F.atorus(A, (x, y, z + 0.05), (0, 1, 0), 0.03, 0.008, lambda a: C['steel'], seg=10, rseg=4, a0=0.0, a1=math.pi)
@@ -1359,6 +1380,13 @@ def name_strips(G):
     out.append([[G(x_stern_at(y, NAME_T[0]) - 0.035, y * 1.01, NAME_T[0]) for y in ys], [G(x_stern_at(y, NAME_T[1]) - 0.035, y * 1.01, NAME_T[1]) for y in ys]])
     return out
 
+def name_house(G, off=0.004, w=0.85):
+    """the name on the wheelhouse's brim over the front windows (round 2: with the front leaning 0.2 m the game's own search found no
+    band over the windows; vessel3d.js houseFront reads geo.nameHouse): [bottom row, top row] from starboard, the reader stands ahead"""
+    xa = WXF + lean_at(WR()) + BRIM_O; zb = WR() + 0.03
+    row = lambda t: [G(xa - BRIM_I * t + off, -w + 2 * w * k / 12, zb + 0.09 * t) for k in range(13)]
+    return [row(0.03), row(0.97)]
+
 def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, mdeck(x, y) + dz) + [0.0, h] for x, y, dz, h in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_md((HATCH[0] + HATCH[1]) / 2) + HATCH_H)}}
 
@@ -1408,7 +1436,7 @@ def anchors():
                       {'at': G((d0 + d1) / 2, DHY + 0.03, md(d0, DHY)), 'w': round(d1 - d0, 2), 'h': 1.85, 'in': G((d0 + d1) / 2, DHY - 0.8, md(d0, DHY)), 'to': 'cabin', 'hinge': 'fwd'},
                       {'at': G(X_FC - 0.04, (FDOOR[0] + FDOOR[1]) / 2, md(X_FC, 0.8)), 'w': round(FDOOR[1] - FDOOR[0], 2), 'h': 1.80, 'in': G(X_FC + 0.8, (FDOOR[0] + FDOOR[1]) / 2, md(X_FC, 0.8)), 'to': 'fc', 'open': True},
                       {'at': G(WX0 - 0.03, (ADOOR[0] + ADOOR[1]) / 2, WSL() + 0.15), 'w': round(ADOOR[1] - ADOOR[0], 2), 'h': 2.05, 'in': G(WX0 + 0.8, (ADOOR[0] + ADOOR[1]) / 2, fl), 'to': 'helm', 'open': True}],
-            'names': name_strips(G),
+            'names': name_strips(G), 'nameHouse': name_house(G),
             # the work at sea: the fisher at the hauler on the starboard rail, the bleeding tub (the game's) just aft of him by the
             # bulwark, her own gutting table for three aft of that, the one who ices at the hatch's coaming inboard of them
             'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (ty0 + ty1) / 2, md(9.3, 3.0)), 'tub': G(TUB[0], tub_y(), md(TUB[0], 3.0)), 'own': True, 'top': round(z_md(9.3) + 0.90 - WL, 3),
@@ -1553,8 +1581,8 @@ def check():
     bx0, bx1, by0, by1 = BINGE; tubs = [(0.75, y) for y in (-1.61, -0.55, 0.51, 1.57)]
     cl = min(min(t[0] - 0.6 - bx0, bx1 - t[0] - 0.6) for t in tubs); cy_ = min(-1.61 - 0.5 - by0, by1 - (1.57 + 0.5))
     gw_ = min(ybi(bx1) - abs(y) for y in (by0, by1)); ga_ = min(ybi(bx0) - abs(y) for y in (by0, by1))
-    out.append(('garnbingen (B13) x %.2f–%.2f, y %.2f til %.2f, %.2f m høy (gangkartet 0,25, karenes prøve 0,2): de fire karene %.2f m innenfor bordene på langs og %.2f på tvers; %.2f m gang til skansekledningen forut og %.2f akter, %.2f til huset; setterullen %.2f m akter for den'
-                % (bx0, bx1, by0, by1, BINGE_H, cl, cy_, gw_, ga_, DH0 - bx1, bx0 - set_x()), BINGE_H <= 0.18 and cl >= 0.03 and cy_ >= 0.03 and gw_ >= 0.35 and ga_ >= 0.15 and DH0 - bx1 >= 0.8 and bx0 - set_x() >= 1.2))
+    out.append(('garnbingen (B13) x %.2f–%.2f, y %.2f til %.2f, akterbordet og sidene %.2f m høye og forbordet %.2f (spillets prøve av karene ser 0,2–1,1 m over dørken innenfor karene, ikke bordene): de fire karene %.2f m innenfor bordene på langs (forbordet %.2f: gangkartet stenger cellene inntil et høyt bord) og %.2f på tvers; %.2f m gang til skansekledningen forut og %.2f akter, %.2f til huset; setterullen %.2f m akter for den'
+                % (bx0, bx1, by0, by1, BINGE_H, BINGE_HS, cl, bx1 - 1.35, cy_, gw_, ga_, DH0 - bx1, bx0 - set_x()), BINGE_H <= 0.18 and cl >= 0.03 and cy_ >= 0.03 and gw_ >= 0.35 and ga_ >= 0.15 and DH0 - bx1 >= 0.65 and bx0 - set_x() >= 1.2 and bx1 - (0.75 + 0.6) >= 0.3))
     # the jigging places (F21)
     js = {sd: sorted(x for s_, x in JIG if s_ == sd) for sd in (1, -1)}; gaps = [b - a for sd in js for a, b in zip(js[sd], js[sd][1:])]
     okj = all(DH1 + 0.5 <= x <= X_FC - BRK - 0.3 for x in js[-1]) and all(DH0 + 0.3 <= x <= DH1 - 0.3 and not (DDOOR[0] - 0.3 < x < DDOOR[1] + 0.3) for x in js[1])
