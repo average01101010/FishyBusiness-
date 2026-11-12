@@ -747,7 +747,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 114 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
   - 132 `hfftMips(out, N)`
 
-## `src/js/core/04-crew.js` (717 linjer)
+## `src/js/core/04-crew.js` (720 linjer)
 
 crew: people with skills, habits and moods
 
@@ -825,14 +825,15 @@ crew: people with skills, habits and moods
   - 589 `namedTick(B)`
   - 598 `borsTick(H)`
   - 607 `crewRumour()`
-  - 609 `crewTick(H)`
-  - 679 `codRoom(H)`
-- **681** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
-  - 695 `flyIn(c)`
-  - 704 `flyOut(c)`
-  - 712 `flyTick()`
+  - 611 `crewSeaFat(c, fishing, workF, night)`
+  - 612 `crewTick(H)`
+  - 682 `codRoom(H)`
+- **684** the crew fly to and from Svalbard (H1b R7, 05.11.2026; docs/planer/havsteget-h1b-rammen.md V4 B)
+  - 698 `flyIn(c)`
+  - 707 `flyOut(c)`
+  - 715 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1428 linjer)
+## `src/js/core/05-vessels.js` (1431 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -891,55 +892,56 @@ crew: people with skills, habits and moods
   - 676 `nearestPort(p)`
   - 678 `nearestYard(p)`
   - 680 `step()`
-  - 698 `vesselStep(H)`
-  - 798 `plantFuel(b)`
-  - 801 `sailV(H, hs)`
-  - 817 `sail(H, W, hs)`
-  - 849 `sailWaiting()`
-  - 850 `sailReplan(pl, b, gp)`
-  - 878 `iceWhy(p, tried)`
-  - 880 `sailStop(pl, b, why)`
-  - 888 `haltPlan(need)`
-  - 898 `arrive(w)`
-  - 916 `unstuckWhy()`
-  - 922 `unstuckSpot()`
-  - 929 `unstuck()`
-- **943** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 951 `moorPhase(b)`
-  - 966 `dock(pid, berth)`
-  - 993 `catchFactors(H, W, hs)`
-  - 1006 `stockDev(p, sp)`
-  - 1012 `fish(H, W, hs)`
-  - 1118 `endFishing(why)`
-  - 1139 `bycHere(how)`
-  - 1143 `bycAdd(sp, kg, how)`
-  - 1147 `bycConf()`
-  - 1150 `addCatch(sp, kg, cls, hook, opt)`
-- **1172** work on deck: gutting and icing take hands and time
-  - 1188 `deckHands()`
-  - 1191 `deckPending()`
-  - 1192 `deckEta(hands)`
-  - 1197 `moveKg(x, kg, patch)`
-  - 1205 `iceMinute()`
-  - 1212 `iceOut(out)`
-  - 1218 `deckMinute()`
-- **1243** lying to in a storm (H1b R8, 05.11.2026)
-  - 1260 `quayFar(b)`
-  - 1264 `lieTo(W, hs)`
-  - 1271 `lieToStep(W, hs)`
-  - 1281 `risk(W, hs)`
-  - 1309 `hullRepair()`
-  - 1312 `svcOverdue()`
-- **1313** the rescue boat (plan E3, 05.10.2026)
-  - 1339 `rescueBases()`
-  - 1348 `rescueBase(p)`
-  - 1355 `rescueAis(H)`
-  - 1359 `rescue(keepCatch)`
-  - 1383 `towSea(p)`
-  - 1388 `towRoutes(b)`
-  - 1399 `towStep(H)`
-  - 1411 `towDone(t)`
-  - 1417 `towPose(frac)`
+  - 700 `holdMinute(H, p)`
+  - 709 `vesselStep(H)`
+  - 801 `plantFuel(b)`
+  - 804 `sailV(H, hs)`
+  - 820 `sail(H, W, hs)`
+  - 852 `sailWaiting()`
+  - 853 `sailReplan(pl, b, gp)`
+  - 881 `iceWhy(p, tried)`
+  - 883 `sailStop(pl, b, why)`
+  - 891 `haltPlan(need)`
+  - 901 `arrive(w)`
+  - 919 `unstuckWhy()`
+  - 925 `unstuckSpot()`
+  - 932 `unstuck()`
+- **946** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 954 `moorPhase(b)`
+  - 969 `dock(pid, berth)`
+  - 996 `catchFactors(H, W, hs)`
+  - 1009 `stockDev(p, sp)`
+  - 1015 `fish(H, W, hs)`
+  - 1121 `endFishing(why)`
+  - 1142 `bycHere(how)`
+  - 1146 `bycAdd(sp, kg, how)`
+  - 1150 `bycConf()`
+  - 1153 `addCatch(sp, kg, cls, hook, opt)`
+- **1175** work on deck: gutting and icing take hands and time
+  - 1191 `deckHands()`
+  - 1194 `deckPending()`
+  - 1195 `deckEta(hands)`
+  - 1200 `moveKg(x, kg, patch)`
+  - 1208 `iceMinute()`
+  - 1215 `iceOut(out)`
+  - 1221 `deckMinute()`
+- **1246** lying to in a storm (H1b R8, 05.11.2026)
+  - 1263 `quayFar(b)`
+  - 1267 `lieTo(W, hs)`
+  - 1274 `lieToStep(W, hs)`
+  - 1284 `risk(W, hs)`
+  - 1312 `hullRepair()`
+  - 1315 `svcOverdue()`
+- **1316** the rescue boat (plan E3, 05.10.2026)
+  - 1342 `rescueBases()`
+  - 1351 `rescueBase(p)`
+  - 1358 `rescueAis(H)`
+  - 1362 `rescue(keepCatch)`
+  - 1386 `towSea(p)`
+  - 1391 `towRoutes(b)`
+  - 1402 `towStep(H)`
+  - 1414 `towDone(t)`
+  - 1420 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (144 linjer)
 
@@ -1278,6 +1280,21 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 91 `planDaySno(o, H0, st)`
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
+
+## `src/js/core/06j-hopp.js` (137 linjer)
+
+---------- Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026) ----------
+
+- **1** Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026)
+  - 15 `hopPrice(realMin)`
+  - 21 `hopStop(pl)`
+  - 27 `hopWhy()`
+  - 45 `hopRun(paid)`
+  - 79 `hopQuote()`
+  - 82 `hopEnergy(e, s, n, rate)`
+  - 87 `hopSaved(real, en)`
+  - 89 `hopDo(q)`
+  - 130 `hopGo(paid)`
 
 ## `src/js/core/06e-anchor.js` (235 linjer)
 
@@ -2756,7 +2773,7 @@ Kvotemarkedet: Kvote → Marked (KM3 of docs/planer/kvotemarkedet.md; Jonas 07.1
   - 176 `kxBoatRow(v)`
   - 183 `kmAct(a, d)`
 
-## `src/js/ui/phone/05-rigg-innst-admin.js` (91 linjer)
+## `src/js/ui/phone/05-rigg-innst-admin.js` (94 linjer)
 
 the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
 
@@ -2781,12 +2798,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1579 linjer)
+## `src/js/ui/phone/07-patch.js` (1585 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1567 `patch()`
+  - 1573 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2930,7 +2947,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (335 linjer)
+## `src/js/ui/phone/14-act.js` (336 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3557,7 +3574,7 @@ THE PAINT SHOP (Malerverkstedet; Jonas 06.10.2026, docs/engasjement.md): a butto
   - 229 `giveCos(k)`
   - 244 `regSet(n)`
 
-## `src/js/ui/10q-buymoment.js` (36 linjer)
+## `src/js/ui/10q-buymoment.js` (44 linjer)
 
 The moment a boat is bought (M5 in docs/planer/butikker-og-sponsorer.md): the top and the end of the purchase
 
@@ -3638,6 +3655,15 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
 - **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
 - **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
+
+## `src/js/ui/10u-hopp.js` (39 linjer)
+
+---------- Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md) ----------
+
+- **1** Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md)
+  - 12 `hopUi()`
+  - 13 `hopOpen()`
+  - 27 `hopPress()`
 
 ## `src/js/ui/11-boot.js` (408 linjer)
 

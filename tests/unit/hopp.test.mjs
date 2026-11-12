@@ -36,6 +36,7 @@ export default function (t){
   sailing(); S.tut = {v:2}; t.ok(!!hopWhy(), 'første tur: ' + (hopWhy() || [''])[0]);
   sailing(); S.plan.halt = true; t.ok(!!hopWhy(), 'mens båten stopper: ' + (hopWhy() || [''])[0]);
   sailing(); S.boat.anch = {}; t.ok(!!hopWhy(), 'mens ankeret er ute: ' + (hopWhy() || [''])[0]); S.boat.anch = null;
+  sailing(); S.boat.dmg = {A:0.002, w:0.1}; t.ok(!!hopWhy(), 'båten tar inn vann: ' + (hopWhy() || [''])[0]); S.boat.dmg = null;
   sailing(); S.mob = {id:'m1'}; t.ok(!!hopWhy(), 'mann over bord: ' + (hopWhy() || [''])[0]); S.mob = null;
   sailing(); S.plan.mob = true; t.ok(!!hopWhy(), 'Autonav mot den som er i sjøen: ' + (hopWhy() || [''])[0]);
   sailing(); S.ptowH = {id:'x', st:'tow'}; t.ok(!!hopWhy(), 'mens du sleper en annen spiller: ' + (hopWhy() || [''])[0]);

@@ -30,6 +30,8 @@ function hopWhy(){
   if (pl.ops || pl.p2) return ['Driftsplanen styrer båten. Hopp går bare på en rute du har lagt selv.', 'The operations plan runs the boat. A hop is only possible on a route you set yourself.'];
   if (pl.halt || pl.replan) return ['Båten stopper eller finner en vei rundt. Vent til hun går videre.', 'The boat is stopping or finding a way round. Wait until she goes on.'];
   if (b.anch || b.hove) return ['Båten ligger for anker eller ligger bi.', 'The boat is at anchor or lying to.'];
+  // a leak is not hopped past: the water rises minute by minute and the pump may not keep up (hullMinute, 16c-hull.js)
+  if (b.dmg && (b.dmg.A > 0 || b.dmg.w > 0)) return ['Båten tar inn vann. Hopp går ikke forbi en lekkasje.', 'The boat is taking in water. A hop does not get past a leak.'];
   if (pl.mob || S.mob) return ['Ikke mens noen er i sjøen.', 'Not while someone is in the water.'];
   if (S.ptowH && S.ptowH.st === 'tow') return ['Ikke mens du sleper en annen båt.', 'Not while you tow another boat.'];
   if (S.tut) return ['Ikke på første tur.', 'Not on the first trip.'];
