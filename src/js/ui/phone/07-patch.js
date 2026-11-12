@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['laerling-121126', '12.11.2026', 'En lærling om bord', 'An apprentice aboard', [
+       ['Med ti års fartstid kan du ta en lærling om bord. Lærlingen står i Mannskapsbørsen, spør hvorfor du gjør som du gjør, og svarene dine blir kunnskapen hans.', 'With ten years at sea you can take an apprentice aboard. The apprentice stands in the crew exchange, asks why you do as you do, and your answers become their knowledge.'],
+       ['Etter læretida kjøper lærlingen egen båt, fisker fra hjemstedet sitt og tuter når dere møtes. Du får merket «Læremester».', 'After the apprenticeship they buy a boat of their own, fish out of their home harbour and sound the horn when you meet. You get the badge «Master of the trade».'],
+       ['Nye mannskapsfolk er nå fra stedene nær hjemhavna di.', 'New crew are now from the places near your home harbour.']]],
     ['bolger2-121126', '12.11.2026', 'Sjøen: båten ruller, bølgene går med vinden', 'The sea: the boat rolls, the waves go with the wind', [
        ['Båten flyter nå i de bølgene du ser, også de korte. Står det kraftig rulling, ruller den: liten båt i krapp sjø ruller og stamper tydelig, særlig liggende stille med sjøen på tvers.', 'The boat now floats in the waves you see, the short ones too. When it says heavy rolling, she rolls: a small boat in a short sea rolls and pitches clearly, above all lying still with the sea abeam.'],
        ['Rundt båten har sjøen fått mye finere form, så de små bølgene har ekte kammer og daler der du er.', 'Round the boat the sea has a much finer shape, so the small waves have real crests and troughs where you are.'],

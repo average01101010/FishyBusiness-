@@ -54,18 +54,17 @@ async def hs4(br, handle, st, calls, errs):
       cos:Object.keys(S.cos || {}).sort(), fix:(CLOUD.q || []).filter(e => e.k === 'srv_fix').map(e => e.d.what).sort(), thanks:S.msgs.filter(m => /Takk for kjøpet/.test(m.no)).length, rc:!!document.querySelector('#modal:not([hidden]) .shoprc'), hs4:SHOP.hs4})"""
     claim = "(async () => { CLOUD.sid = CLOUD.sid || 'sid_test'; CLOUD.q = []; const n = await shopClaim(); await new Promise(r => setTimeout(r, 300)); const o = " + SEE + "; o.n = n; return o; })()"
     cur = await pg.evaluate("(async () => { S.tut = 0; S.cash = 50000; await shopClaim(); return S.cur; })()")
-    # a. the game's own numbers from before are brought over once, within the server's cap (2 haill, 1 luksus; the thank-you and the
-    # credit only within what the server itself delivered: here none), and the haill aboard goes with them, as old as it was (120
-    # game minutes, and the minutes the claim itself takes on the server's clock)
+    # a. the game's own numbers from before are brought over once, every haill kept (valg 36, Jonas 12.11.2026: «La alle spillere som
+    # har haill beholde det.»; the credit only within what the server itself delivered: here none), and the haill aboard goes with
+    # them, as old as it was (120 game minutes, and the minutes the claim itself takes on the server's clock)
     # (one of the five haill is the server's own, id 64, given into the numbers by a page from before HS2, S.haillOld, and still unused
-    # on the server: it stays there and is not sent, so it is neither counted twice nor lost to the cap. The luksus aboard is the
-    # one luksus the cap allows)
+    # on the server: it stays there and is not sent, so it is neither counted twice nor lost)
     st['imp'] = False; st['grants'].append(dn(64, 'haill', {'give': 'haill', 'type': 'haill'}, 40))
     await pg.evaluate("(() => { S.haillInv = {haill:5, luksus:3, takk:1}; S.haillOld = [64]; S.yardCredit = 4; S.haill = {type:'luksus', t0:S.t - 120, how:'inv'}; })()")
     a = await pg.evaluate(claim); a2 = await pg.evaluate(claim); ic = st['impcalls'][:]
-    check(a['hs4'] is True and a['stock'] == {'haill': 3, 'luksus': 0, 'takk': 0} and a['inv'] == [0, 0] and a['credit'] == 0 and a['on'] and a['on']['type'] == 'luksus' and 119 <= a['on']['age'] <= 140 and a['boost'] == 2 and st['used'] == []
+    check(a['hs4'] is True and a['stock'] == {'haill': 5, 'luksus': 3, 'takk': 1} and a['inv'] == [0, 0] and a['credit'] == 0 and a['on'] and a['on']['type'] == 'luksus' and 119 <= a['on']['age'] <= 140 and a['boost'] == 2 and st['used'] == []
           and len(ic) == 1 and {k: ic[0].get(k) for k in ('haill', 'luksus', 'takk', 'yard')} == {'haill': 4, 'luksus': 3, 'takk': 1, 'yard': 4} and (ic[0].get('on') or {}).get('type') == 'luksus' and a2['stock'] == a['stock'] and a2['on']['type'] == 'luksus',
-          'HS4: the save\'s own haill and credits are brought over once, within the server\'s cap (4 haill of its own and one the server still keeps, 3 luksus, 1 thank-you, 4 credits: 2 and the server\'s one, the luksus aboard, 0, 0), the haill aboard stays as old as it was, and the numbers in the save are gone', {'a': {k: a[k] for k in ('hs4', 'stock', 'inv', 'credit', 'on', 'boost')}, 'calls': ic, 'again': a2['stock']})
+          'HS4: the save\'s own haill are all brought over once (4 haill of its own and the one the server still keeps, 3 luksus, 1 thank-you, and the luksus aboard; the 4 credits only within what the server delivered: 0), the haill aboard stays as old as it was, and the numbers in the save are gone', {'a': {k: a[k] for k in ('hs4', 'stock', 'inv', 'credit', 'on', 'boost')}, 'calls': ic, 'again': a2['stock']})
     # b. written into the save, then the next start: the haill in store, the haill aboard, a trim, Skippertak, the credit and a
     # paint design are what the server says, not what the save says
     await pg.evaluate("""(() => { S.haillInv = {haill:50, luksus:9}; S.haillSrv.push({id:999, type:'luksus'}); S.haill = {type:'luksus', t0:S.t, how:'inv'}; S.boat.trim = {k:'turbo', t0:S.t, until:S.t + 72 * 60}; applyVessel();
@@ -73,8 +72,8 @@ async def hs4(br, handle, st, calls, errs):
     b0 = await pg.evaluate(SEE)
     await pg.reload(); await pg.wait_for_function("typeof SHOP !== 'undefined' && CLOUD.user && SHOP.ready === true", timeout=120000)
     b = await pg.evaluate(claim)
-    check(b0['stock']['haill'] == 53 and b0['stock']['luksus'] == 10 and b0['on']['age'] <= 2 and b0['trim'] and b0['vx'] == 2 and b0['skip'] and b0['credit'] == 9 and b0['cos'] == ['logo', 'ripe'], 'HS4: (the save is written in: 50 haill, 10 luksus, a fresh luksus aboard, a turbo trim, Skippertak Max, 9 credits, two designs)', {k: b0[k] for k in ('stock', 'on', 'trim', 'vx', 'skip', 'credit', 'cos')})
-    check(b['stock'] == {'haill': 3, 'luksus': 0, 'takk': 0} and b['inv'] == [0, 0], 'HS4: haill written into the save (the game\'s own numbers and the copy of the server\'s) is gone after the next start: the store is the server\'s', {k: b[k] for k in ('stock', 'inv')})
+    check(b0['stock']['haill'] == 55 and b0['stock']['luksus'] == 13 and b0['on']['age'] <= 2 and b0['trim'] and b0['vx'] == 2 and b0['skip'] and b0['credit'] == 9 and b0['cos'] == ['logo', 'ripe'], 'HS4: (the save is written in: 50 haill, 10 luksus, a fresh luksus aboard, a turbo trim, Skippertak Max, 9 credits, two designs)', {k: b0[k] for k in ('stock', 'on', 'trim', 'vx', 'skip', 'credit', 'cos')})
+    check(b['stock'] == {'haill': 5, 'luksus': 3, 'takk': 1} and b['inv'] == [0, 0], 'HS4: haill written into the save (the game\'s own numbers and the copy of the server\'s) is gone after the next start: the store is the server\'s', {k: b[k] for k in ('stock', 'inv')})
     check(b['on'] and b['on']['type'] == 'luksus' and b['on']['age'] >= 119, 'HS4: the haill aboard has the server\'s minute after the next start, not the one written into the save', b['on'])
     check(b['trim'] is None and b['vx'] == 1, 'HS4: a trim written into the save is gone after the next start, and the top speed is the boat\'s own', {k: b[k] for k in ('trim', 'vx')})
     check(b['skip'] is None, 'HS4: a Skippertak written into the save is gone after the next start', b['skip'])
@@ -95,7 +94,7 @@ async def hs4(br, handle, st, calls, errs):
     c = await pg.evaluate(claim)
     await pg.evaluate("(() => { S.boat.trim.until += 1000 * 60; applyVessel(); S.skip.until += 5000 * 60; S.yardCredit = 7; S.haillSrv = S.haillSrv.concat([{id:998, type:'luksus'}]); S.cos = {lakk:1}; S.haill = {type:'luksus', t0:S.t, how:'inv'}; })()")
     c2 = await pg.evaluate(claim)
-    want = lambda r: r['trim'] and r['trim']['k'] == 'turbo' and abs(r['trim']['left'] - 60) < 0.5 and r['vx'] == 2 and r['skip'] and r['skip']['k'] == 'std' and abs(r['skip']['left'] - 42) < 0.5 and r['credit'] == 1 and r['stock'] == {'haill': 4, 'luksus': 0, 'takk': 0} and r['cos'] == ['ripe'] and r['on']['age'] >= 119
+    want = lambda r: r['trim'] and r['trim']['k'] == 'turbo' and abs(r['trim']['left'] - 60) < 0.5 and r['vx'] == 2 and r['skip'] and r['skip']['k'] == 'std' and abs(r['skip']['left'] - 42) < 0.5 and r['credit'] == 1 and r['stock'] == {'haill': 6, 'luksus': 3, 'takk': 1} and r['cos'] == ['ripe'] and r['on']['age'] >= 119
     check(want(c) and c['thanks'] == 0 and not c['rc'], 'HS4: what the server has delivered comes to a save without it: the trim and Skippertak with the time that is left (60 h, 42 h), the credit, the haill and the design, with no new confirmation', {k: c[k] for k in ('trim', 'vx', 'skip', 'credit', 'stock', 'cos', 'thanks')})
     check(want(c2) and c2['fix'] == ['haill', 'skip', 'trim', 'yard'], 'HS4: the ends written further out, more credits, another design and a fresh haill aboard do not last: the next claim puts the server\'s back, and each fix is counted (srv_fix)', {k: c2[k] for k in ('trim', 'skip', 'credit', 'stock', 'cos', 'on', 'fix')})
     # d. a purchase: the server delivers it in the answer itself, the game shows it and confirms it once, and says no shop_done for it
@@ -103,7 +102,7 @@ async def hs4(br, handle, st, calls, errs):
     st['grants'] += [{'id': 70, 'product': 'trim_pump', 'data': {'give': 'trim', 'k': 'pump', 'boat': cur}}, {'id': 71, 'product': 'haill', 'data': {'give': 'haill', 'type': 'haill'}}, {'id': 73, 'product': 'trim_pump', 'data': {'give': 'trim', 'k': 'pump', 'comp': True}}]; n0 = len(calls)
     d = await pg.evaluate(claim); await pg.evaluate("document.getElementById('modal').hidden = true"); d2 = await pg.evaluate(claim)
     done = [c_[1].get('ids') for c_ in calls[n0:] if c_[0] == 'shop_done']; srv = {g['id']: bool(g.get('done')) for g in st['grants'] if g['id'] in (70, 71, 73)}
-    check(d['n'] == 3 and d['trim'] and d['trim']['k'] == 'pump' and abs(d['trim']['left'] - 48) < 0.5 and d['vx'] == 1.5 and d['stock']['haill'] == 5 and d['thanks'] == 1 and d['rc'] and done == [] and srv == {70: True, 71: True, 73: True}
+    check(d['n'] == 3 and d['trim'] and d['trim']['k'] == 'pump' and abs(d['trim']['left'] - 48) < 0.5 and d['vx'] == 1.5 and d['stock']['haill'] == 7 and d['thanks'] == 1 and d['rc'] and done == [] and srv == {70: True, 71: True, 73: True}
           and d2['n'] == 0 and d2['thanks'] == 1 and not d2['rc'] and d2['trim'] and d2['trim']['k'] == 'pump' and abs(d2['trim']['left'] - d['trim']['left']) < 0.5 and d2['stock'] == d['stock'],
           'HS4: a trim and a haill bought (and a second pump given with no boat, on the first boat: 48 h) are delivered by the server\'s answer, on the boat and in the store at once, confirmed once («Takk for kjøpet!»), with no shop_done, and not again at the next claim', {'first': {k: d[k] for k in ('n', 'trim', 'vx', 'stock', 'thanks', 'rc')}, 'done': done, 'server': srv, 'again': {k: d2[k] for k in ('n', 'thanks', 'rc')}})
     # e. the credit for the yard done now is a grant: the next yard job is done at once and the server told; one bought with a job
@@ -132,7 +131,7 @@ async def hs4(br, handle, st, calls, errs):
     st['offline'] = False
     await pg.evaluate("window.dispatchEvent(new Event('online'))"); await pg.wait_for_function("!(S.haillQ || []).length", timeout=90000); await pg.wait_for_timeout(300)
     f3 = await pg.evaluate("({on:S.haill && S.haill.type})"); f4 = await pg.evaluate(claim)
-    check(f['ok'] and f['on'] == 'haill' and f['how'] == 'srv' and f['age'] <= 2 and f['q'] == [] and f['stock'] == 4 and u1 == [(f['id'], True)] and f2['ok'] and f2['on'] == 'luksus' and f2['q'] == [f2['id']] and f3['on'] is None and f4['on'] and f4['on']['type'] == 'haill' and f4['stock']['luksus'] == 0,
+    check(f['ok'] and f['on'] == 'haill' and f['how'] == 'srv' and f['age'] <= 2 and f['q'] == [] and f['stock'] == 6 and u1 == [(f['id'], True)] and f2['ok'] and f2['on'] == 'luksus' and f2['q'] == [f2['id']] and f3['on'] is None and f4['on'] and f4['on']['type'] == 'haill' and f4['stock']['luksus'] == 3,
           'HS4: «Aktiver» tells the server once with haill_on and the haill stays aboard; one switched on with no network that the server has taken back meanwhile is taken off when the server answers, and the one before it is aboard again', {'on': f, 'told': u1, 'offline': f2, 'after': f3, 'claim': f4['on']})
     # g. the pub: the wheel is the server's (a haill won is in the store with the server's id, the 1 000 kroner paid here), one round
     # per evening; with no network no round and nothing paid; a round the server says is had is not paid again
@@ -330,7 +329,7 @@ async def main():
                     if st['imp']: r = {'ok': False}
                     else:
                         st['imp'] = True; inv = body.get('inv') or {}; r = {'ok': True}; o = inv.get('on') or {}
-                        for ty, cap in (('haill', 2), ('luksus', 1), ('takk', 0), ('yard', 0)):
+                        for ty, cap in (('haill', 1000), ('luksus', 1000), ('takk', 1000), ('yard', 0)):   # (valg 36, 20261112210000_haill_tak.sql: every haill kept)
                             if o.get('type') == ty and ty != 'yard' and cap > 0: new('imp_' + ty, {'give': 'haill', 'type': ty, 'imp': True}, used=True, t0=min(o.get('t0', gm), gm)); r['on'] = ty; cap -= 1   # (the haill aboard is one of its kind)
                             n = max(0, min(int(inv.get(ty) or 0), cap)); r[ty] = n
                             for _ in range(n): new('imp_' + ty, {'give': 'yard', 'imp': True} if ty == 'yard' else {'give': 'haill', 'type': ty, 'imp': True})

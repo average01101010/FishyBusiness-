@@ -2,6 +2,10 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (steg 45b, lærlingen om bord, gren `plan/2026-11-12-45b`, PR #72)
+
+- ~~**Oppdrag 2**~~ (`docs/planer/oppdrag-2.md`, gren `claude/quest-mechanics-engagement-u12mlw` slått inn i `ccr-5e1ba2f4-pusvyd`, 30.–31.10.2026; Jonas: «Gjør det du mener er riktig for spillet»): gjort F1 (lagets felles uke), L1–L2 (leteoppdrag og det som ble funnet), K1 (kjedene), V1 (Kystvakta om bord, `core/09j-kystvakt.js`), F2 (lagets oppslagstavle), F3 (bygdekampen), K2 Kystkartet (kartet og trinnene, 03.11.2026) og U1 Ukas fangst (søndagskortet og pushen søndag kveld, 03.11.2026; migreringen `20261103120000_push_ukas.sql` er kjørt 03.11.2026). De fire migreringene fra 30.10 (`lag_goal`, `news_kv`, `lag_board`, `bygde`) er kjørt (sjekket i databasen 02.11.2026). Mannskapets ærender bygd 12.11.2026 (steg 45a, PR #71; 5.6 «Ærendene» i `docs/systemer/folk-om-bord.md`). Lærlingen bygd 12.11.2026 (steg 45b, PR #72; 5.6 «Lærlingen» i `docs/systemer/folk-om-bord.md`): hele planen er bygd. Måles: `kv_check` (hyppigheten 50 %/25 % per uke), `lag_post`, `lag_goal_hit`, `tur_lete`/`tur_chain`, `crew_errand` (spurt, ja, nei, gjort, løpt ut), `crew_laer` (mønstret, spurt, svart riktig og galt, løpt ut, egen båt).
+
 ## Strøket 12.11.2026 (steg 55, OPP3: propellen på verftet, gren `ccr-013bxxie-opp3`, rullet ut i `bf058fb7`)
 
 Fra punktet om OPP2 i `docs/BACKLOG.md`:

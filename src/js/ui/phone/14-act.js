@@ -248,15 +248,18 @@
       if (!confirm(L('Selge «' + nm + '» til Kystmegleren for ' + kr(val) + ' (90 % av verdien)?', 'Sell the «' + nm + '» to Kystmegleren for ' + kr(val) + ' (90 % of her value)?') + (debt() > 0 ? ' ' + L('Pengene går først til å innfri lånene.', 'The money first pays off the loans.') : ''))) return;
       mbQuickSell(v.id); if (mbPutSel === v.id) mbPutSel = null; if (typeof cloudEv === 'function') cloudEv('mb_quick', {type:vget(v, 'boat').type}); refreshAll(); }
     else if (a === 'bhire' || a === 'bneg'){ const B = S.bors, c = B && B.pool.find(x => x.id === d.id); if (!c || S.crew.length >= BOAT.crewMax || S.boat.status !== 'port' || crewHireWhy()) return;
+      if (a === 'bneg' && c.laer) return;   // (the apprentice's share is the agreement's, § 24.4)
       if (a === 'bneg'){ c.neg = true; if (Math.random() < 0.6 - (c.traits.includes('stolt') ? 0.25 : 0)){ c.ask = lotR(c.ask - LOTT.step); c.share = c.ask; c.morale -= 5; toast(L(c.name.split(' ')[0] + ' godtar ' + lotS(c.ask) + '.', c.name.split(' ')[0] + ' accepts ' + lotS(c.ask) + '.')); }
         else { B.pool.splice(B.pool.indexOf(c), 1); toast(L(c.name.split(' ')[0] + ' takket nei og tok hyre et annet sted.', c.name.split(' ')[0] + ' said no and took a berth elsewhere.')); } }
-      else { B.pool.splice(B.pool.indexOf(c), 1); c.hiredT = S.t; c.earn = []; delete c.until; S.crew.push(c); achAdd('crew'); log(c.name + ' har mønstret på som ' + c.lv + ' på ' + lotS(c.share) + '.', c.name + ' signed on as ' + c.lvEn + ' on ' + lotS(c.share) + '.'); flyIn(c); } }
+      else { B.pool.splice(B.pool.indexOf(c), 1); c.hiredT = S.t; c.earn = []; delete c.until; S.crew.push(c); achAdd('crew'); log(c.name + ' har mønstret på som ' + c.lv + ' på ' + lotS(c.share) + '.', c.name + ' signed on as ' + c.lvEn + ' on ' + lotS(c.share) + '.'); flyIn(c); if (c.laer && typeof laerSign === 'function') laerSign(c); } }
     else if (a === 'foundas'){ if (!foundAS()) toast(t('no_cash')); }
     else if (a === 'coff'){ const c = crewById(d.id); if (c){ c.off = !c.off; if (c.off){ c.morale = Math.min(100, c.morale + 2); } else delete c.offTrip; } }
     // lott or hyre (E3): the day wage is the one asked for when the agreement is changed
     else if (a === 'cfire'){ if (!crewAshore()){ toast(L('Mannskap kan bare sies opp når båten ligger til kai.', 'Crew can only be let go with the boat at a quay.')); return; } const c = crewById(d.id); if (c){ const own = !!c.opp, g = crewLetGo(c); if (g) toast(own ? L(c.name.split(' ')[0] + ' har gått i land, etter avtale.', c.name.split(' ')[0] + ' has gone ashore, by agreement.') : L(c.name.split(' ')[0] + ' er sagt opp: ' + g[0] + '.', c.name.split(' ')[0] + ' has been let go: ' + g[1] + '.')); } }
     // the answer to an errand (steg 45a, core/14-crewlife.js errandAnswer): yes, or not now, which costs nothing
     else if (a === 'cerr'){ if (!errandAnswer(d.id, d.o === 'yes')) return; }
+    // the apprentice's answer (steg 45b, core/14-crewlife.js laerAnswer): the place on his card
+    else if (a === 'claer'){ if (laerAnswer(d.id, +d.o) == null) return; }
     // ask one who gave notice to stay (Ø11.9, crewStay): by agreement, when the mood has come back
     else if (a === 'cstay'){ const c = crewById(d.id); if (!c) return; const w = crewStay(c); if (w === 'mood') toast(L(c.name.split(' ')[0] + ' vil ikke. Trivselen må opp først.', c.name.split(' ')[0] + ' will not. The mood has to come up first.')); else if (w === 'egenbat') toast(L(c.name.split(' ')[0] + ' skal kjøpe egen båt.', c.name.split(' ')[0] + ' is buying a boat of their own.')); }
     else if (a === 'cres'){ const ev = S.cevt; if (!ev) return; const A = crewById(ev.a), Bc = crewById(ev.b), o = d.o, g = (x, y, v) => { if (x && y){ x.grudge = x.grudge || {}; x.grudge[y.id] = (x.grudge[y.id] || 0) + v; } };

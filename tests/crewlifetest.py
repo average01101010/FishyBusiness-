@@ -78,6 +78,29 @@ async def main():
           const gone = !c.err, m1 = c.morale; const p0 = ERRAND.p; ERRAND.p = 1; WX_FORCE = {w:5, d:180}; S.boat.status = 'fishing'; S.boat.port = null;
           for (let h = 0; h < 48; h++){ S.t += 60; errandHour(S.t / 60); } ERRAND.p = p0; WX_FORCE = null; return {clicked:!!b0, gone, same:m1 === m0, again:!!c.err, btns:document.querySelectorAll('[data-pa=cerr]').length}; }""", [r7['other'], r9])
         check(r10['clicked'] and r10['gone'] and r10['same'] and not r10['again'], 'errand: «Ikke nå» costs nothing, and he does not ask again within the week', r10)
+        # the apprentice (steg 45b, laerBors, laerSign, laerHour, laerAnswer): from ten years at sea a young one in the exchange, marked as an
+        # apprentice and without haggling; hired through the button; after a string of nets he asks why, and the right answer on his card
+        # lifts the skill and is a line in his story
+        r11 = await pg.evaluate("""(() => { const b = S.boat, hp = portById('husoy'); S.crew = S.crew.slice(0, 1); S.cevt = null; S.tut = 0; b.status = 'port'; b.port = 'husoy'; b.pos = {x:hp.p.x, y:hp.p.y};
+          S.fs = {p:fsNeed(10) + 1, rest:0, away:0}; S.bors = {pool:[], day:Math.floor((S.t / 60 + 6) / 24)}; const p0 = LAER.p; LAER.p = 1; const c = laerBors(S.bors); LAER.p = p0; S.msgs = S.msgs || [];
+          return c && {id:c.id, age:c.age, lv:c.lv, ask:c.ask}; })()""")
+        check(r11 and 18 <= r11['age'] <= 22 and r11['lv'] == 'lærling' and abs(r11['ask'] - 0.4) < 1e-9, 'apprentice: a young one stands in the exchange from ten years at sea, on 40 % of a share', r11)
+        await pg.evaluate("PHONE.open('bors')"); await pg.wait_for_timeout(400)
+        r12 = await pg.evaluate("""id => ({mark:[...document.querySelectorAll('.ph-laerb')].map(e => e.innerText).join(' '), hire:!!document.querySelector('[data-pa=bhire][data-id="' + id + '"]'), neg:!!document.querySelector('[data-pa=bneg][data-id="' + id + '"]')})""", r11['id'])
+        check('Lærling' in r12['mark'] and r12['hire'] and not r12['neg'], 'apprentice: marked in the exchange, can be hired, no haggling over the share', r12)
+        await pg.click('[data-pa=bhire][data-id="%s"]' % r11['id']); await pg.wait_for_timeout(300)
+        r13 = await pg.evaluate("""id => { const c = crewById(id); if (!c) return null; const b = S.boat; b.status = 'fishing'; b.port = null; b.pos = {x:b.pos.x - 2, y:b.pos.y - 2}; S.me = S.cur;
+          S.sets = [{id:'sl1', vid:S.cur, kind:'garn', n:4, tSet:S.t + 30, a:{x:b.pos.x, y:b.pos.y}, b:{x:b.pos.x + 0.3, y:b.pos.y}, acc:{}, dead:0, lost:null}]; S.t = Math.floor(S.t / 60) * 60 + 60;
+          window.CREW_SEED = 3; laerHour(S.t / 60); return {t0:c.laer.t0 != null, k:c.laer.ask && c.laer.ask.k, o:c.laer.ask && c.laer.ask.o, g:c.gear.garn}; }""", r11['id'])
+        check(r13 and r13['t0'] and r13['k'] == 'garn', 'apprentice: signed on, and after a string of nets he asks why', r13)
+        await pg.evaluate("PHONE.open('mannskap')"); await pg.wait_for_timeout(400)
+        btns = await pg.evaluate("id => [...document.querySelectorAll('[data-pa=claer][data-id=\"' + id + '\"]')].map(e => e.innerText)", r11['id'])
+        check(len(btns) == 3, 'apprentice: his card in Mannskap has the question with three answers', btns)
+        if r13 and r13['o']:
+            await pg.click('[data-pa=claer][data-id="%s"][data-o="%d"]' % (r11['id'], r13['o'].index(0))); await pg.wait_for_timeout(300)
+        r14 = await pg.evaluate("""id => { const c = crewById(id); return c && {ask:!!c.laer.ask, n:c.laer.n, g:c.gear.garn, line:c.life.story.slice(-1)[0][1], card:document.querySelectorAll('[data-pa=claer]').length, head:[...document.querySelectorAll('.ph-laer')].map(e => e.innerText).join(' ')}; }""", r11['id'])
+        check(r14 and not r14['ask'] and r14['n'] == 1 and r13 and abs(r14['g'] - r13['g'] - 0.3) < 1e-9 and 'Lærte' in r14['line'] and r14['card'] == 0 and 'dag 1 av 90' in r14['head'],
+              'apprentice: the right answer lifts his net skill by 0.3, is a line in his story, and the card shows day 1 of 90', r14)
         check(not errs, 'no page errors', errs[:3])
         await br.close()
     print('FEIL: ' + ', '.join(bad) if bad else 'alt OK')
