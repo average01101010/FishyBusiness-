@@ -1625,9 +1625,14 @@ function lanterns(G, V, st){
   // lights one over the other at least 2 m apart from 20 m, 1 m under (FOR-1975-12-01-5 vedlegg I 2(i), read on Lovdata 30.10.2026;
   // it was 1 m on every boat)
   const sp = len >= 20 ? 2.0 : 1.0, moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
+  // a model that carries its fishing lights on their own ('fishR' over 'fishW') has all-round lamps one over the other on the mast;
+  // the two reds of rule 27 (and of the aground) hang there, not a spacing and two over the masthead in the air (OB10 round 3: the new
+  // speed sjark adrift showed them floating over her mast). Without them, a spacing and two over the masthead's place as before
+  const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null, twoReds = k => {
+    if (fR && fW && Math.abs(fR[0][1] - fW[0][1]) >= sp){ push(fW[0], 'r', k); push(fR[0], 'r', k); } else { push(up(mt, sp), 'r', k); push(up(mt, 2 * sp), 'r', k); } };
   if (st.aground || (st.anch && !st.fishing)){
     push(mt, 'w', 'anchor'); if (len >= 50 && stern) push(stern[0], 'w', 'anchor2');
-    if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
+    if (st.aground && len >= 12) twoReds('nuc');
     return out; }
   // a bare boat shows no fishing lights (Jonas 09.11.2026, VESSELS.trebat.bare): she jigs and draws her few nets and pots by hand,
   // and a boat fishing with what does not restrict her manoeuvrability is no vessel engaged in fishing (rule 3 d), as the NPC jiggers
@@ -1637,13 +1642,12 @@ function lanterns(G, V, st){
   if (st.fishing){
     // a model that carries its fishing lights on their own ('fishR' over 'fishW', the havsjark's red over white on arms forward of the
     // mast) lights them where they are; else the white at the masthead's place and the red (the green) a spacing over it
-    const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null;
     if (fR && fW && !st.trawl){ push(fW[0], 'w', 'fishW'); push(fR[0], 'r', 'fishR'); }
     else { push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR'); }
     if (st.trawl && len >= 50) push(extra.length && extra[0][0][1] > mt[1] + sp ? extra[0][0] : up(mt, 2 * sp), 'w', 'masthead2');
     if (moving) sideStern();
     return out; }
-  if (st.nuc){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); if (moving) sideStern(); return out; }
+  if (st.nuc){ twoReds('nuc'); if (moving) sideStern(); return out; }
   push(mt, 'w', len < 12 ? 'allround' : 'masthead');
   if (len < 7 && (V && V.vmax || 99) <= 7) return out;
   sideStern();

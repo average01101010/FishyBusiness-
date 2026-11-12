@@ -33,6 +33,18 @@ export default function (t){
     t.eq([kinds(VESSELS.trebat, {fishing:true, v:0}), kinds(VESSELS.trebat, {fishing:true, v:3}), kinds(VESSELS.trebat, {nuc:true, v:0}), kinds(VESSELS.trebat, {v:5})],
       ['allround side side', 'allround side side', 'allround side side', 'allround side side'], 'trebåten: ingen fiskelanterner og ikke to røde (27 g), bare den hvite rundtlysende og sidelysene');
     t.eq(kinds(VESSELS.snekke, {fishing:true, v:0}), 'fishW fishR', 'plastsnekka viser fortsatt rødt over hvitt når hun fisker'); }
+  // not under command and aground: the two reds hang on the mast where the model has its all-round lamps one over the other (fishR over
+  // fishW), not 1 and 2 m over the top of the mast in the air (OB10 round 3, 12.11.2026: the new speed sjark adrift without fuel showed
+  // them floating over her masthead)
+  { const G = {lights:[[[-0.9, 3.0, -1.5], [1, 0.12, 0.1], 'port'], [[0.9, 3.0, -1.5], [0.1, 1, 0.35], 'stbd'], [[0, 7.7, 0.5], [1, 0.97, 0.88], 'allround'],
+      [[0, 6.6, 0.5], [1, 0.12, 0.1], 'fishR'], [[0, 5.55, 0.5], [1, 0.97, 0.88], 'fishW'], [[0, 3.0, 5.0], [1, 0.97, 0.88], 'stern']]};
+    const top = Math.max(...G.lights.map(l => l[0][1])), nuc = st => K.lanterns(G, Object.assign({}, VESSELS.sjarkny, st.len ? {len:st.len} : {}), st).filter(l => l[2] === 'nuc');
+    const N = nuc({nuc:true, v:0}), A = nuc({aground:true, len:14});
+    t.ok(N.length === 2 && N.every(l => l[0][1] <= top + 1e-9) && Math.abs(N[0][0][1] - N[1][0][1]) >= 1.0 && N.every(l => l[0][0] === 0 && l[0][2] === 0.5),
+      'ikke under kommando: de to røde på masta der fiskelanternene står (1,05 m imellom), ikke i lufta over det øverste lyset', N.map(l => l[0]));
+    t.ok(A.length === 2 && A.every(l => l[0][1] <= top + 1e-9), 'på grunn (fra 12 m): de to røde på masta, ikke over den', A.map(l => l[0]));
+    const G0 = {lights:G.lights.filter(l => !/^fish/.test(l[2]))}, N0 = K.lanterns(G0, VESSELS.sjarkny, {nuc:true, v:0}).filter(l => l[2] === 'nuc');
+    t.ok(N0.length === 2 && Math.abs(N0[1][0][1] - N0[0][0][1] - 1.0) < 1e-9, 'en modell uten fiskelanterner: de to røde én meter imellom over masttoppen som før', N0.map(l => l[0])); }
   t.ok(small.every(k => L(k).smoke === 0 && L(k).mob === 0 && L(k).buoys >= Math.ceil(L(k).persons / 3) && L(k).buoys >= (VESSELS[k].len >= 10.67 ? 2 : 1) && L(k).lights >= L(k).buoys / 2),
     '§ 43 under 15 m: én bøye per tre om bord, to fra 10,67 m, halvparten med lys, ingen røyk og ingen MOB-båt', small.map(k => k + ':' + L(k).buoys));
   t.ok(Object.keys(VESSELS).every(k => L(k).smoke <= L(k).lights && L(k).lights <= L(k).buoys && L(k).lines <= L(k).buoys), 'røyk ≤ lys ≤ bøyer, og linene på bøyer som finnes, for alle typene');
