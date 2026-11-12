@@ -7,7 +7,8 @@ turns to starboard, opens the CPA and comes back to the route; the warning stand
 (not in sight, rule 19): the warning comes earlier, both act (the ferry to starboard, Autonav by 19 d), the ferry's fog signal heard
 forward of the beam takes Autonav down to the minimum steerage speed (19 e), and both sound their fog signals (rule 35). Prints OK or FEIL."""
 from _env import GAME, boot
-import asyncio, json, time
+import asyncio, json, time, os
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 from playwright.async_api import async_playwright
 
 
@@ -51,6 +52,20 @@ SAMPLE = """([id, L0]) => { const H = (S.t + liveFrac()) / 60, all = npcStates(H
 QUIET = """([id, L0]) => { const H = (S.t + liveFrac()) / 60, n = npcStates(H, id)[0], b = S.boat, gs = gridScale(b.pos), own = livePose().p;
   const a = L0.st, e = L0.end, ux = e.x - a.x, uy = e.y - a.y, ul = Math.hypot(ux, uy), xte = ((own.x - a.x) * (-uy) + (own.y - a.y) * ux) / ul / gs * 1000;
   return {rng:n ? Math.round(dist(n.p, own) / gs * 1000) : -1, own:SJV.own ? SJV.own.why : '', off:Math.round(SJV.ownOff), xte:Math.round(xte), plan:!!S.plan}; }"""
+
+
+# TB1: the trebåt on Autonav towards the point where the ocean fleet's ship id is tc game minutes from the feedback's world minute
+# (317277), from ang degrees off her course, reaching it dt game minutes after her, from T game minutes before
+TB1 = """async ([id, tc, T, ang, dt]) => { const tm = 317277 + tc, H = tm / 60, c0 = P(69.545, 18.642), b = S.boat;
+  b.pos = {x:c0.x, y:c0.y}; b.status = 'idle'; b.port = null; await mapNeed(c0, MAPD.simR); HAV.k = ''; const q = npcStates(H, id)[0];
+  const M = q.p, c = q.cog != null ? q.cog : q.hd, gs = gridScale(M), vp = BOAT.vcruise || 6, hp = c + ang * Math.PI / 180, d = vp * NM * gs * (T + dt) / 60;
+  const st = {x:M.x - Math.sin(hp) * d, y:M.y + Math.cos(hp) * d}, end = {x:M.x + Math.sin(hp) * d * 1.8, y:M.y - Math.cos(hp) * d * 1.8};
+  S.t = Math.round(tm - T); acc = 0; WX_FORCE = {w:4, d:200}; COASTM.k = ''; HAV.k = ''; SJV.E.clear(); SJV.sits.clear(); SJV.own = null; SJV.ownOff = 0; SJV.warn = null; SJV.at = -1; SJV.trail.clear(); SJV.lp.clear(); SJV.clash.clear(); S.clashes = [];
+  b.anch = null; b.hove = null; b.gop = null; b.pos = {x:st.x, y:st.y}; b.heading = hp; b.v = vp; b.status = 'sailing'; b.dyn = null; DYN.line = null; DYN.dep = null;
+  S.plan = {wps:[{x:end.x, y:end.y, port:null, fish:0}], idx:0, speed:vp, returning:false, unsafe:[false]}; S.trail = [];
+  return {vp, lim:Math.round(colregLim(BOAT.len, q.L)), gnd:!!(groundCheck(st, M) || groundCheck(M, end))}; }"""
+TB1S = """([id]) => { const H = (S.t + liveFrac()) / 60, n = npcStates(H).find(q => q.id === id), A = sjvOwn(), R = n ? colregSit(A, n, {gs:gridScale(A.p)}) : null, s = SJV.sits.get(id);
+  return {rng:R ? Math.round(R.rng) : 99999, tcpa:R ? R.tcpa : 0, sit:s ? s.sit + '/' + s.give : '', clash:(S.clashes || []).length}; }"""
 
 
 async def run(pg, id, side, h, m, T=4, vp=8):
@@ -179,6 +194,23 @@ async def main():
                 if q['rng'] > 700 and len(Q) > 20 and not q['own'] and abs(q['off']) < 2 and max(abs(x['xte']) for x in Q) > 50: break
             mx = max(x['xte'] for x in Q)
             check(any(x['own'] for x in Q) and mx >= 80 and abs(Q[-1]['xte']) <= 30, 'Autonav viker også når ingen visning spør etter båtene (%d m ut, %d m fra linja til slutt)' % (mx, Q[-1]['xte']))
+        # ---- TB1 (12.11.2026, tilbakemelding #1): the trawler «Bankhavet» (60 m, 12 knots, on her way in) at 69.545 N 18.642 E on the
+        # world's clock (t 317277, 11.11.2026 08.19 UTC), and the trebåt on Autonav at 6 knots meeting her where she passed 3.6 game minutes
+        # before. Before the fix the trawler giving way (rule 13 at 15 degrees, rule 15 at 60 degrees) turned back to her course as soon as
+        # the CPA was behind her while she stood off, and they passed 62 and 84 m apart; rule 8 d: at a safe distance, past and clear.
+        # Needs the whole coast in the build (python3 tools/map/release.py and game.py) ----
+        if not os.path.exists(os.path.join(ROOT, 'tools', 'map', 'out', 'game', 'manifest.json')):
+            check(False, 'TB1: hele kysten i bygget (python3 tools/map/release.py og game.py) for møtet ved Tromsø')
+        else:
+            for ang, dt in ((-15, 0.6), (60, -0.6)):
+                L0 = await pg.evaluate(TB1, ['v95', -3.6, 4, ang, dt])
+                out = []; t0 = time.time()
+                while time.time() - t0 < 120:
+                    await asyncio.sleep(0.5); q = await pg.evaluate(TB1S, ['v95']); out.append(q)
+                    if q['clash'] or (q['tcpa'] < 0 and q['rng'] > 600): break
+                mn = min(x['rng'] for x in out)
+                check(not any(x['clash'] for x in out) and mn >= L0['lim'], 'TB1: trebåten på Autonav og tråleren «Bankhavet» ved Tromsø, %d° fra hennes kurs: ingen sammenstøt, og de passerer på trygg avstand (nærmest %d m, grensa %d m)' % (ang, mn, L0['lim']),
+                      sorted({x['sit'] for x in out if x['sit']}))
         # ---- never in harbour, never in the time away ----
         hv = await pg.evaluate("""(() => { const b = S.boat, q = PORTS[0]; b.status = 'port'; b.port = q.id; S.plan = null; return sjvWarn() === null; })()""")
         check(hv, 'ingen varsler i havn')

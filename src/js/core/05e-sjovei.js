@@ -308,12 +308,14 @@ function sjvBackOwn(A, O){
 function sjvStart(n, R, H, mover, why, own, id){
   const gs = gridScale(n.p), want = Math.max(1.5 * R.lim, R.lim + 60);
   const side = sjvSide(R, n.hd, mover, want, gs);
-  let k = sjvNeed(R, n.hd, side, want, mover, gs); if (k == null) k = SJV_OFFMAX;
+  // (no offset within reach opens the CPA enough: for Autonav the speed too, 8 e «Om nødvendig … slakke farten». A ship at 12 knots
+  // crossing ahead of a boat at 6 moves along the offset; with the way off her she passes ahead. TB1, 12.11.2026)
+  let k = sjvNeed(R, n.hd, side, want, mover, gs); const ease = !!own && k == null; if (k == null) k = SJV_OFFMAX;
   k = Math.min(SJV_OFFMAX, k * 1.3);
   const nx = Math.cos(n.hd) * side * gs, ny = Math.sin(n.hd) * side * gs, rate = Math.max(2, n.v) * NM * Math.tan(SJV_TH);
   let room = own ? sjvRoomOwn(n, nx, ny, k) : sjvRoom(n, nx, ny, k);
   if (!room && k > 0.2){ k = Math.max(0.15, k / 2); room = own ? sjvRoomOwn(n, nx, ny, k) : sjvRoom(n, nx, ny, k); }
-  return {id:id || n.id, side, nx, ny, tgt:k, rate, t0:H, t1:null, why, slow:!room, f:0.35, v:n.v};
+  return {id:id || n.id, side, nx, ny, tgt:k, rate, t0:H, t1:null, why, slow:!room, ease, f:0.35, v:n.v};
 }
 
 // ---- Ø11.2: the sight, the lanterns and the sound signals (pure; sjvEval and the views use them) ----
@@ -583,7 +585,7 @@ function sjvAuto(d, h, ds, T){
     let gp = null; try { gp = groundCheck(a, q); } catch (e){ gp = a; } if (gp){ O.slow = true; tgt = 0; } }
   const rate = Math.max(0.5, Math.abs(d.u)) * Math.tan(SJV_TH) * h;
   SJV.ownOff += clamp(tgt - SJV.ownOff, -rate, rate);
-  const v = O && O.slow && O.t1 == null && !near ? Math.max(1, 0.4 * ((S.plan && S.plan.speed) || BOAT.vcruise || 6) * KN_MS) : 1e9;
+  const v = O && (O.slow || O.ease) && O.t1 == null && !near ? Math.max(1, 0.4 * ((S.plan && S.plan.speed) || BOAT.vcruise || 6) * KN_MS) : 1e9;
   return {off:SJV.ownOff, v:Math.min(v, cap)};
 }
 // the minute step (05-vessels.js sail), when the model is not running: she turns 35 degrees off the leg until she stands the offset off it,
@@ -598,7 +600,8 @@ function sjvSail(pl, b, left){
   const hd0 = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y)), gs = gridScale(b.pos);
   let hd = hd0, L = left * f;
   if (O.slow) L = L * 0.4;
-  else if ((O.mo || 0) < O.tgt * gs){ hd = hd0 + O.side * SJV_TH; O.mo = (O.mo || 0) + L * Math.sin(SJV_TH); }
+  else { if (O.ease) L = L * 0.4;   // (the offset and the way off her both, TB1)
+    if ((O.mo || 0) < O.tgt * gs){ hd = hd0 + O.side * SJV_TH; O.mo = (O.mo || 0) + L * Math.sin(SJV_TH); } }
   const to = {x:b.pos.x + Math.sin(hd) * L, y:b.pos.y - Math.cos(hd) * L};
   let gp = null; try { gp = groundCheck(b.pos, to); } catch (e){ gp = to; }
   if (gp){ O.slow = true; return false; }

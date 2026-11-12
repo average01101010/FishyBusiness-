@@ -227,5 +227,13 @@ export default function (t){
     t.ok(lead > 5 && lead < 6, 'regel 8 a: trebåten i 6 knop må begynne over 5 spillminutter før CPA for å stå 1,5 grenser ut', +lead.toFixed(2));
     t.ok(lead * 18 * NM / 60 > 2.5, 'møtende med tråleren (18 knop sammen) er det over 2,5 km, ikke 1,2', +(lead * 18 * NM / 60).toFixed(2));
     t.ok(lead2 * 11 * NM / 60 < 1.2, 'to sjarker på kryss (11 knop sammen): innenfor 1,2 km, som før', +(lead2 * 11 * NM / 60).toFixed(2));
+    // 8 e: the trawler crossing ahead from starboard at 12 knots, the trebåt at 6 north, meeting in 3 minutes: no parallel offset within
+    // 600 m opens the CPA to 1.5 limits (the relative motion runs along it), so Autonav takes the way off her too (sjvStart: ease);
+    // head-on it does
+    const cr = K.colregSit(V(0, 0, 0, 6, {L:7}), V(at(0, 0, 0, 6, 3).x + 12 * NM * 3 / 60, at(0, 0, 0, 6, 3).y, 270, 12, {L:60.3}));
+    t.eq(cr.give, 'a', 'kryssende fra styrbord: trebåten viker (regel 15)');
+    t.eq(K.sjvNeed(cr, 0, 1, Math.max(1.5 * lim, lim + 60), 'a', 1), null, 'regel 8 e: et avvik alene holder ikke mot tråleren som krysser forut; Autonav slakker også av');
+    const ho = K.colregSit(V(0, 0, 0, 6, {L:7}), V(0, -18 * NM * 3 / 60, 180, 12, {L:60.3}));
+    t.ok(K.sjvNeed(ho, 0, 1, Math.max(1.5 * lim, lim + 60), 'a', 1) > 0, 'møtende holder avviket alene', K.sjvNeed(ho, 0, 1, Math.max(1.5 * lim, lim + 60), 'a', 1));
   }
 }
