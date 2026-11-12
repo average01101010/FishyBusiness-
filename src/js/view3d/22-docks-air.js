@@ -230,7 +230,7 @@
     return out;
   }
   function drawNPCLights(VP){
-    const LF = lanternFog(), A0 = Math.max(env.night, LF.a); ANCHAL.npcLit = 0; ANCHAL.kvLit = 0;   // (what was lit, for the tests: G3._debug.anchl)
+    const LF = lanternFog(), A0 = Math.max(env.night, LF.a); ANCHAL.npcLit = 0; ANCHAL.kvLit = 0; ANCHAL.winLit = 0;   // (what was lit, for the tests: G3._debug.anchl)
     if (A0 < 0.05 || !npcNow.length) return;
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.depthMask(false);
     for (const n of npcNow){
@@ -238,7 +238,7 @@
       // and her real speed, so a boat jigging shows the lights of one under way, a trawler towing green over white, one at anchor the
       // anchor light, one not under command two reds; at the quay none
       const stN = sjvLanternSt(n), len = n.L || (n.K ? 8 : 20);
-      const M = n.K ? chain(n.M, n.K.S) : n.M, px = n.K ? (n.L < 14 ? 260 : 600) : NPCM.lightPx[n.type] || 900;
+      const M = n.K ? chain(n.M, n.K.S) : n.M, px = n.K ? (n.K.geo && n.K.geo.ship ? 900 : n.L < 14 ? 260 : 600) : NPCM.lightPx[n.type] || 900;
       const G = n.K ? n.K.geo : (() => { const LG = NPCM.lanG || (NPCM.lanG = {}); return LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])}); })();
       for (const [p, col, lk] of lampsMore(lanterns(G, {len, vmax:n.K ? 10 : 12}, stN), stN, len)){
         if (!lampArc(M, p, lk)) continue;
@@ -246,8 +246,16 @@
         if (a < 0.01) continue;
         ANCHAL.npcLit++; if (lk === 'kv') ANCHAL.kvLit++;
         PB[0] = q[0]; PB[1] = q[1]; PB[2] = q[2]; PA[0] = a; drawPts(1, gl.POINTS, VP, col, px, true); } }
-    const cs = env.night > 0.05 && npcNow.find(n => n.type === 'coastal');
-    if (cs){ let k = 0; for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(cs.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], 420, true); }
+    // the lit windows of the ships at night: a ship model's own (its GLB's anchors.win, the windows' middles, tools/ships/), every one on
+    // a ferry and some two in three on the coastal ship (the cabins' curtains; fixed per window); the old box's rows on a coastal ship
+    // drawn as the box (beyond 1.5 km)
+    if (env.night > 0.05) for (const n of npcNow){
+      if (n.type !== 'coastal' && n.type !== 'ferry') continue; const W = n.K && n.K.geo && n.K.geo.win;
+      let k = 0;
+      if (W){ const M = chain(n.M, n.K.S), some = n.type === 'coastal';
+        for (let i = 0; i < W.length && k < 4000; i++){ if (some && hash(i * 13 + 7) < 0.35) continue; const q = xf(M, W[i]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } }
+      else if (n.type === 'coastal'){ for (let r = 0; r < 4; r++) for (let i = 0; i < 18; i++) for (const sx of [-1, 1]){ if (hash(r * 97 + i * 13 + (sx > 0 ? 5 : 0)) < 0.35) continue; const q = xf(n.M, [sx * 8.95, 8.5 + r * 3.2, -24 + i * 3.4]); PB[k * 3] = q[0]; PB[k * 3 + 1] = q[1]; PB[k * 3 + 2] = q[2]; PA[k] = env.night * 0.9; k++; } }
+      if (k){ ANCHAL.winLit += k; drawPts(k, gl.POINTS, VP, [1, 0.8, 0.5], W ? 300 : 420, true); } }
     gl.depthMask(true); gl.disable(gl.BLEND);
   }
 
