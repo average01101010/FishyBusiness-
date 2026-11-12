@@ -2686,3 +2686,5 @@
 2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	legmemotest	OK	17	lite	samtidig	
 2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	hbtest	OK	16	lite	samtidig	
 2026-11-12 00:09	ccr-c987b885-ap4668	ef90157	itemcardtest	FEIL	20	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-12 00:19	ccr-c987b885-ap4668	bfe16db+	vectest	OK	560	3d	alene	
+2026-11-12 00:23	ccr-c987b885-ap4668	bfe16db+	anchorlight3d	OK	284	3d	alene	
