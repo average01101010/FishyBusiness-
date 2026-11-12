@@ -492,7 +492,7 @@ function ruByc(q){
   if (!RU.ok || !q || !q.p) return null; const gear = q.gear || 'juksa'; if (!['juksa', 'line', 'garn'].includes(gear)) return null;
   const p = q.p, ll = LL(p); if (ll.lat >= 62) return null;
   if (ruNsjo(p, ll)) return 'nsjo';
-  const bits = ruBits(p); if (bits & 16) return null;   // (the Oslo fjord: cod is banned there, 5.28)
+  const bits = ruBits(p); if ((bits & 16) || ruAt(8, p).length || ruAt(37, p).length) return null;   // (the Oslo fjord and its no-fishing areas: cod is banned there, 5.28; nothing is free)
   if ((bits & 1) && ruSeaNo(p)) return 'sorfri';   // inside the baseline east of the line: no quota (03d-quota.js)
   if ((bits & 1) || !(bits & 64) || !ruSkag(p, bits)) return null;
   const len = q.len || 0; if (gear === 'juksa' && len > 0 && len < 11 && ruIn2(ruMD(q.H == null ? S.t / 60 : q.H), 401, 630) && bladB() && sorLeft('skag4') > 0) return 'skag4';

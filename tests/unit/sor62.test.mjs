@@ -124,7 +124,10 @@ export default function (t){
   // inside the baseline east of Lindesnes: neither the North Sea nor the Skagerrak of the regulation, so no quota: counted as free
   { const c = sorConf({sorfri:{kg:500, cod:400}}, 400, {nsjo:3000, skag4:3000}, 'none');
     t.ok(c.kg === 0 && Math.abs(c.cod - 400) < 1e-9, 'torsk tatt innenfor grunnlinja øst for Lindesnes: ingenting inndras, og den regnes ikke mot kvoten nord for 62° N');
-    t.eq(z(P(59.3, 10.55)), null, 'Oslofjorden er ikke med (torsk er forbudt der, som før)'); }
+    t.eq(z(P(59.3, 10.55)), null, 'Oslofjorden er ikke med (torsk er forbudt der, som før)');
+    for (const [n, la, lo] of [['indre Oslofjord', 59.85, 10.65], ['Drøbak', 59.66, 10.62], ['Hvaler', 59.1, 10.9], ['Larvik', 58.98, 10.05], ['Kragerø', 58.85, 9.45]])
+      t.ok(z(P(la, lo)) === null && !!ruBlockMsg({p:P(la, lo), H:H(6, 1), len:7, gear:'juksa', sp:null, hand:true}), n + ': ingen fri torsk, og juksa er stoppet (Oslofjorden fra Telemark til Sverige, og nullfiskeområdene)');
+    t.ok(z(P(58.71, 9.25)) === 'sorfri' && z(P(58.45, 8.78)) === 'sorfri', 'Risør og Arendal innenfor grunnlinja (Agder): fri torsk'); }
   // who is in the open group in the North Sea (deltakerforskriften § 16 and § 6): the owner aboard, one vessel an owner
   { const {sorAcc} = t.K; t.ok(typeof sorAcc === 'function', 'sorAcc finnes');
     if (typeof sorAcc === 'function'){ const s0 = S(); s0.quota = null; const own0 = s0.tripOwner;

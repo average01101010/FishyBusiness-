@@ -2747,3 +2747,5 @@
 2026-11-11 23:56	ccr-49289d8b-v7t3dk	4459be8	boottest	OK	32	lite	samtidig	
 2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	sor62test	OK	72	lite	samtidig	
 2026-11-11 23:57	ccr-49289d8b-v7t3dk	4459be8	trip2	OK	40	lite	samtidig	
+2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	boottest	OK	37	lite	samtidig	
+2026-11-12 00:07	ccr-49289d8b-v7t3dk	a0a2afe+	sor62test	OK	69	lite	samtidig	
