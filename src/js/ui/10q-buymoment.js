@@ -26,13 +26,14 @@ var BUYM = (() => {
     if (typeof PHONE !== 'undefined' && PHONE.show) PHONE.show(false);
     if (own && b.status === 'port' && typeof G3 !== 'undefined' && G3.paintView){ G3.paintView(true); cam = true;
       // (the 3D view must be up now: the first time it is loaded, or where it cannot be, the card paints the name itself; so it does for
-      // a boat with no name, which carries only her mark on the hull, ui/08-actions.js boatUnnamed)
+      // a boat with no name, which carries only her mark on the hull, ui/08-actions.js boatUnnamed. The card has her name in plain
+      // letters then, so it stands somewhere also if the hull does not show it: the 3D view put away, or a model with no place for it)
       if (!S.unnamed && G3.buyShow && !G3.failWhy && G3.isActive && G3.isActive()){ G3.buyShow(nm); r3d = true; } }
     el = document.createElement('div'); el.id = 'buyMoment'; el.className = 'bm'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', L('Båten er din', 'The boat is yours') + (r3d ? ': ' + nm : ''));
     const letters = [...String(nm)].map((c, i) => '<span style="animation-delay:' + (0.6 + i * 0.22).toFixed(2) + 's">' + (c === ' ' ? '&nbsp;' : esc(c)) + '</span>').join('');
     el.innerHTML = '<div class="bm-card"><p class="bm-k">' + L('Kontrakten er underskrevet', 'The contract is signed') + '</p>' +
       (r3d ? '' : '<div class="bm-row"><div class="bm-pole"><i></i><span class="bm-flag">' + FLAG + '</span></div><div class="bm-name" aria-label="' + esc(nm) + '">' + letters + '</div></div>') +
-      '<p class="bm-sub">' + esc(V.name[S.lang]) + ' · ' + yr + (pt ? ' · ' + L('ved kaia i ', 'at the quay in ') + esc(pt.name) : '') + '</p>' +
+      '<p class="bm-sub">' + (r3d ? '<b>' + esc(nm) + '</b> · ' : '') + esc(V.name[S.lang]) + ' · ' + yr + (pt ? ' · ' + L('ved kaia i ', 'at the quay in ') + esc(pt.name) : '') + '</p>' +
       '<p class="bm-note">' + (r3d ? L('Hun er din. Navnet males på skroget, og flagget går opp.', 'She is yours. The name is painted on her hull, and the flag goes up.') : own ? L('Hun er din. Navnet males på, og flagget går opp.', 'She is yours. The name is painted on, and the flag goes up.') : L('Hun er din, og ligger klar til flåten.', 'She is yours, and lies ready for the fleet.')) + '</p>' +
       '<button class="ph-btn alt bm-skip" type="button">' + L('Hopp over', 'Skip') + '</button></div>';
     document.body.appendChild(el); el.querySelector('.bm-skip').addEventListener('click', () => close(true));

@@ -21,7 +21,7 @@ FIT = """(() => { const d = document.querySelector('%s'); if (!d) return ['none'
 
 BM = """(() => { const e = document.getElementById('buyMoment'); if (!e) return null; const n = e.querySelector('.bm-name'), sub = (e.querySelector('.bm-sub') || {}).textContent || '';
   return {name:n ? n.getAttribute('aria-label') : null, letters:e.querySelectorAll('.bm-name span').length, flag:!!e.querySelector('.bm-flag svg'), skip:!!e.querySelector('.bm-skip'),
-    drawer:document.getElementById('drawer').hidden, in3d:BUYM.in3d, label:e.getAttribute('aria-label'), sub:/ · \\d{4}/.test(sub) && sub.indexOf(VESSELS[S.boat.type].name.no) === 0 ? sub : ''}; })()"""
+    drawer:document.getElementById('drawer').hidden, in3d:BUYM.in3d, label:e.getAttribute('aria-label'), sub:/ · \\d{4}/.test(sub) && sub.includes(VESSELS[S.boat.type].name.no) ? sub : ''}; })()"""
 
 
 async def shot(pg, path):
@@ -58,7 +58,7 @@ async def moment3d(br, errs):
             check(bt['type'] == 'snekke' and bt['name'] == 'Havbris', '3D: båten er kjøpt ved verftet med den gamle i bytte, og hun heter fortsatt Havbris', bt)
         a = await pg.evaluate("({card:document.getElementById('buyMoment') ? true : false, in3d:BUYM.in3d, painting:G3.painting, b:G3.buying})")
         bm = await pg.evaluate(BM)
-        check(a['in3d'] and a['painting'] and a['b'] is not None and bm and not bm['letters'] and not bm['flag'] and bm['sub'] and 'ved kaia i' in bm['sub'],
+        check(a['in3d'] and a['painting'] and a['b'] is not None and bm and not bm['letters'] and not bm['flag'] and bm['sub'] and 'ved kaia i' in bm['sub'] and bm['sub'].startswith(await pg.evaluate('S.boatName')),
               '3D, %s: kjøpsøyeblikket på båten du er om bord i tegner i modellen, kameraet går rundt henne, og kortet har typen, året og kaia' % fmt, [a, bm])
         # half-way through the name (its clock held there, and two frames drawn): some letters on, not all; the flag still down the pole
         n = a['b']['len'] if a['b'] else 8
