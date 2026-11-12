@@ -736,7 +736,7 @@ function vesselStep(H){
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
     const W0 = windAt(H);
     if (portBusy(b)){ S.plan.depAt = portBusy(b) + 1; log('Avgangen venter til arbeidet på kaia er ferdig.', 'Departure waits until the work at the quay is done.'); }
-    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log(jobsCrewOnly() ? 'Avgangen venter til mannskapet er ferdig.' : 'Avgangen venter til verkstedet er ferdig.', jobsCrewOnly() ? 'Departure waits until the crew is done.' : 'Departure waits until the yard is done.'); }
+    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log(jobsFreight() ? 'Avgangen venter til lasta er på plass.' : jobsCrewOnly() ? 'Avgangen venter til mannskapet er ferdig.' : 'Avgangen venter til verkstedet er ferdig.', jobsFreight() ? 'Departure waits until the freight is in place.' : jobsCrewOnly() ? 'Departure waits until the crew is done.' : 'Departure waits until the yard is done.'); }
     else if (S.settings.autoOn && W0 > windLim() && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
@@ -807,6 +807,7 @@ function sailV(H, hs){
   // brake before the next stop (a harbour or a fishing spot) or the route's end along the route, not when leaving
   let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w) || i === pl.wps.length - 1){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
+  tgt = Math.min(tgt, fartKn(b.pos, H));   // the speed limit where she is (Ø11.8, 05e-sjovei.js fartAt)
   const acc = BOAT.accel || 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
   return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);
 }

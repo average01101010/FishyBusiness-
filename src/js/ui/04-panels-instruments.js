@@ -42,7 +42,7 @@ function nextEvent(){
   if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
   if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
   if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
-  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
+  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsFreight() ? (S.jobs.every(j => j.out) ? L('Lasta er i land', 'Freight ashore') : S.jobs.some(j => j.out) ? L('Lasta er på plass', 'Freight in place') : L('Lasta er om bord', 'Freight aboard')) : jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));   // (freight alone says so: «Mannskapet er ferdig» said nothing of what they did, feedback #2 from the test edition)
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
     for (let i = S.plan.idx; i < wps.length; i++){ km += kmTrue(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
@@ -106,6 +106,8 @@ function hudLine3(how){
   // the hull (core/16c-hull.js, Fysikk 3; Jonas 07.11.2026 after Tony's test: «viste ikke om det var noe å være bekymret for»): red while
   // the water rises, with the minutes to a full engine room and «Verft ›» (the nearest yard by Autonav); yellow while the pump keeps up
   if (!h && atSea){ const hw = hullWarn(b); if (hw){ cls = hw.cls; go = 'yard'; h = hw.short; } }
+  // the fairway (Ø11.8, core/05e-sjovei.js): over the speed limit, or on the wrong side of a cardinal mark, when she steers herself (after the hull: water in the boat comes first)
+  if (!h && atSea){ const fw = farvWarn(); if (fw){ cls = 'r1'; h = farvSay(fw, strip ? 'tiny' : 'strip'); } }
   if (strip && atSea){
     if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
     if (!h){ const M = motionHere(H, b), z = M.state; if (z.lvl){ cls = 'r' + z.lvl; h = {gm:L('Rank båt', 'Tender boat'), res:stabStill(b) ? L('Synkronrulling · rull ', 'Synchronous roll · rolls ') + Math.round((M.M.roll + M.M.heel) * 180 / Math.PI) + '°' : L('Synkronrulling · endre kurs eller fart', 'Synchronous roll · change course or speed'), roll:L('Kraftig rulling · ta det rolig', 'Heavy rolling · ease off')}[z.why] || ''; } }

@@ -1,6 +1,6 @@
 # Den planlagte oppgaven «Arbeidsrutinen»
 
-**11.11.2026: oppgaven er laget på nytt og slått på** (`trig_01HGbAsoN6ravK5BDiAVUkTg`; Jonas: «Jeg har masse å jobbe gjennom før lanseringen av spillet, så jeg vil at claude jobber seg så selvstendig som mulig gjennom listen en periode fremover»). Den første (`trig_01Mj9884346G3f7JJ8rvoVFN`) ble slått av ti minutter etter at den ble laget 07.11 og kjørte aldri et steg; den hadde ikke repoet som kilde, og står avslått som «Arbeidsrutinen (gammel, uten repo: ikke bruk)». Den nye har Fable 5.2 (middels innsats i `.claude/settings.json`), repoet lagt inn av Jonas på claude.ai samme dag, og en prompt som følger L1a og L1b (testutgaven, slippet, migreringene på testprosjektet av Jonas). Prompten under er den gamle; den som gjelder, står på oppgaven. Repoet kan ikke settes fra en økt (`create_trigger` gir `sources: []`), bare på claude.ai/code/routines.
+**11.11.2026: oppgaven er laget på nytt og slått på** (`trig_01HGbAsoN6ravK5BDiAVUkTg`; Jonas: «Jeg har masse å jobbe gjennom før lanseringen av spillet, så jeg vil at claude jobber seg så selvstendig som mulig gjennom listen en periode fremover»). Den første (`trig_01Mj9884346G3f7JJ8rvoVFN`) ble slått av ti minutter etter at den ble laget 07.11 og kjørte aldri et steg; den hadde ikke repoet som kilde, og står avslått som «Arbeidsrutinen (gammel, uten repo: ikke bruk)». Den nye hadde Fable 5.2 (middels innsats i `.claude/settings.json`); fra 12.11.2026 skal den ha Opus 5.5 på høy innsats (Jonas), og modellen byttes av Jonas på oppgaven, repoet lagt inn av Jonas på claude.ai samme dag, og en prompt som følger L1a og L1b (testutgaven, slippet, migreringene på testprosjektet av Jonas). Prompten under er den gamle; den som gjelder, står på oppgaven. Repoet kan ikke settes fra en økt (`create_trigger` gir `sources: []`), bare på claude.ai/code/routines.
 
 Slik den første ble satt opp 07.11.2026 (laget fra Jonas' hovedøkt med `create_trigger`). Står her så den kan lages på nytt fra rutinesiden på claude.ai (claude.ai/code/routines) med de samme innstillingene, for eksempel for å gi øktene Supabase-koblingen, som ikke kan settes fra en økt.
 
@@ -13,7 +13,7 @@ Slik den første ble satt opp 07.11.2026 (laget fra Jonas' hovedøkt med `create
 | Økt | ny økt hver gang (ikke samme samtale) |
 | Repo | `average01101010/FishyBusiness-` som kilde, med push; grenen `ccr-5e1ba2f4-pusvyd` |
 | Miljø | det samme som tilbakemeldingsrutinen (`FEEDBACK_AGENT_TOKEN` som nettverkshemmelighet) |
-| Modell | Opus 5.5, innsats ekstra høy (Jonas 07.11.2026: «bruk modellen opus 5.5 på ekstra høy innsats»; innsatsen står også i `.claude/settings.json`, `modelSettings`) |
+| Modell | Opus 5.5, innsats høy (Jonas 12.11.2026: «Kan du fikse sånn at arbeidsrutinen kun bruker opus 5.5 på høy effort?»; før: Fable 5.2 på middels, 11.11.2026, og Opus 5.5 på ekstra høy, 07.11.2026). Modellen settes på oppgaven på claude.ai/code/routines, innsatsen i `.claude/settings.json`, `modelSettings`, som gjelder alle økter i repoet med den modellen |
 | Varsel | push til telefonen når kjøringen er ferdig |
 | Koblinger | Supabase (for `apply_migration`, RUTINE.md punkt 7). Uten den venter steg med migrering på Jonas |
 
