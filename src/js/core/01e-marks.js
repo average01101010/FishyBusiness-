@@ -7,15 +7,31 @@
 // embedded SEAMARKS stay. A build without them (an older release) has Senja's alone.
 //   marksNear(kind, x, y, R)  the lights, marks or rocks of SEAMARKS and of the tiles within R km of x, y (km)
 //   rocksIn (01-world.js)     takes the tiles' rocks too, by 1 km cell
-const MARKS = {tiles:new Map(), ver:0, rk:new Map(), n:0, near:new Map()};
+const MARKS = {tiles:new Map(), ver:0, rk:new Map(), n:0, near:new Map(), senja:0};
 function marksAdd(pk){
   const k = pk.tile[0] + ':' + pk.tile[1]; if (MARKS.tiles.has(k)) return;
   const v = mapVec(pk, 'marks'); MARKS.tiles.set(k, null); if (!v) return;
   let J; try { J = JSON.parse(new TextDecoder().decode(v.b)); } catch (e){ console.error('marks ' + k, e); return; }
   const keep = a => (a || []).filter(q => !inSenja(q[0], q[1]));
+  marksSenja((J.marks || []).filter(q => inSenja(q[0], q[1])));
   const t = {k, tx:pk.tile[0], ty:pk.tile[1], lights:keep(J.lights), marks:keep(J.marks), rocks:keep(J.rocks)};
   for (const q of t.rocks){ q.o = ++MARKS.n; const g = gridKey(Math.floor(q[0]), Math.floor(q[1])); let a = MARKS.rk.get(g); if (!a) MARKS.rk.set(g, a = []); a.push(q); }
   MARKS.tiles.set(k, t); MARKS.ver++; MARKS.near.clear();
+}
+// Senja's embedded marks (SEAMARKS, 01-world.js) are the same objects of OpenStreetMap, taken long before Ø13 K3, and stay the ones
+// used inside Senja's square. Where a tile's mark stands within 3 m of one, the embedded one takes its kind, category and arrow: 7 of
+// them were 'S' without a category (drawn as yellow cardinal posts) and are iron rods and towers, and 22 rods have their arrow.
+// MARKS.senja counts the marks changed, so the 3D view builds Senja's marks again (view3d/05-quays-breakwaters.js marksStatics)
+function marksSenja(list){
+  if (!list.length) return; const at = new Map(), key = (x, y) => Math.round(x * 200) + ':' + Math.round(y * 200);
+  for (const q of list) at.set(key(q[0], q[1]), q);
+  let n = 0;
+  for (const m of SEAMARKS.marks){
+    let q = null; for (let dx = -1; dx <= 1 && !q; dx++) for (let dy = -1; dy <= 1 && !q; dy++){ const c = at.get((Math.round(m[0] * 200) + dx) + ':' + (Math.round(m[1] * 200) + dy)); if (c && Math.hypot(c[0] - m[0], c[1] - m[1]) < 0.003) q = c; }
+    if (!q || (m[2] === q[2] && m[3] === q[3] && m[4] === q[4])) continue;
+    m[2] = q[2]; m[3] = q[3]; m.length = 4; if (q.length > 4) m[4] = q[4]; n++;
+  }
+  if (n){ MARKS.senja += n; MARKS.ver++; MARKS.near.clear(); }
 }
 // the tiles' rocks in the 1 km cells over a box of km, in the order they came
 function marksRocksIn(x0, y0, x1, y1){
@@ -29,6 +45,35 @@ function marksNear(kind, x, y, R){
   a = SEAMARKS[kind].slice();
   for (let ty = ty0; ty <= ty1; ty++) for (let tx = tx0; tx <= tx1; tx++){ const t = MARKS.tiles.get(tx + ':' + ty); if (t) for (const q of t[kind]) a.push(q); }
   if (MARKS.near.size > 24) MARKS.near.clear(); MARKS.near.set(key, a); return a;
+}
+
+// The kinds of mark (tools/map/sjomerker.py; Ø13 K3 added I/i, A/a and Y/y, which sjomerker-7 had as B and D without a category)
+//   M lighthouse, m minor light, P pile or post, D stake (the iron rods, beacon_special_purpose of the stake shape), K cairn,
+//   L lateral beacon and B lateral buoy (port, starb; w or '' without a side, drawn white), C cardinal buoy and S cardinal beacon (north, east, south, west),
+//   I isolated danger buoy and i beacon, A safe water buoy and a beacon, Y special mark buoy and y beacon; a fifth field is the bearing
+//   (true, degrees) of the arrow (viser) on a stake
+// markSvg(mk, u): the chart plotter's symbol for a mark (ui/03-map.js renderStatic), centred on it, u km a pixel: the body in its
+// colours with the topmark over it, as on a paper chart, so a cardinal shows its quadrant (two cones: north both up, east base to base,
+// south both down, west point to point) and a lateral its can or cone
+const MARK_COL = {r:'#c8231c', g:'#1f8a3c', y:'#e0b000', k:'#1a1a1a', w:'#ffffff'};
+const MARK_BANDS = {north:'ky', east:'kyk', south:'yk', west:'yky'};   // top first
+function markSvg(mk, u){
+  const x = mk[0], y = mk[1], ty = mk[2], cat = mk[3], C = MARK_COL, f = v => v.toFixed(4), out = [];
+  const W = 2.6 * u, H = 4.2 * u, x0 = x - W / 2, top = y - H / 2;
+  const body = bands => { const h = H / bands.length; for (let i = 0; i < bands.length; i++) out.push('<rect x="' + f(x0) + '" y="' + f(top + i * h) + '" width="' + f(W) + '" height="' + f(h + 0.02 * u) + '" fill="' + C[bands[i]] + '"/>'); out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="none" stroke="#fff" stroke-width="' + f(0.5 * u) + '"/>'); };
+  const r = 1.3 * u, t0 = top - 0.6 * u;   // the topmark's size and its foot
+  const cone = (yb, up, k) => out.push('<path d="M' + f(x - r) + ',' + f(yb) + 'L' + f(x + r) + ',' + f(yb) + 'L' + f(x) + ',' + f(yb + (up ? -2 * r : 2 * r)) + 'z" fill="' + C[k] + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>');
+  const ball = (cy, k) => out.push('<circle cx="' + f(x) + '" cy="' + f(cy) + '" r="' + f(r * 0.85) + '" fill="' + C[k] + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>');
+  const card = c => { if (c === 'north'){ cone(t0, true, 'k'); cone(t0 - 2.3 * r, true, 'k'); } else if (c === 'south'){ cone(t0 - 2 * r, false, 'k'); cone(t0 - 4.3 * r, false, 'k'); }
+    else if (c === 'east'){ cone(t0 - 2 * r, false, 'k'); cone(t0 - 2.3 * r, true, 'k'); } else if (c === 'west'){ cone(t0, true, 'k'); cone(t0 - 4.3 * r, false, 'k'); } };
+  if (ty === 'C' || ty === 'S'){ body(MARK_BANDS[cat] || 'y'); card(cat); }
+  else if (ty === 'L' || ty === 'B'){ const st = cat === 'starb'; body(st ? 'g' : cat === 'port' ? 'r' : 'w'); if (st) cone(t0, true, 'g'); else if (cat === 'port') out.push('<rect x="' + f(x - r) + '" y="' + f(t0 - 2 * r) + '" width="' + f(2 * r) + '" height="' + f(2 * r) + '" fill="' + C.r + '" stroke="#fff" stroke-width="' + f(0.35 * u) + '"/>'); }
+  else if (ty === 'I' || ty === 'i'){ body('krk'); ball(t0 - r, 'k'); ball(t0 - 3.1 * r, 'k'); }
+  else if (ty === 'A' || ty === 'a'){ out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="#fff"/>'); for (const k of [0, 2]) out.push('<rect x="' + f(x0 + k * W / 4 + W / 8) + '" y="' + f(top) + '" width="' + f(W / 4) + '" height="' + f(H) + '" fill="' + C.r + '"/>');
+    out.push('<rect x="' + f(x0) + '" y="' + f(top) + '" width="' + f(W) + '" height="' + f(H) + '" fill="none" stroke="#555" stroke-width="' + f(0.4 * u) + '"/>'); ball(t0 - r, 'r'); }
+  else if (ty === 'Y' || ty === 'y'){ const k = (cat || 'y')[0]; body('wr'.includes(k) ? k : 'y'); if (ty === 'Y' && !(cat || '').includes('x')) return '<g class="mksym" data-mk="' + ty + ':' + cat + '">' + out.join('') + '</g>'; const d = r * 0.9, c = t0 - r; out.push('<path d="M' + f(x - d) + ',' + f(c - d) + 'L' + f(x + d) + ',' + f(c + d) + 'M' + f(x - d) + ',' + f(c + d) + 'L' + f(x + d) + ',' + f(c - d) + '" stroke="' + C.y + '" stroke-width="' + f(0.7 * u) + '"/>'); }
+  else return '<circle cx="' + f(x) + '" cy="' + f(y) + '" r="' + f(2 * u) + '" fill="#333" stroke="#fff" stroke-width="' + f(0.6 * u) + '"/>';
+  return '<g class="mksym" data-mk="' + ty + (cat ? ':' + cat : '') + '">' + out.join('') + '</g>';
 }
 
 // ===== THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026) =====

@@ -22,21 +22,93 @@
     const rl = Math.max(1, rt * 0.62); band(rl, Ht + 0.3, rl, Ht + 0.6, D); band(rl, Ht + 0.6, rl, Ht + 2.3, GL); band(rl, Ht + 2.3, rl + 0.15, Ht + 2.45, D);
     band(rl + 0.15, Ht + 2.45, 0.18, Ht + 3.5, RF); band(0.18, Ht + 3.5, 0.12, Ht + 3.9, D); cap(0.12, Ht + 3.9, D);
   }
-  function markInto(m, mk, tag){
+  // The marks after IALA region A (Ø13 K3, docs/systemer/sjofart-og-lover.md 9.3): the colours and the topmarks a skipper reads them
+  // by. A lateral mark red to port with a can (cylinder) on top, green to starboard with a cone; the cardinals black and yellow in
+  // bands after the quadrant with two black cones (north both up, east base to base, south both down, west point to point); isolated
+  // danger black with a red band and two black balls; safe water red and white upright stripes and one red ball; a special mark yellow
+  // with a yellow cross. The topmarks are a few triangles each (a six-sided cone 12, a ball 8): about 30 a mark where they stand
+  const MK_K = [0.07, 0.07, 0.07], MK_Y = [0.95, 0.78, 0.08], MK_R = [0.8, 0.12, 0.08], MK_G = [0.1, 0.55, 0.2], MK_W = [0.93, 0.93, 0.9];
+  // a cone (six sides, with its base) from y to y + h, the point up (h > 0) or down (h < 0)
+  function coneInto(m, x, y, z, r, h, k){
+    const N = 6, tip = [x, y + h, z], A = [];
+    for (let j = 0; j <= N; j++){ const a = j / N * Math.PI * 2; A.push([x + Math.cos(a) * r, y, z + Math.sin(a) * r]); }
+    for (let j = 0; j < N; j++){ m.tri(A[j], A[j + 1], tip, k); m.tri([x, y, z], A[j + 1], A[j], k); }
+  }
+  // a low ball: two four-sided pyramids base to base (8 triangles)
+  function ballInto(m, x, y, z, r, k){
+    const E = [[x + r, y, z], [x, y, z + r], [x - r, y, z], [x, y, z - r]], T = [x, y + r, z], B = [x, y - r, z];
+    for (let j = 0; j < 4; j++){ m.tri(E[j], E[(j + 1) % 4], T, k); m.tri(E[(j + 1) % 4], E[j], B, k); }
+  }
+  // an upright prism of n sides from y0 to y1, side j coloured k(j): the safe water mark's stripes
+  function prismInto(m, x, y0, z, r, y1, n, k){
+    for (let j = 0; j < n; j++){ const a = j / n * Math.PI * 2, b = (j + 1) / n * Math.PI * 2, c = k(j);
+      m.quad([x + Math.cos(a) * r, y0, z + Math.sin(a) * r], [x + Math.cos(b) * r, y0, z + Math.sin(b) * r], [x + Math.cos(b) * r, y1, z + Math.sin(b) * r], [x + Math.cos(a) * r, y1, z + Math.sin(a) * r], c);
+      m.tri([x, y1, z], [x + Math.cos(a) * r, y1, z + Math.sin(a) * r], [x + Math.cos(b) * r, y1, z + Math.sin(b) * r], c); }
+  }
+  // the arrow (viser) on top of a stake: a flat pointer across the rod, its point at the bearing deg (true; the frame's north is turned
+  // by gridGamma, sjomerker.py gives sann), so it points to the safe water as the source has it. 4 triangles
+  const MK_I = [0.16, 0.15, 0.14];
+  function arrowInto(m, x, y, z, deg, k){
+    if (m.trace) m.trace.push(m.p.length);
+    const a = (deg - (typeof gridGamma === 'function' ? gridGamma({x:x / 1000, y:z / 1000}) : 0)) * Math.PI / 180, ux = Math.sin(a), uz = -Math.cos(a), L = 0.75, w = 0.18, hy = 0.12;
+    const lx = -uz, lz = ux, at = (f, s, dy) => [x + ux * f + lx * s, y + dy, z + uz * f + lz * s], tip = at(L, 0, 0);
+    // a flat head (two triangles, both faces) and the shaft as a thin upright plate from the tail to the head
+    m.tri(at(L * 0.35, w, 0), tip, at(L * 0.35, -w, 0), k); m.tri(at(L * 0.35, -w, 0), tip, at(L * 0.35, w, 0), k);
+    m.quad(at(-L * 0.5, 0, -hy), at(L * 0.35, 0, -hy), at(L * 0.35, 0, hy), at(-L * 0.5, 0, hy), k);
+  }
+  // a body in horizontal bands, bottom first (a box of w across from y0 to y1)
+  function bandsInto(m, x, y0, z, w, y1, ks){ const h = (y1 - y0) / ks.length; ks.forEach((k, i) => m.box(x, y0 + i * h, z, w, h, w, k, 0)); }
+  // the topmark over y: two cones for the cardinals, a cylinder or a cone for the laterals, balls, a cross
+  const MK_CARD = {north:[MK_Y, MK_K], east:[MK_K, MK_Y, MK_K], south:[MK_K, MK_Y], west:[MK_Y, MK_K, MK_Y]};   // the bands, bottom first (north: black over yellow)
+  function topInto(m, x, y, z, s, kind){
+    const r = 0.32 * s, h = 0.55 * s, st = 0.08 * s; if (m.trace) m.trace.push(m.p.length);   // (tests/marktest.py: where the topmark starts)
+    m.box(x, y, z, st, 0.25 * s, st, MK_K, 0);   // the stalk
+    const b = y + 0.25 * s;
+    if (kind === 'north'){ coneInto(m, x, b, z, r, h, MK_K); coneInto(m, x, b + h + 0.08 * s, z, r, h, MK_K); }
+    else if (kind === 'south'){ coneInto(m, x, b + h, z, r, -h, MK_K); coneInto(m, x, b + 2 * h + 0.08 * s, z, r, -h, MK_K); }
+    else if (kind === 'east'){ coneInto(m, x, b + h, z, r, -h, MK_K); coneInto(m, x, b + h + 0.08 * s, z, r, h, MK_K); }
+    else if (kind === 'west'){ coneInto(m, x, b, z, r, h, MK_K); coneInto(m, x, b + 2 * h + 0.08 * s, z, r, -h, MK_K); }
+    else if (kind === 'port') m.box(x, b, z, 0.5 * s, 0.55 * s, 0.5 * s, MK_R, 0);
+    else if (kind === 'starb') coneInto(m, x, b, z, r, h, MK_G);
+    else if (kind === 'isol'){ ballInto(m, x, b + r, z, r, MK_K); ballInto(m, x, b + 3 * r + 0.06 * s, z, r, MK_K); }
+    else if (kind === 'safe') ballInto(m, x, b + r, z, r, MK_R);
+    else if (kind === 'spec'){ const c = b + 0.35 * s, d = 0.3 * s; m.beam([x - d, c - d, z], [x + d, c + d, z], 0.05 * s, MK_Y); m.beam([x - d, c + d, z], [x + d, c - d, z], 0.05 * s, MK_Y); }
+  }
+  function markInto(m, mk, tag, solid = true){
     const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
     if (ty === 'M' && fyrNear(x, z)) return;
-    if (ty === 'M'){ camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4, tag); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
+    if (ty === 'M'){ if (solid) camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4, tag); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
     else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
-    else if (ty === 'D'){ m.box(x, base, z, 0.5, 4.5, 0.5, [0.08, 0.08, 0.08], 0); m.box(x, base + 2.2, z, 0.56, 0.9, 0.56, [0.75, 0.1, 0.08], 0); }
-    else if (ty === 'L'){ m.box(x, base, z, 0.45, 4, 0.45, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0); }
-    else if (ty === 'B'){ m.box(x, -0.6, z, 1.1, 2.1, 1.1, cat === 'starb' ? [0.1, 0.55, 0.2] : [0.8, 0.12, 0.08], 0.5); }
-    else if (ty === 'C'){ m.box(x, -0.6, z, 1.1, 1.1, 1.1, [0.08, 0.08, 0.08], 0.5); m.box(x, 0.5, z, 1.1, 1.1, 1.1, [0.95, 0.8, 0.1], 0.5); }
-    else if (ty === 'S'){ m.box(x, base, z, 0.5, 3.5, 0.5, [0.95, 0.8, 0.1], 0); }
+    // Norway's stakes and beacons that are no IALA mark (D, sjomerker.py): the iron rod (jernstang) with its arrow (viser) towards the
+    // navigable water where the data has one (Kystverket, «Fritidsbåt: nyttige tjenester», and SNL «sjømerker»), a ball on some; the towers as cairns, white; the lattice beacons as a thicker dark rod
+    else if (ty === 'D'){
+      if (cat === 'tower'){ m.box(x, base, z, 1.6, 3.4, 1.6, [0.9, 0.9, 0.87], 0.4, [0.82, 0.82, 0.8]); if (mk[4] != null) arrowInto(m, x, base + 3.4, z, mk[4], MK_W); }
+      else { const w = cat === 'lattice' ? 0.7 : 0.18, h = cat === 'lattice' ? 5 : 4.5; m.box(x, base, z, w, h, w, MK_I, 0);
+        if (mk[4] != null) arrowInto(m, x, base + h, z, mk[4], MK_I); else if (cat === 'ball') ballInto(m, x, base + h + 0.3, z, 0.3, MK_K); } }
+    // a lateral mark without a side in the data (the inland waterways' white ones, a few with no colour): white, no topmark, never red
+    else if (ty === 'L'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, base, z, 0.45, 4, 0.45, k, 0);
+      if (mk[4] != null) arrowInto(m, x, base + 4, z, mk[4], k); else if (cat === 'port' || cat === 'starb') topInto(m, x, base + 4, z, 1, cat); }
+    else if (ty === 'B'){ const k = cat === 'starb' ? MK_G : cat === 'port' ? MK_R : MK_W; m.box(x, -0.6, z, 1.1, 2.1, 1.1, k, 0.5); if (cat === 'port' || cat === 'starb') topInto(m, x, 1.5, z, 1, cat); }
+    else if (ty === 'C'){ const ks = MK_CARD[cat] || [MK_K, MK_Y]; bandsInto(m, x, -0.6, z, 1.1, 1.8, ks); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); if (MK_CARD[cat]) topInto(m, x, 2.3, z, 1.2, cat); }
+    else if (ty === 'S'){ const ks = MK_CARD[cat] || [MK_Y]; bandsInto(m, x, base, z, 0.5, base + 3.5, ks); if (MK_CARD[cat]) topInto(m, x, base + 3.5, z, 1, cat); }
+    else if (ty === 'I'){ bandsInto(m, x, -0.6, z, 1.1, 1.8, [MK_K, MK_R, MK_K]); m.box(x, 1.8, z, 0.12, 0.5, 0.12, MK_K, 0); topInto(m, x, 2.3, z, 1.2, 'isol'); }
+    else if (ty === 'i'){ bandsInto(m, x, base, z, 0.5, base + 3.5, [MK_K, MK_R, MK_K]); topInto(m, x, base + 3.5, z, 1, 'isol'); }
+    else if (ty === 'A'){ prismInto(m, x, -0.6, z, 0.65, 1.6, 8, j => j % 2 ? MK_W : MK_R); m.box(x, 1.6, z, 0.12, 0.5, 0.12, MK_K, 0); topInto(m, x, 2.1, z, 1.2, 'safe'); }
+    else if (ty === 'a'){ prismInto(m, x, base, z, 0.3, base + 3.5, 6, j => j % 2 ? MK_W : MK_R); topInto(m, x, base + 3.5, z, 1, 'safe'); }
+    // a special mark buoy in its colour (yellow; some white or red ones in the data: moorings, measuring buoys), round where the data says
+    // spherical (the bathing places' summer buoys), with the cross on top where it has one
+    else if (ty === 'Y'){ const c = cat || 'y', k = c[0] === 'w' ? MK_W : c[0] === 'r' ? MK_R : MK_Y;
+      if (c.includes('s')) ballInto(m, x, 0.15, z, 0.65, k); else m.box(x, -0.6, z, 1.1, 2.1, 1.1, k, 0.5);
+      if (c.includes('x')) topInto(m, x, c.includes('s') ? 0.75 : 1.5, z, 1, 'spec'); }
+    else if (ty === 'y'){ m.box(x, base, z, 0.45, 3.5, 0.45, MK_Y, 0); topInto(m, x, base + 3.5, z, 1, 'spec'); }
     else if (ty === 'K'){ m.box(x, base, z, 1.8, 2.6, 1.8, [0.85, 0.85, 0.83], 0.4, [0.8, 0.8, 0.78]); }
   }
   // the coast's sea marks (01e-marks.js): a mesh a tile, built when its marks and its ground are in
-  const MKM = new Map(); let MKV = -1;
+  // Senja's embedded marks (SEAMARKS) a mesh of their own, built again when a tile's data has corrected some of them (01e-marks.js
+  // marksSenja; Ø13 K3); before K3 they were part of the quays' mesh (buildStatics), built once
+  const MKM = new Map(); let MKV = -1, MKS = -1;
   function marksStatics(){
+    if (STAT && MKS !== MARKS.senja){ const m = MB(); for (const mk of SEAMARKS.marks) markInto(m, mk, 'mkS', MKS < 0); MKM.set('senja', m.p.length ? m.mesh(mapMid()) : null); MKS = MARKS.senja; }
     if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;
     const Tk = T / 1000, fyrIn = t => typeof FYR !== 'undefined' && FYR ? FYR.filter(f => Math.floor(f[0] / Tk) === t.tx && Math.floor(f[1] / Tk) === t.ty && !inSenja(f[0], f[1])) : [];
     for (const t of MARKS.tiles.values()){
@@ -56,8 +128,7 @@
     PIERS.forEach((pr, i) => { if (pr[0] === 1 && bwLeft.has(i)) stonesOf(STONES, sm => moundInto(m, Array.from({length:(pr.length - 1) / 2}, (_, k) => [pr[1 + k * 2] * 1000, pr[2 + k * 2] * 1000]), i * 7919 + 13, true, undefined, sm)); });
     // bridges from OpenStreetMap
     for (const br of BRIDGES) if (!bridgeUnderUnit(br, onSite)) bridgeInto(m, br);
-    // lighthouses, lights, beacons and buoys
-    for (const mk of SEAMARKS.marks) markInto(m, mk);
+    // (Senja's lighthouses, lights, beacons and buoys: marksStatics, a mesh of their own since Ø13 K3)
     if (typeof FYR !== 'undefined' && FYR) for (const f of FYR) if (inSenja(f[0], f[1])) fyrInto(m, f);   // the register's lighthouses in Senja's square
     for (const pt of PORTS){
       if (pt.coastal) continue;
