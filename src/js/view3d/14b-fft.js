@@ -20,7 +20,7 @@
       '  if (!T || !T[0].S){ postMessage({t:D.t, none:1}); return; }\n' +
       '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer).concat([new Float32Array(len(T[0].N)).buffer]), st = [];\n' +
       '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k], k ? null : new Float32Array(bufs[T.length])));\n' +
-      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0, 8192);\n' +
+      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0, 8192, ' + HFFT.mix.w2 + ');\n' +
       '  postMessage({t:D.t, st, cq, bufs, ms:performance.now() - t0}, bufs);\n' +
       '} catch (err){ postMessage({err:String(err && err.message || err)}); } };\n';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
@@ -99,15 +99,22 @@
   const fftFoam = () => FFT.on && FFT.ok && FFT.have && !!FFT.cs;
   // the sum of both tiles' (tr, h) at a world point, bilinear at level 0 as the shaders read them up close
   const FFT_S = [0, 0];
+  // (B6: the short tile read twice, turned +-HFFT.mix.rot and the second shifted, over sqrt 2, as the shaders read it (fftT2); in the trace,
+  // the crests' measure, it counts HFFT.mix.w2, so [0] is tr1 + w2 tr2 and [1] the height, both tiles in full)
   function fftTrH(x, z){
-    FFT_S[0] = FFT_S[1] = 0;
-    for (let k = 0; k < 2; k++){ const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k], qx = x - NF.O[k * 2], qz = z - NF.O[k * 2 + 1];
-      let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
+    FFT_S[0] = FFT_S[1] = 0; const M = HFFT.mix;
+    const rd = (k, px, pz, w0, w1) => { const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k];
+      let u = ((px / L) * n - 0.5) % n, v = ((pz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
       const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
       for (let q = 0; q < 2; q++){ const a = A[(j0 * n + i0) * 2 + q], b = A[(j0 * n + i1) * 2 + q], c = A[(j1 * n + i0) * 2 + q], d = A[(j1 * n + i1) * 2 + q];
-        FFT_S[q] += (a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv; } }
+        FFT_S[q] += (q ? w1 : w0) * ((a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv); } };
+    rd(0, x - NF.O[0], z - NF.O[1], 1, 1);
+    const r = hfftRot(x - NF.O[2], z - NF.O[3], M), L2 = FFTT[1].L, h = Math.SQRT1_2;
+    rd(1, r[0], r[1], M.w2 * h, h); rd(1, r[2] + M.dB[0] * L2, r[3] + M.dB[1] * L2, M.w2 * h, h);
     return FFT_S;
   }
+  // the crests' measure's spread for Hs = 1 (the long tile's trace and w2 of the short one's)
+  const fftCapSd = () => Math.max(Math.hypot(FFT.st[0][1], HFFT.mix.w2 * FFT.st[1][1]), 1e-6);
   // is the shape from the tile on (the vertex shader takes it only with textures there, the full sea, and data)
   const fftShape = () => FFT.on && FFT.ok && FFT.have && FFT.cpu && SST_VS && PS && !PS.lite && !PS.basic && !PS.far;
   // the tile's (Dx, Dz, h) at a world point, trilinear between the two kept levels as the GPU samples them (FFT_D)
@@ -172,7 +179,11 @@
     if (u.uFvP != null && fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[2]); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0);
       gl.uniform4f(u.uFvO, o[0][0], o[0][1], fvLod(), 0); gl.uniform4f(u.uFvP, 1 / FFTT[0].L, 0, 1, A0); gl.uniform4f(u.uFvQ, 0, 0, Math.hypot(FFT.st[0][1], FFT.st[1][1]), 0); }
     const s = FFT.st; gl.uniform4f(u.uFftQ, s[0][0], s[1][0], Math.hypot(s[0][1], s[1][1]), s[0][2] + s[1][2]);
-    if (u.uFftQ2 != null){ const c = FFT.cq || [0, 1, 0]; gl.uniform4f(u.uFftQ2, c[0], c[1], c[2], 0); }
+    if (u.uFftQ2 != null){ const c = FFT.cq || [0, 1, 0]; gl.uniform4f(u.uFftQ2, c[0], c[1], c[2], fftCapSd()); }
+    // B6: the short tile's two reads (fftT2 in 01-shaders.js): uv = R(+-rot) q / L + c, q the shader's P - uNFD; c worked out here in
+    // doubles from the tile's place in that frame, b (NF.O less the render origin and the near field's shift), folded to the tile
+    if (u.uF2r != null){ const M = HFFT.mix, L = FFTT[1].L, b = hfftRot(NF.O[2] - RO.x - NF.D[0], NF.O[3] - RO.z - NF.D[1], M), f = v => v - Math.floor(v);
+      gl.uniform4f(u.uF2r, f(-b[0] / L), f(-b[1] / L), f(-b[2] / L + M.dB[0]), f(-b[3] / L + M.dB[1])); }
   }
   // B4: the rest of the near sea's light in the shared sea's place and time (01-shaders.js): the gusts' four slow fields drifting downwind
   // at 1.2 m/s, the cat's paws (nsP, folded modulo its 256-cell lattice) and the eight ripples (RIP), which ride with her under way as

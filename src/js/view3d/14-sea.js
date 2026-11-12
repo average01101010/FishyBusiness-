@@ -1,5 +1,5 @@
   // ---------- sea ----------
-  const HALF = 300, PIN_R = 32, PIN_C = 0.5; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
+  const HALF = 300, PIN_R = 32, PIN_C = 2 / 3; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
   function buildPatch(){
     if (PATCH){ gl.deleteBuffer(PATCH.pb); gl.deleteBuffer(PATCH.ib); if (PATCH.ibH) gl.deleteBuffer(PATCH.ibH); }
     const v = new Float32Array((NP + 1) * (NP + 1) * 2); let k = 0;
@@ -487,7 +487,7 @@
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
     // B3 (14b-fft.js): with the FFT tiles on, the crests break where the tiles' surface is compressed most, as the shaders have it (capFf)
-    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = Math.max(Math.hypot(sq[0][1], sq[1][1]), 1e-6);
+    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = fftCapSd();
       const crS = (yL + fs * T[1]) / Math.sqrt(saL + (sq[0][2] + sq[1][2]) * fs * fs), F = WCAP.F, fz = T[0] / sz;
       // (the tiles' crests are the share F.k of Monahan's cover: a crest that runs on with the waves leaves a longer tail than the old ones did)
       const Wf = clamp(Wc * (kk === WCAP.k ? F.k : kk), 1e-5, 0.5); let zf = Math.sqrt(-2 * Math.log(Wf)); zf -= (2.515517 + 0.802853 * zf + 0.010328 * zf * zf) / (1 + 1.432788 * zf + 0.189269 * zf * zf + 0.001308 * zf * zf * zf);
