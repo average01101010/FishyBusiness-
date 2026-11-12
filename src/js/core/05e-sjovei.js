@@ -1018,40 +1018,62 @@ function sjvSweep(n, A, H, gs, on){
 }
 
 // ---- Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9) ----
-// The speed limits (src/data/fart.json, tools/fart/fart.py). Jonas' choice V4 A (28.10.2026): «En fast grense i havnene hvis Kystverket
-// ikke har et åpent datasett»: the data set of the state's limits for commercial vessels (FOR-2021-12-16-3622, read on Lovdata
-// 11.11.2026) could not be fetched from the sessions' network, so the limit is the fixed one: 5 knots within half a kilometre of every
-// harbour point (PORTS). Areas from the data set, when they come, are FART_D.omr (rings in lat/lon, a limit, the months) and go before
-// the harbours. Autonav holds the limit (sjvCapV for the manoeuvring model, 05-vessels.js sailV for the minute step, so with the game
-// closed too: the shared clock); by hand the strip says so when she is over, and a passage well over it is a line in the log and a row
-// in the Sikkerhet card (V1 A: no fines). The cardinal marks (IALA region A): by hand, close by a cardinal mark on the side it warns
-// of, the strip says «Du går på feil side av merket». The lateral marks are not judged: the direction of buoyage is not in the data.
+// The speed limits (src/data/fart.json and fart-r.b64, tools/fart/fart.py). The state's limits for commercial vessels: Kystverket's
+// layer of FOR-2021-12-16-3622 (74 areas, NLOD 2.0, fetched 12.11.2026), each rasterised at 20 m as runs per row (fart-r, a data element
+// the build takes out of the page and the page fetches late, as the models; until it has come there are no areas). Where an area holds
+// (in its period), its limit is the one, also when it is higher than the harbour's; where none does, Jonas' choice V4 A (28.10.2026):
+// 5 knots within half a kilometre of every harbour point (PORTS). Jonas 12.11.2026, «enig med ditt forslag» to both: the regulation's
+// areas where they are and the harbour's 5 knots where it says nothing, and no line in the chart («Jeg hater den ringen i kartet da»).
+// Autonav holds the limit (sjvCapV for the manoeuvring model, 05-vessels.js sailV for the minute step, so with the game closed too: the
+// shared clock); by hand the strip says so when she is over, and a passage well over it is a line in the log and a row in the Sikkerhet
+// card (V1 A: no fines). The cardinal marks (IALA region A): by hand, close by a cardinal mark on the side it warns of, the strip says
+// «Du går på feil side av merket». The lateral marks are not judged: the direction of buoyage is not in the data.
 const FART_D = /*@include(data/fart.json)*/null;
-const FART = {omr:null, cell:null, n:-1, last:null,   // the areas in km, the harbours by 1 km cell (built again when PORTS grows), the last answer
+const FART = {R:null, cell:null, n:-1, last:null,   // the areas' runs (null not read yet, false never), the harbours by 1 km cell, the last answer
   w:null,                   // what the strip says now: {k:'fart', kn, v, name} or {k:'merke', cat}
   over:null, done:null,     // over the limit now: {id (vessel|zone), H1 (a knot over since), peak}; the visit already written (vessel|zone)
   mk:new Map(),             // the cardinal marks said: 'x,y' -> H
   rows:0, nMk:0,            // rows written since the page was opened (tests/farttest.py)
   TOL:0.5, REC:1, HOLD:30 / 3600,   // over by this much (knots) the strip says so; by this much for this long (game hours) it is written
   MKR:0.2, MKV:2};          // a cardinal mark's reach (true km) and the least speed (knots)
-function fartMonth(H){ try { return Math.min(12, Math.floor(yearFrac(H) * 12) + 1); } catch (e){ return 0; } }
-function fartAreas(){
-  if (FART.omr) return FART.omr; const out = [];
-  for (const a of (FART_D && FART_D.omr) || []){ const xs = [], ys = []; let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
-    for (const q of a.p || []){ const g = P(q[0], q[1]); xs.push(g.x); ys.push(g.y); if (g.x < x0) x0 = g.x; if (g.x > x1) x1 = g.x; if (g.y < y0) y0 = g.y; if (g.y > y1) y1 = g.y; }
-    if (xs.length >= 3) out.push({n:a.n || '', kn:+a.kn, m:a.m || null, xs, ys, bb:[x0, y0, x1, y1]}); }
-  return FART.omr = out;
+// the date at H as month * 100 + day (501 is 1 May), as the areas' periods are
+function fartMd(H){ try { const d = gDate(H); return (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); } catch (e){ return 0; } }
+// in the period [from, to] (month * 100 + day, over the new year when from > to; none: the whole year)
+function fartInSeason(s, md){ if (!s || !md) return true; return s[0] <= s[1] ? md >= s[0] && md <= s[1] : md >= s[0] || md <= s[1]; }
+// the runs from their bytes: per area a row index (H + 1) into a flat list of [start, end) cells; false when they do not match fart.json
+function fartRunsFrom(b){
+  const D = FART_D; if (!D || !D.omr || !b || (D.sb && b.length !== D.sb)) return false;
+  let o = 0; const rd = () => { let v = 0, m = 1, c; do { c = b[o++]; v += (c & 127) * m; m *= 128; } while (c & 128); return v; };
+  if (rd() !== D.omr.length) return false;
+  const out = [];
+  for (const a of D.omr){ const row = new Uint32Array(a.H + 1), run = []; let k = 0;
+    for (let y = 0; y < a.H; y++){ row[y] = k; const n = rd(); let x = 0; for (let q = 0; q < n; q++){ x += rd(); const e = x + rd(); run.push(x, e); x = e; k++; } }
+    row[a.H] = k; out.push({row, run:Int32Array.from(run)}); }
+  return o === b.length ? out : false;
 }
-// the months an area holds in ([from, to], 1-12, over the new year when from > to; none: the whole year)
-function fartInSeason(m, mo){ if (!m || !mo) return true; return m[0] <= m[1] ? mo >= m[0] && mo <= m[1] : mo >= m[0] || mo <= m[1]; }
-function fartInRing(xs, ys, x, y){ let c = false; for (let i = 0, j = xs.length - 1; i < xs.length; j = i++) if ((ys[i] > y) !== (ys[j] > y) && x < (xs[j] - xs[i]) * (y - ys[i]) / (ys[j] - ys[i]) + xs[i]) c = !c; return c; }
+function fartRuns(){
+  if (FART.R !== null) return FART.R;
+  let b = null;
+  if (typeof DATAB !== 'undefined' && DATAB.has('fart-r')) b = DATAB.get('fart-r');
+  else if (typeof document !== 'undefined'){ const el = document.getElementById('fart-r'); if (el && !(el.dataset && el.dataset.src) && el.textContent.trim()) b = b64bytes(el.textContent.trim()); }
+  if (!b){ if (typeof MODELS !== 'undefined' && MODELS.failed && MODELS.failed.includes('fart-r')) FART.R = false; return FART.R === false ? false : null; }
+  FART.R = fartRunsFrom(b) || false; FART.last = null; if (typeof DATAB !== 'undefined') DATAB.delete('fart-r');
+  return FART.R;
+}
+// in area i at cell (cx, cy) (game metres / R)
+function fartInArea(i, cx, cy){
+  const a = FART_D.omr[i], x = cx - a.x0, y = cy - a.y0; if (x < 0 || y < 0 || x >= a.W || y >= a.H) return false;
+  const T = FART.R[i], r = T.run; for (let k = T.row[y], e = T.row[y + 1]; k < e; k++){ if (x < r[k * 2]) return false; if (x < r[k * 2 + 1]) return true; } return false;
+}
 // the speed limit at p (grid km) at H (game hours): {kn, name, k:'omr'|'havn', id}, or null where there is none. The lowest of the areas
-// p is inside in their months, else the harbour's fixed limit within its radius (true metres: the radius over the grid's scale)
+// p is inside in their periods, else the harbour's fixed limit within its radius (true metres: the radius over the grid's scale)
 function fartAt(p, H){
-  const L = FART.last, np = typeof PORTS !== 'undefined' ? PORTS.length : 0; if (L && L.x === p.x && L.y === p.y && L.np === np && Math.abs(L.H - H) < 1) return L.f;
-  let f = null; const A = fartAreas();
-  if (A.length){ const mo = fartMonth(H); for (let i = 0; i < A.length; i++){ const a = A[i]; if (p.x < a.bb[0] || p.x > a.bb[2] || p.y < a.bb[1] || p.y > a.bb[3] || !fartInSeason(a.m, mo) || !fartInRing(a.xs, a.ys, p.x, p.y)) continue;
-    if (!f || a.kn < f.kn) f = {kn:a.kn, name:a.n, k:'omr', id:'o' + i}; } }
+  const R = fartRuns(), np = typeof PORTS !== 'undefined' ? PORTS.length : 0, L = FART.last;
+  if (L && L.x === p.x && L.y === p.y && L.np === np && L.R === R && Math.abs(L.H - H) < 1) return L.f;
+  let f = null;
+  if (R){ const D = FART_D, cx = Math.floor(p.x * 1000 / D.R), cy = Math.floor(p.y * 1000 / D.R), md = fartMd(H);
+    for (let i = 0; i < D.omr.length; i++){ const a = D.omr[i]; if (cx < a.x0 || cy < a.y0 || cx >= a.x0 + a.W || cy >= a.y0 + a.H || !fartInSeason(a.s, md) || !fartInArea(i, cx, cy)) continue;
+      if (!f || a.kn < f.kn) f = {kn:a.kn, name:a.n, k:'omr', id:'o' + i}; } }
   const hv = FART_D && FART_D.havn;
   if (!f && hv && typeof PORTS !== 'undefined'){
     if (!FART.cell || FART.n !== PORTS.length){ FART.cell = new Map(); FART.n = PORTS.length;
@@ -1059,7 +1081,7 @@ function fartAt(p, H){
     const l = FART.cell.get(Math.floor(p.x) * 65536 + Math.floor(p.y));
     if (l){ const r = hv.r * gridScale(p); let bd = r; for (const pt of l){ const d = dist(p, pt.p); if (d < bd){ bd = d; f = {kn:hv.kn, name:pt.name || '', k:'havn', id:'h' + pt.id}; } } }
   }
-  FART.last = {x:p.x, y:p.y, H, f, np}; return f;
+  FART.last = {x:p.x, y:p.y, H, f, np, R}; return f;
 }
 const fartKn = (p, H) => { const f = fartAt(p, H); return f ? f.kn : 1e9; };
 // Autonav's speed under the limit (m/s, 1e9 for none): where she is and where she will be in twenty seconds (at least 60 m ahead), so

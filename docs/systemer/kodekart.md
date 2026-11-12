@@ -962,7 +962,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1128 linjer)
+## `src/js/core/05e-sjovei.js` (1150 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -1051,17 +1051,18 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **991** the look's sweep (sjvEval), when the model does not have her
   - 994 `sjvSweep(n, A, H, gs, on)`
 - **1020** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
-  - 1037 `fartMonth(H)`
-  - 1038 `fartAreas()`
-  - 1046 `fartInSeason(m, mo)`
-  - 1047 `fartInRing(xs, ys, x, y)`
-  - 1050 `fartAt(p, H)`
-  - 1067 `fartCapMs()`
-  - 1078 `farvWrongSide(p, marks)`
-  - 1088 `farvLook(H)`
-  - 1117 `farvRec(r)`
-  - 1120 `farvWarn()`
-  - 1121 `farvSay(w, how)`
+  - 1040 `fartMd(H)`
+  - 1042 `fartInSeason(s, md)`
+  - 1044 `fartRunsFrom(b)`
+  - 1054 `fartRuns()`
+  - 1064 `fartInArea(i, cx, cy)`
+  - 1070 `fartAt(p, H)`
+  - 1089 `fartCapMs()`
+  - 1100 `farvWrongSide(p, marks)`
+  - 1110 `farvLook(H)`
+  - 1139 `farvRec(r)`
+  - 1142 `farvWarn()`
+  - 1143 `farvSay(w, how)`
 
 ## `src/js/core/06-services.js` (333 linjer)
 
@@ -2419,7 +2420,7 @@ the logo (src/brand/logo.svg, the user's anchor of 03.11.2026), filled with curr
   - 219 `codeRead(code)`
   - 227 `loadCode(code)`
 
-## `src/js/ui/03a-chart.js` (244 linjer)
+## `src/js/ui/03a-chart.js` (226 linjer)
 
 THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, the graticule and the place names
 
@@ -2438,10 +2439,8 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
 - **187** the place names
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
-- **227** the speed limits (Ø11.8, core/05e-sjovei.js fartAt, src/data/fart.json)
-  - 232 `fartSvg(vx0, vy0, vx1, vy1, u)`
 
-## `src/js/ui/03-map.js` (918 linjer)
+## `src/js/ui/03-map.js` (917 linjer)
 
 ---------- map ----------
 
@@ -2478,24 +2477,24 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 421 `updateMapButtons()`
   - 437 `tapName(mp, rr)`
   - 456 `renderStatic()`
-  - 564 `portIcon(p, s, u)`
-  - 585 `anchorPath(x, y, s, u)`
-  - 593 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 612 `scheduleStatic()`
-  - 617 `aisTrack(id, H)`
-  - 622 `aisInfo(n)`
-  - 641 `sjvChartSvg(u, bp)`
-  - 651 `renderAisCard()`
-  - 659 `curArrowsOf(q, u, H, lab, halo)`
-  - 672 `curArrowsSvg(u)`
-  - 690 `renderDyn()`
-  - 779 `pinAdd(mp)`
-  - 784 `pinOpen(id, fresh)`
-  - 804 `pinKb()`
-  - 835 `ptrUp(e)`
-  - 865 `unzoom()`
-  - 872 `portByLabel(pt)`
-  - 877 `addWaypoint(pt)`
+  - 563 `portIcon(p, s, u)`
+  - 584 `anchorPath(x, y, s, u)`
+  - 592 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 611 `scheduleStatic()`
+  - 616 `aisTrack(id, H)`
+  - 621 `aisInfo(n)`
+  - 640 `sjvChartSvg(u, bp)`
+  - 650 `renderAisCard()`
+  - 658 `curArrowsOf(q, u, H, lab, halo)`
+  - 671 `curArrowsSvg(u)`
+  - 689 `renderDyn()`
+  - 778 `pinAdd(mp)`
+  - 783 `pinOpen(id, fresh)`
+  - 803 `pinKb()`
+  - 834 `ptrUp(e)`
+  - 864 `unzoom()`
+  - 871 `portByLabel(pt)`
+  - 876 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (293 linjer)
 
@@ -2750,12 +2749,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1556 linjer)
+## `src/js/ui/phone/07-patch.js` (1554 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1544 `patch()`
+  - 1542 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 

@@ -256,7 +256,7 @@ COVER['src/js/view3d/02-mesh-terrain.js'] = COVER.get('src/js/view3d/02-mesh-ter
 COVER['src/js/core/01b-mapdata.js'] = COVER.get('src/js/core/01b-mapdata.js', []) + ['fintest']
 # Ø11.8 (11.11.2026): the speed limits and the cardinal marks (core/05e-sjovei.js fartAt, farvLook; the chart's layer in ui/03a-chart.js)
 LITE += ['farttest']
-COVER['tests/farttest.py'] = ['farttest']; COVER['src/data/fart.json'] = ['farttest']; COVER['src/js/ui/03a-chart.js'] = COVER.get('src/js/ui/03a-chart.js', []) + ['farttest']
+COVER['tests/farttest.py'] = ['farttest']; COVER['src/data/fart.json'] = ['farttest']; COVER['src/data/fart-r.b64'] = ['farttest']; COVER['tools/fart/fart.py'] = []; COVER['src/js/ui/03a-chart.js'] = COVER.get('src/js/ui/03a-chart.js', []) + ['farttest']
 for _f in ('src/js/core/05e-sjovei.js', 'src/js/core/14b-sikkerhet.js', 'src/js/ui/03-map.js', 'src/js/ui/04-panels-instruments.js'): COVER[_f] = COVER.get(_f, []) + ['farttest']
 
 

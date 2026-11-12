@@ -223,21 +223,3 @@ function chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part){
   }
   return g.join('');
 }
-
-// ---- the speed limits (Ø11.8, core/05e-sjovei.js fartAt, src/data/fart.json) ----
-// The areas of a data set (FART_D.omr, none today) as a dashed magenta line (the chart's colour for limits and restrictions) with the
-// fairway sign for a speed limit on it (round, white with a red edge, the knots in black). The fixed limit in the harbours (V4 A) is
-// not drawn: it holds in every harbour, and the ring round each was ugly (Jonas 12.11.2026: «Jeg hater den ringen i kartet da. Det
-// ser jævlig ut.»)
-function fartSvg(vx0, vy0, vx1, vy1, u){
-  if (typeof FART_D === 'undefined' || !FART_D) return '';
-  const A = fartAreas(); if (!A.length) return '';
-  const g = [], signs = [], st = ' fill="none" stroke="#a3268f" stroke-width="' + (1.1 * u) + '" stroke-dasharray="' + (4 * u) + ',' + (3 * u) + '" pointer-events="none"/>';
-  const sign = (x, y, kn) => { if (signs.some(q => Math.abs(q[0] - x) < 16 * u && Math.abs(q[1] - y) < 16 * u)) return; signs.push([x, y]);
-    g.push('<g class="fart-s" pointer-events="none"><circle cx="' + x.toFixed(4) + '" cy="' + y.toFixed(4) + '" r="' + (6.2 * u) + '" fill="#fff" stroke="#c8231c" stroke-width="' + (1.8 * u) + '"/><text x="' + x.toFixed(4) + '" y="' + (y + 2.9 * u).toFixed(4) + '" text-anchor="middle" font-size="' + (8 * u) + '" font-weight="700" fill="#111" style="font-family:Archivo,sans-serif">' + kn + '</text></g>'); };
-  const mo = fartMonth(S.t / 60);
-  for (const a of A){ if (a.bb[2] < vx0 || a.bb[0] > vx1 || a.bb[3] < vy0 || a.bb[1] > vy1 || !fartInSeason(a.m, mo)) continue;
-    let d = '', ti = 0; for (let i = 0; i < a.xs.length; i++){ d += (i ? 'L' : 'M') + a.xs[i].toFixed(4) + ',' + a.ys[i].toFixed(4); if (a.ys[i] < a.ys[ti]) ti = i; }
-    g.push('<path class="fart-o" d="' + d + 'Z"' + st); sign(a.xs[ti], a.ys[ti], a.kn); }
-  return g.join('');
-}
