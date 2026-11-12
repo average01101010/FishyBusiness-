@@ -505,7 +505,7 @@
   // SD.b*: where and when each drop was born (sea3d checks capAt there); SD.ms: the candidates' time, ms a frame.
   const SDN = 400, SDC = 48, SDR = 260 / (WCAP.k * 3.84e-6 * Math.pow(28.5, 3.41));
   const SD = {x:new Float64Array(SDN), y:new Float32Array(SDN), z:new Float64Array(SDN), vx:new Float32Array(SDN), vy:new Float32Array(SDN), vz:new Float32Array(SDN), age:new Float32Array(SDN).fill(99), life:new Float32Array(SDN).fill(1),
-    bx:new Float64Array(SDN), bz:new Float64Array(SDN), bt:new Float64Array(SDN), n:0, acc:0, cand:0, tried:0, hit:0, ms:0};
+    bx:new Float64Array(SDN), bz:new Float64Array(SDN), bt:new Float64Array(SDN), bf:new Float64Array(SDN), n:0, acc:0, cand:0, tried:0, hit:0, ms:0};
   FOAM.sd = SD;
   function driftSpray(VP, eye, dt, t, col){
     const U = env.wind || 0, wd = env.windDir, ramp = sstep(13.9, 17.2, U);
@@ -519,7 +519,7 @@
         while (SD.acc >= 1 && made < 60){ SD.acc -= 1; made++;
           const i = SD.n = (SD.n + 1) % SDN, j = (Math.random() - 0.5) * 1.6, x = x0 + wd[1] * j, z = z0 - wd[0] * j, sp = U * (0.45 + Math.random() * 0.35);   // (along the crest, across the wind)
           SD.x[i] = x; SD.z[i] = z; SD.y[i] = seaHFast(x, z, t) + 0.2; SD.vx[i] = wd[0] * sp; SD.vz[i] = wd[1] * sp; SD.vy[i] = 0.6 + Math.random() * 1.6; SD.age[i] = 0; SD.life[i] = 0.8 + Math.random() * 1.2;
-          SD.bx[i] = x0; SD.bz[i] = z0; SD.bt[i] = t; }
+          SD.bx[i] = x0; SD.bz[i] = z0; SD.bt[i] = t; SD.bf[i] = FFT.tT || 0; }   // (bf: the world time of the FFT tiles the crest was read from, B3; for sea3d)
         SD.acc = Math.min(SD.acc, 60); }
       SD.ms = SD.ms * 0.95 + (performance.now() - t1) * 0.05;
     }

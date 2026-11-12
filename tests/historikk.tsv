@@ -3073,6 +3073,9 @@
 2026-11-12 05:11	ccr-013bxxid-18b	3b52223	vesseltest	FEIL	39	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	opptest	OK	73	lite	samtidig	
 2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	vesseltest	OK	38	lite	samtidig	
+2026-11-12 07:09	ccr-899a9674-q3gjp0	3550e83	dbg23o	OK	46	3d	alene	
+2026-11-12 07:57	ccr-899a9674-q3gjp0	d37bf3c+	sea3d	FEIL	2694	3d	alene	FEIL the whitecap threshold gives Monahan's cover within a factor of two (8-25 m/s)
+2026-11-12 08:35	ccr-899a9674-q3gjp0	d37bf3c+	dbg23o	OK	46	3d	alene	
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	boottest	OK	50	lite	samtidig	
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	crewwalk	OK	14	lite	samtidig	
 2026-11-12 07:42	claude/ob13-kyst21-runde2	26ecebc	lanterntest	OK	24	lite	samtidig	
@@ -3088,3 +3091,5 @@
 2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	worktest	OK	43	lite	samtidig	
 2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	vesseltest	OK	35	lite	samtidig	
 2026-11-12 09:55	plan/2026-11-12-88	621fb2bc+	trip2	OK	55	lite	samtidig	
+2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
+2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
