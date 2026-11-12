@@ -2854,3 +2854,8 @@
 2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	colregtest	OK	734	lite	samtidig	
 2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	hulltest	OK	76	lite	samtidig	
 2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	autonavtest	OK	24	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	colregtest	OK	733	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	autonavtest	OK	25	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	hulltest	OK	71	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	autonavtest	FEIL	39	lite	samtidig	sidefeil: ['map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)', 'map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)']
