@@ -305,21 +305,24 @@ def side_light(A, x, y, z, sg):
     abox(A, x - 0.75, x + 0.05, min(yy, yy - sg * 0.05), max(yy, yy - sg * 0.05), z - 0.35, z + 0.35, C['black'])
     lamp(A, (x - 0.15, y + sg * 0.12, z), C['lampR'] if sg > 0 else C['lampG'], r=0.11, h=0.24)
 
-def capsule(A, c, L, W, H, m, n=10, rings=6, keel=0.0, roofm=None):
-    """a boat shape (a lifeboat, a rescue boat): an ellipsoid-ish loft along x, flatter on top; roofm the canopy's colour over the sheer"""
+def capsule(A, c, L, W, H, m, n=10, rings=6, keel=0.0, roofm=None, pitch=0.0):
+    """a boat shape (a lifeboat, a rescue boat): an ellipsoid-ish loft along x, flatter on top; roofm the canopy's colour over the sheer;
+    pitch: the +x end tipped up by that many radians about the middle (a free-fall boat on her ramp, her bow down over the stern)"""
     cx, cy, cz = c; R = []
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    rot = (lambda q: (cx + (q[0] - cx) * cp - (q[2] - cz) * sp, q[1], cz + (q[0] - cx) * sp + (q[2] - cz) * cp)) if pitch else (lambda q: q)
     for i in range(rings + 1):
         t = -1 + 2 * i / rings; sx = cx + t * L / 2; k = (1 - abs(t) ** 2.4) ** 0.5
         ring = []
         for j in range(n):
             a = 2 * math.pi * j / n; yy = math.cos(a) * W / 2 * max(0.05, k); zz = math.sin(a) * H / 2 * max(0.05, k)
             if zz < 0: zz *= 0.8
-            ring.append((sx, cy + yy, cz + zz))
+            ring.append(rot((sx, cy + yy, cz + zz)))
         R.append(ring)
     for i in range(rings):
         for j in range(n):
             jj = (j + 1) % n; a, b, cc, d = R[i][j], R[i + 1][j], R[i + 1][jj], R[i][jj]
-            mm = roofm if roofm is not None and (a[2] + cc[2]) / 2 > cz + H * 0.12 else m
+            mm = roofm if roofm is not None and (math.sin(2 * math.pi * j / n) + math.sin(2 * math.pi * jj / n)) / 2 > 0.24 else m
             A.poly([a, b, cc, d], mm, ((a[0] + cc[0]) / 2 - cx, (a[1] + cc[1]) / 2 - cy, (a[2] + cc[2]) / 2 - cz))
 
 def davits(A, x0, x1, y, z0, h, sg, m=None):
@@ -333,6 +336,66 @@ def raft(A, x, y, z, m=None):
     """a liferaft canister in its cradle"""
     acyl(A, (x - 0.6, y, z + 0.33), (x + 0.6, y, z + 0.33), 0.33, lambda zz: m or C['raft'], seg=8)
     abox(A, x - 0.5, x + 0.5, y - 0.3, y + 0.3, z, z + 0.08, C['steel'])
+
+
+# ---------- the merchant ships' own parts (last.py, tank.py, cruise.py) ----------
+def rail(A, pts, z, h=1.0, m=None, t=0.05):
+    """a pipe rail along pts (the deck's edge on a merchant ship): the top rail and a knee rail, posts every 3 m; at 30-500 m a thin line"""
+    m = m or C['sup']
+    for i in range(len(pts) - 1):
+        a, b = pts[i], pts[i + 1]; L = math.hypot(b[0] - a[0], b[1] - a[1])
+        if L < 1e-3: continue
+        for zz in (z + h, z + h * 0.5): beam(A, (a[0], a[1], zz), (b[0], b[1], zz), t, t, m)
+        k = max(1, int(L / 3.0))
+        for j in range(k + 1):
+            if j == 0 and i > 0: continue
+            q = (a[0] + (b[0] - a[0]) * j / k, a[1] + (b[1] - a[1]) * j / k); beam(A, (q[0], q[1], z), (q[0], q[1], z + h), t, t, m, up=(1, 0, 0))
+
+def deck_crane(A, x, y, z0, ped, jib, ang, m, mj=None, fine=True, rest=None):
+    """a ship's deck crane: the pedestal ped high, the crane house on it, the jib jib long lowered and stowed pointing ang radians from
+    forward (0 forward, pi aft) down to its rest at the height rest (or level); mj the jib's colour"""
+    mj = mj or m; seg = 10 if fine else 6
+    acyl(A, (x, y, z0), (x, y, z0 + ped), 1.15, lambda z: m, seg=seg)
+    zh = z0 + ped; ca, sa = math.cos(ang), math.sin(ang)
+    obox(A, (x - ca * 0.4, y - sa * 0.4, zh + 1.3), (ca * 2.0, sa * 2.0, 0), (-sa * 1.5, ca * 1.5, 0), (0, 0, 1.3), m)
+    if fine: obox(A, (x + ca * 1.7, y + sa * 1.7 + (-ca) * 0.0, zh + 2.2), (ca * 0.3, sa * 0.3, 0), (-sa * 0.7, ca * 0.7, 0), (0, 0, 0.45), C['win'])   # (the cab's window)
+    p0 = (x + ca * 1.0, y + sa * 1.0, zh + 1.2); zt = rest if rest is not None else zh + 1.2
+    p1 = (x + ca * jib, y + sa * jib, zt)
+    beam(A, p0, p1, 0.9, 1.0, mj)
+    if fine and rest is not None:   # the jib's rest: a post under its head
+        acyl(A, (p1[0] - ca * 0.6, p1[1] - sa * 0.6, z0), (p1[0] - ca * 0.6, p1[1] - sa * 0.6, zt - 0.5), 0.25, lambda z: m, seg=6)
+
+def freefall(A, x, y, z, L, W, H, ang, fine=True):
+    """a free-fall lifeboat on her ramp over the stern: her middle at (x, y, z), bow aft and down ang radians, the ramp's two rails under
+    her (SOLAS: a bulk ship's or a tanker's boat; the colour orange)"""
+    capsule(A, (x, y, z), L, W, H, C['orange'], n=10 if fine else 6, rings=6 if fine else 2, pitch=ang)
+    if fine:
+        ca, sa = math.cos(ang), math.sin(ang)
+        for yy in (y - W * 0.3, y + W * 0.3):
+            beam(A, (x - ca * L * 0.55, yy, z - H * 0.55 - sa * L * 0.55), (x + ca * L * 0.55, yy, z - H * 0.55 + sa * L * 0.55), 0.25, 0.35, C['steel'])
+        for xx in (x + ca * L * 0.45, x - ca * L * 0.1):
+            zt = z - H * 0.55 + (xx - x) * sa / max(0.2, ca)
+            beam(A, (xx, y - W * 0.5, zt), (xx, y + W * 0.5, zt), 0.25, 0.3, C['steel'])
+
+def hull_windows(A, H, x0, x1, z0, z1, every, w, m, lit=None, litk=1, skip=()):
+    """windows on the hull's side between x0 and x1 (as kystrute.py's), each a quad 3 cm off the plating at its own station"""
+    x = x0; k = 0
+    while x + w <= x1:
+        if not any(a <= x <= b for a, b in skip):
+            for sg in (1, -1):
+                q = []
+                for (xx, zz) in ((x, z0), (x + w, z0), (x + w, z1), (x, z1)):
+                    u = clamp((xx - H.xa(zz)) / (H.xf(zz) - H.xa(zz)), 0, 1); q.append((xx, sg * (H.hw(u, zz) + 0.03), zz))
+                A.poly(q, m, (0, sg, 0))
+                if lit is not None and k % litk == 0:
+                    u = clamp((x + w / 2 - H.xa((z0 + z1) / 2)) / (H.xf((z0 + z1) / 2) - H.xa((z0 + z1) / 2)), 0, 1); lit.append((x + w / 2, sg * (H.hw(u, (z0 + z1) / 2) + 0.03), (z0 + z1) / 2))
+            k += 1
+        x += every
+
+def lit_band(lit, x0, x1, y, z, every):
+    """the lights at night along a band of windows drawn as one quad (no panes): a point every so many metres"""
+    x = x0 + every / 2
+    while x < x1: lit.append((x, y, z)); x += every
 
 
 # ---------- the game's frame and the export ----------
