@@ -37,7 +37,7 @@
   }
   function act0(a, d){
     const b = S.boat;
-    if (a !== 'shop' && a !== 'equip') shopPend = null;
+    if (a !== 'shop' && a !== 'equip' && a !== 'propup') shopPend = null;
     if ((/^adm/.test(a) || (a === 'open' && d.a === 'admin')) && !adminOk()) return false;   // the Admin app is only Jonas's (adminOk)
     if (a === 'open' && d.a === 'garderobe'){ show(false); WARD.open(); return; }      // the wardrobe is a sheet of its own (ui/10g-wardrobe.js)
     if (a === 'open' && d.a === 'nett'){ sub.nett = d.s || 'home'; if (sub.nett === 'shop' && typeof cloudEv === 'function') cloudEv('shop_view', {pg:'nett'}); }
@@ -154,7 +154,7 @@
     else if (a === 'caresell'){ const why = sellGear(d.w, isNaN(+d.k) ? d.k : +d.k, +d.n || 1); if (why){ toast(why[0]); return; } }
     else if (a === 'grsplit'){ const l = S.pgear.nets.find(x => x.id === d.id); if (l) splitNets(l.id, Math.floor(l.n / 2)); }
     else if (a === 'grjoin'){ joinNets(d.a, d.b); }
-    else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && j.until == null){ S.jobs.splice(+d.i, 1); gearJobCancel(j); const refund = j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : j.kind === 'hold' ? upPrice(HOLDUP[j.lv - 1].pc) : j.kind === 'eng' ? upPrice(ENGUP[j.lv - 1].pc) : j.kind === 'hull' ? 1500 + Math.round(BOAT.len * 400 / 100) * 100 : 0; book(j.kind === 'fit' ? 'redskap' : 'verft', refund, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en); } }
+    else if (a === 'jobx'){ const j = (S.jobs || [])[+d.i]; if (j && j.until == null){ S.jobs.splice(+d.i, 1); gearJobCancel(j); const refund = (j.kind === 'fit' || j.kind === 'prop') && j.kr > 0 ? j.kr : j.kind === 'prep' ? PREP[j.k].cost : j.kind === 'fit' ? EQUIP[j.k].price : j.kind === 'hold' ? upPrice(HOLDUP[j.lv - 1].pc, HOLDUP[j.lv - 1].min) : j.kind === 'eng' ? upPrice(ENGUP[j.lv - 1].pc, ENGUP[j.lv - 1].min) : j.kind === 'prop' ? upPrice(PROPUP[j.lv - 1].pc, PROPUP[j.lv - 1].min) : j.kind === 'hull' ? 1500 + Math.round(BOAT.len * 400 / 100) * 100 : 0; book(j.kind === 'fit' ? 'redskap' : 'verft', refund, 'Avbestilt: ' + j.no, 'Cancelled: ' + j.en); } }
     else if (a === 'service'){ const c = svcCostOf(b); if (spendable() < c){ toast(t('no_cash')); return; } book('verft', -c, 'Motorservice', 'Engine service'); b.svcAt = b.engH || 0; S.svcTold = false; log('Motorservice utført.', 'Engine serviced.'); }
     else if (a === 'holdup'){ const lv = (S.boat.holdLv || 0) + 1, nx = HOLDUP[lv - 1]; if (!nx || lv > karSteps(S.boat.type) || !atKind('verft') || (S.jobs || []).some(j => j.kind === 'hold')) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
       if (!queueJob({kind:'hold', lv, h:nx.h, no:'Ombygging av lasterommet', en:'Rebuilding the hold'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Ombygging av lasterommet', 'Rebuilding the hold'); log('Bestilte ombygging av lasterommet, ' + kr(c) + '.', 'Ordered a rebuild of the hold, ' + kr(c) + '.'); receipt(L('Ombygging av lasterommet', 'Rebuilding the hold'), 'yard', 'hold'); }
@@ -162,6 +162,13 @@
       if (!queueJob({kind:'upg', u:k, lv:upgLv(S.boat, k) + 1, h:nx.h, no:'Ombygging: ' + nx.no, en:'Rebuild: ' + nx.en})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Ombygging: ' + nx.no, 'Rebuild: ' + nx.en); log('Bestilte ombygging, ' + nx.no.toLowerCase() + ', ' + kr(c) + '.', 'Ordered a rebuild, ' + nx.en.toLowerCase() + ', ' + kr(c) + '.'); receipt(L('Ombygging: ' + nx.no, 'Rebuild: ' + nx.en), 'yard', 'upg'); }
     else if (a === 'engup'){ const lv = (S.boat.engLv || 0) + 1, nx = ENGUP[lv - 1]; if (!nx || !atKind('verft') || VESSELS[S.boat.type].outboard || (S.jobs || []).some(j => j.kind === 'eng')) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
       if (!queueJob({kind:'eng', lv, h:nx.h, no:'Motorbytte', en:'Engine change'})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; } buyMark(); book('verft', -c, 'Motorbytte', 'Engine change'); log('Bestilte større motor, ' + kr(c) + '.', 'Ordered a bigger engine, ' + kr(c) + '.'); receipt(L('Motorbytte', 'Engine change'), 'yard', 'eng'); }
+    // the propeller (OPP3): the next step at the yard, 30 real minutes; from IC_CONFIRM_KR it asks «Bekreft · kr» in the button first, as
+    // the shop's tiers do, and the receipt says the step. j.kr: what was paid (the cancel and a boat traded in meanwhile pay it back)
+    else if (a === 'propup'){ const b = S.boat, V = VESSELS[b.type], lv = propLvOf(b) + 1, nx = PROPUP[lv - 1]; if (!nx || !propFits(V) || !atKind('verft') || (S.jobs || []).some(j => j.kind === 'prop')) return; const c = upPrice(nx.pc, nx.min); if (spendable() < c) return;
+      const pk = 'prop:' + lv; if (c >= IC_CONFIRM_KR && !(shopPend && shopPend.k === pk && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:pk, kg:0, t:Date.now()}; return true; } shopPend = null;
+      if (!queueJob({kind:'prop', lv, ty:b.type, kr:c, h:YARD_H, no:'Ny propell, trinn ' + lv, en:'New propeller, step ' + lv})){ toast(L('Arbeidskøen er full.', 'The work queue is full.')); return; }
+      buyMark(); book('verft', -c, 'Ny propell, trinn ' + lv, 'New propeller, step ' + lv); log('Bestilte ny propell, trinn ' + lv + ', ' + kr(c) + '.', 'Ordered a new propeller, step ' + lv + ', ' + kr(c) + '.');
+      receipt(L('Propell, trinn ' + lv + ': ' + lc1(nx.no), 'Propeller, step ' + lv + ': ' + lc1(nx.en)), 'yard', 'prop'); if (typeof cloudEv === 'function') cloudEv('upg', {k:'prop', lv}); }
     else if (a === 'hullfix'){ if (!atKind('verft')) return; const why = hullOrder(false); if (why){ toast(why[0] === 'no_cash' ? t('no_cash') : L('Arbeidskøen er full.', 'The work queue is full.')); return; } }
     else if (a === 'kasko'){ if (!atKind('verft')) return; if (kaskoSign()){ toast(t('no_cash')); return; } }
     else if (a === 'kaskox'){ kaskoEnd(); }
@@ -177,7 +184,7 @@
     else if (a === 'equip'){ const E = EQUIP[d.k]; if (!E) return;
       // expensive equipment confirms in the button, as the counter's other buys do (M2: IC_CONFIRM_KR); a tier by its price for this boat
       // (tierKr: the knives at tier 3 on a 14.99 m vessel are 13 500 kr, three gutting places; OPP4)
-      const pk = 'equip:' + d.k + (d.sp ? ':sp' : ''), lv1 = E.tiers ? equipLv(d.k) + 1 : 0, price = E.tiers ? tierKr(d.k, lv1) : E.price;   // (the partner's item confirms on its own card, M6)
+      const pk = 'equip:' + d.k + (d.sp ? ':sp' : ''), lv1 = E.tiers ? equipLv(d.k) + 1 : 0, price = E.tiers ? tierKr(d.k, lv1) : equipKr(d.k);   // (a reel at the boat's tier costs what the shop takes, equipKr, OPP2)   // (the partner's item confirms on its own card, M6)
       if (price >= IC_CONFIRM_KR && !(shopPend && shopPend.k === pk && Date.now() - shopPend.t <= IC_CONFIRM_MS)){ shopPend = {k:pk, kg:0, t:Date.now()}; return true; }
       // (the receipt says the tier bought and its name: «Kjøpt: Sløyekniver, trinn 3: sløyekniver i ett stykke og stålhansker»)
       const T = E.tiers && E.tiers[lv1 - 1], nm = T ? E.name[S.lang] + L(', trinn ', ', tier ') + lv1 + ': ' + lc1(T[S.lang]) : E.name[S.lang];

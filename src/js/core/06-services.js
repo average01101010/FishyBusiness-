@@ -246,6 +246,11 @@ function finishJob(j){
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
+  // the propeller (OPP3): the step ordered, on the boat it was ordered for (j.ty); a boat traded in while it waited, or one whose step is no
+  // longer the next, gets the price back (j.kr)
+  else if (j.kind === 'prop'){ const V = VESSELS[b.type];
+    if (!propFits(V) || propLvOf(b) !== j.lv - 1 || (j.ty && j.ty !== b.type)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: propell', 'Paid back: propeller'); log('Propellen passer ikke denne båten. Verftet betalte tilbake ' + kr(back) + '.', 'The propeller does not suit this vessel. The yard paid back ' + kr(back) + '.'); }
+    else { b.propLv = j.lv; applyVessel(); const st = PROPUP[j.lv - 1]; log('Ny propell montert, trinn ' + j.lv + ': ' + st.no.toLowerCase() + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', 'New propeller fitted, step ' + j.lv + ': ' + st.en.toLowerCase() + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); } }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); if (BOAT.karN) log('Plass til ett fiskekar til: ' + BOAT.karN + ' kar, ' + fmt(BOAT.holdCap, 0) + ' kg.', 'Room for one more fish tub: ' + BOAT.karN + ' tubs, ' + fmt(BOAT.holdCap, 0) + ' kg.'); else log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
@@ -258,7 +263,7 @@ function finishJob(j){
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
-const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'upg', 'repair'];
+const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'prop', 'upg', 'repair'];
 const YARD_NOW_NOK = 19;
 // «Ferdig nå» is offered only while a yard job has this many game minutes left (5 real minutes): with a minute left it was offered, the job
 // finished during the payment and the purchase finished nothing (the review 07.11.2026); one that still comes to nothing is kept as a

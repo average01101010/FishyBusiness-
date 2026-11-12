@@ -57,6 +57,18 @@ async def main():
           let dp = 1e9; for (let i = 1; i < track.length; i++) for (const p of B.piers) if (!isLand({x:p.x / 1000, y:p.z / 1000})) dp = Math.min(dp, obsDist(p, track[i - 1].x * 1000, track[i - 1].y * 1000, track[i].x * 1000, track[i].y * 1000));
           return {dp:Math.round(dp), clr:obsClr(), end:Math.round(dist(bt.pos, b) * 1000), st:bt.status}; })()""")
         check(r['dp'] >= r['clr'] - 0.5 and r['end'] < 30, 'a drawn route through a pier: under way the boat goes round it under the deck and on to the end', r)
+        # 6b. the same at the speed sjark's top speed with propeller 3 and the engine at step 2, and with turbo trim on top (OPP3: 30.7 and 52.7
+        # kn; a minute is then 0.9 and 1.6 km): round the pier under the deck all the same, and on to the end
+        for trim in (False, True):
+            r = await pg.evaluate("""(trim => { const br = BRIDGES.find(q => q[2] === 'Gisundbrua'), B = obsBridge(br), q = B.piers.filter(q => !isLand({x:q.x / 1000, y:q.z / 1000}))[3], bt = S.boat, keep = {type:bt.type, propLv:bt.propLv, engLv:bt.engLv, trim:bt.trim};
+              bt.type = 'hurtigsjark'; bt.propLv = 3; bt.engLv = 2; if (trim) bt.trim = {k:'turbo', t0:S.t, until:S.t + 72 * 60}; else delete bt.trim; applyVessel(); const v = BOAT.vmax;
+              const nx = -q.uz, nz = q.ux, a = {x:(q.x + nx * 400) / 1000, y:(q.z + nz * 400) / 1000}, b = {x:(q.x - nx * 400) / 1000, y:(q.z - nz * 400) / 1000};
+              bt.status = 'sailing'; bt.port = null; bt.pos = {...a}; bt.v = 0; bt.fuel = 1000; S.plan = {wps:[{x:b.x, y:b.y, port:null, fish:0}], idx:0, speed:v, full:true};
+              const track = [{...bt.pos}]; for (let k = 0; k < 40 && S.plan; k++){ playMinutes(1); track.push({...bt.pos}); }
+              let dp = 1e9; for (let i = 1; i < track.length; i++) for (const p of B.piers) if (!isLand({x:p.x / 1000, y:p.z / 1000})) dp = Math.min(dp, obsDist(p, track[i - 1].x * 1000, track[i - 1].y * 1000, track[i].x * 1000, track[i].y * 1000));
+              const R = {v:+v.toFixed(1), dp:Math.round(dp), clr:obsClr(), end:Math.round(dist(bt.pos, b) * 1000), st:bt.status, n:track.length};
+              bt.type = keep.type; if (keep.propLv) bt.propLv = keep.propLv; else delete bt.propLv; if (keep.engLv) bt.engLv = keep.engLv; else delete bt.engLv; if (keep.trim) bt.trim = keep.trim; else delete bt.trim; applyVessel(); S.plan = null; return R; })""", trim)
+            check(r['dp'] >= r['clr'] - 0.5 and r['end'] < 30 and abs(r['v'] - (52.7 if trim else 30.7)) < 0.1, 'the speed sjark at %s kn (propeller 3, engine 2%s) through the same pier: round it under the deck and on to the end' % ('52.7' if trim else '30.7', ', turbo trim' if trim else ''), r)
         # 7. a drawn route out under Gisundbrua and back (routes.json 4, as trip2 sails it): it passes a pier, and goes round it under the deck
         # without coming nearer the skerries by the way than the route itself (it ran aground on one, 05.10.2026), and is back in Finnsnes
         R = json.load(open(ROUTES))['4']
