@@ -212,6 +212,12 @@ function jigMeShare(){
   if (F.n - Math.ceil(jk / per) < 1) return 0;
   const tot = effortOf(F.n, jk, JIG.hand) * F.eff; return tot > 0 ? clamp(JIG.hand * meEff() / tot, 0, 1) : 0;
 }
+// your share if you went to the rail now: «Jukse selv» puts you there (window.jigActive, workAssign), so the button asks this and not
+// where you stand this minute (feedback #4 from the test edition, 12.11.2026: a skipper on a break with the crew jigging never saw it)
+function jigMeCan(){
+  if (typeof window === 'undefined' || window.jigActive) return jigMeShare();
+  window.jigActive = true; try { return jigMeShare(); } finally { window.jigActive = false; }
+}
 const GM = {E:1.05, A:1.0, B:0.85, X:0.6, V:0};
 
 // deterministic noise

@@ -3246,3 +3246,7 @@
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
 2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
 2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
+2026-11-12 17:12	claude/admiring-cray-o29dfv	45772c56	worktest	OK	30	lite	samtidig	
+2026-11-12 17:12	claude/admiring-cray-o29dfv	45772c56	selfcrew	OK	9	lite	samtidig	
+2026-11-12 17:13	claude/admiring-cray-o29dfv	45772c56	docktest	OK	65	lite	samtidig	
+2026-11-12 17:26	claude/admiring-cray-o29dfv	45772c56	tut	OK	764	lite	alene	
