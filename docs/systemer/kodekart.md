@@ -4233,7 +4233,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (583 linjer)
+## `src/js/view3d/13-instruments.js` (615 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4244,36 +4244,39 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 75 `paintGauges(dt)`
   - 91 `paintVhf()`
   - 103 `placeQ(t)`
-  - 104 `drawNames(t, M, VP, liv, nm, port)`
-  - 114 `markCanvas(cv, txt, light)`
-  - 120 `markTex(t, liv)`
-  - 128 `imgOf(src)`
-  - 129 `curLogo()`
-  - 130 `logoTexOf(L, img)`
-  - 138 `logoQ(t)`
-  - 139 `drawLogo(t, M, VP, L, img)`
-  - 144 `imgCors(src)`
-  - 148 `markQ(t)`
-  - 149 `drawMark(t, M, VP, liv)`
-  - 153 `callQ(t)`
-  - 154 `drawCall(t, M, VP, liv)`
-  - 158 `nameCanvas(cv, nm, light)`
-  - 173 `nameTex(nm, light, aspect, mark)`
-  - 181 `drawNPCNames(kit, VP)`
-  - 193 `paintHand()`
-  - 202 `limbM(A, B, r)`
-  - 208 `armTo(BMrel, W, Sw, Hw, sd, sp)`
-  - 218 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 407 `drawSkiffGlass(BMrel, VP)`
-  - 417 `jigRail(t, G)`
-  - 450 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 483 `drawGlass(m, BMrel, VP)`
-  - 502 `drawDrops(m, BMrel, VP, t)`
-  - 513 `buildBoat()`
-  - 539 `buildFlag()`
-  - 551 `flagTex()`
-  - 564 `mastTop(G)`
-  - 568 `updateFlag(t, appW)`
+  - 105 `drawNames(t, M, VP, liv, nm, port, other)`
+  - 122 `buyAt()`
+  - 127 `buyShow(nm)`
+  - 133 `markCanvas(cv, txt, light)`
+  - 139 `markTex(t, liv)`
+  - 147 `imgOf(src)`
+  - 148 `curLogo()`
+  - 149 `logoTexOf(L, img)`
+  - 157 `logoQ(t)`
+  - 158 `drawLogo(t, M, VP, L, img)`
+  - 163 `imgCors(src)`
+  - 167 `markQ(t)`
+  - 168 `drawMark(t, M, VP, liv)`
+  - 172 `callQ(t)`
+  - 173 `drawCall(t, M, VP, liv)`
+  - 178 `nameCanvas(cv, nm, light, rv)`
+  - 197 `nameTex(nm, light, aspect, mark)`
+  - 206 `revealTex(nm, light, aspect, rv)`
+  - 213 `drawNPCNames(kit, VP)`
+  - 225 `paintHand()`
+  - 234 `limbM(A, B, r)`
+  - 240 `armTo(BMrel, W, Sw, Hw, sd, sp)`
+  - 250 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 439 `drawSkiffGlass(BMrel, VP)`
+  - 449 `jigRail(t, G)`
+  - 482 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 515 `drawGlass(m, BMrel, VP)`
+  - 534 `drawDrops(m, BMrel, VP, t)`
+  - 545 `buildBoat()`
+  - 571 `buildFlag()`
+  - 583 `flagTex()`
+  - 596 `mastTop(G)`
+  - 600 `updateFlag(t, appW)`
 
 ## `src/js/view3d/14-sea.js` (585 linjer)
 
@@ -4647,7 +4650,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (763 linjer)
+## `src/js/view3d/24-cinema.js` (765 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4672,14 +4675,14 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 268 `frameClock(raw)`
   - 280 `frame()`
   - 285 `frame0()`
-  - 480 `snapTake()`
-  - 485 `drawRoute(VP, eye)`
-  - 508 `driftSpray(VP, eye, dt, t, col)`
-  - 535 `drawSmoke(VP, eye, BM, dt)`
-  - 576 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 610 `splashFoam(x, z, r, a)`
-  - 612 `drawEffects(VP, eye, BM, dt, t)`
-  - 745 `updateLabels(VP, eye, W, Hh)`
+  - 482 `snapTake()`
+  - 487 `drawRoute(VP, eye)`
+  - 510 `driftSpray(VP, eye, dt, t, col)`
+  - 537 `drawSmoke(VP, eye, BM, dt)`
+  - 578 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 612 `splashFoam(x, z, r, a)`
+  - 614 `drawEffects(VP, eye, BM, dt, t)`
+  - 747 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (229 linjer)
 
