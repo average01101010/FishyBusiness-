@@ -8,7 +8,9 @@ Les denne først, så bare dokumentet for systemet du skal endre, og `docs/BACKL
 |---|---|
 | `CLAUDE.md` | Reglene for arbeidet. Jonas' valg. Følges alltid. |
 | `docs/systemer/visjon.md` | Visjonen, sjangeren, arbeidsmåten og statusen slik den sto ved overleveringen. |
-| `docs/BACKLOG.md` | Den ene lista: feil, spillbarhet, antakelser, valg som står med vilje, det som må måles, røde tester, ryddejobber. Oppdateres av hver økt. |
+| `docs/BACKLOG.md` | Den ene lista over det som er åpent: feil, spillbarhet, antakelser, valg som står med vilje, det som må måles, røde tester, ryddejobber. Oppdateres av hver økt. |
+| `docs/BACKLOG-arkiv.md` | Det som er strøket fra backloggen, med dato og commit. Søkes i med `grep`. |
+| `docs/regler-bakgrunn.md` | Reglene i `CLAUDE.md` med Jonas' ord, datoene og grunnene (den lange utgaven fra før 12.11.2026). |
 | `docs/utviklingsplan.md` | Arbeidsmåten framover: økter, skills, agenter, oppdeling av koden. |
 | `docs/systemer/kodekart.md` | Seksjonene og funksjonene i hver kildefil med linjenummer (lages av `python3 tools/docs/kodekart.py`). Slå opp her før en stor fil leses. |
 | `docs/systemer/testing.md` | Testene: `run.py`, `COVER`, LITE og 3D, de lange testene og når de er nødvendige, triksene. |
