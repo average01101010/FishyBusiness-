@@ -35,8 +35,9 @@ function pickW(pairs){ let r = Math.random() * pairs.reduce((a, q) => a + q[1], 
 function crewAge(){ const b = pickW([[0, 4.3], [1, 19.4], [2, 19.5], [3, 16.7], [4, 20.1], [5, 16.1], [6, 3.9]]), lo = [16, 20, 30, 40, 50, 60, 70][b], hi = [19, 29, 39, 49, 59, 69, 74][b]; return lo + Math.floor(Math.random() * (hi - lo + 1)); }
 const r15 = x => clamp(Math.round(x * 2) / 2, 1, 5);
 function skreiSeason(H){ const m = gDate(H).getUTCMonth(); return m <= 3; }
-// (an apprentice who came to learn from you, c.laer in 14-crewlife.js, stays one until the apprenticeship is over: the share of § 24.4)
-function crewDerive(c){ const lvl = c.laer && !c.laer.done ? 0 : c.attr.erf >= 4 ? 2 : c.attr.erf >= 2.5 ? 1 : 0; c.lv = ['lærling', 'erfaren', 'dreven'][lvl]; c.lvEn = ['apprentice', 'experienced', 'seasoned'][lvl]; c.skill = clamp(0.6 + 0.1 * c.attr.erf + 0.04 * c.attr.sjo, 0.7, 1.3); return c; }
+// (an apprentice who came to learn from you, c.laer in 14-crewlife.js, stays one until the apprenticeship is over: the share of § 24.4;
+// one who has become a hand by his experience goes over to a hand's whole share, since § 24.4 is the apprentice's only)
+function crewDerive(c){ const lvl = c.laer && !c.laer.done ? 0 : c.attr.erf >= 4 ? 2 : c.attr.erf >= 2.5 ? 1 : 0; if (lvl > 0 && c.lv === 'lærling' && c.share != null && c.share < LOTT.hand) c.share = c.ask = LOTT.hand; c.lv = ['lærling', 'erfaren', 'dreven'][lvl]; c.lvEn = ['apprentice', 'experienced', 'seasoned'][lvl]; c.skill = clamp(0.6 + 0.1 * c.attr.erf + 0.04 * c.attr.sjo, 0.7, 1.3); return c; }
 function genCrew(){
   const f = Math.random() < 0.06, age = crewAge(), yrs = Math.max(0, Math.round((age - 16) * (0.25 + Math.random() * 0.75))), home = crewHome();
   const ex = 1 + 4 * (1 - Math.exp(-yrs / 9)), peak = 1 - Math.abs(age - 34) / 45, rnd = () => Math.random() - 0.5;
@@ -98,7 +99,7 @@ const OPPG = {
   // § 20 snøkrabbe: 35 %
   snokrabbe:{ref:'§ 20', flat:35}
 };
-const LOTT = {appr:[0.4, 0.6, 0.75], hand:1, step:0.1, min:0.5, max:1.5, half:0.5, ft:3.2808, crabAdd:3, hav:28,
+const LOTT = {oldPct:0.25, appr:[0.4, 0.6, 0.75], hand:1, step:0.1, min:0.5, max:1.5, half:0.5, ft:3.2808, crabAdd:3, hav:28,
   skip:[[10, 1 / 6], [15, 1 / 6], [24, 1 / 3], [Infinity, 1 / 2]], mate:[[24, 408], [Infinity, 500]]};
 const lotR = v => clamp(Math.round(v * 20) / 20, LOTT.min, LOTT.max);
 const lotS = v => fmt(v, Math.round(v * 100) % 10 ? 2 : Math.round(v * 10) % 10 ? 1 : 0) + (S.lang === 'no' ? ' lott' : (Math.abs(v - 1) < 1e-9 ? ' share' : ' shares'));
@@ -107,12 +108,13 @@ const isAppr = c => c.lv === 'lærling';
 const apprLot = c => LOTT.appr[Math.min(LOTT.appr.length - 1, Math.max(0, Math.floor(c.yrs || 0)))];
 const lotOf = c => isAppr(c) ? apprLot(c) : c.share;
 // a crew member from before the shares: a percentage of the catch (0.07-0.20) becomes the nearest quarter share (15 % was a hand's whole
-// share), and one on a day wage goes over to a share
+// share), and one on a day wage goes over to a share. (Under LOTT.oldPct only: before 12.11.2026 the line was 0.45, which took an
+// apprentice's 0.4 of a share for a percentage and made it 1.5 shares every hour, crewUpgrade; found in steg 45b)
 function lotMigrate(c){
   if (!c) return c;
   const q4 = v => lotR(Math.round(v / 0.15 * 4) / 4);
-  if (c.share != null && c.share < 0.45) c.share = q4(c.share);
-  if (c.ask != null && c.ask < 0.45) c.ask = q4(c.ask);
+  if (c.share != null && c.share < LOTT.oldPct) c.share = q4(c.share);
+  if (c.ask != null && c.ask < LOTT.oldPct) c.ask = q4(c.ask);
   if (c.share == null) c.share = c.ask != null ? c.ask : LOTT.hand;
   if (c.pay === 'hyre'){ delete c.pay; delete c.hyre; if (typeof log === 'function') log(c.name + ' går over fra hyre til lott: ' + lotS(c.share) + '.', c.name + ' moves from a wage to a share: ' + lotS(c.share) + '.'); }
   return c;

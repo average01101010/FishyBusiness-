@@ -38,6 +38,10 @@ export default function (t){
   c.attr.erf = 3.2; K.crewDerive(c);
   t.eq(c.lv, 'lærling', 'han er lærling hele læretida, også med erfaring 3,2');
   t.near(K.lotOf(c), 0.4, 1e-9, 'lotten er lærlinglotten etter årene (apprLot)');
+  // the hour's crewUpgrade (lotMigrate) leaves the apprentice's share as it is: 0.4 is a share, not a percentage from before the shares
+  K.crewUpgrade(c); t.near(c.share, 0.4, 1e-9, 'lotMigrate rører ikke lærlinglotten (0,4 lott)'); t.near(c.ask, 0.4, 1e-9, 'heller ikke det han ba om');
+  { const o = K.genCrew(); o.share = o.ask = 0.6; o.attr.erf = 1.5; K.crewDerive(o); K.crewUpgrade(o); t.near(o.share, 0.6, 1e-9, 'en vanlig lærling på 0,6 lott beholder den (før: 1,5)');
+    o.attr.erf = 2.6; K.crewDerive(o); t.eq(o.lv, 'erfaren', 'erfaring 2,6: ikke lærling lenger'); t.near(K.lotOf(o), 1, 1e-9, 'og går over på en hel lott'); }
 
   // ---- the questions: after something that happened aboard, at most once a day; the answer is a lift in the skill ----
   K.set('meAboard', () => true); K.set('windAt', () => 5); K.set('fcWind', () => 5); K.set('tideH', () => 0); K.set('curAt', () => ({sx:0, sy:0}));
@@ -81,6 +85,7 @@ export default function (t){
   S.t = c.laer.t0 + L.days * D + 60; hour();
   t.ok(c.opp && c.opp.gr === 'laer', 'etter ' + L.days + ' døgn og ' + c.laer.n + ' svar: han sier opp etter loven', c.opp);
   t.eq(K.crewStay(c), 'egenbat', 'han lar seg ikke be om å bli');
+  t.eq(c.life.notice, c.opp.end, 'drømmen på kortet sier når han går i land');
   b.status = 'port'; b.port = 'husoy'; S.t = c.opp.end + 60; K.crewOppTick(c);
   const al = (S.alumni || []).find(a => a.id === c.id);
   t.ok(!S.crew.includes(c) && al && al.laer && al.boat, 'han har gått i land til egen båt, med lærlingmerket blant de gamle', al && {boat:al.boat, laer:al.laer});
@@ -89,6 +94,14 @@ export default function (t){
   // he stays a skipper on the grounds: never back in the exchange
   S.t += 3 * 365 * D; S.bors = {pool:[], day:-1}; K.set('Math', Object.assign(Object.create(Math), {random:() => 0.99})); K.borsTick(S.t / 60);
   t.ok(!S.bors.pool.some(x => x.id === c.id) && S.alumni.some(a => a.id === c.id), 'lærlingen kommer aldri tilbake til børsen; han blir skipper');
+
+  // ---- one who leaves before his time is up (unhappy, with the savings for a boat): his own boat, but no «Læremester», and no apprentice ----
+  { const d0 = K.achC('laer'), x = K.laerMake(); S.crew = [x]; K.laerSign(x); S.alumni = []; x.life.saved = x.life.target; K.crewNotice(x, 'trivsel'); b.status = 'port'; S.t = x.opp.end + 60; K.crewOppTick(x);
+    const ax = S.alumni.find(a => a.id === x.id); t.ok(ax && !ax.laer && !ax.c.laer, 'gikk før læretida var ute: egen båt som de andre, uten lærlingmerket', ax && {laer:ax.laer, c:!!ax.c.laer}); t.eq(K.achC('laer'), d0, 'og ingen «Læremester»'); }
+  // ---- never an apprentice for ever: with too few answers he goes at LAER.maxDays all the same ----
+  { const y = K.laerMake(); S.crew = [y]; K.laerSign(y); K.crewAvt(y); b.status = 'fishing'; b.port = null; K.set('meAboard', () => false);
+    S.t = y.laer.t0 + (L.maxDays - 1) * D; hour(); const before = !!y.opp; S.t = y.laer.t0 + L.maxDays * D + 60; hour();
+    t.ok(!before && y.opp && y.opp.gr === 'laer' && (y.laer.n || 0) === 0, 'uten svar (spilleren aldri om bord) går han etter ' + L.maxDays + ' døgn likevel', {before, opp:y.opp}); K.set('meAboard', () => true); }
 
   // ---- the coast (stikkprøven): a home harbour near Bergen, Bodø and Båtsfjord; the apprentice is from the places round it, and his boat
   // fishes on a named ground within 40 km of his home afterwards (alumniGround) ----
