@@ -3244,5 +3244,8 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
+2026-11-12 16:49	ccr-013bxxie-s107	519771e+	farttest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 16:58	ccr-013bxxie-s107	519771e+	farttest	FEIL	545	lite	alene	FEIL sør for staken med viser mot nord: stripa sier «feil side av merket»  [(605, ''), (594, ''), (583, ''), (573, ''), (562, ''), (551, ''), (541, ''), (530, '
+2026-11-12 17:10	ccr-013bxxie-s107	519771e+	farttest	OK	547	lite	alene	
 2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
 2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
