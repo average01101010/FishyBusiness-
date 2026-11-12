@@ -21,6 +21,10 @@ def git(*a):
     return subprocess.run(['git'] + list(a), capture_output=True, text=True, errors='replace').stdout
 
 
+# a shallow clone (the cloud sessions clone 50 commits deep) has no merge base for the older branches: every one of them then
+# showed some 190 commits as missing, and the check ran for over ten minutes instead of 25 seconds (12.11.2026). The whole
+# history is fetched first.
+if git('rev-parse', '--is-shallow-repository').strip() == 'true': git('fetch', '-q', '--unshallow', 'origin')
 git('fetch', '-q', '--prune', 'origin')
 cache, allsrc = {}, None
 

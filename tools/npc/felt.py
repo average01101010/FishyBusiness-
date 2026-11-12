@@ -46,7 +46,8 @@
 # polygons, used to carry all their rings as a list, and the game reads the rings by the even-odd rule (feltSd in core/03j-felt.js):
 # the same ring twice was «outside» all over (179 grounds had it, 156 of them with nothing inside at all), and two polygons that
 # overlap had a hole where they do. Now the polygons of a ground are joined (the union, union_rings; needs shapely) before they are
-# simplified and written: the outer rings of the union and the union's own holes (water no polygon covers, at least HOLE_KM2), and
+# simplified and written: the outer rings of the union and its holes (the source's own holes, and water no polygon covers; at
+# least HOLE_KM2), and
 # no written ring crosses itself or another, so the even-odd rule reads exactly the union. r is the square root of the union's
 # area, for the spawning and nursery grounds too.
 import os, re, sys, json, time, math, urllib.request, urllib.parse
@@ -168,12 +169,18 @@ def kv_places(G):
     return out, st
 
 def rings(member):
-    """the exterior rings of the feature's polygons, in the game's frame (km)"""
+    """the feature's polygons in the game's frame (km): [[exterior, hole, hole, ...], ...]. The holes are the source's own (an
+    island, or water the fishermen left out of the ground); read from F3-rest, 12.11.2026, before only the exteriors were"""
     out = []
-    for m in re.finditer(r'<gml:exterior>.*?<gml:posList[^>]*>([^<]+)</gml:posList>', member, re.S):
-        v = [float(t) for t in m.group(1).split()]
-        # EPSG:25833 in the WFS's axis order: easting, northing
-        out.append([((v[i] + 250000) / 1000, (8050000 - v[i + 1]) / 1000) for i in range(0, len(v) - 1, 2)])
+    for pm in re.finditer(r'<gml:Polygon[ >].*?</gml:Polygon>', member, re.S):
+        P = []
+        for m in re.finditer(r'<gml:(exterior|interior)>.*?<gml:posList[^>]*>([^<]+)</gml:posList>', pm.group(0), re.S):
+            v = [float(t) for t in m.group(2).split()]
+            # EPSG:25833 in the WFS's axis order: easting, northing
+            r = [((v[i] + 250000) / 1000, (8050000 - v[i + 1]) / 1000) for i in range(0, len(v) - 1, 2)]
+            if m.group(1) == 'exterior': P.insert(0, r)
+            elif len(r) >= 3: P.append(r)
+        if P and len(P[0]) >= 3: out.append(P)
     return out
 
 def area_centroid(r):
@@ -313,17 +320,19 @@ def simplify(r, tol):
     far = max(range(len(pts)), key=lambda i: (pts[i][0] - pts[0][0]) ** 2 + (pts[i][1] - pts[0][1]) ** 2)
     return dp(pts[:far + 1], tol)[:-1] + dp(pts[far:] + [pts[0]], tol)[:-1]
 
-def grid_ring(r):
-    """a ring simplified to SIMPLIFY_KM and in whole steps of UNIT, without repeated points; None when under three points are left"""
+def grid_ring(r, simp=True):
+    """a ring simplified to SIMPLIFY_KM (not with simp false) and in whole steps of UNIT, without repeated points; None when under
+    three points are left"""
     v = []
-    for (x, y) in simplify(r, SIMPLIFY_KM):
+    for (x, y) in (simplify(r, SIMPLIFY_KM) if simp else r):
         q = (round(x / UNIT), round(y / UNIT))
         if not v or q != v[-1]: v.append(q)
     while len(v) > 1 and v[0] == v[-1]: v.pop()
     return v if len(v) >= 3 else None
 
 def union_rings(rs):
-    """the polygons of one ground as one surface (F3-rest): the rings to write, in steps of UNIT, and the union's area in km².
+    """the polygons of one ground ([[exterior, hole, ...], ...]) as one surface (F3-rest): the rings to write, in steps of UNIT,
+    and the union's area in km².
     The union is taken of the source's polygons, its outer rings and its own holes are simplified and put on the grid as every
     ring is, and because simplifying and rounding can make a ring cross itself or another again, the written rings are joined once
     more until every part is a valid polygon and no two parts overlap: then the even-odd rule over the rings (feltSd) is the union,
@@ -331,8 +340,8 @@ def union_rings(rs):
     so the file does not follow the library's order of points"""
     def polys(g):
         return [q for q in getattr(g, 'geoms', [g]) if q.geom_type == 'Polygon' and q.area > 0]
-    def solid(r):                         # (a ring that crosses itself: the pieces it encloses)
-        try: g = Polygon(r)
+    def solid(P):                         # (a polygon with its holes; a ring that crosses itself: the pieces it encloses)
+        try: g = Polygon(P[0], P[1:])
         except Exception: return []
         return polys(g if g.is_valid else make_valid(g))
     def canon(c):                         # (the ring from its smallest point, counter-clockwise, closed)
@@ -341,12 +350,15 @@ def union_rings(rs):
         k = c.index(min(c)); c = c[k:] + c[:k]
         return c + c[:1]
     U = unary_union([q for r in rs for q in solid(r)]); area = U.area
-    for _ in range(8):
+    garea = lambda v: Polygon(v).area * UNIT * UNIT
+    for n in range(12):
+        # (simplified once: a ring joined again is on the grid already, and only the new crossing points are rounded to it, so the
+        # rounds come to rest)
         parts = []; ok = True
         for q in polys(U):
-            e = grid_ring(canon(q.exterior.coords))
+            e = grid_ring(canon(q.exterior.coords), n == 0)
             if not e: continue
-            H = sorted(h for h in (grid_ring(canon(i.coords)) for i in q.interiors if Polygon(i).area >= HOLE_KM2) if h)
+            H = sorted(h for h in (grid_ring(canon(i.coords), n == 0) for i in q.interiors if Polygon(i).area >= HOLE_KM2) if h and garea(h) >= HOLE_KM2)
             g = Polygon([(x * UNIT, y * UNIT) for x, y in e], [[(x * UNIT, y * UNIT) for x, y in h] for h in H])
             ok = ok and g.is_valid; parts.append((e, H, g))
         parts.sort(key=lambda t: t[0])
@@ -354,7 +366,7 @@ def union_rings(rs):
         # (valid parts that do not overlap: their areas add up to the union's)
         if not parts or (ok and abs(sum(g.area for _, _, g in parts) - V.area) < 1e-6): return [r for e, H, _ in parts for r in [e] + H], area
         U = V
-    raise SystemExit('the rings of a ground still cross after eight rounds of joining; nothing written')
+    raise SystemExit('the rings of a ground still cross after twelve rounds of joining; nothing written')
 
 def ring_ok(v):
     """a written ring that does not cross itself (a ground of one polygon is written as it always was when this holds)"""
@@ -382,17 +394,24 @@ def zz(v): return (v << 1) if v >= 0 else ((-v << 1) - 1)
 def main():
     G = []                         # [name, x, y, area, gear kinds, kind, lines, rings, short name]
     for layer, (kind, gk) in LAYERS.items():
-        s = fetch(layer); n0 = len(G); nl = 0
+        s = fetch(layer); n0 = len(G); nl = 0; nmoved = 0
         for m in s.split('<wfs:member>')[1:]:
             nm = re.search(r':stedsnavn>([^<]*)<', m)
             n, short = wash(nm.group(1) if nm else None)
             if n is None: continue
-            rs = [r for r in rings(m) if len(r) >= 3]
+            rs = rings(m)
             if not rs: continue
-            parts = [label_point(r) for r in rs]; a = sum(p[0] for p in parts); big = max(parts, key=lambda p: p[0])
+            parts = [label_point(P[0]) for P in rs]; a = sum(p[0] for p in parts); big = max(parts, key=lambda p: p[0])
+            # (the point is found from the outer ring; where it falls in a hole of the polygon's own, it is moved to a point inside
+            # the surface. The ground keeps its place in the order, and so its index, by the point as it was: key)
+            key = (big[1], big[2]); P = rs[parts.index(big)]
+            if any(inside(h, big[1], big[2]) for h in P[1:]):
+                g = Polygon(P[0], P[1:]); g = g if g.is_valid else make_valid(g)
+                q = max((x for x in getattr(g, 'geoms', [g]) if x.geom_type == 'Polygon'), key=lambda x: x.area, default=None)
+                if q is not None: rp = q.representative_point(); big = (big[0], rp.x, rp.y); nmoved += 1
             L = species_lines(m, kind); nl += len(L) > 0
-            G.append([n, big[1], big[2], a, gk, kind, L, rs, short])
-        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows')
+            G.append([n, big[1], big[2], a, gk, kind, L, rs, short, key])
+        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows, {nmoved} with the point moved out of a hole')
     print('the washing (names changed per rule):', json.dumps(WASH, ensure_ascii=False))
     # one ground per name and kind within MERGE_KM: the largest polygon keeps its point; the gear kinds, the lines and the shapes are
     # joined. A ground without a name (a position for a name) is never joined.
@@ -401,7 +420,7 @@ def main():
         key = (g[5], g[0].lower()); hit = None
         if g[0]:
             for o in byname.get(key, []):
-                if math.hypot(o[1] - g[1], o[2] - g[2]) < MERGE_KM: hit = o; break
+                if math.hypot(o[9][0] - g[9][0], o[9][1] - g[9][1]) < MERGE_KM: hit = o; break
         if hit:
             if g[4] not in hit[4]: hit[4] += g[4]
             hit[3] += g[3]; hit[6] = hit[6] + g[6]; hit[7] = hit[7] + g[7]; continue
@@ -413,12 +432,12 @@ def main():
           f'{kvst["dup_spot"]} for another name on the same spot, {kvst["noname"]} without an approved name, {kvst["nopoint"]} without a point')
     # the sea names stand after all the grounds, so a ground's index (which the game draws its pull from, 03j-felt.js feltGeo) is
     # the same with and without them
-    out.sort(key=lambda g: (g[2], g[1])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
+    out.sort(key=lambda g: (g[9][1], g[9][0])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
     p = []; px = py = 0
     for g in out:
         x, y = round(g[1] / UNIT), round(g[2] / UNIT); p += [x - px, y - py]; px, py = x, y
     # the shapes: Douglas-Peucker to SIMPLIFY_KM, in steps of unit relative to the label point
-    shp = []; npt = 0; ncell = 0; nun = 0; nself = 0; B = bytearray(); varint(len(out), B)
+    shp = []; npt = 0; ncell = 0; nun = 0; nself = 0; nhole = 0; B = bytearray(); varint(len(out), B)
     for g in out:
         R = []; lx, ly = round(g[1] / UNIT), round(g[2] / UNIT)
         # (a ground of one polygon is written as before; of several, their union, F3-rest)
@@ -426,9 +445,13 @@ def main():
         # The spawning and nursery grounds have no rings in the file, but their size is the union's too)
         if len(g[7]) > 1:
             Q, g[3] = union_rings(g[7]); nun += 1
-        else:
-            Q = [q for q in (grid_ring(r) for r in g[7]) if q]
-            if Q and not ring_ok(Q[0]): Q, _ = union_rings(g[7]); nself += 1
+        elif g[7]:
+            # (a hole of the source's own that is large enough to write: through the union too, which takes the hole with it)
+            if any(area_centroid(h)[0] >= HOLE_KM2 for h in g[7][0][1:]): Q, g[3] = union_rings(g[7]); nhole += 1
+            else:
+                Q = [q for q in [grid_ring(g[7][0][0])] if q]
+                if Q and not ring_ok(Q[0]): Q, _ = union_rings(g[7]); nself += 1
+        else: Q = []
         if g[5] != 'f': Q = []
         for q in Q:
             v = []; ox, oy = lx, ly
@@ -438,7 +461,7 @@ def main():
         for v in R:
             varint(len(v) // 2, B)
             for c in v: varint(zz(c), B)
-        if g[7] and g[5] == 'f': ncell += len(cells_of(g[7], 0.5))
+        if g[7] and g[5] == 'f': ncell += len(cells_of([P[0] for P in g[7]], 0.5))
     kinds = {k: sum(1 for g in out if g[5] == k) for k in 'fgos'}
     D = {'meta': {'made': time.strftime('%Y-%m-%d'),
                   'src': 'Fiskeridirektoratet, «Fiskeplasser – redskap» (aktive og passive redskap), «Gyteområder» og «Oppvekst- og beiteområder», WFS FiskeridirWFS_fiskeri, NLOD; Kartverket, Sentralt stedsnavnregister (stedsnavn i sjøen, slaget s), api.kartverket.no/stedsnavn/v1, CC BY 4.0',
@@ -459,7 +482,7 @@ def main():
     print(f'  of it: the lines {sz(D["l"]) / 1000:.0f} kB, the names {sz(D["n"]) / 1000 + sz(D["nf"]) / 1000:.0f} kB, the points {sz(D["p"]) / 1000:.0f} kB')
     print(f'  the shapes: {len(B) / 1000:.0f} kB binary ({os.path.getsize(fs) / 1000:.0f} kB base64) -> {fs}; {npt} points at {SIMPLIFY_KM * 1000:.0f} m, '
           f'{sz(shp) / 1000:.0f} kB as JSON; as 500 m cells the same grounds would be {ncell} cells')
-    print(f'  joined to one surface (the union of a ground\'s polygons): {nun} grounds, {sum(1 for R in shp if len(R) > 1)} of the fishing grounds still with more than one ring (separate parts or a hole); {nself} of one polygon whose ring crossed itself')
+    print(f'  joined to one surface (the union of a ground\'s polygons): {nun} grounds, {sum(1 for R in shp if len(R) > 1)} of the fishing grounds still with more than one ring (separate parts or a hole); {nself} of one polygon whose ring crossed itself, {nhole} of one polygon with a hole of its own; {sum(len(R) - 1 for R in shp if len(R) > 1)} rings beyond the first in all')
     print(f'  with species: {sum(1 for g in out if g[6])} of {len(out)}; f with a season (a line not all year): {sum(1 for i, g in enumerate(out) if g[5] == "f" and any(l[2] != 4095 for l in D["l"][i]))}')
 
 if __name__ == '__main__': main()
