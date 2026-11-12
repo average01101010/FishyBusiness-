@@ -24,6 +24,11 @@ BM = """(() => { const e = document.getElementById('buyMoment'); if (!e) return 
     drawer:document.getElementById('drawer').hidden, in3d:BUYM.in3d, label:e.getAttribute('aria-label'), sub:/ · \\d{4}/.test(sub) && sub.indexOf(VESSELS[S.boat.type].name.no) === 0 ? sub : ''}; })()"""
 
 
+async def shot(pg, path):
+    try: await pg.screenshot(path=path, timeout=300000)
+    except Exception as e: print('skjermbildet %s kom ikke: %s' % (path, str(e)[:80]))
+
+
 async def until(pg, cond, ms):
     try: await pg.wait_for_function(cond, timeout=ms); return True
     except Exception: return False
@@ -34,7 +39,7 @@ async def moment3d(br, errs):
     for fmt, vp in (('liggende', {'width': 1280, 'height': 800}), ('staaende', {'width': 800, 'height': 1280})):
         pg = await br.new_page(viewport=vp); pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME_TUT + '#notut')
-        await pg.evaluate("(() => { S.boat.status = 'port'; S.unnamed = false; S.boatName = 'Havbris'; G3.show(true); })()")
+        await pg.evaluate("(() => { S.boat.status = 'port'; S.unnamed = false; S.boatName = 'Havbris'; WX_FORCE = {w:3, d:250}; S.mult = 0; S.t = Math.round((Date.UTC(2027, 5, 12, 12) - EPOCH) / 6e4); G3.show(true); })()")
         await until(pg, "G3.isActive()", 60000); await pg.wait_for_timeout(3000)
         # (the card's own 15 s are held off here, and the moment's clock is held by G3.buyFix: SwiftShader takes seconds over a frame, and
         # a screenshot longer; the 15 s and «Hopp over» on time are checked without 3D above)
@@ -49,12 +54,12 @@ async def moment3d(br, errs):
             await pg.evaluate("G3.buyFix(%f)" % s); f0 = await pg.evaluate("G3.buying ? G3.buying.frame : 0")
             await until(pg, "G3.buying && G3.buying.frame >= %d" % (f0 + 2), 60000); return await pg.evaluate("G3.buying")
         m = await at(0.6 + 0.22 * n * 0.5)
-        await pg.screenshot(path='kjop3d_navn_%s.png' % fmt)
+        await shot(pg, 'kjop3d_navn_%s.png' % fmt)
         check(bool(m) and 0 < m['drawn'] < m['len'] and m['fy'] is not None and m['fy'] < -0.5,
               '3D, %s: navnet males på skroget bokstav for bokstav (%s av %s), flagget nede på stanga' % (fmt, m and round(m['drawn'], 1), m and m['len']), m)
         # the name on, and the flag at the top of its pole
         e = await at(0.6 + 0.22 * n + 0.4 + 3.2)
-        await pg.screenshot(path='kjop3d_flagg_%s.png' % fmt)
+        await shot(pg, 'kjop3d_flagg_%s.png' % fmt)
         check(bool(e) and e['drawn'] == e['len'] and e['fy'] == 0, '3D, %s: hele navnet står på skroget, og flagget er oppe' % fmt, e)
         await pg.evaluate("(() => { const b = document.querySelector('#buyMoment .bm-skip'); if (b) b.click(); })()"); await pg.wait_for_timeout(200)
         z = await pg.evaluate("({card:!!document.getElementById('buyMoment'), b:G3.buying, painting:G3.painting})")
