@@ -2787,3 +2787,7 @@
 2026-11-12 00:43	ccr-c987b885-ap4668	8418af2	boottest	OK	27	lite	alene	
 2026-11-12 00:54	ccr-c987b885-ap4668	8418af2+	mobtest	OK	203	lite	samtidig	
 2026-11-12 00:54	ccr-c987b885-ap4668	8418af2+	hudtest	OK	84	lite	samtidig	
+2026-11-12 01:02	ccr-c987b885-ap4668	6459b1f	colregtest	OK	598	lite	samtidig	
+2026-11-12 01:02	ccr-c987b885-ap4668	6459b1f	boottest	OK	32	lite	samtidig	
+2026-11-12 01:04	ccr-c987b885-ap4668	6459b1f	boottest	OK	28	lite	samtidig	
+2026-11-12 01:10	ccr-c987b885-ap4668	6459b1f	farttest	OK	383	lite	samtidig	
