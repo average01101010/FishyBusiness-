@@ -2942,3 +2942,8 @@
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	colregtest	OK	732	lite	samtidig	
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	autonavtest	OK	42	lite	samtidig	
 2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	hulltest	OK	71	lite	samtidig	
+2026-11-12 04:38	ccr-899a9674-q3gjp0	455a897+	fellessjo	FEIL	276	3d	alene	FEIL lying still at the same place, the two pages have the same waves at the same world time (within 2 cm) {'worst': 0.06, 'spread of the sea': 0.504}
+2026-11-12 04:55	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	300	3d	alene	
+2026-11-12 05:00	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	295	3d	alene	
+2026-11-12 05:06	ccr-899a9674-q3gjp0	455a897+	dbg23o	OK	48	3d	alene	
+2026-11-12 05:11	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	315	3d	alene	
