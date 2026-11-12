@@ -237,8 +237,12 @@ async function bootMapLoad(){
   }
   DEPTH = true;
   // the chart's coast over the whole frame (H1b R2) comes after the start, so the start waits no longer for it
-  if (MAPD.chart0) setTimeout(() => mapLoad(MAPD.chart0).catch(e => console.error(e)), 4000);
+  if (MAPD.chart0) setTimeout(chart0Load, 4000);
 }
+// (the chart is told when it comes: a chart painted while this load was under way asked for no load of its own, chartPath0 in
+// 03a-chart.js, so nothing painted it again, and the whole country stood without land until the view was moved; charttest saw it as
+// «Hardangervidda er sjø», 12.11.2026)
+function chart0Load(){ return mapLoad(MAPD.chart0).then(() => { if (typeof chartCame === 'function') chartCame(null); }, e => console.error(e)); }
 function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
 // the fish plants' morning price messages (gone 13.10.2026) leave the phone's message list too
