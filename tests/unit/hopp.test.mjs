@@ -34,7 +34,10 @@ export default function (t){
   sailing(); S.turer = {board:[], act:[{k:'frakt', vid:S.cur}], done:[]}; t.ok(!!hopWhy(), 'et turoppdrag i gang: ' + (hopWhy() || [''])[0]);
   sailing(); S.turer = {board:[], act:[{k:'frakt', vid:'en-annen'}], done:[]}; t.eq(hopWhy(), null, 'et turoppdrag på en annen båt i flåten stopper ikke dette hoppet');
   sailing(); S.tut = {v:2}; t.ok(!!hopWhy(), 'første tur: ' + (hopWhy() || [''])[0]);
-  sailing(); S.plan.halt = true; t.ok(!!hopWhy(), 'mens båten stopper: ' + (hopWhy() || [''])[0]);
+  sailing(); S.plan.halt = true; t.ok(/stopper/.test((hopWhy() || [''])[0]) && !/Vent til hun går videre/.test((hopWhy() || [''])[0]), '«Stopp båten»: ' + (hopWhy() || [''])[0]);
+  sailing(); S.plan.replan = {t:0}; t.ok(/vei rundt/.test((hopWhy() || [''])[0]), 'Autonav finner en vei rundt: ' + (hopWhy() || [''])[0]);
+  // the time the game was closed not yet played in (S.t behind the world's clock): the hop would count minutes the catch-up sails anyway
+  { const W = K.WCLOCK, on = W.on; W.on = true; sailing(); t.ok(/henter/.test((hopWhy() || [''])[0]), 'tida fra et lukket spill er ikke spilt inn: ' + (hopWhy() || [''])[0]); W.on = on; }
   sailing(); S.boat.anch = {}; t.ok(!!hopWhy(), 'mens ankeret er ute: ' + (hopWhy() || [''])[0]); S.boat.anch = null;
   sailing(); S.boat.dmg = {A:0.002, w:0.1}; t.ok(!!hopWhy(), 'båten tar inn vann: ' + (hopWhy() || [''])[0]); S.boat.dmg = null;
   sailing(); S.mob = {id:'m1'}; t.ok(!!hopWhy(), 'mann over bord: ' + (hopWhy() || [''])[0]); S.mob = null;

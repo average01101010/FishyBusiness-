@@ -72,7 +72,7 @@ async def main():
         pg.set_default_timeout(600000)
         J = lambda js, *a: pg.evaluate(js, *a)
         s = await J(SETUP, os.environ.get('KYST_HOPP_FRA') or None)
-        check(not s.get('err'), 'en Autonav-rute mellom to havner på Senja', s)
+        check(not s.get('err'), 'en Autonav-rute mellom to havner', s)
         if s.get('err'): print(errs); await br.close(); return
         # 1. sailed with the clock
         await J(START, {}); a0 = await J(STATE)

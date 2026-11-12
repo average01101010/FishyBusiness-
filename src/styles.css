@@ -1730,8 +1730,8 @@ body.v3d #hud{z-index:6} body.v3d #plotMin{z-index:7}   /* (the chart's fold but
    bli forvirrende for spillerne om knappene er helt borte»; «Svake, trykk virker»): they stand where they stood and a tap on one works
    at once (the touch that wakes the calm is taken first, ui/10c-dock.js calmTouch). The strip, the little chart, the compass, the phone
    and the deck log's tab are not touched */
-#dock > .dk-b,.ov.cam,.ov.kino,.ov.kino2{transition:opacity .25s ease}
-body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov.cam,body.calm .ov.kino,body.calm .ov.kino2{opacity:.2;transition:opacity .6s ease}
+#dock > .dk-b,.ov.cam,.ov.kino,.ov.kino2,.ov.hop{transition:opacity .25s ease}
+body.calm #dock > .dk-b:not(.hero):not(.stay):not([data-dk="beh"]),body.calm .ov.cam,body.calm .ov.kino,body.calm .ov.kino2,body.calm .ov.hop{opacity:.2;transition:opacity .6s ease}
 /* «Båten og utstyret» (OPP4, ui/phone/10-fartoy.js kitCard; Jonas 07.11.2026 on the first version: «så mye tekst … Det må gjøres mer
    intuitivt»): a row per ladder with the picture, the name and the dots, one short gain in green, and the price as the button to the
    page it is bought on (away from the place only the price; full a tick); where it is bought once per place; two tiles of numbers */

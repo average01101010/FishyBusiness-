@@ -291,22 +291,23 @@ Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet s
 - **Nektet før kjøpet** (`hopWhy`, så `hopRun`), med en grunn og uten at noe endres:
   - ingen rute som seiles
   - Driftsplanen (`pl.ops`, `pl.p2`)
-  - båten stopper eller finner en vei rundt
+  - båten stopper («Stopp båten», `pl.halt`), eller Autonav finner en vei rundt grunt vann (`pl.replan`)
   - ankeret er ute, eller båten ligger bi
   - noen er i sjøen (`S.mob`, Autonav mot den: `pl.mob`)
   - du sleper en annen spiller (`S.ptowH.st === 'tow'`; på vei til en som trenger slep går hoppet)
   - første tur
+  - tida fra et lukket spill er ikke spilt inn ennå (`WCLOCK.on` og `worldT()` foran `S.t`): hoppet ville talt minutter innhentingen seiler uansett
   - et turoppdrag i gang med denne båten
   - været på veien over båtens risiko (`riskLevel` > 0) eller over grensa for Autonav når den står på (`windLim`, `seaLim`)
   - for lite diesel
   - nesten fremme (under ett ekte minutt)
 - **Betalt** (`hopGo(true)`, HO3) går hoppet uansett vær, diesel og nesten fremme (Jonas: «uavhengig av været eller andre ting»).
 - **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
-- **Kartet ved målet** lastes før hoppet (`hopGo`: `mapNeed` ved stoppet, så tørrkjøringen på nytt med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
+- **Kartet ved målet** lastes før hoppet (`hopGo`: stoppet fra ruta, `mapNeed` der med en tidsgrense på `HOP.mapMs` = 20 s, så én tørrkjøring med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
 - **Spoleknappen og kortet** (HO2, steg 105, `ui/10u-hopp.js`; Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»):
-  - `#hopBtn` (⏩, `.ov.hop`) står i 3D til høyre, rett under kamera- og kino-knappen og like stor. Den vises bare mens en rute seiles (`hopShown`: ikke Driftsplanen, ikke med hånda på roret), ikke i kartplotteren, i kinoens rene visning eller mens kinoens «Skjul» står på plassen. Hvert bildetikk kaller `hopUi` (`ui/08-actions.js`, ved siden av `turFotoUi`).
-  - Kortet (`hopOpen`, `modal`) sier hvor båten hopper, den ekte tida spart (`hopSaved`) og prisen med 💎 (`realKr`), eller grunnen fra `hopQuote`.
-  - «Hopp» (`hopPress`) demper skjermen (`#hopFade`), venter på `hopGo` (kartet ved målet), lagrer og viser skjermen igjen.
+  - `#hopBtn` (⏩, `.ov.hop`) står i 3D til høyre, rett under kamera- og kino-knappen og like stor. Den vises bare mens en rute seiles (`hopShown`: ikke Driftsplanen, ikke med hånda på roret, ikke mens båten stopper eller Autonav finner en vei rundt, ikke mens tida fra et lukket spill spilles inn, `CATCH_LEFT`), ikke i kartplotteren, i kinoens rene visning eller mens kinoens «Skjul» står på plassen. I roen (U2-4) dempes den som kamera- og kino-knappen. Hvert bildetikk kaller `hopUi` (`ui/08-actions.js`, ved siden av `turFotoUi`).
+  - Kortet (`hopOpen`, `hopCard`, `modal`) åpner med «Regner ut turen …» og fylles når tørrkjøringen er ferdig, så trykket ikke fryser skjermen. Det sier hvor båten hopper («Til Vangshamn», eller «Til neste stopp på ruta, ved Husøy»), den ekte tida spart (`hopSaved`) og prisen med 💎 (`realKr`), eller grunnen fra `hopQuote`.
+  - «Hopp» (`hopPress`) gjør skjermen mørk (`#hopFade`, to bilder før arbeidet, så mørket er tegnet), venter på `hopGo` og så på alle pakkene kartet og 3D leser rundt målet, slik start langs kysten laster dem (`mapPreload` med sim, chart, view, vec og far, høyst `HOPUI.packMs` = 15 s), lagrer og viser skjermen igjen.
   - **Testbryteren:** til kjøpet er bygd (HO3), vises knappen bare med Admin-appens «Hopp over ruta (test)» (`S.adm.hopp`, `admHopp`), og bare for admin (`adminOk`; `11-boot.js` slår den av for andre). Hoppet er da gratis, og kortet sier det. Ingen spiller kan hoppe gratis.
   - **Det de andre ser:** båten forsvinner ved avgangen og dukker opp ved målet. Et sprang over `PT_SNAP` (1,5 km) mellom to rapporter hoppes, ikke glis (`ptTake`), og det er ikke noe nytt felt i `pos_put`.
   - **Testen:** `tests/hoppshot.py` (3D, begge formater: knappen under kino-knappen, kortet, hoppet til kaia uten land under, knappen borte ved kaia og med bryteren av).

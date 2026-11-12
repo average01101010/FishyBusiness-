@@ -10,7 +10,7 @@
 // diesel, on the operations plan, on a trip mission with this boat, or on the first trip. Once paid (HO3), it goes whatever the weather
 // (Jonas: «uavhengig av været eller andre ting»). The price is a ladder by the real minutes saved, like tax steps, so the total always
 // rises with the time and nobody gains by a detour (Jonas 12.11.2026, A: «75 / 50 / 25 øre»; at least 5 kr, no cap).
-const HOP = {steps:[[60, 0.75], [240, 0.50], [Infinity, 0.25]], min:5, maxMin:14 * 1440};
+const HOP = {steps:[[60, 0.75], [240, 0.50], [Infinity, 0.25]], min:5, maxMin:14 * 1440, mapMs:20000};
 // kr for the real minutes saved
 function hopPrice(realMin){
   let kr = 0, m0 = 0;
@@ -28,7 +28,11 @@ function hopWhy(){
   const b = S.boat, pl = S.plan;
   if (!pl || b.status !== 'sailing' || !(pl.idx < pl.wps.length)) return ['Hopp går bare mens båten seiler en rute.', 'A hop is only possible while the boat sails a route.'];
   if (pl.ops || pl.p2) return ['Driftsplanen styrer båten. Hopp går bare på en rute du har lagt selv.', 'The operations plan runs the boat. A hop is only possible on a route you set yourself.'];
-  if (pl.halt || pl.replan) return ['Båten stopper eller finner en vei rundt. Vent til hun går videre.', 'The boat is stopping or finding a way round. Wait until she goes on.'];
+  if (pl.halt) return ['Båten stopper.', 'The boat is stopping.'];
+  if (pl.replan) return ['Autonav finner en vei rundt grunt vann. Vent til båten går videre.', 'Autonav is finding a way round shallow water. Wait until the boat goes on.'];
+  // the time the game was closed, not yet played in (the world's clock ahead of S.t, ui/08-actions.js CATCH_LEFT): the hop would count
+  // minutes the catch-up sails anyway, and the time saved and the price would be too high
+  if (WCLOCK.on && worldT() - S.t > 1) return ['Spillet henter fortsatt inn tida det var lukket. Vent litt.', 'The game is still catching up on the time it was closed. Wait a little.'];
   if (b.anch || b.hove) return ['Båten ligger for anker eller ligger bi.', 'The boat is at anchor or lying to.'];
   // a leak is not hopped past: the water rises minute by minute and the pump may not keep up (hullMinute, 16c-hull.js)
   if (b.dmg && (b.dmg.A > 0 || b.dmg.w > 0)) return ['Båten tar inn vann. Hopp går ikke forbi en lekkasje.', 'The boat is taking in water. A hop does not get past a leak.'];
@@ -126,11 +130,15 @@ function hopDo(q){
   arrive(w);
   return true;
 }
-// a hop now: the map at the stop first (a block not in is an error, not a value), then the dry run again on the world as it is by then
+// a hop now: the map at the stop first (a block not in is an error, not a value; a fetch that hangs is given up after HOP.mapMs), then
+// the one dry run on the world as it is by then
 async function hopGo(paid){
-  let q = hopWhy() ? {why:hopWhy()} : hopRun(!!paid); if (q.why) return q;
-  try { if (typeof mapNeed === 'function') await mapNeed({x:q.w.x, y:q.w.y}, MAPD.simR); }
+  let why = hopWhy(); if (why) return {why};
+  const pl = S.plan, iS = hopStop(pl); if (iS < 0) return {why:['Ruta har ikke noe mål.', 'The route has no end.']};
+  const w = pl.wps[iS];
+  try { if (typeof mapNeed === 'function') await Promise.race([mapNeed({x:w.x, y:w.y}, MAPD.simR), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), HOP.mapMs))]); }
   catch (e){ console.warn('hopGo map', e); return {why:['Kartet ved målet kom ikke. Prøv igjen om litt.', 'The chart at the stop did not come. Try again in a little while.'], map:true}; }
-  q = hopWhy() ? {why:hopWhy()} : hopRun(!!paid); if (q.why) return q;
+  why = hopWhy(); if (why) return {why};
+  const q = hopRun(!!paid); if (q.why) return q;
   hopDo(q); return q;
 }
