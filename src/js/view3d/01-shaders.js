@@ -90,7 +90,7 @@
   // spread of fv through the normal quantile of W (as before, Monahan and O'Muircheartaigh 1980 is the share of white). WCAP.k: the share
   // of Monahan's cover that is the breaking crests themselves; the rest is the foam they leave, the foam map's tail (FOAM_FS, 14-sea.js).
   // FOAM.capAt in 14-sea.js is the same on the CPU (sea3d measures the share with it).
-  const WCAP = {F:{a:1.0, c:0.3, g:0.8, k:0.2}, thF:[0.00386, 1.1143, 0.00292], j:0.05, s:0.05, c:0.06, g:1.2, th:[-0.00254, 0.2366, -0.01229], k:0.28, G:0.1915};
+  const WCAP = {F:{a:1.0, c:0, g:0.8, k:0.2}, thF:[0, 1.005, 0], j:0.05, s:0.05, c:0.06, g:1.2, th:[-0.00254, 0.2366, -0.01229], k:0.28, G:0.1915};
   // capBr (12.11.2026, Jonas' video and marked picture: «havet glitcher og flasher i 100kmt i stripete formasjoner»): with the
   // compression of the summed trains as most of fv, the whitecaps sat where the crests of the regular trains cross, and those crossings
   // lie in slanting rows and run along the crests many times faster than any wave. Now where a crest breaks is mostly a field of its
@@ -120,7 +120,7 @@
     // follows the normal quantile), in standard deviations of both tiles together, with a little of the crest's height (the long waves'
     // and the tiles') and the breakers' grain; capThF is its threshold for the share W, fitted as capTh was
     'float capFf(float z,float crest,float g){return z*' + wc5(WCAP.F.a) + '+crest*' + wc5(WCAP.F.c) + '+(g-0.5)*' + wc5(WCAP.F.g) + ';}' +
-    'float capThF(float W){float zt=capZ(W);return ' + wc5(WCAP.thF[0]) + '+' + wc5(WCAP.thF[1]) + '*zt+(' + wc5(WCAP.thF[2]) + ')*zt*zt;}' +
+    'float capThF(float W){float zt=capZ(W);return uFftQ2.x+uFftQ2.y*zt+uFftQ2.z*zt*zt;}' +   // (fitted to the tiles each frame, hfftCapFit)
     'float capFv(float jn,float js,float crest,float g){return jn*' + wc5(WCAP.j) + '+js*' + wc5(WCAP.s) + '+crest*' + wc5(WCAP.c) + '+(g-0.5)*' + wc5(WCAP.g) + ';}';
   // The local sea (03b-sea.js) from the sea-state textures, n (32 x 32 over the near terrain) and w (128 x 128 over the whole map): R and G hold
   // the root of the fetch for the 10 degree sectors either side of the wind (blended by uSea2.z and .w), B how much of the ocean swell gets in.
@@ -355,7 +355,7 @@
     'return iw;}';
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = '#define NOSHT\nprecision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;uniform sampler2D uFft1;uniform sampler2D uFft2;uniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;uniform sampler2D uFft1;uniform sampler2D uFft2;uniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;uniform vec4 uFftQ2;varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
     // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
     // edge ragged and its inside clumped as the wash's (nothing beyond 1.25 radii, where the ragged edge never reaches: no noise there)
     'float splF(vec2 Mg,vec2 Pb,vec4 s){if(s.w<=0.0)return 0.0;float d=length(Mg-s.xy);if(d>s.z*1.25)return 0.0;d*=0.8+0.4*ns(Pb*0.7+vec2(3.0,1.0));return s.w*(1.0-smoothstep(s.z*0.5,s.z,d))*(0.6+0.4*ns(Pb*1.1+vec2(8.0,2.0)));}' +
@@ -429,9 +429,13 @@
     'float l1=clamp(log2(max(px,1e-3)/1.3516)/3.5510,0.0,1.0);float l2=clamp(log2(max(px,1e-3)/0.3859)/3.2805,0.0,1.0);vec4 f=f1+f2*g2;float lam=min(Qw,0.27/max(fs*uFftQ.z,1e-4));' +
     'N.x-=fs*f.x;N.z-=fs*f.y;N.y-=lam*fs*f.z;lost+=2.0*fs*fs*(uFftQ.x*l1+uFftQ.y*g2*g2*l2);yF=fs*(f1.w+f2.w);fT=(f1.z+f2.z)/max(uFftQ.z,1e-6);}';
   const SEA_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;uniform vec3 uZen;uniform vec3 uHor;uniform vec3 uDeep;' +
-    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform vec2 uFoamG;uniform vec2 uFoamW;uniform vec2 uFoamCw;uniform sampler2D uFft1;uniform sampler2D uFft2;uniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;' + PLG +
+    'uniform float uTime;uniform float uWind;uniform vec2 uWindDir;uniform float uFlat;uniform float uSpec;uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec2 uNFD;uniform sampler2D uHgt;uniform float uHOn;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform vec4 uSRect;uniform float uSOn;uniform float uPx;uniform float uDbg;uniform sampler2D uFoam;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uFoamOn;uniform float uFoamN;uniform vec2 uFoamG;uniform vec2 uFoamW;uniform vec2 uFoamCw;uniform sampler2D uFft1;uniform sampler2D uFft2;uniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;uniform vec4 uFftQ2;' + PLG +
     'varying vec3 vW;varying vec2 vXZ;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + SWELLG + WCAPS + SURFF +
-    AIR + 'float awAt(vec2 u){vec4 q=texture2D(uFoam,u);float b=q.r>0.002?q.g/q.r:0.0;return q.r*exp(-max(uFoamT.x-b,0.0)*uFoamT.y/uFoamT.z);}void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
+    AIR + 'float awAt(vec2 u){vec4 q=texture2D(uFoam,u);float b=q.r>0.002?q.g/q.r:0.0;return q.r*exp(-max(uFoamT.x-b,0.0)*uFoamT.y/uFoamT.z);}' +
+    // (the wake's foam read with a cubic B-spline over the map's texels, as four bilinear taps, 12.11.2026: read linearly, the trail's
+    // edge followed the 0.6 m texels in steps once the white was sharpened, Jonas' picture with the arrows)
+    'float awB(vec2 u){vec2 st=u*uFoamN-0.5;vec2 i=floor(st);vec2 f=st-i;vec2 f2=f*f;vec2 f3=f2*f;vec2 w0=(1.0-3.0*f+3.0*f2-f3)/6.0;vec2 w1=(4.0-6.0*f2+3.0*f3)/6.0;vec2 w2=(1.0+3.0*f+3.0*f2-3.0*f3)/6.0;vec2 w3=f3/6.0;vec2 g0=w0+w1;vec2 g1=w2+w3;vec2 p0=(i+0.5+w1/g0-1.0)/uFoamN;vec2 p1=(i+0.5+w3/g1+1.0)/uFoamN;' +
+    'return g0.y*(g0.x*awAt(p0)+g1.x*awAt(vec2(p1.x,p0.y)))+g1.y*(g0.x*awAt(vec2(p0.x,p1.y))+g1.x*awAt(p1));}void main(){float d=length(vW);vec2 P=vXZ;vec4 S=seaAt(P);' +
     // the sea by the shore (F4); the far pass is as before
     '\n#ifdef FAR\nvec4 SH=vec4(200.0,0.0,0.0,0.0);\n#else\nvec4 SH=shoalAt(P);\n#endif\nfloat Et=0.0;float Eu=0.0;float Es=0.0;' +
     // metres covered by one pixel here (grows with distance and grazing angle); a wave shorter than a few pixels is faded out and its slope becomes roughness instead
@@ -505,11 +509,9 @@
     // diamonds, «skarpe kanter … nesten litt pixelert», Jonas. Now the amount ramps over a couple of metres and the lace cuts the edge)
     'vec2 fq=fu+(vec2(ns(Pc*0.8+vec2(4.3,1.7)),ns(Pc*0.8+vec2(9.1,6.4)))-0.5)*2.4*uFoamRect.z;vec2 fo=vec2(1.2*uFoamRect.z,0.0);m.ba=0.25*(texture2D(uFoam,fq+fo).ba+texture2D(uFoam,fq-fo).ba+texture2D(uFoam,fq+fo.yx).ba+texture2D(uFoam,fq-fo.yx).ba);' +
     'float b0=m.r>0.002?m.g/m.r:0.0;float c0=m.b>0.002?m.a/m.b:0.0;' +
-    // (the wake's foam aged texel by texel and read as four taps 0.35 m diagonally round the point, 12.11.2026: the hull lays foam every
-    // frame and a texel is born again only where the new foam beats what is left of the old, so neighbouring texels keep births and
-    // amounts a step apart, and one bilinear tap drew the trail as a quilt of squares, Jonas' picture. Four taps smooth the steps over
-    // about a texel and keep the trail's shape; the bubbles' age, b0, is still the middle tap's)
-    'vec2 fg=fu+uFoamG*uFoamRect.z;float fd=0.35*uFoamRect.z;float aw=0.25*(awAt(fg+vec2(fd,fd))+awAt(fg+vec2(-fd,fd))+awAt(fg+vec2(fd,-fd))+awAt(fg+vec2(-fd,-fd)));float ac=m.b*exp(-max(uFoamTc.x-c0,0.0)*uFoamTc.y/uFoamTc.z);' +
+    // (the wake's foam, aged texel by texel (awAt), read with the cubic B-spline (awB) at a place the noise has moved by up to 0.55 m, so
+    // the trail's edge is a smooth, slightly ragged line and not the texels' steps; 12.11.2026, Jonas' pictures of the quilt and the edge)
+    'vec2 fg=fu+uFoamG*uFoamRect.z+(vec2(ns(Pw*0.6+vec2(4.1,2.7)),ns(Pw*0.6+vec2(0.3,7.9)))-0.5)*1.1*uFoamRect.z;float aw=awB(fg);float ac=m.b*exp(-max(uFoamTc.x-c0,0.0)*uFoamTc.y/uFoamTc.z);' +
     'float n1=ns(Pw*1.1+vec2(3.1,7.7));float n2=ns(Pw*2.9+vec2(1.3,9.2));float n4=ns(Pw*0.4+vec2(8.0,1.0));' +
     'float dens=aw*(0.55+0.45*n4)*(0.6+0.4*n1);float fw=smoothstep(0.06,0.45,dens*(0.75+0.25*n2))*(0.6+0.4*min(aw*1.5,1.0))*lod;' +
     // the whitecaps' foam (F3): what the breaking crests laid, left behind as the crest runs on (so the front, where the crest breaks

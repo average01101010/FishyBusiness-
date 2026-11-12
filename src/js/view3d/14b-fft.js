@@ -11,7 +11,7 @@
   const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null};
   const FFTT = HFFT.tiles;
   function fftWorker(){
-    const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips].map(f => f.toString()).join('\n') + '\n' +
+    const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips, hfftCapFit].map(f => f.toString()).join('\n') + '\n' +
       'const len = N => { let s = 0; for (let n = N; n >= 1; n >>= 1) s += n * n * 4; return s; };\n' +
       'let T = null, W = null;\n' +
       'onmessage = e => { const D = e.data; try {\n' +
@@ -20,7 +20,8 @@
       '  if (!T || !T[0].S){ postMessage({t:D.t, none:1}); return; }\n' +
       '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer).concat([new Float32Array(len(T[0].N)).buffer]), st = [];\n' +
       '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k], k ? null : new Float32Array(bufs[T.length])));\n' +
-      '  postMessage({t:D.t, st, bufs, ms:performance.now() - t0}, bufs);\n' +
+      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0.1, 8192);\n' +
+      '  postMessage({t:D.t, st, cq, bufs, ms:performance.now() - t0}, bufs);\n' +
       '} catch (err){ postMessage({err:String(err && err.message || err)}); } };\n';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
     w.onmessage = e => fftGot(e.data);
@@ -70,7 +71,9 @@
       let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; } }
     gl.activeTexture(gl.TEXTURE0);
     fftKeep(new Float32Array(D.bufs[2])); fftKeepS(D.bufs);
-    FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++;
+    FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++; FFT.tT = D.t;
+    // (the crests' threshold fitted to these tiles, eased over a few frames so its sampling noise never flickers the whitecaps)
+    if (D.cq){ if (!FFT.cq) FFT.cq = D.cq.slice(); else for (let k = 0; k < 3; k++) FFT.cq[k] = FFT.cq[k] * 0.85 + D.cq[k] * 0.15; }   // (tT: the world time the tiles on the GPU and in the copies are for)
     FFT.ms = FFT.ms ? FFT.ms * 0.9 + D.ms * 0.1 : D.ms; FFT.up = FFT.up ? FFT.up * 0.9 + (performance.now() - t1) * 0.1 : performance.now() - t1;
     // how far ahead to ask: the time a request takes to come back, as the waves' clock counts it
     FFT.lat = clamp(FFT.lat * 0.9 + ((now - FFT.sentAt) / 1000) * 0.1, 0.005, 0.25);
@@ -128,7 +131,7 @@
     const T = FFTT.map(t => Object.assign({}, t)), outs = [];
     for (let k = 0; k < 2; k++){ const n2 = T[k].N * T[k].N, W = {plan:hfftPlan(T[k].N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)};
       hfftSpec(T[k], FFT.P); const o = new Float32Array(hfftLen(T[k].N)), d = k ? null : new Float32Array(hfftLen(T[k].N)); FFT.st[k] = hfftFrame(T[k], tw, o, W, d); outs.push(o); if (d) outs.push(d); }
-    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = tw; return true;
+    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = FFT.tT = tw; FFT.cq = hfftCapFit(outs[0], T[0].N, FFT.st[0][1], outs[2], T[1].N, FFT.st[1][1], 0.1, 8192); return true;
   }
   // every frame (24-cinema.js, after the waves): ask for the tiles at the time they will be shown, if the worker is free
   function fftStep(t){
@@ -150,7 +153,11 @@
     if (u.uFftP == null) return;
     const on = FFT.on && FFT.ok && FFT.have;
     if (u.uFvP != null) gl.uniform4f(u.uFvP, 0, 0, 0, 1);
-    if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1); return; }
+    if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1);
+      // (the samplers on their own units with a stand-in, 12.11.2026, sea3d: left at unit 0 while the tiles were not up, the foam map's pass
+      // drew into the texture bound there, «Feedback loop formed between Framebuffer and active Texture», GL error 1282, on the lighter seas)
+      for (const [nm, k] of [['uFft1', 8], ['uFft2', 9], ['uFftD', 10]]) if (u[nm] != null){ gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u[nm], k); }
+      gl.activeTexture(gl.TEXTURE0); return; }
     const A0 = fftA0();
     // (B4: each tile lies in the world, less the boat's own offset for it, NF.O; the shader looks it up at P - uNFD - o, so o is that
     // offset in the shader's frame, moved by whole tiles to near the camera)
@@ -160,7 +167,9 @@
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform4f(u.uFftO, o[0][0], o[0][1], o[1][0], o[1][1]);
     gl.uniform4f(u.uFftP, 1 / FFTT[0].L, 1 / FFTT[1].L, 1, A0);
+    if (u.uFftD != null && !fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0); }
     if (u.uFvP != null && fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[2]); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0);
       gl.uniform4f(u.uFvO, o[0][0], o[0][1], fvLod(), 0); gl.uniform4f(u.uFvP, 1 / FFTT[0].L, 0, 1, A0); gl.uniform4f(u.uFvQ, 0, 0, Math.hypot(FFT.st[0][1], FFT.st[1][1]), 0); }
     const s = FFT.st; gl.uniform4f(u.uFftQ, s[0][0], s[1][0], Math.hypot(s[0][1], s[1][1]), s[0][2] + s[1][2]);
+    if (u.uFftQ2 != null){ const c = FFT.cq || [0, 1, 0]; gl.uniform4f(u.uFftQ2, c[0], c[1], c[2], 0); }
   }
