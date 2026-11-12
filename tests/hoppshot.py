@@ -66,8 +66,9 @@ async def one(p, name, vw, vh):
     check(h['shown'] and h['x'] == k['x'] and h['w'] == k['w'] and h['h'] == k['h'] and h['y'] >= k['y'] + k['h'], name + ': 1b. på ruta står spoleknappen rett under kino-knappen, like stor', r)
     await pg.screenshot(path=os.path.join(OUT, 'hopp-knapp-' + name + '.png'))
     # 1c. the calm (U2-4): after a while untouched the button fades with the camera and the cinema
-    # (the fade is 0.6 s; SwiftShader may draw a frame a second, so it waits until the cinema button has come down, at most 8 s)
-    cm = await J("() => { document.body.classList.add('calm'); const o = id => +getComputedStyle(document.getElementById(id)).opacity, t0 = performance.now(); return new Promise(r => { const f = () => { if (o('kinoBtn') > 0.25 && performance.now() - t0 < 8000) return setTimeout(f, 200); const out = {hop:o('hopBtn'), kino:o('kinoBtn'), ms:Math.round(performance.now() - t0)}; document.body.classList.remove('calm'); r(out); }; setTimeout(f, 700); }); }")
+    # (the fade is 0.6 s; SwiftShader may draw a frame a second, so it waits until the cinema button has come down, at most 30 s: 8 s
+    # gave up at 0.87 on both buttons alike, 12.11.2026, steg 116a, and on HO3's branch twice before)
+    cm = await J("() => { document.body.classList.add('calm'); const o = id => +getComputedStyle(document.getElementById(id)).opacity, t0 = performance.now(); return new Promise(r => { const f = () => { if (o('kinoBtn') > 0.25 && performance.now() - t0 < 30000) return setTimeout(f, 200); const out = {hop:o('hopBtn'), kino:o('kinoBtn'), ms:Math.round(performance.now() - t0)}; document.body.classList.remove('calm'); r(out); }; setTimeout(f, 700); }); }")
     check(abs(cm['hop'] - cm['kino']) < 0.05 and cm['hop'] < 0.3, name + ': 1c. i roen dempes spoleknappen som kino-knappen', cm)
     # 2a. a hop that cannot be had: the card says why (the only no on a route under way: the game held by another page, TAB; a leak, the
     # weather or the diesel never refuse it, Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp"»)
