@@ -25,12 +25,13 @@ def write(out, kind, name, parts):
     data = b'KMP1' + len(hj).to_bytes(4, 'little') + hj + b''.join(body); h = hashlib.sha256(data).hexdigest()[:12]
     fn = f'{kind}-{name}-{h}.wasm'; open(os.path.join(out, fn), 'wb').write(data); return fn, h, len(data)
 
-# the sea marks (release.py marks(), the newest out/release/sjomerker-*/sjomerker.json) per tile {(tx, ty): {lights, marks, rocks}}
+# the sea marks (release.py marks(): the release kart-release.json pins as "sjomerker", fetched when it is not here) per tile
+# {(tx, ty): {lights, marks, rocks}}; none when there is no sjomerker- release at all
 def marks_by_tile(T):
-    import glob, re
-    fs = sorted(glob.glob(os.path.join(HERE, 'out', 'release', 'sjomerker-*', 'sjomerker.json')), key=lambda f: int(re.search(r'sjomerker-(\d+)', f).group(1)))
-    if not fs: return {}
-    d = json.load(open(fs[-1])); out = {}
+    sys.path.insert(0, HERE); import release
+    f = release.marks()
+    if not f: return {}
+    fs = [f]; d = json.load(open(f)); out = {}
     for k in ('lights', 'marks', 'rocks'):
         for q in d[k]: out.setdefault((int(q[0] // T), int(q[1] // T)), {'lights': [], 'marks': [], 'rocks': []})[k].append(q)
     print(json.dumps({'marks': fs[-1], 'tiles': len(out), 'lights': len(d['lights']), 'marks_n': len(d['marks']), 'rocks': len(d['rocks'])}))
