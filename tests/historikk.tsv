@@ -3244,3 +3244,5 @@
 2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	boottest	OK	30	lite	samtidig	
 2026-11-12 16:02	claude/k3-sjomerker-33d	8535dd4+	marktest	OK	9	lite	samtidig	
+2026-11-12 16:51	plan/2026-11-12-88	3f9ceeb0	boottest	OK	27	lite	samtidig	
+2026-11-12 16:52	plan/2026-11-12-88	3f9ceeb0	docktest	OK	59	lite	samtidig	
