@@ -2893,3 +2893,6 @@
 2026-11-12 02:28	ccr-360badbd-1zzqz7	1cda355	sp44shot	FEIL	1800	3d	alene	gikk ut på tid
 2026-11-12 03:00	ccr-360badbd-1zzqz7	b5fbc76	sp44shot	OK	1889	3d	alene	
 2026-11-12 02:15	ccr-899a9674-q3gjp0	d38b476	dbg23o	OK	45	3d	alene	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	boottest	OK	31	lite	samtidig	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	sponsor2test	OK	16	lite	samtidig	
+2026-11-12 03:03	ccr-360badbd-1zzqz7	2f7fb05	maletest	OK	17	lite	samtidig	
