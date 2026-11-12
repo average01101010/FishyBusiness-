@@ -21,7 +21,7 @@ function crewSim(src){
   // the boat's type, its deck map and places; false while the boat has none (the hand-worked boats keep their seated figures)
   function ready(){
     const t = src ? src.type() : S && S.boat && S.boat.type; if (!t || typeof deckMap !== 'function') return false;
-    if (ST.type !== t){ ST.type = t; ST.M0 = ST.M = deckMap(t); ST.PT = ST.M ? deckPoints(t) : null; ST.G = typeof geoOf === 'function' ? geoOf(t) : null; doorFace(); ST.PL = null; ST.kitSig = ''; A.length = 0; ST.lastSim = null; ST.ctx = null; ST.ctxT = 0; ST.crates = -1; }
+    if (ST.type !== t){ ST.type = t; ST.M0 = ST.M = deckMap(t); ST.PT = ST.M ? deckPoints(t) : null; ST.G = typeof geoOf === 'function' ? geoOf(t) : null; doorFace(); ST.PL = null; ST.kitSig = ''; ST.KB = null; A.length = 0; ST.lastSim = null; ST.ctx = null; ST.ctxT = 0; ST.crates = -1; }
     return !!(ST.M && ST.PT && ST.G && !ST.G.hand && ST.PT.sloy);
   }
   const on = () => ready();
@@ -45,7 +45,7 @@ function crewSim(src){
   // (what stands on deck whatever she is rigged for: the bleeding tub, the table, the hauler, the fish tubs, the ice box, the crane)
   function fixedBoxes(){
     const G = ST.G, d = G.deck || {y:G.gw, z:0}, W = G.work, K = G.kit || {}, Bm = G.beam || 3, V = VESSELS[ST.type] || {}, out = [];
-    const box = (x, z, w, l, ry) => out.push([x, z, w / 2 + 0.06, l / 2 + 0.06, ry || 0]);
+    const box = (x, z, w, l, ry) => out.push([x, z, w / 2 + 0.06, l / 2 + 0.06, ry || 0, 0.06]);
     const tu = W ? W.tub : [Bm / 2 - 0.62, d.y, d.z + 0.35], s = (W && W.s) || 1; box(tu[0], tu[2], 0.72 * s, 1.08 * s, W && W.ry || 0);
     if (!(W && W.own)){ const tb = W ? W.table : [-(Bm / 2 - 0.42), d.y, d.z]; box(tb[0], tb[2], 0.62, V.len >= 10 ? 1.6 : 1.15); }
     if (G.hauler) box(G.haulerFoot ? G.haulerFoot[0] : Bm / 2 - 0.2, G.hauler[2], 0.35, 0.4);   // (anchors.haulerFoot: where the model sets the post, 10-gear.js, OB12)
@@ -61,10 +61,14 @@ function crewSim(src){
   }
   // the deck with only that out of it: where the gear's own places are looked for (the tub the line is set from, the place to set from)
   function fixedMap(){ const V = VESSELS[ST.type] || {}, key = ST.type + '|' + (V.kar ? (ST.type === S.boat.type && BOAT.karN ? BOAT.karN : karN(ST.type, 0)) : 0); if (ST.MFk !== key){ ST.MFk = key; ST.MF = overlay(ST.M0, fixedBoxes()); } return ST.MF; }
-  function gearBoxes(out, noLand){
-    const G = ST.G, K = G.kit || {}, V = VESSELS[ST.type] || {}, box = (x, z, w, l, ry) => out.push([x, z, w / 2 + 0.06, l / 2 + 0.06, ry || 0]);
+  function gearBoxes(out, noLand, tight){
+    // (OB10 runde 4, 12.11.2026: the gear out of the map as the model's own things are, vessel3d.js deckMap: a cell is barred where
+    // anything stands in it, not only where its middle is. With 6 cm about the box and cells of DM_C, 0.2 m, the crew walked and stood
+    // with their middles 6 cm off the tubs and half the body in them, in every boat (crewclip, kitHits). The last number is the padding,
+    // so kitHits and kitAt measure against the gear itself)
+    const GP = tight ? 0.06 : 0.06 + DM_C / 2, G = ST.G, K = G.kit || {}, V = VESSELS[ST.type] || {}, box = (x, z, w, l, ry) => out.push([x, z, w / 2 + GP, l / 2 + GP, ry || 0, GP, 1]);
     // (OB4: the plant's tubs set out on her deck while she lands, landSlots)
-    if (!noLand && landPlant()) for (const q of landSlots()) box(q[0], q[2], 1.0, 1.2, q[3]);
+    if (!noLand && landPlant()) for (const q of landSlots()) out.push([q[0], q[2], 0.56, 0.66, q[3] || 0, 0.06, 1]);   // (the hands work at them, close, by design: their padding as before)
     if (!src && S.pgear){ const g = rigGear();
       // (OB10 runde 4, 12.11.2026: the block's width is the two tubs' footprint, 0.52 between their middles and 0.5 across each, 1.02 m;
       // it was 0.78, so the crew stood 12 cm inside the outer tubs on either side, «folk gjennom stampene» in line_settfull and riggfull)
@@ -72,7 +76,8 @@ function crewSim(src){
         box(K.stamps.at[0] + lx * c + lz * sn, K.stamps.at[2] - lx * sn + lz * c, 1.02, rows * 0.5 + 0.02, ry); }
       // (OB3: every net tub that stands there, the tub the line is set from at the stern, the setter's magazine and the pot stacks)
       if (g.nets && K.garn){ const sc = K.garn.s || 1; for (const q of netTubs(g.netN)) box(q[0], q[2], 1.0 * sc, 1.2 * sc, q[3]); }
-      if (g.set === 'line'){ const T = setTub(); if (T) box(T[0], T[2], 0.5, 0.5, 0); }
+      // (the tub the line is set from: the one setting stands at it, close, by design; its padding as before)
+      if (g.set === 'line'){ const T = setTub(); if (T) out.push([T[0], T[2], 0.31, 0.31, 0, 0.06, 1]); }
       if (K.setter && magOn()){ const P = K.setter, a = P[3] || 0; box(P[0] - Math.sin(a) * 0.99, P[2] - Math.cos(a) * 0.99, 0.6, 1.06, a); }
       if (K.pots && K.pots.at) for (const q of K.pots.at.slice(0, g.pots)) box(q[0], q[2], 1.3, 1.3, q[3] || 0);
       const kg = typeof cargoKg === 'function' ? Math.min(cargoKg(), BOAT.deckCargo || 0) : 0, nc = kg > 0 && K.cargo ? Math.min(K.cargo.length, Math.ceil(kg / 250)) : 0;
@@ -219,7 +224,15 @@ function crewSim(src){
     if (src){ ST.M = ST.M || ST.M0; return; }
     const g = S.pgear ? rigGear() : {tubs:0, nets:false}, kg = typeof cargoKg === 'function' ? Math.ceil(Math.min(cargoKg(), BOAT.deckCargo || 0) / 250) : 0, sig0 = g.tubs + '|' + g.nets + '|' + kg + '|' + (g.nets ? netTubs(g.netN).length : 0) + '|' + (g.pots || 0) + '|' + (g.set || '') + '|' + (magOn() ? 1 : 0);
     ST.kitSig0 = sig0; const sig = sig0 + '|' + (landPlant() ? 1 : 0);
-    if (sig === ST.kitSig) return; ST.kitSig = sig; ST.M = overlay(ST.M0, kitBoxes()); ST.PL = null;
+    if (sig === ST.kitSig) return; ST.kitSig = sig; ST.KB = kitBoxes(); ST.M = overlay(ST.M0, ST.KB); ST.PL = null;
+    // (the gear's wider padding, gearBoxes, may not take a work place: where the place the gear is set from, or a station, was clear
+    // with the tight padding and is not with the wide, the tight one stands for this boat and gear: the snekke's tubs fill her deck)
+    if (ST.M !== ST.M0 && !src){ const KT = fixedBoxes().concat(gearBoxes([], false, true)), MT = overlay(ST.M0, KT), PT = ST.PT || {};
+      const need = ['sloy', 'is', 'haling', 'door'].map(nm => PT[nm]).filter(q => q && q.k != null).map(q => q.k);
+      for (const kind of ['line', 'garn']){ const O = setOver(kind); if (O && O.man) need.push(O.man.k); }
+      if (need.some(k => MT.ok(k) && !ST.M.ok(k))){ ST.KB = KT; ST.M = MT; }
+      // (and while she sets: the one setting has a place with the wide padding, or the tight one stands)
+      else { const gs = S.pgear ? rigGear().set : null; if (gs && !setPlace(gs, '-')){ const MW = ST.M, KW = ST.KB; ST.M = MT; ST.KB = KT; if (!setPlace(gs, '-')){ ST.M = MW; ST.KB = KW; } } } }
     for (const a of A) a.path = null;   // (the ways are found again over the new map)
   }
 
@@ -242,7 +255,7 @@ function crewSim(src){
   const LANDPL = new Map(), TUBX = 0.5, TUBZ = 0.6;
   function landSlots(){
     const V = VESSELS[ST.type] || {}; if (V.kar || !ST.M0) return []; const id = ST.type + '|ls|' + (ST.kitSig0 || ''); if (LANDPL.has(id)) return LANDPL.get(id);
-    const M0 = ST.M0, Mk = overlay(M0, fixedBoxes().concat(gearBoxes([], true))), G = ST.G, d = G.deck || {y:G.gw, z:0}, N = M0.nx * M0.nz, out = [];
+    const M0 = ST.M0, Mk = overlay(M0, fixedBoxes().concat(gearBoxes([], true, true))), G = ST.G, d = G.deck || {y:G.gw, z:0}, N = M0.nx * M0.nz, out = [];
     const st = ['sloy', 'is', 'haling', 'door'].map(nm => ST.PT[nm]).filter(q => q && q.k != null && M0.ok(q.k)).map(q => q.k), C0 = deckComp(Mk), st1 = st.filter(k => Mk.ok(k)), joined = st1.filter(k => C0[k] === C0[st1[0]]);   // (the stations that are joined now, from the first that is on the map)
     const keeps = L => { const Mx = overlay(Mk, L.map(q => [q[0], q[2], TUBX + 0.06, TUBZ + 0.06, q[3]])), C = deckComp(Mx); return joined.every(k => Mx.ok(k) && C[k] === C[joined[0]]); };
     const fits = (x, y, z, ry) => { const c = Math.cos(ry), sn = Math.sin(ry);
@@ -850,15 +863,17 @@ function crewSim(src){
   const holds = a => a.relief ? a.relief.g : a.put ? a.put.g : a.goal;
   // (OB10 runde 4) the bodies standing in the kit: the kit is out of the walking map (kitBoxes), but the map holds only where a body's
   // middle may be, so one at the edge of the tubs stood with half his body in them, and nothing caught it (poseHits and bodyHits see
-  // the model only). A body here is a ring of 0.15 m round its middle on its own deck, the cells the kit took out of the map
+  // the model only). A body here is eight points 0.12 m round its middle (its chest and back, the shoulders a little in), tested
+  // against the gear itself: the boxes less their padding (ST.KB, walkMap). Only the gear that comes and goes (the tubs, the nets,
+  // the pots, the freight, the plant's tubs): at the bench, the bleeding tub and the hauler they stand close by design
+  function inKit(x, z){ const B = ST.KB; if (!B || !B.length) return 0; let n = 0;
+    for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, px = x + Math.cos(u) * 0.12, pz = z + Math.sin(u) * 0.12;
+      for (const [cx, cz, hx, hz, ry, pd, gear] of B){ if (!gear) continue; const dx = px - cx, dz = pz - cz, c = Math.cos(ry), sn = Math.sin(ry); if (Math.abs(dx * c - dz * sn) < hx - (pd || 0) && Math.abs(dx * sn + dz * c) < hz - (pd || 0)){ n++; break; } } }
+    return n; }
   // (and one place: the body there, moved off by off, in the kit; for the breaks, idlePlace)
-  function kitAt(k, off){ const M = ST.M, M0 = ST.M0; if (src || M === M0 || !M0.ok(k)) return false; const p = M0.at(k), x = p[0] + (off ? off[0] : 0), z = p[2] + (off ? off[1] : 0);
-    for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, c = M0.cellOf(x + Math.cos(u) * 0.15, z + Math.sin(u) * 0.15); if (M0.ok(c) && !M.ok(c) && Math.abs(M0.at(c)[1] - p[1]) < 0.3) return true; }
-    return false; }
-  function kitHits(){ if (!ready() || src) return null; const M = ST.M, M0 = ST.M0, out = []; if (M === M0) return out;
-    for (const a of visible()){ const o = walkOff(a), x = a.x + o[0], z = a.z + o[1]; let n = 0;
-      for (let i = 0; i < 8; i++){ const u = i * Math.PI / 4, k = M0.cellOf(x + Math.cos(u) * 0.15, z + Math.sin(u) * 0.15); if (M0.ok(k) && !M.ok(k) && Math.abs(M0.at(k)[1] - a.y) < 0.3) n++; }
-      if (n) out.push({id:a.id, mode:a.mode, task:a.task || (a.goal && a.goal.task) || null, n}); }
+  function kitAt(k, off){ if (src || !ST.M0.ok(k)) return false; const p = ST.M0.at(k); return inKit(p[0] + (off ? off[0] : 0), p[2] + (off ? off[1] : 0)) > 0; }
+  function kitHits(){ if (!ready() || src) return null; const out = [];
+    for (const a of visible()){ const o = walkOff(a), n = inKit(a.x + o[0], a.z + o[1]); if (n) out.push({id:a.id, mode:a.mode, task:a.task || (a.goal && a.goal.task) || null, n}); }
     return out; }
   function walkOff(a){ const g = holds(a), o = g && g.off; if (!o) return [0, 0]; if (a.mode === 'at') return [o[0] * (a.blend == null ? 1 : a.blend), o[1] * (a.blend == null ? 1 : a.blend)];
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
