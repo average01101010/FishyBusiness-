@@ -81,6 +81,7 @@ async def main():
         for _ in range(3): await pg.wait_for_timeout(2500); tips.append((await pg.evaluate("G3.signs"))['flag']['tip'])
         check(max(tips) - min(tips) > 0.01, 'duken beveger seg fra bilde til bilde (det ytterste hjørnet)', tips)
         await shot(pg, 'flagg_bris_liggende.png')
+        print('sidefeil', errs)   # (before the last picture: SwiftShader can take minutes over it, and the run's time may end there)
         await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(6000); await shot(pg, 'flagg_bris_staaende.png')
         print('sidefeil', errs)
         await br.close()
