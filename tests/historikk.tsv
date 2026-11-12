@@ -3086,3 +3086,12 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	quotatest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	megletest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	kvotemarkedtest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	admintest	FEIL	0	lite	samtidig	avsluttet med kode 1
+2026-11-12 11:27	ccr-dd09444c-km5	950be53+	markettest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 11:28	ccr-dd09444c-km5	950be53+	quotatest	OK	16	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	megletest	OK	24	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	kvotemarkedtest	OK	25	lite	samtidig	
+2026-11-12 11:29	ccr-dd09444c-km5	950be53+	admintest	OK	10	lite	samtidig	
