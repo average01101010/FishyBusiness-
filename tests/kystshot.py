@@ -22,7 +22,7 @@ SETUP = """async ([kind, dark]) => { const F = ferjeInit(); WX_FORCE = {w:4, d:2
   let q = null; for (const r of [0.3, 0.36, 0.42, 0.24]) { for (let a = 0; a < 6.28 && !q; a += 0.3){ const c = {x:n.p.x + Math.cos(a) * r, y:n.p.y + Math.sin(a) * r}; if (!isLand(c) && depthF(c) > 4) q = c; } if (q) break; }
   b.pos = q || {x:n.p.x + 0.25, y:n.p.y}; b.heading = Math.atan2(n.p.x - b.pos.x, -(n.p.y - b.pos.y)); if (!G3.isActive()) G3.show(true);
   return {id:n.id, name:n.name, L:n.L, p:n.p, hd:n.hd, v:n.v, t:S.t, boat:b.pos}; }"""
-LOOK = """([id, at]) => { const b = S.boat; b.pos = {x:at.x, y:at.y}; b.v = 0; const n = npcStates(S.t / 60).find(q => q.id === id), c = G3._debug.cam; b.heading = Math.atan2(n.p.x - b.pos.x, -(n.p.y - b.pos.y)); c.helm = false; c.dist = 90; c.pitch = 0.12; c.yaw = Math.atan2(n.p.x - S.boat.pos.x, -(n.p.y - S.boat.pos.y)) - S.boat.heading;
+LOOK = """([id, at]) => { const b = S.boat; b.pos = {x:at.x, y:at.y}; b.v = 0; const n = npcStates(S.t / 60).find(q => q.id === id), c = G3._debug.cam; c.helm = false; c.dist = 90; c.pitch = 0.12; c.yaw = Math.atan2(n.p.x - S.boat.pos.x, -(n.p.y - S.boat.pos.y)) - S.boat.heading;
   return {v:n.v, drawn:(G3._debug.npcNow ? G3._debug.npcNow().some(q => q.id === id) : null)}; }"""
 
 async def main():
@@ -31,7 +31,8 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         R = {}
-        for fmt, vp in (('liggende', {'width': 1280, 'height': 800}), ('staaende', {'width': 800, 'height': 1280})):
+        # one format a run (a run of both took more than the runner's 15 minutes): kystshot_st.py is the upright one
+        for fmt, vp in [f for f in (('liggende', {'width': 1280, 'height': 800}), ('staaende', {'width': 800, 'height': 1280})) if f[0] == os.environ.get('KYST_SHOT_FMT', 'liggende')]:
             pg = await (await b.new_context(viewport=vp)).new_page(); errs = []
             pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg, GAME + '#qfix')
