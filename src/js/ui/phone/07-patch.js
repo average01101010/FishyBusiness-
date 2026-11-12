@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['autonav-lang-121126', '12.11.2026', 'Autonav på lange etapper', 'Autonav on long legs', [
+       ['Store båter får nå en rute på lange etapper mellom øyene der Autonav før svarte «Fant ingen rute dit», for eksempel fra Rørvik nordover til Bodø.', 'Big boats now get a route on long legs among the islands where Autonav used to answer «Found no route there», for example from Rørvik north to Bodø.']]],
     ['laerling-121126', '12.11.2026', 'En lærling om bord', 'An apprentice aboard', [
        ['Med ti års fartstid kan du ta en lærling om bord. Lærlingen står i Mannskapsbørsen, spør hvorfor du gjør som du gjør, og svarene dine blir kunnskapen hans.', 'With ten years at sea you can take an apprentice aboard. The apprentice stands in the crew exchange, asks why you do as you do, and your answers become their knowledge.'],
        ['Etter læretida kjøper lærlingen egen båt, fisker fra hjemstedet sitt og tuter når dere møtes. Du får merket «Læremester».', 'After the apprenticeship they buy a boat of their own, fish out of their home harbour and sound the horn when you meet. You get the badge «Master of the trade».'],
