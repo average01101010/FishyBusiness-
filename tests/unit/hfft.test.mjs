@@ -16,20 +16,24 @@ export default function (t){
   const so = spec(60), sy = spec(20), P = {dx:0.6, dz:-0.8, so, sy, dv:0.4, ren:1.1, ia:1.4, wpB:Math.sqrt(2 * Math.PI * 9.81 / 30), lc:31.7};
   // a small tile, so the direct sum is quick
   const T = {N:16, L:30, lo:3, hi:0, seed:7}, S = hfftSpec(T, P), N = T.N, n2 = N * N, dk = 2 * Math.PI / T.L;
-  const W = {plan:hfftPlan(N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2)}, out = new Float32Array(hfftLen(N));
-  const tt = 3.7, st = hfftFrame(T, tt, out, W);
+  const W = {plan:hfftPlan(N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)}, out = new Float32Array(hfftLen(N)), outD = new Float32Array(hfftLen(N));
+  const tt = 3.7, st = hfftFrame(T, tt, out, W, outD);
   // the direct sum: h(x) = sum_k htilde(k) e^{ikx}
   const ht = (i, j) => { const c = j * N + i, cm = ((N - j) % N) * N + (N - i) % N, wt = S.w[c] * tt, co = Math.cos(wt), si = Math.sin(wt), a = S.h0r[c], b = S.h0i[c], a2 = S.h0r[cm], b2 = -S.h0i[cm];
     return [a * co - b * si + a2 * co + b2 * si, a * si + b * co + b2 * co - a2 * si]; };
   let worst = 0, imag = 0;
   for (const [px, pz] of [[0, 0], [3, 11], [15, 15], [7, 2], [9, 13]]){
-    let h = 0, hi = 0, hx = 0, hz = 0, tr = 0;
+    let h = 0, hi = 0, hx = 0, hz = 0, tr = 0, Dx = 0, Dz = 0;
     for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){ const n = i < N / 2 ? i : i - N, m = j < N / 2 ? j : j - N, kx = n * dk, kz = m * dk, k = Math.hypot(kx, kz);
       const [r, im] = ht(i, j), ph = 2 * Math.PI * (i * px + j * pz) / N, c = Math.cos(ph), s = Math.sin(ph), er = r * c - im * s, ei = r * s + im * c;
-      h += er; hi += ei; hx += -kx * ei; hz += -kz * ei; tr += k * er; }
-    const o = (pz * N + px) * 4; worst = Math.max(worst, Math.abs(out[o] - hx), Math.abs(out[o + 1] - hz), Math.abs(out[o + 2] - tr), Math.abs(out[o + 3] - h)); imag = Math.max(imag, Math.abs(hi)); }
+      h += er; hi += ei; hx += -kx * ei; hz += -kz * ei; tr += k * er; if (k > 0){ Dx += kx / k * ei; Dz += kz / k * ei; } }
+    const o = (pz * N + px) * 4; worst = Math.max(worst, Math.abs(out[o] - hx), Math.abs(out[o + 1] - hz), Math.abs(out[o + 2] - tr), Math.abs(out[o + 3] - h), Math.abs(outD[o] - Dx), Math.abs(outD[o + 1] - Dz), Math.abs(outD[o + 2] - h)); imag = Math.max(imag, Math.abs(hi)); }
   t.ok(imag < 1e-6, 'the field is real (the imaginary part of the direct sum is ' + imag.toExponential(1) + ')');
-  t.ok(worst < 2e-5, 'the transform equals the direct sum of the waves for the slopes, the trace and the height (worst ' + worst.toExponential(1) + ')');
+  t.ok(worst < 2e-5, 'the transform equals the direct sum of the waves for the slopes, the trace, the height and the displacement (worst ' + worst.toExponential(1) + ')');
+  // the displacement's sign: for one wave h = A cos(kx), D = A sin(kx), so x - Q D pulls the points toward the crest (Gerstner)
+  { const T1 = {N:16, L:16, lo:0.1, hi:100, seed:1, S:{h0r:new Float32Array(256), h0i:new Float32Array(256), w:new Float32Array(256)}}; T1.S.h0r[1] = 0.25; T1.S.h0r[15] = 0.25; T1.S.w[1] = T1.S.w[15] = 0;
+    const o1 = new Float32Array(hfftLen(16)), d1 = new Float32Array(hfftLen(16)); hfftFrame(T1, 0, o1, W, d1);
+    t.near(d1[4 * 4], Math.sin(2 * Math.PI * 4 / 16), 1e-5, 'one wave h = cos(kx): D = sin(kx), so x - Q D pulls toward the crest'); t.near(o1[3], 1, 1e-5, 'and its height at the crest is 1'); }
   // Parseval: the mean of h^2 over the tile is the sum of |htilde|^2
   let sh = 0; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){ const [r, im] = ht(i, j); sh += r * r + im * im; }
   t.near(st[2], sh, sh * 1e-4, 'the mean square height is the sum of the amplitudes squared (Parseval)');

@@ -8,18 +8,18 @@
   // they never race with the game's 6x. The worker gets the time the frame after next will show (FFT.lat ahead), and its result goes up
   // when it comes; it is never asked again before it has answered, so it never queues. WebGL 2 only (RGBA16F with the levels from the
   // worker, no extension needed); elsewhere, with «#fft0» in the address, or if the worker fails, the sea is as before.
-  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null], have:false, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null};
+  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null};
   const FFTT = HFFT.tiles;
   function fftWorker(){
     const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips].map(f => f.toString()).join('\n') + '\n' +
       'const len = N => { let s = 0; for (let n = N; n >= 1; n >>= 1) s += n * n * 4; return s; };\n' +
       'let T = null, W = null;\n' +
       'onmessage = e => { const D = e.data; try {\n' +
-      '  if (D.tiles){ T = D.tiles.map(t => Object.assign({}, t)); W = T.map(t => { const n2 = t.N * t.N; return {plan:hfftPlan(t.N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2)}; }); }\n' +
+      '  if (D.tiles){ T = D.tiles.map(t => Object.assign({}, t)); W = T.map((t, k) => { const n2 = t.N * t.N; return {plan:hfftPlan(t.N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:k ? null : new Float64Array(n2), im3:k ? null : new Float64Array(n2)}; }); }\n' +
       '  if (D.P) for (const t of T) hfftSpec(t, D.P);\n' +
       '  if (!T || !T[0].S){ postMessage({t:D.t, none:1}); return; }\n' +
-      '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer), st = [];\n' +
-      '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k]));\n' +
+      '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer).concat([new Float32Array(len(T[0].N)).buffer]), st = [];\n' +
+      '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k], k ? null : new Float32Array(bufs[T.length])));\n' +
       '  postMessage({t:D.t, st, bufs, ms:performance.now() - t0}, bufs);\n' +
       '} catch (err){ postMessage({err:String(err && err.message || err)}); } };\n';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
@@ -30,7 +30,7 @@
   }
   function fftOff(why){
     FFT.why = why; FFT.on = false; FFT.ok = false; FFT.have = false; try { FFT.w && FFT.w.terminate(); } catch (e){} FFT.w = null;
-    for (let k = 0; k < 2; k++) if (FFT.tex[k]){ gl.deleteTexture(FFT.tex[k]); FFT.tex[k] = null; }
+    for (let k = 0; k < 3; k++) if (FFT.tex[k]){ gl.deleteTexture(FFT.tex[k]); FFT.tex[k] = null; }
     if (typeof cloudErr === 'function') cloudErr('3D FFT-sjø av: ' + why + ' · ' + GPU, 'view3d fft', '');
   }
   function fftInit(){
@@ -38,7 +38,7 @@
     if (!GL2){ FFT.on = false; FFT.why = 'WebGL 1'; return false; }
     try {
       FFT.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
-      for (let k = 0; k < 2; k++){ const N = FFTT[k].N, lv = Math.log2(N) + 1, tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, tx);
+      for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, lv = Math.log2(N) + 1, tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, tx);
         gl.texStorage2D(gl.TEXTURE_2D, lv, gl.RGBA16F, N, N);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
@@ -66,14 +66,45 @@
     if (D.err){ fftOff('arbeider: ' + D.err); return; }
     if (D.none || !FFT.ok) return;
     const now = performance.now(), t1 = performance.now();
-    for (let k = 0; k < 2; k++){ const N = FFTT[k].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]);
+    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]);
       let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; } }
     gl.activeTexture(gl.TEXTURE0);
+    fftKeep(new Float32Array(D.bufs[2]));
     FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++;
     FFT.ms = FFT.ms ? FFT.ms * 0.9 + D.ms * 0.1 : D.ms; FFT.up = FFT.up ? FFT.up * 0.9 + (performance.now() - t1) * 0.1 : performance.now() - t1;
     // how far ahead to ask: the time a request takes to come back, as the waves' clock counts it
     FFT.lat = clamp(FFT.lat * 0.9 + ((now - FFT.sentAt) / 1000) * 0.1, 0.005, 0.25);
   }
+  // B2, the sea's shape (12.11.2026): the first tile's displacement and height (unit 10) lift the wave patch in the vertex shader where it
+  // can read textures there (SST_VS; the phone keeps waves 4-9's Gerstner shape), at the mip level whose texel is a grid cell (fvLod), so
+  // what the grid cannot hold is filtered out, as the Gerstner waves fade under 2.5 cells; seaDisp reads the same two levels from a copy
+  // here, so the boat, the buoys and the gear lie in the waves that are drawn. The second tile (7.5-0.8 m) is below the grid: light only.
+  const fvLod = () => Math.max(0, Math.log2((2 * HALF / NP) / (FFTT[0].L / FFTT[0].N)));
+  function fftKeep(a){
+    const N = FFTT[0].N, l0 = Math.min(Math.floor(fvLod()), Math.log2(N) - 1); let o = 0, n = N;
+    for (let l = 0; l < l0; l++){ o += n * n * 4; n >>= 1; }
+    const len = n * n * 4 + (n >> 1) * (n >> 1) * 4;
+    if (!FFT.cpu || FFT.cpu.length !== len) FFT.cpu = new Float32Array(len);
+    FFT.cpu.set(a.subarray(o, o + len)); FFT.cpuL = l0;
+  }
+  // is the shape from the tile on (the vertex shader takes it only with textures there, the full sea, and data)
+  const fftShape = () => FFT.on && FFT.ok && FFT.have && FFT.cpu && SST_VS && PS && !PS.lite && !PS.basic && !PS.far;
+  // the tile's (Dx, Dz, h) at a world point, trilinear between the two kept levels as the GPU samples them (FFT_D)
+  const FFT_D = [0, 0, 0];
+  function fftAt(x, z){
+    const N = FFTT[0].N, L = FFTT[0].L, l0 = FFT.cpuL, f = clamp(fvLod() - l0, 0, 1), qx = x - RO.x - NF.D[0], qz = z - RO.z - NF.D[1], A = FFT.cpu;
+    FFT_D[0] = FFT_D[1] = FFT_D[2] = 0;
+    for (let q = 0; q < 2; q++){ const n = N >> (l0 + q), base = q ? (N >> l0) * (N >> l0) * 4 : 0, w = q ? f : 1 - f; if (w <= 0) continue;
+      // (texel centres at (i + 0.5) L / n, as the GPU has them; the tile wraps)
+      let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
+      const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
+      for (let k = 0; k < 3; k++){ const a = A[base + (j0 * n + i0) * 4 + k], b = A[base + (j0 * n + i1) * 4 + k], c = A[base + (j1 * n + i0) * 4 + k], d = A[base + (j1 * n + i1) * 4 + k];
+        FFT_D[k] += w * ((a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv); } }
+    return FFT_D;
+  }
+  // the tiles' amplitude at the boat (A0: the squared Gerstner amplitudes of waves 4-9 for Hs = 1, as the shaders and seaDisp sum them)
+  function fftA0(){ let A0 = 0; const dv = WV.loc[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05));
+    for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = (dv * c.wo + (1 - dv) * c.wy) * ren; A0 += a * a; } return Math.max(A0, 1e-8); }
   // every frame (24-cinema.js, after the waves): ask for the tiles at the time they will be shown, if the worker is free
   function fftStep(t){
     if (!FFT.on || !PS || PS.basic || PS.far) return;
@@ -92,13 +123,15 @@
   function fftBind(u, eye){
     if (u.uFftP == null) return;
     const on = FFT.on && FFT.ok && FFT.have;
+    if (u.uFvP != null) gl.uniform4f(u.uFvP, 0, 0, 0, 1);
     if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1); return; }
-    let A0 = 0; const dv = WV.loc[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05));
-    for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = (dv * c.wo + (1 - dv) * c.wy) * ren; A0 += a * a; }
+    const A0 = fftA0();
     const qx = eye[0] - RO.x - NF.D[0], qz = eye[2] - RO.z - NF.D[1], o = FFTT.map(T => [Math.floor(qx / T.L) * T.L, Math.floor(qz / T.L) * T.L]);
     for (let k = 0; k < 2; k++){ gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]); gl.uniform1i(k ? u.uFft2 : u.uFft1, 8 + k); }
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform4f(u.uFftO, o[0][0], o[0][1], o[1][0], o[1][1]);
-    gl.uniform4f(u.uFftP, 1 / FFTT[0].L, 1 / FFTT[1].L, 1, Math.max(A0, 1e-8));
+    gl.uniform4f(u.uFftP, 1 / FFTT[0].L, 1 / FFTT[1].L, 1, A0);
+    if (u.uFvP != null && fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[2]); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0);
+      gl.uniform4f(u.uFvO, o[0][0], o[0][1], fvLod(), 0); gl.uniform4f(u.uFvP, 1 / FFTT[0].L, 0, 1, A0); gl.uniform4f(u.uFvQ, 0, 0, Math.hypot(FFT.st[0][1], FFT.st[1][1]), 0); }
     const s = FFT.st; gl.uniform4f(u.uFftQ, s[0][0], s[1][0], Math.hypot(s[0][1], s[1][1]), s[0][2] + s[1][2]);
   }

@@ -82,8 +82,10 @@ function hfftSpec(T, P){
 }
 // One frame of a tile at time t (s): out (Float32Array, RGBA per cell, then the mip levels down to 1 x 1) gets the slopes hx and hz,
 // the trace tr of the displacement's derivative and the height h; returns [mean square slope (hx^2 + hz^2), rms of tr, mean h^2].
-// W: the work arrays (re1, im1, re2, im2: Float64Array(N^2)) and the plan, kept between frames.
-function hfftFrame(T, t, out, W){
+// W: the work arrays (re1, im1, re2, im2: Float64Array(N^2)) and the plan, kept between frames. outD (B2, the sea's shape), when given
+// with W.re3 and W.im3: the horizontal displacement D = -i k/|k| h (the surface is drawn at x - Q D, so a crest sharpens as in a
+// Gerstner wave) and the height again, RGBA (Dx, Dz, h, 0) with its levels, for the vertex shader and seaH.
+function hfftFrame(T, t, out, W, outD){
   const N = T.N, dk = 2 * Math.PI / T.L, S = T.S, n2 = N * N, re1 = W.re1, im1 = W.im1, re2 = W.re2, im2 = W.im2;
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){
     const c = j * N + i, ni = (N - i) % N, nj = (N - j) % N, cm = nj * N + ni;
@@ -93,8 +95,11 @@ function hfftFrame(T, t, out, W){
     const hr = a * co - b * si + a2 * co + b2 * si, hi = a * si + b * co + b2 * co - a2 * si;
     // (i kx h) + i (i kz h) and (k h) + i h
     re1[c] = -kx * hi - kz * hr; im1[c] = kx * hr - kz * hi; re2[c] = k * hr - hi; im2[c] = k * hi + hr;
+    // (-i kx/k h) + i (-i kz/k h)
+    if (outD){ const ik = k > 0 ? 1 / k : 0; W.re3[c] = (kx * hi + kz * hr) * ik; W.im3[c] = (kz * hi - kx * hr) * ik; }
   }
   hfft2(W.plan, re1, im1); hfft2(W.plan, re2, im2);
+  if (outD){ hfft2(W.plan, W.re3, W.im3); for (let c = 0; c < n2; c++){ const o = c * 4; outD[o] = W.re3[c]; outD[o + 1] = W.im3[c]; outD[o + 2] = im2[c]; outD[o + 3] = 0; } hfftMips(outD, N); }
   let ms = 0, mt = 0, mh = 0;
   for (let c = 0; c < n2; c++){ const o = c * 4, hx = re1[c], hz = im1[c], tr = re2[c], h = im2[c];
     out[o] = hx; out[o + 1] = hz; out[o + 2] = tr; out[o + 3] = h; ms += hx * hx + hz * hz; mt += tr * tr; mh += h * h; }
