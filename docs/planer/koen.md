@@ -52,7 +52,6 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 ## Øktene som kjører
 
-- `ccr-5e1ba2f4-pusvyd`: TB1, sammenstøtet med tråleren under Autonav (tilbakemelding #1; Jonas' økt, 12.11.2026). Eier `core/05e-sjovei.js`, `tests/unit/sjovei.test.mjs`, `tests/colregtest.py`. Deler `ui/phone/07-patch.js` (flettes).
 - `plan/2026-11-11-88`: steg 88 OB10 runde 3, den nye hurtigsjarken (arbeidsrutinen, 11.11.2026 23:35 UTC). Eier `tools/boats/hs11.py`, `src/data/boat-hs11*`, `tools/boats/qa/hs11_*.py`, `tests/hs11shot.py`, `docs/skipsmodeller/sjarkny-grunnlag.md` og `sjarkny-bygging.md`. Deler `src/index.html`, `vessel3d.js` og `ui/phone/07-patch.js` (flettes).
 - `claude/ob13-kyst21-runde2`: steg 91 OB13 kyst21 runde 2 (Jonas' økt, 12.11.2026 04:05 UTC). Eier `tools/boats/kyst21.py`, `src/data/boat-kyst21*`, `docs/skipsmodeller/kyst21-grunnlag.md`, `tools/boats/potplaces.json` (bare kyst21), `STAB_AT.kyst21` i `core/03c-stability.js`, `tests/unit/trim.test.mjs`, `teiner.test.mjs`. Deler `vessel3d.js`, `ui/phone/07-patch.js` og `tools/boats/fittings.py` (flettes).
 - `ccr-013bxxid-18b`: steg 18b Ø12 D, de siste navnene fra den gamle driftsplanen (Jonas' økt, 12.11.2026). Eier `core/06d-plan-felles.js`, `06g-plan2.js`, `05-vessels.js`, `03-simulation.js`, `13-work.js`, `10-gear.js`, `06-services.js`, `ui/phone/11-rederi.js`, `tests/unit/havplan.test.mjs`.
