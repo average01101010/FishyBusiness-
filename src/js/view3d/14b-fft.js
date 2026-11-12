@@ -20,7 +20,7 @@
       '  if (!T || !T[0].S){ postMessage({t:D.t, none:1}); return; }\n' +
       '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer).concat([new Float32Array(len(T[0].N)).buffer]), st = [];\n' +
       '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k], k ? null : new Float32Array(bufs[T.length])));\n' +
-      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0.1, 8192);\n' +
+      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0, 8192);\n' +
       '  postMessage({t:D.t, st, cq, bufs, ms:performance.now() - t0}, bufs);\n' +
       '} catch (err){ postMessage({err:String(err && err.message || err)}); } };\n';
     const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
@@ -127,11 +127,11 @@
     for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = (dv * c.wo + (1 - dv) * c.wy) * ren; A0 += a * a; } return Math.max(A0, 1e-8); }
   // (tests only, B4: the tiles at a given world time on this thread, from the last spectrum sent, so two pages can be compared at one instant)
   function fftSyncAt(tw){
-    if (!FFT.P) return false;
+    if (!FFT.P) return false; if (FFT.syncT === tw) return true;   // (the same instant again: the tiles are already that)
     const T = FFTT.map(t => Object.assign({}, t)), outs = [];
     for (let k = 0; k < 2; k++){ const n2 = T[k].N * T[k].N, W = {plan:hfftPlan(T[k].N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)};
       hfftSpec(T[k], FFT.P); const o = new Float32Array(hfftLen(T[k].N)), d = k ? null : new Float32Array(hfftLen(T[k].N)); FFT.st[k] = hfftFrame(T[k], tw, o, W, d); outs.push(o); if (d) outs.push(d); }
-    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = FFT.tT = tw; FFT.cq = hfftCapFit(outs[0], T[0].N, FFT.st[0][1], outs[2], T[1].N, FFT.st[1][1], 0.1, 8192); return true;
+    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = FFT.tT = tw; return true;   // (the threshold FFT.cq stays the eased one the live sea uses)
   }
   // every frame (24-cinema.js, after the waves): ask for the tiles at the time they will be shown, if the worker is free
   function fftStep(t){
@@ -156,7 +156,7 @@
     if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1);
       // (the samplers on their own units with a stand-in, 12.11.2026, sea3d: left at unit 0 while the tiles were not up, the foam map's pass
       // drew into the texture bound there, «Feedback loop formed between Framebuffer and active Texture», GL error 1282, on the lighter seas)
-      for (const [nm, k] of [['uFft1', 8], ['uFft2', 9], ['uFftD', 10]]) if (u[nm] != null){ gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u[nm], k); }
+      if (GL2) for (const [nm, k] of [['uFft1', 8], ['uFft2', 9], ['uFftD', 10]]) if (u[nm] != null){ gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u[nm], k); }
       gl.activeTexture(gl.TEXTURE0); return; }
     const A0 = fftA0();
     // (B4: each tile lies in the world, less the boat's own offset for it, NF.O; the shader looks it up at P - uNFD - o, so o is that
@@ -167,9 +167,24 @@
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform4f(u.uFftO, o[0][0], o[0][1], o[1][0], o[1][1]);
     gl.uniform4f(u.uFftP, 1 / FFTT[0].L, 1 / FFTT[1].L, 1, A0);
-    if (u.uFftD != null && !fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0); }
+    if (GL2 && u.uFftD != null && !fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0); }
     if (u.uFvP != null && fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[2]); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0);
       gl.uniform4f(u.uFvO, o[0][0], o[0][1], fvLod(), 0); gl.uniform4f(u.uFvP, 1 / FFTT[0].L, 0, 1, A0); gl.uniform4f(u.uFvQ, 0, 0, Math.hypot(FFT.st[0][1], FFT.st[1][1]), 0); }
     const s = FFT.st; gl.uniform4f(u.uFftQ, s[0][0], s[1][0], Math.hypot(s[0][1], s[1][1]), s[0][2] + s[1][2]);
     if (u.uFftQ2 != null){ const c = FFT.cq || [0, 1, 0]; gl.uniform4f(u.uFftQ2, c[0], c[1], c[2], 0); }
   }
+  // B4: the rest of the near sea's light in the shared sea's place and time (01-shaders.js): the gusts' four slow fields drifting downwind
+  // at 1.2 m/s, the cat's paws (nsP, folded modulo its 256-cell lattice) and the eight ripples (RIP), which ride with her under way as
+  // the short tile does (NF.O[2..3]) and glide back with it. Worked out here in doubles from the world's clock (t + WV.dT) and the world's
+  // place (P + RO), so the shaders get small numbers. Before, they ran on the view's clock in the frame of the render origin.
+  const GSTA = [[0.0021, 0.0013, 0], [-0.0009, 0.0024, 1.3], [0.0047, -0.0031, 2.1], [0.0019, 0.0067, 4.0]];
+  function seaShared(u, t){
+    if (u.uGst == null && u.uRp0 == null && u.uPaw == null) return;
+    const TAU = 2 * Math.PI, md = (v, P) => ((v % P) + P) % P, tw = t + WV.dT, w = env.windDir || [0, 1], wp = [-w[1], w[0]];
+    if (u.uGst != null){ const gx = RO.x - w[0] * 1.2 * tw, gz = RO.z - w[1] * 1.2 * tw; gl.uniform4f(u.uGst, ...GSTA.map(([a, b, c]) => md(a * gx + b * gz + c, TAU))); }
+    if (u.uPaw != null) gl.uniform2f(u.uPaw, md(RO.x * 0.013 - w[0] * 0.026 * tw, 256), md(RO.z * 0.013 - w[1] * 0.026 * tw, 256));
+    if (u.uRp0 != null){ const ox = RO.x - NF.O[2], oz = RO.z - NF.O[3], r = RIP.map((q, j) => { const dx = w[0] * Math.cos(q.ang) + wp[0] * Math.sin(q.ang), dz = w[1] * Math.cos(q.ang) + wp[1] * Math.sin(q.ang);
+        return md(q.k * (dx * ox + dz * oz) - q.om * tw + 1.9 * j, TAU); });
+      gl.uniform4f(u.uRp0, r[0], r[1], r[2], r[3]); gl.uniform4f(u.uRp1, r[4], r[5], r[6], r[7]); }
+  }
+
