@@ -271,6 +271,14 @@ async def run(p, w, h, tag):
       return {G, sh:+sh.toFixed(2), p0:+p0.toFixed(3), p1:+p1.toFixed(3), refused, msg, rod:typeof window.ROD}; })()"""))
     check(jg['G'] == [2, 1.5, 1, 0.5, 0.5] and jg['sh'] > 0 and jg['p1'] < jg['p0'] and jg['refused'] and 'juksa' in jg['msg'] and jg['rod'] == 'undefined',
           'jukse-spillet: midt på gir 2×, din del går ut av den automatiske fangsten mens du spiller, uten juksa kan du ikke fiske, og stanga er borte', jg)
+    # step 103 (Jonas 12.11.2026, «A: Jukse-spillet trekkes»): a bite in the jig game is taken from the stock as the jig's own fish are,
+    # without the haill's extra: with luksushaill a third of the kilos (before, the jig game took nothing from the stock)
+    jt = json.loads(await J("""(() => { const b = S.boat, keep = {pos:{...b.pos}, status:b.status, gear:b.gear}, st0 = S.stock, h0 = S.haill, hold0 = S.hold.slice(), g = GROUNDS[0].p, out = {};
+      b.pos = {x:g.x, y:g.y}; b.status = 'fishing'; b.gear = true; const drawn = () => Object.values(S.stock).reduce((a, v) => a + (1 - v), 0) * STK.K;
+      for (const type of [null, 'luksus']){ S.stock = {}; S.haill = type ? {type, t0:S.t} : null; S.hold = []; const r = JIGG._land(1, 25); out[type || 'uten'] = {kg:+r.kg.toFixed(2), drawn:+drawn().toFixed(2)}; }
+      Object.assign(b, keep); S.stock = st0; S.haill = h0; S.hold = hold0; return out; })()"""))
+    check(jt['uten']['kg'] > 0 and abs(jt['uten']['drawn'] - jt['uten']['kg']) < 0.05 and jt['luksus']['kg'] > 0 and abs(jt['luksus']['drawn'] - jt['luksus']['kg'] / 3) < 0.05,
+          'jukse-spillet: bittet tas fra bestanden, med luksushaill en tredel (steg 103)', jt)
     check(errs == [], 'ingen sidefeil', errs)
     await b.close()
 
