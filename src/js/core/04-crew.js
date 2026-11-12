@@ -5,9 +5,12 @@ const CREW_M = ['Ole Martin', 'Stian', 'Tor Arne', 'Mats', 'Eirik', 'Sondre', 'H
 const CREW_F = ['Kari', 'Ingrid', 'Siri', 'Hanne', 'Marit', 'Tone', 'Line', 'Silje', 'Ida', 'Hege', 'Marte', 'Randi'];
 const CREW_SN = ['Hansen', 'Johansen', 'Olsen', 'Pedersen', 'Karlsen', 'Nilsen', 'Jakobsen', 'Andreassen', 'Berg', 'Eriksen', 'Mikalsen', 'Pettersen', 'Nordvik', 'Hamnvik', 'Strand', 'Isaksen', 'Bakke', 'Mathisen'];
 const CREW_HOME = [['Husøy', 'husoy'], ['Gryllefjord', 'gryllefjord'], ['Senjahopen', 'senjahopen'], ['Botnhamn', 'botnhamn'], ['Finnsnes', 'finnsnes'], ['Torsken', 'torsken'], ['Skaland', null], ['Mefjordvær', null], ['Silsand', null], ['Sørreisa', null], ['Tromsø', null], ['Harstad', null], ['Andenes', null]];
-// where a new hand is from: the places round your home harbour, anywhere on the coast (Senja's list where the game began)
+// where a new hand is from: the places round your home harbour, anywhere on the coast (Senja's list where the game began). Round it: the
+// plants within CREW_HOME_KM, or the three nearest where they lie further apart (before 12.11.2026 the eight nearest, which off Bergen
+// reached Bokn and Stad, 170 km off; found in steg 45b's stikkprøve)
+const CREW_HOME_KM = 60;
 function crewHome(){
-  const hp = portById(S.home || HOME0), f = portById('finnsnes'), near = hp && typeof plantsNear === 'function' ? plantsNear(hp.p, 8) : [];
+  const hp = portById(S.home || HOME0), f = portById('finnsnes'), n8 = hp && typeof plantsNear === 'function' ? plantsNear(hp.p, 8) : [], nIn = n8.filter(q => q.d <= CREW_HOME_KM), near = nIn.length >= 3 ? nIn : n8.slice(0, 3);
   if (hp && f && dist(hp.p, f.p) > 60 && near.length){ const x = near[Math.floor(Math.random() * near.length)].pt; return [x.name, x.id]; }
   return CREW_HOME[Math.floor(Math.random() * CREW_HOME.length)];
 }

@@ -89,4 +89,16 @@ export default function (t){
   // he stays a skipper on the grounds: never back in the exchange
   S.t += 3 * 365 * D; S.bors = {pool:[], day:-1}; K.set('Math', Object.assign(Object.create(Math), {random:() => 0.99})); K.borsTick(S.t / 60);
   t.ok(!S.bors.pool.some(x => x.id === c.id) && S.alumni.some(a => a.id === c.id), 'lærlingen kommer aldri tilbake til børsen; han blir skipper');
+
+  // ---- the coast (stikkprøven): a home harbour near Bergen, Bodø and Båtsfjord; the apprentice is from the places round it, and his boat
+  // fishes on a named ground within 40 km of his home afterwards (alumniGround) ----
+  K.set('Math', Object.assign(Object.create(Math), {random:rnd}));
+  const PORTS = K.get('PORTS'), near1 = re => { const y = PORTS.find(p => re.test(p.name)); return y && PORTS.filter(p => p.mottak).sort((a, c2) => K.dist(a.p, y.p) - K.dist(c2.p, y.p))[0]; };
+  for (const re of [/^Bergen/, /^Bodø/, /^Båtsfjord/]){ const hp2 = near1(re); if (!hp2){ t.ok(false, 'fant ikke ' + re); continue; }
+    S.home = hp2.id; b.status = 'port'; b.port = hp2.id; b.pos = {x:hp2.p.x, y:hp2.p.y}; S.alumni = [];
+    const res = []; for (let i = 0; i < 6; i++){ const a1 = K.laerMake(), home = a1.homePort && K.portById(a1.homePort); S.crew = [a1]; a1.laer.t0 = S.t - L.days * D; K.lifeDepart(a1);
+      const al2 = S.alumni[S.alumni.length - 1], G = K.alumniGround(al2); res.push({home:a1.home, km:home ? Math.round(K.dist(home.p, hp2.p)) : null, g:G ? Math.round(K.dist(G, home ? home.p : hp2.p)) : null}); }
+    const lim = Math.max(K.CREW_HOME_KM, K.plantsNear(hp2.p, 8)[2].d) + 0.5;
+    t.ok(res.every(r => r.km != null && r.km <= lim), hp2.name + ': lærlingen er fra stedene rundt hjemhavna (innen ' + Math.round(lim) + ' km: 60 km, eller de tre nærmeste mottakene)', res);
+    t.ok(res.every(r => r.g != null && r.g <= 40), hp2.name + ': båten hans fisker på et felt innen 40 km fra hjemstedet', res); }
 }
