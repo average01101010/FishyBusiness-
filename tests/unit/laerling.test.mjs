@@ -29,7 +29,8 @@ export default function (t){
   t.eq(A.lv, 'lærling', 'nivået er lærling'); t.near(A.ask, 0.4, 1e-9, 'han vil ha lærlinglott første år, 40 % (§ 24.4)');
   t.ok(A.laer.t0 == null && A.until > S.t, 'han venter i børsen, ikke mønstret ennå');
   // one at a time: no second while he waits
-  days(30); t.eq(S.bors.pool.filter(c => c.laer).length, A.until > S.t ? 1 : S.bors.pool.filter(c => c.laer).length, 'høyst én lærling i børsen');
+  { let mx = 0, second = false; for (let d = 0; d < 30; d++){ S.t += D; K.borsTick(S.t / 60); const L1 = S.bors.pool.filter(x => x.laer); mx = Math.max(mx, L1.length); if (A.until > S.t && L1.some(x => x !== A)) second = true; }
+    t.ok(mx === 1 && !second, 'høyst én lærling i børsen om gangen, og ingen ny mens han venter', {mx, second}); }
   // ---- signs on ----
   const c = A; S.bors.pool = S.bors.pool.filter(x => x !== c); c.hiredT = S.t; c.earn = []; delete c.until; S.crew.push(c); K.laerSign(c);
   t.ok(c.laer.t0 === S.t && c.life && c.life.goal === 'egenbat', 'mønstret på: læretida begynner, drømmen er egen båt');
