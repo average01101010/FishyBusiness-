@@ -3095,3 +3095,7 @@
 2026-11-12 11:29	ccr-dd09444c-km5	950be53+	megletest	OK	24	lite	samtidig	
 2026-11-12 11:29	ccr-dd09444c-km5	950be53+	kvotemarkedtest	OK	25	lite	samtidig	
 2026-11-12 11:29	ccr-dd09444c-km5	950be53+	admintest	OK	10	lite	samtidig	
+2026-11-12 11:37	ccr-dd09444c-km5	257d089	markettest	OK	509	lite	alene	
+2026-11-12 11:38	ccr-dd09444c-km5	257d089	kvotemarkedtest	FEIL	24	lite	alene	FEIL Kystposten «Kvoteprisen denne uka» på forsiden, én i uka: prisen, endringen fra forrige uke, ukas salg fra km_week (antall og median mot taksten); uten sal
+2026-11-12 11:38	ccr-dd09444c-km5	257d089+	kvotemarkedtest	FEIL	25	lite	alene	FEIL Kystposten «Kvoteprisen denne uka» på forsiden, én i uka: prisen, endringen fra forrige uke, ukas salg fra km_week (antall og median mot taksten); uten sal
+2026-11-12 11:39	ccr-dd09444c-km5	257d089+	kvotemarkedtest	OK	25	lite	alene	

@@ -49,7 +49,10 @@ export default function (t){
     t.near(kpkCodIx(sk) / kpkCodIx(su), ix(sk) / ix(su), 1e-9, 'torskeprisen regnes mot normalen for årstiden: vinter mot vår er bare ukeavviket (' + (ix(sk) / ix(su)).toFixed(3) + ')'); }
 
   // ---- the same for every save: WORLD_SEED and the server's stock, nothing from the player's own
-  { const H = Hd(2029, 11, 3), a = kpkAt(H); S = mk(WORLD_SEED, 9e7); S.fleet.length = 0; S.home = 'bodo'; const b = kpkAt(H); S = mk(12345, 1); const c = kpkAt(H);
+  // (the day's price is kept in KPKC: emptied between the saves, so each is worked out from its own state; the control 12.11.2026 found
+  // that the first version read the same cached number three times)
+  const nocache = () => { K.KPKC.v = {}; K.KPKC.n = 0; for (const k in K.get('STKY')) delete K.get('STKY')[k]; };
+  { const H = Hd(2029, 11, 3); nocache(); const a = kpkAt(H); S = mk(WORLD_SEED, 9e7); S.fleet.length = 0; S.home = 'bodo'; nocache(); const b = kpkAt(H); S = mk(12345, 1); nocache(); const c = kpkAt(H);
     t.ok(a === b && b === c, `samme kvotepris i to lagringer med WORLD_SEED (${a} og ${b}), og i en lagring med et annet frø (${c})`); }
   S = mk(WORLD_SEED, 1e5);
 
@@ -62,6 +65,11 @@ export default function (t){
   { const l = {id:'h9', hl:HJ.h9.hl, kpk:200, since:2025};
     t.eq(licValue(l), Math.round(licQ(l).torsk * k), 'licValue er hjemmelens torskekvote × kvoteprisen nå');
     t.eq(l.kpk, 200, 'en hjemmel som alt er kjøpt, beholder l.kpk (det den ble kjøpt for)'); }
+  // a right bought in the quota market is put on the boat with the price of that day (kmApply), and keeps it when the price moves
+  { const v = K.newVesselObj('kyst15', S.boat.port, null); K.vget(v, 'boat').status = 'port'; const y = yearH(H);
+    K.kmApply({kind:'right', id:'h14', hl:HJ.h14.hl, flen:14.99, st:[], landY:y, used:{torsk:0, hyse:0, sei:0}, y}, {how:'put', v}, H); const l = K.vget(v, 'lic');
+    t.eq(l && l.kpk, k, 'en hjemmel kjøpt i Kvotemarkedet får l.kpk = kvoteprisen den dagen (' + k + ')');
+    const H2 = Hd(y + 1, 7, 1), k2 = kpkAt(H2); t.ok(k2 !== k && l.kpk === k && licValue(l, H2) === Math.round(licQ(l, H2).torsk * k2), `og når prisen er ${k2}, er l.kpk fortsatt ${l.kpk} mens verdien følger prisen`); }
   { const O = LIC_OFFERS[0]; t.eq(O.kpk, k, 'tilbudene i Båthandel har kvoteprisen nå (O.kpk ' + O.kpk + ')'); t.eq(licValue(O), Math.round(O.cod * k), 'og prisen deres følger den'); }
   // two times with different prices: the values move with it, the quota the same (inside one year)
   { const y = yearH(H) + 1, a = Hd(y, 2, 1), b = Hd(y, 6, 1), ka = kpkAt(a), kb = kpkAt(b), l = {id:'h14'};

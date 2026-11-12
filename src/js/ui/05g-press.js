@@ -79,7 +79,7 @@ async function pressSkreiFetch(){
 // week, and again while it came back empty in the week's first game day (a sale settled a few minutes late)
 async function pressKvoteFetch(){
   const wk = weekOf(S.t / 60) - 1, K = PRESS.kq; if (PRESS.kqOff || wk < 0 || (K && K.wk === wk && (K.r.n > 0 || S.t / 60 - (wk + 1) * 168 > 24))) return;
-  try { const r = await cloudRpc('km_week', {wk}); if (r) PRESS.kq = {wk, r}; }
+  try { const r = await cloudRpc('km_week', {wk}); PRESS.kq = {wk, r:r || {wk, n:0, right:0, struct:0, med:null}}; }
   catch (e){ if (/ 404$/.test(e.message)) PRESS.kqOff = true; }
 }
 function pressStart(){ setTimeout(() => { pressFetch(true); pressFlush(); }, 8000); setInterval(() => pressFetch(false), 180000); setInterval(pressFlush, 120000); }

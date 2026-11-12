@@ -179,10 +179,12 @@ function pressLand(local){
 function pressKvote(){
   const H = S.t / 60, wk = typeof weekOf === 'function' ? weekOf(H) : -1; if (wk < 1 || typeof kpkAt !== 'function') return [];
   const H0 = wk * 168, k = kpkAt(H0), k1 = kpkAt(H0 - 168), ch = Math.round((k / k1 - 1) * 1000) / 10, R = PRESS.kq && PRESS.kq.wk === wk - 1 ? PRESS.kq.r : null;
-  const mv = Math.abs(ch) < 0.5 ? ['uendret fra forrige uke', 'unchanged from last week'] : ch > 0 ? ['opp ' + fmt(ch, 1) + ' % fra forrige uke', 'up ' + fmt(ch, 1) + '% from last week'] : ['ned ' + fmt(-ch, 1) + ' % fra forrige uke', 'down ' + fmt(-ch, 1) + '% from last week'];
+  const mv = k === k1 ? ['uendret fra forrige uke', 'unchanged from last week'] : ch > 0 ? ['opp ' + fmt(ch, 1) + ' % fra forrige uke', 'up ' + fmt(ch, 1) + '% from last week'] : ['ned ' + fmt(-ch, 1) + ' % fra forrige uke', 'down ' + fmt(-ch, 1) + '% from last week'];
   const body = [];
-  if (R && R.n > 0 && R.med != null){ const pc = Math.round(R.med * 100), w = [R.right ? (R.right === 1 ? 'én hjemmel' : R.right + ' hjemler') : null, R.struct ? (R.struct === 1 ? 'én strukturkvote' : R.struct + ' strukturkvoter') : null].filter(Boolean),
-      we = [R.right ? (R.right === 1 ? 'one right' : R.right + ' rights') : null, R.struct ? (R.struct === 1 ? 'one structure quota' : R.struct + ' structure quotas') : null].filter(Boolean);
+  // (the numbers up to ten in words, as the paper writes them)
+  const nw = (n, lg) => n <= 10 ? (lg ? ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'] : ['', 'én', 'to', 'tre', 'fire', 'fem', 'seks', 'sju', 'åtte', 'ni', 'ti'])[n] : String(n);
+  if (R && R.n > 0 && R.med != null){ const pc = Math.round(R.med * 100), w = [R.right ? nw(R.right) + (R.right === 1 ? ' hjemmel' : ' hjemler') : null, R.struct ? nw(R.struct) + (R.struct === 1 ? ' strukturkvote' : ' strukturkvoter') : null].filter(Boolean),
+      we = [R.right ? nw(R.right, 1) + (R.right === 1 ? ' right' : ' rights') : null, R.struct ? nw(R.struct, 1) + (R.struct === 1 ? ' structure quota' : ' structure quotas') : null].filter(Boolean);
     body.push(['I Kvotemarkedet ble det solgt ' + w.join(' og ') + ' forrige uke. Mediansalget lå på ' + pc + ' % av taksten.', 'In the quota market, ' + we.join(' and ') + ' sold last week. The median sale was ' + pc + '% of the valuation.']); }
   body.push(['Taksten følger torskeprisen og kvoteutsiktene: kvoterådet for neste år kommer i juni og totalkvoten i oktober.', 'The valuation follows the cod price and the quota outlook: the advice for next year comes in June and the total quota in October.']);
   body.push(['Registeret selger hjemler til taksten og kjøper dem tilbake til 90 % av den. Hjemlene og strukturkvotene til salgs står under Kvote → Marked.', 'The register sells rights at the valuation and buys them back at 90% of it. The rights and structure quotas for sale are under Quota → Market.']);
