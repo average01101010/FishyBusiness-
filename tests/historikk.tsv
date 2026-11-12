@@ -3086,3 +3086,15 @@
 2026-11-12 08:11	claude/ob13-kyst21-runde2	3193912	maletest	OK	23	lite	samtidig	
 2026-11-12 09:31	ccr-899a9674-q3gjp0	dea685f	sea3d	FEIL	2917	3d	alene	FEIL over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h) [0.92, 3.22]
 2026-11-12 10:25	ccr-899a9674-q3gjp0	1d40c0f	dbg23o	OK	44	3d	alene	
+2026-11-12 11:09	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	0	lite	alene	avsluttet med kode 1
+2026-11-12 11:10	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	40	lite	alene	avsluttet med kode 1
+2026-11-12 11:11	claude/k3-sjomerker-33d	7490aeb+	maptest	FEIL	39	lite	alene	FEIL a pack gone from a new manifest (404): the page sees it at once and the update bar comes (7044 ms, map: chart0-0-0-41c737483bb5.wasm 404)
+2026-11-12 11:19	claude/k3-sjomerker-33d	f618eda+	marktest	FEIL	7	lite	alene	FEIL the 3D view's markInto can be asked (G3._debug)
+2026-11-12 11:20	claude/k3-sjomerker-33d	4ff948f+	marktest	FEIL	8	lite	samtidig	FEIL no buoy or beacon without a side drawn as port: the lateral marks without one are few and drawn white  {"noside": 57, "kinds": "ABCDIKLMPYmy"}
+2026-11-12 11:21	claude/k3-sjomerker-33d	4ff948f+	maptest	OK	37	lite	samtidig	
+2026-11-12 11:30	claude/k3-sjomerker-33d	4ff948f+	marktest	OK	7	lite	alene	
+2026-11-12 11:33	claude/k3-sjomerker-33d	285918c+	obstest	OK	9	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	farttest	OK	388	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	installtest	OK	51	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	boottest	OK	34	lite	samtidig	
+2026-11-12 11:39	claude/k3-sjomerker-33d	63914d8+	trip2	OK	45	lite	samtidig	
