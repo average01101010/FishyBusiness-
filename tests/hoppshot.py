@@ -118,7 +118,7 @@ async def one(p, name, vw, vh):
     t6 = await J("() => document.getElementById('phone').innerText")
     await pg.screenshot(path=os.path.join(OUT, 'hopp-trim-' + name + '.png'))
     await J("() => { PHONE.show(false); S.hopSrv = []; shopMode = window.__sm; }")
-    check(c6['lab'] == 'Bruk hoppet fra Kaiboden' and 'i virkeligheten' in c6['text'] and 'høyst 60 minutter i virkeligheten' in t6, name + ': 4e. et hopp i Kaiboden tilbys på ruta, og Trim-fanen viser det med ekte minutter', {'lab': c6['lab']})
+    check(c6['lab'] == 'Bruk hoppet fra Kaiboden' and 'i virkeligheten' in c6['text'] and '\U0001F48E' not in c6['text'] and 'høyst 60 minutter i virkeligheten' in t6, name + ': 4e. et hopp i Kaiboden tilbys på ruta uten pris (det er betalt), og Trim-fanen viser det med ekte minutter', {'lab': c6['lab']})
     check(not errs, name + ': 5. ingen sidefeil', errs[:3])
     await br.close()
 

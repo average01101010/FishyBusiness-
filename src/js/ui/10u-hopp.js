@@ -34,11 +34,12 @@ function hopCard(h, q){
   const w = q.w, pt = w.port && portById(w.port), np = pt ? null : nearestPlace(w);
   h += '<p>' + (pt ? hopL('Til ', 'To ') + '<b>' + hopEsc(pt.name) + '</b>. ' : hopL('Til neste stopp på ruta, ', 'To the next stop on the route, ') + '<b>' + hopEsc(hopL(np.no, np.en)) + '</b>. ') +
     hopL('Du sparer ', 'You save ') + '<b>' + hopSaved(q.real, S.lang === 'en') + '</b>' + hopL(' og er fremme med en gang.', ' and are there at once.') + '</p>' +
-    '<p>' + hopL('Dieselen, fisken, isen og folkene om bord går som om dere seilte. Fartstid og distanse får du bare ved å seile.', 'The diesel, the fish, the ice and the people aboard go as if you had sailed. Sea time and miles come only from sailing.') + '</p>' +
-    '<p class="hop-kr">' + (typeof realKr === 'function' ? realKr(q.kr) : '\u{1F48E} ' + q.kr + ' kr') + '</p>';
+    '<p>' + hopL('Dieselen, fisken, isen og folkene om bord går som om dere seilte. Fartstid og distanse får du bare ved å seile.', 'The diesel, the fish, the ice and the people aboard go as if you had sailed. Sea time and miles come only from sailing.') + '</p>';
   // a hop kept in Kaiboden that covers this route (the shortest that does), else the purchase; the Admin app's switch hops for free
   // (only as the server said it this session, SHOP.hopFresh: a save from another device may still list a hop used there)
   const kept = typeof SHOP !== 'undefined' && SHOP.hopFresh ? (S.hopSrv || []).filter(x => !HOPUI.pend.has(x.id) && hopCovers(x.min, q.realMin)).sort((a, b) => a.min - b.min)[0] : null;
+  // (the price only for a hop to be bought: one kept in Kaiboden is paid for, and a price by it would read as a new payment)
+  if (!kept) h += '<p class="hop-kr">' + (typeof realKr === 'function' ? realKr(q.kr) : '\u{1F48E} ' + q.kr + ' kr') + '</p>';
   let btn;
   if (kept){ h += '<p>' + hopL('Du har et hopp i Kaiboden for en tur på høyst ' + kept.min + ' minutter i virkeligheten. Det brukes nå, uten ny betaling.', 'You have a hop kept in Kaiboden for a trip of at most ' + kept.min + ' real minutes. It is used now, with no new payment.') + '</p>'; btn = hopL('Bruk hoppet fra Kaiboden', 'Use the hop from Kaiboden'); }
   else if (hopAdm()){ h += '<p class="hop-test">' + hopL('Admin: hoppet er gratis med testbryteren.', 'Admin: the hop is free with the test switch.') + '</p>'; btn = hopL('Hopp', 'Hop'); }
