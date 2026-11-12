@@ -62,7 +62,7 @@ export default function (t){
   // the help at sea (sjøloven § 135 third paragraph): the time it took, less the way made towards the next checkpoint at top speed
   { const {lopSosEnd} = K, S0 = newState(); K.set('S', S0);
     const A = LOP.start.p, B = LOP.cps[0].p, kmT = K.kmTrue(A, B), along = nm => ({x:A.x + (B.x - A.x) * nm * K.NM / kmT, y:A.y + (B.y - A.y) * nm * K.NM / kmT});
-    const r = () => ({type:'sjark', legs:[], ded:[], sos:{id:'m1', t:100, p:{x:A.x, y:A.y}}});   // the havsjark: 10 kn
+    const r = () => ({vid:'en-annen', type:'sjark', legs:[], ded:[], sos:{id:'m1', t:100, p:{x:A.x, y:A.y}}});   // the havsjark (10 kn, 8,5 marsj), not the boat bound
     const r1 = r(); lopSosEnd(r1, 220, {x:A.x, y:A.y}); t.eq(r1.ded.map(x => x.min), [120], 'to timer med hjelp, tilbake der hun svarte: 120 min trukket fra');
     const r2 = r(); lopSosEnd(r2, 160, along(10)); t.eq(r2.ded.length, 0, 'svarte og seilte videre 10 nm på en time: ingenting trukket fra (anropet gir ingen gratis tid)');
     const r3 = r(); lopSosEnd(r3, 220, along(-5)); t.near(r3.ded[0].min, 150, 1, 'to timer og 5 nm bakover: 120 og veien tilbake (30 min på 10 kn)');

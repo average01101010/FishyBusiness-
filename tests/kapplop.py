@@ -43,7 +43,7 @@ ROUTE = """async (k) => { const b = S.boat, A = portById(b.port);
   if (k !== 'goal') S.plan.wps[S.plan.wps.length - 1].port = to.id;
   return {nm:+r.nm.toFixed(1), n:r.wps.length}; }"""
 RUN = """() => { const L = S.lop || {}, r = L.run, T = r ? lopTime(r, S.t) : null;
-  return {st:r ? r.st : null, cls:r ? r.cls : null, t0:r ? r.t0 : null, legs:r ? r.legs.map(l => l.pid) : null, pen:r ? r.pen.length : null, T, t:S.t,
+  return {st:r ? r.st : null, cls:r ? r.cls : null, t0:r ? r.t0 : null, legs:r ? r.legs.map(l => l.pid) : null, legT:r ? r.legs.map(l => l.t) : null, pen:r ? r.pen.length : null, T, t:S.t,
     bst:S.boat.status, port:S.boat.port, hist:(L.hist || []).slice(0, 2), best:L.best || {}, legsN:L.legsN || 0}; }"""
 # sailed minute by minute (open) or an hour at a time as catchUp plays the time the game was closed; until she is in port, the attempt
 # is over, or n minutes have gone. A way round shallow water found by Autonav is waited for (sailWaiting), as playMinutes does
@@ -113,7 +113,7 @@ async def main():
         await J("() => farvRec({k:'fart', kn:5, v:9.2, name:'Lindesnes'})")
         s = await J(SAIL, {}); r = await J(RUN)
         check(s['st'] == 'port' and r['legs'] == [a and (await J("() => LOP.cps[0].port"))], '2. sjekkpunkt Bergen: etappe 1', {'s': s, 'legs': r['legs']})
-        T = r['T']; check(T and T['pen'] == 15 and abs(T['min'] - (T['raw'] + 15)) < 1e-9 and T['splits'] and abs(T['splits'][0] - T['min']) < 1e-9,
+        T = r['T']; check(T and T['pen'] == 15 and abs(T['min'] - (T['raw'] + 15)) < 1e-9 and T['splits'] and abs(T['splits'][0] - (r['legT'][0] - r['t0'] + 15)) < 1e-9,
                           '2. tida med tillegget for fartsgrensa (15 min) og mellomtida i Bergen', T)
         leg1 = s['min']; print('ETAPPE 1 seilt på ' + str(leg1) + ' spillminutter (' + str(rt.get('nm')) + ' nm)')
         # 3. the clock in harbour and at the bunker
