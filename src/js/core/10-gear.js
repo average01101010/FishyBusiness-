@@ -669,7 +669,7 @@ function finishHaul(g, H){
 
 // ---- a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
 // Before a gale (over 17 m/s within 36 hours) the gear is brought home instead of set again.
-// n: how many units the standing plan's field wants (06d-drift.js); a string of nets longer than that is split, a shorter one goes as it is
+// n: how many units the standing plan's field wants (06g-plan2.js); a string of nets longer than that is split, a shorter one goes as it is
 function cycleSpec(kind, want, n){
   const pg = S.pgear;
   if (kind === 'garn'){ const ok = x => !want || (x.mesh === want.mesh && netTy(x) === netTy(want)), L = pg.nets.filter(ok).length ? pg.nets.filter(ok) : pg.nets;
@@ -707,7 +707,7 @@ function opsGearNeeds(o){
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
   { const n = (o.wps || []).filter(w => w.act && w.act.only === 'set').length; if (n > pg.kits.n) miss.push(gL('for få blåsesett om bord (' + pg.kits.n + ' av ' + n + ')', 'too few buoy sets aboard (' + pg.kits.n + ' of ' + n + ')')); }
-  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = potsAboard(pg) * potBaitKg(potK()) - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
+  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = potsAboard(pg) * potBaitKg(potK()) - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !autoL(pg) && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }

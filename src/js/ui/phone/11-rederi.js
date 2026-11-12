@@ -6,7 +6,7 @@
   function selRow(){ if (S.fleet.length < 2) return ''; const s0 = selVessel(); return '<div class="ph-sub">' + S.fleet.map(v => '<button class="' + (v === s0 ? 'on' : '') + '" data-pa="vsel" data-id="' + v.id + '">' + vget(v, 'boatName') + (v.id === S.me ? ' ⚓' : '') + '</button>').join('') + '</div>'; }
   // the bound vessel at a glance, with what needs attention
   function vSummary(){
-    const b = S.boat, H = S.t / 60, o = plan2Ops(), sk = opsSkipper(), day = gDate(H).toISOString().slice(0, 10), al = [];   // (Driftsplan 2: the v4 plan, an older one switched off with its message)
+    const b = S.boat, H = S.t / 60, o = plan2Ops(), sk = actingSkipper(), day = gDate(H).toISOString().slice(0, 10), al = [];   // (Driftsplan 2: the v4 plan, an older one switched off with its message)
     const inc = S.sales.filter(x => x.v === S.cur && gDate(x.t / 60).toISOString().slice(0, 10) === day).reduce((a, x) => a + x.total, 0);
     const A = (k, no, en, app) => al.push({id:S.cur, k, no, en, app});
     if (b.status === 'engine') A('eng', 'Motorstopp', 'Engine stopped', 'redning');

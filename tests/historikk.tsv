@@ -2908,6 +2908,29 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
+2026-11-12 04:00	plan/2026-11-11-88	c4841603	trip2	OK	32	lite	samtidig	
+2026-11-12 04:00	plan/2026-11-11-88	c4841603	maletest	OK	22	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	regmarktest	OK	7	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	vesseltest	FEIL	23	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	lanterntest	OK	15	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	walktest	FEIL	16	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 54
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	crewclip	FEIL	21	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 04:02	plan/2026-11-11-88	c4841603	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-12 04:02	plan/2026-11-11-88	c4841603	boottest	OK	26	lite	samtidig	
+2026-11-12 04:03	plan/2026-11-11-88	c4841603	dbg23o	OK	43	3d	alene	
+2026-11-12 04:12	plan/2026-11-11-88	c4841603	docktest	OK	64	lite	alene	
+2026-11-12 04:13	plan/2026-11-11-88	c4841603	docktest	OK	66	lite	alene	
+2026-11-12 04:15	plan/2026-11-11-88	c4841603+	docktest	FEIL	69	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-12 04:16	plan/2026-11-11-88	c4841603+	docktest	OK	66	lite	alene	
+2026-11-12 04:18	plan/2026-11-11-88	c4841603+	docktest	OK	64	lite	alene	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	hulltest	OK	76	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	autonavtest	OK	24	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	colregtest	OK	733	lite	samtidig	
+2026-11-12 03:37	ccr-5e1ba2f4-pusvyd	e172bbd	autonavtest	OK	25	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	hulltest	OK	71	lite	samtidig	
+2026-11-12 03:56	ccr-5e1ba2f4-pusvyd	b8681f0	autonavtest	FEIL	39	lite	samtidig	sidefeil: ['map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)', 'map: mask block 21,131 is not loaded (sim-4-26-fcf1a22c6eec.wasm)']
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sqltest	FEIL	40	lite	samtidig	FEIL sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing swit
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sponsor2test	FEIL	14	lite	samtidig	FEIL bare Malerverkstedets egne farger kan males (ikke en fri farge, ikke den som må fortjenes), og med logo_url er merket sponsorens bilde  {"hull": null, "hou
 2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	maletest	OK	14	lite	samtidig	
@@ -2954,3 +2977,85 @@
 2026-11-12 07:15	claude/ob13-kyst21-runde2	6405cc9+	regmarktest	OK	7	lite	samtidig	
 2026-11-12 07:21	claude/ob13-kyst21-runde2	a748e2e	vesseltest	FEIL	18	lite	alene	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
 2026-11-12 07:36	claude/ob13-kyst21-runde2	a748e2e	tral3d	FEIL	900	3d	alene	gikk ut på tid
+2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	driftsplan2ui	OK	38	lite	samtidig	
+2026-11-12 04:17	ccr-013bxxid-18b	f923c4c	opsowntest	OK	49	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	fleet2test	FEIL	35	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	fleet3test	OK	18	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	geartest	OK	50	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	skiptest	OK	21	lite	samtidig	
+2026-11-12 04:18	ccr-013bxxid-18b	f923c4c	skipdrift	OK	32	lite	samtidig	
+2026-11-12 04:19	ccr-013bxxid-18b	f923c4c	boottest	OK	38	lite	samtidig	
+2026-11-12 04:19	ccr-013bxxid-18b	f923c4c	mig2test	OK	28	lite	samtidig	
+2026-11-12 04:20	ccr-013bxxid-18b	f923c4c	trip2	OK	53	lite	samtidig	
+2026-11-12 04:20	ccr-013bxxid-18b	f923c4c	worktest	FEIL	40	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 04:36	ccr-013bxxid-18b	f923c4c+	havplantest	FEIL	963	lite	samtidig	FEIL the hold at 95 %: the strings hauled home, the landing at the plant, the other crew signs on [0, 1, 584696, [0, 1]]
+2026-11-12 04:36	ccr-013bxxid-18b	f923c4c+	driftsplan2kyst	OK	227	lite	samtidig	
+2026-11-12 04:38	ccr-013bxxid-18b	f923c4c+	driftsplan2test	FEIL	162	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-12 04:42	ccr-013bxxid-18b	f923c4c+	fleet2test	OK	29	lite	alene	
+2026-11-12 04:44	ccr-013bxxid-18b	4f5f8f2	driftsplan2test	FEIL	118	lite	alene	FEIL S9 the same steps in the same order within five minutes, the same gear set and hauled at the same minutes, the same place and rest at the end ['likt', Fals
+2026-11-12 04:54	ccr-013bxxid-18b	b16b070	geartest	OK	40	lite	alene	
+2026-11-12 04:56	ccr-013bxxid-18b	b16b070	driftsplan2test	FEIL	115	lite	alene	FEIL S9 the same steps in the same order within five minutes, the same gear set and hauled at the same minutes, the same place and rest at the end ['likt', Fals
+2026-11-12 04:59	ccr-013bxxid-18b	b16b070+	driftsplan2test	OK	116	lite	alene	
+2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	avtaleshot	OK	15	lite	samtidig	
+2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	crewlifetest	OK	7	lite	samtidig	
+2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	selfcrew	OK	8	lite	samtidig	
+2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	crewtest	OK	15	lite	samtidig	
+2026-11-12 04:35	claude/o11-9-arbeidsavtalen	c48ec75+	avtaleshot	OK	12	lite	alene	
+2026-11-12 04:40	claude/o11-9-arbeidsavtalen	0914db8	lotttest	OK	15	lite	samtidig	
+2026-11-12 04:40	claude/o11-9-arbeidsavtalen	0914db8	skiptest	OK	25	lite	samtidig	
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	fleet2test	FEIL	33	lite	samtidig	FEIL both vessels went out, at the same time
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	opsowntest	OK	52	lite	samtidig	
+2026-11-12 04:41	claude/o11-9-arbeidsavtalen	0914db8	worktest	FEIL	31	lite	samtidig	FEIL asleep the screen is black with a countdown; after eight hours you wake with 60 %
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	opptest	FEIL	72	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	skattetest	OK	9	lite	samtidig	
+2026-11-12 04:42	claude/o11-9-arbeidsavtalen	0914db8	boktest	OK	10	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	docktest	OK	67	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	vesseltest	FEIL	20	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	krabbefabrikktest	OK	19	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	fabrikktest	OK	14	lite	samtidig	
+2026-11-12 04:43	claude/o11-9-arbeidsavtalen	0914db8	turtest	OK	20	lite	samtidig	
+2026-11-12 04:44	claude/o11-9-arbeidsavtalen	0914db8	trip2	OK	37	lite	samtidig	
+2026-11-12 04:46	claude/o11-9-arbeidsavtalen	0914db8	saytest	OK	128	3d	alene	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	worktest	OK	26	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	avtaleshot	OK	14	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	crewlifetest	OK	7	lite	samtidig	
+2026-11-12 04:49	claude/o11-9-arbeidsavtalen	0914db8+	selfcrew	OK	7	lite	samtidig	
+2026-11-12 03:56	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	46	3d	alene	
+2026-11-12 04:20	ccr-899a9674-q3gjp0	e261f8f+	dbg23o	OK	57	3d	alene	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	colregtest	OK	732	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	autonavtest	OK	42	lite	samtidig	
+2026-11-12 04:17	ccr-5e1ba2f4-pusvyd	6ab82d1	hulltest	OK	71	lite	samtidig	
+2026-11-12 04:38	ccr-899a9674-q3gjp0	455a897+	fellessjo	FEIL	276	3d	alene	FEIL lying still at the same place, the two pages have the same waves at the same world time (within 2 cm) {'worst': 0.06, 'spread of the sea': 0.504}
+2026-11-12 04:55	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	300	3d	alene	
+2026-11-12 05:00	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	295	3d	alene	
+2026-11-12 05:06	ccr-899a9674-q3gjp0	455a897+	dbg23o	OK	48	3d	alene	
+2026-11-12 05:11	ccr-899a9674-q3gjp0	455a897+	fellessjo	OK	315	3d	alene	
+2026-11-12 05:32	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	149	3d	alene	avsluttet med kode 1
+2026-11-12 05:42	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	614	3d	alene	FEIL after she has glided back, the two pages have the same waves again where she stopped (within 2 cm) {'worst': 0.3141}
+2026-11-12 05:54	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	649	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 05:59	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	301	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 06:04	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	304	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': 0.00
+2026-11-12 06:13	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	500	3d	alene	FEIL after she has glided back, the two pages have the same waves again where she stopped (within 2 cm) {'worst': 0.0904}
+2026-11-12 06:23	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	607	3d	alene	FEIL after she has glided back, the two pages have the same waves again between the boats (within 2 cm) {'worst': 0.0559}
+2026-11-12 06:28	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	284	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, more than a metre in 25 s and no faster than 0.3 m/s (0.15 for the short tile) {'g': -0.0
+2026-11-12 06:34	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	FEIL	269	3d	alene	FEIL stopped after sailing, her own sea glides back to the shared one, by more than half a metre in 10 s and no faster than 0.3 m/s (0.15 for the short tile) {'
+2026-11-12 06:42	ccr-899a9674-q3gjp0	38f6cad+	skumkant	OK	520	3d	alene	
+2026-11-12 06:51	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	OK	485	3d	alene	
+2026-11-12 07:04	ccr-899a9674-q3gjp0	38f6cad+	fellessjo	OK	435	3d	alene	
+2026-11-12 07:06	ccr-899a9674-q3gjp0	38f6cad+	dbg23o	OK	45	3d	alene	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	boottest	OK	32	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	lanterntest	OK	17	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	maletest	OK	20	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	regmarktest	OK	7	lite	samtidig	
+2026-11-12 04:29	plan/2026-11-11-88	0f86c6a2	vesseltest	FEIL	17	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:30	plan/2026-11-11-88	0f86c6a2	docktest	OK	63	lite	samtidig	
+2026-11-12 04:30	plan/2026-11-11-88	0f86c6a2	trip2	OK	32	lite	samtidig	
+2026-11-12 04:31	plan/2026-11-11-88	0f86c6a2	dbg23o	OK	44	3d	alene	
+2026-11-12 04:53	claude/o11-9-arbeidsavtalen	add6b5c+	avtaleshot	OK	13	lite	alene	
+2026-11-12 05:04	ccr-013bxxid-18b	10be644	boottest	OK	39	lite	samtidig	
+2026-11-12 05:04	ccr-013bxxid-18b	10be644	trip2	OK	40	lite	samtidig	
+2026-11-12 05:05	ccr-013bxxid-18b	10be644	geartest	OK	37	lite	samtidig	
+2026-11-12 05:11	ccr-013bxxid-18b	3b52223	opptest	FEIL	74	lite	samtidig	FEIL nettbutikken har halerne, ikke trinnene, og ingen NaN eller undefined  ['brovakt', 'vhf', 'ais', 'plotter', 'radar', 'chirp', 'jukse', 'linehaler', 'garnha
+2026-11-12 05:11	ccr-013bxxid-18b	3b52223	vesseltest	FEIL	39	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	opptest	OK	73	lite	samtidig	
+2026-11-12 05:13	ccr-013bxxid-18b	3b52223+	vesseltest	OK	38	lite	samtidig	

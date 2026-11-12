@@ -68,7 +68,7 @@ Spiller- og NPC-båter innenfor 150 m får samme agenter (bare stasjonene), to p
 ## Del 2: livet deres (økt 12–15)
 
 - `life = {home, fam, goal (egenbåt/skipper/ro), saved, story[]}` på hvert mannskap; målet synlig på kortet fra dag én. `lifeTick()` i `core/14-crewlife.js` daglig, mot felles klokke: sparing (lotten × 0,4), livshendelser etter alder og familie som meldinger på dialekt (bryllup: tre dager fri; barn; sykdom; skade ved fall på dekk i grov sjø, med et synlig fall når rullingen går over grensen uten rekke å holde i, tre uker i land på hyre).
-- Avmønstring til egen båt med en ukes varsel; Kystposten skriver; han blir NPC-skipper ved hjemstedet (`S.alumni`, høyst 10, tegnes innenfor AIS-rekkevidde av hjemhavna) og hilser med hornet til VHF-praten er bygd.
+- Avmønstring til egen båt med oppsigelsesfristen i skipsarbeidsloven (før Ø11.9, 12.11.2026: en ukes varsel); Kystposten skriver; han blir NPC-skipper ved hjemstedet (`S.alumni`, høyst 10, tegnes innenfor AIS-rekkevidde av hjemhavna) og hilser med hornet til VHF-praten er bygd.
 - Skipper på båt to for den med målet og vurderingen (rollene fra driftsplanen), så driftsplanen går uten spilleren om bord.
 - Tilbakekomst etter 1–2 år til lavere lott.
 - `c.story` høyst 12 linjer, skrevet i `crewSettle`, `sell()`, `recCatch`, `borsTick`, `crewQuit`.

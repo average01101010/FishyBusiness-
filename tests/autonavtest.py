@@ -199,6 +199,10 @@ async def main():
             check(r['pull'] and r['pull']['to'] < r['pull']['from'] and r['n2'] <= 24 and r['bad2'] == 0, '9d. Honningsvåg → Hammerfest: leinettets vei er rettet ut (færre punkter), ingen etappe grunnstøter', {k: r[k] for k in ('n2', 'nm2', 'pull', 'by2', 'bad2')})
         # 10. over the open sea (H1b R6): each started without returning its promise and polled (a long route outlives evaluate's wait)
         for an, la, lo, name in json.load(open(ROUTES))['hav']['routes']:
+            # (the map round the port is loaded before the boat is put there and before the clock starts: put there first, the game's
+            # own tick read a block of it not yet in, «map: mask block 21,131 is not loaded», and the time counted its loading, 8-10.4 s
+            # for Bergen–Shetland against the 10 s; TB1 12.11.2026)
+            await J("""(async ([an]) => { const A = PORTS.find(p => p.name === an) || PORTS.find(p => p.name.startsWith(an)); await mapNeed({...A.p}, MAPD.simR); return 1; })""", [an])
             await J("""(([an, la, lo]) => { window.__hav = null; const A = PORTS.find(p => p.name === an) || PORTS.find(p => p.name.startsWith(an)), B = P(la, lo);
               S.boat.status = 'port'; S.boat.port = A.id; S.boat.pos = {...A.p}; S.plan = null; const t0 = performance.now();
               leiaRoute({...A.p}, B, A.id, null).then(async r => { const ms = Math.round(performance.now() - t0); if (r.why){ window.__hav = {why:r.why[0], ms}; return; }

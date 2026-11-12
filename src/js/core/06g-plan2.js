@@ -4,9 +4,8 @@
 // the gear in the sea by ONE function, planDay: the steps with their hours (out, set, jig, haul, land, home, baiting, rest, watches). The
 // page shows that day, and the engine (part 2) follows it; there is no other sketch. Nothing here searches or waits: the legs are kept in
 // o.legs when the plan is made (part 2), and a leg not known is reckoned straight with a fifth on.
-// DRIFT2 is the switch: off, today's plan (06d-drift.js) runs as before and no save is touched; on (part 7), plan2Ops switches older plans
-// off with a word (Jonas 26.10.2026, choice 5 C) and the new engine runs.
-let DRIFT2 = true;   // on since 27.10.2026 (part 7): the old plan's code (06d-drift.js, ui/05c-drift.js) stays until part 8 and runs with the switch off (the old tests set it)
+// The plan in the game since 27.10.2026 (part 7): plan2Ops switches older plans off with a word (Jonas 26.10.2026, choice 5 C); the old
+// plan's code was taken out in part 8 (Ø12 C, 08.11.2026) and its last names in Ø12 D (12.11.2026).
 const DRV2 = 4;
 const DRP2 = {
   dayMax:14, minDay:2, tired:72, rested:25, late:8, fatH:5, enH:100 / 24, enMin:15,     // the day's length: 14 h, the crew at 72 with 5 an hour, you at 15 % with 4.2 an hour
@@ -85,13 +84,13 @@ function plan2New(over){
     legs:{}, M:null, homeA:null, restA:null, made:null, err:null, t0:null, run:null, held:null, stop:null, hold:0,
     stats:{days:[], sum:{trips:0, kg:0, kr:0, lott:0, cost:0, conf:0, sp:{}, port:{}}}}, over || {});
 }
-// the plan the new engine runs: with the switch off, none (today's plan is left alone); on, a v4, and an older plan is switched off with a word
+// the plan the engine runs: a v4, and an older plan is switched off with a word
 function plan2Ops(){
-  if (!DRIFT2) return null;
   const o = S.ops; if (!o) return null;
   if (o.v === DRV2){ if (o.rig === 'line' && o.places.some(q => q.k === 'felt' && !q.lk)){ for (const q of o.places) if (q.k === 'felt' && !q.lk){ q.lk = p2LineKind(o); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (fields from before 27.10.2026: the line's kind and the tubs the boat owns)
     // (an ocean vessel, H2c: her teams' watches round the clock, no jig, and the fields of her autoline in lenker)
-    if (p2Lag() || p2Hav()){ if (o.rhythm !== 'watch') o.rhythm = 'watch';   // (an ocean vessel round the clock only, Jonas 07.11.2026) if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
+    if (p2Lag() || p2Hav()){ if (o.rhythm !== 'watch') o.rhythm = 'watch';   // (an ocean vessel round the clock only, Jonas 07.11.2026)
+      if (o.jig && !p2Jig(o)) o.jig = false; if (o.land && o.land.when === 'trip') o.land.when = 'full';
       if (p2Auto(o)) for (const q of o.places) if (q.k === 'felt' && q.lk !== 'auto'){ q.lk = 'auto'; q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); q.soak = clamp(q.soak, DRP2.hav.soak[0], DRP2.hav.soak[3]); }
       if (p2Sno(o) && o.land && o.land.when !== 'days'){ o.land.when = 'days'; o.land.days = DRP2.sno.days; }   // (H3c: a frozen trip lasts some 20 days at most)
       if (p2Sno(o)) for (const q of o.places) if (q.k === 'felt' && (q.soak < DRP2.sno.soak[0] || q.soak > DRP2.sno.soak[3])){ q.soak = clamp(Math.round(q.soak / 24) * 24, DRP2.sno.soak[0], DRP2.sno.soak[3]); q.n = Math.max(1, Math.min(q.n, p2Left(o, q))); } }   // (H3c: a field from before is strings of 200 and days)
@@ -109,7 +108,7 @@ function plan2P(o, k){
   const q = o.places.find(x => x.id === k); return q ? {x:q.x, y:q.y} : null;
 }
 const plan2Port = (o, k) => k === 'H' ? (o.homeA ? null : o.home) : k === 'Q' ? o.home : k === 'M' ? o.M : null;
-// the hours of a leg: the kept leg (o.legs, 06d-drift.js drLK) at cruising speed, else straight with a fifth on
+// the hours of a leg: the kept leg (o.legs, 06d-plan-felles.js drLK) at cruising speed, else straight with a fifth on
 function plan2LegH(o, a, ap, b, bp, v){
   if (!a || !b) return 0; v = Math.max(1, v || BOAT.vcruise || 7);
   if (drCK(a, ap) === drCK(b, bp) || dist(a, b) < 0.005) return 0;
@@ -314,7 +313,7 @@ function planDay(o, H0, st){
   const tailH = () => { let h = 0, a = at, ap = atPort; for (const p of dueToday){ if (p.done) continue; h += legH(a, ap, p.q, null) + p.q.n * (W.trekk[kind] + W.sett[kind]); a = p.q; ap = null; }
     if (toM){ h += legH(a, ap, plan2P(o, 'M'), o.M) + (land ? DRP2.landH : 0) + (needBait ? DRP2.stockH : 0); a = plan2P(o, 'M'); ap = o.M; }
     return h + (watch ? 0 : legH(a, ap, plan2P(o, 'H'), plan2Port(o, 'H'))); };
-  // the jig: until the first haul is due, or the day's end less what remains; the hours shared by the player's own numbers (06d-drift.js planJigRate)
+  // the jig: until the first haul is due, or the day's end less what remains; the hours shared by the player's own numbers (06d-plan-felles.js planJigRate)
   // (the hours until the first haul is due are free whatever the day's length: the haul cannot come sooner, so the jig has them)
   const jigTo = dueToday.length ? dueToday[0].due : watch ? H0 + 24 : endBy - tailH();
   if (jig && jigs.length) jigAt(jigs, jigTo);

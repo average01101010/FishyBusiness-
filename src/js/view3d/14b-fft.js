@@ -96,8 +96,8 @@
   // the sum of both tiles' (tr, h) at a world point, bilinear at level 0 as the shaders read them up close
   const FFT_S = [0, 0];
   function fftTrH(x, z){
-    FFT_S[0] = FFT_S[1] = 0; const qx = x - RO.x - NF.D[0], qz = z - RO.z - NF.D[1];
-    for (let k = 0; k < 2; k++){ const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k];
+    FFT_S[0] = FFT_S[1] = 0;
+    for (let k = 0; k < 2; k++){ const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k], qx = x - NF.O[k * 2], qz = z - NF.O[k * 2 + 1];
       let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
       const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
       for (let q = 0; q < 2; q++){ const a = A[(j0 * n + i0) * 2 + q], b = A[(j0 * n + i1) * 2 + q], c = A[(j1 * n + i0) * 2 + q], d = A[(j1 * n + i1) * 2 + q];
@@ -109,7 +109,7 @@
   // the tile's (Dx, Dz, h) at a world point, trilinear between the two kept levels as the GPU samples them (FFT_D)
   const FFT_D = [0, 0, 0];
   function fftAt(x, z){
-    const N = FFTT[0].N, L = FFTT[0].L, l0 = FFT.cpuL, f = clamp(fvLod() - l0, 0, 1), qx = x - RO.x - NF.D[0], qz = z - RO.z - NF.D[1], A = FFT.cpu;
+    const N = FFTT[0].N, L = FFTT[0].L, l0 = FFT.cpuL, f = clamp(fvLod() - l0, 0, 1), qx = x - NF.O[0], qz = z - NF.O[1], A = FFT.cpu;
     FFT_D[0] = FFT_D[1] = FFT_D[2] = 0;
     for (let q = 0; q < 2; q++){ const n = N >> (l0 + q), base = q ? (N >> l0) * (N >> l0) * 4 : 0, w = q ? f : 1 - f; if (w <= 0) continue;
       // (texel centres at (i + 0.5) L / n, as the GPU has them; the tile wraps)
@@ -122,12 +122,21 @@
   // the tiles' amplitude at the boat (A0: the squared Gerstner amplitudes of waves 4-9 for Hs = 1, as the shaders and seaDisp sum them)
   function fftA0(){ let A0 = 0; const dv = WV.loc[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05));
     for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = (dv * c.wo + (1 - dv) * c.wy) * ren; A0 += a * a; } return Math.max(A0, 1e-8); }
+  // (tests only, B4: the tiles at a given world time on this thread, from the last spectrum sent, so two pages can be compared at one instant)
+  function fftSyncAt(tw){
+    if (!FFT.P) return false;
+    const T = FFTT.map(t => Object.assign({}, t)), outs = [];
+    for (let k = 0; k < 2; k++){ const n2 = T[k].N * T[k].N, W = {plan:hfftPlan(T[k].N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)};
+      hfftSpec(T[k], FFT.P); const o = new Float32Array(hfftLen(T[k].N)), d = k ? null : new Float32Array(hfftLen(T[k].N)); FFT.st[k] = hfftFrame(T[k], tw, o, W, d); outs.push(o); if (d) outs.push(d); }
+    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = tw; return true;
+  }
   // every frame (24-cinema.js, after the waves): ask for the tiles at the time they will be shown, if the worker is free
   function fftStep(t){
     if (!FFT.on || !PS || PS.basic || PS.far) return;
     if (!fftInit() || !FFT.w) return;
     if (FFT.busy){ if (performance.now() - FFT.sentAt > 3000) FFT.busy = false; else return; }   // (a lost answer does not stop it)
-    const P = fftParams(t), msg = {t:t + FFT.lat, P};
+    const P = fftParams(t), msg = {t:t + WV.dT + FFT.lat, P};   // (B4: the world's clock in real seconds, the same for everyone)
+    if (P) FFT.P = P;
     if (FFT.bufs){ msg.bufs = FFT.bufs; FFT.bufs = null; }
     FFT.busy = true; FFT.sentAt = performance.now(); FFT.sentT = t;
     FFT.w.postMessage(msg, msg.bufs || []);
@@ -143,7 +152,10 @@
     if (u.uFvP != null) gl.uniform4f(u.uFvP, 0, 0, 0, 1);
     if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1); return; }
     const A0 = fftA0();
-    const qx = eye[0] - RO.x - NF.D[0], qz = eye[2] - RO.z - NF.D[1], o = FFTT.map(T => [Math.floor(qx / T.L) * T.L, Math.floor(qz / T.L) * T.L]);
+    // (B4: each tile lies in the world, less the boat's own offset for it, NF.O; the shader looks it up at P - uNFD - o, so o is that
+    // offset in the shader's frame, moved by whole tiles to near the camera)
+    const qx = eye[0] - RO.x - NF.D[0], qz = eye[2] - RO.z - NF.D[1], o = FFTT.map((T, k) => { const bx = NF.O[k * 2] - RO.x - NF.D[0], bz = NF.O[k * 2 + 1] - RO.z - NF.D[1];
+      return [bx + T.L * Math.round((qx - bx) / T.L), bz + T.L * Math.round((qz - bz) / T.L)]; });
     for (let k = 0; k < 2; k++){ gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]); gl.uniform1i(k ? u.uFft2 : u.uFft1, 8 + k); }
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform4f(u.uFftO, o[0][0], o[0][1], o[1][0], o[1][1]);
