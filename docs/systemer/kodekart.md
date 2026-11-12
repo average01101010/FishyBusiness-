@@ -2770,12 +2770,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1560 linjer)
+## `src/js/ui/phone/07-patch.js` (1561 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1548 `patch()`
+  - 1549 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3843,7 +3843,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (830 linjer)
+## `src/js/view3d/01-shaders.js` (835 linjer)
 
 ---------- shaders ----------
 
@@ -3853,19 +3853,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **377** the boat's own foam, when she has way on
 - **385** where a slam and the spray land (F3b): four patches, fixed names
 - **387** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 723 `cloudStep(dt)`
-  - 730 `skyFrame(u, Hh, tn, bv)`
-  - 745 `glsl3(src, fs)`
-  - 758 `progStart(vs, fs, attrs, nm = '?')`
-  - 766 `progEnd(P)`
-  - 776 `program(vs, fs, attrs, nm = '?')`
-  - 778 `progWait(list)`
-  - 784 `programA(vs, fs, attrs, nm)`
-  - 785 `buf(data, target, usage)`
-  - 790 `airSet(u, terr)`
-  - 805 `sunT0()`
-  - 812 `attr(loc, b, size)`
-  - 828 `upload(pos, col, idx)`
+  - 728 `cloudStep(dt)`
+  - 735 `skyFrame(u, Hh, tn, bv)`
+  - 750 `glsl3(src, fs)`
+  - 763 `progStart(vs, fs, attrs, nm = '?')`
+  - 771 `progEnd(P)`
+  - 781 `program(vs, fs, attrs, nm = '?')`
+  - 783 `progWait(list)`
+  - 789 `programA(vs, fs, attrs, nm)`
+  - 790 `buf(data, target, usage)`
+  - 795 `airSet(u, terr)`
+  - 810 `sunT0()`
+  - 817 `attr(loc, b, size)`
+  - 833 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
