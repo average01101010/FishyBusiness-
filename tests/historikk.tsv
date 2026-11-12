@@ -2773,3 +2773,6 @@
 2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	skipdrift	OK	18	lite	samtidig	
 2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	trip2	OK	31	lite	samtidig	
 2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	1218b49	boottest	OK	29	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	2055546	posttest	OK	23	lite	samtidig	
+2026-11-12 01:30	ccr-e16ec9aa-rdf1k2	2055546	fixtest	OK	31	lite	samtidig	
+2026-11-12 01:32	ccr-e16ec9aa-rdf1k2	2055546	driftsplan2test	FEIL	83	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
