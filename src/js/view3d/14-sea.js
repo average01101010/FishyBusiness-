@@ -1,12 +1,38 @@
   // ---------- sea ----------
-  const HALF = 300; let NP = 150, curFov = 0.96;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
+  const HALF = 300, PIN_R = 32, PIN_C = 0.5; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
   function buildPatch(){
-    if (PATCH){ gl.deleteBuffer(PATCH.pb); gl.deleteBuffer(PATCH.ib); }
+    if (PATCH){ gl.deleteBuffer(PATCH.pb); gl.deleteBuffer(PATCH.ib); if (PATCH.ibH) gl.deleteBuffer(PATCH.ibH); }
     const v = new Float32Array((NP + 1) * (NP + 1) * 2); let k = 0;
     for (let j = 0; j <= NP; j++) for (let i = 0; i <= NP; i++){ v[k++] = -HALF + i * 2 * HALF / NP; v[k++] = -HALF + j * 2 * HALF / NP; }
     const big = (NP + 1) * (NP + 1) > 65536, idx = big ? new Uint32Array(NP * NP * 6) : new Uint16Array(NP * NP * 6); k = 0;
     for (let j = 0; j < NP; j++) for (let i = 0; i < NP; i++){ const a = j * (NP + 1) + i, b = a + 1, c = a + NP + 1, d = c + 1; idx[k++] = a; idx[k++] = c; idx[k++] = b; idx[k++] = b; idx[k++] = c; idx[k++] = d; }
     PATCH = {pb:buf(v), ib:buf(idx, gl.ELEMENT_ARRAY_BUFFER), n:idx.length, i32:big, np:NP};
+    // the fine patch round the boat (PIN, 12.11.2026): PIN_R a side from her grid point, PIN_C cells, which divide the grid's so its
+    // corners lie on the same world lattice as the grid moves (no swimming); the grid has a hole one of its cells short of the fine
+    // patch's edge, and the fine patch has blended its cell to the grid's before it (uInner, 01-shaders.js), so the two overlap by a
+    // cell. The blend is over two of the grid's cells reckoned from the boat herself, not from the patch's origin, which moves a whole
+    // cell at a time: so a corner's cell changes smoothly as she moves, never in one frame (the kontroll 12.11.2026); she is at most
+    // half a cell from the origin, so it is done half a cell inside the hole's edge
+    if (PIN){ gl.deleteBuffer(PIN.pb); gl.deleteBuffer(PIN.ib); }
+    const st = 2 * HALF / NP, n = Math.round(2 * PIN_R / PIN_C), pv = new Float32Array((n + 1) * (n + 1) * 2), pi = new Uint16Array(n * n * 6); k = 0;
+    for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++){ pv[k++] = -PIN_R + i * PIN_C; pv[k++] = -PIN_R + j * PIN_C; }
+    k = 0; for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){ const a = j * (n + 1) + i, b = a + 1, c = a + n + 1, d = c + 1; pi[k++] = a; pi[k++] = c; pi[k++] = b; pi[k++] = b; pi[k++] = c; pi[k++] = d; }
+    PIN = {pb:buf(pv), ib:buf(pi, gl.ELEMENT_ARRAY_BUFFER), n:pi.length, b0:PIN_R - 3.5 * st, b1:PIN_R - 1.5 * st};
+    // (the grid less the cells wholly inside PIN_R less one cell: the hole)
+    const hr = PIN_R - st, hi = new (big ? Uint32Array : Uint16Array)(NP * NP * 6); let m = 0;
+    for (let j = 0; j < NP; j++) for (let i = 0; i < NP; i++){ const x0 = -HALF + i * st, z0 = -HALF + j * st; if (x0 >= -hr - 1e-6 && x0 + st <= hr + 1e-6 && z0 >= -hr - 1e-6 && z0 + st <= hr + 1e-6) continue;
+      const a = j * (NP + 1) + i, b = a + 1, c = a + NP + 1, d = c + 1; hi[m++] = a; hi[m++] = c; hi[m++] = b; hi[m++] = b; hi[m++] = c; hi[m++] = d; }
+    PATCH.ibH = buf(hi.subarray(0, m), gl.ELEMENT_ARRAY_BUFFER); PATCH.nH = m;
+  }
+  // the cell the sea is drawn with at (x, z) and how far it has blended to the grid's (the vertex shader's cl and fl), for seaH
+  // (on the full sea only: the lite one draws none of waves 4-9, so the boat would roll on waves not drawn; #pin0: the grid alone, as before)
+  const PIN0 = /pin0/.test(location.hash), PIN_ON = () => !!(PIN && PS && !PS.basic && !PS.lite && QUAL.lvl >= 1 && !PIN0);
+  // SEA_OUTER: the grid's own cell everywhere, for what is laid on the sea in the grid's points (the skerries' foam, the trail strips)
+  let SEA_OUTER = false; const SCELL = [4, 1];
+  function seaCell(x, z){
+    const st = 2 * HALF / NP; SCELL[0] = st; SCELL[1] = 1; if (SEA_OUTER || !PIN_ON()) return SCELL;
+    const f = sstep(PIN.b0, PIN.b1, Math.max(Math.abs(x - bv.x), Math.abs(z - bv.z)));
+    SCELL[0] = lerp(PIN_C, st, f); SCELL[1] = f; return SCELL;
   }
   function buildSea(){
     buildPatch(); let k = 0;
@@ -235,7 +261,7 @@
   }
   // the long wake waves as the vertex shader lifts them (for what lies on the water, like the foam trail)
   function wakeHFast(x, z){
-    if (WK.u3[3] < 0.5 || WK.u3[2] <= 0) return 0;
+    const wa = WK.u3[2]; if (WK.u3[3] < 0.5 || wa <= 0) return 0;
     const rx = x - WK.u0[0], rz = z - WK.u0[1], s = -(rx * WK.u0[2] + rz * WK.u0[3]), q = Math.abs(rx * WK.u0[3] - rz * WK.u0[2]), L = WK.u2[0], k = WK.u1[0];
     if (s <= 0 || s > WK.u1[3] || q > s * 0.42 + L * 0.6 + 4) return 0;
     // as wakeH (01-shaders.js): the Kelvin pattern by stationary phase, the two waves and the cusp, along a straight line astern
@@ -243,7 +269,7 @@
     const qn = q * 0.3536 / Math.min(0.3536, Math.tan(0.2 / Math.max(WK.u2[3], 0.2))), d2 = s * s - 8 * qn * qn, sq = Math.sqrt(Math.max(d2, 0)), qq = Math.max(qn, 1e-3);
     const tt = (s - sq) / (4 * qq), td = (s + sq) / (4 * qq), pt = k * Math.sqrt(1 + tt * tt) * (s + qn * tt), pd = k * Math.sqrt(1 + td * td) * (s + qn * td);
     const cb = Math.pow(s * s / (Math.max(d2, 0) + 0.35 * s * s), 0.25), ow = d2 < 0 ? Math.exp(d2 / (0.18 * s * s + 30)) : 1;
-    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(pt) * cb * ow * 0.6 + a * Math.pow(1 + s / L, -0.333) * Math.cos(pd) * cb * ow * (1 - sstep(1, 1.5, td)) * 0.5) * WK.u3[2];
+    return (WK.u1[2] * a / Math.sqrt(1 + s / L) * Math.cos(pt) * cb * ow * 0.6 + a * Math.pow(1 + s / L, -0.333) * Math.cos(pd) * cb * ow * (1 - sstep(1, 1.5, td)) * 0.5) * wa;
   }
 
 
@@ -610,7 +636,7 @@
   const SH_DEEP = [200, 0, 0, 0], SHQ = [200, 0, 0, 0];
   // (SH: the sea by the shore at the point, F4, as SEA_VS_WAVE and SEA_VS_SURF have it; seaH looks it up once for its three calls)
   function seaDisp(x, z, t, S, fade, SH){
-    let dx = 0, dy = 0, dz = 0, dn = 0, Et = 0, Eu = 0, Es = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), cell = 2 * HALF / NP, Qw = seaQ(S, ren);
+    let dx = 0, dy = 0, dz = 0, dn = 0, Et = 0, Eu = 0, Es = 0; const ren = 1 / Math.sqrt(Math.max(1 - 2 * S[2] * (1 - S[2]) * (1 - WV.dot), 0.05)), SC = seaCell(x, z), cell = SC[0], fl = SC[1], Qw = seaQ(S, ren);
     if (!SH) SH = shoalHere(x, z); const sg = SHG, fsh = typeof fftShape === 'function' && fftShape(); let fe2 = 0;
     for (let i = 0; i < WV.list.length; i++){
       const c = WV.list[i], att = sstep(2.5, 5, 2 * Math.PI / (c.k * cell));
@@ -624,7 +650,7 @@
     }
     // B2 (14b-fft.js): waves 4-9's shape from the first FFT tile, as the vertex shader draws it (scaled to the sea here as fe2 / A0,
     // sharpened by the place's Q held under the tile's limit), and counted with the short waves that ride with her (dn)
-    if (fsh && fe2 > 0){ const fs = Math.sqrt(fe2 / fftA0()), lam = Math.min(Qw, 0.27 / Math.max(fs * Math.hypot(FFT.st[0][1], FFT.st[1][1]), 1e-4)), D = fftAt(x, z), k = fs * fade;
+    if (fsh && fe2 > 0){ const fs = Math.sqrt(fe2 / fftA0()), lam = Math.min(Qw, 0.27 / Math.max(fs * Math.hypot(FFT.st[0][1], FFT.st[1][1]), 1e-4)), D = fftAt(x, z, lerp(0, fvLod(), fl)), k = fs * fade;
       dx -= lam * k * D[0]; dz -= lam * k * D[1]; dy += k * D[2]; dn += k * D[2]; }
     if (SH[0] < 78){
       if (Es > 1e-8 && SURF.w > 0){ const As = Math.sqrt(Es), ks = surfK(SH[0]), f = -(SURF.w * t + SURF.p0) - SURF.w * SH[1], w = Math.hypot(SH[2], SH[3]), att = sstep(2.5, 5, 2 * Math.PI / (ks * cell)), a = As * att * fade, Qs = Math.min(0.6, 0.6 / (ks * As + 1e-4)), co = Math.cos(f);

@@ -143,8 +143,8 @@
     if (!ROCKS.va || ROCKS.vn < F.length){ const n = Math.max(F.length, 24), Q = G - 1; ROCKS.vn = n; ROCKS.va = new Float32Array(n * GV * W);
       const I = new Uint16Array(n * Q * Q * 6); for (let r = 0; r < n; r++) for (let j = 0; j < Q; j++) for (let i = 0; i < Q; i++){ const a = r * GV + j * G + i, o = (r * Q * Q + j * Q + i) * 6; I[o] = a; I[o + 1] = a + G; I[o + 2] = a + 1; I[o + 3] = a + 1; I[o + 4] = a + G; I[o + 5] = a + G + 1; }
       if (ROCKS.vb) gl.deleteBuffer(ROCKS.vb); if (ROCKS.ib) gl.deleteBuffer(ROCKS.ib); ROCKS.vb = buf(ROCKS.va, gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW); ROCKS.ib = buf(I, gl.ELEMENT_ARRAY_BUFFER); }
-    const A = ROCKS.va; let n = 0, waved = 0;
-    for (const q of F){
+    const A = ROCKS.va; let n = 0, waved = 0; SEA_OUTER = true;   // (the grid's surface: its points are the grid's, 14-sea.js seaCell)
+    try { for (const q of F){
       if (!(q.hs > 0.1) || tide - q.top > 0.2 + 1.1 * q.hs) continue;   // a calm, or too deep under the water to break
       // on the waves (the nearest, inside the wave patch): the points are the sea mesh's own (every sw m from the patch's origin, which
       // is a whole number of cells), so the patch lies in the drawn surface; else flat on the tide, round the rock
@@ -159,7 +159,7 @@
         A[o + 11] = (q.seed & 1023) / 1023 * 6.283; A[o + 12] = wave ? 0 : 1; A[o + 13] = lx; A[o + 14] = lz;
       }
       n++;
-    }
+    } } finally { SEA_OUTER = false; }
     ROCKS.fdrawn = n; ROCKS.waved = waved; if (!n) return;
     const P = ROCKS.P, u = P.u; gl.useProgram(P.p); gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform1f(u.uT, t % 4096);
     const sy = Math.max(env.lightDir[1], 0), lit = [0, 1, 2].map(k => Math.min(1.2, env.amb[k] * 1.2 + env.sunCol[k] * (0.35 + 0.65 * sy)));

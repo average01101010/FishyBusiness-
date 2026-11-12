@@ -229,7 +229,8 @@ function livePose(frac){
   if (b.gop && b.gop.mv && b.gop.mv.t === S.t) return {p:{x:b.pos.x + b.gop.mv.x * frac, y:b.pos.y + b.gop.mv.y * frac}, hd:b.heading, frac, idx};
   // lying still, she drifts along the minute's drift (core/16b-dyn.js lieDrift)
   if (b.drv && b.drv.st === b.status && b.drv.t === S.t) return {p:{x:b.pos.x + b.drv.x * frac, y:b.pos.y + b.drv.y * frac}, hd:b.drv.up ? Math.atan2(b.drv.x, -b.drv.y) : b.heading, frac, idx};
-  if (b.status === 'sailing' && S.plan){
+  // (held for a hop, core/06j-hopp.js: she lies where she is, never crept on along the route between the minute steps)
+  if (b.status === 'sailing' && S.plan && !(b.hopHold && typeof hopHeld === 'function' && hopHeld(b))){
     let left = sailV(S.t / 60) * NM / 60 * frac * sailSogF(b);   // (over the ground: the stream's share of the last minute, Ø9 F8b)
     while (left > 1e-9 && idx < S.plan.wps.length){
       const w = S.plan.wps[idx], d = dist(p, w);

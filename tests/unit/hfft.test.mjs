@@ -19,7 +19,7 @@ export default function (t){
   const W = {plan:hfftPlan(N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)}, out = new Float32Array(hfftLen(N)), outD = new Float32Array(hfftLen(N));
   const tt = 3.7, st = hfftFrame(T, tt, out, W, outD);
   // the direct sum: h(x) = sum_k htilde(k) e^{ikx}
-  const ht = (i, j) => { const c = j * N + i, cm = ((N - j) % N) * N + (N - i) % N, wt = S.w[c] * tt, co = Math.cos(wt), si = Math.sin(wt), a = S.h0r[c], b = S.h0i[c], a2 = S.h0r[cm], b2 = -S.h0i[cm];
+  const ht = (i, j) => { const c = j * N + i, cm = ((N - j) % N) * N + (N - i) % N, wt = -S.w[c] * tt, co = Math.cos(wt), si = Math.sin(wt), a = S.h0r[c], b = S.h0i[c], a2 = S.h0r[cm], b2 = -S.h0i[cm];
     return [a * co - b * si + a2 * co + b2 * si, a * si + b * co + b2 * co - a2 * si]; };
   let worst = 0, imag = 0;
   for (const [px, pz] of [[0, 0], [3, 11], [15, 15], [7, 2], [9, 13]]){
@@ -30,6 +30,13 @@ export default function (t){
     const o = (pz * N + px) * 4; worst = Math.max(worst, Math.abs(out[o] - hx), Math.abs(out[o + 1] - hz), Math.abs(out[o + 2] - tr), Math.abs(out[o + 3] - h), Math.abs(outD[o] - Dx), Math.abs(outD[o + 1] - Dz), Math.abs(outD[o + 2] - h)); imag = Math.max(imag, Math.abs(hi)); }
   t.ok(imag < 1e-6, 'the field is real (the imaginary part of the direct sum is ' + imag.toExponential(1) + ')');
   t.ok(worst < 2e-5, 'the transform equals the direct sum of the waves for the slopes, the trace, the height and the displacement (worst ' + worst.toExponential(1) + ')');
+  // the tile's waves travel downwind, along (dx, dz) as the Gerstner waves do (f = k D.x - w t): a field h(x - c D t) has dh/dt = -c D.grad h,
+  // so over a short time the change and the slope along D are opposite (Jonas 12.11.2026: «se hvilken vei sjøen går i forhold til
+  // flagget»; e^{ikx + iwt} had them travel into the wind)
+  { const TT = {N:64, L:60, lo:2, hi:0, seed:5}, ST = hfftSpec(TT, P), n = 64 * 64, WT = {plan:hfftPlan(64), re1:new Float64Array(n), im1:new Float64Array(n), re2:new Float64Array(n), im2:new Float64Array(n)}, a = new Float32Array(hfftLen(64)), b = new Float32Array(hfftLen(64));
+    hfftFrame(TT, 5, a, WT); hfftFrame(TT, 5.05, b, WT); let c = 0, s2 = 0;
+    for (let q = 0; q < n; q++){ const g = P.dx * a[q * 4] + P.dz * a[q * 4 + 1]; c += (b[q * 4 + 3] - a[q * 4 + 3]) * g; s2 += g * g; }
+    t.ok(c < 0, 'the tile\'s waves travel downwind (the change over 0.05 s against the slope along the wind: ' + (c / s2).toFixed(3) + ', negative)'); }
   // the displacement's sign: for one wave h = A cos(kx), D = A sin(kx), so x - Q D pulls the points toward the crest (Gerstner)
   { const T1 = {N:16, L:16, lo:0.1, hi:100, seed:1, S:{h0r:new Float32Array(256), h0i:new Float32Array(256), w:new Float32Array(256)}}; T1.S.h0r[1] = 0.25; T1.S.h0r[15] = 0.25; T1.S.w[1] = T1.S.w[15] = 0;
     const o1 = new Float32Array(hfftLen(16)), d1 = new Float32Array(hfftLen(16)); hfftFrame(T1, 0, o1, W, d1);

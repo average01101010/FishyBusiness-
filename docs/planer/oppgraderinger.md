@@ -117,6 +117,8 @@ Spillet har alt mange oppgraderinger, men de er spredt på fem steder, nesten al
 | Hurtigsjark 22 kn | 22,0 | +30 % | +9,5 % | 30,7 kn | 52,7 kn |
 | Ny hurtigsjark 25 kn | 25,0 | +30 % | +9,5 % | 34,9 kn | 59,9 kn |
 
+(Raden for ny hurtigsjark er fra før 05.11.2026: Jonas satte henne da til 12 kn med deplasementsskrog, så hun får +15 % og ikke +30 %. De målte tallene for alle fire står under «OPP3, målt».)
+
 - Trebåten på trinn 3 går forbi snekka og plastsjarken i fart. Det er greit: de selger på last, plass og mannskap, ikke fart.
 - Bremselengder og svingradier ved høyere toppfart på de planende båtene sjekkes i `routetest` og `obstest`; `trackfollow` (3D) bare om `16b-dyn.js` endres.
 
@@ -198,6 +200,38 @@ Trakten (`admin_funnel`, «kjøpt trinn innen dag 7», migreringen `202611071600
 - Ingen spiller hadde kjøpt et trinn ennå (0 `shop_buy` med `lv`, 0 `upg` de siste 30 dagene): trinnene kom med OPP1 samme dag rundt 13:00 UTC. Ukene før er derfor nullpunktet. Kullene er små: 7, 5, 0, 4 og 5 nye spillere med statistikk i ukene fra 5.10, 12.10, 19.10, 26.10 og 2.11. De fem fra uka 2.11 startet før datoen, men har dagene sine etter OPP1 og kan fortsatt telle; de første som startet med trinnene i butikken, leses av fra 14.11.2026. Tallet bør leses over to–tre uker før noe vurderes.
 - Bare spillere som deler bruksstatistikk, er med (de alene har økter og hendelser).
 
+### OPP3, målt 12.11.2026 (farten og dieselen)
+
+Målt med spillets egen kjerne (`applyVessel`, manøvermodellen `dynCalOf`/`dynInt` på full gass i stille vann til farten står, og `fuelLph`), i Node med den samme koden som spillet kjører; i nettleseren går hurtigsjarken i 30,7 og 52,7 kn til et stopp og under Gisundbrua (`routetest`, `obstest`). Toppfart i knop, papiret (`BOAT.vmax`) / modellen:
+
+| Båt | Grunnfart | Propell 3 | Motor 2 | Sum (propell 3 + motor 2) | Med turbotrim | Turbotrim alene | Med den gamle regelen (produktet) |
+|---|---|---|---|---|---|---|---|
+| Trebåt (7 kn, deplasement) | 7,00 / 6,93 | 8,05 / 7,91 | 7,44 / 7,35 | 8,49 / 8,31 | 15,49 / 15,26 | 14,00 / 13,77 | 17,11 |
+| Havsjark (10 kn, deplasement) | 10,00 / 9,82 | 11,50 / 11,18 | 10,63 / 10,38 | 12,13 / 11,79 | 22,13 / 21,84 | 20,00 / 19,72 | 24,44 |
+| Hurtigsjark (22 kn, planende) | 22,00 / 21,70 | 28,60 / 28,25 | 24,10 / 23,78 | 30,70 / 30,32 | 52,70 / 52,07 | 44,00 / 43,48 | 62,66 |
+| Ny hurtigsjark (12 kn, deplasement) | 12,00 / 11,66 | 13,80 / 13,46 | 12,75 / 12,40 | 14,55 / 14,24 | 26,55 / 26,22 | 24,00 / 23,69 | 29,33 |
+
+- Modellen ligger 1–3 % under papiret (vind og drift i stille vann er null; skrogets motstand), som før OPP3 (`trimfart.test.mjs` krever innen 3 %).
+- Trimmen gir like mange knop med og uten propell: turbotrim gir hurtigsjarken +22,0 kn på 22 kn og på 28,6 kn (`trimfart.test.mjs`, `yardupgtest`).
+- Med motor 2 og trim er farten nå lavere enn før: hurtigsjarken går 46,1 kn med motor 2 og turbotrim, mot 48,2 kn med produktet. Det er regelen (prinsipp 1).
+
+**Dieselregnskapet for en tur:** 20 nm ut og 20 nm hjem (40 nm), stille vann, tom båt, rent skrog, `fuelLph` × timene. Fart, timer og liter:
+
+| Båt | Fart | Uten propell | Propell 3 | Propell 3 + motor 2 | Propell 3 ved samme fart som uten |
+|---|---|---|---|---|---|
+| Trebåt | marsj | 6,0 kn · 6,7 t · 6,5 L | 6,9 kn · 5,8 t · 6,0 L | 7,3 kn · 5,5 t · 6,8 L | 5,5 L |
+| Trebåt | full | 7,0 kn · 5,7 t · 12,2 L | 8,1 kn · 5,0 t · 11,0 L | 8,5 kn · 4,7 t · 12,3 L | 6,0 L |
+| Havsjark | marsj | 8,5 kn · 4,7 t · 53 L | 9,8 kn · 4,1 t · 50 L | 10,3 kn · 3,9 t · 58 L | 45 L |
+| Havsjark | full | 10,0 kn · 4,0 t · 93 L | 11,5 kn · 3,5 t · 86 L | 12,1 kn · 3,3 t · 97 L | 51 L |
+| Hurtigsjark | marsj | 17,0 kn · 2,4 t · 126 L | 22,1 kn · 1,8 t · 133 L | 23,7 kn · 1,7 t · 155 L | 109 L |
+| Hurtigsjark | full | 22,0 kn · 1,8 t · 156 L | 28,6 kn · 1,4 t · 167 L | 30,7 kn · 1,3 t · 196 L | 132 L |
+| Ny hurtigsjark | marsj | 10,0 kn · 4,0 t · 212 L | 11,5 kn · 3,5 t · 203 L | 12,1 kn · 3,3 t · 233 L | 181 L |
+| Ny hurtigsjark | full | 12,0 kn · 3,3 t · 364 L | 13,8 kn · 2,9 t · 337 L | 14,6 kn · 2,8 t · 381 L | 211 L |
+
+- Propellen sparer 15 % ved samme fart. Går båten fortere med den (marsj og full følger toppfarten), sparer et skrog som ikke planer, likevel 4–10 % på turen og kommer fram 13 % før; den planende hurtigsjarken bruker 6–8 % mer på turen og kommer fram 23 % før, fordi forbruket stiger med farten.
+- Ved full fart sparer propellen mye mer ved samme fart (trebåten 12,2 → 6,0 L), fordi forbrukskurven til et deplasementsskrog stiger bratt over 90 % av toppfarten (`fuelBase`), og propellen flytter toppfarten opp. Det er kurven slik den er; ikke kalibrert mot ekte båter.
+- Prisene for trinn 1–3: trebåten 2 500, 4 000 og 6 500 kr (gulvene), snekka 5 000, 10 000 og 17 000, havsjarken 23 000, 46 000 og 81 000, hurtigsjarken 98 000, 196 000 og 343 000, kystbåten på 15 m 360 000, 720 000 og 1 260 000 kr (`yardupgtest`, `opptest`).
+
 **Rekkefølgen:** OPP1 og OPP4 først, fordi begge treffer første uke på trebåten og kan leses av i trakten. Så OPP3, OPP2 og OPP5. OPP1 og OPP3 rører `core/03-simulation.js`, `05-vessels.js`, `10-gear.js` og `14-crewlife.js`, som Ø8b S0, S2 og M (køen steg 5, 7, 8) også eier mens de går; rutinens regel om filer avgjør hvem som går først.
 
 ## Valget
@@ -241,3 +275,5 @@ Trakten (`admin_funnel`, «kjøpt trinn innen dag 7», migreringen `202611071600
 - 07.11.2026: Jonas om siden etter utrullingen: «Det er jo nesten umulig å skjønne hva som skjer på denne siden når det er så mye tekst og greier, det er jo elendig UI, UX eller GUI … Det må gjøres mer intuitivt for brukerne.» Siden er gjort om samme dag og rullet ut i c7e1bcb0: én rad per ting med bilde, prikker, én kort gevinst i egne tall og prisen, stedet én gang per handelssted, forklaringen i Håndboka bak «?» (`docs/systemer/baater.md`).
 - 10.11.2026: **OPP5 bygd** i Jonas' økt, gren `claude/opp5-modellene-vkbwvw` (steg 57), rullet ut til testutgaven (test.detstorebla.no) 10.11.2026 etter Jonas samme kveld: «Rull ut på testgrenen når du mener du er ferdig med arbeidet». Produksjonen får det først ved et slipp, så Jonas ser modellene på testutgaven før de når spillerne. `tools/deck/oppgr.py` → `deck-upg` (kniv 2 og 3, høtt 2 og 3, linesetter, stampemagasin med bein, garnrenne), kniven og høtten etter trinn i hendene og stålhansken på trinn 3, høtten ved ripa ved haleplassen, linesetteren eller garnrenna over hekken på `kit.setter` (plassene i `SETTERS`, `vessel3d.js`, målt med stråler; ni av ti kystbåter, kyst15 venter på åpningen i hekken i OB12), «Prøv på båten» og heisen for begge. Plasket ved `slip` fantes fra før. Ingen tall endret. Systemet: «Oppgraderingene i 3D» i `docs/systemer/redskap.md`; det som står igjen, i backloggen («OPP5»). OPP3 (propellen, steg 55) er det som gjenstår av planen.
 - 07.11.2026: **OPP2 bygd** i Jonas' økt, gren `ccr-6e84b098-t2tu38`, etter startmeldingen i køen (steg 56): trinnene for linehaleren, garnhaleren og teinehaleren (10 og 20 % kortere trekk, halve og hele nyprisen), juksamaskinene (V1 A: én person passer 3, 4 og 5; 12 000 og 24 000 kr per maskin; fra fire maskiner), juksasettene (slites halvparten så fort, 50 % dyrere), linesetteren (20 og 35 % kortere setting, 24 000 og 22 000 kr) og garnrenna (25 %, 18 000 kr). Trinnene er egne varer uten pris (`linehalerLv` …, `jukseLv`, `juksesett`) med `of`, som kniven og høtten, fordi OPP4s side, salget mellom spillere og innbyttet da leser dem riktig (med `tiers` på selve haleren ville siden stoppet og innbyttet mistet haleren). Systemet står i «Dekksutstyret i trinn» i `docs/systemer/redskap.md`, målingene over, det som er svakt i backloggen.
+- 12.11.2026: **OPP3 bygd** i Jonas' økt, grenen `ccr-013bxxie-opp3` (steg 55; Jonas overstyrte taket: «Overstyr taket nå»): `PROPUP` og `b.propLv` i `core/03-simulation.js`, summen én gang i `applyVessel` (`speedSum`: propell, motor og trim lagt sammen av båtens egen fart, akselerasjonen likedan, forbruket `fuelK × (1 + 0,4·(P − 1) − propell)`), `boatWith` for kortene (nå og neste trinn), jobben `prop` på verftet (30 ekte minutter, `j.kr` og `j.ty`, prisen tilbake ved innbytte mens den venter og ved avbestilling), kortet under Verft › Oppgrader med «Bekreft · kr» fra 10 000 kr og kvitteringen med trinnet, `cloudEv('upg', {k:'prop', lv})`, linja på «Båten og utstyret» (`tier:true`, så Neste mål tar den), raden i databladet, `lex_propell`, salget mellom spillere (`mbPack`/`mbUnpack`). Det startmeldingen nevnte fra OPP2, er tatt: OPP2s trinn står på siden (`tierLad` med `icTierLine`), juksamaskinens pris på siden og i Neste mål er `equipKr('jukse')`, og `jobx` betaler tilbake `j.kr`. **Rettet:** innbyttet (`switchVessel`) tok med motortrinnet, lasterommet og ombyggingene til den nye båten gratis; nå blir verftets arbeid med den gamle, og bladet sier det før kjøpet. Ny hurtigsjark er 12 kn med deplasementsskrog (Jonas 05.11.2026), så «59,9 kn» i startmeldingen gjelder ikke henne lenger; summen er sjekket på den brukte hurtigsjarken (22 kn: 52,7 kn, ikke 62,7) og på den nye (26,55, ikke 29,33). Målingene står over («OPP3, målt»).
+- 12.11.2026: Jonas svarte **A** på innbyttet (spørsmålet fra OPP3-økta): «A: Alt blir med skroget». Motor, propell, lasterom og ombygginger blir med den gamle båten og regnes ikke i innbytteprisen, som kniv og høtt (valg 9 A). Kontrollen og gjennomgangen fant at verftsjobber som ventet ved innbyttet, kunne legge et trinn på den nye båten, og at Trim-appen lover farten etter den gamle regelen; jobbene er rettet (betales tilbake), og Trim-appen lover nå det trimmen gir (`trimVmax`; rettet i økta da HO3 var ferdig og fila ledig).

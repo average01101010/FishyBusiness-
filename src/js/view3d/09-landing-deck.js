@@ -744,6 +744,7 @@
     // lifted hangs in it through the swing too; before, the crate was drawn only while the crane stood still over the place, so it
     // was gone from the hook all the way between the deck and the quay)
     const H = kit('crane', 'hook'), tip = F.tip, near = !job || Math.hypot(p.sl - tgt.sl, p.e - tgt.e) > 0.15, unf = !!job && Math.abs(p.a2 - tgt.a2) < 0.3 && Math.abs(p.a1 - tgt.a1) < 0.3;
+    KST.crane.unf = unf;   // (for the recordings, tests/ombord.py: the pictures of the crane's work wait until it stands unfolded)
     if (typeof CREW3D !== 'undefined' && CREW3D.setCrane) CREW3D.setCrane(unf ? {u, loading:!!loading} : null);
     let hy = tip[1] - (unf ? work.w * 0.3 : stow.w) * F.s;
     if (job && !near && at){ const goal = xf(BMrel, at)[1] + 0.35 * F.s, wv = ph === 1 || ph === 4 ? Math.sin(((ph === 1 ? u - 0.2 : u - 0.65) / 0.1) * Math.PI) : 0; const h0 = tip[1] - work.w * 0.3 * F.s; hy = h0 - (h0 - goal) * wv; }
@@ -884,7 +885,13 @@
     const vt = vtype(), G = GEO(vt), d = G.deck || {y:G.gw, z:2}, Bm = G.beam, b = S.boat; DK.pt = null;
     // the fish tubs and the ice box stand on deck through a landing too (the tubs on the crane's hook or ashore are the landing's)
     nSetup(VP); KST.tubs = drawCatchTubs(BMrel, vt, b.land && PLANTS.length ? landOff(b.land) : null, b.land ? landBack(b.land) : null); KST.icebox = !!drawIceBox(BMrel, vt, !packingNow()) ? 1 : 0;
-    if (b.land || b.status === 'aground') return;
+    // (OB10 runde 4, 12.11.2026: through a landing the kit stays on deck, the crane stowed, the bench, the bleeding tub and the life
+    // buoys; before, all of it went away while she landed, and from above only the crew and the plant's tubs were left. The plant's tubs
+    // are set down clear of all of it, deckcrew.js landSlots with fixedBoxes)
+    if (b.status === 'aground') return;
+    // (only where the plant's tubs have places clear of the kit: a boat with no deck crew, or none found, sets them on the old fixed
+    // square, through the bench and the bleeding tub, and the kit stays out of the way as before; found in the review)
+    if (b.land && !b.land.own && b.land.kind === 'tub' && !(typeof CREW3D !== 'undefined' && CREW3D.on() && CREW3D.landSlots().length)) return;
     // where they stand: by the beam on the after deck, or where a detailed model says (the starter boat has a seat and a bench aft)
     const W = G.work || null, tx = W ? W.table[0] : -(Bm / 2 - 0.42), ux = W ? W.tub[0] : Bm / 2 - 0.62, tz = W ? W.table[2] : d.z, uz = W ? W.tub[2] : d.z + 0.35;
     // a model with its own gutting table (work.own, the old wooden boat's across the gunwale) has it drawn already, the fish on its top;
@@ -902,6 +909,7 @@
       else drawN(PM.btub, chain(BMrel, M4.T(ux, d.y, uz), M4.RY(W && W.ry || 0), M4.S(W && W.s || 1)));
       // the table by the rail, its long side along the boat and the worker's side inboard
       if (!own){ if (KB) drawN(KB, chain(BMrel, M4.T(tx, d.y, tz), M4.RY(tSide * Math.PI / 2))); else drawN(PM.gtable, chain(BMrel, M4.T(tx, d.y, tz))); } }
+    if (b.land) return;   // (through a landing the kit stands, but nobody works the catch on deck: the crew are at the landing, deckcrew.js)
     // the catch on deck (tools/fish): the round fish waiting for the knife lie in the bleeding tub (their species, about one for every 6 kg),
     // the gutted ones waiting for the icer at the end of the gutting table, and one on the table when nobody guts
     { const wait = x => !x.gut && !x.iced && !(SPECIES[x.sp] || {}).live, all = S.hold.reduce((a, x) => a + (wait(x) ? x.kg : 0), 0), n = Math.min(10, Math.ceil(all / 6)), ts = W && W.s || 1;

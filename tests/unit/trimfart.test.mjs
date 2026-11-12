@@ -81,4 +81,48 @@ export default function (t){
     t.near(K.BOAT.vmax, 2 * K.VESSELS.sjark.vmax, 1e-9, 'farten er fortsatt dobbel');
     St().t += 133 * 60; t.ok(!!K.trimOn(b), 'på i 133 timer til'); St().t += 2 * 60; t.ok(!K.trimOn(b), 'og ute etter 134');
     boat('sjark'); K.trimSet('turbo'); St().t += 10 * 60; K.trimSet('pump'); t.near(K.trimLeft(St().boat), 24, 0.01, 'en annen type erstatter den som går (24 timer, +50 %)'); t.near(K.BOAT.vmax, 1.5 * K.VESSELS.sjark.vmax, 1e-9, 'farten er den nye'); }
+
+  // ---- the propeller and the additive rule (OPP3 of docs/planer/oppgraderinger.md, Jonas 07.11.2026, point 7: «Om det står 10% økning
+  // feks, så betyr det at økningen er 10% opp fra grunnnivået båten eller utstyret hadde»): the propeller (b.propLv), the yard's engine and a
+  // trim each add their share of the boat's own top speed; never multiplied on top of each other ----
+  { const V = K.VESSELS.hurtigsjark, e2 = Math.sqrt(1.2) - 1;   // (a planing hull: the engine's +20 % power is its square root)
+    boat('hurtigsjark', {propLv:3, engLv:2, trim:{k:'turbo', t0:St().t}});
+    t.near(K.BOAT.vmax, V.vmax * (1 + 0.30 + e2 + 1.0), 1e-6, 'hurtigsjark 22 kn, propell 3, motor 2 og turbotrim: summen ' + K.BOAT.vmax.toFixed(1) + ' kn (22 × (1 + 0,30 + 0,095 + 1,0) = 52,7), ikke produktet ' + (V.vmax * 1.3 * (1 + e2) * 2).toFixed(1));
+    t.near(K.BOAT.vcruise, V.vcruise * (1 + 0.30 + e2 + 1.0), 1e-6, 'marsjfarten er den samme summen');
+    t.near(K.BOAT.accel, V.accel * (1 + 0.15 + 0.06 + 1.0), 1e-6, 'akselerasjonen også: propell +15 %, motor +6 %, trim +100 %, lagt sammen'); }
+  { const V = K.VESSELS.sjarkny, e2 = Math.min(1.12, Math.cbrt(1.2)) - 1;   // (12 kn, a displacement hull since 05.11.2026: +15 % at propeller 3)
+    boat('sjarkny', {propLv:3, engLv:2, trim:{k:'turbo', t0:St().t}});
+    t.near(K.BOAT.vmax, V.vmax * (1 + 0.15 + e2 + 1.0), 1e-6, 'ny hurtigsjark 12 kn (deplasement), propell 3, motor 2 og turbotrim: ' + K.BOAT.vmax.toFixed(2) + ' kn, ikke ' + (V.vmax * 1.15 * (1 + e2) * 2).toFixed(2)); }
+  // a trim gives the same knots with and without a propeller (the trim is a share of the boat's own speed, not of the propeller's)
+  for (const type of ['trebat', 'sjark', 'hurtigsjark', 'kyst15']) for (const k of Object.keys(K.BOOSTS)){
+    const add = lv => { boat(type, {propLv:lv}); const v0 = K.BOAT.vmax; boat(type, {propLv:lv, trim:{k, t0:St().t}}); return K.BOAT.vmax - v0; };
+    t.near(add(3), add(0), 1e-9, type + ' ' + k + ': trimmen gir like mange knop med propell 3 som uten (' + add(3).toFixed(2) + ' kn)'); }
+  // the steps: planing +10/+20/+30 %, displacement +5/+10/+15 %, the burn −5/−10/−15 %, the acceleration +5/+10/+15 %
+  for (const lv of [1, 2, 3]){
+    for (const type of ['trebat', 'hurtigsjark']){ const V = K.VESSELS[type], sp = (V.planing ? 0.1 : 0.05) * lv;
+      boat(type, {propLv:lv});
+      t.near(K.BOAT.vmax, V.vmax * (1 + sp), 1e-9, type + ' propell ' + lv + ': toppfarten +' + Math.round(sp * 100) + ' % (' + K.BOAT.vmax.toFixed(2) + ' kn)');
+      t.near(K.BOAT.accel, V.accel * (1 + 0.05 * lv), 1e-9, type + ' propell ' + lv + ': akselerasjonen +' + 5 * lv + ' %');
+      const f0 = (boat(type), K.BOAT.fuelK); boat(type, {propLv:lv});
+      t.near(K.BOAT.fuelK / f0, 1 - 0.05 * lv, 1e-9, type + ' propell ' + lv + ': forbruket −' + 5 * lv + ' %'); }
+    const P = K.PROPUP[lv - 1]; t.near(P.pc, [0.02, 0.04, 0.07][lv - 1], 1e-12, 'trinn ' + lv + ': ' + P.pc * 100 + ' % av båtprisen'); t.eq(P.min, [2500, 4000, 6500][lv - 1], 'trinn ' + lv + ': gulvet ' + P.min + ' kr'); }
+  // the burn with the engine and the propeller: fuelK × (1 + 0,4·(P − 1) − the propeller's)
+  { const f0 = (boat('sjark'), K.BOAT.fuelK); boat('sjark', {engLv:2, propLv:2}); t.near(K.BOAT.fuelK / f0, 1 + 0.4 * 0.2 - 0.10, 1e-9, 'motor 2 og propell 2: forbruket × (1 + 0,08 − 0,10)'); }
+  // a save without the field has no propeller; an outboard and the ocean vessels have none to fit (a field there is ignored)
+  { boat('sjark'); t.ok(St().boat.propLv == null, 'nytt spill: ingen propLv i lagringen'); t.near(K.BOAT.vmax, K.VESSELS.sjark.vmax, 1e-12, 'uten feltet: båtens egen toppfart');
+    boat('skiff', {propLv:3}); t.near(K.BOAT.vmax, K.VESSELS.skiff.vmax, 1e-12, 'påhengsmotor: ingen propell fra verftet');
+    const hav = Object.keys(K.VESSELS).find(k => K.VESSELS[k].cls === 'hav'); boat(hav, {propLv:3}); t.near(K.BOAT.vmax, K.VESSELS[hav].vmax, 1e-12, 'havbåt (' + hav + '): ingen propell fra verftet'); }
+  // the model the game steers by reaches the top speed with the propeller (dynCalOf reads BOAT.vmax; 16b-dyn.js unchanged)
+  for (const type of ['trebat', 'hurtigsjark']){ const b = boat(type, {propLv:3, engLv:2}), v = top(calOf(b).P);
+    t.near(v / K.BOAT.vmax, 1, 0.03, type + ' propell 3 og motor 2: modellen når toppfarten (' + v.toFixed(2) + ' av ' + K.BOAT.vmax.toFixed(2) + ' kn)'); }
+  // the Trim app's promise (trimVmax, ui/phone/06-render.js): the top speed a trim gives is the one it gives, with a propeller and an engine
+  // step (the kontroll 12.11.2026: the app took BOAT.vmax / on.x × B.x, the product, and promised 57,2 kn for 50,6)
+  for (const o of [{}, {propLv:3}, {engLv:2}, {propLv:3, engLv:2}]) for (const k of Object.keys(K.BOOSTS)){
+    boat('hurtigsjark', o); const p0 = K.trimVmax(k); K.trimSet(k); t.near(p0, K.BOAT.vmax, 1e-9, 'Trim-appen lover ' + p0.toFixed(1) + ' kn for ' + k + ' (' + JSON.stringify(o) + ') og gir ' + K.BOAT.vmax.toFixed(1));
+    const other = Object.keys(K.BOOSTS).find(x => x !== k), p1 = K.trimVmax(other); K.trimSet(other); t.near(p1, K.BOAT.vmax, 1e-9, 'med ' + k + ' på lover den ' + p1.toFixed(1) + ' kn for ' + other + ' og gir det'); }
+  // a yard job on the hull for a boat that is no longer the one (yardStale, core/06-services.js): traded in, or not the next step
+  { const b = boat('sjark'), J = (kind, lv, o = {}) => Object.assign({kind, lv, ty:'sjark'}, o);
+    t.ok(!K.yardStale(J('eng', 1), b) && !K.yardStale(J('hold', 1), b) && !K.yardStale(J('upg', 1, {u:'cabin'}), b) && !K.yardStale(J('prop', 1), b), 'jobbene for neste trinn på samme båt står');
+    b.type = 'snekke'; t.ok(['eng', 'hold', 'prop'].every(k => K.yardStale(J(k, 1), b)), 'byttet inn mens de ventet: motor, lasterom og propell betales tilbake');
+    b.type = 'sjark'; b.engLv = 1; t.ok(K.yardStale(J('eng', 1), b) && !K.yardStale(J('eng', 2), b), 'motortrinn 1 på en båt som har det, er ikke lenger neste trinn'); }
 }

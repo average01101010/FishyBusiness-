@@ -1,0 +1,25 @@
+# Kystverket's reference routes (tools/ci/referanseruter.py; the hosts are closed to the cloud sessions), into the release
+# sjomerker-kilde as referanseruter.tar.gz, to read in a session (steg 107, 12.11.2026). Started by a push that changes this file or the
+# script (on any branch), or by hand. Nothing here goes into the game.
+name: Referanserutene
+on:
+  push:
+    paths: ['.github/workflows/referanseruter.yml', 'tools/ci/referanseruter.py']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  rr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch
+        run: python3 tools/ci/referanseruter.py out/rr
+      - name: Into the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tar czf referanseruter.tar.gz -C out rr && ls -la referanseruter.tar.gz
+          gh release view sjomerker-kilde >/dev/null 2>&1 || gh release create sjomerker-kilde --target "${{ github.sha }}" --title "Sjømerkene, kilden" --notes "Kildene til sjømerkene, til arbeidet i en økt."
+          gh release upload sjomerker-kilde referanseruter.tar.gz --clobber

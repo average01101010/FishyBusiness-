@@ -2,6 +2,18 @@
 
 Flyttet hit fra `docs/BACKLOG.md` 12.11.2026, så backloggen bare har det som er åpent. Nye «Strøket»-avsnitt skrives øverst her (dato, steg, gren, commit). Les med `grep`; fila leses aldri hel.
 
+## Strøket 12.11.2026 (steg 55, OPP3: propellen på verftet, gren `ccr-013bxxie-opp3`, rullet ut i `bf058fb7`)
+
+Fra punktet om OPP2 i `docs/BACKLOG.md`:
+
+- ~~«Båten og utstyret» viste ikke OPP2s trinn~~ (lukket i OPP3, 12.11.2026: én linje per trinnvare med `tierLad` og gevinsten fra `icTierLine`; linesetteren og garnrenna som før med `oneLad`).
+- ~~Juksamaskinens pris på siden og i Neste mål~~ (lukket i OPP3, 12.11.2026: siden, Neste mål og bekreftelsen i handlingen `equip` bruker `equipKr`, prisen butikken tar).
+- ~~Avbestilt montering betalte tilbake `EQUIP[j.k].price`~~ (lukket i OPP3, 12.11.2026: `jobx` betaler `j.kr` for montering og propell).
+
+## Strøket 12.11.2026 (steg 107, «feil side av staken», gren `ccr-013bxxie-s107`)
+
+- **Varselet for lateralmerkene og stakene (fra Ø13 K3, steg 33d, 12.11.2026, grenen `claude/k3-sjomerker-33d`; 9.2 og 9.3 i `docs/systemer/sjofart-og-lover.md`).** «Feil side av merket» gjelder bare kardinalmerkene. **Merkeretningen for lateralmerkene kan ikke hentes:** OpenStreetMap har den ikke per merke, leinettet har ingen retning, og Kystverkets navigasjonsinstallasjoner (WFS, NLOD 2.0, lagene `Fast_sjømerke` og `Flytende_merke`, feltene lest 12.11.2026) har ingen retning per lateralmerke, bare `toppmerke_retning` (viseren). Kystverkets «Referanseruter for navigasjon» (Geonorge `25b83fc1-…`, åpne data, API på `kystverket.avadaptive.no`) er ikke prøvd og kan gi leias retning. **Det som finnes:** viseren på 6 905 staker i `sjomerker-8` (femte felt, sann peiling mot seilbart farvann), som et varsel «feil side av staken» kan bygge på med samme regel som kardinalmerkene. Ikke bygd (startmeldingen: «ikke bygg varselet her»). Jonas 12.11.2026: «A: Nytt steg (Recommended)». **Åpent fordi:** annen økt: steg 107 etter lanseringslinja (hel startmelding i `start/107.md`) bygger varselet for stakene og slår opp referanserutene for lateralmerkene; lukkes av den. **Lukket 12.11.2026 i steg 107:** varselet for stakene ble bygd og tatt ut igjen samme dag; Jonas: «Nei, det skal ikke komme noe varsel om man går på feil side av staken.» Autonav endres ikke: «Nå lenge ruten autonav lager er trygg og tilpasset båtens størrelse, dypgående og andre relevante faktorer kan båten gå på hvilken som helst side av merker og staker.» Dobbel viser finnes ikke i kilden, og referanserutene gir ikke merkeretningen (9.2 i `docs/systemer/sjofart-og-lover.md`).
+
 ## Strøket 12.11.2026 (steg 33d, Ø13 K3: sjømerkene mot IALA region A, gren `claude/k3-sjomerker-33d`)
 
 - ~~**Sjømerkene mot IALA region A (tabellen i 9.3).** **Åpent fordi:** annen økt: Ø13 K3, steg 33d, eier `tools/map/sjomerker.py` og `markInto`; lukkes av den (hel startmelding i `start/33d.md`). kardinalmerkene tegnes alle som sørmerket i 3D (svart nederst, gult øverst) og uten toppmerker, og som en gul prikk uten kvadrant i kartet; 696 bøyer for isolert fare, trygt farvann og spesialmerke tegnes røde som babord; 2 075 lateralstaker med indirekte belysning får en gul lyssektor (flomlyset lest som lys); lateralmerkene har ingen toppmerker; 21 lateralstaker uten kategori tegnes røde. Lateralfargene og lysene (rødt babord, grønt styrbord) og kardinalmerkenes hvite lys med riktig rytme stemmer.~~ Rettet i steg 33d 12.11.2026 (`sjomerker-8`, `markInto`, `markSvg`; tallene før og etter i 9.3 i `sjofart-og-lover.md`; `marktest`).
