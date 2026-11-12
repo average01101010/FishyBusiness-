@@ -2851,3 +2851,18 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
+2026-11-12 04:00	plan/2026-11-11-88	c4841603	trip2	OK	32	lite	samtidig	
+2026-11-12 04:00	plan/2026-11-11-88	c4841603	maletest	OK	22	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	regmarktest	OK	7	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	vesseltest	FEIL	23	lite	samtidig	FEIL a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither {'ski
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	lanterntest	OK	15	lite	samtidig	
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	walktest	FEIL	16	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 54
+2026-11-12 04:01	plan/2026-11-11-88	c4841603	crewclip	FEIL	21	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
+2026-11-12 04:02	plan/2026-11-11-88	c4841603	docktest	FEIL	63	lite	samtidig	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-12 04:02	plan/2026-11-11-88	c4841603	boottest	OK	26	lite	samtidig	
+2026-11-12 04:03	plan/2026-11-11-88	c4841603	dbg23o	OK	43	3d	alene	
+2026-11-12 04:12	plan/2026-11-11-88	c4841603	docktest	OK	64	lite	alene	
+2026-11-12 04:13	plan/2026-11-11-88	c4841603	docktest	OK	66	lite	alene	
+2026-11-12 04:15	plan/2026-11-11-88	c4841603+	docktest	FEIL	69	lite	alene	FEIL et trykk på det grå Ta opp i vifta sier hvor langt det er til blåsa
+2026-11-12 04:16	plan/2026-11-11-88	c4841603+	docktest	OK	66	lite	alene	
+2026-11-12 04:18	plan/2026-11-11-88	c4841603+	docktest	OK	64	lite	alene	

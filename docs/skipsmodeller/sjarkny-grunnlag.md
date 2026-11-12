@@ -311,3 +311,26 @@ Steg 88 runde 3, arbeidsrutinen på grenen `plan/2026-11-11-88` (PR #66), etter 
 **Målt:** sotfeltet ligger 3 mm utenpå speilet. Kameraets nærplan er 0,25 m når det står nær båten (`view3d/24-cinema.js`), og med 24-bits dybde skiller spillet flater under 1 mm ut til 50 m og 3 mm rundt 110 m, der feltet er et par piksler; kanten har samme farge som speilet. Gripefeltene (5 mm over dørken) og knastene (4 mm over feltet) er innenfor det samme.
 
 **Ellers:** `check()` grønn. `qa/flatnorm.py` som etter runde 1 og 2 (to flater på den runde mastesøylen, 20,6° mot grensen 20; ingen på vegger). `qa/clip_hs11.py` 0. Modellen er 69 330 trekanter nær (63 974 før; taket er rundt 300 000), fjernmodellen 2 613. Enhetstestene 3 345 OK.
+
+### 10.12 Karakteren etter runde 3: 63/100, ikke ferdig
+
+Satt 12.11.2026 av en ny uavhengig underagent som bare fikk 26 ark fra arbeidet om bord (tre bilder per operasjon i begge formater), 14 bilder fra spillet (utenfra, akterfra, fra roret, dekket, natta fra begge bauger, ovenfra, begge formater), 29 rendringer (`qa/hs11_wle.py` og `qa/hs11_uv.py`), `check()`-utskriften og skalaen. Den fikk ikke karakterene fra runde 1 og 2 og ikke denne teksten.
+
+| Punkt | Vekt | Runde 1 (71) | Runde 2 (67) | Runde 3 | Sensorens begrunnelse (kort) |
+|---|---|---|---|---|---|
+| Skrogutforming | 20 | 15 | 14 | 14 | Én jevn flate, slag, støvelstripe, dyse med propell, vekta stemmer. Trekk: roret en flat kloss, kjølen og skoen bokser, stevnjernet et løst rør utenpå stevnen, nesten halvsirkelformet baug sett ovenfra |
+| Detaljer | 20 | 14 | 13 | 12 | Mye smått holder (lensporter med rustrenner, leider, eksos, vinsj, brannslukker, rister, riffeldørk). Trekk: lista gnidd og uskarp, lyse firkantflekker på sida, rustrennene like kopier, tom takplate, ingen fendere ved kai |
+| Lanterner | 5 | 4 | 3,5 | 4 | Rødt og grønt riktig fra hver baug, den hvite synes, fiskelysene riktig. Trekk: styrhuset fullt opplyst om natta |
+| Styrhus | 10 | 7 | 6,5 | 7 | God utside; fra skipperens øye baugen og horisonten; gass, VHF, ekkolodd og plotter. Trekk: tykke stolper mellom frontvinduene, innvendige flater nakne |
+| Arbeidsflyt | 25 | 16 | 16 | 13 | Gangen i arbeidet logisk. Trekk: folk gjennom hverandre og gjennom stampene (`line_settfull`, `line_riggfull`, `garn_riggfull`), kranen står foldet og stille under «kran», ingen ved trossene under «kast loss», redskapet hopper fra haleren til akterdekket, kranen, benken og livbøyene borte midt i lossingen sett ovenfra (`felles_lossn`) |
+| Utforming av dekk | 20 | 15 | 14 | 13 | Planen god. Trekk: kort åpent akterdekk, stampeblokken fyller styrbord hekk, tre klemt under taket ved haleren, garnkaret og teinestabelen 3,5–5 m fra haleren |
+| **Sum** | **100** | **71** | **67** | **63** | Under grensen på 75 |
+
+**Min egen vurdering.** Tre sensorer, tre kjøringer, flere bilder hver gang; tallene kan ikke trekkes fra hverandre punkt for punkt. Det runden skulle løfte, ble sett: slitasjen («lensporter med rustrenner»), dørken («dekksplater med riffelmønster»), gass og radio fra roret, kameraene og nattbildet. Men sensoren trakk detaljene videre for selve teksturene (lista, flekkene, kopiene), og arbeidsflyten og dekket for det som ligger i spillets felles kode og ble sett tydeligere med 26 ark. Det som skal til for 75, ligger mest der (anslått 7–9 poeng av de 12), og runde 4 tar det (`docs/planer/start/88.md`).
+
+**Det som mangler til 75, og hvor det ligger:**
+1. **Folk gjennom hverandre og gjennom stampene** når line og garn settes eller rigges (`line_settfull`, `line_riggfull`, `garn_riggfull`): `deckcrew.js` (plassene og `kitBoxes` mot stampeblokken), og stampeblokken som fyller styrbord hekk (`STAMP0`, `stamp_box` i `hs11.py`, `gearMax.stamp`).
+2. **Kranen gjør ingenting under «kran»** (`felles_kran`, `felles_krann`): båtens egen kran står foldet i alle tre bildene mens lasta løftes; `view3d/09-landing-deck.js` (kranen, `kit.crane`) og opptakets scene i `tests/ombord.py`. Undersøkes først: er det opptaket som tar bildene før kranen begynner, eller spillet som ikke bruker båtens kran?
+3. **Kranen, benken og livbøyene borte i bildene ovenfra under lossingen** (`felles_lossn`, liggende): folkene og karene står der, utstyret ikke. Ikke funnet med vilje i koden (12.11.2026); første mistanke er at spillet bytter til fjernmodellen uten utstyr når kameraet står høyt. Mål før noe rettes.
+4. **Ingen ved trossene under «kast loss», «hvile» som står ved ripa**, og redskapet som hopper fra haleren til akterdekket: felles kode (`deckcrew.js`, `view3d/10-gear.js`).
+5. **Modellen:** lista (skrubben gir en gnidd, uskarp kant på nært hold; mykere eller ingen), de lyse firkantflekkene på sida (`chalk`, for grov støy mot stasjonene), rustrennene som like kopier (varier lengde og styrke per lensport), roret og skoen som profiler, stevnjernet inntil stevnen, og styrhusets innside (takpanel, kompass).
