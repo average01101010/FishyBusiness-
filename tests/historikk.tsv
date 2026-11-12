@@ -3200,3 +3200,7 @@
 2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	crewclip	FEIL	25	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [13, 5078, ['l:3.31:walk', 'l:3.2:walk', 'lfb:3.09:wa
 2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	regmarktest	OK	8	lite	samtidig	
 2026-11-12 14:56	claude/ob11-r4-breisjark	7cec133+	lanterntest	OK	14	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	kvotemarkedtest	OK	32	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	quotatest	OK	20	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	admintest	OK	10	lite	samtidig	
+2026-11-12 15:29	ccr-dd09444c-km5	7558cbd	megletest	OK	22	lite	samtidig	
