@@ -25,6 +25,7 @@ Jonas' valg, med datoen de ble tatt. De spørres ikke om igjen.
 | V11 Kurs og øvelser | **C** (05.11.2026) | Ingen kurs eller øvelser i spillet. |
 | Det som ikke lages | 28.10.2026 | Nødsignalene, linekasteren, EPIRB, SART, den håndholdte VHF-en og brannslukkeren oppbevares inne og vises ikke. Signalfigurene, radarreflektoren og refleksstripene lages ikke. Overlevelsesdrakten oppbevares inne. |
 | Det som lages | 28.10.2026 | Oppblåsbar vest uten merkenavn, båret av mannskapet og skipperen på dekk. MOB-båt med davit og vugge. MOB-lys med røyk på brakett (bygd i Ø11.4, 06.11.2026). |
+| Ø11.9 Oppsigelsesfristene (valg 40) | **A** (12.11.2026: «A: Loven, ekte tid (anbefalt)») | Lovens frister i ekte tid: 14 dager i prøvetida, ellers én måned (skipperen tre, to etter fem år, tre etter ti). Den som sier opp, står fristen ut om bord og går i land i første havn etter. Sier spilleren opp noen, går de i land med en gang i havn med oppgjøret for fangsten om bord. Kap. 10. |
 | Hviletid og papirer | 11.10.2026 | Hviletiden er fjernet og kommer ikke tilbake. Sertifikatene sperrer ingenting. |
 
 Prinsippene 1–7 i `docs/planer/lover-og-regler.md` gjelder videre. Særlig **prinsipp 4: den som ikke styrer, får aldri følger for noe hun ikke kunne påvirke.** Derfor regnes vikingen, sammenstøtene og ulykkene bare når spillet er åpent, aldri i `catchUp`. Fra `CLAUDE.md`: felles klokke, Friction for Flow, sosialt er additivt (andre spilleres båter skades aldri), ingen ekte firmanavn.
@@ -112,7 +113,17 @@ Det spillet bruker, regel for regel:
 
 ### 2.4 Skipsarbeidsloven, LOV-2013-06-21-102
 
-<https://lovdata.no/dokument/NL/lov/2013-06-21-102>, sist endret LOV-2026-04-10-14. Ordrett. § 3-1 skriftlig arbeidsavtale; § 3-2 prøvetid inntil seks måneder; § 5-2 oppsigelsesfrist én måned (to etter fem år, tre etter ti, 14 dager i prøvetiden); § 5-6 saklig grunn; § 4-1 (4) lønnsreglene gjelder ikke lotten. Ø11.9.
+<https://lovdata.no/dokument/NL/lov/2013-06-21-102>, «Sist endret: LOV-2026-04-10-14 fra 01.07.2026». Lest på nytt 12.11.2026 for Ø11.9 med leseverktøyet (Lovdata svarer ikke `curl`: 405). Verktøyet gir bare korte ordrette sitater (under 125 tegn); det i anførselstegn er ordrett, resten er gjengitt med egne ord.
+
+- **§ 3-1 Krav om skriftlig arbeidsavtale.** «Det skal inngås skriftlig arbeidsavtale mellom arbeidsgiver og arbeidstaker.» Avtalen skal være på plass så snart som mulig og senest når arbeidet om bord begynner; fast ansettelse er utgangspunktet. Minsteinnholdet står i en forskrift (fjerde ledd), som ikke er lest.
+- **§ 3-2 Ansettelse med prøvetid.** «Prøvetid på inntil seks måneder kan avtales skriftlig.» Fravær arbeidsgiveren ikke har skyld i, kan forlenge den bare når det er sagt skriftlig på forhånd (annet ledd). Ingen ny prøvetid for den som fortsetter i samme eller vesentlig lik stilling i samme virksomhet; i fast stilling bare så langt tidligere ansettelse og ny prøvetid til sammen ikke er over seks måneder (tredje ledd).
+- **§ 5-2 Oppsigelsesfrister.** (1) «Den gjensidige oppsigelsesfristen er én måned.» «For skipsfører er den gjensidige fristen likevel tre måneder.» «Oppsigelsesfristen regnes fra dato til dato.» (2) Etter minst fem år sammenhengende «er den gjensidige oppsigelsesfristen minst to måneder», etter minst ti år «minst tre måneder». (3) «Er arbeidstaker skriftlig ansatt med en bestemt prøvetid, er den gjensidige oppsigelsesfristen 14 dager.» (4) Permittert uten lønn: 14 dager, «regnet fra den dag oppsigelsen blir mottatt av arbeidsgiver.» (5) Forliser skipet eller kan det ikke repareres: «er arbeidsgiverens oppsigelsesfrist én måned», tre for skipsføreren. (6) «Oppsigelsesfristene i første, annet og tredje ledd kan fravikes ved skriftlig avtale.» «Kortere frister kan likevel bare avtales i tariffavtale eller etter at oppsigelse har funnet sted.» Paragrafen har ingen regel om at fristen løper fra første dag i måneden etter (som arbeidsmiljøloven § 15-3 (6)).
+- **§ 5-3 Formkrav ved oppsigelse:** skriftlig; arbeidsgiverens oppsigelse «skal anses for å ha funnet sted når den er kommet frem til arbeidstaker» (annet ledd). Gjengitt.
+- **§ 5-5 Oppsigelsesvern i arbeidsavtaler med bestemt prøvetid.** I prøvetida «må oppsigelsen være begrunnet i arbeidstakers tilpasning til arbeidet, faglige dyktighet eller pålitelighet.» «Oppsigelse må være gitt innen utløpet av prøvetiden.»
+- **§ 5-6 Vern mot usaklig oppsigelse.** «En arbeidstaker kan ikke sies opp uten at det er saklig begrunnet» i virksomhetens, arbeidsgivers eller arbeidstakers forhold. Ved innskrenkning er det ikke saklig når det finnes annet passende arbeid (annet ledd). Gjengitt utover sitatet.
+- **§ 4-1 (4):** lønnsreglene gjelder ikke beregningen av lott på fiskefartøy (lest 05.11.2026).
+
+**Jonas' valg 12.11.2026 (valg 40, Ø11.9 oppsigelsesfristene i ekte tid), stilt i økta med spørsmålsverktøyet:** «A: Loven, ekte tid (anbefalt)». Det betyr: fristene som i loven, 14 dager i prøvetida og ellers én måned (lengre for skipperen og etter mange år), på den felles klokka; den som sier opp, står fristen ut om bord med lott som før og går i land i første havn etter at den er ute; sier spilleren opp noen, kan de gå i land med en gang i havn, med oppgjøret for fangsten om bord som før. Bygd i kap. 10.
 
 ### 2.5 Fiskefartøy under 15 m, FOR-2013-11-22-1404
 
@@ -627,3 +638,45 @@ De røde punktene er Ø13 K3 sine (steg 33d, `tools/map/sjomerker.py`, `markInto
 - `run.py changed` 11.–12.11.2026 (hele kysten fra `kart-31` i bygget): enhetstestene 3353 OK; `farttest`, `tutfull`, `krabbefabrikktest`, `colregtest` (32), `keeptest`, `autonavtest` (25), `turtest`, `decktest`, `trip2` (ender i havn), `vectest`, `npctest`, `towtest`, `tattest`, `peergear`, `mobtest` (45), `turlinjetest`, `hudtest` (61), `havflaate`, `hulltest`, `lanterntest`, `anchorlight3d`, `seaworktest`, `driftsplan2map`, `placetest`, `sidetab`, `etikett`, `legmemotest`, `hbtest` og `charttest` (44) grønne. Røde og ikke Ø11.8 sine: `worktest` (søvnskjermen) og `itemcardtest` (Elektronikk og haler), begge kjent røde i backloggen fra før; `routetest` 46 OK og én rød tidsmåling (en bit av ruteletingen tok 84 ms mot grensa 60 mens enhetstestene gikk på samme maskin; ruteletingen er ikke rørt). Droppet: `heattest`, `vindshot` og `docktest` (kjøringen ble avbrutt før dem; de dekker `03-map.js` og `04-panels-instruments.js`, der endringen er ett kall som ikke tegner noe uten områder, og én gren i stripa som bare slår til for hånd over grensa).
 - Stikkprøver 11.11.2026 (Autonav gjennom en havns vann og for hånd over grensa): Oslofjorden (Drøbak), Bergen (Manger) og Tromsø (Tromsdalen): 6,0 knop utenfor, 4,7–4,9 inne, varselet og dagboka for hånd. Bodø og Hammerfest: grensa slår til i de åtte nærmeste havnepunktene, men testen fant ingen rett linje med vann hele veien gjennom havnas vann der, så seilasen er ikke prøvd på de to stedene. Feilen fantes ikke noe sted: oppslaget og taket er de samme overalt.
 - Gjennomgangen (`/code-review`, medium, 12.11.2026) ga ti funn; åtte rettet: varselet sto foran skrogvarselet, «en knop over i 30 s» var ikke sammenhengende, taket gikk inn i minuttstegets `sjvCreep` også med spillet lukket (nå bare tåketaket der, `sjvFogCapV`), radene lå i `S.mobs` (og låste opp håndbokas «Mann over bord»), «én gang per besøk» holdt ikke over en kort Autonav-etappe eller et båtbytte, MOB-redningen ble holdt på 5 knop, oppslagets mellomlager så ikke nye havner, og merkelista ble tømt etter at merket var satt. Ikke rettet: to havneindekser (`PCELL` i `inHarbour` og `FART.cell`, ulik radius med vilje), og `fart.py` som bare tar ytterringen og stoler på feltnavnene (ikke prøvd mot ekte data, 9.1).
+
+## 10. Ø11.9 Arbeidsavtalen (L7, steg 27, 12.11.2026)
+
+Bygd 12.11.2026 i Jonas' økt (grenen `claude/o11-9-arbeidsavtalen`) etter valg 40 A (kap. 1, 2.4). Alt i `core/04-crew.js` (`AVT` og funksjonene etter `crewQuit`), `core/14-crewlife.js` (egen båt) og `ui/phone/13-mannskap-bank-meld.js` (`avtHtml`); knappene i `ui/phone/14-act.js`.
+
+### 10.1 Avtalen (§§ 3-1, 3-2)
+
+- **`crewAvt(c)` → `c.avt = {t0, boat, share, prove}`**: skrevet når personen mønstrer på (dagen er `c.hiredT`; mannskap fra en lagring før Ø11.9 får avtalen fra den dagen de ble ansatt, første time `crewTick` går). `boat` og `share` er båten og lotten den dagen; kortet viser båten de er om bord i nå og lotten som gjelder nå.
+- **Prøvetid seks måneder** (`AVT.proveM`, det lengste loven tillater, avtalt i hver avtale i spillet; et spillvalg som kan justeres). Den som kommer tilbake til rederiet etter egen båt (`alumniReturn`), får ny avtale **uten** prøvetid (§ 3-2 (3); `c.noProve`).
+- **Stillingen** (`crewPos`) følger det personen gjør om bord: skipper (`c.sk`, skipsfører i loven), styrmann (`c.mate`), lærling eller fisker.
+- **I Mannskap-appen** står avtalen på kortet til hver om bord: skrevet (dato og år), stilling, båt, lott (med ønsket lott, lærling og bestmannshyre som før), prøvetid til (eller «over», eller «ingen»), oppsigelsesfristen som gjelder nå, og «Har sagt opp. Går i land …» når en frist løper. Skjermbilder: `docs/okter/2026-11-12-27/`.
+
+### 10.2 Fristene (§ 5-2)
+
+- **`crewFrist(c, t)`**: 14 dager når oppsigelsen gis i prøvetida (§ 5-2 (3), § 5-5: gitt innen prøvetida er ute), ellers én måned fra dato til dato (`avtAddMonths`: den 31. til en måned med 30 dager blir den siste), tre for skipperen, minst to etter fem år og tre etter ti i samme ansettelse (fra `avt.t0`).
+- **Når mannskapet sier opp** (`crewNotice(c, gr)` → `c.opp = {t, end, gr}`): trivselen under grensa i mer enn 36 timer (`trivsel`, før: i land i neste havn), en krangel ingen tok tak i på 48 timer (`krangel`, før: i land med en gang), eller drømmen om egen båt innen rekkevidde (`egenbat`, før: ei uke). Meldingen sier dagen og fristen, og historien får linja. Personen står fristen ut om bord med lott som før.
+- **Når fristen er ute** (`crewOppTick`, fra `crewTick` hver time, også når spillet er lukket): i land i første havn etter fristen, med oppgjøret for fangsten om bord (`crewSettle`) og ingenting annet; på sjøen venter de til havna. Egen båt går som før til `lifeDepart` (navnet, AIS, tilbake etter et år eller to). En lagring med ukesvarselet fra før Ø11.9 (`life.notice` uten `c.opp`) går ut som før.
+- **«Be … bli»** (`crewStay`, knappen på kortet til den som har sagt opp): de trekker oppsigelsen etter avtale (§ 5-2 (6)) når trivselen er 45 eller mer (`AVT.stay`); den som skal kjøpe egen båt, snur ikke.
+
+### 10.3 Når spilleren sier opp (§§ 5-5, 5-6)
+
+- **`crewLetGo(c)`** (knappene «Si opp» på kortet og i krangelkortet, og `fire`): bare i havn, som før. Grunnen (`crewGrunn`) står i loggen: etter avtale når de alt hadde sagt opp selv («La gå nå»), i prøvetida tilpasningen til arbeidet (§ 5-5), en krangel de er i: samarbeidet om bord, ellers at driften trenger færre folk (§ 5-6, virksomhetens forhold). Loggen sier fristen og dagen; personen er fritatt for arbeid og går i land med en gang med oppgjøret for fangsten om bord, som før (valg 40 A). De andres trivsel ±4 etter kjemien, som «Si opp» på kortet gjorde før (nå også fra krangelkortet).
+- Ingen bøter, ingen erstatning og ingen sperre (V1 A).
+
+### 10.4 Prinsipp 4
+
+En frist som løper ut mens spillet er lukket, koster ingenting utover oppgjøret for fangsten om bord, som personen hadde krav på uansett, og ingen går i land midt på sjøen. Oppsigelsen selv kommer bare av det spilleren kunne påvirke (trivselen, krangelen, sparingen) og varsles med melding med dagen; fristen er minst 14 dager.
+
+### 10.5 Tester og målinger
+
+- `tests/unit/arbeidsavtale.test.mjs` (32 sjekker): dato til dato, avtalen og prøvetida, fristene (14 dager, én måned, skipperen, fem og ti år), oppsigelsen og meldingen, fristen ute på sjøen og så i havn med bare oppgjøret i kassa (prinsipp 4), det samme gjennom `crewTick`, «Be … bli», grunnene, «Si opp» og ingen ny prøvetid etter egen båt. Sett rød på koden før: funksjonene fantes ikke, og `crewTick`-sjekken (37 timer med dårlig trivsel i havn) var rød på den gamle koden for seg (personen gikk i land).
+- `tests/avtaleshot.py` (LITE, 8 OK): avtalen i Mannskap-appen i begge formater, en ny og en som har sagt opp.
+- `crewlifetest` (fristen etter § 5-2 i stedet for ei uke), `selfcrew`, `crewtest`: grønne 12.11.2026.
+- Stikkprøver langs kysten trengs ikke: avtalen og fristene er like overalt og bruker ikke stedet (flybilletten fra Svalbard er som før).
+
+### 10.6 Ikke med, og antatt
+
+- Forskriften om minsteinnholdet i arbeidsavtalen (§ 3-1 (4)) er ikke lest; avtalen i spillet viser det spilleren trenger (stilling, båt, lott, prøvetid, frist).
+- Lønn i oppsigelsestida for den spilleren sier opp: personen er fritatt og får oppgjøret for fangsten om bord, ikke lott for turer etter (valg 40 A). Garantilott og hyre i fristen er ikke med.
+- Drøftingen før oppsigelse (§ 5-1), formkravene (§ 5-3), søksmål (kap. 6) og fortrinnsrett er ikke med.
+- Havbåtenes anonyme lag (5.6c i `folk-om-bord.md`) har ingen avtale på kortet; lagene følger båten.
+

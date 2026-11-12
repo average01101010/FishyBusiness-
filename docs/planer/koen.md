@@ -66,7 +66,9 @@ Svar i en økt, eller rett her. Økta som får svaret, skriver det inn i planfil
 
 36. **Taket i importen av haill (HS4, steg 98, PR #61).** Det spilleren har i lagringen i dag, gjøres om til serverens én gang, innenfor et tak. Taket er satt til 2 haill og 1 luksushaill fra lagringens egne tall (puben og kapittel 2), og tallet er gjettet; kjøpt haill, takk-haill og velkomstgaven er utenfor taket og mistes aldri. **A (anbefalt):** tell først: en økt med Jonas teller hvor mange haill hver lagring har (bare antall), og taket settes så ingen ærlig spiller mister noe. **B:** behold 2 og 1; en spiller som har spart mer fra puben, mister resten. **C:** et romslig tak uten å telle, for eksempel 10 og 3. Tallet står ett sted (`haill_import` i migreringen `20261111140000_haill_srv.sql`).
 
-Valg som kommer når steget kommer opp (skrives inn med A/B/C av rutinen da): H5 auksjon eller fast pris hos Sildelaget; H8 stigen mellom 15 m og havbåtene; Ø11.9 oppsigelsesfristene i ekte tid.
+40. **Oppsigelsesfristene i ekte tid (Ø11.9, steg 27). Besvart 12.11.2026 i Jonas' økt.** Fristene i skipsarbeidsloven § 5-2 er i ekte tid, og den felles klokka går i ekte tid; før sa mannskapet opp på noen døgn. **A (anbefalt):** lovens frister i ekte tid: 14 dager i prøvetida, ellers én måned; den som sier opp, står fristen ut om bord med lott som før og går i land i første havn etter; sier du opp noen, går de i land med en gang i havn med oppgjøret for fangsten om bord. **B:** samme ordning, skalert til spillet (for eksempel 3 og 7 dager). **C:** avtalen, prøvetida og fristen vises, men oppsigelsen går som før. **Jonas: «A: Loven, ekte tid (anbefalt)».** Skrevet inn i 2.4 og kap. 10 i `docs/systemer/sjofart-og-lover.md`; koordinatoren flytter valget til arkivet.
+
+Valg som kommer når steget kommer opp (skrives inn med A/B/C av rutinen da): H5 auksjon eller fast pris hos Sildelaget; H8 stigen mellom 15 m og havbåtene.
 
 Besvarte valg står i `docs/planer/koen-arkiv.md`, og svarene er skrevet inn i planfilene.
 

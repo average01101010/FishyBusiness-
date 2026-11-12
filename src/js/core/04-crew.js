@@ -485,6 +485,86 @@ function crewSettle(c){
 }
 function crewQuit(c, why, whyEn){ const i = S.crew.indexOf(c); if (i < 0) return; crewSettle(c); flyOut(c); S.crew.splice(i, 1); for (const o of S.crew){ if (o.grudge) delete o.grudge[c.id]; }
   msg(c.name, why || 'Jeg mønstrer av her. Det er ikke noe for meg lenger.', whyEn || 'I am signing off here. It is not for me any more.'); log(c.name + ' har mønstret av.', c.name + ' has signed off.'); if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null; }
+// ===== Ø11.9 the employment agreement (L7; docs/systemer/sjofart-og-lover.md 2.4 and kap. 10): skipsarbeidsloven, LOV-2013-06-21-102 =====
+// § 3-1: a written agreement no later than when the work aboard starts; § 3-2: «Prøvetid på inntil seks måneder kan avtales skriftlig»;
+// § 5-2: «Den gjensidige oppsigelsesfristen er én måned», «regnes fra dato til dato», three months for the skipper (skipsfører), at least
+// two after five years and three after ten in the same employment, 14 days for one hired in writing on probation; § 5-5: notice on
+// probation for «tilpasning til arbeidet, faglige dyktighet eller pålitelighet», given before the probation ends; § 5-6: never without
+// «saklig begrunnet». Jonas 12.11.2026 (valg 40 A): the law's notice in real time on the shared clock. One who gives notice works it out
+// aboard on the share as before and goes ashore at the first harbour after it; you may let someone go ashore at once in harbour, with
+// the settlement for the catch aboard as before. No fines (V1 A), and a notice that runs out with the game closed costs nothing more than
+// that settlement, which was owed anyway (prinsipp 4).
+const AVT = {proveM:6, monthM:1, skipperM:3, y5M:2, y10M:3, proveD:14, stay:45};
+// t (game minutes) plus n calendar months, date to date: the 31st into a month of 30 days is its last day
+function avtAddMonths(t, n){ const d = gDate(t / 60), y = d.getUTCFullYear(), m = d.getUTCMonth() + n, last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  return (Date.UTC(y, m, Math.min(d.getUTCDate(), last), d.getUTCHours(), d.getUTCMinutes()) - EPOCH) / 60000; }
+const avtDay = t => { const d = gDate(t / 60); return d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.' + d.getUTCFullYear(); };
+// the agreement, written when the person signs on (an old save's crew get one from the day they were hired): the day, the boat, the
+// share agreed and the end of the probation. One who comes back to the company after a boat of their own has no new probation (§ 3-2 (3))
+function crewAvt(c){
+  if (!c) return null; if (c.avt) return c.avt;
+  const t0 = c.hiredT != null ? c.hiredT : S.t;
+  c.avt = {t0, boat:S.boatName || '', share:c.share, prove:c.noProve ? t0 : avtAddMonths(t0, AVT.proveM)}; delete c.noProve;
+  return c.avt;
+}
+// the position in the agreement, from what the person does aboard: skipper (skipsfører, c.sk), mate (c.mate), apprentice, or deckhand
+function crewPos(c){ return c.sk ? ['Skipper', 'Skipper'] : c.mate ? ['Styrmann', 'Mate'] : isAppr(c) ? ['Lærling', 'Apprentice'] : ['Fisker', 'Deckhand']; }
+const crewOnProve = (c, t = S.t) => t < crewAvt(c).prove;
+// the notice that applies to a notice given at t (§ 5-2): [the end, the length as words]
+function crewFrist(c, t = S.t){
+  const A = crewAvt(c); if (crewOnProve(c, t)) return [t + AVT.proveD * 1440, ['14 dager', '14 days']];
+  const yrs = (t - A.t0) / (365.25 * 1440), m = Math.max(c.sk ? AVT.skipperM : AVT.monthM, yrs >= 10 ? AVT.y10M : yrs >= 5 ? AVT.y5M : 0);
+  return [avtAddMonths(t, m), m === 1 ? ['én måned', 'one month'] : [m + ' måneder', m + ' months']];
+}
+// the person gives notice (gr: 'egenbat' a boat of their own, 'trivsel' unhappy too long, 'krangel' a quarrel nobody sorted out):
+// c.opp = {t, end, gr}; they stay aboard on the share until the end, then go ashore at the first harbour (crewOppTick)
+const OPP_SAY = {
+  egenbat:['Jeg har spart nok til egen båt nå. Jeg sier opp, og går i land {d}. Takk for tiden om bord.', 'I have saved enough for a boat of my own now. I give notice, and go ashore {d}. Thank you for the time aboard.'],
+  trivsel:['Jeg har ikke trivdes på lenge. Jeg sier opp, og går i land {d}.', 'I have not been happy for a long time. I give notice, and go ashore {d}.'],
+  krangel:['Når ingen tar tak i dette, sier jeg opp. Jeg går i land {d}.', 'When nobody deals with this, I give notice. I go ashore {d}.']};
+function crewNotice(c, gr){
+  if (!c || c.opp) return null; const [end, len] = crewFrist(c), s = OPP_SAY[gr] || OPP_SAY.trivsel, d = avtDay(end);
+  c.opp = {t:S.t, end, gr};
+  msg(c.name, (typeof crewDialect === 'function' ? crewDialect(c, s[0].replace('{d}', d)) : s[0].replace('{d}', d)) + ' (Oppsigelsesfristen er ' + len[0] + '.)', s[1].replace('{d}', d) + ' (The notice is ' + len[1] + '.)');
+  if (typeof lifeStory === 'function') lifeStory(c, (gr === 'egenbat' ? 'Sa opp for å kjøpe egen båt, med ' : 'Sa opp med ') + len[0] + 's frist.', (gr === 'egenbat' ? 'Gave notice to buy a boat of their own, ' : 'Gave notice, ') + len[1] + '.');
+  return c.opp;
+}
+// the notice is up and the boat lies in a harbour: ashore, with the settlement for the catch aboard (crewSettle) and nothing else; at sea
+// they wait for the next harbour, also with the game closed. True when the person left
+function crewOppTick(c){
+  const o = c.opp; if (!o || S.t < o.end || !S.boat || S.boat.status !== 'port') return false;
+  if (o.gr === 'egenbat' && typeof lifeDepart === 'function') lifeDepart(c);
+  else crewQuit(c, 'Fristen er ute, og jeg går i land her. Takk for nå.', 'The notice is up, and I go ashore here. Thank you for now.');
+  return !S.crew.includes(c);
+}
+// ask one who gave notice to stay: by agreement (§ 5-2 (6)) when their mood has come back (AVT.stay); one who is off to a boat of their
+// own does not turn back. Null when they stay, else why not
+function crewStay(c){
+  const o = c && c.opp; if (!o) return 'none'; if (o.gr === 'egenbat') return 'egenbat'; if (c.morale < AVT.stay) return 'mood';
+  delete c.opp; c.low = 0; if (typeof lifeStory === 'function') lifeStory(c, 'Trakk oppsigelsen og ble om bord.', 'Took back the notice and stayed aboard.');
+  msg(c.name, typeof crewDialect === 'function' ? crewDialect(c, 'Greit, jeg blir. Det har gått bedre i det siste.') : 'Greit, jeg blir. Det har gått bedre i det siste.', 'All right, I will stay. It has gone better lately.');
+  return null;
+}
+// the ground when you let someone go (§ 5-6, and § 5-5 on probation): agreed when they had given notice themselves; on probation their
+// fit for the work; a quarrel aboard they are in; otherwise the business (fewer hands needed)
+function crewGrunn(c){
+  if (c.opp) return ['etter avtale, før fristen i den egne oppsigelsen', 'by agreement, before the end of the notice they gave'];
+  if (crewOnProve(c)) return ['i prøvetida: tilpasningen til arbeidet', 'on probation: their fit for the work'];
+  if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) return ['samarbeidet om bord', 'the cooperation aboard'];
+  return ['driften trenger færre folk', 'the business needs fewer hands'];
+}
+// you let someone go, in harbour (crewAshore): the ground and the notice in the log, freed from work for the notice and ashore now with
+// the settlement for the catch aboard (Jonas 12.11.2026, valg 40 A); the others' mood by how they got on with them. The ground's words
+function crewLetGo(c){
+  const i = S.crew.indexOf(c); if (i < 0) return null; const g = crewGrunn(c), own = !!c.opp, [end, len] = crewFrist(c);
+  crewSettle(c); flyOut(c); S.crew.splice(i, 1);
+  for (const o of S.crew){ o.morale = clamp(o.morale + (compat(o, c) < 0 ? 4 : -4), 0, 100); if (o.grudge) delete o.grudge[c.id]; }
+  if (S.cevt && (S.cevt.a === c.id || S.cevt.b === c.id)) S.cevt = null;
+  if (own) log(c.name + ' har gått i land før fristen, etter avtale.', c.name + ' has gone ashore before the end of the notice, by agreement.');
+  else log(c.name + ' er sagt opp (' + g[0] + '). Fristen er ' + len[0] + ', til ' + avtDay(end) + '; ' + c.name.split(' ')[0] + ' er fritatt for arbeid og har gått i land med oppgjøret for fangsten om bord.',
+    c.name + ' has been let go (' + g[1] + '). The notice is ' + len[1] + ', to ' + avtDay(end) + '; ' + c.name.split(' ')[0] + ' is freed from work and has gone ashore with the settlement for the catch aboard.');
+  return g;
+}
 // ===== Named folk on the coast (Jonas 06.11.2026): real people who have asked to be in the game, as crew to hire at their home quay =====
 // Tony Hjelmseth (Jonas 06.11.2026, after his visit: «Legg inn en NPC-fisker på Husøya som heter Tony Hjelmseth … spøkefugl født 10. mai
 // 1998 … jobbet på en garnbåt med fast havn på Husøy noen år … tidligere kjøpmann på butikk før han startet som røkter på
@@ -541,6 +621,7 @@ function crewTick(H){
   const restC = meAboard() && restAshore() ? restRate(b) * 60 : b.status === 'port' && ((typeof isRorbu === 'function' && isRorbu(b.port)) || bunks(b)) ? RORBU.rate * 60 : b.anch && b.status !== 'port' && bunks(b) ? RORBU.rate * 60 * 0.85 : 0;   // (a boat with bunks rests the crew at the quay as fast as a rorbu does, Jonas 08.10.2026)
   for (const c of S.crew.slice()){
     const here = onIds.has(c.id) && atSea;
+    crewAvt(c);   // the agreement (Ø11.9)
     if (typeof lifeDay === 'function'){ crewLife(c); lifeOffTick(c); lifeDay(c, H); if (!S.crew.includes(c)) continue; if (here && fishing) lifeInjury(c, hs); }   // del 2: their life beside the work (14-crewlife.js)
     // the share of the hour spent working: a break at sea tires less, but is not rest
     const wm = Object.values(c.wk || {}).reduce((a, m) => a + m, 0), workF = c.wk ? clamp(wm / 60, 0, 1) : 1;
@@ -568,7 +649,8 @@ function crewTick(H){
     for (const k in (c.grudge || {})){ c.grudge[k] = Math.max(0, c.grudge[k] - 0.01); if (c.grudge[k] <= 0) delete c.grudge[k]; }
     // someone who stays unhappy too long signs off at the next harbour
     const lim = me('rastlos') ? 30 : me('grinebiter') ? 15 : 22; c.low = c.morale < lim ? (c.low || 0) + 1 : 0;
-    if (c.low > 36 && b.status === 'port'){ crewQuit(c, 'Jeg har ikke trivdes på lenge. Jeg mønstrer av her.'); continue; }
+    if (c.low > 36 && !c.opp){ crewNotice(c, 'trivsel'); c.low = 0; }   // (Ø11.9: notice by § 5-2, not ashore at the next harbour)
+    if (crewOppTick(c)) continue;
   }
   teamHour(H, on, hs, food);
   // quarrels between people, or with you as skipper; bad food makes them likelier, good food rarer, and so does a crew that pulls together
@@ -588,7 +670,7 @@ function crewTick(H){
   // a quarrel left alone gets worse
   if (S.cevt){ const age = S.t - S.cevt.t0, A = crewById(S.cevt.a), Bc = crewById(S.cevt.b);
     if (age > 720 && !S.cevt.esc){ S.cevt.esc = true; if (A) A.cpen = 10; if (Bc) Bc.cpen = 10; msg('Om bord', 'Krangelen om bord er ikke løst, og stemningen blir verre.', 'The quarrel aboard is not sorted out, and the mood is getting worse.'); }
-    if (age > 2880){ const q = Bc || A; S.cevt = null; if (A) A.cpen = 0; if (Bc) Bc.cpen = 0; if (q) crewQuit(q, 'Når ingen tar tak i dette, mønstrer jeg av.'); } }
+    if (age > 2880){ const q = Bc || A; S.cevt = null; if (A) A.cpen = 0; if (Bc) Bc.cpen = 0; if (q && !q.opp) crewNotice(q, 'krangel'); } }
 }
 function codRoom(H){ const q = quotaState(); return Math.max(0, codLimitNow(H) - q.torsk); }
 
