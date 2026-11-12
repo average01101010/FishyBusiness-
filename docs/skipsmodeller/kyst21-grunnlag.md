@@ -200,3 +200,14 @@ Nærmodellen er 147 722 trekanter (før 141 982). Døra til styrhuset er 2,05 m 
   den går forbi dem som står imellom. Begge filene var bare til lesing i denne økta; i backloggen.
 - Kranen (M16), ryddingen (F12), ingen ved teinene under setting (F4) og de hvite flekkene bak båten står som før.
 
+### 12.3 Rundene med sensoren
+
+| Sensor | Sum | Skrog | Detaljer | Lanterner | Styrhus | Arbeidsflyt | Dekk | Rettet etter |
+|---|---|---|---|---|---|---|---|---|
+| 1 (fersk underagent, bare bildene, `check()` og skalaen) | **70** | 15 | 13 | 4 | 7 | 16 | 15 | Koøyene akter 0,6 m over vannet (før 0,3), slitasje og rust i dekket og fra lenseportene, topplanterna skjermet akterover (225°; den var rundtlysende), kompassets kuler svarte (de ble lest som sidelys), frontvinduene 0,20 m forover (før 0,10), garnbingen med et forbord på 0,55 m (flyttet til x 1,70: ved 1,47 stengte gangkartet cellene der spillet prøver karene, og `netTubs` ga ett kar, sett i spillet), navnet på bremmen (`anchors.nameHouse`: med den skrå fronten fant spillets søk ikke båndet over vinduene) |
+| 2 (ny fersk underagent, samme bilder med de nye rendringene) | **76** | 16 | 15 | 4 | 8 | 17 | 16 | – |
+
+Sensor 2 fikk i tillegg vite at setting akter og trekk forut med sidedekket imellom er typens valg (B5) og ikke noe modellen kan endre i denne runden; sensor 1 trakk for det. Tallene er derfor ikke helt sammenlignbare. Det sensor 2 trakk for: mannskapet arbeider ikke synlig i teinetrekket og teina henger tippet uten at noen tar i den (spillets felles kode), vinsjen og ventilene er grove primitiver og båten ser for ny ut (modellen), teinestablene på ti står frittstående uten reol eller surring og garnbingen er lav på sidene (modellen; bingens sider er lave fordi gangkartet ellers stenger karenes plass).
+
+**Kyst21 er ferdig etter skalaen: 76/100** (Jonas 10.11.2026: «ferdig ved 75 eller mer»). Det som står igjen, er i backloggen under OB13.
+
