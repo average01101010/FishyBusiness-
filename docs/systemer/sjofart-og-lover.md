@@ -615,7 +615,7 @@ Bygd 11.11.2026 (Jonas' økt, grenen `ccr-c987b885-ap4668`). Koden står sist i 
 ### 9.2 «Du går på feil side av merket»
 
 - **Bare kardinalmerkene** (`C` bøye og `S` stake med nord, øst, sør eller vest): innen 200 m fra merket, i kvadranten motsatt navnet (peilingen fra merket til båten innen 45° fra den siden merket advarer mot, gjort sann med `gridGamma`, som gir grader), i minst 2 knop og for hånd. Stripa sier «Feil side av merket» eller «Du går på feil side av merket: hold nord for det», og én gang per merke per spilltime skrives «Passerte et nordmerke på feil side. Det er trygt nord for merket.» i dagboka og en rad i Sikkerhet-kortet (`k:'merke'`), med kilden IALA region A.
-- **Lateralmerkene dømmes ikke.** Rød om babord og grønn om styrbord gjelder i merkeretningen (inn fra sjøen, og langs kysten nordover), og den står ikke i dataene (OSM har den ikke per merke; leinettet har ingen retning). Et varsel uten den ville vært feil halve tida.
+- **Lateralmerkene dømmes ikke.** Rød om babord og grønn om styrbord gjelder i merkeretningen (inn fra sjøen, og langs kysten nordover), og den står ikke i dataene (OSM har den ikke per merke; leinettet har ingen retning). Et varsel uten den ville vært feil halve tida. Sjekket i K3 (12.11.2026): heller ikke Kystverkets navigasjonsinstallasjoner har en retning per lateralmerke i lagene WFS-en gir; det som finnes, er viseren på jernstengene (sann peiling mot seilbart farvann, 6 905 merker i `sjomerker-8`), som et varsel «feil side av staken» kan bygge på. Se backloggen («Varselet for lateralmerkene og stakene»).
 - På Autonav kommer ikke varselet: ruta legges etter dybdene, ikke etter merkene.
 
 ### 9.3 Sjømerkene mot IALA region A (`sjomerker-7`, 04.11.2026-utdraget)
@@ -632,7 +632,22 @@ Kontrollert 11.11.2026 mot det spillet leser (`[x, y, type, kategori]` og lysene
 | Indirekte belysning | **Galt:** 2 075 lateralstaker har en gul sektor ved siden av den røde eller grønne (`ry`, `gy`): det er flomlyset på staken (indirekte belysning), som leses som et eget gult lys. |
 | Toppmerke lateral | Mangler: stakene og bøyene er bokser uten sylinder (babord) og kjegle (styrbord). |
 
-De røde punktene er Ø13 K3 sine (steg 33d, `tools/map/sjomerker.py`, `markInto`), og står i backloggen.
+De røde punktene er rettet i Ø13 K3 (steg 33d, 12.11.2026, se under).
+
+**Etter K3 (`sjomerker-8`, talt med `python3 tools/map/sjomerker.py check`):**
+
+| Punkt | `sjomerker-7` | `sjomerker-8` |
+|---|---|---|
+| Lateralmerker uten side (tegnet røde) | 717 (696 bøyer, 21 staker) | 97 uten side i dataene (74 hvite bøyer i innlandsleiene, `waterway_left`, 6 hvite staker, 17 uten farge), **tegnes hvite, ingen røde** |
+| Lateralmerker med gul lyssektor | 2 086 | **0**: `seamark:light:N:category=floodlight` (2 075 på lateralstaker, 228 på lykter, 206 på `light`, 125 på påler) leses ikke som lys; lyktene gikk fra 7 811 til 7 527 |
+| Isolert fare, trygt farvann, spesialmerke | `B` og `D` uten kategori | egne typer: `I` 96 bøyer og `i` 1 stake, `A` 4 bøyer, `Y` 424 bøyer (202 gule kuler med kryss, mest badebøyer 1.6–15.10) og `y` 8 staker |
+| Kardinalmerkene | sørmerket overalt, gul prikk i kartet | fargebåndene og de to kjeglene per kvadrant i 3D og i kartplotteren |
+| Toppmerke lateral | ingen | bøyene: rød sylinder babord, grønn kjegle styrbord (12 trekanter, rundt 30 per merke med stilken); de faste merkene (stakene) hvite med rødt eller grønt bånd og refleksfiguren på toppen, rød firkant babord og grønn trekant styrbord, som Kystverket setter dem (se under) |
+
+- **Jernstengene.** De 13 234 `beacon_isolated_danger` i Kystverkets data er nesten alle norske staker, ikke IALA-merker: 11 626 med formen `stake` (7 676 med viser), 950 tårn (varder), 215 gitterstaker, 228 med kule. De er fortsatt `D` (stake, `tower`, `lattice`, `ball`), og bare den ene med fargene svart–rød–svart og to kuler er `i`. **Viseren** (`seamark:topmark:shape=arrow` med `orientation`, 6 905 merker, sann peiling) ligger som femte felt og tegnes som en pil på toppen; den peker mot seilbart farvann (Kystverket, «Fritidsbåt: nyttige tjenester for båtfolk», 2022; SNL, «sjømerker»).
+- **Lateralmerkenes toppmerke i kilden og hos Kystverket.** 1 913 lateralstaker har `seamark:topmark:shape=triangle, point up` i kilden (979 babord, 934 styrbord). Kystverkets «Retningslinjer for utforming, tekniske krav til og plassering av navigasjonsinnretninger» (2.2, s. 10; hentet fra Actions 12.11.2026, ligger i `sjomerker-kv.tar.gz` i releasen `sjomerker-kilde`) sier: flytende merke babord rødt med «Enkel rød sylinder», styrbord grønt med «Enkel grønn kjegle, spissen opp»; fast merke babord «Hvit med rødt bånd eller svart uten bånd», styrbord «Hvit med grønt bånd eller svart uten bånd», med refleks «Rødt bånd eller figur (firkant)» og «Grønt bånd eller figur (trekant)»; toppmerke på faste merker bare «der hvor formen på et merke ikke er tydelig» (2.2.3). Spillet tegner bøyene med sylinder og kjegle og stakene hvite med båndet og firkanten eller trekanten. Kardinalmerkenes farger og kjegler stemmer med 2.3 (s. 11–12), og viseren: «Viser skal peke mot farbart farvann» (s. 25).
+- **Senja** bruker fortsatt de innebygde merkene (`SEAMARKS`), som er de samme OSM-objektene. Når en flis med merker i Senja lastes, tar et innebygd merke typen, kategorien og viseren fra merket på samme sted (innen 3 m; `marksSenja`): 7 «kardinalstaker» uten kvadrant var jernstenger og tårn, og 22 staker fikk viseren.
+- **Bjørnøya og Jan Mayen:** ingen merker. OpenStreetMap har bare master og vrak der, og Kystverkets navigasjonsinstallasjoner (WFS, NLOD 2.0, `maps.kystverket.cloudgis.no`, katalogen `73e46cf4-…` på Geonorge) gir 0 objekter i alle ti lagene over begge øyene, spurt fra Actions 12.11.2026, mens samme spørring over Senja gir 12 faste merker. Svarene ligger i releasen `sjomerker-kilde` (`sjomerker-kv.tar.gz`).
 
 ### 9.4 Ikke med, og antatt
 

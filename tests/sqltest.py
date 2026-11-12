@@ -1462,6 +1462,32 @@ def main():
         print(ok(all(KMP)),
               "Kvotemarkedet: a right and a structure quota in the same auction house as the boats, the value in the band around the takst (quota_ref), the item without who, three listings shared with the boats, a boat not out with her right, bids and buy-now with no delivery fee, not on your own, the settlement (the right's place in the register moved, the structure quota's not), the quota rows only for a game that asks (km), listings_get per kind, the wish told once, the admin's line (KM2)",
               '' if all(KMP) else {'parts': KMP, **KM})
+        # KM5 (20261112130000_km5.sql): the band rommer the highest kmTakst (4.41 times the 2026 takst: the unit 3.153 times × 1.4), Kystposten's
+        # week of quota sales (numbers, never who), the measuring events arriving through tm_batch, and the admin's card
+        K5 = {}; KS5 = {'sub': 'user_01KS5', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", KS5, 'authenticated')
+        t20 = 10.254 * 6.9986 * 260000; R20 = dict(RI, id='h20', st=[])
+        K5['band'] = [err(kput(KS5, 'b1', R20, round(t20 * 4.42), round(t20 * 4.42 * 0.5))), err(kput(KS5, 'b2', R20, round(t20 * 4.6), round(t20 * 4.6 * 0.5))), err(kput(KS5, 'b3', R20, round(t20 * 0.29), round(t20 * 0.29 * 0.5)))]
+        wk = int(sql("select floor(public.world_gh() / 168)::int"))
+        K5['week'] = json.loads(sql("select public.km_week(%d)" % wk, KB1, 'authenticated'))
+        K5['weekOld'] = json.loads(sql("select public.km_week(%d)" % (wk - 3), KB1, 'authenticated'))
+        K5['weekBad'] = [err(sqle("select public.km_week(%d)" % (wk + 1), KB1, 'authenticated')), err(sqle("select public.km_week(%d)" % (wk - 61), KB1, 'authenticated'))]
+        K5['weekAnon'] = sql("select has_function_privilege('anon', 'public.km_week(int)', 'execute')")
+        sql("select public.tm_consent(true, 1990)", KS5, 'authenticated')
+        evs = [{'k': 'km_reg', 't': int(time.time() * 1000), 'd': {'kind': 'right', 'id': 'h14'}}, {'k': 'km_reg', 't': int(time.time() * 1000), 'd': {'kind': 'struct', 'id': 'h20'}},
+               {'k': 'km_put', 't': int(time.time() * 1000), 'd': {'kind': 'right', 'id': 'h14', 'hours': 24, 'pc': 90, 'bn': 0}}, {'k': 'km_move', 't': int(time.time() * 1000), 'd': {'id': 'h9', 'to': 'free', 'from': 'boat'}},
+               {'k': 'mb_put', 't': int(time.time() * 1000), 'd': {'type': 'sjark', 'hours': 24, 'pc': 80, 'bn': 0, 'lic': 'moved'}}]
+        sql("select public.tm_batch('55555555-5555-4555-8555-555555555555', '{}', 10, %s, false, null)" % J(evs), KS5, 'authenticated')
+        A5 = json.loads(sql("select public.admin_km5(8)", AD2, 'authenticated'))
+        K5['ev'] = sorted((e['k'], e['sub'], e['n']) for e in A5['ev']); K5['grp'] = {g['grp']: (g['players'], g['register']) for g in A5['grp']}
+        K5['bid'] = [(b['kind'], b['n'], b['none'], b['h'] is not None) for b in A5['bid']]
+        K5['adminNo'] = sql("select public.admin_km5(8)", KS5, 'authenticated', expect_err=True)[0]
+        K5['who'] = any(k in json.dumps(A5) + json.dumps(K5['week']) for k in ('user_01', 'seller', 'player_id', 'Kvoterederi'))
+        k5 = [K5['band'] == ['ok', 'bad value', 'bad value'], K5['week'].get('n', 0) >= 2 and K5['week'].get('right', 0) >= 1 and K5['week'].get('struct', 0) >= 1 and K5['week'].get('med') is not None,
+              K5['weekOld'] == {'wk': wk - 3, 'n': 0, 'right': 0, 'struct': 0, 'med': None}, K5['weekBad'] == ['bad week', 'bad week'], K5['weekAnon'] == 'f',
+              ('km_reg', 'right', 1) in K5['ev'] and ('km_reg', 'struct', 1) in K5['ev'] and ('km_put', 'right', 1) in K5['ev'] and ('km_move', 'free', 1) in K5['ev'] and ('mb_put', 'moved', 1) in K5['ev'],
+              K5['grp'].get('g11', (0, 0))[1] >= 1 and K5['grp'].get('g15', (0, 0))[1] >= 1 and K5['grp'].get('g11', (0, 0))[0] >= 1, any(b[0] == 'right' and b[3] for b in K5['bid']), K5['adminNo'], not K5['who']]
+        print(ok(all(k5)), 'KM5: the band holds 4.42 × the 2026 takst and not 4.6 or 0.29, km_week gives the week\'s quota sales and the median against the takst (numbers, never who), the events km_reg, km_put, km_move and mb_put arrive and admin_km5 counts them per week and group, the hours to the first bid',
+              '' if all(k5) else {'parts': k5, **K5})
         # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
         RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
         RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]

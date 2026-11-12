@@ -55,16 +55,41 @@ async def run(p, hold):
     R0['errs'] = errs
     return R0
 
+# An old page and a new release (Ø13 K3, kartrelease-o13.md kap. 7 punkt 5): the server's manifest no longer lists a pack the page
+# knows, and the pack gives 404 (deploy.yml removes what the new manifest does not list). The page should see that at once and put up
+# «En ny versjon av spillet er klar», not ask five times and then fail with no word (before K3 the bar came only with the ten-minute
+# check of version.json)
+async def stale(p):
+    pg = await (await p.new_context(viewport={'width': 900, 'height': 700})).new_page()
+    errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    await boot(pg)
+    # a pack the page has not loaded (and not kept in IndexedDB, which mapFetch asks first): dropped and forgotten if all are in
+    pk = await pg.evaluate("""(async () => { let q = MAPD.packs.find(p => ['sim', 'view', 'chart', 'far'].includes(p.kind) && !p.buf && !p.load) || MAPD.packs.find(p => p.kind === 'sim');
+      mapDrop(q); await idbDo('readwrite', s => s.delete(q.hash)); return {file:q.file, kind:q.kind}; })()""")
+    gone = pk['file']
+    async def man(route):
+        r = await route.fetch(); j = await r.json(); j['packs'] = [q for q in j['packs'] if q['file'] != gone]
+        await route.fulfill(response=r, json=j)
+    await pg.route('**/map/manifest.json*', man)
+    await pg.route('**/map/' + gone, lambda route: route.fulfill(status=404, body='not found'))
+    await pg.evaluate("document.getElementById('updBar') && document.getElementById('updBar').remove()")
+    r = await pg.evaluate("""(async f => { const pk = MAPD.packs.find(p => p.file === f), t0 = performance.now(); let err = '';
+      try { await mapLoad(pk); } catch (e){ err = String(e.message || e); }
+      return {err, ms:Math.round(performance.now() - t0), bar:!!document.getElementById('updBar'), stale:!!MAPD.stale}; })""", gone)
+    r['errs'] = errs; r['file'] = gone
+    return r
+
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        a = await run(b, False); h = await run(b, True)
-        print(json.dumps({'all': a, 'held': h}))
+        a = await run(b, False); h = await run(b, True); st = await stale(b)
+        print(json.dumps({'all': a, 'held': h, 'stale': st}))
         print(ok(a['pack']['file'] != a['pack']['other']), 'the ground and Finnsnes lie in two different sim packs')
         print(ok(h['first']['left'] > 0 and h['held']['t'] == h['first']['t'] and h['held']['left'] == h['first']['left'] and not h['ready']), 'with the ground\'s pack held back the clock stops before the boat comes within reach of it, and stands while it is away')
         print(ok(h['end']['left'] == 0 and h['end']['t'] == a['end']['t']), 'when the pack comes, the rest of the ten hours is played')
         e1, e2 = dict(a['end']), dict(h['end'])
         print(ok(all(e1[k] == e2[k] for k in ['t', 'st', 'port', 'pos', 'hold', 'cash', 'trail', 'log'])), 'and the trip ends exactly as the one with every pack at hand (time, place, catch, cash)')
         print(ok(a['end']['miss'] == 0 and h['end']['miss'] == 0), 'nothing read a block whose pack was not in')
-        print('errors:', (a['errs'] + h['errs'])[:4]); await b.close()
+        print(ok(st['stale'] and st['bar'] and st['ms'] < 3000 and 'gone' in st['err']), 'a pack gone from a new manifest (404): the page sees it at once and the update bar comes (%d ms, %s)' % (st['ms'], st['err'][:60]))
+        print('errors:', (a['errs'] + h['errs'] + st['errs'])[:4]); await b.close()
 asyncio.run(main())

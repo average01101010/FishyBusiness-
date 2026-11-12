@@ -81,7 +81,10 @@ async def main():
             await pg.screenshot(path='coast_plant_%s.png' % v, timeout=120000)
         # a rorbu (07d-rorbu.js; tools/harbour/rorbu.py) by Gryllefjord in daylight, in its colour, with the boat moored at its quay and the
         # skipper ashore resting
-        r = await pg.evaluate("""(async () => { const g = portById('gryllefjord'), R = rorbuNear(g.p, 40).find(e => e.R.kind === 0).R, b = S.boat; await mapNeed(R.cand, 2); rorbuSite(R);
+        r = await pg.evaluate("""(async () => { const g = portById('gryllefjord'), R = rorbuNear(g.p, 40).find(e => e.R.kind === 0).R, b = S.boat; await mapNeed(R.cand, 2);
+          // the ground there first (the view's and the fine ground's packs): after the jump from Lofoten the site was laid on ground not yet
+          // in and stood 2.5 m up with the hill 82 m over its floor (12.11.2026, after K1 added the fine ground to load)
+          await Promise.all(['view', 'fin'].flatMap(k => mapPacksIn(k, R.p.x - 2, R.p.y - 2, R.p.x + 2, R.p.y + 2)).map(mapLoad)); rorbuSite(R);
           S.t = Math.round((Date.UTC(2027, 5, 12, 11) - EPOCH) / 6e4); S.plan = null; b.status = 'port'; b.port = R.id; b.pos = {x:R.p.x, y:R.p.y}; b.berth = 'main'; S.cash = Math.max(S.cash, 500); restStart();
           const c = G3._debug.cam; c.helm = false; c.dist = 45; c.pitch = 0.2; c.yaw = 2.6; return {id:R.id, v:R.v, site:!!R.site, rest:resting()}; })()""")
         await pg.wait_for_timeout(16000)

@@ -69,3 +69,15 @@ Hva som ble gjort, står i `breisjark-grunnlag.md` 10.10. Det som gjelder neste 
 - **Lister i skjøtene og beslag i stål** passer `clip_malo36` (stål er tillatt ved veggene); `alu` ble talt som gjennom siden.
 - **Slitasje per hjørne** synes bare der flatene har mange hjørner (skansene, skroget). På store hvite bokser blir den en myk overgang mot foten; det er det som er mulig uten teksturer.
 
+
+## 8. Runde 4 (OB11, 12.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.11. Det som gjelder neste båt:
+
+- **Spør spillet hvor folkene står, ikke koden.** En sonde som kjører scenene fra `tests/ombord.py` og skriver ut `CREW3D.visible()` (de med `mode` `at`) i modellens ramme, ga plassene på noen minutter. To av sensorens funn var ikke det de så ut som: mannen «i stolpen» i `spill_teiner` var en som tok kaffe ved ripa, og mannen «i en stolpe» i `teiner_trekk` sto 0,8 m fra veggen og ble dekket av den sett fra kameraet. Plassene i pausen velges av `deckcrew.js` blant de ledige rutene ved ripa, så en stolpe på ripa der folk står, blir alltid funnet av noen.
+- **En stolpe på ripa i den åpne sida er i veien for alle.** Ta den bort og bær taket med veggen og et kne, eller sett den der ingen kan stå (over en kasse).
+- **Et svart viskerarm forsvinner mot mørkt glass.** Rustfrie armer med svart gummi leser.
+- **Rustrenner på mørk maling** trenger hele åpningens bredde (`run_under` fra `hs11.py`). En lys rust (0,50, 0,25, 0,09 med 0,80) leste som lys om natta for sensoren; dempet (0,30, 0,18, 0,11 med 0,55) synes den fortsatt i dagslys.
+- **Store hvite kasser** trenger rutenett for at slitasjen per hjørne skal synes: maskinkassa er bygd som rutenett (`gbox`). På styrhuset, der skallet får `solidify` og vinduskutt, ga et rutenett hakk ned akterhjørnet; det ble tatt bort. Legg heller ringer på innsida etter kuttene.
+- **Spillets eget utstyr mangler i rendringene** (ankeret i rulla): legg det i `render_only()` så rendringen viser det spilleren ser.
+- **Før-opptaket kan hentes fra forrige runde** når modellen ikke er endret siden: to opptak samtidig tok over to timer per format.

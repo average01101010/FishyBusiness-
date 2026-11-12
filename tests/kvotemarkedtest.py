@@ -6,6 +6,7 @@ Without the cloud the market has the register and nothing from players. With it:
 rights and structure quotas on cards, the choice of boat, a bid that binds the money, outbid, «Kjøp nå» with the right put on a boat and
 structured onto one, a structure quota at the settlement, the cap, blad B, a structure quota that waits for a boat, your own right sold
 (the boat with the same id stays), the free right (kept, put on a boat, its two years), «Selg nå til registeret», the wish and a guest.
+KM5: the quota price the same in Bergen, Bodø and Hammerfest, and Kystposten «Kvoteprisen denne uka» (kystposten_kvotepris_*.png).
 Pictures in 1280×800, 800×1280 and 390×844 (kvotemarked_*.png). Prints OK or FEIL per check."""
 from _env import boot, OUT
 import asyncio, json, os
@@ -256,6 +257,22 @@ async def main():
               return {port:q.name, lat:+natLL(q.p).lat.toFixed(2), chip:!dis, paid:Math.round(c0 - S.cash), bn:Q.buynow, lic:l && l.id, torsk:Math.round(vget(v, 'quota').torsk), kvote:Math.round(withVessel(v, () => licQ(S.lic).torsk))}; })(%s)""" % json.dumps(place))
             check(sp.get('port') and sp['chip'] and sp['paid'] == sp['bn'] and sp['lic'] == 'h14' and sp['torsk'] == 7000 and sp['kvote'] > 30000, 'stikkprøve %s: hjemmelen kjøpt og satt på en båt der' % place, sp)
 
+        # 8c. KM5: the quota price is the same along the coast (a pure function of the clock, kpkAt): a save at home in Bergen, Bodø and Hammerfest
+        kp = await pg.evaluate("""(() => { const H = S.t / 60, home = S.home, o = {}; for (const pl of ['Bergen', 'Bodø', 'Hammerfest']){ const q = PORTS.find(p => new RegExp('^' + pl, 'i').test(p.name)); S.home = q.id; S.boat.port = q.id; S.boat.pos = {x:q.p.x, y:q.p.y};
+            o[pl] = [kpkAt(H), kmTakst({kind:'right', id:'h14'}, H), licValue({id:'h14'})]; } S.home = home; return o; })()""")
+        check(len(set(json.dumps(v) for v in kp.values())) == 1 and 182 <= kp['Bergen'][0] <= 364, 'stikkprøve KM5: samme kvotepris og takst i Bergen, Bodø og Hammerfest (%s kr/kg)' % kp['Bergen'][0], kp)
+        # 8d. Kystposten «Kvoteprisen denne uka»: the price and its move from the week before, last week's sales from km_week (numbers, never who); without a sale, only the price
+        await pg.evaluate("(() => { window._rpc0 = window.cloudRpc; window.cloudRpc = async (fn, a) => fn === 'km_week' ? (window._kw = a, {wk:a.wk, n:3, right:2, struct:1, med:0.964}) : window._rpc0(fn, a); })()")
+        kq = await pg.evaluate("""(async () => { if (weekOf(S.t / 60) < 3) S.t = 3 * 168 * 60 + 600;   // (the test clock starts at week 0; the paper has the story from week 1)
+            PRESS.kq = null; await pressKvoteFetch(); const wk = weekOf(S.t / 60), s = pressList(false).find(x => x.kind === 'kvotepris'), loc = pressList(true).some(x => x.kind === 'kvotepris');
+            const k = kpkAt(wk * 168), k1 = kpkAt(wk * 168 - 168); PHONE.show(true); PHONE.open('post'); PHONE.render(); const v = document.getElementById('phView'), b = v.querySelector('[data-pa="art"][data-k="kq' + wk + '"]'); if (b) b.click(); PHONE.render();
+            const art = v.querySelector('.pa-art'), txt = art ? art.innerText : ''; PRESS.kq = {wk:wk - 1, r:{wk:wk - 1, n:0, right:0, struct:0, med:null}}; const s0 = pressList(false).find(x => x.kind === 'kvotepris');
+            return {asked:window._kw && window._kw.wk === wk - 1, h:s && s.h[0], k, k1, ing:s && s.ing[0], body:s ? s.body.map(b => b[0]).join(' ') : '', loc, txt, n:pressList(false).filter(x => x.kind === 'kvotepris').length, none:s0 ? s0.body.map(b => b[0]).join(' ') : 'x', key:s && s.key}; })()""")
+        await pg.evaluate("(() => { PRESS.kq = {wk:weekOf(S.t / 60) - 1, r:{wk:weekOf(S.t / 60) - 1, n:3, right:2, struct:1, med:0.964}}; PHONE.render(); })()")
+        await shot(pg, '#phone .pa-art', 'kystposten_kvotepris_liggende.png')
+        check(kq['asked'] and kq['h'] == 'Kvoteprisen denne uka: %d kr/kg' % kq['k'] and 'forrige uke' in (kq['ing'] or '') and 'to hjemler og én strukturkvote' in kq['body'] and '96 % av taksten' in kq['body']
+              and not kq['loc'] and kq['n'] == 1 and 'Kvoteprisen denne uka' in kq['txt'] and 'Kvotemarkedet' not in kq['none'] and 'Taksten følger torskeprisen' in kq['none'],
+              'Kystposten «Kvoteprisen denne uka» på forsiden, én i uka: prisen, endringen fra forrige uke, ukas salg fra km_week (antall og median mot taksten); uten salg bare prisen', kq)
         # 9. the pictures standing up and on a phone: the list, the card, the choice of boat, «Legg ut»
         fits = [fit_form, fit_list, fit_sheet]
         for w, h, tag in [(800, 1280, 'staaende'), (390, 844, 'telefon')]:
@@ -266,6 +283,8 @@ async def main():
             await shot(pg, '#phone .kx-sheet', 'kvotemarked_kort_%s.png' % tag); await shot(pg, '#phone .kx-auc', 'kvotemarked_valg_%s.png' % tag); fits.append(await pg.evaluate(FIT % '#phone'))
             await pg.evaluate("(() => { PHONE.dact('kvote', 'kmput', {k:_hav}); PHONE.render(); })()"); await pg.wait_for_timeout(300)
             await shot(pg, '#phone .kx-form', 'kvotemarked_leggut_%s.png' % tag); fits.append(await pg.evaluate(FIT % '#phone'))
+            await pg.evaluate("(() => { PHONE.open('post'); PHONE.render(); const b = document.querySelector('#phView [data-pa=\"art\"][data-k^=\"kq\"]'); if (b) b.click(); PHONE.render(); })()"); await pg.wait_for_timeout(300)
+            await shot(pg, '#phone .pa-art', 'kystposten_kvotepris_%s.png' % tag); fits.append(await pg.evaluate(FIT % '#phone'))
         await pg.set_viewport_size({'width': 1280, 'height': 800})
         check(all(not f for f in fits), 'ingenting stikker ut av telefonen i 1280×800, 800×1280 eller 390×844', fits)
         await pg.evaluate("(() => { PHONE.show(false); window.cloudRpc = window._real; CLOUD.on = false; CLOUD.user = null; })()")

@@ -1,11 +1,16 @@
 # The sea marks along the whole coast (tools/map/sjomerker.py), from Geofabrik's extract of Norway filtered by osmium (Overpass timed
 # out, 05.10.2026); closed to the cloud session, open here. Started by a push
-# that changes tools/map/sjomerker.json (on any branch), or by hand; kept as a release sjomerker-<run number> with sjomerker.json.gz.
+# that changes tools/map/sjomerker.json (on any branch), or by hand; kept as a release sjomerker-<the next number> with sjomerker.json.gz and the source (the filtered objects with all their tags).
 name: Sjømerker langs kysten
 on:
   push:
     paths: ['tools/map/sjomerker.json', 'tools/map/sjomerker.py']
   workflow_dispatch:
+    inputs:
+      kilde:
+        description: 'Bare kilden: the seamark objects of the extract with all their tags (osmium, geojsonseq.gz) into the release sjomerker-kilde, no sjomerker-N'
+        type: boolean
+        default: false
 permissions:
   contents: write
 env:
@@ -17,6 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: seen
+        if: inputs.kilde != true
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 tools/ci/seen.py sjomerker tools/map/sjomerker.json tools/map/sjomerker.py
@@ -31,12 +37,49 @@ jobs:
         run: |
           curl -sSL --retry 3 -o norway.osm.pbf https://download.geofabrik.de/europe/norway-latest.osm.pbf
           ls -la norway.osm.pbf
-          python3 tools/map/sjomerker.py pbf norway.osm.pbf out/sjomerker.json
-      - if: steps.seen.outputs.skip != 'true'
+          mkdir -p out
+          osmium tags-filter norway.osm.pbf nwr/seamark:type n/seamark:light:colour n/seamark:light:1:colour -o out/sm.osm.pbf --overwrite
+          osmium export out/sm.osm.pbf -f geojsonseq -o out/sjomerker-kilde.geojsonseq --overwrite --add-unique-id=type_id -x print_record_separator=false
+          gzip -9 -f out/sjomerker-kilde.geojsonseq && ls -la out/
+          if [ "${{ inputs.kilde }}" != "true" ]; then python3 tools/map/sjomerker.py pbf norway.osm.pbf out/sjomerker.json; fi
+      # the source alone (by hand, kilde: true): the tags as the extract has them, for working on the converter in a session, where
+      # Geofabrik and Overpass are closed; kept as the one release sjomerker-kilde (replaced each time), never a sjomerker-N
+      - if: inputs.kilde == true
+        name: The source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view sjomerker-kilde >/dev/null 2>&1 || gh release create sjomerker-kilde --target "${{ github.sha }}" --title "Sjømerkene, kilden" --notes "Geofabriks Norge-utdrag filtrert på seamark-taggene (osmium), alle taggene, OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere). Til arbeidet med tools/map/sjomerker.py i en økt; byttes ved hver kjøring."
+          gh release upload sjomerker-kilde out/sjomerker-kilde.geojsonseq.gz --clobber
+      # Kystverket's navigation installations (WFS, NLOD 2.0; the host is closed to the sessions): the capabilities, and each feature
+      # type over Bjørnøya and Jan Mayen, so a session can see what is there before the converter takes it in
+      - if: inputs.kilde == true
+        name: Kystverket over the islands
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p kv && cd kv
+          W='https://maps.kystverket.cloudgis.no/enterprise/services/PROD/nfs_sistop_ekstern_prod/MapServer/WFSServer'
+          curl -sS --retry 3 -o caps.xml "$W?service=WFS&request=GetCapabilities" || true
+          for t in $(grep -o '<wfs:Name>[^<]*</wfs:Name>\|<Name>[^<]*</Name>' caps.xml | sed 's/<[^>]*>//g' | sort -u); do
+            n=$(echo "$t" | tr ':/' '__')
+            curl -sS --retry 2 -G -o "desc_$n.xml" "$W" --data-urlencode "typeNames=$t" -d "service=WFS" -d "version=2.0.0" -d "request=DescribeFeatureType" || true
+            curl -sS --retry 2 -G -o "bjorn_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=74.2,18.6,74.6,19.5,EPSG:4326" || true
+            curl -sS --retry 2 -G -o "janm_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=70.7,-9.2,71.2,-7.8,EPSG:4326" || true
+            curl -sS --retry 2 -G -o "senja_$n.xml" "$W" --data-urlencode "typeName=$t" -d "service=WFS" -d "version=1.1.0" -d "request=GetFeature" -d "srsName=EPSG:4326" -d "bbox=69.2,17.9,69.3,18.1,EPSG:4326" || true
+          done
+          # Kystverket's guidelines for the marks (the topmarks of the lateral marks, 2.2.3), closed to the sessions as well
+          curl -sSL --retry 2 -o retningslinjer.pdf 'https://kystverket.no/contentassets/56500e71a194444f9190fa23bcb7777b/retningslinjer-for-utforming-tekniske-krav-til-ogplassering-av-navigasjonsinnretninger.pdf' || true
+          ls -la; cd .. && tar czf out/sjomerker-kv.tar.gz kv && gh release upload sjomerker-kilde out/sjomerker-kv.tar.gz --clobber
+      # the next free number after the newest sjomerker-N (not the run number: runs that stopped at seen.py count too, and the plan
+      # names the release after the last one, sjomerker-7 then sjomerker-8)
+      - if: steps.seen.outputs.skip != 'true' && inputs.kilde != true
         name: The release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG=sjomerker-${{ github.run_number }}
-          gh release create "$TAG" out/sjomerker.json.gz --target "${{ github.sha }}" --title "Sjømerker $TAG" \
+          N=$(gh release list --limit 300 --json tagName -q '.[].tagName' | sed -n 's/^sjomerker-\([0-9]\+\)$/\1/p' | sort -n | tail -1)
+          TAG=sjomerker-$(( ${N:-0} + 1 ))
+          echo "release $TAG"
+          gh release create "$TAG" out/sjomerker.json.gz out/sjomerker-kilde.geojsonseq.gz --target "${{ github.sha }}" --title "Sjømerker $TAG" \
             --notes "Sjømerker, lykter og skjær langs kysten fra OpenStreetMap (ODbL, © OpenStreetMap-bidragsytere), Geofabriks Norge-utdrag (og Overpass for Svalbard og Jan Mayen om utdraget ikke har dem), tools/map/sjomerker.py, commit ${{ github.sha }}. ${{ steps.seen.outputs.mark }}"

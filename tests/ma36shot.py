@@ -6,13 +6,16 @@ not the old kit model (glbHas, buildVesselModel(..).glb, the anchors), as suleba
 
 Round 3 of OB11 (12.11.2026): the name on in every picture (S.unnamed off: the game letters an unnamed boat with her registration
 only), «Mens du var borte» and the HUD closed, the night from far enough out that the whole mast is in (the white all-round light on
-top), one at night while she fishes (red over white on the fore mast), and the pots being set with the stack still aboard."""
+top), one at night while she fishes (red over white on the fore mast), and the pots being set with the stack still aboard.
+
+Round 4 (12.11.2026): the stern light at night from right astern (natt_akter), and the pots from above, being set and being hauled
+(teiner_ovenfra, teinetrekk_ovenfra): nobody standing in a post. MA36_ONLY=teiner takes the three pictures of the pots alone."""
 import asyncio, os, sys, json
 sys.path.insert(0, os.path.dirname(__file__))
 from _env import boot, HERE
 ROOT = os.path.dirname(HERE)
 from playwright.async_api import async_playwright
-SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, scene === 'teiner' ? 7 : 2, 12, hour) - EPOCH) / 6e4);
+SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0; S.t = Math.round((Date.UTC(2027, scene === 'teiner' || scene === 'teinetrekk' ? 7 : 2, 12, hour) - EPOCH) / 6e4);
   const md = document.getElementById('modal'); if (md) md.hidden = true;
   S.settings.hudMin = true; S.settings.plotMin = true; S.settings.hudOff = true; if (typeof renderHud === 'function') renderHud();
   b.type = t; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; delete S.unnamed; S.equip = {}; S.jobs = []; S.cargo = []; b.gop = null; S.sets = []; S.hold = []; S.pgear = newPGear(); b.rig = 'juksa';
@@ -20,6 +23,11 @@ SET = """((a) => { const [t, scene, hour] = a, b = S.boat; S.tut = 0; S.mult = 0
     b.rig = 'teiner'; S.equip.teinehaler = true; S.pgear.kits.n = 4; S.pgear.pots.big = 6; baitOf(S.pgear).makrell = 50;
     b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; S.plan = null; G3.vesselChanged();
     const ch = setChoices().find(c => !c.off); const why = ch ? startSet(ch.kind, ch.spec, 0) : 'ingen valg'; if (S.crew.length) CREW3D.reset(); return why || null; }
+  if (scene === 'teinetrekk'){ const g = GROUNDS[0].p; S.crew = [0, 1, 2].map(() => Object.assign(genCrew(), {bi:false, off:false, job:null, traits:[]}));
+    b.rig = 'teiner'; S.equip.teinehaler = true; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; S.plan = null; G3.vesselChanged();
+    const p = {...b.pos}; S.sets = [{id:'s0', vid:S.cur, kind:'teine', n:6, a:p, b:{x:p.x + 0.6, y:p.y}, tSet:S.t - 12 * 60, acc:{krabbe:{kg:60, n:90}}, dead:0, cond:1, heavy:false,
+      depth:Math.round(depthF(p)), warn:0, pot:'big', bait:'makrell'}];
+    const why = startHaul('s0', false, 0); if (S.crew.length) CREW3D.reset(); return why || null; }
   if (scene === 'fiskenatt'){ const g = GROUNDS[0].p; S.crew = [Object.assign(genCrew(), {bi:false, off:false})];
     b.status = 'fishing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.fishUntil = S.t + 600; S.plan = null; return; }
   if (scene === 'dekk'){ const g = GROUNDS[0].p; S.crew = [Object.assign(genCrew(), {bi:false, off:false}), Object.assign(genCrew(), {bi:false, off:false})];
@@ -34,6 +42,21 @@ ASK = """((t) => { const G = geoOf(t), m = buildVesselModel(t, 2), g = glbLoad(t
     anchors:G ? Object.keys(G).sort() : [], eye:G && G.eye, kit:G && G.kit ? Object.keys(G.kit) : [], lights:G && G.lights ? G.lights.map(l => l[2]) : [],
     zones:Object.keys(glbZones(t)), mast:!!G3._debug.mastTop(t)}; })"""
 OUT = os.path.join(ROOT, 'tests', 'out')
+POS = """(() => CREW3D.visible().filter(a => a.mode === 'at').map(a => [(a.goal && a.goal.task) || '', +(5.18 - a.z).toFixed(2), +(-a.x).toFixed(2)]))()"""
+async def pots(pg, f, shot):
+    """the pots being set, the stack still aboard (the first pot in hand, five in the stack), from the starboard quarter and from
+    above; then being hauled, from above. Where each one stands, in the model's frame (x from the aft perpendicular, y port +)"""
+    why = await pg.evaluate(SET, [TYPE, 'teiner', 11]); print('teiner', why, flush=True)
+    await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 9; c.pitch = 0.55; c.yaw = -0.9; })()"); await pg.wait_for_timeout(6000)
+    await pg.screenshot(path=shot('teiner', f), timeout=400000)
+    # (from above, over the open aft deck: the roof over the shelter hides everyone under it from straight overhead)
+    await pg.evaluate("(() => { const c = G3._debug.cam; c.at = [0, 0.9, 3.9]; c.dist = 7.5; c.pitch = 1.2; c.yaw = -0.35; })()"); await pg.wait_for_timeout(5000)
+    await pg.screenshot(path=shot('teiner_ovenfra', f), timeout=400000); print('teiner plassene', json.dumps(await pg.evaluate(POS)), flush=True)
+    why = await pg.evaluate(SET, [TYPE, 'teinetrekk', 11]); print('teinetrekk', why, flush=True)
+    # (high over the starboard side, into the open side under the roof's edge where they haul, empty and tend the pots)
+    await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.at = [0, 0.9, 1.0]; c.dist = 7.5; c.pitch = 0.95; c.yaw = -1.45; })()"); await pg.wait_for_timeout(9000)
+    await pg.screenshot(path=shot('teinetrekk_ovenfra', f), timeout=400000); print('teinetrekk plassene', json.dumps(await pg.evaluate(POS)), flush=True)
+    await pg.evaluate("(() => { G3._debug.cam.at = null; })()")
 TYPE = 'breisjark'
 async def main():
     async with async_playwright() as p:
@@ -46,10 +69,8 @@ async def main():
             await boot(pg); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(3000)
             await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.wait_for_function("geoOf('breisjark') && geoOf('breisjark').skipperAt", timeout=120000)
             if f == 'liggende': print('model', json.dumps(await pg.evaluate(ASK, TYPE)), flush=True)
-            if os.environ.get('MA36_ONLY') == 'teiner':   # (only the pots being set: MA36_ONLY=teiner)
-                why = await pg.evaluate(SET, [TYPE, 'teiner', 11]); print('teiner', why, flush=True)
-                await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 9; c.pitch = 0.55; c.yaw = -0.9; })()"); await pg.wait_for_timeout(6000)
-                await pg.screenshot(path=shot('teiner', f), timeout=400000); print(f, 'errors', errs, flush=True); await pg.close(); continue
+            if os.environ.get('MA36_ONLY') == 'teiner':   # (only the pots: MA36_ONLY=teiner)
+                await pots(pg, f, shot); print(f, 'errors', errs, flush=True); await pg.close(); continue
             # K1: the starboard bow quarter, a little above the water
             await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.16; c.yaw = 2.5; })()"); await pg.wait_for_timeout(5000)
             await pg.screenshot(path=shot('ute', f), timeout=400000)
@@ -72,10 +93,11 @@ async def main():
             await pg.evaluate(SET, [TYPE, 'fiskenatt', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 24; c.pitch = 0.10; c.yaw = 1.9; })()"); await pg.wait_for_timeout(6000)
             print('fiske-natt lys', json.dumps(await pg.evaluate("(() => { const b = S.boat; return {status:b.status, night:G3._debug.env ? G3._debug.env.night : null}; })()")), flush=True)
             await pg.screenshot(path=shot('fiskenatt', f), timeout=400000)
-            # the pots being set, the stack aboard (the clock stands still: the first pot in hand, five in the stack)
-            why = await pg.evaluate(SET, [TYPE, 'teiner', 11]); print('teiner', why, flush=True)
-            await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 9; c.pitch = 0.55; c.yaw = -0.9; })()"); await pg.wait_for_timeout(6000)
-            await pg.screenshot(path=shot('teiner', f), timeout=400000)
+            # (round 4) the stern light at night, from right astern (yaw 0; π is the bow)
+            await pg.evaluate(SET, [TYPE, 'ute', 22]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.12; c.yaw = 0; })()"); await pg.wait_for_timeout(6000)
+            await pg.screenshot(path=shot('natt_akter', f), timeout=400000)
+            # the pots being set (the stack aboard), from the quarter and from above, and being hauled from above
+            await pots(pg, f, shot)
             # K7: from above by day in port-like stillness (the deck and the roofs seen from a drone, M14)
             await pg.evaluate(SET, [TYPE, 'ute', 11]); await pg.evaluate("(() => { const c = G3._debug.cam; c.helm = false; c.dist = 16; c.pitch = 0.95; c.yaw = 1.9; })()"); await pg.wait_for_timeout(5000)
             await pg.screenshot(path=shot('ovenfra', f), timeout=400000)

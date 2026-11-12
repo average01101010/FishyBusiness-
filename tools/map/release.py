@@ -3,22 +3,24 @@
 # it names it; not in kart.json, whose every change starts kart.yml),
 # else the newest kart- tag (git ls-remote), or the one named on the command line; its packs fetched from GitHub and unpacked into tools/map/out/release/<tag>/: game/ (the game's
 # format, from kart-2) or lite/ (kart-1's K5 format). tools/map/game.py joins game/ with src/data/map for the build. The newest
-# sjomerker- release (the sea marks) comes along into out/release/sjomerker-<n>/sjomerker.json.
+# sjomerker- release (the sea marks, pinned as "sjomerker" there too) comes along into out/release/sjomerker-<n>/sjomerker.json.
 #   python3 tools/map/release.py [tag]
 import os, re, sys, json, tarfile, subprocess, requests
 REPO = os.environ.get('KYST_REPO', 'average01101010/FishyBusiness-')
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'out', 'release')
-def pinned():
-    f = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kart-release.json')
-    return (json.load(open(f)).get('release') if os.path.exists(f) else None) or newest()
+PIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'kart-release.json')
+def pinned(key='release', pre='kart'):
+    return (json.load(open(PIN)).get(key) if os.path.exists(PIN) else None) or newest(pre)
 def newest(pre='kart'):
     r = subprocess.run(['git', 'ls-remote', '--tags', 'origin', pre + '-*'], capture_output=True, text=True, check=True).stdout
     tags = sorted({int(m) for m in re.findall(r'refs/tags/' + pre + r'-(\d+)$', r, re.M)})
     return f'{pre}-{tags[-1]}' if tags else None
-# the sea marks along the coast (sjomerker.yml, tools/map/sjomerker.py): the newest sjomerker- release's sjomerker.json into
-# out/release/<tag>/, where game.py finds it; None when there is none yet
+# the sea marks along the coast (sjomerker.yml, tools/map/sjomerker.py): the sjomerker- release kart-release.json pins ("sjomerker",
+# Ø13 K3: a release with new kinds of mark reaches a build only once the code that draws them names it; going back is one line), else
+# the newest; its sjomerker.json into out/release/<tag>/, where game.py finds it; None when there is none yet
+def marks_tag(): return pinned('sjomerker', 'sjomerker')
 def marks():
-    tag = newest('sjomerker')
+    tag = marks_tag()
     if not tag: return None
     d = os.path.join(OUT, tag); f = os.path.join(d, 'sjomerker.json')
     if not os.path.exists(f):

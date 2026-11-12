@@ -345,6 +345,7 @@
   }
   // a boat's own phase for her rocking (0 to 2π, fixed by her id)
   const NPHS = new Map();
+  const NPCFS = new Map();   // the ferry box's scale by length and beam (drawNPC)
   function npcPhase(id){ let p = NPHS.get(id); if (p == null){ p = (lookHash(String(id)) % 6283) / 1000; if (NPHS.size > 2000) NPHS.clear(); NPHS.set(id, p); } return p; }
   // the coast guard's ship on her inspection (core/09j-kystvakt.js kvNpcs, steg 100): her model, the skipper on her bridge and two hands
   // on deck, and at sea her RIB (the GLB's part 'rib', V2 A) through kvRib's stages over the game's minutes: lowered from the starboard
@@ -412,6 +413,10 @@
       // metres a second on the screen, pitched and rolled several times a second, a shudder; Jonas' video 03.11.2026)
       const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry' || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, roll);
+      // a ferry, an express boat or a passenger ferry is the one ferry box (N.ferry, 52 × 13 m) scaled to her own length and beam till N7
+      // has the models (N4, 12.11.2026: a passenger ferry of 20 m drawn 52 m long stuck 8 m into the quay, and a row at a quay overlapped);
+      // her lanterns go with it (they are placed by n.M)
+      if (n.type === 'ferry' && n.L){ const k = NPCFS.get(n.L * 100 + n.B) || (() => { const sx = n.B / 13, sz = n.L / 52, sy = clamp((sx + sz) / 2, 0.5, 1.5), S = new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1]); NPCFS.set(n.L * 100 + n.B, S); return S; })(); n.M = chain(n.M, k); }
       const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
       if (n.K) (n.kv ? kvl : kit).push(n); else drawLit(NPCM[n.type], n.M);
     }

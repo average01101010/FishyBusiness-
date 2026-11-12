@@ -68,7 +68,7 @@ THE ERROR TRAP (02.11.2026; Jonas: «det viktigste er at vi klarer å fange opp 
   - 513 `bridgeUnderUnit(br, extra)`
   - 518 `portApproach(pt)`
 
-## `src/js/core/01b-mapdata.js` (264 linjer)
+## `src/js/core/01b-mapdata.js` (281 linjer)
 
 MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in packs from map/
 
@@ -78,38 +78,39 @@ MAP DATA (phase K3 of the coast plan): the rasters in 10 km blocks, fetched in p
   - 28 `mapIdb()`
   - 32 `idbDo(mode, f)`
   - 33 `mapFetch(pk)`
-- **51** the manifest and the packs
-  - 55 `mapStart(base)`
-  - 71 `mapLoad(pk)`
-  - 82 `mapPackOf(L, bx, by)`
-  - 83 `mapPacksIn(kind, x0, y0, x1, y1)`
-  - 91 `mapSimPacks(p, r)`
-  - 92 `mapReadyAt(p, r)`
-  - 94 `mapSimAt(p)`
-  - 95 `mapViewAt(p)`
-  - 98 `mapKindIn(kind, p, memo)`
-  - 100 `mapNeed(p, r)`
-  - 106 `mapPreload(pts, kinds, onProgress)`
-  - 123 `mapLoadKind(kind)`
-- **124** blocks
-  - 125 `med16(raw, n)`
-  - 131 `med8(raw, n)`
-  - 136 `mapDecode(L, raw)`
-  - 150 `mapBlock(L, bx, by)`
-  - 162 `mapHasBlock(L, bx, by)`
-  - 165 `mapBlockKnown(L, bx, by)`
-  - 168 `rcell(L, ix, iy)`
-  - 176 `rbil(L, p)`
-  - 181 `rbilM(L, x, z)`
-- **185** the fine ground along the sea (Ø13 K1, 11.11.2026)
-  - 193 `finBlock(L, bx, by)`
-  - 199 `finCell(L, ix, iy)`
-  - 215 `finH(x, z, h)`
-  - 228 `mapHasM(L, x0, z0, x1, z1)`
-  - 235 `mapVec(pk, name)`
-  - 242 `mapViewReady(x0, y0, x1, y1, then, kinds)`
-  - 249 `simAreaReady()`
-  - 259 `mapDrop(pk)`
+  - 58 `mapStale(pk)`
+- **68** the manifest and the packs
+  - 72 `mapStart(base)`
+  - 88 `mapLoad(pk)`
+  - 99 `mapPackOf(L, bx, by)`
+  - 100 `mapPacksIn(kind, x0, y0, x1, y1)`
+  - 108 `mapSimPacks(p, r)`
+  - 109 `mapReadyAt(p, r)`
+  - 111 `mapSimAt(p)`
+  - 112 `mapViewAt(p)`
+  - 115 `mapKindIn(kind, p, memo)`
+  - 117 `mapNeed(p, r)`
+  - 123 `mapPreload(pts, kinds, onProgress)`
+  - 140 `mapLoadKind(kind)`
+- **141** blocks
+  - 142 `med16(raw, n)`
+  - 148 `med8(raw, n)`
+  - 153 `mapDecode(L, raw)`
+  - 167 `mapBlock(L, bx, by)`
+  - 179 `mapHasBlock(L, bx, by)`
+  - 182 `mapBlockKnown(L, bx, by)`
+  - 185 `rcell(L, ix, iy)`
+  - 193 `rbil(L, p)`
+  - 198 `rbilM(L, x, z)`
+- **202** the fine ground along the sea (Ø13 K1, 11.11.2026)
+  - 210 `finBlock(L, bx, by)`
+  - 216 `finCell(L, ix, iy)`
+  - 232 `finH(x, z, h)`
+  - 245 `mapHasM(L, x0, z0, x1, z1)`
+  - 252 `mapVec(pk, name)`
+  - 259 `mapViewReady(x0, y0, x1, y1, then, kinds)`
+  - 266 `simAreaReady()`
+  - 276 `mapDrop(pk)`
 
 ## `src/js/core/01c-vec.js` (223 linjer)
 
@@ -150,19 +151,21 @@ THE COAST AS THE TRUTH FOR LAND AND SEA (04.10.2026; the user: «Jeg vil ha bort
   - 137 `coastBuildHere(pk)`
   - 138 `coastEnsure(pk)`
 
-## `src/js/core/01e-marks.js` (101 linjer)
+## `src/js/core/01e-marks.js` (154 linjer)
 
 THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av
 
 - **1** THE SEA MARKS ALONG THE WHOLE COAST (05.10.2026; Jonas: «Sjømerker må ordnes langs hele kysten. Alt senja har, må resten av
   - 11 `marksAdd(pk)`
-  - 21 `marksRocksIn(x0, y0, x1, y1)`
-  - 26 `marksNear(kind, x, y, R)`
-- **34** THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026)
-  - 53 `feltData()`
-  - 67 `feltIn(x0, y0, x1, y1, all)`
-  - 76 `feltShapesFrom(bytes)`
-  - 89 `feltShape(f)`
+  - 27 `marksSenja(list, lights)`
+  - 44 `marksRocksIn(x0, y0, x1, y1)`
+  - 49 `marksNear(kind, x, y, R)`
+  - 67 `markSvg(mk, u)`
+- **87** THE NAMES OF THE FISHING GROUNDS ALONG THE WHOLE COAST (B2 of docs/planer/bestand-og-flaate.md, 01.11.2026)
+  - 106 `feltData()`
+  - 120 `feltIn(x0, y0, x1, y1, all)`
+  - 129 `feltShapesFrom(bytes)`
+  - 142 `feltShape(f)`
 
 ## `src/js/core/02-species-gear.js` (454 linjer)
 
@@ -195,7 +198,7 @@ Placeholder prices (NOK/kg, grade A) – to be tuned
   - 429 `reqFill(eq, type)`
   - 447 `lsaOf(V)`
 
-## `src/js/core/03-simulation.js` (1396 linjer)
+## `src/js/core/03-simulation.js` (1398 linjer)
 
 fleet: each vessel keeps its own state; the company holds the rest. The simulation steps through the vessels one at a
 
@@ -352,84 +355,84 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 860 `doyH(H)`
   - 861 `yearH(H)`
   - 862 `quotaState()`
-  - 880 `licValue(l)`
-- **897** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
-  - 919 `bookMigrate()`
-  - 927 `bookAll(parts, no, en, vid)`
-  - 941 `bookResult(y)`
-- **943** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
-  - 952 `bankS()`
-  - 960 `bankMove(k, kr0, no, en)`
-  - 963 `bankAfterIncome(inKr)`
-  - 971 `taxPay(kr0, no, en)`
-  - 974 `bankRelease()`
-  - 978 `bankDay(H)`
-  - 1011 `taxOf(P, form, days, skj = 0, carry = 0)`
-  - 1021 `saldoOf(v)`
-  - 1032 `skjOf(frac, ri = 1)`
-  - 1036 `txInit(H, adv)`
-  - 1038 `yearFrac(H)`
-  - 1040 `txProfit(H)`
-  - 1043 `txNow(H = S.t / 60)`
-  - 1049 `taxOwed(H = S.t / 60)`
-  - 1054 `enkAdv(H)`
-  - 1060 `taxPlan(H = S.t / 60)`
-  - 1073 `asBase(y)`
-  - 1077 `txClose(H)`
-  - 1093 `taxDayMark(H)`
-  - 1099 `taxFix(H)`
-  - 1116 `taxTick(H)`
-  - 1154 `foundAS()`
-  - 1167 `mvaCheck(total)`
-  - 1176 `trekkOf(total, len)`
-  - 1181 `fmInit()`
-  - 1183 `fmLand(total)`
-  - 1192 `takeLoan(amount, months, k)`
-  - 1196 `payDown(x)`
-  - 1202 `deal(price, ti, inn)`
-  - 1209 `finance(x, months)`
-  - 1212 `lenGroup()`
-  - 1213 `codLimits(H)`
-  - 1216 `codOpen(H)`
-  - 1217 `codLimitNow(H)`
-- **1218** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
-  - 1236 `haillBoost()`
-  - 1237 `haillLeft()`
-  - 1238 `haillStage()`
-  - 1240 `haillF()`
-  - 1241 `luck(sp)`
-  - 1245 `haillCap()`
-  - 1254 `haillInit()`
-  - 1262 `haillFromSrv(loc, srv, wait)`
-  - 1269 `srvToT(m, srvNow, t, world)`
-  - 1270 `tToSrv(m, srvNow, t, world)`
-  - 1273 `boostSrv(list, stack, now)`
-  - 1275 `haillMirror(list, used)`
-  - 1279 `haillStock(inv, srv, used)`
-  - 1284 `giveHaill(type, how, id)`
-  - 1289 `useHaill(type)`
-  - 1303 `pubEvening(H)`
-  - 1304 `pubOpen(H)`
-  - 1307 `capHold()`
-  - 1309 `cargoRoom()`
-  - 1311 `cargoMin(kg)`
-- **1312** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
-  - 1315 `streakState()`
-  - 1316 `streakPct()`
-  - 1317 `streakTouch()`
-- **1328** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
-  - 1332 `effTemp(H)`
-  - 1333 `coldPen(H, hs)`
-- **1340** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
-  - 1355 `gradeOk(g, q)`
-  - 1356 `ordState()`
-  - 1359 `custNear(c)`
-  - 1364 `repOf(id)`
-  - 1366 `bkOrderable(H)`
-  - 1368 `bkPlant(id)`
-  - 1369 `custSp(c)`
-  - 1370 `spCatchable(sp, H)`
-  - 1372 `ordersTick(H)`
+  - 882 `licValue(l, H)`
+- **899** the books (Økonomi 2, Ø1, 27.10.2026, docs/planer/okonomi/02-design.md)
+  - 921 `bookMigrate()`
+  - 929 `bookAll(parts, no, en, vid)`
+  - 943 `bookResult(y)`
+- **945** the bank's accounts (Økonomi 2, Ø3, 27.10.2026; Jonas: «Automatisk skatteavsetning, rente på sparekonto, kassakreditt med
+  - 954 `bankS()`
+  - 962 `bankMove(k, kr0, no, en)`
+  - 965 `bankAfterIncome(inKr)`
+  - 973 `taxPay(kr0, no, en)`
+  - 976 `bankRelease()`
+  - 980 `bankDay(H)`
+  - 1013 `taxOf(P, form, days, skj = 0, carry = 0)`
+  - 1023 `saldoOf(v)`
+  - 1034 `skjOf(frac, ri = 1)`
+  - 1038 `txInit(H, adv)`
+  - 1040 `yearFrac(H)`
+  - 1042 `txProfit(H)`
+  - 1045 `txNow(H = S.t / 60)`
+  - 1051 `taxOwed(H = S.t / 60)`
+  - 1056 `enkAdv(H)`
+  - 1062 `taxPlan(H = S.t / 60)`
+  - 1075 `asBase(y)`
+  - 1079 `txClose(H)`
+  - 1095 `taxDayMark(H)`
+  - 1101 `taxFix(H)`
+  - 1118 `taxTick(H)`
+  - 1156 `foundAS()`
+  - 1169 `mvaCheck(total)`
+  - 1178 `trekkOf(total, len)`
+  - 1183 `fmInit()`
+  - 1185 `fmLand(total)`
+  - 1194 `takeLoan(amount, months, k)`
+  - 1198 `payDown(x)`
+  - 1204 `deal(price, ti, inn)`
+  - 1211 `finance(x, months)`
+  - 1214 `lenGroup()`
+  - 1215 `codLimits(H)`
+  - 1218 `codOpen(H)`
+  - 1219 `codLimitNow(H)`
+- **1220** haill: luck from the quay. Fresh goods: full effect for two days, fading to nothing on day seven. Sold for real money only (test mode now) or won at the pub.
+  - 1238 `haillBoost()`
+  - 1239 `haillLeft()`
+  - 1240 `haillStage()`
+  - 1242 `haillF()`
+  - 1243 `luck(sp)`
+  - 1247 `haillCap()`
+  - 1256 `haillInit()`
+  - 1264 `haillFromSrv(loc, srv, wait)`
+  - 1271 `srvToT(m, srvNow, t, world)`
+  - 1272 `tToSrv(m, srvNow, t, world)`
+  - 1275 `boostSrv(list, stack, now)`
+  - 1277 `haillMirror(list, used)`
+  - 1281 `haillStock(inv, srv, used)`
+  - 1286 `giveHaill(type, how, id)`
+  - 1291 `useHaill(type)`
+  - 1305 `pubEvening(H)`
+  - 1306 `pubOpen(H)`
+  - 1309 `capHold()`
+  - 1311 `cargoRoom()`
+  - 1313 `cargoMin(kg)`
+- **1314** the daily login bonus: each real calendar day you open the game adds a point to a bonus on the fish price; each day
+  - 1317 `streakState()`
+  - 1318 `streakPct()`
+  - 1319 `streakTouch()`
+- **1330** cold: effective temperature from air temperature and wind, plus wet from rain, snow and spray. Cold, wet hands fish worse;
+  - 1334 `effTemp(H)`
+  - 1335 `coldPen(H, hs)`
+- **1342** orders from buyers and customers: species, amount, quality, deadline and a price premium; reputation builds with each buyer
+  - 1357 `gradeOk(g, q)`
+  - 1358 `ordState()`
+  - 1361 `custNear(c)`
+  - 1366 `repOf(id)`
+  - 1368 `bkOrderable(H)`
+  - 1370 `bkPlant(id)`
+  - 1371 `custSp(c)`
+  - 1372 `spCatchable(sp, H)`
+  - 1374 `ordersTick(H)`
 
 ## `src/js/core/03b-sea.js` (196 linjer)
 
@@ -494,7 +497,7 @@ STABILITY: hydrostatics, the boat's motions in a sea, and what they do to the wo
   - 267 `hullX(R)`
   - 282 `hullStep(H, R, X, eta, deta, dt, o)`
 
-## `src/js/core/03d-quota.js` (522 linjer)
+## `src/js/core/03d-quota.js` (567 linjer)
 
 Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood from 1 October 2026 (J-187-2026, fiskeridir.no)
 
@@ -506,80 +509,84 @@ Quotas for cod, haddock and saithe north of 62° N. The regulation as it stood f
 - **54** the closed group: quota lengths the game sells, with J-187-2026's quota factors and quantities (§§ 16, 18, 19). Cod is a fixed
   - 71 `licQ(l, H, len)`
   - 83 `sellerCod(id, H)`
-  - 89 `openUsedSave(q)`
-  - 91 `openUsedLoad()`
-  - 92 `freshQuota()`
-  - 93 `licStart(lic)`
-- **94** the stocks and the total quotas year by year. History and the advice for 2027 from the Institute of Marine Research (hi.no,
-  - 136 `kystAt(T, y)`
-  - 137 `kystF(lat, H)`
-  - 144 `stockYear(sp, y)`
-  - 161 `ssbAt(sp, H)`
-  - 162 `stockF(sp, H)`
-- **164** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
-  - 175 `qyOf(y)`
-  - 182 `qyBoats(Y, y)`
-  - 183 `qyStep(Y, y, d)`
-  - 201 `quotaNewYear(y)`
-  - 205 `qyAt(H)`
-  - 207 `codStopDoy(y)`
-  - 208 `openMaxAdd(H)`
-  - 213 `ffPlan(y)`
-  - 221 `ffPct(H)`
-- **223** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
-  - 241 `npcReg()`
-  - 243 `regSend(fn, id)`
-  - 248 `regTake(id)`
-  - 250 `regFree(id)`
-  - 252 `regSeller(id, H)`
-- **254** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
-  - 262 `structFits(l, add)`
-  - 263 `structRoom(l, id)`
-  - 264 `structPrice(id, H)`
-  - 266 `structIn(l, id, H)`
-  - 267 `licExtra(l)`
-  - 269 `structExpire(l, y)`
-- **270** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
-  - 272 `twoOK(la, lb, y)`
-- **273** quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
-  - 277 `coopOffer(H)`
-  - 278 `coopOK(l, y)`
-- **280** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
-- **302** the snow crab's regulation year by year, as data (V4 of docs/planer/havsteget-h3-snokrabbe.md, Jonas 06.11.2026: «Gjør det som blir
-  - 321 `snoQuota(H)`
-  - 323 `snoRoom(H)`
-  - 326 `snoFlexNewYear(q, y)`
-  - 332 `snoYear(y)`
-  - 347 `havLicFor(type)`
-  - 349 `havF(id, sp, y)`
-  - 360 `havGroup(id, y)`
-  - 363 `havQ(l, H)`
-  - 371 `havLicWhy(type)`
-  - 378 `havOffer(id, H)`
-  - 381 `havValue(l, H)`
-  - 395 `snoLicValue(y)`
-  - 401 `havPrice(type, H)`
-  - 403 `havLicTake(type, H)`
-- **407** ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
-  - 415 `lbStop(y)`
-  - 419 `lbShare(sp, H)`
-  - 421 `lbNews(H)`
-- **427** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
-  - 435 `bkSeason(y)`
-  - 438 `bkOpen(H)`
-  - 444 `bkDirect(H, len)`
-  - 446 `bkState(H)`
-  - 449 `bkAllow(H, bk, all)`
-  - 454 `bkLanded(H, bk, all)`
-  - 456 `bkNews(H)`
-- **462** cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
-  - 496 `sorOpenId()`
-  - 497 `sorAcc()`
-  - 500 `sorCodAboard()`
-  - 503 `sorRoom(k, q, acc)`
-  - 505 `sorLeft(k)`
-  - 512 `sorConf(byc, codHold, q, acc)`
-  - 521 `sorLanded(q, ok)`
+  - 90 `openUsedSave(q)`
+  - 92 `openUsedLoad()`
+  - 93 `freshQuota()`
+  - 94 `licStart(lic)`
+- **95** the stocks and the total quotas year by year. History and the advice for 2027 from the Institute of Marine Research (hi.no,
+  - 137 `kystAt(T, y)`
+  - 138 `kystF(lat, H)`
+  - 146 `stockYear(sp, y, sd)`
+  - 163 `ssbAt(sp, H)`
+  - 164 `stockF(sp, H)`
+- **166** the open group's season. About 2 100 boats fish the group quota down a day at a time (more in the skrei season and on days
+  - 177 `qyOf(y)`
+  - 184 `qyBoats(Y, y)`
+  - 185 `qyStep(Y, y, d)`
+  - 203 `quotaNewYear(y)`
+  - 207 `qyAt(H)`
+  - 209 `codStopDoy(y)`
+  - 210 `openMaxAdd(H)`
+  - 215 `ffPlan(y)`
+  - 223 `ffPct(H)`
+- **225** the closed group's register: a fixed number of rights (1 622 in the cod fishery north of 62° N on 17.10.2025, case document
+  - 243 `npcReg()`
+  - 245 `regSend(fn, id)`
+  - 250 `regTake(id)`
+  - 252 `regFree(id)`
+  - 254 `regSeller(id, H)`
+- **256** structure quotas (forskrift om spesielle kvoteordninger for kystfiskeflåten, J-244-2025): quota lengths 11–27.99 m may buy a
+  - 264 `structFits(l, add)`
+  - 265 `structRoom(l, id)`
+  - 266 `structPrice(id, H)`
+  - 268 `structIn(l, id, H)`
+  - 269 `licExtra(l)`
+  - 271 `structExpire(l, y)`
+- **272** the special scheme for quota lengths under 11 m (kap. 2, from 2025): an owner with two such boats, both owned since the year
+  - 274 `twoOK(la, lb, y)`
+- **275** quota cooperation (J-187-2026 § 31): two closed-group boats under 11 m with different owners; both owners aboard, the passive
+  - 279 `coopOffer(H)`
+  - 280 `coopOK(l, y)`
+- **282** the ocean permits (H1 of docs/planer/havsteget.md, 03.11.2026). Jonas' choices the same day: V1 A (the autoliner first), V2 B
+- **304** the snow crab's regulation year by year, as data (V4 of docs/planer/havsteget-h3-snokrabbe.md, Jonas 06.11.2026: «Gjør det som blir
+  - 323 `snoQuota(H)`
+  - 325 `snoRoom(H)`
+  - 328 `snoFlexNewYear(q, y)`
+  - 334 `snoYear(y)`
+- **349** the quota price that lives (KM5 of docs/planer/kvotemarkedet.md, steg 64; Jonas 07.11.2026, V4 B: «V4, anbefalt»)
+  - 371 `kpkOut(H, y)`
+  - 379 `kpkCodIx(H)`
+  - 382 `kpkAt(H)`
+  - 392 `havLicFor(type)`
+  - 394 `havF(id, sp, y)`
+  - 405 `havGroup(id, y)`
+  - 408 `havQ(l, H)`
+  - 416 `havLicWhy(type)`
+  - 423 `havOffer(id, H)`
+  - 426 `havValue(l, H)`
+  - 440 `snoLicValue(y)`
+  - 446 `havPrice(type, H)`
+  - 448 `havLicTake(type, H)`
+- **452** ling and tusk for vessels of 28 m and over (H2a of docs/planer/havsteget-h2-autoline.md, 05.11.2026). J-128-2026 (2026) and the
+  - 460 `lbStop(y)`
+  - 464 `lbShare(sp, H)`
+  - 466 `lbNews(H)`
+- **472** Greenland halibut (blåkveite) for vessels under 28 m (J-241-2025, the regulation for 2026; docs/blakveite.md 2-3, 07.10.2026)
+  - 480 `bkSeason(y)`
+  - 483 `bkOpen(H)`
+  - 489 `bkDirect(H, len)`
+  - 491 `bkState(H)`
+  - 494 `bkAllow(H, bk, all)`
+  - 499 `bkLanded(H, bk, all)`
+  - 501 `bkNews(H)`
+- **507** cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
+  - 541 `sorOpenId()`
+  - 542 `sorAcc()`
+  - 545 `sorCodAboard()`
+  - 548 `sorRoom(k, q, acc)`
+  - 550 `sorLeft(k)`
+  - 557 `sorConf(byc, codHold, q, acc)`
+  - 566 `sorLanded(q, ok)`
 
 ## `src/js/core/03e-rules.js` (601 linjer)
 
@@ -833,21 +840,21 @@ crew: people with skills, habits and moods
   - 707 `flyOut(c)`
   - 715 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1431 linjer)
+## `src/js/core/05-vessels.js` (1424 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
 - **1** other vessels (deterministic, so every player sees the same traffic)
   - 4 `prepRoute(r)`
   - 5 `atRoute(R, s)`
-  - 24 `hashStr(t)`
-  - 26 `berthSlot(q, key, big)`
-  - 39 `berthShift(p, key, big)`
-  - 47 `fleetBerth(i)`
-  - 60 `fleetOff(f, p)`
-  - 64 `fleetState(i, H)`
-  - 73 `fleetState0(i, H)`
-- **101** the NPC traffic along the coast (part 5 of the coast-wide plan, 03.10.2026; the user: full traffic along the coast, but only
+  - 23 `hashStr(t)`
+  - 25 `berthSlot(q, key, big)`
+  - 38 `berthShift(p, key, big)`
+  - 46 `fleetBerth(i)`
+  - 59 `fleetOff(f, p)`
+  - 63 `fleetState(i, H)`
+  - 72 `fleetState0(i, H)`
+- **100** the NPC traffic along the coast (part 5 of the coast-wide plan, 03.10.2026; the user: full traffic along the coast, but only
   - 117 `coastWay(b, moored, m0)`
   - 141 `coastCells(a, z)`
   - 157 `coastWayAt(w, u, back)`
@@ -878,85 +885,86 @@ crew: people with skills, habits and moods
   - 473 `coastSet(b, k, pI, i, H)`
   - 482 `coastNear(H, only)`
   - 506 `npcStates(H, only)`
-  - 555 `peerName(s)`
-  - 570 `peerRouteStr(p, wps, idx)`
-  - 580 `peerRoute(s)`
-  - 586 `routeWalk(p, R, d, hd0)`
-  - 593 `ptPred(q, w, t)`
-  - 608 `ptPose(T, now)`
-  - 616 `ptTake(q, now)`
-  - 630 `peerStates()`
-  - 646 `newState()`
-  - 658 `log(no, en, k)`
-  - 660 `navHour()`
-  - 676 `nearestPort(p)`
-  - 678 `nearestYard(p)`
-  - 680 `step()`
-  - 700 `holdMinute(H, p)`
-  - 709 `vesselStep(H)`
-  - 801 `plantFuel(b)`
-  - 804 `sailV(H, hs)`
-  - 820 `sail(H, W, hs)`
-  - 852 `sailWaiting()`
-  - 853 `sailReplan(pl, b, gp)`
-  - 881 `iceWhy(p, tried)`
-  - 883 `sailStop(pl, b, why)`
-  - 891 `haltPlan(need)`
-  - 901 `arrive(w)`
-  - 919 `unstuckWhy()`
-  - 925 `unstuckSpot()`
-  - 932 `unstuck()`
-- **946** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 954 `moorPhase(b)`
-  - 969 `dock(pid, berth)`
-  - 996 `catchFactors(H, W, hs)`
-  - 1009 `stockDev(p, sp)`
-  - 1015 `fish(H, W, hs)`
-  - 1121 `endFishing(why)`
-  - 1142 `bycHere(how)`
-  - 1146 `bycAdd(sp, kg, how)`
-  - 1150 `bycConf()`
-  - 1153 `addCatch(sp, kg, cls, hook, opt)`
-- **1175** work on deck: gutting and icing take hands and time
-  - 1191 `deckHands()`
-  - 1194 `deckPending()`
-  - 1195 `deckEta(hands)`
-  - 1200 `moveKg(x, kg, patch)`
-  - 1208 `iceMinute()`
-  - 1215 `iceOut(out)`
-  - 1221 `deckMinute()`
-- **1246** lying to in a storm (H1b R8, 05.11.2026)
-  - 1263 `quayFar(b)`
-  - 1267 `lieTo(W, hs)`
-  - 1274 `lieToStep(W, hs)`
-  - 1284 `risk(W, hs)`
-  - 1312 `hullRepair()`
-  - 1315 `svcOverdue()`
-- **1316** the rescue boat (plan E3, 05.10.2026)
-  - 1342 `rescueBases()`
-  - 1351 `rescueBase(p)`
-  - 1358 `rescueAis(H)`
-  - 1362 `rescue(keepCatch)`
-  - 1386 `towSea(p)`
-  - 1391 `towRoutes(b)`
-  - 1402 `towStep(H)`
-  - 1414 `towDone(t)`
-  - 1420 `towPose(frac)`
+  - 548 `peerName(s)`
+  - 563 `peerRouteStr(p, wps, idx)`
+  - 573 `peerRoute(s)`
+  - 579 `routeWalk(p, R, d, hd0)`
+  - 586 `ptPred(q, w, t)`
+  - 601 `ptPose(T, now)`
+  - 609 `ptTake(q, now)`
+  - 623 `peerStates()`
+  - 639 `newState()`
+  - 651 `log(no, en, k)`
+  - 653 `navHour()`
+  - 669 `nearestPort(p)`
+  - 671 `nearestYard(p)`
+  - 673 `step()`
+  - 693 `holdMinute(H, p)`
+  - 702 `vesselStep(H)`
+  - 794 `plantFuel(b)`
+  - 797 `sailV(H, hs)`
+  - 813 `sail(H, W, hs)`
+  - 845 `sailWaiting()`
+  - 846 `sailReplan(pl, b, gp)`
+  - 874 `iceWhy(p, tried)`
+  - 876 `sailStop(pl, b, why)`
+  - 884 `haltPlan(need)`
+  - 894 `arrive(w)`
+  - 912 `unstuckWhy()`
+  - 918 `unstuckSpot()`
+  - 925 `unstuck()`
+- **939** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 947 `moorPhase(b)`
+  - 962 `dock(pid, berth)`
+  - 989 `catchFactors(H, W, hs)`
+  - 1002 `stockDev(p, sp)`
+  - 1008 `fish(H, W, hs)`
+  - 1114 `endFishing(why)`
+  - 1135 `bycHere(how)`
+  - 1139 `bycAdd(sp, kg, how)`
+  - 1143 `bycConf()`
+  - 1146 `addCatch(sp, kg, cls, hook, opt)`
+- **1168** work on deck: gutting and icing take hands and time
+  - 1184 `deckHands()`
+  - 1187 `deckPending()`
+  - 1188 `deckEta(hands)`
+  - 1193 `moveKg(x, kg, patch)`
+  - 1201 `iceMinute()`
+  - 1208 `iceOut(out)`
+  - 1214 `deckMinute()`
+- **1239** lying to in a storm (H1b R8, 05.11.2026)
+  - 1256 `quayFar(b)`
+  - 1260 `lieTo(W, hs)`
+  - 1267 `lieToStep(W, hs)`
+  - 1277 `risk(W, hs)`
+  - 1305 `hullRepair()`
+  - 1308 `svcOverdue()`
+- **1309** the rescue boat (plan E3, 05.10.2026)
+  - 1335 `rescueBases()`
+  - 1344 `rescueBase(p)`
+  - 1351 `rescueAis(H)`
+  - 1355 `rescue(keepCatch)`
+  - 1379 `towSea(p)`
+  - 1384 `towRoutes(b)`
+  - 1395 `towStep(H)`
+  - 1407 `towDone(t)`
+  - 1413 `towPose(frac)`
 
-## `src/js/core/05b-ferje.js` (144 linjer)
+## `src/js/core/05b-ferje.js` (189 linjer)
 
 The car ferries along the whole coast (Ø15 N3 of docs/planer/npc-flaaten.md, 11.11.2026; docs/systemer/npc-trafikk.md 4.18). Every
 
-  - 27 `ferjeInit()`
-  - 48 `ferjeFind(a, b)`
-  - 52 `ferjeChain(s, W)`
-  - 72 `ferjeHop(s, a, b)`
-  - 80 `ferjeSailed(s, v, H0)`
-  - 89 `ferjeAt(s, v, w, ok)`
-  - 105 `ferjeClock(H)`
-  - 110 `ferjeName(s, vi)`
-  - 118 `ferjeStates(s, H, wx = true, C = ferjeClock(H)`
-  - 135 `ferjeNear(H, only)`
+  - 44 `ferjeInit()`
+  - 70 `ferjeFind(a, b, y = 0)`
+  - 74 `ferjeChain(s, W)`
+  - 98 `ferjeHop(s, a, b)`
+  - 106 `ferjeSailed(s, v, H0)`
+  - 115 `ferjeAt(s, v, w, ok)`
+  - 131 `ferjeClock(H)`
+  - 136 `ferjeName(s, vi)`
+  - 145 `ferjeStates(s, H, wx = true, C = ferjeClock(H)`
+  - 164 `kystStates(H, only)`
+  - 177 `ferjeNear(H, only)`
 
 ## `src/js/core/05c-air.js` (64 linjer)
 
@@ -990,7 +998,7 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
   - 212 `havState(s, H, near)`
   - 237 `havNear(H, only)`
 
-## `src/js/core/05e-sjovei.js` (1205 linjer)
+## `src/js/core/05e-sjovei.js` (1202 linjer)
 
 ---------- the rules of the road: who gives way, and the NPCs and Autonav that do (Ø11.1, docs/systemer/sjofart-og-lover.md) ----------
 
@@ -1039,63 +1047,63 @@ The ocean fleet as NPCs (H1 of docs/planer/bestand-og-flaate.md, 02.11.2026)
 - **417** one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second)
   - 418 `sjvEval(H, list)`
   - 540 `sjvNearMiss(n, R, clr)`
-  - 551 `colregNpc(H, out, only)`
-  - 565 `sjvTrack(list)`
-- **567** Autonav
-  - 571 `sjvFresh(model)`
-  - 581 `sjvAuto(d, h, ds, T)`
-  - 596 `sjvSail(pl, b, left)`
-  - 615 `sjvCreep(pl, b, L, v)`
-- **624** the warning's words (the strip, the box and the card, the chart plotter)
-  - 626 `sjvSay(W, how)`
-  - 663 `sjvWhen(W)`
-  - 665 `sjvWarn()`
-- **667** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
-  - 692 `sjvHullPts(X, Z, psi, L, B)`
-  - 696 `sjvInPoly(P, x, z)`
-  - 703 `sjvSat(A, B)`
-  - 724 `sjvSatC(A, cx, cz, r)`
-  - 733 `sjvMass(n)`
-  - 734 `sjvOwnMass(b = S.boat)`
-  - 737 `sjvKnEq(kn, mA, mB)`
-  - 739 `sjvValue(L)`
-  - 744 `sjvMatOf(n)`
-  - 747 `sjvOtherCost(kn, L, mat, P)`
-  - 757 `sjvOwnLoss(b, c)`
-  - 763 `sjvCpa(a, b, gs)`
-  - 768 `sjvTrailAdd(id, e)`
-  - 786 `sjvFault(T, X)`
-  - 853 `sjvFaultWord(w, no)`
-  - 864 `sjvFaultSay(F, name, lang)`
-  - 875 `sjvSettle(b, F, c, oth, name)`
-  - 886 `sjvPaySay(M, F, name, lang)`
-  - 894 `sjvKr(x, no)`
-  - 896 `sjvFrom()`
-  - 900 `sjvTo()`
-  - 907 `sjvVhf(n, rec)`
-  - 921 `sjvStandBy(n, H)`
-  - 932 `sjvBlow(n, kn, E, H, pre)`
-- **964** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
-  - 967 `sjvClock()`
-  - 974 `sjvNear(H, X, Z)`
-  - 993 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
-  - 1004 `sjvTouch(b, d, P)`
-- **1037** the look's sweep (sjvEval), when the model does not have her
-  - 1040 `sjvSweep(n, A, H, gs, on)`
-- **1066** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
-  - 1086 `fartMd(H)`
-  - 1088 `fartInSeason(s, md)`
-  - 1090 `fartRunsFrom(b)`
-  - 1100 `fartRuns()`
-  - 1110 `fartInArea(i, cx, cy)`
-  - 1116 `fartAt(p, H)`
-  - 1135 `fartLegKn(pl, p, L, H)`
-  - 1144 `fartCapMs()`
-  - 1155 `farvWrongSide(p, marks)`
-  - 1165 `farvLook(H)`
-  - 1194 `farvRec(r)`
-  - 1197 `farvWarn()`
-  - 1198 `farvSay(w, how)`
+  - 548 `colregNpc(H, out, only)`
+  - 562 `sjvTrack(list)`
+- **564** Autonav
+  - 568 `sjvFresh(model)`
+  - 578 `sjvAuto(d, h, ds, T)`
+  - 593 `sjvSail(pl, b, left)`
+  - 612 `sjvCreep(pl, b, L, v)`
+- **621** the warning's words (the strip, the box and the card, the chart plotter)
+  - 623 `sjvSay(W, how)`
+  - 660 `sjvWhen(W)`
+  - 662 `sjvWarn()`
+- **664** Ø11.3: collisions (sjøloven kap. 8, LOV-1994-06-24-39 §§ 161-164, read on Lovdata 06.11.2026)
+  - 689 `sjvHullPts(X, Z, psi, L, B)`
+  - 693 `sjvInPoly(P, x, z)`
+  - 700 `sjvSat(A, B)`
+  - 721 `sjvSatC(A, cx, cz, r)`
+  - 730 `sjvMass(n)`
+  - 731 `sjvOwnMass(b = S.boat)`
+  - 734 `sjvKnEq(kn, mA, mB)`
+  - 736 `sjvValue(L)`
+  - 741 `sjvMatOf(n)`
+  - 744 `sjvOtherCost(kn, L, mat, P)`
+  - 754 `sjvOwnLoss(b, c)`
+  - 760 `sjvCpa(a, b, gs)`
+  - 765 `sjvTrailAdd(id, e)`
+  - 783 `sjvFault(T, X)`
+  - 850 `sjvFaultWord(w, no)`
+  - 861 `sjvFaultSay(F, name, lang)`
+  - 872 `sjvSettle(b, F, c, oth, name)`
+  - 883 `sjvPaySay(M, F, name, lang)`
+  - 891 `sjvKr(x, no)`
+  - 893 `sjvFrom()`
+  - 897 `sjvTo()`
+  - 904 `sjvVhf(n, rec)`
+  - 918 `sjvStandBy(n, H)`
+  - 929 `sjvBlow(n, kn, E, H, pre)`
+- **961** the manoeuvring model's steps (16b-dyn.js dynContact, by hand and on Autonav)
+  - 964 `sjvClock()`
+  - 971 `sjvNear(H, X, Z)`
+  - 990 `sjvImpulse(d, P, I, ve, vz, m2, gs)`
+  - 1001 `sjvTouch(b, d, P)`
+- **1034** the look's sweep (sjvEval), when the model does not have her
+  - 1037 `sjvSweep(n, A, H, gs, on)`
+- **1063** Ø11.8: the fairway: the speed limits and the cardinal marks (docs/systemer/sjofart-og-lover.md kap. 9)
+  - 1083 `fartMd(H)`
+  - 1085 `fartInSeason(s, md)`
+  - 1087 `fartRunsFrom(b)`
+  - 1097 `fartRuns()`
+  - 1107 `fartInArea(i, cx, cy)`
+  - 1113 `fartAt(p, H)`
+  - 1132 `fartLegKn(pl, p, L, H)`
+  - 1141 `fartCapMs()`
+  - 1152 `farvWrongSide(p, marks)`
+  - 1162 `farvLook(H)`
+  - 1191 `farvRec(r)`
+  - 1194 `farvWarn()`
+  - 1195 `farvSay(w, how)`
 
 ## `src/js/core/06-services.js` (333 linjer)
 
@@ -1146,13 +1154,13 @@ the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coas
 - **143** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
   - 150 `portWhy(pt, type)`
 
-## `src/js/core/06c-steder.js` (44 linjer)
+## `src/js/core/06c-steder.js` (46 linjer)
 
 the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
 
 - **1** the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
-  - 32 `portServices(pt, berth)`
-  - 40 `placesNear(p, kind, n = 3)`
+  - 34 `portServices(pt, berth)`
+  - 42 `placesNear(p, kind, n = 3)`
 
 ## `src/js/core/06d-plan-felles.js` (70 linjer)
 
@@ -1281,7 +1289,7 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 199 `p2SnoText(o, s, pl, kl, at)`
   - 211 `p2SnoCheck(o, st, ER, Wn)`
 
-## `src/js/core/06j-hopp.js` (137 linjer)
+## `src/js/core/06j-hopp.js` (145 linjer)
 
 ---------- Hopp over resten av ruta (HO1, steg 104; docs/planer/hopp.md, Jonas 12.11.2026) ----------
 
@@ -1289,12 +1297,12 @@ Driftsplan 2 for the snow crab vessel (H3c of docs/planer/havsteget-h3-snokrabbe
   - 15 `hopPrice(realMin)`
   - 21 `hopStop(pl)`
   - 27 `hopWhy()`
-  - 45 `hopRun(paid)`
-  - 79 `hopQuote()`
-  - 82 `hopEnergy(e, s, n, rate)`
-  - 87 `hopSaved(real, en)`
-  - 89 `hopDo(q)`
-  - 130 `hopGo(paid)`
+  - 49 `hopRun(paid)`
+  - 83 `hopQuote()`
+  - 86 `hopEnergy(e, s, n, rate)`
+  - 91 `hopSaved(real, en)`
+  - 93 `hopDo(q)`
+  - 135 `hopGo(paid)`
 
 ## `src/js/core/06e-anchor.js` (235 linjer)
 
@@ -1671,7 +1679,7 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 982 `turDepart()`
   - 1002 `turMechanic()`
 
-## `src/js/core/09h-press.js` (242 linjer)
+## `src/js/core/09h-press.js` (262 linjer)
 
 Kystposten: the coast's paper (07.10.2026)
 
@@ -1684,18 +1692,20 @@ Kystposten: the coast's paper (07.10.2026)
   - 141 `pressTop()`
   - 153 `pressBygde()`
   - 166 `pressLand(local)`
-- **176** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
-  - 181 `pressIx(sp, d)`
-  - 182 `pressHigh(sp, d)`
-  - 183 `pressRecords(d)`
-  - 184 `pressPrice(sp, d)`
-  - 199 `pressDay(H)`
-- **203** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
-  - 205 `pressSkreiH(y)`
-  - 207 `pressSkrei()`
-  - 218 `pressList(local)`
-  - 240 `pressUnread()`
-  - 241 `pressSeen()`
+- **176** «Kvoteprisen denne uka» (KM5, steg 64): once a game week on the front page, the quota price (kpkAt in 03d-quota.js, the same
+  - 179 `pressKvote()`
+- **195** the market: a record price, the highest in a year (Jonas 07.10.2026: «Ta rekordpriser»)
+  - 200 `pressIx(sp, d)`
+  - 201 `pressHigh(sp, d)`
+  - 202 `pressRecords(d)`
+  - 203 `pressPrice(sp, d)`
+  - 218 `pressDay(H)`
+- **222** the year's first skrei: the first cod landing north of Stad (62° N) after the skrei season begins (09c-seasons.js), from the
+  - 224 `pressSkreiH(y)`
+  - 226 `pressSkrei()`
+  - 237 `pressList(local)`
+  - 260 `pressUnread()`
+  - 261 `pressSeen()`
 
 ## `src/js/core/09i-look.js` (111 linjer)
 
@@ -2798,12 +2808,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1589 linjer)
+## `src/js/ui/phone/07-patch.js` (1601 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1577 `patch()`
+  - 1589 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2947,7 +2957,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (336 linjer)
+## `src/js/ui/phone/14-act.js` (338 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3016,7 +3026,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 170 `turFotoUi()`
   - 174 `turFotoShoot(id)`
 
-## `src/js/ui/05g-press.js` (78 linjer)
+## `src/js/ui/05g-press.js` (86 linjer)
 
 ---------- Kystposten on the phone (core/09h-press.js): the front page and the local tab, a story to read on, the unread count on
 
@@ -3028,8 +3038,9 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 36 `pressNotify(s)`
   - 43 `pressFlush()`
   - 54 `pressFetch(force)`
-  - 69 `pressSkreiFetch()`
-  - 77 `pressStart()`
+  - 70 `pressSkreiFetch()`
+  - 80 `pressKvoteFetch()`
+  - 85 `pressStart()`
 
 ## `src/js/ui/05h-kystkart.js` (91 linjer)
 
@@ -3647,23 +3658,24 @@ Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is 
 - **111** the polling
 - **125** the chart: the asks near, and the card
 
-## `src/js/ui/10p-install.js` (165 linjer)
+## `src/js/ui/10p-install.js` (170 linjer)
 
 put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 
 - **1** put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne laster ned spillet»)
 - **70** a new build is out: «Oppdater nå» (Jonas 06.11.2026: «Varsel ved oppdatering for å kjøre refresh på appen»)
-- **104** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
-- **135** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
+- **109** the test edition's label (L1a, 10.11.2026, docs/planer/lansering-plan.md)
+- **140** the browser card on the loading screen (Jonas 03.11.2026, after tilbakemelding #107-#109)
 
-## `src/js/ui/10u-hopp.js` (39 linjer)
+## `src/js/ui/10u-hopp.js` (56 linjer)
 
 ---------- Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md) ----------
 
 - **1** Hopp over resten av ruta: the fast-forward button and the card (HO2, steg 105; docs/planer/hopp.md)
-  - 12 `hopUi()`
-  - 13 `hopOpen()`
-  - 27 `hopPress()`
+  - 14 `hopUi()`
+  - 19 `hopOpen()`
+  - 25 `hopCard(h, q)`
+  - 40 `hopPress()`
 
 ## `src/js/ui/11-boot.js` (408 linjer)
 
@@ -3986,31 +3998,38 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 391 `stonesOf(list, build)`
   - 396 `drawStones(list, TM, eye)`
 
-## `src/js/view3d/05-quays-breakwaters.js` (337 linjer)
+## `src/js/view3d/05-quays-breakwaters.js` (422 linjer)
 
 ---------- villages and quays ----------
 
 - **1** villages and quays
   - 10 `fyrInto(m, f)`
-  - 25 `markInto(m, mk, tag)`
-  - 39 `marksStatics()`
-  - 49 `buildStatics()`
-  - 88 `pierInto(m, q, tag)`
-  - 109 `pierPiles(m, q)`
-  - 117 `fitAdd(tag, f)`
-  - 118 `fitDrop(tag)`
-  - 119 `drawFits(eye, VP)`
-  - 131 `seaOff(cx, cz, nx, nz, L, ax, az)`
-  - 134 `quayFit(m, x, z, ax, az, nx, nz, L)`
-  - 149 `slabInto(m, pts, tag, cut)`
-  - 168 `bridgeInto(m, br, tag)`
-- **209** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
-  - 217 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
-  - 232 `moundTop(x, z)`
-  - 241 `moundInto(m, pts, seed, unit, tag, sm)`
-- **305** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
-  - 307 `obox(nb, c, u, n, len, wid, y0, h, k)`
-  - 313 `buildHarbourFittings()`
+  - 32 `coneInto(m, x, y, z, r, h, k)`
+  - 38 `ballInto(m, x, y, z, r, k)`
+  - 43 `prismInto(m, x, y0, z, r, y1, n, k)`
+  - 51 `arrowInto(m, x, y, z, deg, k)`
+  - 61 `figInto(m, x, y, z, square, k)`
+  - 71 `bandsInto(m, x, y0, z, w, y1, ks)`
+  - 74 `topInto(m, x, y, z, s, kind)`
+  - 88 `markInto(m, mk, tag, solid = true)`
+  - 124 `marksStatics()`
+  - 135 `buildStatics()`
+  - 173 `pierInto(m, q, tag)`
+  - 194 `pierPiles(m, q)`
+  - 202 `fitAdd(tag, f)`
+  - 203 `fitDrop(tag)`
+  - 204 `drawFits(eye, VP)`
+  - 216 `seaOff(cx, cz, nx, nz, L, ax, az)`
+  - 219 `quayFit(m, x, z, ax, az, nx, nz, L)`
+  - 234 `slabInto(m, pts, tag, cut)`
+  - 253 `bridgeInto(m, br, tag)`
+- **294** breakwaters (the user's wish 03.10.2026: they shelter the boats at the quays, and should look it)
+  - 302 `rockInto(m, x, y, z, sx, sy, sz, seed, k)`
+  - 317 `moundTop(x, z)`
+  - 326 `moundInto(m, pts, seed, unit, tag, sm)`
+- **390** harbour fittings along the berth faces: tyres hung on chains, a timber fender beam, the yellow edge and bollards
+  - 392 `obox(nb, c, u, n, len, wid, y0, h, k)`
+  - 398 `buildHarbourFittings()`
 
 ## `src/js/view3d/06-buildings-lights.js` (405 linjer)
 
@@ -4577,7 +4596,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (461 linjer)
+## `src/js/view3d/20-trawl-seine.js` (466 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4608,12 +4627,12 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 311 `npcClock(Hf)`
   - 319 `npcHead(n, t)`
   - 334 `npcFollow(n, t)`
-  - 348 `npcPhase(id)`
-  - 353 `kvDraw(n, eye, t)`
-  - 361 `kvRibDraw(n, R, G, M, eye, t)`
-  - 387 `npcFrame(H)`
-  - 388 `drawNPC(eye, t, H, VP)`
-  - 440 `npcCrewDraw(n, K, eye, t)`
+  - 349 `npcPhase(id)`
+  - 354 `kvDraw(n, eye, t)`
+  - 362 `kvRibDraw(n, R, G, M, eye, t)`
+  - 388 `npcFrame(H)`
+  - 389 `drawNPC(eye, t, H, VP)`
+  - 445 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
