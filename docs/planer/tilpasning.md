@@ -1,6 +1,6 @@
 # Tilpasning av båtenes utseende (plan 12.11.2026)
 
-Status: **plan, ingenting bygd.** Venter på svar på V1–V4 og «kjør på» fra Jonas. Fasene TP1–TP8 er én økt hver.
+Status: **plan, ingenting bygd. Valgene er tatt** (Jonas 12.11.2026): V1 A, TP1 over lanseringslinja rett etter porten; V2 A, blandet (spillkroner for farger, soner og fendere; 29 kr for design, navn og fløyte; noe kan fortjenes, TP7); V3 A, Kystfiskerpakken 249 kr minus det du eier; V4 B, tre skrifter og farge. Fasene TP1–TP8 er én økt hver, steg 108–115 i køen (TP1 over linja, de andre under).
 
 ## Hva Jonas ba om
 
@@ -93,7 +93,7 @@ Startverdier, justeres i spilltesting. Ekte penger står med 💎 i spillet.
 
 ## Fasene
 
-Rekkefølgen: TP1 står alene. TP2 gjør plass i koden og på serveren, så TP3 og TP4 bygger på den. TP8 kommer sist fordi pakken samler alt. Fasene som rører `ui/10i-shop.js`, `supabase/migrations/` og Kaiboden, venter til økta som eier dem nå (steg 106 HO3) er levert. Hver fase får eget stegnummer i køen etter lanseringslinja når Jonas sier «kjør på»; TP1 kommer over linja bare om han svarer A på V1.
+Rekkefølgen: TP1 står alene. TP2 gjør plass i koden og på serveren, så TP3 og TP4 bygger på den. TP8 kommer sist fordi pakken samler alt. Fasene som rører `ui/10i-shop.js`, `supabase/migrations/` og Kaiboden, venter til økta som eier dem nå (steg 106 HO3) er levert. Fasene står i køen som steg 108 (TP1) til 115 (TP8). TP1 står over lanseringslinja, rett etter porten (Jonas 12.11.2026, V1 A); TP2–TP8 står under linja i rekkefølge. TP1 venter til steg 36 (Ø15 N7, NPC-skipene) er levert, fordi den økta eier `vessel3d.js` og `view3d/20-trawl-seine.js` nå.
 
 Felles for alle: `node --check` og bygg, `python3 tests/run.py changed`, `node tests/unit/run.mjs` når `vessel3d.js` eller `core/` er endret, ny sjekk sett rød før rettingen, `/kontroll` før `/lever`, patchnote som sier hva det gjør i spillet (aldri pris, 💎 eller butikk), og 4.23 i `docs/systemer/baater.md` oppdatert samme dag.
 
@@ -162,7 +162,7 @@ Felles for alle: `node --check` og bygg, `python3 tests/run.py changed`, `node t
 - **Ekte penger:** nei.
 - **Ferdig når:** (1) «Nå» viser dagens maling og slipper tilbake til det som prøves; (2) bildet kan deles på Android og lastes ned ellers; (3) målingen for Flåten er gjort, og bildene er der eller ikke etter grensen.
 
-### TP7 Det som kan fortjenes (bare om V2 er A)
+### TP7 Det som kan fortjenes (V2 A)
 
 - **Bygger:** to av de nye designene og tretone-fløyta kan fortjenes gjennom de langsiktige merkene og sesongene (merket for året kan tas igjen neste år, så det er ingen FOMO), og kan fortsatt kjøpes. Kortet sier begge veiene: «Fortjenes med …, eller kjøp nå». Det fortjente gis på serveren én gang, som haillen fra kapittel 2 (`achHaillAsk`), som en rad i `entitlements` med egen kilde, så `srvApply` ikke stryker det og `pos_put` lar de andre se det.
 - **Filer:** `core/09f-merker.js`, `ui/10i-shop.js` (`srvApply`), `ui/10j-paint.js`, en ny migrering (gaven for merket, én per merke og konto).
@@ -183,6 +183,8 @@ Felles for alle: `node --check` og bygg, `python3 tests/run.py changed`, `node t
 - **Ferdig når:** (1) pakken kan kjøpes for 249 kr av en ny konto og gir alt som står på kortet, også for de andre; (2) en konto som eier deler fra før, får lavere pris og aldri høyere enn resten enkeltvis; (3) refusjonen tar alt i pakken bort; (4) `engasjement.md` punkt 8 stemmer med det som er bygd.
 
 ## Valgene
+
+**Svarene (Jonas 12.11.2026):** V1 A · V2 A · V3 A · V4 B, alle de anbefalte. Alternativene står under for historikken; fasene over følger svarene.
 
 - **V1 Flagget som er solgt, men ikke synes (TP1).**
   - **A (anbefalt):** TP1 flyttes over lanseringslinja, rett etter porten.
@@ -240,4 +242,5 @@ Felles for alle: `node --check` og bygg, `python3 tests/run.py changed`, `node t
 
 ## Status
 
-- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`, sammen med HO3). Ingenting bygd. Venter på V1–V4.
+- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`, sammen med HO3). Ingenting bygd.
+- 12.11.2026: Jonas svarte på V1–V4 (alle A, V4 B). Fasene lagt i køen som steg 108–115; hel startmelding for TP1 i `start/108.md`.
