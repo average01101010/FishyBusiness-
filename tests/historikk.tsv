@@ -2851,3 +2851,6 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	colregtest	OK	734	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	hulltest	OK	76	lite	samtidig	
+2026-11-12 03:14	ccr-5e1ba2f4-pusvyd	19ef094	autonavtest	OK	24	lite	samtidig	
