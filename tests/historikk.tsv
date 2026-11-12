@@ -3094,3 +3094,6 @@
 2026-11-12 10:14	ccr-e7efd74c-rioki0	b95faf4	csptest	OK	91	lite	samtidig	
 2026-11-12 10:18	ccr-e7efd74c-rioki0	b95faf4+	hopptest	OK	7	lite	alene	
 2026-11-12 10:30	ccr-e7efd74c-rioki0	7e286dc	hoppshot	OK	728	3d	alene	
+2026-11-12 10:33	ccr-e7efd74c-rioki0	d28df95	hopptest	OK	7	lite	alene	
+2026-11-12 10:45	ccr-e7efd74c-rioki0	d28df95	hoppshot	FEIL	724	3d	alene	FEIL liggende: 1b. på ruta står spoleknappen rett under kino-knappen, like stor {"cam": {"x": 1224, "y": 10, "w": 46, "h": 46, "shown": true}, "kino": {"x": 122
+2026-11-12 10:47	ccr-e7efd74c-rioki0	d28df95+	hopptest	FEIL	14	lite	alene	FEIL 1. seilt med tida: ved kaia i Vangshamn etter 2000 spillminutter {"st": "sailing", "port": null}

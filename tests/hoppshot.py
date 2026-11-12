@@ -29,7 +29,7 @@ SETUP = """async () => {
 # under way on the route, a few hundred metres out (the button is for a route under way, not a departure waiting)
 GO = """(adm) => {
   const b = S.boat, H = window.__H, w0 = H.wps[0];
-  S.tut = 0; S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; WX_FORCE = null; if (S.turer) S.turer.act = [];
+  S.tut = 0; S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; WX_FORCE = {w:3, d:180}; if (S.turer) S.turer.act = [];
   S.adm = Object.assign(S.adm || {}, {hopp:!!adm});
   b.status = 'sailing'; b.port = null; b.pos = {x:w0.x, y:w0.y}; b.v = 6; b.anch = null; b.hove = null; b.fuel = BOAT.tank || 200;
   S.plan = {wps:H.wps.slice(1).map(w => Object.assign({}, w)), idx:0, speed:BOAT.vcruise || BOAT.vmax * 0.8, returning:false, depAt:null, unsafe:H.wps.slice(1).map(() => false)};
@@ -54,7 +54,10 @@ async def one(p, name, vw, vh):
     await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(1500)
     r = await J(RECT)
     check(not r['hop']['shown'], name + ': 1a. i havn står ingen spoleknapp', r['hop'])
-    await J(GO, True); await pg.wait_for_timeout(2500)
+    await J(GO, True)
+    # (the button comes with the next frame's tick; SwiftShader draws a few frames a second)
+    try: await pg.wait_for_function("(() => { const e = document.getElementById('hopBtn'); return e && !e.hidden && getComputedStyle(e).display !== 'none'; })()", timeout=60000)
+    except Exception as e: print('venter på knappen: ' + str(e)[:120])
     r = await J(RECT); h, k = r['hop'], r['kino']
     check(h['shown'] and h['x'] == k['x'] and h['w'] == k['w'] and h['h'] == k['h'] and h['y'] >= k['y'] + k['h'], name + ': 1b. på ruta står spoleknappen rett under kino-knappen, like stor', r)
     await pg.screenshot(path=os.path.join(OUT, 'hopp-knapp-' + name + '.png'))

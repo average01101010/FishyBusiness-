@@ -8,6 +8,8 @@ harbour 8-30 km away on an Autonav route, with fish in the hold and you aboard:
   3. the trim: with a turbo trim on, the hop takes the minutes it would have run off it (Jonas: «som om båten seilte»)
   4. refused, nothing changed: too little diesel, and the weather over the boat's risk (WX_FORCE); paid (hopGo(true)) it goes anyway
   5. no page errors
+The comparisons run in still weather (WX_FORCE 3 m/s), the same for the sailing and the hop; in weather over the boat's risk the
+hop is refused, and that is checked in 4.
 KYST_LITE=1 python3 tests/hopptest.py. Prints OK or FEIL lines. KYST_HOPP_FRA=<havn> starts from that harbour instead
 (the spot check along the coast; the build must have the whole coast)."""
 import asyncio, json, os
@@ -37,12 +39,12 @@ SETUP = """async (fra) => {
 # the same start each time: the clock, the boat out of the harbour on the route, the tank, the hold, you aboard and awake
 START = """(o) => { const trim = o && o.trim, crew = o && o.crew, fishAt = o && o.fishAt;
   const b = S.boat, H = window.__H, A = portById(H.A);
-  S.t = H.t0; S.tut = 0; S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; S.skip = null; WX_FORCE = null;
+  S.t = H.t0; S.tut = 0; S.settings.autoOn = false; S.me = S.cur; S.sleep = null; S.energy = 90; S.skip = null; WX_FORCE = {w:3, d:180};   // still weather: the comparison is the hop's, the weather's refusal is checked in 4
   if (S.turer) S.turer.act = [];
   b.status = 'sailing'; b.port = null; b.pos = {x:A.p.x, y:A.p.y}; b.v = 0; b.anch = null; b.hove = null; b.damage = 0;
   delete b.trim; if (trim) b.trim = {k:'turbo', t0:S.t, until:S.t + trim}; applyVessel();
   S.crew = crew ? [JSON.parse(window.__C)] : []; S.trail = [];
-  b.fuel = BOAT.tank || 200;
+  b.fuel = BOAT.fuelCap;   // (a tank over the boat's own is cut to it by applyVessel, as a trim running out calls it)
   S.hold = []; addCatch('torsk', 120, null, false); addCatch('sei', 40, null, false);
   for (const x of S.hold){ x.fresh = 92; x.iced = false; x.gut = false; }
   S.plan = {wps:H.wps.map(w => Object.assign({}, w)), idx:0, speed:BOAT.vcruise || BOAT.vmax * 0.8, returning:false, depAt:null, unsafe:H.wps.map(() => false)};
