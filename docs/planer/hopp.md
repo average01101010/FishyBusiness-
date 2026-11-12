@@ -1,6 +1,6 @@
 # Hopp over resten av ruta (plan 12.11.2026)
 
-Status: **valgene er tatt (12.11.2026), venter på «kjør på»**. Ingenting er bygd.
+Status: **HO1 pågår (steg 104)**, HO2 og HO3 venter i køen (steg 105 og 106).
 
 ## Hva Jonas ba om
 
@@ -137,4 +137,4 @@ Hver fase er én økt.
 
 ## Status
 
-- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Venter på «kjør på».
+- 12.11.2026: planen skrevet i Jonas' økt (grenen `ccr-e7efd74c-rioki0`). Valgene V1–V3 tatt samme dag. Jonas: «Kjør på hopp over ruta». Fasene er steg 104–106 i køen; HO1 pågår.
