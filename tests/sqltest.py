@@ -534,7 +534,9 @@ def main():
             sql("insert into public.haill_once (player_id, what) values ('%s', 'ach1'), ('%s', 'import')" % (w, w))
             sql("insert into public.grants (player_id, product_id, data, done_at) select '%s', pr.id, pr.data, now() from public.products pr where pr.id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % w)
             sql("insert into public.pub_rounds (player_id, e, k, grant_id) select '%s', case g.product_id when 'pub_haill' then 7 else 8 end, g.data ->> 'type', g.id from public.grants g where g.player_id = '%s' and g.product_id like 'pub\\_%%'" % (w, w))
-        mv = lambda a, b: (sql("update public.grants set player_id = '%s' where player_id = '%s'" % (b, a)), sql("select string_agg(product_id || ':' || (revoked_at is null), ',' order by product_id) from public.grants where player_id = '%s' and product_id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill') and done_at > now() - interval '1 minute' and used_at is null" % b))[1]
+        # (only the grants that were moved are read: the account's own pub round earlier in the test is drawn with random() and may be
+        # a luxury haill of its own, which made the line red now and then, steg 44 12.11.2026)
+        mv = lambda a, b: (ids := sql("select coalesce(string_agg(id::text, ','), '0') from public.grants where player_id = '%s'" % a), sql("update public.grants set player_id = '%s' where player_id = '%s'" % (b, a)), sql("select string_agg(product_id || ':' || (revoked_at is null), ',' order by product_id) from public.grants where player_id = '%s' and id in (%s) and product_id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % (b, ids)))[2]
         Q['mvb'] = mv('user_01HS4c', 'user_01HS4b'); Q['mvd'] = mv('user_01HS4c2', 'user_01HS4d')
         Q['mvonce'] = sql("select string_agg(what, ',' order by what) from public.haill_once where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4b' and e in (7, 8)")
         Q['mvd2'] = js(5000, 'ach_haill(1)', {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok'), js(5000, "haill_import('{\"haill\":2}')", {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok')
@@ -771,7 +773,7 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 2 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         si = (R['spIab'] or [{}])[0]
@@ -1467,8 +1469,8 @@ def main():
         RY['anonTab'] = [sql("select count(*) from public.%s" % tb, {}, 'anon', expect_err=True)[0] for tb in ('berths', 'cash_flags', 'sponsors', 'sponsor_placements')]
         RY['anonYes'] = sql("select jsonb_typeof(public.sp_now())", {}, 'anon')
         print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
-                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
-              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
+                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,sp_paint,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
+              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf, sp_now and sp_paint (a paint design's colours, steg 44) (Ø6 funn 9, 10, 12)", RY)
         # Ø16 (20261105160000_rt_ticket.sql): the real-time relay's ticket. Without the secret in Vault it refuses; with it, a ticket of
         # «1.<id>.<guest>.<expiry>.<nonce>.<hmac>» signed with the secret (checked here as the relay checks it), the public id pos_world
         # gives, the guest flag for a guest, 60 s, a new nonce each time; anon cannot ask, nor a player who is not there

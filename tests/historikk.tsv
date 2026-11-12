@@ -2881,3 +2881,11 @@
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	hudtest	OK	81	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	turtest	OK	14	lite	samtidig	
 2026-11-12 01:35	ccr-e16ec9aa-rdf1k2	21b7b27	trip2	OK	35	lite	samtidig	
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sqltest	FEIL	40	lite	samtidig	FEIL sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing swit
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	sponsor2test	FEIL	14	lite	samtidig	FEIL bare Malerverkstedets egne farger kan males (ikke en fri farge, ikke den som må fortjenes), og med logo_url er merket sponsorens bilde  {"hull": null, "hou
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	maletest	OK	14	lite	samtidig	
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	boottest	OK	23	lite	samtidig	
+2026-11-12 01:53	ccr-360badbd-1zzqz7	7dcc1a0	admintest	OK	8	lite	samtidig	
+2026-11-12 01:54	ccr-360badbd-1zzqz7	7dcc1a0+	sqltest	FEIL	41	lite	samtidig	FEIL HS4: a guest's grants moved to an account that has had its own are taken back (the chapter's haill, the imported ones, a pub haill from an evening the acco
+2026-11-12 01:54	ccr-360badbd-1zzqz7	7dcc1a0+	sponsor2test	OK	14	lite	samtidig	
+2026-11-12 01:58	ccr-360badbd-1zzqz7	7dcc1a0+	sqltest	OK	40	lite	alene	

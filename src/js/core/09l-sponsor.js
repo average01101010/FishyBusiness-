@@ -54,7 +54,8 @@ function spPaintIn(s){
 }
 // its mark on the hull: the sponsor's picture {kind:'u', url}, else the made one, else none
 function spPaintLogo(r){
-  if (!r || !r.sponsor) return null;   // (an ended design has no mark) if (r.sponsor.logo) return {kind:'u', url:r.sponsor.logo};
+  if (!r || !r.sponsor) return null;   // (an ended design has no mark)
+  if (r.sponsor.logo) return {kind:'u', url:r.sponsor.logo};
   const D = r.data || {}; return typeof D.sym === 'string' && D.sym ? {kind:'g', sym:D.sym, txt:String(D.txt || '').slice(0, 3), c1:D.c1, c2:D.c2} : null;
 }
 // the made-up sponsor for the tests and the demo build (never in the game's own data: only with #sptest in the address)
