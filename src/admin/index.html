@@ -140,7 +140,7 @@ const VIEW = {
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
   okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards() + kmCards(),
-  penger: D => { const m = D.money; return sgCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
+  penger: D => { const m = D.money; return sgCard() + hvCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
   teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
@@ -161,6 +161,18 @@ function sgCard(){
   return card('Butikken for nye spillere', '<p>' + (SG.from ? 'Stengt for kontoer laget etter <b>' + esc(new Date(SG.from).toLocaleString('nb-NO')) + '</b>. Kontoer som holdes ute: <b>' + nf(SG.n, 0) + '</b>. De ser «Snart i salg».'
     : 'Åpen for alle kontoer.') + '</p><button id="sgSw"' + (SG.from ? ' class="p"' : '') + '>' + (SG.from ? 'Åpne butikken for alle' : 'Steng butikken for nye kontoer fra nå') + '</button>',
     'Kontoene som fantes da bryteren ble slått på, beholder butikken og alt de har kjøpt. Velkomstgaven gis som før.');
+}
+// ---- hops paid for and not made (HO3, 12.11.2026, supabase/migrations/20261112200000_hopp.sql admin_hop_void): the game marked them for
+// a refund (hop_void), the player was told the money comes back; refunded at Stripe, shop_refund takes the grant back and it leaves the list
+let HV = null;
+async function hvLoad(){ await null; try { HV = DEMO ? [] : await rpc('admin_hop_void', {}); } catch (e){ HV = {err:e.message}; } if (TAB === 'penger') render(); }
+function hvCard(){
+  const t = 'Hopp som ikke ble gjort (refunderes i Stripe)';
+  if (!HV){ hvLoad(); return card(t, '<p class="note">Henter …</p>'); }
+  if (HV.err) return card(t, '<p class="note">' + esc(HV.err) + '</p>');
+  if (!HV.length) return card(t, '<p class="note">Ingen. Et betalt hopp som spillet ikke kunne gjøre, står her til det er refundert.</p>');
+  return card(t, table(HV, [['at', 'Merket', v => esc(v ? new Date(v).toLocaleString('nb-NO') : '')], ['kr', 'Kr'], ['min', 'Min'], ['why', 'Hvorfor'], ['session', 'Stripe-økt'], ['pi', 'Betaling']]),
+    'Spilleren har fått beskjed om at pengene betales tilbake. Refunder betalingen i Stripe; da tar webhooken tilbake hoppet, og raden forsvinner.');
 }
 function sgWire(){
   const sw = $('#sgSw'); if (sw) sw.onclick = async () => { const close = !SG.from;
