@@ -732,7 +732,9 @@ function soakHour(s, H){
     const mw = KC.mean;
     if (lam > 0){ add('krabbe', lam * mw, lam); tot += lam * mw; takeStock(mid, lam * mw, 'krabbe'); }
     // (the fish in the pots get the haill as the crab does: «+100 % fiskelykke på alle arter», 06.11.2026; it was left out here)
-    for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * luck(sp) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
+    // (and they are the sea's: taken from the stock as the nets' are, without the haill's extra, step 103; before, they were taken from nothing)
+    let fsh = 0; for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * luck(sp) * g; if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); if (!SPECIES[sp].stk) fsh += r; else if (!s.dry) takeStock(mid, r, sp); } }
+    if (fsh > 0 && !s.dry) takeStock(mid, fsh);
     // after two days the crab starts to die in the pots
     if (a > 48 && acc.krabbe && acc.krabbe.n > 0){ const fr = a > 72 ? 0.05 : 0.02, K = acc.krabbe; s.dead += K.n * fr; K.n *= 1 - fr; K.kg *= 1 - fr; K.ts *= 1 - fr; }
     return tot;
