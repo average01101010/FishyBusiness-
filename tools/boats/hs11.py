@@ -287,9 +287,11 @@ FREE_H = 0.15                # their height, from 2 cm over the deck (the strake
 EXH = (-0.62, 1.58); EXH_R = 0.06                             # the wet exhaust in the transom (y, z)
 BILGE = (5.20, -1, WLL + 0.45); BILGE_R = 0.02                 # the bilge pump's outlet
 RUST = (0.50, 0.25, 0.09); GRIME = (0.10, 0.10, 0.09); SLIME = (0.16, 0.20, 0.10)
-CLEATS = (8.30, 3.95, 0.35)
+CLEATS = (8.30, 3.95, 0.35)  # the cleats on the caps (decks()), a dark run under each (wear())
 WH_LIFT = 1.6
-def in_wh(p): return WX0 + 0.02 < p[0] < WXF + 0.45 and abs(p[1]) < WY - 0.02 and ZWH - 0.02 < p[2] < WR + 0.005
+def in_wh(p):
+    """inside the wheelhouse: within its walls, the front followed as it leans forward (a fixed margin took in the foredeck)"""
+    return WX0 + 0.02 < p[0] < WXF - lean(p[2]) - 0.01 and abs(p[1]) < WY - 0.02 and ZWH - 0.02 < p[2] < WR + 0.005
 def mix(base, *layers):
     """the factors that take the material's colour base toward each (rgb, k) in turn"""
     c = list(base)
@@ -774,7 +776,7 @@ def dash_pt(t, y):
     (x0, z0), (x1, z1) = DASHL; return V((x0 + (x1 - x0) * t, y, z0 + (z1 - z0) * t))
 def dash_n():
     (x0, z0), (x1, z1) = DASHL; return V((-(z1 - z0), 0, x1 - x0)).normalized()
-SCR = {'plot': (-1.66, -1.30, 0.10, 0.90), 'sound': (-1.26, -1.12, 0.55, 0.92), 'eng': (-0.90, -0.52, 0.10, 0.90)}
+SCR = {'plot': (-1.66, -1.30, 0.10, 0.90), 'sound': (-1.26, -1.12, 0.55, 0.92), 'eng': (-0.80, -0.48, 0.10, 0.90)}
 HELM_EXTRA = []
 def screen_art(A, nm, P, n):
     """what a screen shows (painted, not live: the game draws nothing on this boat's dash): the chart plotter with land, shallows, the
@@ -836,10 +838,11 @@ def helm(A, G, fine=True):
     F.helm_wheel(A, WHEEL, WHEEL_AX, 0.20, C['cush'], C['steel'], C['dark'])
     acyl(A, V(WHEEL) - V(WHEEL_AX).normalized() * 0.14, (HX0 + 0.004, WHEEL[1], WHEEL[2] + 0.02), 0.03, lambda q: C['dark'], seg=10)
     # (OB10 round 3: «radio og gass synlige fra roret». The single lever stood on the console's inboard side and the VHF overhead by the
-    # door, both outside the view from the wheel in both formats. Now the lever stands on the dash between the sounder and the engine
-    # panel, at the skipper's left hand, and the VHF is let into the dash over it with its fist microphone on a clip beside it)
+    # door, both outside the view from the wheel in both formats. Now the lever stands on the dash at the skipper's left hand, just
+    # inboard of the wheel's rim (0.26 m from its centre, the rim 0.20: not reached through the wheel), the engine panel inboard of it;
+    # the VHF is let into the dash over the wheel with its fist microphone on a clip over the lever)
     up_ = (dash_pt(1, 0) - dash_pt(0, 0)).normalized(); Y = V((0, 1, 0))
-    lp = dash_pt(0.40, -1.05)
+    lp = dash_pt(0.40, -0.86)
     obox(A, lp + n * 0.010, Y * 0.036, up_ * 0.058, n * 0.010, C['steel'])
     acyl(A, lp + n * 0.034 - Y * 0.030, lp + n * 0.034 + Y * 0.030, 0.030, lambda q: C['dark'], seg=14)
     d = (n * math.cos(0.32) + up_ * math.sin(0.32)).normalized(); h = lp + n * 0.034
@@ -852,7 +855,7 @@ def helm(A, G, fine=True):
     for a_, b_ in ((0.050, 0.008), (0.030, 0.008), (0.050, -0.008)): A.poly([fq(a_ + 0.008, b_ - 0.003) + n * 0.0006, fq(a_ - 0.008, b_ - 0.003) + n * 0.0006, fq(a_ - 0.008, b_ + 0.003) + n * 0.0006, fq(a_ + 0.008, b_ + 0.003) + n * 0.0006], C['sBar'], n)
     A.poly([fq(a_, b_) for a_, b_ in ((-0.004, 0.022), (-0.016, 0.022), (-0.016, 0.010), (-0.004, 0.010))], C['sBoat'], n)   # the distress button's red cover
     for a_ in (-0.034, -0.062): acyl(A, fq(a_, 0.004), fq(a_, 0.004) + n * 0.016, 0.011, lambda q: C['switch'], seg=10)   # volume and squelch
-    mc = dash_pt(0.56, -0.935)
+    mc = dash_pt(0.84, -0.85)
     obox(A, mc + n * 0.006, Y * 0.014, up_ * 0.014, n * 0.006, C['steel'])                                             # the clip
     obox(A, mc + n * 0.030, Y * 0.027, up_ * 0.040, n * 0.018, C['black'])                                             # the fist microphone
     obox(A, mc + n * 0.030 - Y * 0.030, Y * 0.004, up_ * 0.016, n * 0.008, C['red'])                                   # its key
@@ -920,7 +923,7 @@ def decks(A, fine=True):
     for a, b in zip(stem, stem[1:]): acyl(A, (a[0] + 0.006, 0, a[2]), (b[0] + 0.006, 0, b[2]), 0.022, lambda z: C['steel'] if z > WLL + 0.1 else C['af'], seg=6, cap=False)
     # the bitts on the foredeck, the cleats on the caps, two mushroom vents, the grab rails on the wheelhouse's front
     for y in (0.75, -0.75): F.bitts(A, 9.56, y, z_bk(9.56) + camber(9.56, y), C['steel'])
-    for x in (8.30, 3.95, 0.35):
+    for x in CLEATS:
         for sg in (1, -1):
             if sg < 0 and HP0 - 0.2 < x < HP1 + 0.2: continue
             F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.24, C['steel'])
