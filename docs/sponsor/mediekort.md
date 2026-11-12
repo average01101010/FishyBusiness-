@@ -18,7 +18,7 @@ Hentes fra admin → Mediekort (velg «Siste 30 dager»):
 | Aktive siste 30 dager | … |
 | Aktive per dag (snitt) | … |
 | Økter per dag og snittlengde | … |
-| Hjemhavn etter landsdel | … |
+| Hjemhavn etter fylke (og landsdel) | … |
 | Andel som har levert fisk | … |
 | Flåten (båter per type) | … |
 
@@ -82,8 +82,17 @@ Vi bruker ingen annonsenettverk, informasjonskapsler eller sporing fra andre, og
 
 ## 7. Se det selv
 
-Demobygget viser alle formatene med en oppdiktet partner, «Nordlys Utstyr». Det kan vises på nettbrettet eller sendes som lenke.
+Demobygget viser alle formatene med en oppdiktet partner, «Nordlys Utstyr». Det kan vises på nettbrettet eller sendes som lenke. Slik ser de ut:
+
+| | |
+|---|---|
+| ![Banner og flagg ved butikken i Finnsnes](format-banner.jpg) | ![Partnerens garnhaler i utstyrsbutikken](format-vare.jpg) |
+| Banner og flagg ved butikken i Finnsnes | Partnerens garnhaler i utstyrsbutikken, ved siden av den vanlige |
+| ![Annonsen i Kystposten](format-annonse.jpg) | ![Partnerens jakke i Garderoben](format-jakke.jpg) |
+| Annonsen i Kystposten, spillets avis | Partnerens jakke i Garderoben, gratis for spillerne |
+| ![Partnerens design i Malerverkstedet](format-design.jpg) | |
+| Partnerens design i Malerverkstedet, med merket på skroget | |
 
 ---
 
-*Internt, ikke send dette:* demobygget lages med `KYST_DEMO=1 KYST_DIST=dist-demo node build.mjs`, eller ved å åpne spillet med `#sptest` bak adressen. Prisene i planen (4.3) er startverdier og settes etter rekkevidden i admin, ikke før. IAB-metoden er sjekket mot utkastet til høring (14.06.2022, lastet opp av Jonas 07.11.2026) og bygd etter det i steg 66 (08.11.2026: én synlig visning per økt, 0,2 s per bilde, UI som skjuling, sikt og natt, tre bøtter og median); den endelige teksten fra august 2022 er ikke lest. Natta: banneret tegnes bare med sol og himmellys (`TEX_FS`), ikke med lampene, så det telles ikke etter at sola er 6° under horisonten. Inaktivitetsgrensen på to minutter er et anslag til trakten i admin har nok økter. Første avtale bør sees av advokat.
+*Internt, ikke send dette:* demobygget lages med `KYST_DEMO=1 KYST_DIST=dist-demo node build.mjs`, eller ved å åpne spillet med `#sptest` bak adressen. Bildene i del 7 tas av `KYST_DIST=dist-demo python3 tests/mediekortshot.py` fra demobygget (steg 28) og står her som `format-*.jpg` med tekstene i `format.json`; admin → Mediekort viser de samme. Hjemhavnenes fylke er slått opp hos Kartverket (Kommuneinfo, «Administrative enheter», CC BY 4.0) av `python3 tools/regions/fylke.py` for hver havn i spillet. Prisene i planen (4.3) er startverdier og settes etter rekkevidden i admin, ikke før. IAB-metoden er sjekket mot utkastet til høring (14.06.2022, lastet opp av Jonas 07.11.2026) og bygd etter det i steg 66 (08.11.2026: én synlig visning per økt, 0,2 s per bilde, UI som skjuling, sikt og natt, tre bøtter og median); den endelige teksten fra august 2022 er ikke lest. Natta: banneret tegnes bare med sol og himmellys (`TEX_FS`), ikke med lampene, så det telles ikke etter at sola er 6° under horisonten. Inaktivitetsgrensen på to minutter er et anslag til trakten i admin har nok økter. Første avtale bør sees av advokat.

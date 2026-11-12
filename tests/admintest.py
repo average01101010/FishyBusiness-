@@ -2,7 +2,7 @@
 same shape as admin_dashboard() without page errors, and without the cloud's keys it shows made-up numbers and no sign-in; with keys
 it asks for the sign-in first. Pictures admin_*.png. Prints OK or FEIL."""
 from _env import BASE
-import re, asyncio, json
+import re, asyncio, json, os
 from playwright.async_api import async_playwright
 
 
@@ -33,6 +33,15 @@ async def main():
         check('Gibostad' in ag and 'Åpne PR-er' in ag and before == '' and after == ['seen', 'Takk! Vi ser på Autonav ved Gibostad.'],
               'the Agent tab shows the reports, and «Bruk forslaget» fills in the suggested status and reply without saving', {'after': after})
         check(demo, 'without keys (or with ?demo) the numbers are marked made-up and there is no sign-in')
+        # the media card (steg 28): the home ports by county (Kartverket's, tools/regions/fylke.py) with the parts of the coast under,
+        # and the pictures of the formats from docs/sponsor/ (tests/mediekortshot.py), put in by build.mjs
+        await pg.click('nav button[data-t="mediekort"]'); await pg.wait_for_timeout(300)
+        mk = await pg.evaluate("""(() => { const c = [...document.querySelectorAll('main .card')], h = c.find(e => /Hjemhavn etter fylke/.test(e.textContent)), im = [...document.querySelectorAll('main .mk-img img')];
+          return {fy:h ? h.textContent.slice(0, 400) : null, txt:h ? h.textContent.slice(-260) : '', img:im.length, ok:im.filter(i => i.complete && i.naturalWidth > 600).length}; })()""")
+        nimg = len(json.load(open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'sponsor', 'format.json')))) if os.path.exists(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'docs', 'sponsor', 'format.json')) else 0
+        check(mk['fy'] is not None and all(f in mk['fy'] for f in ('Troms', 'Nordland', 'Finnmark', 'Møre og Romsdal', 'Vestland', 'Rogaland')) and 'Etter landsdel: Nord-Norge' in mk['txt'] and 'Kartverket' in mk['txt']
+              and nimg == 5 and mk['img'] == nimg and mk['ok'] == nimg, 'Mediekort viser hjemhavnene per fylke med landsdelene under, og de fem bildene av formatene', mk)
+        await pg.screenshot(path='admin_mediekort.png', full_page=True)
         # the funnel's upgrades (OPP4, 20261107160000_funnel_tier.sql): the share who bought a tier within day 7, of those who have had
         # seven days, and the column per week
         await pg.click('nav button[data-t="trakt"]'); await pg.wait_for_timeout(200)

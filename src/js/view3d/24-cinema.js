@@ -433,7 +433,9 @@
     PMK('nearSea');
     // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on). No pennant at the masthead (Jonas 09.11.2026)
     gl.disableVertexAttribArray(2);
-    if (PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
+    // (and while a boat just bought has her name painted on: it goes up the pole once the name is on, 13-instruments.js buyAt)
+    const BQ = buyAt(), fy = BQ ? -(1 - BQ.f) * BUY.fd : 0; if (BQ) BUYR.fy = fy;
+    if (BQ || PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1] + fy, pole[2], Math.PI / 2 - appB, 0, 0);
       drawTexQuad(FLAGM, FLAGM.tex, fl.shape === 'vimpel' ? chain(FM, new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])) : FM, VPn, true, [0, 0.6, 0]); }
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }

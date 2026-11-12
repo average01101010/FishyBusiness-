@@ -101,11 +101,29 @@
   // port under it, or along the bows on an open boat; in block capitals, white or black by the paint under each line (nameInkLight)
   const PLACEQ = {};
   function placeQ(t){ if (!(t in PLACEQ)){ const pl = namePlaces(t); PLACEQ[t] = pl.map(p => ({q:texStrip(p.B, p.T), p})); } return PLACEQ[t]; }
-  function drawNames(t, M, VP, liv, nm, port){
+  // (other: a boat that is not yours, whose name is never being painted on)
+  function drawNames(t, M, VP, liv, nm, port, other){
     const Q = nm ? placeQ(t) : null; if (!Q || !Q.length) return; gl.disableVertexAttribArray(2);
+    const R = !other && BUYR && BUYR.nm === nm ? buyAt() : null; if (R) BUYR.drawn = 0;
     for (const {q, p} of Q){ const txt = p.line === 'port' ? port : nm; if (!txt) continue;
-      drawTexQuad(q, nameTex(txt, nameInkLight(placeRGB(t, p, liv)), p.aspect), M, VP, true, [0, 0.2, 0]); }
+      const light = nameInkLight(placeRGB(t, p, liv)), rv = R ? (p.line === 'port' ? R.p : R.n) : null, nl = rv != null ? [...String(txt).toUpperCase()].length : 0;
+      if (rv != null && rv <= 0) continue;   // not yet begun
+      if (R && p.line !== 'port') BUYR.drawn = Math.max(BUYR.drawn, Math.min(nl, rv));
+      drawTexQuad(q, rv != null && rv < nl ? revealTex(txt, light, p.aspect, rv) : nameTex(txt, light, p.aspect), M, VP, true, [0, 0.2, 0]); }
   }
+  // the moment a boat is bought (ui/10q-buymoment.js, M5; steg 28): on the boat you are on, the name is painted onto the hull letter by
+  // letter where she carries it (from 0.6 s, 0.22 s a letter, as the card over the view did before), the home port under it on the
+  // transom after it (0.15 s a letter), and the ensign goes up its pole once the name is on (3 s from 0.7 m below the top), while the
+  // camera turns round her (paintView). In the real time of the page, not the game's. BUYR: {nm, t0}; G3.buyShow sets it, and
+  // G3.buyFix(s) holds it at s seconds (the tests: SwiftShader draws a frame in seconds, so the real 15 s would be gone before they look)
+  let BUYR = null;
+  const BUY = {n0:0.6, nl:0.22, pl:0.15, f0:0.4, ft:3.0, fd:0.7, end:16};
+  function buyAt(){
+    if (!BUYR) return null; const s = BUYR.fix != null ? BUYR.fix : (performance.now() - BUYR.t0) / 1000; if (s > BUY.end && BUYR.fix == null){ buyShow(null); return null; }
+    const ne = BUY.n0 + [...BUYR.nm.toUpperCase()].length * BUY.nl;
+    return {s, n:(s - BUY.n0) / BUY.nl, p:(s - ne) / BUY.pl, f:sstep(0, 1, (s - ne - BUY.f0) / BUY.ft)};
+  }
+  function buyShow(nm){ BUYR = nm ? {nm:String(nm), t0:performance.now(), drawn:0, fy:null} : null; if (!nm){ for (const [, e] of RTX) gl.deleteTexture(e.tex); RTX.clear(); } }
   // the home port the stern carries: the player's own, a boat of the local fleet's (core/05-vessels.js FLEET), else none
   const ownPort = () => { const hp = portById(S.home || HOME0); return hp ? hp.name : ''; };
   const npcPort = n => { const f = n.fleet && FLEET[n.fi], h = f && f.home; if (!h) return ''; const q = portById(h); return q ? q.name : h; };
@@ -155,13 +173,18 @@
     gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   // the name in block capitals (the game's own Archivo, bold and a little narrow, in the page so it is the same on every device), as tall
   // as the strip allows (caps at 0.74 of it, room for the ring over Å) and narrower where the name is long, centred
-  function nameCanvas(cv, nm, light){
+  // (rv: while it is being painted on, how many letters are on; the one being painted shows as far as the brush has come)
+  function nameCanvas(cv, nm, light, rv){
     const g = cv.getContext('2d'), W = cv.width, H = cv.height, txt = String(nm).toUpperCase(); g.clearRect(0, 0, W, H);
     g.fillStyle = light ? '#f7f7f4' : '#111214'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; if ('fontStretch' in g) g.fontStretch = 'semi-condensed';
     if ('letterSpacing' in g) g.letterSpacing = Math.round(H * 0.03) + 'px';
     let fs = Math.round(H * 0.74 / 0.72); const f = () => { g.font = '700 ' + fs + 'px Archivo, "Arial Narrow", Arial, sans-serif'; }; f();
     const sc = Math.min(1, W * 0.97 / Math.max(1, g.measureText(txt).width));
-    g.save(); g.translate(W / 2, H * 0.5 + H * 0.37); g.scale(sc, 1); g.fillText(txt, 0, 0); g.restore();
+    g.save(); g.translate(W / 2, H * 0.5 + H * 0.37); g.scale(sc, 1);
+    if (rv != null){ const ch = [...txt], k = Math.max(0, Math.min(ch.length, Math.floor(rv))); if (k < ch.length){
+      const x0 = -g.measureText(txt).width / 2, w = (k ? g.measureText(ch.slice(0, k).join('')).width : 0) + (rv - k) * g.measureText(ch[k]).width;
+      g.beginPath(); g.rect(-1e5, -2 * H, 1e5 + x0 + Math.max(0, w), 4 * H); g.clip(); } }
+    g.fillText(txt, 0, 0); g.restore();
   }
   // the font is in the page as data, but may not be decoded the first time a name is painted: then the names are painted again once it is
   let FONTOK = typeof document === 'undefined' || !document.fonts || document.fonts.check('700 20px Archivo');
@@ -169,13 +192,21 @@
   const isLight = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] < 0.5;
   // the names: a small pool of textures by text, shade and the strip's shape (the own boat's two or three and those of the boats near you,
   // which change seldom), the oldest let go
-  const NTX = new Map(), NCV = {};
+  const NTX = new Map(), NCV = {}, nameH = aspect => Math.max(32, Math.min(256, Math.round(1024 / (aspect || 4) / 16) * 16));
   function nameTex(nm, light, aspect, mark){
-    const H = mark ? 128 : Math.max(32, Math.min(256, Math.round(1024 / (aspect || 4) / 16) * 16)), k = (mark ? 'M:' : H + ':') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
+    const H = mark ? 128 : nameH(aspect), k = (mark ? 'M:' : H + ':') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
     if (!e){ if (NTX.size >= 28){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
       const W = mark ? 512 : 1024, cv = NCV[W + 'x' + H] || (NCV[W + 'x' + H] = document.createElement('canvas')); cv.width = W; cv.height = H;
       (mark ? markCanvas : nameCanvas)(cv, nm, light); e = {tex:mkTex()}; upTex(e.tex, cv); NTX.set(k, e); }
     e.used = performance.now(); return e.tex;
+  }
+  // the name being painted on (buyAt): a texture of its own per strip, drawn again each sixth of a letter, let go when the moment ends
+  const RTX = new Map();
+  function revealTex(nm, light, aspect, rv){
+    const H = nameH(aspect), k = H + ':' + nm + (light ? '|l' : '|d'), q = Math.floor(rv * 6) / 6; let e = RTX.get(k);
+    if (!e){ e = {tex:mkTex(), cv:document.createElement('canvas'), q:null}; e.cv.width = 1024; e.cv.height = H; RTX.set(k, e); }
+    if (e.q !== q){ e.q = q; nameCanvas(e.cv, nm, light, q); upTex(e.tex, e.cv); }
+    return e.tex;
   }
   // the six nearest boats within 250 m that are drawn near (their glass is in) carry their names on the hull, light or dark by her paint
   function drawNPCNames(kit, VP){
@@ -183,7 +214,7 @@
     if (!near.length) return; near.sort((a, b) => a.dd - b.dd); gl.disableVertexAttribArray(2);
     for (const n of near.slice(0, 6)){
       const t = npcType(n), lv = n.player ? livParse(n.liv, t) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
-      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n));
+      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n), true);
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
       const sl = n.player && typeof spPaintIn === 'function' ? spPaintIn(n.liv) : null, sq = sl && spLogo(sl); if (sq) drawLogo(t, M, VP, sq[0], sq[1]);
       const lg = n.player && !sq && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);

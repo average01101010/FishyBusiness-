@@ -1028,8 +1028,8 @@ E4 (`docs/utviklingsplan.md`) tok de røde testene én om gangen 26.10.2026, i t
 - **Rundt hundre testskript står utenfor listene i `run.py`** (Ø2 05.11.2026): `shot.py`, `shot2`–`shot51`, `shore_*.py`, `*shot.py` for enkeltbåter (`hs11shot`, `ky15shot`, `r38shot` …), `animshot`, `fasit`, `misstest`, `motiontest`, `progtest`, `leiaprobe` og flere, og de kjøres aldri. De fleste er engangsbilder fra da en modell eller kysten ble laget. `shot23.py` var utdatert (`#modeBtn`, salg i telefonen) og er slettet. Forslag: gå gjennom resten i én økt, ta ut det som ikke kjøres mot dagens spill, og legg det som skal bli, i `D3` eller `LITE`. Lista: `python3 tests/run.py utenfor` (`tutcoast` står utenfor med vilje).
 - `oppdrag()` i `ui/phone/02-havn-last-agn-ordre.js` (linje 33, `salg('best')`) kalles ikke lenger: bestillingene tas i dokka (Bygd, Oppdrag), og Salgslaget har ikke fanen. Funnet i Ø2 05.11.2026 da `ordtest` ble skrevet om.
 
-- **M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).
-- **M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).
+- ~~**M9 står igjen** (03.11.2026): hjemhavn per fylke i mediekortet (nå per landsdel), og bilder av formatene i mediekortet (tas nå for hånd fra demobygget).~~ Gjort i steg 28 12.11.2026 (fylkene fra Kartverket, `tools/regions/fylke.py`; bildene av `tests/mediekortshot.py`; «M9-resten» i `docs/systemer/handel-og-steder.md`).
+- ~~**M5 står igjen** (02.11.2026): navnet malt og flagget heist i selve 3D-modellen (nå et kort over bildet).~~ Gjort i steg 28 12.11.2026 («M5-resten» i `docs/systemer/handel-og-steder.md`; `ui/10q-buymoment.js` som PR til Jonas).
 - **fleet2test ventet fast 1,8 s etter reload** og ble rød da oppstarten ble tregere (lasteskjermen); venter nå på `S.fleet` (02.11.2026).
 
 

@@ -200,7 +200,11 @@ if (PWA){
       const j = JSON.parse(raw), t = j[CHANNEL] || {}; delete j.test; return JSON.stringify({...j, ...t}); })();
     // the ports' names and parts of the coast for the media card (src/data/port-regions.json, written by tests/unit/regions.test.mjs)
     const reg = existsSync(join(SRC, 'data', 'port-regions.json')) ? readFileSync(join(SRC, 'data', 'port-regions.json'), 'utf8').trim() : 'null';
-    let page = readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg);
+    // the pictures of the formats for the media card (docs/sponsor/format-*.jpg with their captions in format.json, taken from the demo
+    // build by tests/mediekortshot.py; steg 28), as data: addresses, which the admin page's policy lets in
+    const SPD = join(ROOT, 'docs', 'sponsor'), mk = existsSync(join(SPD, 'format.json')) ? JSON.parse(readFileSync(join(SPD, 'format.json'), 'utf8')).filter(m => existsSync(join(SPD, m.file)))
+      .map(m => ({cap:m.cap, src:'data:image/jpeg;base64,' + readFileSync(join(SPD, m.file)).toString('base64')})) : null;
+    let page = readFileSync(join(A, 'index.html'), 'utf8').replace('/*@cloud*/null', cfg).replace('/*@regions*/null', reg).replace('/*@mkimg*/null', () => JSON.stringify(mk));
     // a strict CSP for the admin page (Ø6 funn 15, 05.11.2026): only its own script, by its hash, runs; it talks only to Supabase.
     // Text from the players that slipped past esc() could then not run with the admin's session (funn 1). Images and the TOTP code
     // are data: URLs, the feedback videos are signed URLs from Supabase's storage. frame-ancestors cannot be set in a meta tag; the
