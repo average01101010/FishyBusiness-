@@ -2826,3 +2826,19 @@
 2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	trip2	OK	36	lite	samtidig	
 2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	docktest	OK	59	lite	samtidig	
 2026-11-12 01:59	ccr-c987b885-ap4668	57950f51	csptest	OK	88	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	colregtest	OK	603	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	npctest	OK	7	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	autonavtest	OK	20	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	hudtest	OK	82	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	havflaate	OK	10	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	hulltest	OK	69	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	lanterntest	OK	13	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	driftsplan2map	OK	12	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	placetest	OK	4	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	sidetab	OK	11	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	etikett	OK	169	lite	samtidig	
+2026-11-12 02:06	ccr-c987b885-ap4668	8c8ce446	legmemotest	OK	15	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	mobtest	OK	203	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	hbtest	OK	15	lite	samtidig	
+2026-11-12 02:09	ccr-c987b885-ap4668	8c8ce446	itemcardtest	FEIL	16	lite	samtidig	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-12 02:10	ccr-c987b885-ap4668	8c8ce446	anchorlight3d	FEIL	79	3d	alene	avsluttet med kode 1
