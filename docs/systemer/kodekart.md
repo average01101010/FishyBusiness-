@@ -843,7 +843,7 @@ crew: people with skills, habits and moods
   - 722 `flyOut(c)`
   - 730 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1429 linjer)
+## `src/js/core/05-vessels.js` (1430 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -947,11 +947,11 @@ crew: people with skills, habits and moods
   - 1349 `rescueBase(p)`
   - 1356 `rescueAis(H)`
   - 1360 `rescue(keepCatch)`
-  - 1384 `towSea(p)`
-  - 1389 `towRoutes(b)`
-  - 1400 `towStep(H)`
-  - 1412 `towDone(t)`
-  - 1418 `towPose(frac)`
+  - 1385 `towSea(p)`
+  - 1390 `towRoutes(b)`
+  - 1401 `towStep(H)`
+  - 1413 `towDone(t)`
+  - 1419 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (189 linjer)
 
@@ -2043,7 +2043,7 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/09o-kapplop.js` (211 linjer)
+## `src/js/core/09o-kapplop.js` (214 linjer)
 
 Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
 
@@ -2053,23 +2053,23 @@ Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.m
   - 57 `lopLastSun(y, m)`
   - 58 `lopOslo(ms)`
   - 61 `lopWeek(ms)`
-  - 72 `lopMinH(nm, vmax, trim)`
-  - 75 `lopTime(run, now)`
-  - 84 `lopOn(vid)`
-  - 87 `lopCpOf(pid)`
-  - 92 `lopWhyNot()`
-  - 101 `lopStart()`
-  - 112 `lopEnd(how)`
-  - 131 `lopHm(min)`
-  - 134 `lopDepart()`
-  - 141 `lopDock(pid)`
-  - 152 `lopCross(a, c, vmax)`
-  - 157 `lopSosNow()`
-  - 171 `lopSosEnd(r, t, p)`
-  - 181 `lopMinute()`
-  - 204 `lopTick()`
+  - 73 `lopMinH(nm, vmax, trim)`
+  - 76 `lopTime(run, now)`
+  - 85 `lopOn(vid)`
+  - 88 `lopCpOf(pid)`
+  - 93 `lopWhyNot()`
+  - 102 `lopStart()`
+  - 113 `lopEnd(how)`
+  - 132 `lopHm(min)`
+  - 135 `lopDepart()`
+  - 142 `lopDock(pid)`
+  - 153 `lopCross(a, c, vmax)`
+  - 158 `lopSosNow()`
+  - 174 `lopSosEnd(r, t, p)`
+  - 184 `lopMinute()`
+  - 207 `lopTick()`
 
-## `src/js/core/11-route.js` (664 linjer)
+## `src/js/core/11-route.js` (707 linjer)
 
 ---------- Autonav (once «Følg leia»): a route along the fairway ----------
 
@@ -2106,10 +2106,11 @@ Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.m
   - 433 `leiaStraighten(P, sd, margin, st)`
   - 461 `leiaPull(P, sd, st)`
   - 495 `leiaRoute(a, b, aPort, bPort, opt)`
-  - 521 `leiaLane(p, goal, km)`
-  - 552 `leiaPocket(p, sd)`
-  - 569 `leiaPocketOut(e, sd, st)`
-  - 579 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
+  - 531 `leiaSplit(a, b, aPort, bPort, opt, r0)`
+  - 564 `leiaLane(p, goal, km)`
+  - 595 `leiaPocket(p, sd)`
+  - 612 `leiaPocketOut(e, sd, st)`
+  - 622 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
 ## `src/js/core/11b-obstacles.js` (226 linjer)
 
@@ -2869,12 +2870,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1618 linjer)
+## `src/js/ui/phone/07-patch.js` (1620 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1606 `patch()`
+  - 1608 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
