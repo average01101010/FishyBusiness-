@@ -1,6 +1,6 @@
 """The coastal route's ship and an express boat at their quays in 3D (Ø15 N4, 12.11.2026; core/05b-ferje.js kystStates and ferjeStates):
 the northbound coastal ship at Tromsø half-way through her four hours at the quay, and an express boat lying at Tromsø at night (03:00,
-all are in), and the northbound coastal ship at Finnsnes (11:00-11:30), each from the sea some 170 m off, in June's light and (the coastal ship) in November's dark with her lights, in 800x1280 and 1280x800.
+all are in), and the northbound coastal ship at Finnsnes (11:00-11:30), each from the sea some 300 m off, in June's light and (the coastal ship) in November's dark with her lights, in 800x1280 and 1280x800.
 Pictures in tests/out/kyst3d_*.png. Checks: the ship is in the list the 3D view draws, lies still at her quay, no GL errors, no page
 errors. Needs the whole coast in the build (python3 tools/map/release.py and game.py, then node build.mjs)."""
 import asyncio, json, os
@@ -19,10 +19,10 @@ SETUP = """async ([kind, dark]) => { const F = ferjeInit(); WX_FORCE = {w:4, d:2
   S.t = Math.floor(T); COASTM.k = ''; await mapNeed(tq.p, MAPD.simR);
   const n = npcStates(S.t / 60).filter(pick).sort((a, c) => dist(a.p, tq.p) - dist(c.p, tq.p))[0]; if (!n) return null;
   // the nearest water 250 m off her, on the side away from the land
-  let q = null; for (const r of [0.17, 0.22, 0.28, 0.13]) { for (let a = 0; a < 6.28 && !q; a += 0.3){ const c = {x:n.p.x + Math.cos(a) * r, y:n.p.y + Math.sin(a) * r}; if (!isLand(c) && depthF(c) > 4) q = c; } if (q) break; }
+  let q = null; for (const r of [0.3, 0.36, 0.42, 0.24]) { for (let a = 0; a < 6.28 && !q; a += 0.3){ const c = {x:n.p.x + Math.cos(a) * r, y:n.p.y + Math.sin(a) * r}; if (!isLand(c) && depthF(c) > 4) q = c; } if (q) break; }
   b.pos = q || {x:n.p.x + 0.25, y:n.p.y}; b.heading = Math.atan2(n.p.x - b.pos.x, -(n.p.y - b.pos.y)); if (!G3.isActive()) G3.show(true);
   return {id:n.id, name:n.name, L:n.L, p:n.p, hd:n.hd, v:n.v, t:S.t, boat:b.pos}; }"""
-LOOK = """([id, at]) => { const b = S.boat; b.pos = {x:at.x, y:at.y}; b.v = 0; const n = npcStates(S.t / 60).find(q => q.id === id), c = G3._debug.cam; b.heading = Math.atan2(n.p.x - b.pos.x, -(n.p.y - b.pos.y)); c.helm = false; c.dist = 30; c.pitch = 0.1; c.yaw = Math.atan2(n.p.x - S.boat.pos.x, -(n.p.y - S.boat.pos.y)) - S.boat.heading;
+LOOK = """([id, at]) => { const b = S.boat; b.pos = {x:at.x, y:at.y}; b.v = 0; const n = npcStates(S.t / 60).find(q => q.id === id), c = G3._debug.cam; b.heading = Math.atan2(n.p.x - b.pos.x, -(n.p.y - b.pos.y)); c.helm = false; c.dist = 90; c.pitch = 0.12; c.yaw = Math.atan2(n.p.x - S.boat.pos.x, -(n.p.y - S.boat.pos.y)) - S.boat.heading;
   return {v:n.v, drawn:(G3._debug.npcNow ? G3._debug.npcNow().some(q => q.id === id) : null)}; }"""
 
 async def main():
@@ -36,12 +36,12 @@ async def main():
             pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg, GAME + '#qfix')
             for kind, dark in (('kyst', False), ('kyst', True), ('hurtig', False), ('finnsnes', False)):
-                if dark and fmt == 'staaende': continue
+                if (dark or kind == 'finnsnes') and fmt == 'staaende': continue   # (the run must keep under the runner's 15 minutes)
                 name = kind + ('_natt' if dark else '') + '_' + fmt
                 r = await pg.evaluate(SETUP, [kind, dark])
                 if not r:
                     check(False, f'{name}: skipet finnes ved Tromsø'); continue
-                await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(20000)
+                await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(12000)
                 await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
                 l = await pg.evaluate(LOOK, [r['id'], r['boat']]); await pg.wait_for_timeout(2500)
                 await pg.evaluate(LOOK, [r['id'], r['boat']]); await pg.wait_for_timeout(4000)
