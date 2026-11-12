@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['aerend-121126', '12.11.2026', 'Mannskapet ber om små ærender', 'The crew ask for small errands', [
+       ['Mannskapet kan be om å gå innom et sted eller om en fridag: hjem når hjemstedet er i nærheten, en kort tur innom en havn på veien, eller en dag i land når båten ligger til kai. Du svarer på kortet deres under Mannskap.', 'The crew may ask to call in somewhere or for a day off: home when their home is nearby, a short call at a harbour on the way, or a day ashore when the boat is at the quay. You answer on their card under Crew.']]],
     ['propell-121126', '12.11.2026', 'Propellen på verftet', 'The propeller at the yard', [
        ['Verftet bytter propell i tre trinn under Verft › Oppgrader. En planende båt går 10, 20 og 30 % fortere, en båt som ikke planer 5, 10 og 15 %, og propellen bruker mindre diesel ved samme fart. Den står også på siden «Båten og utstyret» og i Neste mål.', 'The yard changes the propeller in three steps under Yard › Upgrade. A planing boat goes 10, 20 and 30% faster, a boat that does not plane 5, 10 and 15%, and the propeller burns less diesel at the same speed. It also stands on the page «The boat and her gear» and in Next goals.'],
        ['Fartsøkningene regnes av båtens egen fart og legges sammen, så de ganges ikke oppå hverandre.', 'The gains in speed are counted from the boat\'s own speed and added up, not multiplied on top of each other.'],

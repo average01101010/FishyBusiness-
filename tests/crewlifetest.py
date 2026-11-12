@@ -58,7 +58,7 @@ async def main():
         r7 = await pg.evaluate("""(() => { const b = S.boat, hp = portById('husoy'); S.alumni = []; S.cevt = null; S.tut = 0; S.settings.autoOn = false;
           const mk = () => Object.assign(genCrew(), {bi:false, biDays:null, off:false, fatigue:0, age:35, yrs:10, homePort:'husoy', home:'Husøy', hiredT:S.t - 30 * 1440});
           const A = mk(), B = mk(); delete A.opp; delete B.opp; S.crew = [A, B]; crewLife(A); crewLife(B);
-          b.status = 'fishing'; b.port = null; b.pos = {x:hp.p.x + 6, y:hp.p.y + 3}; S.plan = null; S.me = S.cur;
+          b.status = 'fishing'; b.port = null; b.pos = {x:hp.p.x - 2, y:hp.p.y - 3}; S.plan = null; S.me = S.cur;
           const D0 = Math.floor(S.t / 1440) * 1440; S.t = D0 + 1440 + 10 * 60 - (S.t % 60); S.t = Math.floor(S.t / 60) * 60; S.msgs = [];
           window.CREW_SEED = 7; const p0 = ERRAND.p; ERRAND.p = 1; WX_FORCE = {w:5, d:180}; crewTick(S.t / 60); ERRAND.p = p0; WX_FORCE = null;
           const who = S.crew.find(c => c.err); return {asked:!!who, k:who && who.err.k, id:who && who.id, other:who && S.crew.find(c => c !== who).id, msg:S.msgs.filter(m => who && m.from === who.name).map(m => m.no)}; })()""")
@@ -72,8 +72,8 @@ async def main():
           const L = c.life; return {ok:E.ok, note, done:!c.err, line:L.story.length > n0 ? L.story[L.story.length - 1][1] : null, up:Math.round((L.errUp - S.t) / 1440), learn:errandLearn(c)}; }""", r7['id'])
         check(r8['ok'] and 'Legg til' in r8['note'] and r8['done'] and r8['line'] and ('innom' in r8['line'] or 'land' in r8['line']) and r8['up'] == 7 and abs(r8['learn'] - 1.05) < 1e-9,
               'errand: yes, the boat puts in where he asked, the line is in his story and he learns a little faster for seven days', r8)
-        r9 = await pg.evaluate("""id => { const c = crewById(id), m0 = c.morale; c.err = {k:'off', port:null, why:['Ryggen trenger en dag uten løft.', 'x'], t0:S.t, ok:false}; crewLife(c).errT = S.t; PHONE.render(); return m0; }""", r7['other'])
-        await pg.wait_for_timeout(300)
+        r9 = await pg.evaluate("""id => { const c = crewById(id), m0 = c.morale; c.err = {k:'off', port:null, why:['Ryggen trenger en dag uten løft.', 'x'], t0:S.t, ok:false}; crewLife(c).errT = S.t; refreshAll(); return m0; }""", r7['other'])
+        await pg.wait_for_selector('[data-pa=cerr][data-o=no][data-id="%s"]' % r7['other'], timeout=5000)
         r10 = await pg.evaluate("""([id, _]) => { const c = crewById(id), m0 = c.morale, b0 = document.querySelector('[data-pa=cerr][data-o=no][data-id="' + id + '"]'); if (b0) b0.click();   // (clicked here, so no game minute runs between)
           const gone = !c.err, m1 = c.morale; const p0 = ERRAND.p; ERRAND.p = 1; WX_FORCE = {w:5, d:180}; S.boat.status = 'fishing'; S.boat.port = null;
           for (let h = 0; h < 48; h++){ S.t += 60; errandHour(S.t / 60); } ERRAND.p = p0; WX_FORCE = null; return {clicked:!!b0, gone, same:m1 === m0, again:!!c.err, btns:document.querySelectorAll('[data-pa=cerr]').length}; }""", [r7['other'], r9])

@@ -14,7 +14,8 @@
     return '<div class="ph-kv"><span>' + L('Drømmen', 'The dream') + '</span><span>' + L(g[0], g[1]) + (Lf.notice ? ' · ' + L('går i land ', 'goes ashore ') + dayStr(Lf.notice / 60) : '') + '</span></div>' +
       (pct != null ? bar2(pct, '#4c8df0') + '<p class="ph-note">' + L('Spart ', 'Saved ') + kr(Lf.saved) + L(' av ', ' of ') + kr(Lf.target) + ' · ' + fam + '</p>' : '<p class="ph-note">' + fam + '</p>') + st; }
   // an errand they asked for (steg 45a, core/14-crewlife.js errandHour): the question and two answers; once said yes, where and what is left
-  function errHtml(c){ const E = c.err; if (!E || typeof errandAskText !== 'function') return ''; const q = errandAskText(c, E), pt = E.port && portById(E.port), first = c.name.split(' ')[0];
+  function errHtml(c){ const E = c.err; if (typeof errandAskText !== 'function') return '';
+    if (!E) return c.life && c.life.errUp > S.t ? '<p class="ph-note" style="margin:4px 0">' + L('Lærer litt raskere til ', 'Learning a little faster until ') + dayStr(c.life.errUp / 60) + '</p>' : ''; const q = errandAskText(c, E), pt = E.port && portById(E.port), first = c.name.split(' ')[0];
     const box = s => '<div class="ph-err" style="margin:6px 0;padding:6px 8px;border-radius:8px;background:rgba(76,141,240,.12)">' + s + '</div>';
     if (E.ok) return box('<p class="ph-note" style="margin:0">' + (E.k === 'off' ? L(first + ' tar fridagen når båten ligger til kai.', first + ' takes the day off when the boat is at a quay.') : L('Legg til i ' + (pt ? pt.name : '') + ', så er det gjort.', 'Put in at ' + (pt ? pt.name : '') + ', and it is done.')) + '</p>');
     return box('<p style="margin:0 0 6px">«' + (S.lang === 'en' ? q[1] : crewDialect(c, q[0])) + '»</p><div class="ph-row2"><button class="ph-btn p" data-pa="cerr" data-o="yes" data-id="' + c.id + '">' + L('Ja', 'Yes') + '</button><button class="ph-btn" data-pa="cerr" data-o="no" data-id="' + c.id + '">' + L('Ikke nå', 'Not now') + '</button></div>'); }
