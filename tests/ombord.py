@@ -194,6 +194,8 @@ UNDER = {'jig': (-1.45, 0.10, 0.62, 0.20), 'maskin': (-1.45, 0.10, 0.62, 0.20), 
 OPS['lossn'] = [OPS['loss'][0], OPS['loss'][1] + ' (nært: den som hekter på, og den som gir tegn)', OPS['loss'][2] + " S.mult = 1; b.land.t0 -= LANDING.prep * 0.05 + LANDING.lift * 0.2; b.land.until -= LANDING.prep * 0.05 + LANDING.lift * 0.2;", (0.55, 1.22, 0.95), 16]
 OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22, 0.95), 12]
 OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
+# (OB10 runde 4) the operations whose pictures are taken on the slow clock (the game's time at k of real time) when only pictures are taken
+SLOWOPS = {'kast': 0.15}
 QUAYOPS = {'kast', 'inn', 'loss', 'lossn', 'is', 'isn', 'kran', 'krann'}
 
 # the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck;
@@ -292,6 +294,10 @@ async def record(o, fmt, outdir):
             if op in ('kran', 'krann'):
                 try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
                 except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
+            # (the casting off is a game minute, 10 s, under one frame in ten at the game's own pace under SwiftShader: the pictures of it
+            # on the slow clock, SLOWOPS, so the hands are seen walking to the cleats and taking the lines in)
+            kk = SLOWOPS.get(op, 1.0) if o['bilder'] else 1.0
+            if kk != 1.0: await pg.evaluate("(k) => __TK.set(k)", kk)
             await pg.evaluate("(() => { if (window.OB_GO){ const f = window.OB_GO; window.OB_GO = null; f(); } })()")
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             if o['bilder']:
@@ -299,11 +305,12 @@ async def record(o, fmt, outdir):
                 t1 = time.time() - T0; c1 = None; ran = 0.0
                 for i, at in ((1, 0.15), (2, 0.5), (3, 0.85)):
                     left = sec * at - ran
-                    if left > 0: await pg.wait_for_timeout(int(left * 1000)); ran += left
+                    if left > 0: await pg.wait_for_timeout(int(left * 1000 / kk)); ran += left
                     t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += time.time() - t0
                     if i == 2: c1 = await pg.evaluate(CLIP)
                 t2 = time.time() - T0
                 b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
+                if kk != 1.0: await pg.evaluate("__TK.set(1)")
                 d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'kst': b.get('kst'), 'roles': b.get('roles'), 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
                 log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
