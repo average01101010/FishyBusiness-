@@ -57,3 +57,15 @@ Hva som ble gjort, står i `breisjark-grunnlag.md` 10.9. Det som gjelder neste b
 - **En liten flis ved et boolsk kutt** (lensporten som slutter 3 cm fra en stasjon) ga den ene flata `flatnorm` fant i runde 1. Flytt åpningen så stasjonen går gjennom den.
 - **Tekst i rendringene** lages med Blenders egen skrift gjort om til flater og lagt på skroget punkt for punkt (`render_only()`, aldri eksportert).
 - **En plass for en teinestabel må prøves mot `potshot` før bildene tas, ikke etter.** `check()` regner mot skansen, masta og pullertene; `potshot` regner mot dekkskartets ruter på 0,2 m, der den ytterste ruta ved skansen ikke er gulv og unntaket for den gjelder fra `beam`/2 − 0,45. I runde 2 ble etter-bildene tatt og karakteren satt med stabelen på en plass testen siden felte.
+
+## 7. Runde 3 (OB11, 12.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.10. Det som gjelder neste båt:
+
+- **Flagget henger der spillet setter det, fra toppen av `anchors.pole`, og blåser med den tilsynelatende vinden** (`24-cinema.js`). En flaggstang på ripa ved hekken gir et flagg i hodehøyde over den som setter. På en båt med galge: sett stanga på galgen, og regn i `check()` at et flagg på 1,2 m ikke henger lavere enn 2,0 m over dekket.
+- **To bokser med toppen i samme plan der de krysser hverandre gir svarte firkanter** i rendringen (tverrbjelkene gjennom sidebjelkene på galgen). La tverrbjelkene gå mellom sidebjelkenes innsider og være noen millimeter lavere.
+- **Et stag som ender midt på toppen av en bjelke** har halve endeflata i lufta; la det gå inn i bjelken og stå i et øre.
+- **Detaljer på 1–2 cm synes ikke i spillets bilder** (dørhåndtaket og hengslene var der i runde 2, sensoren så dem ikke). Et håndtak på 17 cm, et mørkt låsskilt og en mørk tetningslist rundt dørbladet leser.
+- **Lister i skjøtene og beslag i stål** passer `clip_malo36` (stål er tillatt ved veggene); `alu` ble talt som gjennom siden.
+- **Slitasje per hjørne** synes bare der flatene har mange hjørner (skansene, skroget). På store hvite bokser blir den en myk overgang mot foten; det er det som er mulig uten teksturer.
+
