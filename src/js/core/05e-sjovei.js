@@ -270,18 +270,19 @@ function sjvRoomOwn(a, nx, ny, k){
 // lovdata.no …/KAPITTEL_1-2-6, read 12.11.2026). M is the one going back: her own course ({x, y} grid km, cog radians, v knots) with the
 // offset off it now (ox, oy: the grid km one km of it moves her; off km) closing at rate (km an hour); Q the other ({p, cog or hd, v})
 // on her course and speed.
-// Both carried on in steps of a quarter game minute until the offset is gone and two minutes more: true when they are never nearer than
-// lim (m). The time to the CPA turning past nothing while she stands off proves nothing: on the turn back her own course may still lead
+// Both carried on in steps of 3 game seconds until the offset is gone and two minutes more: true when they are never nearer than
+// lim (m) and a margin (SJV_BACK: the turn back is not instant, and the pass came out at the limit itself, 196-199 m with lim 190). The time to the CPA turning past nothing while she stands off proves nothing: on the turn back her own course may still lead
 // into the other (TB1, 12.11.2026: a trawler at 12 knots giving way by rule 15 turned back with the CPA at 450 m off her course and
 // passed 47 m from the boat on Autonav)
+const SJV_BACK = 1.15;
 function sjvBackClear(M, Q, lim, gs){
   const kA = (M.v || 0) * NM * gs, kB = (Q.v || 0) * NM * gs, off0 = Math.abs(M.off || 0), sg = (M.off || 0) < 0 ? -1 : 1, rate = Math.max(1e-3, M.rate || 0);
-  const T = off0 / rate + 2 / 60, st = 0.25 / 60;
+  const T = off0 / rate + 2 / 60, st = 0.05 / 60, lm = lim * SJV_BACK;   // (every 3 game seconds: some 30 m at 18 knots between them)
   for (let tt = 0; tt <= T + 1e-9; tt += st){
     const o = sg * Math.max(0, off0 - rate * tt);
     const ax = M.x + Math.sin(M.cog) * kA * tt + M.ox * o, ay = M.y - Math.cos(M.cog) * kA * tt + M.oy * o;
     const qc = Q.cog != null ? Q.cog : Q.hd, bx = Q.p.x + Math.sin(qc) * kB * tt, by = Q.p.y - Math.cos(qc) * kB * tt;
-    if (Math.hypot(ax - bx, ay - by) / gs * 1000 < lim) return false;
+    if (Math.hypot(ax - bx, ay - by) / gs * 1000 < lm) return false;
   }
   return true;
 }
