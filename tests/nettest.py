@@ -87,7 +87,8 @@ async def main():
         await pg.evaluate("S.equip.vhf = true; DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
         r = json.loads(await J("{cards:[...document.querySelectorAll('#drawerBody .ph-card.ic')].map(c => c.dataset.ic), aboard:(document.querySelector('#drawerBody .ic-aboard') || {}).textContent || '', nofit:(document.querySelector('#drawerBody details.ic-nofit') || {}).open, nofitT:(document.querySelector('#drawerBody details.ic-nofit') || {}).textContent || ''}"))
         check('vhf' not in r['cards'] and 'VHF' in r['aboard'], 'VHF-en om bord står i «Om bord», ikke som kort', r['aboard'])
-        check(r['cards'][:3] == ['linehaler', 'garnhaler', 'teinehaler'] and r['nofit'] is False and 'Sonar' in r['nofitT'], 'halerne først, og det som ikke passer snekka, er lukket nederst', [r['cards'][:3], r['nofitT'][:60]])
+        # (13.11.2026: the snekke is not rigged for pots any more, so the pot hauler is among what does not suit her; the check asked for it first)
+        check(r['cards'][:2] == ['linehaler', 'garnhaler'] and 'teinehaler' not in r['cards'] and r['nofit'] is False and 'Teinehaler' in r['nofitT'], 'halerne først, og det som ikke passer snekka (teinehaleren), er lukket nederst', [r['cards'][:3], r['nofitT'][:60]])
         # expensive equipment confirms in the button
         c0 = await pg.evaluate("S.cash")
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=equip][data-k=garnhaler]').click()"); await pg.wait_for_timeout(200)

@@ -81,11 +81,12 @@ async def main():
 
         # next goals: at the top of Vessels and a line on the home screen
         await pg.evaluate("S.boat.gear = true; S.cash = 5000; PHONE.open('fartoy')"); await pg.wait_for_timeout(300)
-        first = await pg.evaluate("document.querySelector('#drawerBody .ph-c .ph-card h4').textContent")
+        # (D3, 13.11.2026: the boats first in the boat market; «Neste mål» stands after them)
+        first = await pg.evaluate("(() => { const c = [...document.querySelectorAll('#drawerBody .ph-c > *')], g = c.findIndex(e => (e.querySelector('h4') || {}).textContent === 'Neste mål'), v = c.findIndex(e => e.classList.contains('vcard')); return g > v && v >= 0 ? 'Neste mål' : 'g' + g + ' v' + v; })()")
         await pg.evaluate("DOCK.close()")
         await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(200)
         home = await pg.evaluate("(document.querySelector('#phone .ph-goal') || {}).textContent || ''")
-        check(first == 'Neste mål' and 'Første juksamaskin' in home, 'Neste mål øverst i Båthandel og på hjemskjermen', [first, home])
+        check(first == 'Neste mål' and 'Første juksamaskin' in home, 'Neste mål står i Båthandel etter båtene, og på hjemskjermen', [first, home])
         await pg.screenshot(path='shop_home.png')
         # on a narrow phone the goal's name, what is left and the bar stay inside its card (Jonas 05.10.2026: «ser rotete ut»)
         await pg.set_viewport_size({'width': 360, 'height': 780}); await pg.evaluate("PHONE.open('home')"); await pg.wait_for_timeout(300)
