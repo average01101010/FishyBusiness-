@@ -70,7 +70,7 @@ def build(fine=True):
         pts = [(H.x(u, H.zd(u)), H.hw(u, H.zd(u)) - 0.05) for u in [0.8 + 0.2 * i / 6 for i in range(7)]]
         rail(A, pts + [(p[0], -p[1]) for p in reversed(pts)], H.zd(0.9), 0.6, C['inox'], t=0.025)
         rail(A, [(1.3, 1.25), (0.15, 0.9), (0.15, -0.9), (1.3, -1.25)], D, 0.6, C['inox'], t=0.025)
-        place_lights(A, H, {k: v for k, v in LT.items() if k in ('masthead', 'stern')}, fine)
+        for k in ('masthead', 'stern'): lamp(A, LT[k], C['lampW'], r=0.05, h=0.1)
         for k in ('port', 'stbd'): lamp(A, LT[k], C['lampR'] if k == 'port' else C['lampG'], r=0.05, h=0.1)
     G = []; tiny_glass(G)
     return [hull, A.done(35)], G

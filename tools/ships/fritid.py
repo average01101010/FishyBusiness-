@@ -36,24 +36,29 @@ def build(fine=True):
     prism(A, pl, zc - 0.1, zc + CAB[3], C['sup'], C['sup'])
     if fine:
         for sg in (1, -1): A.poly([(CAB[0] + 0.5, sg * (CAB[2] - 0.1 + 0.03), zc + 0.35), (CAB[1] - 0.6, sg * (0.6 + 0.03), zc + 0.35), (CAB[1] - 0.6, sg * (0.6 + 0.03), zc + 0.6), (CAB[0] + 0.5, sg * (CAB[2] - 0.1 + 0.03), zc + 0.6)], C['win'], (0, sg, 0))
-    A.poly([(CAB[0], -1.05, zc + CAB[3]), (CAB[0], 1.05, zc + CAB[3]), (CAB[0] - 0.35, 1.0, zc + CAB[3] + 0.5), (CAB[0] - 0.35, -1.0, zc + CAB[3] + 0.5)], C['winB'], (1, 0, 0.6))
-    A.poly([(CAB[0], -1.05, zc + CAB[3]), (CAB[0] - 0.35, -1.0, zc + CAB[3] + 0.5), (CAB[0] - 0.35, 1.0, zc + CAB[3] + 0.5), (CAB[0], 1.05, zc + CAB[3])], C['winB'], (-1, 0, -0.6))
-    zt = D + HT[3]
+    # the windscreen from the cabin's after edge up to the hardtop's front, leaning back, in its white frame
+    zt = D + HT[3]; zw = zc + CAB[3]
+    ws = [(CAB[0], -0.98, zw), (CAB[0], 0.98, zw), (HT[1] + 0.02, 1.02, zt), (HT[1] + 0.02, -1.02, zt)]
+    A.poly(ws, C['glass'], (1, 0, 0.3)); A.poly(list(reversed(ws)), C['glass'], (-1, 0, -0.3))
+    if fine:
+        for sg in (1, -1): beam(A, (CAB[0], sg * 1.0, zw), (HT[1] + 0.02, sg * 1.04, zt), 0.05, 0.05, C['sup'])
     abox(A, HT[0], HT[1], -HT[2], HT[2], zt, zt + 0.08, C['sup'])
     for x in (HT[0] + 0.05, ):
         for sg in (1, -1): beam(A, (x, sg * (HT[2] - 0.08), D), (x, sg * (HT[2] - 0.08), zt), 0.06, 0.06, C['inox'], up=(1, 0, 0))
     # the cockpit's seats and the helm console, the outboard on the transom
     abox(A, 0.5, 1.6, -1.0, 1.0, D, D + 0.42, C['seat'])
     abox(A, 2.6, 3.2, -0.9, -0.2, D, D + 0.8, C['sup']); abox(A, 2.6, 3.2, 0.2, 0.9, D, D + 0.45, C['seat'])
-    abox(A, -0.55, -0.05, -0.25, 0.25, T - 0.6, D + 0.55, C['dark'])
+    # the outboard: the leg down into the water and the cowl over the transom's top
+    abox(A, -0.4, -0.18, -0.1, 0.1, T - 0.55, D + 0.2, C['dark'])
+    obox(A, (-0.36, 0.0, D + 0.42), (0.3, 0, 0), (0, 0.24, 0), (0, 0, 0.27), C['black'])
     if fine:
-        abox(A, -0.62, 0.0, -0.3, 0.3, D + 0.25, D + 0.75, C['black'])
+        abox(A, -0.15, 0.0, -0.18, 0.18, D - 0.05, D + 0.2, C['dark'])
         # the pulpit at the bow, the toe rails, the all-round light's pole
         pts = [(H.x(u, H.zd(u)), H.hw(u, H.zd(u)) - 0.05) for u in [0.78 + 0.22 * i / 6 for i in range(7)]]
         rail(A, pts + [(p[0], -p[1]) for p in reversed(pts)], H.zd(0.9), 0.6, C['inox'], t=0.03)
         acyl(A, (LT['masthead'][0], 0.0, zc + CAB[3]), (LT['masthead'][0], 0.0, LT['masthead'][2] - 0.1), 0.025, lambda z: C['inox'], seg=5)
-        place_lights(A, H, {k: v for k, v in LT.items() if k in ('masthead', 'stern')}, fine)
-        for k in ('port', 'stbd'): lamp(A, LT[k], C['lampR'] if k == 'port' else C['lampG'], r=0.06, h=0.12)
+        for k in ('masthead', 'stern'): lamp(A, LT[k], C['lampW'], r=0.05, h=0.1)
+        for k in ('port', 'stbd'): lamp(A, LT[k], C['lampR'] if k == 'port' else C['lampG'], r=0.05, h=0.1)
     G = []; tiny_glass(G)
     return [hull, A.done(35)], G
 

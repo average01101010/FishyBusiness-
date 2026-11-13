@@ -261,8 +261,13 @@ COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npc
 D3 += ['kystshot', 'kystshot_st']; COVER['tests/kystshot.py'] = ['kystshot', 'kystshot_st']; COVER['tests/kystshot_st.py'] = ['kystshot_st']   # (Ø15 N4: the coastal route's ship and an express boat at their quays in 3D)
 D3 += ['npcshot', 'npcshot_st']; COVER['tests/npcshot.py'] = ['npcshot', 'npcshot_st']; COVER['tests/npcshot_st.py'] = ['npcshot_st']   # (Ø15 N7: the NPC fleet's ship models in 3D)
 for _k in ('ferje34', 'ferje64', 'ferje112', 'hurtig', 'passasjer', 'kystrute'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot', 'npcshot_st']; COVER['tools/ships/%s.py' % _k] = ['npcshot']
-COVER['tools/ships/shiplib.py'] = ['npcshot']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
-for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot']))
+COVER['tools/ships/shiplib.py'] = ['npcshot', 'npcshot_fisk']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
+# (N7's second part, 13.11.2026: the coast's fishing boats by their gear; npcshot_skip.py, the merchant ships, needs a build with their
+# lines in the page and is run by hand until N5 adds them)
+D3 += ['npcshot_fisk']; VECB.append('npcshot_fisk'); LONG['npcshot_fisk'] = 4500; COVER['tests/npcshot_fisk.py'] = ['npcshot_fisk']; COVER['tests/npcshot.py'] = COVER['tests/npcshot.py'] + ['npcshot_fisk']
+for _k in ('snurrevad', 'not', 'tral', 'teine', 'autoline'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot_fisk']
+for _k in ('snurrevad', 'notbat', 'reketral', 'teine', 'autoline', 'fisklib'): COVER['tools/ships/%s.py' % _k] = ['npcshot_fisk']
+for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot', 'npcshot_fisk']))
 COVER['src/data/ferje.json'] += ['kystshot', 'kystshot_st']; COVER['src/js/core/05b-ferje.js'] += ['kystshot', 'kystshot_st']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
 # fin.test.mjs (unit) the reading. finshot is pictures for the eye (before and after), run by hand
