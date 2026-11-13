@@ -212,8 +212,9 @@ def ease_cut_fans(o, rims, step=0.2, reach=2.5):
         for e in {e for f in fs for e in f.edges}:
             L = e.calc_length()
             if L > 1.5 * step: by.setdefault(int(math.ceil(L / step)) - 1, []).append(e)
+        key = lambda v: (round(v.co.x, 5), round(v.co.y, 5), round(v.co.z, 5)); old = {key(v) for v in bm.verts}   # (subdivide_edges passes the tag on)
         for k, es in by.items(): bmesh.ops.subdivide_edges(bm, edges=es, cuts=k, use_grid_fill=False)
-        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3 and any(key(v) not in old for v in f.verts)])   # (a triangle with one edge split is a quad of three points in a line: cut it here, so no triangle of no area skips the new point)
     bm.to_mesh(me); bm.free(); me.update()
     return len(fs)
 
