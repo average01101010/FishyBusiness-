@@ -462,6 +462,9 @@ def weights(J, pts, top=4, cls='body'):
     back = ['hips', 'spine1', 'spine2', 'spine3', 'neck', 'head']
     wb, db = chain(back, [0, S['spine'], S['spine'], S['spine'], S['neck'], S['head']], tails(J)['head'])
     for i, n in enumerate(back): W[:, BI[n]] = wb[:, i]
+    # (the face is the head's, whole: the jaw and the mouth lie level with the head's joint, where the neck hands over)
+    hj = A('head'); fm = _ss(p[:, 1], hj[1] + 0.020, hj[1] + 0.045) * _ss(p[:, 2], hj[2] - 0.050, hj[2] - 0.025)
+    W[:, BI['head']] += fm * W[:, BI['neck']]; W[:, BI['neck']] *= 1 - fm
     for sd, sg in (('R', 1), ('L', -1)):
         # the arm, from the collar bone out
         names = ['clav_' + sd, 'uarm_' + sd, 'utw_' + sd, 'farm_' + sd, 'ftw_' + sd, 'hand_' + sd]
@@ -483,9 +486,12 @@ def weights(J, pts, top=4, cls='body'):
         wr_ = A('hand_' + sd); tip_ = wr_ + (wr_ - el) / np.linalg.norm(wr_ - el) * 0.20
         zs_ = [tip_[2], wr_[2], el[2], sh[2]]; xl = np.interp(p[:, 2], zs_, [tip_[0] * sg, wr_[0] * sg, el[0] * sg, sh[0] * sg]); rin = np.interp(p[:, 2], zs_, [0.082, 0.080, 0.076, 0.078])          # (wider than a sleeve, a cuff or a glove seen level: the arm leans)
         below = _ss(p[:, 2], sh[2] - 0.075, sh[2] - 0.115)
+        ka0 = ka
         ka = ka * (1 - below + below * _ss(sg * x - (xl - rin), -0.007, 0.007))
         if cls == 'torso':          # a jacket's body and a vest never go with the arm below the armhole: only the sleeves do
-            ka = ka * _ss(p[:, 2], sh[2] - 0.24, sh[2] - 0.13)
+            # (but the cloth under the armhole is drawn along a little, fading out down the side: the pull of a raised arm is spread
+            # over the side panel and not taken by the one row under the rim)
+            ka = ka * _ss(p[:, 2], sh[2] - 0.165, sh[2] - 0.105)          # (gone by the first row under the armhole's rim)
         else:
             ka = np.maximum(ka, _ss(tw, -0.02, 0.01) * _ss(da, 0.125, 0.100) * side)          # the hand is the arm's, whole
             if cls == 'arm': ka = np.maximum(ka, _ss(ta, 0.05, 0.10) * side)                          # a sleeve and a glove are the arm's from the armhole out (at the armhole's rim as the jacket there)
