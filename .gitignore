@@ -28,3 +28,6 @@ trailer/out/
 trailer/audio/suno/
 dist-kanal/
 tools/fart/out/
+
+# local tooling (.mcp/gemini-server.mjs)
+node_modules/
