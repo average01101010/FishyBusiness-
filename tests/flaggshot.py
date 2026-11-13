@@ -70,18 +70,22 @@ async def main():
         kob = [k for k in mk['keys'] if 'h:kobolt' in k]
         check(mk['bufs'] and kob and not any(x in k for k in mk['keys'] for x in ('m:', 'f:', 'l:')) and len(kob) == len(set(k.split('|')[1] for k in kob)),
               'to båter med lik maling og ulikt merke deler modell (nøkkelen er bare malingen), og de malte modellene telles', mk)
-        if mk['bufs']:   # (the pictures only of a build with the step: SwiftShader takes minutes over each)
-            await pg.wait_for_timeout(3000); await shot(pg, 'flagg_liggende.jpg')
+        # (the card «while you were away», which the clock moved on brings up, is closed as npcshot closes it)
+        close = "() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }"
+        only = os.environ.get('KYST_FLAGG_BILDER') == 'staaende'
+        if mk['bufs'] and not only:   # (the pictures only of a build with the step: SwiftShader takes minutes over each)
+            await pg.evaluate(close); await pg.wait_for_timeout(3000); await shot(pg, 'flagg_liggende.jpg')
             if os.environ.get('KYST_FLAGG_PREVIEW'): await br.close(); return
             # near the one with the Swedish pennant, off her quarter (the game's own test camera, npcLook), and standing near the one
             # with the house flag (the overview from above leaves the boats under the narrow picture)
             for w in (2500, 2500, 2000): await pg.evaluate("(G3._debug.npcLook || G3.npcLook)('ptp1aaaaaaa', 13, 0.22, 2.4)"); await pg.wait_for_timeout(w)
             print('flaggene i bildet', await pg.evaluate("G3._debug.peerFlags.at"), flush=True)
-            await shot(pg, 'flagg_naer_liggende.jpg')
+            await pg.evaluate(close); await shot(pg, 'flagg_naer_liggende.jpg')
+        if mk['bufs']:
             await pg.set_viewport_size({'width': 800, 'height': 1280})
             for w in (2500, 2500, 3000): await pg.evaluate("(G3._debug.npcLook || G3.npcLook)('ptp1ccccccc', 12, 0.2, 2.4)"); await pg.wait_for_timeout(w)
             print('flaggene i bildet, stående', await pg.evaluate("G3._debug.peerFlags.at"), flush=True)
-            await shot(pg, 'flagg_staaende.jpg'); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")
+            await pg.evaluate(close); await pg.wait_for_timeout(1500); await shot(pg, 'flagg_staaende.jpg'); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")
             await pg.set_viewport_size({'width': 1280, 'height': 800})
             if os.environ.get('KYST_FLAGG_BILDER'): await br.close(); return   # (only the pictures)
         await pg.evaluate("S.t = Math.floor(S.t / 1440) * 1440 + 1020"); await pg.wait_for_timeout(3000)
