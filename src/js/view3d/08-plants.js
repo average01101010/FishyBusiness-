@@ -494,7 +494,7 @@
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = knifeKit(!!P.bare), fishAt = (P, sp, kg, rz, rx) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2 + (rx || 0)), M4.RZ(rz || 0), M4.S(sc))); };
     // (a fish not yet bled kicks in the hand and on the gaff, flap in 09-landing-deck.js; k the life left in it)
-    const live = (P, e, k) => { const Fl = flap(T, (e.kg || 2) * 2.7 + idx, k); fishAt(P, e.sp, e.kg, Fl[0], Fl[1]); };
+    const live = (P, e, k) => { const Fl = flap(T, (e.kg || 2) * 2.7 + idx, k); bendOn(Fl); fishAt(P, e.sp, e.kg, Fl[0], Fl[1]); bendOff(); };
     if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
     // (sharpening: the knife in the right hand, its blade drawn across the steel)
     if (kn && st.task === 'knife') drawN(kn, toolM(GP[0], st.kd || [-R[0], 0.15, -R[1]]));

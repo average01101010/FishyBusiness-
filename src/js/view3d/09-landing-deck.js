@@ -442,9 +442,12 @@
   const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKWATER = [], DKSMOKE = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
   // a live fish (Jonas 13.11.2026: «fisken som kommer opp spreller litt helt til den er bløgget, snøret dras i litt ulike retninger og
   // fisken plasker litt i vannet når den kommer opp»): bursts of hard kicks with short rests between, each fish out of step with the
-  // others (w its own phase), k how much life is left (1 alive, fading to 0 once the throat is cut). [the tail's sweep, the head's toss]
+  // others (w its own phase), k how much life is left (1 alive, fading to 0 once the throat is cut). [the whole body's sweep, the head's
+  // toss, the bend's amplitude at the tail (in the fish's 1 m) and its phase] (the bend: bendOn, LITN_VS uBend in 12-skiff.js; the body
+  // swings a little against the tail, as a fish's head does)
   function flapK(T, w){ return clamp(0.55 + 0.6 * Math.sin(T * 1.3 + w * 2.1) + 0.35 * Math.sin(T * 3.7 + w * 0.7), 0, 1); }
-  function flap(T, w, k){ const kk = k == null ? 1 : k, b = flapK(T, w) * kk; return [Math.sin(T * 16 + w * 5) * (0.08 * kk + 0.55 * b), Math.sin(T * 9.5 + w * 3) * 0.22 * b]; }
+  function flap(T, w, k){ const kk = k == null ? 1 : k, b = flapK(T, w) * kk, ph = T * 15 + w * 5;
+    return [-Math.sin(ph) * (0.03 * kk + 0.16 * b), Math.sin(T * 9.5 + w * 3) * 0.2 * b, kk > 0 ? 0.03 * kk + 0.17 * b : 0, ph]; }
   // where the fish pulls the line on its way up: a slow wander to both sides and a jerk with the kicks (m metres at most, across [x, z])
   function tug(T, w, m){ const j = 0.3 * flapK(T, w) * Math.sin(T * 13 + w * 4); return [m * (0.6 * Math.sin(T * 1.1 + w * 1.9) + j), m * (0.6 * Math.cos(T * 0.8 + w * 2.7) + 0.3 * Math.sin(T * 3.1 + w * 1.3))]; }
   // a fish breaking the surface: a few small drops thrown up where it is (E eye-relative), in the sea's own spray (SD, 24-cinema.js)

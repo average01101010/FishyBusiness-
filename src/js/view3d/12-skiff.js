@@ -2,8 +2,13 @@
   const WHITE = [0.9, 0.92, 0.93], NAVY = [0.1, 0.16, 0.3], RED = [0.45, 0.12, 0.1], FLOOR = [0.72, 0.74, 0.74], ORANGE = [0.93, 0.4, 0.1], SKIN = [0.85, 0.65, 0.5], DARK = [0.14, 0.16, 0.18], GREY = [0.62, 0.64, 0.66], GLASS = [0.2, 0.27, 0.32];
   // ======================= the starter boat: a 19 ft centre-console skiff, modelled in detail =======================
   // smooth-shaded lit program with gloss (vertex colour alpha) for curved parts; textured program for screens and decals
-  const LITN_VS = 'attribute vec3 aPos;attribute vec3 aNor;attribute vec4 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' +
-    'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vN=(uM*vec4(aNor,0.0)).xyz;vC=aCol;vP=aPos;vNm=aNor;gl_Position=uVP*w;}';
+  // uBend: a live fish bending (bendOn below; Jonas 13.11.2026: «fisken må bevege seg litt som en ekte fisk»): the fish meshes are 1 m
+  // along z with the head at -z; behind the stiff head (uBend.w of its length) the body is swept to the side (x) by a wave running to
+  // the tail, amp uBend.x (m at the tail), phase uBend.y, uBend.z radians over the body; the normals follow the slope. Zero for all else
+  const LITN_VS = 'attribute vec3 aPos;attribute vec3 aNor;attribute vec4 aCol;uniform mat4 uVP;uniform mat4 uM;uniform vec4 uBend;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' +
+    'void main(){vec3 p=aPos,n=aNor;if(uBend.x!=0.0){float s=clamp((p.z+0.5-uBend.w)/(1.0-uBend.w),0.0,1.0),a=uBend.y-s*uBend.z,sn=sin(a);' +
+    'p.x+=uBend.x*s*s*sn;float d=uBend.x*(2.0*s*sn-s*s*uBend.z*cos(a))/(1.0-uBend.w);n=vec3(n.x,n.y,n.z-d*n.x);}' +
+    'vec4 w=uM*vec4(p,1.0);vW=w.xyz;vN=(uM*vec4(n,0.0)).xyz;vC=aCol;vP=aPos;vNm=aNor;gl_Position=uVP*w;}';
   // The wear on your own hull (Fysikk 3, core/16c-hull.js): uWear = (scratches, damage, the gunwale's height over the waterline, half
   // the length), zero for everything else. In the boat's own metres (the waterline at y = 0, the bow to -z), on the sides: scratches are
   // thin streaks along her in the upper topsides, at the rubbing strake and fender height where a quay is met, and down the stem, where
@@ -140,6 +145,9 @@
   function lifeOff(){ const u = PRGN.u; if (!u.uAge) return; gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); gl.uniform4fv(u.uWear, WEAR0); }
   // the local fleet's age, from the boat's id: from fairly kept (0.15) to a hard-worked old one (0.9), most in between
   const npcAge = n => n.player ? 0 : 0.15 + 0.75 * Math.pow((lookHash('age' + n.id) % 1000) / 1000, 0.8);
+  // a fish's bend for the next draws (LITN_VS uBend; Fl from flap in 09-landing-deck.js: [sweep, toss, amp, phase]), and back to none
+  function bendOn(Fl){ const u = PRGN && PRGN.u.uBend; if (u && Fl && Fl[2]) gl.uniform4f(u, Fl[2], Fl[3], 3.6, 0.22); }
+  function bendOff(){ const u = PRGN && PRGN.u.uBend; if (u) gl.uniform4f(u, 0, 0, 0, 0); }
   function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
   function texStrip(Pb, Pt){ const p = [], uv = [], n = Pb.length - 1; for (let i = 0; i < n; i++){ const u0 = i / n, u1 = (i + 1) / n; p.push(...Pb[i], ...Pb[i + 1], ...Pt[i + 1], ...Pb[i], ...Pt[i + 1], ...Pt[i]); uv.push(u0, 1, u1, 1, u1, 0, u0, 1, u1, 0, u0, 0); } return {pb:buf(new Float32Array(p)), ub:buf(new Float32Array(uv)), n:p.length / 3}; }
