@@ -3968,3 +3968,5 @@
 2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	docktest	OK	64	lite	samtidig	
 2026-11-13 22:45	ccr-432150cd-kkjoez	f8e9aa6b+	docktest	OK	60	lite	alene	
 2026-11-13 22:47	ccr-432150cd-kkjoez	f076b7fd	docktest	OK	60	lite	alene	
+2026-11-13 22:56	ccr-d5-telefonen	498e8107	boottest	OK	32	lite	samtidig	
+2026-11-13 22:57	ccr-d5-telefonen	498e8107	telefonflate	OK	129	lite	samtidig	
