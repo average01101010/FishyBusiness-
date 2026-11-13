@@ -150,6 +150,21 @@ Jonas 12.11.2026, tilpasning V1 A: «TP1 over linja». Det som er solgt, skal se
 
   Tallene som teller, måler Jonas på Pad 3 med `#benchpeer` (`docs/spill-dette/108.md`).
 
+### Navnets skrift og farge, og hjemhavna for andre (TP2, steg 109, 13.11.2026)
+
+Jonas 12.11.2026, tilpasning V4 B: «Tre skrifter og farge»; V2 A: 29 kr (`des_navn`, ekte penger: PR #82 til Jonas). Planen: `docs/planer/tilpasning.md` TP2.
+
+- **Skriftene** (`NAMEFONT` i `vessel3d.js`, `NFONT` og `nameCanvas` i `view3d/13-instruments.js`): blokk (`b`, Archivo halvfet 700 i normal bredde), smal blokk (`s`, Archivo 700 i bredden `condensed`, 78 % så bred), antikva (`a`, Source Serif 4 600). Begge skriftene lå alt i sida; ingen ny skrift.
+  - **Blokk er uendret.** Koden ba før om `semi-condensed`, men satte `fontStretch` før `font`, og det nullstiller bredden. Målt i Chromium 13.11.2026: «HAVBRIS ÅSEN» 760 px i 100 px blokk, 591 px i smal blokk, 675 px i `semi-condensed`. Navnene har altså alltid stått i normal bredde, og blokk beholder det.
+  - En nettleser som ikke kan smale inn skriften på lerretet, smaler bokstavene (×0,8) i stedet.
+  - Antikva-skriften hentes første gang et navn skrives i den (`serifNeed`), og navnene i den tegnes på nytt når den er inne.
+- **Fargen** (`NAMEINK`, `nameInk`): automatisk (svart eller hvit etter malingen, `nameInkLight`, som før), hvit, svart, gull eller en farge fra `HULLPAL`. En valgt farge brukes bare der kontrasten mot malingen under er minst 3:1 (`NAMEMIN`, WCAGs krav for stor tekst, `contrastOf`); ellers står navnet i svart eller hvitt der. Kortet sier fra når det skjer (`inkWeak`). Gjelder navnet på styrhuset, på hekken og hjemhavna under det; registreringsmerket og kallesignalet står fortsatt i svart eller hvitt (§ 9 i merkeforskriften).
+- **Per båt:** `b.liv.nf` og `b.liv.nc`, kjøpt én gang for kontoen (som designene) og satt på hver båt i Malerverkstedet. Prøves før kjøpet (`PAINTPRE`). Et nytt maleri beholder båtens skrift også der kjøpet ikke er kjent ennå på enheten.
+- **Koden til de andre** (`livStr`): `n:<skrift>.<farge>` (betalt, `des_navn`) og `k:<havnas id>` (gratis), begge sist, så en server som fortsatt kutter ved 160, kutter dem og ikke logoen. Havnas id kjenner alle spill (`PORTS`: mottakene langs hele kysten, Senjas havner og fars naust); hjemhavna er `S.home`, ellers `HOME0`, det samme som egen hekk viser. `livPaint` og `livParse` ser bort fra begge, så båtene deler fortsatt modell (TP1). De andre leser dem med `livName` og `livHome`, slått opp én gang per kode (`livNameOf`).
+- **Serveren** (`supabase/migrations/20261113160000_liv_navn.sql`): `pos_put` tar 320 tegn (var 160; den lengste koden før var 151). De betalte delene sjekkes mot tabellen `liv_paid` (bokstav og produkt: `r t v s g l n`), så et nytt betalt felt er en rad; flagget (`f`) står som før (nasjon `des_flagg`, rederiflagg `des_logo`). Ingen leser tabellen utenom `pos_put`. Migreringen kjøres av Jonas på testprosjektet før pushen, og i produksjon rett før slippet.
+- **Lageret av navneteksturer** er fortsatt 28 (`NTX`), nøklet på høyde, skrift, tekst og blekk. Tellerne: `G3._debug.names` (hva bildene skrev), `G3._debug.nameTex` (antall og millisekundene for det første navnet i hver skrift).
+- **Testene:** `tests/unit/navn.test.mjs` (kontrasten over alle farger og all maling, fallet tilbake, koden), `maletest` (kortet, prøving, kjøp), `sqltest` (320 tegn, `n:` bare med `des_navn`, `k:` alltid, ingen leser `liv_paid`), `cloudtest` (en kode over 160 går opp hel; en annen spillers skrift og hjemhavn kommer ned), `tests/navnshot.py` (3D: tre skrifter på tre båttyper, hjemhavnene Kristiansand, Kristiansund og Båtsfjord, lageret).
+
 ## 5.1 Båter og utstyr
 
 Båtene står i `VESSELS` (`core/02-species-gear.js`) i fartøyskjemaet v2 (17.10.2026, `docs/batplan.md` del 4). Tallene er startverdier og anslag. Skjemaet har sju grupper felt:
