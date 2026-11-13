@@ -299,7 +299,7 @@
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
     const L2R = q => xf(BMrel, q), fsc = kg => clamp(0.42 * Math.cbrt(kg), 0.28, 1.2);
     // (k: the life left in it, flap in 09-landing-deck.js: it kicks on the line and in the hand until it is bled, and lies still in the toss)
-    const hang = (sp, kg, P, w, k) => { const Fl = flap(T, w, k); bendOn(Fl); drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(fsc(kg)))); bendOff(); };
+    const hang = (sp, kg, P, w, k) => { const Fl = flap(T, w, k, sp, kg); bendOn(Fl); drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(fsc(kg)))); bendOff(); };
     const fw = f => ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283;   // (each fish its own phase)
     const WT = karB && GEO(vtype()).work ? GEO(vtype()).work.tub : null, TUB = WT ? [WT[0], WT[1] + 0.42, WT[2]] : [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;   // (an open boat with tubs: into the bleeding tub, where the one who guts takes them)
     // fish swung from the rail into the tub
@@ -513,7 +513,7 @@
         for (let i = m.fish.length - 1; i >= 0; i--){ const f = m.fish[i], y = end + i * 0.5;
           if (y >= tip[1] - 0.35){ m.fish.splice(i, 1); dkEvent('bleed', tip, f.sp, f.kg); continue; }
           // (alive on the line: it kicks, bends, pulls the line about and splashes as it comes out; flap, tug, fishSurf in 09-landing-deck.js)
-          const sc = clamp(0.42 * Math.cbrt(f.kg), 0.28, 1.2), w = ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283, tg = tug(T, w, 0.12 * clamp((tip[1] - y) / 1.5, 0.15, 1)), Pf = [tip[0] + tg[0], y, tip[2] + tg[1]], Fl = flap(T, w);
+          const sc = clamp(0.42 * Math.cbrt(f.kg), 0.28, 1.2), w = ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283, tg = tug(T, w, 0.12 * clamp((tip[1] - y) / 1.5, 0.15, 1)), Pf = [tip[0] + tg[0], y, tip[2] + tg[1]], Fl = flap(T, w, 1, f.sp, f.kg);
           fishSurf(f, y, L2R(Pf), f.kg, T, w);
           if (y > -0.2){ bendOn(Fl); drawN(SK.fishM[f.sp] || SK.fishM.torsk, chain(BMrel, M4.T(Pf[0], Pf[1] - sc * 0.45, Pf[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(sc))); bendOff(); }
           low = low || Pf; }

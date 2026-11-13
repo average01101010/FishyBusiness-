@@ -57,7 +57,9 @@ async def main():
             s0 = await splashes(pg)
             for i in range(3):
                 await pg.wait_for_timeout(2000); await pg.screenshot(path=f'sprell_{kind}_{i}.png')
-            try: await pg.wait_for_function(f"(G3._debug.dk.n.fsplash || 0) > {s0}", timeout=60000)
+            # (SwiftShader draws a few frames a second and the hauler moves by the frame: wait for 8 m of gear, not a fixed time)
+            a0 = await pg.evaluate("G3._debug.haulA")
+            try: await pg.wait_for_function(f"(G3._debug.dk.n.fsplash || 0) > {s0} && G3._debug.haulA > {a0} + 1 || G3._debug.haulA > {a0} + 8", timeout=150000)
             except Exception: pass
             s1 = await splashes(pg); ha = await pg.evaluate("Math.round(G3._debug.haulA * 100) / 100")
             check(s1 > s0, f'{kind}: fisken på redskapet plasker når den kommer opp ved haleren', (s0, s1, 'haulA', ha))

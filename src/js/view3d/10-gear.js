@@ -722,7 +722,7 @@
       const off = (HAULA * HM.r) % 1, HF = haulFish(g), id0 = Math.floor(HAULA * HM.r);
       // (a fish on the hook or in the meshes kicks, pulls its snood about, the most down at the water, and splashes as it comes out: flap,
       // tug and fishSurf in 09-landing-deck.js; m how far it pulls, the nets' fish held tighter in the meshes)
-      const liveFish = (sp, id, P, sc, m) => { const w = id * 1.7, k = clamp(1 - (P[1] - FS_Y) / 1.6, 0.25, 1), tg = tug(t, w, m * k), Q = [P[0] + tg[0], P[1], P[2] + tg[1]], Fl = flap(t, w);
+      const liveFish = (sp, id, P, sc, m) => { const w = id * 1.7, k = clamp(1 - (P[1] - FS_Y) / 1.6, 0.25, 1), tg = tug(t, w, m * k), Q = [P[0] + tg[0], P[1], P[2] + tg[1]], Fl = flap(t, w, 1, sp);
         fishSurf('g' + id, Q[1], xf(BMrel, Q), 3, t, w); bendOn(Fl); drawN(fishOf(sp), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(sc))); bendOff(); };
       // on a longline each fish is taken in with the gaff as the line comes to the rail (sR along the path): an event for the hand at the
       // hauler as it gets there, and no fish drawn on the line past it (the nets' fish are picked out at the tray, as before)
@@ -764,8 +764,8 @@
       const ph = (t * (turning ? 0.5 : 0.15)) % 0.125, HF = haulFish(g), id0 = Math.floor(t * (turning ? 0.5 : 0.15) / 0.125);
       for (let u = ph, k = 0; u < 1; u += 0.125, k++){ const A = [NP[0] + (W0[0] - NP[0]) * u, NP[1] + 0.12 + (W0[1] + 0.3 - NP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), NP[2] + (W0[2] - NP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004)));
         // (the fish in the meshes kick and splash as the net comes out, flap and fishSurf in 09-landing-deck.js)
-        if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3){ const w = (k - id0) * 1.7, Fl = flap(t, w), Fp = [B2[0], B2[1] - 0.1, B2[2]]; fishSurf('n' + (k - id0), Fp[1], xf(BMrel, Fp), 3, t, w);
-          bendOn(Fl); drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(Fp[0], Fp[1], Fp[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(0.45))); bendOff(); } }
+        if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3){ const w = (k - id0) * 1.7, nsp = HF.sp(hash((k - id0) * 3 + 1)), Fl = flap(t, w, 1, nsp), Fp = [B2[0], B2[1] - 0.1, B2[2]]; fishSurf('n' + (k - id0), Fp[1], xf(BMrel, Fp), 3, t, w);
+          bendOn(Fl); drawN(fishOf(nsp), chain(BMrel, M4.T(Fp[0], Fp[1], Fp[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(0.45))); bendOff(); } }
       }
       drawNetsOp(BMrel, G, d, g);
     } else if (g.kind === 'line'){

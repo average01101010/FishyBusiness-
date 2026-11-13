@@ -494,7 +494,7 @@
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = knifeKit(!!P.bare), fishAt = (P, sp, kg, rz, rx) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2 + (rx || 0)), M4.RZ(rz || 0), M4.S(sc))); };
     // (a fish not yet bled kicks in the hand and on the gaff, flap in 09-landing-deck.js; k the life left in it)
-    const live = (P, e, k) => { const Fl = flap(T, (e.kg || 2) * 2.7 + idx, k); bendOn(Fl); fishAt(P, e.sp, e.kg, Fl[0], Fl[1]); bendOff(); };
+    const live = (P, e, k) => { const Fl = flap(T, (e.kg || 2) * 2.7 + idx, k, e.sp, e.kg); bendOn(Fl); fishAt(P, e.sp, e.kg, Fl[0], Fl[1]); bendOff(); };
     if (kn && (st.task === 'gut' || (st.task === 'bleed' && st.knife))) drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]));
     // (sharpening: the knife in the right hand, its blade drawn across the steel)
     if (kn && st.task === 'knife') drawN(kn, toolM(GP[0], st.kd || [-R[0], 0.15, -R[1]]));
@@ -508,7 +508,7 @@
       else if (!f.splashed){ f.splashed = true; ancSplash(E[0] + eye[0], E[1] + eye[1], E[2] + eye[2], 22, false); DKN.splash = (DKN.splash || 0) + 1; } }   // (the splash where it meets the sea; counted for the tests, oppshot)
     if (st.task === 'gaff' && st.gaff){ const hm = gaffKit(!!P.bare); if (hm) drawN(hm, toolM(st.gaff.g, st.gaff.n)); else drawN(PM.broom, limbM(hands[1], st.gaff.tip, 0.018));
       const e = st.ev; if (e && st.gaffFish) live(st.gaff.tip, e);
-      if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; const Fl = flap(T, (e.kg || 2) * 2.7 + idx); bendOn(Fl); fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2 + Fl[0], Fl[1]); bendOff(); } }
+      if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; const Fl = flap(T, (e.kg || 2) * 2.7 + idx, 1, e.sp, e.kg); bendOn(Fl); fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2 + Fl[0], Fl[1]); bendOff(); } }
     if (st.task === 'bleed' && st.ev){ const e = st.ev; if (st.held) live(st.held, e, e.k < 1.25 ? 1 : clamp(1 - (e.k - 1.25) / 0.45, 0, 1));   // (alive until the cut at 1.25 s, dead by the swing to the tub)
       if (st.toss){ const u = st.toss.u, A = st.toss.from, B = st.toss.to, arc = 0.45 + 0.18 * Math.hypot(B[0] - A[0], B[2] - A[2]); fishAt([A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + arc * 4 * u * (1 - u), A[2] + (B[2] - A[2]) * u], e.sp, e.kg, u * 3.5); }
       // the blood from the cut throat, a few drops falling toward the tub
@@ -520,7 +520,7 @@
     // ice, the bucket and the bait, the netting needle, the jig line
     const lie = (P, sp, sc, yaw) => { if (SK && SK.fishM) drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1], P[2]), M4.RY(yaw), M4.RZ(Math.PI / 2), M4.S(sc))); }, fishy = !!(SK && SK.fishM);
     if ((st.task === 'pick' || st.task === 'jigup') && st.ev && fishy){ const e = st.ev; if (st.held) live(st.held, e);
-      if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; bendOn(flap(T, (e.kg || 2) * 2.7 + idx)); lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); bendOff(); } }
+      if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; bendOn(flap(T, (e.kg || 2) * 2.7 + idx, 1, e.sp, e.kg)); lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); bendOff(); } }
     if (st.line) for (let i = 0; i + 1 < st.line.length; i++) drawN(PM.wire, limbM(st.line[i], st.line[i + 1], 0.004));
     if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(GP[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
     if (kn && st.task === 'bleedst') drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));

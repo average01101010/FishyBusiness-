@@ -146,7 +146,7 @@
   // the local fleet's age, from the boat's id: from fairly kept (0.15) to a hard-worked old one (0.9), most in between
   const npcAge = n => n.player ? 0 : 0.15 + 0.75 * Math.pow((lookHash('age' + n.id) % 1000) / 1000, 0.8);
   // a fish's bend for the next draws (LITN_VS uBend; Fl from flap in 09-landing-deck.js: [sweep, toss, amp, phase]), and back to none
-  function bendOn(Fl){ const u = PRGN && PRGN.u.uBend; if (u && Fl && Fl[2]) gl.uniform4f(u, Fl[2], Fl[3], 3.6, 0.22); }
+  function bendOn(Fl){ const u = PRGN && PRGN.u.uBend; if (u && Fl && Fl[2]) gl.uniform4f(u, Fl[2], Fl[3], Fl[4] || 3.6, Fl[5] || 0.22); }
   function bendOff(){ const u = PRGN && PRGN.u.uBend; if (u) gl.uniform4f(u, 0, 0, 0, 0); }
   function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
