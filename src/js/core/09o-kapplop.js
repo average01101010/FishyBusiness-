@@ -15,10 +15,11 @@
 //     the clock: helping costs no place
 //   - a tow (the rescue boat, b.status 'tow', or another player, 'ptow') and selling the boat end the attempt (dnf); the legs sailed
 //     still count on the long badge (S.lop.legsN, KL4)
-// The tasks on the way (the fixed one and the surprise per leg) are steg 116b; the screen is KL2, the board and the server's checks KL3,
+// The tasks on the way (KL1b, steg 116b, V5 B): one fixed task and one surprise per leg, below at lopTasks; the screen is KL2, the board and the server's checks KL3,
 // the week's end with the prize KL4. Nothing here sells anything (docs/engasjement.md).
 // S.lop = {run (the attempt now: null, or {id, vid, type, cls, name, reg, t0, legs:[{t, pid}], pen:[{t, k, min}], ded:[{t0, t1, min, k}],
-//          sos (the help under way), lp (her place the minute before), st:'reg'|'run'}), hist:[finished or broken attempts, newest first],
+//          sos (the help under way), lp (her place the minute before), st:'reg'|'run', tasks:[the legs' tasks, lopLegTasks], surp:[the
+//          surprise drawn for each leg, as it is shown]}), hist:[finished or broken attempts, newest first],
 //          best:{week id: the best finished time in game minutes}, legsN (legs sailed in all), seq}
 const LOP = {
   id:'lnk',   // Lindesnes–Nordkapp (KL3 keeps the attempts under this id; another course is another entry, kapplop.md «Det planen ikke gjør»)
@@ -41,6 +42,23 @@ const LOP = {
   pen:{fart:15, vik:15},   // game minutes added for each passing over a limit and each near miss with the duty to give way
   margin:0.9,   // the server's check (KL3): no leg faster than the shortest way at top speed with trim, with 10 % margin
   hist:20,      // the attempts kept
+  // the tasks on the way (KL1b, V5 B, Jonas 12.11.2026: «oppgavene som kommer underveis i løpet kan være x-faktoren som gjør det mer
+  // spennende og balanserer spillet»): per leg the fixed one (fix) and the list the surprise is drawn from (surp), at fixed places by the
+  // way (measured on the Autonav routes 13.11.2026, kapplop.md «Oppgavene underveis»). Kinds: 'foto' a picture of the light fyr (in the
+  // light lys), 'prove' the survey station (one game hour of fishing and the measuring board; a type without the jig in rigs, the ocean
+  // vessels, runs the echo line at p instead), 'ekko' the echo line from p, 'slep' a boat with engine failure at p towed to the
+  // harbour nearest her, 'frakt' kg of freight from the checkpoint the leg starts at to the next. nm: the leg's way, measured in KL1a
+  legs:[
+    {nm:194, fix:{k:'foto', fyr:'Marstein'}, surp:[{k:'foto', fyr:'Lista', lys:'sol'}, {k:'prove', p:P(59.30, 4.95)}, {k:'slep', p:P(58.75, 5.45)}]},
+    {nm:157, fix:{k:'frakt', kg:300}, surp:[{k:'foto', fyr:'Kråkenes'}, {k:'foto', fyr:'Svinøy', lys:'natt'}, {k:'ekko', p:P(61.60, 4.85)}]},
+    {nm:210, fix:{k:'prove', p:P(63.85, 9.25)}, surp:[{k:'foto', fyr:'Grip', lys:'natt'}, {k:'foto', fyr:'Sklinna', lys:'sol'}, {k:'slep', p:P(63.10, 7.40)}]},
+    {nm:175, fix:{k:'foto', fyr:'Myken', lys:'sol'}, surp:[{k:'foto', fyr:'Træna'}, {k:'prove', p:P(66.00, 12.40)}, {k:'slep', p:P(66.60, 13.00)}]},
+    {nm:192, fix:{k:'slep', p:P(68.05, 15.30)}, surp:[{k:'prove', p:P(68.40, 15.80)}, {k:'ekko', p:P(69.00, 16.50)}, {k:'foto', fyr:'Hekkingen'}]},
+    {nm:181, fix:{k:'foto', fyr:'Fruholmen', lys:'natt'}, surp:[{k:'foto', fyr:'Helneset'}, {k:'ekko', p:P(70.50, 21.00)}, {k:'prove', p:P(70.80, 23.00)}]}],
+  // game minutes: a surprise not done when the leg ends, or a task that failed (the boat drifted ashore before she came); the most the
+  // measuring board takes off for an exact reading or adds for a bad one (kapplop.md); the light waited for within the leg's time at
+  // the type's top speed times lysF, or the picture is taken in any light
+  task:{miss:60, meas:30, lysF:2.5},
 };
 const lopL = (no, en) => S.lang === 'en' ? en : no;
 function lopState(){ const L = S.lop || (S.lop = {run:null, hist:[], best:{}, legsN:0, seq:0}); L.hist = L.hist || []; L.best = L.best || {}; return L; }
@@ -102,7 +120,7 @@ function lopWhyNot(){
 function lopStart(){
   const why = lopWhyNot(); if (why) return {why};
   const L = lopState(), b = S.boat, V = VESSELS[b.type];
-  L.run = {id:LOP.id + '-' + (++L.seq), vid:S.cur, type:b.type, cls:lopCls(V), name:S.boatName || '', reg:S.t, t0:null, t1:null, legs:[], pen:[], ded:[], sos:null, lp:null, st:'reg'};
+  L.run = {id:LOP.id + '-' + (++L.seq), vid:S.cur, type:b.type, cls:lopCls(V), name:S.boatName || '', reg:S.t, t0:null, t1:null, legs:[], pen:[], ded:[], sos:null, lp:null, st:'reg', tasks:[], surp:[]};
   b.lop = L.run.id;   // the boat herself carries the attempt: a boat bought later under the same vessel id does not
   log('Påmeldt til kappløpet ' + LOP.name[0] + ' i klassen ' + lopClsName(L.run.cls) + '. Klokka går når du kaster loss.', 'Registered for the race ' + LOP.name[1] + ' in the class ' + lopClsName(L.run.cls, true) + '. The clock starts when you cast off.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('lop_start', {cls:L.run.cls, type:b.type});
@@ -115,6 +133,8 @@ function lopEnd(how){
   // registered and never off: the registration is struck, nothing kept or counted
   if (r.t0 == null){ L.run = null; log('Påmeldingen til kappløpet er strøket.', 'The registration for the race is struck off.', 'nav'); return null; }
   if (r.sos) lopSosEnd(r, S.t, r.lp);
+  // the race's freight still aboard goes ashore with the attempt (the tasks are the race's, KL1b)
+  if (r.vid === S.cur && S.cargo) S.cargo = S.cargo.filter(c => !(typeof c.tur === 'string' && c.tur.indexOf(r.id + ':') === 0));
   r.t1 = S.t; r.st = how === 'maal' ? 'done' : 'dnf'; r.how = how;
   const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id;
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
@@ -137,15 +157,25 @@ function lopDepart(){
   const b = S.boat; if (b.status !== 'port' || lopCpOf(b.port) !== 0) return;
   r.t0 = S.t; r.st = 'run'; r.lp = {x:b.pos.x, y:b.pos.y};
   log('Kappløpet er i gang. Klokka går til mållinja ved ' + LOP.goal.name + '.', 'The race is on. The clock runs to the finish line at ' + LOP.goal.name + '.', 'nav');
+  lopLegTasks(r, 0);   // leg 1's task and its surprise, shown at the start (KL1b)
 }
-// moored (05-vessels.js dock, the bound vessel): the next checkpoint in order is a leg done
+// moored (05-vessels.js dock, the bound vessel): the next checkpoint in order is a leg done, when the leg's fixed task is (KL1b). The
+// leg's freight is landed here first (the crew's work on the clock, cargoJob), and the next leg's tasks are shown
 function lopDock(pid){
   const L = S.lop, r = L && L.run; if (!r || r.vid !== S.cur || r.st !== 'run') return;
   const k = lopCpOf(pid), next = r.legs.length + 1; if (k !== next || next > LOP.cps.length) return;
+  for (const m of (r.tasks || []).slice()) if (m.st === 'go' && m.k === 'frakt' && m.leg === next - 1 && m.stage === 'go'){
+    S.cargo = (S.cargo || []).filter(c => c.tur !== m.id); cargoJob(m.kg, 'Lossing av ' + m.what[0], 'Landing the ' + m.what[1], true); m.stage = 'landed';
+    lopTaskEnd(m, true);   // (a fixed task done in port counts the leg from there)
+    if (S.lop.run !== r || r.legs.length + 1 !== next) return; }
+  if (!lopFixDone(r, next - 1)){ const m = r.tasks.find(x => x.leg === next - 1 && x.role === 'fix' && x.st === 'go'), w = lopTaskWhat(m);
+    log('Sjekkpunkt ' + LOP.cps[k - 1].name + ' teller når etappens oppgave er gjort: ' + w[0] + '.', 'Checkpoint ' + LOP.cps[k - 1].name + ' counts when the leg\'s task is done: ' + w[1] + '.', 'nav'); return; }
+  lopLegClose(r, next - 1);
   r.legs.push({t:S.t, pid}); L.legsN = (L.legsN || 0) + 1;
   const T = lopTime(r), hm = lopHm(T.min);
   log('Sjekkpunkt ' + LOP.cps[k - 1].name + ': etappe ' + next + ' av ' + (LOP.cps.length + 1) + '. Klokka står på ' + hm[0] + '.', 'Checkpoint ' + LOP.cps[k - 1].name + ': leg ' + next + ' of ' + (LOP.cps.length + 1) + '. The clock is at ' + hm[1] + '.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('lop_leg', {cls:r.cls, leg:next, min:Math.round(T.min)});
+  lopLegTasks(r, next);   // the next leg's task and its surprise
 }
 // the finish: the move from a to c crosses the line due north of the cape in the chart's grid (constant x; it parts from the true
 // meridian by the grid's convergence, some 8° here, and is the line the chart will draw in KL2), either way. vmax: the boat's top
@@ -199,8 +229,15 @@ function lopMinute(){
   const sid = lopSosNow();
   if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here, to:lopNext(r)};
   else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here, to:lopNext(r)}; }
-  // the finish line, after the last checkpoint
-  if (r.legs.length === LOP.cps.length && lopCross(r.lp, here, Math.max(BOAT.vmax || 0, (VESSELS[r.type] || {}).vmax || 0) || 30)){ r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
+  // the race's freight: loaded at the checkpoint when there is room now, and a word once if she leaves it on the quay
+  for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'frakt' && m.stage === 'pick'){
+    if (b.status === 'port' && cargoRoom() >= m.kg) lopLoad(m);
+    else if (b.status !== 'port' && !m.warn){ m.warn = 1; const pt = portById(m.from); log('Kappløpet: lasta ligger igjen på kaia i ' + (pt ? pt.name : '') + '. Sjekkpunktet teller ikke uten den.', 'The race: the freight is left on the quay in ' + (pt ? pt.name : '') + '. The checkpoint does not count without it.', 'nav'); } }
+  // the finish line, after the last checkpoint, when the last leg's task is done
+  const over = r.legs.length === LOP.cps.length && lopCross(r.lp, here, Math.max(BOAT.vmax || 0, (VESSELS[r.type] || {}).vmax || 0) || 30);
+  if (over && !lopFixDone(r, LOP.cps.length)){ if (!r.goalW){ r.goalW = 1; const m = r.tasks.find(x => x.leg === LOP.cps.length && x.role === 'fix' && x.st === 'go'), w = lopTaskWhat(m);
+    log('Mållinja teller når etappens oppgave er gjort: ' + w[0] + '.', 'The finish line counts when the leg\'s task is done: ' + w[1] + '.', 'nav'); } }
+  else if (over){ lopLegClose(r, LOP.cps.length); r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
   r.lp = here;
 }
 // once a minute from step, outside the vessels: a race boat no longer in the fleet (sold) ends the attempt; else her minute
@@ -210,4 +247,98 @@ function lopTick(){
   // the attempt's id, b.lop; a renamed boat is the same boat)
   const v = vesselById(r.vid), bt = v && vget(v, 'boat'); if (!v || !bt || bt.lop !== r.id){ lopEnd('salg'); return; }
   if (r.vid !== S.cur) onVessel(v, lopMinute); else lopMinute();
+}
+
+// ---- the tasks on the way (KL1b, steg 116b; kapplop.md «Oppgavene underveis (x-faktoren)», V5 B) ----
+// Each leg has its fixed task and one surprise, the same for everyone in the class that week (V3 B: a new board every real week): drawn
+// from the race's id, the week the attempt started in and the class, and shown when the leg begins (at the start for leg 1, at the
+// checkpoint before for the others). The tasks lie in S.lop.run.tasks, not on the board: they take no place there (T.slots), are not
+// paid (turPay; turPayOut and turEnd hand them to lopTaskEnd) and do not count in the board's brake (turWeek reads T.done and T.act).
+// They are done by the missions' own minute (turMinute: the station, the echo line, the tow drifting and made fast), the quay (turDock:
+// the tow delivered), the camera (turFotoAt and turFotoTake) and the crew's loading (cargoJob). The tasks take their time on the one
+// clock (V2 A). A leg counts at its checkpoint only when its fixed task is done; the surprise left undone then adds task.miss, and the
+// measuring board adds or takes off up to task.meas by how close it was read (kapplop.md: «Nøyaktig måling gir opptil 30
+// spillminutter fradrag, og en dårlig måling gir like mye tillegg»).
+const lopSeed = str => { let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h | 0; };
+// the surprise of leg j for a class in a week: its index in LOP.legs[j].surp (the same for all in the class that week)
+function lopSurp(j, cls, wk){ const L = LOP.legs[j]; return L && L.surp.length ? Math.floor(h2(lopSeed(LOP.id + '|' + wk + '|' + cls), j) * L.surp.length) % L.surp.length : -1; }
+// a task as the type does it: the station needs the jig (rigs), so a type without it runs the echo line at the same place
+function lopKind(spec, V){ if (spec.k === 'prove' && !((V && V.rigs) || []).includes('juksa')) return Object.assign({}, spec, {k:'ekko'}); return spec; }
+// a seeded draw (the places the picture is taken from, the echo line's points, the towed boat): the same for every attempt
+const lopRnd = seed => { let i = 0; return () => h2(seed, i++); };
+// the light a picture asks for, from H (game hours) and within hTot game hours: when it does not come in time (midnight sun, the dark
+// time of the year), the picture is taken in any light. Written here why: the race is always open (V3 B), so a light the season does not
+// have would hold the boat at the light for days, and that is not the race Jonas chose («den kjappeste tiden»)
+function lopLys(m, H, hTot){
+  if (!m.lys) return true; m.hTot = hTot; m.due = Math.round((H + hTot) * 60);
+  if (turLysNext(m, H) != null) return true;
+  m.lysAlt = m.lys; m.lys = null; return false;
+}
+// the words for a task
+function lopTaskWhat(m){
+  const P0 = id => portById(id) ? portById(id).name : '';
+  if (m.k === 'foto'){ const nm = turFyrName(m), ly = m.lys ? TUR_LYS[m.lys] : null; return ['bilde av ' + nm + (ly ? ' ' + ly.no : ''), 'a picture of ' + nm + (ly ? ' ' + ly.en : '')]; }
+  if (m.k === 'prove' && m.kind === 'ekko') return ['ekkoloddlinja ved ' + mobLL(m.p), 'the echo line at ' + mobLLen(m.p)];
+  if (m.k === 'prove') return ['prøvestasjonen ved ' + mobLL(m.p), 'the survey station at ' + mobLLen(m.p)];
+  if (m.k === 'slep') return ['slep av «' + m.boat + '» til ' + P0(m.to), 'tow the «' + m.boat + '» to ' + P0(m.to)];
+  if (m.k === 'frakt') return [Math.round(m.kg) + ' kg ' + m.what[0] + ' til ' + LOP.cps[m.leg].name, Math.round(m.kg) + ' kg of ' + m.what[1] + ' to ' + LOP.cps[m.leg].name];
+  return ['', ''];
+}
+// the tasks under way for the race boat bound now (turActs reads them; the minute is the bound vessel's)
+function lopTasks(){ const L = S.lop, r = L && L.run; if (!r || r.st !== 'run' || r.vid !== S.cur || !r.tasks) return []; return r.tasks.filter(m => m.st === 'go'); }
+// one task of leg j made at its place (null when the place is not one the generator takes: the tests make sure each is)
+function lopMake(run, j, role, spec){
+  const V = VESSELS[run.type] || {}, sp = lopKind(spec, V), o = turHere(), rnd = lopRnd(lopSeed(LOP.id + '|' + j + '|' + role + '|' + sp.k));
+  let m = null;
+  if (sp.k === 'foto') m = turFoto(o, 'lop', null, {fyr:sp.fyr, lys:sp.lys || null, rnd});
+  else if (sp.k === 'prove' || sp.k === 'ekko') m = turProve(o, 'lop', {p:sp.p, kind:sp.k === 'ekko' ? 'ekko' : 'stasjon', rnd});
+  else if (sp.k === 'slep') m = turSlep(o, 'lop', {p:sp.p, rnd});
+  else if (sp.k === 'frakt'){ const b = S.boat, from = b.status === 'port' ? b.port : null, cp = LOP.cps[j];
+    if (from && cp) m = turFrakt(o, 'lop', new Set(), turMe(), null, {from, to:cp.port, kg:sp.kg, rnd}); }
+  if (!m) return null;
+  Object.assign(m, {id:run.id + ':' + j + role[0], lop:run.id, leg:j, role, vid:run.vid, st:'go', t0:S.t, pay:0, base:0});
+  if (m.k === 'prove') m.stage = m.kind === 'ekko' ? 'line' : 'fish';
+  if (m.k === 'slep') m.stage = 'reach';
+  if (m.k === 'frakt') m.stage = 'pick';
+  if (m.k === 'foto' && m.lys){ const vm = Math.max(1, +V.vmax || 6), hTot = LOP.legs[j].nm / vm * LOP.task.lysF;
+    if (!lopLys(m, S.t / 60, hTot)) log('Kappløpet: ' + TUR_LYS[m.lysAlt].no + ' kommer ikke ved ' + turFyrName(m) + ' innen etappens tid. Et vanlig bilde av fyret holder.', 'The race: ' + TUR_LYS[m.lysAlt].en + ' does not come at ' + turFyrName(m) + ' within the leg\'s time. An ordinary picture of the light will do.', 'nav'); }
+  return m;
+}
+// the tasks of leg j (0 to 5), when the leg begins: the fixed one and the surprise, shown now
+function lopLegTasks(run, j){
+  const Lg = LOP.legs[j]; if (!Lg) return;
+  run.tasks = (run.tasks || []).filter(m => m.leg !== j); run.surp = run.surp || [];
+  const wk = lopWeek(lopMs(run.t0)).id, si = lopSurp(j, run.cls, wk); run.surp[j] = si;
+  for (const [role, spec] of [['fix', Lg.fix], ['surp', Lg.surp[si]]]){
+    const m = spec && lopMake(run, j, role, spec);
+    if (!m){ if (spec) console.warn('lop: no task at', j, role, spec); continue; }
+    run.tasks.push(m);
+    const w = lopTaskWhat(m);
+    log((role === 'fix' ? 'Etappe ' + (j + 1) + ', oppgaven: ' : 'Etappe ' + (j + 1) + ', overraskelsen: ') + w[0] + '.', (role === 'fix' ? 'Leg ' + (j + 1) + ', the task: ' : 'Leg ' + (j + 1) + ', the surprise: ') + w[1] + '.', 'nav');
+    if (m.k === 'frakt' && S.boat.status === 'port') lopLoad(m);
+  }
+}
+// the freight aboard at the checkpoint the leg starts at (turLoad: the crew's work, cargoJob; waits on the quay when there is no room)
+function lopLoad(m){ if (m.stage !== 'pick' || S.boat.status !== 'port' || lopCpOf(S.boat.port) !== m.leg) return false; return turLoad(m); }
+// a task over: done, or failed (ok false: the boat drifted ashore before she came, and the task counts as done with task.miss added)
+function lopTaskEnd(m, ok, how){
+  const L = S.lop, r = L && L.run; if (m.st !== 'go') return; m.st = ok ? 'done' : 'fail'; m.t1 = S.t;
+  let adj = 0;
+  if (!ok) adj = LOP.task.miss;
+  else if (m.k === 'prove' && m.kind === 'stasjon' && m.err != null){ const f = clamp(1 - (m.err - 0.5) / 2.5, 0, 1); adj = Math.round(LOP.task.meas * (1 - 2 * f)); }
+  m.adj = adj;
+  if (r && r.id === m.lop && adj) r.pen.push({t:S.t, k:'opp', min:adj, leg:m.leg});
+  const w = lopTaskWhat(m), hm = lopHm(Math.abs(adj));
+  log('Kappløpet: ' + w[0] + (ok ? ' er gjort' : ' gikk ikke') + (adj ? (adj > 0 ? ', ' + hm[0] + ' lagt til' : ', ' + hm[0] + ' trukket fra') : '') + '.',
+    'The race: ' + w[1] + (ok ? ' is done' : ' failed') + (adj ? (adj > 0 ? ', ' + hm[1] + ' added' : ', ' + hm[1] + ' taken off') : '') + '.', 'nav');
+  if (typeof cloudEv === 'function') cloudEv('lop_task', {leg:m.leg + 1, role:m.role, k:m.k === 'prove' ? m.kind : m.k, ok:!!ok, adj, min:Math.round(S.t - m.t0), cls:r ? r.cls : null});
+  // done at the checkpoint the leg ends at (the freight landed there): the leg counts now
+  if (r && m.role === 'fix' && S.boat.status === 'port' && r.vid === S.cur) lopDock(S.boat.port);
+}
+// the leg j's fixed task done (or failed, or none could be made): the checkpoint counts
+const lopFixDone = (r, j) => !(r.tasks || []).some(m => m.leg === j && m.role === 'fix' && m.st === 'go');
+// the leg j is over: the surprise left undone adds task.miss (a tow left drifting, a picture not taken), and is struck
+function lopLegClose(r, j){
+  for (const m of r.tasks || []) if (m.leg === j && m.role === 'surp' && m.st === 'go'){ m.st = 'miss'; m.adj = LOP.task.miss; r.pen.push({t:S.t, k:'opp', min:LOP.task.miss, leg:j});
+    const w = lopTaskWhat(m), hm = lopHm(LOP.task.miss); log('Kappløpet: overraskelsen (' + w[0] + ') ble ikke gjort, ' + hm[0] + ' lagt til.', 'The race: the surprise (' + w[1] + ') was not done, ' + hm[1] + ' added.', 'nav'); }
 }

@@ -2,6 +2,9 @@
 // (V4 A, no type names), the real week an attempt counts in over the changes to summer and winter time (V3 B), one clock with the
 // penalties and the help taken off (V2 A), the least possible time the server checks against (KL3), the hop refused in the race and
 // allowed before the start and after the finish (Jonas: «Nei i løpet»), and a leg from the registration to the finish line.
+// The tasks on the way (KL1b, steg 116b, V5 B): one fixed task and one surprise per leg, the surprise the same for the class that week,
+// the station swapped for the echo line on a type without the jig, the light's alternative, the measuring board's ±30 minutes, the
+// surprise left undone, a checkpoint that waits for its task, and no pay and no place on the board.
 export default function (t){
   const K = t.K, {VESSELS, LOP, lopCls, lopWeek, lopTime, lopMinH, lopCross, lopCpOf, hopWhy, newState} = K;
   // 1. the class from vmax and cls, for every type in VESSELS
@@ -104,4 +107,59 @@ export default function (t){
   const ys = [LOP.start.p.y].concat(LOP.cps.map(c => c.p.y), [LOP.goal.p.y]);
   t.ok(ys.every((y, i) => !i || y < ys[i - 1]), 'start, sjekkpunktene og målet ligger fra sør mot nord');
   t.ok(typeof lopCpOf === 'function', 'lopCpOf finnes');
+
+  // 7. the tasks on the way (KL1b): one fixed task and a list for the surprise per leg, at places and lights that exist
+  { const {lopSurp, lopKind, lopLys, lopTaskEnd, lopFixDone, lopLegClose, FYR, TUR_LYS, EPOCH} = K;
+    t.eq(LOP.legs.length, LOP.cps.length + 1, 'én rad oppgaver for hver av de seks etappene');
+    const kinds = ['foto', 'prove', 'ekko', 'slep', 'frakt'], fyrOk = x => x.k !== 'foto' || FYR.some(f => f[3] === x.fyr), lysOk = x => !x.lys || !!TUR_LYS[x.lys], pOk = x => !['prove', 'ekko', 'slep'].includes(x.k) || (x.p && isFinite(x.p.x) && isFinite(x.p.y));
+    LOP.legs.forEach((L, j) => { t.ok(L.fix && kinds.includes(L.fix.k) && fyrOk(L.fix) && lysOk(L.fix) && pOk(L.fix), 'etappe ' + (j + 1) + ': én fast oppgave (' + (L.fix && L.fix.k) + ')');
+      t.ok(L.surp.length >= 2 && L.surp.every(x => kinds.includes(x.k) && x.k !== 'frakt' && fyrOk(x) && lysOk(x) && pOk(x)), 'etappe ' + (j + 1) + ': overraskelsen trekkes blant ' + L.surp.length + ' (' + L.surp.map(x => x.k).join(', ') + ')');
+      t.ok(L.nm > 100, 'etappe ' + (j + 1) + ': lengden fra KL1a (' + L.nm + ' nm)'); });
+    t.ok(LOP.legs[0].fix.k !== 'frakt', 'etappe 1 har ingen frakt (lasting før start ville gått utenfor klokka)');
+    // the surprise: the same for two attempts in the class that week, drawn again another week
+    for (let j = 0; j < 6; j++) t.eq(lopSurp(j, 'middels', '2026-W47'), lopSurp(j, 'middels', '2026-W47'), 'etappe ' + (j + 1) + ': samme overraskelse for to forsøk i samme klasse og uke');
+    const wks = Array.from({length:12}, (_, i) => '2026-W' + String(40 + i).padStart(2, '0')), seen = new Set(wks.map(w => lopSurp(0, 'middels', w)));
+    t.ok(seen.size > 1 && [...seen].every(i => i >= 0 && i < LOP.legs[0].surp.length), 'etappe 1 over tolv uker: ' + seen.size + ' ulike overraskelser, alle i lista');
+    const other = wks.find(w => lopSurp(0, 'middels', w) !== lopSurp(0, 'middels', '2026-W47'));
+    t.ok(!!other, 'en annen uke gir en annen overraskelse (' + other + ')');
+    t.ok(LOP.legs.some((L, j) => ['sakte', 'rask', 'hav'].some(c => lopSurp(j, c, '2026-W47') !== lopSurp(j, 'middels', '2026-W47'))), 'klassene trekker hver for seg samme uke');
+    // the station needs the jig: a type without it in rigs (the ocean vessels) gets the echo line at the same place
+    const st = LOP.legs.map(L => L.fix).find(x => x.k === 'prove');
+    t.ok(!!st, 'én etappe har prøvestasjonen som fast oppgave');
+    for (const k in VESSELS){ const V = VESSELS[k], jig = (V.rigs || []).includes('juksa'), got = lopKind(st, V);
+      t.eq(got.k, jig ? 'prove' : 'ekko', k + (lopCls(V) === 'hav' ? ' (havfartøy)' : '') + ': ' + (jig ? 'prøvestasjonen' : 'ekkoloddlinja, rigs uten juksa'));
+      if (lopCls(V) === 'hav') t.ok(!jig, k + ': havfartøyet har ikke juksa og får ekkoloddlinja'); }
+    t.ok(lopKind(st, VESSELS.sjark) === st || lopKind(st, VESSELS.sjark).p === st.p, 'stedet er det samme');
+    // the light's alternative: «mens fyret lyser» at Fruholmen (71° N) in the midnight sun does not come, and the picture is ordinary
+    const fr = FYR.find(f => f[3] === 'Fruholmen'), mk = () => ({k:'foto', fyr:{x:fr[0], y:fr[1], name:fr[3]}, lys:'natt'}), Hof = ms => (ms - EPOCH) / 3600000;
+    const mJun = mk(), okJun = lopLys(mJun, Hof(Date.UTC(2027, 5, 21, 12)), 181 / 10 * 2.5);
+    t.ok(!okJun && mJun.lys === null && mJun.lysAlt === 'natt', 'Fruholmen 21. juni: midnattssol, lyset kommer ikke innen etappens tid (45 t): et vanlig fyrbilde', mJun);
+    const mDec = mk(), okDec = lopLys(mDec, Hof(Date.UTC(2027, 11, 15, 12)), 181 / 10 * 2.5);
+    t.ok(okDec && mDec.lys === 'natt', 'Fruholmen 15. desember: fyret lyser innen etappens tid, oppgaven står', mDec);
+    const mNo = {k:'foto', fyr:{x:fr[0], y:fr[1]}, lys:null}; t.ok(lopLys(mNo, 0, 10) && mNo.lys === null && !mNo.lysAlt, 'et bilde uten bestemt lys er urørt');
+    // the end of a task: the measuring board ±30 minutes by how close it was read, a failed task task.miss, once
+    const S7 = newState(); K.set('S', S7); S7.cur = 'v1';
+    const run = {id:'lnk-9', vid:'v1', type:'sjark', cls:'middels', t0:0, legs:[], pen:[], ded:[], st:'run', tasks:[]};
+    S7.lop = {run, hist:[], best:{}, legsN:0, seq:9}; S7.boat.status = 'sailing';
+    const task = o => Object.assign({lop:'lnk-9', vid:'v1', st:'go', t0:0, leg:2, role:'fix'}, o);
+    const a1 = task({k:'prove', kind:'stasjon', p:{x:500, y:900}, err:0.4}); run.tasks.push(a1); lopTaskEnd(a1, true); t.eq(a1.adj, -LOP.task.meas, 'målebrettet innen en halv centimeter: 30 minutter trukket fra');
+    const a2 = task({k:'prove', kind:'stasjon', p:{x:500, y:900}, err:3.2}); run.tasks.push(a2); lopTaskEnd(a2, true); t.eq(a2.adj, LOP.task.meas, 'målebrettet 3 cm feil i snitt: 30 minutter lagt til');
+    const a3 = task({k:'prove', kind:'stasjon', p:{x:500, y:900}, err:1.75}); run.tasks.push(a3); lopTaskEnd(a3, true); t.eq(a3.adj, 0, 'midt imellom (1,75 cm): verken eller');
+    const a4 = task({k:'slep', boat:'Måsen', to:null, p:{x:500, y:900}}); run.tasks.push(a4); lopTaskEnd(a4, false, 'ashore'); t.eq([a4.st, a4.adj], ['fail', LOP.task.miss], 'båten drev på land før hun kom: oppgaven gikk ikke, 60 minutter lagt til');
+    lopTaskEnd(a4, true); t.eq(a4.st, 'fail', 'en oppgave som er over, endres ikke');
+    t.eq(run.pen.map(x => x.min), [-30, 30, 60], 'tilleggene og fradraget står på klokka (lopTime)');
+    t.eq(lopTime(run, 100).pen, 60, 'lopTime summerer dem');
+    // a checkpoint waits for its fixed task; the surprise left undone adds 60 minutes when the leg is over
+    run.tasks = [task({k:'foto', leg:0, role:'fix', fyr:{x:0, y:0, name:'Marstein'}}), task({k:'foto', leg:0, role:'surp', fyr:{x:0, y:0, name:'Lista'}})]; run.pen = [];
+    t.ok(!lopFixDone(run, 0), 'den faste oppgaven er ikke gjort: sjekkpunktet teller ikke');
+    run.tasks[0].st = 'done'; t.ok(lopFixDone(run, 0), 'den faste oppgaven er gjort: sjekkpunktet teller');
+    lopLegClose(run, 0); t.eq([run.tasks[1].st, run.pen.map(x => x.min)], ['miss', [60]], 'overraskelsen ble ikke gjort: 60 minutter lagt til når etappen er over');
+    lopLegClose(run, 0); t.eq(run.pen.length, 1, 'bare én gang');
+    // no pay, no record on the board, no place: turPayOut and turEnd hand a task to lopTaskEnd
+    const {turPayOut, turEnd, turState} = K, T7 = turState(), book0 = JSON.stringify(S7.book || null), money0 = S7.money;
+    const a5 = task({k:'foto', leg:1, role:'surp', fyr:{x:0, y:0, name:'Kråkenes'}, pay:0}); run.tasks.push(a5);
+    turPayOut(a5, 'Kystposten', 'Takk for bildet.', 'Thank you for the picture.');
+    t.ok(a5.st === 'done' && S7.money === money0 && JSON.stringify(S7.book || null) === book0 && !T7.done.length && !T7.act.length && T7.slots === K.TUR.boardMax, 'fyrbildet i løpet: gjort, ingen betaling, ingenting i tavlas historikk, ingen plass brukt', {st:a5.st, done:T7.done.length, slots:T7.slots});
+    const a6 = task({k:'slep', leg:1, role:'surp', boat:'Terna', p:{x:0, y:0}}); run.tasks.push(a6); turEnd(a6, false, null, 'ashore');
+    t.ok(a6.st === 'fail' && !T7.done.length, 'slepet i løpet som gikk galt: til løpet, ikke til tavla'); }
 }
