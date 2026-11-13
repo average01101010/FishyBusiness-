@@ -630,6 +630,14 @@ Gi en stolpe `up=(1, 0, 0)` (eller bruk `abox`/`acyl`), og se etter svevende del
 **Vegger med boolske vinduer skal skygges flatt.** Husets vegger ble lofta med glatt skygge; vinduskuttene laget vifter av trekanter, og K5
 viste flekkete, bulete vegger. Etter kuttet: alle flatene `use_smooth = False` (veggene er plane plater).
 
+**Skyggen ved et boolsk hull smøres langs vifta** (tilbakemelding #5 fra testutgaven, 13.11.2026). Kuttet gir en vifte av lange, tynne
+trekanter fra hullkanten til platas ytterkanter, og `bake_ao` baker skyggen per hjørne: mørk ved hullet (rundt 100 av 255) og lys ute ved
+kanten, så skyggen ble mørke striper 1–4 m tvers over hurtigsjarkens akterspeil. Etter kuttet: `bpyutil.ease_cut_fans(obj, rims)` deler
+flatene rundt hvert hull og resten av plata i samme maling og plan (innen 2,5 m) med punkter 0,2 m fra hverandre, så skyggen blir ved
+hullet og festene. Hurtigsjarken (`hurtig11.py cut_holes`) har det; lod0 gikk fra 64 252 til 73 260 trekanter. De andre båtene med
+egne `cut_holes` (havsjark35, hs11, krabbe50, kyst15, kyst21, malo36, plast31, snekke26) har samme vifter og trenger samme kall og en ny
+eksport.
+
 **Lanternenes «over skroget» er det øverste gjennomgående dekket.** På en båt med bakk og shelter som ikke går hele lengden, er det
 teinedekket (vedlegg I). Regnet fra bakken ville topplanterna stått 1,4 m for lavt. Skriv i `check()` hvilket dekk som er «skroget».
 
