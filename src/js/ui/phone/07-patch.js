@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['alesund-mottak-131126', '13.11.2026', 'Fiskemottaket i Ålesund', 'The fish plant in Ålesund', [
+       ['Fiskemottaket i Ålesund sto med kaia inn mot land, så båtene kom ikke inn eller ut. Det ligger nå ved en kai rundt 800 m lenger øst, med åpent vann foran. Ingen andre mottak, verft eller butikker langs kysten har samme feil.', 'The fish plant in Ålesund stood with its quay facing the land, so boats could not get in or out. It now lies at a quay some 800 m further east, with open water in front. No other plant, yard or shop along the coast had the same fault.']]],
     ['flagg-131126', '13.11.2026', 'Flaggene på de andre båtene', 'The flags on the other boats', [
        ['Andre spilleres flagg synes nå i akterenden på båtene deres, også rederiflagget med logoen. En båt uten eget flagg fører det norske. Flaggene går opp og ned etter flaggtidene der båten er.', "Other players' flags now fly at the stern of their boats, the house flag with the company logo too. A boat without a flag of her own flies the Norwegian one. The flags go up and down by the flag hours where the boat is."]]],
     ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [

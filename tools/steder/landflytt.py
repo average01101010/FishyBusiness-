@@ -12,6 +12,10 @@
 #   - lies within REACH km (500 m first, never over 3 km) of the old face,
 #   - keeps SPACE km to every other place (as bruflytt.py: plants, yards, shops, rorbuer, Father's naust), and YARDS km to the other yards,
 #   - has no bridge and no fixed obstacle in the berth (fotavtrykk.measure: 'bru', 'pir_liggeplass').
+# A place must also have a way out to the sea (tilbakemelding #8 from the test version, 13.11.2026: the plant in Ålesund stood with its face
+# on a pier line towards the land, its basin a pool shut in by the land and the boat could not get out): sea_way() floods the water from
+# the front of the basin, keeping CLEAR m from land, and a place that reaches no point WAYR m from the unit is moved as one standing
+# off the land is, to a face that has both.
 # Only q (the face) of the plants in src/data/mottak.json changes, and the entry in src/data/steder.json. No network; reads the vector packs
 # (tools/map/out/game). Run it after bruflytt.py (a second run finds nothing to move).
 #   python3 tools/steder/landflytt.py [--dry]      (--report prints every place's gap and moves nothing)
@@ -28,6 +32,8 @@ STEDER = os.path.join(ROOT, 'src', 'data', 'steder.json'); MOTTAK = os.path.join
 REACHES = (0.5, 1.0, 1.5, 3.0)
 GAPOK = 6.0       # m from the unit's ground to land that still counts as joined (the fine coast is simplified to 3 m)
 FAR = 400.0       # m: the gap is not measured further than this
+WAYR = 300.0      # m from the unit's middle the water from its basin must reach
+CLEAR = 4.0       # m from land (and the unit's own ground) the way keeps: a passage some 8-12 m wide on the 4 m grid
 
 def land_gap(u):
     """metres from the unit's ground (block and fill) to the nearest land of the fine coast (the game's truth near the boats; the 25 m mask
@@ -47,6 +53,31 @@ def land_gap(u):
             if F.land_fine(q.x, q.y): return float(d)
     return FAR + 1
 
+def sea_way(u, st=4.0):
+    """how far (m, up to WAYR) the water in front of the unit's basin reaches from its middle, keeping CLEAR m from land: the fine coast
+    (land_fine) and the unit's block and fill are land, its dredged basin water (as the game's isLand, 01-world.js inHarbourPocket). WAYR
+    means it reaches the sea; less means the basin is shut in."""
+    import collections, shapely
+    ox, oz = u.o; N = int(WAYR / st) + 3; xs = ox + np.arange(-N, N + 1) * st; zs = oz + np.arange(-N, N + 1) * st
+    GX, GZ = np.meshgrid(xs, zs); L = np.array([[F.land_fine(float(x), float(z)) for x in xs] for z in zs], bool)
+    L = (L | shapely.contains_xy(u.poly_land(), GX, GZ)) & ~shapely.contains_xy(u.poly_basin(), GX, GZ)
+    k = int(math.ceil(CLEAR / st)); B = L.copy()
+    for dj in range(-k, k + 1):
+        for di in range(-k, k + 1):
+            if di * di + dj * dj <= k * k: B |= np.roll(np.roll(L, dj, 0), di, 1)
+    g = u.g; seen = np.zeros_like(B); q = collections.deque()
+    for lx in np.arange(-g['basinX'] + 6, g['basinX'] - 5, 4.0):
+        x, z = u.w(float(lx), g['basinZ'] - 6); i = int(round((x - xs[0]) / st)); j = int(round((z - zs[0]) / st))
+        if not B[j, i] and not seen[j, i]: seen[j, i] = True; q.append((j, i))
+    best = 0.0
+    while q:
+        j, i = q.popleft(); d = math.hypot(xs[i] - ox, zs[j] - oz); best = max(best, d)
+        if d >= WAYR: return WAYR
+        for a, b in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            jj, ii = j + a, i + b
+            if 0 <= jj < B.shape[0] and 0 <= ii < B.shape[1] and not B[jj, ii] and not seen[jj, ii]: seen[jj, ii] = True; q.append((jj, ii))
+    return best
+
 def tot(res, k): return sum(v for _, v, _ in res.get(k, []))
 def bad(res): return bool(res.get('bru')) or bool(res.get('pir_liggeplass'))
 def cost(res): return tot(res, 'pir_basseng') / 50 + tot(res, 'vei') + tot(res, 'bygg') * 5 + tot(res, 'pir_land') / 20
@@ -58,13 +89,13 @@ def main():
     hx, hy = F.LG(57.395, 27.563)
     pts = [(x['q'][0], x['q'][1], ('m', x['id'])) for x in M['m'] if x.get('q')] + [(r[0], r[1], ('s', i)) for i, r in enumerate(S['r'])]
     pts += [(r[0], r[1], ('r', i)) for i, r in enumerate(RB)] + [(56.058, 53.575, ('f', 0)), (hx, hy, ('n', 0))]
-    places, _ = F.load_places(); moved = []; report = []; gaps = []
+    places, _ = F.load_places(); moved = []; report = []; gaps = []; ways = []
     for u in places:
         if not hasattr(u, 'ref'): continue
-        try: g = land_gap(u)
+        try: g = land_gap(u); w = sea_way(u)
         except F.Missing: report.append((u.ref, u.kind, u.name, 'no map under it')); continue
-        gaps.append((g, u))
-        if '--report' in sys.argv or g <= GAPOK: continue
+        gaps.append((g, u)); ways.append((w, u))
+        if '--report' in sys.argv or (g <= GAPOK and w >= WAYR): continue
         ref = u.ref; x0, y0 = u.o[0] / 1000, u.o[1] / 1000
         # a plant's register entries on the very same face (Kongsfjord: two firms, one quay) are one place with it, not a neighbour
         pts = [t for t in pts if t[2] == ref or t[2][0] != 'm' or math.hypot(t[0] - x0, t[1] - y0) > 0.002]
@@ -86,20 +117,23 @@ def main():
                     try: g2 = land_gap(nu)
                     except F.Missing: continue
                     seen += 1
-                    if g2 > GAPOK: continue
+                    if g2 > GAPOK or sea_way(nu) < WAYR: continue
                     r2 = F.measure(nu, F.Env(nu.o[0], nu.o[1], 150))
                     if bad(r2): continue
                     cands.append((cost(r2) + 20 * math.hypot(fx - x0, fy - y0), j, g2, r2, math.hypot(fx - x0, fy - y0)))
                     if len(cands) >= 6 or seen > 80: break
                 if cands: best = min(cands, key=lambda c: c[0]); break
             if best: break
-        if not best: report.append((ref, u.kind, u.name, 'no face with land within 3 km (gap %d m)' % g)); continue
+        if not best: report.append((ref, u.kind, u.name, 'no face with land and a way to the sea within 3 km (gap %d m, way %d m)' % (g, w))); continue
         _, j, g2, r2, dist = best; new = [round(float(X[j]), 4), round(float(Y[j]), 4), round(float(A[j]), 3), round(float(Ln[j]), 1), round(float(D[j]), 2), int(K[j])]
         pts = [(new[0], new[1], r) if r == ref else (a, b, r) for a, b, r in pts]
         moved.append((ref, u.kind, u.name, round(dist * 1000), new, g, g2))
     gs = sorted(g for g, _ in gaps)
     print('places measured:', len(gs), '| joined (gap <= %d m): %d | gap <= 30 m: %d | further: %d' % (GAPOK, sum(1 for g in gs if g <= GAPOK), sum(1 for g in gs if GAPOK < g <= 30), sum(1 for g in gs if g > 30)))
+    print('shut in (the water from the basin reaches under %d m with %d m from land): %d' % (WAYR, CLEAR, sum(1 for w, _ in ways if w < WAYR)))
     if '--report' in sys.argv:
+        for w, u in sorted(ways, key=lambda t: t[0]):
+            if w < WAYR: print('%-8s %-24s way %5.0f m  (%.3f, %.3f)' % (u.kind, u.name, w, u.o[0] / 1000, u.o[1] / 1000))
         for g, u in sorted(gaps, key=lambda t: -t[0])[:60]: print('%-8s %-24s gap %5.0f m  (%.3f, %.3f)' % (u.kind, u.name, g, u.o[0] / 1000, u.o[1] / 1000))
         return
     for r in report: print('UNSOLVED', r)
@@ -110,8 +144,8 @@ def main():
                 x = next(e for e in M['m'] if e['id'] == ref[1]); p = x['p']; x['q'] = new + [round(math.hypot(new[0] - p[0], new[1] - p[1]) * 1000)]
             else: S['r'][ref[1]][:5] = new[:5]
         nm = sum(1 for r in moved if r[0][0] == 'm'); ns = len(moved) - nm
-        S['meta']['landflytt'] = '%d places moved to a quay face with land behind it (%d plants, %d yards/shops), tools/steder/landflytt.py' % (len(moved), nm, ns)
-        M['meta']['landflytt'] = '%d plants moved to a quay face with land behind it, tools/steder/landflytt.py' % nm
+        S['meta']['landflytt'] = '%d places moved to a quay face with land behind it and a way to the sea (%d plants, %d yards/shops), tools/steder/landflytt.py' % (len(moved), nm, ns)
+        M['meta']['landflytt'] = '%d plants moved to a quay face with land behind it and a way to the sea, tools/steder/landflytt.py' % nm
         S['r'].sort(key=lambda o: (o[0], o[1]))
         json.dump(M, open(MOTTAK, 'w'), ensure_ascii=False, separators=(',', ':')); json.dump(S, open(STEDER, 'w'), ensure_ascii=False, separators=(',', ':'))
     print(len(moved), 'moved,', len(report), 'unsolved')
