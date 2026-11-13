@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['flagg-131126', '13.11.2026', 'Flaggene på de andre båtene', 'The flags on the other boats', [
+       ['Andre spilleres flagg synes nå i akterenden på båtene deres, også rederiflagget med logoen. En båt uten eget flagg fører det norske. Flaggene går opp og ned etter flaggtidene der båten er.', "Other players' flags now fly at the stern of their boats, the house flag with the company logo too. A boat without a flag of her own flies the Norwegian one. The flags go up and down by the flag hours where the boat is."]]],
     ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [
        ['Mannskapet står støtt i sjøgang: føttene står på dekket slik det krenger, knærne tar opp sjøen, de står bredere når det blåser opp, og den som står ledig, tar rekka med en hånd eller setter en fot ut når hun ruller tungt.', 'The crew stand steady in a seaway: their feet are on the deck as it heels, their knees take up the sea, they stand wider as it blows up, and someone standing free takes the rail with a hand or puts a foot out when she rolls heavily.']]],
     ['kapplop-131126', '13.11.2026', 'Kappløpet Lindesnes–Nordkapp', 'The race Lindesnes–Nordkapp', [
@@ -14,7 +16,8 @@
        ['Går du fort mot sjøen og hun slår hardt gang på gang, sier mannskapet fra.', 'Run fast into a sea and slam hard again and again, and the crew will tell you.'],
        ['Den korte streken på vannet ved holmer i kanten av det nære landskapet, sett høyt ovenfra, er borte.', 'The short line on the water by islets at the edge of the near landscape, seen from high up, is gone.'],
        ['Sjøen gjentar seg ikke lenger i et mønster: skumflekkene og glitteret lå i et fast rutenett som synes rett ovenfra. Nå er de spredt slik de er på sjøen, og det er de lange bølgene som brekker.', 'The sea no longer repeats in a pattern: the flecks of foam and the glitter lay in a fixed grid that showed from straight above. Now they are scattered as they are at sea, and it is the long waves that break.'],
-       ['De små bølgene går nå med vinden. Før gikk mange av dem på tvers og mot, så sjøen så ut til å koke og dirre på stedet.', 'The small waves now go with the wind. Many of them ran across and against it, so the sea seemed to boil and tremble in place.']]],
+       ['De små bølgene går nå med vinden. Før gikk mange av dem på tvers og mot, så sjøen så ut til å koke og dirre på stedet.', 'The small waves now go with the wind. Many of them ran across and against it, so the sea seemed to boil and tremble in place.'],
+       ['Solglitteret på sjøen flimrer ikke lenger så fort når du ser det fra høyden.', 'The sun\'s glitter on the sea no longer flickers so fast when seen from high up.']]],
     ['autonav-lang-121126', '12.11.2026', 'Autonav på lange etapper', 'Autonav on long legs', [
        ['Store båter får nå en rute på lange etapper mellom øyene der Autonav før svarte «Fant ingen rute dit», for eksempel fra Rørvik nordover til Bodø.', 'Big boats now get a route on long legs among the islands where Autonav used to answer «Found no route there», for example from Rørvik north to Bodø.']]],
     ['skip-121126', '12.11.2026', 'Ferjene og kystruta har egne modeller', 'The ferries and the coastal route have their own models', [

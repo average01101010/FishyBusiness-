@@ -652,14 +652,29 @@ function livStr(b){
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
-  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') && !(W && spPaintLogo(W)) ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
   if (W) out.push('x:' + W.id);
+  // the company's logo (all its boats), also under a partner's design with a mark of its own: the others draw the design's mark on her
+  // hull (view3d/13-instruments.js drawNPCNames) and her logo in her house flag (drawPeerFlags, TP1). After 'x:', so a code cut at 160
+  // loses the logo before the design
+  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);
   return out.join(';');
 }
 // another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)
 function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); return m ? +m[1] : 0; }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
+// the part of another player's paint code that changes her model (TP1, steg 108): the colours, the designs and a partner's design
+// (h o d r t v s g from LIVS, and x), in that order; the flag, the registration mark and the logo are drawn over the model, so boats painted alike
+// share one model and its buffers (view3d/20-trawl-seine.js npcKB). '' when nothing in it changes the model
+const LIVPAINT = Object.keys(LIVS).filter(k => !['flag', 'mark', 'logo'].includes(k)).map(k => LIVS[k]).concat('x');
+function livPaint(s){
+  if (typeof s !== 'string') return s; const by = {};
+  for (const part of s.split(';')){ const i = part.indexOf(':'), k = i > 0 ? part.slice(0, i) : ''; if (LIVPAINT.includes(k) && i < part.length - 1) by[k] = part; }   // (the last of a key twice, as livParse reads it)
+  return LIVPAINT.filter(k => k in by).map(k => by[k]).join(';');
+}
+// another player's ensign from her paint code ('f:SE.vimpel'; 'f:LOGO.rekt' is her house flag): what she bought, else Norway in a
+// rectangle as the own boat flies (flagOf)
+function livFlag(s){ const m = /(?:^|;)f:([A-Z]{2,4})\.([a-z]+)(?:;|$)/.exec(String(s || '')); return flagOf(m ? {flag:{c:m[1], s:m[2]}} : null); }
 function livParse(s, type){
   const W = typeof spPaintIn === 'function' ? spPaintIn(s) : null, WL = W && modelLiv(spPaintLiv(W, type)); if (WL) return WL;   // a partner's design, from the list of the active ones, as her type wears it
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
@@ -1267,7 +1282,11 @@ function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const
 const NPCMOD = {};
 // liv: one of LIVERY for the local fleet, or another player's paint as it came with her position (livStr)
 // (a paint code with a partner's design, 'x:<id>', is read against the list of active agreements, so the model is kept apart by whether it was found: a list that comes later, or an agreement that ends, gives a new model)
-function npcModel(type, lod, liv){ const str = typeof liv === 'string', k = type + '|' + lod + '|' + liv + (str && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : ''); if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, str ? livParse(liv, type) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+// (a player's code by its paint only, livPaint: her flag, mark and logo are drawn over the model; view3d/20-trawl-seine.js npcKB lets the
+// painted ones go again past its cap, npcModelDrop)
+function npcModelKey(type, lod, liv){ const str = typeof liv === 'string', lp = str ? livPaint(liv) : liv; return type + '|' + lod + '|' + lp + (str && typeof spPaintIn === 'function' && spPaintIn(lp) ? '|x' : ''); }
+function npcModel(type, lod, liv){ const str = typeof liv === 'string', k = npcModelKey(type, lod, liv); if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, str ? livParse(livPaint(liv), type) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+function npcModelDrop(k){ delete NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit, kit){
   if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)

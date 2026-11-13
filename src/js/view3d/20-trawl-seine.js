@@ -309,13 +309,29 @@
   const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : shipT(n) || npcGearT(n) || leisT(n) || npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
   const NKN = {}; function npcNear(n){ if (!n.player && shipT(n)) return 500; if (npcGearT(n) || leisT(n)) return 300; const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }   // (a gear model is some 4 000 triangles: near within 300 m as the kit's own)
   const NKB = {};
-  // a model's buffers by type, lod and livery (npcMesh and npcWarm)
+  // a model's buffers by type, lod and livery (npcMesh and npcWarm). Another player's by her paint only (TP1, steg 108: vessel3d.js
+  // livPaint; her flag, mark and logo are drawn over it), so boats painted alike share them, and one with nothing painted shares the
+  // local fleet's unpainted model (0). The painted ones (NKBP.n) are held up to NKBP.cap: past it, the one longest out of use (not drawn
+  // for NKBP.idle s) is let go, its buffers deleted and its model (vessel3d.js NPCMOD) with it; never one still in use, so every boat
+  // in view keeps her paint. NKBP counts what is made, let go and sent to the GPU (G3._debug.npcBufs)
   const spX = liv => typeof liv === 'string' && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : '';   // (a partner's design found in the list or not: steg 44, as vessel3d.js npcModel)
-  function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv + spX(liv);
-    if (!(k in NKB)){ const G = VESSELS[t] ? null : glbLoad(t), m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, G && G.ex.anchors && G.ex.anchors.liv && typeof liv === 'number' && LIVERY[liv % LIVERY.length] ? {hull:LIVERY[liv % LIVERY.length].hull} : null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null; }   // (a ship's windows are in her hull: no glass drawn)
-    return NKB[k]; }
+  const NKBP = {n:0, cap:12, idle:20, made:0, dropped:0, bytes:0, up:0};   // (bytes: the painted models alive; up: all the painted ever sent)
+  const LPM = new Map(), nkbLiv = liv => { if (typeof liv !== 'string') return liv; let v = LPM.get(liv); if (v === undefined){ if (LPM.size > 256) LPM.clear(); v = livPaint(liv) || 0; LPM.set(liv, v); } return v; };
+  const nkbKey = (t, lod, liv) => { const lp = nkbLiv(liv); return t + '|' + lod + '|' + lp + spX(lp); };
+  function npcKB(t, lod, liv){ const lp = nkbLiv(liv), k = nkbKey(t, lod, liv);
+    if (!(k in NKB)){ const G = VESSELS[t] ? null : glbLoad(t), m = VESSELS[t] ? npcModel(t, lod, lp) : glbModel(t, lod, G && G.ex.anchors && G.ex.anchors.liv && typeof lp === 'number' && LIVERY[lp % LIVERY.length] ? {hull:LIVERY[lp % LIVERY.length].hull} : null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null;   // (a ship's windows are in her hull: no glass drawn)
+      const B = NKB[k]; if (B && typeof lp === 'string'){ const by = (B.hull.n + (B.glass ? B.glass.n : 0)) * 36; B.peer = {k, mk:npcModelKey(t, lod, lp), by, used:performance.now()}; NKBP.n++; NKBP.made++; NKBP.bytes += by; NKBP.up += by; nkbCap(); } }   // (36: position, normal and colour, three floats each)
+    const B = NKB[k]; if (B && B.peer) B.peer.used = performance.now(); return B; }
+  function nkbCap(){
+    while (NKBP.n > NKBP.cap){ let old = null; const now = performance.now();
+      for (const kk in NKB){ const B = NKB[kk]; if (B && B.peer && now - B.peer.used > NKBP.idle * 1000 && (!old || B.peer.used < old.peer.used)) old = B; }
+      if (!old) return;
+      for (const kk in NKM) if (NKM[kk] && NKM[kk].hull === old.hull) delete NKM[kk];   // (the boats' own views of it)
+      for (const q of [old.hull, old.glass]) if (q) for (const b of [q.pb, q.nb, q.cb]) gl.deleteBuffer(b);
+      delete NKB[old.peer.k]; npcModelDrop(old.peer.mk); NKBP.n--; NKBP.dropped++; NKBP.bytes -= old.peer.by; }
+  }
   function npcMesh(n, lod){
-    const kk = n.id + '|' + (n.coast ? n.L + '|' : '') + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : SHIPTY[n.type] || LEISM[n.type] ? npcType(n) + '|' + n.L + '|' + n.B : n.coast ? npcGearT(n) || '' : ''); if (kk in NKM) return NKM[kk];   // (a coast boat's gear model once it is read in)   // a player's repaint is a new key (and the coast guard's other ship)
+    const kk = n.id + '|' + (n.coast ? n.L + '|' : '') + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : SHIPTY[n.type] || LEISM[n.type] ? npcType(n) + '|' + n.L + '|' + n.B : n.coast ? npcGearT(n) || '' : ''); if (kk in NKM){ const e = NKM[kk]; if (e && e.peer) e.peer.used = performance.now(); return e; }   // (a painted model in use is not let go, nkbCap)   // (a coast boat's gear model once it is read in)   // a player's repaint is a new key (and the coast guard's other ship)
     const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
     const V = VESSELS[t] || (GLBM[t] && GLBM[t].ex) || {len:n.L, beam:n.B}, sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
@@ -333,7 +349,9 @@
     let best = null, bd = Infinity;
     for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav || shipT(n) || leisT(n))) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
       for (const [lod, r] of [[0.3, 5000], [1, 1500]]){ if (d > r || d + (lod === 1 ? 5000 : 0) >= bd) continue; const t = npcType(n);
-        if (!((t + '|' + lod + '|' + (n.liv || 0)) in NKB)){ best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } } }
+        if (nkbKey(t, lod, n.liv || 0) in NKB) continue;
+        if (typeof nkbLiv(n.liv || 0) === 'string' && NKBP.n >= NKBP.cap) continue;   // (a painted model is made ahead only under the cap, so the cap never lets go of what this makes again)
+        best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } }
     if (!best) return;
     NWARM.busy = true; const idle = window.requestIdleCallback || (f => setTimeout(f, 50));
     idle(() => { try { if (!ready) return; NWARM.n++;
@@ -499,7 +517,7 @@
       if (n.st !== 'port') drawN(npcPerson('skip', n), at(G.skipperAt));
       if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i, player:n.player, lk:n.lk, ck:n.ck}, i), at(G.crewSpots[i], G.crewSpots[i][3]));
     }
-    drawNPCNames(kit, VP);
+    drawNPCNames(kit, VP); drawPeerFlags(kit, VP, t, H);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
   // the agents of another boat within the near LOD (deckcrew.js crewSim, one per boat, dropped when she has been out of sight a
