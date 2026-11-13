@@ -161,5 +161,13 @@ export default function (t){
     turPayOut(a5, 'Kystposten', 'Takk for bildet.', 'Thank you for the picture.');
     t.ok(a5.st === 'done' && S7.cash === cash0 && (S7.ledger || []).length === led0 && !T7.done.length && !T7.act.length && T7.slots === K.TUR.boardMax, 'fyrbildet i løpet: gjort, ingen betaling, ingenting i tavlas historikk, ingen plass brukt', {st:a5.st, done:T7.done.length, slots:T7.slots, cash:S7.cash - cash0});
     const a6 = task({k:'slep', leg:1, role:'surp', boat:'Terna', p:{x:0, y:0}}); run.tasks.push(a6); turEnd(a6, false, null, 'ashore');
-    t.ok(a6.st === 'fail' && !T7.done.length, 'slepet i løpet som gikk galt: til løpet, ikke til tavla'); }
+    t.ok(a6.st === 'fail' && !T7.done.length, 'slepet i løpet som gikk galt: til løpet, ikke til tavla'); 
+    // the finish line does not count before the last leg's task is done
+    { const {lopMinute} = K, G = LOP.goal.p; S7.fleet = [{id:'v1'}]; S7.boat.type = 'sjark'; S7.boat.lop = 'lnk-9'; S7.boat.status = 'sailing';
+      run.legs = LOP.cps.map(c => ({t:1, pid:c.port})); run.pen = []; run.st = 'run'; run.lp = {x:G.x - 0.1, y:G.y - 3}; S7.lop.run = run;
+      run.tasks = [task({k:'foto', leg:5, role:'fix', fyr:{x:0, y:0, name:'Fruholmen'}})];
+      S7.boat.pos = {x:G.x + 0.1, y:G.y - 3}; lopMinute();
+      t.ok(S7.lop.run === run && run.legs.length === LOP.cps.length && run.goalW === 1, 'over mållinja før bildet av Fruholmen: teller ikke');
+      run.tasks[0].st = 'done'; run.lp = {x:G.x - 0.1, y:G.y - 3}; lopMinute();
+      t.ok(!S7.lop.run && S7.lop.hist[0].st === 'done' && S7.lop.hist[0].legs === LOP.cps.length + 1, 'med bildet tatt: over mållinja, fullført', S7.lop.hist[0]); } }
 }
