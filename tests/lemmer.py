@@ -17,7 +17,7 @@ from playwright.async_api import async_playwright
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHOTS = os.path.join(ROOT, 'docs', 'okter', '2026-11-13-123')
 OFF = os.environ.get('KYST_IK') == '0'
-URL = GAME + (',ik0' if OFF else '')
+URL = GAME + ',folk2' + (',ik0' if OFF else '')   # (the solver is on only behind #folk2, with the new people)
 DEG = 3.14159265358979 / 180
 
 
@@ -72,7 +72,7 @@ AGG = """((L, R) => { const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a
 # every pose through its beat at one roll, the people drawn again each time; what was drawn summed up in the page (AGG)
 SWEEP = """(([tasks, n, roll, on]) => { const R = {}, agg = %s; LEMMER.on = on; LEMMER.log = [];
   for (const task of tasks) for (let k = 0; k < n; k++){ SJOBEIN.test = {roll, pitch:0, T:100 + k * 0.37, task}; LEMMER.log.length = 0; LEMMER.redraw(); agg(LEMMER.log, R); }
-  SJOBEIN.test = null; LEMMER.log = null; LEMMER.on = !/ik0/.test(location.hash); return R; })""" % AGG
+  SJOBEIN.test = null; LEMMER.log = null; LEMMER.on = /folk2/.test(location.hash) && !/ik0/.test(location.hash); return R; })""" % AGG
 
 
 # the clip guard's limbs against the drawn ones (deckcrew.js poseSegs through CREW3D.poseLines): the poses that stand upright and still,
@@ -96,7 +96,7 @@ async def live(pg, t, n, roll, on, R):
     """What drawWorker drew over n frames of the game as it runs (the walk, the events), summed into R."""
     await pg.evaluate("([roll, on]) => { SJOBEIN.test = roll == null ? null : {roll, pitch:0}; LEMMER.on = on; LEMMER.log = []; }", [roll, on])
     await frames(pg, t, n)
-    R.update(await pg.evaluate("(R) => { const L = LEMMER.log; LEMMER.log = null; LEMMER.on = !/ik0/.test(location.hash); SJOBEIN.test = null; return (%s)(L, R); }" % AGG, R))
+    R.update(await pg.evaluate("(R) => { const L = LEMMER.log; LEMMER.log = null; LEMMER.on = /folk2/.test(location.hash) && !/ik0/.test(location.hash); SJOBEIN.test = null; return (%s)(L, R); }" % AGG, R))
 
 
 def merge(A, B):
@@ -143,6 +143,8 @@ def spread(R, nm, L):
 async def checks(pg):
     boats = await pg.evaluate(BOATS); mid = boats[1]; print('båter:', boats, flush=True)
     await pg.set_viewport_size({'width': 240, 'height': 150})   # (a tiny window: SwiftShader takes 25 s a frame at 640×400, and the checks read numbers)
+    on = await pg.evaluate("[LEMMER.on, (h => /folk2/.test(h) && !/ik0/.test(h))('#qfix,seed=1,ro0#notut')]")
+    check(on == [not OFF, False], 'løseren er på bak #folk2 og av uten merket (og av med #ik0)', on)
     std = await pg.evaluate("limbLen(null)"); reach = (std['ua'] + std['fa']) * await pg.evaluate("LEMMER.REACH"); names = {'ua': 'overarm', 'fa': 'underarm', 'th': 'lår', 'sn': 'legg'}
     full = [('arbeid', 4), ('garn', 3), ('juksa', 3), ('egning', 2), ('boting', 2), ('pause', 2)]
     # ---- after: the scenes as they run and every pose through its beat
@@ -202,7 +204,7 @@ async def checks(pg):
     check(len(G) >= 8 and we < 0.22 and wk < 0.02, 'klippevakten regner med samme løser som tegningen (%d stillinger; kneet innen %.1f cm, albuen innen %.1f cm: vakten kjenner ikke grepene og ryggbøyen)' % (len(G), wk * 100, we * 100), {k: [round(g['el'] * 100, 1), round(g['kn'] * 100, 1)] for k, g in G.items()})
     tm = await pg.evaluate("""(() => { const out = {}, n = CREW3D.visible().length; LEMMER.log = null; SJOBEIN.test = {roll:0.1, pitch:0, T:100.3};
       for (let go = 0; go < 3; go++) for (const on of [false, true]){ LEMMER.on = on; for (let i = 0; i < 20; i++) LEMMER.redraw(); const t0 = performance.now(); for (let i = 0; i < 150; i++) LEMMER.redraw(); const ms = (performance.now() - t0) / 150 / n; out[on] = Math.min(out[on] || 9, ms); }
-      LEMMER.on = !/ik0/.test(location.hash); SJOBEIN.test = null; return {av:out[false], paa:out[true], n}; })()""")
+      LEMMER.on = /folk2/.test(location.hash) && !/ik0/.test(location.hash); SJOBEIN.test = null; return {av:out[false], paa:out[true], n}; })()""")
     check(tm['paa'] < tm['av'] * 1.25 + 0.02, 'tida per figur i drawDeckCrew (%d om bord, beste av tre): %.3f ms med løseren av, %.3f ms med den på' % (tm['n'], tm['av'], tm['paa']))
 
 
@@ -223,7 +225,7 @@ async def shots(pg):
                 await pg.evaluate("(on) => { LEMMER.on = on; SJOBEIN.test = {T:103.1}; }", on); await frames(pg, t, 2)
                 await pg.screenshot(path=os.path.join(SHOTS, f'{name}_{tag}_{fmt}.jpg'), type='jpeg', quality=70)
                 print(name, tag, fmt, json.dumps(await pg.evaluate("CREW3D.agents().map(a => a.mode + ':' + a.task)")), flush=True)
-            await pg.evaluate("LEMMER.on = !/ik0/.test(location.hash); SJOBEIN.test = null")
+            await pg.evaluate("LEMMER.on = /folk2/.test(location.hash) && !/ik0/.test(location.hash); SJOBEIN.test = null")
 
 
 async def main():

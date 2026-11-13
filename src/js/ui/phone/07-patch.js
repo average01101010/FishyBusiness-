@@ -1,7 +1,5 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
-    ['lemmer-131126', '13.11.2026', 'Armer og bein', 'Arms and legs', [
-       ['Armene og beina til folk om bord og på kaia holder lengden sin i arbeid: albuen og kneet bøyer seg i stedet for at armen strekkes, og den som må langt ut etter noe, bøyer ryggen og vrir seg etter det.', 'The arms and legs of the people aboard and on the quay keep their length at work: the elbow and the knee bend instead of the arm stretching, and someone reaching far for something bends the back and turns after it.']]],
     ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [
        ['Mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy og butikkene i Vanse og Søndeled lå i lommer der båten ikke kom ut. De har fått nye kaier med fritt vann ut.', 'The plants in Ålesund, Fosnavåg, Laukvik and Vengsøy and the shops in Vanse and Søndeled lay in pockets the boat could not get out of. They have new quays with open water out.'],
        ['Bakken bak og ved sidene av kaiene går nå rett inn til kaikanten, uten grøfter og tagger langs veggen.', 'The ground behind and beside the quays now runs straight up to the quay edge, with no trenches or jagged teeth along the wall.']]],

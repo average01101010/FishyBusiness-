@@ -310,7 +310,7 @@ function crewSim(src){
       // (a step back from a close rail, so the hand at his side is inside it)
       // (FB2: and a little further back where the raised arm's elbow would be in a high bulwark or what stands on it)
       const h = l.h || hq, rl = railAt(l.k, h); let off = null, hits = 99;
-      for (const need of [0.4, 0.5, 0.6]){ const st = rl && rl[0] < need ? need - rl[0] : 0, o2 = st ? [-Math.sin(h) * st, Math.cos(h) * st] : null, n = poseHits('signal', l.k, h, null, o2) + poseHits('look', l.k, h, null, o2); if (n < hits){ hits = n; off = o2; } if (!n) break; }
+      for (const need of LEMMER.on ? [0.4, 0.5, 0.6] : [0.4]){ const st = rl && rl[0] < need ? need - rl[0] : 0, o2 = st ? [-Math.sin(h) * st, Math.cos(h) * st] : null, n = poseHits('signal', l.k, h, null, o2) + poseHits('look', l.k, h, null, o2); if (n < hits){ hits = n; off = o2; } if (!n) break; }
       const v = Math.abs(dz - 2.2) + dy * 3 + (livePart(l.k) ? 0 : 4) + hits * 2; if (v < bv){ bv = v; best = {k:l.k, h, off, task:'signal', dyn:'luke'}; } }
     return best; }
   // the ice box on deck (the model's place, else by the packer's place as the view stands it: view3d/09-landing-deck.js iceBoxAt)
@@ -600,7 +600,61 @@ function crewSim(src){
     RAIL.set(key, out); return out; }
   // each pose as its limbs and what it holds, segments in the person's own frame [forward, up, right] from the feet, as drawWorker draws
   // it (at the furthest reach of its movement): rail is [ahead, height] of the rail's top (facing it), the hands on it 4 cm over
-  function poseSegs(k, rail){
+  function poseSegs(k, rail){ return LEMMER.on ? poseSegsIk(k, rail) : poseSegs0(k, rail); }
+  // (as before FB2: each limb one line from the root to the hand or the foot; used while the solver is off, LEMMER.on)
+  function poseSegs0(k, rail){
+    const R = rail || [0.42, 1.0], d = R[0] + 0.02, top = R[1] + 0.04;
+    const legs = [[[0, 0.92, 0.11], [0, 0.1, 0.12]], [[0, 0.92, -0.11], [0, 0.1, -0.12]]], torso = [[[0, 0.95, 0], [0, 1.45, 0]], [[0.12, 1.0, 0], [0.12, 1.38, 0]], [[-0.12, 1.0, 0], [-0.12, 1.38, 0]], [[0, 1.42, 0.21], [0, 1.42, -0.21]]];
+    const head = [[[0, 1.5, 0], [0, 1.8, 0]], [[0.13, 1.64, 0], [-0.13, 1.64, 0]]], arms = (r, l) => [[[0.02, 1.42, 0.21], r], [[0.02, 1.42, -0.21], l]], std = (r, l, ...more) => legs.concat(torso, head, arms(r, l), more);
+    switch (k){
+      case 'lean': return std([d, top, 0.2], [d, top, -0.2]);
+      case 'coffee': return std([0.18, 1.5, 0.04], [0.05, 0.85, -0.25], [[0.12, 0.0, -0.32], [0.12, 0.32, -0.32]]);
+      case 'back': return [[[0.05, 0.92, 0.11], [0.3, 0.08, -0.05]], [[0.05, 0.92, -0.11], [0.2, 0.08, -0.13]], [[0.05, 0.95, 0], [-0.07, 1.45, 0]], [[-0.17, 1.0, 0], [-0.19, 1.38, 0]], [[-0.07, 1.5, 0], [-0.1, 1.8, 0]],
+        [[0.02, 1.42, 0.21], [0.17, 1.18, -0.07]], [[0.02, 1.42, -0.21], [0.17, 1.16, 0.07]]];
+      case 'sit': return [[[-0.04, 0.5, 0.12], [0.38, 0.52, 0.15]], [[0.38, 0.52, 0.15], [0.44, 0.08, 0.17]], [[-0.04, 0.5, -0.12], [0.38, 0.52, -0.15]], [[0.38, 0.52, -0.15], [0.44, 0.08, -0.17]], [[0, 0.55, 0], [0.1, 1.05, 0]],
+        [[0.15, 1.08, 0], [0.22, 1.36, 0]], [[0.06, 1.0, 0.2], [0.36, 0.7, 0.05]], [[0.06, 1.0, -0.2], [0.36, 0.7, -0.05]], [[-0.31, 0.2, 0], [0.19, 0.2, 0]], [[-0.06, 0.2, 0.25], [-0.06, 0.2, -0.25]], [[-0.06, 0.02, 0], [-0.06, 0.45, 0]]];
+      case 'chat': return std([0.34, 1.3, 0.2], [0.04, 0.92, -0.22]);
+      case 'knife': return std([0.45, 1.2, 0.13], [0.3, 1.02, -0.06], [[0.3, 1.02, -0.06], [0.42, 1.3, 0.03]]);
+      case 'lunch': return std([0.13, 1.5, 0.03], [0.3, 1.03, -0.1], [[0.3, 1.03, -0.2], [0.3, 1.03, 0.0]]);
+      case 'phone': return std([0.26, 1.13, 0.035], [0.26, 1.12, -0.035]);
+      case 'binoc': return std([0.15, 1.56, 0.07], [0.15, 1.56, -0.07], [[0.15, 1.57, 0], [0.3, 1.57, 0]]);
+      case 'seasick': return legs.concat([[[0.03, 0.95, 0], [0.44, 1.42, 0]], [[0.5, 1.5, 0], [0.62, 1.66, 0]], [[0.44, 1.42, 0.21], [d, top, 0.24]], [[0.44, 1.42, -0.21], [d, top, -0.24]]]);
+      case 'gear': return legs.concat([[[0.03, 0.92, 0], [0.26, 1.4, 0]], [[0.3, 1.48, 0], [0.34, 1.74, 0]], [[0.26, 1.4, 0.21], [0.45, 0.72, 0.15]], [[0.26, 1.4, -0.21], [0.45, 0.72, -0.15]]]);
+      case 'smoke': return std([0.24, 1.52, 0.17], [d, top, -0.2]);
+      case 'snus': return std([0.26, 1.47, 0.02], [0.26, 1.1, -0.04], [[0.02, 1.42, 0.21], [d, top, 0.2]], [[0.02, 1.42, -0.21], [d, top, -0.2]]);
+      case 'sweep': return std([0.25, 1.0, 0.1], [0.35, 0.8, -0.05], [[0.25, 1.0, 0.1], [0.8, 0.12, 0]], [[0.8, 0.06, 0.42], [0.8, 0.06, -0.42]]);
+      case 'hose': return std([0.45, 1.15, 0.12], [0.3, 1.1, -0.1], [[0.12, 0.02, 0.62], [0.12, 0.46, 0.62]], [[0.12, 0.3, 0.5], [0.45, 1.15, 0.12]]);
+      // the work at its places (the stations' own places from the models; tested, not chosen)
+      // (at the rail, rail is its top as at a break: the jig hauled up over it, the hauler's lever and the line just over it; at the gutting
+      // table rail[1] is the table's top, the hands working on it)
+      case 'jig': return rail ? std([d, top + 0.4, 0.16], [d - 0.04, top + 0.01, -0.16]) : std([0.34, 1.3, 0.16], [0.3, 0.9, -0.16]);
+      case 'haul': return rail ? std([d + 0.06, top + 0.1, 0.2], [d + 0.1, top + 0.24, -0.06]) : std([0.42, 1.08, 0.2], [0.52, 1.22, -0.06]);
+      case 'bleedst': return std([0.3, 0.92, 0.2], [0.28, 0.95, -0.18]);
+      case 'pick': return rail ? std([d + 0.04, top + 0.03, 0.14], [d + 0.04, top + 0.03, -0.14]) : std([0.48, 0.92, 0.16], [0.48, 0.92, -0.16]);
+      case 'tend': return std([0.48, 0.92, 0.16], [0.48, 0.92, -0.16]);
+      // (setting: the hands on the gear just inside the rail, paying it out over it; rail is [ahead, height] of where it goes over)
+      case 'sett': return rail ? std([R[0] + 0.1, R[1] + 0.08, 0.13], [R[0] + 0.1, R[1] + 0.08, -0.13]) : std([0.5, 1.1, 0.13], [0.5, 1.1, -0.13]);
+      case 'mend': return std([0.42, 1.0, 0.12], [0.42, 1.02, -0.1]);
+      // (OB4, the landing and the ice: the signs to the crane driver, the arms up to the load, a hand at the ring of the sling, the
+      // crane's remote, the end of the ice hose held over the box before him; view3d/08-plants.js drawWorker)
+      case 'signal': return std([0.26, 1.72, 0.44], [0.25, 0.95, -0.22]);
+      case 'guide': return std([0.42, 1.62, 0.22], [0.42, 1.62, -0.22]);
+      case 'unhook': return std([0.38, 1.9, 0.08], [0.35, 1.3, -0.18]);
+      case 'remote': return std([0.3, 1.05, 0.11], [0.3, 1.05, -0.11]);
+      case 'nozzle': return std([0.42, 0.85, 0.06], [0.36, 0.98, -0.12]);
+      // (OB14: the packed lunch and the coffee seated on an upturned tub, the lunch box on the knee and the flask on the deck beside him;
+      // the cold: the arms beaten round the chest and swung out again, the hands rubbed before it; view3d/08-plants.js drawWorker)
+      case 'sitmat': case 'sitkaffe': return [[[-0.04, 0.5, 0.12], [0.38, 0.52, 0.15]], [[0.38, 0.52, 0.15], [0.44, 0.08, 0.17]], [[-0.04, 0.5, -0.12], [0.38, 0.52, -0.15]], [[0.38, 0.52, -0.15], [0.44, 0.08, -0.17]], [[0, 0.55, 0], [0.1, 1.05, 0]],
+        [[0.15, 1.08, 0], [0.22, 1.36, 0]], [[0.06, 1.0, 0.2], [0.2, 1.1, 0.04]], [[0.06, 1.0, -0.2], [0.34, 0.68, -0.1]], [[-0.31, 0.2, 0], [0.19, 0.2, 0]], [[-0.06, 0.2, 0.25], [-0.06, 0.2, -0.25]], [[-0.06, 0.02, 0], [-0.06, 0.45, 0]]]
+        .concat(k === 'sitkaffe' ? [[[0.1, 0.0, -0.36], [0.1, 0.32, -0.36]]] : []);
+      case 'cold': return std([0.2, 1.36, -0.14], [0.2, 1.36, 0.14], [[0.02, 1.42, 0.21], [0.14, 1.22, 0.56]], [[0.02, 1.42, -0.21], [0.14, 1.22, -0.56]], [[0.02, 1.42, 0.21], [0.28, 1.46, 0.03]]);
+      case 'helm': return std([0.3, 1.1, 0.17], [0.3, 1.1, -0.17]);
+      case 'gut': { const tt = rail ? rail[1] : 0.9; return std([0.42, tt + 0.28, 0.2], [0.36, tt + 0.06, -0.12]); }
+      case 'pack': return std([0.4, 0.95, 0.15], [0.08, 1.02, -0.2]);
+      case 'aurora': case 'look': default: return std([0, 0.93, 0.19], [0, 0.93, -0.19]);
+    }
+  }
+  function poseSegsIk(k, rail){
     const R = rail || [0.42, 1.0], d = R[0] + 0.02, top = R[1] + 0.04;
     // (FB2, steg 123: the limbs as they are drawn, with the solver that draws them: the knee and the elbow where ik2 and armIk put
     // them, each limb two lines, and the torso, the shoulders and the head gone after a hand out of reach, reachBody. The back's own
@@ -729,7 +783,7 @@ function crewSim(src){
     let f = fit(g.k, h0); if (!poseHits(g.task, g.k, h0, f.rail, f.off)){ g.rail = f.rail; g.off = f.off; return g; }
     // (FB2, F19: never to within 0.55 m of someone else's place: the second at a table was moved 0.4 m from the first when the guard got the elbows)
     const p0 = M.at(g.k), C = [], apart = q => { for (const [t0, who] of TAKEN){ if (who === id) continue; const u = M.at(t0); if (Math.hypot(u[0] - q[0], u[2] - q[2]) < 0.55) return false; } return true; };
-    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !free(k, id)) continue; const q = M.at(k), d = Math.hypot(q[0] - p0[0], q[2] - p0[2]); if (d <= 0.5 && Math.abs(q[1] - p0[1]) < 0.2 && apart(q)) C.push([d, k]); }
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !free(k, id)) continue; const q = M.at(k), d = Math.hypot(q[0] - p0[0], q[2] - p0[2]); if (d <= 0.5 && Math.abs(q[1] - p0[1]) < 0.2 && (!LEMMER.on || apart(q))) C.push([d, k]); }
     C.sort((a, b) => a[0] - b[0]);
     for (const dh of [0, 0.25, -0.25]) for (const [, k] of C){ const h = h0 + dh; f = fit(k, h); if (!poseHits(g.task, k, h, f.rail, f.off)){ TAKEN.delete(g.k); g.k = k; g.h = h; g.rail = f.rail; g.off = f.off; TAKEN.set(k, id); return g; } }
     f = fit(g.k, h0); g.rail = f.rail; g.off = f.off; return g; }
@@ -925,9 +979,9 @@ function crewSim(src){
     const hipJ = i => [o.hipF + hH * o.sqF, hH * o.sqU + (i ? 0.11 : -0.11) * o.pelv, o.hipR + hH * o.sqR + (i ? 0.11 : -0.11)];
     const foot = i => [o.fa[i] + 0.1 * n[0], o.fy[i] + 0.1 * n[1], o.fr[i] + 0.1 * n[2]];   // (the ankle, 10 cm over where the foot stands on the deck)
     // (FB2: each leg as it is drawn, the knee from the solver; a foot the leg does not reach is moved in, as drawWorker moves it)
-    const L0 = limbLen(null), kn = [0, 1].map(i => ik2(hipJ(i), foot(i), L0.th, L0.sn, [LEMMER.KNEE[0], LEMMER.KNEE[1], 0]));
-    const segs = [[hipJ(0), kn[0].j], [kn[0].j, kn[0].e], [hipJ(1), kn[1].j], [kn[1].j, kn[1].e], [at(0.95), at(1.45)], [at(0.95, -0.17), at(1.42, -0.21)], [at(0.95, 0.17), at(1.42, 0.21)],
-      [at(1.0, 0, 0.12), at(1.38, 0, 0.12)], [at(1.0, 0, -0.12), at(1.38, 0, -0.12)], [at(1.42, -0.21), at(1.42, 0.21)], [at(1.5), at(1.8)], [at(1.64, 0, 0.13), at(1.64, 0, -0.13)], [at(1.66, -0.1), at(1.66, 0.1)]];
+    const L0 = limbLen(null), kn = LEMMER.on ? [0, 1].map(i => ik2(hipJ(i), foot(i), L0.th, L0.sn, [LEMMER.KNEE[0], LEMMER.KNEE[1], 0])) : null;
+    const segs = (kn ? [[hipJ(0), kn[0].j], [kn[0].j, kn[0].e], [hipJ(1), kn[1].j], [kn[1].j, kn[1].e]] : [[hipJ(0), foot(0)], [hipJ(1), foot(1)]]).concat([[at(0.95), at(1.45)], [at(0.95, -0.17), at(1.42, -0.21)], [at(0.95, 0.17), at(1.42, 0.21)],
+      [at(1.0, 0, 0.12), at(1.38, 0, 0.12)], [at(1.0, 0, -0.12), at(1.38, 0, -0.12)], [at(1.42, -0.21), at(1.42, 0.21)], [at(1.5), at(1.8)], [at(1.64, 0, 0.13), at(1.64, 0, -0.13)], [at(1.66, -0.1), at(1.66, 0.1)]]);
     let bits = 0; for (let i = 0; i < segs.length; i++) if (M.hit(B(segs[i][0]), B(segs[i][1])) >= 0) bits |= 1 << i; return bits; };
   const SEATMP = seaState();
   // (those lines at the deck's furthest one way, with the room given; a full sea, so the feet are at their widest)
@@ -940,7 +994,7 @@ function crewSim(src){
     const M = ST.M, C = SJOBEIN, W = P.W, t = Math.tan(C.CLIP); let out;
     // (first with the bracing step where seaStepOk lets a foot out; if that still puts something through, without it at this place)
     // (FB2: and if a knee still goes into what he stands at, with less of the crouch, k: the knees bend further ahead the lower he stands)
-    for (const [nostep, kq] of [[false, 1], [true, 1], [true, 0.5], [true, 0]]){ out = {r:[0, 0], f:[0, 0], w:[0, 0], nostep, k:kq};
+    for (const [nostep, kq] of LEMMER.on ? [[false, 1], [true, 1], [true, 0.5], [true, 0]] : [[false, 1], [true, 1]]){ out = {r:[0, 0], f:[0, 0], w:[0, 0], nostep, k:kq};
       for (const i of [0, 1]){ const s = i ? 1 : -1; out.w[i] = M.hit(W(0, 0.92, s * 0.11), W(0, 0.1, s * (0.12 + C.WIDE + 0.02))) < 0 ? 1 : 0; }
       // (what goes through something on a level deck already is not the sea legs' doing; the most room that adds nothing to it)
       const base = seaTry(a, P, 0, 0, out), trial = {r:[0, 0], f:[0, 0], w:out.w, nostep, k:kq};
@@ -1103,9 +1157,11 @@ function seaKnee(dref, dnow){ const L2 = SJOBEIN.SEG * SJOBEIN.SEG, a = dref / 2
 // values are the figure's as drawWorker drew it standing before (tests/lemmer.py measured them: 0.575 m from the shoulder to the
 // wrist with the arm hanging, drawn as 0.39 + 0.21 with the elbow low; here the same arm, 0.585 m, shared as a body shares it, 55 to
 // 45; 0.84 m from the hip to the ankle with the knee 7 cm ahead, 0.426 + 0.426).
-// «#ik0» in the address turns it all off (the limbs stretched between the points, as before).
+// It is on only behind «#folk2» in the address, with the new people (Jonas 13.11.2026: «det er disse kroppene som skal brukes i det
+// ferdige resultatet»: the hands' points are tuned on the new body, FB7); without it the limbs are drawn, and the clip guard reckons,
+// as before the step. «#ik0» turns it off there too.
 const LEMMER = {
-  on:!(typeof location !== 'undefined' && /ik0/.test(String(location.hash || ''))),
+  on:typeof location !== 'undefined' && /folk2/.test(String(location.hash || '')) && !/ik0/.test(String(location.hash || '')),
   STD:{ua:0.32, fa:0.265, th:0.426, sn:0.426},   // m: upper arm, forearm (to the wrist), thigh, shin (to the ankle)
   HAND:0.085,     // m from the wrist to where a hand holds, for the one-piece glove far off (near, each grip has its own point)
   REACH:0.995,    // the share of its full length a limb is straightened to at most (a joint never locks dead straight)
@@ -1118,6 +1174,7 @@ const LEMMER = {
   ELBOW:[-0.5, -1, 0.1],   // the way an elbow points in the torso's frame [ahead, up, out]: down, back and a very little out (more, and it went into what he stands beside: tests/crewclip.py)
   ELBOWHI:0,      // straight down instead of back and out, with the hand up by the shoulder (from 25 cm under it to 5 cm over): the elbow under a raised hand
   CLEAR:0.22,     // m out from the spine an elbow keeps when it is beside the torso (the torso's half width and the arm's, the sleeve against the jacket)
+  FOLD:0.2,       // m from the shoulder a wrist keeps at the least (an elbow does not fold further than some 40°)
   CHEST:0.13,     // m ahead of the spine a wrist keeps before the chest and the belly (never in his own body)
   FRONT:0.2,      // and when it is well across him, beyond his middle (it goes round before the belly, not through it)
   BELLY:0.13,     // m ahead of the spine an elbow keeps when it is before the torso (a hand reaching across him)
@@ -1169,6 +1226,11 @@ function reachBody(sh, tg, reach, b0, o){
 // (LEMMER.ELBOW), and further out when that would put it in the torso's side (CLEAR, and cl more under a life jacket), so it never
 // goes through the body.
 function armIk(s, tg, sd, L, o, cl){
+  // (a wrist is never folded right up into its own shoulder: nearer than FOLD it is moved out to that, down, ahead and out of it the
+  // nearer it was; how far it was moved is in near)
+  { const dx = tg[0] - s[0], dy = tg[1] - s[1], dz = tg[2] - s[2], D = Math.hypot(dx, dy, dz), F = LEMMER.FOLD;
+    if (D < F){ const k = F - D, vx = dx + 0.3 * k * 4, vy = dy - 0.8 * k * 4, vz = dz + 0.5 * sd * k * 4, l = Math.hypot(vx, vy, vz) || 1, t2 = [s[0] + vx / l * F * 1.001, s[1] + vy / l * F * 1.001, s[2] + vz / l * F * 1.001];
+      o = armIk(s, t2, sd, L, o, cl); o.near = Math.hypot(t2[0] - tg[0], t2[1] - tg[1], t2[2] - tg[2]); return o; } }
   // (a wrist is never in his own body, and a hand across him by the far hip is not reached through it: before the chest and the
   // belly the wrist keeps CHEST ahead of the spine, and well across him FRONT, going round before the belly; how far it was moved
   // is in push. The edges soft)
@@ -1179,7 +1241,7 @@ function armIk(s, tg, sd, L, o, cl){
   const C = LEMMER, P = C.ELBOW, CL = C.CLEAR + (cl || 0), up = Math.min(1, Math.max(0, (tg[1] - s[1] + 0.25) / 0.3)), hi = up * up * (3 - 2 * up); o = ik2(s, tg, L.ua, L.fa, [P[0] + (C.ELBOWHI - P[0]) * hi, P[1], P[2] * sd * (1 - hi * Math.min(1, Math.max(0, (tg[2] * sd - s[2] * sd) / 0.1)))], o);   // (and not out, under a hand raised out to his side)
   const e = o.j, side = e[2] * sd;
   // (beside or in the torso: between the hips and the shoulders, not well ahead of the chest or behind the back; the edges soft)
-  const w = Math.min(1, (0.2 - Math.abs(e[0])) / 0.06, (e[1] + 0.05) / 0.06, (C.SH[0] + 0.02 - e[1]) / 0.06); if (side >= CL || w <= 0) return o;
+  const w = Math.min(1, (0.2 - Math.abs(e[0])) / 0.06, (e[1] + 0.05) / 0.06, (C.SH[0] + 0.08 - e[1]) / 0.06); if (side >= CL || w <= 0) return o;
   // the elbow is on a circle about the arm's own line: turned on it the least that takes it out to CLEAR, or as far out as it goes
   const d = o.d, ux = (o.e[0] - s[0]) / d, uy = (o.e[1] - s[1]) / d, uz = (o.e[2] - s[2]) / d, a = (d * d + L.ua * L.ua - L.fa * L.fa) / (2 * d), cx = s[0] + ux * a, cy = s[1] + uy * a, cz = s[2] + uz * a;
   const px = e[0] - cx, py = e[1] - cy, pz = e[2] - cz, qx = uy * pz - uz * py, qy = uz * px - ux * pz, qz = ux * py - uy * px, A = sd * pz, B = sd * qz, M = Math.hypot(A, B); if (M < 1e-6) return o;

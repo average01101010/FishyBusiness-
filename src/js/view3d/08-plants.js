@@ -216,7 +216,7 @@
       case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
         st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(0.2, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
       case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = st.seated ? [W(0.3 - k * 0.1, sh + 0.22 + k * 0.42, 0.12 - k * 0.08), W(0.34, sh + 0.2, -0.1)] : [W(0.18 + (1 - k) * 0.1, 1.05 + k * 0.45, 0.14 - k * 0.1), W(0.05, 0.85, -0.25)]; break; }
       // the cold (OB14, F14): the arms beaten round the chest and flung out again a few times, then the hands rubbed before the chest
@@ -226,9 +226,9 @@
         const A0 = [W(0.28 + rub, 1.24 + up * 0.22, 0.035), W(0.28 - rub, 1.24 + up * 0.22, -0.035)], B0 = [lerp3(W(0.14, 1.22, 0.56), W(0.2, 1.36, -0.14), sw2), lerp3(W(0.14, 1.22, -0.56), W(0.2, 1.36, 0.14), sw2)];
         hands = [lerp3(A0[0], B0[0], beat), lerp3(A0[1], B0[1], beat)]; break; }
       // at a landing: hand signals to the crane driver, reaching for a load coming down, unhooking it, counting, and the radio remote
-      case 'signal': { const k = Math.sin(t * 3.2); hands = [W(0.2 + k * 0.06, 1.72, 0.3 + k * 0.1), W(0.25, 0.95, -0.22)]; break; }   // (FB2: the wave 4 cm narrower, the elbow under the hand)
+      case 'signal': { const k = Math.sin(t * 3.2); hands = [LEMMER.on ? W(0.2 + k * 0.06, 1.72, 0.3 + k * 0.1) : W(0.2 + k * 0.06, 1.72, 0.32 + k * 0.12), W(0.25, 0.95, -0.22)]; break; }   // (FB2: the wave 4 cm narrower, the elbow under the hand)
       case 'guide': hands = [W(0.42, 1.62, 0.22), W(0.42, 1.62, -0.22)]; break;
-      case 'unhook': hands = [W(0.36, 1.87, 0.1), W(0.35, 1.3, -0.18)]; break;   // (FB2: the ring 3 cm lower and 2 cm nearer, where the arm reaches it)
+      case 'unhook': hands = [LEMMER.on ? W(0.36, 1.87, 0.1) : W(0.38, 1.9, 0.08), W(0.35, 1.3, -0.18)]; break;   // (FB2: the ring 3 cm lower and 2 cm nearer, where the arm reaches it)
       case 'tally': { const k = Math.max(0, Math.sin(t * 0.9)) * 0.04; hands = [W(0.3, 1.12, 0.1), W(0.28 + k, 1.08, -0.12)]; break; }
       case 'remote': hands = [W(0.3, 1.05, 0.11), W(0.3, 1.05, -0.11)]; break;
       case 'nozzle': hands = [W(0.42, 0.85, 0.06), W(0.36, 0.98, -0.12)]; break;
@@ -269,7 +269,7 @@
       // ---- the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
       // hands go to (the table, the bleeding tub, the crate, the rail) come from drawDeckCrew as points in the eye's frame (st.Tb, st.Ub ...)
       // at the line hauler between the fish: a hand on the hauler's lever, the other guiding the line in over the sheave
-      case 'haul': { const k = Math.sin(t * 1.6) * 0.03, r = st.rail, ra = r ? Math.min(r[0], 0.5) : 0;   // (FB2: no further ahead than he reaches bent over, where the hauler stands far in from his place)
+      case 'haul': { const k = Math.sin(t * 1.6) * 0.03, r = st.rail, ra = r ? (LEMMER.on ? Math.min(r[0], 0.5) : r[0]) : 0;   // (FB2: no further ahead than he reaches bent over, where the hauler stands far in from his place)
         hands = r ? [W(ra + 0.08, r[1] + 0.1 + k, 0.2), W(ra + 0.12, r[1] + 0.24 - k, -0.06)] : [W(0.42, 1.08 + k, 0.2), W(0.52, 1.22 - k, -0.06)]; break; }
       // the pot hand and the crab sorter: hands at the work in front, low
       case 'tend': { const k = Math.sin(t * 2.2); hands = [W(0.45 + k * 0.05, 0.8 + Math.max(0, k) * 0.12, 0.16), W(0.45 - k * 0.05, 0.8 + Math.max(0, -k) * 0.12, -0.16)]; break; }
@@ -305,7 +305,7 @@
         const c = ((T + idx * 1.7) % 2.6) / 2.6, sw0 = c < 0.3 ? 0 : c < 0.55 ? ease((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - ease((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = rB + sw0 * (rT - rB), a = aB + sw0 * (aT - aB), up = (hB + 0.17) + sw0 * (hT - hB - 0.17) - lo * 0.15 + Math.sin(sw0 * Math.PI) * 0.25;
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(0.2, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
       case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); hands = [W(0.42, 0.95 - 0.5 * ease(u), 0.22), W(0.42, 0.95 - 0.5 * ease(u), -0.22)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
@@ -335,7 +335,7 @@
       // throat and the gills, the guts pulled out and over the rail (st.Of; the gulls come for them), the fish laid on the table (st.Tb),
       // the head cut off at a slant behind the gill cover and over the side, the belly scraped clean, and the fish on to the packer's
       // crate (st.Cr), else to the end of the table; 5.6 s a fish (about the simulation's 5 kg a minute at the game's pace)
-      case 'gutw': { const Gs = ((T + idx * 1.7) % 5.6), Tb = st.Tb, sh = W(0.1, 1.3 + dy, 0), Ub = st.Ub ? lerp3(sh, st.Ub, Math.min(1, 0.5 / Math.max(0.01, Math.hypot(st.Ub[0] - sh[0], st.Ub[1] - sh[1], st.Ub[2] - sh[2])))) : W(0.45, 0.6, 0.5);
+      case 'gutw': { const Gs = ((T + idx * 1.7) % 5.6), Tb = st.Tb, sh = W(0.1, 1.3 + dy, 0), Ub = st.Ub ? lerp3(sh, st.Ub, Math.min(1, (LEMMER.on ? 0.5 : 0.68) / Math.max(0.01, Math.hypot(st.Ub[0] - sh[0], st.Ub[1] - sh[1], st.Ub[2] - sh[2])))) : W(0.45, 0.6, 0.5);
         const sc = st.gsc || 0.46, fH = [Tb[0] - R[0] * 0.2, Tb[1] + 0.05, Tb[2] - R[1] * 0.2], fT = [Tb[0] + R[0] * 0.2, Tb[1] + 0.05, Tb[2] + R[1] * 0.2], mid = lerp3(fH, fT, 0.5), rest = [W(0.36, 0.98, 0.18), W(0.36, 0.96, -0.12)], lo = [Ub[0], Ub[1] - 0.14, Ub[2]];
         const end = st.Cr ? [st.Cr[0], st.Cr[1] + (st.crTop || 0.3), st.Cr[2]] : [Tb[0] + F[0] * 0.05 + R[0] * 0.55, Tb[1] + 0.05, Tb[2] + F[1] * 0.05 + R[1] * 0.55];
         // the head held at the table's near edge, the fish hanging from it; the vent and the throat on its belly, towards him
@@ -350,7 +350,7 @@
         else if (Gs < 2.5){ const k = Math.sin((Gs - 2.0) * 22) * 0.03; hands = [[throat[0] + R[0] * k, throat[1] + 0.01, throat[2] + R[1] * k], E]; st.gf = {at:E, hang:true}; st.kdir = [F[0] * 0.5 - R[0] * 0.4, 0.2, F[1] * 0.5 - R[1] * 0.4]; }
         // the guts pulled out and down, and thrown over the rail
         else if (Gs < 2.95){ const u = ease((Gs - 2.5) / 0.45), g0 = up(E, 0.3 * sc), g1 = [g0[0] - F[0] * 0.18, g0[1] - 0.12, g0[2] - F[1] * 0.18]; hands = [lerp3(g0, g1, u), E]; st.gf = {at:E, hang:true}; st.slo = {at:hands[0]}; }
-        else if (Gs < 3.35){ const u = ease((Gs - 2.95) / 0.4), g1 = up(E, 0.42 * sc), twk = st.Of ? Math.min(0.3, 0.5 / Math.max(0.01, Math.hypot(st.Of[0] - sh[0], st.Of[2] - sh[2]))) : 0, tw = st.Of ? [sh[0] + (st.Of[0] - sh[0]) * twk, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * twk] : W(0.3, 1.12, 0.32);   // (FB2: the throw ends where the arm reaches, half a metre out at most)
+        else if (Gs < 3.35){ const u = ease((Gs - 2.95) / 0.4), g1 = up(E, 0.42 * sc), twk = st.Of ? (LEMMER.on ? Math.min(0.3, 0.5 / Math.max(0.01, Math.hypot(st.Of[0] - sh[0], st.Of[2] - sh[2]))) : 0.3) : 0, tw = st.Of ? [sh[0] + (st.Of[0] - sh[0]) * twk, sh[1] + 0.05, sh[2] + (st.Of[2] - sh[2]) * twk] : W(0.3, 1.12, 0.32);   // (FB2: the throw ends where the arm reaches, half a metre out at most)
           hands = [lerp3([g1[0] - F[0] * 0.18, g1[1] - 0.06, g1[2] - F[1] * 0.18], tw, u), E]; st.gf = {at:E, hang:true}; if (Gs < 3.15) st.slo = {at:hands[0]}; }
         // the fish laid on the table
         else if (Gs < 3.7){ const u = ease((Gs - 3.35) / 0.35); hands = [lerp3(W(0.34, 1.05, 0.2), [mid[0] + R[0] * 0.1, mid[1] + 0.05, mid[2] + R[1] * 0.1], u), lerp3(E, [fH[0] + R[0] * 0.04, fH[1] + 0.05, fH[2] + R[1] * 0.04], u)];
