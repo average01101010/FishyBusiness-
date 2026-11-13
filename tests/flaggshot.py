@@ -12,7 +12,7 @@ from playwright.async_api import async_playwright
 
 
 def check(ok, what, extra=''):
-    print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False, default=str)[:600]) if extra != '' else ''))
+    print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False, default=str)[:600]) if extra != '' else ''), flush=True)
 
 
 async def shot(pg, path):
@@ -84,7 +84,7 @@ async def main():
             nb = await pg.evaluate("G3._debug.npcBufs || null")
             r = {'maling': mode, 'MB_til_GPU': round((g1['bytes'] - g0['bytes']) / 1048576, 2), 'buffere_laget': g1['made'] - g0['made'], 'buffere_slettet': g1['del'] - g0['del'], 'ms': ms,
                  'malte_modeller_laget': nb and nb['made'] - nb0['made'], 'malte_i_live': nb and nb.get('models'), 'malte_MB_sendt': nb and round((nb['up'] - nb0['up']) / 1048576, 2)}
-            rows.append(r); print('MÅLT', json.dumps(r, ensure_ascii=False))
+            rows.append(r); print('MÅLT', json.dumps(r, ensure_ascii=False), flush=True)
             await pg.evaluate("PEERS.length = 0"); await pg.wait_for_timeout(2000)
         if mk['bufs']:
             check(rows[1]['MB_til_GPU'] < rows[0]['MB_til_GPU'] / 4 and rows[1]['malte_modeller_laget'] <= 2 and rows[0]['malte_modeller_laget'] >= 20,
