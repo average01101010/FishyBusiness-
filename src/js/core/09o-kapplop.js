@@ -109,14 +109,19 @@ const lopPt = (t, p) => [t, Math.round(p.x * 100) / 100, Math.round(p.y * 100) /
 // the end of a leg (at the checkpoint's quay, or over the line): its time, the port, the place, and whether a trim was on during it;
 // the next leg's trim begins with what is on now
 function lopLegEnd(r, pid, p){ const e = {t:S.t, pid, p:lopPt(0, p).slice(1), tr:r.tr ? 1 : 0}; r.tr = trimOn(S.boat) ? 1 : 0; return e; }
+// the attempt's id in the cloud: the game's id with the game minute it cast off, so a save taken back or a new game (S.lop.seq starts
+// again) never sends an id the server already has for another attempt
+const lopRid = run => run.id + '-' + Math.round(run.t0 || 0);
 // leg j of an attempt as the server takes it (lop_leg, ui/10h-world.js lopSync): the game minutes it began and ended, the place it ended,
-// the track's points from its start to its end (leg 1 begins with the point at the cast-off), and for the admin the trim, what was added
-// and taken off, and the tasks. null before the leg is over
+// the track's points from its start to its end (leg 1 begins with the point at the cast-off; a leg over 400 game hours, lying in harbour
+// for days, is thinned evenly to 400 with its first and last point kept), and for the admin the trim, what was added and taken off, and the tasks. null before the leg is over
 function lopLegPut(run, j){
   const lg = run.legs || [], e = lg[j]; if (!e || run.t0 == null) return null;
   const t0 = j ? lg[j - 1].t : run.t0, t1 = e.t, inLeg = t => j ? t > t0 && t <= t1 : t >= t0 && t <= t1;
   const sum = (a, f) => (a || []).filter(f).reduce((s, x) => s + (+x.min || 0), 0);
-  return {rid:run.id, leg:j, t0, t1, p:e.p || null, pts:(run.trk || []).filter(q => inLeg(q[0])).slice(0, 400),
+  let pts = (run.trk || []).filter(q => inLeg(q[0]));
+  if (pts.length > 400){ const k = Math.ceil(pts.length / 399); pts = pts.filter((q, i) => i % k === 0 || i === pts.length - 1); }
+  return {rid:lopRid(run), leg:j, t0, t1, p:e.p || null, pts,
     d:{tr:e.tr ? 1 : 0, pen:sum(run.pen, x => inLeg(x.t)), ded:sum(run.ded, x => inLeg(x.t1)),
       opp:(run.tasks || []).filter(m => m.leg === j).map(m => [m.role, m.k, m.st, m.adj || 0])}};
 }
@@ -168,11 +173,11 @@ function lopEnd(how){
   const ashore = () => { if (S.cargo) S.cargo = S.cargo.filter(c => !(typeof c.tur === 'string' && c.tur.indexOf(r.id + ':') === 0)); };
   if (r.vid === S.cur) ashore(); else { const v = vesselById(r.vid); if (v) onVessel(v, ashore); }
   r.t1 = S.t; r.st = how === 'maal' ? 'done' : 'dnf'; r.how = how;
-  const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id;
+  const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id; r.min = T.min;   // (on the attempt too: lopSync may hold it while it ends)
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
   L.hist.unshift(e); if (L.hist.length > LOP.hist) L.hist.length = LOP.hist;
   // what the cloud still needs of it (KL3, lopSync): the legs and the track go with it until they are sent, the last three kept
-  if (r.trk) L.out = (L.out || []).concat([{id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs, trk:r.trk, pen:r.pen, ded:r.ded, tasks:(r.tasks || []).map(m => ({leg:m.leg, role:m.role, k:m.k, st:m.st, adj:m.adj || 0})), st:r.st, how, min:T.min, cs:r.cs || null}]).slice(-3);
+  if (r.trk) L.out = (L.out || []).concat([{id:r.id, vid:r.vid, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs, trk:r.trk, pen:r.pen, ded:r.ded, tasks:(r.tasks || []).map(m => ({leg:m.leg, role:m.role, k:m.k, st:m.st, adj:m.adj || 0})), st:r.st, how, min:T.min, cs:r.cs || null}]).slice(-3);
   if (r.st === 'done' && !(L.best[wk] != null && L.best[wk] <= T.min)) L.best[wk] = T.min;
   L.run = null;
   const hm = lopHm(T.min);

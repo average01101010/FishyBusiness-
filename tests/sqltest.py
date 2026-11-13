@@ -1706,11 +1706,13 @@ def main():
             LW = [(0, 194, (287.15, 1590.02), (217.83, 1315.37)), (1, 157, (217.83, 1315.37), (294.69, 1091.97)), (2, 210, (294.69, 1091.97), (571.86, 851.63)),
                   (3, 175, (571.86, 851.63), (723.28, 586.94)), (4, 192, (723.28, 586.94), (903.6, 318.18)), (5, 181, (903.6, 318.18), (1136.68, 119.25))]
             NOWM = float(sql("select floor(public.world_gh() * 60)"))
-            def lopRun(who, rid, vtype, kn, boat='Havbris', jump=None, hop_leg=None, end=True, legs=6):
+            def lopRun(who, rid, vtype, kn, boat='Havbris', jump=None, hop_leg=None, end=True, legs=6, vid='v1', hop_boat=None, hole=None, hop_before=None):
                 # an attempt sailed at kn knots over each leg's measured way, the track a straight line with a point each whole game hour, ending
                 # 30 game minutes ago; jump: the leg whose middle point lies 60 km off the line; hop_leg: a hop made in the middle of that leg
                 mins = [round(nm / kn * 60) for _, nm, _, _ in LW]; t = NOWM - 30 - sum(mins); t0 = t
-                sql("select public.lop_start('%s', '%s', '%s', %r)" % (rid, vtype, boat, t0), who, 'authenticated')
+                sql("select public.lop_start('%s', '%s', '%s', %r, '%s')" % (rid, vtype, boat, t0, vid), who, 'authenticated')
+                if hop_before is not None:   # a hop to the start, made hop_before real seconds before casting off
+                    sql("insert into public.grants (player_id, product_id, data, used_at) values ('%s', 'hopp', '{\"give\":\"hopp\",\"boat\":\"%s\"}', public.lop_real(%r) - make_interval(secs => %d))" % (who['sub'], vid, t0, hop_before))
                 for (j, nm, a, b), m in zip(LW[:legs], mins):
                     s, e = t, t + m; pts = [[s, a[0], a[1]]] if j == 0 else []
                     hs = [h * 60 for h in range(int(s // 60) + 1, int(e // 60) + 1)]
@@ -1718,8 +1720,9 @@ def main():
                         f = (ht - s) / m; x, y = a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f
                         if jump == j and k == len(hs) // 2: x += 60
                         pts.append([ht, round(x, 2), round(y, 2)])
+                    if hole == j: pts = pts[:1]   # the game closed longer than catchUp plays: no points in this leg
                     if hop_leg == j:
-                        sql("insert into public.grants (player_id, product_id, data, used_at) values ('%s', 'hopp', '{\"give\":\"hopp\",\"min\":30}', public.lop_real(%r))" % (who['sub'], (s + e) / 2))
+                        sql("insert into public.grants (player_id, product_id, data, used_at) values ('%s', 'hopp', '{\"give\":\"hopp\",\"min\":30,\"boat\":\"%s\"}', public.lop_real(%r))" % (who['sub'], hop_boat or vid, (s + e) / 2))
                     sql("select public.lop_leg('%s', %d, %r, %r, '%s'::jsonb, '%s'::jsonb, '{\"tr\":%d}'::jsonb)" % (rid, j, s, e, json.dumps(list(b)), json.dumps(pts), 1 if kn > 9 else 0), who, 'authenticated')
                     t = e
                 if end: sql("select public.lop_end('%s', 'done', 'maal', %r, %r)" % (rid, t, t - t0), who, 'authenticated')
@@ -1727,7 +1730,8 @@ def main():
             LA = {'sub': 'user_01LOPA', 'role': 'authenticated'}; LB = {'sub': 'user_01LOPB', 'role': 'authenticated'}; LC = {'sub': 'user_01LOPC', 'role': 'authenticated'}
             LD = {'sub': 'user_01LOPD', 'role': 'authenticated'}; LE = {'sub': 'user_01LOPE', 'role': 'authenticated'}; LF = {'sub': 'user_01LOPF', 'role': 'authenticated'}
             LS = {'sub': 'user_01LOPS', 'role': 'authenticated'}; LG = {'sub': '9a1c2a3e-0000-4000-8000-0000000000dd', 'role': 'authenticated', 'is_anonymous': True}
-            for w in (LA, LB, LC, LD, LE, LF, LS, LG): sql("select public.tm_hello('{}')", w, 'authenticated')
+            LH = {'sub': 'user_01LOPH', 'role': 'authenticated'}
+            for w in (LA, LB, LC, LD, LE, LF, LS, LG, LH): sql("select public.tm_hello('{}')", w, 'authenticated')
             sql("update public.players set guest = true where id = '%s'" % LG['sub'])
             sql("insert into public.names (player_id, name) values ('user_01LOPA', 'Kystkaren') on conflict do nothing")
             T1 = lopRun(LA, 'lnk-1', 'trebat', 7)                          # honest: 7 kn in a trebåt (vmax 8.5)
@@ -1739,14 +1743,17 @@ def main():
             lopRun(LF, 'lnk-1', 'trebat', 6.9)                              # honest, then marked for cash with cheat_on
             lopRun(LS, 'lnk-1', 'skiff', 25)                                # another class
             lopRun(LG, 'lnk-1', 'trebat', 7.2)                              # a guest
+            # honest, with a hop by another boat of the fleet in leg 4, a hop to the start 20 s before casting off, and leg 2 with no points
+            # (the game closed longer than catchUp plays): no flag (after the independent check, 13.11.2026)
+            lopRun(LH, 'lnk-1', 'trebat', 6.6, hop_leg=3, hop_boat='v2', hop_before=20, hole=1)
             WK = sql("select public.lop_wk(public.lop_real(%r))" % T1)
             FL = lambda pid: json.loads(sql("select coalesce(flag, 'null'::jsonb)::text from public.lop_runs where player_id = '%s' and rid = 'lnk-1'" % pid) or 'null')
-            LP['flags'] = {k: (FL(w['sub']) or {}).get('k') for k, w in (('A', LA), ('B', LB), ('C', LC), ('D', LD), ('E', LE), ('F', LF), ('S', LS), ('G', LG))}
+            LP['flags'] = {k: (FL(w['sub']) or {}).get('k') for k, w in (('A', LA), ('B', LB), ('C', LC), ('D', LD), ('E', LE), ('F', LF), ('S', LS), ('G', LG), ('H', LH))}
             LP['marks'] = sql("select string_agg(player_id || ':' || kind, ',' order by player_id) from public.cheat_flags where kind = 'lop' and cleared_at is null")
             top = lambda who, wk=WK: json.loads(sql("select public.lop_top('%s')" % wk, who, 'authenticated'))
             ta = top(LA); sak = ta['cls'].get('sakte', {})
             LP['boardA'] = [(r['boat'], r['user'], r['rank'], r['me']) for r in sak.get('rows', [])]
-            LP['who'] = sorted(r['id'] for r in sak.get('rows', [])) == sorted(sql("select left(md5('dsb' || '%s'), 10)" % w['sub']) for w in (LA, LE, LF))
+            LP['who'] = sorted(r['id'] for r in sak.get('rows', [])) == sorted(sql("select left(md5('dsb' || '%s'), 10)" % w['sub']) for w in (LA, LE, LF, LH))
             LP['mineA'] = sak.get('mine'); LP['nA'] = sak.get('n'); LP['rask'] = [r['type'] for r in ta['cls'].get('rask', {}).get('rows', [])]
             LP['guest'] = [(r['me'], r['type']) for c in top(LG)['cls'].values() for r in c['rows']]
             LP['week'] = [sql("select public.lop_wk('2026-11-15 22:59+00')"), sql("select public.lop_wk('2026-11-15 23:00+00')"), sql("select public.lop_wk('2026-06-14 22:00+00')")]
@@ -1779,22 +1786,25 @@ def main():
             LP['cleared'] = [FL('user_01LOPB'), any(r['boat'] == 'Havbris' and r['id'] == sql("select left(md5('dsb' || 'user_01LOPB'), 10)") for r in top(LA)['cls']['sakte']['rows'])]
             sql("select public.news_put('lop', 1000, 900, 300, 'Havbris', '', '{\"k\":\"done\",\"cls\":\"sakte\",\"min\":9500,\"wk\":\"2026-W47\",\"trim\":1}'::jsonb)", LA, 'authenticated')
             LP['news'] = json.loads(sql("select d::text from public.news where kind = 'lop' order by at desc limit 1") or 'null')
+            # the file again, as the real order may run it twice: nothing lost, nothing doubled
+            n0 = sql("select count(*) || '/' || (select count(*) from public.lop_legs) || '/' || (select count(*) from public.cheat_vt where vmax is not null) from public.lop_runs")
+            LP['rerun'] = [run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261113200000_kapplop.sql')).returncode, n0 == sql("select count(*) || '/' || (select count(*) from public.lop_legs) || '/' || (select count(*) from public.cheat_vt where vmax is not null) from public.lop_runs"), n0]
         except Exception as e:
             LP['err'] = str(e)[:300]
-        print(ok(not LP.get('err') and LP.get('flags') == {'A': None, 'B': 'fast', 'C': 'trk', 'D': 'hopp', 'E': None, 'F': None, 'S': None, 'G': None}
+        print(ok(not LP.get('err') and LP.get('flags') == {'A': None, 'B': 'fast', 'C': 'trk', 'D': 'hopp', 'E': None, 'F': None, 'S': None, 'G': None, 'H': None}
                  and LP.get('marks') == 'user_01LOPB:lop,user_01LOPC:lop,user_01LOPD:lop'),
-              'KL3: a leg faster than lopMinH (12 kn in a trebåt), a point 60 km off the track and a hop made in the race are flagged and marked lop; 15 kn with a turbo delivered, the guest and the honest are not', LP.get('flags'), LP.get('marks'), LP.get('err', ''))
-        print(ok(not LP.get('err') and LP.get('who') and LP.get('boardA', [None])[0][3] is False and ('Havbris', 'Kystkaren', 2, True) in LP.get('boardA', []) and LP.get('mineA') and LP['mineA']['rank'] == 2
-                 and LP.get('nA') == 3 and LP.get('rask') == ['skiff'] and LP.get('guest') == [(True, 'trebat')] and LP.get('top20') == [20, 28, 27]
-                 and LP.get('cheatOn') == [2, [True]] and LP.get('week') == ['2026-W46', '2026-W47', '2026-W25']),
-              'KL3: the week\'s board per class has the honest and the turbo (never the flagged or the guest), your place, at most 20 rows of 28; a guest sees only themselves; cheat_on keeps a marked account out for the others; lop_wk is lopWeek', LP.get('boardA'), LP.get('mineA'), LP.get('nA'), LP.get('top20'), LP.get('guest'), LP.get('cheatOn'), LP.get('week'))
+              'KL3: a leg faster than lopMinH (12 kn in a trebåt), a point 60 km off the track and a hop made with the race boat in the race are flagged and marked lop; 15 kn with a turbo delivered, the guest, the honest, a hop with another boat or to the start and a leg without points are not', LP.get('flags'), LP.get('marks'), LP.get('err', ''))
+        print(ok(not LP.get('err') and LP.get('who') and LP.get('boardA', [None])[0][3] is False and ('Havbris', 'Kystkaren', 2, True) in LP.get('boardA', []) and LP.get('mineA') and LP['mineA']['rank'] == 2 and LP['mineA'].get('boat') == 'Havbris'
+                 and LP.get('nA') == 4 and LP.get('rask') == ['skiff'] and LP.get('guest') == [(True, 'trebat')] and LP.get('top20') == [20, 29, 27]
+                 and LP.get('cheatOn') == [3, [True]] and LP.get('week') == ['2026-W46', '2026-W47', '2026-W25']),
+              'KL3: the week\'s board per class has the honest and the turbo (never the flagged or the guest), your place, at most 20 rows of 29; a guest sees only themselves; cheat_on keeps a marked account out for the others; lop_wk is lopWeek', LP.get('boardA'), LP.get('mineA'), LP.get('nA'), LP.get('top20'), LP.get('guest'), LP.get('cheatOn'), LP.get('week'))
         print(ok(not LP.get('err') and LP.get('ahead') and LP.get('order') and LP.get('oneOpen') == 'lnk-1:done,lnk-2:run' and LP.get('twice') == ['{"ok": true}', '6'] and LP.get('closed') == [True, True]
                  and LP.get('legs5') == (None, 'legs')),
               'KL3: no leg ahead of the world\'s clock, legs in order and once, one open attempt, the tables closed and anon refused; «done» after five legs is flagged', LP.get('ahead'), LP.get('order'), LP.get('oneOpen'), LP.get('twice'), LP.get('closed'), LP.get('legs5'))
-        print(ok(not LP.get('err') and (LP.get('admin') or {}).get('started') == 10 and LP['admin'].get('done') == 9 and LP['admin'].get('dnf') == 1 and LP['admin'].get('flag') == 4
+        print(ok(not LP.get('err') and (LP.get('admin') or {}).get('started') == 11 and LP['admin'].get('done') == 10 and LP['admin'].get('dnf') == 1 and LP['admin'].get('flag') == 4
                  and LP['admin'].get('flags') == {'fast': 1, 'trk': 1, 'hopp': 1, 'legs': 1} and LP['admin'].get('trim') is not None and LP.get('adminNo') == [True, True] and LP.get('adminNames') is False
-                 and LP.get('cleared') == [None, True] and LP.get('news') == {'k': 'done', 'cls': 'sakte', 'min': 9500, 'wk': '2026-W47'}),
-              'KL3: admin_lop gives the sums without names, only to the admin with aal2; «Fjern merket» puts the attempt back on the board; Kystposten keeps a race story without trim', LP.get('admin'), LP.get('adminNo'), LP.get('cleared'), LP.get('news'))
+                 and LP.get('cleared') == [None, True] and LP.get('news') == {'k': 'done', 'cls': 'sakte', 'min': 9500, 'wk': '2026-W47'} and (LP.get('rerun') or [1])[:2] == [0, True]),
+              'KL3: admin_lop gives the sums without names, only to the admin with aal2; «Fjern merket» puts the attempt back on the board; Kystposten keeps a race story without trim; the file runs twice with nothing lost or doubled', LP.get('admin'), LP.get('adminNo'), LP.get('cleared'), LP.get('news'), LP.get('rerun'))
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

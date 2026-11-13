@@ -85,14 +85,15 @@ function lopPage(){
 function lopBoard(cls0, wk){
   const T = typeof lopTop === 'function' ? lopTop(wk.id) : null; if (!T) return '';
   const en = S.lang === 'en', cls = LOP_CLS && LOP.cls.keys.includes(LOP_CLS) ? LOP_CLS : cls0, d = T.data, C = d && d.cls ? d.cls[cls] : null, rows = C ? C.rows || [] : [];
-  const esc = turEsc, me = esc(S.boatName || lopL('Deg', 'You')) + ' <small>(' + lopL('deg', 'you') + ')</small>';
+  // (your row: the race boat's name as the server has it, not the boat you are aboard now)
+  const esc = turEsc, me0 = esc(S.boatName || lopL('Deg', 'You')), me = r => (r && r.boat && peerName(r.boat) !== '–' ? esc(peerName(r.boat)) : me0) + ' <small>(' + lopL('deg', 'you') + ')</small>';
   const nm = r => { const bn = peerName(r.boat), un = r.user ? peerName(r.user) : ''; return (bn === '–' ? lopL('Ukjent båt', 'Unknown boat') : esc(bn)) + (un && un !== '–' ? '<br><small class="ph-note">' + esc(un) + '</small>' : ''); };
   const tabs = '<div class="ph-sub" style="padding:0 0 8px">' + LOP.cls.keys.map(k => '<button class="' + (k === cls ? 'on' : '') + '" data-pa="lopcls" data-s="' + k + '">' + lopClsName(k, en) + '</button>').join('') + '</div>';
   const body = !d ? '<p class="ph-note">' + (T.err ? lopL('Tavla kan ikke hentes nå.', 'The board cannot be fetched now.') : lopL('Henter tavla …', 'Fetching the board …')) + '</p>'
     : !rows.length ? '<p class="ph-note">' + lopL('Ingen i klassen ' + lopClsName(cls).toLowerCase() + ' har kommet i mål denne uka ennå.', 'No one in the class ' + lopClsName(cls, true).toLowerCase() + ' has finished this week yet.') + '</p>'
     : '<table class="ph-tbl lop-top"><tr><th>#</th><th>' + lopL('Båt', 'Boat') + '</th><th class="n">' + lopL('Tid', 'Time') + '</th></tr>' +
-      rows.map(r => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me : nm(r)) + '</td><td class="n">' + lopHmS(r.min) + '</td></tr>').join('') +
-      (C.mine && C.mine.rank > rows.length ? '<tr class="me"><td>' + C.mine.rank + '</td><td>' + me + '</td><td class="n">' + lopHmS(C.mine.min) + '</td></tr>' : '') + '</table>';
+      rows.map(r => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me(r) : nm(r)) + '</td><td class="n">' + lopHmS(r.min) + '</td></tr>').join('') +
+      (C.mine && C.mine.rank > rows.length ? '<tr class="me"><td>' + C.mine.rank + '</td><td>' + me(C.mine) + '</td><td class="n">' + lopHmS(C.mine.min) + '</td></tr>' : '') + '</table>';
   const n = C ? C.n || 0 : 0, guest = typeof isGuest === 'function' && isGuest();
   return '<h4 class="tur-sec">' + lopL('Ukas tavle', 'This week\'s board') + '</h4><div class="ph-card lop-board">' + tabs + body +
     '<p class="ph-note">' + (n ? lopL(n + (n === 1 ? ' båt' : ' båter') + ' i mål i klassen denne uka. ', n + (n === 1 ? ' boat' : ' boats') + ' finished in the class this week. ') : '') +

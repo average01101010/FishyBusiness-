@@ -178,14 +178,15 @@ async function lopSync(){
   LOPS.busy = true; let wait = 0;
   try {
     for (const R of items){
-      const cs = R.cs || (R.cs = {s:0, n:0, e:0}), over = R !== L.run;
+      // (over: ended, read off the attempt itself; it may end while this waits for the network, and then the copy in out shares cs)
+      const cs = R.cs || (R.cs = {s:0, n:0, e:0}), over = R.st === 'done' || R.st === 'dnf';
       if (cs.at && Date.now() < cs.at) continue;
       try {
-        if (!cs.s){ await cloudRpc('lop_start', {rid:R.id, vtype:R.type, boat:R.name || '', t0:R.t0}); cs.s = 1; }
+        if (!cs.s){ await cloudRpc('lop_start', {rid:lopRid(R), vtype:R.type, boat:R.name || '', t0:R.t0, vid:R.vid || ''}); cs.s = 1; }
         while (cs.n < (R.legs || []).length){ const a = lopLegPut(R, cs.n); if (!a) break; await cloudRpc('lop_leg', a); cs.n++; }
         if (over && !cs.e && cs.n >= (R.legs || []).length){
-          await cloudRpc('lop_end', {rid:R.id, st:R.st, how:R.how || '', t1:R.t1, min:+(+R.min || 0).toFixed(1)}); cs.e = 1;
-          L.out = (L.out || []).filter(x => x !== R); for (const k in LTOP) if (LTOP[k] && typeof LTOP[k] === 'object') LTOP[k].at = 0; }
+          await cloudRpc('lop_end', {rid:lopRid(R), st:R.st, how:R.how || '', t1:R.t1, min:+(+R.min || 0).toFixed(1)}); cs.e = 1;
+          L.out = (L.out || []).filter(x => x.id !== R.id); for (const k in LTOP) if (LTOP[k] && typeof LTOP[k] === 'object') LTOP[k].at = 0; }
         cs.f = 0; delete cs.at;
       } catch (e){
         if (/ 404$/.test(e.message)){ LOPS.off = Date.now() + 600000; return; }
@@ -194,7 +195,7 @@ async function lopSync(){
         // goes from the start, a minute, then longer, later (the server takes a repeat with ok); a finished one it refuses five times
         // is let go, the one under way is kept
         cs.f = (cs.f || 0) + 1; cs.s = 0; cs.n = 0; cs.e = 0; cs.at = Date.now() + 60000 * Math.min(10, Math.pow(2, cs.f - 1));
-        if (over && cs.f >= 5) L.out = (L.out || []).filter(x => x !== R);
+        if (over && cs.f >= 5) L.out = (L.out || []).filter(x => x.id !== R.id);
       }
     }
   } finally { LOPS.busy = false; if (wait) LOPS.next = Date.now() + wait; }

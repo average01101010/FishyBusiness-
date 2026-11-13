@@ -14,7 +14,8 @@
 --                   taken off, the tasks), the end (st 'done' or 'dnf', how, the time on the clock, the real week it counts in) and the flag
 --   cheat_vt.vmax   the highest top speed of the type without trim (core/09o-kapplop.js lopVcap: the 90 hp outboard, the yard's last
 --                   propeller and engine step), and vcls its class (lopCls); tests/unit/juksetabell.test.mjs holds both against the game
---   lop_start(rid, vtype, boat, t0)                 the attempt cast off (the class is the type's here, never the call's)
+--   lop_start(rid, vtype, boat, t0, vid)            the attempt cast off (the class is the type's here, never the call's); rid is the
+--                                                   game's id with the game minute it cast off, so a save taken back never repeats one
 --   lop_leg(rid, leg, t0, t1, p, pts, d)            a leg over, in order, with the checks below
 --   lop_end(rid, st, how, t1, min)                  the attempt over
 --   lop_top(wk)                                     the week's top 20 per class, how many, your place, the public id as pos_world
@@ -25,9 +26,13 @@
 --          trims, any time: a trim adds its hours and may lie unused), less the 10 % margin (lopMinH)
 --   start  the track's first point is not at the quay in Lindesnes at the cast-off
 --   trk    a point of the track farther from the one before than that speed reaches with 10 % and 5 km («Sitter båten fast?» moves her
---          up to 4 km), points out of order or outside the leg, or fewer than one a game hour less two
+--          up to 4 km), or points out of order or outside the leg. The number of points is not checked: the game closed for longer than
+--          catchUp plays (14 game days) leaves a hole in an honest track, and a leg over 400 game hours is thinned by the game (lopLegPut);
+--          a track left out gives only the line from the start to the end, which the speed check over the leg holds anyway
 --   cp     the leg does not end at its checkpoint (within its radius and 1 km) or, the last, at the line
---   hopp   a hop over the route (HO3, a grant 'hopp' used) between the leg's start and its end: «Nei i løpet»
+--   hopp   a hop over the route (HO3, a grant 'hopp' used) with the race boat (the grant's boat is the vessel id the attempt was
+--          started with) after the leg's start and before its end, a minute inside both: «Nei i løpet»; a hop with another boat of the
+--          fleet, to the start or home after the finish is allowed
 -- and at the end, a finished time below the least the legs allow (fast), or not all six legs (legs). No time ahead of the world's clock
 -- (world_gh() + 24 game hours, as land_put). The game's admin account (game_admin) gets trims without the shop and is never flagged.
 -- Guests: their attempts are kept and they see themselves; they are on no one else's board, and a guest's board has only themselves.
@@ -52,7 +57,7 @@ create table if not exists public.lop_runs (
   player_id text not null references public.players (id) on delete cascade,
   course text not null default 'lnk',
   rid text not null,
-  cls text not null, vtype text not null, boat text not null default '',
+  cls text not null, vtype text not null, boat text not null default '', vid text not null default '',
   t0 double precision not null,
   legs jsonb not null default '[]'::jsonb,
   st text not null default 'run' check (st in ('run', 'done', 'dnf')), how text,
@@ -91,7 +96,7 @@ create or replace function public.lop_trim(p text) returns double precision lang
   select greatest(1, coalesce((select max(case g.data ->> 'k' when 'pump' then 1.5 when 'ic' then 1.75 when 'turbo' then 2 else 1 end)
     from grants g where g.player_id = p and g.data ->> 'give' = 'trim'), 1)) $$;
 
-create or replace function public.lop_start(rid text, vtype text, boat text, t0 double precision) returns jsonb
+create or replace function public.lop_start(rid text, vtype text, boat text, t0 double precision, vid text default '') returns jsonb
 language plpgsql security definer set search_path = public as $$
 declare me text := pid(); id_ text := left(regexp_replace(coalesce(lop_start.rid, ''), '[^a-z0-9_-]', '', 'g'), 24);
   vt text := left(regexp_replace(coalesce(lop_start.vtype, ''), '[^a-z0-9_]', '', 'g'), 24); c text;
@@ -107,8 +112,9 @@ begin
   if (select count(*) from lop_runs r where r.player_id = me and r.at > now() - interval '1 hour') >= 30 then raise exception 'too many'; end if;
   -- one open attempt per account: one the game no longer has (a save taken back, another device) is broken off
   update lop_runs r set st = 'dnf', how = 'ny', done_at = now() where r.player_id = me and r.st = 'run';
-  insert into lop_runs (player_id, rid, cls, vtype, boat, t0)
-    values (me, id_, c, vt, left(btrim(regexp_replace(coalesce(lop_start.boat, ''), '[<>&"''`\\]', '', 'g')), 24), lop_start.t0);
+  insert into lop_runs (player_id, rid, cls, vtype, boat, t0, vid)
+    values (me, id_, c, vt, left(btrim(regexp_replace(coalesce(lop_start.boat, ''), '[<>&"''`\\]', '', 'g')), 24), lop_start.t0,
+            left(regexp_replace(coalesce(lop_start.vid, ''), '[^A-Za-z0-9_-]', '', 'g'), 24));
   return jsonb_build_object('ok', true);
 end $$;
 
@@ -116,7 +122,7 @@ create or replace function public.lop_leg(rid text, leg int, t0 double precision
 language plpgsql security definer set search_path = public as $$
 declare me text := pid(); r lop_runs; g lop_legs; n int; vc double precision; trx double precision; mh double precision; fl jsonb := null; ov int := 0;
   pv double precision; ex double precision; ey double precision; ax double precision; ay double precision; at_ double precision;
-  bx double precision; by_ double precision; bt double precision; q jsonb; i int := 0; cnt int; want int; spd double precision;
+  bx double precision; by_ double precision; bt double precision; q jsonb; i int := 0; cnt int; spd double precision;
 begin
   if me is null then raise exception 'not signed in'; end if;
   select * into r from lop_runs x where x.player_id = me and x.rid = lop_leg.rid;
@@ -156,8 +162,6 @@ begin
     at_ := t0; ax := (r.legs -> (n - 1) -> 'p' ->> 0)::double precision; ay := (r.legs -> (n - 1) -> 'p' ->> 1)::double precision;
   end if;
   cnt := jsonb_array_length(pts);
-  want := floor(t1 / 60)::int - floor(t0 / 60)::int + case when n = 0 then 1 else 0 end;
-  if fl is null and cnt < want - 2 then fl := jsonb_build_object('k', 'trk', 'leg', n, 'pts', cnt, 'want', want); end if;
   i := 0;
   while fl is null and i <= cnt loop
     if i < cnt then bt := (pts -> i ->> 0)::double precision; bx := (pts -> i ->> 1)::double precision; by_ := (pts -> i ->> 2)::double precision;
@@ -174,8 +178,9 @@ begin
     elsif abs(ex - g.tx) > 3 or ey < g.ty - g.tr - 1 or ey > g.ty + 1 then fl := jsonb_build_object('k', 'cp', 'leg', n); end if;
   end if;
   -- hopp: a hop made between the leg's start and its end
-  if fl is null and exists (select 1 from grants h where h.player_id = me and h.data ->> 'give' = 'hopp' and h.used_at is not null
-                              and h.used_at between lop_real(lop_leg.t0) - interval '1 minute' and lop_real(lop_leg.t1) + interval '1 minute') then
+  if fl is null and exists (select 1 from grants h where h.player_id = me and h.data ->> 'give' = 'hopp' and h.used_at is not null and r.vid <> ''
+                              and h.data ->> 'boat' = r.vid
+                              and h.used_at > lop_real(lop_leg.t0) + interval '1 minute' and h.used_at < lop_real(lop_leg.t1) - interval '1 minute') then
     fl := jsonb_build_object('k', 'hopp', 'leg', n); end if;
   if coalesce((select pl.game_admin from players pl where pl.id = me), false) then fl := null; end if;
   update lop_runs x set legs = x.legs || jsonb_build_array(jsonb_build_object('t0', lop_leg.t0, 't1', lop_leg.t1, 'p', lop_leg.p, 'pts', lop_leg.pts, 'd', lop_leg.d)),
@@ -231,7 +236,7 @@ begin
                  'me', a.player_id = me, 'id', left(md5('dsb' || a.player_id), 10)) order by a.rk, a.min)
                from (select * from r r2 where r2.cls = c.cls order by r2.rk, r2.min limit 20) a),
       'n', (select count(*) from r r3 where r3.cls = c.cls),
-      'mine', (select jsonb_build_object('rank', r4.rk, 'min', round(r4.min::numeric)) from r r4 where r4.cls = c.cls and r4.player_id = me))), '{}'::jsonb))
+      'mine', (select jsonb_build_object('rank', r4.rk, 'min', round(r4.min::numeric), 'boat', r4.boat) from r r4 where r4.cls = c.cls and r4.player_id = me))), '{}'::jsonb))
     from c);
 end $$;
 
@@ -244,7 +249,7 @@ begin
   return (
     with r as (select x.*, exists (select 1 from jsonb_array_elements(x.legs) e where (e -> 'd' ->> 'tr') = '1') trim_on,
                  exists (select 1 from grants h where h.player_id = x.player_id and h.data ->> 'give' = 'hopp' and h.used_at is not null
-                           and h.used_at between lop_real(x.t0) - interval '6 hours' and lop_real(x.t0)) hop_in
+                           and h.data ->> 'boat' = x.vid and h.used_at between lop_real(x.t0) - interval '6 hours' and lop_real(x.t0)) hop_in
                from lop_runs x where x.at >= since)
     select jsonb_build_object('days', dd,
       'reg', (select count(*) from events e where e.kind = 'lop_start' and e.ts >= since),
@@ -321,9 +326,9 @@ begin
 end $$;
 
 revoke all on function public.lop_real(double precision), public.lop_wk(timestamptz), public.lop_trim(text) from public, anon, authenticated;
-revoke all on function public.lop_start(text, text, text, double precision), public.lop_leg(text, int, double precision, double precision, jsonb, jsonb, jsonb),
+revoke all on function public.lop_start(text, text, text, double precision, text), public.lop_leg(text, int, double precision, double precision, jsonb, jsonb, jsonb),
   public.lop_end(text, text, text, double precision, double precision), public.lop_top(text), public.admin_lop(int),
   public.admin_cheat_clear(bigint), public.news_put(text, double precision, real, real, text, text, jsonb) from public, anon;
-grant execute on function public.lop_start(text, text, text, double precision), public.lop_leg(text, int, double precision, double precision, jsonb, jsonb, jsonb),
+grant execute on function public.lop_start(text, text, text, double precision, text), public.lop_leg(text, int, double precision, double precision, jsonb, jsonb, jsonb),
   public.lop_end(text, text, text, double precision, double precision), public.lop_top(text), public.admin_lop(int),
   public.admin_cheat_clear(bigint), public.news_put(text, double precision, real, real, text, text, jsonb) to authenticated;

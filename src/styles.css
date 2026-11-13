@@ -1782,6 +1782,7 @@ body.v3d .attr{left:44px;max-width:calc(100% - 108px)}   /* (as far from the rig
 .kv.lop-l b{font-weight:600;white-space:nowrap}.lop-clock{font-size:17px;color:#5b2a85}
 .lop-b{flex-wrap:wrap}.lop-b .ph-note{flex:1 0 100%;margin:4px 0}.ph-btn.warn{background:#b8402f;border-color:var(--m-bad,#b8402f);color:#fff}
 .lop-r{margin:0;padding-left:18px}.lop-r li{margin:3px 0;font-size:13.5px;line-height:1.4}
+.lop-board .ph-sub{flex-wrap:wrap;gap:6px}.lop-board .ph-sub button{min-height:44px;padding:0 14px}.lop-top td.n{white-space:nowrap}   /* the week's board (KL3): the class buttons big enough for a finger */
 .lopmk{stroke:#7b3fae;stroke-linecap:round;stroke-linejoin:round;opacity:.8}.lopmk.done{opacity:.4}.lopmk.now{opacity:1}
 .lopcp{fill:#fff;stroke:#7b3fae}.lopcp.ok{fill:#7b3fae}.lopgoal{stroke:#7b3fae;stroke-linecap:round}
 .lbl-lop{fill:#5b2a85;font-weight:700;paint-order:stroke;stroke:#fff}

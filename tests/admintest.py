@@ -28,6 +28,8 @@ async def main():
         await pg.click('nav button[data-t="kapplop"]'); await pg.wait_for_timeout(200); lp = await pg.evaluate("document.querySelector('main').innerText")
         check(all(s in lp for s in ('Påmeldt', 'I mål', 'Brutt', 'Med trim i en etappe', 'Hoppet til startstreken', 'Snittida per klasse', 'Sakte', 'Havfartøy', 'Hvorfor forsøkene ble brutt', 'Forsøkene med merke', 'Sporet (sprang)')),
               'Kappløp: påmeldt, i mål, brutt og hvorfor, snittida per klasse, andelen med trim og med hopp til startstreken, og forsøkene med merke, som summer', lp[:200])
+        jw = await pg.evaluate("jkWhy({kind:'lop', data:{rid:'lnk-1-30', vtype:'trebat', k:'fast', leg:0, h:16.17, min_h:20.54, vmax:8.5, trim:1}})")
+        check('Kappløpet' in jw and 'For rask etappe' in jw and 'etappe 1' in jw and 'Fjern merket' in jw, 'Juks: et merke fra kappløpet sier sjekken, etappen og tallene', jw)
         # the feedback agent: its report in the Agent tab, and under a feedback its suggestion, which «Bruk forslaget» only fills in
         await pg.click('nav button[data-t="agent"]'); await pg.wait_for_timeout(150); ag = await pg.evaluate("document.querySelector('main').innerText")
         await pg.click('nav button[data-t="tilbake"]'); await pg.wait_for_selector('[data-fbai]', timeout=5000)
