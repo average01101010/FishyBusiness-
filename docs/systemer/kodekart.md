@@ -2902,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1654 linjer)
+## `src/js/ui/phone/07-patch.js` (1657 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1642 `patch()`
+  - 1645 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3978,7 +3978,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 1640 `lanterns(G, V, st)`
   - 1683 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (1138 linjer)
+## `src/js/deckcrew.js` (1275 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
@@ -3986,25 +3986,34 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **111** the nets aboard in their tubs (F8, OB3): NET_TUB nets to a 460 l tub (assumed; a 27.5 m net is some 35-40 l in a heap), the
 - **142** setting the line and the nets (F4, F20, OB3; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig»): the
 - **254** the landing, the ice and the freight at the quay (OB4, 11.11.2026; docs/planer/om-bord.md F10, F11, F22, F23; Jonas 09.11.2026:
-- **332** the deck washed down, the packed lunch and the cold (OB14, 11.11.2026, docs/planer/om-bord.md F12-F14; the roles 'spyl',
-- **383** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
-- **446** what the game says: everyone's station this minute, and the boat's state
-- **469** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
-- **583** a free person: something to do for a while, by the weather, the hour and their nature
-- **589** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **695** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **710** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **722** the agents follow the people aboard
-- **849** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **869** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-- **877** the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
-  - 1015 `sternKit(vt)`
-  - 1017 `moorSpots(G, sd)`
-  - 1025 `npcCrewCtx(n, G)`
-- **1031** the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
-  - 1064 `seaState()`
-  - 1068 `seaKnee(dref, dnow)`
-  - 1085 `seaLegs(s, inp)`
+- **334** the deck washed down, the packed lunch and the cold (OB14, 11.11.2026, docs/planer/om-bord.md F12-F14; the roles 'spyl',
+- **385** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
+- **448** what the game says: everyone's station this minute, and the boat's state
+- **471** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
+- **585** a free person: something to do for a while, by the weather, the hour and their nature
+- **591** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
+- **719** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **736** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **748** the agents follow the people aboard
+- **875** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **895** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+- **903** the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
+  - 1044 `sternKit(vt)`
+  - 1046 `moorSpots(G, sd)`
+  - 1054 `npcCrewCtx(n, G)`
+- **1060** the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
+  - 1093 `seaState()`
+  - 1097 `seaKnee(dref, dnow)`
+- **1098** the limbs (FB2, steg 123, 13.11.2026; docs/planer/folk-2.md; Jonas: «Kjør på med FB2 i en ny økt»): the upper arm, the forearm,
+  - 1130 `limbLen(c)`
+  - 1135 `ik2(Rt, Tg, L1, L2, pole, o)`
+  - 1146 `torsoPt(q, b, tw)`
+  - 1148 `torsoInv(q, b, tw)`
+  - 1155 `reachBody(sh, tg, reach, b0, o)`
+  - 1171 `armIk(s, tg, sd, L, o, cl)`
+  - 1196 `armHand(s, hd, sd, L, o, cl)`
+  - 1202 `legDrop(hips, feet, L)`
+  - 1221 `seaLegs(s, inp)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -4220,7 +4229,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 256 `signUi(ok, M, F, VP, now)`
   - 270 `signTake()`
 
-## `src/js/view3d/08-plants.js` (566 linjer)
+## `src/js/view3d/08-plants.js` (624 linjer)
 
 ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
 
@@ -4244,9 +4253,10 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 172 `bootM(foot, h, n)`
   - 177 `leanM(h, lr, lf)`
   - 181 `drawWorker(P, st, eye, T, idx)`
-- **299** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
-- **402** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **514** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+- **269** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
+- **373** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+- **426** the legs, the torso, the head and the arms (FB2, steg 123; deckcrew.js LEMMER, ik2, armIk, reachBody, legDrop): the hands
+- **572** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
 ## `src/js/view3d/09-landing-deck.js` (941 linjer)
 
@@ -4419,7 +4429,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (663 linjer)
+## `src/js/view3d/13-instruments.js` (662 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4451,22 +4461,22 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 213 `drawNPCNames(kit, VP)`
   - 225 `paintHand()`
   - 234 `limbM(A, B, r)`
-  - 240 `armTo(BMrel, W, Sw, Hw, sd, sp)`
-  - 250 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 439 `drawSkiffGlass(BMrel, VP)`
-  - 449 `jigRail(t, G)`
-  - 482 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 515 `drawGlass(m, BMrel, VP)`
-  - 534 `drawDrops(m, BMrel, VP, t)`
-  - 545 `buildBoat()`
-  - 571 `buildFlag()`
-  - 583 `flagTex()`
-  - 596 `mastTop(G)`
-  - 601 `clothInto(a, ph, appW)`
-  - 613 `clothStep(C, t, appW)`
-  - 614 `updateFlag(t, appW)`
-  - 627 `peerFlagTex(n)`
-  - 639 `drawPeerFlags(kit, VP, t, H)`
+  - 241 `armTo(BMrel, W, Sw, Hw, sd, sp)`
+  - 249 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 438 `drawSkiffGlass(BMrel, VP)`
+  - 448 `jigRail(t, G)`
+  - 481 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 514 `drawGlass(m, BMrel, VP)`
+  - 533 `drawDrops(m, BMrel, VP, t)`
+  - 544 `buildBoat()`
+  - 570 `buildFlag()`
+  - 582 `flagTex()`
+  - 595 `mastTop(G)`
+  - 600 `clothInto(a, ph, appW)`
+  - 612 `clothStep(C, t, appW)`
+  - 613 `updateFlag(t, appW)`
+  - 626 `peerFlagTex(n)`
+  - 638 `drawPeerFlags(kit, VP, t, H)`
 
 ## `src/js/view3d/14-sea.js` (729 linjer)
 
@@ -4749,7 +4759,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (548 linjer)
+## `src/js/view3d/20-trawl-seine.js` (551 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4763,33 +4773,33 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 69 `seineState(now)`
   - 79 `drawSeine(t, A, BMrel, VP, now, stO)`
   - 120 `drawDeckCrew(BMrel, eye, VP, t, G)`
-  - 190 `spHold(f)`
-  - 193 `deckWork(G)`
-  - 201 `drawHelmKit(BMrel, eye, G)`
-  - 213 `sailOf(t)`
-  - 214 `drawSail(t, M, set)`
-  - 218 `drawHatch(t, G, M, k)`
-  - 225 `shipCraneOf(t)`
-  - 226 `shipCraneAim(C, pose)`
-  - 233 `drawShipCrane(t, G, M, pose)`
-  - 243 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 288 `npcGear(n)`
-  - 300 `npcGearT(n)`
-  - 321 `npcKB(t, lod, liv)`
-  - 325 `nkbCap()`
-  - 333 `npcMesh(n, lod)`
-  - 347 `npcWarm(eye)`
-  - 364 `seineAnch(G)`
-  - 374 `npcClock(Hf)`
-  - 382 `npcHead(n, t)`
-  - 397 `npcFollow(n, t)`
-  - 416 `npcRev(n)`
-  - 425 `npcPhase(id)`
-  - 430 `kvDraw(n, eye, t)`
-  - 438 `kvRibDraw(n, R, G, M, eye, t)`
-  - 464 `npcFrame(H)`
-  - 465 `drawNPC(eye, t, H, VP)`
-  - 526 `npcCrewDraw(n, K, eye, t)`
+  - 193 `spHold(f)`
+  - 196 `deckWork(G)`
+  - 204 `drawHelmKit(BMrel, eye, G)`
+  - 216 `sailOf(t)`
+  - 217 `drawSail(t, M, set)`
+  - 221 `drawHatch(t, G, M, k)`
+  - 228 `shipCraneOf(t)`
+  - 229 `shipCraneAim(C, pose)`
+  - 236 `drawShipCrane(t, G, M, pose)`
+  - 246 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 291 `npcGear(n)`
+  - 303 `npcGearT(n)`
+  - 324 `npcKB(t, lod, liv)`
+  - 328 `nkbCap()`
+  - 336 `npcMesh(n, lod)`
+  - 350 `npcWarm(eye)`
+  - 367 `seineAnch(G)`
+  - 377 `npcClock(Hf)`
+  - 385 `npcHead(n, t)`
+  - 400 `npcFollow(n, t)`
+  - 419 `npcRev(n)`
+  - 428 `npcPhase(id)`
+  - 433 `kvDraw(n, eye, t)`
+  - 441 `kvRibDraw(n, R, G, M, eye, t)`
+  - 467 `npcFrame(H)`
+  - 468 `drawNPC(eye, t, H, VP)`
+  - 529 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
