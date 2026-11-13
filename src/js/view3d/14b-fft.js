@@ -8,7 +8,7 @@
   // they never race with the game's 6x. The worker gets the time the frame after next will show (FFT.lat ahead), and its result goes up
   // when it comes; it is never asked again before it has answered, so it never queues. WebGL 2 only (RGBA16F with the levels from the
   // worker, no extension needed); elsewhere, with «#fft0» in the address, or if the worker fails, the sea is as before.
-  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:!/fftbl0/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0};
+  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:!/fftbl0/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0, fdt:0.017, lt:null};
   const FFTT = HFFT.tiles;
   function fftWorker(){
     const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips, hfftCapFit].map(f => f.toString()).join('\n') + '\n' +
@@ -74,7 +74,9 @@
   // _half_float); without it, or with «#fftbl0», the tiles are the worker's as before. The copies on the CPU (the boat, the spray) are
   // the newest answer's, up to a lead ahead.
   const FFT_BL_FS = 'precision highp float;varying vec2 vUV;uniform sampler2D uA;uniform sampler2D uB;uniform float uL;uniform float uF;void main(){gl_FragColor=mix(texture2DLod(uA,vUV,uL),texture2DLod(uB,vUV,uL),uF);}';
-  const fftLead = () => FFT.src ? clamp(2.4 * FFT.lat + 0.012, 0.03, 0.5) : FFT.lat;
+  // (two round trips and two frames ahead: an answer is used a frame after it comes at the earliest, and with less the frame's time ran
+  // past B before the next answer was in, and the sea stood a frame, FFT.hold)
+  const fftLead = () => FFT.src ? clamp(2.4 * FFT.lat + 2.2 * FFT.fdt, 0.03, 0.5) : FFT.lat;
   function fftBlInit(){
     if (!FFT.bl) return;
     try {
@@ -200,6 +202,7 @@
   function fftStep(t){
     if (!FFT.on || !PS || PS.basic || PS.far) return;
     if (!fftInit() || !FFT.w) return;
+    if (FFT.lt != null && t > FFT.lt) FFT.fdt += (clamp(t - FFT.lt, 0.004, 0.1) - FFT.fdt) * 0.1; FFT.lt = t;   // (the frame's length, eased)
     if (FFT.src) fftBlend(t + WV.dT);
     if (FFT.busy){ if (performance.now() - FFT.sentAt > 3000) FFT.busy = false; else return; }   // (a lost answer does not stop it)
     if (FFT.pend) return;   // (the set that waits is not yet due: nowhere to put another)
