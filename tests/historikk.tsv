@@ -3767,3 +3767,6 @@
 2026-11-13 14:25	plan/2026-11-13-108	b894aa33	dbg23o	OK	48	3d	alene	
 2026-11-13 14:35	plan/2026-11-13-108	a6960ef0	benchshot	OK	637	3d	alene	
 2026-11-13 14:43	plan/2026-11-13-108	a6960ef0	f1test	OK	447	3d	alene	
+2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
+2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
+2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	
