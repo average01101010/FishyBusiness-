@@ -3416,3 +3416,13 @@
 2026-11-12 22:53	ccr-013bxxig-n7skip	7ff341e+	ferrytest	OK	22	lite	samtidig	
 2026-11-12 22:54	ccr-013bxxig-n7skip	7ff341e+	trip2	OK	31	lite	alene	
 2026-11-12 21:55	plan/2026-11-12-45b	023beed7	boottest	OK	25	lite	alene	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	seatest	OK	20	lite	samtidig	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	calib	LES	17	lite	samtidig	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	simday	LES	14	lite	samtidig	
+2026-11-13 00:49	ccr-013bxxie-f7brott	34c249e	progweek	LES	53	lite	samtidig	
+2026-11-13 00:49	ccr-013bxxie-f7brott	34c249e	trip2	OK	42	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	hulltest	OK	72	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	crewlifetest	OK	10	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	fleet2test	OK	35	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	worktest	OK	23	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	towtest	OK	15	lite	samtidig	

@@ -425,6 +425,27 @@ Jonas 27.10.2026: «Ytterligere forbedring av vannfysikk og hvordan båten samha
 
 - **Det mørke beltet langs land rettet 29.10.2026** (Jonas' bilder fra Bleik): regelen om 5 m ved linja (der en av de grove cellene rundt var land) laget et mørkt belte en grov celle bredt rundt hver holme og molo, trappete som cellene, og de grove grunnene utenfor ble en lys ring. Nå gir fjærekartet (`uLandS`) dybden helt ned til 4 m der det finnes, og dybden er minst 4 m utenfor det; de grove høydene teller bare dypere enn det. Det turkise toner da jevnt ut fra fjæra. Bilde før og etter i `docs/pr/ccr-1d00422f-gjapvb/g10/grunt_for_etter.png`.
 
+## 5.20t Brottsjøen (Fysikk 4 F7, 12.–13.11.2026, Jonas' økt, grenen `ccr-013bxxie-f7brott`, steg 43)
+
+Jonas 27.10.2026 (valg 6 A: brottsjø sist og liten) og 13.11.2026 i økta: «Lag det gjerne, men ikke la det skade båten», og på spørsmålet om hva den skal gjøre i stedet: «Bare varsel og skrekk». Kjernens del (minuttsteget, slagene og mannskapet) står i «F7» under 5.62 i `fysikk-og-styring.md`; her er sjøen.
+
+- **Når:** i grov sjø (Hs over 3 m, `BRT.hs`) der vindsjø og dønning krysser med over 60° og begge er minst 1 m (`brottCond` i `core/03b-sea.js`), eller der vindsjøen (med høyden strømmen gir den, `seaCur`) står mot over 2 knop strøm.
+- **Hvor ofte:** en bølge over 2 Hs kommer én gang på e⁸ ≈ 3 000 bølger i en Rayleigh-sjø (Longuet-Higgins 1952), og en andel `BRT.B` = 0,25 av dem bryter (antatt: ingen kilde gir andelen for en sjøtilstand). Bølgene telles i sjøens ekte sekunder, som i 3D (B4): 1/Tz i sekundet, Tz = Tp/1,29 (JONSWAP, γ 3,3), 10 sekunder per spillminutt.
+- **Lik for alle:** kysten er delt i celler på 2 km. Hver celle og hvert spillminutt har et tall fra en fast hash (`brtHash`). Faller det under raten sjøen i cellen gir, fødes en gruppe der, i et punkt i cellen hashen gir, og den går dit sjøen går. Bare sted, tid og vær går inn, så to spillere på samme sted ser den samme gruppen, og en båt ute med spillet lukket møter den i minuttsteget. Cellens rate er punktets ganger cellens areal over arealet én gruppe sveiper (bredden 2 × 2,5 bølgelengder ganger veien den går mens den er minst halvt så høy). Gruppen lever 14 perioder og er høyest midt i livet (en sinus). Utregningen huskes per celle og minutt (`BRT_MEMO`).
+- **I 3D** (`brvStep` i `view3d/14-sea.js`, `SEA_BR` og `BR_GR` i `01-shaders.js`): gruppen nærmest båten slås opp én gang i sekundet (`brottNear`). Innenfor en innhyllingskurve som går med gruppens gruppefart (1,2 bølgelengder langs, 2,5 på tvers) går bærebølgens gruppefaktor over til den forsterkningen som gir den amplituden Hs. Bærebølgen er vindsjøens lengste bølge (0, 96 m) eller dønningens hovedbølge (11), etter hvilken sjø gruppen kom fra. Amplituden holdes under k·a 0,42, der bølgen bryter: en 96 m bølge stopper på 12,8 m fra topp til bunn, og Jacobi-skummet (F3) gjør toppen hvit. Det samme regnes i `grpAt`, så `seaH` og skroget rir på den samme bølgen. Uten gruppe er `uBr2.w` 0, og ingenting endres. `#brott0` i adressen slår den av.
+- **Målt** (`tests/brottaar.py`, hele kysten, et år fra mars 2027, for en båt som lå der hele året):
+
+  | Sted | Timer med slik sjø | Ventet antall | Minuttsteget møtte |
+  |---|---|---|---|
+  | Bergen, vest av Sotra | 559 | 3,75 | 1 |
+  | Frøya, vest av Halten | 618 | 4,23 | ikke kjørt |
+  | Bodø, ute ved Givær | 231 | 1,56 | 1 |
+  | Hammerfest, nord av Sørøya | 123 | 0,88 | 0 |
+  | Bergen, Vågen | 0 | 0 | ikke kjørt |
+
+  Nesten alt kommer fra november til februar, og alt fra kryssende sjø: strømmen ga ingen timer på disse stedene (regelen er sjekket i `tests/unit/brottsjo.test.mjs`). Et døgn av minuttsteget med brottsjøen og slagene tar 81–96 ms i nettleseren. I 3D (`tests/brottshot.py`, kuling 19 m/s nordvest av Senja, Hs 8,1 m): 13,6 og 11,8 m fra topp til bunn innenfor gruppen, mot 2,1 m som høyeste topp på samme sted og tid uten den.
+- **Usikkert:** `BRT.B` er antatt. Det er heller ikke sjekket hvordan gruppen ser ut på nettbrettet (bare under SwiftShader, `docs/spill-dette/43.md`).
+
 ## 5.20s Båten som ikke rullet, bølgene mot vinden og firkanten (12.11.2026, Jonas' tre videoer fra nettbrettet)
 
 Jonas: «Hvorfor står det 0,7 m bølger, kraftig rulling, men båten har ingen bevegelse?», «Se også hvordan vei sjøen går i forhold til flagget og vindretningen», «Man ser også tydelig en firkant i havet rundt båten» og «refleksjoner som flasher i vannet».

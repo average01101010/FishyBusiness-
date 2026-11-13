@@ -437,7 +437,7 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1408 `spCatchable(sp, H)`
   - 1410 `ordersTick(H)`
 
-## `src/js/core/03b-sea.js` (196 linjer)
+## `src/js/core/03b-sea.js` (288 linjer)
 
 SEA: fetch, wind sea, swell
 
@@ -472,6 +472,15 @@ SEA: fetch, wind sea, swell
   - 182 `seaDirOf(rel)`
   - 189 `seaPartsNear(p, H)`
   - 191 `seaDirF(p, H, head)`
+- **196** The breaking sea, brottsjøen (Ø9 F7, docs/planer/fysikk-4-sjo-og-skrog.md F7; Jonas 27.10.2026 6A: «at båten skal fungere så ekte
+  - 214 `brtHash(ix, iy, t, k)`
+  - 219 `brottCond(p, H)`
+  - 232 `brottEvent(ix, iy, t, cond)`
+  - 238 `brottMake(ix, iy, t, u, cond)`
+  - 249 `brottNear(p, T, cond)`
+  - 258 `brottRel(e, p, T)`
+  - 264 `brottSide(e, head)`
+  - 273 `brottMinute(cond)`
 
 ## `src/js/core/03c-stability.js` (312 linjer)
 
@@ -2184,7 +2193,7 @@ work aboard: stations, and how the crew share them
   - 434 `workTeam(st, g, as)`
   - 440 `workMinute()`
 
-## `src/js/core/14-crewlife.js` (703 linjer)
+## `src/js/core/14-crewlife.js` (736 linjer)
 
 life aboard: learning, meals, the rest rule and what the crew says
 
@@ -2254,6 +2263,8 @@ life aboard: learning, meals, the rest rule and what the crew says
   - 675 `laerAnswer(id, i)`
   - 685 `laerHour(H)`
   - 698 `laerDone(c, boat, hp)`
+- **703** The breaking sea and the slamming (Ø9 F7; Jonas 13.11.2026: «Bare varsel og skrekk»): the most seasoned hand aboard calls it, at
+  - 720 `crewBrott(kind, side)`
 
 ## `src/js/core/14b-sikkerhet.js` (593 linjer)
 
@@ -2441,7 +2452,7 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 639 `dynAuto(d, dtG)`
   - 775 `dynTrackView()`
 
-## `src/js/core/16c-hull.js` (149 linjer)
+## `src/js/core/16c-hull.js` (202 linjer)
 
 ---- Fysikk 3: what the blows and the groundings do to the hull (Jonas 18.10.2026: «kollisjoner og grunnstøting skal få
 
@@ -2455,15 +2466,18 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 52 `bedRock(p)`
   - 60 `hullGround(p, kn, b = S.boat)`
   - 69 `hullMinute()`
-  - 89 `hullCost(b = S.boat, d = b.dmg || {})`
-- **96** the hull insurance (kasko)
-  - 101 `kaskoSign(b = S.boat)`
-  - 107 `kaskoEnd(b = S.boat)`
-  - 109 `kaskoHour()`
-  - 115 `hullLeft(b = S.boat)`
-  - 122 `hullBill(b = S.boat)`
-  - 128 `hullOrder(auto, b = S.boat)`
-  - 143 `hullMended(j, b = S.boat)`
+  - 92 `hullCost(b = S.boat, d = b.dmg || {})`
+- **99** the hull insurance (kasko)
+  - 104 `kaskoSign(b = S.boat)`
+  - 110 `kaskoEnd(b = S.boat)`
+  - 112 `kaskoHour()`
+  - 118 `hullLeft(b = S.boat)`
+  - 125 `hullBill(b = S.boat)`
+  - 131 `hullOrder(auto, b = S.boat)`
+  - 146 `hullMended(j, b = S.boat)`
+- **153** The slamming in the minute step (Ø9 F7; Jonas 13.11.2026: «Bare varsel og skrekk»): repeated hard slams at speed make the crew
+  - 167 `slamRate(b = S.boat, H = S.t / 60, hard = 1)`
+  - 196 `slamMinute()`
 
 ## `src/js/ui/01-i18n.js` (120 linjer)
 
@@ -2843,12 +2857,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1618 linjer)
+## `src/js/ui/phone/07-patch.js` (1622 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1606 `patch()`
+  - 1610 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3934,29 +3948,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (876 linjer)
+## `src/js/view3d/01-shaders.js` (885 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
-- **162** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-- **292** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **390** the boat's own foam, when she has way on
-- **398** where a slam and the spray land (F3b): four patches, fixed names
-- **400** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 764 `cloudStep(dt)`
-  - 771 `skyFrame(u, Hh, tn, bv)`
-  - 789 `glsl3(src, fs)`
-  - 802 `progStart(vs, fs, attrs, nm = '?')`
-  - 812 `progEnd(P)`
-  - 822 `program(vs, fs, attrs, nm = '?')`
-  - 824 `progWait(list)`
-  - 830 `programA(vs, fs, attrs, nm)`
-  - 831 `buf(data, target, usage)`
-  - 836 `airSet(u, terr)`
-  - 851 `sunT0()`
-  - 858 `attr(loc, b, size)`
-  - 874 `upload(pos, col, idx)`
+- **168** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+- **298** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
+- **396** the boat's own foam, when she has way on
+- **404** where a slam and the spray land (F3b): four patches, fixed names
+- **406** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 773 `cloudStep(dt)`
+  - 780 `skyFrame(u, Hh, tn, bv)`
+  - 798 `glsl3(src, fs)`
+  - 811 `progStart(vs, fs, attrs, nm = '?')`
+  - 821 `progEnd(P)`
+  - 831 `program(vs, fs, attrs, nm = '?')`
+  - 833 `progWait(list)`
+  - 839 `programA(vs, fs, attrs, nm)`
+  - 840 `buf(data, target, usage)`
+  - 845 `airSet(u, terr)`
+  - 860 `sunT0()`
+  - 867 `attr(loc, b, size)`
+  - 883 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4365,7 +4379,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 596 `mastTop(G)`
   - 600 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (673 linjer)
+## `src/js/view3d/14-sea.js` (705 linjer)
 
 ---------- sea ----------
 
@@ -4378,49 +4392,53 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 68 `spreadSd(f, ia)`
   - 76 `waveDTStep(dt)`
   - 82 `updateWaves(dt, H)`
-- **163** the near field: the short sea rides with the boat
-  - 172 `nfStep()`
-- **210** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 217 `wakeTrack(x, z, fx, fz, ds)`
-  - 236 `wakeTU(u, ox, oz)`
-  - 237 `updateWake()`
-  - 263 `wakeHFast(x, z)`
-- **276** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 290 `foamFree()`
-  - 291 `foamInit()`
-  - 309 `wavePh()`
-  - 319 `foamStep(dt, t)`
-  - 387 `foamSplash(Dx, Dz)`
-  - 408 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 448 `foamBind(u, t)`
-  - 465 `grpAt(i, c, x, z, t)`
-- **498** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 513 `shoalPrep(J)`
-  - 514 `shoalCell(J, k, land, dd)`
-  - 518 `shoalSweep(J, end)`
-  - 532 `shoalPut(J)`
-  - 538 `shTex(u, v, out)`
-  - 545 `shoalAt(x, z)`
-  - 559 `shW(c, SH, out)`
-  - 565 `surfK(h)`
-  - 567 `surfStep(t)`
-  - 573 `shoalBind(u, t)`
-- **581** the sea state over the near terrain and the whole map
-  - 588 `ssLevel(n, unit)`
-  - 590 `ssRect(L)`
-  - 591 `ssWork(L, until)`
-  - 614 `ssStep(rdt)`
-  - 616 `ssBlend(L)`
-  - 618 `ssTex(L, x, z, out)`
-  - 625 `ssAt(x, z)`
-  - 635 `seaQ(S, ren)`
-  - 638 `seaDisp(x, z, t, S, fade, SH)`
-  - 662 `seaFade(x, z)`
-  - 663 `seaH(x, z, t)`
-  - 669 `seaHFast(x, z, t)`
-  - 671 `shoalHere(x, z)`
+- **164** the near field: the short sea rides with the boat
+  - 173 `nfStep()`
+- **211** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 218 `wakeTrack(x, z, fx, fz, ds)`
+  - 237 `wakeTU(u, ox, oz)`
+  - 238 `updateWake()`
+  - 264 `wakeHFast(x, z)`
+- **277** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 291 `foamFree()`
+  - 292 `foamInit()`
+  - 310 `wavePh()`
+  - 320 `foamStep(dt, t)`
+  - 388 `foamSplash(Dx, Dz)`
+  - 409 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 449 `foamBind(u, t)`
+  - 466 `grpAt(i, c, x, z, t)`
+- **475** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 484 `brvE(x, z)`
+  - 485 `brvStep()`
+  - 498 `brvSet(u)`
+- **530** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 545 `shoalPrep(J)`
+  - 546 `shoalCell(J, k, land, dd)`
+  - 550 `shoalSweep(J, end)`
+  - 564 `shoalPut(J)`
+  - 570 `shTex(u, v, out)`
+  - 577 `shoalAt(x, z)`
+  - 591 `shW(c, SH, out)`
+  - 597 `surfK(h)`
+  - 599 `surfStep(t)`
+  - 605 `shoalBind(u, t)`
+- **613** the sea state over the near terrain and the whole map
+  - 620 `ssLevel(n, unit)`
+  - 622 `ssRect(L)`
+  - 623 `ssWork(L, until)`
+  - 646 `ssStep(rdt)`
+  - 648 `ssBlend(L)`
+  - 650 `ssTex(L, x, z, out)`
+  - 657 `ssAt(x, z)`
+  - 667 `seaQ(S, ren)`
+  - 670 `seaDisp(x, z, t, S, fade, SH)`
+  - 694 `seaFade(x, z)`
+  - 695 `seaH(x, z, t)`
+  - 701 `seaHFast(x, z, t)`
+  - 703 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (192 linjer)
+## `src/js/view3d/14b-fft.js` (193 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -4487,7 +4505,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (292 linjer)
+## `src/js/view3d/17-draw.js` (293 linjer)
 
 ---------- drawing ----------
 
@@ -4498,14 +4516,14 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 36 `dryIdx(m, thr)`
   - 52 `dryThr(eye, near)`
   - 61 `drawTerrain(TM, eye, VP, near)`
-  - 88 `buildGround()`
-  - 99 `maskOr(J, x, z)`
-  - 100 `groundStep()`
-  - 140 `buildLandMask()`
-  - 163 `lmStep()`
-  - 210 `skyMask(eye, Vm, fov, asp, farZ)`
-  - 221 `seaRing(u, eye, y, R, Hl)`
-  - 238 `drawSea(VP, eye, t, far, drop)`
+  - 89 `buildGround()`
+  - 100 `maskOr(J, x, z)`
+  - 101 `groundStep()`
+  - 141 `buildLandMask()`
+  - 164 `lmStep()`
+  - 211 `skyMask(eye, Vm, fov, asp, farZ)`
+  - 222 `seaRing(u, eye, y, R, Hl)`
+  - 239 `drawSea(VP, eye, t, far, drop)`
 
 ## `src/js/view3d/17b-inland-water.js` (152 linjer)
 
