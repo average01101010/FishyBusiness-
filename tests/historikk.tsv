@@ -3906,3 +3906,24 @@
 2026-11-13 19:45	plan/2026-11-13-118	a7d9e66e+	kapplop	FEIL	28	lite	alene	FEIL 10. KL3: forsøket til skyen: lop_start, de seks etappene i rekkefølge med sporet (ett punkt per spilltime) og lop_end, én gang; uten funksjonene (404) spør
 2026-11-13 19:45	plan/2026-11-13-118	a7d9e66e+	kapplop	OK	28	lite	alene	
 2026-11-13 20:26	plan/2026-11-13-118	7373114b	kapplopshot	FEIL	2400	3d	alene	gikk ut på tid
+2026-11-13 20:29	plan/2026-11-13-118	698d4280	admintest	OK	10	lite	samtidig	
+2026-11-13 20:29	plan/2026-11-13-118	698d4280	kapplop	OK	28	lite	samtidig	
+2026-11-13 20:29	plan/2026-11-13-118	698d4280	hopptest	OK	7	lite	samtidig	
+2026-11-13 20:30	plan/2026-11-13-118	698d4280	cloudtest	FEIL	48	lite	samtidig	FEIL every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes o
+2026-11-13 20:30	plan/2026-11-13-118	698d4280	peergear	OK	6	lite	samtidig	
+2026-11-13 20:30	plan/2026-11-13-118	698d4280	eventtest	OK	6	lite	samtidig	
+2026-11-13 20:30	plan/2026-11-13-118	698d4280	rttest	OK	51	lite	samtidig	
+2026-11-13 20:31	plan/2026-11-13-118	698d4280	docktest	OK	62	lite	samtidig	
+2026-11-13 20:31	plan/2026-11-13-118	698d4280	turtest	OK	17	lite	samtidig	
+2026-11-13 20:31	plan/2026-11-13-118	698d4280	adminbuytest	OK	9	lite	samtidig	
+2026-11-13 20:32	plan/2026-11-13-118	698d4280	opptest	OK	87	lite	samtidig	
+2026-11-13 20:32	plan/2026-11-13-118	698d4280	megletest	OK	25	lite	samtidig	
+2026-11-13 20:32	plan/2026-11-13-118	698d4280	aerendshot	OK	15	lite	samtidig	
+2026-11-13 20:32	plan/2026-11-13-118	698d4280	laerlingshot	OK	16	lite	samtidig	
+2026-11-13 20:32	plan/2026-11-13-118	698d4280	avtaleshot	OK	14	lite	samtidig	
+2026-11-13 20:33	plan/2026-11-13-118	698d4280	uishots	OK	85	lite	samtidig	
+2026-11-13 20:33	plan/2026-11-13-118	698d4280	navbarshot	OK	28	lite	samtidig	
+2026-11-13 20:33	plan/2026-11-13-118	698d4280	dockrow	OK	40	lite	samtidig	
+2026-11-13 20:35	plan/2026-11-13-118	698d4280	roetest	OK	119	lite	samtidig	
+2026-11-13 20:35	plan/2026-11-13-118	698d4280	hudtest	OK	113	lite	samtidig	
+2026-11-13 20:36	plan/2026-11-13-118	698d4280	sqltest	OK	51	lite	samtidig	
