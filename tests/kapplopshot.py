@@ -19,7 +19,7 @@ everything tapped as CDP touch:
   8. no page errors
 Screenshots: tests/out/kapplop-{for,under,klokke,kart,sjekkpunkt}-{staaende,liggende}.jpg. KYST_KL_ONE=liggende (or staaende): one format.
 python3 tests/kapplopshot.py (3D). Prints OK or FEIL lines."""
-import asyncio, json, os
+import asyncio, json, os, time
 from _env import boot
 from playwright.async_api import async_playwright
 
@@ -95,10 +95,11 @@ async def one(p, name, vw, vh):
     check(r['st'] == 'reg' and t and 'Påmeldt i Lindesnes' in t['txt'], name + ': 2. påmeldt med berøring, «Påmeldt i Lindesnes» krysset av', {'run': r, 'btns': t and t['btns']})
     ticked = await J("() => !!document.querySelector('#phone .lop-l.ok')")
     check(ticked, name + ': 2. kortet starter med «Påmeldt i Lindesnes» krysset av')
-    await tap('#phone [data-pa="lopgo"]')
+    t_go = time.monotonic(); await tap('#phone [data-pa="lopgo"]')
     try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=480000)
     except Exception as e:
         print('     (ikke i gang:', await J("() => ({toast:(document.getElementById('toast') || {}).textContent, plan:!!S.plan, st:S.boat.status, run:S.lop && S.lop.run && S.lop.run.st, busy:typeof LEIA_RUN !== 'undefined' ? LEIA_RUN.length : null})"), ')'); raise
+    print('     (ruta Lindesnes–Bergen funnet på %.1f s)' % (time.monotonic() - t_go))
     r = await J(RUN)
     check(r['st'] == 'run' and r['t0'] is not None and r['plan'] and r['plan']['port'] == await J("() => LOP.cps[0].port") and len(r['tasks']) == 2, name + ': 2. «Kast loss mot Bergen» med berøring: ruta funnet, klokka går, oppgaven og overraskelsen vist', r)
     # a little way out under the clock, still weather
