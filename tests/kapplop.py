@@ -216,7 +216,8 @@ async def main():
           return {ok, min:S.t - t0, raw:lopTime(S.lop.run, S.t).raw - raw0, fuel:Math.round(b.fuel), cap:BOAT.fuelCap, at:portById(b.port).name, st:S.lop.run.st}; }""")
         check(f['min'] > 0 and f['fuel'] > f['cap'] * 0.4 and abs(f['raw'] - f['min']) < 1e-9 and f['st'] == 'run', '3. bunkringen i ' + str(f['at']) + ': klokka går', f)
         # 4. leg 3, middle: Ålesund–Rørvik, played with the game closed
-        await J("() => { const r = S.lop.run; r.legs = [{t:S.t, pid:LOP.cps[0].port}, {t:S.t, pid:LOP.cps[1].port}]; }")
+        # (the legs skipped by the test written as lopDock writes them: the time, the port and its place, KL3)
+        await J("() => { const r = S.lop.run; r.legs = [0, 1].map(i => ({t:S.t, pid:LOP.cps[i].port, p:lopPt(0, portById(LOP.cps[i].port).p).slice(1), tr:0})); }")
         a = await J(AT, {'k': 2}); await J("() => lopLegTasks(S.lop.run, 2)")
         tk = await J(TASKS); st = [m for m in tk if m['leg'] == 2 and m['role'] == 'fix']
         check(len(st) == 1 and st[0]['k'] == 'prove' and st[0]['kind'] == 'stasjon', '4. etappe 3: prøvestasjonen på Frohavet (havsjarken har juksa)', st)
@@ -230,7 +231,7 @@ async def main():
         check(s['st'] == 'port' and len(r['legs']) == 3 and r['legs'][2] == (await J("() => LOP.cps[2].port")) and r['st'] == 'run',
               '4. etappe 3 spilt som med spillet lukket: Autonav seilte videre, sjekkpunkt Rørvik', {'s': s, 'legs': r['legs'], 'nm': rt.get('nm')})
         # 5. leg 6, north: Tromsø–Nordkapp, over the line
-        await J("() => { const r = S.lop.run; r.legs = LOP.cps.map(c => ({t:S.t, pid:c.port})); }")
+        await J("() => { const r = S.lop.run; r.legs = LOP.cps.map(c => ({t:S.t, pid:c.port, p:lopPt(0, portById(c.port).p).slice(1), tr:0})); }")
         a = await J(AT, {'k': 5}); await J("() => lopLegTasks(S.lop.run, 5)")
         tk = await J(TASKS); fu = [m for m in tk if m['leg'] == 5 and m['role'] == 'fix']
         check(len(fu) == 1 and fu[0]['fyr'] == 'Skjervøya', '5. etappe 6: bildet av Skjervøy fyr' + (' mens fyret lyser' if fu and fu[0]['lys'] else ' (lyset kommer ikke: et vanlig bilde)'), fu)
@@ -248,6 +249,26 @@ async def main():
               '5. over mållinja nord for Nordkapp: fullført, uka ' + wk + ' og beste tid', {'hist': h0, 'best': r['best'], 'nm': rt.get('nm'), 'min': s['min']})
         hw = await J("() => (hopWhy() || [null])[0]")
         check(hw is None, '5. etter mål er hoppet lov igjen (hjem til Honningsvåg)', hw)
+        # 10. KL3 (steg 118): the finished attempt to the cloud, with a fake one as in eventtest: lop_start, the six legs in order with the
+        # track (the point at the cast-off and one each whole game hour, each point in one leg) and lop_end; once and never again; a server
+        # without the functions (404) is asked once and left for ten minutes
+        k3 = await J("""async () => { const calls = [], real = window.cloudRpc, c0 = {on:CLOUD.on, user:CLOUD.user, guest:CLOUD.guest};
+          const o = (S.lop.out || [])[0]; if (!o) return {err:'no out'};
+          window.cloudRpc = async (fn, a) => { calls.push([fn, JSON.parse(JSON.stringify(a))]); return {ok:true}; }; CLOUD.on = true; CLOUD.user = 'u1'; CLOUD.guest = false; LOPS.next = 0; LOPS.off = 0;
+          try {
+            await lopSync(); const first = calls.slice(); await lopSync(); const lg = first.filter(c => c[0] === 'lop_leg').map(c => c[1]);
+            const R = {fns:first.map(c => c[0]), again:calls.length - first.length, out:(S.lop.out || []).length, legs:lg.map(a => [a.leg, a.pts.length, a.t1 - a.t0]),
+              hours:lg.every(a => a.pts.every((q, i) => a.leg === 0 && i === 0 ? q[0] === a.t0 : q[0] % 60 === 0 && q[0] > a.t0 && q[0] <= a.t1)),
+              chain:lg.every((a, i) => !i || a.t0 === lg[i - 1].t1), places:lg.every(a => Array.isArray(a.p) && a.p.length === 2), npts:lg.reduce((s, a) => s + a.pts.length, 0),
+              start:first[0] && first[0][1], end:first[first.length - 1] && first[first.length - 1][1], trk:o.trk.length, t0:o.t0, t1:o.t1, min:o.min};
+            S.lop.out = [o]; o.cs = null; calls.length = 0; window.cloudRpc = async (fn) => { calls.push(fn); throw new Error(fn + ' 404'); };
+            await lopSync(); await lopSync(); R.n404 = calls.length; R.off = LOPS.off - Date.now() > 590000;
+            return R;
+          } finally { window.cloudRpc = real; Object.assign(CLOUD, c0); LOPS.off = 0; LOPS.next = 0; S.lop.out = []; } }""")
+        check(not k3.get('err') and k3.get('fns') == ['lop_start'] + ['lop_leg'] * 6 + ['lop_end'] and k3['again'] == 0 and k3['out'] == 0 and [l[0] for l in k3['legs']] == list(range(6))
+              and k3['hours'] and k3['chain'] and k3['places'] and k3['npts'] == k3['trk'] and k3['trk'] > 5 and k3['start'].get('t0') == k3['t0'] and k3['start'].get('vtype') == 'sjark'
+              and k3['end'].get('st') == 'done' and k3['end'].get('how') == 'maal' and k3['end'].get('t1') == k3['t1'] and abs(k3['end'].get('min', -1) - k3['min']) < 0.06 and k3['n404'] == 1 and k3['off'],
+              '10. KL3: forsøket til skyen: lop_start, de seks etappene i rekkefølge med sporet (ett punkt per spilltime) og lop_end, én gang; uten funksjonene (404) spørres det ikke mer på ti minutter', k3)
         # 6. a tow breaks the attempt
         a = await J(AT, {'k': 0}); await J("() => lopStart()"); rt = await J(ROUTE, 1); await J("() => depart()"); await J(SAIL, {'n': 30})
         # the race boat sails on by Autonav while you are aboard another boat in the fleet (lopTick binds her: onVessel); a passing over a
