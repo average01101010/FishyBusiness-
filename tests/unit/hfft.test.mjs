@@ -37,6 +37,14 @@ export default function (t){
     hfftFrame(TT, 5, a, WT); hfftFrame(TT, 5.05, b, WT); let c = 0, s2 = 0;
     for (let q = 0; q < n; q++){ const g = P.dx * a[q * 4] + P.dz * a[q * 4 + 1]; c += (b[q * 4 + 3] - a[q * 4 + 3]) * g; s2 += g * g; }
     t.ok(c < 0, 'the tile\'s waves travel downwind (the change over 0.05 s against the slope along the wind: ' + (c / s2).toFixed(3) + ', negative)'); }
+  // the short waves go with the wind (5.20v, Jonas' video 13.11.2026: «det ser ut som at det nesten vibrerer litt»): far above the peak the
+  // spreading rule's exponent fell to 0.1-0.7, all but the same in every direction, and waves that meet stand and boil in place. With the
+  // exponent held at 2 or more, under a tenth of the short tile's slope energy travels against the wind (two fifths before).
+  { const TT = {N:64, L:23.18, lo:0.8, hi:7.5, seed:2}, sp = K.hfftSp(9.81 * 3.6 * 3.6 / (2 * Math.PI)), PP = {dx:0.6, dz:-0.8, so:sp, sy:sp, dv:1, ren:1, ia:1.9, wpB:2 * Math.PI / 3.6, lc:31.7}, ST = hfftSpec(TT, PP), dkk = 2 * Math.PI / TT.L;
+    let ag = 0, all = 0;
+    for (let j = 0; j < 64; j++) for (let i = 0; i < 64; i++){ const n = i < 32 ? i : i - 64, m = j < 32 ? j : j - 64, kx = n * dkk, kz = m * dkk, c = j * 64 + i, e = (ST.h0r[c] ** 2 + ST.h0i[c] ** 2) * (kx * kx + kz * kz);
+      all += e; if (kx * PP.dx + kz * PP.dz < 0) ag += e; }
+    t.ok(all > 0 && ag / all < 0.1, 'under a tenth of the short tile\'s slope energy travels against the wind (' + (ag / all).toFixed(3) + ')'); }
   // the displacement's sign: for one wave h = A cos(kx), D = A sin(kx), so x - Q D pulls the points toward the crest (Gerstner)
   { const T1 = {N:16, L:16, lo:0.1, hi:100, seed:1, S:{h0r:new Float32Array(256), h0i:new Float32Array(256), w:new Float32Array(256)}}; T1.S.h0r[1] = 0.25; T1.S.h0r[15] = 0.25; T1.S.w[1] = T1.S.w[15] = 0;
     const o1 = new Float32Array(hfftLen(16)), d1 = new Float32Array(hfftLen(16)); hfftFrame(T1, 0, o1, W, d1);

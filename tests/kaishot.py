@@ -10,7 +10,7 @@ os.environ.setdefault('KYST_DIST', os.path.join(ROOT0, 'dist-vec'))   # the quay
 from _env import *
 
 def check(c, what, extra=''): print(('OK  ' if c else 'FEIL') + ' ' + what + (('  ' + str(extra)) if extra else ''))
-SHOTS = [('tromso', 69.6489, 18.9604), ('bergen', 60.3990, 5.3180), ('bodo', 67.2870, 14.3790), ('batsfjord', 70.6349, 29.7230), ('finnsnes', 69.2302, 17.9742)]
+SHOTS = [('tromso', 69.6489, 18.9604), ('bergen', 60.3990, 5.3180), ('bodo', 67.2870, 14.3790), ('batsfjord', 70.6349, 29.7230), ('finnsnes', 69.2302, 17.9742), ('vardo', 70.8577, 29.0912)]   # (Vardø: steg 36, a quay was built out over another boat there, kaiover.py)
 TAG = os.environ.get('KAI_TAG', '')
 
 PROBE = """(() => { const H = S.t / 60, b = S.boat.pos, out = [];

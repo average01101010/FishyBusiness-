@@ -1,0 +1,10 @@
+{
+  "name": "kystfiske-tools",
+  "private": true,
+  "description": "Local developer tooling (the gemini-reviewer MCP server in .mcp/). The game itself has no npm dependencies.",
+  "dependencies": {
+    "@google/genai": "^3.3.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  }
+}

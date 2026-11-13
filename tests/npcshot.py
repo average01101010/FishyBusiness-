@@ -76,8 +76,8 @@ FSETUP = """async ([kind, mode, dark, key, gear, a, b]) => { const [tk, hi] = ke
   // (and one whose id no other boat of the harbour shares: the test camera, npcLook, follows the first boat of an id)
   const boats = h.boats.filter(q => q.gear === gear && q.L >= a && q.L < b && h.boats.filter(o => o.id === q.id).length === 1 && !(q.lg != null && q.lg < 3 && hash(hashStr(q.id) % 1000003 * 5 + 17) < heldShare(q.lg))); if (!boats.length) return {err:'no boat ' + key};
   for (const q of boats) q.h = h;
-  // at her berth: not one with another berth 1-30 m from it (the quay built out to the boat further out is drawn over her, as at tile
-  // 25:2 by Vardø; BACKLOG «kaia bygd ut over en annen båtplass»)
+  // at her berth: not one with another berth 1-30 m from it (a shot of her alone; the quay built out to the boat further out was drawn
+  // over her at tile 25:2 by Vardø until 13.11.2026, quayClear in core/05-vessels.js, tests/kaiover.py)
   if (mode === 'kai'){ const keep = boats.filter(q => !h.boats.some(o => { const d = dist(o.p, q.p) * 1000; return d > 1 && d < 30; })); if (!keep.length) return {err:'berths too near ' + key}; boats.length = 0; boats.push(...keep); }
   const st = (q, H) => { const A = coastState(q, H, hodOf(H)), B = coastState(q, H - 1 / 60, hodOf(H - 1 / 60)); return {A, v:dist(A.p, B.p) / gridScale(A.p) / NM * 60}; };
   const m0 = dark ? 17 * 60 : mode === 'kai' ? 10 * 60 : 8 * 60, m1 = dark ? m0 + 600 : 17 * 60 + 30; let found = null;   // (by day in daylight: March's sun is up 07-18 along the coast)

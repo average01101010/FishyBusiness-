@@ -124,6 +124,7 @@ function miniPaint(){
     const pos = G.ll[0] + ' ' + G.ll[1]; if (ctx.measureText(pos).width <= W - 2 * pad) L.push([pos]); else L.push([G.ll[0]], [G.ll[1]]);
     if (G.ukc != null) L.push([(S.lang === 'en' ? 'Under the keel ' : 'Under kjølen ') + fmt(G.ukc, 1) + ' m', '', G.ukc < 1]);   // (shallow water, Ø9 F5: the depth with the tide less her draught and squat)
     if (G.nv){ const a = 'WPT ' + G.nv.n + ' ' + G.nv.wpt, b = 'ETA ' + G.nv.eta; if (ctx.measureText(a + '  ' + b).width <= W - 2 * pad) L.push([a, b]); else L.push([a], [b]); }
+    if (G.lop) L.push([(S.lang === 'en' ? 'Race ' : 'Kappløp ') + G.lop.t, G.lop.leg]);   // (the race clock while a leg is sailed, KL2)
   } else L.push(['', fmt(2 * R / NM, 1) + ' nm']);
   const h = L.length * lh + pad; ctx.fillStyle = 'rgba(6,16,24,.66)'; ctx.fillRect(0, H - h, W, h);
   ctx.fillStyle = '#eef4f7';
