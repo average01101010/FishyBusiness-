@@ -2055,43 +2055,47 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/09o-kapplop.js` (363 linjer)
+## `src/js/core/09o-kapplop.js` (405 linjer)
 
 Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
 
 - **1** Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
-  - 65 `lopState()`
-  - 67 `lopCls(V)`
-  - 76 `lopLastSun(y, m)`
-  - 77 `lopOslo(ms)`
-  - 80 `lopWeek(ms)`
-  - 92 `lopMinH(nm, vmax, trim)`
-  - 95 `lopTime(run, now)`
-  - 104 `lopOn(vid)`
-  - 107 `lopCpOf(pid)`
-  - 112 `lopWhyNot()`
-  - 121 `lopStart()`
-  - 132 `lopEnd(how)`
-  - 154 `lopHm(min)`
-  - 157 `lopDepart()`
-  - 166 `lopDock(pid)`
-  - 185 `lopCross(a, c, vmax)`
-  - 190 `lopSosNow()`
-  - 206 `lopSosEnd(r, t, p)`
-  - 216 `lopMinute()`
-  - 249 `lopTick()`
-- **257** the tasks on the way (KL1b, steg 116b; kapplop.md «Oppgavene underveis (x-faktoren)», V5 B)
-  - 269 `lopSurp(j, cls, wk)`
-  - 271 `lopKind(spec, V)`
-  - 277 `lopLys(m, H, hTot)`
-  - 283 `lopLysDrop(m, say = true)`
-  - 286 `lopTaskWhat(m)`
-  - 296 `lopTasks()`
-  - 298 `lopMake(run, j, role, spec)`
-  - 321 `lopLegTasks(run, j)`
-  - 335 `lopLoad(m)`
-  - 337 `lopTaskEnd(m, ok, how)`
-  - 357 `lopLegClose(r, j)`
+  - 69 `lopState()`
+  - 71 `lopCls(V)`
+  - 80 `lopLastSun(y, m)`
+  - 81 `lopOslo(ms)`
+  - 84 `lopWeek(ms)`
+  - 96 `lopMinH(nm, vmax, trim)`
+  - 100 `lopVcap(type)`
+  - 111 `lopLegEnd(r, pid, p)`
+  - 113 `lopOutCap(o)`
+  - 120 `lopLegPut(run, j)`
+  - 132 `lopTime(run, now)`
+  - 141 `lopOn(vid)`
+  - 144 `lopCpOf(pid)`
+  - 149 `lopWhyNot()`
+  - 158 `lopStart()`
+  - 169 `lopEnd(how)`
+  - 193 `lopHm(min)`
+  - 196 `lopDepart()`
+  - 205 `lopDock(pid)`
+  - 224 `lopCross(a, c, vmax)`
+  - 229 `lopSosNow()`
+  - 245 `lopSosEnd(r, t, p)`
+  - 255 `lopMinute()`
+  - 291 `lopTick()`
+- **299** the tasks on the way (KL1b, steg 116b; kapplop.md «Oppgavene underveis (x-faktoren)», V5 B)
+  - 311 `lopSurp(j, cls, wk)`
+  - 313 `lopKind(spec, V)`
+  - 319 `lopLys(m, H, hTot)`
+  - 325 `lopLysDrop(m, say = true)`
+  - 328 `lopTaskWhat(m)`
+  - 338 `lopTasks()`
+  - 340 `lopMake(run, j, role, spec)`
+  - 363 `lopLegTasks(run, j)`
+  - 377 `lopLoad(m)`
+  - 379 `lopTaskEnd(m, ok, how)`
+  - 399 `lopLegClose(r, j)`
 
 ## `src/js/core/11-route.js` (707 linjer)
 
@@ -2905,12 +2909,12 @@ D5: where the big phone stands on a tablet, and how wide it is. It leaves the st
 - **73** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 77 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1656 linjer)
+## `src/js/ui/phone/07-patch.js` (1659 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1644 `patch()`
+  - 1647 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (126 linjer)
 
@@ -3056,7 +3060,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (356 linjer)
+## `src/js/ui/phone/14-act.js` (357 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3192,29 +3196,30 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 30 `ordbok(root)`
   - 46 `ordTip(el, head, text)`
 
-## `src/js/ui/05l-kapplop.js` (200 linjer)
+## `src/js/ui/05l-kapplop.js` (234 linjer)
 
 ---------- Kappløpet on the screen (KL2, steg 117; docs/planer/kapplop.md KL2; the rules are in core/09o-kapplop.js) ----------
 
 - **1** Kappløpet on the screen (KL2, steg 117; docs/planer/kapplop.md KL2; the rules are in core/09o-kapplop.js)
-  - 22 `lopClock()`
-- **36** the tab
-  - 37 `lopPage()`
-  - 78 `lopButtons(r, mine)`
-  - 92 `lopTaskCard(m)`
-  - 116 `lopReg()`
-  - 118 `lopQuit()`
-  - 125 `lopGo()`
-- **131** the course in the chart, while she is registered: the checkpoints with their names, the finish line, and the legs as thin
-  - 136 `lopLegWay(r, j)`
-  - 141 `lopSvg(u, inV)`
-- **159** the card at a checkpoint and at the finish (once each; a checkpoint passed with the game closed shows when it opens, within a day)
-  - 160 `lopUi()`
-  - 169 `lopCpHtml(r)`
-  - 176 `lopGoalHtml(e)`
-  - 183 `lopPop(inner)`
-- **192** the card in the Sesong app: the race this week and your best time (the board for everyone is KL3)
-  - 193 `lopSeasonCard()`
+  - 24 `lopClock()`
+- **41** the tab
+  - 42 `lopPage()`
+  - 86 `lopBoard(cls0, wk)`
+  - 107 `lopButtons(r, mine)`
+  - 121 `lopTaskCard(m)`
+  - 145 `lopReg()`
+  - 147 `lopQuit()`
+  - 154 `lopGo()`
+- **160** the course in the chart, while she is registered: the checkpoints with their names, the finish line, and the legs as thin
+  - 165 `lopLegWay(r, j)`
+  - 170 `lopSvg(u, inV)`
+- **188** the card at a checkpoint and at the finish (once each; a checkpoint passed with the game closed shows when it opens, within a day)
+  - 189 `lopUi()`
+  - 198 `lopCpHtml(r)`
+  - 205 `lopGoalHtml(e)`
+  - 212 `lopPop(inner)`
+- **221** the card in the Sesong app: the race this week and your best time (the board for everyone is KL3)
+  - 222 `lopSeasonCard()`
 
 ## `src/js/ui/06-logbook.js` (115 linjer)
 
@@ -3636,7 +3641,7 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 201 `pushCatToggle(k)`
   - 206 `pushToggle()`
 
-## `src/js/ui/10h-world.js` (320 linjer)
+## `src/js/ui/10h-world.js` (373 linjer)
 
 ---------- the shared world V3: the other players' boats (05.10.2026; supabase/migrations/20261005220000_presence.sql) ----------
 
@@ -3652,20 +3657,23 @@ PUSH NOTIFICATIONS (05.10.2026, the list's 9: «Push-varsler i appen»; supabase
   - 136 `bygdeTop(w)`
   - 149 `evTop(ev, y)`
   - 160 `evCloseTick()`
-- **166** the real-time relay (Ø16, S2 in docs/planer/sanntid-posisjoner.md, 05.11.2026; Jonas «kjør på» 03.11.2026: «like smooth som når
-  - 183 `rtUrl()`
-  - 190 `rtWant()`
-  - 191 `rtTick()`
-  - 199 `rtRetry(ms)`
-  - 200 `rtClose(code, ms)`
-  - 201 `rtOpen()`
-  - 218 `rtSend(now)`
-  - 232 `rtClock(T, p)`
-  - 233 `rtRecv(data)`
-  - 254 `rtVel(B, i)`
-  - 260 `rtPose(id)`
-  - 273 `rtTurn(B)`
-  - 307 `worldStart()`
+- **166** the race Lindesnes–Nordkapp in the cloud (KL3, steg 118; supabase/migrations/20261113200000_kapplop.sql, core/09o-kapplop.js)
+  - 173 `lopSync()`
+  - 208 `lopTop(wk)`
+- **218** the real-time relay (Ø16, S2 in docs/planer/sanntid-posisjoner.md, 05.11.2026; Jonas «kjør på» 03.11.2026: «like smooth som når
+  - 235 `rtUrl()`
+  - 242 `rtWant()`
+  - 243 `rtTick()`
+  - 251 `rtRetry(ms)`
+  - 252 `rtClose(code, ms)`
+  - 253 `rtOpen()`
+  - 270 `rtSend(now)`
+  - 284 `rtClock(T, p)`
+  - 285 `rtRecv(data)`
+  - 306 `rtVel(B, i)`
+  - 312 `rtPose(id)`
+  - 325 `rtTurn(B)`
+  - 359 `worldStart()`
 
 ## `src/js/ui/10i-shop.js` (429 linjer)
 
