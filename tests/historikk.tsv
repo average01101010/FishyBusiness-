@@ -3742,3 +3742,4 @@
 2026-11-13 09:32	plan/2026-11-13-117	0fb5ab8f	docktest	OK	60	lite	samtidig	
 2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
 2026-11-13 12:54	ccr-535ab52d-bv560n	960c205	boottest	OK	24	lite	alene	
+2026-11-13 13:24	ccr-535ab52d-bv560n	337184d5	workshot	FEIL	1800	3d	alene	FEIL garntrekket: én haler og én plukker fisken ut av garnet  (['frys', 'frys'], {'gaff': 0, 'pick': 2, 'jigup': 0, 'bleed': 1})
