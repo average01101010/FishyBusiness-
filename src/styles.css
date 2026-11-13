@@ -1990,3 +1990,62 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
 .wd-side{background:rgba(11,23,32,.9);border-color:#2A4252}
 .wd-tab.on{background:#EEF4F7;color:#0B1720} .wd-chip.on{border-color:#EEF4F7;background:rgba(238,244,247,.14)}
 .wd-ok{background:var(--a-main)} .wd-sw.on{box-shadow:0 0 0 2px #EEF4F7} .wd-sub{color:#A9BEC8} .wd-note{color:#C6D6DE}
+
+/* (found in D5: «Hvor du er» in the Regler app ran out of its card, in the phone too: the fjord line's name and the minimum sizes are one long line) */
+.ph-appv[data-app=regler] .ph-kv span:last-child{white-space:normal;min-width:0;overflow-wrap:anywhere}
+/* (D5: the naust's list has its paper back; an empty place on the trophy wall is told by its dashed edge, not by text too faint to read) */
+.ph-paper .nb-rec.empty{opacity:1} .ph-paper .nb-rec.empty :is(b,span,small){color:#5a5247}
+/* ===== D5 (designombyggingen, 13.11.2026; Jonas, valg 2 A: «telefonen blir en stor flate på nettbrett som beholder telefonens ramme
+   og statuslinje») =====
+   On a tablet and a PC (wider than 560 px and taller than 520 px; a phone is as before, the two blocks «a phone upright» and «a phone
+   on its side» above) the phone is a surface of its own: beside the status box and the small chart lying down, under them standing
+   (ui/phone/06-render.js place() measures them), with the frame, the status line and the bar at the bottom it has in a phone. The dock is
+   hidden while it is open (body.ph-on), so no button lies half under it. The home screen has what matters now beside the apps lying down
+   and above them standing, and the groups in two columns; the apps have their cards in two columns, and the pages that are read have a
+   line of about 70 characters. */
+.ph-nowcol{display:contents}
+@media (min-width:561px) and (min-height:521px){
+  #phone{left:max(12px,calc(100vw - 912px));right:12px;bottom:12px;top:max(12px,min(calc(var(--ph-hb,430px) + 10px),calc(100vh - 692px)),calc(100vh - 972px));width:auto;height:auto}
+  body.ph-on :is(#dock,#dockInfo,#dockFan){visibility:hidden}
+  .ph-body{border-radius:34px;padding:10px} .ph-screen{border-radius:25px;font-size:15px}
+  .ph-status{padding:10px 28px 6px;font-size:13px} #phNet{font-size:12px}
+  .ph-nav{padding:6px 28px 10px} .ph-nav button{width:64px;height:40px;font-size:26px} .ph-nav .ph-home{width:150px;height:5px}
+  /* the home screen: the clock beside the weather, the goals and the «Nå» cards, then the groups two and two */
+  .ph-homescr{box-sizing:border-box;padding:24px 28px 28px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px 30px;align-content:start}
+  .ph-nowcol{display:grid;grid-template-columns:minmax(180px,.42fr) minmax(0,1fr);grid-template-areas:"clock widget" "date goals" "date now";gap:8px 24px;align-items:start;min-width:0}
+  .ph-nowcol .ph-clock{grid-area:clock;margin:0;align-self:end;font-size:56px} .ph-nowcol .ph-date{grid-area:date;margin:0;font-size:14px}
+  .ph-nowcol .ph-widget{grid-area:widget;margin:0;font-size:14px;padding:11px 14px} .ph-nowcol .ph-goals{grid-area:goals;margin:0} .ph-nowcol .ph-nowc{grid-area:now;margin:0}
+  .ph-nowcol .ph-goal{font-size:13px;padding:10px 14px} .ph-nowcol .ph-now{padding:10px 14px}
+  .ph-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 30px;align-items:start}
+  .ph-tiles{gap:16px 6px} .ph-app{font-size:12.5px;gap:6px} .ph-app .ic{width:58px;height:58px} .ph-app .ic svg{width:29px;height:29px}
+  /* the apps: the title bar and the tabs over the whole surface, the content in a column in the middle of it */
+  .ph-top{padding:14px 28px;font-size:18px} .ph-top .ic{width:32px;height:32px} .ph-top .ic svg{width:20px;height:20px}
+  .ph-appv{--phw:940px}
+  .ph-appv > :not(.ph-top){box-sizing:border-box;max-width:var(--phw);margin-left:auto;margin-right:auto}
+  .ph-appv > .ph-c{padding:14px 28px 26px} .ph-appv > :is(.ph-sub,.kb-tabs){padding-left:28px;padding-right:28px}
+  /* the cards in two columns that fill from the top (no hole beside a tall card); a heading, a note and a row of tabs go across both */
+  .ph-appv > .ph-c{column-count:2;column-gap:14px}
+  .ph-appv > .ph-c > *,.ph-appv > .ph-c > .ph-c > *{column-span:all;min-width:0}
+  .ph-appv > .ph-c > .ph-card,.ph-appv > .ph-c > .ph-c > .ph-card{column-span:none;break-inside:avoid}
+  .ph-appv > .ph-c > .ph-c{display:contents}
+  .ph-appv > .ph-c > .ph-sub{padding-left:0;padding-right:0}
+  .ph-appv > .ph-c > p{max-width:72ch}
+  /* the pages that are read: one column with a line that can be read */
+  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=post],[data-app=notat],[data-app=naustp],[data-app=tilbake],[data-app=folk],[data-app=gbook]){--phw:37rem}
+  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=tilbake],[data-app=folk],[data-app=gbook]) > .ph-c{column-count:1}
+  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=regler][data-sub=laer]){--phw:32.5rem} .ph-appv[data-app=regler][data-sub=laer] > .ph-c{column-count:1}
+  /* (the text a little larger where it is read, which also gives the line its length) */
+  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=regler][data-sub=laer]) :is(.ph-card p,.patchc ul,.ph-note){font-size:15px;line-height:1.5}
+  /* the fish guide: the species two and two, the month's card across */
+  .ph-appv > .ph-c.gd > .gd-row{column-span:none;break-inside:avoid} .ph-appv > .ph-c.gd > .ph-card{column-span:all}
+}
+@media (min-width:561px) and (min-height:521px) and (orientation:landscape){
+  #phone{top:max(12px,calc(100vh - 972px));left:max(12px,min(calc(var(--ph-hr,278px) + 14px),calc(100vw - 672px)),calc(100vw - 1092px))}
+  .ph-homescr{grid-template-columns:minmax(260px,.46fr) minmax(0,1fr)}
+  .ph-nowcol{display:block} .ph-nowcol .ph-clock{text-align:left;margin:4px 0 4px} .ph-nowcol .ph-date{text-align:left;margin:0 0 16px}
+  .ph-nowcol .ph-widget{margin:0 0 10px} .ph-nowcol .ph-goals{margin:0 0 10px} .ph-nowcol .ph-nowc{margin:0}
+  /* the camera buttons in the corner the phone covers lying down */
+  body.ph-on :is(#camBtn,#kinoBtn){visibility:hidden}
+}
+/* and the deck log's tab in the corner it covers standing */
+@media (min-width:561px) and (min-height:521px) and (orientation:portrait){body.ph-on #logbook{visibility:hidden}}

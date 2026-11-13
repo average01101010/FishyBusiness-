@@ -51,7 +51,7 @@ HOOK = r"""(() => {
       if (!tabs.length) out.tabs.push(one()); else for (const t of tabs){ t.click(); out.tabs.push(one()); }
       DOCK.close(); return out; },
     phoneHome(){ const v = document.getElementById('phView'), apps = [...document.querySelectorAll('.ph-app')].filter(vis), grid = document.querySelector('.ph-grid');
-      const inView = apps.filter(a => a.getBoundingClientRect().bottom <= innerHeight).length, cards = [...document.querySelectorAll('.ph-homescr > *')].filter(e => e !== grid && vis(e)).length;
+      const inView = apps.filter(a => a.getBoundingClientRect().bottom <= innerHeight).length, cards = [...document.querySelectorAll('.ph-nowcol > *')].filter(e => e !== grid && vis(e)).length;
       return {apps:apps.length, inView, cardsAbove:cards, gridTop:grid ? Math.round(grid.getBoundingClientRect().top) : null, H:innerHeight, scroll:v.scrollHeight, client:v.clientHeight, screens:+(v.scrollHeight / Math.max(1, v.clientHeight)).toFixed(1)}; },
     phoneRederi(){ const v = document.getElementById('phView'), h4 = [...document.querySelectorAll('#phView h4')].find(h => /Flåten|The fleet/.test(txt(h))) || v.querySelector('.ph-card.fl');   // (U2-5: the fleet's first card, no heading)
       const top = h4 ? h4.getBoundingClientRect().top - v.getBoundingClientRect().top + v.scrollTop : null;
