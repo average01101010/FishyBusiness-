@@ -493,7 +493,8 @@ function renderStatic(){
   if (typeof srchSvg === 'function') g.push(srchSvg(u));   // the place found by search (ui/03f-search.js)
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
-  g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
+  if (typeof lopSvg === 'function') g.push(lopSvg(u, inV));   // the race's course while she is registered (ui/05l-kapplop.js, KL2)
+  g.push(turSvg(u, inV));   // where the missions go and the race's tasks (ui/05f-turer.js)
   if (typeof kkSvg === 'function') g.push(kkSvg(u, inV));   // Kystkartet, when it is laid over the chart (ui/05h-kystkart.js)
   // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
   // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other

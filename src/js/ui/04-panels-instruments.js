@@ -278,15 +278,17 @@ const INSTR = (() => {
   function render3d(pose, H, sog, ll, nv){
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
     const cg = cogUi(pose, sog);   // (her course over the ground where a stream sets her off her heading, F8b)
-    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg};   // the little chart's foot (03e-miniplot.js)
+    // (the race clock while a leg is sailed, ui/05l-kapplop.js lopClock, KL2)
+    const lc = typeof lopClock === 'function' ? lopClock() : null, lop = lc ? {t:lopHmL(lc.min), leg:lc.leg + '/' + lc.n} : null;
+    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg, lop};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
-      setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b><span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
+      setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b>' + (lop ? '<b class="glop">⏱ ' + lop.t + '</b>' : '') + '<span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
     { const pm = $('plotMin'); if (pm.textContent !== '–'){ pm.textContent = '–'; pm.setAttribute('aria-label', no ? 'Minimer kartplotteren' : 'Minimise the chart plotter'); } }
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
     setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (cg ? row('COG', cg) : '') + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
-      (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
+      (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : '') + (lop ? row((no ? 'Kappløp ' : 'Race ') + lop.leg, lop.t) : ''));
   }
   // the course over the ground (COG) when it is 3 degrees or more off the heading at half a knot or more over the ground (a stream
   // across her, or a drift): else null, and the heading says it all (COG was taken off the bar 2026 when it only ever repeated it)
