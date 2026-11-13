@@ -597,6 +597,8 @@ def main():
         R['nOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;' || repeat('k:m1;', 60) || 'n:a.gull')", A, 'authenticated')
         R['livLong'] = sql("select liv from public.presence where player_id = 'user_01AAA'")
+        sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;' || repeat('k:m1;', 62) || 'n:a.gull')", A, 'authenticated')
+        R['livCut'] = sql("select liv from public.presence where player_id = 'user_01AAA'")
         R['livPaid'] = sql("select count(*) from public.liv_paid", A, 'authenticated', expect_err=True)
         sql("select public.shop_refund('pi_n1')"); R['livNavnGone'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
@@ -805,8 +807,8 @@ def main():
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
         print(ok(R['livNavn'] == 'h:gul;r:raud;k:m1234;n:a.gull;m:T.1.LK;p:2;x:-9' and R['livNavnGone'] == 'h:gul;r:raud;k:m1234;m:T.1.LK;p:2;x:-9' and R['nPrice'] == '29|skin'
-                 and 'des_navn' in (R['nOwn'] or []) and len(R['livLong'] or '') == 314 and (R['livLong'] or '').endswith(';n:a.gull') and R['livPaid'][0]),
-              "TP2: the name's lettering (n:) goes to the others only while the account owns des_navn (29 kr), the home port (k:) always, 320 characters are kept, and nobody reads liv_paid", {'navn': R['livNavn'], 'gone': R['livNavnGone'], 'price': R['nPrice'], 'long': len(R['livLong'] or ''), 'paid': str(R['livPaid'])[:80]})
+                 and 'des_navn' in (R['nOwn'] or []) and len(R['livLong'] or '') == 314 and (R['livLong'] or '').endswith(';n:a.gull') and len(R['livCut'] or '') == 320 and R['livPaid'][0]),
+              "TP2: the name's lettering (n:) goes to the others only while the account owns des_navn (29 kr), the home port (k:) always, 320 characters are kept, and nobody reads liv_paid", {'navn': R['livNavn'], 'gone': R['livNavnGone'], 'price': R['nPrice'], 'long': len(R['livLong'] or ''), 'cut': len(R['livCut'] or ''), 'paid': str(R['livPaid'])[:80]})
         print(ok(R['livOwn'] == 'h:gul;r:raud;k:m1234;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;k:m1234;m:T.1.LK;p:2;x:-9'),
               "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark, the pennants and a partner's design (x:<id>, steg 44) always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})

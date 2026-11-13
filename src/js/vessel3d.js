@@ -652,17 +652,18 @@ function livStr(b){
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
-  // the home port under the name on her transom (TP2): the harbour's id, which every game knows (PORTS: the plants of the whole coast,
-  // Senja's harbours and Father's naust); early, so a code cut short keeps it
-  const hm = typeof S !== 'undefined' && b === S.boat ? S.home : null; if (hm && /^[a-z0-9_]{1,24}$/.test(hm)) out.push('k:' + hm);
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
-  { const ns = nameStyle(L0); if (ns.f !== 'b' || ns.c !== 'auto') out.push('n:' + ns.f + '.' + ns.c); }   // the name's lettering (her own, also under a partner's design)
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
   if (W) out.push('x:' + W.id);
   // the company's logo (all its boats), also under a partner's design with a mark of its own: the others draw the design's mark on her
   // hull (view3d/13-instruments.js drawNPCNames) and her logo in her house flag (drawPeerFlags, TP1). After 'x:', so a code cut at 160
   // loses the logo before the design
   const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);
+  // TP2: the home port under her name on her transom, the harbour's id, which every game knows (PORTS: the plants of the whole coast,
+  // Senja's harbours and Father's naust; the same as her own transom shows, ownPort), and the name's lettering (her own, also under a
+  // partner's design). Last, so a server that still cuts at 160 cuts these and not the logo
+  const hm = typeof S !== 'undefined' && b === S.boat ? S.home || (typeof HOME0 !== 'undefined' ? HOME0 : '') : ''; if (hm && /^[a-z0-9_]{1,24}$/.test(hm)) out.push('k:' + hm);
+  { const ns = nameStyle(L0); if (ns.f !== 'b' || ns.c !== 'auto') out.push('n:' + ns.f + '.' + ns.c); }
   return out.join(';');
 }
 // another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)

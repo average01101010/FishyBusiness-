@@ -17,8 +17,8 @@ var PAINT = (() => {
     reg:['Ønskenummer', 'Own number', 'Velg løpenummeret i registreringsmerket selv.', 'Choose the serial number in the registration mark yourself.'],
     logo:['Rederilogo', 'Company logo', 'Logoen på skroget midtskips og som rederiflagg på alle båtene dine. Lag den av et tegn, bokstaver og to farger, eller last opp et eget bilde.',
       'The logo on the hull midships and as the house flag on all your boats. Make it from a sign, letters and two colours, or upload a picture of your own.'],
-    navn:['Navnet', 'The name', 'Skriften og fargen på navnet på styrhuset og hekken, på alle båtene dine. Registreringsmerket og kallesignalet står i svart eller hvitt, som loven sier.',
-      'The lettering and colour of the name on the wheelhouse and the transom, on all your boats. The registration mark and the call sign stay black or white, as the law says.']};
+    navn:['Navnet', 'The name', 'Skriften og fargen på navnet på styrhuset og hekken. Kjøpt én gang kan du bruke det på alle båtene dine. Registreringsmerket og kallesignalet står i svart eller hvitt, som loven sier.',
+      'The lettering and colour of the name on the wheelhouse and the transom. Bought once, you can use it on all your boats. The registration mark and the call sign stay black or white, as the law says.']};
   const LGNAME = {anker:['Anker', 'Anchor'], fisk:['Fisk', 'Fish'], bolge:['Bølger', 'Waves'], stjerne:['Stjerne', 'Star'], ring:['Ring', 'Ring'], kompass:['Kompassrose', 'Compass rose']};
   const LGPIC = {}; const logoPic = L => { if (L && L.kind === 'u') return L.img || ''; const k = logoStr(L); if (!LGPIC[k]){ const cv = document.createElement('canvas'); cv.width = cv.height = 64; logoCanvas(cv, L); LGPIC[k] = cv.toDataURL(); } return LGPIC[k]; };
   const initials = () => String(S.company || S.boatName || 'DSB').split(/\s+/).filter(w => /^[A-Za-zÆØÅæøå]/.test(w)).map(w => w[0].toUpperCase()).join('').slice(0, 3) || 'DSB';
@@ -160,12 +160,13 @@ var PAINT = (() => {
     { const W = typeof spWorn === 'function' ? spWorn(pre) : null; if (W){ liv.sp = W.id; liv.spd = spPaintData(W.data); } }   // (with its colours: they stay on her when the agreement ends, Jonas 12.11.2026 «Fargene blir»)
     const f = flagOf(flagOk(pre) ? pre : b.liv); if (f.code !== 'NO' || f.shape !== 'rekt') liv.flag = {c:f.code, s:f.shape};
     if (pre.logo !== undefined && owned('logo')) logoSet(pre.logo);
-    { const n = nameStyle(owned('navn') ? pre : null); if (n.f !== 'b') liv.nf = n.f; if (n.c !== 'auto') liv.nc = n.c; }   // (the name's lettering, when it is the player's)
+    { const n = nameStyle(owned('navn') ? pre : b.liv); if (n.f !== 'b') liv.nf = n.f; if (n.c !== 'auto') liv.nc = n.c; }   // (the name's lettering as tried when it is the player's; else as she has it, so a repaint where the purchase is not yet known keeps it)
     if (Object.keys(liv).length) b.liv = liv; else delete b.liv;
   }
   function act(a, d){
     const b = S.boat; if (!pre) pre = copy(b.liv);
-    if (a === 'pntsp'){ if (d.k === '' || d.k == null){ delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; } const r = typeof spPaintOf === 'function' ? spPaintOf(d.k) : null; pre = copy(b.liv); if (!r){ if (spNow(b.liv) !== +d.k) return false; PAINTPRE = pre; return true; }   // (an ended design she wears: put back on the try as she has it)
+    if (a === 'pntsp'){ if (d.k === '' || d.k == null){ delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; } const r = typeof spPaintOf === 'function' ? spPaintOf(d.k) : null, nm = {nf:pre.nf, nc:pre.nc}; pre = copy(b.liv);
+      for (const k of ['nf', 'nc']){ if (nm[k]) pre[k] = nm[k]; else delete pre[k]; }   // (the name's lettering being tried stays: it is not part of the design) if (!r){ if (spNow(b.liv) !== +d.k) return false; PAINTPRE = pre; return true; }   // (an ended design she wears: put back on the try as she has it)
       pre.sp = r.id; pre.spd = spPaintData(r.data); PAINTPRE = pre; return true; }   // (from the boat's own paint: a colour chosen before is not left under the design to be paid for unseen)
     if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }   // (the own paint is what is being chosen: a partner's design being tried goes off, so the choice shows)
     if (a === 'pntz'){ if (!zoneOk(b, d.d) || !HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; if (d.k === 'orig') delete pre[d.d]; else pre[d.d] = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }

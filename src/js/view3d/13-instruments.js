@@ -133,7 +133,9 @@
   // the home port the stern carries: the player's own, a boat of the local fleet's (core/05-vessels.js FLEET), else none
   const ownPort = () => { const hp = portById(S.home || HOME0); return hp ? hp.name : ''; };
   // (another player's from her paint code, TP2: the harbour's id, which every game knows; one it does not know is left out)
-  const npcPort = n => { if (n.player){ const q = portById(livHome(n.liv)); return q ? q.name : ''; } const f = n.fleet && FLEET[n.fi], h = f && f.home; if (!h) return ''; const q = portById(h); return q ? q.name : h; };
+  // (what a player's code says of her name, by the code: it seldom changes, and the lookups are not done again every frame)
+  const LIVN = new Map(), livNameOf = s => { let e = LIVN.get(s); if (!e){ if (LIVN.size >= 64) LIVN.clear(); const q = portById(livHome(s)); e = {port:q ? q.name : '', sty:livName(s)}; LIVN.set(s, e); } return e; };
+  const npcPort = n => { if (n.player) return livNameOf(String(n.liv || '')).port; const f = n.fleet && FLEET[n.fi], h = f && f.home; if (!h) return ''; const q = portById(h); return q ? q.name : h; };
   // the registration mark: block letters, white on dark paint and black on light (§ 23: white on black or black on white), by the paint
   // under the letters (vessel3d.js markRGB: the hull's, or a stripe's where the mark could find no place off it)
   function markCanvas(cv, txt, light){
@@ -230,6 +232,7 @@
   // the name being painted on (buyAt): a texture of its own per strip, drawn again each sixth of a letter, let go when the moment ends
   const RTX = new Map();
   function revealTex(nm, ink, aspect, rv, font){
+    if (font === 'a') serifNeed();   // (drawn again each sixth of a letter, so it takes the font once it is in)
     const H = nameH(aspect), k = H + ':' + (font || 'b') + ':' + nm + '|' + inkOf(ink), q = Math.floor(rv * 6) / 6; let e = RTX.get(k);
     if (!e){ e = {tex:mkTex(), cv:document.createElement('canvas'), q:null}; e.cv.width = 1024; e.cv.height = H; RTX.set(k, e); }
     if (e.q !== q){ e.q = q; nameCanvas(e.cv, nm, ink, q, font); upTex(e.tex, e.cv); }
@@ -241,7 +244,7 @@
     if (!near.length) return; near.sort((a, b) => a.dd - b.dd); gl.disableVertexAttribArray(2);
     for (const n of near.slice(0, 6)){
       const t = npcType(n), lv = n.player ? livParse(n.liv, t) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
-      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n), true, n.player ? livName(n.liv) : null);
+      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n), true, n.player ? livNameOf(String(n.liv || '')).sty : null);
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
       const sl = n.player && typeof spPaintIn === 'function' ? spPaintIn(n.liv) : null, sq = sl && spLogo(sl); if (sq) drawLogo(t, M, VP, sq[0], sq[1]);
       const lg = n.player && !sq && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
