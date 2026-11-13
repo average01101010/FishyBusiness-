@@ -197,14 +197,17 @@
   const tn = n => n >= 10000 ? fmt(n / 1000, n >= 100000 ? 0 : 1) + ' t' : fmt(n, 0) + ' kg';
   function mkCard(k, O){
     const V = VESSELS[k], price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, mine = S.boat.type === k && !O, tag = V.lock ? L('kommer', 'coming') : O ? O.hl : V.isNew ? L('nybygg', 'new build') : L('brukt', 'used');
-    return '<button class="ph-card vcard' + (mine ? ' mine' : '') + '" data-pa="mksel" data-k="' + k + '"' + (O ? ' data-o="' + O.k + '"' : '') + '><span class="vpic">' + vesselSVG(k) + '</span><span class="vtx"><b>' + (O ? O[S.lang] : V.name[S.lang]) + '</b><small>' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' × ' + fmt(V.draft, 1) + ' m · ' + tn(V.holdCap) + '</small><span class="vpr">' + kr(price) + ' <i>' + tag + '</i></span></span></button>';
+    return '<button class="ph-card vcard' + (mine ? ' mine' : '') + '" data-pa="mksel" data-k="' + k + '"' + (O ? ' data-o="' + O.k + '"' : '') + '><span class="vpic">' + vesselSVG(k) + '</span><span class="vtx">' + (mine ? '<em class="v-mine">' + L('Din båt', 'Your boat') + '</em>' : '') + '<b>' + (O ? O[S.lang] : V.name[S.lang]) + '</b><small>' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' × ' + fmt(V.draft, 1) + ' m · ' + tn(V.holdCap) + '</small><span class="vpr">' + kr(price) + ' <i>' + tag + '</i></span></span></button>';
   }
   function market(){
     const tab = sub.marked || 'open', h = [];
     if (mkSel) return sheet(mkSel.k, mkSel.o ? LIC_OFFERS.find(x => x.k === mkSel.o) : null);
     if (mbPutSel){ const v = vesselById(mbPutSel); if (v) return mbForm(v).replace(/^<div class="ph-c">/, '<div>'); mbPutSel = null; }   // «Legg ut til salgs» from the yard (B1)
     if (mgSel){ const Lx = MBC.byId(mgSel); if (Lx) return mgSheet(Lx).replace(/^<div class="ph-c">/, '<div>'); }   // a used boat opened from «Båter til salgs her» (M4, B)
-    h.push(mgHere());
+    // (D3: the boats first. Used boats lying at this quay are boats too and stay on top; with none, «Båter til salgs her» and its way
+    // to Kystmegleren come after the list, and so does «Neste mål», fartoy())
+    const usedHere = atKind('verft') && MBC.list().some(x => x.port === S.boat.port), mgh = mgHere();
+    if (usedHere) h.push(mgh);
     h.push('<div class="ph-sub mk">' + [['open', 'Åpen gruppe', 'Open group'], ['lic', 'Med hjemmel', 'With a right'], ['kyst', 'Kystflåten', 'Coastal fleet'], ['hav', 'Havfiske', 'Ocean']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mktab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
     const bn = '«' + S.boatName + '»', ti = tradeIn();
     if (tab === 'open'){
@@ -221,6 +224,7 @@
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'hav') h.push(mkCard(k));
     }
     if (!atKind('verft')) h.push('<p class="ph-note">' + L('Båter kjøpes og selges på verftet.', 'Vessels are bought and sold at the yard.') + '</p>' + nearHint('verft'));
+    if (!usedHere) h.push(mgh);
     return h.join('');
   }
   // the spec sheet: eight sections with the same rows for every boat (Jonas 17.10.2026, docs/batplan.md del 5). A row that does not
@@ -303,7 +307,7 @@
   }
   // tab0: one tab without the tab row (the boat market in the yard, the boat in the inventory)
   function fartoy(tab0){
-    const b = S.boat, V = VESSELS[b.type], s0 = tab0 || sub.fartoy || 'min', h = [tab0 ? '' : subs('fartoy', [['min', 'Min båt', 'My vessel'], ['marked', 'Marked', 'Market']]), '<div class="ph-c">' + (tab0 === 'min' ? '' : goalsCard())];
+    const b = S.boat, V = VESSELS[b.type], s0 = tab0 || sub.fartoy || 'min', h = [tab0 ? '' : subs('fartoy', [['min', 'Min båt', 'My vessel'], ['marked', 'Marked', 'Market']]), '<div class="ph-c">' + (tab0 === 'min' || s0 !== 'min' ? '' : goalsCard())];   // (D3: in the market the goals stand after the boats)
     if (s0 === 'min'){
       h.push(kitCard());   // «Båten og utstyret» first (OPP4)
       h.push('<div class="ph-card"><h4>«' + S.boatName + '»' + (meAboard() ? ' ⚓' : '') + '</h4><p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(curVessel()) + '</p>' + (S.fleet.length > 1 ? '<button class="ph-btn alt" data-pa="open" data-a="rederi">' + L('Hele flåten i Rederi-appen', 'The whole fleet in the Company app') + '</button>' : '') + '</div>');
@@ -334,7 +338,7 @@
       const eq = Object.keys(EQUIP).filter(k => EQUIP[k].multi ? S.equip[k] > 0 : S.equip[k]).map(k => EQUIP[k].name[S.lang] + (EQUIP[k].multi ? ' × ' + S.equip[k] : EQUIP[k].tiers ? ' (' + L('trinn ', 'tier ') + equipLv(k) + ')' : '') + off(k));
       h.push('<div class="ph-card"><h4>' + L('Utstyr om bord', 'Equipment on board') + '</h4><p>' + ['GPS'].concat(S.equip.chirp ? [] : [L('Enkelt ekkolodd', 'Basic sounder') + (S.settings.echo === false ? L(' (av)', ' (off)') : '')]).concat(eq).join(', ') + '</p><h4 style="margin-top:8px">' + L('Mannskap', 'Crew') + '</h4><p>' + (lagOf() ? (meAboard() ? L('Deg (skipper) og ', 'You (skipper) and ') : '') + L('skift ', 'crew ') + lagShName(lagOf().on) + ' · ' + lagN() + L(' mann', ' men') : [L('Deg (skipper)', 'You (skipper)')].concat(S.crew.map(c => c.name)).join(', ') + ' · ' + L('plass til ', 'room for ') + (V.crewMax + 1)) + '</p></div>');
       if (S.order) h.push('<div class="ph-card"><h4>' + L('Bestilt', 'On order') + '</h4><p>' + VESSELS[S.order.type].name[S.lang] + '</p>' + '<p class="ph-note">' + L('Byttes så snart båten den skal erstatte, ligger i havn.', 'Swapped as soon as the vessel it replaces lies in port.') + '</p></div>');
-    } else h.push(market());
+    } else { h.push(market()); if (!mkSel && !mbPutSel && !mgSel) h.push(goalsCard()); }
     h.push('</div>'); return h.join('');
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)

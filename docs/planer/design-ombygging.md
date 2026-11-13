@@ -114,6 +114,18 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 - **Sett:** begge formater uten 3D (alle sider), og malerverkstedet i stående med 3D: hele båten står over arket. **Ikke sett:** «Prøv på båten» og malerverkstedet i liggende med 3D (skjermbildet rakk ikke fristen i testmiljøet) → `docs/spill-dette/D2-skuffen.md`.
 - **Tester:** `docktest` (118), `dockrow`, `uishots`, `itemcardtest`, `shoptest` grønne; `kontrast.py` 0. Ikke kjørt: `tut.py` (tas samlet etter D3), `driftsplan2gui`, `worktest`.
 
+## D3: butikkene og kjøpet (13.11.2026, bygd)
+
+- **Varen først.** Utstyrsbutikkens topp er én blokk (`shopTop` i `ui/phone/13b-nettet.js`, `.shop-top`): stedet med «Du er her», kjøpmannens replikk (høyst to linjer), det som er bestilt hit, «båten trenger nå» som brikker, og under Elektronikk og haler én setning om hva monteringen binder. `dress` i `ui/10c-dock.js` lar sitt eget stedshode stå av på de to sidene (`OWNTOP`). På de andre sidene er «Du er her» én linje uten boks (`.pl-head.here`).
+- **Båthandelen:** fanene og båtene først. «Båter til salgs her» står øverst bare når det ligger brukte båter ved kaia; ellers etter lista, og «Neste mål» etter den igjen (`market` og `fartoy` i `ui/phone/10-fartoy.js`). Båten du eier har merket «Din båt» (`.v-mine`), ikke grønn ramme.
+- **Tittelen:** skuffen heter «Utstyrsbutikken» på begge fanene (`TITLE` i `ui/10c-dock.js`). Fanene heter som før (Redskap, Elektronikk og haler), og knappene i vifta også.
+- **Kjøpet:** knappen er «Kjøp og monter · pris». Under den (`buySub`, `.ic-sub`): «Montering 3 t (30 min i ekte tid). Båten ligger i havn imens.», og fra `IC_CONFIRM_KR` «Du bekrefter før kjøpet.» Sjekket mot koden: en avgang venter på verkstedets jobber (`depnow` i `ui/08-actions.js`, `jobsDone`), og jobbene går bare mens båten ligger i havn (`core/05-vessels.js`). «Prøv på båten» heter «Se den på båten» og står ikke på en vare `buyGate` nekter (linesetter og garnrenne uten haler). `trytest` sjekket det motsatte (OPP5) og er rettet.
+- **Magenta bare på kjøp og godta:** `.ph-btn.p` er blå (`--a-main:#2F6F8F`, hvit tekst 5,5:1) i skuffen og appene; magenta får bare handlingene i lista i D3-blokka i `src/styles.css` (utstyr, redskap, is, klær, båt, hjemmel, naust, oppgraderinger, kasko, skrog, hyre, bestilling og henting, bud, oppdrag og påmelding, og knappene til Kaiboden, Trim og registrering). En ny kjøpsknapp må inn i lista. Lasteromsstolpen (`.bar i`) og avkrysningsboksene er lyseblå.
+- **Økta valgte:** «Registrer meg» (`cloudReg`) beholder magenta som «godta». Snus ved å ta den ut av lista.
+- **Oppgraderingene:** lasterom/kar, motor, propell og ombyggingene er varekort (`upCard` i `ui/phone/12-utstyr-redskap.js`, `.upc`): bilde fra atlaset, forklaringen, «Nå» og «Neste trinn» som to linjer, prisen på knappen, monteringen under. Prisen og tida står ikke lenger i «Neste trinn»-linja.
+- **Liggende:** redskapskortene i Redskap flyter i de samme to spaltene som de første kortene (`display:contents` på den indre `.ph-c`), så første rad ikke står halvtom.
+- **Ikke rørt:** `ui/10i-shop.js`, `ui/10q-buymoment.js`, `src/legal/`. Knappene til Kaiboden og Trim får fargen sin fra stilarket, som før.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
@@ -121,4 +133,4 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 
 ## Status
 
-13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). D2 bygd 13.11.2026 (bred skuff liggende, arkhøyde etter innholdet stående). Neste: D3.
+13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). D2 bygd 13.11.2026 (bred skuff liggende, arkhøyde etter innholdet stående). D3 bygd 13.11.2026 (butikkene og kjøpet). Neste: Jonas ser D1–D3 på nettbrettet, så vurderes D4.

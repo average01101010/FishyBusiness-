@@ -36,8 +36,9 @@ async def main():
 
         # the shop: title in Finnsnes, two taps to buy, a log line on the operations page
         await pg.evaluate("S.boat.gear = false; DOCK.open('fiske')"); await pg.wait_for_timeout(300)   # the jig comes with the boat; this is the one bought after losing it
-        title = await pg.evaluate("document.querySelector('#drawerBody .ph-card h4').textContent")
-        check(title == 'Fiskeutstyr på kaia i Finnsnes', 'butikken heter Fiskeutstyr på kaia i Finnsnes', title)
+        # (D3, 13.11.2026: one title for the shop, and its compact top says the place and that you are here)
+        title = await pg.evaluate("document.getElementById('drawerTitle').textContent + ' · ' + document.querySelector('#drawerBody .shop-top .st-h').textContent")
+        check(title == 'Utstyrsbutikken · FinnsnesDu er her', 'skuffen heter Utstyrsbutikken, og toppen sier Finnsnes og «Du er her»', title)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').click()"); await pg.wait_for_timeout(200)
         r = json.loads(await J("{gear:S.boat.gear, cash:S.cash, btn:document.querySelector('#drawerBody [data-pa=shop][data-k=jig]').textContent}"))
         check(not r['gear'] and r['cash'] == 20000 and 'Bekreft' in r['btn'] and '1 900' in r['btn'], 'første trykk viser prisen og ber om bekreftelse', r)
