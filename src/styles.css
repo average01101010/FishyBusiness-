@@ -17,6 +17,8 @@
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
   --r-tag:4px; --r-btn:8px; --r-card:14px; --r-pill:999px;
   --h-btn:44px; --h-act:56px;
+  /* the drawer's width lying down: the narrow column, or the wide one for the pages with cards to compare (D2, body.dk-wide) */
+  --drw:min(380px,92vw);
   /* the layers, low to high, and over each other only in this order: one of drawer, book and phone open at a time, a dialog dims what is
      under it, the guide never covers what it points at, effects never over the gates (sleep, start, wardrobe, letter, sign-in). The small
      numbers inside the HUD and the chart (0-10) and the loading screen (20, nothing shows over it while body.booting) stay as they are */
@@ -119,13 +121,13 @@ body.vplot #gps::after{display:none}
 .dk-go,.dk-tg{height:44px;border-radius:22px;border:0;background:var(--mag);color:#fff;font:700 14px var(--sans);cursor:pointer}
 .dk-tg{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);font-weight:600} .dk-tg.on{background:var(--m-card,#f2f5f7);color:var(--m-ink,#0d1b24)} .dk-tg:disabled{opacity:.5}
 /* the drawer: at the side when the screen lies, a sheet above the buttons when it stands; the sea stays in view */
-#drawer{position:absolute;z-index:var(--z-drawer);top:0;right:0;bottom:0;width:min(380px,92vw);display:flex;flex-direction:column;background:var(--m-card,#f3f6f8);color:var(--m-ink,#15252f);box-shadow:-8px 0 26px rgba(0,0,0,.28)}
+#drawer{position:absolute;z-index:var(--z-drawer);top:0;right:0;bottom:0;width:var(--drw);display:flex;flex-direction:column;background:var(--m-card,#f3f6f8);color:var(--m-ink,#15252f);box-shadow:-8px 0 26px rgba(0,0,0,.28)}
 #drawer[hidden]{display:none}
 .dr-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px 16px;background:var(--m-dark,#15252f);color:#fff;font:700 16px var(--sans)}
 .dr-head button{width:44px;height:44px;flex:none;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:18px;cursor:pointer}
 #drawerTabs{padding:8px 12px 2px} #drawerTabs[hidden]{display:none}
 #drawerBody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-@media (orientation:landscape){body.dk-open #dock{right:calc(min(380px,92vw) + 8px)} body.dk-open #dockInfo{left:calc((100% - min(380px,92vw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - min(380px,92vw) - 16px)}}
+@media (orientation:landscape){body.dk-open #dock{right:calc(var(--drw) + 8px)} body.dk-open #dockInfo{left:calc((100% - var(--drw)) / 2)} body.dk-open #dockFan{max-width:calc(100% - var(--drw) - 16px)}}
 @media (orientation:portrait){#drawer{top:max(12%, calc(env(safe-area-inset-top,0px) + 8px));left:0;width:auto;height:auto;bottom:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px));border-radius:16px 16px 0 0;box-shadow:0 -8px 26px rgba(0,0,0,.28);overflow:hidden} .dr-head{padding-top:8px} body.dk-open #dockInfo{display:none}}
 
 @media (max-width:560px){#plotTop .pt-title{display:none} body.vplot #hud{max-width:52vw}}
@@ -1594,7 +1596,7 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 @media (orientation:portrait){#catchFeed{bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}}
 /* the catch list beside the open drawer, never over it (GUI review F3 05.11.2026: it covered the plan's rows and day): left of the drawer
    in landscape, as the dock goes; in portrait the drawer takes the lower half, and the list waits until it is shut */
-@media (orientation:landscape){body.dk-open #catchFeed{right:calc(min(380px,92vw) + 14px)}}
+@media (orientation:landscape){body.dk-open #catchFeed{right:calc(var(--drw) + 14px)}}
 @media (orientation:portrait){body.dk-open #catchFeed{display:none}}
 @media (max-width:560px){#hud .gauges{gap:5px} #hud .g b{font-size:11.5px} #hud .g .gl{letter-spacing:0}}
 @media (max-width:560px){.dk-b.hero{width:66px} .dk-b.hero .dk-i{width:52px;height:52px} .dk-b.hero .dk-i svg{width:26px;height:26px}}
@@ -1657,7 +1659,7 @@ body.kino-clean #catchFeed,body.hudoff #catchFeed{display:none!important}
 /* P5 (GUI review): with the drawer open the toast stands clear of it: at the top in a standing screen (over the tall form pages too,
    which begin at 12 %), in the free part beside it in a lying one */
 @media (orientation:portrait){body.dk-open #toast{bottom:auto;top:calc(env(safe-area-inset-top,0px) + 8px)}}
-@media (orientation:landscape){body.dk-open #toast{left:calc((100% - min(380px,92vw)) / 2);max-width:calc(100% - min(380px,92vw) - 24px)}}
+@media (orientation:landscape){body.dk-open #toast{left:calc((100% - var(--drw)) / 2);max-width:calc(100% - var(--drw) - 24px)}}
 
 /* ---------- UI 2, U2-1: the fixed zones in 3D (docs/planer/ui-2-staaende.md 4.1, 06.11.2026; V1 A: the phone upright is the measure) ----------
    The strip (or the box) has a fixed width, and the little chart a fixed place on top of it, not --gpsTop from the box's height: upright
@@ -1846,3 +1848,25 @@ body.booting #lopPop{visibility:hidden!important}
 :is(#drawer,.ph-appv:not(.ph-paper)) ::placeholder{color:#9DB3BE;opacity:1}
 :is(#drawer,.ph-appv:not(.ph-paper)) svg text[fill="#778899"]{fill:#A9BEC8}
 :is(#drawer,.ph-appv:not(.ph-paper)) .dr-why b{opacity:1}
+
+/* ===== D2 (designombyggingen, 13.11.2026): the drawer by what it holds =====
+   Lying down, the pages with things to compare (the shops, the boats, the upgrades, the crew exchange, the harbour's price table) open a
+   wide drawer with the cards in two columns; the dock, the toast and the catch cards follow the width (--drw), and the paint shop's and
+   the try-on's camera puts the boat in what is left (view3d/25-controls.js paintAim measures the drawer). Standing, the sheet is as
+   high as its content, up to the height it had; in the paint shop and while gear is tried on it stops at 56 %, so the boat shows. */
+@media (orientation:landscape){
+  body.dk-wide{--drw:min(740px,58vw)}
+  body.dk-wide #drawerBody .ph-c{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px;align-items:start}
+  body.dk-wide #drawerBody .ph-c > *{grid-column:1 / -1}
+  body.dk-wide #drawerBody .ph-c > :is(.ph-card.ic,.ph-card.crewc,.ph-card.vcard){grid-column:auto}
+  body.dk-wide #drawerBody .ph-c > .ph-c{display:grid}
+}
+@media (orientation:portrait){
+  /* (the top the sheet may reach: under the strip in 3D, under the plotter's stripe in the chart; U2-7's 88 % is now the most, not the rule) */
+  #drawer{--drTop:max(12%, calc(env(safe-area-inset-top,0px) + 8px));--drBot:max(calc(env(safe-area-inset-bottom,0px) + 84px + var(--dkx, 0px)), var(--dkh, 0px))}
+  body.v3d.dk-open:not(.hudoff) #drawer{--drTop:max(12%, calc(var(--sTop) + var(--sH) + 6px))}
+  body.vplot.dk-open:not(.hudoff) #drawer{--drTop:max(12%, calc(var(--ecH) + 8px + 60px + 6px))}
+  #drawer,body.v3d.dk-open:not(.hudoff) #drawer,body.vplot.dk-open:not(.hudoff) #drawer{top:auto;max-height:calc(100% - var(--drTop) - var(--drBot))}
+  body.dk-low #drawer,body.v3d.dk-open.dk-low:not(.hudoff) #drawer,body.vplot.dk-open.dk-low:not(.hudoff) #drawer{max-height:calc(56% - var(--drBot))}
+}
+#drawer > .dr-head,#drawerTabs{flex:none}

@@ -105,6 +105,15 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 - **Avvik fra Kystlys** (`docs/planer/ui-redesign.md`, 04.11.2026): der var «Kort (lyst)» rollen for skuffen og appene. Jonas' valg 13.11.2026 gjør dem til instrument (mørkt glass). Papir, ECDIS og krem står som før.
 - **Ikke gjort i D1:** dialogene og tipsene er fortsatt lyse (D6); oppsett, bredder og arkhøyder er urørt (D2); diagrammene i Vær og Kvote er sett på, ikke målt.
 
+## D2: skuffen etter innholdet (13.11.2026, bygd)
+
+- **Liggende:** sidene med noe å sammenligne (`WIDE` i `ui/10c-dock.js`: `fiske`, `utstyrb`, `fartoy`, `utstyr`, `bors`, `havn`) åpner en bred skuff (`--drw: min(740px, 58vw)`, `body.dk-wide`) med varekortene, båtkortene og mannskapskortene i to spalter; alt annet på siden går over hele bredden. Havnesidens pristabell vises hel. Knappelinja, toasten og fangstkortene følger `--drw` (sju steder i stilarket brukte `min(380px,92vw)` direkte). De andre sidene er 380 px som før.
+- **Stående:** arket er så høyt som innholdet, opp til høyden det hadde (fra 12 %, under stripa). I malerverkstedet og mens utstyr prøves på båten (`body.dk-low`) stopper det på 56 %. Kameraet i malerverkstedet og ved prøving måler skuffen selv (`paintAim` i `view3d/25-controls.js`), så båten havner i det som er igjen uten endring der.
+- **Endrer U2-7** (`docs/planer/ui-2-staaende.md`, 06.11.2026: «ett ark på 88 % for alle sider i stående»): 88 % er nå det høyeste, ikke regelen. Jonas så et ark på 58 % i skissen (D0) og sa «kjør på» til D2 med dette beskrevet. `docktest` sjekket den gamle regelen og sjekker nå den nye (arket står på knappelinja, aldri over 12 %, med stripa over).
+- **Økta valgte:** innholdshøyde i stedet for et fast tak på 58 % for alle sider (butikkene har lange lister). Snus med `max-height` i D2-blokka.
+- **Sett:** begge formater uten 3D (alle sider), og malerverkstedet i stående med 3D: hele båten står over arket. **Ikke sett:** «Prøv på båten» og malerverkstedet i liggende med 3D (skjermbildet rakk ikke fristen i testmiljøet) → `docs/spill-dette/D2-skuffen.md`.
+- **Tester:** `docktest` (118), `dockrow`, `uishots`, `itemcardtest`, `shoptest` grønne; `kontrast.py` 0. Ikke kjørt: `tut.py` (tas samlet etter D3), `driftsplan2gui`, `worktest`.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
@@ -112,4 +121,4 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 
 ## Status
 
-13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). Neste: D2.
+13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). D2 bygd 13.11.2026 (bred skuff liggende, arkhøyde etter innholdet stående). Neste: D3.

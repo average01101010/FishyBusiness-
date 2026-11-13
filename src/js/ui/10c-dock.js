@@ -414,7 +414,12 @@ const DOCK = (() => {
     if (dTabs.innerHTML !== th) dTabs.innerHTML = th; dTabs.hidden = !tb;
   }
   let shown = '';
+  // (D2) the drawer by what it holds: wide lying down for the pages with cards to compare, low standing where the boat is to be seen
+  // (the paint shop, gear being tried on); the stylesheet does the rest (body.dk-wide, body.dk-low)
+  const WIDE = ['fiske', 'utstyrb', 'fartoy', 'utstyr', 'bors', 'havn'];
+  function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && WIDE.includes(page)); b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
   function draw(keep){
+    shape();
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
     if (!page) return;
@@ -455,7 +460,7 @@ const DOCK = (() => {
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});
   }
-  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
+  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open', 'dk-wide', 'dk-low'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
   dTabs.addEventListener('click', e => { const el = e.target.closest('[data-pg]'); if (el){ page = el.dataset.pg; shown = ''; draw(false); if (SHOP_PAGES.includes(page) && typeof cloudEv === 'function') cloudEv('shop_view', {pg:page}); } });
   $('drawerClose').addEventListener('click', close);
   dBody.addEventListener('click', e => {
