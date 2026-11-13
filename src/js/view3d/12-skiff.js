@@ -84,7 +84,7 @@
     'foam*=vS;aer*=vS;float d=length(vP);float fg=1.0-exp(-uFogD*uFogD*d*d);' +
     'float al=clamp(max(foam,aer),0.0,0.95);vec3 base=vW4.w<0.5?uAer:uArm;vec3 c=mix(base,uCol,clamp(foam/max(al,0.001),0.0,1.0));gl_FragColor=vec4(mix(c,uFog,fg),al*(1.0-fg));}';
   // builder with normals and gloss: the geometry is VB() (vessel3d.js), this adds the GL buffers
-  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}, g); return o; }
+  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3, fig2:o.fig2 || null}, g); return o; }
   // arrays {p, n, c} as a mesh to draw
   const upA = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
@@ -168,7 +168,9 @@
   function lifeOff(){ const u = PRGN.u; if (!u.uAge) return; gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); gl.uniform4fv(u.uWear, WEAR0); }
   // the local fleet's age, from the boat's id: from fairly kept (0.15) to a hard-worked old one (0.9), most in between
   const npcAge = n => n.player ? 0 : 0.15 + 0.75 * Math.pow((lookHash('age' + n.id) % 1000) / 1000, 0.8);
-  function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
+  // (a figure that is not built in, fig2: where it stands is kept for its arms, which draw all of it; armTo, figLive)
+  let FIGLV = null;
+  function drawN(m, M){ if (m.fig2){ FIGLV = {M:m.o ? relM(m) : M, seated:m.fig2.seated, arms:{}}; return; } gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
   function texStrip(Pb, Pt){ const p = [], uv = [], n = Pb.length - 1; for (let i = 0; i < n; i++){ const u0 = i / n, u1 = (i + 1) / n; p.push(...Pb[i], ...Pb[i + 1], ...Pt[i + 1], ...Pb[i], ...Pt[i + 1], ...Pt[i]); uv.push(u0, 1, u1, 1, u1, 0, u0, 1, u1, 0, u0, 0); } return {pb:buf(new Float32Array(p)), ub:buf(new Float32Array(uv)), n:p.length / 3}; }
   function texQuad(P0, P1, P2, P3){ const p = new Float32Array([...P0, ...P1, ...P2, ...P0, ...P2, ...P3]), uv = new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]); return {pb:buf(p), ub:buf(uv), n:6}; }
@@ -371,6 +373,9 @@
     const nq = [strip(-1, sb, sa), strip(1, sa, sb)];
     // the skipper at the wheel and a crewman on the cooler seat, with rounded shapes
     const person = PERSON = (B, x, y, z, seated, hands, kit) => {
+      // (the new people, FB7: built in as the old, and the one whose arms are drawn live, hands false, is not built at all: the
+      // whole figure is drawn skinned with its arms each frame, drawN and armTo in 13-instruments.js)
+      if (PRGS && glbHas('folk2')){ if (hands === false){ B.fig2 = {seated:!!seated}; return; } if (figBake(B, x, y, z, seated, hands, kit)) return; }
       if (glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);      // the detailed figure: the skipper in his cap, the crew in oilskins
       const JAC = [0.14, 0.26, 0.58, 0.25], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
       const hip = y + (seated ? 0.46 : 0.82);

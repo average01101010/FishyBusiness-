@@ -386,6 +386,31 @@
     return [crs3(y, z), y, z]; }
   const inFrame = (Fr, v) => [Fr[0][0] * v[0] + Fr[1][0] * v[1] + Fr[2][0] * v[2], Fr[0][1] * v[0] + Fr[1][1] * v[1] + Fr[2][1] * v[2], Fr[0][2] * v[0] + Fr[1][2] * v[1] + Fr[2][2] * v[2]];
   const handMtx = (Fr, o) => new Float32Array([Fr[0][0], Fr[0][1], Fr[0][2], 0, Fr[1][0], Fr[1][1], Fr[1][2], 0, Fr[2][0], Fr[2][1], Fr[2][2], 0, o[0], o[1], o[2], 1]);
+  // ---- nothing through a person (Jonas 13.11.2026: «Sørg for at objekter ikke kan clippe inn i menneskene»; the tests' measure of
+  // it, tests/folk2deck.py): every thing drawn with the workers (LEMMER.things: the knife, the gaff, the fish, the boxes, the shovel,
+  // the cup …) tried against every body drawn the same time (LEMMER.bodies: the new figure's joints). A body is its core: the trunk
+  // from the hips to the chest and on to the neck, the head, the thighs, the shins and the upper arms as rounded rods (the forearms
+  // and the hands hold the things, and are left out). A thing is its mesh's corners and points over its triangles, read back from
+  // the buffer once (WebGL 2). Returns what is deeper in than tol (m): [{task, own (his own thing), name, part, cm, n points}].
+  const THINGCPU = new Map();
+  function thingPts(m){
+    let P = THINGCPU.get(m); if (P) return P; P = [];
+    if (GL2 && m.pb && m.n){ const a = new Float32Array(m.n * 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.pb); gl.getBufferSubData(gl.ARRAY_BUFFER, 0, a);
+      for (let t = 0; t + 8 < a.length; t += 9){ const A = [a[t], a[t + 1], a[t + 2]], B = [a[t + 3], a[t + 4], a[t + 5]], C = [a[t + 6], a[t + 7], a[t + 8]];
+        const L = Math.max(Math.hypot(...sub3(A, B)), Math.hypot(...sub3(B, C)), Math.hypot(...sub3(C, A))), n = Math.min(8, Math.max(1, Math.ceil(L / 0.05)));
+        for (let i = 0; i <= n; i++) for (let j = 0; i + j <= n; j++){ const u = i / n, v = j / n, w = 1 - u - v; P.push(A[0] * w + B[0] * u + C[0] * v, A[1] * w + B[1] * u + C[1] * v, A[2] * w + B[2] * u + C[2] * v); } } }
+    P = new Float32Array(P); THINGCPU.set(m, P); return P; }
+  function thingName(m){ for (const k in PM){ const v = PM[k]; if (v === m) return k; if (v && typeof v === 'object' && !v.pb) for (const q in v) if (v[q] === m) return k + '.' + q; } for (const k in KITM) if (KITM[k] === m) return k; if (HANDM) for (const k of ['tape']) if (HANDM[k] === m) return 'hånd.' + k; return m.n + ' hjørner'; }
+  function thingClip(tol){
+    tol = tol == null ? 0.01 : tol; const T = LEMMER.things || [], B = LEMMER.bodies || [], out = {};
+    const segD = (p, a, b) => { const ab = sub3(b, a), l2 = dot3(ab, ab) || 1e-9, t = Math.max(0, Math.min(1, dot3(sub3(p, a), ab) / l2)); return Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t); };
+    for (const b of B){ const J = b.J, up = nrm3(sub3(J.head, J.neck)), hc = add3(J.head, mul3(up, 0.09));
+      b.rods = [['kroppen', J.hips, J.spine3, 0.115], ['brystet', J.spine3, J.neck, 0.105], ['hodet', hc, hc, 0.095], ['låret', J.thigh_R, J.shin_R, 0.065], ['låret', J.thigh_L, J.shin_L, 0.065], ['leggen', J.shin_R, J.foot_R, 0.045], ['leggen', J.shin_L, J.foot_L, 0.045], ['overarmen', J.uarm_R, J.farm_R, 0.04], ['overarmen', J.uarm_L, J.farm_L, 0.04]]; }
+    for (const th of T){ const P = thingPts(th.m), M = th.M, e = th.eye, nm = thingName(th.m);
+      for (const b of B){ const c = b.J.spine3; if (Math.hypot(M[12] + e[0] - c[0], M[13] + e[1] - c[1], M[14] + e[2] - c[2]) > 4) continue;
+        for (let i = 0; i < P.length; i += 3){ const x = P[i], y = P[i + 1], z = P[i + 2], p = [M[0] * x + M[4] * y + M[8] * z + M[12] + e[0], M[1] * x + M[5] * y + M[9] * z + M[13] + e[1], M[2] * x + M[6] * y + M[10] * z + M[14] + e[2]];
+          for (const r of b.rods){ const d = r[3] - segD(p, r[1], r[2]); if (d > tol){ const k = b.task + '|' + (th.i === b.i ? 'egen' : 'annens') + '|' + nm + '|' + r[0], o = out[k] || (out[k] = {task:b.task, own:th.i === b.i, name:nm, part:r[0], cm:0, n:0}); o.n++; if (d * 100 > o.cm) o.cm = +(d * 100).toFixed(1); } } } } }
+    return Object.values(out).sort((a, b) => b.cm - a.cm); }
   // what each hand does in each pose: the grip, the way the palm faces (n) or the axis held (a), as directions in the figure's frame
   // (forward, up, right); the knife's way (st.kd) is set here for the props after
   function handSpecs(st, F, R, hands){

@@ -238,7 +238,20 @@
   // the look of the one it belongs to: SK.wk the skipper's, SK.wkC the first hand's); sd 1 the right arm, -1 the left; sp the hand's grip.
   // Returns where the hand holds
   // (FB2, steg 123: the one solver for every limb, deckcrew.js ik2; his own segment, 0.31 m, and his elbow's own way, as before)
+  // (FB7, the new people: the one whose arms are drawn live is drawn whole and skinned, once both arms are known (the left comes
+  // last everywhere): standing or seated where drawN was given his place (FIGLV), the wrists and the elbows from here, in his own frame)
+  function figLive(BMrel, fg){
+    const L = FIGLV, M = L.M, S = WK_S; FIGLV = null;
+    const vv = v => { const e = [BMrel[0] * v[0] + BMrel[4] * v[1] + BMrel[8] * v[2], BMrel[1] * v[0] + BMrel[5] * v[1] + BMrel[9] * v[2], BMrel[2] * v[0] + BMrel[6] * v[1] + BMrel[10] * v[2]]; return [e[0] * M[0] + e[1] * M[1] + e[2] * M[2], e[0] * M[4] + e[1] * M[5] + e[2] * M[6], e[0] * M[8] + e[1] * M[9] + e[2] * M[10]]; };
+    const pp = p => { const q = xf(BMrel, p), d = [q[0] - M[12], q[1] - M[13], q[2] - M[14]]; return [(d[0] * M[0] + d[1] * M[1] + d[2] * M[2]) / S, (d[0] * M[4] + d[1] * M[5] + d[2] * M[6]) / S, (d[0] * M[8] + d[1] * M[9] + d[2] * M[10]) / S]; };
+    const J = figStand(fg.sk, L.seated, null, S);
+    ['R', 'L'].forEach((sd, i) => { const a = L.arms[sd]; if (a) J.arms[sd] = {el:pp(a.E), wr:pp(a.Hc), hand:figHandTurn(fg.H0[i], vv(a.Fr[0]), vv(a.Fr[1]), vv(a.Fr[2]))}; });
+    const o = figFromJoints(fg.sk, J); ['R', 'L'].forEach(sd => figGrip(fg.ex, fg.sex, (L.arms[sd] || {}).g || 'relax', o.local, sd));
+    drawFig(fg, figPose(fg.sk, o.local, o.root).M, chain(M, M4.S(S)));
+  }
   function armTo(BMrel, W, Sw, Hw, sd, sp){ const seg = 0.31, o = ik2(Sw, Hw, seg, seg, [0, -1, sd * 0.5]), Hc = o.e, E = o.j;
+    if (W && FIGLV){ const fg = figOf(W); if (fg){ const f = nrm3([Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]]), s2 = sp || {g:'relax', n:[-sd * 0.9, -0.4, 0]}, Fr = handFrame(f, s2, sd), gd = (fg.grip[s2.g] || fg.grip.relax)[sd > 0 ? 'R' : 'L'];
+      FIGLV.arms[sd > 0 ? 'R' : 'L'] = {E, Hc, Fr, g:s2.g}; if (sd < 0) figLive(BMrel, fg); return add3(Hc, mul3(inFrame(Fr, gd.at), WK_S)); } }
     if (W){ const f = [Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1, HT = [Hc[0] + f[0] / fl * WK_S, Hc[1] + f[1] / fl * WK_S, Hc[2] + f[2] / fl * WK_S];
       drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S)));
       // the hands in their grips (hender.py): relaxed, the palm in and down; round the knife's handle when it bleeds a fish

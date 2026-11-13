@@ -1310,6 +1310,7 @@ function npcModel(type, lod, liv){ const str = typeof liv === 'string', k = npcM
 function npcModelDrop(k){ delete NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit, kit){
+  if (kit && hands !== false && figBake(B, x, y, z, seated, hands, kit)) return;      // the new people, behind #folk2 (FB7)
   if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)
   const JAC = suit || [0.95, 0.62, 0.1, 0.3], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
   const hip = y + (seated ? 0.46 : 0.82);
@@ -1453,6 +1454,16 @@ function figMesh(kit, opt){
     M.p.set(o.p.subarray(a * 3, (a + cnt) * 3), at * 3); M.n.set(o.n.subarray(a * 3, (a + cnt) * 3), at * 3); M.c.set(o.c.subarray(a * 4, (a + cnt) * 4), at * 4);
     M.j.set(o.j.subarray(a * 4, (a + cnt) * 4), at * 4); M.w.set(o.w.subarray(a * 4, (a + cnt) * 4), at * 4); M.parts.push([name, at, cnt]); at += cnt; }
   return M;
+}
+// The new figure built once into a mesh (FB7: the people in the skiff and on boats seen from outside): posed standing or seated on
+// the processor (figpose.js figStand, figFromJoints, figSkin) and added to the builder B with its feet at (x, y, z), facing -z, at
+// the size people have on board (WK_S). hands as figureVB's: [left, right] where given. False when the new people are not on.
+function figBake(B, x, y, z, seated, hands, kit){
+  if (!FOLK2 || !glbHas('folk2')) return false; const M = figMesh(kit, {}); if (!M || !M.cnt) return false;
+  const sk = figSkelOf(M.sex), S = WK_S, ex = glbLoad('folk2').ex, o = figFromJoints(sk, figStand(sk, seated, hands ? hands.map(h => [(h[0] - x) / S, (h[1] - y) / S, (h[2] - z) / S]) : null, S));
+  figGrip(ex, M.sex, 'relax', o.local); const Q = figSkin(M.p, M.n, M.j, M.w, figPose(sk, o.local, o.root).M);
+  for (let i = 0; i < M.cnt; i++) B.v([x + Q.p[i * 3] * S, y + Q.p[i * 3 + 1] * S, z + Q.p[i * 3 + 2] * S], [Q.n[i * 3], Q.n[i * 3 + 1], Q.n[i * 3 + 2]], [M.c[i * 4], M.c[i * 4 + 1], M.c[i * 4 + 2], M.c[i * 4 + 3]]);
+  return true;
 }
 // a figure's mesh as draw calls of at most maxB bones each (figpose.js figSplit): [{p, n, c, j, w, cnt, bones}], j counted in the draw
 // call's own palette (bones: which of the skeleton's bones it holds, in order). One draw call, the mesh itself, when maxB holds all.

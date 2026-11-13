@@ -178,7 +178,14 @@
     const dx = Math.cos(h) * lr + Math.sin(h) * lf, dz = Math.sin(h) * lr - Math.cos(h) * lf, th = Math.hypot(dx, dz); if (th < 1e-6) return null;
     const kx = dz / th, kz = -dx / th, c = Math.cos(th), sn = Math.sin(th), v = 1 - c;
     return new Float32Array([c + kx * kx * v, kz * sn, kx * kz * v, 0, -kz * sn, c, kx * sn, 0, kx * kz * v, -kx * sn, c + kz * kz * v, 0, 0, 0, 0, 1]); }
+  // (the tests, tests/folk2deck.py «ting»: with LEMMER.things set, every thing drawn with a worker is kept with its place, and the
+  // worker's body as it was drawn (LEMMER.bodies), so what he holds and what stands by him can be tried against people: thingClip)
   function drawWorker(P, st, eye, T, idx){
+    if (!LEMMER.things) return drawWorker0(P, st, eye, T, idx);
+    const d0 = drawN; drawN = (m, M) => { if (m && !m.fig2 && M) LEMMER.things.push({i:idx, m, M:new Float32Array(M), eye:[eye[0], eye[1], eye[2]]}); d0(m, M); };
+    try { return drawWorker0(P, st, eye, T, idx); } finally { drawN = d0; }
+  }
+  function drawWorker0(P, st, eye, T, idx){
     // (OB14: seated with the lunch or the cup; deckcrew.js matPlace)
     if (st.task === 'sitmat' || st.task === 'sitkaffe'){ st.seated = true; st.task = st.task === 'sitmat' ? 'lunch' : 'coffee'; }
     const chill = !!st.deck && !!P.look && typeof P.look === 'object' && deckChill(), hooded = chill && HOODTOP[P.look.tp] && HOODHAT[P.look.ht || 'none'];
@@ -471,7 +478,7 @@
     if (LM) for (const v of [HA, HU, HR]){ const x = v[0], yy = v[1], z = v[2]; v[0] = LM[0] * x + LM[4] * yy + LM[8] * z; v[1] = LM[1] * x + LM[5] * yy + LM[9] * z; v[2] = LM[2] * x + LM[6] * yy + LM[10] * z; }
     const toH = q => { const x = q[0] - pv[0], yy = q[1] - pv[1], z = q[2] - pv[2]; return [x * HA[0] + yy * HA[1] + z * HA[2], x * HU[0] + yy * HU[1] + z * HU[2], x * HR[0] + yy * HR[1] + z * HR[2]]; };
     const ofH = l => [pv[0] + HA[0] * l[0] + HU[0] * l[1] + HR[0] * l[2], pv[1] + HA[1] * l[0] + HU[1] * l[1] + HR[1] * l[2], pv[2] + HA[2] * l[0] + HU[2] * l[1] + HR[2] * l[2]];
-    const SHL = [0, 1].map(i => [0, LEMMER.SH[0] - (vsh ? vsh[1] : 0), (i ? -1 : 1) * (LEMMER.SH[1] + (vsh ? vsh[0] : 0))]), reach = (LL.ua + LL.fa) * LEMMER.REACH;
+    const SHL = [0, 1].map(i => [FG ? FG.len.shA : 0, LEMMER.SH[0] - (vsh ? vsh[1] : 0), (i ? -1 : 1) * (LEMMER.SH[1] + (vsh ? vsh[0] : 0))]), reach = (LL.ua + LL.fa) * LEMMER.REACH;
     // (the wrist a hand's grip asks for, with the forearm as it comes from the shoulder s and the elbow el)
     // (the wrist for a hand pointing z: back from the grip's point in the hand's frame Fr; far off, the one-piece glove: a hand's
     // length back along it)
@@ -504,8 +511,8 @@
     let hd = up3(W(bend, 1.6 + dyq, 0)); if (RB && RB.b){ const l = toH(hd), c = Math.cos(RB.b), sn = Math.sin(RB.b); hd = ofH([l[0] * c + l[1] * sn, -l[0] * sn + l[1] * c, l[2]]); }
     const HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
     if (FG){} else if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
-    const LQ = LEMMER.log ? {idx, task:st.task || null, walk:!!st.walk, ev:!!(st.ev || st.fx), put:!!st.put, deck:!!st.deck, sea:!!SE, sit:!!sit, near, on:IK, at:[st.x - eye[0], y - eye[1], st.z - eye[2]], h, rail:st.rail || null, b:RB ? RB.b : 0, t:RB ? RB.t : 0, drop, hip:LEG.map(g => g.hip.slice()), knee:LEG.map(g => g.knee.slice()), foot:LEG.map(g => g.foot.slice()), kf:LEG.map(g => g.kf), lo:LEG.map(g => g.over),
-      sh:[], el:[], wr:[], elT:[], tg:[hands[0].slice(), hands[1].slice()], gp:[], ao:[0, 0], gl:[0, 0], wrT:[null, null]} : null;
+    const LQ = LEMMER.log ? {idx, task:st.task || null, walk:!!st.walk, ev:!!(st.ev || st.fx), put:!!st.put, deck:!!st.deck, sea:!!SE, sit:!!sit, near, on:IK, L:LL, at:[st.x - eye[0], y - eye[1], st.z - eye[2]], h, rail:st.rail || null, b:RB ? RB.b : 0, t:RB ? RB.t : 0, drop, hip:LEG.map(g => g.hip.slice()), knee:LEG.map(g => g.knee.slice()), foot:LEG.map(g => g.foot.slice()), kf:LEG.map(g => g.kf), lo:LEG.map(g => g.over),
+      sh:[], el:[], wr:[], elT:[], tg:[hands[0].slice(), hands[1].slice()], gp:[], ao:[0, 0], ov:[null, null], T, gl:[0, 0], wrT:[null, null]} : null;
     const AO = [0, 0], ARM = [null, null];   // (m each hand is short of its point: the arm at its reach, with the body gone after it)
     [0.21, -0.21].forEach((r, i) => { const sd = i ? -1 : 1; let sh, el, wr, Fr = null, zh = null;
       if (IK){ sh = ofT(SHL[i]); const cl = vsh ? vsh[2] : 0; let z = nrm3(sub3(hands[i], sh)), o = null, wf;
@@ -514,12 +521,12 @@
         for (let n = 0; n < 4; n++){ wf = wristFor(i, z); o = armIk(SHL[i], toT(wf[0]), sd, LL, o, cl); if (n === 3 || o.over > 0) break; const z2 = handDir(i, sh, ofT(o.j), ofT(o.e)), dz = sub3(z2, z); if (Math.abs(dz[0]) + Math.abs(dz[1]) + Math.abs(dz[2]) < 0.01) break;
           z = nrm3(add3(z, mul3(dz, 0.8))); wf = null; }
         if (!wf){ wf = wristFor(i, z); o = armIk(SHL[i], toT(wf[0]), sd, LL, o, cl); }
-        el = ofT(o.j); wr = ofT(o.e); Fr = wf[1]; zh = z; AO[i] = Math.hypot(o.over, o.near, o.push); if (LQ){ LQ.ao[i] = AO[i]; LQ.elT.push(o.j.slice()); LQ.wrT[i] = o.e.slice(); } }
+        el = ofT(o.j); wr = ofT(o.e); Fr = wf[1]; zh = z; AO[i] = Math.hypot(o.over, o.near, o.push); if (LQ){ LQ.ao[i] = AO[i]; LQ.ov[i] = [o.over, o.near, o.push]; LQ.elT.push(o.j.slice()); LQ.wrT[i] = o.e.slice(); } }
       else { sh = up3(vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r)); const eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
         if (near){ const gd = (GRIP[HS[i].g] || GRIP.relax)[i ? 'L' : 'R']; Fr = handFrame(nrm3(sub3(hands[i], elOf(hands[i]))), HS[i], sd); wr = sub3(hands[i], inFrame(Fr, gd.at)); el = elOf(wr); } else { wr = hands[i]; el = elOf(wr); }
         if (LQ) LQ.elT.push(toT(el)); }
       if (LQ){ LQ.sh.push(sh.slice()); LQ.el.push(el.slice()); LQ.wr.push(wr.slice()); }
-      ARM[i] = {el, wr, Fr:null};
+      ARM[i] = {sh, el, wr, Fr:null};
       if (near){ const sn = i ? 'L' : 'R', sp = HS[i], gd = (GRIP[sp.g] || GRIP.relax)[sn];
         if (!IK) Fr = handFrame(nrm3(sub3(wr, el)), sp, sd);
         ARM[i].Fr = Fr; if (!FG){ drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS[sn][sp.g] || HMS[sn].relax, handMtx(Fr, wr)); }
@@ -536,7 +543,7 @@
     // and the legs are solved again there from the skeleton's own shoulders and hips, so what the hands hold is moved to where the
     // wrists came out (a few mm when the arm reaches), and the tests get the joints as they were drawn.
     if (FG){ const O = rel(st.x, y, st.z), tf = v => [v[0] * R[0] + v[2] * R[1], v[1], -(v[0] * F[0] + v[2] * F[1])], tp = q => tf([q[0] - O[0], q[1] - O[1], q[2] - O[2]]), fw = l => [O[0] + R[0] * l[0] - F[0] * l[2], O[1] + l[1], O[2] + R[1] * l[0] - F[1] * l[2]];
-      const arm = i => { const a = ARM[i]; return {el:tp(a.el), wr:tp(a.wr), hand:a.Fr ? figHandTurn(FG.H0[i], tf(a.Fr[0]), tf(a.Fr[1]), tf(a.Fr[2])) : null}; };
+      const arm = i => { const a = ARM[i]; return {el:tp(a.el), wr:tp(a.wr), sh:tp(a.sh), hand:a.Fr ? figHandTurn(FG.H0[i], tf(a.Fr[0]), tf(a.Fr[1]), tf(a.Fr[2])) : null}; };
       const leg = g => ({knee:tp(g.knee), foot:tp(g.foot), footR:g.BT ? figCols(tf([g.BT[0], g.BT[1], g.BT[2]]), tf([g.BT[4], g.BT[5], g.BT[6]]), tf([g.BT[8], g.BT[9], g.BT[10]])) : null});
       const J = {pelvis:tp(pv), hipsR:figCols(tf(HR), tf(HU), tf([-HA[0], -HA[1], -HA[2]])), chestR:figCols(tf(XR), tf(XU), tf([-XA[0], -XA[1], -XA[2]])), headR:figMul3(figRot([0, 1, 0], hy * 180 / Math.PI), figRot([1, 0, 0], hp * 180 / Math.PI)),
         arms:{R:arm(0), L:arm(1)}, legs:{L:leg(LEG[0]), R:leg(LEG[1])}};
@@ -547,7 +554,9 @@
       if (hooded && !LEMMER.dry){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); }
         if (HD){ const b = FG.sk.ix.head, Rh = PZ.R[b], hj = [PZ.J[b * 3], PZ.J[b * 3 + 1] - 0.075, PZ.J[b * 3 + 2]]; drawN(HD, chain(UM, new Float32Array([Rh[0], Rh[3], Rh[6], 0, Rh[1], Rh[4], Rh[7], 0, Rh[2], Rh[5], Rh[8], 0, hj[0], hj[1], hj[2], 1]))); } }
       [0, 1].forEach(i => { const sd = i ? 'L' : 'R', w = fw(o.out.wr[sd]), d = sub3(w, ARM[i].wr); GP[i] = add3(GP[i], d); AO[i] = Math.max(AO[i], Math.hypot(d[0], d[1], d[2]) > 0.002 ? Math.hypot(d[0], d[1], d[2]) : 0);
-        if (LQ){ LQ.sh[i] = fw(o.out.sh[sd]); LQ.el[i] = fw(o.out.el[sd]); LQ.wr[i] = w; LQ.elT[i] = toT(LQ.el[i]); } });
+        if (LQ){ LQ.fo = LQ.fo || [0, 0]; LQ.fo[i] = Math.hypot(d[0], d[1], d[2]); LQ.ao[i] = AO[i]; LQ.sh[i] = fw(o.out.sh[sd]); LQ.el[i] = fw(o.out.el[sd]); LQ.wr[i] = w; LQ.elT[i] = toT(LQ.el[i]); } });
+      if (LEMMER.bodies){ const jw = n => { const b = FG.sk.ix[n]; return fw([PZ.J[b * 3], PZ.J[b * 3 + 1], PZ.J[b * 3 + 2]]).map((v, k) => v + eye[k]); }, B = {i:idx, task:st.task || (st.walk ? 'gå' : 'står'), walk:!!st.walk, sit:!!sit, J:{}};
+        for (const n of ['hips', 'spine3', 'neck', 'head', 'uarm_R', 'farm_R', 'uarm_L', 'farm_L', 'thigh_R', 'shin_R', 'foot_R', 'thigh_L', 'shin_L', 'foot_L']) B.J[n] = jw(n); LEMMER.bodies.push(B); }
       if (LQ){ LQ.fig = 1; LQ.hip = [fw(o.out.hip.L), fw(o.out.hip.R)]; LQ.knee = [fw(o.out.knee.L), fw(o.out.knee.R)]; LQ.foot = [fw(o.out.foot.L), fw(o.out.foot.R)]; } }
     if (LQ){ LQ.gp = [GP[0].slice(), GP[1].slice()]; LEMMER.log.push(LQ); }
     // (a hand that did not reach its point: what it holds is drawn where the hand is)

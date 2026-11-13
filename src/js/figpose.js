@@ -114,7 +114,7 @@ function figIk(S, T, l1, l2, pole){
 function figLens(sk){
   const r = n => sk.rest[sk.ix[n]], d = (a, b) => { const p = r(a), q = r(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
   return {ua:d('uarm_R', 'farm_R'), fa:d('farm_R', 'hand_R'), th:d('thigh_R', 'shin_R'), sn:d('shin_R', 'foot_R'),
-    sh:[r('uarm_R')[1] - r('thigh_R')[1], r('uarm_R')[0]], hip:r('thigh_R')[1], hipX:r('thigh_R')[0], ankle:r('foot_R')[1]};
+    sh:[r('uarm_R')[1] - r('thigh_R')[1], r('uarm_R')[0]], shA:r('thigh_R')[2] - r('uarm_R')[2], hip:r('thigh_R')[1], hipX:r('thigh_R')[0], ankle:r('foot_R')[1]};
 }
 // a hand's own frame at rest, from the file's grips: the columns are where the fingers' frame of the 3D view (handFrame: the fingers
 // along z, the palm toward y, x = y × z, the thumb at -x on the right hand and +x on the left) lies on this hand. The fist's handle
@@ -145,14 +145,14 @@ function figArmOut(S, E, W, Rc, sg){
 // The local turns and the root for figPose from the joints of a pose. J:
 //   pelvis   the middle between the two hip joints
 //   hipsR    the pelvis' turn (3x3; the sea's lean), chestR the chest's (the back bent and turned), headR the head's; none: upright
-//   arms     {R:{el, wr, hand}, L:…}: the elbow's side and the wrist, hand the hand's turn (3x3, from figHandTurn) or nothing (along the forearm)
+//   arms     {R:{el, wr, hand, sh}, L:…}: the elbow's side and the wrist, sh where the shoulder was reckoned (or nothing), hand the hand's turn (3x3, from figHandTurn) or nothing (along the forearm)
 //   legs     {R:{knee, foot, footR}, L:…}: the knee's side and the ankle, footR the foot's turn or nothing (flat, facing ahead)
 // The back's bend is shared between the pelvis (FIG_HIPBEND of what is ahead or to a side: he bends at the hips, as the 3D view's
 // solver reckons the shoulders, about the hips) and the three bones of the spine, its turn about the spine between those three; the neck and the head share the head's turn from the chest (at most 70 degrees round and 45 over).
 // A limb's roll is found from the plane its three joints are in, so the elbow and the knee bend as hinges, and half of it is on the
 // twist bone (utw, ttw; the forearm's roll to the hand on ftw). Returns {local, root, out:{sh, el, wr, hip, knee, foot}} with the
 // joints as the skeleton has them.
-const FIG_HIPBEND = 0.8;
+const FIG_HIPBEND = 0.8, FIG_CLAV = 25;
 function figFromJoints(sk, J){
   const L = {}, ix = sk.ix, r = n => sk.rest[ix[n]], Y = [0, 1, 0], Rh0 = J.hipsR || FIG_I3, Rc = J.chestR || Rh0, mul = figMul3;
   // the back: rel = swing · twist
@@ -180,10 +180,14 @@ function figFromJoints(sk, J){
   };
   for (const sd of ['R', 'L']){
     const A = (J.arms || {})[sd], sg = sd === 'R' ? 1 : -1; if (!A) continue;
-    const cl = figAdd(s3j, figV3(Rc, figSub(r('clav_' + sd), r('spine3')))), S = figAdd(cl, figV3(Rc, figSub(r('uarm_' + sd), r('clav_' + sd))));
+    // (the collarbone takes the shoulder to where the solver reckoned it, A.sh, when it is given: at most FIG_CLAV degrees, the
+    // shoulder pushed ahead or lifted as he reaches)
+    const cl = figAdd(s3j, figV3(Rc, figSub(r('clav_' + sd), r('spine3')))), dc = figV3(Rc, figSub(r('uarm_' + sd), r('clav_' + sd))); let Gc = Rc;
+    if (A.sh){ const q = figAxis(figTo(dc, figSub(A.sh, cl))); Gc = mul(figRot(q.ax, Math.min(FIG_CLAV, q.deg)), Rc); L['clav_' + sd] = mul(figT3(Rc), Gc); }
+    const S = figAdd(cl, figV3(Gc, figSub(r('uarm_' + sd), r('clav_' + sd))));
     const l1 = Math.hypot(...figSub(r('farm_' + sd), r('uarm_' + sd))), l2 = Math.hypot(...figSub(r('hand_' + sd), r('farm_' + sd)));
     const k = figIk(S, A.wr, l1, l2, A.el), E = figArmOut(S, k[0], k[1], Rc, sg), W = k[1];
-    const Gf = limb(Rc, S, 'uarm_' + sd, 'utw_' + sd, 'farm_' + sd, 'hand_' + sd, E, W, null);
+    const Gf = limb(Gc, S, 'uarm_' + sd, 'utw_' + sd, 'farm_' + sd, 'hand_' + sd, E, W, null);
     if (A.hand){ const Q = mul(figT3(Gf), A.hand), ax = figNrm(figSub(r('hand_' + sd), r('farm_' + sd))), t = Math.max(-80, Math.min(80, figTwist(Q, ax)));
       L['ftw_' + sd] = figRot(ax, t); L['hand_' + sd] = mul(figT3(L['ftw_' + sd]), Q); }
     out.sh[sd] = S; out.el[sd] = E; out.wr[sd] = W; out.over[sd] = k[2];
@@ -196,6 +200,18 @@ function figFromJoints(sk, J){
     out.hip[sd] = S; out.knee[sd] = k[0]; out.foot[sd] = k[1];
   }
   return {local:L, root, out};
+}
+// The joints of a figure standing or seated where it was built into a boat (the skiff's skipper and crew, the people on boats seen
+// from outside; vessel3d.js figBake), for figFromJoints: hands [left, right] as wrists in the figure's frame, or nothing (down by
+// the sides; on the knees seated). S is the scale the figure is drawn at: a seat's height is the boat's, not the figure's.
+function figStand(sk, seated, hands, S){
+  const LN = figLens(sk), hipY = seated ? 0.46 / S : LN.hip - 0.004, J = {pelvis:[0, hipY, 0], arms:{}, legs:{}};
+  for (const [sd, sg] of [['R', 1], ['L', -1]]){
+    J.legs[sd] = seated ? {knee:[sg * 0.11, hipY + 0.02, -0.42], foot:[sg * 0.12, LN.ankle, -0.46]} : {knee:[sg * LN.hipX, 0.5, -0.4], foot:[sg * (LN.hipX + 0.01), LN.ankle, 0]};
+    const h = hands ? hands[sg < 0 ? 0 : 1] : seated ? [sg * 0.16 / S, hipY + 0.1 / S, -0.36 / S] : [sg * 0.25, 0.9, 0.01];
+    J.arms[sd] = {wr:h, el:[sg * 0.4, (LN.hip + LN.sh[0] + h[1]) / 2 - 0.1, 0.25]};
+  }
+  return J;
 }
 // the turn of a hand's bone for the 3D view's hand frame [x, y, z] (given in the figure's frame) on the hand whose rest frame is H0
 function figHandTurn(H0, x, y, z){ return figMul3(figCols(x, y, z), figT3(H0)); }
