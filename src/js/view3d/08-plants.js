@@ -155,7 +155,7 @@
   const SEAGRAB = {look:-1, aurora:-1, chat:-1, coffee:1}, SEAHANDS = {back:3, chat:3, phone:3, coffee:3, lunch:3, binoc:3, aurora:3, cold:3, knife:3, snus:3, smoke:1, cut:3, bleedst:3, carry:3, tally:3, remote:3};
   // whose sea legs (a deckcrew agent a of the boat's crewSim sim) on a deck whose frame is M (hers in the eye's frame); null with the sea legs off
   function seaSet(sim, a, M){
-    if (!SJOBEIN.on || !sim.seaRoom) return null; let q = a.slQ; if (!q) q = a.slQ = {sim, a, ok:(dr, da) => sim.seaStepOk(a, dr, da)};
+    if (!SJOBEIN.on || !sim.seaRoom) return null; let q = a.slQ; if (!q) q = a.slQ = {sim, a, ok:(dr, da) => a.mode === 'at' && sim.seaStepOk(a, dr, da)};   // (a foot is put out only at a place on deck, where it is tried against the model)
     return q; }
   function deckN(M){ const l = Math.hypot(M[4], M[5], M[6]) || 1; return [M[4] / l, M[5] / l, M[6] / l]; }
   function seaNow(st, h, y){
@@ -163,6 +163,8 @@
     if (!n || n[1] < 0.3) return null;
     I.sr = -(n[0] * c + n[2] * sn) / n[1]; I.sf = -(n[0] * sn - n[2] * c) / n[1]; I.y = y; I.hs = SJOBEIN.test && SJOBEIN.test.hs != null ? SJOBEIN.test.hs : (CREW3D._st.sea && CREW3D._st.sea.hs) || 0; I.dt = s.tp == null ? undefined : now - s.tp; s.tp = now;
     I.walk = !!st.walk; I.room = q.sim.seaRoom(a) || SEAROOM;
+    // (turned at his work, workTurn, the room is not where it was measured: the least of it all round, and no step)
+    if (Math.abs(h - st.h) > 0.3){ const R0 = I.room; if (!R0.min){ const m = Math.min(R0.r[0], R0.r[1], R0.f[0], R0.f[1]), w = Math.min(R0.w[0], R0.w[1]); R0.min = {r:[m, m], f:[m, m], w:[w, w], nostep:true}; } I.room = R0.min; }
     const g = st.walk || st.put || st.crate || st.ev || st.fx || st.blend < 1 ? undefined : st.task == null ? -1 : SEAGRAB[st.task];
     I.rail = g === undefined ? null : q.sim.seaRail(a); I.hand = g === 1 ? 1 : null; I.stepOk = q.ok;
     return seaLegs(s, I); }
@@ -441,7 +443,7 @@
     // its top as in «lean», where the deck has it now
     let seaG = -1;
     if (SE){ if (!st.ev && !st.fx) for (const i of [0, 1]) if (seaH & (i + 1)) up3(hands[i]);
-      if (SE.grab > 0 && SEAIN.rail){ const rl = SEAIN.rail, i = SE.gh, ra = rl[0], rr = rl[1] || (i ? -0.2 : 0.2); hands[i] = lerp3(hands[i], W(ra, rl[2] + 0.04 + ra * SE.sf + rr * SE.sr, rr), SE.grab); if (SE.grab > 0.6) seaG = i; } }
+      if (SE.grab > 0 && SE.rail){ const rl = SE.rail, i = SE.gh, ra = rl[0], rr = rl[1] || (i ? -0.2 : 0.2); hands[i] = lerp3(hands[i], W(ra, rl[2] + 0.04 + ra * SE.sf + rr * SE.sr, rr), SE.grab); if (SE.grab > 0.6) seaG = i; } }
     // the break's thing put away before the walk to work (deckcrew.js a.put): the last of it (a sip, a draw), the hand to the pocket
     // (the binoculars to the chest, the butt over the side) and it is gone (st.gone), then the hands down
     if (st.put){ const u = st.put.u, ph = st.put.task, hy = near ? 0.76 : 0.82, fin = u < 0.35 ? Math.sin(u / 0.35 * Math.PI) : 0, go = ease(clamp((u - 0.35) / 0.4, 0, 1)), back = ease(clamp((u - 0.8) / 0.2, 0, 1));
@@ -482,7 +484,7 @@
     if (st.task === 'binoc' && !st.gone){ const B = pz('kikk'); if (B){ const c = st.put ? [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2] : up3(W(0.13, 1.57, 0)); drawN(B, atH(c, M4.RY(-hy))); } }
     if (st.task === 'smoke' && !st.gone){ const C = pz('sig'); if (C) drawN(C, atH(GP[0], M4.RY(0.6), M4.RX(0.25)));
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
-      if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = W(0.2, 1.52, 0.02); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
+      if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = up3(W(0.2, 1.52, 0.02)); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
         DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
     if (st.task === 'sit' || st.seated){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
     if (st.task === 'snus' && st.can && !st.gone){ const C = pz('snus'); if (C) drawN(C, atH([GP[1][0], GP[1][1] + 0.01, GP[1][2]])); }

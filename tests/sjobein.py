@@ -177,7 +177,7 @@ async def checks(pg):
                 if side and not kn > 0.01: okb = False
             # (never past the deck's normal the other way, with or without room)
             if lean * nrm < -1e-6 or abs(lean) > abs(nrm) + 1e-6: okb = False
-    for r in rows: print('   ', json.dumps(r, ensure_ascii=False), flush=True)
+    for r in rows: print('OK   stillingen ved 8°:' if r['oppreist'] or r['hofte_cm'] == 0 else 'FEIL stillingen ved 8°:', json.dumps(r, ensure_ascii=False), flush=True)
     check(okb and free >= 2, 'ved 8° rulling: hofta mot den høye siden, kneet der mer bøyd, overkroppen mellom loddrett og dekkets normal (%d av %d stillinger har rom til å stå oppreist; resten står vinkelrett på dekket inntil det de står ved)' % (free, len(rows)))
 
     # 4. the rail and the bracing step: at 10° a free hand is on the rail's top, at 13° a foot is out, at 2° both are back

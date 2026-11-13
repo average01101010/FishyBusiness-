@@ -882,7 +882,8 @@ function crewSim(src){
   // keeps it off things: all the room.
   const SEAWALK = {r:[1, 1], f:[1, 1], w:[1, 1]};
   // (where he stands at his place: the cell and how far off it the place has him, not the way there as it blends in; so the room is found once a place)
-  const SEAR = new Map(), seaAt = a => { const g = a.fake ? null : holds(a), o = (g && g.off) || [0, 0], x = a.x + o[0], z = a.z + o[1], h = a.h, F = [Math.sin(h), -Math.cos(h)], Rv = [Math.cos(h), Math.sin(h)];
+  const SEAR = new Map(), seaAt = a => { const g = a.fake ? null : holds(a), o = (g && g.off) || [0, 0], x = a.x + o[0], z = a.z + o[1], h = g && g.h != null ? g.h : a.h,   // (the heading the place has him at, not the turn to it: one key a place)
+    F = [Math.sin(h), -Math.cos(h)], Rv = [Math.cos(h), Math.sin(h)];
     return {key:Math.round(x * 50) + ':' + Math.round(z * 50) + ':' + h.toFixed(2), W:(f, up, r) => [x + F[0] * f + Rv[0] * r, a.y + up, z + F[1] * f + Rv[1] * r]}; };
   // (the body's lines with the sea legs as seaLegs gave them (o) on a deck sloping sr to his right and sf ahead, in the boat's frame,
   // where a point up over the deck is that much to her high side: the legs, the spine, the sides, the chest and the back, the
@@ -1103,6 +1104,7 @@ function seaLegs(s, inp){
   const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, pk)), hipY = -cr - A * Math.tanh(beta * dy / A);
   // the hand to the rail, and the foot put out down the slope
   const step = (on, v, t) => snap || !(t > 0) ? (on ? 1 : 0) : on ? Math.min(1, v + dt / t) : Math.max(0, v - dt / t), rl = !walk && inp.rail ? inp.rail : null, d0 = dt >= 0 ? Math.min(dt, 5) : 0;   // (after a gap the hand and the foot are where the time gone puts them)
+  if (rl) s.rl = rl;   // (the rail last within reach: the hand leaves it over GRABT when he goes)
   if (rl && !s.gOn && ang > C.GRAB){ const gh = inp.hand != null ? inp.hand : rl[1] >= 0 ? 0 : 1;   // (a rail to one side is for the hand on that side)
     if (rl[1] * (gh ? -1 : 1) >= 0 && Math.hypot(rl[0], rl[2] - 1.42, (rl[1] || (gh ? -0.2 : 0.2)) - (gh ? -0.21 : 0.21)) < C.REACH){ s.gOn = true; s.gh = gh; s.gT = 0; } }
   else if (s.gOn){ if (!rl) s.gOn = false; else if (ang < C.FREE){ s.gT += d0; if (s.gT > C.HOLD) s.gOn = false; } else s.gT = 0; }
@@ -1119,6 +1121,6 @@ function seaLegs(s, inp){
     o.fr[i] = sg * (0.12 + C.WIDE * s.k * (walk ? 0.4 : 1) * rm[4 + i]) + s.stR * mine; o.fa[i] = s.stF * mine; o.fy[i] = o.fa[i] * sf + o.fr[i] * sr;
     o.lift[i] = mine && s.st < 1 ? 0.05 * Math.sin(Math.PI * s.st) : 0;
     const d = Math.hypot(hh * sqU - 0.08 + sg * 0.11 * pelv - o.fy[i] - o.lift[i], hipR + hh * sqR + sg * 0.11 - o.fr[i], hipF + hh * sqF - o.fa[i]); o.kf[i] = Math.max(0.02, 0.07 + seaKnee(0.84, d)); o.kneeDeg[i] = 2 * Math.atan2(o.kf[i], d / 2) * 180 / Math.PI; }
-  o.sr = sr; o.sf = sf; o.ang = ang; o.k = s.k; o.hipR = hipR; o.hipF = hipF; o.hipY = hipY; o.pelv = pelv; o.sqR = sqR; o.sqF = sqF; o.sqU = sqU; o.leanR = leanR; o.leanF = leanF; o.grab = s.g * s.g * (3 - 2 * s.g); o.gh = s.gh; o.step = e; o.stFoot = s.stFoot;
+  o.sr = sr; o.sf = sf; o.ang = ang; o.k = s.k; o.hipR = hipR; o.hipF = hipF; o.hipY = hipY; o.pelv = pelv; o.sqR = sqR; o.sqF = sqF; o.sqU = sqU; o.leanR = leanR; o.leanF = leanF; o.grab = s.g * s.g * (3 - 2 * s.g); o.gh = s.gh; o.rail = s.rl || null; o.step = e; o.stFoot = s.stFoot;
   return o;
 }
