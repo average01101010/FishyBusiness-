@@ -8,7 +8,7 @@ og alt»): each drawer page, the phone's home and each app, the deck log, and th
 """
 import os, sys, asyncio, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'tests'))
-from _env import boot, OUT
+from _env import boot, OUT, GAME_RO
 from playwright.async_api import async_playwright
 from PIL import Image
 
@@ -29,7 +29,7 @@ async def main():
             pg = await b.new_page(viewport={'width': w, 'height': h}); pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg); n[0] = 0
             async def shot(name):
-                n[0] += 1; f = os.path.join(DIR, '%s%02d-%s-%s' % ('hud' if hud else '', n[0], name, tag))
+                n[0] += 1; f = os.path.join(DIR, '%s%02d-%s-%s' % ('hud' if hud else 'rest' if 'rest' in sys.argv else '', n[0], name, tag))
                 await pg.screenshot(path=f + '.png'); Image.open(f + '.png').convert('RGB').save(f + '.jpg', quality=82)
             async def safe(js, name, wait=350):
                 try: await pg.evaluate(js); await pg.wait_for_timeout(wait); await shot(name)
@@ -39,6 +39,45 @@ async def main():
             await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; renderActs()"); await pg.wait_for_timeout(hud and 6000 or 400)
             await shot('havn')
             if hud:
+                # the screen with 3D drawn: in harbour, a shop, the paint shop and the phone over it, at sea, the chart plotter, a route
+                await safe("DOCK.open('fiske')", 'butikk-over-3d', 3000); await safe("DOCK.open('maler')", 'maler-over-3d', 3000); await pg.evaluate("DOCK.close()")
+                await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
+                await safe("(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); })()", 'til-sjos', 8000)
+                await safe("(() => { const e = document.querySelector('#dock button'); })()", 'til-sjos-knapper', 500)
+                await safe("(() => { setBodyView(false); refreshAll(); })()", 'kartplotter', 3000)
+                await safe("(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()", 'rute', 1500)
+                await pg.close(); continue
+            if 'rest' in sys.argv:
+                # the tabs under each page and app (every tab after the first), and the deck log's tabs
+                TABS = "[...document.querySelectorAll('%s .ph-sub button, %s .dr-tabs button, %s .ph-tabs button')].filter(e => e.offsetParent)"
+                async def tabs(root, name):
+                    try: k = await pg.evaluate("(" + TABS % (root, root, root) + ").length")
+                    except Exception: k = 0
+                    for i in range(1, min(k, 7)):
+                        await safe("(() => { const t = " + TABS % (root, root, root) + "; if (t[%d]) t[%d].click(); })()" % (i, i), name + '-fane%d' % (i + 1))
+                for page, port in DRAWER:
+                    try: await pg.evaluate("(() => { const b = S.boat, q = portById('%s'); if (b.port !== q.id){ b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; } DOCK.open('%s'); })()" % (port, page)); await pg.wait_for_timeout(250)
+                    except Exception: continue
+                    await tabs('#drawerBody', 'skuff-' + page)
+                await pg.evaluate("DOCK.close()")
+                for a in APPS + ['garderobe']:
+                    try: await pg.evaluate("PHONE.show(true); PHONE.open('%s')" % a); await pg.wait_for_timeout(250)
+                    except Exception as e: print('FEIL åpne', a, str(e)[:80]); continue
+                    await tabs('#phone', 'app-' + a)
+                await safe("PHONE.open('nett'); document.querySelector('#phone [data-pa=sub][data-s=megler]').click()", 'app-nett-megler')
+                await pg.evaluate("PHONE.show(false)")
+                await pg.evaluate("BOOK.open()"); await pg.wait_for_timeout(500)
+                nb = await pg.evaluate("document.querySelectorAll('.bk-tab').length")
+                for i in range(1, nb): await safe("document.querySelectorAll('.bk-tab')[%d].click()" % i, 'dagbok-fane%d' % (i + 1), 500)
+                await pg.close()
+                # the opening: the loader, the first screen, and what meets a new player after «Start» (the letter, the first tip)
+                pg = await b.new_page(viewport={'width': w, 'height': h}); pg.set_default_timeout(120000)
+                await pg.goto(GAME_RO); await pg.wait_for_timeout(600); await shot('aapning-innlasting')
+                try:
+                    await pg.wait_for_selector('#obGo', state='visible', timeout=90000); await shot('aapning-forste-skjerm')
+                    await pg.click('#obGo'); await pg.wait_for_timeout(2500); await shot('aapning-etter-start')
+                    await pg.wait_for_timeout(6000); await shot('aapning-litt-senere')
+                except Exception as e: print('FEIL åpning', tag, str(e)[:120])
                 await pg.close(); continue
             for page, port in DRAWER:
                 await safe("(() => { const b = S.boat, q = portById('%s'); if (b.port !== q.id){ b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; } DOCK.open('%s'); })()" % (port, page), 'skuff-' + page)
