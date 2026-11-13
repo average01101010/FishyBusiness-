@@ -34,8 +34,11 @@
   }
   function oppdrag(){ return salg('best'); }
   function ordl(){
-    const tab = sub.ordl || 'turer', tabs = subs('ordl', [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders']]);
+    // the race's tab (ui/05l-kapplop.js, KL2), opened from its card at a checkpoint or in the Sesong app (LOP_TAB)
+    if (typeof LOP_TAB !== 'undefined' && LOP_TAB){ LOP_TAB = false; sub.ordl = 'lop'; }
+    const tab = sub.ordl || 'turer', tabs = subs('ordl', [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders'], ['lop', 'Kappløp', 'Race']]);
     if (tab === 'turer') return '<div class="ph-c">' + tabs + turPage() + '</div>';
+    if (tab === 'lop') return '<div class="ph-c">' + tabs + lopPage() + '</div>';
     return ordlBest(tabs);
   }
   function ordlBest(tabs){

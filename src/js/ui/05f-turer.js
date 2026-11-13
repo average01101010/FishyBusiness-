@@ -82,28 +82,36 @@ function turPage(){
   if (old.length) h.push('<h4 class="tur-sec">' + L0('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(d => '<div class="kv"><span>' + turEsc(L0(d.what[0], d.what[1])) + '</span><b>' + (d.ok ? kr(d.pay) : d.part ? kr(d.pay) + ' <span class="r2">' + L0('delvis', 'in part') + '</span>' : '<span class="r2">' + L0('ikke fullført', 'not done') + '</span>') + '</b></div>').join('') + '</div>');
   return h.join('');
 }
-// «Kjør dit»: the way there as Autonav finds it (to the pick-up first for freight), and off she goes, from the quay too
+// «Kjør dit»: the way there as Autonav finds it (to the pick-up first for freight), and off she goes, from the quay too. id: a
+// mission's number or a race task's text id ('lnk-1:2f', KL2), so they are compared as text
 async function turGo(id){
-  const T = turState(), m = T.act.find(x => x.id === id), b = S.boat; if (!m) return;
-  const L0 = (no, en) => S.lang === 'en' ? en : no;
-  if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L0('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
-  if (!meAboard() && !crewAboard().length){ toast(L0(...noCrewText())); return; }
+  const m = turActs().find(x => String(x.id) === String(id)); if (!m) return;
   const sea = m.k === 'garn' || m.k === 'prove' || m.k === 'foto' || m.k === 'lete' || (m.k === 'slep' && m.stage !== 'tow'), ekko = m.k === 'prove' && m.kind === 'ekko';
-  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : sea ? null : m.to, q = toPort ? portById(toPort) : null;
-  const end = q ? q.p : ekko ? m.pts[m.at || 0] : m.k === 'prove' || m.k === 'foto' || m.k === 'lete' ? m.p : {x:m.p.x + (m.k === 'slep' ? 0.06 : 0.12), y:m.p.y}, aPort = b.status === 'port' ? b.port : null;
-  if (q && aPort === toPort){ toast(L0('Du er allerede der.', 'You are there already.')); return; }
+  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : sea ? null : m.to; if (toPort && !portById(toPort)) return;   // (a harbour no longer there: nothing, as before)
+  const end = toPort ? portById(toPort).p : ekko ? m.pts[m.at || 0] : m.k === 'prove' || m.k === 'foto' || m.k === 'lete' ? m.p : {x:m.p.x + (m.k === 'slep' ? 0.06 : 0.12), y:m.p.y};
+  // at a station she starts fishing as she comes (the time it still needs); an echo line goes on through its other points
+  const fish = m.k === 'prove' && m.kind === 'stasjon' ? Math.round(((m.need - (m.min || 0)) / 60 + 0.1) * 10) / 10 : 0;
+  await turSail(end, toPort, {fish, more:ekko ? m.pts.slice((m.at || 0) + 1) : null, atSea:turDepart});
+}
+// the way to end (a point, or the harbour toPort's) as Autonav finds it, and off she goes, from the quay too: «Kjør dit» for a mission
+// and the race's way to the next checkpoint (05l-kapplop.js lopGo). o.fish: game hours fished at the end; o.more: points after it; o.atSea:
+// called when she sets off from the sea. True when she went
+async function turSail(end, toPort, o = {}){
+  const b = S.boat, L0 = (no, en) => S.lang === 'en' ? en : no, q = toPort ? portById(toPort) : null;
+  if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(L0('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return false; }
+  if (!meAboard() && !crewAboard().length){ toast(L0(...noCrewText())); return false; }
+  const aPort = b.status === 'port' ? b.port : null;
+  if (q && aPort === toPort){ toast(L0('Du er allerede der.', 'You are there already.')); return false; }
   toast(L0('Finner veien …', 'Finding the way …'));
   let res; try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, end, aPort, toPort); } catch (e){ console.error(e); res = {why:['Fant ingen vei dit.', 'Found no way there.']}; }
-  if (res.why){ toast(L0(res.why[0], res.why[1])); return; }
-  if (!['idle', 'port'].includes(b.status)) return;   // something else started while the way was found
+  if (res.why){ toast(L0(res.why[0], res.why[1])); return false; }
+  if (!['idle', 'port'].includes(b.status)) return false;   // something else started while the way was found
   if (S.draft && S.draft.length) S.draft = [];
-  // at a station she starts fishing as she comes (the time it still needs); an echo line goes on through its other points
-  const fishH = m.k === 'prove' && m.kind === 'stasjon' ? Math.round(((m.need - (m.min || 0)) / 60 + 0.1) * 10) / 10 : 0;
-  const wps = res.wps.map((p, i) => i === res.wps.length - 1 ? {x:q ? q.p.x : p.x, y:q ? q.p.y : p.y, port:toPort, fish:fishH} : {x:p.x, y:p.y, port:null, fish:0, leia:true});
-  if (ekko) for (let k = (m.at || 0) + 1; k < m.pts.length; k++) wps.push({x:m.pts[k].x, y:m.pts[k].y, port:null, fish:0});
+  const wps = res.wps.map((p, i) => i === res.wps.length - 1 ? {x:q ? q.p.x : p.x, y:q ? q.p.y : p.y, port:toPort, fish:o.fish || 0} : {x:p.x, y:p.y, port:null, fish:0, leia:true});
+  for (const p of o.more || []) wps.push({x:p.x, y:p.y, port:null, fish:0});
   S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, full:!!S.draftFull, returning:false};
-  if (b.status === 'port') depart(); else { b.status = 'sailing'; turDepart(); }
-  save(); if (typeof refreshAll === 'function') refreshAll();
+  if (b.status === 'port') depart(); else { b.status = 'sailing'; if (o.atSea) o.atSea(); }
+  save(); if (typeof refreshAll === 'function') refreshAll(); return true;
 }
 // the chart: a ring where each mission goes (and where freight waits), with its name when the chart is close enough
 function turSvg(u, inV){
@@ -112,12 +120,12 @@ function turSvg(u, inV){
   for (const sp in (S.lete || {})) for (const x of S.lete[sp]){ if (S.t - x.t > 1440 || !x.p || !inV(x.p.x, x.p.y)) continue;
     g.push('<circle cx="' + x.p.x + '" cy="' + x.p.y + '" r="' + (TUR_LETE.R * NM) + '" class="turmk lete" fill="none" stroke-width="' + (1.5 * u) + '" stroke-dasharray="' + (3 * u) + ' ' + (3 * u) + '"/>');
     if (view.z > 0.5) g.push(txt({x:x.p.x + 6 * u, y:x.p.y - 6 * u}, turEsc((S.lang === 'en' ? 'Found: ' : 'Funnet: ') + SPECIES[sp][S.lang === 'en' ? 'en' : 'no'].toLowerCase()), 'lbl-tur', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"')); }
-  const T = S.turer; if (!T || !T.act.length) return g.join('');
-  for (const m of T.act){ const ekko = m.k === 'prove' && m.kind === 'ekko';
+  const A = turActs(); if (!A.length) return g.join('');   // (the race's tasks have their rings too, KL2)
+  for (const m of A){ const ekko = m.k === 'prove' && m.kind === 'ekko';
     if (ekko && m.at < 3) g.push('<polyline points="' + m.pts.slice(m.at).map(q => q.x + ',' + q.y).join(' ') + '" class="turmk" fill="none" stroke-width="' + (1.5 * u) + '" stroke-dasharray="' + (2 * u) + ' ' + (3 * u) + '"/>');
     const p = m.k === 'frakt' && m.stage === 'pick' ? portById(m.from).p : m.k === 'slep' && m.stage === 'tow' ? portById(m.to).p : ekko ? m.pts[Math.min(2, m.at || 0)] : m.k === 'foto' ? m.fyr : m.p; if (!p || !inV(p.x, p.y)) continue;
     g.push('<circle cx="' + p.x + '" cy="' + p.y + '" r="' + (11 * u) + '" class="turmk" stroke-width="' + (2 * u) + '" stroke-dasharray="' + (4 * u) + ' ' + (3 * u) + '"/>');
-    if (view.z > 0.8){ const w = turWhat(m); g.push(txt({x:p.x + 13 * u, y:p.y - 9 * u}, turEsc(S.lang === 'en' ? w[1] : w[0]), 'lbl-tur', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
+    if (view.z > 0.8){ const w = m.lop ? lopTaskWhat(m) : turWhat(m); g.push(txt({x:p.x + 13 * u, y:p.y - 9 * u}, turEsc(S.lang === 'en' ? w[1] : w[0]), 'lbl-tur', 10.5 * u, 'stroke-width="' + (2.5 * u) + '"')); } }
   return g.join('');
 }
 // ---- the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
@@ -126,7 +134,7 @@ function turSvg(u, inV){
 const TUR_FISHC = {torsk:'#8b7d55', hyse:'#7f8892', sei:'#4f5e5b', lange:'#7a6b4b', brosme:'#8d6c3e', kveite:'#6b5b47', blakveite:'#3f3b37', uer:'#c2553d', steinbit:'#6f7375', makrell:'#3f7290', lysing:'#8e9599', breiflabb:'#6a5a44'};
 const TUR_FORK = ['sei', 'makrell', 'hyse', 'sild', 'lysing'];
 function turMeasure(id){
-  const m = ((S.turer && S.turer.act) || []).find(x => x.id === id); if (!m || m.stage !== 'measure') return;
+  const m = turActs().find(x => String(x.id) === String(id)); if (!m || m.stage !== 'measure') return;   // (the race's station too, its id text: KL2)
   turProveFish(m);
   let el = $('turMeas'); if (!el){ el = document.createElement('div'); el.id = 'turMeas'; document.body.appendChild(el); }
   const L0 = (no, en) => S.lang === 'en' ? en : no, PX = 15;
@@ -172,7 +180,7 @@ function turFotoUi(){
   const on = turG3() && !!turFotoAt(); if (btn.hidden === on) btn.hidden = !on;
 }
 async function turFotoShoot(id){
-  const T = S.turer, m = T && T.act.find(x => (id == null || x.id === id) && x.k === 'foto' && x.vid === S.cur && dist(S.boat.pos, x.fyr) <= TUR.fotoR); if (!m) return;
+  const m = turActs().find(x => (id == null || String(x.id) === String(id)) && x.k === 'foto' && x.vid === S.cur && dist(S.boat.pos, x.fyr) <= TUR.fotoR); if (!m) return;   // (the race's picture too, KL2)
   let seen = null, img = null;
   if (turG3()){ seen = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h);
     if (seen && seen.front && seen.clear){ const fl = $('fotoFlash'); if (fl){ fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go'); } try { img = await G3.snap(720); } catch (e){ console.error(e); } } }

@@ -266,19 +266,49 @@
   // core/05b-ferje.js FERJE_SIZE; the bounds the geometric means between them, so Senja's 49.9 m ferry is the 64 m one), an express boat (ex 1) the catamaran, a passenger ferry (ex 2) the monohull, a coastal ship (type 'coastal') the route's
   // ship; each scaled to her own length and beam as the fleet is (npcMesh). Near (the GLB's lod0) within 500 m, the simple version (lod1)
   // out to 1.5 km, the old boxes (19-wildlife-npc.js N.ferry, N.coastal) beyond, and the boxes too until the models are in
-  const shipT = n => { if (n.type !== 'ferry' && n.type !== 'coastal') return null;
-    const t = n.type === 'coastal' ? 'ship-kystrute' : n.ex === 1 ? 'ship-hurtig' : n.ex === 2 ? 'ship-passasjer' : !(n.L > 0) ? null : n.L < 46.6 ? 'ship-ferje34' : n.L < 84.7 ? 'ship-ferje64' : 'ship-ferje112';
+  // the merchant ships (N5's traffic, steg 37; the models from the second part of N7) by their type: cargo, tanker, cruise. Their
+  // models are in tools/ships/ and src/data/ship-last, ship-tank, ship-cruise; the page has them once N5 adds their lines to
+  // src/index.html, and until then (glbHas false) they are the scaled ferry box like a ferry beyond 1.5 km
+  const SHIPM = {coastal:'ship-kystrute', cargo:'ship-last', tanker:'ship-tank', cruise:'ship-cruise'};
+  const SHIPTY = {ferry:1, coastal:1, cargo:1, tanker:1, cruise:1};   // (the types drawn as ships: steady in the sea, the box scaled to them)
+  const shipT = n => { if (!SHIPTY[n.type]) return null;
+    const t = SHIPM[n.type] || (n.ex === 1 ? 'ship-hurtig' : n.ex === 2 ? 'ship-passasjer' : !(n.L > 0) ? null : n.L < 46.6 ? 'ship-ferje34' : n.L < 84.7 ? 'ship-ferje64' : 'ship-ferje112');
     return t && glbHas(t) ? t : null; };
-  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : shipT(n) || npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
-  const NKN = {}; function npcNear(n){ if (!n.player && shipT(n)) return 500; const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
+  // the coast's fishing boats by their main gear (N7's second part, 12.11.2026): the register's gear of each boat (flaate.json, the boat
+  // npcStates read; read here by her id, as npcStates' entry does not carry it), and the model that shows that gear where there is one
+  // for her length (tools/ships/: snurrevad, not, tral, teine, autoline); the net, jig and short line boats, and every boat whose gear
+  // has no model, are the player's boat nearest her length and beam as before (npcKit). By the vessel's fields, never her name.
+  const NGEAR = new Map();
+  function npcGear(n){
+    if (n.mainGear) return n.mainGear; if (!n.coast || typeof VEC === 'undefined') return null;   // (npcStates carries it, core/05-vessels.js; the lookup below for an entry without it) const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
+    // (two boats can share a berth and so its id, flaate.json's «shared»: the one of her length; two of the same length on one berth get
+    // the first one's gear, a picture's error only. A boat that is not the register's (a trip's, the coast guard's) has none, kept so)
+    const m = /^c(-?\d+):(-?\d+)\.(\d+)\./.exec(String(n.id)), keep = g => { if (NGEAR.size > 4000) NGEAR.clear(); NGEAR.set(k, g); return g; };
+    if (!m) return keep(null);
+    const t = VEC.tiles.get(m[1] + ':' + m[2]); if (!t) return null;   // (the tile not in yet: asked again)
+    const h = t.npc && t.npc[+m[3]], b = h && h.boats && (h.boats.find(q => q.id === n.id && q.L === n.L) || h.boats.find(q => q.id === n.id));
+    return keep(b ? b.gear || null : null);
+  }
+  const GEARM = [['snurrevad', 'ship-snurrevad', 8, 99], ['not', 'ship-not', 8, 99], ['tral', 'ship-tral', 8, 99], ['teine', 'ship-teine', 7, 13], ['line', 'ship-autoline', 13, 99]];
+  function npcGearT(n){ if (!n.coast || n.player) return null; if (n._gT !== undefined) return n._gT;   // (once per boat's entry: asked several times a frame)
+    const g = npcGear(n); if (!g) return null; let r = null;
+    for (const [k, t, a, b] of GEARM) if (g === k && n.L >= a && n.L < b){ r = glbHas(t) ? t : null; break; }
+    return n._gT = r; }
+  // the summer's leisure boats (N6's traffic, steg 38; the models from N7's second part): a motor boat and a sailing boat by their type,
+  // drawn as the fleet is (the kit's list: the sailing boat's sails set at sea and furled in port, drawSail); the page has them once N6
+  // adds their lines to src/index.html
+  const LEISM = {fritid:'ship-fritid', seil:'ship-seil'};
+  const leisT = n => LEISM[n.type] && glbHas(LEISM[n.type]) ? LEISM[n.type] : null;
+  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : shipT(n) || npcGearT(n) || leisT(n) || npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
+  const NKN = {}; function npcNear(n){ if (!n.player && shipT(n)) return 500; if (npcGearT(n) || leisT(n)) return 300; const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }   // (a gear model is some 4 000 triangles: near within 300 m as the kit's own)
   const NKB = {};
   // a model's buffers by type, lod and livery (npcMesh and npcWarm)
   const spX = liv => typeof liv === 'string' && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : '';   // (a partner's design found in the list or not: steg 44, as vessel3d.js npcModel)
   function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv + spX(liv);
-    if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null; }   // (a ship's windows are in her hull: no glass drawn)
+    if (!(k in NKB)){ const G = VESSELS[t] ? null : glbLoad(t), m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, G && G.ex.anchors && G.ex.anchors.liv && typeof liv === 'number' && LIVERY[liv % LIVERY.length] ? {hull:LIVERY[liv % LIVERY.length].hull} : null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null; }   // (a ship's windows are in her hull: no glass drawn)
     return NKB[k]; }
   function npcMesh(n, lod){
-    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : n.type === 'ferry' || n.type === 'coastal' ? npcType(n) + '|' + n.L + '|' + n.B : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
+    const kk = n.id + '|' + (n.coast ? n.L + '|' : '') + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : SHIPTY[n.type] || LEISM[n.type] ? npcType(n) + '|' + n.L + '|' + n.B : n.coast ? npcGearT(n) || '' : ''); if (kk in NKM) return NKM[kk];   // (a coast boat's gear model once it is read in)   // a player's repaint is a new key (and the coast guard's other ship)
     const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
     const V = VESSELS[t] || (GLBM[t] && GLBM[t].ex) || {len:n.L, beam:n.B}, sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
@@ -294,7 +324,7 @@
   function npcWarm(eye){
     if (NWARM.busy || !ready) return; const now = performance.now(); if (!NWARM.t0) NWARM.t0 = now; if (now - NWARM.t0 < 4000) return;
     let best = null, bd = Infinity;
-    for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav || shipT(n))) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
+    for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav || shipT(n) || leisT(n))) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
       for (const [lod, r] of [[0.3, 5000], [1, 1500]]){ if (d > r || d + (lod === 1 ? 5000 : 0) >= bd) continue; const t = npcType(n);
         if (!((t + '|' + lod + '|' + (n.liv || 0)) in NKB)){ best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } } }
     if (!best) return;
@@ -428,20 +458,22 @@
         const F = npcFollow(n, t), sp = Math.hypot(F.vx, F.vz), k = clamp((sp - 1) / 2, 0, 1);   // (m/s on the screen)
         n.p = {x:F.x / 1000, y:F.z / 1000};
         if (k > 0) n.hd = n.hd + angDiff(n.hd, Math.atan2(F.vx, -F.vz)) * k;
-        heel = clamp(-F.w * sp * 0.012, -0.12, 0.12) * (n.type === 'coastal' || n.type === 'ferry' ? 0.3 : 1);
+        heel = clamp(-F.w * sp * 0.012, -0.12, 0.12) * (SHIPTY[n.type] ? 0.3 : 1);
       }
       if (!n.ptow && !(n.tur && n.st === 'tow')) n.hd = npcHead(n, t);
       // (the rocking's phase is the boat's own, from her id: it was her place in metres, so a boat under way at the game's pace, tens of
       // metres a second on the screen, pitched and rolled several times a second, a shudder; Jonas' video 03.11.2026)
-      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry' || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav || shipT(n)) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
+      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = SHIPTY[n.type] || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav || shipT(n) || leisT(n)) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
       n.rev = !!(rv && n.K);   // a double-ended ferry's model drawn the other way round (npcRev), her heel with it
       n.M = model(x - eye[0], y - eye[1], z - eye[2], -(n.hd + (n.rev ? Math.PI : 0)), big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, n.rev ? -roll : roll);
       // beyond the ship models' 1.5 km (or before they are in) a ferry, an express boat or a passenger ferry is the one ferry box (N.ferry,
       // 52 × 13 m) scaled to her own length and beam (N4, 12.11.2026: a passenger ferry of 20 m drawn 52 m long stuck 8 m into the quay);
       // her lanterns go with it (they are placed by n.M)
-      if (!n.K && n.type === 'ferry' && n.L){ const k = NPCFS.get(n.L * 100 + n.B) || (() => { const sx = n.B / 13, sz = n.L / 52, sy = clamp((sx + sz) / 2, 0.5, 1.5), S = new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1]); NPCFS.set(n.L * 100 + n.B, S); return S; })(); n.M = chain(n.M, k); }
-      if (n.K) (n.kv ? kvl : n.K.geo && n.K.geo.ship ? shl : kit).push(n); else drawLit(NPCM[n.type], n.M);
+      // (a merchant ship, N5, the same until she has a box of her own)
+      // (and a leisure boat, N6, the sjark box, 10.5 × 3.8 m, scaled to her the same way)
+      if (!n.K && (n.type === 'ferry' || (SHIPTY[n.type] && !NPCM[n.type]) || LEISM[n.type]) && n.L){ const sb = LEISM[n.type] ? [3.8, 10.5] : [13, 52], k = NPCFS.get(n.L * 100 + n.B + (LEISM[n.type] ? 0.5 : 0)) || (() => { const sx = n.B / sb[0], sz = n.L / sb[1], sy = clamp((sx + sz) / 2, 0.5, 1.5), S = new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1]); NPCFS.set(n.L * 100 + n.B + (LEISM[n.type] ? 0.5 : 0), S); return S; })(); n.M = chain(n.M, k); }
+      if (n.K) (n.kv ? kvl : n.K.geo && n.K.geo.ship ? shl : kit).push(n); else drawLit(NPCM[n.type] || (SHIPTY[n.type] ? NPCM.ferry : NPCM.sjark), n.M);
     }
     npcWarm(eye);
     if (!kit.length && !kvl.length && !shl.length) return;
@@ -468,8 +500,8 @@
   const NCREW = new Map();
   function npcCrewDraw(n, K, eye, t){
     if (typeof crewSim !== 'function' || !K.geo || K.geo.hand) return false;
-    const type = K.t; let E = NCREW.get(n.id);
-    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(n.id, E); }
+    const type = K.t, nk = n.coast ? n.id + '|' + n.L : n.id; let E = NCREW.get(nk);   // (two of the coast's boats can share an id: hers by her length too)
+    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(nk, E); }
     E.st.n = n; const gap = t - E.t; E.t = t; const sim = E.sim; if (!sim.on()) return false;
     if (gap > 5) sim._st.lastSim = null;   // out of sight a while: everyone straight to their place
     sim.tick(Math.min(0.1, Math.max(0, gap)));

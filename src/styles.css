@@ -1768,3 +1768,24 @@ body.v3d .attr{left:44px;max-width:calc(100% - 108px)}   /* (as far from the rig
    button's corner showed behind the phone's rounded corner; the phone lies over the button in every size, so it could not be tapped
    anyway, and the phone closes with its own ✕ and ‹. A child :has, so only #app's own children are looked at when «hidden» changes) */
 #app:has(> #phone:not([hidden])) #phoneFab{visibility:hidden}
+/* Kappløpet on the screen (KL2, steg 117; ui/05l-kapplop.js): the tab, the course in the chart, the clock and the card at a checkpoint */
+.ph-card.tur.lop,.ph-card.tur.lop-t{border-left-color:#7b3fae}.ph-card.tur.lop-t.surp{border-left-color:#c9971c}.ph-card.tur.lop-t.over{opacity:.72}
+.lop-c h4{margin:0 0 4px}
+.kv.lop-l span{display:flex;align-items:center;gap:8px;min-width:0}.kv.lop-l span i{flex:0 0 14px;height:14px;border-radius:50%;border:2px solid #9aa7b0;box-sizing:border-box}
+.kv.lop-l.ok span i{background:#2e7d4f;border-color:#2e7d4f}.kv.lop-l.now span i{border-color:#7b3fae;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 7px #7b3fae}.kv.lop-l.now span{font-weight:700}
+.kv.lop-l b{font-weight:600;white-space:nowrap}.lop-clock{font-size:17px;color:#5b2a85}
+.lop-b{flex-wrap:wrap}.lop-b .ph-note{flex:1 0 100%;margin:4px 0}.ph-btn.warn{background:#b8402f;border-color:#b8402f;color:#fff}
+.lop-r{margin:0;padding-left:18px}.lop-r li{margin:3px 0;font-size:13.5px;line-height:1.4}
+.lopmk{stroke:#7b3fae;stroke-linecap:round;stroke-linejoin:round;opacity:.8}.lopmk.done{opacity:.4}.lopmk.now{opacity:1}
+.lopcp{fill:#fff;stroke:#7b3fae}.lopcp.ok{fill:#7b3fae}.lopgoal{stroke:#7b3fae;stroke-linecap:round}
+.lbl-lop{fill:#5b2a85;font-weight:700;paint-order:stroke;stroke:#fff}
+#ecdisTop .ec-lop{display:none} body.lopon #ecdisTop .ec-lop{display:flex} #ecdisTop .ec-lop small{color:#d6b4f2;white-space:nowrap} #ecdisTop .ec-lop{box-shadow:inset 2px 0 0 #b07de0}
+@media (max-width:1240px){body.lopon #ecdisTop .ec-x{display:none}} @media (max-width:980px){body.lopon #ecdisTop .ec-pos{display:none}}
+#gps3d .gstrip b.glop{color:#e2c8ff}
+body.booting #lopPop{visibility:hidden!important}
+#lopPop{position:fixed;inset:0;z-index:var(--z-modal);background:rgba(4,12,20,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+#lopPop[hidden]{display:none}
+#lopPop .lp-box{background:#fbf7ee;color:#1d2a33;border-radius:16px;padding:14px 16px;width:min(440px,100%);max-height:calc(100vh - 32px);overflow:auto;box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.4);border-top:5px solid #7b3fae}
+#lopPop h4{margin:0 0 4px;font:700 17px var(--sans)} #lopPop p{margin:0 0 8px;font:14px/1.4 var(--sans)} #lopPop .lop-nx{margin-top:8px;font-size:13.5px}
+#lopPop .kv.lop-s{font-size:13px;padding:3px 0;opacity:.85}
+#lopPop .lp-b{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}

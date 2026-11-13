@@ -142,6 +142,10 @@ COVER['tests/rundshot.py'] = ['rundshot']
 COVER['src/js/core/06j-hopp.js'] = ['hopptest']; COVER['tests/hopptest.py'] = ['hopptest']
 LITE += ['kapplop']   # kappløpet Lindesnes–Nordkapp, kjernen (KL1, steg 116a); trenger hele kysten i bygget
 COVER['src/js/core/09o-kapplop.js'] = ['kapplop', 'hopptest']; COVER['src/js/core/11-route.js'] = COVER.get('src/js/core/11-route.js', []) + ['kapplop']; COVER['tests/kapplop.py'] = ['kapplop']; COVER['tests/unit/kapplop.test.mjs'] = []
+D3 += ['kapplopshot']   # kappløpet på skjermen i begge formater (KL2, steg 117): fanen, løypa i kartet, klokka, oppgavene fra skjermen; trenger hele kysten
+LONG['kapplopshot'] = 2400
+COVER['src/js/ui/05l-kapplop.js'] = ['kapplopshot']; COVER['tests/kapplopshot.py'] = ['kapplopshot']
+for _f in ('src/js/ui/05f-turer.js', 'src/js/ui/phone/02-havn-last-agn-ordre.js', 'src/js/ui/03e-miniplot.js', 'src/js/ui/04-panels-instruments.js', 'src/js/ui/06d-season-folk.js', 'src/js/ui/03-map.js', 'src/js/ui/08-actions.js', 'src/js/ui/phone/14-act.js'): COVER.setdefault(_f, []).append('kapplopshot')
 COVER['src/js/ui/10u-hopp.js'] = ['hopptest', 'hoppshot', 'fasittest']; COVER['supabase/migrations/20261112200000_hopp.sql'] = ['sqltest', 'fasittest']; COVER['tests/hoppshot.py'] = ['hoppshot']; COVER['src/js/core/06j-hopp.js'] += ['hoppshot']
 D3 += ['hoppshot']   # spoleknappen, kortet og hoppet i 3D i begge formater (HO2, steg 105)
 LONG['hoppshot'] = 2400   # (both formats, and the first frames after a hop draw every pack round the stop: minutes in SwiftShader; out on time at 900 s 12.11.2026)
@@ -264,8 +268,19 @@ COVER['src/js/core/05b-ferje.js'] = ['ferrytest', 'colregtest', 'hulltest', 'npc
 D3 += ['kystshot', 'kystshot_st']; COVER['tests/kystshot.py'] = ['kystshot', 'kystshot_st']; COVER['tests/kystshot_st.py'] = ['kystshot_st']   # (Ø15 N4: the coastal route's ship and an express boat at their quays in 3D)
 D3 += ['npcshot', 'npcshot_st']; COVER['tests/npcshot.py'] = ['npcshot', 'npcshot_st']; COVER['tests/npcshot_st.py'] = ['npcshot_st']   # (Ø15 N7: the NPC fleet's ship models in 3D)
 for _k in ('ferje34', 'ferje64', 'ferje112', 'hurtig', 'passasjer', 'kystrute'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot', 'npcshot_st']; COVER['tools/ships/%s.py' % _k] = ['npcshot']
-COVER['tools/ships/shiplib.py'] = ['npcshot']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
-for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot']))
+COVER['tools/ships/shiplib.py'] = ['npcshot', 'npcshot_fisk']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
+# (N7's second part, 13.11.2026: the coast's fishing boats by their gear; npcshot_skip.py, the merchant ships, needs a build with their
+# lines in the page and is run by hand until N5 adds them)
+LITE += ['kaiover']; VECB.append('kaiover'); COVER['tests/kaiover.py'] = ['kaiover']   # (steg 36: no quay built out over another boat's place)
+for _f in ('src/js/core/05-vessels.js', 'src/js/core/07-harbours.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['kaiover']))
+D3 += ['npcshot_fisk']; VECB.append('npcshot_fisk'); LONG['npcshot_fisk'] = 4500; COVER['tests/npcshot_fisk.py'] = ['npcshot_fisk']; COVER['tests/npcshot.py'] = COVER['tests/npcshot.py'] + ['npcshot_fisk']
+for _k in ('snurrevad', 'not', 'tral', 'teine', 'autoline'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot_fisk']
+for _k in ('snurrevad', 'notbat', 'reketral', 'teine', 'autoline', 'fisklib'): COVER['tools/ships/%s.py' % _k] = ['npcshot_fisk']
+# (the merchant ships and the leisure boats are not in the page until N5 and N6 add their lines: no test of run.py can see them, so
+# their files are in no list here. Their pictures are npcshot_skip.py's, run by hand with KYST_DIST on a build of the test's own with
+# the lines (its docstring), and their models' checks are `python3.11 tools/ships/<model>.py check`; N5 and N6 give them their tests)
+for _k in ('last', 'tank', 'cruise', 'fritid', 'seil'): COVER['src/data/ship-%s.b64' % _k] = []; COVER['tools/ships/%s.py' % _k] = []
+for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot', 'npcshot_fisk']))
 COVER['src/data/ferje.json'] += ['kystshot', 'kystshot_st']; COVER['src/js/core/05b-ferje.js'] += ['kystshot', 'kystshot_st']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
 # fin.test.mjs (unit) the reading. finshot is pictures for the eye (before and after), run by hand

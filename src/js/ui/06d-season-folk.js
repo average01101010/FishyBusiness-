@@ -35,6 +35,7 @@ const SEASONAPP = (() => {
     // the fiskarlag's week (ui/09c-pubsoc.js PUBSOC.lagCard; docs/planer/oppdrag-2.md F1)
     if (typeof PUBSOC !== 'undefined' && PUBSOC.lagCard) h.push(PUBSOC.lagCard());
     h.push(bygdeCard(H));
+    if (typeof lopSeasonCard === 'function') h.push(lopSeasonCard());   // the race this week (ui/05l-kapplop.js, KL2)
     if (e) h.push('<div class="ph-card sn-now"><small>' + L('Nå', 'Now') + '</small><h4>' + L(e.post[0][0], e.post[0][1]) + '</h4><p>' + L(e.post[1][0], e.post[1][1]) + '</p></div>');
     // the festival from a week before to three days after
     if (H > F.H0 - 24 * 7 && H < F.H1 + 24 * 3){
