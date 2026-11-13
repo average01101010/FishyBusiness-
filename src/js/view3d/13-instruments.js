@@ -613,19 +613,21 @@
   function clothStep(C, t, appW){ C.ph = (C.ph || 0) + (4 + appW * 1.1) * (C.t0 == null ? 0 : Math.min(0.5, Math.max(0, t - C.t0))); C.t0 = t; clothInto(C.pos, C.ph, appW); gl.bindBuffer(gl.ARRAY_BUFFER, C.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, C.pos); }
   function updateFlag(t, appW){ clothStep(FLAGM, t, appW); }
   // the other players' ensigns (TP1, steg 108; flagged by Jonas 12.11.2026, V1 A: what is sold is seen by the others): on the six nearest
-  // player boats within 250 m whose glass is in, as the names (drawNPCNames), at her ensign's pole while her flag's hours are where she
+  // player boats within 250 m (the names, drawNPCNames, only where her glass is in), at her ensign's pole while her flag's hours are where she
   // is (core/03-simulation.js flagUp, asked once a game minute). Her flag from her paint code (vessel3d.js livFlag): the one she bought,
   // her house flag with her logo (made, or her picture by her id, ui/10h-world.js peerLogo; Norway until the picture is in, as on the own
   // boat), else Norway in a rectangle. The pictures in a pool by flag, shape and logo (at most 8, the oldest let go, as the logos), and
   // each boat's cloth its own, waved once a frame in the apparent wind of her course and speed. No flag on the local fleet in this step.
   // PFLAG counts for the tests (G3._debug.peerFlags)
-  const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0};
+  const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0, near:0, out:0};
   const lruDrop = (M, max, del) => { if (M.size < max) return; let old = null; for (const [kk, v] of M) if (!old || v.used < old[1].used) old = [kk, v]; del(old[1]); M.delete(old[0]); };
   let PFCV = null, PFLC = null;
   const VIMPEL = new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);   // (the pennant's stretch, as the own boat's in 24-cinema.js)
+  const PFP = new Map();   // (her code read once: the flag and the logo, by the code)
   function peerFlagTex(n){
-    const f = livFlag(n.liv); let L = null, img = null, lk = '';
-    if (f.code === 'LOGO'){ L = logoParse(n.liv); img = L && L.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), L.ver) : null;
+    let q = PFP.get(n.liv); if (!q){ if (PFP.size > 64) PFP.clear(); const f0 = livFlag(n.liv); q = {f0, L:f0.code === 'LOGO' ? logoParse(n.liv) : null}; PFP.set(n.liv, q); }
+    const f = Object.assign({}, q.f0); let L = null, img = null, lk = '';
+    if (f.code === 'LOGO'){ L = q.L; img = L && L.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), L.ver) : null;
       if (L && (L.kind !== 'u' || (img && img.complete && img.naturalWidth))) lk = L.kind === 'u' ? 'u:' + n.id + '.' + L.ver : logoStr(L); else f.code = 'NO'; }
     const k = f.code + '|' + f.shape + '|' + lk; let e = PFT.get(k);
     if (!e){ lruDrop(PFT, 8, v => gl.deleteTexture(v.tex));
@@ -635,20 +637,24 @@
     e.used = performance.now(); return {tex:e.tex, shape:f.shape, k};
   }
   function drawPeerFlags(kit, VP, t, H){
-    PFLAG.drawn = 0; PFLAG.codes = []; if (!FLAGM) return;
-    const near = []; for (const n of kit){ if (!n.player || !n.K || !n.K.glass) continue; const d = Math.hypot(n.M[12], n.M[14]); if (d < 250) near.push([d, n]); }
-    if (!near.length) return; near.sort((a, b) => a[0] - b[0]); gl.disableVertexAttribArray(2); const now = performance.now(), mn = Math.floor(S.t);
+    PFLAG.drawn = PFLAG.near = PFLAG.out = 0; PFLAG.codes = []; if (!FLAGM) return;
+    // (any level of her model: the glass, and so the names, comes only within the near level's 150 m for a detailed model, npcNear)
+    const near = []; for (const n of kit){ if (!n.player || !n.K) continue; const d = Math.hypot(n.M[12], n.M[14]); if (d < 250) near.push([d, n]); }
+    if (!near.length) return; near.sort((a, b) => a[0] - b[0]); gl.disableVertexAttribArray(2); const now = performance.now(), mn = Math.floor(S.t); PFLAG.near = Math.min(6, near.length);
     for (const [, n] of near.slice(0, 6)){
       const G = GEO(n.K.t), pole = G && G.pole; if (!pole) continue;
       let C = PFC.get(n.id);
       if (!C){ lruDrop(PFC, 8, v => gl.deleteBuffer(v.pb));
         C = {pos:new Float32Array(FW * FH * 18), pb:buf(new Float32Array(FW * FH * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), mn:null, up:false}; PFC.set(n.id, C); }
       C.used = now; if (C.mn !== mn){ C.mn = mn; C.up = flagUp(S.t / 60, n.p); } if (!C.up) continue;
+      // not waved or drawn when her pole is out of the picture (behind the camera or well off its sides)
+      const P = xf(chain(n.M, n.K.S), pole), cw = VP[3] * P[0] + VP[7] * P[1] + VP[11] * P[2] + VP[15];
+      if (cw <= 0.1 || Math.abs((VP[0] * P[0] + VP[4] * P[1] + VP[8] * P[2] + VP[12]) / cw) > 1.3 || Math.abs((VP[1] * P[0] + VP[5] * P[1] + VP[9] * P[2] + VP[13]) / cw) > 1.3){ PFLAG.out++; continue; }
       // the apparent wind where she is, against her course and speed (as the own boat's, 24-cinema.js)
       const p = n.p, wdir = (windDir(H, p) - gridGamma(p) + 180) * DEG, wv = env.wind || windAt(H, p), bms = (n.v || 0) * 0.514 * 2;
       const ax = Math.sin(wdir) * wv - Math.sin(n.hd) * bms, az = -Math.cos(wdir) * wv + Math.cos(n.hd) * bms;
       clothStep(C, t, Math.hypot(ax, az));
-      const fl = peerFlagTex(n), P = xf(chain(n.M, n.K.S), pole), FM = model(P[0], P[1], P[2], Math.PI / 2 - Math.atan2(ax, -az), 0, 0);
+      const fl = peerFlagTex(n), FM = model(P[0], P[1], P[2], Math.PI / 2 - Math.atan2(ax, -az), 0, 0);
       drawTexQuad({pb:C.pb, ub:FLAGM.ub, n:FLAGM.n}, fl.tex, fl.shape === 'vimpel' ? chain(FM, VIMPEL) : FM, VP, true, [0, 0.6, 0]);
       PFLAG.drawn++; PFLAG.codes.push(fl.k);
     }

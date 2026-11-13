@@ -47,16 +47,19 @@ async def main():
         await pg.wait_for_function("G3.isActive()", timeout=90000)
         await pg.evaluate("""(() => { WX_FORCE = {w:7, d:250}; S.t = Math.floor(S.t / 1440) * 1440 + 360; S.mult = 0; const b = S.boat; b.status = 'idle'; b.port = null; b.v = 0; PEERS.length = 0;
           const h = b.heading, add = (id, ax, r, liv) => PEERS.push({id, boat:'Fjordbris', vtype:'sjark', x:b.pos.x + Math.cos(h + ax) * r, y:b.pos.y + Math.sin(h + ax) * r, hd:h + 1.4, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv});
-          add('tp1aaaaaaa', 1.25, 0.022, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 1.75, 0.03, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', -1.6, 0.03, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit');
+          add('tp1aaaaaaa', 1.25, 0.022, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 1.75, 0.03, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', -1.6, 0.03, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit'); add('tp1ddddddd', 3.0, 0.2, 'h:hvit;f:DK.splitt;m:F.7.H');
           const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.12; c.yaw = 1.5; })()""")
         pf = {}
         for _ in range(30):
             await pg.wait_for_timeout(2000); pf = await pg.evaluate("(G3._debug.peerFlags || null)")
-            if not pf or pf.get('drawn') == 3: break   # (a build without the counters, from before the step, has nothing to wait for)
+            if not pf or (pf.get('drawn') == 3 and pf.get('near') == 4): break   # (a build without the counters, from before the step, has nothing to wait for)
         pf = pf or {}
         codes = sorted(pf.get('codes') or [])
         check(pf.get('drawn') == 3 and codes == ['LOGO|rekt|g.anker.JH.marine.hvit', 'NO|rekt|', 'SE|vimpel|'],
               'de andre spillernes flagg tegnes: det kjøpte (svensk vimpel), rederiflagget med logoen, og Norge i rektangel uten kjøp', pf)
+        # the fourth 200 m off (past the near level's 150 m, where her glass and name are not drawn): her flag is still one of those
+        # within 250 m, drawn or left out only because it is out of the picture
+        check(pf.get('near') == 4 and pf.get('drawn', 0) + pf.get('out', 0) == 4, 'en båt 200 m unna er også med (innen 250 m, ikke bare der glasset er lastet)', pf)
         mk = await pg.evaluate("""(() => ({keys:Object.keys(NPCMOD).filter(k => /^sjark\\|/.test(k)), bufs:G3._debug.npcBufs || null}))()""")
         kob = [k for k in mk['keys'] if 'h:kobolt' in k]
         check(mk['bufs'] and kob and not any(x in k for k in mk['keys'] for x in ('m:', 'f:', 'l:')) and len(kob) == len(set(k.split('|')[1] for k in kob)),
@@ -73,18 +76,19 @@ async def main():
         await pg.wait_for_timeout(6000)
         rows = []
         for mode in ('ulik', 'lik'):
-            g0 = await pg.evaluate("Object.assign({}, window.__glc)")
+            g0 = await pg.evaluate("Object.assign({}, window.__glc)"); nb0 = await pg.evaluate("G3._debug.npcBufs || null")
             await pg.evaluate(STAND + "(%s)" % json.dumps([mode, 20, False]))
             await pg.wait_for_timeout(10000)
             ms = await pg.evaluate(FRAMES)
             g1 = await pg.evaluate("Object.assign({}, window.__glc)")
             nb = await pg.evaluate("G3._debug.npcBufs || null")
             r = {'maling': mode, 'MB_til_GPU': round((g1['bytes'] - g0['bytes']) / 1048576, 2), 'buffere_laget': g1['made'] - g0['made'], 'buffere_slettet': g1['del'] - g0['del'], 'ms': ms,
-                 'malte_modeller': nb and nb.get('models'), 'npcBufs_MB': nb and nb.get('mb')}
+                 'malte_modeller_laget': nb and nb['made'] - nb0['made'], 'malte_i_live': nb and nb.get('models'), 'malte_MB_sendt': nb and round((nb['up'] - nb0['up']) / 1048576, 2)}
             rows.append(r); print('MÅLT', json.dumps(r, ensure_ascii=False))
             await pg.evaluate("PEERS.length = 0"); await pg.wait_for_timeout(2000)
         if mk['bufs']:
-            check(rows[1]['MB_til_GPU'] < rows[0]['MB_til_GPU'] / 4, '20 båter med lik maling og ulikt merke sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør', rows)
+            check(rows[1]['MB_til_GPU'] < rows[0]['MB_til_GPU'] / 4 and rows[1]['malte_modeller_laget'] <= 2 and rows[0]['malte_modeller_laget'] >= 20,
+                  '20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør', rows)
             # the cap: past it, a painted model not in use is let go with its buffers (the stand-ins gone 20 s, then 13 new paints)
             cp = await pg.evaluate("""(async () => { const B = G3._debug.npcBufs, n0 = B.models, d0 = B.dropped; await new Promise(r => setTimeout(r, 21000));
               const pal = HULLPAL.map(e => e[0]).filter(k => k !== 'orig' && palRGB(k)), b = S.boat; PEERS.length = 0;

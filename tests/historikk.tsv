@@ -3740,3 +3740,13 @@
 2026-11-13 09:31	plan/2026-11-13-117	0fb5ab8f	trip2	OK	35	lite	samtidig	
 2026-11-13 09:32	plan/2026-11-13-117	0fb5ab8f	docktest	OK	60	lite	samtidig	
 2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	merketest	OK	23	lite	samtidig	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	fartstidtest	OK	23	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	trip2	OK	49	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	fasittest	OK	53	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	docktest	OK	73	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	vesseltest	OK	27	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	maletest	OK	29	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	regmarktest	OK	10	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	maletest	OK	18	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	regmarktest	OK	8	lite	samtidig	

@@ -652,8 +652,11 @@ function livStr(b){
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
-  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') && !(W && spPaintLogo(W)) ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
   if (W) out.push('x:' + W.id);
+  // the company's logo (all its boats), also under a partner's design with a mark of its own: the others draw the design's mark on her
+  // hull (view3d/13-instruments.js drawNPCNames) and her logo in her house flag (drawPeerFlags, TP1). After 'x:', so a code cut at 160
+  // loses the logo before the design
+  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);
   return out.join(';');
 }
 // another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)
