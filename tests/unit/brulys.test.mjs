@@ -9,7 +9,7 @@ export default function (t){
   const BR = [[0, 377, 'Puddefjordsbroen', 'yes', 217631, 1316408, 217372, 1316681], [0, 376, 'Puddefjordsbroen', 'yes', 217383, 1316690, 217641, 1316416]];
   const ON = [[217.4846, 1316.592, 'm', ''], [217.4765, 1316.6008, 'm', ''], [217.4714, 1316.6076, 'm', ''], [217.4508, 1316.5891, 'm', ''], [217.4573, 1316.5816, 'm', ''], [217.4641, 1316.5741, 'm', '']];
   // a lateral beacon on the deck's edge, a buoy under the bridge, a minor light 12 m off the deck, a lighthouse on it
-  const BEACON = [217.5, 1316.555, 'L', 'port'], BUOY = [217.468, 1316.588, 'B', 'port'], OFF = [217.4895, 1316.5331, 'm', ''], FYR = [217.5, 1316.555, 'M', ''];
+  const BEACON = [217.5, 1316.555, 'L', 'port'], BUOY = [217.43, 1316.60, 'B', 'port'], OFF = [217.4895, 1316.5331, 'm', ''], FYR = [217.5, 1316.555, 'M', ''];
   // the off one: how far from the nearer deck's middle line (m)
   const segD = (x, z, b) => { const ax = b[4], az = b[5], dx = b[6] - ax, dz = b[7] - az, u = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))); return Math.hypot(x - ax - dx * u, z - az - dz * u); };
   const dOff = Math.min(...BR.map(b => segD(OFF[0] * 1000, OFF[1] * 1000, b)));
@@ -31,5 +31,16 @@ export default function (t){
     const d = K.bridgeDeckAt(ON[1][0], ON[1][1]);
     t.ok(d && d.B.br[2] === 'Puddefjordsbroen' && d.under > 5, `bridgeDeckAt finner dekket over det hvite lyset (undersiden ${d && d.under.toFixed(1)} m over sjøen)`);
     t.eq(K.bridgeDeckAt(OFF[0], OFF[1]), null, 'bridgeDeckAt: ingen bru ved lyset 12 m utenfor');
+    // 3. the way under twin bridges (obsWays): the two decks have their piers every 70 m from opposite ends, so a gap in one faced a pier
+    // of the other and 7 of the 9 ways under it were not clear; with the other's piers counted, 7 are. The leg is Autonav's last one to Bergen verft
+    // (leiaRoute in the build, 13.11.2026), which ran at a pier of the 376 m deck; the ways through the gaps beside that pier (all their
+    // points within 120 m of it), not those far along the bridge, which end on land
+    const keepL = K.get('isLand'); K.set('isLand', () => false);   // (Node has no map: water everywhere)
+    try {
+      const a = {x:217.413, y:1316.538}, b = {x:217.672, y:1316.737}, hit = K.obsSegHit(a, b), pr = hit || {x:0, z:0, s:0};
+      const ways = hit ? K.obsWays(hit, a, b) : [], near = w => w.every(p => Math.hypot(p.x * 1000 - pr.x, p.y * 1000 - pr.z) < 120), clear = ways.filter(w => near(w) && w.every((p, i) => i === 0 || K.obsClear(w[i - 1], p)));
+      t.ok(!!hit && !!hit.B && hit.t === 0, `Autonavs etappe til verftet treffer en pilar (${hit && hit.B ? hit.B.br[1] + ' m-dekket, s = ' + hit.s.toFixed(0) + ' m' : 'ingenting'})`);
+      t.ok(clear.length > 0 && clear.length >= ways.filter(near).length - 2, `obsWays: veiene under brua ved pilaren (alle punktene innen 120 m) er fri for pilarene til begge dekkene, høyst to er stengt (${clear.length} av ${ways.filter(near).length} fri; uten det andre dekkets pilarer var 2 av 9 fri)`);
+    } finally { K.set('isLand', keepL); }
   } finally { K.set('mapReadyAt', ready); VEC.tiles.delete('4:26'); VEC.ver++; MARKS.tiles.delete('4:26'); MARKS.ver++; }
 }

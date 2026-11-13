@@ -165,7 +165,16 @@ function obsWays(o, a, b){
     let s0 = null; const cut = [];
     for (const d of B.deck){ if (d.under >= air){ if (s0 === null) s0 = d.s0; } else if (s0 !== null){ cut.push([s0, d.s0]); s0 = null; } }
     if (s0 !== null) cut.push([s0, B.tot]);
-    for (const [c0, c1] of cut){ let p = c0; const ps = B.piers.filter(q => q.s > c0 && q.s < c1).map(q => q.s).sort((x, y) => x - y);
+    // and the piers of a bridge beside it, put onto this one's length: a road's two carriageways are often two bridges side by side,
+    // each with its piers every 70 m from its own end (bridgeInto), so the middle of a gap in one stood behind a pier of the other, and
+    // the way under was never clear (Puddefjordsbroen in Bergen, 13 m apart: Autonav sailed on straight at a pier and a light,
+    // tilbakemelding #6 fra testutgaven)
+    const side = [], idx = obsIndex(), C = HIND.C, ox = o.t === 2 ? (o.ax + o.bx) / 2 : o.x, oz = o.t === 2 ? (o.az + o.bz) / 2 : o.z, seen = new Set();
+    for (let i = Math.floor(ox / C) - 1; i <= Math.floor(ox / C) + 1; i++) for (let j = Math.floor(oz / C) - 1; j <= Math.floor(oz / C) + 1; j++) for (const q of idx.get(i * 1048576 + j) || []){
+      if (q.t !== 0 || !q.B || q.B === B || seen.has(q)) continue; seen.add(q); let bd = Infinity, bs = 0, bp = 0;
+      for (const d of B.deck){ const L = Math.hypot(d.bx - d.ax, d.bz - d.az) || 1, u = clamp(((q.x - d.ax) * d.ux + (q.z - d.az) * d.uz) / L, 0, 1), dd = Math.hypot(q.x - d.ax - (d.bx - d.ax) * u, q.z - d.az - (d.bz - d.az) * u); if (dd < bd){ bd = dd; bs = d.s0 + (d.s1 - d.s0) * u; bp = Math.abs(q.ux * d.ux + q.uz * d.uz); } }
+      if (bd < 30 && bp > 0.94) side.push(bs); }   // (alongside: within 30 m of it and no more than 20° off its line)
+    for (const [c0, c1] of cut){ let p = c0; const ps = B.piers.map(q => q.s).concat(side).filter(s => s > c0 && s < c1).sort((x, y) => x - y);
       for (const s of ps.concat([c1])){ const e0 = p + (p === c0 ? need : 1.5 + need), e1 = s - (s === c1 ? need : 1.5 + need); if (e1 > e0) gaps.push((e0 + e1) / 2); p = s; } }
     const lx = bx - ax, lz = bz - az, LL = Math.hypot(lx, lz) || 1;
     for (const s of gaps){
