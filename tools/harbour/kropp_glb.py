@@ -8,13 +8,16 @@ A GLB (glTF 2.0) in the game's frame (x to the person's right, y up, z back: the
   - skinned parts (the skin, the jackets, the sleeves, the trouser legs, the boots and shoes, the vests): POSITION float32 in the
     rest pose, NORMAL int8, COLOR_0 uint8 (rgb with the baked shade, a = gloss), _PAINT uint8 (zone, shade), JOINTS_0 uint8 x 4,
     WEIGHTS_0 uint8 x 4 normalised. The node carries 'skin'.
-  - rigid parts (the hair, the beards, the hats on the head; the hands in their grips on the wrists): as in worker.b64 (POSITION int16
-    with the node's translation and scale, KHR_mesh_quantization), the node a child of its bone's node. A hand's node also has the
-    rotation that lays the hand's own frame (the fingers along +z, the palm +y) on the wrist in the rest pose.
+  - rigid parts (the hair, the beards, the hats): as in worker.b64 (POSITION int16 with the node's translation and scale,
+    KHR_mesh_quantization), the node a child of the head's node. The nodes carry the man's rest pose: for the woman the skeleton
+    is built from extras.rest.f, and the head parts are placed from rest.f.head (the two skulls differ by millimetres seen from
+    their own joints: 3.5 mm in the median, 10.7 mm at most, measured by the control 13.11.2026).
   - a few parts are pieces of another part's vertices (the same accessors with a range of the indices): 'head' and 'handbare' of
-    'body', 'headF' and 'handbareF' of 'bodyF', 'hand' of 'hR_relax'.
-scenes[0].extras: bones, rest (per sex), parts (per part: skinned or the bone, the sex, the triangles), cover (the skin's index
-ranges per group, for hiding it under what is worn), hands, vest, vestHair."""
+    'body', 'headF' and 'handbareF' of 'bodyF'; the hands in their grips ('hR_<grip>', 'hL_<grip>', 'hand', 'hand_lo') of 'glove',
+    'hRF' and 'hLF' of 'gloveF'. A grip is the same hand with its fingers turned (extras.grips), not another mesh.
+scenes[0].extras: bones, parents, rest (per sex), parts (per part: skinned or the bone, the sex, the triangles; 'glove' and 'gloveF'
+also 'sides': the index ranges of the right and the left glove), cover (the skin's index ranges per group, for hiding it under what
+is worn), zones, grips, limits, twist, vest, vestHair, spread, source."""
 import json, struct, base64, math
 import numpy as np
 

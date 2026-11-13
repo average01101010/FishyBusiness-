@@ -463,8 +463,10 @@ def weights(J, pts, top=4, cls='body'):
     wb, db = chain(back, [0, S['spine'], S['spine'], S['spine'], S['neck'], S['head']], tails(J)['head'])
     for i, n in enumerate(back): W[:, BI[n]] = wb[:, i]
     # (the face is the head's, whole: the jaw and the mouth lie level with the head's joint, where the neck hands over)
-    hj = A('head'); fm = _ss(p[:, 1], hj[1] + 0.020, hj[1] + 0.045) * _ss(p[:, 2], hj[2] - 0.050, hj[2] - 0.025)
-    W[:, BI['head']] += fm * W[:, BI['neck']]; W[:, BI['neck']] *= 1 - fm
+    hj = A('head'); fm = _ss(p[:, 1], hj[1] + 0.010, hj[1] + 0.050) * _ss(p[:, 2], hj[2] - 0.080, hj[2] - 0.025)
+    if cls == 'body': W[:, BI['head']] += fm * W[:, BI['neck']]; W[:, BI['neck']] *= 1 - fm
+    else:          # (a collar stands on the chest: it never turns with the head, and only a third as far as the neck)
+        up = W[:, BI['neck']] + W[:, BI['head']]; W[:, BI['head']] = 0.0; W[:, BI['neck']] = 0.35 * up; W[:, BI['spine3']] += 0.65 * up
     for sd, sg in (('R', 1), ('L', -1)):
         # the arm, from the collar bone out
         names = ['clav_' + sd, 'uarm_' + sd, 'utw_' + sd, 'farm_' + sd, 'ftw_' + sd, 'hand_' + sd]
@@ -534,7 +536,10 @@ def weights(J, pts, top=4, cls='body'):
         uk = _ss(z, kn[2] + S['knee'], kn[2] - S['knee']); ua = _ss(z, an[2] + S['ankle'] + 0.03, an[2] - S['ankle'] + 0.05)
         ut = _ss(p[:, 1], to[1] - S['toe'], to[1] + S['toe']) * _ss(z, 0.12, 0.07)
         w[:, 0] = (1 - uk) * (1 - utw); w[:, 1] = (1 - uk) * utw; w[:, 2] = uk * (1 - ua); w[:, 3] = ua * (1 - ut); w[:, 4] = ua * ut
-        kl = _ss(z, hp[2] + S['hip'] * 0.55, hp[2] - S['hip']) * _ss(sg * x, -0.030, 0.030)
+        # (the two legs share the cloth and the skin only in the crotch: below it each leg is its own to the middle line, or a
+        # stride pulls the inside of one trouser leg along with the other leg. A coat's skirt is one piece and keeps the wide share.)
+        lw_ = 0.100 if cls == 'torso' else 0.004 + 0.026 * _ss(z, hp[2] - 0.255, hp[2] - 0.185)
+        kl = _ss(z, hp[2] + S['hip'] * 0.55, hp[2] - S['hip']) * _ss(sg * x / lw_, -1.0, 1.0)
         lw[sd] = (names, w, kl)
     kt = lw['R'][2] + lw['L'][2]; kt = np.clip(kt, 0, 1)
     arms_w = W.copy(); arms_w[:, [BI[n] for n in back]] = 0.0; ak = arms_w.sum(1)       # (what the arms hold stays theirs: a hand at the thigh)
@@ -546,6 +551,55 @@ def weights(J, pts, top=4, cls='body'):
     W = np.maximum(W, 0); W /= W.sum(1, keepdims=True)
     idx = np.argsort(-W, 1)[:, :top]; w = np.take_along_axis(W, idx, 1); w /= w.sum(1, keepdims=True)
     return idx, w
+
+
+def relax_rim(pos, tri, idx, w, rim=None, share=0.6, it=24, rings=1):
+    """the weights round an armhole, evened out over the mesh. The armhole's rim is the sleeve's first ring and the jacket's edge
+    (the same places): by place alone the rim went with the arm and the cloth beside it with the chest, so an arm swung forward
+    pulled one row of edges out to three times their length. Now the rim holds a share of what the arm had there (the rest goes to
+    the back's bones), and the ring of vertices beside it settles between the rim and what lies beyond, in the sleeve and in the
+    jacket alike. For a sleeve (rim None) the rim is its top open loop on each side; for a jacket, rim is what the sleeve's call
+    returned, and the jacket's vertices at those places take those weights. Returns (idx, w, (the rim's places, their weights))."""
+    from scipy.spatial import cKDTree
+    pos = np.asarray(pos, float); tri = np.asarray(tri).reshape(-1, 3); key = {}; rep = np.zeros(len(pos), int)
+    for i, q in enumerate(np.round(pos, 5)): rep[i] = key.setdefault(tuple(q), len(key))
+    n = len(key); t = rep[tri]; e = np.concatenate([t[:, [0, 1]], t[:, [1, 2]], t[:, [2, 0]]]); e = e[e[:, 0] != e[:, 1]]
+    ue, cnt = np.unique(np.sort(e, 1), axis=0, return_counts=True); P = np.zeros((n, 3)); P[rep] = pos
+    adj = [[] for _ in range(n)]
+    for a_, b_ in ue: adj[a_].append(b_); adj[b_].append(a_)
+    W = np.zeros((n, len(BONES))); cnt_ = np.zeros(n)
+    for k in range(idx.shape[1]): np.add.at(W, (rep, idx[:, k]), w[:, k])
+    np.add.at(cnt_, rep, 1.0); W /= np.maximum(cnt_, 1)[:, None]
+    if rim is None:
+        b = ue[cnt == 1]; comp = np.arange(n)
+        def find(i):
+            while comp[i] != i: comp[i] = comp[comp[i]]; i = comp[i]
+            return i
+        for a_, b_ in b: comp[find(a_)] = find(b_)
+        loops = {}
+        for i in np.unique(b.ravel()): loops.setdefault(find(i), []).append(i)
+        ids = []
+        for sg in (1, -1):
+            cand = [l for l in loops.values() if P[l][:, 0].mean() * sg > 0]
+            if cand: ids += max(cand, key=lambda l: P[l][:, 2].mean())
+        ids = np.array(ids, int); back = [BI[x] for x in ('hips', 'spine1', 'spine2', 'spine3', 'neck', 'head', 'clav_R', 'clav_L')]; arm = np.ones(len(BONES), bool); arm[back] = False
+        R_ = W[ids].copy(); gone = R_[:, arm].sum(1) * (1 - share); R_[:, arm] *= share; bs = R_[:, back].sum(1)
+        for k, i in enumerate(ids):
+            if bs[k] > 1e-6: R_[k, back] *= 1 + gone[k] / bs[k]
+            else: R_[k, BI['spine3']] += gone[k]
+        W[ids] = R_
+    else:
+        d, j = cKDTree(rim[0]).query(P); ids = np.where(d < 1e-3)[0]; W[ids] = rim[1][j[ids]]
+    fixed = np.zeros(n, bool); fixed[ids] = True; free = set(); edge = set(int(i) for i in ids)
+    for _ in range(rings):
+        edge = {j for i in edge for j in adj[i] if not fixed[j] and j not in free}; free |= edge
+    free = sorted(free)
+    for _ in range(it):
+        new = W.copy()
+        for i in free: new[i] = W[adj[i]].mean(0)
+        W = new
+    Wv = W[rep]; i2 = np.argsort(-Wv, 1)[:, :idx.shape[1]]; w2 = np.take_along_axis(Wv, i2, 1)
+    return i2, w2 / w2.sum(1, keepdims=True), (P[ids].copy(), W[ids].copy())
 
 
 def finger_weights(sex):
@@ -581,7 +635,7 @@ def finger_weights(sex):
     # the web between two fingers and the fingers' roots beside it: the shares are evened out over the mesh's own neighbours, so no
     # edge runs from a vertex wholly the hand's to one wholly a finger's
     sh = np.array(sh); nh = len(F['hand']); at = {int(i): k for k, i in enumerate(F['hand'])}
-    for _ in range(3):
+    for _ in range(5):
         new = sh.copy()
         for half in (0, nh):
             for i in F['hand']:
@@ -655,7 +709,16 @@ def POSES(J):
     for sd in 'RL': b['thigh_' + sd] = rot(X, -34 - 4); b['shin_' + sd] = rot(X, 8)
     P['bøyd over rekka'] = (_arms(J, b, out=10, fwd=58, el=20), (0, -0.06, -0.02))
     v = {'spine1': rot(Z, 14), 'spine2': rot(Z, 16), 'spine3': rot(Z, 16), 'neck': rot(Z, 14), 'head': rot(Z, 16)}
-    P['vridd'] = (_arms(J, v, out=12, fwd=20, el=40), (0, 0, 0))
+    # (the arms turn with the chest: set as seen from the body and not from the world, or the arm on the side the chest turns
+    # away from is left behind and goes through the jacket's side; Jonas 13.11.2026: «Clipper den ene armen gjennom siden på jakken?»)
+    va = _arms(J, {}, out=16, fwd=20, el=40); va.update(v); P['vridd'] = (va, (0, 0, 0))
+    # the weights' own poses (the control of 13.11.2026: what the six above never ask of the weights): a stride with the legs
+    # apart fore and aft, the head turned as far as the neck lets it, the arms straight forward
+    g = {}
+    g['thigh_R'] = rot(X, -32); g['shin_R'] = rot(X, 12); g['thigh_L'] = rot(X, 22); g['shin_L'] = rot(X, 30)
+    P['gange'] = (_arms(J, g, out=10, fwd=0, el=20), (0, 0, -0.04))
+    P['hodevri'] = (_arms(J, {'neck': rot(Z, 35), 'head': rot(Z, 40)}, out=13, el=14), (0, 0, 0))
+    P['arm frem'] = (_arms(J, {}, out=6, fwd=90, el=4), (0, 0, 0))
     return P
 
 
@@ -683,6 +746,20 @@ def grip_turns(sex, grip, J=None):
                 u = pts[k + 1] - pts[k]; ax = np.cross(u, n); L['%s%d_%s' % (fn, k + 1, sd)] = rot(ax, ang)
         pts = [np.array(J['thumb%d_%s' % (k, sd)], float) for k in (1, 2, 3)] + [np.array(tails(J)['thumb3_%s' % sd], float)]
         goal = np.array(J['middle1_' + sd], float) + n * 0.035 - pts[1]          # the thumb swings across the palm, toward in front of the middle finger's knuckle
+        if grip in ('pinch', 'grip'):
+            # the thumb's two outer joints curl, and the first joint turns the curled thumb to point where it shall lie (within the
+            # joint's reach). Pinch: the thumb's pad meets the index finger's tip as the grip holds it. Grip: the thumb lies over
+            # the outside of the index finger's last joint, round the shaft the fingers close on, and not through it.
+            for k in (1, 2):
+                u = pts[k + 1] - pts[k]; L['thumb%d_%s' % (k + 1, sd)] = rot(np.cross(u, goal), G['t'][k])
+            M, Jp = pose_mats(J, {k_: v_ for k_, v_ in L.items() if k_.endswith(sd)})
+            at = lambda fn: (M[BI['%s3_%s' % (fn, sd)]] @ np.append(np.array(tails(J)['%s3_%s' % (fn, sd)], float), 1))[:3]
+            if grip == 'pinch': to = at('index')
+            else:
+                c_ = circle3(Jp['middle2_' + sd], Jp['middle3_' + sd], at('middle')); i3 = Jp['index3_' + sd]; r_ = np.linalg.norm(i3 - c_); to = c_ + (i3 - c_) / r_ * (r_ + 0.018)
+            a_ = at('thumb') - pts[0]; b_ = to - pts[0]; a_ /= np.linalg.norm(a_); b_ /= np.linalg.norm(b_)
+            ang = math.degrees(math.acos(float(np.clip(a_ @ b_, -1, 1)))); L['thumb1_' + sd] = rot(np.cross(a_, b_), min(ang, 60.0))
+            continue
         u = pts[1] - pts[0]; L['thumb1_' + sd] = rot(np.cross(u, goal), G['t'][0])
         for k in (1, 2):
             u = pts[k + 1] - pts[k]; L['thumb%d_%s' % (k + 1, sd)] = rot(np.cross(u, goal), G['t'][k])
@@ -701,7 +778,8 @@ def grip_point(sex, grip, sd):
     J = joints(sex); F = fingers(sex); sg = 1 if sd == 'R' else -1; mir = np.array([sg, 1, 1.0]); L = grip_turns(sex, grip, J); M, Jp = pose_mats(J, L)
     tip = lambda fn: (M[BI['%s3_%s' % (fn, sd)]] @ np.append(np.array(tails(J)['%s3_%s' % (fn, sd)], float), 1))[:3]
     w = np.array(J['hand_' + sd], float); n = F['n'] * mir; d = F['d'] * mir; side = F['side'] * mir; m = [Jp['middle%d_%s' % (k, sd)] for k in (1, 2, 3)] + [tip('middle')]
-    if grip in ('grip', 'hook'): at = circle3(m[1], m[2], m[3]); ax = side
+    if grip == 'grip': at = circle3(m[0], m[2], m[3]); ax = side          # (the ring the hand closes: the knuckle, the last joint and the fingertip)
+    elif grip == 'hook': at = circle3(m[1], m[2], m[3]); ax = side
     elif grip == 'hold': at = (m[1] + m[3]) / 2 + n * 0.012; ax = side
     elif grip == 'pinch': at = (tip('index') + tip('thumb')) / 2; ax = d
     elif grip == 'flat': at = w + d * 0.085 + n * 0.014; ax = d
@@ -721,6 +799,7 @@ LIMITS = {
 
 
 CHECK_POSES = ['stå', 'armene opp', 'dyp knebøy', 'sittende', 'bøyd over rekka', 'vridd']
+WEIGHT_POSES = ['gange', 'hodevri', 'arm frem']          # measured for stretch only
 
 
 if __name__ == '__main__':

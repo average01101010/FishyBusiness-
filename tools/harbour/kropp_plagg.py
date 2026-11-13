@@ -1,12 +1,9 @@
-"""The garments on the new body (FB5, steg 122): the jackets with their trouser tops, the sleeves and the trouser legs, built as
-structured meshes round the body of kropp.py, and the parts kept from arbeider.py, garderobe.py and hender.py (the hair, the beards,
-the hats, the boots and shoes, the hands in their grips, the vests) moved onto it. Used by kropp_bygg.py.
+"""The garments on the new body (FB5, steg 122): the jackets with their trouser tops, the sleeves and the trouser legs, the boots
+and shoes and the life vests, built as structured meshes round the body of kropp.py. Nothing is taken from arbeider.py, garderobe.py
+or hender.py (Jonas 13.11.2026). The hair, the beards and the hats are kropp_hode.py's; the gloves are made of the body's own hands
+in kropp_bygg.py. Used by kropp_bygg.py.
 
-How a garment gets the body's forms: it is built again on the body in each form with the same vertices in the same order, and the
-form is the difference (so cloth hangs from a belly as cloth does, not as skin). What is kept from the old scripts takes the form of
-the skin under it (Body.field), or simply follows its bone.
-
-Every builder takes a Ctx (a body in one form) and returns the same mesh topology whatever the form."""
+Every builder takes a Ctx (a body) and returns a Mesh."""
 import math
 import numpy as np
 from mathutils import Vector
@@ -443,6 +440,7 @@ def vest(c, hit):
         for dx in (-0.012, 0.0, 0.012):
             h = hit(hp + np.array([dx, 0, 0]), d)
             if h is not None: r = max(r, float((h - hp) @ d))
+        if d[2] < -1e-6: r = min(r or 0.12, 0.085 / -d[2])          # (never below the trousers' crotch: between the legs the outermost thing a ray meets is a trouser leg far down)
         p = hp + d * ((r or 0.12) + GAP + 0.009); strap.append([M.add(p + np.array([-0.0125, 0, 0])), M.add(p + np.array([0.0125, 0, 0]))])
     M.grid(strap, 'belt', hp, closed=False)
     return M

@@ -434,8 +434,8 @@ def export(parts, B_, path):
     for sx in 'mf':
         ibm = np.array([np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [-rest[sx][n][0], -rest[sx][n][1], -rest[sx][n][2], 1]], np.float32) for n, _ in K.BONES])     # column-major
         a = Wr.acc(Wr.view(ibm.tobytes()), 5126, len(K.BONES), 'MAT4'); Wr.skins.append({'name': 'folk_' + sx, 'joints': [bone_node[n] for n, _ in K.BONES], 'inverseBindMatrices': a, 'skeleton': bone_node['hips']}); skin[sx] = len(Wr.skins) - 1
-    roots = [bone_node['hips']]; info = {}; cover = {}; src = {}
-    for name, Pt in parts.items():
+    roots = [bone_node['hips']]; info = {}; cover = {}; src = {}; RIM = {}
+    for name, Pt in sorted(parts.items(), key=lambda q: q[0] not in ('uarm', 'uarmF')):          # (the sleeves first: the jackets take their armholes' weights from them)
         o = Pt['o']; sx = Pt['sex']
         if 'body' in Pt:
             B = Pt['body']; cg = cover_groups(B); A_ = arrays(o, lambda pi: int(cg[pi])); n_head = A_['groups'].get(0, 0)
@@ -452,6 +452,8 @@ def export(parts, B_, path):
         if Pt['kind'] == 'skin':
             J = B_[sx].J; idx, w = K.weights(J, A_['pos'], cls='torso' if Pt.get('torso') else ('arm' if Pt.get('arm') else 'body'))
             if 'body' in Pt or Pt.get('sides') or name == 'tape_L': idx, w = lay_fingers(sx, A_['pos'], idx, w)
+            if name in ('uarm', 'uarmF'): idx, w, RIM[sx] = K.relax_rim(A_['pos'], A_['idx'], idx, w, rings=2)
+            if Pt.get('torso') and not name.startswith('vest'): idx, w, _ = K.relax_rim(A_['pos'], A_['idx'], idx, w, RIM[sx])
             A_['joints'] = idx; A_['weights'] = w; A_['pos'] = GLB.to_game(A_['pos']); A_['nor'] = GLB.to_game(A_['nor'])
             ni, s_ = Wr.skinned(name, A_, skin[sx]); roots.append(ni); info[name] = {'skinned': True, 'sex': sx, 'tris': ntri}
             if Pt.get('sides'): info[name]['sides'] = {'R': [0, A_['groups'].get(0, 0)], 'L': [A_['groups'].get(0, 0), A_['groups'].get(1, 0)]}

@@ -113,7 +113,7 @@ def check_stretch(R):
     for ln, L in LOOKS.items():
         names = look_parts(R, L); rest = {}
         for n in names: v, t, _ = posed(R, n, L['sex'], 'hvile'); rest[n] = v
-        for pose in K.CHECK_POSES:
+        for pose in K.CHECK_POSES + K.WEIGHT_POSES:
             bad = {}; worst = (1.0, '')
             for n in names:
                 v, t, _ = posed(R, n, L['sex'], pose); e = np.concatenate([t[:, [0, 1]], t[:, [1, 2]], t[:, [2, 0]]])
@@ -132,6 +132,24 @@ def check_stretch(R):
                 l0 = np.linalg.norm(v0[e[:, 0]] - v0[e[:, 1]], axis=1); r = np.linalg.norm(v[e[:, 0]] - v[e[:, 1]], axis=1) / np.maximum(l0, 1e-6); r = r[l0 > 0.002]; k += int((r > 2.5).sum()); worst = max(worst, float(r.max()))
             tot += k; print('STREKK grep %s %-6s kanter over 2,5x: %3d  verst %.1fx' % (sex, g, k, worst))
     print('STREKK i alt: %d kanter over 2x' % tot); return tot
+
+
+def check_grips(R):
+    """the grips hold something: in the pinch the thumb's pad meets the index finger's (the nearest two points of their last joints'
+    skin), and in the grip the fingers close round a shaft of 35 mm laid where the grip holds a thing (per finger: how far its last
+    joint's skin is from the shaft's surface at the nearest; negative is into the shaft)"""
+    for sex, name in (('m', 'handbare'), ('f', 'handbareF')):
+        J = K.joints(sex); P = R.part(name); top = P['joints'][np.arange(len(P['joints'])), np.argmax(P['weights'], 1)]
+        of = lambda bone: np.where(top == K.BI[bone])[0]
+        v0, _, _ = posed(R, name, sex, 'hvile'); v, _, _ = posed(R, name, sex, 'hvile', 'pinch')
+        d = lambda q: float(np.sqrt(((q[of('thumb3_R')][:, None] - q[of('index3_R')][None]) ** 2).sum(2)).min())
+        print('GREP %s pinch  tommel til pekefinger: %.1f mm (i hvile %.1f mm)' % (sex, d(v) * 1000, d(v0) * 1000))
+        v, _, _ = posed(R, name, sex, 'hvile', 'grip'); at, ax = K.grip_point(sex, 'grip', 'R'); at = at + np.array(J['hand_R'], float); ax = ax / np.linalg.norm(ax)
+        row = []
+        for fn in K.FINGERS:
+            q = v[of(fn + '3_R')] - at; r = np.linalg.norm(q - np.outer(q @ ax, ax), axis=1); row.append('%s %+.1f' % (fn, (r.min() - 0.0175) * 1000))
+        q = v[top == K.BI['hand_R']] - at; q = q[np.abs(q @ ax) < 0.04]; r = np.linalg.norm(q - np.outer(q @ ax, ax), axis=1)          # (the palm across the shaft's 8 cm in the hand)
+        print('GREP %s grip   skaft 35 mm, avstand fra ytterleddets hud til skaftet (mm): %s; håndflata %+.1f' % (sex, ', '.join(row), (r.min() - 0.0175) * 1000))
 
 
 def check_cross(R, poses=None):
@@ -252,5 +270,5 @@ def pictures(R):
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if a != 'tall']; path = args[0] if args else os.path.join(OUT, 'folk2.glb')
     R = GLB.Reader(path); print('FIL: %s, %.2f MB (worker.b64: %.2f MB)' % (os.path.relpath(path, ROOT), R.size / 1e6, len(base64.b64decode(open(os.path.join(ROOT, 'src', 'data', 'worker.b64')).read())) / 1e6))
-    old = check_names(R); check_tris(R, old); check_stretch(R); check_cross(R)
+    old = check_names(R); check_tris(R, old); check_stretch(R); check_grips(R); check_cross(R)
     if 'tall' not in sys.argv: pictures(R)
