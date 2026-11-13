@@ -35,6 +35,8 @@ Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi
 
 Jonas 13.11.2026: «Jeg tror forresten det også er megaviktig at vi forteller at det er et online-spill». **Online sies derfor tre ganger:** som første ord i kroken, i et eget klipp rett før logoen der andre spilleres båter er i bildet, og på sluttkortet. Ordet «online» står rett ut; «ett felles hav» alene er for vagt.
 
+Jonas 13.11.2026: «Også tror jeg det er viktig at vi sier noe om at det er early access eller noe sånt, for det kommer sannsynligvis til å avdekkes et lass av feil i spillet etter lansering selv om vi har fått luket ut det verste.» **Early access sies to steder i filmen og ett sted utenfor:** i den lille linja i åpningen (sammen med «All footage captured in-game»), på sluttkortet som en invitasjon, og i teksten under videoen med hvor feil meldes (Tilbakemelding-appen i spillet). Det sies som noe å være med på, ikke som en unnskyldning: «Vær med fra starten». Ordet er «Early access» i begge utgaver; det er det spillere kaller det, også på norsk.
+
 | Tid (s) | Del | Bilde | Tekst (engelsk utgave) | Tekst (norsk utgave) |
 |---|---|---|---|---|
 | 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys: den eldre kystbåten mot midnattssola, hvalen blåser | An online fishing game. The whole Norwegian coast and the sea beyond. | Et online fiskespill. Hele norskekysten og havet utenfor. |
@@ -47,7 +49,7 @@ Jonas 13.11.2026: «Jeg tror forresten det også er megaviktig at vi forteller a
 | 32,4–37,4 | Mulighetene | Kystnotbåten under Gisundbrua i midnattssol, det andre lange taket | stedsstempel | stedsstempel |
 | 37,4–41,1 | Mulighetene | Garn, line og teiner på slag, med mannskapet på dekk, på båtene fra rollelista | Your gear. Your crew. Your fleet. | Eget bruk. Eget mannskap. Eget rederi. |
 | 41,1–44,9 | Online | Mange spilleres båter på samme felt eller i samme havn i lavt lys. Viser spillet navn på de andre båtene, tones de inn her (det tredje spilløyeblikket) | Online. Everyone sails the same sea. | Online. Alle seiler i samme hav. |
-| 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free online. detstorebla.no | Spill gratis online. detstorebla.no |
+| 44,9–50 | Oppfordringen | Logo på slaget, så to linjer: early access, og adressen | Early access. Join from the start. / Play free online. detstorebla.no | Early access. Vær med fra starten. / Spill gratis online. detstorebla.no |
 
 Teksten er et utkast. Hver påstand sjekkes mot spillet i T1 før den låses (del 7).
 
@@ -85,7 +87,7 @@ Dommen over m2 (kontaktarket `trailer/control-m1/grovklipp-m2-kontaktark.jpg`): 
 7. **Rytmen følger låta:** lange tak i den rolige delen, båtstigen som match cut i oppbyggingen, ett langt tak på droppet, korte klipp på slag etterpå.
 8. **Havet utenfor Norge** vises i 3D der landet holder (Svalbard) og i kartet ellers, til terrenget på Færøyene, Shetland og Grønland er løftet.
 9. **Sluttkortet** er logoen fra `tools/brand/logo.py` over et levende bilde, som i m2, men med adressen stor nok til å leses på en telefon.
-10. **«All footage captured in-game»** i liten skrift i åpningen. Det er sant, og det er det folk spør om.
+10. **«Early access · All footage captured in-game»** i liten skrift i åpningen (norsk: «Early access · Alt er ekte spillgrafikk»). Begge deler er sant, og det er det folk spør om.
 
 ### Én film og fem korte
 
@@ -119,6 +121,7 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 - **Om grensesnittet tåler å filmes,** vet vi ikke før prøvebildene i T1. Kartet tror jeg holder; resten er usikkert.
 - **GPU-maskinen:** jeg vet ikke om den fortsatt er leid, eller om m1, m2 og klippene fra 10.11 ligger der. Uten dem filmes alt på nytt (rundt ett minutt per klipp), og det er uansett riktig etter tre dager med endringer i spillet.
 - **Online-klippet:** andre spilleres båter legges inn i filmoppsettet som `PEERS`, slik side om side-klippet gjorde. Det viser det spillet gjør, men det er satt opp, ikke tatt opp fra ekte spillere. T1 slår opp hva spilleren faktisk ser av de andre i dag (båtene i sanntid, navn, flagg, tuting), og klippet viser bare det. «I nettleseren» er tatt ut av sluttkortet for å gi plass til «online»; det står i teksten under videoen.
+- **Early access i spillet:** T1 ser etter om spillet selv sier «early access» noe sted spilleren møter det (lasteskjermen, åpningen). Sier filmen det og spillet ikke, er det Jonas som avgjør om spillet skal si det også; planen legger ikke det i køen.
 - **Lengden.** 50 s er langt for kald rekkevidde på TikTok. Planen satser på at kroken og de korte klippene bærer det (V3).
 - **Lyden:** musikken bærer. Semidieselen under åpningen er fortsatt bare mulig med lydrendering i filmoppsettet, som ikke er prøvd.
 
