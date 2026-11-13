@@ -46,7 +46,7 @@ TABS = "[...document.querySelectorAll('%s .ph-sub button')].filter(e => e.offset
 
 
 async def main():
-    only = [a for a in sys.argv[1:] if not a.startswith('-')]; found = {}; errs = []
+    only = [a for a in sys.argv[1:] if not a.startswith('-')]; found = {}; errs = []; shut = []
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -99,14 +99,14 @@ async def main():
             if only and name not in only and 'dialoger' not in only: continue
             try:
                 await pg.evaluate(op); await pg.wait_for_timeout(SLOW.get(name, 350))
-                if not await pg.evaluate("(r) => { const e = document.querySelector(r); return !!e && e.getClientRects().length > 0; }", root): print('åpnet ikke', name)
+                if not await pg.evaluate("(r) => { const e = document.querySelector(r); return !!e && e.getClientRects().length > 0; }", root): print('FEIL åpnet ikke', name); shut.append(name)
                 else: await measure(root, name)
-            except Exception as e: print('kunne ikke åpne', name, str(e)[:100])
+            except Exception as e: print('FEIL kunne ikke åpne', name, str(e)[:100]); shut.append(name)
             try: await pg.evaluate(cl)
             except Exception: pass
         await b.close()
     rows = sorted(found.values(), key=lambda x: (x['where'], x['k']))
     for x in rows: print('FEIL %-22s %4.1f  %s på %s  %2d px  ×%-3d %s  «%s»%s' % (x['where'], x['k'], x['fg'], x['bg'], x['px'], x['n'], x['sel'], x['t'], '  [style: ' + x['inl'][:60] + ']' if x['inl'] else ''))
-    print('sidefeil', errs[:5]); print(('OK  ' if not rows else 'FEIL') + ' %d slags tekst under kravet' % len(rows))
+    print('sidefeil', errs[:5]); print(('OK  ' if not rows and not shut else 'FEIL') + ' %d slags tekst under kravet' % len(rows) + (', %d scener åpnet ikke (%s)' % (len(shut), ', '.join(shut)) if shut else ''))   # (a scene that did not open is not measured, so it is not a pass)
 
 asyncio.run(main())

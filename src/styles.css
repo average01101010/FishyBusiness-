@@ -1939,7 +1939,8 @@ body.booting #lopPop{visibility:hidden!important}
 #modal .aw-t,#modal .ob.achc .ach-list li{background:#15252F;border:1px solid #2A4252} #modal .aw-bar{background:rgba(238,244,247,.14)}
 #modal .ob.reg .reg-have div{background:#15252F;border-color:#2A4252} #modal .ob.reg .reg-warn{background:rgba(240,185,74,.14)}
 #modal .aw-h,#modal .aw-big small,#modal .aw-t span,#modal .ob.achc .ach-list li span,#modal .hop-test{opacity:1;color:var(--m-muted)}
-#modal .slip-first{background:rgba(240,185,74,.14);border-color:rgba(240,185,74,.5)}
+/* (the small print under a paid action was half as strong as it could be read at on the dark) */
+#modal .ph-note.shop-fine{opacity:.9}
 /* the measuring board and the race's box */
 #turMeas .tm-box,#lopPop .lp-box{background:#0F1E28;color:#EEF4F7;border:1px solid #2A4252;box-shadow:0 16px 44px rgba(0,0,0,.55)}
 #lopPop .lp-box{border-top:5px solid #9B6FD0}
@@ -1968,7 +1969,7 @@ body.v3d #miniPlot{background:#09141F;border-color:rgba(238,244,247,.28)}
 /* «Kart»: the button beside the little chart that opens the plotter (the chart itself still does) */
 #plotOpen{display:none}
 body.v3d #plotOpen{display:flex;z-index:5;left:calc(8px + var(--pmW,176px) + 6px);top:calc(var(--pmT,130px) + var(--pmH,176px) - 44px);height:44px;padding:0 13px 0 10px;gap:6px;border-radius:22px;font:700 13px var(--sans);background:rgba(6,16,24,.62);border-color:rgba(238,244,247,.3)}
-body.v3d.plotmin #plotOpen{top:var(--pmT,130px);height:36px}
+body.v3d.plotmin #plotOpen{top:calc(var(--pmT,130px) + 42px);height:36px}   /* (the chart folded: beside the box under the GPS strip, under the compass line, which reaches down to 34 px there) */
 body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-naust #plotOpen{display:none!important}
 @media (orientation:portrait){
   body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}
@@ -1986,6 +1987,10 @@ body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-na
 #plotTop #plotClose,#ecdisTop #ecClose,.viewbtn,.zoom button.rt.on,.btn.leia.on,.zoom button#zsearch.on,#srchCard .pin-b button[data-s=go],#setBar button.go{background:var(--a-main);border-color:var(--a-main)}
 .zoom button.rt.play{background:var(--a-main);border-color:var(--a-main);box-shadow:0 4px 14px rgba(47,111,143,.45)}
 #tabs button[aria-selected="true"]{border-bottom-color:var(--a-main)}
+/* (the bars, the sliders and the tick boxes in the plotter's side panel: the blue too; the drawer's are light blue, D3) */
+.bar i{background:var(--a-main)} .range input,.tog input{accent-color:var(--a-main)}
+/* the strip in the chart plotter over the day chart: the same glass as in 3D (it was .38, light text on light grey over the white chart) */
+body.vplot #hud{background:rgba(11,23,32,.78)!important}
 .ov.cam.on{background:rgba(47,111,143,.9)}
 /* ---- the wardrobe: the same glass, the chosen one light, «Ferdig» the blue main action ---- */
 .wd{background:linear-gradient(#15252F,#0B1720);color:#EEF4F7}
