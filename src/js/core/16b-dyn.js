@@ -599,7 +599,12 @@ function dynLineBuild(pl, dep){
   const stops = []; for (let i = pl.idx; i <= iEnd; i++) if (wpStop(pl.wps[i]) && wpAt[i] != null) stops.push({i, s:L[wpAt[i]]});
   // the corners: where the line turns, by how much
   const corners = []; for (let i = 1; i < P.length - 1; i++){ const a = Math.atan2(P[i][0] - P[i - 1][0], -(P[i][1] - P[i - 1][1])), c = Math.atan2(P[i + 1][0] - P[i][0], -(P[i + 1][1] - P[i][1])), th = Math.abs(dynAng(a, c)); if (th > 0.2) corners.push({s:L[i], th}); }
-  return {plan:pl, n:pl.wps.length, sig:dynSig(pl), chk:0, P, L, end:L[L.length - 1], wpAt, stops, corners, iEnd, back, turnL:Math.max(10, ((dep && dep.bp.Lb) || 8) * 1.5), hd0, sOut:L[iOut], s:0, gchk:0, ghit:null};
+  // the hands take her round the sharp turns just past the harbour point too (13.11.2026, tests/allesteder.py, steg 126 AS1: the 21 m
+  // coastal vessel at Vannvåg met a hairpin 15 m past it, crept into it at a knot and a half with no bite in her rudder and went round
+  // in a circle 100 m wide, onto the marks of the lead; a turn of more than 60 degrees within three of her lengths of the last one)
+  let sOut = L[iOut]; const Lb = (dep && dep.bp.Lb) || 8;
+  if (dep) for (const c of corners){ if (c.s <= sOut) continue; if (c.s - sOut > 3 * Lb || c.th < Math.PI / 3) break; sOut = c.s; }
+  return {plan:pl, n:pl.wps.length, sig:dynSig(pl), chk:0, P, L, end:L[L.length - 1], wpAt, stops, corners, iEnd, back, turnL:Math.max(10, Lb * 1.5), hd0, sOut, s:0, gchk:0, ghit:null};
 }
 function dynLineAt(T, s){
   const L = T.L, n = L.length; if (n < 2) return T.P[0]; s = clamp(s, 0, T.end);
@@ -634,6 +639,25 @@ function dynGroundAhead(T, s, look){
     a = c; sa = Math.min(T.L[i], s + look);
   }
   return null;
+}
+// A mark, a pile or a bridge's pier near her way ahead (13.11.2026, tests/allesteder.py, steg 126 AS1: the 21 m coastal vessel on Autonav
+// rounded the corners of a winding lead on her own radius, 20-25 m inside the line, and struck marks the line passed 25-30 m off, at
+// Vannvåg, Stamsund, Napp and Sund in Lofoten; the route keeps its legs clear of them, obsRoute, but not the arcs she turns on): what
+// the skipper does, bear away from it so it passes at half her beam and four metres. Each thing (the circles of obsIndex: marks, piles,
+// piers) from half her length astern to the way she covers in twelve seconds and two lengths ahead, nearer than that across her way,
+// turns her course away by the angle that clears it there; on both sides they weigh against each other (a narrow lead between two
+// marks keeps her in the middle). {dh (rad, + to starboard), n} or null
+function dynAvoid(d, P){
+  const idx = obsIndex(); if (!idx.size) return null;
+  const C = HIND.C, sn = Math.sin(d.psi), c = Math.cos(d.psi), look = Math.max(2 * P.L, P.L + Math.max(0, d.u) * 12), need = P.B / 2 + 4;
+  const i0 = Math.floor((d.X - look) / C), i1 = Math.floor((d.X + look) / C), j0 = Math.floor((d.Y - look) / C), j1 = Math.floor((d.Y + look) / C), seen = new Set();
+  let dh = 0, n = 0;
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++){ const L = idx.get(i * 1048576 + j); if (!L) continue;
+    for (const o of L){ if (o.t !== 0 || seen.has(o)) continue; seen.add(o);
+      const dx = o.x - d.X, dz = o.z - d.Y, a = dx * sn - dz * c, l = dx * c + dz * sn; if (a < -P.L / 2 || a > look) continue;
+      const gap = Math.abs(l) - (o.r || 0); if (gap >= need) continue;
+      dh -= (l >= 0 ? 1 : -1) * Math.atan2(need - gap, Math.max(a, P.L / 2)); n++; } }
+  return n ? {dh:clamp(dh, -0.7, 0.7), n} : null;
 }
 // ---- the autopilot ----
 function dynAuto(d, dtG){
@@ -722,6 +746,10 @@ function dynAuto(d, dtG){
             const rs = room(1), rp = room(-1); side = rs === rp ? (dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))) >= 0 ? 1 : -1) : rs > rp ? 1 : -1; }
           T.bow = {gd, astern, bk, u:N0.u, side}; } } }
     if (T.bow) vG = Math.min(vG, T.bow.astern ? 0 : T.bow.u);
+    // (a thing near her way ahead, dynAvoid: looked for twice a game second; not on the last lengths in to a harbour, which the quay's
+    // lines take, nor while she backs or turns off the shore)
+    // (her speed is left as the corners have it: slowed down for it, her rudder lost its bite and she swung wider onto it, Vannvåg)
+    if (!(T.achk-- > 0)){ T.achk = Math.round(0.5 / h); T.av = !T.bow && !(stopW && stopW.port && ds < 3 * L) ? dynAvoid(d, P) : null; }
     const sj = sjvAuto(d, h, ds, T); if (sj) vG = Math.min(vG, sj.v);
     // (away from a stop never under the speed her rudder bites at, vTmin: in a following stream stronger than a corner's speed
     // she would else be told to go astern through it; into a stop she may, to stand on the point)
@@ -747,7 +775,12 @@ function dynAuto(d, dtG){
     const Kp = wn * wn * Tn / Kn, Kd = Math.max(0, (2 * wn * Tn - 1) / Kn), Rn = N[j - 1].R + (N[j].R - N[j - 1].R) * fN;
     const Rt = Math.max(Rn, d.u * d.u / P.alat), n = T.P.length; let seg = dynSeg(T, T.s);
     // (in a stream the wheel goes over earlier, by what the stream carries her while she turns: F8b)
-    if (seg + 1 <= n - 1){ const th = Math.abs(dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1))), lead = Math.min(Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate) + (cs ? E.cm * cs * th * Rt / Math.max(Math.abs(d.u), 0.5) : 0), 0.5 * (T.L[seg] - T.L[seg - 1])); if (T.L[seg] - T.s < lead) seg++; }
+    if (seg + 1 <= n - 1){ const turn = dynAng(dynSegHd(T, seg), dynSegHd(T, seg + 1)), th = Math.abs(turn), lead0 = Rt * Math.tan(Math.min(th, 2.6) / 2) + Math.abs(d.u) * (Tn + 0.5 * DYN_RUD / P.drate) + (cs ? E.cm * cs * th * Rt / Math.max(Math.abs(d.u), 0.5) : 0), lead = Math.min(lead0, 0.5 * (T.L[seg] - T.L[seg - 1]));
+      // (a thing near her way ahead, dynAvoid, on the outside of the turn: she turns as early as her radius asks, so she does not swing
+      // out onto it, Vannvåg; on the inside: she holds on along this leg, which passes it with the route's margin, and turns once it is
+      // abeam: the early turn cut the corner on her radius onto it)
+      const avT = T.av ? T.av.dh * turn : 0;
+      if (avT > 0 ? T.L[seg] - T.s < lead0 : T.L[seg] - T.s < lead && !(avT < 0)) seg++; }
     const sa = T.P[seg - 1], hdP = dynSegHd(T, seg), ye = (d.X - sa[0]) * Math.cos(hdP) + (d.Y - sa[1]) * Math.sin(hdP) - (sj ? sj.off : 0);
     // (in a stream she heads up into what sets her off the line: her course through the water and the angle the stream sets her by,
     // d.crab, eased over eight game seconds, so a slow corner, where the course over the ground turns with the stream before her bow
@@ -757,7 +790,7 @@ function dynAuto(d, dtG){
     if (cs && d.u < 0.3) chi = d.psi;   // (holding astern against a following stream at a stop: her bow is her course)
     if (cs){ const sp = Math.sin(d.psi), cp = Math.cos(d.psi), gE = d.u * sp + d.v * cp + E.cx * cs, gN = d.u * cp - d.v * sp - E.cy * cs, to = Math.hypot(gE, gN) > 0.3 ? clamp(dynAng(chi, Math.atan2(gE, gN)), -1.2, 1.2) : 0;
       d.crab = (d.crab || 0) + (to - (d.crab || 0)) * (1 - Math.exp(-h / 8)); chi += d.crab; } else if (d.crab) d.crab = 0;
-    const chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L));
+    const chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L)) + (T.av ? T.av.dh : 0);
     const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
     dynBank(E, d, P); dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h, E);
     // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
