@@ -588,8 +588,17 @@ def main():
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
         # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
         # the registration mark and the pennants are free
-        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2;x:-9')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;k:m1234;f:SE.rekt;f:LOGO.vimpel;n:a.gull;l:abc;m:T.1.LK;p:2;x:-9')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
         R['livOwn'] = livA()
+        # TP2 (20261113160000_liv_navn.sql): the name's lettering ('n:') only with des_navn, the home port ('k:') always; 320 characters
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_n1', 'user_01AAA', 'des_navn', 29, 'open', '{}')")
+        R['nPrice'] = sql("select price_nok || '|' || kind from public.products where id = 'des_navn'")
+        sql("select public.shop_paid('cs_n1', 'pi_n1')"); R['livNavn'] = livA()
+        R['nOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
+        sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;' || repeat('k:m1;', 60) || 'n:a.gull')", A, 'authenticated')
+        R['livLong'] = sql("select liv from public.presence where player_id = 'user_01AAA'")
+        R['livPaid'] = sql("select count(*) from public.liv_paid", A, 'authenticated', expect_err=True)
+        sql("select public.shop_refund('pi_n1')"); R['livNavnGone'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
         # one's own registration number: one player's per mark
@@ -750,8 +759,8 @@ def main():
               "the leaderboards: the players of the whole coast by what they landed in the open or the closed group that game week (the closed group with the company's name); in the open in the open group that game week, under the boat's latest name and the plant they delivered most to (a closed-group landing does not count, a landing at most 10 t), with one's own rank, never an account; a boat's name loses anything that could make markup (also on the AIS)",
               R['topB'])
         lv = (R['posLiv'] or [''])[0] or ''
-        print(ok(lv.startswith('h:koboltscript') and len(lv) == 160 and '<' not in lv and R['posLiv0'] == ['']),
-              "a boat's paint goes along with her position, kept to letters, digits and separators and 160 characters, and empty when the game sends none", {'liv': lv[:30], 'n': len(lv), 'none': R['posLiv0']})
+        print(ok(lv.startswith('h:koboltscript') and len(lv) == 314 and '<' not in lv and R['posLiv0'] == ['']),
+              "a boat's paint goes along with her position, kept to letters, digits and separators and 320 characters (TP2; 160 before), and empty when the game sends none", {'liv': lv[:30], 'n': len(lv), 'none': R['posLiv0']})
         print(ok(all(R[k][0] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')) and R['wGone'].startswith('0/0/')),
               'the shared world: a bad time, too many cells, reading the tables, the anonymous and a player asking the admin sums are refused; the landings and catches go with the account',
               [R[k][1][:40] for k in ('wBadT', 'wBadC', 'wRead', 'wAnon', 'wAdmPl')] + [R['wGone']])
@@ -795,7 +804,10 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;m:T.1.LK;p:2;x:-9'),
+        print(ok(R['livNavn'] == 'h:gul;r:raud;k:m1234;n:a.gull;m:T.1.LK;p:2;x:-9' and R['livNavnGone'] == 'h:gul;r:raud;k:m1234;m:T.1.LK;p:2;x:-9' and R['nPrice'] == '29|skin'
+                 and 'des_navn' in (R['nOwn'] or []) and len(R['livLong'] or '') == 314 and (R['livLong'] or '').endswith(';n:a.gull') and R['livPaid'][0]),
+              "TP2: the name's lettering (n:) goes to the others only while the account owns des_navn (29 kr), the home port (k:) always, 320 characters are kept, and nobody reads liv_paid", {'navn': R['livNavn'], 'gone': R['livNavnGone'], 'price': R['nPrice'], 'long': len(R['livLong'] or ''), 'paid': str(R['livPaid'])[:80]})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;k:m1234;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;k:m1234;m:T.1.LK;p:2;x:-9'),
               "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark, the pennants and a partner's design (x:<id>, steg 44) always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
