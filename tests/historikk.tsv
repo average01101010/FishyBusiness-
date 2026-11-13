@@ -3787,3 +3787,9 @@
 2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	uishots	OK	88	lite	samtidig	
 2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	navbarshot	OK	32	lite	samtidig	
 2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	lanterntest	OK	18	lite	samtidig	
+2026-11-13 16:16	plan/2026-11-13-109	5df26318	boottest	OK	35	lite	samtidig	
+2026-11-13 16:16	plan/2026-11-13-109	5df26318	maletest	OK	21	lite	samtidig	
+2026-11-13 16:16	plan/2026-11-13-109	5df26318	sponsor2test	OK	20	lite	samtidig	
+2026-11-13 16:16	plan/2026-11-13-109	5df26318	cloudtest	FEIL	54	lite	samtidig	FEIL TP2: a code longer than 160 goes up whole with the home port and the name's lettering last, and another player's lettering and home port (Båtsfjord) come d
+2026-11-13 16:18	plan/2026-11-13-109	5df26318	kjoptest	OK	165	lite	samtidig	
+2026-11-13 16:19	plan/2026-11-13-109	5df26318	dbg23o	OK	47	3d	alene	
