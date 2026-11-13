@@ -8,7 +8,7 @@
   // they never race with the game's 6x. The worker gets the time the frame after next will show (FFT.lat ahead), and its result goes up
   // when it comes; it is never asked again before it has answered, so it never queues. WebGL 2 only (RGBA16F with the levels from the
   // worker, no extension needed); elsewhere, with «#fft0» in the address, or if the worker fails, the sea is as before.
-  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:!/fftbl0/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0, fdt:0.017, lt:null};
+  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:/fftbl1/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0, fdt:0.017, lt:null};
   const FFTT = HFFT.tiles;
   function fftWorker(){
     const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips, hfftCapFit].map(f => f.toString()).join('\n') + '\n' +
@@ -71,7 +71,8 @@
   // tA, B at tB) at the frame's own time. A third set (C) takes the next answer and waits until the time has reached tB; then A <- B,
   // B <- C, and the blend goes on from where it was, so nothing ever jumps. The worker is asked fftLead ahead, 2.4 round trips: the
   // answers come lead / 2 apart, and the frame's time lies between the two. Needs a float framebuffer (EXT_color_buffer_float or
-  // _half_float); without it, or with «#fftbl0», the tiles are the worker's as before. The copies on the CPU (the boat, the spray) are
+  // _half_float). OFF unless the address has «#fftbl1» (13.11.2026): the test with fixed steps still showed an uneven step where one pair of
+  // answers hands over to the next (0.99, 0.99, 0.92), not proven better than the worker's own tiles; Jonas compares on the tablet. The copies on the CPU (the boat, the spray) are
   // the newest answer's, up to a lead ahead.
   const FFT_BL_FS = 'precision highp float;varying vec2 vUV;uniform sampler2D uA;uniform sampler2D uB;uniform float uL;uniform float uF;void main(){gl_FragColor=mix(texture2DLod(uA,vUV,uL),texture2DLod(uB,vUV,uL),uF);}';
   // (two round trips and two frames ahead: an answer is used a frame after it comes at the earliest, and with less the frame's time ran
