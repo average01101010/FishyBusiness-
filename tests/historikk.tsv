@@ -3770,3 +3770,5 @@
 2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
 2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
 2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	
+2026-11-13 16:26	fb/2026-11-13-mottak-sjovei	aee7d6c8	docktest	OK	62	lite	samtidig	
+2026-11-13 16:27	fb/2026-11-13-mottak-sjovei	aee7d6c8	starttest	OK	103	lite	samtidig	
