@@ -3954,3 +3954,10 @@
 2026-11-13 21:31	ccr-d5-telefonen	5665a77+	tabtest	OK	91	lite	samtidig	
 2026-11-13 16:26	fb/2026-11-13-mottak-sjovei	aee7d6c8	docktest	OK	62	lite	samtidig	
 2026-11-13 16:27	fb/2026-11-13-mottak-sjovei	aee7d6c8	starttest	OK	103	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	boottest	OK	40	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	trip2	OK	44	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	rorbutest	OK	15	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	utfrakai	OK	92	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	lukket	OK	16	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	docktest	OK	64	lite	samtidig	
+2026-11-13 22:45	ccr-432150cd-kkjoez	f8e9aa6b+	docktest	OK	60	lite	alene	
