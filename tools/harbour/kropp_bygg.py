@@ -359,6 +359,18 @@ def join_copy(objs, name):
     return join(cs, name)
 
 
+_FW = {}
+def lay_fingers(sex, pos, idx, w):
+    """the hands' weights by the mesh's own fingers (kropp.finger_weights) laid over the weights by place: what a vertex of the hand
+    (or of the glove made of it, within 5 mm of it) holds for the hand and its fingers is shared out as the mesh's split says"""
+    if sex not in _FW: fp, fs = K.finger_weights(sex); _FW[sex] = (cKDTree(fp), fs)
+    tree, fs = _FW[sex]; d, j = tree.query(pos); fam = np.array([n.startswith('hand') or n[:-3] in K.FINGERS for n, _ in K.BONES])
+    W = np.zeros((len(pos), len(K.BONES)))
+    for k in range(idx.shape[1]): np.add.at(W, (np.arange(len(pos)), idx[:, k]), w[:, k])
+    m = (d < 0.005) & (W[:, fam].sum(1) > 1e-6); h = W[m][:, fam].sum(1); Wm = W[m]; Wm[:, fam] = 0.0; Wm += h[:, None] * fs[j[m]]; W[m] = Wm
+    i2 = np.argsort(-W, 1)[:, :4]; w2 = np.take_along_axis(W, i2, 1); return i2, w2 / w2.sum(1, keepdims=True)
+
+
 def glove_obj(B, C):
     """a pair of work gloves made of the body's own hands: the skin from 6 cm up the forearm to the fingertips, 1.5 mm thicker, the
     cuff widening to go over the sleeve's cuff. And the tape round the left palm (a cut hand, taped over the glove)."""
@@ -396,8 +408,8 @@ def build_all():
     # ---- the garments built on the bodies ----
     for B in (BM, BF):
         F = 'F' if B.sex == 'f' else ''; c = G.Ctx(B)
-        for name, fn in G.BUILDERS.items(): parts[name + F] = {'o': mesh_obj((name + F).upper(), fn(c), C), 'kind': 'skin', 'sex': B.sex}
-        for name, kind in (G.JACKETS_F if F else G.JACKETS_M).items(): parts[name] = {'o': mesh_obj(name.upper(), G.jacket(c, kind), C), 'kind': 'skin', 'sex': B.sex}
+        for name, fn in G.BUILDERS.items(): parts[name + F] = {'o': mesh_obj((name + F).upper(), fn(c), C), 'kind': 'skin', 'sex': B.sex, 'arm': name in ('uarm', 'farm')}
+        for name, kind in (G.JACKETS_F if F else G.JACKETS_M).items(): parts[name] = {'o': mesh_obj(name.upper(), G.jacket(c, kind), C), 'kind': 'skin', 'sex': B.sex, 'torso': True}
     # ---- the parts kept from arbeider.py, garderobe.py and hender.py ----
     P = A.build_all(); W = {n: (o, g) for n, o, g in GD.build(A)}
     old_head = GD.bvh_of([P['head']]); falign = head_align(BM, BF)
@@ -424,8 +436,8 @@ def build_all():
     # of the old hands; the grips are the fingers' turns now, kropp.py GRIPS) ----
     C['glove'] = mat('glove2', (0.13, 0.30, 0.58), 0.45); C['glovecuff'] = mat('glovecuff', (0.07, 0.08, 0.10), 0.3)
     for B in (BM, BF):
-        F = 'F' if B.sex == 'f' else ''; g, tp = glove_obj(B, C); parts['glove' + F] = {'o': g, 'kind': 'skin', 'sex': B.sex, 'sides': True}
-        if not F: parts['tape_L'] = {'o': tp, 'kind': 'skin', 'sex': 'm'}
+        F = 'F' if B.sex == 'f' else ''; g, tp = glove_obj(B, C); parts['glove' + F] = {'o': g, 'kind': 'skin', 'sex': B.sex, 'sides': True, 'arm': True}
+        if not F: parts['tape_L'] = {'o': tp, 'kind': 'skin', 'sex': 'm', 'arm': True}
         else: bpy.data.objects.remove(tp)
     # ---- the vests: garderobe.py's own builder, laid on the new jackets and heads ----
     heads = {}
@@ -434,7 +446,7 @@ def build_all():
         bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z < B.J['neck'][2] - 0.03 or abs(f.calc_center_median().x) > 0.12], context='FACES'); bm.to_mesh(h.data); bm.free(); heads[B.sex] = h
     for name, js, rc in GD.VEST_GROUPS:
         B = BF if name.endswith('F') else BM
-        parts[name] = {'o': GD.vest(A, name, [parts[j]['o'] for j in js] + [heads[B.sex], parts['thigh' + ('F' if B.sex == 'f' else '')]['o']], rc, neck_y=B.J['neck'][1] + 0.004), 'kind': 'skin', 'sex': B.sex}
+        parts[name] = {'o': GD.vest(A, name, [parts[j]['o'] for j in js] + [heads[B.sex], parts['thigh' + ('F' if B.sex == 'f' else '')]['o']], rc, neck_y=B.J['neck'][1] + 0.004), 'kind': 'skin', 'sex': B.sex, 'torso': True}
     # ---- the skin, with the eyes and the brows in the head's range ----
     for h in heads.values(): bpy.data.objects.remove(h)
     for B in (BM, BF):
@@ -483,7 +495,8 @@ def export(parts, B_, path):
         else: A_ = arrays(o)
         ntri = len(A_['idx']) // 3
         if Pt['kind'] == 'skin':
-            J = B_[sx].J; idx, w = K.weights(J, A_['pos'])
+            J = B_[sx].J; idx, w = K.weights(J, A_['pos'], cls='torso' if Pt.get('torso') else ('arm' if Pt.get('arm') else 'body'))
+            if 'body' in Pt or Pt.get('sides') or name == 'tape_L': idx, w = lay_fingers(sx, A_['pos'], idx, w)
             A_['joints'] = idx; A_['weights'] = w; A_['pos'] = GLB.to_game(A_['pos']); A_['nor'] = GLB.to_game(A_['nor'])
             ni, s_ = Wr.skinned(name, A_, skin[sx]); roots.append(ni); info[name] = {'skinned': True, 'sex': sx, 'tris': ntri}
             if Pt.get('sides'): info[name]['sides'] = {'R': [0, A_['groups'].get(0, 0)], 'L': [A_['groups'].get(0, 0), A_['groups'].get(1, 0)]}

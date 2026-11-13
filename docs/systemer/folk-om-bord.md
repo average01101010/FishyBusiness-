@@ -377,6 +377,12 @@ Fase FB5 i `docs/planer/folk-2.md`. **Spillet leser ikke fila ennå** (FB6 gjør
 - **Fila:** 2,48 MB mot 1,96 MB (GLB-byte). Hodet er telt ned fra rundt 3 100 til 1 500 trekanter.
 - **Kryssende flater** i tre antrekk × seks stillinger (stående og de fem ytterstillingene), delt i tre: **synlig** (to ting i ulik farge) 3 746, **samme stoff** (erme mot jakke, bukseben mot sete: samme malesone) 3 334, **sitter på** (hår og skjegg i huden, som i dag) 17 280. Stående: skipper 26, kvinne 59, mannskap 282. **Kravet om null holder ikke.** Det meste av det synlige er redningsvesten (gammel del) mot oljehyra og armene, og jakkekanten mot låret i dyp knebøy; skjegg og hestehale går i kragen.
 
+**Vektene, rettet samme dag etter Jonas' bilder** («Det er jo liksom tagger eller noe sånt», «Er det noe vektfeil i jakken under armene her også?», «Vi må sørge for å ha så lite vektfeil som mulig på modellene før vi går videre»):
+- **Feilen:** armen henger tett inntil hofta i hvilestillingen, og vektene skilte arm fra kropp bare med avstand. Fingertupper og tommel ble hengende igjen på kroppen (lange spyd), og jakkekanten og vestens belte fulgte armen.
+- **Rettet slik:** under armhulen er armens det som ligger utenfor en linje langs armens innside; et plagg har en **klasse** (`kropp.weights(cls=)`): `torso` (jakker og vester følger aldri armen nedenfor armhullet), `arm` (ermer og hansker er armens fra armhullet og ut; i armhullets kant som jakken der); hånda er armens hel. **Fingrene vektes etter nettets egen oppdeling** (`kropp.finger_weights`: et punkt på en finger følger den fingerens bein og ingen andres), jevnet over nettets naboer ved knokene, og hansken arver hånda punkt for punkt (`lay_fingers`).
+- **Målingen `STREKK`** (`kropp_bilder.py`): en kant som en stilling drar ut til over det dobbelte (2,5 ganger i et grep), er et punkt som følger feil bein. Første måling fant 7 344; nå **664 over tre antrekk i seks stillinger, 0 i stående**, og grepene 0 unntatt mannens `grip` og `pinch` (12 kanter hver, verst 3,0 ganger). Det som står igjen, sitter rundt armhullet på jakkene med armene høyt (opptil 4,9 ganger) og i den gamle vesten i knebøy.
+- **Kryssene etter rettingen:** synlig 2 563 (før 3 746), samme stoff 1 925, sitter på 17 280.
+
 **Det som står igjen i steget** (steget er `pågår`): hår, skjegg, hatter, sko, støvler og vester på nytt; de synlige kryssene ned; lepper og øyenfarge; grepene og ytterstillingene sett av Jonas; `/kontroll`.
 
 
