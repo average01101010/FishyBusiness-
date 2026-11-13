@@ -3741,6 +3741,107 @@
 2026-11-13 09:31	plan/2026-11-13-117	0fb5ab8f	trip2	OK	35	lite	samtidig	
 2026-11-13 09:32	plan/2026-11-13-117	0fb5ab8f	docktest	OK	60	lite	samtidig	
 2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
+2026-11-13 11:06	ccr-061ea8a6-pt4l71	7a012fe+	itemcardtest	FEIL	80	lite	alene	FEIL hvert kort har det malte bildet fra arket (pic-items)  ['jig', 'kgear', 'kniv', 'hott', 'juksesett', 'garnhalerLv', 'net', 'line', 'pot', 'kit', 'hooks']
+2026-11-13 11:07	ccr-061ea8a6-pt4l71	7a012fe+	itemcardtest	FEIL	19	lite	alene	FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'rad
+2026-11-13 11:08	ccr-061ea8a6-pt4l71	7a012fe+	itemcardtest	FEIL	23	lite	alene	FEIL kjøpt utstyr står «Til montering» på kortet  {'job': True, 'have': 'Til montering · ferdig kl. 09:01 (om 30 min i ekte tid)'}
+2026-11-13 11:08	ccr-061ea8a6-pt4l71	7a012fe+	itemcardtest	OK	21	lite	alene	
+2026-11-13 11:09	ccr-061ea8a6-pt4l71	7a012fe+	trip2	OK	36	lite	samtidig	
+2026-11-13 11:09	ccr-061ea8a6-pt4l71	7a012fe+	docktest	OK	65	lite	samtidig	
+2026-11-13 11:10	ccr-061ea8a6-pt4l71	7a012fe+	csptest	OK	91	lite	samtidig	
+2026-11-13 11:10	ccr-061ea8a6-pt4l71	7a012fe+	itemcardtest	OK	24	lite	samtidig	
+2026-11-13 11:10	ccr-061ea8a6-pt4l71	7a012fe+	shoptest	OK	31	lite	samtidig	
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	opptest	FEIL	89	lite	samtidig	FEIL siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr  {'lv': 2, 'max': 3, 'd
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	jukseboot	OK	12	lite	samtidig	
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	savestest	OK	11	lite	samtidig	
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	boottest	OK	34	lite	samtidig	
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	worldtest	OK	21	lite	samtidig	
+2026-11-13 11:12	ccr-061ea8a6-pt4l71	7a012fe+	errtest	OK	48	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	bootgtest	OK	181	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	krabbefabrikktest	OK	23	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	fabrikktest	OK	16	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	fleet3test	OK	18	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	vesseltest	OK	23	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	adminbuytest	OK	12	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	megletest	OK	26	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	autolinetest	OK	12	lite	samtidig	
+2026-11-13 11:15	ccr-061ea8a6-pt4l71	7a012fe+	geartest	OK	46	lite	samtidig	
+2026-11-13 11:16	ccr-061ea8a6-pt4l71	7a012fe+	uishots	OK	92	lite	samtidig	
+2026-11-13 11:16	ccr-061ea8a6-pt4l71	7a012fe+	navbarshot	OK	31	lite	samtidig	
+2026-11-13 11:16	ccr-061ea8a6-pt4l71	7a012fe+	dockrow	OK	45	lite	samtidig	
+2026-11-13 11:19	ccr-061ea8a6-pt4l71	7a012fe+	trip2	OK	36	lite	samtidig	
+2026-11-13 11:19	ccr-061ea8a6-pt4l71	7a012fe+	docktest	OK	65	lite	samtidig	
+2026-11-13 11:20	ccr-061ea8a6-pt4l71	c1c343f	csptest	OK	95	lite	samtidig	
+2026-11-13 11:20	ccr-061ea8a6-pt4l71	c1c343f	itemcardtest	OK	25	lite	samtidig	
+2026-11-13 11:20	ccr-061ea8a6-pt4l71	c1c343f	shoptest	OK	35	lite	samtidig	
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	opptest	FEIL	90	lite	samtidig	FEIL siden står først under Om bord › Båten: kniven med bilde, ●●○, gevinsten i egne tall (330 → 360 kg/t ved bordet) og prisen 4 500 kr  {'lv': 2, 'max': 3, 'd
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	jukseboot	OK	12	lite	samtidig	
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	savestest	OK	10	lite	samtidig	
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	boottest	OK	38	lite	samtidig	
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	worldtest	OK	20	lite	samtidig	
+2026-11-13 11:22	ccr-061ea8a6-pt4l71	c1c343f	errtest	OK	37	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	bootgtest	OK	181	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	krabbefabrikktest	FEIL	22	lite	samtidig	FEIL lossingen av levende krabbe: 11.6 t i 30 kar og 0.2 t klør på 1 paller, 2.6 timer
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	fabrikktest	OK	16	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	fleet3test	OK	15	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	vesseltest	OK	23	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	adminbuytest	OK	11	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	havtur	FEIL	0	lite	samtidig	FEIL hele kysten mangler i tools/map/out/game (release.py og game.py)
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	megletest	OK	25	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	autolinetest	OK	12	lite	samtidig	
+2026-11-13 11:25	ccr-061ea8a6-pt4l71	c1c343f	geartest	OK	40	lite	samtidig	
+2026-11-13 11:26	ccr-061ea8a6-pt4l71	c1c343f	uishots	OK	85	lite	samtidig	
+2026-11-13 11:26	ccr-061ea8a6-pt4l71	c1c343f	navbarshot	OK	30	lite	samtidig	
+2026-11-13 11:26	ccr-061ea8a6-pt4l71	c1c343f	dockrow	OK	43	lite	samtidig	
+2026-11-13 11:29	ccr-061ea8a6-pt4l71	c1c343f+	opptest	OK	66	lite	alene	
+2026-11-13 11:29	ccr-061ea8a6-pt4l71	c1c343f+	krabbefabrikktest	OK	20	lite	alene	
+2026-11-13 11:30	ccr-061ea8a6-pt4l71	c1c343f+	krabbefabrikktest	OK	20	lite	alene	
+2026-11-13 12:15	ccr-061ea8a6-pt4l71	aac8b22+	uishots	FEIL	86	lite	alene	FEIL plotter   brett      {"cut": ["#ecSog «0,0 kn» 42/45", "#ecPos «69°38,699'N017°40,324'Ø» 74/79", "#ecDep «71,9 m» 42/45", "#ecTide «+0,3 m ↑ flo 06:42» 127
+2026-11-13 12:16	ccr-061ea8a6-pt4l71	aac8b22+	uishots	FEIL	88	lite	alene	FEIL plotter   brett      {"cut": ["#ecSog «0,0 kn» 42/45", "#ecPos «69°38,699'N017°40,324'Ø» 74/79", "#ecDep «71,9 m» 42/45", "#ecTide «+0,3 m ↑ flo 06:42» 127
+2026-11-13 12:18	ccr-061ea8a6-pt4l71	aac8b22+	uishots	OK	86	lite	alene	
+2026-11-13 12:53	ccr-061ea8a6-pt4l71	52d3a32+	kystkarttest	OK	15	lite	samtidig	
+2026-11-13 12:54	ccr-061ea8a6-pt4l71	568ae64	docktest	OK	64	lite	samtidig	
+2026-11-13 12:54	ccr-061ea8a6-pt4l71	568ae64	uishots	OK	91	lite	samtidig	
+2026-11-13 12:54	ccr-061ea8a6-pt4l71	568ae64	navbarshot	OK	31	lite	samtidig	
+2026-11-13 12:55	ccr-061ea8a6-pt4l71	568ae64	dockrow	OK	43	lite	samtidig	
+2026-11-13 12:56	ccr-061ea8a6-pt4l71	568ae64	roetest	OK	123	lite	samtidig	
+2026-11-13 12:56	ccr-061ea8a6-pt4l71	568ae64	hudtest	OK	93	lite	samtidig	
+2026-11-13 13:34	ccr-061ea8a6-pt4l71	8807213+	docktest	OK	65	lite	samtidig	
+2026-11-13 13:34	ccr-061ea8a6-pt4l71	8807213+	uishots	OK	90	lite	samtidig	
+2026-11-13 13:39	ccr-061ea8a6-pt4l71	1599ad2+	docktest	FEIL	63	lite	samtidig	FEIL skuffen med is er ett ark fra 12 % med stripa over  {'x': 0, 'y': 797.234375, 'w': 800, 'h': 398.765625, 'hud': [8, 70], 'title': 'Is', 'ice': True}
+2026-11-13 13:39	ccr-061ea8a6-pt4l71	1599ad2+	dockrow	OK	43	lite	samtidig	
+2026-11-13 13:40	ccr-061ea8a6-pt4l71	1599ad2+	uishots	OK	93	lite	samtidig	
+2026-11-13 13:40	ccr-061ea8a6-pt4l71	1599ad2+	itemcardtest	OK	26	lite	samtidig	
+2026-11-13 13:40	ccr-061ea8a6-pt4l71	1599ad2+	shoptest	OK	33	lite	samtidig	
+2026-11-13 13:42	ccr-061ea8a6-pt4l71	1599ad2+	docktest	OK	61	lite	alene	
+2026-11-13 14:10	ccr-061ea8a6-pt4l71	03c66e8	docktest	OK	60	lite	samtidig	
+2026-11-13 14:10	ccr-061ea8a6-pt4l71	03c66e8	dockrow	OK	39	lite	samtidig	
+2026-11-13 14:11	ccr-061ea8a6-pt4l71	03c66e8	uishots	OK	84	lite	samtidig	
+2026-11-13 14:11	ccr-061ea8a6-pt4l71	03c66e8	itemcardtest	OK	20	lite	samtidig	
+2026-11-13 14:11	ccr-061ea8a6-pt4l71	03c66e8	shoptest	FEIL	31	lite	samtidig	FEIL Neste mål øverst i Båthandel og på hjemskjermen  ['Båter til salgs her', 'Neste mål: Første juksamaskin5\xa0000 kr / 34\xa0000 kr']
+2026-11-13 14:12	ccr-061ea8a6-pt4l71	03c66e8	opptest	FEIL	73	lite	samtidig	FEIL «Om bord» sier trinnene og hvor de kjøpes  Om bordLinehaler (trinn 2) · Juksamaskin × 4 (trinn 2) · VHF-radio (påbudt, følger båten) · Kartplotter 9" med d
+2026-11-13 14:12	ccr-061ea8a6-pt4l71	03c66e8	nettest	FEIL	28	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbek
+2026-11-13 14:12	ccr-061ea8a6-pt4l71	03c66e8	yardupgtest	OK	15	lite	samtidig	
+2026-11-13 14:12	ccr-061ea8a6-pt4l71	03c66e8	megletest	OK	22	lite	samtidig	
+2026-11-13 14:22	ccr-061ea8a6-pt4l71	03c66e8+	shoptest	OK	52	lite	samtidig	
+2026-11-13 14:22	ccr-061ea8a6-pt4l71	03c66e8+	markettest	OK	607	lite	alene	
+2026-11-13 14:23	ccr-061ea8a6-pt4l71	03c66e8+	opptest	OK	98	lite	samtidig	
+2026-11-13 14:23	ccr-061ea8a6-pt4l71	03c66e8+	nettest	FEIL	29	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbek
+2026-11-13 14:46	ccr-061ea8a6-pt4l71	129b6da	trytest	OK	1261	3d	alene	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	merketest	OK	23	lite	samtidig	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	fartstidtest	OK	23	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	trip2	OK	49	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	fasittest	OK	53	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	docktest	OK	73	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	vesseltest	OK	27	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	maletest	OK	29	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	regmarktest	OK	10	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	maletest	OK	18	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	regmarktest	OK	8	lite	samtidig	
+2026-11-13 12:10	plan/2026-11-13-108	0cd37557	flaggshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-13 12:55	plan/2026-11-13-108	95576b40+	flaggshot	FEIL	1498	3d	alene	FEIL 20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør
+2026-11-13 13:14	plan/2026-11-13-108	75562628	boottest	OK	24	lite	alene	
+2026-11-13 13:48	plan/2026-11-13-108	2baac8a7	flaggshot	OK	2036	3d	alene	
 2026-11-13 12:54	ccr-899a9674-q3gjp0	a24ac8e1	dbg23o	OK	44	3d	alene	
 2026-11-13 13:56	ccr-899a9674-q3gjp0	a24ac8e1	sea3d	FEIL	3694	3d	alene	FEIL the whitecap threshold gives Monahan's cover within a factor of two (8-25 m/s)
 2026-11-13 14:01	ccr-899a9674-q3gjp0	a24ac8e1	monster	OK	304	3d	alene	
@@ -3752,3 +3853,25 @@
 2026-11-13 16:23	ccr-899a9674-q3gjp0	e6eea931+	docktest	OK	64	lite	alene	
 2026-11-13 16:35	ccr-899a9674-q3gjp0	e6eea931+	dbg23o	OK	48	3d	alene	
 2026-11-13 16:40	ccr-899a9674-q3gjp0	e6eea931+	monster	OK	287	3d	alene	
+2026-11-13 16:17	ccr-013bxxic-fb5kropp	f02c9a5+	looktest	OK	15	lite	alene	
+2026-11-13 14:24	plan/2026-11-13-108	b894aa33	boottest	OK	28	lite	alene	
+2026-11-13 14:25	plan/2026-11-13-108	b894aa33	dbg23o	OK	48	3d	alene	
+2026-11-13 14:35	plan/2026-11-13-108	a6960ef0	benchshot	OK	637	3d	alene	
+2026-11-13 14:43	plan/2026-11-13-108	a6960ef0	f1test	OK	447	3d	alene	
+2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
+2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
+2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	
+2026-11-13 15:46	ccr-061ea8a6-pt4l71	312cb49	tut	FEIL	3600	lite	alene	gikk ut på tid
+2026-11-13 15:48	ccr-061ea8a6-pt4l71	312cb49	docktest	OK	60	lite	samtidig	
+2026-11-13 15:48	ccr-061ea8a6-pt4l71	312cb49	uishots	OK	82	lite	samtidig	
+2026-11-13 15:48	ccr-061ea8a6-pt4l71	312cb49	shoptest	OK	29	lite	samtidig	
+2026-11-13 15:49	ccr-061ea8a6-pt4l71	312cb49	opptest	OK	77	lite	samtidig	
+2026-11-13 15:49	ccr-061ea8a6-pt4l71	312cb49	nettest	OK	27	lite	samtidig	
+2026-11-13 15:49	ccr-061ea8a6-pt4l71	312cb49	itemcardtest	OK	24	lite	samtidig	
+2026-11-13 15:49	ccr-061ea8a6-pt4l71	312cb49	megletest	OK	22	lite	samtidig	
+2026-11-13 15:50	ccr-061ea8a6-pt4l71	312cb49	dockrow	OK	37	lite	samtidig	
+2026-11-13 15:59	ccr-061ea8a6-pt4l71	b512fa0	markettest	OK	558	lite	alene	
+2026-11-13 16:11	ccr-061ea8a6-pt4l71	0b8b7fb	tut	FEIL	632	lite	alene	FEIL staaende: kaia sier hva sløying om bord gir ved første levering
+2026-11-13 16:38	ccr-061ea8a6-pt4l71	2ccd735	tut	OK	759	lite	alene	
+2026-11-13 16:39	ccr-061ea8a6-pt4l71	1ba54af+	docktest	OK	59	lite	samtidig	
+2026-11-13 16:39	ccr-061ea8a6-pt4l71	1ba54af+	shoptest	OK	26	lite	samtidig	

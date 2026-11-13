@@ -113,6 +113,10 @@ async def play(p, W, H, tag):
         if s['ring']:
             await tap(s['ring']['x'], s['ring']['y']); await pg.wait_for_timeout(350 if sid != 'route2' else 700); continue
         await pg.wait_for_timeout(500)
+    # (13.11.2026: the plant's hand speaks 900 ms after the sale, ui/08-actions.js; a guide that ended sooner than that was read before
+    # he had spoken, and «kaia sier hva sløying om bord gir» was red upright on the D3 build. The check is the same: he must say it)
+    try: await pg.wait_for_function("PSAYLOG.length > 0", timeout=5000)
+    except Exception: pass
     end = json.loads(await pg.evaluate("JSON.stringify({crew:S.crew.length, tut:S.tut, haill:S.haill && S.haill.type, sale:S.lastSale && {port:S.lastSale.port, total:S.lastSale.total, streak:S.lastSale.streak}, catchFlag:!!(S.tut && S.tut.catch), land:S.tutStart && S.tutStart.land, iceFree:!!S.iceFree, freeIce:tutFree('ice'), ice:S.boat.ice, gear:S.boat.gear, log:S.log.slice(-30).map(e => e.no).filter(t => !/^Gave for «/.test(t)).slice(-8), gutKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? r.kg : 0), 0) : -1, roundKg:S.lastSale ? S.lastSale.lines.reduce((a, r) => a + (r.gut ? 0 : r.kg), 0) : -1, said:PSAYLOG.map(l => l.pick), knife:S.log.filter(e => /Bløggekaret er fullt|Tar unna fangsten|Stopper fisket for å sløye/.test(e.no)).length})"))
     await pg.evaluate("PHONE.show(false); DOCK.open('lever')"); await pg.wait_for_timeout(600)
     await pg.screenshot(path='tut_' + tag + '.png')

@@ -1,0 +1,139 @@
+# Designombyggingen: alle menyer (plan, ikke bygd)
+
+**Jonas 13.11.2026:** «send bilder av UI, UX, GUI fra alle butikker, menyer, undermenyer, skuffer og alt til gemini. Målet er en total design-rebuild i spillet der […] målet er et skikkelig løft fra hvordan det ser ut i dag. Sammen med gemini og meg skal vi finne ut av hvordan vi skal lage dette.» Og: «vi skal i gang med en fullstendig UI/UX/GUI-overhaul så mye må testes i etterkant uansett.»
+
+Ingenting er bygd. Dette er grunnlaget og valgene.
+
+## Hva som er sendt, og hva som mangler
+
+`tools/ui/designshots.py` tar hver skjerm i 800 × 1280 og 1280 × 800 til `tests/out/design/`. Første runde: 46 skjermer per format (92 bilder), ett `ask_gemini`-kall.
+
+- **Med:** skjermen i havn, de 21 skuffesidene (butikk, mottak, verft, bank, mannskap, om bord), telefonens hjemskjerm, 22 apper, nettbutikken, dekksdagbokas første oppslag.
+- **Mangler:** skjermen til sjøs og HUD-en over 3D (bildene er tatt uten 3D, så bakgrunnen er svart), kartplotteren og ruteplanleggeren, «Sett ut»-skuffen og fisket for hånd, underfanene i appene og skuffene (bare første fane er tatt), dekksdagbokas andre faner, Garderoben (åpnes ikke som en vanlig app; skriptet feilet der), Admin, Kystmegleren, dialogene (bekreftelser, kjøpsøyeblikket), innlastingen, innloggingen, brevet, startstedet og veiledningen, telefon- og PC-størrelsene, mørkt tema, og tilstander med innhold (fangst om bord, redskap i sjøen, mannskap, skadet utstyr). Butikken for ekte penger er bare sett som Kaibodens første fane.
+
+Runde to tar det som mangler før noe låses.
+
+## Hva Gemini fant (hele svaret: `design-ombygging-gemini.md`)
+
+1. **Samme ting flere steder:** lasterommet (tre steder), redskapen (to skuffer, pluss en «Kjøp»-fane), driftsplanen og mannskapet (fire innganger), oppdrag (skuff og app med ulikt innhold), prisene og regnskapet (havn, bank, Rederi, Salgslaget, dagboka), blad B (båthandelen og Kvote).
+2. **De verste skjermene:** telefonens hjemskjerm (liten telefon i hjørnet, dekker «Verft» og «Om bord» i stående, nederste ikonrad kuttet), Havn i liggende (pristabellen kuttet), Malerverkstedet (arket dekker båten du maler, rundt 90 små fargeruter på én gang), utstyrsbutikken (fire bokser før første vare, tittelen skifter med fanen), båthandelen (fem bokser før første båt), Om bord › Redskap, Oppgraderinger, Innstillinger (knapperaden kuttet).
+3. **Ingen felles byggeklosser:** minst fire knappestiler (magenta, marine, grønn, stiplet), flere kort- og fanestiler.
+4. **Formatene brukes feil:** liggende har skuffen som en smal spalte på 30 % uansett innhold; stående har alltid et ark på 80 %, også når det er nesten tomt eller skjuler båten.
+5. **Telefonen:** behold fiksjonen (statuslinja, appfargene, hjem-knappen), men la den bli en skjerm i nettbrettstørrelse på nettbrett og fylle hele skjermen på en ekte telefon.
+6. **Kjøpet:** uklart hva «Kjøp og monter · 3 t (30 min i ekte tid)» binder, om det bekreftes, og hva «Prøv på båten» gjør. For få varer til søk; to filtre («Passer båten», «Kan kjøpes nå») holder.
+7. **Designsystem:** bygger på tokenene som finnes; magenta beholdes som den ene fargen for «kjøp/godta», én primærknapp per kort, minst 44 px trykkflate, minste skrift 12 px, én kortmal for varer og én for statuslinjer, én fanestil.
+8. **Det som er bra og skal stå:** kartet og HUD-en, dekksdagboka, Kystposten, Regler- og Fiskeguide-tabellene, de malte bildene, roen (ingen nedtelling, ingen press).
+
+## Øktas vurdering
+
+- Enig i hovedlinja: mest å hente på (a) felles byggeklosser, (b) formatene, (c) færre innganger til samme ting, (d) telefonen i nettbrettstørrelse.
+- **Navigasjonsforslaget (Kaia, Bygd & Verft, Om bord, Telefon, Dagbok) passer ikke rett inn:** knappelinja følger i dag stedet (utstyrsbutikk, mottak, verft er tre steder, `docs/handelssteder.md`), og Gemini har slått mottaket og butikken sammen til «Kaia». Sammenslåingen av skuffesidene kan gjøres uten å røre den regelen.
+- **Ikke sjekket mot koden:** tapptellingen, hva som skjer ved «Kjøp og monter», og om vifta finnes slik den antar. Bekreftelsen finnes (kjøp fra 10 000 kr bekreftes i knappen, `IC_CONFIRM_KR`), så punktet «ingen bekreftelse» er feil, men at det ikke synes før trykket, stemmer.
+- Gemini så ikke 3D-bildet bak menyene. Hvor mye av båten og sjøen en meny skal dekke, er halve spørsmålet, og må vurderes i runde to med 3D på.
+- Ekte penger (`ui/10i-shop.js`, `ui/10q-buymoment.js`) og `src/legal/` går som PR til Jonas uansett fase.
+
+## Faser (forslag, hver én økt)
+
+- **D0 Runde to:** resten av skjermene, med 3D og med innhold; skisser av tre nøkkelskjermer (utstyrsbutikken i liggende, telefonen på nettbrett, Om bord) som Jonas velger mellom.
+- **D1 Byggeklossene:** knapper, kort, faner, skrift og avstander som ett sett i `styles.css`; ingen flytting. Størst synlig løft for minst risiko.
+- **D2 Formatene:** bredere skuff med rutenett i liggende for butikk, båthandel, oppgraderinger og havn; ark etter innholdet i stående; malerverkstedet viser båten.
+- **D3 Butikkene og kjøpet:** varen først, én topplinje i stedet for fire bokser, tydelig hva kjøpet binder.
+- **D4 Sammenslåingene:** én plass for lasterom, redskap, mannskap og drift, oppdrag, regnskap.
+- **D5 Telefonen i nettbrettstørrelse** og appene i to spalter.
+- **D6 HUD-en, dialogene, innlastingen og resten.**
+
+Etter hver fase: `designshots.py` før og etter, `uishots`, og Jonas på nettbrettet. De lange UI-testene tas samlet etter D2 og D5, ikke etter hver fase.
+
+## Valg for Jonas
+
+1. **Hvor dypt?** A: nytt utseende og nye oppsett, samme innhold og funksjoner (anbefalt: D1–D3 først, så vurdere). B: også sammenslåing og ny navigasjon (D4–D5) fra start. C: bare byggeklossene.
+2. **Telefonen på nettbrett:** A: stor skjerm som beholder telefonens ramme og statuslinje (anbefalt). B: som i dag. C: fjern telefonen som ramme, appene blir vanlige paneler.
+3. **Knappelinja:** A: som i dag, etter stedet (anbefalt; følger handelsstedsregelen). B: Geminis fem faste.
+4. **Retning for utseendet:** velges fra skissene i D0, ikke nå.
+
+## Runde to (13.11.2026): underfanene, dagboka og skjermene over 3D
+
+99 bilder i ett kall: 86 av underfanene i skuffene og appene, dagbokas faner og innlastingen (`rest..`), og 13 med 3D tegnet (`hud..`: havn, telefonen og malerverkstedet over 3D, til sjøs, kartplotter, rute).
+
+**Det Gemini fant som står seg:**
+
+- **Menyene over 3D:** malerverkstedet i stående dekker rundt 85 % og lar båten stå i en stripe på toppen; telefonen i stående dekker «Verft» og «Om bord» i knappelinja. Den trakk derfor tilbake «ark etter innholdet»: i stående trengs et tak (55–60 %) over knappelinja, og en bredere skuff i liggende krever at kameraet flytter båten til venstre. En telefon i nettbrettstørrelse må være en egen flate som skjuler knappelinja, ikke flyte over den.
+- **HUD-en:** kompasstapen øverst har ingen bakgrunn og forsvinner mot fjell og båt; statuskortet i stående mangler «Regler ✓ Lov her» og søylene som liggende har; det lille kartet skifter mellom mørkt, beige og lyst varmekart.
+- **Til sjøs:** fiske, anker og Om bord er lette å finne; det finnes ingen synlig knapp til kartet (man må vite at det lille kartet åpner det).
+- **Faner uten tegn på at de ruller:** Milepæler (sju faner, tre synlige), Kvote (fire, pluss fem underfaner på to linjer), båthandelens fire filtre på to linjer.
+- **Tette skjermer som trenger mest:** Kvote (din kvote først), Regler › Sjekk (32 valg før svaret; svaret for båten din her og nå først), Kystbanken › Regnskap (tre tall først, resten under «Detaljer»).
+- **Dekksdagboka:** fanene Sesonger, Hendelser, Utstyr og Salg overlapper Fiskeguiden, Kystposten, Redskap og Salgslaget; i stående blir boka liten med håndskrift rundt 8–9 px. Gemini vil løse den opp. **Økta er uenig:** i runde én kalte den selv boka «standout worldbuilding», og fiksjonen er Jonas' valg. Lesbarheten i stående er det ekte problemet.
+
+**Feil i skjermbildene, ikke i spillet (skriptet, rettet eller notert):**
+
+- **Kartplotteren og ruta** (`hud07`, `hud08`) viste sjø uten kart: skriptet åpnet den med `setBodyView(false)` i stedet for `openPlotter()`. Rettet i skriptet. **`tests/uishots.py` hadde samme feil** og har fotografert en tom plotter; med kartet på plass fant testen at feltene i topplinja var 3–6 px for smale i stående nettbrett. Rettet i `src/styles.css` (feltene holder bredden, ekkoloddforklaringen gir etter), `uishots` rød før og grønn etter.
+- **Innlastingen** (`rest43`) var et grått bilde: tatt etter 0,6 s, før bildet av naustet var hentet. Punkt 6 og beslutning 10 hos Gemini faller.
+- **Kystbanken fane 2–7** var samme bilde: skriptet trykket på knapper som ikke er faner. `skuff-arbeid` og `skuff-beholdning` er samme skuff («Om bord») åpnet på ulik fane, ikke to sider.
+
+**Fortsatt ikke tatt:** Garderoben og underfanene i Tilbakemelding og Innstillinger (åpnes ikke fra skriptet), åpningen etter «Start» (brevet, veiledningen), dialogene, og tilstander med fangst, mannskap og redskap i sjøen.
+
+**Geminis beslutningsliste** (ti A/B-valg) står i svaret. De som er nye i forhold til valgene under: tak på arkhøyden i stående, kameraet som flytter båten når skuffen åpnes, en synlig kartknapp til sjøs, lik HUD i begge formater, én kartpalett, og bakgrunn på kompasset og meldingene.
+
+## Jonas' svar (13.11.2026)
+
+- **Valg 1: A.** Nytt utseende og nye oppsett, samme innhold og funksjoner. D1–D3 først; sammenslåingene (D4) vurderes etterpå.
+- **Valg 2: A.** Telefonen blir en stor flate på nettbrett som beholder telefonens ramme og statuslinje.
+- **Valg 3:** «Dette bestemmer du selv». Økta valgte **A: knappelinja følger stedet som i dag** (utstyrsbutikk, mottak og verft er tre steder, `docs/handelssteder.md`). Snus ved å bygge Geminis fem faste i D4; ingenting i D1–D3 låser det.
+
+## D0: skissene (13.11.2026)
+
+Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artifact/3fHdvNBptZ29gwPwERw3ZC. Tre skjermer i to retninger, over ekte skjermbilder fra spillet og med de malte bildene:
+
+- **Retning A «Lys kai»:** lyse flater som i dag, ryddet; marine topplinje, magenta bare på kjøp.
+- **Retning B «Styrhus»:** mørkt glass som HUD-en, så menyen hører til 3D-bildet.
+- **Skjermene:** utstyrsbutikken i liggende (kategoriskinne til venstre, to spalter med varer, varen først), telefonen i nettbrettstørrelse (appene i tre grupper og det viktigste nå ved siden av), Om bord i stående (ark på 58 % så båten synes, fire faner på én linje, én linje per redskap med stand).
+- **Ikke sett av økta i en nettleser:** lerretet tegner skissene selv, og økta har ikke åpnet siden. Tallene i skissene er eksempler (standen på redskapen, avstanden til Botnhamn), ikke spilltilstand. Appikonene er bokstaver som plassholdere for spillets egne ikoner.
+
+**Jonas 13.11.2026: «Jeg liker best retning B best av alternativene.»** Retning B «Styrhus» gjelder: mørkt glass over 3D-bildet (`rgba(11,23,32,0.86–0.9)` med uskarp bakgrunn, kant `#2A4252`), kort `#15252F`, tekst `#EEF4F7` og dempet `#A9BEC8`, valgt fane lys (`#EEF4F7` med mørk tekst), magenta `#C22A86` bare på kjøp og godta, grønn `#4FC08A` og gul `#F0B94A` for stand. Økta leser svaret som B for alle menyene, også de med mye lesing (regnskap, regler, Håndboka); dekksdagboka og Kystposten beholder papiret sitt. Snus per skjerm i D1 om lesingen blir tung på nettbrettet.
+
+**D1 bygger dette** som ett sett i `src/styles.css` (knapper, kort, faner, skrift, avstander), uten å flytte innhold. Før D1: uskarp bakgrunn (`backdrop-filter`) over WebGL må måles på nettbrettet; er den for dyr, brukes en tettere flate uten uskarphet.
+
+## D1: Styrhus-paletten i skuffen og telefonen (13.11.2026, bygd)
+
+- **Slik:** `tools/ui/styrhus.py` ga 395 hardkodede farger i `src/styles.css` en rolle (`var(--m-ink,#22323c)`: rollen, med fargen den hadde som reserve). Rollene har verdier bare i `#drawer` og `.ph-appv:not(.ph-paper)` (blokka «Styrhus» nederst i stilarket), så alt utenfor faller tilbake på fargen det hadde. De gamle variablene (`--paper`, `--ink`, `--muted`, `--line`, `--s-card`, `--t-ink`, `--ok` …) er satt til mørke verdier i det samme omfanget. En flate som skal være lys der inne, setter rollen til `initial` (bildeflisene `.ic-pic`, `.bu-ic`, `.net-ic`).
+- **Rollene:** `ink`, `muted`, `card`, `card2`, `line`, `dark` (den marine knappen), `ok`, `bad`, `warn`, `link`, og fire toner (`tint-ok` …). Skriptet leser rollen av lysheten og fargetonen: mørk tekst blir `ink`, grå `muted`, mørk grønn/rød/gul/blå (laget for hvit bunn) blir `ok`/`bad`/`warn`/`link`; hvit bunn `card`, lysegrå `card2`, lys kant `line`. Lys tekst, mettede fyll (stolpene, appfargene, magenta) står.
+- **For hånd i blokka:** skuffen er `rgba(11,23,32,.94)` uten uskarphet (ikke målt på nettbrett), kortene har kant i stedet for skygge, valgt fane er lys, appenes hode er mørkt med appens farge som en linje under (hvit tekst på de lyseste appfargene var under 4,5:1 også før), «Lag driftsplan» er magenta som de andre primærknappene, og det som er dempet (låste kapitler, fredede arter, tomme rekorder), er mindre dempet enn på hvitt.
+- **Målingen:** `tools/ui/kontrast.py` går gjennom 20 skuffesider og 20 apper med fanene og måler hver tekst mot flaten den står på. Første kjøring etter omleggingen: 27 slags tekst under kravet; etter rettingene 0. Stjerner, prikker og piler alene regnes som pynt og måles ikke; tekst over bilder og fargeoverganger måles ikke.
+- **Den uavhengige kontrollen (13.11.2026)** fant det målingen ikke så, fordi den bare åpnet tomme sider: «⋯»-knappen på mannskapskortet og i Rederi ble hvit på hvitt når den var åpen (`background:var(--t-ink)` med hvit tekst), bildeflisene var blitt mørke (feil rolle nullstilt: de bruker `tint-link`), kappløpsklokka var lilla på mørkt, tre tekstfarger og driftsplanens grønne valg sto under kravet, skuffen var 94 % tett så knappene under skinte gjennom, og felt fikk nettleserens grå. Alt er rettet: ett valgt-utseende (lyst) for faner, brikker, måneder, driftsplanens valg og Kaibodens faner; skuffen er tett; feltene har palettens flate. Den bekreftet at stilarket utenfor de to omfangene gir de samme beregnede stilene som før (havn, til sjøs, kartplotter, dagboka, dialog, tips, toast, garderoben, innlastingen), i lys og mørk OS-modus, og at Kystposten er uendret.
+- **Målingen er utvidet** med en båt med mannskap og tillatelse, «Om bord», «⋯»-menyene åpne, driftsplanens veiviser og megleren, og tegn alene på noe som kan trykkes. Sett rød mot bygget før rettingene (fire funn), grønn etter. **Fortsatt ikke dekket:** fangst om bord, redskap i sjøen, et løp som går, skjemaene hos megleren, stående format som egen runde, og alt med 3D tegnet.
+- **Magenta** står fortsatt på hovedhandlingen på hver side, ikke bare på kjøp («Til service», «Lever fangst», «Rigg om»), og på lasteromstolpen. Det ryddes i D3.
+- **Avvik fra Kystlys** (`docs/planer/ui-redesign.md`, 04.11.2026): der var «Kort (lyst)» rollen for skuffen og appene. Jonas' valg 13.11.2026 gjør dem til instrument (mørkt glass). Papir, ECDIS og krem står som før.
+- **Ikke gjort i D1:** dialogene og tipsene er fortsatt lyse (D6); oppsett, bredder og arkhøyder er urørt (D2); diagrammene i Vær og Kvote er sett på, ikke målt.
+
+## D2: skuffen etter innholdet (13.11.2026, bygd)
+
+- **Liggende:** sidene med noe å sammenligne (`WIDE` i `ui/10c-dock.js`: `fiske`, `utstyrb`, `fartoy`, `utstyr`, `bors`, `havn`) åpner en bred skuff (`--drw: min(740px, 58vw)`, `body.dk-wide`) med varekortene, båtkortene og mannskapskortene i to spalter; alt annet på siden går over hele bredden. Havnesidens pristabell vises hel. Knappelinja, toasten og fangstkortene følger `--drw` (sju steder i stilarket brukte `min(380px,92vw)` direkte). De andre sidene er 380 px som før.
+- **Stående:** arket er så høyt som innholdet, opp til høyden det hadde (fra 12 %, under stripa). I malerverkstedet og mens utstyr prøves på båten (`body.dk-low`) stopper det på 56 %. Kameraet i malerverkstedet og ved prøving måler skuffen selv (`paintAim` i `view3d/25-controls.js`), så båten havner i det som er igjen uten endring der.
+- **Endrer U2-7** (`docs/planer/ui-2-staaende.md`, 06.11.2026: «ett ark på 88 % for alle sider i stående»): 88 % er nå det høyeste, ikke regelen. Jonas så et ark på 58 % i skissen (D0) og sa «kjør på» til D2 med dette beskrevet. `docktest` sjekket den gamle regelen og sjekker nå den nye (arket står på knappelinja, aldri over 12 %, med stripa over).
+- **Økta valgte:** innholdshøyde i stedet for et fast tak på 58 % for alle sider (butikkene har lange lister). Snus med `max-height` i D2-blokka.
+- **Sett:** begge formater uten 3D (alle sider), og malerverkstedet i stående med 3D: hele båten står over arket. **Ikke sett:** «Prøv på båten» og malerverkstedet i liggende med 3D (skjermbildet rakk ikke fristen i testmiljøet) → `docs/spill-dette/D2-skuffen.md`.
+- **Tester:** `docktest` (118), `dockrow`, `uishots`, `itemcardtest`, `shoptest` grønne; `kontrast.py` 0. Ikke kjørt: `tut.py` (tas samlet etter D3), `driftsplan2gui`, `worktest`.
+
+## D3: butikkene og kjøpet (13.11.2026, bygd)
+
+- **Varen først.** Utstyrsbutikkens topp er én blokk (`shopTop` i `ui/phone/13b-nettet.js`, `.shop-top`): stedet med «Du er her», kjøpmannens replikk (høyst to linjer), det som er bestilt hit, «båten trenger nå» som brikker, og under Elektronikk og haler én setning om hva monteringen binder. `dress` i `ui/10c-dock.js` lar sitt eget stedshode stå av på de to sidene (`OWNTOP`). På de andre sidene er «Du er her» én linje uten boks (`.pl-head.here`).
+- **Båthandelen:** fanene og båtene først. «Båter til salgs her» står øverst bare når det ligger brukte båter ved kaia; ellers etter lista, og «Neste mål» etter den igjen (`market` og `fartoy` i `ui/phone/10-fartoy.js`). Båten du eier har merket «Din båt» (`.v-mine`), ikke grønn ramme.
+- **Tittelen:** skuffen heter «Utstyrsbutikken» på begge fanene (`TITLE` i `ui/10c-dock.js`). Fanene heter som før (Redskap, Elektronikk og haler), og knappene i vifta også.
+- **Kjøpet:** knappen er «Kjøp og monter · pris». Under den (`buySub`, `.ic-sub`): «Montering 3 t (30 min i ekte tid). Båten ligger i havn imens.», og fra `IC_CONFIRM_KR` «Du bekrefter før kjøpet.» Sjekket mot koden: en avgang venter på verkstedets jobber (`depnow` i `ui/08-actions.js`, `jobsDone`), og jobbene går bare mens båten ligger i havn (`core/05-vessels.js`). «Prøv på båten» heter «Se den på båten» og står ikke på en vare `buyGate` nekter (linesetter og garnrenne uten haler). `trytest` sjekket det motsatte (OPP5) og er rettet.
+- **Magenta bare på kjøp og godta:** `.ph-btn.p` er blå (`--a-main:#2F6F8F`, hvit tekst 5,5:1) i skuffen og appene; magenta får bare handlingene i lista i D3-blokka i `src/styles.css` (utstyr, redskap, is, klær, båt, hjemmel, naust, oppgraderinger, kasko, skrog, hyre, bestilling og henting, bud, oppdrag og påmelding, og knappene til Kaiboden, Trim og registrering). En ny kjøpsknapp må inn i lista. Lasteromsstolpen (`.bar i`) og avkrysningsboksene er lyseblå.
+- **Økta valgte:** «Registrer meg» (`cloudReg`) beholder magenta som «godta». Snus ved å ta den ut av lista.
+- **Oppgraderingene:** lasterom/kar, motor, propell og ombyggingene er varekort (`upCard` i `ui/phone/12-utstyr-redskap.js`, `.upc`): bilde fra atlaset, forklaringen, «Nå» og «Neste trinn» som to linjer, prisen på knappen, monteringen under. Prisen og tida står ikke lenger i «Neste trinn»-linja.
+- **Den uavhengige kontrollen (13.11.2026, D2 og D3 sammen)** fant, og økta rettet: «Egnebua egner» og «Godta» manglet i magenta-lista; sponsorkortet viste `E.price` mens knappen viste `equipKr`; «Båter til salgs her» ville hoppet til toppen når meglerens liste kom inn (kortet står nå alltid etter lista, og en linje øverst sier hvor mange brukte båter som ligger ved kaia og lenker til Kystmegleren); en deaktivert hovedknapp i driftsplanen ville vist den gamle grønne; det lave arket (D2, `dk-low`) hang igjen et øyeblikk når prøvingen ble tatt av ved fanebytte; «Hent» av bestilt utstyr sa ikke at det monteres. Den bekreftet at «Båten ligger i havn imens» og «Du bekrefter før kjøpet» stemmer med koden, og at ekte penger og `src/legal/` er urørt.
+- **Gemini (ett svar, før- og etterbilder i begge formater):** bekreftet at øyet lander på første vare og at magenta bare står på kjøp. Tatt inn: oppgraderingskortene (og utstyret etter dem) tar hele raden i liggende, fordi «Nå» og «Neste trinn» ble brutt over tre–fire linjer i to spalter; lenka til Kystmegleren over båtlista; større trykkflate på «Mer om montering». Avfeid: bekreftelse på alle «Kjøp og monter» (endrer kjøpsregelen, Jonas' valg), underteksten som støy («Ferdig når» krever den), rammen tilbake på «Din båt» («Ferdig når» sier merke), lav kontrast på dempet tekst (`kontrast.py` 0).
+- **Ikke gjort, med grunn:** Vedlikehold har fortsatt tiden på knappen («Verkstedet · 2 000 kr · 3 t»); sidens topp sier hva jobben binder. Flere kjøp er nøytrale knapper og har aldri vært magenta («Kjøp nå» hos megleren, «Kjøp til flåten», «Kjøp 50 kg is» på Havn). «Din båt» står på båttypen du eier i katalogen, som rammen gjorde.
+- **Liggende:** redskapskortene i Redskap flyter i de samme to spaltene som de første kortene (`display:contents` på den indre `.ph-c`), så første rad ikke står halvtom. Oppgraderingskortene tar hele raden.
+- **Ikke rørt:** `ui/10i-shop.js`, `ui/10q-buymoment.js`, `src/legal/`. Knappene til Kaiboden og Trim får fargen sin fra stilarket, som før.
+
+## Usikkert
+
+- Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
+- Bare første fane av hver skjerm er sett; funnene om «tomme» sider kan skyldes at båten var tom.
+
+## Status
+
+13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). D2 bygd 13.11.2026 (bred skuff liggende, arkhøyde etter innholdet stående). D3 bygd 13.11.2026 (butikkene og kjøpet). Neste: Jonas ser D1–D3 på nettbrettet, så vurderes D4.
