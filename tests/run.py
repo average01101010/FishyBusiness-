@@ -267,6 +267,8 @@ for _k in ('ferje34', 'ferje64', 'ferje112', 'hurtig', 'passasjer', 'kystrute'):
 COVER['tools/ships/shiplib.py'] = ['npcshot', 'npcshot_fisk']; COVER['tools/ships/lukketferje.py'] = ['npcshot']
 # (N7's second part, 13.11.2026: the coast's fishing boats by their gear; npcshot_skip.py, the merchant ships, needs a build with their
 # lines in the page and is run by hand until N5 adds them)
+LITE += ['kaiover']; VECB.append('kaiover'); COVER['tests/kaiover.py'] = ['kaiover']   # (steg 36: no quay built out over another boat's place)
+for _f in ('src/js/core/05-vessels.js', 'src/js/core/07-harbours.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['kaiover']))
 D3 += ['npcshot_fisk']; VECB.append('npcshot_fisk'); LONG['npcshot_fisk'] = 4500; COVER['tests/npcshot_fisk.py'] = ['npcshot_fisk']; COVER['tests/npcshot.py'] = COVER['tests/npcshot.py'] + ['npcshot_fisk']
 for _k in ('snurrevad', 'not', 'tral', 'teine', 'autoline'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot_fisk']
 for _k in ('snurrevad', 'notbat', 'reketral', 'teine', 'autoline', 'fisklib'): COVER['tools/ships/%s.py' % _k] = ['npcshot_fisk']

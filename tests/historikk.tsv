@@ -3679,3 +3679,6 @@
 2026-11-13 06:36	ccr-013bxxid-n7rest	eff96d1	docktest	OK	63	lite	samtidig	
 2026-11-13 06:43	ccr-013bxxid-n7rest	eff96d1	trytest	FEIL	437	3d	alene	avsluttet med kode 1
 2026-11-13 06:55	ccr-013bxxid-n7rest	eff96d1	markettest	FEIL	722	lite	alene	FEIL 3D, liggende: kjøpsøyeblikket på båten du er om bord i tegner i modellen, kameraet går rundt henne, og kortet har typen, året og kaia  [{"card": true, "in3
+2026-11-13 08:10	ccr-013bxxid-n7rest	3d26e3c+	npctest	OK	9	lite	samtidig	
+2026-11-13 08:11	ccr-013bxxid-n7rest	3d26e3c+	trip2	OK	38	lite	samtidig	
+2026-11-13 08:12	ccr-013bxxid-n7rest	3d26e3c+	kaiover	OK	125	lite	samtidig	

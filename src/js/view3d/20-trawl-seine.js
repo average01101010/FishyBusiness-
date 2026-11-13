@@ -280,7 +280,7 @@
   // has no model, are the player's boat nearest her length and beam as before (npcKit). By the vessel's fields, never her name.
   const NGEAR = new Map();
   function npcGear(n){
-    if (n.gear) return n.gear; if (!n.coast || typeof VEC === 'undefined') return null; const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
+    if (n.mainGear) return n.mainGear; if (!n.coast || typeof VEC === 'undefined') return null;   // (npcStates carries it, core/05-vessels.js; the lookup below for an entry without it) const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
     // (two boats can share a berth and so its id, flaate.json's «shared»: the one of her length; two of the same length on one berth get
     // the first one's gear, a picture's error only. A boat that is not the register's (a trip's, the coast guard's) has none, kept so)
     const m = /^c(-?\d+):(-?\d+)\.(\d+)\./.exec(String(n.id)), keep = g => { if (NGEAR.size > 4000) NGEAR.clear(); NGEAR.set(k, g); return g; };

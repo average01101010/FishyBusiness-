@@ -305,6 +305,20 @@ function moorFree(p, hd, L, B, others){
     if (o.buoy || al < (L + o.L) / 2 + 1 && ac < (B + o.B) / 2 + 1) return false; }
   return true;
 }
+// whether the quay built out from the face f at a (m along it) to out m from the face (face.out: as the 3D view draws it, drawDocks
+// quayMod, from 3 m in on the land out to her side, her length and 2 m more at each end) keeps clear of every boat placed already
+// (others' items with q are quays, not boats). Jonas 13.11.2026: «vi kan ikke ha det sånn at det er kaier på innsiden av andre kaier. Da
+// må heller den innerste kaien fjernes slik at båtene ligger … realistisk fortøyd … i den kaien som faktisk vises»: a boat whose quay
+// would stand over a boat lying there already does not get that place (moorHarbour tries the next, then a dock or a buoy)
+function quayClear(f, a, L, out, others){
+  if (!(out > 0.3)) return true;
+  const fx = f.x + f.ux * a, fz = f.z + f.uz * a, hl = L / 2 + 2;
+  for (const o of others){ if (o.q) continue; const dx0 = o.p.x * 1000 - fx, dz0 = o.p.y * 1000 - fz; if (Math.hypot(dx0, dz0) > hl + out + o.L + 10) continue;
+    const s = Math.sin(o.hd), c = Math.cos(o.hd), ohl = o.L / 2, ohb = o.B / 2;
+    for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]){ const x = dx0 + s * fa * ohl + c * ab * ohb, z = dz0 - c * fa * ohl + s * ab * ohb, al = x * f.ux + z * f.uz, ac = x * f.nx + z * f.nz;
+      if (Math.abs(al) < hl && ac > -3 && ac < out) return false; } }
+  return true;
+}
 // the floating docks (tools/harbour/brygge.py): where a harbour's quays hold too few of its boats, a dock of the common kind is laid
 // out from a straight bit of shore near it: the abutment on the shoreline, the 10 m gangway down to a row of 12 m pontoons running
 // out to sea, and the boats alongside it on both sides, bow out. The dock is laid only where all of it is on water (the pontoons, and
@@ -335,7 +349,8 @@ function moorAround(h, p){ const out = []; for (const t of vecTilesIn(p.x * 1000
   for (const b of g.boats) if (b.moored && !b.moored.none && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
     out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } }
   // Senja's named boats (FLEET) at their berths: the square's coast boats (senja.py) keep off them
-  if (h.senja) FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, p) > 1.2) return; const m = fleetBerth(i); if (m) out.push({p:m.p, hd:m.hd, L:f.L, B:f.B}); });
+  if (h.senja) FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, p) > 1.2) return; const m = fleetBerth(i); if (!m) return; out.push({p:m.p, hd:m.hd, L:f.L, B:f.B});
+    const F = m.face; if (F && F.out > 0.3){ const c = (F.out - 3) / 2; out.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:f.L + 4, B:F.out + 3, q:true}); } });   // (and the quay built out to her)
   return out; }
 function moorHarbour(h){
   // fixed again: its own docks and buoys out of the obstacles first (they would push its boats about)
@@ -358,13 +373,13 @@ function moorHarbour(h){
         if (Math.abs(a) > lim || resHit(res, a, b.L / 2 + 1)) continue;
         // (out from the face as far as the quay must be built out over the 3D shore, quayOut in 07-harbours.js)
         const g0 = quayOut(f, a, b.L); if (g0 < 0) continue;
-        for (let off = b.B / 2 + 0.4 + g0; off <= b.B / 2 + 8.5 + g0 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L, off - b.B / 2 - 0.4)}; }
+        for (let off = b.B / 2 + 0.4 + g0; off <= b.B / 2 + 8.5 + g0 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed) && quayClear(f, a, b.L, off - b.B / 2 - 0.4, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L, off - b.B / 2 - 0.4)}; }
         if (m) break; }
       if (m) break;
     }
     if (m){ b.moored = {p:m.p, hd:m.hd, st:'port', face:m.face}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B});
       // the quay built out to her (from 3 m in on the shore to her side) is in the way of the boats placed after her
-      const F = m.face; if (F.out > 0.3){ const c = (F.out - 3) / 2; placed.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:b.L + 4, B:F.out + 3}); }
+      const F = m.face; if (F.out > 0.3){ const c = (F.out - 3) / 2; placed.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:b.L + 4, B:F.out + 3, q:true}); }
     } else need.push(b);
   }
   // a floating dock inside the harbour for the boats under 11 m the quays did not take (L1, choice 2: a bigger boat lies at a quay or
@@ -497,7 +512,7 @@ function coastNear(H, only){
       if (!only && A.set && A.set.a !== A.set.b && Math.min(dist(A.set.a, b.pos), dist(A.set.b, b.pos)) <= R) gear.push({k:A.set.k, a:A.set.a, b:A.set.b, id:bt.id, name:bt.name});
       if (A.hidden || dist(A.p, b.pos) > R) continue;
       const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
-      out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
+      out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv, mainGear:bt.gear});   // (the register's main gear: the 3D view draws her by it, view3d npcGearT; not «gear», which colregCls reads as her set being in the sea)
     }
   }
   if (!only){ COASTM.k = k; COASTM.v = out; COASTM.g = gear; }
