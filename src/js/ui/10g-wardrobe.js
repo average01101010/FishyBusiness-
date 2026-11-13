@@ -133,7 +133,7 @@ const WARD = (() => {
     if (two) draw2(P, R, cy, sy, off, ty, dist);
   }
   // the new figure, to the right of today's: the same camera, turn and light; at the size the old one has on board (WK_S), so the two
-  // are compared at one height. Timed with the driver made to finish (a pixel read back), for the line over the figures.
+  // are compared at one height. Timed with the driver made to finish (a pixel read back), for the line under the figures.
   function draw2(P, R, cy, sy, off, ty, dist){
     const s = WK_S, Mv = new Float32Array([cy * s, 0, -sy * s, 0, 0, s, 0, 0, sy * s, 0, cy * s, 0, off, -ty, -dist, 1]), u = N2.loc, M = pose2(), px = new Uint8Array(4);
     gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now();          // (what was drawn before is done: the time is the new figure's)
