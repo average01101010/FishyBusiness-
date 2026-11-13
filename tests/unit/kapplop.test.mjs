@@ -156,10 +156,10 @@ export default function (t){
     lopLegClose(run, 0); t.eq([run.tasks[1].st, run.pen.map(x => x.min)], ['miss', [60]], 'overraskelsen ble ikke gjort: 60 minutter lagt til når etappen er over');
     lopLegClose(run, 0); t.eq(run.pen.length, 1, 'bare én gang');
     // no pay, no record on the board, no place: turPayOut and turEnd hand a task to lopTaskEnd
-    const {turPayOut, turEnd, turState} = K, T7 = turState(), book0 = JSON.stringify(S7.book || null), money0 = S7.money;
+    const {turPayOut, turEnd, turState} = K, T7 = turState(), cash0 = S7.cash, led0 = (S7.ledger || []).length;
     const a5 = task({k:'foto', leg:1, role:'surp', fyr:{x:0, y:0, name:'Kråkenes'}, pay:0}); run.tasks.push(a5);
     turPayOut(a5, 'Kystposten', 'Takk for bildet.', 'Thank you for the picture.');
-    t.ok(a5.st === 'done' && S7.money === money0 && JSON.stringify(S7.book || null) === book0 && !T7.done.length && !T7.act.length && T7.slots === K.TUR.boardMax, 'fyrbildet i løpet: gjort, ingen betaling, ingenting i tavlas historikk, ingen plass brukt', {st:a5.st, done:T7.done.length, slots:T7.slots});
+    t.ok(a5.st === 'done' && S7.cash === cash0 && (S7.ledger || []).length === led0 && !T7.done.length && !T7.act.length && T7.slots === K.TUR.boardMax, 'fyrbildet i løpet: gjort, ingen betaling, ingenting i tavlas historikk, ingen plass brukt', {st:a5.st, done:T7.done.length, slots:T7.slots, cash:S7.cash - cash0});
     const a6 = task({k:'slep', leg:1, role:'surp', boat:'Terna', p:{x:0, y:0}}); run.tasks.push(a6); turEnd(a6, false, null, 'ashore');
     t.ok(a6.st === 'fail' && !T7.done.length, 'slepet i løpet som gikk galt: til løpet, ikke til tavla'); }
 }
