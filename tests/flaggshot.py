@@ -46,8 +46,9 @@ async def main():
           const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.12; c.yaw = 1.5; })()""")
         pf = {}
         for _ in range(30):
-            await pg.wait_for_timeout(2000); pf = await pg.evaluate("(G3._debug.peerFlags || {})")
-            if pf.get('drawn') == 3: break
+            await pg.wait_for_timeout(2000); pf = await pg.evaluate("(G3._debug.peerFlags || null)")
+            if not pf or pf.get('drawn') == 3: break   # (a build without the counters, from before the step, has nothing to wait for)
+        pf = pf or {}
         codes = sorted(pf.get('codes') or [])
         check(pf.get('drawn') == 3 and codes == ['LOGO|rekt|g.anker.JH.marine.hvit', 'NO|rekt|', 'SE|vimpel|'],
               'de andre spillernes flagg tegnes: det kjøpte (svensk vimpel), rederiflagget med logoen, og Norge i rektangel uten kjøp', pf)
