@@ -191,6 +191,22 @@ def legs(c, upper):
     return M
 
 
+def arm_inside(c):
+    """how far out a jacket's side may stand at each height before the sleeve hanging beside it goes into it: (heights, the
+    least x of the sleeve's cloth there) with the arms as the game holds them standing (13 degrees out) and in the rest pose.
+    Jonas 13.11.2026: «Clipper den ene armen gjennom siden på jakken?» (measured: the sleeves went into the side of all ten jackets)"""
+    if getattr(c, '_arm_in', None) is None:
+        rings = [np.array(arm_ring(c, k)) for k in range(12)]; pts = []
+        for a_, b_ in zip(rings[:-1], rings[1:]):
+            for t in np.linspace(0, 1, 7): pts.append(a_ * (1 - t) + b_ * t)
+        pts = np.concatenate(pts); idx, w = K.weights(c.J, pts, cls='arm'); L, root = K.POSES(c.J)['stå']; Mx, _ = K.pose_mats(c.J, L, root)
+        q = np.concatenate([K.skin(pts, idx, w, Mx), pts]); q = q[q[:, 0] > 0]; zs = np.arange(0.70, c.J['uarm_R'][2], 0.01)
+        lim = np.array([q[np.abs(q[:, 2] - z) < 0.012][:, 0].min() if (np.abs(q[:, 2] - z) < 0.012).any() else 9.0 for z in zs])
+        ok = np.where(lim < 5)[0]; lim[:ok[0]] = lim[ok[0]] - 0.012          # (below the cuff: the glove, a little wider than the cuff it goes over)
+        c._arm_in = (zs, lim)
+    return c._arm_in
+
+
 def jacket(c, kind):
     """a jacket with its sleeves' holes, its collar and what is on it, and the trousers' top under it (the seat). The armholes' rims are
     the sleeves' first rings and the seat's leg holes the legs' first rings, vertex for vertex."""
@@ -221,6 +237,17 @@ def jacket(c, kind):
     if kind == 'parka':
         for i in range(1, nz, 2): rg[i] = rg[i] + 0.008                                                       # the quilting
     if kind == 'oilskin': rg[0] = rg[0] + 0.006 + 0.004 * np.cos(np.array(th) * 2); rg[1] = rg[1] + 0.002 * np.cos(np.array(th) * 2)   # stiff: it stands out in a few broad folds
+    # the sides stay inside the hanging sleeves: under the armhole no row stands further out than the sleeve's inner side there, less
+    # a few millimetres (but never inside the body, and over the trousers' top as above)
+    za, xa = arm_inside(c)
+    for i in range(nz):
+        z = zrows[i]; lim = float(np.interp(z, za, xa)) - 0.004; g = float(K._ss(z, sh[2] - 0.10, sh[2] - 0.15))
+        if lim > 5 or g <= 0: continue
+        floor_ = rb[i] + ease * 0.3
+        if z < zt + 0.03: floor_ = np.maximum(floor_, _smooth_ring(rb[i] + SEAT_EASE, 1) + 0.011)
+        for k in range(NC):
+            dx = abs(dirs[i][k][0])
+            if dx > 1e-6 and rg[i][k] * dx > lim: rg[i][k] = max(rg[i][k] * (1 - g) + (lim / dx) * g, floor_[k]) if lim / dx < rg[i][k] else rg[i][k]
     P = [[org[i][k] + dirs[i][k] * rg[i][k] for k in range(NC)] for i in range(nr)]
     # the neck's opening: a clean ring round the neck itself (the rays from the chest meet the neck unevenly)
     nc_ = np.array([0.0, J['neck'][1] + 0.006, J['neck'][2] + 0.004]); rn = _smooth_ring([c.out(nc_, (math.cos(a), math.sin(a), 0.0), 0.2, 0.06) for a in th], 3) + 0.010 + ease * 0.4
