@@ -619,7 +619,7 @@
   // boat), else Norway in a rectangle. The pictures in a pool by flag, shape and logo (at most 8, the oldest let go, as the logos), and
   // each boat's cloth its own, waved once a frame in the apparent wind of her course and speed. No flag on the local fleet in this step.
   // PFLAG counts for the tests (G3._debug.peerFlags)
-  const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0, near:0, out:0};
+  const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0, near:0, out:0, at:[]};
   const lruDrop = (M, max, del) => { if (M.size < max) return; let old = null; for (const [kk, v] of M) if (!old || v.used < old[1].used) old = [kk, v]; del(old[1]); M.delete(old[0]); };
   let PFCV = null, PFLC = null;
   const VIMPEL = new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);   // (the pennant's stretch, as the own boat's in 24-cinema.js)
@@ -637,7 +637,7 @@
     e.used = performance.now(); return {tex:e.tex, shape:f.shape, k};
   }
   function drawPeerFlags(kit, VP, t, H){
-    PFLAG.drawn = PFLAG.near = PFLAG.out = 0; PFLAG.codes = []; if (!FLAGM) return;
+    PFLAG.drawn = PFLAG.near = PFLAG.out = 0; PFLAG.codes = []; PFLAG.at = []; if (!FLAGM) return;
     // (any level of her model: the glass, and so the names, comes only within the near level's 150 m for a detailed model, npcNear)
     const near = []; for (const n of kit){ if (!n.player || !n.K) continue; const d = Math.hypot(n.M[12], n.M[14]); if (d < 250) near.push([d, n]); }
     if (!near.length) return; near.sort((a, b) => a[0] - b[0]); gl.disableVertexAttribArray(2); const now = performance.now(), mn = Math.floor(S.t); PFLAG.near = Math.min(6, near.length);
@@ -656,7 +656,7 @@
       clothStep(C, t, Math.hypot(ax, az));
       const fl = peerFlagTex(n), FM = model(P[0], P[1], P[2], Math.PI / 2 - Math.atan2(ax, -az), 0, 0);
       drawTexQuad({pb:C.pb, ub:FLAGM.ub, n:FLAGM.n}, fl.tex, fl.shape === 'vimpel' ? chain(FM, VIMPEL) : FM, VP, true, [0, 0.6, 0]);
-      PFLAG.drawn++; PFLAG.codes.push(fl.k);
+      PFLAG.drawn++; PFLAG.codes.push(fl.k); PFLAG.at.push([+((VP[0] * P[0] + VP[4] * P[1] + VP[8] * P[2] + VP[12]) / cw).toFixed(3), +((VP[1] * P[0] + VP[5] * P[1] + VP[9] * P[2] + VP[13]) / cw).toFixed(3), +cw.toFixed(1)]);   // (where in the picture, for the tests)
     }
   }
 

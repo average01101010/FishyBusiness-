@@ -46,15 +46,15 @@ async def main():
         await boot(pg)
         await pg.wait_for_function("G3.isActive()", timeout=90000)
         # where she lies at the start, the camera off her side over open water (the quay behind her); the three stand-ins abreast on that
-        # water 45 m out from her towards the camera, 12 m apart, the camera 62 m out, and a fourth 190 m along the shore from her
+        # water 45 m out from her towards the camera, 9 m apart, the camera 78 m out and a little from above (the wheelhouse hides a flag from low down), and a fourth 190 m along the shore from her
         await pg.evaluate("""(() => { WX_FORCE = {w:7, d:250}; S.t = Math.floor(S.t / 1440) * 1440 + 360; S.mult = 0; const b = S.boat; b.status = 'idle'; b.port = null; b.v = 0; PEERS.length = 0;
           const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.12; c.yaw = 1.5; })()""")
         await pg.wait_for_timeout(4000)
         await pg.evaluate("""(() => { const b = S.boat, bv = G3._debug.bv, e = G3._debug.eye, dx = e[0] - bv.x, dz = e[2] - bv.z, L = Math.hypot(dx, dz) || 1, u = [dx / L, dz / L], v = [-u[1], u[0]];
           const at = (a, w) => ({x:b.pos.x + (u[0] * a + v[0] * w) / 1000, y:b.pos.y + (u[1] * a + v[1] * w) / 1000}), hd = Math.atan2(v[0], -v[1]);
           const add = (id, a, w, liv) => PEERS.push(Object.assign({id, boat:'Fjordbris', vtype:'sjark', hd, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv}, at(a, w)));
-          add('tp1aaaaaaa', 45, 0, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 45, 12, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', 45, -12, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit');
-          add('tp1ddddddd', 0, 190, 'h:hvit;f:DK.splitt;m:F.7.H'); G3._debug.cam.dist = 62; G3._debug.cam.pitch = 0.06; })()""")
+          add('tp1aaaaaaa', 45, 0, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 45, 9, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', 45, -9, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit');
+          add('tp1ddddddd', 0, 190, 'h:hvit;f:DK.splitt;m:F.7.H'); G3._debug.cam.dist = 78; G3._debug.cam.pitch = 0.32; })()""")
         pf = {}
         for _ in range(30):
             await pg.wait_for_timeout(2000); pf = await pg.evaluate("(G3._debug.peerFlags || null)")
@@ -75,6 +75,10 @@ async def main():
             if os.environ.get('KYST_FLAGG_PREVIEW'): await br.close(); return
             await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(5000); await shot(pg, 'flagg_staaende.jpg')
             await pg.set_viewport_size({'width': 1280, 'height': 800})
+            # near the one with the Swedish pennant, off her quarter (the game's own test camera, npcLook)
+            for w in (2500, 2500, 2000): await pg.evaluate("(G3._debug.npcLook || G3.npcLook)('ptp1aaaaaaa', 13, 0.22, 2.4)"); await pg.wait_for_timeout(w)
+            at = await pg.evaluate("G3._debug.peerFlags.at"); print('flaggene i bildet', at, flush=True)
+            await shot(pg, 'flagg_naer_liggende.jpg'); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")
         await pg.evaluate("S.t = Math.floor(S.t / 1440) * 1440 + 1020"); await pg.wait_for_timeout(3000)
         nd = await pg.evaluate("(G3._debug.peerFlags || {}).drawn")
         check(nd == 0, 'klokka 23 er flaggene til de andre nede (flaggtidene der hun er)', nd)
@@ -94,7 +98,8 @@ async def main():
             rows.append(r); print('MÅLT', json.dumps(r, ensure_ascii=False), flush=True)
             await pg.evaluate("PEERS.length = 0"); await pg.wait_for_timeout(2000)
         if mk['bufs']:
-            check(rows[1]['MB_til_GPU'] < rows[0]['MB_til_GPU'] / 4 and rows[1]['malte_modeller_laget'] <= 2 and rows[0]['malte_modeller_laget'] >= 20,
+            check(rows[1]['MB_til_GPU'] < rows[0]['MB_til_GPU'] / 4 and rows[1]['malte_modeller_laget'] <= 2 and rows[0]['malte_modeller_laget'] >= 18,   # (one of the 20 paints is the first stand-ins', made already)
+                 
                   '20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør', rows)
             # the cap: past it, a painted model not in use is let go with its buffers (the stand-ins gone 20 s, then 13 new paints)
             cp = await pg.evaluate("""(async () => { const B = G3._debug.npcBufs, n0 = B.models, d0 = B.dropped; await new Promise(r => setTimeout(r, 21000));

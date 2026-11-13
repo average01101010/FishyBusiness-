@@ -3752,3 +3752,4 @@
 2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	maletest	OK	18	lite	samtidig	
 2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	regmarktest	OK	8	lite	samtidig	
 2026-11-13 12:10	plan/2026-11-13-108	0cd37557	flaggshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-13 12:55	plan/2026-11-13-108	95576b40+	flaggshot	FEIL	1498	3d	alene	FEIL 20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør
