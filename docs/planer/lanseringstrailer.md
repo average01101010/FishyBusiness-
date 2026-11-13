@@ -1,6 +1,6 @@
-# Lanseringstraileren (plan 13.11.2026, venter på valgene)
+# Lanseringstraileren (plan 13.11.2026, valgene tatt, venter på «klar» fra Jonas)
 
-Planen for den første traileren som legges ut. Den bygger på arbeidet i `trailer/` (strategien, filmoppsettet, opptakslista v2 og grovklippene m1 og m2 fra 10.11.2026) og bytter premisset. Ingenting filmes eller bygges før Jonas har svart på valgene nederst.
+Planen for den første traileren som legges ut. Den bygger på arbeidet i `trailer/` (strategien, filmoppsettet, opptakslista v2 og grovklippene m1 og m2 fra 10.11.2026) og bytter premisset. Valgene er tatt 13.11.2026 (del 8). Filmingen venter til Jonas sier at spillet er klart; han har økter gående som løfter kvaliteten, og GPU-maskinen er fortsatt tilgjengelig.
 
 ## 1. Hva Jonas ba om
 
@@ -29,33 +29,41 @@ Det som beholdes fra det gamle: metoden, klippene som holder, harde klipp på sl
 
 ## 4. Konseptet
 
-**Én setning først, så tre påstander som hver bevises med bilder, så én oppfordring.**
+**Én setning først, så tre påstander som hver bevises med bilder, så én oppfordring.** Filmen er filmatisk hele veien (Jonas 13.11.2026: «cinematiske klipp er jævlig stilig»); grensesnittet kommer inn to–tre ganger, oppå filmbildet.
 
-- **Kroken (0–2,5 s):** det sterkeste bildet vi har, med en setning som sier sjanger og størrelse på én gang: «Et fiskespill med hele norskekysten.» Seeren skal vite at det er et spill før tommelen rekker å bevege seg.
-- **Hva (2,5–17,4 s, den rolige delen):** du begynner med fars gamle trebåt, du fisker selv, du leverer og tjener, du kjøper større. Her må fisket synes: redskap som dras, fisk om bord, mottaket.
-- **Hvor stort (17,4–27,4 s, pusten og oppbyggingen):** fra båten og ut til hele kysten, så stedene og årstidene på slag. «Fra Hvaler til Kirkenes. Ekte kart. Ekte vær.»
-- **Mulighetene (27,4–44,9 s, full styrke):** droppet på den største båten spilleren kan eie, så redskapene, mannskapet, flåten og de andre spillerne i samme hav.
-- **Oppfordringen (44,9–50 s):** logoen på slaget, så «Spill gratis i nettleseren. detstorebla.no». «I nettleseren» er nytt og viktig: ingen nedlasting er det laveste gulvet et spill kan ha på TikTok.
+Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi man kan jo i praksis seile til svalbard, grønland, færøyene, og flere steder.» Kroken og størrelsen sier derfor kysten **og havet utenfor**.
 
-### Utkast til tekst på skjermen
-
-Tidene følger slagene i `trailer/audio/music-edit-1.json`. Høyst én kort linje per takt, ingen utropstegn.
-
-| Tid (s) | Bilde | Tekst |
-|---|---|---|
-| 0–2,5 | Sterkeste bilde (velges i T1: kuling ved Vardø, hvalen i midnattssol eller Lofotveggen) | Et fiskespill med hele norskekysten |
-| 2,5–7,4 | Naustet, trebåten ved kaia | Du begynner med fars gamle trebåt |
-| 7,4–12,4 | Redskapet dras, fisk om bord | Du fisker selv |
-| 12,4–17,4 | Mottaket, lossing, sluttseddelen | Lever. Tjen. Kjøp større. |
-| 17,4–22,4 | Fra båten og ut til hele kysten | Fra Hvaler til Kirkenes |
-| 22,4–27,4 | Steder og årstider, ett slag hver | stedsnavnene |
-| 27,4–32,4 | Droppet: den største båten spilleren kan eie | – |
-| 32,4–37,4 | Garn, line, teiner, snøkrabbe | Garn. Line. Teiner. |
-| 37,4–41,1 | Mannskapet på dekk, flere av dine båter | Eget mannskap. Eget rederi. |
-| 41,1–44,9 | Andre spilleres båter i samme farvann | Alle spiller i samme hav |
-| 44,9–50 | Logo, så adressen | Spill gratis i nettleseren. detstorebla.no |
+| Tid (s) | Del | Bilde | Tekst (engelsk utgave) | Tekst (norsk utgave) |
+|---|---|---|---|---|
+| 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys | A fishing game with the whole Norwegian coast and the sea beyond | Et fiskespill med hele norskekysten og havet utenfor |
+| 2,5–7,4 | Hva | Naustet, trebåten i grålysning | You start with your father's old wooden boat | Du begynner med fars gamle trebåt |
+| 7,4–12,4 | Hva | Trebåten på feltet. **Grensesnittet tones inn over samme bilde**, redskapet dras, fisk om bord | You do the fishing | Du fisker selv |
+| 12,4–17,4 | Hva | Mottaket, lossing, sluttseddelen | Land it. Sell it. Buy bigger. | Lever. Tjen. Kjøp større. |
+| 17,4–22,4 | Hvor stort | Kartet zoomer ut fra båten: kysten, så Svalbard, Færøyene og Grønland | From Hvaler to Kirkenes. And beyond. | Fra Hvaler til Kirkenes. Og videre. |
+| 22,4–27,4 | Mulighetene | **Båtstigen som match cut:** samme vinkel, en større båt på hvert slag | – | – |
+| 27,4–32,4 | Mulighetene | Droppet: snøkrabbefartøyet ved Svalbard i lav sol, ett langt tak | stedsstempel | stedsstempel |
+| 32,4–41,1 | Verden | På slag: Lofoten i vintersol, hvalen i midnattssol, kuling ved Vardø, nordlys, kystnotbåten under Gisundbrua, garn, line og teiner innimellom | stedsstempler; Nets. Longlines. Pots. | stedsstempler; Garn. Line. Teiner. |
+| 41,1–44,9 | Mulighetene | Mannskapet på dekk, dine båter, andre spilleres båter | Your crew. Your fleet. One shared ocean. | Eget mannskap. Eget rederi. Ett felles hav. |
+| 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free in your browser. detstorebla.no | Spill gratis i nettleseren. detstorebla.no |
 
 Teksten er et utkast. Hver påstand sjekkes mot spillet i T1 før den låses (del 7).
+
+**Kystnotbåten** kan ikke kjøpes (del 3), så hun er med som en båt i verden, i sitt beste klipp (under Gisundbrua), uten tekst som sier at hun kan bli din. **Snøkrabbefartøyet** kan kjøpes og får droppet. Skal kystnotbåten vises som spillerens egen, må hun låses opp først; det er Jonas' valg.
+
+## 4b. Stilen
+
+Dommen over m2 (kontaktarket `trailer/control-m1/grovklipp-m2-kontaktark.jpg`): klippene i lavt lys holder (naustet i grålysning, hvalen i motlys, nordlyset, sluttkortet over solstripa, bruklippene). Klippene midt på dagen holder ikke: flat blå himmel, høyt kamera over byene så husene blir fargede klosser og båten en prikk, og snøkrabbefartøyet ved Svalbard i flatt lys og halvveis ute av bildet. Land utenfor Norge og Svalbard er tomme bakker eller en hvit stripe (`docs/BACKLOG.md`). Stedsnavnene er for små og forsvinner mot lys himmel.
+
+1. **Lyset velger klippet.** Bare lav sol, blå time, natt eller vær. Ingen klipp midt på dagen under flat blå himmel. Spillet regner sola der båten er, så det er et valg av dato og klokkeslett i klippfila.
+2. **Lavt, nært og lang linse.** Kameraet står i høyde med rekka eller lavere, 18–30° brennvidde, båten fyller bildet og fjellene trekkes inn bak. Som filmet fra en annen båt eller fra land. Ingen høye dronebilder over byer. Én rolig bevegelse per klipp; klippene gir farten.
+3. **Stående bilde bygges i høyden:** himmel, fjell, båt, speiling. Båten forfra eller bakfra, bru og mast over. Motiv og tekst utenfor TikToks soner (øverste 10 %, nederste 22 %, høyre kant; tallene er et anslag og sjekkes mot appen i T1).
+4. **Blått og én varm ting.** Dyp blågrønn sjø, og én varm aksent i hvert bilde: sola, lys i vinduer, oransje oljehyre. Samme gradering over alle klipp (S-kurven, vignetten og kornet i `assemble.py`). Ingen effekter lagt på etterpå: ingen linseglans, risting eller AI-bilder.
+5. **Teksten i to nivåer,** begge i Source Serif 4 Display Semibold (spillets egen). *Påstanden:* vanlig skrift, rundt 96 px i 1080 bredde, høyst tre linjer. *Stedsstempelet:* sperrede versaler, en strek og koordinatene under, som en linje i loggboka. Et mykt mørkt felt bak, så teksten leses på lys himmel og i solstripa. Minst to slag på skjermen. Skisse: `trailer/stil/stilark-1.jpg`.
+6. **Grensesnittet tones inn over filmbildet,** det klippes ikke til. Samme 3D-bilde, og så kommer instrumentene på: det sier «dette er et spill, og slik ser det ut når du spiller» uten et ord. Kartet filmes i mørkt tema, så det går i ett med graderingen.
+7. **Rytmen følger låta:** lange tak i den rolige delen, båtstigen som match cut i oppbyggingen, ett langt tak på droppet, korte klipp på slag etterpå.
+8. **Havet utenfor Norge** vises i 3D der landet holder (Svalbard) og i kartet ellers, til terrenget på Færøyene, Shetland og Grønland er løftet.
+9. **Sluttkortet** er logoen fra `tools/brand/logo.py` over et levende bilde, som i m2, men med adressen stor nok til å leses på en telefon.
+10. **«All footage captured in-game»** i liten skrift i åpningen. Det er sant, og det er det folk spør om.
 
 ### Én film og fire korte
 
@@ -92,31 +100,18 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 - **Lengden.** 50 s er langt for kald rekkevidde på TikTok. Planen satser på at kroken og de korte klippene bærer det (V3).
 - **Lyden:** musikken bærer. Semidieselen under åpningen er fortsatt bare mulig med lydrendering i filmoppsettet, som ikke er prøvd.
 
-## 8. Valgene
+## 8. Valgene (Jonas 13.11.2026)
 
-**V1. Grensesnitt i bildet.** 10.11 sa Jonas «Ingen UI, UX eller GUI». Det nye premisset trekker den andre veien.
-- **A (anbefalt): to–tre korte spilløyeblikk med grensesnitt,** filmet i telefonformat: kartet som zoomer ut fra båten til hele kysten, fangsten som kommer om bord, sluttseddelen. Resten rent. Uten ett bilde som viser at dette styres med fingeren, er «er dette et spill?» den første kommentaren. Bare det som holder i prøvebildene i T1, kommer med.
-- B: intet grensesnitt. Teksten på skjermen sier alt.
-- C: spillbilder først, filmbilder som pynt.
-
-**V2. Den største båten og løftet.** Kystnotbåten kan ikke kjøpes i dag.
-- **A (anbefalt): droppet går til en båt spilleren kan eie,** snøkrabbefartøyet eller autolineren, og teksten lover bare det som finnes. Kystnotbåten kan gå forbi som en av de andre båtene i farvannet. T1 sjekker hele kjøpsveien før noe låses.
-- B: kystnotbåten låses opp før publisering. Det er spillarbeid (plassen i stigen er ikke bestemt), og porten er frossen.
-- C: bildet beholdes, «… til snurper» strykes. Hun er fortsatt hovedbildet i en film om hva du kan bli, så løftet står der uten ord.
-
-**V3. Lengde og musikk.**
-- **A (anbefalt): 50 s på «Fjord at Dawn»,** med kroken lagt foran og de fire korte ved siden av. Låta er analysert, og droppet ved 27,4 s passer overgangen til «mulighetene».
-- B: ny låt på rundt 30 s og én strammere film. Bedre for kald rekkevidde, men ny musikk, nytt klippekart og mindre plass til tre påstander.
-
-**V4. Når.**
-- **A (anbefalt): så snart filmen holder og porten er grønn,** og en utgave med Lofoten først i uka før Lofotfisket åpner 20. januar (den gamle planen), klippet av de samme opptakene.
-- B: vent til januar med alt.
-- C: legg ut filmen før porten er grønn, uten lenke til spillet.
+- **V1 A:** to–tre korte spilløyeblikk med grensesnitt, resten rent. Bare det som holder i prøvebildene i T1.
+- **V2 A:** droppet går til en båt spilleren kan eie. Jonas: «gjerne ringnotbåten og krabbebåten da disse er jobbet mye med og har veldig gode modeller.» Snøkrabbefartøyet får droppet; kystnotbåten er med som båt i verden, fordi hun er låst (del 4).
+- **V3 A:** «Fjord at Dawn», 50 s.
+- **V4:** «i løpet av de nærmeste dagene», ingen fast dag. Filmingen venter på Jonas' «klar».
+- **Språk:** Jonas har én TikTok-konto for Norge og én for utlandet, og traileren kan være på engelsk; Norge er fortsatt målgruppen. Teksten på skjermen er det eneste språket i filmen, så den lages i to utgaver av de samme klippene: engelsk til den internasjonale kontoen og norsk til den norske. Stedsnavnene og «Det Store Blå» er like i begge. Vil Jonas bare ha én, blir det den engelske.
 
 ## 9. Hva planen ikke gjør
 
 - Ingen stemme i masteren. Jonas' egen stemme kan legges på som egen utgave senere, som avgjort 30.10.2026.
-- Ingen engelsk utgave og ingen 16:9 nå. Begge kan klippes av de samme opptakene etterpå.
+- Ingen 16:9 nå. Den kan klippes av de samme opptakene etterpå.
 - Ingen betalt annonsering. Den hører til den offentlige lanseringen.
 - Legger ingenting til i køen, i porten eller over lanseringslinja. Traileren er ikke et steg i køen.
 - Ingen videoopptak av skjermen: klippene lages bilde for bilde av filmoppsettet, som sist.
@@ -124,4 +119,4 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 
 ## 10. Status
 
-13.11.2026: planen skrevet. Venter på V1–V4 og på svar om GPU-maskinen.
+13.11.2026: planen skrevet, valgene tatt, stilen lagt til (del 4b) med stilarket `trailer/stil/stilark-1.jpg`. Neste er T1 (faktasjekk og prøvebilder), som kan gjøres uten GPU. T3 venter på Jonas' «klar».
