@@ -208,6 +208,7 @@
     // to Kystmegleren come after the list, and so does «Neste mål», fartoy())
     const usedHere = atKind('verft') && MBC.list().some(x => x.port === S.boat.port), mgh = mgHere();
     if (usedHere) h.push(mgh);
+    else if (atKind('verft')) h.push('<p class="ph-note st-fit">' + L('Brukte båter fra andre spillere:', 'Used boats from other players:') + ' <button type="button" class="ic-more" data-pa="open" data-a="nett" data-s="megler">' + L('Kystmegleren ›', 'Kystmegleren ›') + '</button></p>');   // (the way to the broker stays within reach above the list)
     h.push('<div class="ph-sub mk">' + [['open', 'Åpen gruppe', 'Open group'], ['lic', 'Med hjemmel', 'With a right'], ['kyst', 'Kystflåten', 'Coastal fleet'], ['hav', 'Havfiske', 'Ocean']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mktab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
     const bn = '«' + S.boatName + '»', ti = tradeIn();
     if (tab === 'open'){
