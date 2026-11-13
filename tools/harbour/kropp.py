@@ -716,7 +716,7 @@ def POSES(J):
     # apart fore and aft, the head turned as far as the neck lets it, the arms straight forward
     g = {}
     g['thigh_R'] = rot(X, -32); g['shin_R'] = rot(X, 12); g['thigh_L'] = rot(X, 22); g['shin_L'] = rot(X, 30)
-    P['gange'] = (_arms(J, g, out=10, fwd=0, el=20), (0, 0, -0.04))
+    P['gange'] = (_arms(J, g, out=13, fwd=0, el=14), (0, 0, -0.04))          # (the arms as standing: what a jacket's sides are cut to clear)
     P['hodevri'] = (_arms(J, {'neck': rot(Z, 35), 'head': rot(Z, 40)}, out=13, el=14), (0, 0, 0))
     P['arm frem'] = (_arms(J, {}, out=6, fwd=90, el=4), (0, 0, 0))
     return P
