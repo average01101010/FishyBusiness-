@@ -672,7 +672,7 @@ function crewSim(src){
     const legs = stand([0, HY, 0.11], 0.12).concat(stand([0, HY, -0.11], -0.12));
     const std = (r, l, ...more) => { const hips = q => [q[0] - HX, q[1] - HY, q[2]], wrist = (hd, i) => { const s = torsoPt(SHL[i], b0, 0), q = hips(hd), v = [q[0] - s[0], q[1] - s[1], q[2] - s[2]], n = Math.hypot(v[0], v[1], v[2]) || 1; return [q[0] - v[0] / n * C.HAND, q[1] - v[1] / n * C.HAND, q[2] - v[2] / n * C.HAND]; };
       const rb = reachBody(SHL, [wrist(r, 0), wrist(l, 1)], (L0.ua + L0.fa) * C.REACH, b0), bT = b0 + rb.b, tw = rb.t, at = (q, t) => { const p = torsoPt([q[0], q[1] - HY, q[2]], bT, t == null ? tw : t); return [p[0] + HX, p[1] + HY, p[2]]; }, seg = (A, B, t) => [at(A, t), at(B, t)];
-      const out = legs.concat([seg([0, 0.95, 0], [0, 1.45, 0]), seg([0.12, 1.0, 0], [0.12, 1.38, 0]), seg([-0.12, 1.0, 0], [-0.12, 1.38, 0]), seg([0, 1.42, 0.21], [0, 1.42, -0.21]), seg([0, 1.5, 0], [0, 1.8, 0], 0), seg([0.13, 1.64, 0], [-0.13, 1.64, 0], 0)]);
+      const out = stand([0, HY, 0.11], 0.12).concat(stand([0, HY, -0.11], -0.12), [seg([0, 0.95, 0], [0, 1.45, 0]), seg([0.12, 1.0, 0], [0.12, 1.38, 0]), seg([-0.12, 1.0, 0], [-0.12, 1.38, 0]), seg([0, 1.42, 0.21], [0, 1.42, -0.21]), seg([0, 1.5, 0], [0, 1.8, 0], 0), seg([0.13, 1.64, 0], [-0.13, 1.64, 0], 0)]);
       for (const i of [0, 1]){ const sd = i ? -1 : 1, hd = i ? l : r, o = armHand(SHL[i], torsoInv(hips(hd), bT, tw), sd, L0), sh = at([0, 1.42, sd * C.SH[1]]), el = at([o.j[0], o.j[1] + HY, o.j[2]]), wr = at([o.e[0], o.e[1] + HY, o.e[2]]);
         for (const q of limb([[sh, el], [el, wr], [wr, o.over > 0 || o.near > 0 || o.push > 0 ? tip(el, wr) : hd]])) out.push(q); }
       return out.concat(more); };
@@ -1235,7 +1235,7 @@ function armIk(s, tg, sd, L, o, cl){
   // belly the wrist keeps CHEST ahead of the spine, and well across him FRONT, going round before the belly; how far it was moved
   // is in push. The edges soft)
   const C0 = LEMMER, k01 = v => v < 0 ? 0 : v > 1 ? 1 : v, wu = k01((tg[1] + 0.05) / 0.08) * k01((C0.SH[0] + 0.05 - tg[1]) / 0.08);
-  const need = Math.max(C0.CHEST * Math.sqrt(Math.max(0, 1 - tg[2] * tg[2] / 0.0361)), C0.FRONT * k01((-0.05 - tg[2] * sd) / 0.1)) * wu, lack = (need - tg[0]) * k01(need / 0.03);   // (the torso round: 0.19 m to either side; nothing asked of a wrist out beside it)
+  const need = Math.max(C0.CHEST * Math.sqrt(Math.max(0, 1 - tg[2] * tg[2] / 0.0361)), C0.FRONT * k01((-0.05 - tg[2] * sd) / 0.1)) * wu, lack = tg[0] < -0.2 ? 0 : Math.min(0.4, (need - tg[0]) * k01(need / 0.03) * k01((tg[0] + 0.2) / 0.05));   // (the torso round: 0.19 m to either side; nothing asked of a wrist out beside it, nor of one behind his back, which is not pulled through him)
   if (lack > 1e-4){ o = armIk(s, [tg[0] + lack + 1e-3, tg[1], tg[2]], sd, L, o, cl); o.push = lack; return o; }
   // (a hand up by the shoulder or over it, the cup at the mouth, the binoculars, an arm up: the elbow down under it, not back)
   const C = LEMMER, P = C.ELBOW, CL = C.CLEAR + (cl || 0), up = Math.min(1, Math.max(0, (tg[1] - s[1] + 0.25) / 0.3)), hi = up * up * (3 - 2 * up); o = ik2(s, tg, L.ua, L.fa, [P[0] + (C.ELBOWHI - P[0]) * hi, P[1], P[2] * sd * (1 - hi * Math.min(1, Math.max(0, (tg[2] * sd - s[2] * sd) / 0.1)))], o);   // (and not out, under a hand raised out to his side)

@@ -143,7 +143,8 @@ def spread(R, nm, L):
 async def checks(pg):
     boats = await pg.evaluate(BOATS); mid = boats[1]; print('båter:', boats, flush=True)
     await pg.set_viewport_size({'width': 240, 'height': 150})   # (a tiny window: SwiftShader takes 25 s a frame at 640×400, and the checks read numbers)
-    on = await pg.evaluate("[LEMMER.on, (h => /folk2/.test(h) && !/ik0/.test(h))('#qfix,seed=1,ro0#notut')]")
+    # (and a page of its own without the mark: the game as it is played)
+    p2 = await pg.context.new_page(); await boot(p2, GAME); on = [await pg.evaluate("LEMMER.on"), await p2.evaluate("LEMMER.on")]; await p2.close()
     check(on == [not OFF, False], 'løseren er på bak #folk2 og av uten merket (og av med #ik0)', on)
     std = await pg.evaluate("limbLen(null)"); reach = (std['ua'] + std['fa']) * await pg.evaluate("LEMMER.REACH"); names = {'ua': 'overarm', 'fa': 'underarm', 'th': 'lår', 'sn': 'legg'}
     full = [('arbeid', 4), ('garn', 3), ('juksa', 3), ('egning', 2), ('boting', 2), ('pause', 2)]
