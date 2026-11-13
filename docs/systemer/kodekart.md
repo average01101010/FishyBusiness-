@@ -751,7 +751,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
 - **159** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
   - 162 `kmBuyWhy(item, to, kr0)`
 
-## `src/js/core/03k-hav-fft.js` (150 linjer)
+## `src/js/core/03k-hav-fft.js` (153 linjer)
 
 ---------- the short sea as a wave field: FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -764,9 +764,9 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 53 `hfft1(p, re, im, o, st)`
   - 62 `hfft2(p, re, im)`
   - 68 `hfftSpec(T, P)`
-  - 95 `hfftFrame(T, t, out, W, outD)`
-  - 122 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false)`
-  - 141 `hfftMips(out, N)`
+  - 98 `hfftFrame(T, t, out, W, outD)`
+  - 125 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false)`
+  - 144 `hfftMips(out, N)`
 
 ## `src/js/core/04-crew.js` (735 linjer)
 
@@ -2899,12 +2899,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1632 linjer)
+## `src/js/ui/phone/07-patch.js` (1633 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1620 `patch()`
+  - 1621 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4506,25 +4506,28 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 720 `seaHFast(x, z, t)`
   - 722 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (205 linjer)
+## `src/js/view3d/14b-fft.js` (271 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
 - **1** the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026)
   - 13 `fftWorker()`
   - 32 `fftOff(why)`
-  - 37 `fftInit()`
-  - 57 `fftParams(t)`
-  - 65 `fftGot(D)`
-  - 88 `fftKeep(a)`
-  - 95 `fftKeepS(bufs)`
-  - 104 `fftTrH(x, z, only2)`
-  - 122 `fftAt(x, z, lod)`
-  - 134 `fftA0()`
-  - 137 `fftSyncAt(tw)`
-  - 145 `fftStep(t)`
-  - 160 `fftBind(u, eye)`
-  - 194 `seaShared(u, t)`
+  - 38 `fftInit()`
+  - 59 `fftParams(t)`
+  - 81 `fftBlInit()`
+  - 98 `fftBlGot(tC)`
+  - 105 `fftBlend(now)`
+  - 122 `fftGot(D)`
+  - 148 `fftKeep(a)`
+  - 155 `fftKeepS(bufs)`
+  - 164 `fftTrH(x, z, only2)`
+  - 182 `fftAt(x, z, lod)`
+  - 194 `fftA0()`
+  - 197 `fftSyncAt(tw)`
+  - 205 `fftStep(t)`
+  - 226 `fftBind(u, eye)`
+  - 260 `seaShared(u, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
