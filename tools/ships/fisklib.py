@@ -96,14 +96,15 @@ def fishing_anchors(H, LT, WIN, skipper, crew, deck_z, gw):
             'deck': {'y': round(deck_z - H.T, 3), 'z': 0.0}, 'gw': round(gw - H.T, 3), 'stern': H.L / 2, 'bow': -H.L / 2, 'side': H.HB, 'beam': H.B,
             'open': False, 'hand': False, 'liv': True}
 
-def fishing_check(T_ID, H, LT, hull_z, more, cb=(0.40, 0.60)):
+def fishing_check(T_ID, H, LT, hull_z, more, cb=(0.40, 0.60), what='en fiskebåt med skjegg og kjøl', disp=None):
     ok = [True]
     def say(good, txt):
         ok[0] = ok[0] and good; print(('OK   ' if good else 'FEIL ') + T_ID + ': ' + txt)
     top = H.zd(1.0)
     say(abs(H.x(1.0, top) - H.x(0.0, top) - H.L) < 0.05, 'lengde over alt %.2f m (modellens %.2f)' % (H.x(1.0, top) - H.x(0.0, top), H.L))
     say(abs(2 * H.hw(0.5, H.zd(0.5)) - H.B) < 0.05, 'bredde %.2f m (modellens %.2f)' % (2 * H.hw(0.5, H.zd(0.5)), H.B))
-    v = volume(H); say(cb[0] < v / (H.L * H.B * H.T) < cb[1], 'deplasement %.0f t (Cb %.2f; en fiskebåt med skjegg og kjøl har Cb %.2f-%.2f, antatt)' % (v * 1.025, v / (H.L * H.B * H.T), cb[0], cb[1]))
+    v = volume(H); say(cb[0] < v / (H.L * H.B * H.T) < cb[1], 'deplasement %.1f t (Cb %.2f; %s har Cb %.2f-%.2f, antatt)' % (v * 1.025, v / (H.L * H.B * H.T), what, cb[0], cb[1]))
+    if disp: say(disp[0] <= v * 1.025 <= disp[1], 'deplasementet %.1f t innenfor %.1f-%.1f t for typen (antatt)' % (v * 1.025, disp[0], disp[1]))
     for good, txt in more: say(good, txt)
     check_lights(H, LT, hull_z, say)
     return ok[0]

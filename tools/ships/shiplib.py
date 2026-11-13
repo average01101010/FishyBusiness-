@@ -431,7 +431,7 @@ def check_lights(H, L, hull_z, say):
         say(LOA - xx('masthead') <= LOA / 4 + 1e-6, 'den forre %.1f m fra stevnen (3(a): høyst en firedel av lengden)' % (LOA - xx('masthead')))
     sh = zz('port') - hull_z
     say(sh <= 0.75 * mh + 1e-6, 'sidelanternene %.1f m over skroget, høyst 3/4 av topplanterna (2(g))' % sh)
-    say(xx('port') <= xx('masthead') + 1e-6, 'sidelanternene ikke forut for den forre topplanterna (3(b))')
+    if LOA >= 20: say(xx('port') <= xx('masthead') + 1e-6, 'sidelanternene ikke forut for den forre topplanterna (3(b), fra 20 m)')
     say(L['port'][1] > 0 and L['stbd'][1] < 0 and abs(L['port'][1] + L['stbd'][1]) < 1e-6, 'rød om babord, grønn om styrbord')
 
 def volume(H):
@@ -483,11 +483,14 @@ def run(M):
     join(solids, 'BOAT0'); join(glass, 'GLASS0')
     H = M.H
     if 'fast' not in sys.argv:
+        shown = M.show_parts() if hasattr(M, 'show_parts') else []   # (the sails set, in the renders only)
         L, XM, T = H.L, H.L / 2, H.T
         beauty(OUT, M.T_ID, T, [('side', (XM, -2.6 * L, T + 4), (XM, 0, T + 4), 50), ('bow3q', (L * 1.25, -L * 0.8, T + L * 0.12), (XM, 0, T + 3), 50),
                                  ('stern3q', (-L * 0.35, L * 0.75, T + L * 0.16), (XM, 0, T + 3), 50)])
+        for o in shown: bpy.data.objects.remove(o, do_unlink=True)
     if export:
         tg, tn = to_game_f(H)
         ex = {'frame': 'kystfiske: x starboard, y up from the waterline, z aft; metres', 'type': M.T_ID, 'name': M.NAME, 'len': H.L, 'beam': H.B, 'draft': H.T,
               'anchors': M.anchors()}
-        export_boat(lambda fine: M.build(fine), tg, tn, OUT, M.T_ID + '.glb', os.path.join(ROOT, 'src', 'data', M.T_ID + '.b64'), ex, side=None, dry=dry)
+        more = M.more() if hasattr(M, 'more') else None   # (parts of their own: the sailing boat's sails set and furled, drawn by view3d drawSail)
+        export_boat(lambda fine: M.build(fine), tg, tn, OUT, M.T_ID + '.glb', os.path.join(ROOT, 'src', 'data', M.T_ID + '.b64'), ex, side=None, dry=dry, more=more)
