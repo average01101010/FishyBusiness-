@@ -89,7 +89,9 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 - **Skjermene:** utstyrsbutikken i liggende (kategoriskinne til venstre, to spalter med varer, varen først), telefonen i nettbrettstørrelse (appene i tre grupper og det viktigste nå ved siden av), Om bord i stående (ark på 58 % så båten synes, fire faner på én linje, én linje per redskap med stand).
 - **Ikke sett av økta i en nettleser:** lerretet tegner skissene selv, og økta har ikke åpnet siden. Tallene i skissene er eksempler (standen på redskapen, avstanden til Botnhamn), ikke spilltilstand. Appikonene er bokstaver som plassholdere for spillets egne ikoner.
 
-Jonas velger retning (A, B eller en blanding per skjerm); så bygges D1.
+**Jonas 13.11.2026: «Jeg liker best retning B best av alternativene.»** Retning B «Styrhus» gjelder: mørkt glass over 3D-bildet (`rgba(11,23,32,0.86–0.9)` med uskarp bakgrunn, kant `#2A4252`), kort `#15252F`, tekst `#EEF4F7` og dempet `#A9BEC8`, valgt fane lys (`#EEF4F7` med mørk tekst), magenta `#C22A86` bare på kjøp og godta, grønn `#4FC08A` og gul `#F0B94A` for stand. Økta leser svaret som B for alle menyene, også de med mye lesing (regnskap, regler, Håndboka); dekksdagboka og Kystposten beholder papiret sitt. Snus per skjerm i D1 om lesingen blir tung på nettbrettet.
+
+**D1 bygger dette** som ett sett i `src/styles.css` (knapper, kort, faner, skrift, avstander), uten å flytte innhold. Før D1: uskarp bakgrunn (`backdrop-filter`) over WebGL må måles på nettbrettet; er den for dyr, brukes en tettere flate uten uskarphet.
 
 ## Usikkert
 
@@ -98,4 +100,4 @@ Jonas velger retning (A, B eller en blanding per skjerm); så bygges D1.
 
 ## Status
 
-13.11.2026: runde én og to sendt, planen skrevet. Ingenting av ombyggingen er bygd; kartplotterens topplinje i stående er rettet underveis. Venter på Jonas.
+13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. Neste: D1 i egen økt.
