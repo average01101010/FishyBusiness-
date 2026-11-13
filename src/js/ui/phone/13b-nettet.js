@@ -38,25 +38,35 @@
     if ((c.olje || 0) < people || (c.varme || 0) < people) out.push({k:'cloth', pg:'utstyrb', id:'ic-varme', t:['Klær til alle om bord', 'Clothes for everyone aboard']});
     return out.filter((x, i, a) => a.findIndex(y => y.t[0] === x.t[0]) === i);
   }
-  // the top of the shop on the quay: the keeper, what is reserved here, and what the boat needs
+  // the top of the shop on the quay (D3, 13.11.2026: one compact top in place of four boxes, so the first item stands above the fold):
+  // the place and that you are here, the keeper's line, what is reserved here, what the boat needs as chips, and under Elektronikk og
+  // haler what a fitting binds. ui/10c-dock.js dress() leaves its own «Du er her» off these pages (OWNTOP)
   function shopTop(cur){
     const pt = portById(S.boat.port); if (!pt || !atKind('butikk')) return '';
-    const h = ['<div class="ph-card shop-k"><div class="shop-kp" aria-hidden="true">' + keeperName(pt).charAt(0) + '</div><div><h4>' + (pt.id === 'finnsnes' ? L('Fiskeutstyr på kaia i Finnsnes', 'The tackle shop on the quay in Finnsnes') : L('Butikken i ', 'The shop in ') + pt.name) + '</h4><p class="shop-say"><b>' + keeperName(pt) + ':</b> «' + keeperLine(pt) + '»</p></div></div>'];
+    const kn = keeperName(pt), h = ['<div class="shop-top"><div class="shop-k"><div class="shop-kp" aria-hidden="true">' + kn.charAt(0) + '</div><div class="st-t"><div class="st-h"><b>' + pt.name + '</b><span class="st-here">' + L('Du er her', 'You are here') + '</span></div><p class="shop-say"><b>' + kn + ':</b> «' + keeperLine(pt) + '»</p></div></div>'];
     const here = pickAt(pt.id);
     if (here.length){ const tot = here.reduce((a, o) => a + pickKr(o), 0);
-      h.push('<div class="ph-card pick"><h4>' + L('Bestilt til henting her', 'Ordered for collection here') + '</h4>' + here.map(o => { const nm = pickName(o);
+      h.push('<div class="pick"><h4>' + L('Bestilt til henting her', 'Ordered for collection here') + ' <small>' + L('betales når du henter', 'paid when you fetch it') + '</small></h4>' + here.map(o => { const nm = pickName(o);
         return '<div class="pick-r"><span>' + L(nm[0], nm[1]) + '</span><span class="pick-b"><button class="ph-btn p" data-pa="ptake" data-id="' + o.id + '"' + (pickKr(o) > spendable() ? ' disabled' : '') + '>' + L('Hent', 'Fetch') + ' · ' + kr(pickKr(o)) + '</button><button class="ph-btn alt ic-x" data-pa="pdrop" data-id="' + o.id + '" aria-label="' + L('Avbestill', 'Cancel') + '">✕</button></span></div>'; }).join('') +
-        (here.length > 1 ? '<button class="ph-btn p" data-pa="ptakeall"' + (tot > spendable() ? ' disabled' : '') + '>' + L('Hent alt', 'Fetch it all') + ' · ' + kr(tot) + '</button>' : '') + '<p class="ph-note">' + L('Betales når du henter.', 'Paid when you fetch it.') + '</p></div>'); }
+        (here.length > 1 ? '<button class="ph-btn p" data-pa="ptakeall"' + (tot > spendable() ? ' disabled' : '') + '>' + L('Hent alt', 'Fetch it all') + ' · ' + kr(tot) + '</button>' : '') + (here.some(o => o.w === 'equip') ? '<small class="ic-sub">' + fitSays() + '</small>' : '') + '</div>'); }   // (equipment fetched is fitted: the same binding as bought over the counter)
     const need = buyList();
-    if (need.length) h.push('<div class="ph-card buyl"><h4>' + L('Det «' + S.boatName + '» trenger nå', 'What the «' + S.boatName + '» needs now') + '</h4><div class="buyl-c">' + need.map(x => '<button class="chip-b" data-pa="icgo" data-pg="' + x.pg + '" data-id="' + (x.id || 'ic-' + x.k) + '">' + L(x.t[0], x.t[1]) + ' ›</button>').join('') + '</div></div>');
-    return h.join('');
+    if (need.length) h.push('<div class="buyl"><span class="st-l">' + L('«' + S.boatName + '» trenger nå', 'The «' + S.boatName + '» needs now') + '</span><div class="buyl-c">' + need.map(x => '<button class="chip-b" data-pa="icgo" data-pg="' + x.pg + '" data-id="' + (x.id || 'ic-' + x.k) + '">' + L(x.t[0], x.t[1]) + ' ›</button>').join('') + '</div></div>');
+    if (cur === 'utstyrb') h.push('<p class="st-fit">' + fitSays() + ' <button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="lex_montering">' + L('Mer om montering ›', 'More on fitting ›') + '</button></p>');
+    return h.join('') + '</div>';
   }
+  // the line under a buy button (D3): the fitting's time and that she lies until it is done, and, where the button asks «Bekreft · kr»
+  // first (from IC_CONFIRM_KR: phone/14-act.js), that it does, before the tap
+  const buySub = (price, fits, confirms) => { const t = [fits ? L('Montering ' + durBoth(YARD_H * 60) + '. Båten ligger i havn imens.', 'Fitting ' + durBoth(YARD_H * 60) + '. The boat stays in port meanwhile.') : '', confirms && price >= IC_CONFIRM_KR ? L('Du bekrefter før kjøpet.', 'You confirm before you buy.') : ''].filter(Boolean).join(' ');
+    return t ? '<small class="ic-sub">' + t + '</small>' : ''; };
+  // what a fitting binds, in one sentence (D3): the yard's time in both clocks, and that she lies in port until it is done (a departure
+  // waits for the yard's jobs: ui/08-actions.js depnow, core/05-vessels.js)
+  const fitSays = () => L('Montering tar ' + durBoth(YARD_H * 60) + ', og båten ligger i havn til den er ferdig.', 'Fitting takes ' + durBoth(YARD_H * 60) + ', and the boat stays in port until it is done.');
   // ---- fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
   // trying gear on the boat in 3D before it is bought (M3): what was tried this session, for the measure (shop_buy tried, shop_try)
   const TRIED = new Set();
   const tryable = k => typeof G3 !== 'undefined' && !!G3.tryView && (G3.TRY3D || []).includes(k) && S.boat.status === 'port' && !S.boat.land && equipFits(k, S.boat.type);
   function equipTry(k){ if (!tryable(k)) return; const on = G3.trying === k; G3.tryView(on ? null : k); if (!on){ TRIED.add(k); if (typeof cloudEv === 'function') cloudEv('shop_try', {k}); } }
-  const tryBtn = k => !tryable(k) ? '' : '<button class="ph-btn alt" data-pa="eqtry" data-k="' + k + '"' + (G3.trying === k ? ' aria-pressed="true"' : '') + '>' + (G3.trying === k ? L('Ta av igjen', 'Take it off') : L('Prøv på båten', 'Try it on the boat')) + '</button>';
+  const tryBtn = k => !tryable(k) ? '' : '<button class="ph-btn alt" data-pa="eqtry" data-k="' + k + '"' + (G3.trying === k ? ' aria-pressed="true"' : '') + '>' + (G3.trying === k ? L('Ta av igjen', 'Take it off') : L('Se den på båten', 'See it on the boat')) + '</button>';
   function equipBuy(k){
     const E = EQUIP[k]; if (!E) return L('Ukjent utstyr.', 'Unknown equipment.');
     // the knives and the gaff in tiers (OPP1): the next tier, paid and aboard at once at the tackle shop's quay (core/10-gear.js tierBuy,

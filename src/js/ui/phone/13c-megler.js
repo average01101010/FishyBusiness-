@@ -210,7 +210,7 @@
   function mgHere(){
     if (!atKind('verft')) return ''; MBC.load();
     const A = MBC.list().filter(x => x.port === S.boat.port), mine = S.fleet.filter(v => v.id !== S.me || mbSale(v));
-    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå. Verftet selger nye til full pris under.', 'No used boats at this quay now. The yard sells new ones at full price below.') + '</p>') +
+    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå. Verftet selger nye til full pris.', 'No used boats at this quay now. The yard sells new ones at full price.') + '</p>') +
       (mine.length ? '<h5>' + L('Selg en båt', 'Sell a boat') + '</h5>' + mine.map(v => '<p><b>«' + mgEsc(vget(v, 'boatName')) + '»</b></p>' + mgOwnRow(v, true)).join('') : '') +
       '<button class="ph-btn alt" data-pa="open" data-a="nett" data-s="megler">' + L('Alle båter hos Kystmegleren ›', 'All boats at Kystmegleren ›') + '</button></div>';
   }

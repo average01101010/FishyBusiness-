@@ -59,8 +59,14 @@ let hudV = '', hudT = 0, hudCard = false;   // hudCard: the whole box open as a 
 // to (S.settings.hudMin). The little chart has a fixed place under either (styles.css), whatever the box holds
 // the phone's layout: upright, and a phone on its side too (no higher than 520 px; Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på
 // samme måte som stående … Og det skal være likt i alle formater»): the chart on top, the strip under it, a tap gives the card
-const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait), (max-height: 520px)') : null;
+// D6 (designombyggingen, 13.11.2026: «HUD-en er lik i begge formater»): a tablet upright has the whole box as a tablet on its side has
+// (the gauges and «Regler ✓ Lov her» stood only behind a tap there); only a phone (upright up to 560 px wide, or on its side) keeps the
+// strip. While the drawer's sheet is open upright, and in the chart plotter upright, the strip stands as before (the sheet starts under
+// the strip's fixed height, and the plotter's layout is made for it: U2-8)
+const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait) and (max-width: 560px), (max-height: 520px)') : null;
+const HUDUP = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait)') : null;
 const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
+const hudSheet = () => !!(HUDUP && HUDUP.matches) && (document.body.classList.contains('dk-open') || !document.body.classList.contains('v3d'));
 // the strip's second line: diesel, hold, energy and sea as an icon (the dock's stroke icons' kin) and a figure
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',
   // the hold: a fish (Jonas 07.11.2026: «gjør ikonet som står for last i statusboksen om til en fisk. Det er mye mer forståelig»; the box
@@ -153,7 +159,7 @@ function renderHud(){
   const b = S.boat, H = S.t / 60, no = S.lang === 'no', L = (a, c) => no ? a : c, F = hudFigures(), {W, hs, lvl, atSea, HF} = F;
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
-  const v3 = document.body.classList.contains('v3d'), up = hudPortrait(), strip = up || !!S.settings.hudMin;
+  const v3 = document.body.classList.contains('v3d'), up = hudPortrait(), strip = up || hudSheet() || !!S.settings.hudMin;
   if (hudCard && !(strip && v3)) hudCard = false;   // the card belongs to the strip in 3D; the plotter and the whole box have none
   const card = strip && hudCard;
   hudClasses(strip && !card, card);
@@ -330,7 +336,7 @@ hud.addEventListener('click', e => {
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }
   if (e.target.closest('.rlink')){ PHONE.open('regler'); return; }
   if (document.body.classList.contains('hudcard')){ e.stopPropagation(); hudCardOpen(false); return; }   // a tap on the card itself closes it, as the ✕ does
-  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
+  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && !hudSheet() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
   if (!hudPortrait() && document.body.classList.contains('v3d') && !tutOn() && !e.target.closest('button,a,input,select,label')){ e.stopPropagation(); hudFold('hud'); }
 });
 // the card over the chart: a tap outside or on the card closes it (as the dock's fans close), so do Escape and a turn of the screen,
@@ -339,6 +345,8 @@ function hudCardOpen(on){ on = !!on; if (hudCard === on) return; hudCard = on; r
 document.addEventListener('pointerdown', e => { if (hudCard && !hud.contains(e.target)) hudCardOpen(false); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && hudCard) hudCardOpen(false); });
 window.addEventListener('resize', () => { if (hudCard) hudCardOpen(false); });
+// (D6: the box or the strip follows the way the screen stands, at once and not on the next tick: the sheet upright starts under the strip)
+if (HUDUP && HUDUP.addEventListener) HUDUP.addEventListener('change', () => { if (S && S.boat) renderHud(); });
 // the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
 // away (hudOff): the status box, the little chart, its GPS strip and the compass. hudstrip and hudcard say what the box is right now
 // (renderHud: upright it is always the strip); without them the classes stand as they are

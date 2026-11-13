@@ -626,7 +626,7 @@
       // the waterline a little aft of the stem, as a fine mist, and keeps most of the boat's way: it fans out beside the bow and falls
       // astern of it (Jonas 21.10.2026, #90: the spray did not look real. Thrown from a point at the stem with no way on, it hung in the
       // air as a trail of round blobs behind the boat)
-      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
+      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3) / (NF.on ? 1 : Math.max(1, simRate())); wk.imm = imm;   // (5.20x: the sea stands in the world and passes her bow at the game's rate, six times a real boat's; unscaled, every crest that passed threw a burst of spray, Jonas' video 13.11.2026)
       const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, Lb = VG.stern - VG.bow, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9;
       if (v > 3 && sink < -0.5 && imm < 0.6) wk.sacc += Math.min(100, -sink * v * 1.25);
       if (WK.Fr > 0.9) wk.sacc += dt * v * WV.hs * 2;
@@ -639,6 +639,11 @@
           spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); WKS[wk.n] = 0; } }
       while (wk.sacc >= 1){ wk.sacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.08 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.45 + a * 1.6), 0.1, VG.bow + a * Lb]), up = 0.9 + Math.random() * (1.4 + Math.min(4, -sink)), out = 1.6 + Math.random() * 2.6;
         spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); WKS[wk.n] = 1; }
+      // 5.20x: the bow's steady spray at the speed the water passes her on the screen (WK.bowG, with bowFoam in the foam map): a low, fine
+      // spray off both sides from where the hull meets the water, all the time, so the bow is not dry between the seas (Jonas 13.11.2026)
+      if ((WK.bowG || 0) > 0.02){ wk.bacc = (wk.bacc || 0) + dt * 70 * WK.bowG;
+        while (wk.bacc >= 1){ wk.bacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.3 * (WK.pf || 0) + 0.02 + Math.random() * 0.14, p = xf(BM, [side * VG.side * (0.25 + a * 2.2), 0.05, VG.bow + a * Lb]), out = 1.2 + Math.random() * 2.2;
+          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.5 + Math.random() * 1.1, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.4, 9.8); WKS[wk.n] = 0; } }
       // the rooster tail: a planing outboard throws a plume of water up behind the leg
       if (BOAT.outboard && WK.Fr > 1){ wk.racc = (wk.racc || 0) + dt * 70 * sstep(1, 1.6, WK.Fr);
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;
@@ -649,7 +654,7 @@
     // particles (SLP, drawn below), larger and denser than the spray's mist: the first try put 160 into the mist and the picture showed
     // a fleck at the stem
     if (HSEA.slam.t > (wk.slamSeen || 0)){ wk.slamSeen = HSEA.slam.t;
-      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(Math.min(SLN - 1, 140 + 80 * s)), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
+      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(Math.min(SLN - 1, 140 + 80 * s)), way = (bv.spd || 0) * 0.9, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
       const wv = (env.wind || 0) * 0.35, wd = env.windDir || [0, -1], wx = wd[0] * wv, wz = wd[1] * wv;
       for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.02 + Math.random() * 0.25, p = xf(BM, [side * VG.side * (0.3 + a * 1.5), -0.1 + Math.random() * 0.3, VG.bow + a * Lb]);
         const up = (2 + Math.random() * 4) * Math.sqrt(s), out = (1.5 + Math.random() * 3.5) * Math.sqrt(s), k = SLP.n = (SLP.n + 1) % SLN;
@@ -740,7 +745,7 @@
       }
       const pc = [Math.min(1, env.amb[0] * 2 + env.sunCol[0] * 0.6 + 0.25), Math.min(1, env.amb[1] * 2 + env.sunCol[1] * 0.6 + 0.27), Math.min(1, env.amb[2] * 2 + env.sunCol[2] * 0.6 + 0.3)];
       if (m) drawPts(m, gl.LINES, VP, pc, 95, true);
-      if (mf){ PB.set(fl.subarray(0, mf * 3)); for (let i = 0; i < mf; i++) PA[i] = sleet ? 0.7 : 0.85; drawPts(mf, gl.POINTS, VP, pc, sleet ? 80 : 95, true); }
+      if (mf){ PB.set(fl.subarray(0, mf * 3)); for (let i = 0; i < mf; i++) PA[i] = sleet ? 0.7 : 0.85; drawPts(mf, gl.POINTS, VP, pc, sleet ? 80 : 95, 2, null, 20); }   // (soft and at most 20 px: a flake near the eye was a hard grey disc of 48 px on the sea, Jonas' video 13.11.2026)
     }
     gl.depthMask(true); gl.disable(gl.BLEND);
   }

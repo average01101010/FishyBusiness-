@@ -368,7 +368,15 @@
     // white of the transom's corners and the screws, which closes into a white rooster tail some 3 beams aft (lc)
     'if(a<st+0.5&&a>st-6.0-tv*hb*5.0){float back=st+0.5-a;float lc=tv*hb*(3.0+0.1*v);float ch=tv*(1.0-smoothstep(lc*0.7,lc,back))*(1.0-smoothstep(hb*0.25,hb*0.6,q));' +
     'float rst=tv*exp(-hfSq((back-lc)/(0.8+0.3*hb)))*(1.0-smoothstep(hb*0.3,hb*0.9,q));float wb=(hullWh(st,H)+0.15+0.3+0.1*v*(1.0-0.6*pf)+pl*(1.0-0.8*pf)*(0.4+0.08*v))*(1.0+0.03*back)*(0.85+0.3*ns(Pb*0.45+vec2(4.0,9.0)));float band=1.0-smoothstep(wb*0.75,wb*1.1,q);float core=1.0-smoothstep(wb*0.2,wb*0.5,q);iw=max(iw,max((mix(0.45,0.7,max(tv,pl))*band+0.3*core)*(1.0-0.85*ch),rst)*clump*smoothstep(1.0,3.0,v)*(0.85+0.15*smoothstep(0.6,1.0,Fr)));}' +
-    'return iw;}';
+    'return iw;}' +
+    // 5.20x (13.11.2026, Jonas: «Mer baugskum i fart»): the sea stands in the world and she crosses it at the game's rate, six times her
+    // speed through the water, with a bow wave reckoned for that speed alone (and all but none on the plane). The foam at the bow as the
+    // eye expects it at the speed the water passes: a band thrown off both sides from where the hull meets the water (the stem; the spray
+    // root on the plane), widening aft over the first four tenths of her length. g: how much, from her speed over the screen (foamStep)
+    'float bowFoam(vec2 Mg,vec2 Pb,vec4 FB,vec4 FH,vec4 H,vec3 V,float g){if(g<0.01)return 0.0;vec2 B0=FB.xy;vec2 B1=FB.zw;vec2 dB=B1-B0;float l2=max(dot(dB,dB),1e-4);float tt=clamp(dot(Mg-B0,dB)/l2,0.0,1.0);vec2 C=mix(B0,B1,tt);vec2 f=normalize(mix(FH.xy,FH.zw,tt));vec2 rt=vec2(-f.y,f.x);' +
+    'vec2 r=Mg-C;float a=dot(r,f);float q=abs(dot(r,rt));float Lh=H.z+H.w;float pf=V.z*smoothstep(0.6,1.2,V.y);float ro=H.z-Lh*0.3*pf;float al=(ro-a)/Lh;if(al<-0.06||al>0.45)return 0.0;' +
+    'float w=hullWh(min(a,H.z),H);float wo=w+0.1+max(al,0.0)*0.7*H.y;float wd=0.15+max(al,0.0)*0.5*H.y;float band=exp(-hfSq((q-wo)/wd))+step(q,wo)*smoothstep(-0.06,0.0,al)*(1.0-smoothstep(0.0,0.12,al));' +
+    'return min(band,1.0)*g*smoothstep(-0.06,0.02,al)*(1.0-smoothstep(0.15,0.4,al))*(0.55+0.45*ns(Pb*0.9+vec2(6.0,1.0)));}';
   // B6 (12.11.2026, Jonas' video: the flecks of foam in a lattice): the short tile read twice, turned +-HFFT.mix.rot about the world's
   // origin and the second shifted (uF2r, fftBind), its slopes turned back, summed over sqrt 2 so its variance is kept; bi: the mip bias.
   // q: the place from the render origin (P, not P - uNFD: the reads' offsets are their own, NF.OA and NF.OB)
@@ -377,7 +385,7 @@
       'vec4 A=texture2D(uFft2,a,bi);vec4 B=texture2D(uFft2,b,bi);A.xy=vec2(' + c + '*A.x+' + s + '*A.y,' + c + '*A.y-' + s + '*A.x);B.xy=vec2(' + c + '*B.x-' + s + '*B.y,' + s + '*B.x+' + c + '*B.y);return (A+B)*0.70711;}\n#endif\n'; })();
   const FOAM_VS = 'attribute vec2 aXZ;varying vec2 vUV;void main(){vUV=aXZ*0.5+0.5;gl_Position=vec4(aXZ,0.0,1.0);}';
   const FOAM_FS = '#define NOSHT\nprecision highp float;uniform sampler2D uPrev;uniform vec2 uShift;uniform vec2 uShiftG;uniform vec2 uFoamG;uniform sampler2D uLandS;uniform vec4 uLRect;uniform float uLSOn;uniform float uTideL;uniform float uN;uniform vec2 uRebase;uniform vec4 uFoamRect;uniform vec4 uFoamT;uniform vec4 uFoamTc;uniform float uTime;uniform vec2 uNFD;uniform float uWind;uniform vec2 uWindDir;uniform vec2 uShiftC;' +
-    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;\n#ifndef NOFFT\nuniform sampler2D uFft1;uniform sampler2D uFft2;\n#endif\nuniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;uniform vec4 uFftQ2;uniform vec4 uF2r;' + FFT_T2 + 'varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
+    'uniform vec4 uWa[13];uniform vec4 uWb[13];uniform float uNFp[13];uniform float uNFg[13];uniform vec4 uFB;uniform vec4 uFH;uniform vec4 uHull;uniform vec4 uFSp;uniform float uBowG;uniform vec4 uSp0;uniform vec4 uSp1;uniform vec4 uSp2;uniform vec4 uSp3;\n#ifndef NOFFT\nuniform sampler2D uFft1;uniform sampler2D uFft2;\n#endif\nuniform vec4 uFftO;uniform vec4 uFftP;uniform vec4 uFftQ;uniform vec4 uFftQ2;uniform vec4 uF2r;' + FFT_T2 + 'varying vec2 vUV;' + NOISE + SEA_STATE + SHOAL + WAKE_GLSL + FETCHG + WCAPS +
     // the foam where a slam and the spray land (F3b, foamSplash in 14-sea.js): a patch (x, z in the wake's frame, radius, amount), its
     // edge ragged and its inside clumped as the wash's (nothing beyond 1.25 radii, where the ragged edge never reaches: no noise there)
     'float splF(vec2 Mg,vec2 Pb,vec4 s){if(s.w<=0.0)return 0.0;float d=length(Mg-s.xy);if(d>s.z*1.25)return 0.0;d*=0.8+0.4*ns(Pb*0.7+vec2(3.0,1.0));return s.w*(1.0-smoothstep(s.z*0.5,s.z,d))*(0.6+0.4*ns(Pb*1.1+vec2(8.0,2.0)));}' +
@@ -401,7 +409,7 @@
     'float iw=0.0;float ic=0.0;' +
     // --- the boat's own foam, when she has way on ---
     'if(uWk3.w>0.5){' +
-    'iw=hullFoam(Mg,Pb,uFB,uFH,uHull,uFSp.xyz);' +
+    'iw=hullFoam(Mg,Pb,uFB,uFH,uHull,uFSp.xyz);iw=max(iw,bowFoam(Mg,Pb,uFB,uFH,uHull,uFSp.xyz,uBowG));' +
     // the stern wave breaking along the Kelvin arms and the bow wave, as the sea shader breaks them (uWk0 is given in the map's metres)
     'float wh=wakeH(Mg,1.0);if(wh>0.0){vec2 rr=Mg-uWk0.xy;float s=-dot(rr,uWk0.zw);float br=ns(Pb*1.4+vec2(uTime*1.3,0.0))*0.5+0.5;float lam=6.2832/uWk1.x;' +
     'float arm=uWk3.y*smoothstep(0.45,0.9,wh/max(uWk1.y,0.02))*(1.0-smoothstep(0.0,lam,s))*step(0.0,s)*br;' +

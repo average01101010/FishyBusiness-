@@ -63,7 +63,7 @@ async def run(p, w, h, tag):
     check(await pg.evaluate("document.getElementById('dockFan').hidden"), 'et nytt trykk lukker viften')
 
     # pages in the yard and the village
-    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Fiskeutstyr', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Elektronikk og haler', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
+    for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Utstyrsbutikken', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Utstyrsbutikken', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
                               ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await fan_up()
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
@@ -98,8 +98,8 @@ async def run(p, w, h, tag):
     # visible over it (UI 2, U2-7; until then the trade pages opened at 55 % and the middle of the screen stayed free)
     await tap_el('#dockFan [data-dk=is]'); await pg.wait_for_timeout(300)
     r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(), u = document.getElementById('hud').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, hud:[u.top, u.bottom], title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
-    side = r['x'] > w * 0.55 if w > h else (h * 0.11 <= r['y'] <= h * 0.15 and r['hud'][1] <= r['y'] and r['hud'][0] >= 0)
-    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'er ett ark fra 12 % med stripa over'), r)
+    side = r['x'] > w * 0.55 if w > h else (r['y'] >= h * 0.11 and r['y'] + r['h'] >= h * 0.9 and r['h'] <= h * 0.78 and r['hud'][1] <= r['y'] and r['hud'][0] >= 0)
+    check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'er et ark fra bunnen, så høyt som innholdet (aldri over 12 %), med stripa over'), r)
     await pg.screenshot(path='dock_drawer_' + tag + '.png')
     ice0 = await pg.evaluate("S.boat.ice")
     await tap_el('#drawerBody [data-pa=shop][data-k=ice][data-fill]'); await pg.wait_for_timeout(200)

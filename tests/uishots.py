@@ -53,7 +53,7 @@ FIND = """([blocks, touch]) => {
 VIEWS = [
     ('havn', None),
     ('sjo', "(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); })()"),
-    ('plotter', "(() => { setBodyView(false); refreshAll(); })()"),
+    ('plotter', "openPlotter()"),
     ('rute', "(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()"),
     ('telefon', "(() => { setBodyView(true); if (typeof PHONE !== 'undefined') PHONE.show(true, 'home'); else document.getElementById('phoneFab').click(); })()"),
     ('salg', "(() => { PHONE.show(true, 'salg'); })()"),

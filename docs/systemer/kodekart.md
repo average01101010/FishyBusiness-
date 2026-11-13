@@ -1170,13 +1170,13 @@ the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coas
 - **143** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
   - 150 `portWhy(pt, type)`
 
-## `src/js/core/06c-steder.js` (46 linjer)
+## `src/js/core/06c-steder.js` (48 linjer)
 
 the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
 
 - **1** the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
-  - 34 `portServices(pt, berth)`
-  - 42 `placesNear(p, kind, n = 3)`
+  - 36 `portServices(pt, berth)`
+  - 44 `placesNear(p, kind, n = 3)`
 
 ## `src/js/core/06d-plan-felles.js` (70 linjer)
 
@@ -1430,7 +1430,7 @@ harbours: quays, berths and mooring
 - **609** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
   - 615 `shopBuy(k, kg, free)`
 
-## `src/js/core/07c-naust.js` (225 linjer)
+## `src/js/core/07c-naust.js` (234 linjer)
 
 Father's naust by the home harbour, and the shop on the Finnsnes quay: where the 3D view sets them (05.10.2026)
 
@@ -1442,15 +1442,15 @@ Father's naust by the home harbour, and the shop on the Finnsnes quay: where the
   - 124 `naustFind(pid)`
   - 141 `naustWayOk(n, pid)`
   - 143 `naustSite()`
-  - 160 `naustFace(pid)`
-  - 170 `shopNearFind(n)`
-  - 176 `shopNear()`
-  - 184 `naustTarget(pt, r)`
-  - 190 `shopSite()`
-- **194** the naust as a home (05.10.2026; Jonas chose it from the list, 4): set it to rights step by step
-  - 209 `naustRest(b)`
-  - 211 `naustWhy(k)`
-  - 219 `naustBuy(k)`
+  - 169 `naustFace(pid)`
+  - 179 `shopNearFind(n)`
+  - 185 `shopNear()`
+  - 193 `naustTarget(pt, r)`
+  - 199 `shopSite()`
+- **203** the naust as a home (05.10.2026; Jonas chose it from the list, 4): set it to rights step by step
+  - 218 `naustRest(b)`
+  - 220 `naustWhy(k)`
+  - 228 `naustBuy(k)`
 
 ## `src/js/core/07d-rorbu.js` (82 linjer)
 
@@ -2723,18 +2723,18 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 67 `renderSetBar()`
   - 81 `setModeEnd(go, stay)`
 
-## `src/js/ui/03e-miniplot.js` (154 linjer)
+## `src/js/ui/03e-miniplot.js` (157 linjer)
 
 ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 
 - **1** the little chart in 3D (the user's wish 02.10.2026)
-  - 11 `miniRadius()`
-  - 18 `miniBg(c, R, k, W, H, dpr)`
-  - 64 `miniStep(until)`
-  - 71 `miniFrame(t)`
-  - 77 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
-  - 91 `miniPaint()`
-  - 136 `miniSjv(ctx, X, Y, p, dpr)`
+  - 14 `miniRadius()`
+  - 21 `miniBg(c, R, k, W, H, dpr)`
+  - 67 `miniStep(until)`
+  - 74 `miniFrame(t)`
+  - 80 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
+  - 94 `miniPaint()`
+  - 139 `miniSjv(ctx, X, Y, p, dpr)`
 
 ## `src/js/ui/03f-search.js` (118 linjer)
 
@@ -2753,7 +2753,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (354 linjer)
+## `src/js/ui/04-panels-instruments.js` (362 linjer)
 
 ---------- estimates ----------
 
@@ -2765,20 +2765,20 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 21 `statusText()`
   - 37 `nextEvent()`
   - 55 `setHtml(el, h)`
-  - 74 `hudFigures()`
-  - 97 `hudShortEv(txt)`
-  - 98 `hudLine3(how)`
-  - 134 `hullWarn(b)`
-  - 143 `hudGoYard()`
-  - 152 `renderHud()`
-  - 219 `liveFrac()`
-  - 220 `livePose(frac)`
-  - 244 `vnoise2(x, y, s)`
-  - 250 `microBottom(p, d)`
-- **252** instruments: GPS and echo sounder
-  - 338 `hudCardOpen(on)`
-  - 345 `hudClasses(stripOn, cardOn)`
-  - 349 `hudFold(which)`
+  - 80 `hudFigures()`
+  - 103 `hudShortEv(txt)`
+  - 104 `hudLine3(how)`
+  - 140 `hullWarn(b)`
+  - 149 `hudGoYard()`
+  - 158 `renderHud()`
+  - 225 `liveFrac()`
+  - 226 `livePose(frac)`
+  - 250 `vnoise2(x, y, s)`
+  - 256 `microBottom(p, d)`
+- **258** instruments: GPS and echo sounder
+  - 344 `hudCardOpen(on)`
+  - 353 `hudClasses(stripOn, cardOn)`
+  - 357 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2786,15 +2786,18 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 
 - **1** sailors' tattoos: the flash and the seated sailor they go on
 
-## `src/js/ui/05a-itemcard.js` (156 linjer)
+## `src/js/ui/05a-itemcard.js` (182 linjer)
 
 The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 
 - **1** The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **7** the pictures: 64 × 40, a light sea line under the things that float or stand on deck
-- **76** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
-  - 116 `icTierLine(k, lv)`
-  - 144 `itemCard(o)`
+- **75** the painted pictures (13.11.2026, Jonas: «skikkelige bilder til alt som selges», gouache, everything but the boats): one atlas,
+  - 86 `icAtlas()`
+  - 95 `icPic(k)`
+- **102** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
+  - 142 `icTierLine(k, lv)`
+  - 170 `itemCard(o)`
 
 ## `src/js/ui/phone/00-shell.js` (69 linjer)
 
@@ -2899,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1638 linjer)
+## `src/js/ui/phone/07-patch.js` (1654 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1626 `patch()`
+  - 1642 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2940,7 +2943,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 134 `redning()`
 - **152** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (341 linjer)
+## `src/js/ui/phone/10-fartoy.js` (346 linjer)
 
   - 14 `goals()`
   - 39 `goalsCard()`
@@ -2955,10 +2958,10 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
 - **189** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   - 198 `mkCard(k, O)`
   - 202 `market()`
-  - 229 `specSecs(k, O)`
-  - 253 `sheet(k, O)`
-  - 305 `fartoy(tab0)`
-- **340** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 234 `specSecs(k, O)`
+  - 258 `sheet(k, O)`
+  - 310 `fartoy(tab0)`
+- **345** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (88 linjer)
 
@@ -2967,19 +2970,19 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 45 `rederi()`
 - **87** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (251 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (260 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **76** gear: in the sea, aboard (baiting and mending), and the shop
-- **77** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **82** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 86 `lineCard(lk, o)`
-  - 111 `egnChooser(lk, o)`
-  - 137 `autoCard()`
-  - 149 `careAboard(inPort, p)`
-  - 176 `redskap(tab0)`
+- **85** gear: in the sea, aboard (baiting and mending), and the shop
+- **86** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **91** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 95 `lineCard(lk, o)`
+  - 120 `egnChooser(lk, o)`
+  - 146 `autoCard()`
+  - 158 `careAboard(inPort, p)`
+  - 185 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (219 linjer)
 
@@ -3005,7 +3008,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **189** actions
   - 196 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (148 linjer)
+## `src/js/ui/phone/13b-nettet.js` (158 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -3016,15 +3019,15 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 12 `keeperLine(pt)`
 - **26** what the boat needs now, from her own state: each a chip that takes you to its card
   - 27 `buyList()`
-  - 42 `shopTop(cur)`
-- **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
-  - 58 `equipTry(k)`
-  - 60 `equipBuy(k)`
-  - 84 `clothBuy(k)`
-  - 91 `pickTake(o)`
-- **103** the Net: the bookmarks, and the web shop
-  - 105 `nett()`
-  - 117 `netShop()`
+  - 44 `shopTop(cur)`
+- **64** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
+  - 68 `equipTry(k)`
+  - 70 `equipBuy(k)`
+  - 94 `clothBuy(k)`
+  - 101 `pickTake(o)`
+- **113** the Net: the bookmarks, and the web shop
+  - 115 `nett()`
+  - 127 `netShop()`
 
 ## `src/js/ui/phone/13c-megler.js` (256 linjer)
 
@@ -3349,7 +3352,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (486 linjer)
+## `src/js/ui/08-actions.js` (487 linjer)
 
 actions
 
@@ -3376,10 +3379,10 @@ actions
   - 437 `applyLang()`
 - **450** screens: full-screen 3D, or the chart plotter for route planning
   - 451 `setBodyView(v3d)`
-  - 456 `openPlotter()`
-  - 461 `plotSetRender()`
-  - 465 `plotSetOpen(on)`
-  - 478 `kinoUi()`
+  - 457 `openPlotter()`
+  - 462 `plotSetRender()`
+  - 466 `plotSetOpen(on)`
+  - 479 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -3486,15 +3489,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (576 linjer)
+## `src/js/ui/10c-dock.js` (584 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **411** the drawer
-- **482** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
-  - 549 `renderActs()`
-  - 562 `showroomTick()`
+- **412** the drawer
+- **490** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
+  - 557 `renderActs()`
+  - 570 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -3728,16 +3731,16 @@ Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is 
 
 - **1** Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is KM2, supabase/migrations/20261108230000_kvotemarked.sql)
 
-## `src/js/ui/10s-mob.js` (176 linjer)
+## `src/js/ui/10s-mob.js` (179 linjer)
 
 ---------- man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js) ----------
 
 - **1** man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js)
-- **45** the actions
-- **86** the panel
-- **127** the core's word
-- **141** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
-- **163** the Sikkerhet card in the Redning app (Ø11.7 SK6): the near misses with the day, the place, what each teaches and its source,
+- **48** the actions
+- **89** the panel
+- **130** the core's word
+- **144** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
+- **166** the Sikkerhet card in the Redning app (Ø11.7 SK6): the near misses with the day, the place, what each teaches and its source,
 
 ## `src/js/ui/10k-friends.js` (134 linjer)
 
@@ -3799,7 +3802,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 115 `hopVoid(id, why)`
   - 127 `hopDeliver(id, d)`
 
-## `src/js/ui/11-boot.js` (408 linjer)
+## `src/js/ui/11-boot.js` (410 linjer)
 
 ---------- boot ----------
 
@@ -3834,7 +3837,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 215 `bootMapLoad()`
   - 246 `chart0Load()`
   - 247 `bootGame()`
-  - 390 `bootFail(e)`
+  - 392 `bootFail(e)`
 
 ## `src/js/ui/11b-watchdog.js` (89 linjer)
 
@@ -4024,29 +4027,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (896 linjer)
+## `src/js/view3d/01-shaders.js` (904 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **168** the sea by the shore (Fysikk 4, F4, 09.11.2026)
 - **298** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **402** the boat's own foam, when she has way on
-- **410** where a slam and the spray land (F3b): four patches, fixed names
-- **412** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 784 `cloudStep(dt)`
-  - 791 `skyFrame(u, Hh, tn, bv)`
-  - 809 `glsl3(src, fs)`
-  - 822 `progStart(vs, fs, attrs, nm = '?')`
-  - 832 `progEnd(P)`
-  - 842 `program(vs, fs, attrs, nm = '?')`
-  - 844 `progWait(list)`
-  - 850 `programA(vs, fs, attrs, nm)`
-  - 851 `buf(data, target, usage)`
-  - 856 `airSet(u, terr)`
-  - 871 `sunT0()`
-  - 878 `attr(loc, b, size)`
-  - 894 `upload(pos, col, idx)`
+- **410** the boat's own foam, when she has way on
+- **418** where a slam and the spray land (F3b): four patches, fixed names
+- **420** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 792 `cloudStep(dt)`
+  - 799 `skyFrame(u, Hh, tn, bv)`
+  - 817 `glsl3(src, fs)`
+  - 830 `progStart(vs, fs, attrs, nm = '?')`
+  - 840 `progEnd(P)`
+  - 850 `program(vs, fs, attrs, nm = '?')`
+  - 852 `progWait(list)`
+  - 858 `programA(vs, fs, attrs, nm)`
+  - 859 `buf(data, target, usage)`
+  - 864 `airSet(u, terr)`
+  - 879 `sunT0()`
+  - 886 `attr(loc, b, size)`
+  - 902 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4057,7 +4060,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **45** terrain
   - 84 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (431 linjer)
+## `src/js/view3d/03-berths-naust.js` (439 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -4075,28 +4078,28 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 163 `tileH(L, kind, x, z)`
   - 170 `terrH(x, z)`
   - 179 `unitTerr(x, z, h0)`
-  - 204 `terrCoarse(x, z, dil)`
-  - 214 `forestAt(x, z)`
-  - 226 `forestCell(one, LF, ct, c, r)`
-  - 233 `coverAt(x, z, cv, ck, k)`
-  - 261 `satRead(L, x, z)`
-  - 273 `satAt(x, z, cv, o)`
-  - 281 `covBlk(LC, bx, by)`
-  - 285 `coverRing(LC, ix, iz)`
-  - 295 `coverClass(x, z)`
-  - 313 `runAll(g)`
-  - 315 `sliceRun(J, end)`
-  - 316 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 320 `meshRows(B, until)`
-  - 338 `gridIdx(n)`
-  - 361 `meshEnd(B)`
-  - 362 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 363 `freeMesh(m)`
-  - 365 `nearSurf(M, x, z)`
-  - 375 `unitPatch(U, M)`
-  - 400 `buildPatches()`
-  - 409 `buildTerrain()`
-  - 418 `stream3d()`
+  - 212 `terrCoarse(x, z, dil)`
+  - 222 `forestAt(x, z)`
+  - 234 `forestCell(one, LF, ct, c, r)`
+  - 241 `coverAt(x, z, cv, ck, k)`
+  - 269 `satRead(L, x, z)`
+  - 281 `satAt(x, z, cv, o)`
+  - 289 `covBlk(LC, bx, by)`
+  - 293 `coverRing(LC, ix, iz)`
+  - 303 `coverClass(x, z)`
+  - 321 `runAll(g)`
+  - 323 `sliceRun(J, end)`
+  - 324 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 328 `meshRows(B, until)`
+  - 346 `gridIdx(n)`
+  - 369 `meshEnd(B)`
+  - 370 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 371 `freeMesh(m)`
+  - 373 `nearSurf(M, x, z)`
+  - 383 `unitPatch(U, M)`
+  - 408 `buildPatches()`
+  - 417 `buildTerrain()`
+  - 426 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (399 linjer)
 
@@ -4465,7 +4468,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 627 `peerFlagTex(n)`
   - 639 `drawPeerFlags(kit, VP, t, H)`
 
-## `src/js/view3d/14-sea.js` (724 linjer)
+## `src/js/view3d/14-sea.js` (729 linjer)
 
 ---------- sea ----------
 
@@ -4479,51 +4482,51 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 76 `waveDTStep(dt)`
   - 82 `updateWaves(dt, H)`
 - **164** the near field: the short sea rides with the boat
-  - 173 `nfStep()`
-  - 215 `nfShift(ex, ez)`
-- **225** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 232 `wakeTrack(x, z, fx, fz, ds)`
-  - 251 `wakeTU(u, ox, oz)`
-  - 252 `updateWake()`
-  - 278 `wakeHFast(x, z)`
-- **291** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 305 `foamFree()`
-  - 306 `foamInit()`
-  - 324 `wavePh()`
-  - 334 `foamStep(dt, t)`
-  - 402 `foamSplash(Dx, Dz)`
-  - 423 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 463 `foamBind(u, t)`
-  - 480 `grpAt(i, c, x, z, t)`
-- **489** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 498 `brvE(x, z)`
-  - 499 `brvStep()`
-  - 517 `brvSet(u)`
-- **549** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 564 `shoalPrep(J)`
-  - 565 `shoalCell(J, k, land, dd)`
-  - 569 `shoalSweep(J, end)`
-  - 583 `shoalPut(J)`
-  - 589 `shTex(u, v, out)`
-  - 596 `shoalAt(x, z)`
-  - 610 `shW(c, SH, out)`
-  - 616 `surfK(h)`
-  - 618 `surfStep(t)`
-  - 624 `shoalBind(u, t)`
-- **632** the sea state over the near terrain and the whole map
-  - 639 `ssLevel(n, unit)`
-  - 641 `ssRect(L)`
-  - 642 `ssWork(L, until)`
-  - 665 `ssStep(rdt)`
-  - 667 `ssBlend(L)`
-  - 669 `ssTex(L, x, z, out)`
-  - 676 `ssAt(x, z)`
-  - 686 `seaQ(S, ren)`
-  - 689 `seaDisp(x, z, t, S, fade, SH)`
-  - 713 `seaFade(x, z)`
-  - 714 `seaH(x, z, t)`
-  - 720 `seaHFast(x, z, t)`
-  - 722 `shoalHere(x, z)`
+  - 175 `nfStep()`
+  - 217 `nfShift(ex, ez)`
+- **227** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 234 `wakeTrack(x, z, fx, fz, ds)`
+  - 253 `wakeTU(u, ox, oz)`
+  - 254 `updateWake()`
+  - 283 `wakeHFast(x, z)`
+- **296** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 310 `foamFree()`
+  - 311 `foamInit()`
+  - 329 `wavePh()`
+  - 339 `foamStep(dt, t)`
+  - 407 `foamSplash(Dx, Dz)`
+  - 428 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 468 `foamBind(u, t)`
+  - 485 `grpAt(i, c, x, z, t)`
+- **494** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 503 `brvE(x, z)`
+  - 504 `brvStep()`
+  - 522 `brvSet(u)`
+- **554** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 569 `shoalPrep(J)`
+  - 570 `shoalCell(J, k, land, dd)`
+  - 574 `shoalSweep(J, end)`
+  - 588 `shoalPut(J)`
+  - 594 `shTex(u, v, out)`
+  - 601 `shoalAt(x, z)`
+  - 615 `shW(c, SH, out)`
+  - 621 `surfK(h)`
+  - 623 `surfStep(t)`
+  - 629 `shoalBind(u, t)`
+- **637** the sea state over the near terrain and the whole map
+  - 644 `ssLevel(n, unit)`
+  - 646 `ssRect(L)`
+  - 647 `ssWork(L, until)`
+  - 670 `ssStep(rdt)`
+  - 672 `ssBlend(L)`
+  - 674 `ssTex(L, x, z, out)`
+  - 681 `ssAt(x, z)`
+  - 691 `seaQ(S, ren)`
+  - 694 `seaDisp(x, z, t, S, fade, SH)`
+  - 718 `seaFade(x, z)`
+  - 719 `seaH(x, z, t)`
+  - 725 `seaHFast(x, z, t)`
+  - 727 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (271 linjer)
 
@@ -4853,7 +4856,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (765 linjer)
+## `src/js/view3d/24-cinema.js` (770 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4885,9 +4888,9 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 578 `scupperWater(VP, eye, BM, dt, t, col)`
   - 612 `splashFoam(x, z, r, a)`
   - 614 `drawEffects(VP, eye, BM, dt, t)`
-  - 747 `updateLabels(VP, eye, W, Hh)`
+  - 752 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (263 linjer)
+## `src/js/view3d/25-controls.js` (273 linjer)
 
 ---------- controls ----------
 

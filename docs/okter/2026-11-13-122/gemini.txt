@@ -1,0 +1,83 @@
+[gemini-4-hydrogen; files: image: docs/okter/2026-11-13-122/kropp.jpg; image: docs/okter/2026-11-13-122/ansikt.jpg; image: docs/okter/2026-11-13-122/hender.jpg; image: docs/okter/2026-11-13-122/antrekk.jpg; image: docs/okter/2026-11-13-122/stillinger_mannskap.jpg; image: docs/okter/2026-11-13-122/stillinger_skipper.jpg; image: docs/okter/2026-11-13-120/etter_kyst21_arbeid_bris_liggende.jpg; 8313 prompt tokens]
+
+Her er en konkret gjennomgang basert på bildene. Jeg skiller mellom det jeg **ser** direkte i bildene og det jeg **antar** om årsaker eller hvordan det vil oppleves i spillet.
+
+---
+
+### 1. Hører de nye figurene hjemme ved siden av båten, eller bryter de?
+**Delvis ja i grunnform, men de bryter tydelig i overflatebehandling og fargemetning.**
+
+* **Det som passer:** *Jeg ser* at størrelsesforholdet og den enkle, funksjonelle lavpoly-formen kan passe båtens stil i `etter_kyst21_arbeid_bris_liggende.jpg` (båten har rene geometriske former uten høyfrekvente overflatedetaljer).
+* **Det som bryter mest – fasettert skygging mot båtens glatte flater:** *Jeg ser* i `antrekk.jpg`, `stillinger_mannskap.jpg` og `stillinger_skipper.jpg` at klærne har harde kanter mellom polygonene (tydelige flate trekanter/fasetter på ermer, skuldre, jakker og bukser). På båten i `etter_kyst21_arbeid_bris_liggende.jpg` *ser jeg* derimot glatt skygging (smooth shading) på skrog, livbøye, overbygg og rør, samt glattere overflater på dagens figurer på dekk. Denne kontrasten gjør at de nye figurene ser uferdige eller «kantete» ut ved siden av båten.
+* **Fargemetning og kontrast:** *Jeg ser* at dagens figurer på dekk i skjermbildet har svært sterke, klare farger (knallgul bukse, skarp oransje/rød vest, klar blå genser) som skiller seg godt ut fra det mørke dekket og sjøen. De nye antrekkene i `antrekk.jpg` har mer dempede, matte farger (mørkere rustoransje, mørk marineblå og grå). *Jeg antar* at noe skyldes det flate, overskyede studiolyset i Blender-rendringene mot sollyset i spillet, men særlig skipperens mørkeblå/grå antrekk vil trolig bli for mørkt og lite lesbart mot dekksskyggene.
+* **Sprik i detaljnivå:** *Jeg ser* at ansikt/kropp (`kropp.jpg`, `ansikt.jpg`) har ganske realistiske småformer (øyelokk, nese, tær, fingre), mens klærne (`antrekk.jpg`) er grove, rørformede skall og de gamle delene (skjegg, hår, sko) er svært blokkete. Blandingen gir stilbrudd.
+
+---
+
+### 2. Hvor ser anatomien eller proporsjonene feil ut?
+* **Hode mot kropp og ansikt (`kropp.jpg`, `ansikt.jpg`):**
+  * *Jeg ser* at hode-til-kropp-forholdet er omtrent realistisk (~7–7,5 hoder høyt). *Jeg antar* likevel at hodet kan virke litt lite og lite «lesbart» på nettbrett på avstand sammenlignet med de mer stiliserte figurene på dekk i skjermbildet.
+  * *Jeg ser* i `kropp.jpg` at kvinnefiguren (de fire høyre figurene) har **nøyaktig samme hode/ansikt** som mannen, inkludert tykke mørke øyenbryn og maskulin kjeve.
+  * *Jeg ser* i `ansikt.jpg` (alle visninger) to kraftige, mørke trekanter/skyggeflekker rett over innerkanten av øyenbrynene oppover pannen, at øyenbrynene stikker litt ut fra huden i ytterkanten (tydelig i venstre 3/4-visning), og at ørene sitter litt lavt og langt bak.
+* **Skulderbredde (`kropp.jpg` vs. `antrekk.jpg`):**
+  * *Jeg ser* at de nakne skuldrene i `kropp.jpg` har naturlige proporsjoner. Men i `antrekk.jpg` gjør de skriptbygde jakkene skuldrene altfor brede og kasseformede: skipperen (i midten) ser unaturlig bredskuldret og «tønneformet» ut sammenlignet med hoftene, og kvinnen (til høyre) mister midjen og blir svært bred over skuldre/brystkasse.
+* **Armlengde (`kropp.jpg`, `antrekk.jpg`):**
+  * *Jeg ser* at armlengden i `kropp.jpg` (rekker til midt på låret) er anatomisk riktig, men albuene ser litt stive ut. Med hanskene på i `antrekk.jpg` virker hendene/underarmene litt lange i forhold til overarmene.
+* **Hender (`kropp.jpg`, `hender.jpg`):**
+  * *Jeg ser* i `hender.jpg` (lengst t.v.) at fingrene er litt lange, tynne og spisse i forhold til håndflaten. På de blå hanskene (nr. 2 og 3) *ser jeg* at tommelspissene er flatt avkuttet.
+* **Føtter (`kropp.jpg`, `antrekk.jpg`):**
+  * *Jeg ser* i `kropp.jpg` (profilvisningene) at føttene er litt lange og flate uten tydelig vrist. I `antrekk.jpg` blir skoene på skipperen (brune) og kvinnen (blå/hvite) svært lange, brede og klumpete foran tærne.
+
+---
+
+### 3. Hvor bryter stoffet, og hva er de tre verste feilene?
+*Jeg ser* alvorlige stoff- og mesh-feil i `stillinger_mannskap.jpg`, `stillinger_skipper.jpg` og `antrekk.jpg`:
+
+* **Spisse pigger og «flaggermusvinger»:**
+  * I *armene opp* (nr. 2 i begge stillingsbildene) *ser jeg* lange, sylspisse blå trekanter som strekker seg fra hendene/hanskene og helt ned til midje/hoftehøyde. På mannskapet (`stillinger_mannskap.jpg` nr. 2) trekkes i tillegg hele den oransje jakkesiden ut i to enorme trekantede «flaggermusvinger» mellom jakkekanten og armhulene.
+  * I *dyp knebøy* (nr. 3), *sittende* (nr. 4), *bøyd over rekka* (nr. 5) og *vridd* (nr. 6) *ser jeg* de samme blå piggene stikke ut fra håndledd/underarmer på både mannskap og skipper.
+* **Revet/sammenklemt jakke og vest:**
+  * I *dyp knebøy* (`stillinger_mannskap.jpg` nr. 3) *ser jeg* at brystet/magen på jakken og vesten kollapser inn i mørke folder mot lårene, mens jakkekanten og det svarte beltet strekkes langt bakover til en skarp spiss bak rumpa.
+  * I *sittende* (`stillinger_mannskap.jpg` nr. 4) *ser jeg* at baksiden av den oransje jakken strekkes ut til en stor, stiv skål under lårene/setet. I `stillinger_skipper.jpg` nr. 4 blir genserkanten skarp og klemt mot hoftene.
+  * I *bøyd over rekka* (nr. 5, begge bilder) *ser jeg* at jakken/genseren folder seg i skarpe trekanter langs ribbeina/ryggen, og at beltet/vesten skjærer inn i jakken på mannskapet.
+* **Vertikal sprekk mellom beina:** I `stillinger_mannskap.jpg` (nr. 1, 2, 5, 6) *ser jeg* en mørk, vertikal strek/sprekk fra jakkekanten og rett opp i skrittet mellom lårene. *Jeg antar* at midtlinjen ikke er sveiset eller har feil normaler/skinning.
+* **Oppblåst og svevende i hvilestilling (`antrekk.jpg`):** *Jeg ser* at kvinnens røde jakkekrage (høyre profil) stikker rett bakover som en stiv hylle bak nakken, at redningsvesten til mannskapet flyter høyt og stivt rundt skuldre/hals med stive stropper bak, og at alle tre jakkene har stiv, kantete rørform.
+
+**Rangering av de tre verste:**
+1. **Lange pigger fra hender/ermer og «flaggermusvinger» i `armene opp` og bøyde stillinger** (`stillinger_mannskap.jpg` og `stillinger_skipper.jpg`). *Jeg antar* feil bone weights (at vertexer på erme/hanske er bundet til ryggrad eller hofte). Ødelegger silhuetten helt.
+2. **Jakke/vest som strekkes bakover i `dyp knebøy` (nr. 3) og danner stiv skål under baken i `sittende` (nr. 4)** (`stillinger_mannskap.jpg`).
+3. **Kasseformede jakker, kvinnens utstikkende jakkekrage (`antrekk.jpg`) og den mørke splitten mellom lårene (`stillinger_mannskap.jpg`)**.
+
+---
+
+### 4. I stillingene: hvilke ledd ser feil ut, og kollapser volumet et sted?
+*Jeg ser* følgende i `stillinger_mannskap.jpg` og `stillinger_skipper.jpg`:
+
+* **Skulder ved `armene opp` (nr. 2):** Skulderen klemmes brått og spisst inn mot halsen/kragen (tydeligst på skipperens mørkeblå genser), mens armhulene trekkes utover i store flate trekanter (ekstremt på mannskapet). *Jeg antar* at overarmsbeinet tar all rotasjonen uten støtte fra kragebein/skulderblad.
+* **Hofte i `dyp knebøy` (nr. 3) og `sittende` (nr. 4) – og `bøyd over rekka` (nr. 5):**
+  * I *dyp knebøy* (nr. 3) kollapser volumet i hofte/nedre mage på mannskapet (jakken krasjer inn i lårene), og på skipperen klemmes genserkanten flatt inn mot øverste del av lårene.
+  * I *sittende* (nr. 4) blir hoftebøyen på skipperen veldig kantete: buksebeina stikker ut som to stive rør under genserkanten uten volum over setet. På mannskapet skjules hele hoftebøyen av den utstrekte jakken.
+  * I *bøyd over rekka* (nr. 5) knekker hoften skarpt ~90 grader fremover mens beina står helt pinnestive og rette, og fronten av midjen klemmes sammen.
+* **Albue:** I *dyp knebøy* (nr. 3) og *sittende* (nr. 4) mister albuens innside litt volum (skarp knekk). I *vridd* (nr. 6) ser jeg en unaturlig vridning/innsnevring langs venstre underarm/albue (til høyre i bildet).
+* **Kne:** Knærne fungerer tålelig greit i *knebøy* (nr. 3) og *sittende* (nr. 4), selv om baksiden av knærne klemmes noe flate i dyp knebøy og hele fotsålen står flatt i bakken uten hælløft.
+
+---
+
+### 5. Hendene: ser grepene riktige ut, og hvilket grep er dårligst?
+*Jeg ser* i `hender.jpg` (seks hender fra venstre til høyre):
+
+1. **Nr. 1 (hudfarget, avslappet):** Ser brukbar ut, men fingrene er litt lange/rette og samlet stivt sammen.
+2. **Nr. 2 og Nr. 3 (de to første blå hanskene):** Nr. 2 har lett bøyde fingre og nr. 3 er nesten helt flat/rett nedover med tommelen rett frem. Ingen av disse tre første ser ut som et faktisk *grep* rundt noe (hvis nr. 3 skal være `grep`, er den åpen og flat). Begge har stygg, flat avkutting på tommelspissen.
+3. **Nr. 4 (fjerde fra venstre – antakelig `hold` eller `grep`):** Fingrene er bøyd bakover inn i håndflaten, men geometrien kollapser: fingrene stikker ut som to skarpe pigger på undersiden/baksiden av knokene, og tommelen er klemt flatt inntil siden. Det er ikke noe hulrom til å holde rundt et redskap eller tau.
+4. **Nr. 5 og Nr. 6 (`klype` og `krok`):** *Jeg ser* at disse to er **nesten identiske**. Fingrene er bøyd ~90 grader til en firkantet, flat «hylle» nederst, med skarpe polygonpigger som stikker ut bak lillefingeren. I *klype* møtes ikke tommelen og pekefingeren i det hele tatt – tommelen henger bak på siden. Som *krok* er bøyningen for firkantet og spiss.
+
+* **Hvilket grep er dårligst?** **Nr. 4 er visuelt mest ødelagt** (kollapset med spisse pigger og uten plass til å holde noe), mens **Nr. 5 (`klype`) er mest feil funksjonelt** fordi tommelen ikke møter pekefingeren og den ikke skiller seg fra nr. 6.
+
+---
+
+### 6. Tre endringer som vil løfte helhetsinntrykket mest (3–8 m unna på nettbrett)
+På 3–8 meters avstand ser spilleren silhuett, bevegelse, fargekontrast og rene flater – ikke detaljer som negler eller øyevipper:
+
+1. **Rydd opp i skinning/vektmaling (bone weights) på ermer, hansker, jakke og vest:** Fjern alle pigger fra hender/ermer, «flaggermusvingene» under armene og jakkestrekkingen i knebøy/sittende. På 3–8 m avstand er spisse polygon-feil i bevegelse det aller første øyet fanger opp.
+2. **Gi klærne glatt skygging (smooth shading) og høyere fargekontrast mot båten:** Slå på glatte normaler på de skriptbygde klærne så de matcher båtens glatte stil, og øk fargemetning/kontrast (spesielt på skipperens mørke antrekk og overgangen mellom jakke, bukse og redningsvest) så figurene skiller seg tydelig fra mørkt dekk og sjø på nettbrettskjermen.
+3. **Stram opp silhuetten på jakke, krage, skjegg/hår og sko:** Gjør jakkene mindre kasseformede/oppblåste, rett inn kvinnens bakoverstikkende jakkekrage, gjør skoene kortere/smalere, og sørg for at skjegg/hatter sitter rent mot hodet uten å sveve eller klippe inn i kinnene. *(Som en rask bonus ved nærbilder: fjern de mørke trekantskyggene over øyenbrynene og gi kvinnefiguren mykere ansiktstrekk/bryn.)*
