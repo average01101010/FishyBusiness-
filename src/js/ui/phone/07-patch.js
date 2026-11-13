@@ -33,7 +33,8 @@
        ['De små bølgene går nå med vinden. Før gikk mange av dem på tvers og mot, så sjøen så ut til å koke og dirre på stedet.', 'The small waves now go with the wind. Many of them ran across and against it, so the sea seemed to boil and tremble in place.'],
        ['Solglitteret på sjøen flimrer ikke lenger så fort når du ser det fra høyden.', 'The sun\'s glitter on the sea no longer flickers so fast when seen from high up.'],
        ['Sjøen og kjølvannet går nå bakover i samme fart når du er i fart. Før gikk kjølvannet mye fortere enn sjøen rundt.', 'The sea and the wake now pass aft at the same speed when you are under way. The wake used to go much faster than the sea round it.'],
-       ['Snøfnugg nær kameraet er ikke lenger grå skiver, og spruten fra baugen kommer ikke i støt og blir ikke hengende igjen langs skroget.', 'Snowflakes near the camera are no longer grey discs, and the spray from the bow no longer comes in bursts or hangs behind along the hull.']]],
+       ['Snøfnugg nær kameraet er ikke lenger grå skiver, og spruten fra baugen kommer ikke i støt og blir ikke hengende igjen langs skroget.', 'Snowflakes near the camera are no longer grey discs, and the spray from the bow no longer comes in bursts or hangs behind along the hull.'],
+       ['Baugen kaster mer skum og sprut jo fortere båten går over sjøen.', 'The bow throws more foam and spray the faster the boat goes over the sea.']]],
     ['autonav-lang-121126', '12.11.2026', 'Autonav på lange etapper', 'Autonav on long legs', [
        ['Store båter får nå en rute på lange etapper mellom øyene der Autonav før svarte «Fant ingen rute dit», for eksempel fra Rørvik nordover til Bodø.', 'Big boats now get a route on long legs among the islands where Autonav used to answer «Found no route there», for example from Rørvik north to Bodø.']]],
     ['skip-121126', '12.11.2026', 'Ferjene og kystruta har egne modeller', 'The ferries and the coastal route have their own models', [
