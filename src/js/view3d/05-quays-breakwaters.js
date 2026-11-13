@@ -123,7 +123,7 @@
   // marksSenja; Ø13 K3); before K3 they were part of the quays' mesh (buildStatics), built once
   const MKM = new Map(), MKB = new Set(); let MKV = -1, MKS = -1;
   // a tile's marks built before its bridges came (the vec pack decoded later) are built again when they come, without those on a deck
-  VEC.came.push(t => { if (!t.bridges.length || !MKM.has(t.k) || MKB.has(t.k)) return; const old = MKM.get(t.k); if (old) freeMesh(old); MKM.delete(t.k); MKV = -1; });
+  VEC.came.push(t => { if (!t.bridges.length || !MKM.has(t.k) || MKB.has(t.k)) return; const old = MKM.get(t.k); if (old) freeMesh(old); camDropTag('mk' + t.k); MKM.delete(t.k); MKV = -1; });
   function marksStatics(){
     if (STAT && MKS !== MARKS.senja){ const old = MKM.get('senja'); if (old) freeMesh(old); const m = MB(); for (const mk of SEAMARKS.marks) markInto(m, mk, 'mkS', MKS < 0); MKM.set('senja', m.p.length ? m.mesh(mapMid()) : null); MKS = MARKS.senja; }
     if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;

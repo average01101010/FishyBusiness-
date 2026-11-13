@@ -50,7 +50,7 @@ function obsBridge(br){
 // to steer round or run into (the bridge's piers and deck are), and its light hangs under the deck (06-buildings-lights.js lightY). The
 // lighthouses and cairns stand on land and the buoys float; they stay. The marks stay for the fairway's sides (05e-sjovei.js
 // farvWrongSide) and the chart
-const MK_HUNG = new Set(['m', 'P', 'L', 'D', 'S', 'i', 'a', 'y']);
+const MK_HUNG = new Set(['m', 'L', 'D', 'S', 'i', 'a', 'y']);   // (not P: a pile stands in the sea, by a bridge's pier too)
 const markCell = mk => Math.floor(mk[0] * 1000 / HIND.C) * 1048576 + Math.floor(mk[1] * 1000 / HIND.C);
 // the deck piece among L (a cell of the index; obsBridge's pieces have r = half the deck and 0.4 m) within 4 m of whose edge the point
 // x, z (m) is, the highest where two are; or null
