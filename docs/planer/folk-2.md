@@ -189,3 +189,4 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 - 13.11.2026 (senere): Jonas svarte «V5 A». Åpent: V1, V3, og om FB5e skal komme tidlig på dagens figur.
 - 13.11.2026 (senere): Jonas: «Klær skal vente til etter den nye kroppen er på plass». FB5e (og FB5c og FB5d) kommer etter FB7. Åpent: V1 og V3.
 - 13.11.2026 (senere): Jonas: «Kjør på med FB5 i en ny økt». FB5 lagt i køen som steg 122 med startmeldingen `docs/planer/start/122.md`; går samtidig med steg 120 fordi den ikke rører `src/js/`.
+- 13.11.2026 (senere): Jonas spurte «Bruker vi inverse kinematics i dette prosjektet?» (svar: bare `armTo` for småbåtens skipper og `seaKnee` i sjøbeina) og sa «Kjør på med FB2 i en ny økt». FB2 lagt i køen som steg 123 med startmeldingen `docs/planer/start/123.md`; den tas før FB3 (steg 121, venter fortsatt på klarsignal) og før FB1, på dagens figur, med løseren i `deckcrew.js`.
