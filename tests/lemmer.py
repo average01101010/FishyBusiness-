@@ -21,6 +21,9 @@ URL = GAME + ',folk2' + (',ik0' if OFF else '')   # (the solver is on only behin
 DEG = 3.14159265358979 / 180
 
 
+PLAIN = {}   # (what the page without #folk2 said)
+
+
 def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + str(extra)) if extra != '' else ''), flush=True)
 
@@ -143,8 +146,8 @@ def spread(R, nm, L):
 async def checks(pg):
     boats = await pg.evaluate(BOATS); mid = boats[1]; print('båter:', boats, flush=True)
     await pg.set_viewport_size({'width': 240, 'height': 150})   # (a tiny window: SwiftShader takes 25 s a frame at 640×400, and the checks read numbers)
-    # (and a page of its own without the mark: the game as it is played)
-    p2 = await pg.context.new_page(); await boot(p2, GAME); on = [await pg.evaluate("LEMMER.on"), await p2.evaluate("LEMMER.on")]; await p2.close()
+    # (and the page without the mark, opened first in main: the game as it is played)
+    on = [await pg.evaluate("LEMMER.on"), PLAIN.get('on')]
     check(on == [not OFF, False], 'løseren er på bak #folk2 og av uten merket (og av med #ik0)', on)
     std = await pg.evaluate("limbLen(null)"); reach = (std['ua'] + std['fa']) * await pg.evaluate("LEMMER.REACH"); names = {'ua': 'overarm', 'fa': 'underarm', 'th': 'lår', 'sn': 'legg'}
     full = [('arbeid', 4), ('garn', 3), ('juksa', 3), ('egning', 2), ('boting', 2), ('pause', 2)]
@@ -233,6 +236,7 @@ async def main():
     args = sys.argv[1:]
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
+        p0 = await br.new_page(viewport={'width': 240, 'height': 150}); await boot(p0, GAME); PLAIN['on'] = await p0.evaluate("LEMMER.on"); await p0.close()
         pg = await br.new_page(viewport={'width': 1280, 'height': 800}); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, URL)
