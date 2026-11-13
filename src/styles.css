@@ -2005,7 +2005,8 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
    line of about 70 characters. */
 .ph-nowcol{display:contents}
 @media (min-width:561px) and (min-height:521px){
-  #phone{left:max(12px,calc(100vw - 912px));right:12px;bottom:18px;top:max(12px,min(calc(var(--ph-hb,430px) + 10px),calc(100vh - 692px)),calc(100vh - 1040px));width:auto;height:auto}
+  #phone{left:max(12px,calc(100vw - 912px));right:12px;bottom:18px;top:max(12px,calc(var(--ph-hb,0px) + 10px),calc(100vh - 1040px));width:auto;height:auto}
+  #phone.ph-full{left:12px;top:12px}   /* (no room for the box and the phone both, place(): the phone takes the screen) */
   body.ph-on :is(#dock,#dockInfo,#dockFan){visibility:hidden}
   /* (the chart's source line under the surface stays whole: 18 px; and a toast lies in the bar at the bottom, not on the tiles: a tap goes through it) */
   body.ph-on #toast{bottom:calc(38px + env(safe-area-inset-bottom,0px))}
@@ -2018,7 +2019,7 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
   .ph-nowcol .ph-clock{grid-area:clock;margin:0;align-self:end;font-size:56px} .ph-nowcol .ph-date{grid-area:date;margin:0;font-size:14px}
   .ph-nowcol .ph-widget{grid-area:widget;margin:0;font-size:14px;padding:11px 14px} .ph-nowcol .ph-goals{grid-area:goals;margin:0} .ph-nowcol .ph-nowc{grid-area:now;margin:0}
   .ph-nowcol .ph-goal{font-size:13px;padding:10px 14px} .ph-nowcol .ph-now{padding:10px 14px}
-  .ph-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 30px;align-items:start}
+  #phone.ph-w2 .ph-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 30px;align-items:start}
   .ph-tiles{gap:16px 6px} .ph-app{font-size:12.5px;gap:6px} .ph-app .ic{width:58px;height:58px} .ph-app .ic svg{width:29px;height:29px}
   /* the apps: the title bar and the tabs over the whole surface, the content in a column in the middle of it */
   .ph-top{padding:14px 28px;font-size:18px} .ph-top .ic{width:32px;height:32px} .ph-top .ic svg{width:20px;height:20px}
@@ -2026,31 +2027,31 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
   .ph-appv > :not(.ph-top){box-sizing:border-box;max-width:var(--phw);margin-left:auto;margin-right:auto}
   .ph-appv > .ph-c{padding:14px 28px 26px} .ph-appv > :is(.ph-sub,.kb-tabs){padding-left:28px;padding-right:28px}
   /* the cards in two columns that fill from the top (no hole beside a tall card); a heading, a note and a row of tabs go across both */
-  .ph-appv > .ph-c{column-count:2;column-gap:14px}
+  #phone.ph-w2 .ph-appv > .ph-c{column-count:2;column-gap:14px}
   .ph-appv > .ph-c > *,.ph-appv > .ph-c > .ph-c > *{column-span:all;min-width:0}
   .ph-appv > .ph-c > .ph-card,.ph-appv > .ph-c > .ph-c > .ph-card{column-span:none;break-inside:avoid}
   .ph-appv > .ph-c > .ph-c{display:contents}
   .ph-appv > .ph-c > .ph-sub{padding-left:0;padding-right:0}
   .ph-appv > .ph-c > p{max-width:34rem}
   /* the pages that are read: one column with a line that can be read */
-  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=post],[data-app=notat],[data-app=naustp],[data-app=tilbake],[data-app=folk],[data-app=gbook]){--phw:37rem}
-  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=tilbake],[data-app=folk],[data-app=gbook]) > .ph-c{column-count:1}
-  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=post],[data-app=regler][data-sub=laer]){--phw:32.5rem} .ph-appv[data-app=regler][data-sub=laer] > .ph-c{column-count:1}
+  .ph-appv:is([data-app=naustp],[data-app=tilbake],[data-app=folk],[data-app=gbook]){--phw:37rem}
+  .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=post],[data-app=regler][data-sub=laer]){--phw:32.5rem}
+  #phone .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=tilbake],[data-app=folk],[data-app=gbook],[data-app=regler][data-sub=laer]) > .ph-c{column-count:1}
   /* (the text a little larger where it is read, which also gives the line its length) */
   .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=regler][data-sub=laer]) :is(.ph-card p,.patchc ul,.ph-note){font-size:15px;line-height:1.5}
   /* the fish guide: the species two and two, the month's card across */
   .ph-appv > .ph-c.gd > .gd-row{column-span:none;break-inside:avoid} .ph-appv > .ph-c.gd > .ph-card{column-span:all}
 }
 @media (min-width:561px) and (min-height:521px) and (orientation:landscape){
-  #phone{top:max(12px,calc(100vh - 972px));left:max(12px,min(calc(var(--ph-hr,278px) + 14px),calc(100vw - 672px)),calc(100vw - 1092px))}
+  #phone{top:max(12px,calc(100vh - 972px));left:max(12px,calc(var(--ph-hr,0px) + 14px),calc(100vw - 1092px))}
   /* the camera buttons in the corner the phone covers lying down, and the compass line its top edge would cut */
   body.ph-on :is(#camBtn,#kinoBtn,#compass3d){visibility:hidden}
 }
-/* (beside the apps only where the surface is wide enough for both; a small window lying down has the block above them, as standing) */
-@media (min-width:900px) and (min-height:521px) and (orientation:landscape){
-  .ph-homescr{grid-template-columns:minmax(260px,.46fr) minmax(0,1fr)}
-  .ph-nowcol{display:block} .ph-nowcol .ph-clock{text-align:left;margin:4px 0 4px} .ph-nowcol .ph-date{text-align:left;margin:0 0 16px}
-  .ph-nowcol .ph-widget{margin:0 0 10px} .ph-nowcol .ph-goals{margin:0 0 10px} .ph-nowcol .ph-nowc{margin:0}
+/* (beside the apps only where the surface itself is wide enough for both, .ph-wide from place(); a narrower one has the block above them) */
+@media (min-width:561px) and (min-height:521px){
+  #phone.ph-wide .ph-homescr{grid-template-columns:minmax(260px,.46fr) minmax(0,1fr)}
+  #phone.ph-wide .ph-nowcol{display:block} #phone.ph-wide .ph-nowcol .ph-clock{text-align:left;margin:4px 0 4px} #phone.ph-wide .ph-nowcol .ph-date{text-align:left;margin:0 0 16px}
+  #phone.ph-wide .ph-nowcol .ph-widget{margin:0 0 10px} #phone.ph-wide .ph-nowcol .ph-goals{margin:0 0 10px} #phone.ph-wide .ph-nowcol .ph-nowc{margin:0}
 }
 /* and the deck log's tab in the corner it covers standing */
 @media (min-width:561px) and (min-height:521px) and (orientation:portrait){body.ph-on #logbook{visibility:hidden}}

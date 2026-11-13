@@ -8,3 +8,4 @@ Etter at grenen `ccr-d5-telefonen` er på testadressen.
 4. **Kvote, Salgslaget og Innstillinger:** kortene står i to spalter og leses ovenfra og ned i venstre spalte, så høyre. Leser du dem i riktig rekkefølge, eller hopper du feil?
 5. **Håndboka og Patchnotes:** én smal spalte med større skrift. Er den god å lese, eller for smal på nettbrettet?
 6. **Snu nettbrettet med telefonen åpen:** flata skal flytte seg ved siden av eller under statusboksen uten å ligge over den.
+7. **Nettet › Kystmegleren med båter til salgs:** båtkortene skal stå i to spalter som de andre kortene. Det er ikke sett, fordi lista krever skyen.

@@ -33,6 +33,10 @@ COLS = """(() => { const v = document.getElementById('phView'), q = v.getBoundin
   const xs = [...new Set([...v.querySelectorAll('.ph-appv > .ph-c > .ph-card, .ph-appv > .ph-c > .ph-c > .ph-card')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().left)))];
   const out = [...v.querySelectorAll('.ph-appv *')].filter(e => e.offsetParent && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().right > q.right + 1 && !e.closest('svg, table, .ph-sub, .gd-mon, .ru-tbl')).map(e => e.className || e.tagName).slice(0, 3);
   return {cols:xs.length, out}; })()"""
+# tiles of one group whose icons lie on each other
+OVER = """(() => { const out = []; for (const g of document.querySelectorAll('#phone .ph-tiles')){ const r = [...g.querySelectorAll('.ph-app .ic')].map(e => e.getBoundingClientRect());
+  for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (r[i].left < r[j].right - 1 && r[j].left < r[i].right - 1 && r[i].top < r[j].bottom - 1 && r[j].top < r[i].bottom - 1) out.push([Math.round(r[i].left), Math.round(r[j].left)]); }
+  return out.slice(0, 3); })()"""
 LUM = "(s => { const e = document.querySelector(s); if (!e) return -1; const m = getComputedStyle(e).backgroundColor.match(/[\\d.]+/g).map(Number); return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; })"
 
 
@@ -59,7 +63,9 @@ async def tablet(b, w, h, tag):
     now = await pg.evaluate(RECT + "('.ph-nowcol')"); grid = await pg.evaluate(RECT + "('.ph-grid')")
     if not now: check(False, tag + ': det viktigste nå er én blokk på hjemskjermen (.ph-nowcol)'); await pg.close(); return
     inside = await pg.evaluate("['.ph-clock', '.ph-date', '.ph-widget', '.ph-goals', '.ph-nowc'].filter(s => { const e = document.querySelector('.ph-nowcol ' + s); return e && e.offsetParent; }).length")
-    if w > h: check(now['r'] <= grid['l'] + 1 and abs(now['t'] - grid['t']) < 40 and inside >= 4, tag + ': det viktigste nå står ved siden av appene', [round(now['r']), round(grid['l']), inside])
+    wide = await pg.evaluate("document.getElementById('phone').classList.contains('ph-wide')")   # (beside from a surface of 880 px, place(); 1280 x 800 has it, 1024 x 768 and standing have not)
+    check(wide == (ph['w'] >= 880) and (wide or w < 1200), tag + ': oppsettet følger flatas bredde', [wide, round(ph['w'])])
+    if wide: check(now['r'] <= grid['l'] + 1 and abs(now['t'] - grid['t']) < 40 and inside >= 4, tag + ': det viktigste nå står ved siden av appene', [round(now['r']), round(grid['l']), inside])
     else: check(now['b'] <= grid['t'] + 1 and now['w'] > 0.8 * grid['w'] and inside >= 4, tag + ': det viktigste nå står over appene', [round(now['b']), round(grid['t']), inside])
     gr = await pg.evaluate("[...document.querySelectorAll('#phone .ph-grp')].map(g => { const q = g.getBoundingClientRect(); return [g.dataset.g, Math.round(q.left), Math.round(q.top), g.querySelectorAll('.ph-app').length]; })")
     check(len(gr) >= 5 and len({g[1] for g in gr}) == 2 and all(g[3] for g in gr), tag + ': gruppene står to og to', gr)
@@ -67,6 +73,7 @@ async def tablet(b, w, h, tag):
     check(fit[2] <= fit[3] + 1, tag + ': hjemskjermen ruller ikke sidelengs', fit)
     tp = await pg.evaluate("Math.min(...[...document.querySelectorAll('#phone .ph-app .ic')].map(e => Math.min(e.getBoundingClientRect().width, e.getBoundingClientRect().height)))")
     check(tp >= 48, tag + ': flisene er store nok for en finger', tp)
+    ov = await pg.evaluate(OVER); check(not ov, tag + ': ingen fliser ligger på hverandre', ov)
     # the apps with something to compare: two columns, and nothing out of the view
     for a in TWO:
         await pg.evaluate("a => { if (a === 'rederi') S.form = 'AS'; PHONE.open(a); }", a); await pg.wait_for_timeout(250)
@@ -114,11 +121,13 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         await tablet(b, 800, 1280, 'stående nettbrett'); await tablet(b, 1280, 800, 'liggende nettbrett'); await tablet(b, 1024, 768, 'lite nettbrett')
         # (the independent check, D5: the home screen ran sideways in a small window lying down, and the phone lay half over the box on a small tablet standing)
-        for w, h in ((600, 521), (640, 540), (768, 1024), (600, 960)):
+        # (the review of the code: at 1024 px the tiles were pressed onto each other, since the layout followed the screen's width and not the surface's)
+        for w, h in ((600, 521), (640, 540), (768, 1024), (600, 960), (1024, 600), (960, 600), (561, 900), (900, 700)):
             pg = await b.new_page(viewport={'width': w, 'height': h}); await boot(pg); await pg.evaluate("S.boat.status = 'port'; renderActs(); PHONE.show(true)"); await pg.wait_for_timeout(700)
             f = await pg.evaluate("(() => { const v = document.getElementById('phView'); return [v.scrollWidth, v.clientWidth]; })()"); ph = await pg.evaluate(RECT + "('#phone')"); hud = await pg.evaluate(RECT + "('#hud')")
             half = bool(hud and hud['w'] and hud['b'] > ph['t'] + 1 and hud['t'] < ph['t'] - 1 and hud['r'] > ph['l'] + 1)
             check(f[0] <= f[1] + 1 and not half, '%d × %d: hjemskjermen ruller ikke sidelengs, og flata ligger ikke halvt over statusboksen' % (w, h), [f, [round(ph[k]) for k in 'ltrb'], hud and [round(hud[k]) for k in 'ltrb']])
+            ov = await pg.evaluate(OVER); check(not ov, '%d × %d: ingen fliser ligger på hverandre' % (w, h), ov)
             await pg.close()
         await phone(b, 390, 844, 'stående telefon'); await phone(b, 844, 390, 'liggende telefon')
         await b.close()

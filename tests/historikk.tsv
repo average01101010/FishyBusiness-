@@ -3927,3 +3927,12 @@
 2026-11-13 21:00	ccr-d5-telefonen	effdec8+	telefonflate	OK	150	lite	samtidig	
 2026-11-13 21:00	ccr-d5-telefonen	effdec8+	boottest	OK	36	lite	samtidig	
 2026-11-13 20:13	ccr-013bxxid-fb6skinning	bc1b351	f1test	OK	415	3d	alene	
+2026-11-13 21:12	ccr-d5-telefonen	5665a77	telefonflate	OK	157	lite	samtidig	
+2026-11-13 21:12	ccr-d5-telefonen	5665a77	boottest	OK	37	lite	samtidig	
+2026-11-13 21:12	ccr-d5-telefonen	5665a77	docktest	OK	71	lite	samtidig	
+2026-11-13 21:28	ccr-d5-telefonen	5665a77+	telefonflate	OK	169	lite	samtidig	
+2026-11-13 21:28	ccr-d5-telefonen	5665a77+	docktest	OK	68	lite	samtidig	
+2026-11-13 21:28	ccr-d5-telefonen	5665a77+	uishots	OK	90	lite	samtidig	
+2026-11-13 21:30	ccr-d5-telefonen	5665a77+	hudtest	OK	109	lite	samtidig	
+2026-11-13 21:30	ccr-d5-telefonen	5665a77+	roetest	OK	118	lite	samtidig	
+2026-11-13 21:31	ccr-d5-telefonen	5665a77+	tabtest	OK	91	lite	samtidig	
