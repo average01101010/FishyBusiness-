@@ -3850,6 +3850,7 @@
 2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	mobshot	OK	797	3d	alene	
 2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	npcshot	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py, så node build.mjs)
 2026-11-13 13:38	ccr-535ab52d-bv560n	e0868808	boottest	OK	25	lite	alene	
+2026-11-13 16:17	ccr-013bxxic-fb5kropp	f02c9a5+	looktest	OK	15	lite	alene	
 2026-11-13 14:24	plan/2026-11-13-108	b894aa33	boottest	OK	28	lite	alene	
 2026-11-13 14:25	plan/2026-11-13-108	b894aa33	dbg23o	OK	48	3d	alene	
 2026-11-13 14:35	plan/2026-11-13-108	a6960ef0	benchshot	OK	637	3d	alene	
@@ -3869,3 +3870,5 @@
 2026-11-13 15:59	ccr-061ea8a6-pt4l71	b512fa0	markettest	OK	558	lite	alene	
 2026-11-13 16:11	ccr-061ea8a6-pt4l71	0b8b7fb	tut	FEIL	632	lite	alene	FEIL staaende: kaia sier hva sløying om bord gir ved første levering
 2026-11-13 16:38	ccr-061ea8a6-pt4l71	2ccd735	tut	OK	759	lite	alene	
+2026-11-13 16:39	ccr-061ea8a6-pt4l71	1ba54af+	docktest	OK	59	lite	samtidig	
+2026-11-13 16:39	ccr-061ea8a6-pt4l71	1ba54af+	shoptest	OK	26	lite	samtidig	
