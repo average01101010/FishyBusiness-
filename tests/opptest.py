@@ -119,7 +119,7 @@ async def main():
         # does not suit her not there, where it is bought with «Nærmeste» and Autonav, and the fish over the rail and the minutes a tub today
         LAD = """(() => { const d = document.getElementById('drawerBody'), nb = x => (x || '').replace(/\\u00a0|\\u202f/g, ' '), card = d.querySelector('.bu-card'); if (!card) return null;
           const L = {}; for (const e of card.querySelectorAll('.bu-l')) L[e.dataset.lad] = {lv:+e.dataset.lv, max:+e.dataset.max, dots:nb(e.querySelector('.bu-d').textContent), gain:nb((e.querySelector('.bu-tx small') || {}).textContent),
-            pr:nb((e.querySelector('.bu-pr') || {}).textContent), buy:!!e.querySelector('button.bu-pr[data-pa=open]'), pic:!!e.querySelector('.bu-ic svg'), txt:nb(e.textContent)};
+            pr:nb((e.querySelector('.bu-pr') || {}).textContent), buy:!!e.querySelector('button.bu-pr[data-pa=open]'), pic:!!e.querySelector('.bu-ic svg, .bu-ic .ic-img'), txt:nb(e.textContent)};
           const at = {}; for (const e of card.querySelectorAll('.bu-at')) at[e.dataset.at] = {txt:nb(e.textContent), go:(e.querySelector('[data-pa=goplace]') || {dataset:{}}).dataset.id || null};
           const order = []; for (let e = card.querySelector('.bu-at[data-at=butikk]'); e && (e = e.nextElementSibling) && e.classList.contains('bu-l');) order.push(e.dataset.lad);
           return {first:d.querySelector('.ph-card') === card, L, at, order, num:nb((card.querySelector('.bu-num') || {}).textContent), sum:nb((card.querySelector('.bu-sum') || {}).textContent), q:!!card.querySelector('.bu-q[data-hbid=lex_oppgrad]'), txt:nb(card.textContent)}; })()"""
@@ -288,14 +288,14 @@ async def opp3(pg, J):
     PC = """(() => { const c = document.querySelector('#drawerBody [data-card=prop]'); if (!c) return null; const nb = x => (x || '').replace(/\\u00a0|\\u202f/g, ' '), b = c.querySelector('[data-pa=propup]');
       return {h:nb(c.querySelector('h4').textContent), txt:nb(c.textContent), btn:nb(b ? b.textContent : ''), dis:!!(b && b.disabled), x:!!c.querySelector('[data-pa=shop0]'), more:!!c.querySelector('[data-hbid=lex_propell]')}; })()"""
     LADP = """(() => { const e = document.querySelector('#drawerBody .bu-card .bu-l[data-lad=prop]'); if (!e) return null; const nb = x => (x || '').replace(/\\u00a0|\\u202f/g, ' ');
-      return {dots:nb(e.querySelector('.bu-d').textContent), gain:nb((e.querySelector('.bu-tx small') || {}).textContent), pr:nb((e.querySelector('.bu-pr') || {}).textContent), pic:!!e.querySelector('.bu-ic svg'),
+      return {dots:nb(e.querySelector('.bu-d').textContent), gain:nb((e.querySelector('.bu-tx small') || {}).textContent), pr:nb((e.querySelector('.bu-pr') || {}).textContent), pic:!!e.querySelector('.bu-ic svg, .bu-ic .ic-img'),
         at:(e.parentElement.querySelector('.bu-at[data-at=verft]') ? 'verft' : '')}; })()"""
     GOAL = """(() => { DOCK.open('fartoy'); const c = [...document.querySelectorAll('#drawerBody .ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; })()"""
     await pg.set_viewport_size({'width': 1280, 'height': 800}); await pg.wait_for_timeout(400)
     await pg.evaluate("""DOCK.close(); if (typeof BUYM !== 'undefined' && BUYM.close) BUYM.close(); const b = S.boat, q = PORTS.find(q => q.sted === 'verft'); b.type = 'trebat'; delete b.propLv; delete b.engLv; delete b.holdLv; delete b.upg; delete b.trim;
       S.jobs = []; S.equip.kniv = 3; S.equip.hott = 3; S.order = null; b.status = 'port'; b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; applyVessel(); S.cash = 50000; DOCK.open('utstyr')"""); await pg.wait_for_timeout(500)
     c0 = json.loads(await J(PC))
-    check(c0 and c0['h'] == 'Propell (0/3)' and 'Propellen hun kom med · 7,0 kn' in c0['txt'] and 'l/t ved 6,0 kn' in c0['txt'] and '(+5 %) · 7,4 kn' in c0['txt'] and 'Bytt propell · 2 500 kr' in c0['btn'] and not c0['dis'] and c0['more'],
+    check(c0 and c0['h'] == 'Propell 0 / 3' and 'Propellen hun kom med · 7,0 kn' in c0['txt'] and 'l/t ved 6,0 kn' in c0['txt'] and '(+5 %) · 7,4 kn' in c0['txt'] and 'Bytt propell · 2 500 kr' in c0['btn'] and not c0['dis'] and c0['more'],
           'trebåten ved verftet: kortet «Propell (0/3)» med knop og l/t nå og med trinn 1 (+5 %, 7,4 kn), «Bytt propell · 2 500 kr» og «Mer» til Håndboka', c0)
     await pg.evaluate("const e = document.querySelector('#drawerBody [data-card=prop]'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
     await pg.screenshot(path='opp3_verft_liggende.png')
@@ -339,7 +339,7 @@ async def opp3(pg, J):
     await pg.evaluate("const e = document.querySelector('#drawerBody [data-card=prop]'); if (e) e.scrollIntoView({block:'center'})"); await pg.wait_for_timeout(200)
     fit = json.loads(await J("""(() => { const d = document.getElementById('drawerBody'), r = d.getBoundingClientRect(), c = d.querySelector('[data-card=prop]'); if (!c) return null;
       return {wide:[c, ...c.querySelectorAll('*')].filter(e => { const q = e.getBoundingClientRect(); return q.width && q.right > r.right + 1; }).length, txt:c.textContent.replace(/\\u00a0|\\u202f/g, ' ')}; })()"""))
-    check(fit and not fit['wide'] and 'Propell (2/3)' in fit['txt'], 'stående: kortet (trinn 2 av 3) stikker ikke ut av skuffen', fit)
+    check(fit and not fit['wide'] and 'Propell 2 / 3' in fit['txt'], 'stående: kortet (trinn 2 av 3) stikker ikke ut av skuffen', fit)
     await pg.screenshot(path='opp3_verft_staaende.png')
     await pg.evaluate("DOCK.close(); DOCK.open('beholdning:boat')"); await pg.wait_for_timeout(400)
     l1 = json.loads(await J(LADP))

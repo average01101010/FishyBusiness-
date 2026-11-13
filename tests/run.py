@@ -128,6 +128,8 @@ COVER = {'tests/kartkorridortest.py':['kartkorridortest'], 'tests/legmemotest.py
 for _f in ('src/js/view3d/13-instruments.js', 'src/js/view3d/20-trawl-seine.js', 'src/js/vessel3d.js', 'tests/flaggshot.py'):
     COVER[_f] = COVER.get(_f, []) + ['flaggshot']
 COVER['src/js/core/05e-sjovei.js'] = COVER['src/js/core/05e-sjovei.js'] + ['hulltest', 'lanterntest', 'anchorlight3d']
+# the item cards' painted pictures (13.11.2026): the atlas and the script that cuts it
+COVER['src/data/items.b64'] = ['itemcardtest']; COVER['tools/ui/butikkbilder.py'] = ['itemcardtest']
 # H3d1 (07.11.2026): the snow crab vessel rebuilt (krabbe50.py), her gear (snoteine.py), the snow crab and its clusters (fisk.py), the
 # cartons of clusters and the live crab's tub (pall.py); h3dshot looks at them in the game (3D, alone)
 for _f, _t in (('src/data/boat-krabbe50.b64', ['h3dshot', 'vessel3d', 'lanterntest', 'regmarktest', 'maletest', 'walktest']), ('tools/boats/krabbe50.py', ['h3dshot', 'brotest', 'lanterntest']),

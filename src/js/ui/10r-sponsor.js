@@ -40,7 +40,7 @@ var SPUI = (() => {
   function card(k, btn, extra){
     const sp = spOf('item', k); if (!sp) return ''; const E = EQUIP[k], url = spUrl(sp.sponsor.site);
     return itemCard(Object.assign({k, id:'ic-' + k + '-sp', name:esc(sp.data.model || E.name[S.lang]), sub:'<span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('levert av ', 'supplied by ') + esc(sp.sponsor.name),
-      price:E.price, note:(sp.data.line ? esc(sp.data.line) + '. ' : '') + L('Samme pris og virkning som ' + E.name.no.toLowerCase() + ' over.', 'The same price and effect as the ' + E.name.en.toLowerCase() + ' above.'),
+      price:equipKr(k), note:(sp.data.line ? esc(sp.data.line) + '. ' : '') + L('Samme pris og virkning som ' + E.name.no.toLowerCase() + ' over.', 'The same price and effect as the ' + E.name.en.toLowerCase() + ' above.'),
       body:url ? '<p class="ic-sp-out"><a class="ic-sp-link" href="' + esc(url) + '" target="_blank" rel="noopener sponsored" data-pl="' + sp.id + '">' + L('Se hos ' + esc(sp.sponsor.name) + ' ↗', 'See at ' + esc(sp.sponsor.name) + ' ↗') + '</a> <small>' + L('åpner utenfor spillet', 'opens outside the game') + '</small></p>' : '',
       btns:btn}, extra || {}));
   }
