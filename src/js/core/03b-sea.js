@@ -226,7 +226,8 @@ function brottSea(p, H){
 }
 function brottCond(p, H){
   if (isLandFar(p)) return null;
-  const q = brottSea(p, H); let af = 1, against = 0;
+  const q = brottSea(p, H); if (!(Math.hypot(q.w * CURW.max, q.sw) >= BRT.hs)) return null;   // (too low even with the most a stream lifts it)
+  let af = 1, against = 0;
   try { const c = seaCur(p, H, q); if (c){ af = c.af || 1; against = c.against || 0; } } catch (e){}
   const w = q.w * af, hs = Math.hypot(w, q.sw); if (!(hs >= BRT.hs)) return null;
   const cross = Math.abs(((q.dir - q.swDir) % 360 + 540) % 360 - 180);

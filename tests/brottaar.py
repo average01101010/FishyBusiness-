@@ -36,15 +36,18 @@ async def main():
               const T0 = Math.round((Date.UTC(2027, 2, 1, 6) - EPOCH) / 6e4); try { for (let m = 0; m < 525600; m++){ S.t = T0 + m; brottMinute(); } } finally { window.crewBrott = f0; S.t = t0; b.status = 'port'; }
               return n; }""", [lat, lon])
         # what the minute step costs: a day of minutes for a boat under way off Bergen (the breaking sea and the slamming)
-        R['ms_dag'] = await pg.evaluate("""() => { const b = S.boat, p = P(60.36, 4.80), t0 = S.t; b.status = 'sailing'; b.v = 6; b.heading = 4.4; b.pos = {x:p.x, y:p.y};
-          const T0 = performance.now(); for (let i = 0; i < 1440; i++){ S.t = t0 + i; brottMinute(); slamMinute(); } const ms = performance.now() - T0; S.t = t0; b.status = 'port'; return +ms.toFixed(0); }""")
+        # (as the time the game was closed is played in, LANDQ.away: the slams are not reckoned then; and with the game open)
+        for k, away in (('ms_dag', 'true'), ('ms_dag_aapen', 'false')):
+            R[k] = await pg.evaluate("""(away) => { const b = S.boat, p = P(60.36, 4.80), t0 = S.t, T1 = Math.round((Date.UTC(2028, 0, 10, 0) - EPOCH) / 6e4); b.status = 'sailing'; b.v = 6; b.heading = 4.4; b.pos = {x:p.x, y:p.y}; LANDQ.away = away;
+              const T0 = performance.now(); try { for (let i = 0; i < 1440; i++){ S.t = T1 + i; brottMinute(); slamMinute(); } } finally { LANDQ.away = false; } const ms = performance.now() - T0; S.t = t0; b.status = 'port'; return +ms.toFixed(0); }""", away == 'true')
         print(json.dumps(R, ensure_ascii=False))
         for name, *_ in PLACES[:4]:
             r = R[name]; check('err' not in r and not r['land'] and r['hrs'] > 0, name + ': timer i året med sjø som kan reise en brottsjø, og ventet antall for en båt som lå der hele året', (r.get('hrs'), r.get('exp')))
         for name in [PLACES[0][0], PLACES[1][0], PLACES[3][0]]:
             r = R[name]; check(r['moett']['warn'] >= r['moett']['hit'] and abs(r['moett']['hit'] - r['exp']) <= 3 * max(1, r['exp']) ** 0.5 + 1, name + ': brottsjøene minuttsteget møter i året, mot det ventede (innen tilfeldighetens spredning)', (r['moett'], r['exp']))
         check(R['Bergen, Vågen'].get('hrs') == 0, 'Bergen, Vågen (i havn): ingen', R['Bergen, Vågen'].get('hrs'))
-        check(R['ms_dag'] < 1500, 'et døgn av minuttsteget med brottsjøen og slagene tar under 1,5 s', R['ms_dag'])
+        check(R['ms_dag'] < 150, 'et døgn av minuttsteget med brottsjøen, slik tida spillet var lukket spilles inn, i januar utenfor Bergen: under 150 ms (to uker under 2 s)', R['ms_dag'])
+        check(R['ms_dag_aapen'] < 400, 'et døgn med spillet åpent (brottsjøen og slagene): under 400 ms', R['ms_dag_aapen'])
         check(not errs, 'no page errors', errs[:2])
         await b.close()
 if __name__ == "__main__": asyncio.run(main())
