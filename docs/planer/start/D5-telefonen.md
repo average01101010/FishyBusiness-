@@ -1,6 +1,6 @@
 # D5: telefonen i nettbrettstørrelse, og appene i to spalter
 
-Fra `docs/planer/design-ombygging.md` (les «Runde to», «Jonas' svar», D0, D1 og D6). Jonas 13.11.2026, valg 2: «A», telefonen blir en stor flate på nettbrett som beholder telefonens ramme og statuslinje. **Han har ikke sagt at D5 skal startes:** rekkefølgen han ga, var D1–D3 og så D6; D4 (sammenslåingene) er ikke bestemt. Start bare når han sier det, eller når køen sier at steget er klart.
+Fra `docs/planer/design-ombygging.md` (les «Runde to», «Jonas' svar», D0, D1 og D6). Jonas 13.11.2026, valg 2: «A», telefonen blir en stor flate på nettbrett som beholder telefonens ramme og statuslinje. Jonas 13.11.2026, etter D6: «Start D5 i en ny økt». D4 (sammenslåingene) er ikke bestemt, og D5 venter ikke på den. Samme dag tok han bort «Kart»-knappen D6 la ved det lille kartet («det ser ikke bra ut»): legg ikke nye knapper i HUD-en uten at han har bedt om dem.
 
 ## Ferdig når
 
