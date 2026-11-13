@@ -1,7 +1,7 @@
 """The other players' flags and the shared models (TP1, steg 108: view3d/13-instruments.js drawPeerFlags, vessel3d.js livPaint and
 livFlag, view3d/20-trawl-seine.js npcKB and its cap). Stand-in players beside her (PEERS): a Swedish pennant, one painted as the first
 with nothing bought (Norway in a rectangle) and another mark, and one with her house flag from a made logo. At noon in June their flags
-are up and drawn, at 23 down. Then the measurement for docs/systemer/baater.md 4.23: 20 stand-ins round her, first each in her own paint
+are up and drawn, at 23 down (the same game day: S.t 0 is 06:00, and a clock moved months on makes the game live them all first). Then the measurement for docs/systemer/baater.md 4.23: 20 stand-ins round her, first each in her own paint
 and mark ('ulik'), then all in one paint with their own marks ('lik'), and what was sent to the GPU (counted at WebGL's bufferData, so
 the same numbers come from a build before the step: KYST_DIST=<that build>), the buffers alive and the frame time; SwiftShader's
 milliseconds are only a check. Pictures flagg_liggende.jpg and flagg_staaende.jpg in tests/out/. Prints OK or FEIL per check, and MÅLT
@@ -13,6 +13,11 @@ from playwright.async_api import async_playwright
 
 def check(ok, what, extra=''):
     print(('OK  ' if ok else 'FEIL') + ' ' + what + (('  ' + json.dumps(extra, ensure_ascii=False, default=str)[:600]) if extra != '' else ''))
+
+
+async def shot(pg, path):
+    try: await pg.screenshot(path=path, type='jpeg', quality=60, timeout=300000)
+    except Exception as e: print('skjermbildet %s kom ikke: %s' % (path, str(e)[:80]))
 
 
 # what WebGL is given: the bytes in static buffers, and the buffers made and deleted
@@ -40,7 +45,7 @@ async def main():
         await pg.add_init_script(HOOK)
         await boot(pg)
         await pg.wait_for_function("G3.isActive()", timeout=90000)
-        await pg.evaluate("""(() => { WX_FORCE = {w:7, d:250}; S.t = Math.round((Date.UTC(2027, 5, 15, 12) - EPOCH) / 6e4); S.mult = 0; const b = S.boat; b.status = 'idle'; b.port = null; b.v = 0; PEERS.length = 0;
+        await pg.evaluate("""(() => { WX_FORCE = {w:7, d:250}; S.t = Math.floor(S.t / 1440) * 1440 + 360; S.mult = 0; const b = S.boat; b.status = 'idle'; b.port = null; b.v = 0; PEERS.length = 0;
           const h = b.heading, add = (id, ax, r, liv) => PEERS.push({id, boat:'Fjordbris', vtype:'sjark', x:b.pos.x + Math.cos(h + ax) * r, y:b.pos.y + Math.sin(h + ax) * r, hd:h + 1.4, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv});
           add('tp1aaaaaaa', 1.25, 0.022, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 1.75, 0.03, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', -1.6, 0.03, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit');
           const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.12; c.yaw = 1.5; })()""")
@@ -56,16 +61,15 @@ async def main():
         kob = [k for k in mk['keys'] if 'h:kobolt' in k]
         check(mk['bufs'] and kob and not any(x in k for k in mk['keys'] for x in ('m:', 'f:', 'l:')) and len(kob) == len(set(k.split('|')[1] for k in kob)),
               'to båter med lik maling og ulikt merke deler modell (nøkkelen er bare malingen), og de malte modellene telles', mk)
-        await pg.wait_for_timeout(3000)
-        await pg.screenshot(path='flagg_liggende.jpg', type='jpeg', quality=60)
-        await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(5000)
-        await pg.screenshot(path='flagg_staaende.jpg', type='jpeg', quality=60)
-        await pg.set_viewport_size({'width': 1280, 'height': 800})
-        await pg.evaluate("S.t = Math.round((Date.UTC(2027, 5, 15, 23) - EPOCH) / 6e4)"); await pg.wait_for_timeout(3000)
+        if mk['bufs']:   # (the pictures only of a build with the step: SwiftShader takes minutes over each)
+            await pg.wait_for_timeout(3000); await shot(pg, 'flagg_liggende.jpg')
+            await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(5000); await shot(pg, 'flagg_staaende.jpg')
+            await pg.set_viewport_size({'width': 1280, 'height': 800})
+        await pg.evaluate("S.t = Math.floor(S.t / 1440) * 1440 + 1020"); await pg.wait_for_timeout(3000)
         nd = await pg.evaluate("(G3._debug.peerFlags || {}).drawn")
         check(nd == 0, 'klokka 23 er flaggene til de andre nede (flaggtidene der hun er)', nd)
         # the measurement, the same on a build from before the step: 20 stand-ins round her in view
-        await pg.evaluate("(() => { S.t = Math.round((Date.UTC(2027, 5, 15, 12) - EPOCH) / 6e4); PEERS.length = 0; const c = G3._debug.cam; c.dist = 170; c.pitch = 0.5; c.yaw = 0.7; })()")
+        await pg.evaluate("(() => { S.t = Math.floor(S.t / 1440) * 1440 + 360; PEERS.length = 0; const c = G3._debug.cam; c.dist = 170; c.pitch = 0.5; c.yaw = 0.7; })()")
         await pg.wait_for_timeout(6000)
         rows = []
         for mode in ('ulik', 'lik'):
@@ -93,4 +97,5 @@ async def main():
         check(errs == [], 'sidefeil', errs)
         await br.close()
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())
