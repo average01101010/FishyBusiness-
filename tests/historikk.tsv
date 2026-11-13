@@ -3901,4 +3901,10 @@
 2026-11-13 18:16	ccr-d6-hud-dialoger	d35e50b+	docktest	OK	61	lite	samtidig	
 2026-11-13 18:59	ccr-d6-hud-dialoger	f90d006c+	boottest	OK	32	lite	samtidig	
 2026-11-13 19:01	ccr-d6-hud-dialoger	f90d006c+	hudtest	OK	121	lite	samtidig	
+2026-11-13 19:51	ccr-013bxxid-fb6skinning	75ec5a1+	looktest	OK	13	lite	samtidig	
+2026-11-13 19:53	ccr-013bxxid-fb6skinning	75ec5a1+	csptest	OK	91	lite	samtidig	
+2026-11-13 19:53	ccr-013bxxid-fb6skinning	75ec5a1+	boottest	OK	34	lite	samtidig	
+2026-11-13 19:59	ccr-013bxxid-fb6skinning	75ec5a1+	f1test	OK	398	3d	alene	
+2026-11-13 20:00	ccr-013bxxid-fb6skinning	75ec5a1+	dbg23o	OK	46	3d	alene	
 2026-11-13 19:27	ccr-899a9674-q3gjp0	d0d9a935+	dbg23o	OK	46	3d	alene	
+2026-11-13 20:13	ccr-013bxxid-fb6skinning	bc1b351	f1test	OK	415	3d	alene	

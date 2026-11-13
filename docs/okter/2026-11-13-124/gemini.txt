@@ -1,0 +1,64 @@
+[gemini-reviewer] node_modules missing, running npm ci
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+added 134 packages in 3s
+npm notice
+npm notice New major version of npm available! 10.9.9 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
+[gemini-4-hydrogen; files: image: docs/okter/2026-11-13-124/garderobe_liggende_staa.png; image: docs/okter/2026-11-13-124/garderobe_liggende_hvile.png; image: docs/okter/2026-11-13-124/garderobe_liggende_grep.png; image: docs/okter/2026-11-13-124/garderobe_liggende_grep_uten_hansker.png; image: docs/okter/2026-11-13-124/garderobe_liggende_ansikt.png; image: docs/okter/2026-11-13-124/garderobe_liggende_kvinne.png; image: docs/okter/2026-11-13-124/garderobe_liggende_kvinne_grep.png; image: docs/okter/2026-11-13-124/garderobe_staaende_staa.png; image: docs/okter/2026-11-13-124/garderobe_staaende_grep.png; image: docs/okter/2026-11-13-124/garderobe_staaende_ansikt.png; text: src/js/ui/10g-wardrobe.js; text: src/js/figpose.js; 26336 prompt tokens]
+
+### 1) Revner, hull, spyd/tagger eller flater som går gjennom hverandre
+* **Revner, hull og spyd/tagger:** Jeg **SER** ingen revner, hull eller spyd/tagger som stikker ut noe sted på den nye figuren i noen av de ti bildene (verken i skuldre/armhuler, albuer, hofter, knær eller hender).
+* **Erme gjennom jakke / hanske gjennom erme / bukse gjennom jakke:** Jeg **SER** ingen gjennomtrengning mellom erme og jakke, mellom hanske/hånd og erme, eller mellom bukse og jakke i `garderobe_liggende_staa.png`, `garderobe_liggende_hvile.png`, `garderobe_liggende_grep.png`, `garderobe_liggende_grep_uten_hansker.png`, `garderobe_liggende_kvinne.png` eller `garderobe_liggende_kvinne_grep.png`. Hanskemansjettene og jakkekanten ligger rent utenpå erme og bukse.
+* **To små mulige punktgjennomtrengninger (små pikselflekker):**
+  * **Bukse/sokk på kvinnen:** Jeg **SER** en bitteliten rød prikk (1–2 piksler) nederst på forsiden av kvinnens venstre blå buksebein (til høyre i bildet), rett over den hvite skoen, i både `garderobe_liggende_kvinne.png` og `garderobe_liggende_kvinne_grep.png`. I de samme bildene **SER** man også rødt inne i bukseåpningen over begge skoene; jeg **ANTAR** at det røde er sokker/legg inni buksebeinet som stikker ørlite gjennom bukseflaten i det ene punktet.
+  * **Lue/hår/panne på mannen:** Jeg **SER** 2–3 bittesmå mørke prikker/streker på huden rett over øyenbrynene (særlig over figurens venstre øyenbryn, til høyre i bildet) helt opp mot bremmen/skyggen på lua i `garderobe_liggende_ansikt.png` og `garderobe_staaende_ansikt.png`. Jeg **ANTAR** at dette enten er bittelitt av hårnettet/luen som bryter gjennom eller skygge-/kantaliasing langs bremmen.
+
+---
+
+### 2) Grep-bildene: forskjell på høyre og venstre hånd, og fingerbøy
+* **Ulike grep på høyre og venstre hånd:** Jeg **SER** tydelig i `garderobe_liggende_grep.png`, `garderobe_liggende_grep_uten_hansker.png`, `garderobe_liggende_kvinne_grep.png` og `garderobe_staaende_grep.png` at hendene har ulike stillinger:
+  * **Figurens høyre hånd** (til venstre for betrakteren) har alle fire fingre krummet innover mot håndflaten i en lukket neve (rundt et tenkt skaft), med tommelen lagt inntil/over.
+  * **Figurens venstre hånd** (til høyre for betrakteren) står i et åpnere klypegrep der pekefingeren og tommelen danner en C-form med synlig mellomrom mellom tuppene (særlig tydelig uten hansker i `garderobe_liggende_grep_uten_hansker.png`).
+* **Bøy i leddene vs. knust/vridd:** Jeg **SER** i `garderobe_liggende_grep_uten_hansker.png` og `garderobe_liggende_grep.png` at fingrene bøyer seg jevnt i leddene og beholder volumet sitt. Ingen av hendene eller fingrene ser knust, flatklemt eller vridd ut. (Dette samsvarer også med koden i `pose2()` i `10g-wardrobe.js`, der `figGrip` gir `'grip'` til `'R'` og `'pinch'` til `'L'`.)
+
+---
+
+### 3) Lyset på ny vs. gammel figur og eventuelle normalfeil
+* **Lysretning og styrke:** Jeg **SER** i `garderobe_liggende_staa.png`, `garderobe_liggende_ansikt.png` og `garderobe_liggende_kvinne.png` at lyset har **samme retning** (skrått ovenfra og forfra fra betrakterens høyre side) og **samme lysstyrke/fargeverdi** på både ny og gammel figur (f.eks. lysere høyre bildekinn på begge ansiktene i `garderobe_liggende_ansikt.png`, og samme blå-/gråtoner på genser og bukser i `garderobe_liggende_staa.png`). (Dette stemmer med at `draw2` i `10g-wardrobe.js` bruker samme fragmentshader `FS` og samme `uL = [0.35, 0.55, 0.75]`.)
+* **Flatere / mørkere / svarte flekker:**
+  * Jeg **SER** at den nye figuren ikke er mørkere totalt sett, og jeg **SER** ingen svarte flekker fra feilvendte normaler på hud, klær eller hender.
+  * Jeg **SER** likevel en overflateforskjell i `garderobe_liggende_staa.png` og `garderobe_liggende_ansikt.png`: på den gamle figuren gir de enkle sylinderdelene et blankere/mer markant høylys på skulderkulene og ermene, mens den nye figuren har mykere, mer dempede overganger på kroppen og samtidig litt synlige trekantfasetter i kinn/kjeve i nærbildet (`garderobe_liggende_ansikt.png`).
+
+---
+
+### 4) Gulvhøyde og høyde på de to figurene
+* **Gulvhøyde:** Jeg **SER** i `garderobe_liggende_staa.png`, `garderobe_liggende_hvile.png`, `garderobe_liggende_kvinne.png` og `garderobe_staaende_staa.png` at skosålene til begge figurene står på **samme gulvhøyde** (nederst på føttene ligger de på linje horisontalt).
+* **Total høyde:** Jeg **SER** tydelig at de **ikke er like høye** – den nye figuren er merkbart **lavere** enn den gamle:
+  * I `garderobe_liggende_staa.png` og `garderobe_liggende_hvile.png` ligger både skuldrene, haken, øynene og toppen av lua på den nye figuren lavere enn på den gamle (øynene på den nye er omtrent på høyde med nese/munn på den gamle, og toppen av lua rekker bare midt opp på kronen av den gamle lua).
+  * I `garderobe_liggende_ansikt.png` og `garderobe_staaende_ansikt.png` **SER** man det samme nært på: øynene til den nye figuren ligger omtrent på høyde med nesetippen/overleppen til den gamle.
+  * I `garderobe_liggende_kvinne.png` **SER** man også at kvinnens hode og røde topplue er lavere enn på den gamle figuren.
+  * Jeg **ANTAR** ut fra `draw2` i `10g-wardrobe.js` (som skalerer den nye med `WK_S`) at den gamle figurens geometri (`figureVB`) er litt høyere enn høyden som svarer til `WK_S` på den nye, i tillegg til at den gamle lua har høyere krone.
+
+---
+
+### 5) Stående format: klipping/overlapping og lesbarhet på tekstlinja
+* **Klipping eller dekking av knappene:**
+  * I `garderobe_staaende_staa.png` og `garderobe_staaende_grep.png` **SER** jeg at føttene og knappene under figurene ikke overlapper – det er god luft mellom skoene og den nederste knapperaden (`⟲`, `Ansiktet`, `⟳`, `Stilling: ...`, `Med hansker`).
+  * Øverst **SER** jeg derimot i både `garderobe_staaende_staa.png` og `garderobe_staaende_grep.png` at toppen av den gamle figurens svarte lue **overlapper/berører den lille tekstlinja** (nøyaktig under teksten `"5949 trekanter, 1"`). Den nye figuren (som er lavere) går helt klar av tekstlinja.
+  * I `garderobe_staaende_ansikt.png` **SER** jeg at ansiktene og hattene er helt frie for både tekstlinja øverst og knappene nederst, mens brystkassen/skuldrene på begge figurene ligger bak knapperaden nederst i 3D-visningen.
+* **Lesbarhet på den lille tekstlinja øverst:**
+  * Jeg **SER** i `garderobe_staaende_staa.png`, `garderobe_staaende_grep.png` og `garderobe_staaende_ansikt.png` at hele linja (`"Ny figur: 5949 trekanter, 1 tegnekall, 58 bein per kall (enheten har 4096 vektorer), 13.7 ms"`) får plass på én linje uten å bli klippet i kantene.
+  * Den er **lesbar** mot den mørke bakgrunnen takket være lys tekst og skygge (`text-shadow`), men skriften er liten (`12px`, `opacity: 0.8`), og akkurat der den svarte lua til den gamle figuren ligger bak `"5949 trekanter, 1"` i `staa` og `grep`, blir bakgrunnen litt urolig langs luekanten.
+
+---
+
+### 6) Viktigste stilbrudd og om den nye passer sammen med den gamle på samme dekk
+* **Viktigste stilbrudd (observert i bildene):**
+  1. **Ansiktet (størst stilbrudd):** I `garderobe_liggende_ansikt.png` **SER** man at den gamle figuren har et naivistisk dukkeansikt (enkle svarte knappeøyne uten hvitt, stor avlang pølsenese, rett munnstrek og sylinderhode), mens den nye har et skulptert, halvrealistisk menneskeansikt med markerte kinnbein, kjeve, anatomisk nese, ører og øyne med både hvitt og pupill.
+  2. **Proporsjoner og ledd:** I `garderobe_liggende_staa.png` og `garderobe_liggende_kvinne.png` **SER** man at den gamle består av stive, adskilte sylindere med synlige kuleledd i skuldrene og tynn stiv hals, mens den nye har sammenhengende, anatomiske skuldre, bryst, hofter og naturlig hals.
+  3. **Hender og sko:** I `garderobe_liggende_grep.png` og `garderobe_liggende_kvinne.png` **SER** man at den gamle har klumpete vottelignende hender og klossformede sko med overdimensjonerte detaljer/remmer, mens den nye har fem adskilte, leddede fingre og mer realistisk formede støvler/sko.
+* **Passer de sammen på samme dekk?**
+  * Ut fra det jeg **SER** i sammenligningsbildene: **Nei.** De tilhører to ulike form- og detaljnivåer (stilisert tredukke vs. halvrealistisk menneske). Hvis begge sto på samme dekk, ville forskjellen – særlig i ansikt, skulderledd og hender – skapt et tydelig stilbrudd der den gamle ser ut som en enkel plassholderfigur ved siden av den nye. Den nye bør derfor erstatte de gamle figurene samlet fremfor å blandes med dem på dekk.

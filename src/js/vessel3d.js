@@ -394,8 +394,29 @@ function glbParse(b64){
       o.n[k3] = N[i3]; o.n[k3 + 1] = N[i3 + 1]; o.n[k3 + 2] = N[i3 + 2];
       o.c[k4] = Cc[i4]; o.c[k4 + 1] = Cc[i4 + 1]; o.c[k4 + 2] = Cc[i4 + 2]; o.c[k4 + 3] = Cc[i4 + 3];
       if (Q){ o.zone[k] = Q[i4]; o.ao[k] = Q[i4 + 1] / 255; } }
+    // a skinned part (the new people, folk2.b64; FB6, 13.11.2026): the four bones of each corner and their weights as bytes (255 = all),
+    // the positions in the rest pose (float32 in the file, no scale on the node). A part that is a piece of another's vertices (its
+    // own range of the same indices) comes out as its own corners here, as every part does.
+    const aj = pr.attributes.JOINTS_0, aw = pr.attributes.WEIGHTS_0;
+    if (aj != null && aw != null){ const Jn = acc(aj), W = acc(aw); o.j = new Uint8Array(nI * 4); o.w = new Uint8Array(nI * 4); o.skin = nd.skin == null ? 0 : nd.skin;
+      for (let k = 0; k < nI; k++){ const i4 = I[k] * 4, k4 = k * 4; for (let c = 0; c < 4; c++){ o.j[k4 + c] = Jn[i4 + c]; o.w[k4 + c] = Math.round(W[i4 + c] * 255); } } }
     return o;
   };
+  // the skeletons of a file that has them (skins): the bones by name in the first skin's order, each bone's parent (an index, -1 at the
+  // root) from the nodes' children, where each joint rests (the nodes' translations added up from the root: the file's nodes hold the
+  // man's places, the woman's are in the extras' rest.f), each skin's inverse bind matrices (16 floats a bone, column by column), and
+  // for a part that hangs on a bone, the bone's name (the hair, the beards and the hats on the head). Null for a file without skins.
+  const skel = () => {
+    if (!J.skins || !J.skins.length) return null;
+    const par = new Map(); J.nodes.forEach((nd, i) => { for (const c of nd.children || []) par.set(c, i); });
+    const jn = J.skins[0].joints, at = new Map(jn.map((ni, b) => [ni, b])), bones = jn.map(ni => J.nodes[ni].name), parent = jn.map(ni => par.has(ni) && at.has(par.get(ni)) ? at.get(par.get(ni)) : -1);
+    const rest = jn.map(() => [0, 0, 0]); const place = b => { const t = J.nodes[jn[b]].translation || [0, 0, 0], p = parent[b] < 0 ? [0, 0, 0] : place(parent[b]); return [p[0] + t[0], p[1] + t[1], p[2] + t[2]]; };
+    for (let b = 0; b < jn.length; b++) rest[b] = place(b);
+    const on = {}; J.nodes.forEach((nd, i) => { if (nd.mesh != null && par.has(i) && at.has(par.get(i))) on[nd.name] = bones[at.get(par.get(i))]; });
+    return {bones, parent, rest, on, skins:J.skins.map(sk => ({name:sk.name, ibm:sk.inverseBindMatrices != null ? accRaw(sk.inverseBindMatrices) : null}))};
+  };
+  const accRaw = i => { const A = J.accessors[i], BV = J.bufferViews[A.bufferView], off = bo + (BV.byteOffset || 0) + (A.byteOffset || 0), out = new Float32Array(A.count * 16); for (let k = 0; k < out.length; k++) out[k] = dv.getFloat32(off + k * 4, true); return out; };
+  const sk = skel();
   // Each part is read out the first time it is asked for (05.11.2026, the lag on 04.11: the JS heap was 390 MB after the start against
   // 240 MB on 30.10 and grew towards 650-820 MB, when Android ended the page). A part read out was then plain arrays of 8 bytes a number, a
   // corner per triangle: a revised boat was 27-47 MB so, its near model (lod0) the most, 17-33 MB (typed arrays since Ø3d, about half). The fleet and the other players' boats
@@ -412,7 +433,7 @@ function glbParse(b64){
     return v; };
   for (const nm of node.keys()) Object.defineProperty(parts, nm, {enumerable:true, configurable:true, get:() => take(nm, true)});
   Object.defineProperty(parts, 'peek', {value:nm => node.has(nm) ? take(nm, false) : undefined});
-  return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
+  return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}, sk};
 }
 function glbLoad(type){
   if (!(type in GLBM)){ const src = glbData('glb', type); if (!src) return null; try { GLBM[type] = glbParse(src); } catch (e){ GLBM[type] = null; }
@@ -1381,6 +1402,70 @@ function figureVB(B, x, y, z, seated, hands, kit){
     wkLimb(B, P('hand_lo') || P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);   // (the one-piece glove: these figures are seen from a distance)
   }
 }
+// ---------- the new people (Folk 2, FB6, steg 124): one skinned figure per look, from src/data/folk2.b64 ----------
+// The file has a body for the man and one for the woman on a skeleton of 58 bones, and every part of worker.b64 anew under the same
+// name (tools/harbour/kropp_bygg.py; docs/systemer/folk-om-bord.md 5.33b). A figure is one mesh in the rest pose with four bones and
+// weights a corner; the shader bends it by the bones' matrices (figpose.js figPose, figGL). Shown only behind #folk2 in the address,
+// and only in the wardrobe yet: on deck and on the quay the figure is the old one (worker.b64) until Jonas has seen this one (FB7).
+const FOLK2 = typeof location !== 'undefined' && !!location && /folk2/.test(location.hash || '');
+const FIGSK = {}, FIGPC = {};
+function figSkelOf(sex){ const k = sex === 'f' ? 'f' : 'm'; if (FIGSK[k]) return FIGSK[k]; const G = glbLoad('folk2'); return G && G.sk ? FIGSK[k] = figSkel(G.ex, k) : null; }
+// a part of the new file painted by the kit's zones as wkPart paints the old (1 jacket, 3 trousers, 4 skin, 5 hair, beard and
+// eyebrows, 6 hat, 7 shoes; zone 0 keeps its own colour: the eyes, the gloves, the soles), with its bones and weights. A part that
+// hangs on a bone (the hair, the beards and the hats on the head) is measured from that bone's joint and is shared by both bodies:
+// it gets the joint's place for this sex (the woman's from the extras' rest.f, never from the file's nodes, which are the man's)
+// and all its weight on that bone.
+function figPart(name, kit, sex){
+  const K = wkKitOf(kit); if (!K) return null; sex = sex === 'f' ? 'f' : 'm';
+  const k = name + '|' + sex + '|' + wkKeyOf(kit); if (k in FIGPC) return FIGPC[k];
+  if (Object.keys(FIGPC).length > 400) for (const q in FIGPC) delete FIGPC[q];
+  const G = glbLoad('folk2'), o = G && G.parts[name]; if (!o) return FIGPC[k] = null;
+  const c = o.c.slice(), zc = {1:K.top, 3:K.legs, 4:K.skin || null, 5:K.hair || null, 6:K.hatc || null, 7:K.shoec || null}, nC = o.p.length / 3;
+  for (let i = 0; i < o.zone.length; i++){ const col = zc[o.zone[i]]; if (col){ const a = o.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } }
+  if (o.j) return FIGPC[k] = {p:o.p, n:o.n, c, j:o.j, w:o.w};
+  const bone = G.sk.on[name], sk = figSkelOf(sex), bi = bone != null ? sk.ix[bone] : null; if (bi == null) return FIGPC[k] = null;
+  const at = sk.rest[bi], p = new Float32Array(nC * 3), j = new Uint8Array(nC * 4), w = new Uint8Array(nC * 4);
+  for (let i = 0; i < nC; i++){ p[i * 3] = o.p[i * 3] + at[0]; p[i * 3 + 1] = o.p[i * 3 + 1] + at[1]; p[i * 3 + 2] = o.p[i * 3 + 2] + at[2]; j[i * 4] = bi; w[i * 4] = 255; }
+  return FIGPC[k] = {p, n:o.n, c, j, w};
+}
+// The parts of a look on the new body: [name, range], range the corners [first, count] of the part that are drawn (nothing: all of it).
+// Under the clothes only what the file's extras cover say is drawn of the skin: the head with the neck, and the hands when the figure
+// wears no gloves (opt.bare); the arms, the torso, the legs and the feet of the skin are never drawn under clothes.
+function figParts(kit, opt){
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, K = wkKitOf(kit); if (!G || !G.sk || !K) return null;
+  const X = G.ex, F = K.f ? 'F' : '', body = 'body' + F, cov = (X.cover || {})[body] || {}, L = [[K.torso]];
+  for (const n of ['uarm', 'farm', 'thigh', 'shin']) L.push([n + F]);
+  L.push([(K.shoe || 'boot') + F]);
+  if (K.vest && (X.vest || {})[K.torso]) L.push([X.vest[K.torso]]);
+  if (cov.head) L.push([body, cov.head]);
+  if (opt && opt.bare){ if (cov.hands) L.push([body, cov.hands]); } else L.push(['glove' + F]);
+  for (const n of [K.hat, K.hairP, K.beard]) if (n) L.push([n]);
+  return L;
+}
+// the whole figure of a look in the rest pose: {p, n, c (Float32Array), j, w (Uint8Array, 4 a corner), cnt corners, sex, parts
+// [[name, first corner, corners]], miss: the names the file did not have}
+function figMesh(kit, opt){
+  const L = figParts(kit, opt); if (!L) return null; const K = wkKitOf(kit), sex = K.f ? 'f' : 'm', got = [], miss = []; let n = 0;
+  for (const [name, range] of L){ const o = figPart(name, kit, sex); if (!o){ miss.push(name); continue; }
+    const a = range ? range[0] : 0, cnt = range ? range[1] : o.p.length / 3; got.push([name, o, a, cnt]); n += cnt; }
+  const M = {p:new Float32Array(n * 3), n:new Float32Array(n * 3), c:new Float32Array(n * 4), j:new Uint8Array(n * 4), w:new Uint8Array(n * 4), cnt:n, sex, parts:[], miss}; let at = 0;
+  for (const [name, o, a, cnt] of got){
+    M.p.set(o.p.subarray(a * 3, (a + cnt) * 3), at * 3); M.n.set(o.n.subarray(a * 3, (a + cnt) * 3), at * 3); M.c.set(o.c.subarray(a * 4, (a + cnt) * 4), at * 4);
+    M.j.set(o.j.subarray(a * 4, (a + cnt) * 4), at * 4); M.w.set(o.w.subarray(a * 4, (a + cnt) * 4), at * 4); M.parts.push([name, at, cnt]); at += cnt; }
+  return M;
+}
+// a figure's mesh as draw calls of at most maxB bones each (figpose.js figSplit): [{p, n, c, j, w, cnt, bones}], j counted in the draw
+// call's own palette (bones: which of the skeleton's bones it holds, in order). One draw call, the mesh itself, when maxB holds all.
+function figDraws(M, maxB){
+  const G = figSplit(M.j, M.w, maxB, FIG_BONES); if (G.length === 1 && !G[0].tris) return [Object.assign({bones:G[0].bones}, M)];
+  return G.map(g => { const n = g.tris.length * 3, D = {p:new Float32Array(n * 3), n:new Float32Array(n * 3), c:new Float32Array(n * 4), j:new Uint8Array(n * 4), w:new Uint8Array(n * 4), cnt:n, bones:g.bones}, slot = {};
+    g.bones.forEach((b, i) => { slot[b] = i; });
+    g.tris.forEach((t, q) => { const a = t * 3, b = q * 3; D.p.set(M.p.subarray(a * 3, a * 3 + 9), b * 3); D.n.set(M.n.subarray(a * 3, a * 3 + 9), b * 3); D.c.set(M.c.subarray(a * 4, a * 4 + 12), b * 4); D.w.set(M.w.subarray(a * 4, a * 4 + 12), b * 4);
+      for (let k = 0; k < 12; k++) D.j[b * 4 + k] = M.w[a * 4 + k] > 0 ? slot[M.j[a * 4 + k]] : 0; });
+    return D; });
+}
+// the bones of a draw call out of a pose's matrices (figPose's M): what goes to the shader's uB
+function figPal(M, bones){ if (bones.length * 12 === M.length) return M; const o = new Float32Array(bones.length * 12); bones.forEach((b, i) => { o.set(M.subarray(b * 12, b * 12 + 12), i * 12); }); return o; }
 // a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
 // without WebGL. Colours from the spec; the hull below the waterline in bottom paint.
 function vesselSVG(type, w, h){
