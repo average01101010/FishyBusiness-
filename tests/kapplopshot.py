@@ -127,12 +127,23 @@ async def one(p, name, vw, vh):
     await pg.wait_for_timeout(4000)
     # (the camera stands 0.55 rad off her bow, and standing up the view is narrow: the bow turned until the light is in the picture, as a
     # player turns the camera; G3.seen is what the shutter asks)
-    aim = None; tries = []
-    for off in [0, -0.55, 0.55, -0.3, -0.8, 0.3, 0.8, -1.1, 1.1]:
-        await J("([id, off]) => { const m = S.lop.run.tasks.find(x => x.id === id); S.boat.heading = Math.atan2(m.fyr.x - m.p.x, -(m.fyr.y - m.p.y)) + off; }", [fx, off]); await pg.wait_for_timeout(3000)
-        sn = await J("(id) => { const m = S.lop.run.tasks.find(x => x.id === id), q = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h); return q ? {front:!!q.front, clear:!!q.clear, ang:q.ang, half:q.half} : null; }", fx)
-        tries.append([off, sn])
-        if sn and sn['front'] and sn['clear']: aim = off; break
+    # (the camera stands 0.55 rad off her bow and does not follow her heading while she lies still, and standing up the view is only
+    # some 36° wide: the camera is turned as a player turns it, by dragging a finger across the 3D view, until G3.seen, which the
+    # shutter asks, says the light is in the picture)
+    SEEN = "(id) => { const m = S.lop.run.tasks.find(x => x.id === id), q = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h); return q ? {front:!!q.front, clear:!!q.clear, ang:q.ang, half:q.half} : null; }"
+    async def drag(dx):
+        cx, cy = vw / 2, vh * 0.55
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': cx, 'y': cy, 'id': 1}]}); await asyncio.sleep(0.05)
+        for k in range(1, 9):
+            await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': cx + dx * k / 8, 'y': cy, 'id': 1}]}); await asyncio.sleep(0.03)
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await asyncio.sleep(1.2)
+    aim = None; tries = []; step = 60
+    sn = await J(SEEN, fx); tries.append([0, sn])
+    for k in range(14):
+        if sn and sn['front'] and sn['clear']: aim = k; break
+        await drag(step); s2 = await J(SEEN, fx); tries.append([step, s2])
+        if s2 and sn and s2['ang'] > sn['ang']: step = -step // 2 if abs(step) > 15 else -step   # (the wrong way, or past it: back, by less)
+        sn = s2
     if aim is None: print('     (kameraet: ' + json.dumps(tries) + ')')
     await J("() => { turFotoUi(); }"); fb = await J(RECT, '#fotoBtn')
     check(fb and fb['shown'], name + ': 4a. utløseren står i 3D innen 3 km av Obrestad fyr', {'pos': pos, 'btn': fb})
