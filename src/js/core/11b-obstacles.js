@@ -43,6 +43,22 @@ function obsBridge(br){
   }
   HIND.br.set(br, o); return o;
 }
+// A fixed sea mark on a bridge: a bridge's own lights and the signs of the passage under it (Puddefjordsbroen in Bergen has a red, a
+// white and a green light on each side, ten metres apart across the passage). OpenStreetMap has them on the deck's edge, 1.5 to 3.5 m
+// outside the deck as bridgeInto draws it, so they stood as posts in the water across the passage, and a boat on Autonav ran into them
+// (tilbakemelding #6 fra testutgaven, 13.11.2026). One within 4 m of a deck's edge hangs on the bridge: no post in the water, nothing
+// to steer round or run into (the bridge's piers and deck are), and its light hangs under the deck (06-buildings-lights.js lightY). The
+// lighthouses and cairns stand on land and the buoys float; they stay. The marks stay for the fairway's sides (05e-sjovei.js
+// farvWrongSide) and the chart
+const MK_HUNG = new Set(['m', 'P', 'L', 'D', 'S', 'i', 'a', 'y']);
+const markCell = mk => Math.floor(mk[0] * 1000 / HIND.C) * 1048576 + Math.floor(mk[1] * 1000 / HIND.C);
+// the deck piece among L (a cell of the index; obsBridge's pieces have r = half the deck and 0.4 m) within 4 m of whose edge the point
+// x, z (m) is, the highest where two are; or null
+function deckAt(L, x, z){ let b = null; if (L) for (const o of L) if (o.t === 2 && obsDist(o, x, z, x, z) < 3.6 && (!b || o.under > b.under)) b = o; return b; }
+const markOnDeck = (L, mk) => MK_HUNG.has(mk[2]) && !!deckAt(L, mk[0] * 1000, mk[1] * 1000);
+const markOnBridge = mk => markOnDeck(obsIndex().get(markCell(mk)), mk);
+// the deck piece a light at x, y (km) hangs on, or null where it is on no bridge
+const bridgeDeckAt = (x, y) => deckAt(obsIndex().get(markCell([x, y])), x * 1000, y * 1000);
 // everything there is now, in a grid of 250 m cells (each thing in every cell within 40 m of it)
 function obsIndex(){
   const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + MARKS.ver + '|' + nk + '|' + (RORBU.ver || 0) + '|' + FDOCK.ver;
@@ -71,7 +87,7 @@ function obsIndex(){
       put({t:1, x:d.o[0] + d.n[0] * d.s0 / 2, z:d.o[1] + d.n[1] * d.s0 / 2, l:d.s0 / 2, w:0.8, ux:d.n[0], uz:d.n[1], why:'dock'}); }
     if (h.moorVer === MOOR.ver) for (const b of h.boats) if (b.moored && b.moored.buoy) put({t:0, x:b.moored.buoy.x * 1000, z:b.moored.buoy.y * 1000, r:b.L + MOOR.PEN, why:'buoy'});
   }
-  const mark = mk => { const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
+  const mark = mk => { const r = obsMarkR[mk[2]]; if (r && !markOnDeck(idx.get(markCell(mk)), mk)) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
   SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
   // the wind turbines that stand in the sea (the floating ones off Karmøy, a few on skerries; tools/vind/vind.py): the tower and its
   // foundation (view3d/17d-vind.js draws it 0.045 x the hub across at the foot, the ring 0.11)
