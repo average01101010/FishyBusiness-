@@ -137,7 +137,7 @@ Brukerens valg:
   - `progweek`: blad B dag 22 som før, 37 turer mot 44 på 56 dager, men 296 kg og 10 140 kr per tur mot 281 kg og 8 766 kr. Nettoen etter 56 dager er 379 301 kr mot 388 726 kr. Med 15 % egenkapital kommer inngangen nå litt etter dag 56.
   - `simday` er innenfor ±3 %.
 - **Sjøgang og tekst:**
-  - `seaState(hs)` gir Douglas-skalaen (WMO-kode 3700) med met.no sine navn: havblikk, småkruset sjø, smul sjø, svak sjø, moderat sjø, røff sjø, veldig røff sjø, opprørt hav, veldig opprørt hav, ekstremt opprørt hav (`SEAN`).
+  - `seaCode(hs)` (het `seaState` til 13.11.2026, da `deckcrew.js` sin `seaState()` for sjøbeina tok navnet i sidens felles skop og Vær-appen viste «undefined») gir Douglas-skalaen (WMO-kode 3700) med met.no sine navn: havblikk, småkruset sjø, smul sjø, svak sjø, moderat sjø, røff sjø, veldig røff sjø, opprørt hav, veldig opprørt hav, ekstremt opprørt hav (`SEAN`).
   - `seaHere` legger til «krapp» når vindsjøen er brattere enn 1/25 av bølgelengden og større enn dønningen.
   - `BFS` beskriver havet ved hver Beaufort-styrke (etter SNL «Beauforts vindskala»).
   - Vær-panelet og vær-appen viser sjøgangen, vindsjøen og dønningen med retning og periode, og teksten for vindstyrken.

@@ -437,7 +437,7 @@ fleet: each vessel keeps its own state; the company holds the rest. The simulati
   - 1408 `spCatchable(sp, H)`
   - 1410 `ordersTick(H)`
 
-## `src/js/core/03b-sea.js` (311 linjer)
+## `src/js/core/03b-sea.js` (313 linjer)
 
 SEA: fetch, wind sea, swell
 
@@ -462,26 +462,26 @@ SEA: fetch, wind sea, swell
   - 126 `hsOpen(H, p)`
   - 128 `fcHsOpen(H, now, p)`
   - 129 `hsAtFc(p, H, now)`
-  - 135 `seaState(hs)`
-  - 138 `seaHere(p, H)`
-- **143** waves on a current (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8)
-  - 153 `curWave(om, U)`
-  - 162 `curEff(c)`
-  - 168 `curAlong(C, from, g)`
-  - 171 `seaCur(p, H, q)`
-  - 182 `seaDirOf(rel)`
-  - 189 `seaPartsNear(p, H)`
-  - 191 `seaDirF(p, H, head)`
-- **196** The breaking sea, brottsjøen (Ø9 F7, docs/planer/fysikk-4-sjo-og-skrog.md F7; Jonas 27.10.2026 6A: «at båten skal fungere så ekte
-  - 216 `brtHash(ix, iy, t, k)`
-  - 223 `brottSea(p, H)`
-  - 227 `brottCond(p, H)`
-  - 242 `brottEvent(ix, iy, t, cond)`
-  - 248 `brottMake(ix, iy, t, u, cond)`
-  - 259 `brottNear(p, T, cond)`
-  - 268 `brottRel(e, p, T)`
-  - 274 `brottSide(e, head)`
-  - 286 `brottMinute(cond)`
+  - 137 `seaCode(hs)`
+  - 140 `seaHere(p, H)`
+- **145** waves on a current (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8)
+  - 155 `curWave(om, U)`
+  - 164 `curEff(c)`
+  - 170 `curAlong(C, from, g)`
+  - 173 `seaCur(p, H, q)`
+  - 184 `seaDirOf(rel)`
+  - 191 `seaPartsNear(p, H)`
+  - 193 `seaDirF(p, H, head)`
+- **198** The breaking sea, brottsjøen (Ø9 F7, docs/planer/fysikk-4-sjo-og-skrog.md F7; Jonas 27.10.2026 6A: «at båten skal fungere så ekte
+  - 218 `brtHash(ix, iy, t, k)`
+  - 225 `brottSea(p, H)`
+  - 229 `brottCond(p, H)`
+  - 244 `brottEvent(ix, iy, t, cond)`
+  - 250 `brottMake(ix, iy, t, u, cond)`
+  - 261 `brottNear(p, T, cond)`
+  - 270 `brottRel(e, p, T)`
+  - 276 `brottSide(e, head)`
+  - 288 `brottMinute(cond)`
 
 ## `src/js/core/03c-stability.js` (312 linjer)
 
@@ -2888,45 +2888,48 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
   - 34 `innst()`
   - 72 `admin()`
 
-## `src/js/ui/phone/06-render.js` (67 linjer)
+## `src/js/ui/phone/06-render.js` (92 linjer)
 
-  - 1 `show(on, a)`
-  - 2 `status()`
-  - 8 `tickHome()`
-  - 14 `render()`
-  - 18 `shell(a)`
-  - 20 `page(a)`
-  - 21 `dact(cur, a, d)`
-- **27** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
-  - 32 `trim()`
-- **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
-  - 52 `skipApp()`
+D5: where the big phone stands on a tablet, and how wide it is. It leaves the status box and the small chart in sight: beside them
 
-## `src/js/ui/phone/07-patch.js` (1657 linjer)
+  - 7 `place()`
+  - 23 `show(on, a)`
+  - 24 `status()`
+  - 30 `tickHome()`
+  - 36 `render()`
+  - 43 `shell(a)`
+  - 45 `page(a)`
+  - 46 `dact(cur, a, d)`
+- **52** Trim: more speed for the boat you are aboard for a while (core BOOSTS; Jonas 05.10.2026: sold for real money, the time in game
+  - 57 `trim()`
+- **73** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
+  - 77 `skipApp()`
+
+## `src/js/ui/phone/07-patch.js` (1656 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1645 `patch()`
+  - 1644 `patch()`
 
-## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
+## `src/js/ui/phone/08-home-papers-merker.js` (126 linjer)
 
 the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2-staaende.md): the clock, the weather and the cash,
 
-  - 5 `home()`
-  - 24 `nowCards(na)`
-  - 44 `nearHint(kind)`
-- **48** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
-  - 49 `tattoos()`
-  - 67 `papBladB()`
-  - 72 `papPermit()`
-  - 78 `papZlic()`
-  - 83 `papKv()`
-  - 89 `papBiz()`
-  - 95 `fsChip()`
-  - 97 `fsCard()`
-  - 104 `merker()`
-  - 116 `lore()`
+  - 7 `home()`
+  - 26 `nowCards(na)`
+  - 46 `nearHint(kind)`
+- **50** the seaman's life: the tattoos you have earned, and the old ways at sea you have heard of
+  - 51 `tattoos()`
+  - 69 `papBladB()`
+  - 74 `papPermit()`
+  - 80 `papZlic()`
+  - 85 `papKv()`
+  - 91 `papBiz()`
+  - 97 `fsChip()`
+  - 99 `fsCard()`
+  - 106 `merker()`
+  - 118 `lore()`
 
 ## `src/js/ui/phone/09-vaer-post-salg-redning.js` (153 linjer)
 
@@ -4003,7 +4006,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 1725 `lanterns(G, V, st)`
   - 1768 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (1275 linjer)
+## `src/js/deckcrew.js` (1337 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
@@ -4017,28 +4020,28 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
 - **471** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
 - **585** a free person: something to do for a while, by the weather, the hour and their nature
 - **591** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **719** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **736** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **748** the agents follow the people aboard
-- **875** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **895** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-- **903** the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
-  - 1044 `sternKit(vt)`
-  - 1046 `moorSpots(G, sd)`
-  - 1054 `npcCrewCtx(n, G)`
-- **1060** the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
-  - 1093 `seaState()`
-  - 1097 `seaKnee(dref, dnow)`
-- **1098** the limbs (FB2, steg 123, 13.11.2026; docs/planer/folk-2.md; Jonas: «Kjør på med FB2 i en ny økt»): the upper arm, the forearm,
-  - 1130 `limbLen(c)`
-  - 1135 `ik2(Rt, Tg, L1, L2, pole, o)`
-  - 1146 `torsoPt(q, b, tw)`
-  - 1148 `torsoInv(q, b, tw)`
-  - 1155 `reachBody(sh, tg, reach, b0, o)`
-  - 1171 `armIk(s, tg, sd, L, o, cl)`
-  - 1196 `armHand(s, hd, sd, L, o, cl)`
-  - 1202 `legDrop(hips, feet, L)`
-  - 1221 `seaLegs(s, inp)`
+- **773** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **790** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **802** the agents follow the people aboard
+- **929** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **949** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+- **957** the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
+  - 1098 `sternKit(vt)`
+  - 1100 `moorSpots(G, sd)`
+  - 1108 `npcCrewCtx(n, G)`
+- **1114** the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
+  - 1147 `seaState()`
+  - 1151 `seaKnee(dref, dnow)`
+- **1152** the limbs (FB2, steg 123, 13.11.2026; docs/planer/folk-2.md; Jonas: «Kjør på med FB2 i en ny økt»): the upper arm, the forearm,
+  - 1187 `limbLen(c)`
+  - 1192 `ik2(Rt, Tg, L1, L2, pole, o)`
+  - 1203 `torsoPt(q, b, tw)`
+  - 1205 `torsoInv(q, b, tw)`
+  - 1212 `reachBody(sh, tg, reach, b0, o)`
+  - 1228 `armIk(s, tg, sd, L, o, cl)`
+  - 1258 `armHand(s, hd, sd, L, o, cl)`
+  - 1264 `legDrop(hips, feet, L)`
+  - 1283 `seaLegs(s, inp)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
