@@ -109,7 +109,7 @@ const BFS = {
     'High waves and dense streaks of foam. The sea begins to roll, and spray may reduce visibility.', 'Very high waves with long overhanging crests. The foam blows in dense white streaks and the sea looks white. Visibility is reduced.',
     'Exceptionally high waves, and the sea is covered with long white patches of foam. Visibility is reduced.', 'The air is filled with foam and spray, and the sea is completely white. Visibility is very much reduced.']
 };
-// the sea state by its significant wave height (the Douglas scale, as met.no names it), seaState() gives the number
+// the sea state by its significant wave height (the Douglas scale, as met.no names it), seaCode() gives the number
 const SEAN = {
   no:['havblikk', 'småkruset sjø', 'smul sjø', 'svak sjø', 'moderat sjø', 'røff sjø', 'veldig røff sjø', 'opprørt hav', 'veldig opprørt hav', 'ekstremt opprørt hav'],
   en:['calm (glassy)', 'calm (rippled)', 'smooth sea', 'slight sea', 'moderate sea', 'rough sea', 'very rough sea', 'high sea', 'very high sea', 'phenomenal sea']

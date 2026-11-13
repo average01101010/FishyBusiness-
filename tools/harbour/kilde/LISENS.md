@@ -8,7 +8,8 @@
   variety of mediums and applications». De fulle vilkårene står i RenderHubs «3D Content Licensing Agreement».
 - **Avgjort av Jonas 13.11.2026:** han sendte fila og et skjermbilde av lisensen, og valgte «Bruk modellen nå» da økta spurte
   (alternativene var egne kropper nå, lime inn avtalen først, eller bare som forbilde).
-- **Ikke lest av økta:** den fulle avtalen. `www.renderhub.com` var utenfor nettverket økta fikk nå, så avsnittene om spill der fila
+- **Avgjort av Jonas 13.11.2026 (steg 124, før fila gikk ut med bygget):** økta spurte om han hadde lest RenderHubs fulle avtale og om fila kunne rulles ut, med tre valg (bare testadressen til avtalen var lest; «Lest, rull ut alt»: han har lest hele avtalen og den dekker et nettspill der fila ligger åpent; ikke rull ut ennå). Han valgte **«Lest, rull ut alt»**. `src/data/folk2.b64` går derfor med i bygget til testadressen og i slipp.
+- **Ikke lest av noen økt (Jonas har lest den, punktet over):** den fulle avtalen. `www.renderhub.com` var utenfor nettverket økta fikk nå, så avsnittene om spill der fila
   følger med og om videredistribusjon er ikke lest av den som bygde dette. Jonas går god for lisensen; leser noen avtalen og finner at
   et nettspill med fila åpent tilgjengelig ikke er dekket, må kroppene byttes (rørledningen tar et hvilket som helst kroppsnett:
   `kropp.py` `SRC`, `BASE` og `fingers()`).

@@ -196,11 +196,53 @@ async def u28(p):
     await br.close()
 
 
+# D6 (designombyggingen, 13.11.2026): the HUD is the same in both formats. A tablet upright has the whole box in 3D, with the gauges and
+# «Regler ✓» at sea, as a tablet on its side (they stood only behind a tap on the strip); the strip stands over the drawer's sheet and
+# in the plotter as before; a phone upright keeps the strip. The little chart itself opens the plotter, and there is no
+# button beside it (a «Kart» button was built and taken away the same day: Jonas 13.11.2026, «det ser ikke bra ut»). The little chart has one palette: at noon its sea is the dark chart's, not the light one
+D6 = """(() => { const r = s => { const e = document.querySelector(s); if (!e || !e.getClientRects().length) return null; const cs = getComputedStyle(e);
+  if (cs.display === 'none' || cs.visibility === 'hidden') return null; const q = e.getBoundingClientRect(); return {l:Math.round(q.left), t:Math.round(q.top), r:Math.round(q.right), b:Math.round(q.bottom), w:Math.round(q.width), h:Math.round(q.height)}; };
+  const h = document.getElementById('hud'), po = document.getElementById('plotOpen');
+  return {hud:r('#hud'), plot:r('#miniPlot'), open:r('#plotOpen'), openTx:po ? po.textContent.trim() : null, gauges:!!h.querySelector('.gauges'), g:h.querySelectorAll('.gauges .g').length, rules:(h.querySelector('.rlink') || {}).textContent || '',
+    cls:['v3d', 'vplot', 'hudstrip', 'hudcard', 'dk-open'].filter(c => document.body.classList.contains(c))}; })()"""
+SEA = "(() => { if (!document.body.classList.contains('v3d') && typeof G3 !== 'undefined') G3.show(true); S.settings.hudMin = false; S.settings.plotMin = false; S.plan = null; S.boat.status = 'idle'; S.boat.port = null; renderHud(); if (typeof renderGPS === 'function') renderGPS(); })()"
+
+
+async def d6(p):
+    br = await p.chromium.launch(args=['--disable-gpu-compositing']); box = {}
+    for W, H in ((800, 1280), (1280, 800), (390, 844)):
+        ctx = await br.new_context(viewport={'width': W, 'height': H}, has_touch=True, is_mobile=W < 900); pg = await ctx.new_page(); errs = []
+        pg.on('pageerror', lambda e: errs.append(str(e)))
+        await boot(pg, GAME + '#notut'); await pg.wait_for_timeout(800)
+        await pg.evaluate(SEA); await pg.wait_for_timeout(800); tag = 'D6 %dx%d' % (W, H); a = await pg.evaluate(D6); box[tag] = a
+        if W >= 800:
+            check('hudstrip' not in a['cls'] and a['gauges'] and a['g'] == 4 and ('Regler' in a['rules'] or 'Rules' in a['rules']), tag + ': the whole box at sea, the four gauges and the rules row', {'cls': a['cls'], 'gauges': a['g'], 'rules': a['rules']})
+        else:
+            check('hudstrip' in a['cls'] and not a['gauges'], tag + ': a phone upright keeps the strip', a['cls'])
+        check(not a['open'], tag + ': no button beside the little chart (Jonas 13.11.2026: the chart itself opens the plotter)', a['open'])
+        if H > W and W >= 800:
+            await pg.evaluate("DOCK.open('beholdning')"); await pg.wait_for_timeout(600); d = await pg.evaluate(D6)
+            check('hudstrip' in d['cls'] and d['hud'] and d['hud']['h'] <= 70, tag + ': over the drawer\'s sheet the box is the strip', {'cls': d['cls'], 'hud': d['hud']})
+            await pg.evaluate("DOCK.close()"); await pg.wait_for_timeout(500); e = await pg.evaluate(D6)
+            check('hudstrip' not in e['cls'] and e['gauges'], tag + ': and the whole box again when the sheet closes', e['cls'])
+        # the little chart when the sun is highest (the day's chart was the light one): its sea is dark (one palette)
+        await pg.evaluate("(() => { let best = S.t, el = -99; for (let m = 0; m < 1440; m += 20){ const e = sunAt((S.t + m) / 60, S.boat.pos).el; if (e > el){ el = e; best = S.t + m; } } S.t = best; if (S.settings) S.settings.chartNight = 'auto'; const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; MINIP.key = ''; miniPaint(); })()"); await pg.wait_for_timeout(2500)
+        lum = await pg.evaluate("(() => { miniPaint(); const c = document.getElementById('miniPlot'), g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, Math.round(c.height * 0.6)).data; let s = 0, n = 0; for (let i = 0; i < d.length; i += 16){ s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++; } return Math.round(s / n); })()")
+        check(20 < lum < 140, tag + ': the little chart is the dark chart at noon too (mean lightness of its upper part with the fish colours on it, 0–255; the light chart is over 200, a chart that was not painted is 0)', lum)
+        await pg.click('#miniPlot'); await pg.wait_for_timeout(700); f = await pg.evaluate(D6)
+        check('vplot' in f['cls'], tag + ': a tap on the little chart opens the plotter', f['cls'])
+        print('errors (%s):' % tag, errs[:3]); await ctx.close()
+    u, l = box.get('D6 800x1280'), box.get('D6 1280x800')
+    check(u and l and u['hud'] and l['hud'] and u['g'] == l['g'] == 4 and u['rules'] == l['rules'] and u['rules'], 'D6: the box upright and on its side says the same (the gauges and the rules row; upright it is 250 px wide as the little chart, so the compass line keeps its degrees)', {'upright': u and u['hud'], 'side': l and l['hud']})
+    await br.close()
+
+
 async def main():
     async with async_playwright() as p:
         await phone(p)
         await tablet(p)
         await phone_side(p)
         await u28(p)
+        await d6(p)
 
 asyncio.run(main())

@@ -639,6 +639,11 @@
           spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); WKS[wk.n] = 0; } }
       while (wk.sacc >= 1){ wk.sacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.08 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.45 + a * 1.6), 0.1, VG.bow + a * Lb]), up = 0.9 + Math.random() * (1.4 + Math.min(4, -sink)), out = 1.6 + Math.random() * 2.6;
         spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); WKS[wk.n] = 1; }
+      // 5.20x: the bow's steady spray at the speed the water passes her on the screen (WK.bowG, with bowFoam in the foam map): a low, fine
+      // spray off both sides from where the hull meets the water, all the time, so the bow is not dry between the seas (Jonas 13.11.2026)
+      if ((WK.bowG || 0) > 0.02){ wk.bacc = (wk.bacc || 0) + dt * 70 * WK.bowG;
+        while (wk.bacc >= 1){ wk.bacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.3 * (WK.pf || 0) + 0.02 + Math.random() * 0.14, p = xf(BM, [side * VG.side * (0.25 + a * 2.2), 0.05, VG.bow + a * Lb]), out = 1.2 + Math.random() * 2.2;
+          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.5 + Math.random() * 1.1, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.4, 9.8); WKS[wk.n] = 0; } }
       // the rooster tail: a planing outboard throws a plume of water up behind the leg
       if (BOAT.outboard && WK.Fr > 1){ wk.racc = (wk.racc || 0) + dt * 70 * sstep(1, 1.6, WK.Fr);
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;

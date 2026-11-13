@@ -1,4 +1,26 @@
-  function show(on, a){ const was = isOpen; isOpen = on; if (a === 'kaiboden') a = kbLast; if (a) app = a === 'admin' && !adminOk() ? 'home' : a; else if (on && !was) app = 'home'; /* a closed phone opens on the home screen, not on the last app */ if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
+  // D5: where the big phone stands on a tablet, and how wide it is. It leaves the status box and the small chart in sight: beside them
+  // lying down, under them standing (the stylesheet reads --ph-hr and --ph-hb). When that would leave it less than 620 x 640, it takes
+  // the screen instead (.ph-full) rather than lie half over the box: this is the one place that rule is. The home screen and the apps
+  // follow the surface's own width, not the screen's: two columns from 640 px (.ph-w2), what matters now beside the apps from 880
+  // (.ph-wide). Measured when it opens, when the screen turns, and when the box changes size or place. Nothing is done in a phone
+  const BIGMQ = window.matchMedia('(min-width:561px) and (min-height:521px)');
+  function place(){
+    if (!BIGMQ.matches) return;
+    let r = 0, b = 0;
+    for (const id of ['hud', 'miniPlot', 'gps3d']){ const e = $(id); if (!e || e.hidden) continue;
+      const q = e.getBoundingClientRect(), c = getComputedStyle(e); if (!q.width || !q.height || c.display === 'none' || c.visibility === 'hidden') continue;
+      if (q.left < innerWidth / 2) r = Math.max(r, q.right); if (q.top < innerHeight / 2) b = Math.max(b, q.bottom); }
+    const land = innerWidth > innerHeight, hr = land && innerWidth - r - 26 >= 620 ? Math.round(r) : 0, hb = !land && innerHeight - b - 28 >= 640 ? Math.round(b) : 0;
+    const set = (k, v) => { if (el.style.getPropertyValue(k) !== v) el.style.setProperty(k, v); };
+    set('--ph-hr', hr + 'px'); set('--ph-hb', hb + 'px'); el.classList.toggle('ph-full', land ? r > 0 && !hr : b > 0 && !hb);
+    const w = el.getBoundingClientRect().width; el.classList.toggle('ph-w2', w >= 640); el.classList.toggle('ph-wide', w >= 880);
+  }
+  // (the box settles a moment after the screen has changed size, and grows, shrinks and moves with what the boat does and with the
+  // body's classes: measured again then)
+  window.addEventListener('resize', () => { if (isOpen){ place(); setTimeout(() => { if (isOpen) place(); }, 400); } });
+  if (typeof ResizeObserver === 'function'){ const ro = new ResizeObserver(() => { if (isOpen) place(); }); for (const id of ['hud', 'miniPlot', 'gps3d']) if ($(id)) ro.observe($(id)); }
+  if (typeof MutationObserver === 'function') new MutationObserver(() => { if (isOpen) place(); }).observe(document.body, {attributes:true, attributeFilter:['class']});
+  function show(on, a){ const was = isOpen; isOpen = on; if (a === 'kaiboden') a = kbLast; if (a) app = a === 'admin' && !adminOk() ? 'home' : a; else if (on && !was) app = 'home'; /* a closed phone opens on the home screen, not on the last app */ document.body.classList.toggle('ph-on', !!on); if (on) place();   /* (D5: the big phone on a tablet is a surface of its own, and the dock is hidden under it; the stylesheet reads this) */ if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
   function status(){
     const H = (S.t + liveFrac()) / 60, bars = S.boat.status === 'port' ? 4 : coverage(S.boat.pos);
     tEl.textContent = hm(H);
@@ -15,7 +37,10 @@
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, skip:skipApp, kaiboden:() => PAGES()[kbLast](), logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), gbook:() => GBOOK.page(), trim, patch, handbok:() => HBUI.page(), tilbake:() => FEEDBACK.page(), innst, admin,
     ordl, rigg, arbeid:() => WORK.page() + PLAN2UI.line(), drift:() => PLAN2UI.page(), fiske, service, nett, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
-  function shell(a){ const kb = KBT.includes(a); if (kb) kbLast = a; const h = kb ? 'kaiboden' : a, d = APPS.find(x => x[0] === h) || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'notat' ? ' ph-paper' : '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[h] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (kb ? kbTabs(a) : '') + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
+  // the pages that open in the phone without being an app on the home screen: their name, the bar's colour and the icon (D5: the bar said
+  // «naustp» and «gbook», and the naust's list had lost its paper when the notebook's page changed name from «notat»)
+  const PAGE_HEAD = {naustp:['naustp', 'Naustet', 'The boathouse', '#7a5a2c', 'notat'], gbook:['gbook', 'Gjesteboka', 'The guest book', '#8a5a2b', 'notat'], logg:['logg', 'Logg', 'Log', '#28507f', 'logg']};
+  function shell(a){ const kb = KBT.includes(a); if (kb) kbLast = a; const h = kb ? 'kaiboden' : a, d = APPS.find(x => x[0] === h) || PAGE_HEAD[a] || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'naustp' ? ' ph-paper' : '') + '" data-app="' + a + '" data-sub="' + (sub[a] || '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[d[4] || h] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (kb ? kbTabs(a) : '') + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
   function dact(cur, a, d){

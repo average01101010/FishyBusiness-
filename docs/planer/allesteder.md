@@ -1,4 +1,4 @@
-# Alle steder: ingen blir sittende fast (steg 124 AS1)
+# Alle steder: ingen blir sittende fast (steg 126 AS1)
 
 Jonas 13.11.2026: «Test å start fra alle kaiplasser, butikker, verft, rorbuer, fiskemottak med den eldre kystbåten å se om du kan starte en rute som går en eller annen plass. Å se at det faktisk fungerer både å ligge der med båten med tanke på størrelse og dypgående, men også at det faktisk er mulig å seile videre der i fra … Jeg MÅ vite at alle stedene i spillet fungerer som de skal og at spillere ikke blir stuck NOEN steder.» Og: «det er fullstendig krise om alt ikke fungerer som det skal når spillet lanseres.»
 

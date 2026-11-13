@@ -132,13 +132,15 @@ function hsAtFc(p, H, now){
 }
 // the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)
 const SEA_CODE = [0.05, 0.1, 0.5, 1.25, 2.5, 4, 6, 9, 14];
-function seaState(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return c; }
+// (called seaCode since 13.11.2026: deckcrew.js got a seaState() of its own for the crew's sea legs, FB4, and in the page's one scope the later one
+// took this one's place, so the Vær app said «0,1 m · undefined»)
+function seaCode(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return c; }
 // the sea where you are, for the weather texts: wind sea and swell with where they come from, the state, and whether the wind sea is
 // krapp (short and steep, as a young sea in a fjord: its height over its peak wavelength above 1/25)
 function seaHere(p, H){
   const q = hsParts(p, H), hs = Math.max(0.05, Math.hypot(q.w, q.sw)), Lp = 1.56 * q.tp * q.tp;
   let cur = null; try { cur = seaCur(p, H, q); } catch (e){}   // (the wind sea against the stream, F8b)
-  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04, cur};
+  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaCode(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04, cur};
 }
 // ---- waves on a current (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8) ----
 // A wave that runs on to a current keeps its frequency as the ground sees it, om, and its wavenumber follows (om - k U)^2 = g k (deep

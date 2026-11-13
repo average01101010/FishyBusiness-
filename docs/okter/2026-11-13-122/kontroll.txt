@@ -1,0 +1,74 @@
+FIL: src/data/folk2.b64, 1.72 MB (worker.b64: 1.96 MB)
+NAVN: 69 deler i worker.b64, 84 i den nye fila, mangler: ingen
+TREKANTER, påkledd figur nært, alle 30240 utseender i katalogen: i dag 7508–15334 (median 10508), ny 5455–7317 (median 6443)
+  størst økning: -1868 (('fleeceF', None, None, None, 'shoe', False)); flest over i dag: 0 av 30240 utseender
+STREKK mannskap  stå              kanter over 2x:    0  verst 1.5x (uarm)  
+STREKK mannskap  armene opp       kanter over 2x:   22  verst 2.4x (uarm)  uarm 22
+STREKK mannskap  dyp knebøy       kanter over 2x:   18  verst 2.4x (vest_o)  oilskin 10, uarm 4, vest_o 4
+STREKK mannskap  sittende         kanter over 2x:    6  verst 2.2x (vest_o)  oilskin 4, vest_o 2
+STREKK mannskap  bøyd over rekka  kanter over 2x:   20  verst 2.4x (uarm)  uarm 20
+STREKK mannskap  vridd            kanter over 2x:    0  verst 1.6x (vest_o)  
+STREKK mannskap  gange            kanter over 2x:    6  verst 2.4x (thigh)  thigh 5, oilskin 1
+STREKK mannskap  hodevri          kanter over 2x:    2  verst 2.0x (head)  head 2
+STREKK mannskap  arm frem         kanter over 2x:    4  verst 2.1x (uarm)  uarm 4
+STREKK skipper   stå              kanter over 2x:    0  verst 1.5x (uarm)  
+STREKK skipper   armene opp       kanter over 2x:   22  verst 2.4x (uarm)  uarm 22
+STREKK skipper   dyp knebøy       kanter over 2x:    4  verst 2.2x (uarm)  uarm 4
+STREKK skipper   sittende         kanter over 2x:    0  verst 1.9x (sweater)  
+STREKK skipper   bøyd over rekka  kanter over 2x:   20  verst 2.4x (uarm)  uarm 20
+STREKK skipper   vridd            kanter over 2x:    0  verst 1.4x (head)  
+STREKK skipper   gange            kanter over 2x:    5  verst 2.4x (thigh)  thigh 5
+STREKK skipper   hodevri          kanter over 2x:    2  verst 2.0x (head)  head 2
+STREKK skipper   arm frem         kanter over 2x:    4  verst 2.1x (uarm)  uarm 4
+STREKK kvinne    stå              kanter over 2x:    0  verst 1.3x (uarmF)  
+STREKK kvinne    armene opp       kanter over 2x:   16  verst 2.3x (uarmF)  uarmF 16
+STREKK kvinne    dyp knebøy       kanter over 2x:    8  verst 2.1x (uarmF)  parkaF 4, uarmF 4
+STREKK kvinne    sittende         kanter over 2x:    0  verst 1.9x (parkaF)  
+STREKK kvinne    bøyd over rekka  kanter over 2x:   12  verst 2.3x (uarmF)  uarmF 12
+STREKK kvinne    vridd            kanter over 2x:    0  verst 1.4x (headF)  
+STREKK kvinne    gange            kanter over 2x:    3  verst 2.2x (thighF)  thighF 3
+STREKK kvinne    hodevri          kanter over 2x:    0  verst 2.0x (headF)  
+STREKK kvinne    arm frem         kanter over 2x:    0  verst 2.0x (uarmF)  
+STREKK grep m relax  kanter over 2,5x:   0  verst 1.0x
+STREKK grep m flat   kanter over 2,5x:   0  verst 1.3x
+STREKK grep m grip   kanter over 2,5x:   4  verst 2.7x
+STREKK grep m hold   kanter over 2,5x:   0  verst 1.9x
+STREKK grep m pinch  kanter over 2,5x:   4  verst 2.5x
+STREKK grep m hook   kanter over 2,5x:   0  verst 1.5x
+STREKK grep f relax  kanter over 2,5x:   0  verst 1.0x
+STREKK grep f flat   kanter over 2,5x:   0  verst 1.3x
+STREKK grep f grip   kanter over 2,5x:   0  verst 2.2x
+STREKK grep f hold   kanter over 2,5x:   0  verst 1.6x
+STREKK grep f pinch  kanter over 2,5x:   0  verst 2.0x
+STREKK grep f hook   kanter over 2,5x:   0  verst 1.4x
+STREKK i alt: 182 kanter over 2x
+GREP m pinch  tommel til pekefinger: 2.8 mm (i hvile 38.9 mm)
+GREP m grip   skaft 35 mm, avstand fra ytterleddets hud til skaftet (mm): thumb +13.8, index +1.4, middle -1.0, ring +9.0, little +4.4; håndflata -16.3
+GREP f pinch  tommel til pekefinger: 1.9 mm (i hvile 35.6 mm)
+GREP f grip   skaft 35 mm, avstand fra ytterleddets hud til skaftet (mm): thumb +11.2, index -1.2, middle +0.7, ring +3.7, little -0.4; håndflata -13.4
+KRYSS mannskap  stå              synlig  353  samme stoff   68  sitter på  226   synlig: oilskin×vest_o 103, head×vest_o 57, farm×vest_o 39, thigh×vest_o 32, b_short×vest_o 28, hair_short_h×vest_o 27, oilskin×b_short 21, oilskin×head 18
+KRYSS mannskap  armene opp       synlig  305  samme stoff    0  sitter på  187   synlig: oilskin×vest_o 108, head×vest_o 57, thigh×vest_o 32, b_short×vest_o 30, hair_short_h×vest_o 29, oilskin×b_short 21, oilskin×head 18, head×beanie 10
+KRYSS mannskap  dyp knebøy       synlig  511  samme stoff  101  sitter på  226   synlig: oilskin×vest_o 142, thigh×vest_o 94, oilskin×thigh 90, head×vest_o 57, b_short×vest_o 28, hair_short_h×vest_o 27, oilskin×b_short 21, oilskin×head 18
+KRYSS mannskap  sittende         synlig  372  samme stoff   86  sitter på  226   synlig: oilskin×vest_o 131, head×vest_o 57, oilskin×thigh 37, thigh×vest_o 35, b_short×vest_o 28, hair_short_h×vest_o 27, oilskin×b_short 21, oilskin×head 18
+KRYSS mannskap  bøyd over rekka  synlig  246  samme stoff   39  sitter på  249   synlig: oilskin×vest_o 99, head×vest_o 54, thigh×vest_o 32, hair_short_h×vest_o 29, b_short×vest_o 22, head×beanie 10
+KRYSS mannskap  vridd            synlig  296  samme stoff   66  sitter på  242   synlig: oilskin×vest_o 104, head×vest_o 52, thigh×vest_o 32, hair_short_h×vest_o 27, oilskin×b_short 23, b_short×vest_o 19, oilskin×head 18, head×beanie 10
+KRYSS skipper   stå              synlig   28  samme stoff   69  sitter på  300   synlig: sweater×b_full 28
+KRYSS skipper   armene opp       synlig   28  samme stoff    0  sitter på  174   synlig: sweater×b_full 28
+KRYSS skipper   dyp knebøy       synlig   88  samme stoff   99  sitter på  300   synlig: sweater×thigh 60, sweater×b_full 28
+KRYSS skipper   sittende         synlig   52  samme stoff   77  sitter på  300   synlig: sweater×b_full 28, sweater×thigh 24
+KRYSS skipper   bøyd over rekka  synlig    0  samme stoff   24  sitter på  296   synlig: 
+KRYSS skipper   vridd            synlig   32  samme stoff   51  sitter på  285   synlig: sweater×b_full 32
+KRYSS kvinne    stå              synlig   58  samme stoff   67  sitter på    9   synlig: parkaF×hair_pony_h 39, headF×hat_bobble 14, parkaF×hLF 3, parkaF×hRF 2
+KRYSS kvinne    armene opp       synlig   53  samme stoff    0  sitter på    9   synlig: parkaF×hair_pony_h 39, headF×hat_bobble 14
+KRYSS kvinne    dyp knebøy       synlig  171  samme stoff  124  sitter på    9   synlig: parkaF×thighF 118, parkaF×hair_pony_h 39, headF×hat_bobble 14
+KRYSS kvinne    sittende         synlig  111  samme stoff   97  sitter på    9   synlig: parkaF×thighF 58, parkaF×hair_pony_h 39, headF×hat_bobble 14
+KRYSS kvinne    bøyd over rekka  synlig   46  samme stoff   35  sitter på    9   synlig: parkaF×hair_pony_h 32, headF×hat_bobble 14
+KRYSS kvinne    vridd            synlig   50  samme stoff   87  sitter på    9   synlig: parkaF×hair_pony_h 36, headF×hat_bobble 14
+KRYSS i alt: synlig 2800, samme stoff 1090, sitter på 3065
+
+
+
+
+
+
+

@@ -186,7 +186,7 @@ def connected(t, n):
     return len({f(i) for i in set(t.ravel().tolist())})
 
 
-MATNAME = {'suit': 'suit', 'trousers': 'trou', 'zip': 'zip', 'wool': 'wool', 'skin': 'skin'}
+MATNAME = {'suit': 'suit', 'trousers': 'trou', 'zip': 'zip', 'wool': 'wool', 'skin': 'skin', 'boot': 'boot', 'sole': 'sole', 'cream': 'cream', 'hair': 'hair', 'hat': 'beanie', 'helmet': 'helmet', 'peak': 'peak', 'vest': 'vest', 'vestzip': 'vestzip', 'refl': 'refl', 'belt': 'harness', 'buckle': 'buckle', 'toggle': 'toggle'}
 
 
 def mesh_obj(name, M, C, angle=72):
@@ -297,66 +297,19 @@ def eye_obj(sex, C):
 
 
 def brow_obj(B, C):
-    """the brows: a strip of hair on the skin over each eye (zone 5, the hair's colour), laid on the head by rays from the front"""
-    (cx, cy, cz), r = EYES[B.sex]; A = Acc('BROWS' + B.sex); H = C['brow']; bv = B.surf()
+    """the brows: a strip of hair on the skin over each eye (zone 5, the hair's colour), laid on the head by rays from the front: an
+    arch along the brow bone, close over the eye, fullest a third of the way out and thinning to a point at the temple"""
+    (cx, cy, cz), r = EYES[B.sex]; A = Acc('BROWS' + B.sex); H = C['brow']; bv = B.surf(); fine = 0.72 if B.sex == 'f' else 1.0
     for sg in (1, -1):
         rows = []
-        for u in (0.0, 0.25, 0.5, 0.75, 1.0):
-            x = sg * (cx - 0.019 + 0.040 * u); zc = cz + 0.0225 + 0.0028 * math.sin(math.pi * u) - 0.004 * u * u; hw = (0.0024 if B.sex == 'f' else 0.0034) - 0.0014 * u; row = []          # (hers are finer)
+        for u in (0.0, 0.18, 0.4, 0.62, 0.82, 1.0):
+            x = sg * (cx - 0.020 + 0.044 * u); zc = cz + 0.0150 + 0.0052 * math.sin(math.pi * u ** 0.75) - 0.0030 * u
+            hw = fine * 0.0031 * (0.75 + 0.5 * math.sin(math.pi * min(1.0, u * 1.6) * 0.5)) * (1.0 - 0.72 * max(0.0, u - 0.4) / 0.6); row = []
             for dz in (-hw, hw):
-                h = bv.ray_cast(Vector((x, cy + 0.2, zc + dz)), Vector((0, -1, 0)), 0.4); row.append(A.v((x, (h[0].y if h[0] is not None else cy + r) + 0.0007, zc + dz)))
+                h = bv.ray_cast(Vector((x, cy + 0.2, zc + dz)), Vector((0, -1, 0)), 0.4); row.append(A.v((x, (h[0].y if h[0] is not None else cy + r) + 0.0006, zc + dz)))
             rows.append(row)
         for a, b in zip(rows[:-1], rows[1:]): A.f([a[0], a[1], b[1], b[0]], H, (0, 1, 0))
     return A.done(60)
-
-
-def head_align(BM, BF):
-    """how far the woman's skull is from the man's when both are seen from their head joints: the parts on the head (hair, hats) are
-    the same for both, so they are laid on whichever of the two heads stands furthest out at each place"""
-    def box(B):
-        v = B.v[(B.v[:, 2] > B.J['head'][2] + 0.06)] - np.array(B.J['head']); return (v.min(0) + v.max(0)) / 2
-    return box(BF) - box(BM)
-
-
-def reseat(o, old_bvh, BM, BF, shift, falign, far=0.045):
-    """move a part made for the old head (arbeider.py's) onto the new one: each vertex keeps its place over the old skin, and the old
-    skin under it goes to the new skin along the ray from the head's middle (the outermost of the man's and the woman's heads)."""
-    me = o.data; sm = BM.surf(); sf = BF.surf(); c_old = Vector((0, -0.010, 1.665)); c_new = c_old + Vector(shift); dj = Vector(BF.J['head']) - Vector(BM.J['head'])
-    for vtx in me.vertices:
-        p = vtx.co; q, _n, _i, d = old_bvh.find_nearest(p); q2 = q + Vector(shift); dr = (q2 - c_new)
-        if dr.length < 1e-6: vtx.co = p + Vector(shift); continue
-        dr.normalize(); best = None
-        for bv, off in ((sm, Vector((0, 0, 0))), (sf, dj)):
-            h = bv.ray_cast(c_new + off, dr, 0.4)
-            if h[0] is not None:
-                r = (h[0] - off - c_new).length
-                if best is None or r > best: best = r
-        mv = Vector((0, 0, 0))
-        if best is not None:
-            mv = dr * (best - (q2 - c_new).length)
-            if mv.length > 0.035: mv *= 0.035 / mv.length
-            mv *= max(0.0, 1.0 - max(0.0, d - far) / 0.06)
-        vtx.co = p + Vector(shift) + mv
-    me.update(); return o
-
-
-def drop_lid(o):
-    """a hat's underside (the loft's cap, inside the head and never seen) is taken away: it crossed the hair and the skin"""
-    lid = Vector((0, 0.36, -1.0)).normalized(); bm = bmesh.new(); bm.from_mesh(o.data); bm.normal_update()
-    kill = [f for f in bm.faces if f.normal.dot(lid) > 0.96 and len(f.verts) > 4]
-    bmesh.ops.delete(bm, geom=kill, context='FACES'); bm.to_mesh(o.data); bm.free(); o.data.update()
-
-
-def mirror_obj(o, name):
-    c = o.copy(); c.data = o.data.copy(); link(c); c.name = name; bm = bmesh.new(); bm.from_mesh(c.data)
-    for v in bm.verts: v.co.x = -v.co.x
-    bmesh.ops.reverse_faces(bm, faces=bm.faces); bm.to_mesh(c.data); bm.free(); c.data.update(); return c
-
-
-def join_copy(objs, name):
-    cs = []
-    for o in objs: c = o.copy(); c.data = o.data.copy(); link(c); cs.append(c)
-    return join(cs, name)
 
 
 _FW = {}
@@ -399,9 +352,24 @@ def glove_obj(B, C):
     return A.done(70), T.done(70)
 
 
+def colours():
+    """the materials: the game colour, the gloss and the paint zone (1 jacket, 3 trousers, 4 skin, 5 hair, 6 hat, 7 shoes), as the game
+    paints them per look"""
+    C = {}
+    C['suit'] = mat('suit', (0.13, 0.29, 0.62), 0.3, zone=1); C['trou'] = mat('trousers', (0.13, 0.29, 0.62), 0.2, zone=3)
+    C['skin'] = mat('skin', (0.86, 0.64, 0.50), 0.25, zone=4); C['hair'] = mat('hair', (0.26, 0.17, 0.10), 0.1, zone=5); C['brow'] = mat('brow', (0.20, 0.13, 0.08), 0.1, zone=5)
+    C['eye'] = mat('eye', (0.06, 0.06, 0.07), 0.7); C['helmet'] = mat('helmet', (0.98, 0.80, 0.06), 0.75, zone=6); C['beanie'] = mat('beanie', (0.72, 0.15, 0.12), 0.05, zone=6)
+    C['wool'] = mat('wool', (0.07, 0.07, 0.08), 0.05, zone=6); C['peak'] = mat('peak', (0.04, 0.04, 0.05), 0.85)
+    C['boot'] = mat('boot', (0.09, 0.09, 0.10), 0.35, zone=7); C['sole'] = mat('sole', (0.24, 0.22, 0.20), 0.1); C['cream'] = mat('cream', (0.90, 0.86, 0.74), 0.1)
+    C['zip'] = mat('zip', (0.55, 0.57, 0.60), 0.6, metal=0.5); C['tape'] = mat('tape', (0.94, 0.93, 0.89), 0.2); C['refl'] = mat('reflective', (0.85, 0.87, 0.85), 0.6)
+    C['harness'] = mat('harness', (0.12, 0.12, 0.13), 0.2); C['vest'] = mat('vest', (0.80, 0.11, 0.08), 0.35); C['vestzip'] = mat('vest_zip', (0.08, 0.08, 0.09), 0.45)
+    C['buckle'] = mat('vest_buckle', (0.15, 0.15, 0.16), 0.5); C['toggle'] = mat('vest_toggle', (0.86, 0.10, 0.06), 0.6)
+    return C
+
+
 def build_all():
-    import arbeider as A, garderobe as GD, kropp_plagg as G
-    reset(); A.colours(); C = A.C
+    import kropp_plagg as G
+    reset(); C = colours()
     C['eyewhite'] = mat('eyewhite', (0.93, 0.92, 0.89), 0.6); C['suit']['gloss'] = 0.3
     BM, BF = Body('m', C['skin']), Body('f', C['skin']); B_ = {'m': BM, 'f': BF}
     parts = {}        # name -> {'o', 'kind': 'skin'|'rigid'|'alias', 'sex', 'bone', ...}
@@ -410,28 +378,13 @@ def build_all():
         F = 'F' if B.sex == 'f' else ''; c = G.Ctx(B)
         for name, fn in G.BUILDERS.items(): parts[name + F] = {'o': mesh_obj((name + F).upper(), fn(c), C), 'kind': 'skin', 'sex': B.sex, 'arm': name in ('uarm', 'farm')}
         for name, kind in (G.JACKETS_F if F else G.JACKETS_M).items(): parts[name] = {'o': mesh_obj(name.upper(), G.jacket(c, kind), C), 'kind': 'skin', 'sex': B.sex, 'torso': True}
-    # ---- the parts kept from arbeider.py, garderobe.py and hender.py ----
-    P = A.build_all(); W = {n: (o, g) for n, o, g in GD.build(A)}
-    old_head = GD.bvh_of([P['head']]); falign = head_align(BM, BF)
-    hb = BM.v[BM.v[:, 2] > BM.J['head'][2] + 0.06]; shift = ((0.0, (hb[:, 1].min() + hb[:, 1].max()) / 2 - (-0.010), hb[:, 2].max() - 1.774))
-    print('the head: the old parts moved by', np.round(shift, 4), ' the woman\'s skull from the man\'s, seen from the joints:', np.round(falign, 4))
-    head_names = ['hardhat', 'beanie', 'skippercap'] + [n for n in W if n.startswith(('hair_', 'b_', 'hat_'))]
-    for n in head_names:
-        o = P[n] if n in P else W[n][0]; reseat(o, old_head, BM, BF, shift, falign)
-        if n in ('hardhat', 'beanie', 'skippercap') or n.startswith('hat_'): drop_lid(o)
-        parts[n] = {'o': o, 'kind': 'rigid', 'bone': 'head', 'sex': 'mf'}
-    # the boots and the shoes: the old one is a right foot at the origin; both feet on the ankles, for each sex
-    for n in ('boot', 'shoe', 'sneaker'):
-        src = P[n] if n in P else W[n][0]
-        for B in (BM, BF):
-            F = 'F' if B.sex == 'f' else ''; a = B.J['foot_R']; r = src.copy(); r.data = src.data.copy(); link(r)
-            for vtx in r.data.vertices: vtx.co.x += a[0]; vtx.co.y += a[1] + 0.024
-            r.data.update()
-            if n != 'boot':            # a sock up into the trouser leg (Jonas 13.11.2026: «Leggen mangler jo»: the skin under the clothes is not drawn)
-                kn = B.J['shin_R']; sk = Acc('sock'); rr = [[sk.v((a[0] + (kn[0] - a[0]) * (z - a[2]) / (kn[2] - a[2]) + 0.047 * math.cos(2 * math.pi * k / 8), a[1] + (kn[1] - a[1]) * (z - a[2]) / (kn[2] - a[2]) + 0.050 * math.sin(2 * math.pi * k / 8), z)) for k in range(8)] for z in (0.055, 0.185)]
-                for k in range(8): sk.f([rr[0][k], rr[0][(k + 1) % 8], rr[1][(k + 1) % 8], rr[1][k]], C['wool'], (math.cos(2 * math.pi * (k + 0.5) / 8), math.sin(2 * math.pi * (k + 0.5) / 8), 0))
-                r = join([r, sk.done(60)], 'r')
-            l = mirror_obj(r, 'l'); parts[n + F] = {'o': join([r, l], (n + F).upper()), 'kind': 'skin', 'sex': B.sex}
+    # ---- the hair, the beards and the hats: built on the new head (kropp_hode.py) ----
+    import kropp_hode as HD
+    for n, Mh in HD.build_all(BM, BF).items(): parts[n] = {'o': mesh_obj(n.upper(), Mh, C, angle=60), 'kind': 'rigid', 'bone': 'head', 'sex': 'mf'}
+    # ---- the boots and the shoes: built on the body's own feet (kropp_plagg.shoes) ----
+    for B in (BM, BF):
+        F = 'F' if B.sex == 'f' else ''
+        for n in G.SHOES: parts[n + F] = {'o': mesh_obj((n + F).upper(), G.shoes(G.Ctx(B), n), C, angle=60), 'kind': 'skin', 'sex': B.sex}
     # ---- the gloves: the body's own hands, a little thicker, with a cuff that goes over the sleeve's (Jonas 13.11.2026: nothing
     # of the old hands; the grips are the fingers' turns now, kropp.py GRIPS) ----
     C['glove'] = mat('glove2', (0.13, 0.30, 0.58), 0.45); C['glovecuff'] = mat('glovecuff', (0.07, 0.08, 0.10), 0.3)
@@ -439,16 +392,19 @@ def build_all():
         F = 'F' if B.sex == 'f' else ''; g, tp = glove_obj(B, C); parts['glove' + F] = {'o': g, 'kind': 'skin', 'sex': B.sex, 'sides': True, 'arm': True}
         if not F: parts['tape_L'] = {'o': tp, 'kind': 'skin', 'sex': 'm', 'arm': True}
         else: bpy.data.objects.remove(tp)
-    # ---- the vests: garderobe.py's own builder, laid on the new jackets and heads ----
-    heads = {}
-    for B in (BM, BF):       # (the head and the neck alone: the vest's collar lies round them, not round the arms)
-        h = B.o.copy(); h.data = B.o.data.copy(); link(h); bm = bmesh.new(); bm.from_mesh(h.data)
-        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.calc_center_median().z < B.J['neck'][2] - 0.03 or abs(f.calc_center_median().x) > 0.12], context='FACES'); bm.to_mesh(h.data); bm.free(); heads[B.sex] = h
-    for name, js, rc in GD.VEST_GROUPS:
-        B = BF if name.endswith('F') else BM
-        parts[name] = {'o': GD.vest(A, name, [parts[j]['o'] for j in js] + [heads[B.sex], parts['thigh' + ('F' if B.sex == 'f' else '')]['o']], rc, neck_y=B.J['neck'][1] + 0.004), 'kind': 'skin', 'sex': B.sex, 'torso': True}
+    # ---- the vests: new, laid on the new jackets by rays (kropp_plagg.vest) ----
+    for name, js in G.VEST_GROUPS:
+        B = BF if name.endswith('F') else BM; F = 'F' if B.sex == 'f' else ''; objs = [parts[j]['o'] for j in js] + [parts['thigh' + F]['o']]
+        vs = []; ps = []
+        for o in objs + [B.o]:
+            n0 = len(vs); vs += [tuple(v.co) for v in o.data.vertices]
+            if o is B.o: ps += [tuple(n0 + i for i in p.vertices) for p in o.data.polygons if p.center.z > B.J['neck'][2] - 0.03 and abs(p.center.x) < 0.12]          # (of the skin only the head and the neck)
+            else: ps += [tuple(n0 + i for i in p.vertices) for p in o.data.polygons]
+        bv = BVHTree.FromPolygons(vs, ps)
+        def hit(o, d, far=0.45, bv=bv):
+            d = Vector(d).normalized(); h = bv.ray_cast(Vector(o) + d * far, -d, far); return None if h[0] is None else np.array(h[0])
+        parts[name] = {'o': mesh_obj(name.upper(), G.vest(G.Ctx(B), hit), C, angle=60), 'kind': 'skin', 'sex': B.sex, 'torso': True}
     # ---- the skin, with the eyes and the brows in the head's range ----
-    for h in heads.values(): bpy.data.objects.remove(h)
     for B in (BM, BF):
         F = 'F' if B.sex == 'f' else ''; parts['body' + F] = {'o': B.o, 'kind': 'skin', 'sex': B.sex, 'body': B, 'face': [eye_obj(B.sex, C), brow_obj(B, C)]}
     return parts, B_, C
@@ -459,7 +415,6 @@ def bake_all(parts):
     for n, Pt in parts.items():
         o = Pt['o']; o.hide_render = False; keep = [o]
         if Pt.get('bone') == 'head': keep.append(parts['body']['o'])
-        if 'body' in Pt: keep += Pt['face']
         hid = hide(keep)
         for x in hid: x.hide_render = True
         bake_ao(o, 32 if 'body' in Pt else 20, 0.06 if Pt['kind'] == 'rigid' else 0.10)
@@ -467,7 +422,7 @@ def bake_all(parts):
 
 
 def export(parts, B_, path):
-    import garderobe as GD
+    import kropp_plagg as G
     Wr = GLB.Writer(); bone_node = {}
     # the skeleton: the man's rest places as the nodes' translations; the woman's in the extras and her own skin's matrices
     rest = {sx: {n: GLB.to_game(np.array(B.J[n])).tolist() for n, _ in K.BONES} for sx, B in B_.items()}
@@ -479,8 +434,8 @@ def export(parts, B_, path):
     for sx in 'mf':
         ibm = np.array([np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [-rest[sx][n][0], -rest[sx][n][1], -rest[sx][n][2], 1]], np.float32) for n, _ in K.BONES])     # column-major
         a = Wr.acc(Wr.view(ibm.tobytes()), 5126, len(K.BONES), 'MAT4'); Wr.skins.append({'name': 'folk_' + sx, 'joints': [bone_node[n] for n, _ in K.BONES], 'inverseBindMatrices': a, 'skeleton': bone_node['hips']}); skin[sx] = len(Wr.skins) - 1
-    roots = [bone_node['hips']]; info = {}; cover = {}; src = {}
-    for name, Pt in parts.items():
+    roots = [bone_node['hips']]; info = {}; cover = {}; src = {}; RIM = {}
+    for name, Pt in sorted(parts.items(), key=lambda q: q[0] not in ('uarm', 'uarmF')):          # (the sleeves first: the jackets take their armholes' weights from them)
         o = Pt['o']; sx = Pt['sex']
         if 'body' in Pt:
             B = Pt['body']; cg = cover_groups(B); A_ = arrays(o, lambda pi: int(cg[pi])); n_head = A_['groups'].get(0, 0)
@@ -497,6 +452,8 @@ def export(parts, B_, path):
         if Pt['kind'] == 'skin':
             J = B_[sx].J; idx, w = K.weights(J, A_['pos'], cls='torso' if Pt.get('torso') else ('arm' if Pt.get('arm') else 'body'))
             if 'body' in Pt or Pt.get('sides') or name == 'tape_L': idx, w = lay_fingers(sx, A_['pos'], idx, w)
+            if name in ('uarm', 'uarmF'): idx, w, RIM[sx] = K.relax_rim(A_['pos'], A_['idx'], idx, w, rings=2)
+            if Pt.get('torso') and not name.startswith('vest'): idx, w, _ = K.relax_rim(A_['pos'], A_['idx'], idx, w, RIM[sx])
             A_['joints'] = idx; A_['weights'] = w; A_['pos'] = GLB.to_game(A_['pos']); A_['nor'] = GLB.to_game(A_['nor'])
             ni, s_ = Wr.skinned(name, A_, skin[sx]); roots.append(ni); info[name] = {'skinned': True, 'sex': sx, 'tris': ntri}
             if Pt.get('sides'): info[name]['sides'] = {'R': [0, A_['groups'].get(0, 0)], 'L': [A_['groups'].get(0, 0), A_['groups'].get(1, 0)]}
@@ -527,7 +484,7 @@ def export(parts, B_, path):
           'bones': [n for n, _ in K.BONES], 'parents': [p for _, p in K.BONES], 'rest': rest, 'parts': info, 'cover': cover,
           'zones': {'1': 'jacket', '3': 'trousers', '4': 'skin', '5': 'hair', '6': 'hat', '7': 'shoes'}, 'grips': grips, 'limits': K.LIMITS,
           'twist': {'utw': 'uarm', 'ftw': 'farm', 'ttw': 'thigh'},
-          'vest': GD.VEST_FOR, 'vestHair': GD.VEST_HAIR, 'spread': K.SPREAD,
+          'vest': G.VEST_FOR, 'vestHair': G.VEST_HAIR, 'spread': K.SPREAD,
           'source': 'the skin: "Realistic White Male and Female Low Poly" by novisoj (RenderHub, Extended Use License), tools/harbour/kilde/LISENS.md'}
     return Wr.done(path, roots, ex), info
 
@@ -540,48 +497,3 @@ if __name__ == '__main__' and not [a for a in sys.argv[1:] if a in ('plagg', 'kr
     print('folk2 GLB %.2f MB, %d parts, %.0f s' % (n / 1e6, len(info), time.time() - t0))
     print(', '.join('%s %d' % (k, v['tris']) for k, v in info.items()))
     sys.exit()
-
-
-if __name__ == '__main__' and 'plagg' in sys.argv:
-    # a look at the garments on the bodies (out/kp_*.png)
-    import arbeider as A
-    os.makedirs(OUT, exist_ok=True); reset(); A.colours(); C = A.C
-    C['suit'] = mat('suit', (0.95, 0.42, 0.07), 0.45, zone=1); C['trou'] = mat('trousers', (0.16, 0.20, 0.30), 0.2, zone=3)
-    BM, BF = Body('m', C['skin']), Body('f', C['skin']); parts = build_garments(BM, BF, C)
-    parts['body'] = {'o': BM.o, 'sex': 'm', 'var': BM.d}; parts['bodyF'] = {'o': BF.o, 'sex': 'f', 'var': BF.d}
-    for n, P in parts.items(): P['o'].hide_render = True; print('%-10s %5d tris' % (n, sum(len(p.vertices) - 2 for p in P['o'].data.polygons)))
-    limbs = ['uarm', 'farm', 'thigh', 'shin']; i = 0; row = []
-    for B, tab in ((BM, ['torso', 'sweater', 'oilskin', 'parka', 'fleece']), (BF, ['jacketF', 'sweaterF', 'oilskinF', 'parkaF', 'fleeceF'])):
-        for j, jn in enumerate(tab):
-            build = [None, 'thin', 'heavy', None, 'muscular'][j]; pose = ['hvile', 'stå', 'stå', 'armene opp', 'sittende'][j]
-            figure(parts, [jn] + limbs + ['body' if B.sex == 'm' else 'bodyF'], B, build, pose, x=-(i - 4.5) * 0.95); i += 1
-    bm = bmesh.new(); bm.faces.new([bm.verts.new(p) for p in ((-9, -9, 0), (9, -9, 0), (9, 9, 0), (-9, 9, 0))]); obj_from_bm('ground', bm, [mat('ground', (0.5, 0.5, 0.52), 0.1)])
-    setup_render(2600, 760, samples=24)
-    camera((0.0, 10.4, 1.05), (0.0, 0, 0.88), lens=50); render(os.path.join(OUT, 'kp_front.png'))
-    camera((8.0, 6.6, 1.5), (0.0, 0, 0.85), lens=50); render(os.path.join(OUT, 'kp_3q.png'))
-    sys.exit()
-
-
-if __name__ == '__main__' and 'kropp' in sys.argv:
-    # a first look: the bodies in their builds and in the check's poses (out/kb_*.png)
-    os.makedirs(OUT, exist_ok=True); reset(); skin = mat('skin', (0.62, 0.62, 0.63), 0.25, zone=4)
-    for sex in 'mf':
-        B = Body(sex, skin); cg = cover_groups(B); print(' one piece:', connected(B.t, len(B.v)), ' tris per cover group:', {n: int((cg == i).sum()) for i, n in enumerate(COVER_ORDER)})
-        B.o.hide_render = True
-        cols = [('normal', None, 'hvile')] + [(b, f, 'hvile') for b, f in K.BUILDS[sex].items() if b != 'normal'] + [('normal', None, p) for p in K.CHECK_POSES]
-        for i, (b, f, pose) in enumerate(cols):
-            v = B.v.copy(); J = dict(B.J)
-            if f:
-                for fn, wt in f.items():
-                    if wt and fn in B.d: v = v + wt * B.d[fn]
-                J = K.joints(sex, f)
-            L, root = K.POSES(J)[pose]; M, _ = K.pose_mats(J, L, root); idx, w = K.weights(J, v); v = K.skin(v, idx, w, M)
-            o = np_mesh('%s_%d' % (sex, i), v, B.t, skin); o.data.shade_smooth(); o.location = (-(i - (len(cols) - 1) / 2) * 0.95, 0, 0 if sex == 'm' else 0)
-            o['row'] = sex
-    bm = bmesh.new(); bm.faces.new([bm.verts.new(p) for p in ((-9, -9, 0), (9, -9, 0), (9, 9, 0), (-9, 9, 0))]); obj_from_bm('ground', bm, [mat('ground', (0.5, 0.5, 0.52), 0.1)])
-    for sex in 'mf':
-        for o in bpy.data.objects:
-            if o.type == 'MESH' and 'row' in o: o.hide_render = o['row'] != sex
-        setup_render(2400, 760, samples=24)
-        camera((0.0, 9.6, 1.05), (0.0, 0, 0.88), lens=50); render(os.path.join(OUT, 'kb_%s_front.png' % sex))
-        camera((7.5, 6.2, 1.5), (0.0, 0, 0.85), lens=50); render(os.path.join(OUT, 'kb_%s_3q.png' % sex))
