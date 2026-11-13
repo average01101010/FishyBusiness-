@@ -144,7 +144,7 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 - B: bare frie bibliotek for gange og hvile; arbeidet blir håndskrevet som i dag.
 - C: leie eller kjøpe opptaksutstyr. Bedre fingre og føtter, men ekte penger og mer arbeid per opptak.
 
-**V5. Hvem velger antrekket?** (styrer FB5e)
+**V5. Hvem velger antrekket?** (styrer FB5e) **Besvart 13.11.2026: «V5 A».** Spilleren setter opp stilen sin i garderoben, spillet velger laget etter vær og arbeid, og mannskapet gjør det samme med sin egen stil.
 - **A (anbefalt): du setter opp stilen din, spillet velger laget.** I garderoben velger du plaggene dine per plass (din genser, din lue, din hyre og fargene), og spillet tar av og på etter vær og arbeid. Mannskapet gjør det samme med sin egen stil. Du får ditt eget utseende uten å måtte kle deg om selv.
 - B: helt automatisk for alle; garderoben velger bare kropp, ansikt og farger.
 - C: du lager hele antrekk selv for hver situasjon (arbeid, fint vær, kulde, i land). Mest kontroll, mest å stelle med.
@@ -186,3 +186,4 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 - 13.11.2026 (senere): Jonas svarte «Utseende V2: A+» og «V4: ABCD». Skrevet inn i valgene; tilpasningen delt i FB5b (kroppen og ansiktet, før FB6), FB5c (plagg og mønstre) og FB5d (små ting). Åpent: V1, V3 og referansebildene før FB5.
 - 13.11.2026 (senere): Jonas sendte to referansebilder av kroppsbygninger (kvinner og menn, tynn til tung). Beskrevet under FB5b. Bilder av klær kommer.
 - 13.11.2026 (senere): Jonas sendte tolv bilder av klær og ba om klær etter forholdene. Skrevet inn som FB5e, referansen for klærne og V5.
+- 13.11.2026 (senere): Jonas svarte «V5 A». Åpent: V1, V3, og om FB5e skal komme tidlig på dagens figur.
