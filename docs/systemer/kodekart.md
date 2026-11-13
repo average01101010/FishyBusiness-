@@ -2723,18 +2723,18 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 67 `renderSetBar()`
   - 81 `setModeEnd(go, stay)`
 
-## `src/js/ui/03e-miniplot.js` (154 linjer)
+## `src/js/ui/03e-miniplot.js` (159 linjer)
 
 ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 
 - **1** the little chart in 3D (the user's wish 02.10.2026)
-  - 11 `miniRadius()`
-  - 18 `miniBg(c, R, k, W, H, dpr)`
-  - 64 `miniStep(until)`
-  - 71 `miniFrame(t)`
-  - 77 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
-  - 91 `miniPaint()`
-  - 136 `miniSjv(ctx, X, Y, p, dpr)`
+  - 14 `miniRadius()`
+  - 21 `miniBg(c, R, k, W, H, dpr)`
+  - 67 `miniStep(until)`
+  - 74 `miniFrame(t)`
+  - 80 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
+  - 94 `miniPaint()`
+  - 139 `miniSjv(ctx, X, Y, p, dpr)`
 
 ## `src/js/ui/03f-search.js` (118 linjer)
 
@@ -2753,7 +2753,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (354 linjer)
+## `src/js/ui/04-panels-instruments.js` (361 linjer)
 
 ---------- estimates ----------
 
@@ -2765,20 +2765,20 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 21 `statusText()`
   - 37 `nextEvent()`
   - 55 `setHtml(el, h)`
-  - 74 `hudFigures()`
-  - 97 `hudShortEv(txt)`
-  - 98 `hudLine3(how)`
-  - 134 `hullWarn(b)`
-  - 143 `hudGoYard()`
-  - 152 `renderHud()`
-  - 219 `liveFrac()`
-  - 220 `livePose(frac)`
-  - 244 `vnoise2(x, y, s)`
-  - 250 `microBottom(p, d)`
-- **252** instruments: GPS and echo sounder
-  - 338 `hudCardOpen(on)`
-  - 345 `hudClasses(stripOn, cardOn)`
-  - 349 `hudFold(which)`
+  - 80 `hudFigures()`
+  - 103 `hudShortEv(txt)`
+  - 104 `hudLine3(how)`
+  - 140 `hullWarn(b)`
+  - 149 `hudGoYard()`
+  - 158 `renderHud()`
+  - 225 `liveFrac()`
+  - 226 `livePose(frac)`
+  - 250 `vnoise2(x, y, s)`
+  - 256 `microBottom(p, d)`
+- **258** instruments: GPS and echo sounder
+  - 345 `hudCardOpen(on)`
+  - 352 `hudClasses(stripOn, cardOn)`
+  - 356 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2902,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1652 linjer)
+## `src/js/ui/phone/07-patch.js` (1654 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1640 `patch()`
+  - 1642 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3352,7 +3352,7 @@ Garderoben: the player changes how his figure looks (Jonas 10.10.2026)
 - **14** the right-hand side: what the current tab offers
 - **50** the little renderer
 
-## `src/js/ui/08-actions.js` (486 linjer)
+## `src/js/ui/08-actions.js` (487 linjer)
 
 actions
 
@@ -3379,10 +3379,10 @@ actions
   - 437 `applyLang()`
 - **450** screens: full-screen 3D, or the chart plotter for route planning
   - 451 `setBodyView(v3d)`
-  - 456 `openPlotter()`
-  - 461 `plotSetRender()`
-  - 465 `plotSetOpen(on)`
-  - 478 `kinoUi()`
+  - 457 `openPlotter()`
+  - 462 `plotSetRender()`
+  - 466 `plotSetOpen(on)`
+  - 479 `kinoUi()`
 
 ## `src/js/ui/08b-letter.js` (127 linjer)
 
@@ -3731,16 +3731,16 @@ Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is 
 
 - **1** Kvotemarkedet and the cloud (KM3 of docs/planer/kvotemarkedet.md; the server is KM2, supabase/migrations/20261108230000_kvotemarked.sql)
 
-## `src/js/ui/10s-mob.js` (176 linjer)
+## `src/js/ui/10s-mob.js` (179 linjer)
 
 ---------- man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js) ----------
 
 - **1** man overboard on the screen (Ø11.6; the core is core/14b-sikkerhet.js)
-- **45** the actions
-- **86** the panel
-- **127** the core's word
-- **141** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
-- **163** the Sikkerhet card in the Redning app (Ø11.7 SK6): the near misses with the day, the place, what each teaches and its source,
+- **48** the actions
+- **89** the panel
+- **130** the core's word
+- **144** the chart plotter (ui/03-map.js renderDyn): the mark, the line to it, the lifebuoy and the person
+- **166** the Sikkerhet card in the Redning app (Ø11.7 SK6): the near misses with the day, the place, what each teaches and its source,
 
 ## `src/js/ui/10k-friends.js` (134 linjer)
 

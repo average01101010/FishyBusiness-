@@ -346,6 +346,8 @@ function hudCardOpen(on){ on = !!on; if (hudCard === on) return; hudCard = on; r
 document.addEventListener('pointerdown', e => { if (hudCard && !hud.contains(e.target)) hudCardOpen(false); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && hudCard) hudCardOpen(false); });
 window.addEventListener('resize', () => { if (hudCard) hudCardOpen(false); });
+// (D6: the box or the strip follows the way the screen stands, at once and not on the next tick: the sheet upright starts under the strip)
+if (HUDUP && HUDUP.addEventListener) HUDUP.addEventListener('change', () => { if (S && S.boat) renderHud(); });
 // the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
 // away (hudOff): the status box, the little chart, its GPS strip and the compass. hudstrip and hudcard say what the box is right now
 // (renderHud: upright it is always the strip); without them the classes stand as they are

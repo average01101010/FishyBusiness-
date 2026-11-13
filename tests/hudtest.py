@@ -228,7 +228,7 @@ async def d6(p):
         # the little chart when the sun is highest (the day's chart was the light one): its sea is dark (one palette)
         await pg.evaluate("(() => { let best = S.t, el = -99; for (let m = 0; m < 1440; m += 20){ const e = sunAt((S.t + m) / 60, S.boat.pos).el; if (e > el){ el = e; best = S.t + m; } } S.t = best; if (S.settings) S.settings.chartNight = 'auto'; const g = GROUNDS[0].p; S.boat.pos = {x:g.x, y:g.y}; MINIP.key = ''; miniPaint(); })()"); await pg.wait_for_timeout(2500)
         lum = await pg.evaluate("(() => { miniPaint(); const c = document.getElementById('miniPlot'), g = c.getContext('2d'), d = g.getImageData(0, 0, c.width, Math.round(c.height * 0.6)).data; let s = 0, n = 0; for (let i = 0; i < d.length; i += 16){ s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]; n++; } return Math.round(s / n); })()")
-        check(lum < 140, tag + ': the little chart is the dark chart at noon too (mean lightness of its upper part with the fish colours on it, 0–255; the light chart is over 200)', lum)
+        check(20 < lum < 140, tag + ': the little chart is the dark chart at noon too (mean lightness of its upper part with the fish colours on it, 0–255; the light chart is over 200, a chart that was not painted is 0)', lum)
         if a['open']:
             await pg.click('#plotOpen'); await pg.wait_for_timeout(700); f = await pg.evaluate(D6)
             check('vplot' in f['cls'] and not f['open'], tag + ': a tap on «Kart» opens the plotter, and the button is not shown there', f['cls'])

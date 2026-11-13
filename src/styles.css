@@ -1977,6 +1977,8 @@ body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-na
 }
 @media (orientation:landscape) and (min-height:521px){body.v3d{--pmT:var(--bTop);--pmW:var(--bW);--pmH:var(--mH)}}
 @media (max-height:520px){body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}}
+/* (a tablet upright has the whole box now: a tap folds it there too, and the 3D view is not dragged through it) */
+@media (orientation:portrait) and (min-width:561px){body.v3d #hud{pointer-events:auto;cursor:pointer}}
 /* «Regler ✓ Lov her ›» opens the rules: a row high enough for a finger */
 #hud .row.rlink{min-height:36px;align-items:center}
 /* under way: the dot is the instruments' blue, not magenta */

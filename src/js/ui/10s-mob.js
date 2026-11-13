@@ -34,7 +34,7 @@ const MOBUI = (() => {
       '@media (orientation:portrait){#mobUI{top:calc(var(--sTop,8px) + var(--mH,20vh) + var(--sH,62px) + 18px)}}' +
       // (D6: a tablet upright has the whole box under the little chart, not the strip, so there the panel stands beside the chart and the
       // box, under the compass line and clear of the camera buttons; it lies over «Kart» while it is up, and the chart itself still opens the plotter)
-      '@media (orientation:portrait) and (min-width:561px){#mobUI{top:calc(var(--sTop,8px) + 44px);left:calc(8px + var(--mW,250px) + 12px);transform:none;width:min(440px,calc(100vw - var(--mW,250px) - 90px))}}' +
+      '@media (orientation:portrait) and (min-width:561px){body.v3d:not(.hudoff) #mobUI{top:calc(var(--sTop,8px) + 44px);left:calc(8px + var(--mW,250px) + 12px);transform:none;width:min(440px,calc(100vw - var(--mW,250px) - 90px))}}' +
       '@media (orientation:landscape) and (max-height:520px){#mobUI{top:calc(env(safe-area-inset-top,0px) + 8px);width:min(500px,calc(100vw - 2 * (var(--hudW,176px) + 22px)))}#mobUI .mb-b button{min-height:40px;padding:6px 8px}#mobUI .mb-k{margin:4px 0 6px}}';
     document.head.appendChild(s);
   }

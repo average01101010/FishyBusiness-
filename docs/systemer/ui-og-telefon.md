@@ -204,11 +204,12 @@ Fase U2-8 i `docs/planer/ui-2-staaende.md` (kap. 5; Jonas' valg V1 A 06.11.2026:
 
 Hele beskrivelsen står i `docs/planer/design-ombygging.md` («D6»). Det som gjelder for den som endrer UI-et etterpå:
 
-- **Statusboksen:** et nettbrett i stående har hele boksen i 3D, som liggende (søylene, «Regler ✓»). Stripa står på telefonen (opp til 560 px bred, eller opp til 520 px høy), over skuffens ark i stående og i kartplotteren i stående. `hudPortrait()` er nå «telefon», `hudSheet()` er «stående med arket åpent eller i kartplotteren» (`ui/04-panels-instruments.js`). Dette endrer U2-1 («stående er alltid stripa») for nettbrettet.
-- **«Kart»** (`#plotOpen`) står ved det lille kartets nedre høyre hjørne og åpner kartplotteren. Plassen kommer fra `--pmT`, `--pmW` og `--pmH`, som settes fra sonene (`--sTop`/`--mW` i stående og på telefon, `--bTop`/`--bW` i liggende).
+- **Statusboksen:** et nettbrett i stående har hele boksen i 3D, som liggende (søylene, «Regler ✓»). Stripa står på telefonen (opp til 560 px bred, eller opp til 520 px høy), over skuffens ark i stående og i kartplotteren i stående. I stående er boksen 250 px bred som kartet over (270 i liggende), så kompasslinja beholder gradtallene. `hudPortrait()` er nå «telefon», `hudSheet()` er «stående med arket åpent eller i kartplotteren» (`ui/04-panels-instruments.js`). Dette endrer U2-1 («stående er alltid stripa») for nettbrettet.
+- **«Kart»** (`#plotOpen`) står ved det lille kartets nedre høyre hjørne og åpner kartplotteren (med kartet foldet: ved boksen, under kompasslinja). Plassen kommer fra `--pmT`, `--pmW` og `--pmH`, som settes fra sonene (`--sTop`/`--mW` i stående og på telefon, `--bTop`/`--bW` i liggende).
 - **Det lille kartet er mørkt hele døgnet** (`MINI_NIGHT` i `ui/03e-miniplot.js`). Det som tegnes i det, må leses mot mørk bunn.
 - **Dialoger, tips og toast er mørkt glass.** Rollene (`--m-ink`, `--m-card` …) har verdier i `#modal .box`, `#tip`, `#turMeas .tm-box` og `#lopPop .lp-box` (blokka «D6» i `src/styles.css`). En ny dialog gjennom `modal()` får dem av seg selv; en ny flate utenfor disse omfangene må inn i lista. `tools/ui/scener.py` har scenene `tools/ui/kontrast.py` måler: en ny dialog legges inn der.
 - **Hovedknappen er blå (`--a-main`) overalt.** Magenta får bare kjøp og godta: lista i D3-blokka for skuffen og appene, og `#regGo`, `#hopGo` og `[data-act=tow]` utenfor. Ruta og veipunktene i kartet er magenta som sjøkartets farge.
 - **Glasset over 3D** er `rgba(11,23,32,.78)` for boksen, GPS-stripa, de runde knappene og linja over knappelinja; kompasslinja har et bånd bak seg.
-- **Testet:** `hudtest` (61 + 15 nye, de nye sett røde mot bygget før), `docktest` (118), `dockrow` (16), `uishots` (45), `navbarshot` (5), `roetest` (23), `kystkarttest` (5), `kontrast.py` 0.
+- **Testet:** `hudtest` (61 + 15 nye, de nye sett røde mot bygget før), `docktest` (118), `dockrow` (16), `uishots` (45), `navbarshot` (5), `roetest` (23), `kystkarttest` (5), `kontrast.py` 0, `tut.py` i begge formater (16 OK hver).
+- **Mann over bord-panelet** (`ui/10s-mob.js`) står ved siden av kartet og boksen på et stående nettbrett i 3D, ikke under stripa.
 
