@@ -230,6 +230,9 @@ for _f in ('build.mjs', 'src/data/cloud.json', 'src/js/ui/10f-cloud.js', 'src/js
 # chute and the gaff on every coastal boat (3D, alone); the places and the parts' measures in tests/unit/oppmodell.test.mjs. On lines of
 # their own, so a merge with the sessions that add to the lists above does not meet them
 D3 += ['oppshot']
+# TP2 (steg 109): the name's lettering and ink, and the home port for the others, in 3D (alone); on lines of their own for the merges
+D3 += ['navnshot']; LONG['navnshot'] = 1800; COVER['tests/navnshot.py'] = ['navnshot']
+for _f in ('src/js/view3d/13-instruments.js', 'src/js/vessel3d.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['navnshot']))
 LONG['flaggshot'] = 3000   # (TP1: three pictures, the 20 stand-ins twice, the cap and #benchpeer; out on time at 900 s 13.11.2026, 2 036 s with two)
 LONG['oppshot'] = 3600; LONG['trytest'] = 1800   # (trytest on the fast sjark, which takes pots: 14 checks in 900 s under SwiftShader, 10.11.2026)
 COVER['tests/oppshot.py'] = ['oppshot']; COVER['tests/unit/oppmodell.test.mjs'] = []; COVER['tools/deck/oppgr.py'] = []; COVER['src/data/deck-upg.b64'] = ['oppshot']

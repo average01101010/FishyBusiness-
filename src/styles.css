@@ -1087,6 +1087,16 @@ body.v3d #compass3d{width:min(440px,54vw,calc(100vw - 2 * (var(--hudW,176px) + 2
 .pnt-pal.sm .pnt-sw{height:34px;border-radius:8px}
 .pnt-sw.off{background:#e8edf1;color:#2a3a46;font:600 12px/1 system-ui,sans-serif}
 .pnt-row{margin:8px 0}
+/* the name's lettering (TP2): each lettering shows the boat's name in its own font, a finger wide */
+.pnt-nfs{display:flex;gap:6px}
+.pnt-nf{flex:1 1 0;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.pnt-nf span{font-size:15px;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pnt-nf small{font:500 11px/1 system-ui,sans-serif;opacity:.75}
+/* the chosen one of the paint shop's small buttons (the lettering, the flag's shape, fresh gloss on): it had no mark of its own */
+.pnt-d .ph-btn.sm.on{background:#1e6fd9;color:#fff}
+/* the name's inks: «Auto»'s mark of what she has now small in its corner, clear of the word; gold as leaf, apart from the ochre paint */
+.pnt-sw.off.cur::after{top:2px;right:3px;bottom:auto;font-size:10px;color:#2a3a46;text-shadow:none}
+.pnt-sw[data-pa=pntnc][data-k=gull]{background:linear-gradient(135deg,#f6dc8c 0%,#c8962f 45%,#8e6416 70%,#e7c262 100%)!important}
 .pnt-flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px;margin:8px 0;max-height:190px;overflow:auto}
 .pnt-fl{padding:2px;border:2px solid rgba(0,0,0,.12);border-radius:6px;background:#fff;cursor:pointer;line-height:0}
 .pnt-fl img{width:100%;height:auto;border-radius:2px}

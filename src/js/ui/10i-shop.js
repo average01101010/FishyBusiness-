@@ -31,7 +31,7 @@
 // cloud off, what the server said last stands and nothing new is won (srvOnly).
 const SHOP = {ready:null, busy:false, ret:null, hs4:null, gen:0};
 const SHOP_PRODUCT = {haill:'haill', luksus:'luksus', pump:'trim_pump', ic:'trim_ic', turbo:'trim_turbo', yard:'verft_na', sk_light:'skip_light', sk_std:'skip', sk_max:'skip_max',
-  des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo',   // the paint designs (ui/10j-paint.js)
+  des_ripe:'des_ripe', des_totone:'des_totone', des_vann:'des_vann', des_stripe:'des_stripe', des_lakk:'des_lakk', des_flagg:'des_flagg', des_reg:'des_reg', des_logo:'des_logo', des_navn:'des_navn',   // the paint designs (ui/10j-paint.js; des_navn the name's lettering, TP2)
   hopp:'hopp'};   // the hop over the rest of a route (HO3, ui/10u-hopp.js): the price is the server's for the minutes (shop_quote_hop)
 const shopFn = () => CLOUD_CFG.supabaseUrl.replace(/\/$/, '') + '/functions/v1/shop-checkout';
 const shopL = (no, en) => S.lang === 'en' ? en : no;
@@ -52,7 +52,7 @@ function shopWhat(k, g){
   if (HAILL[k]) return {name:HAILL[k][S.lang === 'en' ? 'en' : 'no'], nok:HAILL[k].nok};
   if (BOOSTS[k]) return {name:'Trim: ' + BOOSTS[k][S.lang === 'en' ? 'en' : 'no'], nok:BOOSTS[k].nok};
   if (/^sk_/.test(k) && SKIP[k.slice(3)]){ const X = SKIP[k.slice(3)]; return {name:X[S.lang === 'en' ? 'en' : 'no'], nok:X.nok}; }   // Skippertak (core/15-energy.js)
-  if (/^des_/.test(k)){ const N = PAINT.DNAME[k.slice(4)] || ['', '']; return {name:(k === 'des_flagg' || k === 'des_reg' ? '' : shopL('Malingsdesign: ', 'Paint design: ')) + shopL(N[0], N[1]), nok:PAINT.nok(k.slice(4))}; }
+  if (/^des_/.test(k)){ const N = PAINT.DNAME[k.slice(4)] || ['', '']; return {name:(k === 'des_flagg' || k === 'des_reg' || k === 'des_navn' ? '' : shopL('Malingsdesign: ', 'Paint design: ')) + shopL(N[0], N[1]), nok:PAINT.nok(k.slice(4))}; }
   // (back from Stripe the card's SHOP.hopQ is gone with the page: the grant has the minutes and the price paid)
   if (k === 'hopp'){ const d = g && g.data || {}, q = d.kr != null ? {kr:d.kr, realMin:d.min} : SHOP.hopQ;
     return {name:shopL('Hopp over resten av ruta', 'Skip the rest of the route') + (q && q.realMin ? ' (' + q.realMin + ' min)' : ''), nok:q ? q.kr : HOP.min}; }

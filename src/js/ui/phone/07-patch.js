@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['navn-131126', '13.11.2026', 'Navnet på skroget', 'The name on the hull', [
+       ['Navnet på styrhuset og hekken kan stå i blokkbokstaver, smal blokk eller antikva, og i en farge du velger. En farge som ikke kan leses mot malingen, blir svart eller hvit der.', 'The name on the wheelhouse and the transom can be lettered in block capitals, narrow block or antiqua, in a colour you choose. A colour that cannot be read against the paint becomes black or white there.'],
+       ['De andre spillerne ser nå hjemhavna di under navnet på hekken.', 'The other players now see your home port under the name on the transom.']]],
     ['flagg-131126', '13.11.2026', 'Flaggene på de andre båtene', 'The flags on the other boats', [
        ['Andre spilleres flagg synes nå i akterenden på båtene deres, også rederiflagget med logoen. En båt uten eget flagg fører det norske. Flaggene går opp og ned etter flaggtidene der båten er.', "Other players' flags now fly at the stern of their boats, the house flag with the company logo too. A boat without a flag of her own flies the Norwegian one. The flags go up and down by the flag hours where the boat is."]]],
     ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [

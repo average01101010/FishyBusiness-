@@ -3770,3 +3770,20 @@
 2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
 2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
 2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	
+2026-11-13 15:52	plan/2026-11-13-109	844418fb+	maletest	OK	22	lite	alene	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	kjoptest	OK	202	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	fasittest	OK	53	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	maletest	OK	25	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	regnrtest	OK	15	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	sponsor2test	OK	21	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	vesseltest	OK	24	lite	samtidig	
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	walktest	FEIL	19	lite	samtidig	FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 17
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	crewclip	FEIL	33	lite	samtidig	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-13 15:57	plan/2026-11-13-109	a4a5526d+	regmarktest	OK	6	lite	samtidig	
+2026-11-13 15:58	plan/2026-11-13-109	a4a5526d+	docktest	OK	63	lite	samtidig	
+2026-11-13 15:58	plan/2026-11-13-109	a4a5526d+	dockrow	OK	44	lite	samtidig	
+2026-11-13 16:00	plan/2026-11-13-109	a4a5526d+	roetest	OK	126	lite	samtidig	
+2026-11-13 16:00	plan/2026-11-13-109	a4a5526d+	hudtest	OK	98	lite	samtidig	
+2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	uishots	OK	88	lite	samtidig	
+2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	navbarshot	OK	32	lite	samtidig	
+2026-11-13 16:02	plan/2026-11-13-109	a4a5526d+	lanterntest	OK	18	lite	samtidig	

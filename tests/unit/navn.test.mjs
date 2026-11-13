@@ -47,4 +47,36 @@ export default function (t){
     const mk = markStrips('breisjark'), P = stripPaint('breisjark', mk[0]), lum = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
     t.ok(mk === G.marks && P && P.zone3 >= 0.9 && lum(P.rgb) > 0.7, 'breisjark: merket står på den hvite skansen, modellens egen plass', P);
     t.ok(lum(markRGB('breisjark', null)) > 0.7 && lum(markRGB('breisjark', {house:[0.05, 0.1, 0.3]})) < 0.3, 'breisjark: merkets blekk følger overbyggets maling (hvitt gir mørke bokstaver, et mørkt malt overbygg lyse)'); }
+  // TP2 (steg 109; Jonas 12.11.2026, V4 B «Tre skrifter og farge»): the name's lettering and ink. A chosen ink is used only where it
+  // reads against the paint under it (3:1, WCAG's for large text), else the name falls back to white or black as before
+  { const {nameInk, nameStyle, contrastOf, inkRGB, NAMEINK, NAMEMIN, livStr, livPaint, livParse, livName, livHome, npcModelKey} = t.K, S = t.K.newState(); t.K.set('S', S);
+    const hex = c => c.map(v => Math.round(v * 255)).join(',');
+    t.ok(NAMEMIN === 3 && Math.abs(contrastOf([1, 1, 1], [0, 0, 0]) - 21) < 1e-9 && Math.abs(contrastOf(pal('rod'), pal('rod')) - 1) < 1e-9, 'kontrasten er WCAG-ens: hvitt mot svart 21, en farge mot seg selv 1, grensen 3:1');
+    t.eq(hex(nameInk(pal('sort'), 'gull')), hex(NAMEINK.gull[2]), 'gull på sort skrog blir gull');
+    t.eq(hex(nameInk(pal('marine'), 'hvit')), hex(NAMEINK.hvit[2]), 'hvitt på marineblått blir hvitt');
+    t.eq(hex(nameInk(pal('gul'), 'gull')), hex(NAMEINK.sort[2]), 'gull på gult skrog leses ikke (under 3:1) og faller tilbake til svart');
+    t.eq(hex(nameInk(pal('marine'), 'sort')), hex(NAMEINK.hvit[2]), 'svart på marineblått leses ikke og faller tilbake til hvitt');
+    t.eq(hex(nameInk(pal('hvit'), 'hvit')), hex(NAMEINK.sort[2]), 'hvitt på hvitt faller tilbake til svart');
+    t.eq(hex(nameInk(pal('kobolt'), 'kobolt')), hex(NAMEINK.hvit[2]), 'skrogets egen farge på skroget faller tilbake til hvitt');
+    t.ok(['hvit', 'krem', 'sort', 'marine', 'rod', 'gul', 'petrol', 'oransje'].every(k => hex(nameInk(pal(k), 'auto')) === hex(nameInkLight(pal(k)) ? NAMEINK.hvit[2] : NAMEINK.sort[2])), 'automatisk er svart eller hvitt som før (nameInkLight)');
+    // every ink and every paint: what is used always reads (3:1 or more)
+    const inks = ['auto', ...Object.keys(NAMEINK), ...HULLPAL.filter(x => x[3]).map(x => x[0])], under = HULLPAL.filter(x => x[3]).map(x => x[3]);
+    let worst = 99; for (const c of inks) for (const u of under) worst = Math.min(worst, contrastOf(nameInk(u, c), u));
+    t.ok(worst >= NAMEMIN, `skriften leses alltid: minste kontrast over alle farger og all maling er ${worst.toFixed(2)}:1`);
+    t.eq(nameStyle(null), {f:'b', c:'auto'}, 'uten valg: blokk og automatisk');
+    t.eq(nameStyle({nf:'z', nc:'orig'}), {f:'b', c:'auto'}, 'en ukjent skrift og «Original» som farge gir blokk og automatisk');
+    t.eq(nameStyle({nf:'a', nc:'oksblod'}), {f:'a', c:'oksblod'}, 'antikva i oksblod');
+    t.ok(inkRGB('gull') && inkRGB('petrol') && !inkRGB('blaa'), 'fargene er gull, hvit, svart og palettens');
+    // the code: 'n:' the lettering and 'k:' the home port, neither in the part that makes the model (TP1's shared models)
+    S.home = 'm1234'; const b = Object.assign(S.boat, {liv:{hull:'sort', nf:'a', nc:'gull'}});
+    const code = livStr(b);
+    t.ok(/(^|;)n:a\.gull(;|$)/.test(code) && /(^|;)k:m1234(;|$)/.test(code), 'koden har skriften og fargen (n:a.gull) og hjemhavna (k:m1234): ' + code);
+    t.eq(livPaint(code), 'h:sort', 'skriften, fargen og hjemhavna endrer ikke modellen (livPaint)');
+    t.eq(JSON.stringify(livParse(code, 'sjark')), JSON.stringify(livParse('h:sort', 'sjark')), 'og malingen leses likt med og uten dem (livParse)');
+    t.ok(npcModelKey('sjark', 1, code) === npcModelKey('sjark', 1, 'h:sort'), 'to båter med lik maling og ulik skrift deler modell');
+    t.ok(!/(^|;)[nk]:/.test(livStr({type:'sjark', liv:{hull:'sort'}})), 'en annen båt enn din egen og uten valg sender ingen n: og k:');
+    t.eq(livName(code), {f:'a', c:'gull'}, 'de andre leser skriften og fargen');
+    t.eq(livName('h:hvit;n:q.gull'), {f:'b', c:'gull'}, 'en skrift de ikke kjenner, blir blokk');
+    t.eq([livHome(code), livHome('h:hvit'), livHome('k:Bad<x>'), livHome('k:' + 'a'.repeat(30))], ['m1234', '', '', ''], 'hjemhavna leses bare som en kort id');
+  }
 }

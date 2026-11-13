@@ -150,6 +150,20 @@ async def main():
         check(len(wl) == 1 and wl[0].startswith('h:kobolt;m:') and lv['liv'] == 'h:gul' and lv['parsed'] and abs(lv['parsed']['hull'][0] - 0.95) < 1e-6 and wf == [(True, True), (False, True)] and nofs['noFs'] and not nofs['noLiv']
               and wo2 == [True, False] and not old['off'] and old['noLiv'] and old['peers'] == 1,
               "the boat's paint goes up with her place and another player's paint comes down to her model; a server without sea time or paint yet gets the place without them, and the shared world stays on", {'up': wl, 'peer': lv, 'nofs': wf, 'old': old, 'calls': wo2})
+        # TP2 (steg 109, 20261113160000_liv_navn.sql): a full code, longer than the 160 the server kept before, goes up whole with the
+        # name's lettering and the home port last; another player's lettering and home port come down and are read (Båtsfjord: Å)
+        replies['pos_put'] = 'null'; n0 = len(calls)
+        bfj = await pg.evaluate("(PORTS.find(p => p.name === 'Båtsfjord') || {}).id || ''")
+        replies['pos_world'][0]['liv'] = 'h:gul;m:F.7.BD;k:' + bfj + ';n:s.hvit'
+        tp2 = await pg.evaluate("""async () => { WORLDP.noLiv = false; WORLDP.noFs = false; S.cos = Object.assign({}, S.cos, {logo:1, navn:1}); S.logo = {kind:'g', sym:'anker', txt:'JHS', c1:'marine', c2:'hvit'};
+          S.boat.liv = {hull:'kobolt', house:'hvit', deck:'lysgra', d:{ripe:'hvit', totone:'marine', vann:'oksblod', stripe:'gul', lakk:1}, flag:{c:'SE', s:'vimpel'}, nf:'a', nc:'gull'};
+          const want = livStr(S.boat); WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
+          return {want, home:S.home || HOME0, peer:n && n.liv, sty:n && livName(n.liv), port:n && (portById(livHome(n.liv)) || {}).name, noLiv:!!WORLDP.noLiv}; }""")
+        up = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
+        check(bfj and up and up[-1] == tp2['want'] and len(tp2['want']) > 160 and tp2['want'].endswith(';k:' + tp2['home'] + ';n:a.gull') and not tp2['noLiv']
+              and tp2['sty'] == {'f': 's', 'c': 'hvit'} and tp2['port'] == 'Båtsfjord',
+              "TP2: a code longer than 160 goes up whole with the home port and the name's lettering last, and another player's lettering and home port (Båtsfjord) come down and are read", {'n': len(tp2['want']), 'up': (up[-1] if up else None), 'tp2': tp2})
+        await pg.evaluate("(() => { S.cos = {}; S.logo = null; })()")
         replies['pos_put'] = 'null'; S_reset = await pg.evaluate("(() => { delete S.boat.liv; WORLDP.noLiv = false; WORLDP.noFs = false; return 1; })()")
         n0 = len(calls)
         hide = await pg.evaluate("async () => { S.settings.showMe = false; PHONE.open('innst'); const card = document.getElementById('phView').innerText; PHONE.show(false); await worldTick(); return {card:card.includes('Vis båten min'), hasOff:typeof worldShowMe !== 'undefined'}; }")
