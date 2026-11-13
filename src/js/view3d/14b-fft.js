@@ -206,7 +206,10 @@
     if (FFT.src) fftBlend(t + WV.dT);
     if (FFT.busy){ if (performance.now() - FFT.sentAt > 3000) FFT.busy = false; else return; }   // (a lost answer does not stop it)
     if (FFT.pend) return;   // (the set that waits is not yet due: nowhere to put another)
-    const P = fftParams(t), msg = {t:t + WV.dT + fftLead(), P};   // (B4: the world's clock in real seconds, the same for everyone)
+    // (each answer later than the last: the lead follows the round trip and shrinks when the worker quickens, and a time before B's
+    // would be out of order, taken at once, a jump; the test with fixed steps saw one every few frames)
+    let tq = t + WV.dT + fftLead(); if (FFT.src){ if (FFT.tq != null && Math.abs(FFT.tq - tq) < 2) tq = Math.max(tq, FFT.tq + 0.9 * FFT.fdt); FFT.tq = tq; }
+    const P = fftParams(t), msg = {t:tq, P};   // (B4: the world's clock in real seconds, the same for everyone)
     if (P) FFT.P = P;
     if (FFT.bufs){ msg.bufs = FFT.bufs; FFT.bufs = null; }
     FFT.busy = true; FFT.sentAt = performance.now(); FFT.sentT = t;
