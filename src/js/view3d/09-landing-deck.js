@@ -458,11 +458,12 @@
     DKN.fsplash = (DKN.fsplash || 0) + 1; }   // (counted for the tests)
   // the surface by a fish on the line (y in the boat's frame, FS_Y where the lines go into the sea in these drawings): a splash once as it
   // comes out, and now and then while it kicks just at the surface. id: the fish (kept a few seconds to see it cross)
-  const FS_Y = -0.3, FSURF = new Map();
+  const FS_Y = -0.3, FSURF = new Map(); FSURF.sl = 0;
   function fishSurf(id, y, E, kg, T, w){ const now = performance.now(), o = FSURF.get(id); FSURF.set(id, {y, t:now});
     if (FSURF.size > 80) for (const [k, v] of FSURF) if (now - v.t > 3000) FSURF.delete(k);
-    if (o && now - o.t < 400 && o.y < FS_Y && y >= FS_Y) fishSplash(E, kg, 12);
-    else if (y > FS_Y - 0.25 && y < FS_Y + 0.2 && flapK(T, w) > 0.8 && Math.random() < 0.06) fishSplash(E, kg, 4); }
+    // (the crossing seen across frames up to 1.5 s apart, a slow tablet included; the kicks at the surface at most one in 0.7 s, whatever the frame rate)
+    if (o && now - o.t < 1500 && o.y < FS_Y && y >= FS_Y) fishSplash(E, kg, 12);
+    else if (y > FS_Y - 0.25 && y < FS_Y + 0.2 && flapK(T, w) > 0.8 && now - FSURF.sl > 700){ FSURF.sl = now; fishSplash(E, kg, 4); } }
   const ASLIDE = [];   // the autoliner's gaffed fish sliding into the chute's mouth (e.chute, 10-gear.js drawAutoSlides; H2d2)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }

@@ -308,7 +308,7 @@
       case 'pick': { const e = st.ev, c = e ? e.k : 99, i0 = Math.sin(t * 2.4), pr = st.rail, idle = pr ? [W(pr[0] + 0.06, pr[1] + 0.05 + i0 * 0.05, 0.14), W(pr[0] + 0.06, pr[1] + 0.03 - i0 * 0.05, -0.14)] : [W(0.48, 1.02 + i0 * 0.05, 0.14), W(0.48, 1.0 - i0 * 0.05, -0.14)]; st.held = null; st.fall = null;
         if (e && c < DKDUR.pick){ const Rt = e.R, aR = [Rt[0] + R[0] * 0.09, Rt[1], Rt[2] + R[1] * 0.09], aL = [Rt[0] - R[0] * 0.09, Rt[1] + 0.05, Rt[2] - R[1] * 0.09], back = [W(0.36, 1.0, 0.12), W(0.36, 1.02, -0.12)];
           if (c < 0.4){ const u = ease(c / 0.4); hands = [lerp3(idle[0], aR, u), lerp3(idle[1], aL, u)]; }
-          else if (c < 1.6){ const w = Math.sin((c - 0.4) * 11) * 0.04; hands = [[aR[0], aR[1] + w, aR[2]], [aL[0], aL[1] - w, aL[2]]]; st.held = [Rt[0], Rt[1] - 0.04, Rt[2]]; st.hrz = Math.sin(c * 9) * 0.45; }
+          else if (c < 1.6){ const w = Math.sin((c - 0.4) * 11) * 0.04; hands = [[aR[0], aR[1] + w, aR[2]], [aL[0], aL[1] - w, aL[2]]]; st.held = [Rt[0], Rt[1] - 0.04, Rt[2]]; }
           else if (c < 2.0){ const u = ease((c - 1.6) / 0.4); hands = [lerp3(aR, back[0], u), lerp3(aL, back[1], u)]; const m = [(hands[0][0] + hands[1][0]) / 2, Math.min(hands[0][1], hands[1][1]) - 0.06, (hands[0][2] + hands[1][2]) / 2];
             if (c < 1.8) st.held = m; else st.fall = {A:m, B:e.D || W(0.5, 0.05, 0), u:(c - 1.8) / 0.2}; }
           else { const u = ease((c - 2.0) / 0.4); hands = [lerp3(back[0], idle[0], u), lerp3(back[1], idle[1], u)]; } }
@@ -321,7 +321,7 @@
           // (the fish pulls the line to the sides on its way up, less as it comes to the rail, and splashes as it breaks the surface)
           const u = clamp(c / 1.5, 0, 1), fw = (e.kg || 2) * 2.7 + e.t0 % 7, tg = tug(t, fw, 0.16 * (1 - u * u)), H0 = lerp3(Wt, [Rl[0], Rl[1] - 0.15, Rl[2]], u * u);
           st.held = [H0[0] + tg[0], H0[1], H0[2] + tg[1]]; st.line = [hands[1], Rl, st.held];
-          if (!e.spl && u > 0.06){ e.spl = true; fishSplash(st.held, e.kg, 12); } else if (u < 0.35 && flapK(t, fw) > 0.85 && Math.random() < 0.06) fishSplash(st.held, e.kg, 4); }
+          if (!e.spl && u > 0.06){ e.spl = true; fishSplash(st.held, e.kg, 12); } else if (u < 0.35 && flapK(t, fw) > 0.85 && t - (e.slT || 0) > 0.7){ e.slT = t; fishSplash(st.held, e.kg, 4); } }   // (at most one in 0.7 s, whatever the frame rate)
         else { const u = e ? ease(clamp((c - 1.6) / 0.6, 0, 1)) : 1, chest = W(0.4, 1.1, -0.05); hands = [W(0.36, 1.0, 0.16), lerp3([Rl[0], Rl[1] + 0.05, Rl[2]], chest, u)]; if (e) st.held = [hands[1][0], hands[1][1] - 0.04, hands[1][2]]; }
         break; }
       // packing and icing (by the bleeding tub): a gutted fish just landed in the box before him (st.lay, s since) is laid straight with both
@@ -508,8 +508,8 @@
       else if (!f.splashed){ f.splashed = true; ancSplash(E[0] + eye[0], E[1] + eye[1], E[2] + eye[2], 22, false); DKN.splash = (DKN.splash || 0) + 1; } }   // (the splash where it meets the sea; counted for the tests, oppshot)
     if (st.task === 'gaff' && st.gaff){ const hm = gaffKit(!!P.bare); if (hm) drawN(hm, toolM(st.gaff.g, st.gaff.n)); else drawN(PM.broom, limbM(hands[1], st.gaff.tip, 0.018));
       const e = st.ev; if (e && st.gaffFish) live(st.gaff.tip, e);
-      if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2); } }
-    if (st.task === 'bleed' && st.ev){ const e = st.ev; if (st.held) live(st.held, e, st.blood < 0 ? 1 : clamp(1 - st.blood * 1.4, 0, 1));
+      if (e && st.gaffDrop >= 0){ const u = st.gaffDrop, A = st.gaff.tip; const Fl = flap(T, (e.kg || 2) * 2.7 + idx); bendOn(Fl); fishAt([A[0] + (e.U[0] - A[0]) * u, A[1] + (e.U[1] + 0.15 - A[1]) * u * u, A[2] + (e.U[2] - A[2]) * u], e.sp, e.kg, u * 2 + Fl[0], Fl[1]); bendOff(); } }
+    if (st.task === 'bleed' && st.ev){ const e = st.ev; if (st.held) live(st.held, e, e.k < 1.25 ? 1 : clamp(1 - (e.k - 1.25) / 0.45, 0, 1));   // (alive until the cut at 1.25 s, dead by the swing to the tub)
       if (st.toss){ const u = st.toss.u, A = st.toss.from, B = st.toss.to, arc = 0.45 + 0.18 * Math.hypot(B[0] - A[0], B[2] - A[2]); fishAt([A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u + arc * 4 * u * (1 - u), A[2] + (B[2] - A[2]) * u], e.sp, e.kg, u * 3.5); }
       // the blood from the cut throat, a few drops falling toward the tub
       if (st.blood >= 0 && st.held){ const sc = clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), th = [st.held[0], st.held[1] - sc * 0.12, st.held[2]];
@@ -520,7 +520,7 @@
     // ice, the bucket and the bait, the netting needle, the jig line
     const lie = (P, sp, sc, yaw) => { if (SK && SK.fishM) drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1], P[2]), M4.RY(yaw), M4.RZ(Math.PI / 2), M4.S(sc))); }, fishy = !!(SK && SK.fishM);
     if ((st.task === 'pick' || st.task === 'jigup') && st.ev && fishy){ const e = st.ev; if (st.held) live(st.held, e);
-      if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); } }
+      if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; bendOn(flap(T, (e.kg || 2) * 2.7 + idx)); lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); bendOff(); } }
     if (st.line) for (let i = 0; i + 1 < st.line.length; i++) drawN(PM.wire, limbM(st.line[i], st.line[i + 1], 0.004));
     if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(GP[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
     if (kn && st.task === 'bleedst') drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));
