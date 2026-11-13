@@ -1,6 +1,6 @@
 # Kappløp: Lindesnes–Nordkapp (plan 12.11.2026)
 
-Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene underveis, steg 116b) bygd 13.11.2026; KL2 (skjermen) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
+Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene underveis, steg 116b) bygd og rullet ut til testutgaven 13.11.2026 (92e389ec, versjon ecf2207b3148); KL2 (skjermen, steg 117) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
 
 ## Hva Jonas ba om
 
@@ -407,4 +407,4 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 - 12.11.2026: Jonas: hopp nektes i løpet («Nei i løpet»), selv om ingenting ellers hindrer kjøp av hopp (`docs/planer/hopp.md`).
 - 12.11.2026: KL1 delt i KL1a (steg 116a) og KL1b (steg 116b) av arbeidsrutinen. KL1a bygd (gren `plan/2026-11-12-116`, PR #74): `core/09o-kapplop.js`, løypa målt; systemet står i `docs/systemer/oppdrag-og-kystposten.md` 4.28.
 - 13.11.2026: KL1a rullet ut til testutgaven (1001c029, versjon 631532c5d670). KL1b (steg 116b) er klar.
-- 13.11.2026: KL1b bygd av arbeidsrutinen (gren `plan/2026-11-13-116b`, PR #75): oppgavene underveis, se «Bygd i KL1b» over og `oppdrag-og-kystposten.md` 4.28.
+- 13.11.2026: KL1b bygd av arbeidsrutinen (gren `plan/2026-11-13-116b`, PR #75) og rullet ut til testutgaven (92e389ec, versjon ecf2207b3148): oppgavene underveis, se «Bygd i KL1b» over og `oppdrag-og-kystposten.md` 4.28. Hel startmelding for KL2 i `start/117.md`.
