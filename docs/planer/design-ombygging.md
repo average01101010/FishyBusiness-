@@ -166,6 +166,26 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 - **Sett:** hjemskjermen og alle appene i begge formater uten 3D, og hjemskjermen, Salgslaget og til sjøs med 3D i begge formater (`docs/okter/2026-11-13-D5/`; 3D-bildene er tatt før kodegjennomgangens omlegging, som ikke flytter noe i de to formatene). **Ikke sett:** flata på et ekte nettbrett med fingre, og båtkortene hos Kystmegleren med båter til salgs → `docs/spill-dette/D5-telefonen.md`.
 - **Ikke rørt:** `ui/10i-shop.js`, `ui/10q-buymoment.js`, `src/legal/`. Kaiboden og Trim har fått spaltene gjennom stilarket.
 
+## D4: sammenslåingene (13.11.2026, bestemt, ikke bygd)
+
+Jonas fikk forklaringen av D4 i D5-økta og svarte 13.11.2026, punkt for punkt (planens liste over det som står flere steder):
+
+1. **Lasterommet:** «Ja, spillere må ha et slags inventory der hvor mye fisk de har ombord, men jeg er usikker på om vi skal kalle det lasterom ettersom mange av båtene ikke har lasterom, men heller fyller fisken i kar på dekk. Kanskje bare "Last"?» → én side «Last» (fane i Om bord og øverst i Lever fangst); den egne Lasterom-siden går bort; ordet «Lasterom» blir «Last» der det er navnet på siden eller fanen.
+2. **Redskapen og riggen:** «spillere må som sagt ha en slags inventory der de kan se hvilke redskaper båten har ombord og hva som er rigget klart til fiske. Jeg tror egentlig "Redskap" og "rigg" kan slås sammen slik at man inne på redskap velger hvilket redskap som skal være aktivt og dermed kan brukes. Man skal ikke sendes videre til butikken fra "Redskaps"-fanen i "om bord".» → Om bord › Redskap viser redskapen om bord og i sjøen, og hvert redskap har «Rigg» der riggen velges (det Rigg-siden gjør i dag, `rigg()` i `ui/phone/05-rigg-innst-admin.js`); Rigg-siden og Redskap-siden med «Kjøp»-fanen går bort; ingen lenke til butikken derfra.
+3. **Mannskap og driftsplan:** «Enig.» → «Om bord › Mannskap og drift» for dem om bord og driftsplanen; Mannskapsbørsen i Bygd bare for å ansette; Driftsplan-appen i telefonen åpner den samme siden.
+4. **Oppdrag:** «Enig, men hva er omdømme?» Forklart (omdømmet hos hvert mottak og hver kunde, 0–100 fra 50, opp når et oppdrag leveres i tide og ned når fristen går ut; gir flere bestillinger og høyere tillegg). Jonas valgte **«A: Under Bestillinger»** → én Oppdrag-side med fanene Turer, Bestillinger og Kappløp, fra mottaket og fra telefonen; omdømmet står nederst i Bestillinger.
+5. **Regnskap og priser:** «Enig.» → regnskapet bare i Kystbanken og Rederi, med tre tall først (konto, gjeld, resultat i år) og resten under «Detaljer»; Havn viser prisene der du er; Salgslaget hele kysten.
+6. **Blad B:** «Enig.» → i Kvote; i båthandelen bare når det stopper et kjøp.
+7. **Service:** forklart (siden i vifta ved butikken: kroker, line, garn, selge tilbake; og kortet i Om bord › Redskap). Jonas valgte **«A: Tredje fane i butikken»** → Utstyrsbutikken får fanene Redskap, Elektronikk og haler, Service; knappen i vifta går bort; kortet i Om bord › Redskap blir en snarvei dit når redskap er slitt.
+
+**Dekksdagboka** (Jonas 13.11.2026): «jeg mener fanene for utstyr, hendelser og sesonger kan fjernes fra dekksdagboka. Grunnen til det er at hele konseptet er stjålet fra fishing: barents sea spillet, så for å gjøre den til noe eget tenker jeg at vi kan fjerne 3 faner. Jeg bruker dessuten bare "dagbok" og "salg"-fanen selv.» → boka beholder fanene Dagbok og Salg. Lesbarheten i stående (håndskrift 8–9 px, runde to) tas i samme steg.
+
+**Ikke med:** knappelinja med fem faste knapper (valg 3 A står), «Kart»-knappen (avvist av Jonas), de tette skjermene Kvote og Regler › Sjekk (spurt i D5-økta, ikke besvart; tas når Jonas sier det). Startmeldingen: `docs/planer/start/D4-sammenslaaing.md`.
+
+## D5 etter Jonas' bilder (13.11.2026)
+
+Jonas så D5 på nettbrettet (bilder i økta, 1280 × 900, til sjøs med et AS og to båter): «Jeg synes det er mye luft i mellom mange av boksene», «Symmetrien og plassutnyttelsen er på en måte dårlig», «Enkelte knapper overlapper bokser», «Det fremstår litt rotete». Årsaken: kortene sto i to frie spalter (`column-count`), så et kort på 300 px ved siden av et på 700 px etterlot et hull, og hver overskrift over begge spaltene («Foretaket», «Fast kunde», «Forsøkene dine») kuttet fordelingen så ett kort ble stående alene i en halv rad. Rettet: kortene står i rader (`pairCards` i `ui/phone/06-render.js`); to kort deler en rad bare når det korteste er minst 60 % av det høyeste, og da er de like høye; et kort alene eller ved siden av et mye høyere tar hele raden. Fanene inne i en side står ikke lenger oppå kortet under (Kvote › Marked), Værs drivstoffkort har de samme kantene som resten, Kystpostens faner står under mastens kant, kantene er smalere (22 px), og hjemskjermen står midt i flata i stedet for øverst med all lufta under. `telefonflate` sjekker «rader uten hull» (sett rød mot bygget før i alle ti appene).
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
