@@ -29,6 +29,7 @@
   }
   // live bits of the home screen are updated in place, so icons never move under a finger
   function tickHome(){
+    jobTick();   // (FN1: the work on the boat counts down in the phone and in the drawer, ui/phone/01-haill-fiske-service.js)
     if (!isOpen || app !== 'home') return; const H = S.t / 60, q = c => view.querySelector(c);
     const a = q('.ph-clock'), d = q('.ph-date'), w1 = q('.w1'), w2 = q('.w2'); if (!a) return;
     a.textContent = hm(H); d.textContent = dayStr(H); w1.textContent = dirName(windDir(H)) + ' ' + fmt(windAt(H), 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C'; w2.textContent = kr(S.cash);
@@ -55,16 +56,18 @@
     runs.forEach((r, k) => { const h = hs[k]; let i = 0;
       while (i < r.length){ if (i + 1 < r.length && Math.min(h[i], h[i + 1]) >= 0.6 * Math.max(h[i], h[i + 1])) i += 2; else r[i++].classList.remove('ph-half'); } });
   }
-  function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); if (app !== 'home') ordbok(view); pairCards(); shown = key; view.scrollTop = y; }
+  function render(){ status(); setBadge(); if (!isOpen) return; if (app === 'patch' && S.settings.patchSeen !== PATCH[0][0]){ S.settings.patchLast = S.settings.patchSeen; S.settings.patchSeen = PATCH[0][0]; } const key = app + '|' + (sub[app] || ''), y = key === shown ? view.scrollTop : 0; view.innerHTML = app === 'home' ? home() : shell(app); if (app !== 'home'){ ordbok(view); jobTick(view, true); } pairCards(); shown = key; view.scrollTop = y; }
   // every page by name: the phone apps, and the pages that open in the dock's drawer instead (DRAWER)
   const PAGES = () => ({vaer, post, salg, kvote, regler, redning, rederi, meld, haill, skip:skipApp, kaiboden:() => PAGES()[kbLast](), logg, merker, naustp:() => NOTEBOOK.page(), sesong:() => SEASONAPP.page(), guide:() => GUIDE.page(), folk:() => FRIENDS.page(), gbook:() => GBOOK.page(), trim, patch, handbok:() => HBUI.page(), tilbake:() => FEEDBACK.page(), innst, admin,
     ordl, rigg, arbeid:() => WORK.page() + PLAN2UI.line(), drift:() => PLAN2UI.page(), fiske, service, nett, fartoy:() => fartoy('marked'), maler:() => PAINT.page(), utstyr:() => utstyr('verft'), utstyrb:() => utstyr('butikk'), redskap, mannskap, bors, bank, verksted, havn, last, lever, is:isApp, agn, oppdrag, beholdning});
   // the pages that open in the phone without being an app on the home screen: their name, the bar's colour and the icon (D5: the bar said
   // «naustp» and «gbook», and the naust's list had lost its paper when the notebook's page changed name from «notat»)
   const PAGE_HEAD = {naustp:['naustp', 'Naustet', 'The boathouse', '#7a5a2c', 'notat'], gbook:['gbook', 'Gjesteboka', 'The guest book', '#8a5a2b', 'notat'], logg:['logg', 'Logg', 'Log', '#28507f', 'logg']};
-  function shell(a){ const kb = KBT.includes(a); if (kb) kbLast = a; const h = kb ? 'kaiboden' : a, d = APPS.find(x => x[0] === h) || PAGE_HEAD[a] || [a, a, a, '#28507f'], f = PAGES()[a]; return '<div class="ph-appv' + (a === 'post' || a === 'naustp' ? ' ph-paper' : '') + '" data-app="' + a + '" data-sub="' + (sub[a] || '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[d[4] || h] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (kb ? kbTabs(a) : '') + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
+  function shell(a){ const kb = KBT.includes(a); if (kb) kbLast = a; const h = kb ? 'kaiboden' : a, d = APPS.find(x => x[0] === h) || PAGE_HEAD[a] || [a, a, a, '#28507f'], f = jobPage(a, PAGES()[a]); return '<div class="ph-appv' + (a === 'post' || a === 'naustp' ? ' ph-paper' : '') + '" data-app="' + a + '" data-sub="' + (sub[a] || '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[d[4] || h] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (kb ? kbTabs(a) : '') + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
-  function page(a){ const f = PAGES()[a]; return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
+  // (FN1: the pages that make jobs, and Om bord, have the work on the boat at the top, for the boat the page is about: inside withSel)
+  const jobPage = (a, f) => f && JOB_PAGES.includes(a) ? () => jobStrip() + f() : f;
+  function page(a){ const f = jobPage(a, PAGES()[a]); return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
   function dact(cur, a, d){
     const keep = app; let done; app = cur;
     try { done = SEL_APPS.includes(app) && !NAV.has(a) ? withSel(() => act0(a, d)) : act0(a, d); } finally { cur = app; app = keep; }

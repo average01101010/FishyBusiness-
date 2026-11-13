@@ -350,6 +350,6 @@
   el.querySelector('.ph-nav').addEventListener('click', e => { const t0 = e.target.closest('[data-pa]'); if (t0) act(t0.dataset.pa, t0.dataset); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && isOpen) show(false); });
   el.classList.add('off');
-  return {show, toggle(){ show(!isOpen); }, candidates, hire(id){ const c = candidates().find(x => x.id === id); if (!c || S.crew.length >= BOAT.crewMax || crewHireWhy()) return false; S.crew.push(crewUpgrade(c)); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); save(); render(); return true; }, open(a){ if (DRAWER.has(String(a).split(':')[0])){ show(false); DOCK.open(a); } else show(true, a); }, page, dact, DRAWER, isOpen:() => isOpen, render, status, setBadge, tickHome, switchVessel, alerts, get app(){ return app; }, get sel(){ return selVessel().id; }};
+  return {show, toggle(){ show(!isOpen); }, candidates, hire(id){ const c = candidates().find(x => x.id === id); if (!c || S.crew.length >= BOAT.crewMax || crewHireWhy()) return false; S.crew.push(crewUpgrade(c)); log(c.name + ' er ansatt som ' + c.lv + '.', c.name + ' joined as ' + c.lvEn + '.'); save(); render(); return true; }, open(a){ if (DRAWER.has(String(a).split(':')[0])){ show(false); DOCK.open(a); } else show(true, a); }, page, dact, DRAWER, isOpen:() => isOpen, render, status, setBadge, tickHome, jobTick, switchVessel, alerts, get app(){ return app; }, get sel(){ return selVessel().id; }};
 })();
 

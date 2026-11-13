@@ -53,7 +53,8 @@ async def main():
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width': 800, 'height': 1280} if tall else {'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
-        await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; renderActs()"); await pg.wait_for_timeout(400)
+        # (FN1: a yard job running, so «Arbeid på båten» and «Ferdig nå» are measured on the pages that make jobs and in Om bord)
+        await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; S.jobs = []; queueJob({kind:'hull', h:6, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'}); renderActs()"); await pg.wait_for_timeout(400)
         # with something aboard (the independent check 13.11.2026: the first run measured an empty boat): a tired hand, a licence
         try: await pg.evaluate("S.crew = [genCrew()].map(c => Object.assign(c, {bi:false, off:false, fatigue:78})); S.lic = S.lic || {id:'u7', since:2026}; renderActs()")
         except Exception as e: print('tilstand:', str(e)[:100])
