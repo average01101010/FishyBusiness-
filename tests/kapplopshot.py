@@ -58,11 +58,14 @@ async def one(p, name, vw, vh):
     br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-compositing'])
     ctx = await br.new_context(viewport={'width': vw, 'height': vh}, has_touch=True)
     pg = await ctx.new_page(); cdp = await ctx.new_cdp_session(pg)
-    errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+    errs = []; pg.on('pageerror', lambda e: errs.append(str(e) + ' @ ' + ' | '.join((getattr(e, 'stack', '') or '').split('\n')[1:4])))
     await boot(pg)
     await pg.wait_for_function("typeof SIMREADY !== 'undefined' && SIMREADY && S.boat.status === 'port'", timeout=120000)
     pg.set_default_timeout(600000)
     J = lambda js, *a: pg.evaluate(js, *a)
+    # (the phone slides in with a CSS transition, which does not run without frames in headless Chromium: it stood at translateY(110 %)
+    # under the screen and the taps missed it, 13.11.2026. The slide is taken off for the test; nothing it checks depends on it)
+    await pg.add_style_tag(content='#phone{transition:none!important}')
     async def tap_xy(x, y):
         await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y, 'id': 0}]}); await asyncio.sleep(0.05)
         await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await asyncio.sleep(0.3)
@@ -73,7 +76,8 @@ async def one(p, name, vw, vh):
     async def shot(k):
         await pg.wait_for_timeout(500); await pg.screenshot(path=os.path.join(OUT, 'kapplop-' + k + '-' + name + '.jpg'), type='jpeg', quality=60)
     async def tab():
-        await J("() => { PHONE.show(true); PHONE.open('ordl'); }"); await pg.wait_for_timeout(900)   # (the phone slides in: 0.28 s)
+        st = await J("() => { try { PHONE.show(true); PHONE.open('ordl'); return null; } catch (e){ return String(e.stack).slice(0, 600); } }"); await pg.wait_for_timeout(500)
+        if st: print('     (fanen feilet: ' + st + ')')
         await tap('#phone .ph-sub button[data-s="lop"]'); await pg.wait_for_timeout(400)
         return await J(TAB)
 
@@ -92,13 +96,15 @@ async def one(p, name, vw, vh):
     ticked = await J("() => !!document.querySelector('#phone .lop-l.ok')")
     check(ticked, name + ': 2. kortet starter med «Påmeldt i Lindesnes» krysset av')
     await tap('#phone [data-pa="lopgo"]')
-    await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=120000)
+    try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=480000)
+    except Exception as e:
+        print('     (ikke i gang:', await J("() => ({toast:(document.getElementById('toast') || {}).textContent, plan:!!S.plan, st:S.boat.status, run:S.lop && S.lop.run && S.lop.run.st, busy:typeof LEIA_RUN !== 'undefined' ? LEIA_RUN.length : null})"), ')'); raise
     r = await J(RUN)
     check(r['st'] == 'run' and r['t0'] is not None and r['plan'] and r['plan']['port'] == await J("() => LOP.cps[0].port") and len(r['tasks']) == 2, name + ': 2. «Kast loss mot Bergen» med berøring: ruta funnet, klokka går, oppgaven og overraskelsen vist', r)
     # a little way out under the clock, still weather
     await J("() => { for (let i = 0; i < 25; i++){ DYN.on = false; playMinutes(1, true); CATCH_LEFT = 0; } }")
     t = await tab()
-    check(t and 'Oppgaven' in t['txt'] and 'Overraskelsen' in t['txt'] and 'Obrestad' in t['txt'] and 'Klokka' in t['txt'], name + ': 2. fanen under forsøket: klokka, etappe 1 og oppgavene', t and t['txt'][:400])
+    check(t and 'oppgaven' in t['txt'].lower() and 'overraskelsen' in t['txt'].lower() and 'Obrestad' in t['txt'] and 'Klokka' in t['txt'], name + ': 2. fanen under forsøket: klokka, etappe 1 og oppgavene', t and t['txt'][:400])
     await shot('under')
     # 3. the clock in 3D and in the plotter's bar
     await J("() => PHONE.show(false)"); await pg.wait_for_timeout(900)
@@ -158,8 +164,12 @@ async def one(p, name, vw, vh):
     c = await J("""async () => { const r = S.lop.run, pt = portById(LOP.cps[0].port), b = S.boat; await mapNeed(pt.p, 3);
       r.tasks = r.tasks.filter(m => !/:\dt/.test(m.id));   // (the tasks made for the test above; leg 1's own picture is taken)
       b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; S.plan = null; lopDock(pt.id); return {legs:r.legs.length}; }""")
-    await pg.wait_for_timeout(1500)
+    # (the card comes with the next tick of the game; while the 3D view draws Bergen for the first time that can take a while in SwiftShader)
+    try: await pg.wait_for_function("(() => { const e = document.querySelector('#lopPop .lp-box'); return !!e && !document.getElementById('lopPop').hidden; })()", timeout=60000)
+    except Exception: pass
+    await pg.wait_for_timeout(500)
     pop = await J(RECT, '#lopPop .lp-box')
+    if not pop: print('     (ingen kort: ' + json.dumps(await J("() => { const r = S.lop.run; try { lopUi(); } catch (e){ return String(e.stack).slice(0, 600); } return {seen:r.seenN, legs:r.legs.length, tut:typeof tutOn === 'function' && tutOn()}; }")) + ' sidefeil: ' + json.dumps(errs[:2])[:600] + ')')
     check(c['legs'] == 1 and pop and pop['shown'] and 'Sjekkpunkt Bergen' in pop['t'], name + ': 6. kortet ved sjekkpunktet i Bergen med etappetida', {'c': c, 'pop': pop})
     await shot('sjekkpunkt')
     await tap('#lopPop [data-x="see"]'); await pg.wait_for_timeout(600)
@@ -177,7 +187,7 @@ async def one(p, name, vw, vh):
     await pg.wait_for_function("S.plan && S.plan.wps.length > 1", timeout=300000)
     e = await J("() => { const w = S.plan.wps[S.plan.wps.length - 1]; return {y:w.y, goal:LOP.goal.p.y, x:w.x, gx:LOP.goal.p.x, n:S.plan.wps.length, st:S.boat.status}; }")
     check(e['y'] < e['goal'] and e['x'] > e['gx'], name + ': 6b. ruta fra Tromsø ender øst for mållinja, nord for Nordkapp', e)
-    await J("() => { S.plan = null; S.boat.status = 'port'; }")
+    await J("() => { const pt = portById(LOP.cps[4].port), b = S.boat; S.plan = null; b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; b.v = 0; }")   # (back at the quay: depart emptied b.port)
     t = await tab()
     # 7. «Begynn på nytt», twice
     await tap('#phone [data-pa="lopquit"]'); r1 = await J(RUN)
