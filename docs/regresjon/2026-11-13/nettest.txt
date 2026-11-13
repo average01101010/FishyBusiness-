@@ -1,0 +1,27 @@
+OK   Nettet ligger på telefonen
+OK   Nettet åpner på bokmerkene, med nettbutikken  {'tile': True, 'bar': 'detstorebla.no'}
+OK   nettbutikken viser redskapet og velger nærmeste butikk å hente i  {'shops': ['Tussøy utstyrsbutikk · 9,6 nm', 'Skaland utstyrsbutikk · 12,2 nm', 'Finnsnes · 16,4 nm'], 'on': 'Tussøy utstyrsbutikk · 9,6 nm', 'cards': ['jig', 'kgear', 'net', 'line', 'pot', 'kit', 'hooks']}
+OK   Finnsnes velges som hentested
+OK   garn kan ikke bestilles før garnhaleren er om bord (samme regel som i butikken)  {'gate': True}
+OK   linehaler og varmedress er bestilt til Finnsnes, uten at noe er betalt eller gitt  {'pick': [['finnsnes', 'equip', 'linehaler'], ['finnsnes', 'cloth', 'varme']], 'cash': 300000, 'equip': False, 'jobs': 0, 'have': 'Bestilt i Finnsnes'}
+OK   kortet sier hvor det er bestilt  Bestilt i Finnsnes
+OK   samme utstyr bestilles ikke to ganger
+OK   mottaket i Botnhamn har ingen butikk å hente i
+OK   Butikk-knappen har en prikk når noe er bestilt der
+OK   butikkviften har to knapper, Service er flyttet  ['fiskeutstyr', 'elektronikk']
+OK   kjøpmannen i Finnsnes er Solveig, med en linje  Solveig: «Æ har lagt fram det du bestilte. Det ligg her ved disken.»
+OK   det som er bestilt hit, står øverst med «Hent»  ['LinehalerHent · 68\xa0000 kr✕', 'VarmedressHent · 3\xa0490 kr✕']
+OK   butikken har fanene Redskap og Elektronikk og haler  ['Redskap', 'Elektronikk og haler']
+OK   lista over det båten trenger nå, har klær til alle om bord  ['Klær til alle om bord ›']
+OK   «Hent alt» betaler og gir det i butikken: haleren til montering, dressen om bord  {'pick': 0, 'paid': 71490, 'job': True, 'varme': 1}
+OK   en lapp i lista går til kortet sitt  {'page': 'utstyrb', 'flash': True}
+OK   VHF-en om bord står i «Om bord», ikke som kort  Om bordVHF-radio (påbudt, følger båten)
+FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbekar med sjøvann']
+OK   garnhaleren (95 000 kr) ber om bekreftelse i knappen først  {'cash': 228510, 'btn': 'Bekreft · 95\xa0000 kr', 'x': True}
+OK   andre trykk kjøper den
+OK   Beholdning › Redskap har Service når båten ligger ved butikken  {'svc': True}
+OK   knappen åpner Service
+OK   på mottaket er det ingen Service å gå til
+OK   stående: nettbutikken passer skjermen, knappene er store nok  {'wide': [], 'small': []}
+OK   stående: butikken med kjøpmann og bestilling passer skjermen  {'wide': [], 'small': []}
+sidefeil []

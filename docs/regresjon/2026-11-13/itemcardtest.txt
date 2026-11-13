@@ -1,0 +1,45 @@
+OK   Fiskeutstyr: juksa, kveiteutstyr, garn, line, teiner, blåser og kroker er varekort  ['jig', 'kgear', 'kniv', 'hott', 'juksesett', 'garnhalerLv', 'net', 'line', 'pot', 'kit', 'hooks']
+OK   hvert kort har bilde, navn, pris og én linje med hva det gjør
+OK   hvert kort har «Mer» til Håndboka
+OK   garnkortet har de seks garnvalgene og maskeviddene i linja  {'k': 'net', 'pic': True, 'name': 'Garn', 'fx': '156 mm torsk · 180–200 mm skrei · flytegarn sei · 360 mm blåkveite', 'price': 'fra 1\xa0500 kr per garn', 'more': True, 'btns': 6, 'have': 'Plass til 15 garn til'}
+OK   ingen «prisene er foreløpige» og ingen leksikontekst i butikken
+OK   første trykk gjør knappen til «Bekreft» med ✕ ved siden av  {'cf': True, 'btn': 'Bekreft · 1\xa0900 kr', 'rows': 0}
+OK   bekreftelsen faller tilbake av seg selv etter noen sekunder  Kjøp · 1 900 kr
+OK   to trykk kjøper juksa, og den flytter til «Om bord» nederst  {'gear': True, 'card': False, 'aboard': 'Om bordHåndjuksa'}
+OK   liggende: ingenting stikker ut av skuffen, knappene er store nok  {'wide': [], 'small': 0, 'sw': 380, 'cw': 380}
+OK   «Mer om garn» åpner Håndboka på garn, med leksikonteksten og «Hele Håndboka»  {'open': True, 'h': 'Garn', 'n': 1, 'txt': 'Garn settes i lenker mellom to blåser. 156 mm er vanlig torskegarn, 180 og 200 mm tar større fisk som skrei. Flytegarn fisker høyere og tar mest sei. Blåkveitegarn (360 mm) tar blåkveite og kveite. Minste lovlige maskevidde nord for 62° N er 156 mm. Garn krever minst to om bord og en garnhaler, som passer båter fra 7,5 m. Garna slites ved hvert trekk og bøtes av mannskapet, på bøteriet eller i butikken.', 'all': True}
+OK   hele Håndboka igjen; oppslagskapitlet har ingen prikker og ingen «Jeg kan dette»  {'n': 68, 'dots': 0, 'skip': 6, 'chs': 7}
+FEIL Elektronikk og haler: utstyret og klærne er varekort med bilde og pris  ['linehaler', 'linesetter', 'garnrenne', 'jukse', 'brovakt', 'ais', 'plotter', 'radar', 'chirp', 'olje', 'varme']
+OK   linehaleren sier hvor mye raskere den trekker enn for hånd  {'k': 'linehaler', 'pic': True, 'name': 'Linehaler', 'fx': 'Trekker lina 2,0× raskere enn for hånd', 'price': '68\xa0000 kr', 'more': True, 'btns': 2, 'have': ''}
+Traceback (most recent call last):
+  File "/home/user/FishyBusiness-/tests/itemcardtest.py", line 102, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/user/FishyBusiness-/tests/itemcardtest.py", line 74, in main
+    await pg.evaluate("document.querySelector('#drawerBody [data-pa=equip][data-k=vhf]').click()"); await pg.wait_for_timeout(300)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/async_api/_generated.py", line 9421, in evaluate
+    await self._impl_obj.evaluate(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_page.py", line 474, in evaluate
+    return await self._main_frame.evaluate(expression, arg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_frame.py", line 346, in evaluate
+    await self._channel.send(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of null (reading 'click')
+    at eval (eval at evaluate (:311:30), <anonymous>:1:66)
+    at eval (<anonymous>)
+    at UtilityScript.evaluate (<anonymous>:311:30)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
