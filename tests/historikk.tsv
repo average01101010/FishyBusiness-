@@ -3924,3 +3924,10 @@
 2026-11-13 17:34	ccr-432150cd-kkjoez	891278f	lukket	OK	17	lite	samtidig	
 2026-11-13 18:19	plan/2026-11-13-109	f04274cd	boottest	OK	36	lite	samtidig	
 2026-11-13 18:19	plan/2026-11-13-109	f04274cd	maletest	OK	23	lite	samtidig	
+2026-11-13 18:20	plan/2026-11-13-109	6d074680	docktest	OK	64	lite	samtidig	
+2026-11-13 18:21	plan/2026-11-13-109	6d074680	uishots	OK	87	lite	samtidig	
+2026-11-13 18:21	plan/2026-11-13-109	6d074680	navbarshot	OK	29	lite	samtidig	
+2026-11-13 18:21	plan/2026-11-13-109	6d074680	dockrow	OK	43	lite	samtidig	
+2026-11-13 18:23	plan/2026-11-13-109	6d074680	roetest	OK	124	lite	samtidig	
+2026-11-13 18:23	plan/2026-11-13-109	6d074680	hudtest	OK	91	lite	samtidig	
+2026-11-13 18:23	plan/2026-11-13-109	6d074680	sponsor2test	OK	16	lite	samtidig	
