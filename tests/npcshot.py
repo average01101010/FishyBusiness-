@@ -6,7 +6,12 @@ Sandvikvåg-Halhjem, the express boats, the passenger ferry Kleppestø-Strandkai
 Pictures in tests/out/npc3d_<model>_<kai|fart>_<dag|natt>_<format>.png. Checks (OK/FEIL), one a shot: the vessel is drawn with her own
 model (G3._debug.ships: t is ship-<model>) at the near level, not the box; at night her windows are lit; then (liggende) the levels by
 distance for the coastal ship at Bergen (near within 500 m, the simple one to 1.5 km, the box beyond); no GL errors, no page errors.
-Needs the whole coast in the build (python3 tools/map/release.py and game.py, then node build.mjs)."""
+Needs the whole coast in the build (python3 tools/map/release.py and game.py, then node build.mjs).
+N7's second part (12.11.2026): NPC_SHOT_SET=fisk the coast's fishing boats by their gear (snurrevad, not, tral, teine, autoline: a boat
+of the register with that main gear, in the harbour of flaate.json with the most of them, at her berth and under way on a March day
+and a November night; needs the vec packs, KYST_VEC=1 node build.mjs), NPC_SHOT_SET=skip the merchant ships (lasteskip, tankskip,
+cruiseskip: no traffic until N5, steg 37, so one of each is put into npcStates by the test, lying still and under way off Bergen; needs
+their lines in src/index.html, which N5 adds: a build of the test's own until then). npcshot_fisk.py and npcshot_skip.py run them."""
 import asyncio, json, os
 from playwright.async_api import async_playwright
 from _env import *
@@ -48,33 +53,99 @@ SETUP = """async ([kind, mode, dark, K]) => { const F = ferjeInit(); WX_FORCE = 
 # p: a vessel under way gives way to your boat in your own view, valg 4 A, so she is not quite where the clock has her)
 # (under way the clock is held at the minute SETUP chose, T: it runs at six times real time while the 3D view settles, and a ferry at ten
 # knots was a kilometre on before the shot)
-LOOK = """([id, off, T]) => { if (T) S.t = T; const n = npcStates(S.t / 60).find(q => q.id === id); if (!n) return null; const d = (G3._debug.ships || []).find(q => q.id === id), p = d && d.p ? d.p : n.p, b = S.boat; b.v = 0;
+LOOK = """([id, off, T, L]) => { if (T) S.t = T; const n = npcStates(S.t / 60).find(q => q.id === id && (!L || q.L === L)); if (!n) return null; const d = (G3._debug.ships || []).find(q => q.id === id && (!L || q.L === L)), p = d && d.p ? d.p : n.p, b = S.boat; b.v = 0;
   const c = G3._debug.cam; c.helm = false; c.dist = 55; c.pitch = 0.1; c.yaw = Math.atan2(p.x - b.pos.x, -(p.y - b.pos.y)) - b.heading;
-  const s = (G3._debug.ships || []).find(q => q.id === id); return {v:n.v, s:s || null, win:G3._debug.winLit, lit:(G3._debug.anchl || {}).npcLit}; }"""
+  const s = (G3._debug.ships || []).find(q => q.id === id && (!L || q.L === L)); return {v:n.v, s:s || null, win:G3._debug.winLit, lit:(G3._debug.anchl || {}).npcLit}; }"""
 
-SEEN = """([id]) => { const s = (G3._debug.ships || []).find(q => q.id === id), n = npcStates(S.t / 60).find(q => q.id === id); return {v:n ? n.v : null, s:s || null, win:G3._debug.winLit, lit:(G3._debug.anchl || {}).npcLit}; }"""
+# ---- the coast's fishing boats by their gear (NPC_SHOT_SET=fisk) ----
+# kind -> (the register's gear, the lengths the model is drawn for, view3d/20-trawl-seine.js GEARM)
+FISK = {'snurrevad': ('snurrevad', 8, 99), 'not': ('not', 8, 99), 'tral': ('tral', 8, 99), 'teine': ('teine', 7, 13), 'autoline': ('line', 13, 99)}
+def fisk_harbours(kind):
+    """the harbours (tile:ty.hi) of flaate.json with the most boats of the gear in the model's lengths, best first"""
+    D = json.load(open(os.path.join(HERE, '..', 'src', 'data', 'flaate.json'))); G = D['meta']['gear']; g, a, b = FISK[kind]
+    n = [(sum(1 for bi, L, gi in v if G[gi] == g and a <= L < b), k) for k, v in D['h'].items()]
+    return [k for c, k in sorted(n, reverse=True)[:3] if c]
+FSETUP = """async ([kind, mode, dark, key, gear, a, b]) => { const [tk, hi] = key.split('.'), [tx, ty] = tk.split(':').map(Number), TL = MAPD.man.tile; WX_FORCE = {w:3, d:200};
+  const day = Math.round(((dark ? Date.UTC(2027, 10, 17) : Date.UTC(2027, 2, 10)) - EPOCH) / 6e4), bt = S.boat; bt.status = 'idle'; bt.port = null; S.plan = null; S.draft = []; bt.v = 0;
+  const c0 = {x:(tx + 0.5) * TL, y:(ty + 0.5) * TL}; bt.pos = c0; await mapNeed(c0, MAPD.simR); let t = null;
+  for (let i = 0; i < 80 && !t; i++){ t = vecTile(tx, ty); if (!t) await new Promise(r => setTimeout(r, 250)); }
+  const h = t && t.npc && t.npc[+hi]; if (!h) return {err:'no harbour ' + key};
+  const boats = h.boats.filter(q => q.gear === gear && q.L >= a && q.L < b); if (!boats.length) return {err:'no boat ' + key};
+  for (const q of boats) q.h = h;
+  const st = (q, H) => { const A = coastState(q, H, hodOf(H)), B = coastState(q, H - 1 / 60, hodOf(H - 1 / 60)); return {A, v:dist(A.p, B.p) / gridScale(A.p) / NM * 60}; };
+  const m0 = dark ? 17 * 60 : mode === 'kai' ? 12 * 60 : 5 * 60; let found = null;
+  for (let m = m0; m < m0 + 900 && !found; m += mode === 'kai' ? 10 : 3) for (const q of boats){ const H = (day + m) / 60, s = st(q, H);
+    if (s.A.hidden) continue;
+    if (mode === 'kai' ? s.A.st === 'port' && [10, 30].every(k => { const z = st(q, H + k / 60); return z.A.st === 'port' && dist(z.A.p, s.A.p) < 0.01; })
+                       : s.v > 3 && dist(s.A.p, h) > 0.4 && [2, 4].every(k => st(q, H + k / 60).v > 3)){ found = {q, m, A:s.A}; break; } }
+  if (!found) return {err:'no time'};
+  const q = found.q, T = day + found.m, A = mode === 'kai' ? found.A : coastState(q, (T + 2) / 60, hodOf((T + 2) / 60)); S.t = T; S.mult = 0.00001; COASTM.k = ''; await mapNeed(A.p, MAPD.simR);
+  const r = mode === 'kai' ? Math.max(0.07, Math.min(0.2, q.L * 6 / 1000)) : Math.max(0.06, Math.min(0.15, q.L * 5 / 1000)); let off = null;
+  // at her berth: from the water side of the quay she lies at (its face's normal; a pier between the camera and her hid her)
+  if (mode === 'kai'){ let best = null; const x = A.p.x * 1000, z = A.p.y * 1000;
+    for (const tt of vecTilesIn(x - 200, z - 200, x + 200, z + 200)) for (const f of tt.quays || []){ const a = (x - f.x) * f.ux + (z - f.z) * f.uz, o = (x - f.x) * f.nx + (z - f.z) * f.nz; if (Math.abs(a) <= f.hl + 2 && o > -1 && o < 25 && (!best || o < best.o)) best = {f, o}; }
+    if (best) for (const da of [0.5, -0.5, 0.0, 0.9, -0.9]) for (const k of [1, 0.7, 1.4]){ if (off) break; const ca = Math.cos(da), sa = Math.sin(da), nx = best.f.nx * ca - best.f.nz * sa, nz = best.f.nx * sa + best.f.nz * ca;
+      const c = {x:A.p.x + nx * r * k, y:A.p.y + nz * r * k}; if (!isLand(c) && depthF(c) > 2) off = {x:c.x - A.p.x, y:c.y - A.p.y}; } }
+  for (const da of [Math.PI / 2, -Math.PI / 2, 1.2, -1.2, 2.0, -2.0, 0.6, -0.6, 2.6, -2.6, 0, Math.PI]) for (const k of [1, 1.3, 0.8, 1.7]){
+    if (off) break; const aa = A.hd + da, c = {x:A.p.x + Math.sin(aa) * r * k, y:A.p.y - Math.cos(aa) * r * k}; if (!isLand(c) && depthF(c) > 2) off = {x:c.x - A.p.x, y:c.y - A.p.y}; }
+  if (!off) off = {x:r, y:0};
+  bt.pos = {x:A.p.x + off.x, y:A.p.y + off.y}; bt.heading = Math.atan2(-off.x, off.y); if (!G3.isActive()) G3.show(true);
+  return {id:q.id, name:q.name, L:q.L, B:q.B, gear, p:A.p, hd:A.hd, t:S.t, T, off, min:found.m, key}; }"""
+
+# ---- the merchant ships (NPC_SHOT_SET=skip): one put into npcStates by the test, lying still or going at her speed off Bergen ----
+SKIP = {'last': ('cargo', 88.0, 14.0, 12), 'tank': ('tanker', 130.0, 21.0, 12), 'cruise': ('cruise', 240.0, 31.0, 15)}
+MSETUP = """async ([kind, mode, dark, type, L, B, kn]) => { const F = ferjeInit(); WX_FORCE = {w:3, d:200};
+  const day = Math.round(((dark ? Date.UTC(2027, 10, 17) : Date.UTC(2027, 5, 16)) - EPOCH) / 6e4), bt = S.boat; bt.status = 'idle'; bt.port = null; S.plan = null; S.draft = []; bt.v = 0;
+  const sk = F.q.find(q => q.name === 'Strandkaien'); S.t = day + (dark ? 18 : 12) * 60; S.mult = 0.00001; await mapNeed(sk.p, MAPD.simR);
+  // a place in the fjord off Bergen deep enough, and a heading along which she stays on deep water 1.5 km each way
+  let at = null;
+  for (const R of [1.2, 1.6, 2.0, 2.6, 3.2]) for (let a0 = 0; a0 < 6.28 && !at; a0 += 0.2){ const c = {x:sk.p.x + Math.sin(a0) * R, y:sk.p.y - Math.cos(a0) * R}; if (isLand(c) || depthF(c) < 20) continue;
+    for (let h = 0; h < 6.28 && !at; h += 0.26){ let ok = true; for (let s = -1.5; s <= 1.5 && ok; s += 0.1){ const q = {x:c.x + Math.sin(h) * s, y:c.y - Math.cos(h) * s}; ok = !isLand(q) && depthF(q) > 12; } if (ok) at = {c, h}; } }
+  if (!at) return {err:'no water'};
+  const H0 = S.t / 60, v = mode === 'kai' ? 0 : kn, id = 'npcshot-' + kind;
+  window.__FK = [H => { const s = v * 1.852 * (H - H0) * gridScale(at.c); return {id, name:'Prøveskip', type, L, B, T:6, p:{x:at.c.x + Math.sin(at.h) * s, y:at.c.y - Math.cos(at.h) * s}, hd:at.h, cog:at.h, v, st:v ? 'transit' : 'anchor'}; }];
+  if (!window.__npcW){ const o = npcStates; window.__npcW = true; npcStates = function(H, only){ const r = o.apply(this, arguments); return window.__FK && !only ? r.concat(window.__FK.map(f => f(H))) : r; }; }
+  const n = window.__FK[0](H0 + 2 / 60), r = Math.max(0.12, Math.min(0.45, L * 1.6 / 1000)); let off = null;
+  for (const da of [Math.PI / 2, -Math.PI / 2, 1.2, -1.2, 2.0, -2.0]) for (const k of [1, 1.3, 0.8]){ if (off) break; const a = n.hd + da, c = {x:n.p.x + Math.sin(a) * r * k, y:n.p.y - Math.cos(a) * r * k}; if (!isLand(c) && depthF(c) > 3) off = {x:c.x - n.p.x, y:c.y - n.p.y}; }
+  if (!off) off = {x:r, y:0};
+  bt.pos = {x:n.p.x + off.x, y:n.p.y + off.y}; bt.heading = Math.atan2(-off.x, off.y); if (!G3.isActive()) G3.show(true);
+  return {id, name:'Prøveskip (' + type + ')', L, B, p:n.p, hd:n.hd, v, t:S.t, T:S.t, off}; }"""
+
+async def setup(pg, kind, mode, dark):
+    if kind in FISK:
+        g, a, b = FISK[kind]; r = None
+        for key in fisk_harbours(kind):
+            r = await pg.evaluate(FSETUP, [kind, mode, dark, key, g, a, b])
+            if r and not r.get('err'): return r
+        return r
+    if kind in SKIP:
+        t, L, B, kn = SKIP[kind]; return await pg.evaluate(MSETUP, [kind, mode, dark, t, L, B, kn])
+    return await pg.evaluate(SETUP, [kind, mode, dark, KINDS[kind]])
+
+SEEN = """([id, L]) => { const s = (G3._debug.ships || []).find(q => q.id === id && (!L || q.L === L)), n = npcStates(S.t / 60).find(q => q.id === id && (!L || q.L === L)); return {v:n ? n.v : null, s:s || null, win:G3._debug.winLit, lit:(G3._debug.anchl || {}).npcLit}; }"""
 
 async def shot(pg, kind, mode, dark, fmt, R):
     name = f'{kind}_{mode}_{"natt" if dark else "dag"}_{fmt}'
-    r = await pg.evaluate(SETUP, [kind, mode, dark, KINDS[kind]])
+    r = await setup(pg, kind, mode, dark); Lm = r.get('L') if r and kind in FISK else None   # (two boats of the coast can share an id: hers by her length)
     if not r or r.get('err'):
         check(False, f'{name}: fant {kind} {"ved kai" if mode == "kai" else "under fart"}', r); return None
     await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(9000 if mode == 'kai' else 3000)   # (under way: the same place as the shot before, loaded)
     await pg.evaluate("() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }")
     l = None
     if mode == 'kai':
-        for w in (2500, 2500, 600): l = await pg.evaluate(LOOK, [r['id'], r['off'], None]); await pg.wait_for_timeout(w)
-        l = await pg.evaluate(LOOK, [r['id'], r['off'], None]); await pg.wait_for_timeout(250)
+        for w in (2500, 2500, 600): l = await pg.evaluate(LOOK, [r['id'], r['off'], None, Lm]); await pg.wait_for_timeout(w)
+        l = await pg.evaluate(LOOK, [r['id'], r['off'], None, Lm]); await pg.wait_for_timeout(250)
     else:   # under way: the game's own test camera on her (npcLook), off her bow quarter, as she goes
-        dm = max(70, min(280, r['L'] * 2.2))
+        dm = max(45 if kind in FISK else 70, min(280 if kind in KINDS else 520, r['L'] * 2.2))
         for w in (2500, 2500, 2500, 2000): await pg.evaluate("([id, d]) => (G3._debug.npcLook || G3.npcLook)(id, d, 0.12, 2.1)", [r['id'], dm]); await pg.wait_for_timeout(w)
     await pg.screenshot(path=os.path.join(OUT, f'npc3d_{name}.png'), timeout=300000)
-    if mode != 'kai': l = await pg.evaluate(SEEN, [r['id']]); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")   # (read after the shot: the camera takes seconds to come round)
+    if mode != 'kai': l = await pg.evaluate(SEEN, [r['id'], Lm]); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")   # (read after the shot: the camera takes seconds to come round)
     s = (l or {}).get('s') or {}
     R[name] = dict(r, look=l)
     ok = s.get('t') == 'ship-' + kind and s.get('lod') == 1
     check(ok, f'{name}: {r["name"]} ({r["L"]} × {r["B"]} m) tegnet med sin egen modell ship-{kind} nær (ikke kassa), {s.get("d")} m unna, {s.get("tris")} trekanter (npc3d_{name}.png)', {'t': s.get('t'), 'lod': s.get('lod'), 'v': (l or {}).get('v')})
-    if dark: check((l or {}).get('win', 0) > 0, f'{name}: vinduene lyser om natta ({(l or {}).get("win")} lys)')
+    if dark and kind not in FISK: check((l or {}).get('win', 0) > 0, f'{name}: vinduene lyser om natta ({(l or {}).get("win")} lys)')
+    if dark and mode != 'kai': check((l or {}).get('lit', 0) > 0, f'{name}: lanternene tent om natta ({(l or {}).get("lit")} lys)')
     return r
 
 async def main():
@@ -88,12 +159,13 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME + '#qfix')
         R = {}
-        for kind in KINDS:
+        SET = os.environ.get('NPC_SHOT_SET', 'ferjer')
+        for kind in (FISK if SET == 'fisk' else SKIP if SET == 'skip' else KINDS):
             if only and kind not in only: continue
             for mode in [m for m in ('kai', 'fart') if os.environ.get('NPC_SHOT_MODE', m) == m]:
                 for dark in ((False, True) if fmt == 'liggende' else (False,)): await shot(pg, kind, mode, dark, fmt, R)   # (stående by day only: the night's lights are the same in either format, and the run must end within the hour)
         # the levels by distance (liggende only): the coastal ship at Bergen's quay from 300 m, 1 km and 2.2 km
-        if fmt == 'liggende' and (not only or 'kystrute' in only):
+        if fmt == 'liggende' and SET == 'ferjer' and (not only or 'kystrute' in only):
             r = await pg.evaluate(SETUP, ['kystrute', 'kai', False, None])
             if r and not r.get('err'):
                 await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(6000)
