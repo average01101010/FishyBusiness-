@@ -420,9 +420,9 @@ const DOCK = (() => {
   const WIDE = ['fiske', 'utstyrb', 'fartoy', 'utstyr', 'bors', 'havn'];
   function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && WIDE.includes(page)); b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
   function draw(keep){
-    shape();
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
+    shape();   // (after the try-on is taken off, so the low sheet does not hang on for a tick on the next page)
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();

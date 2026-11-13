@@ -48,18 +48,18 @@
     if (here.length){ const tot = here.reduce((a, o) => a + pickKr(o), 0);
       h.push('<div class="pick"><h4>' + L('Bestilt til henting her', 'Ordered for collection here') + ' <small>' + L('betales når du henter', 'paid when you fetch it') + '</small></h4>' + here.map(o => { const nm = pickName(o);
         return '<div class="pick-r"><span>' + L(nm[0], nm[1]) + '</span><span class="pick-b"><button class="ph-btn p" data-pa="ptake" data-id="' + o.id + '"' + (pickKr(o) > spendable() ? ' disabled' : '') + '>' + L('Hent', 'Fetch') + ' · ' + kr(pickKr(o)) + '</button><button class="ph-btn alt ic-x" data-pa="pdrop" data-id="' + o.id + '" aria-label="' + L('Avbestill', 'Cancel') + '">✕</button></span></div>'; }).join('') +
-        (here.length > 1 ? '<button class="ph-btn p" data-pa="ptakeall"' + (tot > spendable() ? ' disabled' : '') + '>' + L('Hent alt', 'Fetch it all') + ' · ' + kr(tot) + '</button>' : '') + '</div>'); }
+        (here.length > 1 ? '<button class="ph-btn p" data-pa="ptakeall"' + (tot > spendable() ? ' disabled' : '') + '>' + L('Hent alt', 'Fetch it all') + ' · ' + kr(tot) + '</button>' : '') + (here.some(o => o.w === 'equip') ? '<small class="ic-sub">' + fitSays() + '</small>' : '') + '</div>'); }   // (equipment fetched is fitted: the same binding as bought over the counter)
     const need = buyList();
     if (need.length) h.push('<div class="buyl"><span class="st-l">' + L('«' + S.boatName + '» trenger nå', 'The «' + S.boatName + '» needs now') + '</span><div class="buyl-c">' + need.map(x => '<button class="chip-b" data-pa="icgo" data-pg="' + x.pg + '" data-id="' + (x.id || 'ic-' + x.k) + '">' + L(x.t[0], x.t[1]) + ' ›</button>').join('') + '</div></div>');
     if (cur === 'utstyrb') h.push('<p class="st-fit">' + fitSays() + ' <button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="lex_montering">' + L('Mer om montering ›', 'More on fitting ›') + '</button></p>');
     return h.join('') + '</div>';
   }
-  // what a fitting binds, in one sentence (D3): the yard's time in both clocks, and that she lies in port until it is done (a departure
-  // waits for the yard's jobs: ui/08-actions.js depnow, core/05-vessels.js)
   // the line under a buy button (D3): the fitting's time and that she lies until it is done, and, where the button asks «Bekreft · kr»
   // first (from IC_CONFIRM_KR: phone/14-act.js), that it does, before the tap
   const buySub = (price, fits, confirms) => { const t = [fits ? L('Montering ' + durBoth(YARD_H * 60) + '. Båten ligger i havn imens.', 'Fitting ' + durBoth(YARD_H * 60) + '. The boat stays in port meanwhile.') : '', confirms && price >= IC_CONFIRM_KR ? L('Du bekrefter før kjøpet.', 'You confirm before you buy.') : ''].filter(Boolean).join(' ');
     return t ? '<small class="ic-sub">' + t + '</small>' : ''; };
+  // what a fitting binds, in one sentence (D3): the yard's time in both clocks, and that she lies in port until it is done (a departure
+  // waits for the yard's jobs: ui/08-actions.js depnow, core/05-vessels.js)
   const fitSays = () => L('Montering tar ' + durBoth(YARD_H * 60) + ', og båten ligger i havn til den er ferdig.', 'Fitting takes ' + durBoth(YARD_H * 60) + ', and the boat stays in port until it is done.');
   // ---- fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
   // trying gear on the boat in 3D before it is bought (M3): what was tried this session, for the measure (shop_buy tried, shop_try)

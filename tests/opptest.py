@@ -235,7 +235,7 @@ async def opp2(pg, J, card):
     ab = await pg.evaluate("(document.querySelector('#drawerBody .ic-aboard') || {}).textContent || ''")
     check(ls and 'Kjøp og monter' in ls['btn'] and '24 000' in ls['price'] and 'krever linehaler' in ls['fx'] and '3,4 min mot 4,3 (−20 %)' in ls['fx'], 'linesetteren selges under Elektronikk og haler: 24 000 kr, setter en stamp på 3,4 min mot 4,3', ls)
     check(gr and not gr['btn'] and 'krever garnhaler' in gr['note'].lower() and '0,6 min mot 0,8' in gr['fx'], 'garnrenna uten garnhaler: ingen kjøpsknapp, kortet sier at den krever garnhaler', gr)
-    check('Linehaler (trinn 2)' in ab and 'Juksamaskin × 4 (trinn 2)' in ab and 'Trinnene kjøpes under Redskap' in ab, '«Om bord» sier trinnene og hvor de kjøpes', ab)
+    check('Linehaler (trinn 2)' in ab and 'Juksamaskin × 4 (trinn 2)' in ab and 'Trinnene kjøpes under Fiskeutstyr' in ab, '«Om bord» sier trinnene og hvor de kjøpes', ab)
     await pg.evaluate("document.querySelector('#drawerBody [data-ic=linesetter] [data-pa=equip]').click()"); await pg.wait_for_timeout(200)
     await pg.evaluate("document.querySelector('#drawerBody [data-ic=linesetter] [data-pa=equip]').click()"); await pg.wait_for_timeout(300)
     r = json.loads(await J("{job:(S.jobs || []).some(j => j.kind === 'fit' && j.k === 'linesetter'), cash:S.cash}"))

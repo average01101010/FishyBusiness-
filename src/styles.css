@@ -1895,14 +1895,16 @@ body.booting #lopPop{visibility:hidden!important}
 .up-l{display:flex;gap:8px;margin-top:3px;font-size:13px;line-height:1.35} .up-l span{flex:0 0 78px;color:var(--m-muted,#5b6c76)} .up-l b{flex:1;min-width:0;font-weight:600;color:var(--m-ink,#15252f)}
 .ph-card .up-st{margin:0;font-size:13px}
 /* (after the review of the pictures: «Nå» and «Neste trinn» need the width to be compared, so an upgrade card takes the whole row lying down) */
-@media (orientation:landscape){body.dk-wide #drawerBody .ph-c > .ph-card.ic.upc{grid-column:1 / -1}}
+@media (orientation:landscape){body.dk-wide #drawerBody .ph-c > :is(.ph-card.ic.upc,.upc ~ .ph-card.ic){grid-column:1 / -1}}   /* (and the yard's equipment after them, so no card stands alone in half a row) */
+/* (the operations plan's older green primary must not show through on a disabled button) */
+#drawer .dr-page .ph-btn.p:disabled{background:transparent;box-shadow:none}
 /* the boat you own: a tag, not a frame */
 .vcard.mine{outline:0}
 .v-mine{display:inline-block;align-self:flex-start;margin-bottom:3px;padding:1px 7px;border-radius:4px;background:var(--m-tint-ok,#e3f3ea);color:var(--m-ok,#1e8c6e);font:700 11px/1.5 var(--sans);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
 /* magenta only on what buys or accepts (the list: the actions that take money or bind the player); the rest of the main actions blue */
 :is(#drawer,.ph-appv:not(.ph-paper)){--a-main:#2F6F8F}
 :is(#drawer,.ph-appv:not(.ph-paper)) :is(.ph-btn.p,.btn.primary):not(:disabled){background:var(--a-main);border-color:var(--a-main);box-shadow:none}
-:is(#drawer,.ph-appv:not(.ph-paper)) .ph-btn.p:is([data-pa=equip],[data-pa=shop],[data-pa=propup],[data-pa=upg],[data-pa=engup],[data-pa=holdup],[data-pa=cloth],[data-pa=buy],[data-pa=ptake],[data-pa=ptakeall],[data-pa=pord],[data-pa=ordtake],[data-pa=turtake],[data-pa=pttake],[data-pa=kmtake],[data-pa=mbbid],[data-pa=kmbid],[data-pa=kasko],[data-pa=hullfix],[data-pa=hullclean],[data-pa=bhire],[data-pa=trimbuy],[data-pa=skipbuy],[data-pa=yardnow],[data-pa=haillbuy],[data-pa=lopreg],[data-pa=cloudReg],[data-pa=grbuy],[data-pa=buylic],[data-pa=naustbuy]):not(:disabled),
+:is(#drawer,.ph-appv:not(.ph-paper)) .ph-btn.p:is([data-pa=equip],[data-pa=shop],[data-pa=propup],[data-pa=upg],[data-pa=engup],[data-pa=holdup],[data-pa=cloth],[data-pa=buy],[data-pa=ptake],[data-pa=ptakeall],[data-pa=pord],[data-pa=ordtake],[data-pa=turtake],[data-pa=pttake],[data-pa=kmtake],[data-pa=mbbid],[data-pa=kmbid],[data-pa=kasko],[data-pa=hullfix],[data-pa=hullclean],[data-pa=bhire],[data-pa=trimbuy],[data-pa=skipbuy],[data-pa=yardnow],[data-pa=haillbuy],[data-pa=lopreg],[data-pa=cloudReg],[data-pa=grbuy],[data-pa=buylic],[data-pa=naustbuy],[data-pa=gregn],[data-pa=frYes]):not(:disabled),
 :is(#drawer,.ph-appv:not(.ph-paper)) .btn.primary[data-act=tow]:not(:disabled){background:var(--a-primary);border-color:var(--a-primary)}
 /* the hold's bar and the tick boxes are not purchases */
 :is(#drawer,.ph-appv:not(.ph-paper)) .bar i{background:#7CC4E0}

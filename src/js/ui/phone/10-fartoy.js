@@ -206,9 +206,9 @@
     if (mgSel){ const Lx = MBC.byId(mgSel); if (Lx) return mgSheet(Lx).replace(/^<div class="ph-c">/, '<div>'); }   // a used boat opened from «Båter til salgs her» (M4, B)
     // (D3: the boats first. Used boats lying at this quay are boats too and stay on top; with none, «Båter til salgs her» and its way
     // to Kystmegleren come after the list, and so does «Neste mål», fartoy())
-    const usedHere = atKind('verft') && MBC.list().some(x => x.port === S.boat.port), mgh = mgHere();
-    if (usedHere) h.push(mgh);
-    else if (atKind('verft')) h.push('<p class="ph-note st-fit">' + L('Brukte båter fra andre spillere:', 'Used boats from other players:') + ' <button type="button" class="ic-more" data-pa="open" data-a="nett" data-s="megler">' + L('Kystmegleren ›', 'Kystmegleren ›') + '</button></p>');   // (the way to the broker stays within reach above the list)
+    // (the card always stands after the list, so nothing jumps when the broker's list comes in; the line on top says how many lie here)
+    const mgh = mgHere(), usedN = atKind('verft') ? MBC.list().filter(x => x.port === S.boat.port).length : 0;
+    if (atKind('verft')) h.push('<p class="ph-note st-fit">' + (usedN ? L('Brukte båter ved denne kaia: ' + usedN + ' (nederst på siden). Flere hos', 'Used boats at this quay: ' + usedN + ' (at the bottom of the page). More at') : L('Brukte båter fra andre spillere:', 'Used boats from other players:')) + ' <button type="button" class="ic-more" data-pa="open" data-a="nett" data-s="megler">' + L('Kystmegleren ›', 'Kystmegleren ›') + '</button></p>');   // (the way to the broker stays within reach above the list)
     h.push('<div class="ph-sub mk">' + [['open', 'Åpen gruppe', 'Open group'], ['lic', 'Med hjemmel', 'With a right'], ['kyst', 'Kystflåten', 'Coastal fleet'], ['hav', 'Havfiske', 'Ocean']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mktab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
     const bn = '«' + S.boatName + '»', ti = tradeIn();
     if (tab === 'open'){
@@ -225,7 +225,7 @@
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'hav') h.push(mkCard(k));
     }
     if (!atKind('verft')) h.push('<p class="ph-note">' + L('Båter kjøpes og selges på verftet.', 'Vessels are bought and sold at the yard.') + '</p>' + nearHint('verft'));
-    if (!usedHere) h.push(mgh);
+    h.push(mgh);
     return h.join('');
   }
   // the spec sheet: eight sections with the same rows for every boat (Jonas 17.10.2026, docs/batplan.md del 5). A row that does not

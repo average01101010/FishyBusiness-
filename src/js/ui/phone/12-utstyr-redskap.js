@@ -78,7 +78,7 @@
       h.push('<h4 style="margin:12px 2px 6px">' + L('Klær til mannskapet', 'Clothes for the crew') + '</h4><p class="ph-note">' + L('Nå: effektiv temperatur ' + Math.round(effTemp(H)) + ' °C, fisket går ' + Math.round(cp * 100) + ' % tregere. Alle om bord trenger sine egne.', 'Now: effective temperature ' + Math.round(effTemp(H)) + ' °C, fishing ' + Math.round(cp * 100) + '% slower. Everyone aboard needs their own.') + '</p>');
       for (const k of ['olje', 'varme']){ const C = CLOTHES[k], have = c[k] || 0;
         h.push(itemCard({k, name:C[S.lang], sub:Math.min(have, people) + ' / ' + people, price:C.price, have:have >= people ? L('Alle om bord har', 'Everyone aboard has one') : '', btns:have >= people ? '' : '<button class="ph-btn p" data-pa="cloth" data-k="' + k + '">' + L('Kjøp én', 'Buy one') + '</button>'})); } }
-    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p>' + (tiersAboard ? '<p class="ph-note">' + L('Trinnene kjøpes under Redskap.', 'The tiers are bought under Gear.') + '</p>' : '') + '</div>');
+    if (aboard.length) h.push('<div class="ph-card ic-aboard"><h4>' + L('Om bord', 'Aboard') + '</h4><p>' + aboard.join(' · ') + '</p>' + (tiersAboard ? '<p class="ph-note">' + L('Trinnene kjøpes under Fiskeutstyr.', 'The tiers are bought under Tackle.') + '</p>' : '') + '</div>');
     if (nofit.length) h.push('<details class="ph-card ic-nofit"><summary>' + L('Passer ikke «' + S.boatName + '»', 'Does not suit the «' + S.boatName + '»') + ' (' + nofit.length + ')</summary><p>' + nofit.join(' · ') + '</p></details>');
     h.push('</div>'); return h.join('');
   }
