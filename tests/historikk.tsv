@@ -3736,3 +3736,7 @@
 2026-11-13 08:10	ccr-013bxxid-n7rest	3d26e3c+	npctest	OK	9	lite	samtidig	
 2026-11-13 08:11	ccr-013bxxid-n7rest	3d26e3c+	trip2	OK	38	lite	samtidig	
 2026-11-13 08:12	ccr-013bxxid-n7rest	3d26e3c+	kaiover	OK	125	lite	samtidig	
+2026-11-13 09:31	plan/2026-11-13-117	0fb5ab8f	boottest	OK	33	lite	samtidig	
+2026-11-13 09:31	plan/2026-11-13-117	0fb5ab8f	trip2	OK	35	lite	samtidig	
+2026-11-13 09:32	plan/2026-11-13-117	0fb5ab8f	docktest	OK	60	lite	samtidig	
+2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
