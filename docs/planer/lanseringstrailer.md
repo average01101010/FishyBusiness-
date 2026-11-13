@@ -35,20 +35,40 @@ Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi
 
 | Tid (s) | Del | Bilde | Tekst (engelsk utgave) | Tekst (norsk utgave) |
 |---|---|---|---|---|
-| 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys | A fishing game with the whole Norwegian coast and the sea beyond | Et fiskespill med hele norskekysten og havet utenfor |
+| 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys: den eldre kystbåten mot midnattssola, hvalen blåser | A fishing game with the whole Norwegian coast and the sea beyond | Et fiskespill med hele norskekysten og havet utenfor |
 | 2,5–7,4 | Hva | Naustet, trebåten i grålysning | You start with your father's old wooden boat | Du begynner med fars gamle trebåt |
 | 7,4–12,4 | Hva | Trebåten på feltet. **Grensesnittet tones inn over samme bilde**, redskapet dras, fisk om bord | You do the fishing | Du fisker selv |
 | 12,4–17,4 | Hva | Mottaket, lossing, sluttseddelen | Land it. Sell it. Buy bigger. | Lever. Tjen. Kjøp større. |
-| 17,4–22,4 | Hvor stort | Kartet zoomer ut fra båten: kysten, så Svalbard, Færøyene og Grønland | From Hvaler to Kirkenes. And beyond. | Fra Hvaler til Kirkenes. Og videre. |
-| 22,4–27,4 | Mulighetene | **Båtstigen som match cut:** samme vinkel, en større båt på hvert slag | – | – |
+| 17,4–19,9 | Hvor stort | Kartet zoomer ut fra båten: kysten, så Svalbard, Færøyene og Grønland | From Hvaler to Kirkenes. And beyond. | Fra Hvaler til Kirkenes. Og videre. |
+| 19,9–27,4 | Hvor stort og mulighetene | **Båtstigen som match cut,** to slag per båt, samme vinkel, og hver båt på sitt sted og i sin årstid: trebåten (Senja, høst), plastsnekka (Reine, vintersol), havsjarken (Vestfjorden under Lofotfisket), sjarken på 36 fot (midnattssol), den nye hurtigsjarken (kuling ved Vardø), den eldre kystbåten (nordlys) | stedsstempler | stedsstempler |
 | 27,4–32,4 | Mulighetene | Droppet: snøkrabbefartøyet ved Svalbard i lav sol, ett langt tak | stedsstempel | stedsstempel |
-| 32,4–41,1 | Verden | På slag: Lofoten i vintersol, hvalen i midnattssol, kuling ved Vardø, nordlys, kystnotbåten under Gisundbrua, garn, line og teiner innimellom | stedsstempler; Nets. Longlines. Pots. | stedsstempler; Garn. Line. Teiner. |
+| 32,4–37,4 | Mulighetene | Kystnotbåten under Gisundbrua i midnattssol, det andre lange taket | stempel etter V5 | stempel etter V5 |
+| 37,4–41,1 | Mulighetene | Garn, line og teiner på slag, på båtene fra rollelista | Nets. Longlines. Pots. | Garn. Line. Teiner. |
 | 41,1–44,9 | Mulighetene | Mannskapet på dekk, dine båter, andre spilleres båter | Your crew. Your fleet. One shared ocean. | Eget mannskap. Eget rederi. Ett felles hav. |
 | 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free in your browser. detstorebla.no | Spill gratis i nettleseren. detstorebla.no |
 
 Teksten er et utkast. Hver påstand sjekkes mot spillet i T1 før den låses (del 7).
 
-**Kystnotbåten** kan ikke kjøpes (del 3), så hun er med som en båt i verden, i sitt beste klipp (under Gisundbrua), uten tekst som sier at hun kan bli din. **Snøkrabbefartøyet** kan kjøpes og får droppet. Skal kystnotbåten vises som spillerens egen, må hun låses opp først; det er Jonas' valg.
+### Rollelista (Jonas 13.11.2026)
+
+Jonas: «Andre båter jeg synes er ekspesjonelt pene er, den gamle trebåten, den eldre kystbåten, havsjark 35, ny hurtigsjark 10.99, sjark 36fot med bakk og ly, plastsnekke 26 fot. De svakeste modellene er plastsjark 31 fot og kystbåt 14,99.»
+
+| Båt | Rolle |
+|---|---|
+| Trebåten (`trebat`) | Hovedrollen i første del: naustet, fisket, mottaket. Første trinn i stigen. |
+| Plastsnekke 26 fot (`snekke`), havsjark 35 (`sjark`), sjark 36 fot med bakk og ly (`breisjark`), ny hurtigsjark 10,99 (`sjarkny`) | Stigen, hver på sitt sted og i sin årstid, og redskapsklippene. |
+| Eldre kystbåt 21 m (`kyst21`) | Kroken (hvalen i midnattssol) og siste trinn i stigen før droppet. |
+| Snøkrabbefartøyet (`snokrabbe`) | Droppet. Kan kjøpes i dag. |
+| Kystnotbåten 38,55 m (`ringnot38`) | Det andre lange taket etter droppet. Se under. |
+| Plastsjark 31 fot (`plastsjark`), kystbåt 14,99 (`kyst15`) | Ikke i bildet. m2 hadde `kyst15` i hvalklippet og i byene; de klippene får andre båter. |
+
+Den brukte hurtigsjarken, skiffen og autolineren er reserver. Havbåtene som er låst og ikke nevnt (frysetråleren, ringnotbåten på 75 m), vises ikke.
+
+### Kystnotbåten er en av stjernene
+
+Jonas 13.11.2026: «Jeg tenker det er viktig å bevist bruke ringnotbåten i traileren fordi den er en av "end-game"-stjernene i spillet sammen med krabbebåten, så det er viktig å vise dem også, spesielt siden mange fiskere jobber på slike båter og kan relatere til det og kanskje ønsker å komme til det stadiet selv en dag.»
+
+Hun får derfor sitt eget lange tak rett etter droppet, i klippet der hun er best (under Gisundbrua i midnattssol). Det som er sant om henne i spillet i dag: hun står i Båthandelen med «Kan ikke kjøpes ennå» (`ui/phone/10-fartoy.js`), ringnottillatelsen finnes i kvotedataene (`core/03d-quota.js`), men spilleren har ikke ringnot som redskap (`GEAR` i `core/10-gear.js` har garn, line, teine, autoline og snøkrabbeteine). Å låse henne opp er altså ikke en bryter; det er havsteget etter lansering. Hvordan filmen sier det, er valg V5.
 
 ## 4b. Stilen
 
@@ -103,10 +123,11 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 ## 8. Valgene (Jonas 13.11.2026)
 
 - **V1 A:** to–tre korte spilløyeblikk med grensesnitt, resten rent. Bare det som holder i prøvebildene i T1.
-- **V2 A:** droppet går til en båt spilleren kan eie. Jonas: «gjerne ringnotbåten og krabbebåten da disse er jobbet mye med og har veldig gode modeller.» Snøkrabbefartøyet får droppet; kystnotbåten er med som båt i verden, fordi hun er låst (del 4).
+- **V2 A:** droppet går til en båt spilleren kan eie. Jonas: «gjerne ringnotbåten og krabbebåten da disse er jobbet mye med og har veldig gode modeller.» Snøkrabbefartøyet får droppet, og kystnotbåten får det andre lange taket rett etter, som en av de to stjernene (del 4, «Kystnotbåten er en av stjernene»).
 - **V3 A:** «Fjord at Dawn», 50 s.
 - **V4:** «i løpet av de nærmeste dagene», ingen fast dag. Filmingen venter på Jonas' «klar».
-- **Språk:** Jonas har én TikTok-konto for Norge og én for utlandet, og traileren kan være på engelsk; Norge er fortsatt målgruppen. Teksten på skjermen er det eneste språket i filmen, så den lages i to utgaver av de samme klippene: engelsk til den internasjonale kontoen og norsk til den norske. Stedsnavnene og «Det Store Blå» er like i begge. Vil Jonas bare ha én, blir det den engelske.
+- **Språk:** to utgaver av de samme klippene, én norsk og én engelsk (Jonas 13.11.2026: «Du kan lage en norsk og en engelsk»). Stedsnavnene og «Det Store Blå» er like i begge.
+- **V5 (åpent, Jonas): hva står det på kystnotbåten?** **A (anbefalt, og det planen bygger på til han svarer):** et lite stempel i samme stil som stedsstemplene, «Ringnot · kommer» / «Purse seiner · coming soon». Det er sant, det gir fiskerne som jobber på slike båter en grunn til å følge kontoen, og det svarer på spørsmålet før det kommer i kommentarfeltet. B: ingen tekst på henne, og en festet kommentar som sier at hun kommer. C: hun vises i Båthandelen med spillets egen «Kan ikke kjøpes ennå». Valget kan snus helt til sammensettingen: det er ett stempel i `titles.py`.
 
 ## 9. Hva planen ikke gjør
 
@@ -119,4 +140,4 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 
 ## 10. Status
 
-13.11.2026: planen skrevet, valgene tatt, stilen lagt til (del 4b) med stilarket `trailer/stil/stilark-1.jpg`. Neste er T1 (faktasjekk og prøvebilder), som kan gjøres uten GPU. T3 venter på Jonas' «klar».
+13.11.2026: planen skrevet, valgene tatt, stilen lagt til (del 4b) med stilarket `trailer/stil/stilark-1.jpg`. Rollelista og kystnotbåtens plass lagt inn samme dag; V5 er åpent. Neste er T1 (faktasjekk og prøvebilder), som kan gjøres uten GPU. T3 venter på Jonas' «klar».
