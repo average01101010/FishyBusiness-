@@ -39,8 +39,9 @@ async def main():
         check(s0['haul'] is None and not s0['tank'], 'uten haler og krabbekar står ingen av dem på dekk', s0)
         await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_selector('#drawerBody #ic-garnhaler')
         btns = await pg.evaluate("[...document.querySelectorAll('#drawerBody [data-pa=eqtry]')].map(b => b.dataset.k)")
-        check({'garnhaler', 'linehaler', 'jukse'} <= set(btns), 'kortene for halerne og juksamaskinen har «Prøv på båten»', btns)
-        check({'linesetter', 'garnrenne'} <= set(btns) and s0['stern'] is None, 'kortene for linesetteren og garnrenna har «Prøv på båten» (OPP5), og ingenting står over hekken', [btns, s0['stern']])
+        check({'garnhaler', 'linehaler', 'jukse'} <= set(btns), 'kortene for halerne og juksamaskinen har «Se den på båten»', btns)
+        # (D3, 13.11.2026: the try-on does not stand on what cannot be bought; the setter and the chute need their hauler, buyGate)
+        check(not ({'linesetter', 'garnrenne'} & set(btns)) and s0['stern'] is None, 'uten haler har linesetteren og garnrenna ikke «Se den på båten» (de kan ikke kjøpes), og ingenting står over hekken', [btns, s0['stern']])
 
         # trying the net hauler: drawn on the boat, the camera round her, nothing paid, the equipment untouched
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=garnhaler]').click()"); await frames(pg)
@@ -66,6 +67,7 @@ async def main():
         o = await pg.evaluate(ST)
         check(o['trying'] is None and not o['painting'] and not o['tank'], '«Ta av igjen» tar det av og kameraet tilbake', o)
         # the line setter and the net chute over the stern (OPP5): tried one at a time, nothing paid, off again
+        await pg.evaluate("S.equip.linehaler = true; S.equip.garnhaler = true; DOCK.close(); DOCK.open('utstyrb')"); await pg.wait_for_selector('#drawerBody [data-pa=eqtry][data-k=linesetter]'); await frames(pg)   # (with their haulers aboard they can be bought, and tried)
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=linesetter]').click()"); await frames(pg)
         ls = await pg.evaluate(ST)
         check(ls['trying'] == 'linesetter' and ls['painting'] and ls['stern'] == 'linesetter' and not ls['eq'].get('linesetter') and ls['cash'] == s0['cash'], 'linesetteren prøves: den står over hekken, ingenting er betalt', ls)
@@ -78,6 +80,7 @@ async def main():
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=garnrenne]').click()"); await frames(pg)
         g0 = await pg.evaluate(ST)
         check(g0['trying'] is None and g0['stern'] is None, '«Ta av igjen» tar renna av hekken', g0)
+        await pg.evaluate("delete S.equip.linehaler; delete S.equip.garnhaler; DOCK.close(); DOCK.open('utstyrb')"); await pg.wait_for_selector('#drawerBody [data-pa=eqtry][data-k=linehaler]'); await frames(pg)
         # leaving the page takes it off too
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=eqtry][data-k=linehaler]').click()"); await frames(pg)
         a = await pg.evaluate("G3.trying")

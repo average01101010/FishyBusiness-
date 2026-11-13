@@ -2786,15 +2786,18 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
 
 - **1** sailors' tattoos: the flash and the seated sailor they go on
 
-## `src/js/ui/05a-itemcard.js` (156 linjer)
+## `src/js/ui/05a-itemcard.js` (182 linjer)
 
 The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 
 - **1** The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **7** the pictures: 64 × 40, a light sea line under the things that float or stand on deck
-- **76** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
-  - 116 `icTierLine(k, lv)`
-  - 144 `itemCard(o)`
+- **75** the painted pictures (13.11.2026, Jonas: «skikkelige bilder til alt som selges», gouache, everything but the boats): one atlas,
+  - 86 `icAtlas()`
+  - 95 `icPic(k)`
+- **102** what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
+  - 142 `icTierLine(k, lv)`
+  - 170 `itemCard(o)`
 
 ## `src/js/ui/phone/00-shell.js` (69 linjer)
 
@@ -2899,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1638 linjer)
+## `src/js/ui/phone/07-patch.js` (1649 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1626 `patch()`
+  - 1637 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -2940,7 +2943,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 134 `redning()`
 - **152** vessels: my vessel overview and the market
 
-## `src/js/ui/phone/10-fartoy.js` (341 linjer)
+## `src/js/ui/phone/10-fartoy.js` (346 linjer)
 
   - 14 `goals()`
   - 39 `goalsCard()`
@@ -2955,10 +2958,10 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
 - **189** the boat market: tabs for the open group, boats with a closed-group right, the coastal fleet over 11 m and the ocean fleet;
   - 198 `mkCard(k, O)`
   - 202 `market()`
-  - 229 `specSecs(k, O)`
-  - 253 `sheet(k, O)`
-  - 305 `fartoy(tab0)`
-- **340** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
+  - 234 `specSecs(k, O)`
+  - 258 `sheet(k, O)`
+  - 310 `fartoy(tab0)`
+- **345** the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)
 
 ## `src/js/ui/phone/11-rederi.js` (88 linjer)
 
@@ -2967,19 +2970,19 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 45 `rederi()`
 - **87** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (251 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (260 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
   - 2 `utstyr(mode)`
-- **76** gear: in the sea, aboard (baiting and mending), and the shop
-- **77** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
-- **82** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
-  - 86 `lineCard(lk, o)`
-  - 111 `egnChooser(lk, o)`
-  - 137 `autoCard()`
-  - 149 `careAboard(inPort, p)`
-  - 176 `redskap(tab0)`
+- **85** gear: in the sea, aboard (baiting and mending), and the shop
+- **86** gear care (core/10b-gearcare.js): the condition of the gear aboard, and what the crew can do about it in port
+- **91** a line kind as it stands (Jonas 20.10.2026, tilbakemelding #74: «hva båten har slags fiskeredskaper ombord og hva disse eventuelt er
+  - 95 `lineCard(lk, o)`
+  - 120 `egnChooser(lk, o)`
+  - 146 `autoCard()`
+  - 158 `careAboard(inPort, p)`
+  - 185 `redskap(tab0)`
 
 ## `src/js/ui/phone/13-mannskap-bank-meld.js` (219 linjer)
 
@@ -3005,7 +3008,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **189** actions
   - 196 `switchVessel(k)`
 
-## `src/js/ui/phone/13b-nettet.js` (148 linjer)
+## `src/js/ui/phone/13b-nettet.js` (158 linjer)
 
 Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.md, Jonas 30.10.2026)
 
@@ -3016,15 +3019,15 @@ Nettet and the tackle shop on the quay (M2 in docs/planer/butikker-og-sponsorer.
   - 12 `keeperLine(pt)`
 - **26** what the boat needs now, from her own state: each a chip that takes you to its card
   - 27 `buyList()`
-  - 42 `shopTop(cur)`
-- **54** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
-  - 58 `equipTry(k)`
-  - 60 `equipBuy(k)`
-  - 84 `clothBuy(k)`
-  - 91 `pickTake(o)`
-- **103** the Net: the bookmarks, and the web shop
-  - 105 `nett()`
-  - 117 `netShop()`
+  - 44 `shopTop(cur)`
+- **64** fetching a reservation: the same purchase as over the counter; null when it went, else why not (a string)
+  - 68 `equipTry(k)`
+  - 70 `equipBuy(k)`
+  - 94 `clothBuy(k)`
+  - 101 `pickTake(o)`
+- **113** the Net: the bookmarks, and the web shop
+  - 115 `nett()`
+  - 127 `netShop()`
 
 ## `src/js/ui/phone/13c-megler.js` (256 linjer)
 
@@ -3486,15 +3489,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (576 linjer)
+## `src/js/ui/10c-dock.js` (584 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **411** the drawer
-- **482** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
-  - 549 `renderActs()`
-  - 562 `showroomTick()`
+- **412** the drawer
+- **490** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
+  - 557 `renderActs()`
+  - 570 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -4465,7 +4468,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 627 `peerFlagTex(n)`
   - 639 `drawPeerFlags(kit, VP, t, H)`
 
-## `src/js/view3d/14-sea.js` (724 linjer)
+## `src/js/view3d/14-sea.js` (726 linjer)
 
 ---------- sea ----------
 
@@ -4479,51 +4482,51 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 76 `waveDTStep(dt)`
   - 82 `updateWaves(dt, H)`
 - **164** the near field: the short sea rides with the boat
-  - 173 `nfStep()`
-  - 215 `nfShift(ex, ez)`
-- **225** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 232 `wakeTrack(x, z, fx, fz, ds)`
-  - 251 `wakeTU(u, ox, oz)`
-  - 252 `updateWake()`
-  - 278 `wakeHFast(x, z)`
-- **291** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 305 `foamFree()`
-  - 306 `foamInit()`
-  - 324 `wavePh()`
-  - 334 `foamStep(dt, t)`
-  - 402 `foamSplash(Dx, Dz)`
-  - 423 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 463 `foamBind(u, t)`
-  - 480 `grpAt(i, c, x, z, t)`
-- **489** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 498 `brvE(x, z)`
-  - 499 `brvStep()`
-  - 517 `brvSet(u)`
-- **549** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 564 `shoalPrep(J)`
-  - 565 `shoalCell(J, k, land, dd)`
-  - 569 `shoalSweep(J, end)`
-  - 583 `shoalPut(J)`
-  - 589 `shTex(u, v, out)`
-  - 596 `shoalAt(x, z)`
-  - 610 `shW(c, SH, out)`
-  - 616 `surfK(h)`
-  - 618 `surfStep(t)`
-  - 624 `shoalBind(u, t)`
-- **632** the sea state over the near terrain and the whole map
-  - 639 `ssLevel(n, unit)`
-  - 641 `ssRect(L)`
-  - 642 `ssWork(L, until)`
-  - 665 `ssStep(rdt)`
-  - 667 `ssBlend(L)`
-  - 669 `ssTex(L, x, z, out)`
-  - 676 `ssAt(x, z)`
-  - 686 `seaQ(S, ren)`
-  - 689 `seaDisp(x, z, t, S, fade, SH)`
-  - 713 `seaFade(x, z)`
-  - 714 `seaH(x, z, t)`
-  - 720 `seaHFast(x, z, t)`
-  - 722 `shoalHere(x, z)`
+  - 175 `nfStep()`
+  - 217 `nfShift(ex, ez)`
+- **227** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 234 `wakeTrack(x, z, fx, fz, ds)`
+  - 253 `wakeTU(u, ox, oz)`
+  - 254 `updateWake()`
+  - 280 `wakeHFast(x, z)`
+- **293** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 307 `foamFree()`
+  - 308 `foamInit()`
+  - 326 `wavePh()`
+  - 336 `foamStep(dt, t)`
+  - 404 `foamSplash(Dx, Dz)`
+  - 425 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 465 `foamBind(u, t)`
+  - 482 `grpAt(i, c, x, z, t)`
+- **491** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 500 `brvE(x, z)`
+  - 501 `brvStep()`
+  - 519 `brvSet(u)`
+- **551** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 566 `shoalPrep(J)`
+  - 567 `shoalCell(J, k, land, dd)`
+  - 571 `shoalSweep(J, end)`
+  - 585 `shoalPut(J)`
+  - 591 `shTex(u, v, out)`
+  - 598 `shoalAt(x, z)`
+  - 612 `shW(c, SH, out)`
+  - 618 `surfK(h)`
+  - 620 `surfStep(t)`
+  - 626 `shoalBind(u, t)`
+- **634** the sea state over the near terrain and the whole map
+  - 641 `ssLevel(n, unit)`
+  - 643 `ssRect(L)`
+  - 644 `ssWork(L, until)`
+  - 667 `ssStep(rdt)`
+  - 669 `ssBlend(L)`
+  - 671 `ssTex(L, x, z, out)`
+  - 678 `ssAt(x, z)`
+  - 688 `seaQ(S, ren)`
+  - 691 `seaDisp(x, z, t, S, fade, SH)`
+  - 715 `seaFade(x, z)`
+  - 716 `seaH(x, z, t)`
+  - 722 `seaHFast(x, z, t)`
+  - 724 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (271 linjer)
 

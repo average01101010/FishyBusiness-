@@ -12,7 +12,7 @@ def check(ok, what, extra=''):
 
 
 CARDS = """(() => { const cs = [...document.querySelectorAll('#drawerBody .ph-card.ic')];
-  return cs.map(c => ({k:c.dataset.ic, pic:!!c.querySelector('.ic-pic svg'), name:(c.querySelector('h4') || {}).textContent || '', fx:(c.querySelector('.ic-fx') || {}).textContent || '',
+  return cs.map(c => ({k:c.dataset.ic, pic:!!c.querySelector('.ic-pic svg, .ic-pic .ic-img'), img:!!c.querySelector('.ic-pic .ic-img'), name:(c.querySelector('h4') || {}).textContent || '', fx:(c.querySelector('.ic-fx') || {}).textContent || '',
     price:(c.querySelector('.ic-pr b') || {}).textContent || '', more:!!c.querySelector('.ic-more'), btns:c.querySelectorAll('.ic-btns .ph-btn').length, have:(c.querySelector('.ic-have') || {}).textContent || ''})); })()"""
 # anything wider than the drawer, and buttons under the touch size
 FIT = """(() => { const d = document.getElementById('drawerBody'), r = d.getBoundingClientRect();
@@ -29,6 +29,9 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         J = lambda js: pg.evaluate("JSON.stringify(" + js + ")")
+        # the painted pictures (13.11.2026): the atlas comes with the late data; the cards draw it once it is in
+        try: await pg.wait_for_function("() => { const e = document.getElementById('pic-items'); return !!e && !e.dataset.src; }", timeout=60000)
+        except Exception: pass
         await pg.evaluate("S.cash = 500000; S.boat.gear = false; S.boat.status = 'port'; S.boat.type = 'snekke'; applyVessel(); S.equip.garnhaler = true; S.crew = S.crew || []; renderActs()")
 
         # the tackle shop in Finnsnes: the hand jig and the halibut gear, then the gear
@@ -36,6 +39,7 @@ async def main():
         cs = json.loads(await J(CARDS)); ks = [c['k'] for c in cs]
         check(ks[:2] == ['jig', 'kgear'] and all(k in ks for k in ['net', 'line', 'pot', 'kit', 'hooks']), 'Fiskeutstyr: juksa, kveiteutstyr, garn, line, teiner, blåser og kroker er varekort', ks)
         check(all(c['pic'] and c['name'] and c['price'] and c['fx'] for c in cs), 'hvert kort har bilde, navn, pris og én linje med hva det gjør', [c for c in cs if not (c['pic'] and c['name'] and c['price'] and c['fx'])])
+        check(all(c['img'] for c in cs), 'hvert kort har det malte bildet fra arket (pic-items)', [c['k'] for c in cs if not c['img']])
         check(all(c['more'] for c in cs), 'hvert kort har «Mer» til Håndboka', [c['k'] for c in cs if not c['more']])
         net = next(c for c in cs if c['k'] == 'net')
         check(net['btns'] == 6 and '156 mm' in net['fx'], 'garnkortet har de seks garnvalgene og maskeviddene i linja', net)
@@ -68,12 +72,13 @@ async def main():
         # electronics and haulers: the equipment and the clothes are cards too
         await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
         cs = json.loads(await J(CARDS)); ks = [c['k'] for c in cs]
-        check(all(k in ks for k in ['linehaler', 'vhf', 'olje', 'varme']) and all(c['pic'] and c['price'] for c in cs), 'Elektronikk og haler: utstyret og klærne er varekort med bilde og pris', ks)
+        check(all(k in ks for k in ['linehaler', 'ais', 'olje', 'varme']) and all(c['pic'] and c['price'] for c in cs), 'Elektronikk og haler: utstyret og klærne er varekort med bilde og pris', ks)
+        check(all(c['img'] for c in cs), 'Elektronikk og haler: hvert kort har det malte bildet', [c['k'] for c in cs if not c['img']])
         lh = next(c for c in cs if c['k'] == 'linehaler')
         check('raskere enn for hånd' in lh['fx'], 'linehaleren sier hvor mye raskere den trekker enn for hånd', lh)
-        await pg.evaluate("document.querySelector('#drawerBody [data-pa=equip][data-k=vhf]').click()"); await pg.wait_for_timeout(300)
-        r = json.loads(await J("{job:(S.jobs || []).some(j => j.kind === 'fit' && j.k === 'vhf'), have:(document.querySelector('#drawerBody [data-ic=vhf] .ic-have') || {}).textContent}"))
-        check(r['job'] and r['have'] == 'Til montering', 'kjøpt utstyr står «Til montering» på kortet', r)
+        await pg.evaluate("document.querySelector('#drawerBody [data-pa=equip][data-k=ais]').click()"); await pg.wait_for_timeout(300)
+        r = json.loads(await J("{job:(S.jobs || []).some(j => j.kind === 'fit' && j.k === 'ais'), have:(document.querySelector('#drawerBody [data-ic=ais] .ic-have') || {}).textContent}"))
+        check(r['job'] and str(r['have']).startswith('Til montering'), 'kjøpt utstyr står «Til montering» på kortet', r)
         await pg.screenshot(path='itemcard_utstyr_liggende.png')
 
         # ice and bait at the plant in Botnhamn
