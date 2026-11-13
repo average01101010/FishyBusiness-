@@ -751,7 +751,7 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
 - **159** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
   - 162 `kmBuyWhy(item, to, kr0)`
 
-## `src/js/core/03k-hav-fft.js` (150 linjer)
+## `src/js/core/03k-hav-fft.js` (153 linjer)
 
 ---------- the short sea as a wave field: FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -764,9 +764,9 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
   - 53 `hfft1(p, re, im, o, st)`
   - 62 `hfft2(p, re, im)`
   - 68 `hfftSpec(T, P)`
-  - 95 `hfftFrame(T, t, out, W, outD)`
-  - 122 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false)`
-  - 141 `hfftMips(out, N)`
+  - 98 `hfftFrame(T, t, out, W, outD)`
+  - 125 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false)`
+  - 144 `hfftMips(out, N)`
 
 ## `src/js/core/04-crew.js` (735 linjer)
 
@@ -2899,12 +2899,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1632 linjer)
+## `src/js/ui/phone/07-patch.js` (1638 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1620 `patch()`
+  - 1626 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3845,7 +3845,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 44 `wdWhere()`
   - 51 `wdBeat(off)`
 
-## `src/js/vessel3d.js` (1705 linjer)
+## `src/js/vessel3d.js` (1724 linjer)
 
 - **2** VESSEL MODELS
   - 7 `VB()`
@@ -3908,91 +3908,100 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 641 `livKey(liv)`
   - 643 `livGeo(liv)`
   - 648 `livStr(b)`
-  - 660 `livPen(s)`
-  - 662 `livMark(s)`
-  - 663 `livParse(s, type)`
-- **669** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
-  - 673 `topsides(type)`
-  - 691 `designLines(TS, liv)`
-  - 700 `glbDesign(type, part, liv)`
-  - 734 `designFits(type, k)`
-  - 741 `kitLiv(liv)`
-- **743** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
-- **792** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
-  - 803 `logoCanvas(cv, L, img)`
-  - 819 `logoStrips(type)`
-  - 840 `stripBare(type, st)`
-  - 855 `logoStr(L)`
-  - 856 `logoParse(s)`
-  - 860 `flagCanvas(cv, code, shape, logo)`
-  - 872 `flagOf(L)`
-- **873** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
-  - 882 `hullTris(type)`
-  - 899 `sideStrip(type, frac, hMax, aspect, drop, band)`
-  - 939 `nameStrips(type)`
-  - 975 `stripProud(type, st)`
-  - 998 `stripPaint(type, st)`
-  - 1019 `markStrips(type)`
-  - 1032 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
-  - 1057 `callStrips(type)`
-  - 1063 `callRGB(type, liv)`
-  - 1066 `anchorLen(bw)`
-  - 1069 `markRGB(type, liv)`
-  - 1078 `hullRGB(type, liv)`
-- **1088** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
-  - 1099 `facingTris(P, dir, keep)`
-  - 1114 `rayZ(T, x, y, dir, za, zb)`
-  - 1125 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
-  - 1136 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
-  - 1147 `halfWidth(T, y, z0, zw, dir, wmax)`
-  - 1158 `houseFront(type, P, Gl, V)`
-  - 1201 `transom(type, P, V)`
-  - 1236 `namePlaces(type)`
-  - 1254 `placeRGB(type, p, liv)`
-  - 1262 `nameInkLight(rgb)`
-  - 1266 `npcKit(L, B)`
-  - 1270 `npcModel(type, lod, liv)`
-  - 1272 `personVB(B, x, y, z, seated, hands, suit, kit)`
-- **1284** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
-  - 1303 `vestKit(K)`
-  - 1318 `wkPart(name, kit)`
-  - 1328 `wkPut(B, o, ax, s, at)`
-  - 1338 `wkLimb(B, o, A, E, r)`
-  - 1345 `figureVB(B, x, y, z, seated, hands, kit)`
-  - 1367 `vesselSVG(type, w, h)`
-- **1405** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
-  - 1412 `deckMap(type)`
-  - 1557 `deckPass(M, k, q)`
-  - 1562 `passLine(M, A, B)`
-  - 1564 `linkPass(M, k, q)`
-  - 1568 `deckComp(M)`
-  - 1577 `deckPath(M, a, b)`
-- **1608** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
-  - 1621 `lanterns(G, V, st)`
-  - 1664 `deckPoints(type)`
+  - 663 `livPen(s)`
+  - 665 `livMark(s)`
+  - 670 `livPaint(s)`
+  - 677 `livFlag(s)`
+  - 678 `livParse(s, type)`
+- **684** paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
+  - 688 `topsides(type)`
+  - 706 `designLines(TS, liv)`
+  - 715 `glbDesign(type, part, liv)`
+  - 749 `designFits(type, k)`
+  - 756 `kitLiv(liv)`
+- **758** flags (Malerverkstedet, 07.10.2026): the ensign at the stern as a picture, so any nation and shape can fly. Each flag is drawn here
+- **807** the company logo (Malerverkstedet, 07.10.2026): made here from a sign, initials and two colours, or the player's own picture
+  - 818 `logoCanvas(cv, L, img)`
+  - 834 `logoStrips(type)`
+  - 855 `stripBare(type, st)`
+  - 870 `logoStr(L)`
+  - 871 `logoParse(s)`
+  - 875 `flagCanvas(cv, code, shape, logo)`
+  - 887 `flagOf(L)`
+- **888** the boat's name on her hull (Jonas 07.10.2026: «Pass på at båtnavnet vises godt på skroget på alle båtene»): a strip on each side
+  - 897 `hullTris(type)`
+  - 914 `sideStrip(type, frac, hMax, aspect, drop, band)`
+  - 954 `nameStrips(type)`
+  - 990 `stripProud(type, st)`
+  - 1013 `stripPaint(type, st)`
+  - 1034 `markStrips(type)`
+  - 1047 `stripSearch(type, lh, first0, fr, PAINT, avoid)`
+  - 1072 `callStrips(type)`
+  - 1078 `callRGB(type, liv)`
+  - 1081 `anchorLen(bw)`
+  - 1084 `markRGB(type, liv)`
+  - 1093 `hullRGB(type, liv)`
+- **1103** where the name is painted (Jonas 04.11.2026: «Det som er mest vanlig er at navnet på båten skrives i blokkbokstaver på kanten av
+  - 1114 `facingTris(P, dir, keep)`
+  - 1129 `rayZ(T, x, y, dir, za, zb)`
+  - 1140 `crossStrip(T, xa, xb, y0, y1, z0, zw, dir, off)`
+  - 1151 `crossPaint(T, xa, xb, y0, y1, dir, za, zb)`
+  - 1162 `halfWidth(T, y, z0, zw, dir, wmax)`
+  - 1173 `houseFront(type, P, Gl, V)`
+  - 1216 `transom(type, P, V)`
+  - 1251 `namePlaces(type)`
+  - 1269 `placeRGB(type, p, liv)`
+  - 1277 `nameInkLight(rgb)`
+  - 1281 `npcKit(L, B)`
+  - 1287 `npcModelKey(type, lod, liv)`
+  - 1288 `npcModel(type, lod, liv)`
+  - 1289 `npcModelDrop(k)`
+  - 1291 `personVB(B, x, y, z, seated, hands, suit, kit)`
+- **1303** people from tools/harbour/arbeider.py: one body in parts, posed at its joints and painted per kit
+  - 1322 `vestKit(K)`
+  - 1337 `wkPart(name, kit)`
+  - 1347 `wkPut(B, o, ax, s, at)`
+  - 1357 `wkLimb(B, o, A, E, r)`
+  - 1364 `figureVB(B, x, y, z, seated, hands, kit)`
+  - 1386 `vesselSVG(type, w, h)`
+- **1424** the deck map: where people can walk on each type (the crew plan, docs/mannskap-plan.md)
+  - 1431 `deckMap(type)`
+  - 1576 `deckPass(M, k, q)`
+  - 1581 `passLine(M, A, B)`
+  - 1583 `linkPass(M, k, q)`
+  - 1587 `deckComp(M)`
+  - 1596 `deckPath(M, a, b)`
+- **1627** the lanterns after Sjøveisreglene (FOR-1975-12-01-5, rules 22–30, read on Lovdata 17.10.2026; docs/batplan.md del 11)
+  - 1640 `lanterns(G, V, st)`
+  - 1683 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (946 linjer)
+## `src/js/deckcrew.js` (1138 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
-- **41** the kit on the deck, out of the walking map
-- **108** the nets aboard in their tubs (F8, OB3): NET_TUB nets to a 460 l tub (assumed; a 27.5 m net is some 35-40 l in a heap), the
-- **139** setting the line and the nets (F4, F20, OB3; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig»): the
-- **251** the landing, the ice and the freight at the quay (OB4, 11.11.2026; docs/planer/om-bord.md F10, F11, F22, F23; Jonas 09.11.2026:
-- **329** the deck washed down, the packed lunch and the cold (OB14, 11.11.2026, docs/planer/om-bord.md F12-F14; the roles 'spyl',
-- **380** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
-- **443** what the game says: everyone's station this minute, and the boat's state
-- **466** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
-- **580** a free person: something to do for a while, by the weather, the hour and their nature
-- **586** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
-- **692** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
-- **707** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
-- **719** the agents follow the people aboard
-- **845** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
-- **865** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
-  - 930 `sternKit(vt)`
-  - 932 `moorSpots(G, sd)`
-  - 940 `npcCrewCtx(n, G)`
+- **44** the kit on the deck, out of the walking map
+- **111** the nets aboard in their tubs (F8, OB3): NET_TUB nets to a 460 l tub (assumed; a 27.5 m net is some 35-40 l in a heap), the
+- **142** setting the line and the nets (F4, F20, OB3; Jonas 09.11.2026: «at arbeidet ombord utføres på en så ekte måte som mulig»): the
+- **254** the landing, the ice and the freight at the quay (OB4, 11.11.2026; docs/planer/om-bord.md F10, F11, F22, F23; Jonas 09.11.2026:
+- **332** the deck washed down, the packed lunch and the cold (OB14, 11.11.2026, docs/planer/om-bord.md F12-F14; the roles 'spyl',
+- **383** where the work is on this deck: [x, z, heading, task] in the boat's frame (the heading as the view draws it: 0 forward, +pi/2 to starboard)
+- **446** what the game says: everyone's station this minute, and the boat's state
+- **469** the lines and the fenders round a quay (OB2, Jonas 09.11.2026; docs/planer/om-bord.md F1-F3)
+- **583** a free person: something to do for a while, by the weather, the hour and their nature
+- **589** no limb through a wall, the rail or anything else (Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger,
+- **695** the work at its place, clear of everything: at the rail the hands go to the rail's own top (a step back when it is close), at the
+- **710** a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre)
+- **722** the agents follow the people aboard
+- **849** the body on its way, clear of everything: the shoulders and the chest and back as upright lines; one that would go through a wall
+- **869** no way over the deck between two parts of it (fore and aft of the house on the big boats): through the house, out of sight for
+- **877** the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
+  - 1015 `sternKit(vt)`
+  - 1017 `moorSpots(G, sd)`
+  - 1025 `npcCrewCtx(n, G)`
+- **1031** the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
+  - 1064 `seaState()`
+  - 1068 `seaKnee(dref, dnow)`
+  - 1085 `seaLegs(s, inp)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -4015,7 +4024,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (891 linjer)
+## `src/js/view3d/01-shaders.js` (896 linjer)
 
 ---------- shaders ----------
 
@@ -4025,19 +4034,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **402** the boat's own foam, when she has way on
 - **410** where a slam and the spray land (F3b): four patches, fixed names
 - **412** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 779 `cloudStep(dt)`
-  - 786 `skyFrame(u, Hh, tn, bv)`
-  - 804 `glsl3(src, fs)`
-  - 817 `progStart(vs, fs, attrs, nm = '?')`
-  - 827 `progEnd(P)`
-  - 837 `program(vs, fs, attrs, nm = '?')`
-  - 839 `progWait(list)`
-  - 845 `programA(vs, fs, attrs, nm)`
-  - 846 `buf(data, target, usage)`
-  - 851 `airSet(u, terr)`
-  - 866 `sunT0()`
-  - 873 `attr(loc, b, size)`
-  - 889 `upload(pos, col, idx)`
+  - 784 `cloudStep(dt)`
+  - 791 `skyFrame(u, Hh, tn, bv)`
+  - 809 `glsl3(src, fs)`
+  - 822 `progStart(vs, fs, attrs, nm = '?')`
+  - 832 `progEnd(P)`
+  - 842 `program(vs, fs, attrs, nm = '?')`
+  - 844 `progWait(list)`
+  - 850 `programA(vs, fs, attrs, nm)`
+  - 851 `buf(data, target, usage)`
+  - 856 `airSet(u, terr)`
+  - 871 `sunT0()`
+  - 878 `attr(loc, b, size)`
+  - 894 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4208,7 +4217,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 256 `signUi(ok, M, F, VP, now)`
   - 270 `signTake()`
 
-## `src/js/view3d/08-plants.js` (505 linjer)
+## `src/js/view3d/08-plants.js` (566 linjer)
 
 ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
 
@@ -4225,10 +4234,16 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 136 `deckChill()`
   - 137 `hoodOf(col)`
   - 148 `coldLook(l)`
-  - 149 `drawWorker(P, st, eye, T, idx)`
-- **247** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
-- **350** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **453** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+- **149** the sea legs in the drawing (FB4, steg 120; deckcrew.js seaLegs and SJOBEIN): for someone on a deck at sea (st.sea: whose
+  - 157 `seaSet(sim, a, M)`
+  - 160 `deckN(M)`
+  - 161 `seaNow(st, h, y)`
+  - 172 `bootM(foot, h, n)`
+  - 177 `leanM(h, lr, lf)`
+  - 181 `drawWorker(P, st, eye, T, idx)`
+- **299** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
+- **402** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+- **514** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
 ## `src/js/view3d/09-landing-deck.js` (941 linjer)
 
@@ -4401,7 +4416,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 187 `handKit(t)`
   - 209 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (615 linjer)
+## `src/js/view3d/13-instruments.js` (663 linjer)
 
 ---------- the skiff's live instruments ----------
 
@@ -4444,7 +4459,11 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 571 `buildFlag()`
   - 583 `flagTex()`
   - 596 `mastTop(G)`
-  - 600 `updateFlag(t, appW)`
+  - 601 `clothInto(a, ph, appW)`
+  - 613 `clothStep(C, t, appW)`
+  - 614 `updateFlag(t, appW)`
+  - 627 `peerFlagTex(n)`
+  - 639 `drawPeerFlags(kit, VP, t, H)`
 
 ## `src/js/view3d/14-sea.js` (724 linjer)
 
@@ -4506,25 +4525,28 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 720 `seaHFast(x, z, t)`
   - 722 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (205 linjer)
+## `src/js/view3d/14b-fft.js` (271 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
 - **1** the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026)
   - 13 `fftWorker()`
   - 32 `fftOff(why)`
-  - 37 `fftInit()`
-  - 57 `fftParams(t)`
-  - 65 `fftGot(D)`
-  - 88 `fftKeep(a)`
-  - 95 `fftKeepS(bufs)`
-  - 104 `fftTrH(x, z, only2)`
-  - 122 `fftAt(x, z, lod)`
-  - 134 `fftA0()`
-  - 137 `fftSyncAt(tw)`
-  - 145 `fftStep(t)`
-  - 160 `fftBind(u, eye)`
-  - 194 `seaShared(u, t)`
+  - 38 `fftInit()`
+  - 59 `fftParams(t)`
+  - 81 `fftBlInit()`
+  - 98 `fftBlGot(tC)`
+  - 105 `fftBlend(now)`
+  - 122 `fftGot(D)`
+  - 148 `fftKeep(a)`
+  - 155 `fftKeepS(bufs)`
+  - 164 `fftTrH(x, z, only2)`
+  - 182 `fftAt(x, z, lod)`
+  - 194 `fftA0()`
+  - 197 `fftSyncAt(tw)`
+  - 205 `fftStep(t)`
+  - 226 `fftBind(u, eye)`
+  - 260 `seaShared(u, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
@@ -4724,7 +4746,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (522 linjer)
+## `src/js/view3d/20-trawl-seine.js` (548 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4738,32 +4760,33 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 69 `seineState(now)`
   - 79 `drawSeine(t, A, BMrel, VP, now, stO)`
   - 120 `drawDeckCrew(BMrel, eye, VP, t, G)`
-  - 184 `spHold(f)`
-  - 187 `deckWork(G)`
-  - 195 `drawHelmKit(BMrel, eye, G)`
-  - 207 `sailOf(t)`
-  - 208 `drawSail(t, M, set)`
-  - 212 `drawHatch(t, G, M, k)`
-  - 219 `shipCraneOf(t)`
-  - 220 `shipCraneAim(C, pose)`
-  - 227 `drawShipCrane(t, G, M, pose)`
-  - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 282 `npcGear(n)`
-  - 293 `npcGearT(n)`
-  - 307 `npcKB(t, lod, liv)`
-  - 310 `npcMesh(n, lod)`
-  - 324 `npcWarm(eye)`
-  - 339 `seineAnch(G)`
-  - 349 `npcClock(Hf)`
-  - 357 `npcHead(n, t)`
-  - 372 `npcFollow(n, t)`
-  - 391 `npcRev(n)`
-  - 400 `npcPhase(id)`
-  - 405 `kvDraw(n, eye, t)`
-  - 413 `kvRibDraw(n, R, G, M, eye, t)`
-  - 439 `npcFrame(H)`
-  - 440 `drawNPC(eye, t, H, VP)`
-  - 501 `npcCrewDraw(n, K, eye, t)`
+  - 190 `spHold(f)`
+  - 193 `deckWork(G)`
+  - 201 `drawHelmKit(BMrel, eye, G)`
+  - 213 `sailOf(t)`
+  - 214 `drawSail(t, M, set)`
+  - 218 `drawHatch(t, G, M, k)`
+  - 225 `shipCraneOf(t)`
+  - 226 `shipCraneAim(C, pose)`
+  - 233 `drawShipCrane(t, G, M, pose)`
+  - 243 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 288 `npcGear(n)`
+  - 300 `npcGearT(n)`
+  - 321 `npcKB(t, lod, liv)`
+  - 325 `nkbCap()`
+  - 333 `npcMesh(n, lod)`
+  - 347 `npcWarm(eye)`
+  - 364 `seineAnch(G)`
+  - 374 `npcClock(Hf)`
+  - 382 `npcHead(n, t)`
+  - 397 `npcFollow(n, t)`
+  - 416 `npcRev(n)`
+  - 425 `npcPhase(id)`
+  - 430 `kvDraw(n, eye, t)`
+  - 438 `kvRibDraw(n, R, G, M, eye, t)`
+  - 464 `npcFrame(H)`
+  - 465 `drawNPC(eye, t, H, VP)`
+  - 526 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
@@ -4864,7 +4887,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 614 `drawEffects(VP, eye, BM, dt, t)`
   - 747 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (231 linjer)
+## `src/js/view3d/25-controls.js` (263 linjer)
 
 ---------- controls ----------
 
@@ -4878,10 +4901,11 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 48 `showroom(type)`
   - 57 `show(on, auto)`
   - 73 `bench(ks, ns)`
-- **91** the profile (#prof, F1)
-  - 101 `pqInit()`
-  - 109 `pqPoll()`
-  - 118 `profBegin(rdt, j0)`
-  - 121 `profMark(k)`
-  - 125 `profEnd()`
-  - 135 `prof(sets)`
+  - 96 `benchPeers(n)`
+- **123** the profile (#prof, F1)
+  - 133 `pqInit()`
+  - 141 `pqPoll()`
+  - 150 `profBegin(rdt, j0)`
+  - 153 `profMark(k)`
+  - 157 `profEnd()`
+  - 167 `prof(sets)`

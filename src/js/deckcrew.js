@@ -31,6 +31,9 @@ function crewSim(src){
     if (Math.hypot(A0.in[0] - p[0], A0.in[2] - p[2]) > 0.2) D.h = Math.atan2(A0.in[0] - p[0], -(A0.in[2] - p[2])); }
   function setJig(spots){ ST.jig = spots || null; }
   function setRoll(r){ ST.roll = r || 0; }
+  // what the deck does (FB4; view3d/24-cinema.js each frame): her roll and pitch (rad), her height (m, the heave) and the sea's
+  // significant wave height (m). The roll slows the walk as before; the drawing reads the rest for the sea legs (ST.sea)
+  function setSea(roll, pitch, y, hs){ ST.roll = roll || 0; const q = ST.sea || (ST.sea = {}); q.roll = roll || 0; q.pitch = pitch || 0; q.y = y || 0; q.hs = hs || 0; }
   // the skipper sits at the wheel in the bridge view: someone else takes his place on deck (the view does not draw him from his own eyes)
   function setHelm(v){ ST.helmView = !!v; }
   // the lines and the fenders round a quay as the view has them (view3d/15-env-mooring.js moorTick, every frame): the spell, the side to
@@ -770,6 +773,7 @@ function crewSim(src){
   }
   // everyone straight to their place (the first frame, a change of boat, the clock run on)
   function snap(){ for (const a of A){ a.sub = null; a.put = a.relief = null; a.door = a.out = 0; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
+  const dropY = p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; };
   function tick(dt){
     if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); ST.clk += dt; const t = nowS();
     const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30 || (src && src.jump && src.jump()); ST.lastSim = S.t;
@@ -870,6 +874,87 @@ function crewSim(src){
     const nearest = (c, P) => { let best = -1, bd = Infinity; for (let k = 0; k < N; k++){ if (C[k] !== c) continue; const q = M.at(k), d = Math.hypot(q[0] - P[0], (q[1] - P[1]) * 2, q[2] - P[2]); if (d < bd){ bd = d; best = k; } } return best; };
     const ex = door >= 0 && C[door] === ca ? door : nearest(ca, M.at(to)), en = door >= 0 && C[door] === cb ? door : nearest(cb, M.at(ex)), E = M.at(ex), F = M.at(en);
     return [ex, en, 1 + (Math.hypot(F[0] - E[0], F[2] - E[2]) + Math.abs(F[1] - E[1]) * 2) / WALK]; }
+  // ---- the sea legs' room where someone stands (FB4; seaLegs' room, rail and stepOk). Someone upright in the world on a deck that
+  // heels is, seen from the boat, leaning to her high side: at 15° the hips are 0.3 m and the head 0.45 m off the line square to the
+  // deck through the feet. With a wall, the rail or a table on that side there is no room for it, and he stands square to the deck
+  // there instead, as one braced against it does. The room to each side is found against the model once at the place (kept by the
+  // place and the heading): the largest share (0, 0.25, 0.5, 0.75 or 1; every smaller one clear too) of standing upright at CLIP (15°) that puts none of the
+  // body's lines through anything; and each foot at its widest (0 or 1). Walking, the body is in the middle of the way and unclip
+  // keeps it off things: all the room.
+  const SEAWALK = {r:[1, 1], f:[1, 1], w:[1, 1]};
+  // (where he stands at his place: the cell and how far off it the place has him, not the way there as it blends in; so the room is found once a place)
+  const SEAR = new Map(), seaAt = a => { const g = a.fake ? null : holds(a), o = (g && g.off) || [0, 0], x = a.x + o[0], z = a.z + o[1], h = g && g.h != null ? g.h : a.h,   // (the heading the place has him at, not the turn to it: one key a place)
+    F = [Math.sin(h), -Math.cos(h)], Rv = [Math.cos(h), Math.sin(h)];
+    return {key:Math.round(x * 50) + ':' + Math.round(z * 50) + ':' + h.toFixed(2), W:(f, up, r) => [x + F[0] * f + Rv[0] * r, a.y + up, z + F[1] * f + Rv[1] * r]}; };
+  // (the body's lines with the sea legs as seaLegs gave them (o) on a deck sloping sr to his right and sf ahead, in the boat's frame,
+  // where a point up over the deck is that much to her high side: the legs, the spine, the sides, the chest and the back, the
+  // shoulders and the head; which of them pass through the model)
+  const seaLines = (P, o, sr, sf) => { const M = ST.M, th = Math.hypot(o.leanR, o.leanF), dR = th > 1e-9 ? o.leanR / th : 0, dF = th > 1e-9 ? o.leanF / th : 0, ct = Math.cos(th), sn = Math.sin(th), hH = 0.92 + o.hipY;
+    // (his level frame [ahead, up, right] to the deck's: along the deck ahead and to the right, and along its normal)
+    const eF = 1 / Math.hypot(1, sf), eR = 1 / Math.hypot(1, sr), nl = Math.hypot(sf, 1, sr), n = [-sf / nl, 1 / nl, -sr / nl];
+    const B = q => P.W((q[0] + q[1] * sf) * eF, q[0] * n[0] + q[1] * n[1] + q[2] * n[2], (q[2] + q[1] * sr) * eR);
+    // (a point of the upper body, [ahead, up from the deck, right] standing straight: turned about the hips with the torso's lean)
+    const at = (hh, r, f) => { const u = hh - 0.92, a = (f || 0) * dF + (r || 0) * dR, p = -(f || 0) * dR + (r || 0) * dF, a2 = a * ct + u * sn, u2 = -a * sn + u * ct;
+      return [o.hipF + hH * o.sqF + a2 * dF - p * dR, hH * o.sqU + u2, o.hipR + hH * o.sqR + a2 * dR + p * dF]; };
+    const hipJ = i => [o.hipF + hH * o.sqF, hH * o.sqU + (i ? 0.11 : -0.11) * o.pelv, o.hipR + hH * o.sqR + (i ? 0.11 : -0.11)];
+    const foot = i => [o.fa[i] + 0.1 * n[0], o.fy[i] + 0.1 * n[1], o.fr[i] + 0.1 * n[2]];   // (the ankle, 10 cm over where the foot stands on the deck)
+    const segs = [[hipJ(0), foot(0)], [hipJ(1), foot(1)], [at(0.95), at(1.45)], [at(0.95, -0.17), at(1.42, -0.21)], [at(0.95, 0.17), at(1.42, 0.21)],
+      [at(1.0, 0, 0.12), at(1.38, 0, 0.12)], [at(1.0, 0, -0.12), at(1.38, 0, -0.12)], [at(1.42, -0.21), at(1.42, 0.21)], [at(1.5), at(1.8)], [at(1.64, 0, 0.13), at(1.64, 0, -0.13)], [at(1.66, -0.1), at(1.66, 0.1)]];
+    let bits = 0; for (let i = 0; i < segs.length; i++) if (M.hit(B(segs[i][0]), B(segs[i][1])) >= 0) bits |= 1 << i; return bits; };
+  const SEATMP = seaState();
+  // (those lines at the deck's furthest one way, with the room given; a full sea, so the feet are at their widest)
+  // (and a foot put out to brace where one can be, as he would: seaStepOk)
+  const seaTry = (a, P, sr, sf, room) => { SEATMP.y = null; SEATMP.gOn = SEATMP.stOn = false; SEATMP.st = SEATMP.g = 0; return seaLines(P, seaLegs(SEATMP, {sr, sf, y:0, hs:9, room, stepOk:(dr, da) => seaStepOk(a, dr, da)}), sr, sf); };
+  const SEAWAYS = t => [[t, 0], [-t, 0], [0, t], [0, -t], [t * 0.7, t * 0.7], [-t * 0.7, t * 0.7], [t * 0.7, -t * 0.7], [-t * 0.7, -t * 0.7]];
+  function seaRoom(a){
+    if (a.mode !== 'at') return SEAWALK; const P = seaAt(a), ck = ST.type + '|' + (ST.kitSig || '') + '|' + P.key; if (a.srK === ck) return a.srV;
+    const hit = SEAR.get(ck); if (hit){ a.srK = ck; a.srV = hit; return hit; }
+    const M = ST.M, C = SJOBEIN, W = P.W, t = Math.tan(C.CLIP); let out;
+    // (first with the bracing step where seaStepOk lets a foot out; if that still puts something through, without it at this place)
+    for (const nostep of [false, true]){ out = {r:[0, 0], f:[0, 0], w:[0, 0], nostep};
+      for (const i of [0, 1]){ const s = i ? 1 : -1; out.w[i] = M.hit(W(0, 0.92, s * 0.11), W(0, 0.1, s * (0.12 + C.WIDE + 0.02))) < 0 ? 1 : 0; }
+      // (what goes through something on a level deck already is not the sea legs' doing; the most room that adds nothing to it)
+      const base = seaTry(a, P, 0, 0, out), trial = {r:[0, 0], f:[0, 0], w:out.w, nostep};
+      for (const i of [0, 1]){ const s = i ? 1 : -1;
+        // (from none upwards, as far as every step is clear: what is clear at CLIP with a share of the room is clear with all of it at that share of CLIP)
+        for (const u of [0.25, 0.5, 0.75, 1]){ trial.r[0] = trial.r[1] = u; trial.f[0] = trial.f[1] = 0; if (seaTry(a, P, s * t, 0, trial) & ~base) break; out.r[i] = u; }
+        for (const u of [0.25, 0.5, 0.75, 1]){ trial.f[0] = trial.f[1] = u; trial.r[0] = trial.r[1] = 0; if (seaTry(a, P, 0, s * t, trial) & ~base) break; out.f[i] = u; } }
+      // (and with her down by a corner, both ways at once: the larger of the two gives way until that is clear too)
+      for (const i of [0, 1]) for (const j of [0, 1]) while ((out.r[i] > 0 || out.f[j] > 0) && (seaTry(a, P, (i ? 1 : -1) * t * 0.7, (j ? 1 : -1) * t * 0.7, out) & ~base)){ if (out.r[i] >= out.f[j]) out.r[i] -= 0.25; else out.f[j] -= 0.25; }
+      if (!SEAWAYS(t).some(([sr, sf]) => seaTry(a, P, sr, sf, out) & ~base)) break; }
+    if (SEAR.size > 400) SEAR.clear(); SEAR.set(ck, out); a.srK = ck; a.srV = out; return out; }
+  // the tests: how many of the body's lines pass through the model with the sea legs at their furthest (the deck at CLIP to either
+  // side and fore and aft, and to the four corners between; a full sea), that do not standing on a level deck
+  function seaHits(a){
+    const P = seaAt(a), room = seaRoom(a), t = Math.tan(SJOBEIN.CLIP), base = seaTry(a, P, 0, 0, room); let n = 0;
+    for (const [sr, sf] of SEAWAYS(t)){ let b = seaTry(a, P, sr, sf, room) & ~base, c = 0; while (b){ c += b & 1; b >>= 1; } n = Math.max(n, c); }
+    return n; }
+  // the tests: where each foot of those at their places stands, in the boat's own frame, and the model's own deck under it (the deck
+  // is flat in her frame, so the deck under the foot is the model's surface there: this is the measure against the model, not against
+  // the plane the sea legs reckoned with). dy: the foot's height over the deck under it, null where the model has nothing there
+  function seaFeet(){ if (!ready()) return null; const out = [];
+    for (const a of A){ const o = a.sl && a.sl.y !== null ? a.sl.o : null; if (a.mode !== 'at' || !o) continue; const w = walkOff(a), x = a.x + w[0], z = a.z + w[1], F = [Math.sin(a.h), -Math.cos(a.h)], Rv = [Math.cos(a.h), Math.sin(a.h)];
+      for (let i = 0; i < 2; i++){ const cf = 1 / Math.hypot(1, o.sf), cr = 1 / Math.hypot(1, o.sr), fx = x + (F[0] * o.fa[i] * cf + Rv[0] * o.fr[i] * cr), fz = z + (F[1] * o.fa[i] * cf + Rv[1] * o.fr[i] * cr);
+        const d = dropY([fx, a.y + 0.6, fz]); out.push({id:a.id, task:a.task, i, lift:+o.lift[i].toFixed(3), dy:d == null ? null : +(a.y - d).toFixed(4)}); } }
+    return out; }
+  // (the people at their places now; and every break at every rail place it fits, as clipScan: [places clear, places])
+  function seaClip(){ if (!ready()) return null; return A.filter(a => a.mode === 'at' && a.goal && !a.goal.inside).map(a => ({id:a.id, task:a.task, n:seaHits(a), room:seaRoom(a)})); }
+  function seaScan(){ if (!ready()) return null; const R = {}; for (const k of ['lean', 'look', 'coffee', 'phone', 'binoc', 'smoke', 'snus', 'aurora', 'back', 'chat', 'knife', 'lunch']){
+      const L = (ST.PT.lean || []).filter(l => ST.M.ok(l.k) && livePart(l.k)); let clear = 0, fits = 0; for (const q of L){ const f = fitPlace(k, q); if (poseHits(k, q.k, f.h, f.rail, f.off)) continue; fits++;
+        const p = ST.M.at(q.k), o = f.off || [0, 0]; if (!seaHits({fake:true, mode:'at', x:p[0] + o[0], y:p[1], z:p[2] + o[1], h:f.h})) clear++; } R[k] = [clear, fits]; } return R; }
+  // something firm for a hand within reach of where someone stands (the rail's top, or the edge of a table or a bin: its top 0.6 to
+  // 1.3 m over the deck), ahead of him or to either side: [ahead, right, top] in his own frame (right 0: straight ahead, the hand at
+  // its own side); null with none. Kept by the place and the heading
+  function seaRail(a){
+    if (a.mode !== 'at') return null; const P = seaAt(a), ck = (ST.kitSig || '') + '|' + P.key; if (a.sgK === ck) return a.sgV;
+    const M = ST.M; let best = null, bd = 9;
+    for (const sd of [0, 1, -1]) for (let d = 0.2; d <= 0.72; d += 0.04){ const p = sd ? P.W(0.04, 0, sd * d) : P.W(d, 0, 0), u = M.hit([p[0], a.y + 1.4, p[2]], [p[0], a.y + 0.3, p[2]]); if (u < 0) continue;
+      const top = 1.4 - u * 1.1; if (top >= 0.6 && top <= 1.3 && d < bd){ bd = d; best = sd ? [0.04, sd * (d + 0.02), Math.round(top * 100) / 100] : [d + 0.02, 0, Math.round(top * 100) / 100]; } break; }
+    a.sgK = ck; a.sgV = best; return best; }
+  // can a foot be put out that way ([right, ahead], a unit) from where he stands: deck under it and nothing between
+  function seaStepOk(a, dr, da){
+    const M = ST.M, P = seaAt(a), C = SJOBEIN, s = Math.abs(dr) > 0.35 ? (dr > 0 ? 1 : -1) : 1, r = s * (0.12 + C.WIDE) + dr * C.STEPLEN, f = da * C.STEPLEN, q = P.W(f, 0, r), q2 = P.W(f + da * 0.12, 0.45, r + dr * 0.12);
+    return M.ok(M.cellOf(q[0], q[2])) && M.hit(P.W(0, 0.92, s * 0.11), P.W(f, 0.1, r)) < 0 && M.hit(P.W(f, 0.45, r), q2) < 0; }
   // the nearest rail from where someone stands, ahead or to either side within 3 m (a fish that slips over the side goes over it):
   // the way [forward, right] in the boat's frame, how far, and its top over the deck; null with none (a wall is not a rail)
   function railNear(a){ const M = ST.M; let best = null;
@@ -919,7 +1004,7 @@ function crewSim(src){
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
   return {tick, agents, visible, anchorOf, on, setPlan, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
     // (for the view: nothing of the boat between two points in her frame, and the first thing of her under a point, its height)
-    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setSea, seaRoom:a => ready() ? seaRoom(a) : null, seaRail:a => ready() ? seaRail(a) : null, seaStepOk:(a, dr, da) => ready() && seaStepOk(a, dr, da), seaClip, seaScan, seaFeet, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the
@@ -942,4 +1027,111 @@ function npcCrewCtx(n, G){
   const hands = [{id:String(n.id) + '0', traits:[]}, {id:String(n.id) + '1', traits:[]}], fishing = n.st === 'fishing', port = n.st === 'port';
   const WA = port ? [] : fishing ? [{c:null, st:'fiske'}, {c:hands[0], st:'sloy'}, {c:hands[1], st:'fiske'}] : [{c:null, st:'ror'}, {c:hands[0], st:'pause'}, {c:hands[1], st:'pause'}];
   return {away:false, underway:!fishing && !port, port, hasBunks:false, open:!!(G && G.open), deckTask:'gut', wind, night:hr >= 22 || hr < 6, WA, aground:false, fishing, crates:-1, crateFill:0};
+}
+// ---- the sea legs (FB4, steg 120, 13.11.2026; docs/planer/folk-2.md; Jonas: «at mannskapet oppfører seg som ekte mennesker»): someone
+// standing on a deck at sea stands on the deck as it heels. Each foot is on the deck where the deck is under it, the hips go to the
+// high side and the knee there bends, the torso lies between plumb and the deck's normal and lags (a spring), the knees take up the
+// heave, the feet stand wider the more sea there is, a free hand takes the rail when she rolls past GRAB, and past STEP a foot is put
+// out down the slope to brace. The numbers are here and nowhere else, for the playtests (start values: the lean's share and its most
+// are docs/mannskap-plan.md 1.3's 30 % and 12°; the rest are set by eye and by the measures in tests/sjobein.py).
+// «#sjobein0» in the address turns it all off (the figure upright on one height, as before).
+const SJOBEIN = {
+  on:!(typeof location !== 'undefined' && /sjobein0/.test(String(location.hash || ''))),
+  LEAN:0.3,       // the share of the deck's tilt the torso takes (0: plumb, 1: square to the deck)
+  LEANMAX:0.21,   // rad (12°): the most the torso leans
+  HIP:0.2,        // m the hips go to the high side per unit of slope (the tangent of the tilt)
+  HIPMAX:0.06,    // m, the most
+  HIPF:0.5,       // the share of that fore and aft (the feet are side by side, so less room that way)
+  WIDE:0.07,      // m each foot further out in a full sea
+  HSFULL:2.5,     // m of significant wave height that is a full sea for the stance
+  ROLLFULL:0.26,  // rad (15°) of roll lately that is a full sea for the stance (a boat rolling in a small sea)
+  CROUCH:0.03,    // m the hips come down in a full sea (the knees ready)
+  CROUCHMAX:0.04, // m, the most: in a full sea, or as far as the knees have had to take up of the heave lately
+  FZ:0.9, ZT:0.6,     // the torso's spring: its own frequency (Hz) and its damping (of critical)
+  HEAVE:0.5,      // the share of the deck's way up and down the knees take up, while the legs reach (less in a big sea: as much as they reach)
+  HMEAN:8,        // s: the deck's height is taken about its mean over this long
+  HSHEAVE:0.3,    // the heave each way that is expected of a sea, as a share of its significant wave height (measured in tests/sjobein.py: ±1.6–2.4 m at Hs 5.9 m)
+  HIPUP:0.03, HIPDN:0.11,   // m the hips can rise over and sink under their height standing (the legs straight, the knees deep)
+  GRAB:0.14, FREE:0.09, HOLD:1.5, GRABT:0.35, REACH:0.78,   // rad of tilt a free hand takes the rail at and lets go under, s it holds on after, s the hand takes, m it reaches from the shoulder
+  CLIP:0.262,     // rad (15°): the roll the room for the body is measured for (deckcrew seaRoom; past it a shoulder may touch what he stands by)
+  STEP:0.21, STEPBACK:0.15, STEPHOLD:0.8, STEPT:0.4, STEPLEN:0.16,   // rad of tilt a foot is put out at and taken back under, s it stays after, s the step takes, m it goes
+  SEG:0.426,      // m of thigh and of shin (the figure's leg standing: 0.84 m from hip to ankle, the knee 0.07 forward)
+  test:null,      // the tests: {roll, pitch} (rad) the crew's deck is turned more than the boat's (view3d/20-trawl-seine.js drawDeckCrew)
+  log:null        // the tests: an array drawWorker writes what it drew to
+};
+const SEAROOM = {r:[1, 1], f:[1, 1], w:[1, 1], nostep:false};   // the room to either side ([left, right]) and fore and aft ([aft, ahead]), for each foot out ([left, right]), and no room for the bracing step
+// one person's sea legs from frame to frame (the springs, the hand on the rail, the foot put out), and what seaLegs last gave (o)
+function seaState(){ return {qr:0, vr:0, qf:0, vf:0, hy:0, y:null, k:0, env:0, envH:0, envP:0, cr:0, rm:[1, 1, 1, 1, 1, 1], g:0, gOn:false, gT:0, gh:0, st:0, stOn:false, stT:0, stR:0, stF:0, stFoot:1,
+  o:{sr:0, sf:0, ang:0, k:0, fr:[-0.12, 0.12], fa:[0, 0], fy:[0, 0], lift:[0, 0], kf:[0.07, 0.07], kneeDeg:[0, 0], hipR:0, hipF:0, hipY:0, pelv:0, sqR:0, sqF:0, sqU:1, leanR:0, leanF:0, grab:0, gh:0, step:0, stFoot:1}}; }
+// how much further forward a knee goes when its leg, dref long from hip to ankle before, is dnow long (the thigh and the shin keep
+// their length, so a shorter leg is a knee more bent)
+function seaKnee(dref, dnow){ const L2 = SJOBEIN.SEG * SJOBEIN.SEG, a = dref / 2, b = dnow / 2; return Math.sqrt(Math.max(0, L2 - b * b)) - Math.sqrt(Math.max(0, L2 - a * a)); }
+// the sea legs of one person standing or walking on a deck: s his state (seaState), inp what the deck does where he stands, in his own
+// frame (ahead and to his right, level in the world):
+//   sr, sf   the deck's slope to his right and ahead (m up per m; from the deck's normal, so roll and pitch seen his way)
+//   y        the height of the deck under him in the world (m; its changes are the heave)
+//   hs       the significant wave height (m)
+//   dt       s since the last call (none, or over half a second: he is put straight into the pose, nothing swings)
+//   walk     he is walking (the feet are the gait's; no hand to the rail, no step)
+//   room     the room for it (SEAROOM's form; deckcrew seaRoom): to each side and fore and aft 0–1 (1: upright with the sea legs, 0: square to the deck), each foot out 0 or 1, nostep no bracing step here
+//   rail     a rail within reach as [ahead, right, height of its top] or null, hand the hand that may take it (0 right, 1 left, null either)
+//   stepOk   (right, ahead) => whether a foot can be put out that way (nothing in the way); none: it can
+// Gives (the same object each time, s.o): fr, fa where each foot stands ([left, right]; m to his right and ahead of where he stands),
+// fy the deck's height under it over the deck under him, lift how far it is off the deck (the step), kf how far forward each knee is
+// and kneeDeg its bend, sqR, sqU, sqF the way from the feet up to the hips (a unit: plumb, or along the deck's normal where there is
+// no room to stand upright; pelv: the hips' slope to his right then), hipY how much nearer the feet the hips are along it (the knees
+// bent), hipR, hipF the hips' shift to the side and ahead from there, leanR, leanF the torso's lean (rad, to the right and ahead), grab 0–1 the hand
+// gh on the rail, step 0–1 the foot stFoot put out. Pure but for s.
+function seaLegs(s, inp){
+  const C = SJOBEIN, o = s.o, sr = inp.sr || 0, sf = inp.sf || 0, y = inp.y || 0, room = inp.room || SEAROOM, walk = !!inp.walk, dt = inp.dt;
+  const tilt = Math.hypot(sr, sf), ang = Math.atan(tilt), snap = s.y === null || !(dt >= 0) || dt > 0.5, kT0 = Math.min(1, Math.max(0, (inp.hs || 0) / C.HSFULL));
+  if (snap){ s.qr = sr; s.qf = sf; s.vr = s.vf = 0; s.hy = y; s.env = ang; s.envH = s.envP = 0; s.k = Math.max(kT0, Math.min(1, ang / C.ROLLFULL)); }
+  else {
+    const n = Math.max(1, Math.ceil(dt / 0.02)), h = dt / n, wn = 2 * Math.PI * C.FZ;
+    for (let i = 0; i < n; i++){
+      s.vr += (wn * wn * (sr - s.qr) - 2 * C.ZT * wn * s.vr) * h; s.qr += s.vr * h;
+      s.vf += (wn * wn * (sf - s.qf) - 2 * C.ZT * wn * s.vf) * h; s.qf += s.vf * h;
+    }
+    s.hy += (y - s.hy) * (1 - Math.exp(-dt / C.HMEAN));
+    s.env = Math.max(ang, s.env * Math.exp(-dt / 20));
+    s.k += (Math.max(kT0, Math.min(1, s.env / C.ROLLFULL)) - s.k) * (1 - Math.exp(-dt / 3)); }
+  s.y = y;
+  const lim = (v, m) => v > m ? m : v < -m ? -m : v;
+  // (the room to the deck's high side, 0–1: with all of it he stands upright with the sea legs; with none, square to the deck, the
+  // hips over the feet as the deck has them, braced against what is there; between, that share of each)
+  // (the room changes when he comes to a place or leaves it: taken over a third of a second, so the body does not jump; s.rm)
+  const rm = s.rm, kr = snap ? 1 : 1 - Math.exp(-dt / 0.3); for (let i = 0; i < 2; i++){ rm[i] += (room.r[i] - rm[i]) * kr; rm[2 + i] += (room.f[i] - rm[2 + i]) * kr; rm[4 + i] += (room.w[i] - rm[4 + i]) * kr; }
+  const uqR = rm[s.qr > 0 ? 1 : 0], uaR = rm[sr > 0 ? 1 : 0], uqF = rm[s.qf > 0 ? 3 : 2], uaF = rm[sf > 0 ? 3 : 2];
+  const leanR = -uqR * lim(C.LEAN * Math.atan(s.qr), C.LEANMAX) - (1 - uaR) * Math.atan(sr), leanF = -uqF * lim(C.LEAN * Math.atan(s.qf), C.LEANMAX) - (1 - uaF) * Math.atan(sf);
+  let hipR = uqR * lim(C.HIP * s.qr, C.HIPMAX), hipF = uqF * lim(C.HIP * C.HIPF * s.qf, C.HIPMAX * C.HIPF);
+  // (the way from the feet to the hips, a unit: plumb with all the room, along the deck's normal with none)
+  const qR = -(1 - uaR) * sr, qF = -(1 - uaF) * sf, ql = Math.hypot(qR, 1, qF), sqR = qR / ql, sqF = qF / ql, sqU = 1 / ql;
+  // the heave: the knees give against the deck's way up and down about its mean (s.hy), by a share of it: HEAVE while the legs
+  // reach that far, less in a big sea (the share of the heave lately, s.envH, that they do reach), so the hips move less than the
+  // deck and never faster than the legs go; he stands lower the more there is to take up
+  // (before the heave has been seen, a first frame or after a gap, it is taken from the sea's height: HSHEAVE of Hs each way)
+  const dy = snap ? 0 : y - s.hy, pk0 = C.HSHEAVE * (inp.hs || 0), pk = Math.max(Math.abs(dy), pk0, snap ? 0 : s.envP * Math.exp(-dt / 15)); s.envP = pk; s.envH = snap ? pk : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
+  const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
+  const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, pk)), hipY = -cr - A * Math.tanh(beta * dy / A);
+  // the hand to the rail, and the foot put out down the slope
+  const step = (on, v, t) => snap || !(t > 0) ? (on ? 1 : 0) : on ? Math.min(1, v + dt / t) : Math.max(0, v - dt / t), rl = !walk && inp.rail ? inp.rail : null, d0 = dt >= 0 ? Math.min(dt, 5) : 0;   // (after a gap the hand and the foot are where the time gone puts them)
+  if (rl) s.rl = rl;   // (the rail last within reach: the hand leaves it over GRABT when he goes)
+  if (rl && !s.gOn && ang > C.GRAB){ const gh = inp.hand != null ? inp.hand : rl[1] >= 0 ? 0 : 1;   // (a rail to one side is for the hand on that side)
+    if (rl[1] * (gh ? -1 : 1) >= 0 && Math.hypot(rl[0], rl[2] - 1.42, (rl[1] || (gh ? -0.2 : 0.2)) - (gh ? -0.21 : 0.21)) < C.REACH){ s.gOn = true; s.gh = gh; s.gT = 0; } }
+  else if (s.gOn){ if (!rl) s.gOn = false; else if (ang < C.FREE){ s.gT += d0; if (s.gT > C.HOLD) s.gOn = false; } else s.gT = 0; }
+  s.g = step(s.gOn, s.g, C.GRABT);
+  // (a foot on its way back in comes all the way in before it is put out again)
+  if (!walk && !s.stOn && s.st === 0 && ang > C.STEP){ const dr = -sr / tilt, da = -sf / tilt;
+    if (!room.nostep && (!inp.stepOk || inp.stepOk(dr, da))){ s.stOn = true; s.stT = 0; s.stR = dr; s.stF = da; s.stFoot = Math.abs(dr) > 0.35 ? (dr > 0 ? 1 : 0) : 1; } }
+  else if (s.stOn){ if (walk) s.stOn = false; else if (ang < C.STEPBACK){ s.stT += d0; if (s.stT > C.STEPHOLD) s.stOn = false; } else s.stT = 0; }
+  s.st = walk ? 0 : step(s.stOn, s.st, C.STEPT);
+  const pelv = (1 - uaR) * sr;   // (square to the deck, the hips lie as the deck does: the slope across them)
+  const e = s.st * s.st * (3 - 2 * s.st), sl = C.STEPLEN * e; hipR += 0.4 * s.stR * sl; hipF += 0.4 * s.stF * sl;
+  const hh = 0.92 + hipY;   // (the hips' height over the feet along that way: the knees bend along the legs)
+  for (let i = 0; i < 2; i++){ const sg = i ? 1 : -1, mine = i === s.stFoot ? sl : 0;
+    o.fr[i] = sg * (0.12 + C.WIDE * s.k * (walk ? 0.4 : 1) * rm[4 + i]) + s.stR * mine; o.fa[i] = s.stF * mine; o.fy[i] = o.fa[i] * sf + o.fr[i] * sr;
+    o.lift[i] = mine && s.st < 1 ? 0.05 * Math.sin(Math.PI * s.st) : 0;
+    const d = Math.hypot(hh * sqU - 0.08 + sg * 0.11 * pelv - o.fy[i] - o.lift[i], hipR + hh * sqR + sg * 0.11 - o.fr[i], hipF + hh * sqF - o.fa[i]); o.kf[i] = Math.max(0.02, 0.07 + seaKnee(0.84, d)); o.kneeDeg[i] = 2 * Math.atan2(o.kf[i], d / 2) * 180 / Math.PI; }
+  o.sr = sr; o.sf = sf; o.ang = ang; o.k = s.k; o.hipR = hipR; o.hipF = hipF; o.hipY = hipY; o.pelv = pelv; o.sqR = sqR; o.sqF = sqF; o.sqU = sqU; o.leanR = leanR; o.leanF = leanF; o.grab = s.g * s.g * (3 - 2 * s.g); o.gh = s.gh; o.rail = s.rl || null; o.step = e; o.stFoot = s.stFoot;
+  return o;
 }

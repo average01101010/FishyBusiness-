@@ -3722,6 +3722,7 @@
 2026-11-13 05:40	plan/2026-11-13-117	47cab595+	charttest	OK	43	lite	alene	
 2026-11-13 02:48	ccr-899a9674-q3gjp0	0508d931+	dbg23o	OK	44	3d	alene	
 2026-11-13 04:09	ccr-899a9674-q3gjp0	22c970d0	sea3d	OK	3112	3d	alene	
+2026-11-13 11:50	ccr-899a9674-q3gjp0	0476adc8	dbg23o	OK	45	3d	alene	
 2026-11-13 08:05	plan/2026-11-13-117	f7281404	kapplopshot	OK	2057	3d	alene	
 2026-11-13 08:16	plan/2026-11-13-117	79a789c3	vectest	OK	610	3d	alene	
 2026-11-13 08:28	plan/2026-11-13-117	79a789c3	vindshot	OK	755	3d	alene	
@@ -3827,3 +3828,32 @@
 2026-11-13 14:23	ccr-061ea8a6-pt4l71	03c66e8+	opptest	OK	98	lite	samtidig	
 2026-11-13 14:23	ccr-061ea8a6-pt4l71	03c66e8+	nettest	FEIL	29	lite	samtidig	FEIL halerne først, og det som ikke passer snekka, er lukket nederst  [['linehaler', 'garnhaler', 'linesetter'], 'Passer ikke «T-658-LK» (4)Teinehaler · Krabbek
 2026-11-13 14:46	ccr-061ea8a6-pt4l71	129b6da	trytest	OK	1261	3d	alene	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	merketest	OK	23	lite	samtidig	
+2026-11-13 11:23	plan/2026-11-13-108	b793bf85	fartstidtest	OK	23	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	trip2	OK	49	lite	samtidig	
+2026-11-13 11:24	plan/2026-11-13-108	b793bf85	fasittest	OK	53	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	docktest	OK	73	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	vesseltest	OK	27	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	maletest	OK	29	lite	samtidig	
+2026-11-13 11:26	plan/2026-11-13-108	b793bf85	regmarktest	OK	10	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	maletest	OK	18	lite	samtidig	
+2026-11-13 11:55	plan/2026-11-13-108	fe96f5b0+	regmarktest	OK	8	lite	samtidig	
+2026-11-13 12:10	plan/2026-11-13-108	0cd37557	flaggshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-13 12:55	plan/2026-11-13-108	95576b40+	flaggshot	FEIL	1498	3d	alene	FEIL 20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør
+2026-11-13 13:14	plan/2026-11-13-108	75562628	boottest	OK	24	lite	alene	
+2026-11-13 13:48	plan/2026-11-13-108	2baac8a7	flaggshot	OK	2036	3d	alene	
+2026-11-13 12:54	ccr-899a9674-q3gjp0	a24ac8e1	dbg23o	OK	44	3d	alene	
+2026-11-13 13:56	ccr-899a9674-q3gjp0	a24ac8e1	sea3d	FEIL	3694	3d	alene	FEIL the whitecap threshold gives Monahan's cover within a factor of two (8-25 m/s)
+2026-11-13 14:01	ccr-899a9674-q3gjp0	a24ac8e1	monster	OK	304	3d	alene	
+2026-11-13 12:54	ccr-535ab52d-bv560n	960c205	boottest	OK	24	lite	alene	
+2026-11-13 13:24	ccr-535ab52d-bv560n	337184d5	workshot	FEIL	1800	3d	alene	FEIL garntrekket: én haler og én plukker fisken ut av garnet  (['frys', 'frys'], {'gaff': 0, 'pick': 2, 'jigup': 0, 'bleed': 1})
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	mobshot	OK	797	3d	alene	
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	npcshot	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py, så node build.mjs)
+2026-11-13 13:38	ccr-535ab52d-bv560n	e0868808	boottest	OK	25	lite	alene	
+2026-11-13 14:24	plan/2026-11-13-108	b894aa33	boottest	OK	28	lite	alene	
+2026-11-13 14:25	plan/2026-11-13-108	b894aa33	dbg23o	OK	48	3d	alene	
+2026-11-13 14:35	plan/2026-11-13-108	a6960ef0	benchshot	OK	637	3d	alene	
+2026-11-13 14:43	plan/2026-11-13-108	a6960ef0	f1test	OK	447	3d	alene	
+2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
+2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
+2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	

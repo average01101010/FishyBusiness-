@@ -121,7 +121,7 @@ function achMinute(){
   const A = achState(), H = S.t / 60;
   if (!A.stormT && beaufort(windAt(H)) >= 6) A.stormT = 1;
   const hr = ((H % 24) + 24) % 24; if (b.status === 'fishing' && (hr >= 23 || hr < 4) && A.nightD !== Math.floor((H + 1) / 24)){ A.nightD = Math.floor((H + 1) / 24); achAdd('night'); }
-  if (typeof PEERS !== 'undefined') for (const q of PEERS) if (q && q.id && !A.peers[q.id] && dist(b.pos, {x:q.x, y:q.y}) < 3.7) A.peers[q.id] = Math.max(1, S.t);
+  if (typeof PEERS !== 'undefined') for (const q of PEERS) if (q && q.id && !q.bench && !A.peers[q.id] && dist(b.pos, {x:q.x, y:q.y}) < 3.7) A.peers[q.id] = Math.max(1, S.t);   // (not the measuring run's stand-ins, view3d/25-controls.js benchPeers)
 }
 // the end of a trip with you aboard: a gale weathered without a tow counts
 function achTripEnd(bad){ const A = achState(); if (A.stormT && !bad) achAdd('storm'); A.stormT = 0;
