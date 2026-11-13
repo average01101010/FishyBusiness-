@@ -3770,3 +3770,12 @@
 2026-11-13 15:03	plan/2026-11-13-108	40b12986	boottest	OK	42	lite	samtidig	
 2026-11-13 15:04	plan/2026-11-13-108	40b12986	fasittest	OK	52	lite	samtidig	
 2026-11-13 15:05	plan/2026-11-13-108	40b12986	docktest	OK	67	lite	samtidig	
+2026-11-13 16:59	ccr-432150cd-kkjoez	4fc2ffc+	stedertest	OK	8	lite	samtidig	
+2026-11-13 16:59	ccr-432150cd-kkjoez	4fc2ffc+	placetest	OK	7	lite	samtidig	
+2026-11-13 17:01	ccr-432150cd-kkjoez	4fc2ffc+	starttest	OK	155	lite	samtidig	
+2026-11-13 17:01	ccr-432150cd-kkjoez	4fc2ffc+	boottest	OK	35	lite	samtidig	
+2026-11-13 17:01	ccr-432150cd-kkjoez	4fc2ffc+	savestest	OK	11	lite	samtidig	
+2026-11-13 17:01	ccr-432150cd-kkjoez	4fc2ffc+	docktest	OK	68	lite	samtidig	
+2026-11-13 17:04	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	146	3d	alene	avsluttet med kode 1
+2026-11-13 17:13	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	533	3d	alene	avsluttet med kode 1
+2026-11-13 17:16	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	129	3d	alene	avsluttet med kode 1

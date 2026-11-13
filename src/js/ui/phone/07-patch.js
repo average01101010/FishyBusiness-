@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [
+       ['Mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy og butikkene i Vanse og Søndeled lå i lommer der båten ikke kom ut. De har fått nye kaier med fritt vann ut.', 'The plants in Ålesund, Fosnavåg, Laukvik and Vengsøy and the shops in Vanse and Søndeled lay in pockets the boat could not get out of. They have new quays with open water out.'],
+       ['Bakken bak og ved sidene av kaiene går nå rett inn til kaikanten, uten grøfter og tagger langs veggen.', 'The ground behind and beside the quays now runs straight up to the quay edge, with no trenches or jagged teeth along the wall.']]],
     ['flagg-131126', '13.11.2026', 'Flaggene på de andre båtene', 'The flags on the other boats', [
        ['Andre spilleres flagg synes nå i akterenden på båtene deres, også rederiflagget med logoen. En båt uten eget flagg fører det norske. Flaggene går opp og ned etter flaggtidene der båten er.', "Other players' flags now fly at the stern of their boats, the house flag with the company logo too. A boat without a flag of her own flies the Norwegian one. The flags go up and down by the flag hours where the boat is."]]],
     ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [
