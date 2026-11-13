@@ -24,15 +24,15 @@ HOOK = """(() => { const C = window.__ntx = {made:0};
   for (const P of [WebGLRenderingContext.prototype, window.WebGL2RenderingContext && WebGL2RenderingContext.prototype].filter(Boolean)){
     const ct = P.createTexture; P.createTexture = function (){ C.made++; return ct.call(this); }; } })()"""
 
-# the stand-ins: abreast 45 m out towards the camera, 9 m apart, all heading the same way; ids by what they show
+# the stand-ins: abreast 45 m out towards the camera, 30 m apart (so none is in the way of another's picture), all heading the same way; ids by what they show
 PEERS = """(() => { const b = S.boat, bv = G3._debug.bv, e = G3._debug.eye, dx = e[0] - bv.x, dz = e[2] - bv.z, L = Math.hypot(dx, dz) || 1, u = [dx / L, dz / L], v = [-u[1], u[0]];
   const at = (a, w) => ({x:b.pos.x + (u[0] * a + v[0] * w) / 1000, y:b.pos.y + (u[1] * a + v[1] * w) / 1000}), hd = Math.atan2(v[0], -v[1]);
   const pid = nm => (PORTS.find(p => p.name === nm) || {}).id || '';
   const H = {ksand:pid('Kristiansand S'), ksund:pid('Averøy'), bfj:pid('Båtsfjord')}; PEERS.length = 0;
   const add = (id, vt, nm, a, w, liv) => PEERS.push(Object.assign({id, boat:nm, vtype:vt, hd, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv}, at(a, w)));
   add('navnantikv', 'kyst15', 'Havbris', 45, 0, 'h:marine;k:' + H.ksand + ';n:a.gull;m:VA.112.K');
-  add('navnsmalbl', 'breisjark', 'Nordkapp Senior', 45, 12, 'h:oksblod;k:' + H.ksund + ';n:s.hvit;m:MR.12.K');
-  add('navnblokkg', 'sjark', 'Åsheim', 45, -12, 'h:gul;k:' + H.bfj + ';n:b.gul;m:F.7.BD');
+  add('navnsmalbl', 'breisjark', 'Nordkapp Senior', 45, 30, 'h:oksblod;k:' + H.ksund + ';n:s.hvit;m:MR.12.K');
+  add('navnblokkg', 'sjark', 'Åsheim', 45, -30, 'h:gul;k:' + H.bfj + ';n:b.gul;m:F.7.BD');
   add('navnfire00', 'sjark', 'Fjordbris', 70, 20, 'h:hvit;m:T.21.LK'); add('navnfem000', 'sjark', 'Storegga', 70, -20, 'h:kobolt;m:T.22.LK');
   add('navnseks00', 'sjark', 'Måken', 90, 0, 'h:rod;m:T.23.LK');
   return H; })()"""
@@ -87,12 +87,12 @@ async def main():
         await pg.evaluate("(() => { S.boat.liv = Object.assign({}, S.boat.liv); delete S.boat.liv.nf; delete S.boat.liv.nc; })()")
         close = "() => { for (const b of document.querySelectorAll('button[data-close]')) if (/Til sjøs|To sea/.test(b.textContent)) b.click(); }"
         # the pictures: from astern (the transom: the name and the home port) and from ahead (the wheelhouse front), near
-        for (pid, dist, off, nm) in (('pnavnantikv', 13, 0.0, 'antikva_hekk'), ('pnavnsmalbl', 14, 0.25, 'smal_hekk'), ('pnavnblokkg', 11, 0.2, 'blokk_hekk')):
-            for w in (2500, 2500, 2000): await pg.evaluate("G3.npcLook(%s, %d, 0.12, %f)" % (json.dumps(pid), dist, off)); await pg.wait_for_timeout(w)
+        for (pid, dist, off, nm) in (('pnavnantikv', 19, 0.15, 'antikva_hekk'), ('pnavnsmalbl', 19, 0.15, 'smal_hekk'), ('pnavnblokkg', 15, 0.15, 'blokk_hekk')):
+            for w in (2500, 2500, 2000): await pg.evaluate("G3.npcLook(%s, %d, 0.0, %f)" % (json.dumps(pid), dist, off)); await pg.wait_for_timeout(w)
             await pg.evaluate(close); await shot(pg, 'navn_%s_liggende.jpg' % nm)
         await pg.set_viewport_size({'width': 800, 'height': 1280})
-        for (pid, dist, off, nm) in (('pnavnantikv', 15, 3.0, 'antikva_styrhus'), ('pnavnsmalbl', 16, 0.2, 'smal_hekk'), ('pnavnblokkg', 12, 0.2, 'blokk_hekk')):
-            for w in (2500, 2500, 3000): await pg.evaluate("G3.npcLook(%s, %d, 0.12, %f)" % (json.dumps(pid), dist, off)); await pg.wait_for_timeout(w)
+        for (pid, dist, off, nm) in (('pnavnantikv', 20, 3.0, 'antikva_styrhus'), ('pnavnsmalbl', 22, 0.15, 'smal_hekk'), ('pnavnblokkg', 17, 0.15, 'blokk_hekk')):
+            for w in (2500, 2500, 3000): await pg.evaluate("G3.npcLook(%s, %d, 0.0, %f)" % (json.dumps(pid), dist, off)); await pg.wait_for_timeout(w)
             await pg.evaluate(close); await pg.wait_for_timeout(1500); await shot(pg, 'navn_%s_staaende.jpg' % nm)
         await pg.evaluate("G3.npcLook(null)")
         print('sidefeil', errs)

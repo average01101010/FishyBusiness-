@@ -155,12 +155,12 @@ async def main():
         replies['pos_put'] = 'null'; n0 = len(calls)
         bfj = await pg.evaluate("(PORTS.find(p => p.name === 'Båtsfjord') || {}).id || ''")
         replies['pos_world'][0]['liv'] = 'h:gul;m:F.7.BD;k:' + bfj + ';n:s.hvit'
-        tp2 = await pg.evaluate("""async () => { WORLDP.noLiv = false; WORLDP.noFs = false; S.cos = Object.assign({}, S.cos, {logo:1, navn:1}); S.logo = {kind:'g', sym:'anker', txt:'JHS', c1:'marine', c2:'hvit'};
-          S.boat.liv = {hull:'kobolt', house:'hvit', deck:'lysgra', d:{ripe:'hvit', totone:'marine', vann:'oksblod', stripe:'gul', lakk:1}, flag:{c:'SE', s:'vimpel'}, nf:'a', nc:'gull'};
+        tp2 = await pg.evaluate("""async () => { WORLDP.noLiv = false; WORLDP.noFs = false; S.cos = Object.assign({}, S.cos, {logo:1, navn:1}); S.logo = {kind:'g', sym:'kompass', txt:'JHS', c1:'antrasitt', c2:'kystfisker'};
+          S.boat.liv = {hull:'antrasitt', house:'kystfisker', deck:'antrasitt', d:{ripe:'kystfisker', totone:'antrasitt', vann:'kystfisker', stripe:'antrasitt', lakk:1}, flag:{c:'SE', s:'vimpel'}, nf:'a', nc:'kystfisker'};   // (the longest colour names: a code past 160)
           const want = livStr(S.boat); WORLDP.last = 0; await worldTick(); const n = npcStates(S.t / 60).find(q => q.player);
           return {want, home:S.home || HOME0, peer:n && n.liv, sty:n && livName(n.liv), port:n && (portById(livHome(n.liv)) || {}).name, noLiv:!!WORLDP.noLiv}; }""")
         up = [c[1].get('liv') for c in calls[n0:] if c[0] == 'pos_put']
-        check(bfj and up and up[-1] == tp2['want'] and len(tp2['want']) > 160 and tp2['want'].endswith(';k:' + tp2['home'] + ';n:a.gull') and not tp2['noLiv']
+        check(bfj and up and up[-1] == tp2['want'] and len(tp2['want']) > 160 and tp2['want'].endswith(';k:' + tp2['home'] + ';n:a.kystfisker') and not tp2['noLiv']
               and tp2['sty'] == {'f': 's', 'c': 'hvit'} and tp2['port'] == 'Båtsfjord',
               "TP2: a code longer than 160 goes up whole with the home port and the name's lettering last, and another player's lettering and home port (Båtsfjord) come down and are read", {'n': len(tp2['want']), 'up': (up[-1] if up else None), 'tp2': tp2})
         await pg.evaluate("(() => { S.cos = {}; S.logo = null; })()")
@@ -194,7 +194,7 @@ async def main():
         nc = [c[1] for c in calls[n0:] if c[0] == 'name_claim']
         replies['name_mine'] = {'name': 'Havørn_2', 'removed': True, 'reason': 'Upassende'}
         rm = await pg.evaluate("async () => { await nameCheck(); return {user:S.user, msg:S.msgs.some(q => /tatt bort: Upassende/.test(q.no))}; }")
-        check(nmc == 'Kystjenta' and 'Velg et brukernavn' in ask['t'] and ask['closers'] == 0 and 'Senere' not in ask['t'] and ask['open1'] and 'mellomrom' in ask['bad'] and ask['open2'] and 'tatt' in ask['taken']
+        check(nmc == 'Kystjenta' and 'Velg et brukernavn' in ask['t'] and ask['closers'] == 0 and 'Senere' not in ask['t'] and ask['open1'] and 'mellomrom' in ask['bad'].lower() and ask['open2'] and 'tatt' in ask['taken']
               and nc == [{'name': 'Havørn_1'}, {'name': 'Havørn_2'}] and ok2 == {'user': 'Havørn_2', 'closed': True, 'asking': False} and rm == {'user': None, 'msg': True},
               'every account has a player name: one taken on another device comes down; without one the card has no way round it, refuses a bad or taken name and closes on a free one; one the admin took away is gone with the reason', {'mine': nmc, 'ask': ask, 'ok': ok2, 'claim': nc, 'removed': rm})
         # the shared world V2: my sale and the fish my boat took go up; the other players' open-group cod, deliveries and catch come down
