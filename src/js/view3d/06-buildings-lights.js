@@ -238,7 +238,17 @@
   const lightsHere = (eye, R) => marksNear('lights', eye[0] / 1000, eye[2] / 1000, R);
   // where a light shines: its height is over the sea (the seamark's focal height), but never less than 4 m over the ground the terrain
   // has there (07.10.2026; before, it was over the ground, and a lighthouse on a hill had its light far over the tower)
-  function lightY(L, x, z){ return Math.max(Math.max(terrH(x, z), 0.2) + 4, L[2]); }
+  // A minor light on a bridge over the water (core/11b-obstacles.js bridgeDeckAt; Puddefjordsbroen's six, tilbakemelding #6 fra
+  // testutgaven) hangs under the deck's edge beam as bridgeInto draws it (its ends on the ground, 1 m at least, and the arch), not 4 m
+  // over the sea under the bridge; the deck piece is kept on the light until the coast's vec packs change, the height reckoned each time
+  // (the ground at the bridge's ends may come after the light is first seen)
+  function lightBridgeY(o){ const B = o.B, br = B.br, n = (br.length - 4) / 2, s = (o.s0 + o.s1) / 2, u = clamp(s / B.tot, 0, 1);
+    const hA = Math.max(terrH(br[4], br[5]), 1), hB = Math.max(terrH(br[2 + n * 2], br[3 + n * 2]), 1);
+    return hA + (hB - hA) * u + B.under(s) - 1 + clamp(br[1] / 450, 1.1, 2.6) - 0.8; }
+  function lightY(L, x, z){
+    if (L.bv !== VEC.ver){ L.bv = VEC.ver; L.bo = L[6] === 'm' && terrH(x, z) < 0.5 ? bridgeDeckAt(L[0], L[1]) : null; }
+    return L.bo ? lightBridgeY(L.bo) : Math.max(Math.max(terrH(x, z), 0.2) + 4, L[2]);
+  }
   function lightOn(L, t){ const P = lightLP(L, -1); let tm = (t + P.ph) % P.per; for (const v of L[4]){ const d = Math.abs(v); if (tm < d) return v > 0; tm -= d; } return false; }
   function drawSeaLights(VP, eye, t, near){
     if (env.night < 0.05) return;

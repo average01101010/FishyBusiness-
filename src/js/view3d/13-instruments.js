@@ -237,9 +237,8 @@
   // an arm from the shoulder Sw to the hand Hw (boat frame) with the elbow bent down and out, in the arm meshes W (the worker's sleeves in
   // the look of the one it belongs to: SK.wk the skipper's, SK.wkC the first hand's); sd 1 the right arm, -1 the left; sp the hand's grip.
   // Returns where the hand holds
-  function armTo(BMrel, W, Sw, Hw, sd, sp){ const d = [Hw[0] - Sw[0], Hw[1] - Sw[1], Hw[2] - Sw[2]], Lh = Math.hypot(d[0], d[1], d[2]) || 1e-6, u = d.map(v => v / Lh), seg = 0.31, Lc = Math.min(Lh, 2 * seg * 0.995);
-    let bv = [0, -1, sd * 0.5]; const kk = bv[0] * u[0] + bv[1] * u[1] + bv[2] * u[2]; bv = [bv[0] - kk * u[0], bv[1] - kk * u[1], bv[2] - kk * u[2]]; const bl = Math.hypot(bv[0], bv[1], bv[2]) || 1, h = Math.sqrt(Math.max(0, seg * seg - (Lc / 2) ** 2));
-    const Hc = [Sw[0] + u[0] * Lc, Sw[1] + u[1] * Lc, Sw[2] + u[2] * Lc], E = [(Sw[0] + Hc[0]) / 2 + bv[0] / bl * h, (Sw[1] + Hc[1]) / 2 + bv[1] / bl * h, (Sw[2] + Hc[2]) / 2 + bv[2] / bl * h];
+  // (FB2, steg 123: the one solver for every limb, deckcrew.js ik2; his own segment, 0.31 m, and his elbow's own way, as before)
+  function armTo(BMrel, W, Sw, Hw, sd, sp){ const seg = 0.31, o = ik2(Sw, Hw, seg, seg, [0, -1, sd * 0.5]), Hc = o.e, E = o.j;
     if (W){ const f = [Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1, HT = [Hc[0] + f[0] / fl * WK_S, Hc[1] + f[1] / fl * WK_S, Hc[2] + f[2] / fl * WK_S];
       drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S)));
       // the hands in their grips (hender.py): relaxed, the palm in and down; round the knife's handle when it bleeds a fish
