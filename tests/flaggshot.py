@@ -7,7 +7,7 @@ the same numbers come from a build before the step: KYST_DIST=<that build>), the
 milliseconds are only a check. Pictures flagg_liggende.jpg and flagg_staaende.jpg in tests/out/. Prints OK or FEIL per check, and MÅLT
 lines with the numbers."""
 from _env import boot
-import asyncio, json
+import asyncio, json, os
 from playwright.async_api import async_playwright
 
 
@@ -45,10 +45,16 @@ async def main():
         await pg.add_init_script(HOOK)
         await boot(pg)
         await pg.wait_for_function("G3.isActive()", timeout=90000)
+        # where she lies at the start, the camera off her side over open water (the quay behind her); the three stand-ins abreast on that
+        # water 45 m out from her towards the camera, 12 m apart, the camera 62 m out, and a fourth 190 m along the shore from her
         await pg.evaluate("""(() => { WX_FORCE = {w:7, d:250}; S.t = Math.floor(S.t / 1440) * 1440 + 360; S.mult = 0; const b = S.boat; b.status = 'idle'; b.port = null; b.v = 0; PEERS.length = 0;
-          const h = b.heading, add = (id, ax, r, liv) => PEERS.push({id, boat:'Fjordbris', vtype:'sjark', x:b.pos.x + Math.cos(h + ax) * r, y:b.pos.y + Math.sin(h + ax) * r, hd:h + 1.4, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv});
-          add('tp1aaaaaaa', 1.25, 0.022, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 1.75, 0.03, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', -1.6, 0.03, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit'); add('tp1ddddddd', 3.0, 0.2, 'h:hvit;f:DK.splitt;m:F.7.H');
           const c = G3._debug.cam; c.helm = false; c.dist = 14; c.pitch = 0.12; c.yaw = 1.5; })()""")
+        await pg.wait_for_timeout(4000)
+        await pg.evaluate("""(() => { const b = S.boat, bv = G3._debug.bv, e = G3._debug.eye, dx = e[0] - bv.x, dz = e[2] - bv.z, L = Math.hypot(dx, dz) || 1, u = [dx / L, dz / L], v = [-u[1], u[0]];
+          const at = (a, w) => ({x:b.pos.x + (u[0] * a + v[0] * w) / 1000, y:b.pos.y + (u[1] * a + v[1] * w) / 1000}), hd = Math.atan2(v[0], -v[1]);
+          const add = (id, a, w, liv) => PEERS.push(Object.assign({id, boat:'Fjordbris', vtype:'sjark', hd, v:0, st:'fishing', user:'Kari', fs:0, at:Date.now() + 36e5, liv}, at(a, w)));
+          add('tp1aaaaaaa', 45, 0, 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK'); add('tp1bbbbbbb', 45, 12, 'h:kobolt;r:hvit;m:N.12.B'); add('tp1ccccccc', 45, -12, 'h:oksblod;f:LOGO.rekt;l:g.anker.JH.marine.hvit');
+          add('tp1ddddddd', 0, 190, 'h:hvit;f:DK.splitt;m:F.7.H'); G3._debug.cam.dist = 62; G3._debug.cam.pitch = 0.06; })()""")
         pf = {}
         for _ in range(30):
             await pg.wait_for_timeout(2000); pf = await pg.evaluate("(G3._debug.peerFlags || null)")
@@ -66,6 +72,7 @@ async def main():
               'to båter med lik maling og ulikt merke deler modell (nøkkelen er bare malingen), og de malte modellene telles', mk)
         if mk['bufs']:   # (the pictures only of a build with the step: SwiftShader takes minutes over each)
             await pg.wait_for_timeout(3000); await shot(pg, 'flagg_liggende.jpg')
+            if os.environ.get('KYST_FLAGG_PREVIEW'): await br.close(); return
             await pg.set_viewport_size({'width': 800, 'height': 1280}); await pg.wait_for_timeout(5000); await shot(pg, 'flagg_staaende.jpg')
             await pg.set_viewport_size({'width': 1280, 'height': 800})
         await pg.evaluate("S.t = Math.floor(S.t / 1440) * 1440 + 1020"); await pg.wait_for_timeout(3000)
