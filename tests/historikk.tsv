@@ -3755,3 +3755,8 @@
 2026-11-13 12:55	plan/2026-11-13-108	95576b40+	flaggshot	FEIL	1498	3d	alene	FEIL 20 båter med lik maling og ulikt merke deler modell (høyst én ny per nivå i tellerne) og sender mindre enn en firedel til GPU-en av det 20 ulikt malte gjør
 2026-11-13 13:14	plan/2026-11-13-108	75562628	boottest	OK	24	lite	alene	
 2026-11-13 13:48	plan/2026-11-13-108	2baac8a7	flaggshot	OK	2036	3d	alene	
+2026-11-13 12:54	ccr-535ab52d-bv560n	960c205	boottest	OK	24	lite	alene	
+2026-11-13 13:24	ccr-535ab52d-bv560n	337184d5	workshot	FEIL	1800	3d	alene	FEIL garntrekket: én haler og én plukker fisken ut av garnet  (['frys', 'frys'], {'gaff': 0, 'pick': 2, 'jigup': 0, 'bleed': 1})
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	mobshot	OK	797	3d	alene	
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	npcshot	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py, så node build.mjs)
+2026-11-13 13:38	ccr-535ab52d-bv560n	e0868808	boottest	OK	25	lite	alene	

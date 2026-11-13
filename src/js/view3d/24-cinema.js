@@ -404,7 +404,7 @@
     const deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr - Math.max(0, gHaul) - helmCr - inBunks);
     // the people aboard walk the deck (deckcrew.js): the boat is drawn without her fixed figures, and the agents are drawn after her
     const DKON = !VG.hand && typeof CREW3D !== 'undefined' && CREW3D.on();
-    if (DKON){ CREW3D.setJig(jigRail(VT, VG)); CREW3D.setRoll(bv.roll); CREW3D.setHelm(!!cam.helm); CREW3D.tick(dt); }
+    if (DKON){ CREW3D.setJig(jigRail(VT, VG)); CREW3D.setSea(bv.roll, bv.pitch, bv.y, Math.hypot(WV.hs || 0, WV.swHs || 0)); CREW3D.setHelm(!!cam.helm); CREW3D.tick(dt); }
     if (SKP.boats){}
     else if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail (the hand-worked boats do the same in drawSkiff),
