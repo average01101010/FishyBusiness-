@@ -12,7 +12,8 @@ everything tapped as CDP touch:
      b. the measuring board opened from the tab («Mål fisken») at a station, ten fish read off by touch, «Send til instituttet»: the task
         is done with the reading taken off the clock
      c. the tow made fast: the way to the harbour is found (turGo from turMinute with the task's text id)
-  5. the chart with the course while she is registered: the way, the checkpoints and the finish line, no overlap with the bar
+  5. the chart with the course while she is registered: Autonav's way for the leg sailed now, the other legs, the checkpoints and the
+     finish line, no overlap in the bar
   6. the card at the checkpoint in Bergen with the leg's time, «Se kappløpet» by touch opens the tab
   7. «Begynn på nytt» by touch, twice: the attempt is broken off («avbrutt»)
   8. no page errors
@@ -72,8 +73,8 @@ async def one(p, name, vw, vh):
     async def shot(k):
         await pg.wait_for_timeout(500); await pg.screenshot(path=os.path.join(OUT, 'kapplop-' + k + '-' + name + '.jpg'), type='jpeg', quality=60)
     async def tab():
-        await J("() => { PHONE.show(true); PHONE.open('ordl'); }"); await pg.wait_for_timeout(300)
-        await tap('#phone .ph-sub button[data-s="lop"]'); await pg.wait_for_timeout(300)
+        await J("() => { PHONE.show(true); PHONE.open('ordl'); }"); await pg.wait_for_timeout(900)   # (the phone slides in: 0.28 s)
+        await tap('#phone .ph-sub button[data-s="lop"]'); await pg.wait_for_timeout(400)
         return await J(TAB)
 
     a = await J(AT); check(a.get('name') == 'Lindesnes' or a.get('port') == await J("() => LOP.start.port"), name + ': båten ved kaia i Lindesnes', a)
@@ -144,9 +145,9 @@ async def one(p, name, vw, vh):
     await J("() => { S.plan = null; S.boat.status = 'idle'; G3.show(false); openPlotter(); }"); await pg.wait_for_timeout(800)
     await J("""() => { const P = [LOP.start.p].concat(LOP.cps.map(c => c.p), [LOP.goal.p]), y0 = Math.min(...P.map(q => q.y)), y1 = Math.max(...P.map(q => q.y)), x0 = Math.min(...P.map(q => q.x)), x1 = Math.max(...P.map(q => q.x)), r = document.getElementById('map').getBoundingClientRect();
       view.cx = (x0 + x1) / 2; view.cy = (y0 + y1) / 2; view.z = MAP_H / Math.max((y1 - y0) * 1.2, (x1 - x0) * 1.25 * r.height / r.width); applyView(); renderStatic(); }""")
-    await pg.wait_for_function("LOP_WAY.legs && !LOP_WAY.busy", timeout=300000); await J("() => { renderStatic(); }"); await pg.wait_for_timeout(1500)
-    k = await J("() => ({lines:document.querySelectorAll('#map .lopmk').length, cps:document.querySelectorAll('#map .lopcp').length, goal:document.querySelectorAll('#map .lopgoal').length, ways:LOP_WAY.legs.map(w => w ? w.length : 0)})")
-    check(k['lines'] == 6 and k['cps'] == 6 and k['goal'] == 1 and all(n > 1 for n in k['ways']), name + ': 5. løypa i kartet: Autonav-veien for alle seks etappene, sjekkpunktene og mållinja', k)
+    await pg.wait_for_function("LOP_WAY.w && !LOP_WAY.busy", timeout=300000); await J("() => { renderStatic(); }"); await pg.wait_for_timeout(1500)
+    k = await J("() => ({lines:document.querySelectorAll('#map .lopmk').length, now:[...document.querySelectorAll('#map .lopmk.now')].map(e => e.getAttribute('points').split(' ').length), cps:document.querySelectorAll('#map .lopcp').length, goal:document.querySelectorAll('#map .lopgoal').length, way:LOP_WAY.w.length})")
+    check(k['lines'] == 6 and k['cps'] == 6 and k['goal'] == 1 and k['now'] and k['now'][0] > 2, name + ': 5. løypa i kartet: Autonav-veien for etappen som seiles, de andre etappene, sjekkpunktene og mållinja', k)
     bar = await J(RECT, '#ecLop'); bars = await J("() => [...document.querySelectorAll('#ecdisTop > .ec-f')].map(e => { const q = e.getBoundingClientRect(), cs = getComputedStyle(e); return cs.display === 'none' ? null : [e.className, Math.round(q.left), Math.round(q.right)]; }).filter(Boolean)")
     ov = [1 for i in range(len(bars) - 1) if bars[i][2] > bars[i + 1][1] + 1]
     vw_ok = all(b[2] <= vw + 1 for b in bars)
@@ -164,6 +165,20 @@ async def one(p, name, vw, vh):
     await tap('#lopPop [data-x="see"]'); await pg.wait_for_timeout(600)
     t = await J(TAB); hid = await J("() => { const e = document.getElementById('lopPop'); return !e || e.hidden; }")
     check(hid and t and t['on'] == 'Kappløp' and 'Etappe 2' in t['txt'], name + ': 6. «Se kappløpet» med berøring åpner fanen', {'on': t and t['on']})
+    # 6b. north: the last leg from Tromsø, «Kjør til Nordkapp» by touch: Autonav's way ends past the finish line (the stikkprøve's north;
+    # south is Lindesnes, Obrestad and the tow off Egersund, the middle the station on Frohavet)
+    n = await J("""async () => { const r = S.lop.run, pt = portById(LOP.cps[4].port), b = S.boat; await mapNeed(pt.p, 3);
+      while (r.legs.length < 5) r.legs.push({t:S.t, pid:LOP.cps[r.legs.length].port}); r.seenN = 5; r.tasks = r.tasks.filter(m => m.leg < 5);
+      b.status = 'port'; b.port = pt.id; b.pos = {x:pt.p.x, y:pt.p.y}; S.plan = null; return {port:pt.name}; }""")
+    t = await tab()
+    go = [b for b in (t or {}).get('btns', []) if b[0] == 'lopgo']
+    check(go and 'Nordkapp' in go[0][1], name + ': 6b. fra Tromsø: «Kjør til Nordkapp»', {'n': n, 'go': go})
+    await tap('#phone [data-pa="lopgo"]')
+    await pg.wait_for_function("S.plan && S.plan.wps.length > 1", timeout=300000)
+    e = await J("() => { const w = S.plan.wps[S.plan.wps.length - 1]; return {y:w.y, goal:LOP.goal.p.y, x:w.x, gx:LOP.goal.p.x, n:S.plan.wps.length, st:S.boat.status}; }")
+    check(e['y'] < e['goal'] and e['x'] > e['gx'], name + ': 6b. ruta fra Tromsø ender øst for mållinja, nord for Nordkapp', e)
+    await J("() => { S.plan = null; S.boat.status = 'port'; }")
+    t = await tab()
     # 7. «Begynn på nytt», twice
     await tap('#phone [data-pa="lopquit"]'); r1 = await J(RUN)
     await tap('#phone [data-pa="lopquit"]'); r2 = await J(RUN)

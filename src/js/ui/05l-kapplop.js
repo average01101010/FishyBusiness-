@@ -23,17 +23,21 @@ function lopClock(){
 const lopTitle = wk => lopL(LOP.name[0] + ', uke ' + wk.w, LOP.name[1] + ', week ' + wk.w);
 // a sea point past the finish line, east of the cape (Autonav goes there from Tromsø; the same as tests/kapplop.py)
 const lopPast = () => P(71.215, 25.86);
-let LOP_QUIT = 0, LOP_TAB = false;   // «Begynn på nytt» asks once more (the time of the first tap); the Oppdrag app opens on the race's tab
+// «Begynn på nytt» asks once more (the time of the first tap, put back when the tab is drawn more than 8 s after it, so the button
+// always says what a tap does); LOP_TAB: the Oppdrag app opens on the race's tab (the card at a checkpoint, outside the phone)
+let LOP_QUIT = 0, LOP_TAB = false;
+// the race as it stands, read without making S.lop (only registering makes it: lopState)
+const lopRead = () => S.lop || {run:null, hist:[], best:{}};
 
 // ---- the tab ----
 function lopPage(){
-  const L = lopState(), r = L.run, b = S.boat, V = VESSELS[b.type] || {}, wk = lopWeek(lopMs(S.t)), h = [], en = S.lang === 'en';
+  const L = lopRead(), r = L.run, b = S.boat, V = VESSELS[b.type] || {}, wk = lopWeek(lopMs(S.t)), h = [], en = S.lang === 'en';
   const mine = !!(r && r.vid === S.cur), cls = mine ? r.cls : lopCls(V);
-  if (LOP_QUIT && Date.now() - LOP_QUIT > 8000) LOP_QUIT = 0;
+  if (LOP_QUIT && (Date.now() - LOP_QUIT > 8000 || !r || r.st !== 'run')) LOP_QUIT = 0;
   h.push('<div class="ph-card tur lop"><div class="tur-h"><span class="tur-c">' + lopL('Kappløp', 'Race') + '</span><small>' + lopL('Uke ', 'Week ') + wk.w + '</small></div><h4>' + lopL(LOP.name[0], LOP.name[1]) + '</h4>' +
     '<p class="ph-note">' + lopL('Den raskeste tida fra kaia i Lindesnes til mållinja nord for Nordkapp. Klokka går fra du kaster loss til du er over linja, også i havn og mens du sover.', 'The fastest time from the quay in Lindesnes to the finish line north of the North Cape. The clock runs from when you cast off until you are over the line, in harbour and while you sleep too.') + '</p>' +
     lopKv(lopL('Klasse', 'Class'), lopClsName(cls, en) + ' · ' + turEsc(mine ? ((VESSELS[r.type] || {}).name || {})[S.lang] || r.type : (V.name || {})[S.lang] || b.type)) +
-    (L.best[wk.id] != null ? lopKv(lopL('Din beste tid denne uka', 'Your best time this week'), lopHmL(L.best[wk.id])) : '') + '</div>');
+    ((L.best || {})[wk.id] != null ? lopKv(lopL('Din beste tid denne uka', 'Your best time this week'), lopHmL(L.best[wk.id])) : '') + '</div>');
   // another of her boats is in the race: said here, with the clock; its tasks are done aboard it
   if (r && !mine){ const v = vesselById(r.vid), nm = v ? vget(v, 'boatName') || '' : r.name || '', T = lopTime(r, S.t);
     h.push('<div class="ph-card"><p class="ph-note">' + lopL('«' + turEsc(nm) + '» er med i kappløpet. Oppgavene underveis gjøres om bord i henne.', 'The «' + turEsc(nm) + '» is in the race. The tasks on the way are done aboard her.') + '</p>' +
@@ -52,7 +56,7 @@ function lopPage(){
   if (going){ const ts = (r.tasks || []).filter(m => m.leg === done || (m.st === 'go' && m.carry));
     if (ts.length) h.push('<h4 class="tur-sec">' + lopL('Etappe ' + (done + 1) + ': oppgavene', 'Leg ' + (done + 1) + ': the tasks') + '</h4>' + ts.map(lopTaskCard).join('')); }
   // the attempts before
-  if (L.hist.length) h.push('<h4 class="tur-sec">' + lopL('Forsøkene dine', 'Your attempts') + '</h4><div class="ph-card">' + L.hist.slice(0, 5).map(e => {
+  if ((L.hist || []).length) h.push('<h4 class="tur-sec">' + lopL('Forsøkene dine', 'Your attempts') + '</h4><div class="ph-card">' + L.hist.slice(0, 5).map(e => {
     const w = lopWeek(lopMs(e.t1)).w;
     return lopKv(lopL('Uke ', 'Week ') + w + ' · ' + lopClsName(e.cls, en), e.st === 'done' ? lopHmL(e.min) : '<span class="r2">' + lopL('brutt', 'broken off') + ' (' + lopL(lopHowWords(e.how)[0], lopHowWords(e.how)[1]) + ')</span> · ' + e.legs + '/' + lopLegsN()); }).join('') + '</div>');
   h.push('<h4 class="tur-sec">' + lopL('Reglene', 'The rules') + '</h4><div class="ph-card"><ul class="lop-r">' + [
@@ -69,7 +73,7 @@ function lopPage(){
 // the course card's buttons: «Meld på» (or why not, with the way to Lindesnes), «Kast loss mot …» / «Kjør til …», and «Begynn på nytt»
 function lopButtons(r, mine){
   const b = S.boat, free = ['idle', 'port'].includes(b.status), B = [];
-  if (!r){ const why = lopWhyNot();
+  if (!r){ const had = S.lop, why = lopWhyNot(); if (!had) delete S.lop;   // (lopWhyNot makes S.lop: not by looking)
     if (!why) B.push('<button class="ph-btn p" data-pa="lopreg">' + lopL('Meld på', 'Register') + '</button>');
     else { B.push('<p class="ph-note">' + lopL(why[0], why[1]) + '</p>');
       if (free && lopCpOf(b.port) !== 0) B.push('<button class="ph-btn p" data-pa="lopgo">' + lopL('Kjør til ' + LOP.start.name, 'Go to ' + LOP.start.name) + '</button>'); } }
@@ -106,51 +110,43 @@ function lopTaskCard(m){
 }
 // «Meld på» from the tab
 function lopReg(){ const r = lopStart(); if (r && r.why){ toast(lopL(r.why[0], r.why[1])); return false; } save(); return true; }
-// «Begynn på nytt»: twice within 8 s for an attempt under way; the registration is struck at once
+// «Begynn på nytt»: twice for an attempt under way (the second while the button says «Trykk igjen»); the registration is struck at once
 function lopQuit(){
   const r = S.lop && S.lop.run; if (!r) return;
-  if (r.st === 'run' && !(LOP_QUIT && Date.now() - LOP_QUIT <= 8000)){ LOP_QUIT = Date.now(); return; }
+  if (r.st === 'run' && !LOP_QUIT){ LOP_QUIT = Date.now(); return; }
   LOP_QUIT = 0; lopEnd('avbrutt'); save();
 }
 // «Meld på» is at Lindesnes: the way there; registered, casting off for Bergen (the clock starts, lopDepart); under way, the way to the
 // next checkpoint's quay, or past the line after Tromsø. As «Kjør dit» does it for a mission (05f-turer.js turGo)
 async function lopGo(){
-  const b = S.boat, r = S.lop && S.lop.run, mine = !!(r && r.vid === S.cur && (r.st === 'reg' || r.st === 'run'));
-  if (!['idle', 'port'].includes(b.status) || (S.plan && S.plan.depAt)){ toast(lopL('Båten er opptatt. Stopp det den holder på med først.', 'The boat is busy. Stop what it is doing first.')); return; }
-  if (!meAboard() && !crewAboard().length){ const t = noCrewText(); toast(lopL(t[0], t[1])); return; }
-  const k = !mine ? -1 : r.st === 'reg' ? 0 : r.legs.length, toPort = k < 0 ? LOP.start.port : k < LOP.cps.length ? LOP.cps[k].port : null, q = toPort ? portById(toPort) : null;
-  const end = q ? q.p : lopPast(), aPort = b.status === 'port' ? b.port : null;
-  if (q && aPort === toPort){ toast(lopL('Du er allerede der.', 'You are there already.')); return; }
-  toast(lopL('Finner veien …', 'Finding the way …'));
-  let res; try { res = await leiaRoute({x:b.pos.x, y:b.pos.y}, end, aPort, toPort); } catch (e){ console.error(e); res = {why:['Fant ingen vei dit.', 'Found no way there.']}; }
-  if (res.why){ toast(lopL(res.why[0], res.why[1])); return; }
-  if (!['idle', 'port'].includes(b.status)) return;   // (something else started while the way was found)
-  if (S.draft && S.draft.length) S.draft = [];
-  const wps = res.wps.map((p, i) => i === res.wps.length - 1 ? {x:q ? q.p.x : p.x, y:q ? q.p.y : p.y, port:toPort, fish:0} : {x:p.x, y:p.y, port:null, fish:0, leia:true});
-  S.plan = {wps, idx:0, speed:S.draftSpeed || BOAT.vcruise || 6, full:!!S.draftFull, returning:false};
-  if (b.status === 'port') depart(); else b.status = 'sailing';
-  save(); if (typeof refreshAll === 'function') refreshAll();
+  const r = S.lop && S.lop.run, mine = !!(r && r.vid === S.cur && (r.st === 'reg' || r.st === 'run'));
+  const k = !mine ? -1 : r.st === 'reg' ? 0 : r.legs.length, toPort = k < 0 ? LOP.start.port : k < LOP.cps.length ? LOP.cps[k].port : null;
+  await turSail(toPort ? portById(toPort).p : lopPast(), toPort);
 }
 
-// ---- the course in the chart, while she is registered: the way between the checkpoints as Autonav sails it (found once a session,
-// in the background; straight lines until then), the checkpoints with their names and the finish line ----
-const LOP_WAY = {legs:null, busy:false, t:0};
-function lopWayFind(){
-  // (a leg whose way was not found, the map not in yet, is tried again after two minutes)
-  if (LOP_WAY.busy || typeof leiaRoute !== 'function' || (LOP_WAY.legs && (LOP_WAY.legs.every(Boolean) || Date.now() - LOP_WAY.t < 120000))) return; LOP_WAY.busy = true;
-  (async () => { const out = [];
-    for (let j = 0; j < lopLegsN(); j++){ const a = portById(j ? LOP.cps[j - 1].port : LOP.start.port), c = j < LOP.cps.length ? portById(LOP.cps[j].port) : null;
-      let w = null; try { const res = await leiaRoute({x:a.p.x, y:a.p.y}, c ? {x:c.p.x, y:c.p.y} : lopPast(), a.id, c ? c.id : null); if (!res.why) w = [a.p].concat(res.wps.map(p => ({x:p.x, y:p.y}))); } catch (e){ console.warn('lop way', e); }
-      out.push(w); }
-    LOP_WAY.legs = out; LOP_WAY.busy = false; LOP_WAY.t = Date.now(); if (typeof renderStatic === 'function') try { renderStatic(); } catch (e){} })();
+// ---- the course in the chart, while she is registered: the checkpoints with their names, the finish line, and the legs as thin
+// dotted lines between them; the leg she sails now as the way Autonav takes, her own route when it ends at the checkpoint, else found
+// once (as «Kjør dit» finds one, leiaRoute, one search: never the whole course in the background, which would hold the route
+// search's things in the water and its tide for minutes, 11-route.js LEIA_RUN, and pull the map of the whole coast)
+const LOP_WAY = {key:null, w:null, busy:false, t:0};
+function lopLegWay(r, j){
+  const b = S.boat, last = S.plan && S.plan.wps && S.plan.wps[S.plan.wps.length - 1], to = j < LOP.cps.length ? LOP.cps[j].port : null;
+  // her own route to the checkpoint (or past the line after Tromsø), from where she is
+  if (r.vid === S.cur && last && S.plan.idx < S.plan.wps.length && (to ? last.port === to : !last.port && last.y < LOP.goal.p.y)) return [b.pos].concat(S.plan.wps.slice(S.plan.idx));
+  const key = r.id + '|' + j + '|' + r.type;
+  if (LOP_WAY.key === key && LOP_WAY.w) return LOP_WAY.w;
+  if (LOP_WAY.busy || typeof leiaRoute !== 'function' || (LOP_WAY.key === key && Date.now() - LOP_WAY.t < 120000)) return null;   // (a way not found is tried again after two minutes)
+  const a = portById(j ? LOP.cps[j - 1].port : LOP.start.port), c = to ? portById(to) : null; if (!a) return null;
+  LOP_WAY.busy = true; LOP_WAY.key = key; LOP_WAY.w = null; LOP_WAY.t = Date.now();
+  leiaRoute({x:a.p.x, y:a.p.y}, c ? {x:c.p.x, y:c.p.y} : lopPast(), a.id, c ? c.id : null).then(res => { if (LOP_WAY.key === key && !res.why) LOP_WAY.w = [a.p].concat(res.wps.map(p => ({x:p.x, y:p.y}))); })
+    .catch(e => console.warn('lop way', e)).finally(() => { LOP_WAY.busy = false; if (LOP_WAY.w && typeof renderStatic === 'function') try { renderStatic(); } catch (e){} });
+  return null;
 }
 function lopSvg(u, inV){
   const r = S.lop && S.lop.run; if (!r || !(r.st === 'reg' || r.st === 'run')) return '';
-  lopWayFind();
   const g = [], pts = [LOP.start.p].concat(LOP.cps.map(c => c.p)), done = r.st === 'run' ? r.legs.length : 0;
-  for (let j = 0; j < lopLegsN(); j++){ const w = LOP_WAY.legs && LOP_WAY.legs[j], a = pts[j], c = j < LOP.cps.length ? pts[j + 1] : lopPast();
-    const line = w && w.length > 1 ? w : [a, c];
-    g.push('<polyline points="' + line.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="lopmk' + (j < done ? ' done' : j === done ? ' now' : '') + '" fill="none" stroke-width="' + ((j === done ? 2.6 : 1.8) * u) + '"' + (w ? '' : ' stroke-dasharray="' + (6 * u) + ' ' + (4 * u) + '"') + '/>'); }
+  for (let j = 0; j < lopLegsN(); j++){ const a = pts[j], c = j < LOP.cps.length ? pts[j + 1] : lopPast(), w = j === done ? lopLegWay(r, j) : null, line = w && w.length > 1 ? w : [a, c];
+    g.push('<polyline points="' + line.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="lopmk' + (j < done ? ' done' : j === done ? ' now' : '') + '" fill="none" stroke-width="' + ((w ? 2.6 : 1.4) * u) + '"' + (w ? '' : ' stroke-dasharray="' + (1.5 * u) + ' ' + (4 * u) + '"') + '/>'); }
   // the checkpoints: a square at each, ticked off when passed, with the name when the chart is close enough or far out (the course is long)
   pts.forEach((p, i) => { if (!inV(p.x, p.y)) return; const s = 7 * u, ok = i === 0 ? r.st === 'run' : i <= done;
     g.push('<rect x="' + (p.x - s) + '" y="' + (p.y - s) + '" width="' + 2 * s + '" height="' + 2 * s + '" transform="rotate(45 ' + p.x + ' ' + p.y + ')" class="lopcp' + (ok ? ' ok' : '') + '" stroke-width="' + (1.8 * u) + '"/>');
@@ -198,7 +194,7 @@ function lopPop(inner){
 
 // ---- the card in the Sesong app: the race this week and your best time (the board for everyone is KL3) ----
 function lopSeasonCard(){
-  const L = lopState(), wk = lopWeek(lopMs(S.t)), best = L.best[wk.id], c = lopClock(), r = L.run;
+  const L = lopRead(), wk = lopWeek(lopMs(S.t)), best = (L.best || {})[wk.id], c = lopClock(), r = L.run;
   return '<div class="ph-card lop-s"><h4>' + lopTitle(wk) + '</h4><p class="ph-note">' + lopL('Kappløpet fra Lindesnes til Nordkapp er åpent hele uka. Meld deg på ved kaia i Lindesnes, under Oppdrag › Kappløp.', 'The race from Lindesnes to the North Cape is open all week. Register at the quay in Lindesnes, under Orders › Race.') + '</p>' +
     (best != null ? lopKv(lopL('Din beste tid denne uka', 'Your best time this week'), lopHmL(best)) : '') +
     (c ? lopKv(lopL('Forsøket ditt nå', 'Your attempt now'), lopL('etappe ', 'leg ') + c.leg + '/' + c.n + ' · ' + lopHmL(c.min)) : r && r.st === 'reg' ? lopKv(lopL('Forsøket ditt nå', 'Your attempt now'), lopL('påmeldt i Lindesnes', 'registered in Lindesnes')) : '') +
