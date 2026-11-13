@@ -6,9 +6,13 @@
     for (const id of ['hud', 'miniPlot', 'gps3d']){ const e = $(id); if (!e || e.hidden || !e.offsetParent && getComputedStyle(e).position !== 'fixed') continue;
       const q = e.getBoundingClientRect(), c = getComputedStyle(e); if (!q.width || !q.height || c.display === 'none' || c.visibility === 'hidden') continue;
       if (q.left < innerWidth / 2) r = Math.max(r, q.right); if (q.top < innerHeight / 2) b = Math.max(b, q.bottom); }
+    // no room for the box and a phone of 660 x 680 beside or under it (a small tablet): the phone takes the screen, rather than lie half over the box
+    if (innerWidth - r - 26 < 660) r = 0; if (innerHeight - b - 22 < 680) b = 0;
     el.style.setProperty('--ph-hr', Math.round(r) + 'px'); el.style.setProperty('--ph-hb', Math.round(b) + 'px');
   }
-  window.addEventListener('resize', () => { if (isOpen) place(); });
+  // (the box settles a moment after the screen has changed size, and grows and shrinks with what the boat does: measured again then)
+  window.addEventListener('resize', () => { if (isOpen){ place(); setTimeout(() => { if (isOpen) place(); }, 400); } });
+  if (typeof ResizeObserver === 'function'){ const ro = new ResizeObserver(() => { if (isOpen) place(); }); for (const id of ['hud', 'miniPlot']) if ($(id)) ro.observe($(id)); }
   function show(on, a){ const was = isOpen; isOpen = on; if (a === 'kaiboden') a = kbLast; if (a) app = a === 'admin' && !adminOk() ? 'home' : a; else if (on && !was) app = 'home'; /* a closed phone opens on the home screen, not on the last app */ document.body.classList.toggle('ph-on', !!on); if (on) place();   /* (D5: the big phone on a tablet is a surface of its own, and the dock is hidden under it; the stylesheet reads this) */ if (on){ el.hidden = false; void el.offsetWidth; el.classList.remove('off'); render(); } else { el.classList.add('off'); setTimeout(() => { if (!isOpen) el.hidden = true; }, 300); } }
   function status(){
     const H = (S.t + liveFrac()) / 60, bars = S.boat.status === 'port' ? 4 : coverage(S.boat.pos);

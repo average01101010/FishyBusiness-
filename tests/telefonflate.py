@@ -113,6 +113,13 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         await tablet(b, 800, 1280, 'stående nettbrett'); await tablet(b, 1280, 800, 'liggende nettbrett'); await tablet(b, 1024, 768, 'lite nettbrett')
+        # (the independent check, D5: the home screen ran sideways in a small window lying down, and the phone lay half over the box on a small tablet standing)
+        for w, h in ((600, 521), (640, 540), (768, 1024), (600, 960)):
+            pg = await b.new_page(viewport={'width': w, 'height': h}); await boot(pg); await pg.evaluate("S.boat.status = 'port'; renderActs(); PHONE.show(true)"); await pg.wait_for_timeout(700)
+            f = await pg.evaluate("(() => { const v = document.getElementById('phView'); return [v.scrollWidth, v.clientWidth]; })()"); ph = await pg.evaluate(RECT + "('#phone')"); hud = await pg.evaluate(RECT + "('#hud')")
+            half = bool(hud and hud['w'] and hud['b'] > ph['t'] + 1 and hud['t'] < ph['t'] - 1 and hud['r'] > ph['l'] + 1)
+            check(f[0] <= f[1] + 1 and not half, '%d × %d: hjemskjermen ruller ikke sidelengs, og flata ligger ikke halvt over statusboksen' % (w, h), [f, [round(ph[k]) for k in 'ltrb'], hud and [round(hud[k]) for k in 'ltrb']])
+            await pg.close()
         await phone(b, 390, 844, 'stående telefon'); await phone(b, 844, 390, 'liggende telefon')
         await b.close()
 
