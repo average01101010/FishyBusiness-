@@ -15,7 +15,7 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(ROOT, 'tools', 'mottak
 import numpy as np
 import fotavtrykk as F
 import mottak
-from steder import good, SPACE, YARDS
+from steder import good, SPACE, YARDS, move_sted
 from landflytt import land_gap, bad, cost, GAPOK
 
 STEDER = os.path.join(ROOT, 'src', 'data', 'steder.json'); MOTTAK = os.path.join(ROOT, 'src', 'data', 'mottak.json'); RORBU = os.path.join(ROOT, 'src', 'data', 'rorbuer.json')
@@ -79,7 +79,7 @@ def main():
     for u in unsolved: print('UNSOLVED', u)
     for i, kind, town, name, m, new in moved: print('moved %-7s %-14s (by the ocean plant in %s) %5d m -> (%.3f, %.3f), %d m face, %.1f m deep' % (kind, town, name, m, new[0], new[1], new[3], new[4]))
     if moved and '--dry' not in sys.argv:
-        for i, kind, town, name, m, new in moved: S['r'][i][:5] = new
+        for i, kind, town, name, m, new in moved: move_sted(S, i, new)
         S['meta']['havflytt'] = '%d shops/yards moved 1.5 km from the ocean fleet\'s plants (%s), tools/steder/havflytt.py' % (len(moved), ', '.join(n for *_, n, _, _ in [(0, 0, 0, x[3], 0, 0) for x in moved]))
         S['r'].sort(key=lambda o: (o[0], o[1]))
         json.dump(S, open(STEDER, 'w'), ensure_ascii=False, separators=(',', ':'))
