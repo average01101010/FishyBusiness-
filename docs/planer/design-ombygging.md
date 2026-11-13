@@ -74,6 +74,12 @@ Etter hver fase: `designshots.py` før og etter, `uishots`, og Jonas på nettbre
 
 **Geminis beslutningsliste** (ti A/B-valg) står i svaret. De som er nye i forhold til valgene under: tak på arkhøyden i stående, kameraet som flytter båten når skuffen åpnes, en synlig kartknapp til sjøs, lik HUD i begge formater, én kartpalett, og bakgrunn på kompasset og meldingene.
 
+## Jonas' svar (13.11.2026)
+
+- **Valg 1: A.** Nytt utseende og nye oppsett, samme innhold og funksjoner. D1–D3 først; sammenslåingene (D4) vurderes etterpå.
+- **Valg 2: A.** Telefonen blir en stor flate på nettbrett som beholder telefonens ramme og statuslinje.
+- **Valg 3:** «Dette bestemmer du selv». Økta valgte **A: knappelinja følger stedet som i dag** (utstyrsbutikk, mottak og verft er tre steder, `docs/handelssteder.md`). Snus ved å bygge Geminis fem faste i D4; ingenting i D1–D3 låser det.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
