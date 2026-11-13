@@ -1,0 +1,17 @@
+OK   skiff        205 cells   8.2 m2 of  14.5, places sloy,is,haling,ror,spot0,filler, rail 10 (0 behind a wall), 120 ways (longest 41), 0 through the house between 1 parts, 232 ms 
+OK   trebat        87 cells   3.5 m2 of  15.8, places sloy,is,haling,ror,spot0,filler, rail 10 (0 behind a wall), 120 ways (longest 26), 0 through the house between 1 parts, 104 ms 
+OK   snekke       135 cells   5.4 m2 of  21.3, places sloy,is,haling,ror,door,spot0,spot1,spot2,filler, rail 10 (0 behind a wall), 171 ways (longest 9), 0 through the house between 1 parts, 61 ms 
+OK   plastsjark   302 cells  12.1 m2 of  31.2, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (0 behind a wall), 139 ways (longest 15), 51 through the house between 2 parts, 97 ms 
+OK   sjark        585 cells  23.4 m2 of  43.3, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (1 behind a wall), 153 ways (longest 10), 18 through the house between 2 parts, 68 ms 
+OK   hurtigsjark  569 cells  22.8 m2 of  42.9, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (0 behind a wall), 190 ways (longest 11), 0 through the house between 1 parts, 52 ms 
+OK   sjarkny      696 cells  27.8 m2 of  51.4, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (3 behind a wall), 136 ways (longest 20), 0 through the house between 1 parts, 77 ms 
+OK   breisjark    476 cells  19.0 m2 of  46.2, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (0 behind a wall), 154 ways (longest 14), 36 through the house between 2 parts, 91 ms 
+OK   kyst15      1732 cells  69.3 m2 of  98.9, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (2 behind a wall), 153 ways (longest 17), 0 through the house between 1 parts, 59 ms 
+OK   kyst21      1799 cells  72.0 m2 of 151.2, places sloy,is,haling,door,spot0,spot1,spot2,spot3,filler, rail 10 (0 behind a wall), 171 ways (longest 28), 0 through the house between 1 parts, 51 ms 
+OK   snokrabbe   11058 cells 442.3 m2 of 550.0, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,spot4,spot5,filler, rail 10 (0 behind a wall), 210 ways (longest 12), 21 through the house between 2 parts, 90 ms 
+FEIL autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 48 ms {"fail": 0}
+OK   bunntral    14473 cells 578.9 m2 of 753.8, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (3 behind a wall), 76 ways (longest 35), 60 through the house between 2 parts, 272 ms 
+OK   pelagisk    24327 cells 973.1 m2 of 1162.5, places sloy,is,haling,ror,door,spot0,spot1,spot2,spot3,filler, rail 10 (2 behind a wall), 88 ways (longest 196), 65 through the house between 2 parts, 315 ms 
+OK   ringnot38   1323 cells  52.9 m2 of 366.2, places sloy,is,haling,door,spot0,spot1,spot2,filler, rail 10 (3 behind a wall), 69 ways (longest 18), 36 through the house between 2 parts, 200 ms 
+OK   no page errors 
+FEIL: autoliner    152 cells   6.1 m2 of 474.4, places sloy,is,haling,door, rail 0 (0 behind a wall), 6 ways (longest 4), 0 through the house between 1 parts, 48 ms
