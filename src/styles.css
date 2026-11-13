@@ -1951,11 +1951,11 @@ body.booting #lopPop{visibility:hidden!important}
 /* the tip: a lighter glass than what it points at (the drawer is dark too), the guide's yellow as its edge, the arrow of the same */
 #tip{background:#223B4A;color:#EEF4F7;box-shadow:none;filter:drop-shadow(0 0 1px rgba(232,201,106,.95)) drop-shadow(0 10px 22px rgba(0,0,0,.5))}
 .tip-arrow{background:#223B4A}
-.tip-b button{min-height:36px;background:rgba(238,244,247,.12);color:#EEF4F7} .tip-b #tipOk{background:var(--a-main);color:#fff} #tipAlt{color:#C6D6DE!important}
+.tip-b button{min-height:44px;padding:5px 14px;background:rgba(238,244,247,.12);color:#EEF4F7} .tip-b #tipOk{background:var(--a-main);color:#fff} #tipAlt{color:#C6D6DE!important}
 #tip.small{opacity:1}
 /* the toast, the update bar and the «showing» chip: the same glass in a light and a dark system (they were --ink on --paper, so light on a dark one) */
 #toast,#updBar,#showChip{background:rgba(11,23,32,.94);color:#EEF4F7;border:1px solid #2A4252;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-#toast{border-radius:10px}
+#toast{border-radius:10px;background:rgba(30,50,64,.96);border-color:#4A6B7E}   /* (a lighter glass with a clearer edge: over a dark sea at night the darkest one all but vanished) */
 #updBar #updX{color:#EEF4F7} #showChip button{background:#EEF4F7;color:#0B1720}
 /* ---- the HUD ---- */
 /* the compass line: a band of glass behind it, fading out with the line, so the course reads against snow, hills and the boat */
@@ -1977,6 +1977,8 @@ body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-na
 }
 @media (orientation:landscape) and (min-height:521px){body.v3d{--pmT:var(--bTop);--pmW:var(--bW);--pmH:var(--mH)}}
 @media (max-height:520px){body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}}
+/* «Regler ✓ Lov her ›» opens the rules: a row high enough for a finger */
+#hud .row.rlink{min-height:36px;align-items:center}
 /* under way: the dot is the instruments' blue, not magenta */
 #hud .dot.go{background:#7CC4E0}
 /* ---- magenta only on what buys or accepts: the dock, the box, the plotter ---- */
