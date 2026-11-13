@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['lemmer-131126', '13.11.2026', 'Armer og bein', 'Arms and legs', [
+       ['Armene og beina til folk om bord og på kaia holder lengden sin i arbeid: albuen og kneet bøyer seg i stedet for at armen strekkes, og den som må langt ut etter noe, bøyer ryggen og vrir seg etter det.', 'The arms and legs of the people aboard and on the quay keep their length at work: the elbow and the knee bend instead of the arm stretching, and someone reaching far for something bends the back and turns after it.']]],
     ['flagg-131126', '13.11.2026', 'Flaggene på de andre båtene', 'The flags on the other boats', [
        ['Andre spilleres flagg synes nå i akterenden på båtene deres, også rederiflagget med logoen. En båt uten eget flagg fører det norske. Flaggene går opp og ned etter flaggtidene der båten er.', "Other players' flags now fly at the stern of their boats, the house flag with the company logo too. A boat without a flag of her own flies the Norwegian one. The flags go up and down by the flag hours where the boat is."]]],
     ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [

@@ -122,6 +122,9 @@
     // (the tests hold the crew's deck at a roll and a pitch of their own, where the boat is and heading her way, hold everyone's beat
     // still (T), put everyone at a place in one pose (task), and take the time of this function: SJOBEIN.test, tests/sjobein.py)
     const SJT = SJOBEIN.test, sjp0 = SJT && SJT.prof ? performance.now() : 0;
+    // (the tests go through the people again with another pose or beat without a whole frame: LEMMER.redraw, tests/lemmer.py. Nothing
+    // is drawn then, the joints are only reckoned and logged: thousands of figures a second were minutes of work for a software GPU)
+    LEMMER.fr++; if (LEMMER.log && !LEMMER.dry){ const B0 = BMrel; LEMMER.redraw = () => { const d0 = drawN; LEMMER.dry = true; drawN = () => {}; try { drawDeckCrew(B0, eye, VP, t, G); } finally { drawN = d0; LEMMER.dry = false; } }; }
     if (SJT && SJT.roll != null) BMrel = model(BMrel[12], BMrel[13], BMrel[14], -bv.head, SJT.pitch || 0, SJT.roll || 0);
     const DN = deckN(BMrel);   // (the deck's normal in the world, for the sea legs: view3d/08-plants.js seaNow)
     const b = S.boat, d = G.deck || {y:G.gw, z:0}, gw = G.gw || d.y + 0.9, railH = clamp(gw - d.y, 0.6, 1.1), now = performance.now() / 1000, DW = deckWork(G), ST = CREW3D._st, V = VESSELS[vtype()] || {}, K = G.kit || {};
