@@ -55,4 +55,16 @@ export default function (t){
     && Rb.every(b => b[3] - b[2] >= 0.9 && Math.abs((b[0] + b[1]) / 2 - z0 - Lr / 2) < 0.15 * Lr),
     'ringnot38: logoen nær midtskips på skrogets egen maling, uten koøyer, utløp eller lister under eller rundt den på noen side, minst 0,9 m høy'
     + (R ? ' (' + Rb.map((b, i) => `${i ? 'babord' : 'styrbord'} ${(b[3] - b[2]).toFixed(2)} m, z ${b[0].toFixed(2)}–${b[1].toFixed(2)}, y ${b[2].toFixed(2)}–${b[3].toFixed(2)}`).join('; ') + ')' : ''));
+  // TP1 (steg 108): another player's model is keyed on the part of her paint code that changes it (livPaint: h o d r t v s g x), not on
+  // her registration mark, logo or flag, so two boats painted alike share one model; a partner's design ('x:') is a model of its own.
+  // Seen red 13.11.2026 against vessel3d.js before the change: npcModel gave each code its own model.
+  const {livPaint, livFlag} = t.K;
+  const A = 'h:kobolt;r:hvit;f:SE.vimpel;m:T.112.LK;l:g.anker.JH.marine.hvit', B = 'h:kobolt;r:hvit;f:NO.rekt;m:N.12.B;l:u.3', C = 'h:kobolt;r:hvit;x:-9', D = 'h:oksblod;r:hvit;m:T.112.LK';
+  t.ok(npcModel('sjark', 0.3, A) === npcModel('sjark', 0.3, B), 'to spillerbåter med lik maling og ulikt merke, logo og flagg får samme modell');
+  t.ok(npcModel('sjark', 0.3, A) !== npcModel('sjark', 0.3, D), 'ulik skrogfarge gir egen modell');
+  t.eq(typeof livPaint === 'function' && livPaint(A), 'h:kobolt;r:hvit', 'livPaint: bare malingen blir igjen');
+  t.ok(typeof livPaint === 'function' && livPaint(C) !== livPaint(A) && livPaint(C).endsWith('x:-9'), 'livPaint: et sponset design gir en ny nøkkel');
+  t.eq(typeof livPaint === 'function' && [livPaint('f:SE.rekt;m:T.1.LK'), livPaint(3), livPaint('m:T.1.LK;h:hvit;g:1;h:rod')], ['', 3, 'h:hvit;g:1'], 'livPaint: tom uten maling, tallene for lokalflåten som de er, fast rekkefølge');
+  t.eq(typeof livFlag === 'function' && [livFlag(A), livFlag(''), livFlag('h:hvit;f:LOGO.splitt'), livFlag('f:XX.rekt'), livFlag('f:SE.bred')].map(f => f.code + '.' + f.shape),
+    ['SE.vimpel', 'NO.rekt', 'LOGO.splitt', 'NO.rekt', 'SE.rekt'], 'livFlag: det kjøpte flagget, ellers Norge i rektangel');
 }
