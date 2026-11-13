@@ -81,6 +81,13 @@ Dette er reglene, én linje hver. **Bakgrunnen (Jonas' ord, datoene, grunnene) s
 - Rammen er UTM sone 33 i km: x = (E + 250 km)/1000 østover, y = (8 050 km − N)/1000 sørover (`natP`/`natLL`). Sann kurs = rutenettskurs + γ (`gridGamma`, `trueDeg`): det som vises, er sann retning; det som regnes, går i rutenettet. Senja-dataene føres inn med `LG`/`LGa`/`LGm`; nytt skrives med `P(lat, lon)`. Se `docs/systemer/kart-og-terreng.md`.
 - Siden er rundt 6 MB; modellene, bildene og Senja-byggene ligger som hashede filer i `data/` og hentes ved oppstart (`ui/11-boot.js`).
 
+## Gemini som andre øyne
+
+- **`ask_gemini`** (MCP-serveren `gemini-reviewer`, `.mcp/gemini-server.mjs`, registrert i `.mcp.json`) spør `gemini-4-hydrogen` og bare den. Den tar `prompt` og `filePaths` (bilder inline, video lastet opp, kode og tekst lest inn under stien). Krever `GEMINI_API_KEY`; serveren kjører `npm ci` selv når `node_modules/` mangler.
+- **Visuell verifisering:** når det finnes skjermbilder (`tests/out/`, `docs/okter/`) eller et opptak Jonas har sendt, spør `ask_gemini` om bildet viser det steget skal vise, og om noe ser galt ut, før det meldes ferdig. Svaret er en annen mening, ikke fasit: les selv det den peker på.
+- **Før større endringer i WebGL-shadere eller vannfysikken** (`src/js/view3d/`, bølgene, skummet, refleksjon, båtens bevegelse i sjøen): send planen og de berørte filene til `ask_gemini` for en sjekk av arkitektur, ytelse (tegnekall, presisjon, mobil-GPU) og aliasing (flimmer, moiré, kanter langt unna). Det den finner, veies i økta og nevnes i meldingen.
+- Send ingenting til Gemini som ikke allerede er i repoet eller i skjermbildene: ikke `.env`, nøkler, spillerdata eller noe fra databasen.
+
 ## Engasjement og inntekt
 
 Spillet skal tjene penger. Grunnlaget og arbeidslista står i `docs/engasjement.md`. I hver avgjørelse gjelder:
