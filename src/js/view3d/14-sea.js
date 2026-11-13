@@ -255,6 +255,9 @@
     // the boat's speed through the water from the simulation (the drawn speed also catches up on lag, which is not the hull's speed)
     // (under the manoeuvring model, by hand: its speed through the water, ahead or astern)
     const VG = GEO(vtype()), kn = typeof dynLive === 'function' && dynLive() ? Math.abs(S.boat.dyn.u || 0) / 0.5144 : S.boat.status === 'sailing' ? Math.abs(S.boat.v || 0) : 0, v = kn * 0.5144, Lb = BOAT.len || 6, Fr = v / Math.sqrt(9.81 * Lb); WK.Fr = Fr; WK.kn = kn;
+    // (5.20x: how much foam and spray the bow throws for the speed the water passes her on the screen, bowFoam in 01-shaders.js and
+    // drawEffects: nothing at a real boat's pace, by hand; a sjark at 7 knots under the game's clock a quarter, 20 knots and over most of it)
+    WK.bowG = NF.on || v < 0.8 ? 0 : 0.85 * sstep(10, 45, bv.spd || 0);
     if (v < 0.8){ WK.u3[3] = 0; WK.pf = 0; return; }
     const fx = Math.sin(bv.head), fz = -Math.cos(bv.head), k0 = 9.81 / (v * v), lam = 2 * Math.PI / k0;
     const A = Math.min(0.6, 0.045 * Lb * sstep(0.12, 0.38, Fr) * (1 - 0.55 * sstep(0.6, 1.5, Fr)));
@@ -385,7 +388,7 @@
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     foamSplash(Dx, Dz); if (u.uSp0 != null){ const V = FOAM.spv; gl.uniform4fv(u.uSp0, V[0]); gl.uniform4fv(u.uSp1, V[1]); gl.uniform4fv(u.uSp2, V[2]); gl.uniform4fv(u.uSp3, V[3]); }
-    gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt);
+    gl.uniform4f(u.uHull, (VG.stern - VG.bow) || 6, (VG.beam || 2.4) / 2, -(VG.bow || -2.2), VG.stern || 3.1); gl.uniform4f(u.uFSp, (WK.kn || 0) * 0.5144, WK.Fr || 0, BOAT.planing ? 1 : 0, dt); if (u.uBowG != null) gl.uniform1f(u.uBowG, WK.bowG || 0);
     attr(0, SKYQ, 2); gl.drawArrays(gl.TRIANGLES, 0, 6);
     foamNPC(qx, qz, Dx, Dz, Dx - FOAM.G[0], Dz - FOAM.G[1]);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null); FOAM.r = w; FOAM.pB = [qx, qz, fx, fz]; FOAM.ms = FOAM.ms * 0.9 + (performance.now() - t1) * 0.1; FOAM.sh = [sx, sz]; FOAM.n++;
