@@ -3927,3 +3927,4 @@
 2026-11-13 20:35	plan/2026-11-13-118	698d4280	roetest	OK	119	lite	samtidig	
 2026-11-13 20:35	plan/2026-11-13-118	698d4280	hudtest	OK	113	lite	samtidig	
 2026-11-13 20:36	plan/2026-11-13-118	698d4280	sqltest	OK	51	lite	samtidig	
+2026-11-13 21:26	plan/2026-11-13-118	56013e50	kapplopshot	FEIL	3000	3d	alene	gikk ut på tid
