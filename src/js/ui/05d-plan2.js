@@ -87,7 +87,7 @@ const PLAN2UI = (() => {
     // (the naust is a home even where its harbour has a yard)
     const add = id => { const p = portById(id); if (!p || out.some(q => q.id === id)) return; if (id !== o.home && id !== home && portServices(p).verft) return; out.push({id}); };
     if (portById(home) && dist(portById(home).p, p0) < 80) add(home); add(here); if (o.home) add(o.home);
-    try { for (const R of rorbuSites(p0, 40).slice(0, 4)) add(R.id); } catch (e){}
+    try { if (siteFits(S.boat.type)) for (const R of rorbuSites(p0, 40).slice(0, 4)) add(R.id); } catch (e){}   // (a boat over 15 m: not at a rorbu, SITE_MAXLEN)
     const hids = new Set(out.map(q => isBerth(q.id) && portById(q.id).hid).filter(Boolean));
     for (const q of havnOptions(p0, 25).filter(q => !hids.has(q.place.hid)).slice(0, 3)) add(q.place.id);
     for (const q of PORTS.filter(q => !q.rorbu && dist(q.p, p0) < 30).sort((a, c) => dist(a.p, p0) - dist(c.p, p0)).slice(0, 5)) add(q.id);
@@ -309,7 +309,7 @@ const PLAN2UI = (() => {
   function fresh(){
     const b = S.boat, here = b.status === 'port' ? b.port : nearestPort(b.pos).id, bunk = (VESSELS[b.type].berths || 0) > 0, hv = havnOptions(portById(here).p, 15)[0];
     let home = plan2RestOk(here) && (isRorbu(here) || here === (S.home || HOME0) || isBerth(here)) ? here : bunk && hv ? hv.place.id : null;
-    if (!home){ try { const r = rorbuSites(portById(here).p, 40)[0]; if (r) home = r.id; } catch (e){} }
+    if (!home && siteFits(b.type)){ try { const r = rorbuSites(portById(here).p, 40)[0]; if (r) home = r.id; } catch (e){} }
     if (!home && hv) home = hv.place.id; if (!home && plan2RestOk(here)) home = here;
     // (an ocean vessel: here when the quay takes her, else the nearest plant that does, H2c)
     if (BOAT.cls === 'hav'){ const P0 = portById(here).p; home = p2PlantOk(portById(here)) ? here : ((p2Plants().sort((a, c) => dist(a.p, P0) - dist(c.p, P0))[0]) || {id:here}).id; }

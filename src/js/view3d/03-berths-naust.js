@@ -100,7 +100,9 @@
       if (hs.length === 9){ hs.sort((a, b) => a - b); SITES.push({k:'shop', near:true, o:sn.o, u:sn.u, n:nn, lev:clamp(hs[4], 1.2, 30), clear:[[SHOP_APRON[0], 0, SHOP_APRON[1], SHOP_APRON[3]]]}); }
       else SITEK = '';   // the ground is not in yet: try again next frame
     }
-    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1), w:(V.beam || 3) + 8, a});
+    // (the pit as deep as the simulation dredges the berth, SITE_DRAFT and half a metre at the lowest tide, below mean sea level: siteDredge,
+    // 13.11.2026; a boat up to 15 m lies there whatever she draws)
+    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w), a});
     if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
       SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the

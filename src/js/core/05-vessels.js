@@ -984,7 +984,7 @@ function dock(pid, berth){
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   if (isBerth(pid)){ havnHold(pid); b.hvDay = null; }   // a berth in a harbour: hers while she lies there, the day's due paid (07e-havn.js)
   b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.castT = null; b.shift = b.fueling = b.after = null;
-  b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
+  b.berth = berth === 'naust' && siteFits(b.type) && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   if (typeof achVisitPort === 'function') achVisitPort(pid);
   if (typeof PTOW !== 'undefined') PTOW.docked(pid);   // moored with another player's boat in tow: the tow is done (ui/10o-ptow.js)   // «Havner besøkt» and the rest (09f-merker.js)
   const wasOps = S.plan && S.plan.ops, opsK = S.plan && S.plan.opsK;
