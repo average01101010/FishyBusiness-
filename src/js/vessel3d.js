@@ -625,7 +625,7 @@ const palOk = x => x[4] !== 'ach' || !!(typeof S !== 'undefined' && S.ach && S.a
 // A boat's paint (b.liv): {hull:<colour>, d:{ripe, totone, vann, stripe: <colour>, lakk:1}}; what the models take (modelLiv):
 // {hull:[r, g, b, gloss], ripe:[r, g, b], ..., lakk:true}. PAINTPRE is the paint being tried in the paint shop on the boat you are aboard.
 let PAINTPRE = null;
-const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg', 'reg', 'logo'];
+const DESIGNS = ['ripe', 'totone', 'vann', 'stripe', 'lakk'], COS = [...DESIGNS, 'flagg', 'reg', 'logo', 'navn'];   // (navn: the name's lettering, TP2)
 const COSOWN = k => !!((typeof S !== 'undefined' && S.cos && S.cos[k]) || (typeof CLOUD !== 'undefined' && (CLOUD.owned || []).includes('des_' + k)));   // a paint shop thing is the player's   // COS: what the paint shop sells (ui/10j-paint.js)
 const palRGB = k => { const e = k && HULLPAL.find(x => x[0] === k); return e && e[3] ? e[3].slice() : null; };
 function modelLiv(L){
@@ -643,14 +643,20 @@ function livKey(liv){ return liv ? ['hull', 'house', 'deck', ...DESIGNS].map(k =
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
 // the paint as it goes to the other players with the position (ui/10h-world.js pos_put, supabase/migrations/20261007090000_livery.sql):
 // 'h:<colour>;o:<overbygg>;d:<dekk>;r:..;t:..;v:..;s:..;g:1'; and back again. Only colours in HULLPAL count, so nothing else can be painted on a boat.
-const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
+// (TP2, steg 109: 'n:<font>.<ink>' the name's lettering, paid with des_navn, and 'k:<harbour id>' the home port under the name on the
+// transom, free; neither changes the model, so both stay out of livPaint)
+const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l', name:'n', port:'k'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
   const L0 = (b && b.liv) || {}, W0 = typeof spWorn === 'function' ? spWorn(L0) : null, W = W0 && modelLiv(spPaintLiv(W0, b.type)) ? W0 : null, L = W ? Object.assign(spPaintLiv(W, b.type), {flag:L0.flag}) : L0, out = [];   // (a partner's design: its colours for a game from before it, and 'x:<id>' for the rest)
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
+  // the home port under the name on her transom (TP2): the harbour's id, which every game knows (PORTS: the plants of the whole coast,
+  // Senja's harbours and Father's naust); early, so a code cut short keeps it
+  const hm = typeof S !== 'undefined' && b === S.boat ? S.home : null; if (hm && /^[a-z0-9_]{1,24}$/.test(hm)) out.push('k:' + hm);
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
+  { const ns = nameStyle(L0); if (ns.f !== 'b' || ns.c !== 'auto') out.push('n:' + ns.f + '.' + ns.c); }   // the name's lettering (her own, also under a partner's design)
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
   if (W) out.push('x:' + W.id);
   // the company's logo (all its boats), also under a partner's design with a mark of its own: the others draw the design's mark on her
@@ -666,7 +672,7 @@ function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1
 // the part of another player's paint code that changes her model (TP1, steg 108): the colours, the designs and a partner's design
 // (h o d r t v s g from LIVS, and x), in that order; the flag, the registration mark and the logo are drawn over the model, so boats painted alike
 // share one model and its buffers (view3d/20-trawl-seine.js npcKB). '' when nothing in it changes the model
-const LIVPAINT = Object.keys(LIVS).filter(k => !['flag', 'mark', 'logo'].includes(k)).map(k => LIVS[k]).concat('x');
+const LIVPAINT = Object.keys(LIVS).filter(k => !['flag', 'mark', 'logo', 'name', 'port'].includes(k)).map(k => LIVS[k]).concat('x');
 function livPaint(s){
   if (typeof s !== 'string') return s; const by = {};
   for (const part of s.split(';')){ const i = part.indexOf(':'), k = i > 0 ? part.slice(0, i) : ''; if (LIVPAINT.includes(k) && i < part.length - 1) by[k] = part; }   // (the last of a key twice, as livParse reads it)
@@ -678,7 +684,7 @@ function livFlag(s){ const m = /(?:^|;)f:([A-Z]{2,4})\.([a-z]+)(?:;|$)/.exec(Str
 function livParse(s, type){
   const W = typeof spPaintIn === 'function' ? spPaintIn(s) : null, WL = W && modelLiv(spPaintLiv(W, type)); if (WL) return WL;   // a partner's design, from the list of the active ones, as her type wears it
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
-    if (k === 'hull') L.hull = v; else if (k === 'house' || k === 'deck') L[k] = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
+    if (k === 'hull') L.hull = v; else if (k === 'house' || k === 'deck') L[k] = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo' || k === 'name' || k === 'port') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
 }
 // ---- paint designs (Malerverkstedet): a stripe under the sheer (ripe), a second colour on the lower topsides (totone), a stripe at the
@@ -1277,6 +1283,27 @@ function placeRGB(type, p, liv){
 function nameInkLight(rgb){
   const lin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4), L = 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]);
   return 1.05 / (L + 0.05) >= (L + 0.05) / 0.05;
+}
+// ---- the name's lettering (TP2, steg 109; Jonas 12.11.2026, V4 B: «Tre skrifter og farge»): three letterings real boats carry, block
+// (the game's Archivo a little narrow, as it always was), narrow block (Archivo condensed) and antiqua (Source Serif 4, semibold), all in
+// the page already; and the ink: automatic (white or black by the paint, nameInkLight), white, black, gold or a colour of the palette.
+// A boat's choice is b.liv.nf and b.liv.nc, bought once for all boats (des_navn), tried before. The house front's and the transom's
+// letters (and the home port under them) take it; the registration mark and the call sign keep § 9's white or black. ----
+const NAMEFONT = {b:['Blokk', 'Block'], s:['Smal blokk', 'Narrow block'], a:['Antikva', 'Antiqua']};
+const NAMEINK = {hvit:['Hvit', 'White', [0.969, 0.969, 0.957]], sort:['Svart', 'Black', [0.067, 0.071, 0.078]], gull:['Gull', 'Gold', [0.83, 0.64, 0.2]]};
+const NAMEMIN = 3;   // the contrast a chosen ink must have against the paint under it (WCAG's 3:1 for large text), else automatic
+const wcagLum = rgb => { const lin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]); };
+function contrastOf(a, b){ const x = wcagLum(a), y = wcagLum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+const inkRGB = c => NAMEINK[c] ? NAMEINK[c][2].slice() : palRGB(c);
+// a boat's lettering from her paint ({nf, nc}): what is unknown is the default (block, automatic)
+function nameStyle(L){ return {f:L && NAMEFONT[L.nf] ? L.nf : 'b', c:L && L.nc && L.nc !== 'auto' && inkRGB(L.nc) ? L.nc : 'auto'}; }
+// another player's lettering and home port from her paint code ('n:a.gull', 'k:m1234')
+function livName(s){ const m = /(?:^|;)n:([a-z])\.([a-z]+)(?:;|$)/.exec(String(s || '')); return nameStyle(m ? {nf:m[1], nc:m[2]} : null); }
+function livHome(s){ const m = /(?:^|;)k:([a-z0-9_]{1,24})(?:;|$)/.exec(String(s || '')); return m ? m[1] : ''; }
+// the ink of the name over the paint under it (rgb): the chosen colour where it reads, 3:1 or more, else white or black, whichever reads best
+function nameInk(under, c){
+  const k = c && c !== 'auto' ? inkRGB(c) : null; if (k && contrastOf(k, under) >= NAMEMIN) return k;
+  return nameInkLight(under) ? NAMEINK.hvit[2].slice() : NAMEINK.sort[2].slice();
 }
 function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
 const NPCMOD = {};
