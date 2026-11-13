@@ -326,7 +326,7 @@ for _f in ('src/js/core/05e-sjovei.js', 'src/js/core/14b-sikkerhet.js', 'src/js/
 # (tests/unit/figpose.test.mjs) holds figpose.js to kropp.py's numbers (figpose.fasit.json, written by tools/harbour/kropp_fasit.py)
 LITE += ['folk2shot']
 COVER['tests/folk2shot.py'] = ['folk2shot']; COVER['src/js/figpose.js'] = ['folk2shot', 'f1test']; COVER['src/data/folk2.b64'] = ['folk2shot', 'boottest']
-COVER['tests/unit/figpose.test.mjs'] = []; COVER['tests/unit/figpose.fasit.json'] = []; COVER['tools/harbour/kropp_fasit.py'] = []
+COVER['tests/unit/figpose.test.mjs'] = []; COVER['tests/unit/figpose.fasit.json'] = []; COVER['tools/harbour/kropp_fasit.py'] = []; COVER['tests/unit/figjoints.test.mjs'] = []
 for _f in ('src/js/ui/10g-wardrobe.js', 'src/js/vessel3d.js'): COVER[_f] = COVER.get(_f, []) + ['folk2shot']
 
 

@@ -71,6 +71,134 @@ function figArms(sk, L, out, fwd, el){
   }
   return L;
 }
+// ---- from the joints the work asks for to the bones' turns (FB7, steg 125) ----
+// The 3D view reckons where a worker's hips, chest, head, elbows, wrists, knees and ankles are (drawWorker; the solver of FB2 in
+// deckcrew.js). figFromJoints turns them into the local turns figPose takes. The skeleton keeps its own lengths: a limb is solved
+// again here from where its root really is on this skeleton (the shoulder after the back's bend, the hip joint under the pelvis),
+// with the asked elbow or knee as the side its joint is on, so the wrist and the ankle stand where they were asked for whenever the
+// limb reaches, and point at them when it does not. Everything in the figure's frame (x right, y up, z back, metres).
+const figSub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], figAdd = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]], figScl = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
+const figDot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], figCrs = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const figNrm = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
+// a 3x3 from its three columns
+const figCols = (x, y, z) => [x[0], y[0], z[0], x[1], y[1], z[1], x[2], y[2], z[2]];
+// the turn from a to b the short way, also when they are opposite (figBetween gives none then)
+function figTo(a, b){
+  const u = figNrm(a), v = figNrm(b), c = figDot(u, v);
+  if (c < -0.999999){ const p = Math.abs(u[1]) < 0.9 ? figCrs(u, [0, 1, 0]) : figCrs(u, [1, 0, 0]); return figRot(p, 180); }
+  return figBetween(u, v);
+}
+// a turn's axis and angle (deg), and a share k of it
+function figAxis(R){
+  const c = Math.max(-1, Math.min(1, (R[0] + R[4] + R[8] - 1) / 2)), ax = [R[7] - R[5], R[2] - R[6], R[3] - R[1]], l = Math.hypot(ax[0], ax[1], ax[2]);
+  return l < 1e-9 ? {ax:[0, 1, 0], deg:0} : {ax:[ax[0] / l, ax[1] / l, ax[2] / l], deg:Math.acos(c) * 180 / Math.PI};
+}
+function figFrac(R, k){ const a = figAxis(R); return figRot(a.ax, a.deg * k); }
+// how far a turn turns about the axis a (deg, -180 to 180): R = swing · twist, the twist about a
+function figTwist(R, a){
+  const w = Math.sqrt(Math.max(0, 1 + R[0] + R[4] + R[8])) / 2; if (w < 1e-6) return 0;
+  const v = [(R[7] - R[5]) / (4 * w), (R[2] - R[6]) / (4 * w), (R[3] - R[1]) / (4 * w)];
+  return 2 * Math.atan2(figDot(v, figNrm(a)), w) * 180 / Math.PI;
+}
+// a limb of two parts from its root S to the target T, the joint on the side of the point pole: [joint, end, m short of the target]
+function figIk(S, T, l1, l2, pole){
+  let u = figSub(T, S); const D = Math.hypot(u[0], u[1], u[2]); u = D < 1e-6 ? [0, -1, 0] : figScl(u, 1 / D);
+  const d = Math.min(Math.max(D, Math.abs(l1 - l2) + 1e-4), (l1 + l2) * 0.9995), a = (d * d + l1 * l1 - l2 * l2) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  let p = figSub(pole, S); p = figSub(p, figScl(u, figDot(p, u)));
+  if (Math.hypot(p[0], p[1], p[2]) < 1e-6) p = Math.abs(u[1]) < 0.9 ? figCrs(u, [1, 0, 0]) : [0, 0, -1];
+  p = figNrm(p);
+  return [figAdd(figAdd(S, figScl(u, a)), figScl(p, h)), figAdd(S, figScl(u, d)), Math.max(0, D - d)];
+}
+// the skeleton's own measures (m): the upper arm, the forearm (to the wrist), the thigh and the shin (to the ankle), the shoulder
+// joint over the hip joints and out from the spine, the hip joints' height standing and half their width, the ankle's height
+function figLens(sk){
+  const r = n => sk.rest[sk.ix[n]], d = (a, b) => { const p = r(a), q = r(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
+  return {ua:d('uarm_R', 'farm_R'), fa:d('farm_R', 'hand_R'), th:d('thigh_R', 'shin_R'), sn:d('shin_R', 'foot_R'),
+    sh:[r('uarm_R')[1] - r('thigh_R')[1], r('uarm_R')[0]], hip:r('thigh_R')[1], hipX:r('thigh_R')[0], ankle:r('foot_R')[1]};
+}
+// a hand's own frame at rest, from the file's grips: the columns are where the fingers' frame of the 3D view (handFrame: the fingers
+// along z, the palm toward y, x = y × z, the thumb at -x on the right hand and +x on the left) lies on this hand. The fist's handle
+// (grips.grip.ax) is its x, the flat hand's fingers (grips.flat.ax) its z.
+function figHandRest(ex, sex, side){
+  const G = (ex.grips || {})[sex === 'f' ? 'f' : 'm'] || {}, sd = side === 'L' ? 'L' : 'R'; if (!G.grip || !G.flat) return FIG_I3.slice();
+  const z = figNrm(G.flat[sd].ax); let x = G.grip[sd].ax; x = figNrm(figSub(x, figScl(z, figDot(x, z))));
+  if ((sd === 'R') !== (x[2] > 0)) x = figScl(x, -1);
+  return figCols(x, figCrs(z, x), z);
+}
+// where a grip holds, in that frame (m from the wrist): what the 3D view's hand specs take (the old file's extras.hands)
+function figGripAt(ex, sex, grip, side){
+  const G = ((ex.grips || {})[sex === 'f' ? 'f' : 'm'] || {}), g = G[grip] || G.relax, sd = side === 'L' ? 'L' : 'R', H = figT3(figHandRest(ex, sex, sd));
+  return {at:figV3(H, g[sd].at), ax:figV3(H, g[sd].ax)};
+}
+// the least an upper arm is out from the body when it hangs (deg from straight down along the chest, to its own side): the jackets'
+// sides are cut to clear arms 13 degrees out (5.33b). The elbow is turned about the line from the shoulder to the wrist, the least
+// that brings it there (or as far out as it goes); the wrist stays.
+const FIG_ARM_OUT = 13;
+function figArmOut(S, E, W, Rc, sg){
+  const cx = [Rc[0], Rc[3], Rc[6]], cy = [Rc[1], Rc[4], Rc[7]], lim = Math.sin(FIG_ARM_OUT * Math.PI / 180);
+  const lack = e => { const u = figNrm(figSub(e, S)), dn = Math.max(0, -figDot(u, cy)); return lim * dn - sg * figDot(u, cx); };
+  if (lack(E) <= 0) return E;
+  const ax = figNrm(figSub(W, S)); let best = E, bl = lack(E);
+  for (let a = 5; a <= 120; a += 5) for (const s of [1, -1]){ const R = figRot(ax, a * s), e = figAdd(S, figV3(R, figSub(E, S))), l = lack(e); if (l <= 0) return e; if (l < bl){ bl = l; best = e; } }
+  return best;
+}
+// The local turns and the root for figPose from the joints of a pose. J:
+//   pelvis   the middle between the two hip joints
+//   hipsR    the pelvis' turn (3x3; the sea's lean), chestR the chest's (the back bent and turned), headR the head's; none: upright
+//   arms     {R:{el, wr, hand}, L:…}: the elbow's side and the wrist, hand the hand's turn (3x3, from figHandTurn) or nothing (along the forearm)
+//   legs     {R:{knee, foot, footR}, L:…}: the knee's side and the ankle, footR the foot's turn or nothing (flat, facing ahead)
+// The back's bend is shared between the pelvis (FIG_HIPBEND of what is ahead or to a side: he bends at the hips, as the 3D view's
+// solver reckons the shoulders, about the hips) and the three bones of the spine, its turn about the spine between those three; the neck and the head share the head's turn from the chest (at most 70 degrees round and 45 over).
+// A limb's roll is found from the plane its three joints are in, so the elbow and the knee bend as hinges, and half of it is on the
+// twist bone (utw, ttw; the forearm's roll to the hand on ftw). Returns {local, root, out:{sh, el, wr, hip, knee, foot}} with the
+// joints as the skeleton has them.
+const FIG_HIPBEND = 0.8;
+function figFromJoints(sk, J){
+  const L = {}, ix = sk.ix, r = n => sk.rest[ix[n]], Y = [0, 1, 0], Rh0 = J.hipsR || FIG_I3, Rc = J.chestR || Rh0, mul = figMul3;
+  // the back: rel = swing · twist
+  const rel = mul(figT3(Rh0), Rc), tw = figTwist(rel, Y), sw = mul(rel, figRot(Y, -tw));
+  const Gh = mul(Rh0, figFrac(sw, FIG_HIPBEND)); L.hips = Gh;
+  L.spine1 = mul(figFrac(sw, (1 - FIG_HIPBEND) * 0.4), figRot(Y, tw * 0.22)); L.spine2 = mul(figFrac(sw, (1 - FIG_HIPBEND) * 0.35), figRot(Y, tw * 0.33));
+  const G1 = mul(Gh, L.spine1), G2 = mul(G1, L.spine2); L.spine3 = mul(figT3(G2), Rc);
+  // the head from the chest
+  if (J.headR){ const rh = mul(figT3(Rc), J.headR), yw = Math.max(-70, Math.min(70, figTwist(rh, Y))), s0 = figAxis(mul(rh, figRot(Y, -figTwist(rh, Y)))), s1 = figRot(s0.ax, Math.min(45, s0.deg)), all = mul(s1, figRot(Y, yw));
+    L.neck = mul(figFrac(s1, 0.5), figRot(Y, yw * 0.45)); L.head = mul(figT3(L.neck), all); }
+  // where the joints are
+  const tm = figScl(figAdd(r('thigh_R'), r('thigh_L')), 0.5), hj = figSub(J.pelvis || tm, figV3(Gh, figSub(tm, r('hips')))), root = figSub(hj, r('hips'));
+  const s1j = figAdd(hj, figV3(Gh, figSub(r('spine1'), r('hips')))), s2j = figAdd(s1j, figV3(G1, figSub(r('spine2'), r('spine1')))), s3j = figAdd(s2j, figV3(G2, figSub(r('spine3'), r('spine2'))));
+  const out = {sh:{}, el:{}, wr:{}, hip:{}, knee:{}, foot:{}, over:{}};
+  // a limb: the root's turn R0 and joint S, its three bones a (with its twist bone t) and b, the end bone c; hinge the axis the joint bends
+  // about at rest (none: the plane the limb rests in. The arm rests with the elbow bent 24 degrees, so its own plane is the elbow's;
+  // the leg rests straight, and the knee's axis is given)
+  const limb = (R0, S, a, t, b, c, E, W, hinge) => {
+    const d1 = figSub(r(b), r(a)), d2 = figSub(r(c), r(b)), u = figNrm(figSub(E, S)), R1 = mul(figTo(figV3(R0, d1), u), R0);
+    const d1n = figNrm(d1), hg = hinge || figCrs(d1, d2), h0 = figNrm(figSub(hg, figScl(d1n, figDot(hg, d1n)))), n = figCrs(figSub(E, S), figSub(W, E)), sb = Math.hypot(n[0], n[1], n[2]) / (Math.hypot(d1[0], d1[1], d1[2]) * Math.hypot(d2[0], d2[1], d2[2]));
+    let ang = 0;
+    if (sb > 0.03){ const a0 = figV3(R1, h0), nn = figNrm(n), k = Math.min(1, (sb - 0.03) / 0.22); ang = Math.atan2(figDot(figCrs(a0, nn), u), figDot(a0, nn)) * 180 / Math.PI * k * k * (3 - 2 * k); }
+    const Ga = mul(figRot(u, ang * 0.5), R1), Gt = mul(figRot(u, ang), R1), Gb = mul(figTo(figV3(Gt, d2), figSub(W, E)), Gt);
+    L[a] = mul(figT3(R0), Ga); L[t] = mul(figT3(Ga), Gt); L[b] = mul(figT3(Gt), Gb); return Gb;
+  };
+  for (const sd of ['R', 'L']){
+    const A = (J.arms || {})[sd], sg = sd === 'R' ? 1 : -1; if (!A) continue;
+    const cl = figAdd(s3j, figV3(Rc, figSub(r('clav_' + sd), r('spine3')))), S = figAdd(cl, figV3(Rc, figSub(r('uarm_' + sd), r('clav_' + sd))));
+    const l1 = Math.hypot(...figSub(r('farm_' + sd), r('uarm_' + sd))), l2 = Math.hypot(...figSub(r('hand_' + sd), r('farm_' + sd)));
+    const k = figIk(S, A.wr, l1, l2, A.el), E = figArmOut(S, k[0], k[1], Rc, sg), W = k[1];
+    const Gf = limb(Rc, S, 'uarm_' + sd, 'utw_' + sd, 'farm_' + sd, 'hand_' + sd, E, W, null);
+    if (A.hand){ const Q = mul(figT3(Gf), A.hand), ax = figNrm(figSub(r('hand_' + sd), r('farm_' + sd))), t = Math.max(-80, Math.min(80, figTwist(Q, ax)));
+      L['ftw_' + sd] = figRot(ax, t); L['hand_' + sd] = mul(figT3(L['ftw_' + sd]), Q); }
+    out.sh[sd] = S; out.el[sd] = E; out.wr[sd] = W; out.over[sd] = k[2];
+  }
+  for (const sd of ['R', 'L']){
+    const A = (J.legs || {})[sd]; if (!A) continue;
+    const S = figAdd(hj, figV3(Gh, figSub(r('thigh_' + sd), r('hips')))), l1 = Math.hypot(...figSub(r('shin_' + sd), r('thigh_' + sd))), l2 = Math.hypot(...figSub(r('foot_' + sd), r('shin_' + sd)));
+    const k = figIk(S, A.foot, l1, l2, A.knee), Gs = limb(Gh, S, 'thigh_' + sd, 'ttw_' + sd, 'shin_' + sd, 'foot_' + sd, k[0], k[1], [-1, 0, 0]);
+    L['foot_' + sd] = mul(figT3(Gs), A.footR || FIG_I3);
+    out.hip[sd] = S; out.knee[sd] = k[0]; out.foot[sd] = k[1];
+  }
+  return {local:L, root, out};
+}
+// the turn of a hand's bone for the 3D view's hand frame [x, y, z] (given in the figure's frame) on the hand whose rest frame is H0
+function figHandTurn(H0, x, y, z){ return figMul3(figCols(x, y, z), figT3(H0)); }
 // the poses of the check (kropp.POSES, the same numbers): each {local, root}. 'hvile' is the model's own rest pose, 'stå' the standing
 // pose the game holds (the arms 13 degrees out from the body, the elbows a little bent).
 function figPoses(sk){
