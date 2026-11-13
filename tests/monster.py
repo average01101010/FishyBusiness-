@@ -1,4 +1,4 @@
-"""The sea has no lattice (Bølgene B6, 5.20t in docs/systemer/vaer-og-hav.md; Jonas' video 12.11.2026: «repiterende geometriske
+"""The sea has no lattice (Bølgene B6, 5.20u in docs/systemer/vaer-og-hav.md; Jonas' video 12.11.2026: «repiterende geometriske
 mønstre»). The short FFT tile, laid side by side, made the whitecaps' flecks and the glitter repeat every 24.7 m in the world's axes.
 Looking straight down from 160 m on the open sea in a fresh breeze (whitecaps out), a square of the picture away from the boat and her
 wake is correlated with itself shifted: a tile repeated shows as side peaks of the autocorrelation where the shift is a tile.
