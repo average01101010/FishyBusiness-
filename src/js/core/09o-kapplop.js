@@ -53,7 +53,7 @@ const LOP = {
     {nm:194, fix:{k:'foto', fyr:'Obrestad'}, surp:[{k:'foto', fyr:'Lista', lys:'sol'}, {k:'prove', p:P(58.9955, 5.3527)}, {k:'slep', p:P(58.4275, 5.8232)}]},
     {nm:157, fix:{k:'frakt', kg:300}, surp:[{k:'foto', fyr:'Kråkenes'}, {k:'foto', fyr:'Svinøy', lys:'natt'}, {k:'ekko', p:P(61.3042, 4.5525)}]},
     {nm:210, fix:{k:'prove', p:P(63.7724, 9.3127)}, surp:[{k:'foto', fyr:'Kya', lys:'natt'}, {k:'foto', fyr:'Bjørnsund', lys:'sol'}, {k:'slep', p:P(63.1622, 7.6705)}]},
-    {nm:175, fix:{k:'slep', p:P(66.3772, 12.9642)}, surp:[{k:'ekko', p:P(65.8689, 12.3801)}, {k:'prove', p:P(66.6331, 13.0879)}, {k:'foto', fyr:'Kalsholmen', lys:'sol'}]},
+    {nm:175, fix:{k:'slep', p:P(66.3772, 12.9642)}, surp:[{k:'ekko', p:P(65.8689, 12.3801)}, {k:'prove', p:P(65.5849, 12.2385)}, {k:'foto', fyr:'Kalsholmen', lys:'sol'}]},
     {nm:192, fix:{k:'foto', fyr:'Tranøy'}, surp:[{k:'prove', p:P(68.1068, 15.1829)}, {k:'slep', p:P(68.7763, 16.8129)}, {k:'foto', fyr:'Landegode', lys:'sol'}]},
     {nm:181, fix:{k:'foto', fyr:'Skjervøya', lys:'natt'}, surp:[{k:'foto', fyr:'Vorterøy'}, {k:'ekko', p:P(70.4619, 22.3459)}, {k:'slep', p:P(70.7903, 23.7850)}]}],
   // game minutes: a surprise not done when the leg ends, or a task that failed (the boat drifted ashore before she came); the most the
