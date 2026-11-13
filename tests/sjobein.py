@@ -226,15 +226,19 @@ async def checks(pg):
         check(r['hs'] > 2 and r['stepLean'] < 0.25 and r['stepHipR'] < 6 and r['stepHipY'] < 4, '%s: ingen dirring: fra ett bilde til neste (1/60 s) endrer leningen seg høyst %.2f°, hofta %.1f mm til siden og %.1f mm opp og ned' % (bt, r['stepLean'], r['stepHipR'], r['stepHipY']))
 
     # 6. the people on another boat close by have them too: your boat put 35 m from one that is fishing, her people's soles on her deck
-    near = await pg.evaluate("""(() => { const H = S.t / 60, L = npcStates(H).filter(n => n.st === 'fishing' && !n.coast && n.p); if (!L.length) return null; const n = L[0], b = S.boat;
-      WX_FORCE = {w:9, d:250}; b.status = 'idle'; b.gop = null; b.pos = {x:n.p.x + 0.035, y:n.p.y}; b.v = 0; G3._debug.bv.init = false; const c = G3._debug.cam; c.yaw = 1.57; c.pitch = 0.3; c.dist = 30; return {id:n.id, type:n.type, n:L.length}; })()""")
-    npc = []
-    if near:
-        await frames(pg, t, 6)
-        for k in range(6):
-            await pg.evaluate("SJOBEIN.log = []"); await frames(pg, t, 1); L = await pg.evaluate("(() => { const L = SJOBEIN.log; SJOBEIN.log = null; return L; })()")
+    cands = await pg.evaluate("npcStates(S.t / 60).filter(n => n.p && n.st !== 'port' && VESSELS[n.type] && !VESSELS[n.type].hand).sort((a, b) => (b.st === 'fishing') - (a.st === 'fishing')).slice(0, 4).map(n => ({id:n.id, type:n.type, st:n.st, L:n.L || 0}))")
+    npc = []; near = None
+    for c in cands:
+        near = c
+        ok = await pg.evaluate("""(c) => { const n = npcStates(S.t / 60).find(q => q.id === c.id && (q.L || 0) === c.L); if (!n) return false; const b = S.boat;
+          WX_FORCE = {w:9, d:250}; b.status = 'idle'; b.gop = null; b.pos = {x:n.p.x + 0.03, y:n.p.y}; b.v = 0; G3._debug.bv.init = false; const cm = G3._debug.cam; cm.yaw = 1.57; cm.pitch = 0.3; cm.dist = 30; return true; }""", c)
+        if not ok: continue
+        await frames(pg, t, 5)
+        for k in range(5):
+            # (she moves: your boat is put beside her again each time)
+            await pg.evaluate("(c) => { const n = npcStates(S.t / 60).find(q => q.id === c.id && (q.L || 0) === c.L); if (n){ S.boat.pos = {x:n.p.x + 0.03, y:n.p.y}; } SJOBEIN.log = []; }", c); await frames(pg, t, 1); L = await pg.evaluate("(() => { const L = SJOBEIN.log; SJOBEIN.log = null; return L; })()")
             npc += [g for g in L if g.get('npc') and g['n'] and not g['walk'] and g['on']]
-            if len(npc) >= 4: break
+        if npc: break
     wn = max([sole(g, i) for g in npc for i in (0, 1)] or [9]); tl = max([math.degrees(math.acos(min(1, g['n'][1]))) for g in npc] or [0])
     check(near is not None and npc and wn < 0.01, 'folkene på en annen båt tett ved står på dekket sitt (%d stillinger, verst %.1f mm, dekket opptil %.1f° skrått)' % (len(npc), wn * 1000, tl), near)
 

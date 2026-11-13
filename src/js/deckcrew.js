@@ -1043,7 +1043,7 @@ const SJOBEIN = {
   HIPUP:0.03, HIPDN:0.11,   // m the hips can rise over and sink under their height standing (the legs straight, the knees deep)
   GRAB:0.14, FREE:0.09, HOLD:1.5, GRABT:0.35, REACH:0.78,   // rad of tilt a free hand takes the rail at and lets go under, s it holds on after, s the hand takes, m it reaches from the shoulder
   CLIP:0.262,     // rad (15°): the roll the room for the body is measured for (deckcrew seaRoom; past it a shoulder may touch what he stands by)
-  STEP:0.21, STEPBACK:0.15, STEPHOLD:0.8, STEPT:0.3, STEPLEN:0.16,   // rad of tilt a foot is put out at and taken back under, s it stays after, s the step takes, m it goes
+  STEP:0.21, STEPBACK:0.15, STEPHOLD:0.8, STEPT:0.4, STEPLEN:0.16,   // rad of tilt a foot is put out at and taken back under, s it stays after, s the step takes, m it goes
   SEG:0.426,      // m of thigh and of shin (the figure's leg standing: 0.84 m from hip to ankle, the knee 0.07 forward)
   test:null,      // the tests: {roll, pitch} (rad) the crew's deck is turned more than the boat's (view3d/20-trawl-seine.js drawDeckCrew)
   log:null        // the tests: an array drawWorker writes what it drew to
@@ -1100,7 +1100,7 @@ function seaLegs(s, inp){
   // deck and never faster than the legs go; he stands lower the more there is to take up
   const dy = snap ? 0 : y - s.hy, pk = Math.max(Math.abs(dy), s.envP * Math.exp(-(dt || 0) / 15)); s.envP = snap ? 0 : pk; s.envH = snap ? 0 : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
   const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
-  const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, s.envH)), hipY = -cr - A * Math.tanh(beta * dy / A);
+  const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, pk)), hipY = -cr - A * Math.tanh(beta * dy / A);
   // the hand to the rail, and the foot put out down the slope
   const step = (on, v, t) => snap || !(t > 0) ? (on ? 1 : 0) : on ? Math.min(1, v + dt / t) : Math.max(0, v - dt / t), rl = !walk && inp.rail ? inp.rail : null, d0 = dt >= 0 ? Math.min(dt, 5) : 0;   // (after a gap the hand and the foot are where the time gone puts them)
   if (rl && !s.gOn && ang > C.GRAB){ const gh = inp.hand != null ? inp.hand : rl[1] >= 0 ? 0 : 1;   // (a rail to one side is for the hand on that side)
