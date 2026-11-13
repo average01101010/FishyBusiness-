@@ -1,6 +1,6 @@
 # Folk 2: ny figur og ny bevegelse (plan 13.11.2026)
 
-Status: **FB4 (sjøbeina) har klarsignal og er steg 120 i køen (Jonas 13.11.2026: «Kjør på med FB4 i en ny økt»).** Resten venter på klarsignal. Valgene V1–V4 nederst er Jonas' og trengs først før del 2.
+Status: **FB4 (sjøbeina) har klarsignal og er steg 120 i køen (Jonas 13.11.2026: «Kjør på med FB4 i en ny økt»).** Resten venter på klarsignal. **V2 og V4 er besvart 13.11.2026 (A+, og A, B, C og D).** V1 og V3 er åpne og trengs først før del 2 og 3.
 
 ## Hva Jonas ba om
 
@@ -74,7 +74,12 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 - Ferdig når: (1) hver av de 69 delene har en utgave med samme navn, (2) ingen flate går gjennom en annen i de fem ytterstillingene (målt, som `garderobe_bilder.py` gjør for hår og hatt), (3) trekantene per figur er ikke flere enn i dag, (4) fila er ikke større enn dagens med mer enn det FB0-budsjettet og nedlastingen tåler (måles og skrives).
 - Utseendet følger V2. **Jonas 13.11.2026: «et sterkt grafisk løft, og større mulighet for tilpasning».** FB5 er derfor ikke bare dagens figur med skjelett: kroppen, ansiktet, hendene og stoffet lages på nytt med mer form og bedre materialer, og kroppen bygges slik at den kan tilpasses (se FB5b). Løftet hentes først der det ikke koster bilder i sekundet (form, proporsjoner, farger, bakt lys, folder i nettet), og trekantene og nedlastingen settes av målingen i FB0.
 
-**FB5b. Tilpasningen (ny, etter Jonas 13.11.2026).** Hva spilleren kan endre på figuren sin utover dagens kode (kropp, hud, frisyre, hårfarge, skjegg, hatt, jakke, bukser, sko, med farger). Hva som skal inn, er V4. Koden utvides bakover-kompatibelt: en gammel kode gir samme figur som før, og nye felt har en startverdi.
+**FB5b–FB5d. Tilpasningen (ny, etter Jonas 13.11.2026; V4: alle fire).** Hva spilleren kan endre på figuren sin utover dagens kode (kropp, hud, frisyre, hårfarge, skjegg, hatt, jakke, bukser, sko, med farger). Fire ting er for mye for én økt, så den deles i tre, i denne rekkefølgen:
+- **FB5b, kroppen og ansiktet (V4 A og B):** høyde, bygning og alder som synes; ansiktsformer, øyenbryn, øyenfarge, flere skjegg og frisyrer. Bygges inn i den nye kroppen fra FB5 (former som blandes i nettet, ikke egne kropper per valg), og må derfor være med før FB6 viser figuren i garderoben.
+- **FB5c, plagg og mønstre (V4 C):** flere jakker, bukser, hodeplagg og hansker, og mønster og striper på genser og lue. Etter FB7, når figuren står på dekk.
+- **FB5d, små ting (V4 D):** briller, klokke, øredobb og lignende. Tatoveringer ses mot det som finnes (`ui/05-tattoo-art.js`) før noe bygges. Etter FB5c.
+
+Felles for de tre: koden utvides bakover-kompatibelt: en gammel kode gir samme figur som før, og nye felt har en startverdi.
 - Filer: `core/09i-look.js` (koden og katalogen), `tools/harbour/garderobe.py`, `ui/10g-wardrobe.js`, `presence.lk` (lengden på koden mot skyen sjekkes; trengs en migrering, kjører Jonas den på testprosjektet først). Tester: `looktest` (gamle koder gir samme figur), garderoben i begge formater.
 - Ferdig når: (1) hver gammel kode i `looktest` gir samme utseende som før, (2) de nye valgene synes i garderoben og på dekk og for andre spillere, (3) mannskapet trekker fra de samme nye valgene, så ingen to er like, (4) ingenting av det nye er til salgs (butikken er fase 5 i `docs/karaktersystem.md` og ekte penger går som PR til Jonas).
 
@@ -106,14 +111,14 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 - B: bare del 1 (FB0–FB4). Dagens figur, riktig bevegelse. Minst arbeid, og skjøtene i skuldre og albuer blir stående.
 - C: del 1 og 2 uten opptak. Ny kropp, all bevegelse håndskrevet.
 
-**V2. Hvordan skal de se ut?** (styrer FB5)
+**V2. Hvordan skal de se ut?** (styrer FB5) **Besvart 13.11.2026: «Utseende V2: A+».** Dagens stil løftet kraftig: ny kropp, nytt ansikt, nye hender og nytt stoff med mer form og bedre materialer, i slekt med båtene og landskapet. Referansebilder fra Jonas trengs fortsatt før FB5.
 - **A (anbefalt): dagens stil, men én sammenhengende kropp med bedre proporsjoner, og stoff som folder seg i leddene.** Tåler nettbrettet, og bevegelsen kan holde følge med utseendet.
 - B: merkbart mer realistisk (flere detaljer, ansikter med trekk). Flere trekanter og større nedlasting, og småfeil i bevegelsen synes mer.
 - C: tydelig stilisert. Tilgir mest, men bryter med båtene og landskapet.
 - Uansett valg: referansebilder fra Jonas av det han ser for seg, før FB5.
 - **Etter Jonas 13.11.2026 («et sterkt grafisk løft»):** A slik den sto, er for lite. Valget står nå mellom **A+ (anbefalt): dagens stil løftet kraftig**, altså ny kropp, nytt ansikt, nye hender og nytt stoff med mer form og bedre materialer, men fortsatt i slekt med båtene og landskapet, og **B: mot det realistiske**. Anbefalingen er A+ fordi telefonen ga 12 bilder/s, og fordi småfeil i bevegelsen synes mer jo mer ekte kroppen ser ut. Referansebildene avgjør.
 
-**V4. Hva betyr «større mulighet for tilpasning»?** (styrer FB5b; flere kan velges)
+**V4. Hva betyr «større mulighet for tilpasning»?** (styrer FB5b; flere kan velges) **Besvart 13.11.2026: «V4: ABCD».** Alle fire: kroppen, ansiktet, flere plagg og mønstre, og små ting.
 - **A (anbefalt): kroppen.** Høyde og bygning (for eksempel tre av hver), og alder som synes.
 - **B (anbefalt): ansiktet.** Noen ansiktsformer, øyenbryn, øyenfarge, og flere skjegg og frisyrer.
 - C: flere plagg og mønstre (flere jakker, bukser, hodeplagg, hansker, mønster og striper på genser og lue).
@@ -140,7 +145,7 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 ## Hva planen ikke gjør
 
 - Ingen ansiktsanimasjon, ingen stoffsimulering, ingen kropper styrt av fysikk (trinn 4 i samtalen: for tungt for nettbrettet).
-- Ingen butikk og ingenting til salgs (fase 5 i `docs/karaktersystem.md` er sin egen). Nye plagg bare om V4 C velges.
+- Ingen butikk og ingenting til salgs (fase 5 i `docs/karaktersystem.md` er sin egen). De nye plaggene og småtingene (V4 C og D) er gratis til butikken bygges, som resten av garderoben (Jonas 10.10.2026: «gratis til å begynne med»).
 - Ingen endring i hva mannskapet gjør, tjener eller koster (`workAssign`, `crewEffort`); gangtidene holdes.
 - Ingen endring i lagringene, utseendekodene eller skyen.
 - Måkene, fisken og dyrene er ikke med.
@@ -159,3 +164,4 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 - 13.11.2026: planen skrevet (Jonas' økt, grenen `ccr-535ab52d-bv560n`). Venter på V1–V3 og klarsignal. Ikke lagt i køen.
 - 13.11.2026 (senere): Jonas: «Menneskene trenger forresten også et sterkt grafisk løft, og større mulighet for tilpasning». Skrevet inn i FB5, ny FB5b, V2 (A+ eller B) og nytt V4.
 - 13.11.2026 (senere): rekkefølgen snudd etter Jonas' ønske om synlig forskjell straks, og FB4 lagt i køen som steg 120 under lanseringslinja med startmeldingen `docs/planer/start/120.md`. Jonas: «Kjør på med FB4 i en ny økt».
+- 13.11.2026 (senere): Jonas svarte «Utseende V2: A+» og «V4: ABCD». Skrevet inn i valgene; tilpasningen delt i FB5b (kroppen og ansiktet, før FB6), FB5c (plagg og mønstre) og FB5d (små ting). Åpent: V1, V3 og referansebildene før FB5.
