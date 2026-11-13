@@ -6,7 +6,10 @@
 // uses it. Registered in .mcp.json; needs GEMINI_API_KEY (runs npm ci itself
 // when node_modules/ is missing).
 //
-// stdout is the MCP channel: log only to stderr.
+// A session where the MCP tool is not loaded can ask from the shell instead:
+//   node .mcp/gemini-server.mjs --ask "<question>" [--fps 15] <file> [<file> ...]
+//
+// stdout is the MCP channel (or the answer with --ask): log only to stderr.
 
 import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -44,6 +47,13 @@ const INLINE_IMAGE_MAX = 15 * 1024 * 1024;
 // file cannot fill the context.
 const TEXT_MAX = 400 * 1024;
 const VIDEO_READY_TIMEOUT_MS = 5 * 60 * 1000;
+// Gemini samples a video at 1 frame a second unless videoMetadata.fps says
+// otherwise (valid range (0, 24]), and at 1 fps it cannot see stutter, ripples
+// or the beat of the swell. 10 is the default here (Jonas 13.11.2026); each
+// sampled frame costs tokens, so a long clip is trimmed before it is sent
+// rather than sampled faster.
+const VIDEO_FPS_DEFAULT = 10;
+const VIDEO_FPS_MAX = 24;
 
 let ai = null;
 function client() {
@@ -91,7 +101,14 @@ async function uploadFile(abs, mimeType) {
 
 // Turns the file list into Gemini parts. Returns the parts, the text blocks
 // for the prompt, notes for the caller, and the uploaded files to delete after.
-async function collectFiles(filePaths) {
+function videoFpsOf(v) {
+  if (v === undefined || v === null) return VIDEO_FPS_DEFAULT;
+  const n = Number(v);
+  if (!(n > 0) || n > VIDEO_FPS_MAX) throw new Error(`videoFps must be above 0 and at most ${VIDEO_FPS_MAX} (got ${v}).`);
+  return n;
+}
+
+async function collectFiles(filePaths, fps) {
   const mediaParts = [];
   const textBlocks = [];
   const notes = [];
@@ -103,7 +120,8 @@ async function collectFiles(filePaths) {
     if (!st.isFile()) { notes.push(`skipped (not a file): ${p}`); continue; }
     const ext = path.extname(abs).toLowerCase();
     const relRepo = path.relative(REPO, abs);
-    const rel = !relRepo || relRepo.startsWith('..') ? abs : relRepo;
+    // A file outside the repo goes by its name only: the folders above it are nobody else's business.
+    const rel = !relRepo || relRepo.startsWith('..') ? path.basename(abs) : relRepo;
 
     if (IMAGE_MIME[ext]) {
       const mimeType = IMAGE_MIME[ext];
@@ -119,8 +137,8 @@ async function collectFiles(filePaths) {
     } else if (VIDEO_MIME[ext]) {
       const f = await uploadFile(abs, VIDEO_MIME[ext]);
       uploaded.push(f.name);
-      mediaParts.push({ text: `Video: ${rel}` }, createPartFromUri(f.uri, f.mimeType));
-      notes.push(`video (uploaded): ${rel}`);
+      mediaParts.push({ text: `Video: ${rel}` }, { ...createPartFromUri(f.uri, f.mimeType), videoMetadata: { fps } });
+      notes.push(`video (uploaded, sampled at ${fps} fps): ${rel}`);
     } else {
       const buf = await readFile(abs);
       if (buf.subarray(0, 8192).includes(0)) { notes.push(`skipped (binary): ${rel}`); continue; }
@@ -137,9 +155,10 @@ async function collectFiles(filePaths) {
   return { mediaParts, textBlocks, notes, uploaded };
 }
 
-async function askGemini({ prompt, filePaths = [] }) {
+async function askGemini({ prompt, filePaths = [], videoFps }) {
+  const fps = videoFpsOf(videoFps);
   await checkModel();
-  const { mediaParts, textBlocks, notes, uploaded } = await collectFiles(filePaths);
+  const { mediaParts, textBlocks, notes, uploaded } = await collectFiles(filePaths, fps);
   try {
     const fullPrompt = textBlocks.length ? `${prompt}\n\n## Files\n\n${textBlocks.join('\n\n')}` : prompt;
     const res = await client().models.generateContent({
@@ -147,12 +166,31 @@ async function askGemini({ prompt, filePaths = [] }) {
       contents: [{ role: 'user', parts: [...mediaParts, { text: fullPrompt }] }],
     });
     const answer = res.text ?? '(empty answer)';
-    const head = notes.length ? `[${MODEL}; files: ${notes.join('; ')}]\n\n` : `[${MODEL}]\n\n`;
+    const tok = res.usageMetadata?.promptTokenCount;
+    const cost = tok ? `; ${tok} prompt tokens` : '';
+    const head = notes.length ? `[${MODEL}; files: ${notes.join('; ')}${cost}]\n\n` : `[${MODEL}${cost}]\n\n`;
     return head + answer;
   } finally {
-    for (const name of uploaded) {
-      client().files.delete({ name }).catch((e) => log('could not delete', name, e.message));
-    }
+    await Promise.all(uploaded.map((name) =>
+      client().files.delete({ name }).catch((e) => log('could not delete', name, e.message))));
+  }
+}
+
+// --ask: one question from the shell, the answer on stdout, no MCP.
+const ai0 = process.argv.indexOf('--ask');
+if (ai0 > 0) {
+  const rest = process.argv.slice(ai0 + 1);
+  const prompt = rest.shift();
+  let videoFps;
+  const fi = rest.indexOf('--fps');
+  if (fi >= 0) videoFps = rest.splice(fi, 2)[1];
+  if (!prompt) { log('usage: --ask "<question>" [--fps N] <file> ...'); process.exit(2); }
+  try {
+    console.log(await askGemini({ prompt, filePaths: rest, videoFps }));
+    process.exit(0);
+  } catch (e) {
+    log(e);
+    process.exit(1);
   }
 }
 
@@ -164,11 +202,15 @@ server.registerTool(
     title: 'Ask Gemini',
     description:
       `Ask Google Gemini (${MODEL}) for a second opinion. Attach files by path (relative to the repo root or absolute): ` +
-      'images (.png .jpg .jpeg .webp) are sent inline, videos (.mp4 .webm .mov) are uploaded, ' +
+      'images (.png .jpg .jpeg .webp) are sent inline, videos (.mp4 .webm .mov) are uploaded and sampled at ' +
+      `videoFps frames a second (default ${VIDEO_FPS_DEFAULT}; without it Gemini sees 1 frame a second and misses motion), ` +
       'other files are read as UTF-8 text and put in the prompt under their path.',
     inputSchema: {
       prompt: z.string().describe('The question or review request.'),
       filePaths: z.array(z.string()).optional().describe('Files to attach. Missing files are skipped and reported.'),
+      videoFps: z.number().gt(0).max(VIDEO_FPS_MAX).optional().describe(
+        `Frames a second Gemini samples from attached videos, above 0 and at most ${VIDEO_FPS_MAX} (default ${VIDEO_FPS_DEFAULT}). ` +
+        'Raise it towards 15-24 for fast motion (ripples, stutter, frame pacing); every frame costs tokens, so trim long clips first.'),
     },
   },
   async (args) => {
