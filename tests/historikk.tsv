@@ -3909,3 +3909,4 @@
 2026-11-13 19:27	ccr-899a9674-q3gjp0	d0d9a935+	dbg23o	OK	46	3d	alene	
 2026-11-13 20:13	ccr-013bxxid-fb6skinning	bc1b351	f1test	OK	415	3d	alene	
 2026-11-13 20:42	ccr-2dc63e8b-wjwijq	5f972aa+	sprelltest	FEIL	625	3d	alene	FEIL line: fisken på redskapet plasker når den kommer opp ved haleren  (3, 3)
+2026-11-13 21:16	ccr-2dc63e8b-wjwijq	61d3b9f	sprelltest	FEIL	704	3d	alene	FEIL garn: fisken på redskapet plasker når den kommer opp ved haleren  (16, 16, 'haulA', 2.6)
