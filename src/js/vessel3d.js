@@ -1291,7 +1291,7 @@ function nameInkLight(rgb){
 // A boat's choice is b.liv.nf and b.liv.nc, bought once for all boats (des_navn), tried before. The house front's and the transom's
 // letters (and the home port under them) take it; the registration mark and the call sign keep § 9's white or black. ----
 const NAMEFONT = {b:['Blokk', 'Block'], s:['Smal blokk', 'Narrow block'], a:['Antikva', 'Antiqua']};
-const NAMEINK = {hvit:['Hvit', 'White', [0.969, 0.969, 0.957]], sort:['Svart', 'Black', [0.067, 0.071, 0.078]], gull:['Gull', 'Gold', [0.83, 0.64, 0.2]]};
+const NAMEINK = {hvit:['Hvit', 'White', [0.969, 0.969, 0.957]], sort:['Svart', 'Black', [0.067, 0.071, 0.078]], gull:['Gull', 'Gold', [0.95, 0.78, 0.32]]};
 const NAMEMIN = 3;   // the contrast a chosen ink must have against the paint under it (WCAG's 3:1 for large text), else automatic
 const wcagLum = rgb => { const lin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); return 0.2126 * lin(rgb[0]) + 0.7152 * lin(rgb[1]) + 0.0722 * lin(rgb[2]); };
 function contrastOf(a, b){ const x = wcagLum(a), y = wcagLum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }

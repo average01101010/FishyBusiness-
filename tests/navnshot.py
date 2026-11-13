@@ -66,7 +66,7 @@ async def main():
         def one(txt, line='name'): return [s for s in oth if s['txt'] == txt and s['line'] == line]
         kb, ns, sj = one('Havbris'), one('Nordkapp Senior'), one('Åsheim')
         # (kyst15's name on the wheelhouse front lies on its light grey house, where gold does not read: black there; on the navy transom gold)
-        check(kb and all(s['f'] == 'a' for s in kb) and {s['ink'] for s in kb if s['kind'] == 'stern'} == {'#d4a333'} and {s['ink'] for s in kb if s['kind'] == 'house'} == {'#111214'},
+        check(kb and all(s['f'] == 'a' for s in kb) and {s['ink'] for s in kb if s['kind'] == 'stern'} == {'#f2c752'} and {s['ink'] for s in kb if s['kind'] == 'house'} == {'#111214'},
               'kyst15 med marineblått skrog: antikva, i gull på hekken der det leses, svart på det lysegrå styrhuset der gull ikke leses', kb[:4])
         check(ns and all(s['f'] == 's' for s in ns) and any(s['ink'] == '#f7f7f4' for s in ns), 'breisjarken: smal blokk, hvitt der det leses', ns[:3])
         # (the sjark's wheelhouse front is her own dark red, where yellow reads)

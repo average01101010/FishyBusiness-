@@ -3795,3 +3795,6 @@
 2026-11-13 16:19	plan/2026-11-13-109	5df26318	dbg23o	OK	47	3d	alene	
 2026-11-13 16:48	plan/2026-11-13-109	c4553748	navnshot	FEIL	1752	3d	alene	FEIL kyst15 med marineblått skrog: antikva i gull (fargen leses mot malingen)  [{"txt": "Havbris", "line": "name", "kind": "house", "f": "a", "ink": "#111214", 
 2026-11-13 17:22	plan/2026-11-13-109	640f33cf	flaggshot	OK	2020	3d	alene	
+2026-11-13 17:23	plan/2026-11-13-109	54c5068c	cloudtest	OK	40	lite	samtidig	
+2026-11-13 17:23	plan/2026-11-13-109	54c5068c	maletest	OK	22	lite	samtidig	
+2026-11-13 17:47	plan/2026-11-13-109	54c5068c	navnshot	OK	1464	3d	alene	
