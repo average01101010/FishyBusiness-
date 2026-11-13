@@ -287,7 +287,6 @@ const INSTR = (() => {
     // (the race clock while a leg is sailed, ui/05l-kapplop.js lopClock, KL2)
     const lc = typeof lopClock === 'function' ? lopClock() : null, lop = lc ? {t:lopHmS(lc.min), leg:lc.leg + '/' + lc.n} : null;
     GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg, lop};   // the little chart's foot (03e-miniplot.js)
-    { const po = $('plotOpen'), sp = po && po.lastElementChild, tx = no ? 'Kart' : 'Chart'; if (sp && sp.textContent !== tx){ sp.textContent = tx; po.setAttribute('aria-label', no ? 'Åpne kartplotteren' : 'Open the chart plotter'); } }   // (D6: the button beside the little chart)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
       setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b>' + (lop ? '<b class="glop">⏱ ' + lop.t + '</b>' : '') + '<span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
