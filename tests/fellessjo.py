@@ -8,8 +8,12 @@ Checks:
   3. the second page's boat sails eastward for a few seconds, staying in the same 2 km cell, and stops: her own sea (the waves' held
      phases against the shared rule, in metres along each wave, and the FFT tiles' offsets) glides back no faster than the limits
      (0.3 m/s; 0.15 m/s for the short tile), each part faster than 0.05 m/s, and
-  4. after it has glided back, the two pages agree again (within 3 cm, the boats being 300 m apart with each one's sea state) at five
-     points midway between the boats (inside both wave patches).
+  4. after it has glided back, the first page's boat is moved to where she stopped (a jump: the shared sea at once) and given 45 s to
+     take the sea state there, and the two pages agree again within 2 cm at five points round her; with 5 m laid on her long tile for
+     the moment of the reading, the same check sees it (over 3 cm), so it would see a sea that had not glided back.
+     (Until 13.11.2026 the first page stayed where it was and the two were compared midway, within 3 cm: but each page draws the sea
+     state where its own boat lies, and with her 300-340 m off the two differed by 3-4 cm even without the tiles. Before B6 that check
+     passed on the old build only because she barely moved, 7 m, the software GPU drawing too slowly for her to gather way.)
 Seen red before B4 (the waves' clock was the seconds since each page opened: 39 cm apart with the view's clock in place of the world's).
 Not covered: two devices whose clocks differ (here both pages read the same Date.now), a boat crossing into another cell, the GPU.
 """
@@ -75,13 +79,21 @@ async def main():
             await B.wait_for_timeout(15000)
         o2 = json.loads(await B.evaluate(OWN)); print('her own sea at the end', {k: round(o2[k], 3) for k in ('g', 't1', 't2')})
         HW2 = """(a) => { const D = G3._debug; return %s.map(([p, q]) => D.seaHW(a[0] + p * 0.35, a[1] + q * 0.35, a[2])); }""" % json.dumps(PTS)
-        sa2 = json.loads(await A.evaluate(STATE))   # (midway between the two boats, within 20 m: inside both pages' wave patch, where neither fades it out)
-        tw = await A.evaluate("Date.now() / 1000") + 20; at = [round((o2['x'] + sa2['x']) / 20) * 10, round((o2['z'] + sa2['z']) / 20) * 10, tw]
+        # (the first page's boat to where she stopped, and the jump forced, WV.lb: a move under 300 m would count as sailing there and
+        # give that page an own sea of its own, which glides back over minutes)
+        bp = json.loads(await B.evaluate("JSON.stringify(S.boat.pos)"))
+        await A.evaluate("(p) => { S.boat.pos = {x:p.x, y:p.y}; }", bp)
+        await A.wait_for_function("(p) => Math.hypot(G3._debug.bv.x - p.x * 1000, G3._debug.bv.z - p.y * 1000) < 20", arg=bp, timeout=600000)
+        await A.evaluate("G3._debug.wv.lb = null"); await A.wait_for_timeout(45000)
+        sa2 = json.loads(await A.evaluate(STATE)); o3 = json.loads(await A.evaluate(OWN))
+        tw = await A.evaluate("Date.now() / 1000") + 20; at = [round(o2['x'] / 10) * 10, round(o2['z'] / 10) * 10, tw]
         ha, hb = await A.evaluate(HW2, at), await B.evaluate(HW2, at); w2 = max(abs(x - y) for x, y in zip(ha, hb))
-        print('A', await A.evaluate(STATE), 'B', await B.evaluate(STATE))
-        print('heights A / B where B stopped:', [round(x, 3) for x in ha], [round(x, 3) for x in hb])
-        # (3 cm: the boats now lie 300 m apart, and each one's sea state, the waves' direction and period, is the one where she is)
-        print(ok(w2 < 0.03), 'after she has glided back, the two pages have the same waves again between the boats (within 3 cm)', {'worst': round(w2, 4)})
+        HW3 = """(a) => { const D = G3._debug, N = D.nf; N.O[0] += 5; try { return %s.map(([p, q]) => D.seaHW(a[0] + p * 0.35, a[1] + q * 0.35, a[2])); } finally { N.O[0] -= 5; } }""" % json.dumps(PTS)
+        hc = await B.evaluate(HW3, at); w3 = max(abs(x - y) for x, y in zip(ha, hc))
+        print('A', sa2, 'own', {k: round(o3[k], 3) for k in ('g', 't1', 't2')}, 'B', await B.evaluate(STATE))
+        print('heights A / B where B stopped:', [round(x, 3) for x in ha], [round(x, 3) for x in hb], 'B with 5 m on her long tile:', [round(x, 3) for x in hc])
+        print(ok(abs(sa2['x'] - o2['x']) < 20 and abs(sa2['z'] - o2['z']) < 20 and o3['g'] < 0.05 and o3['t1'] < 0.05 and w2 < 0.02 and w3 > 0.03),
+              'after she has glided back, a page whose boat lies where she stopped has the same waves there (within 2 cm), and 5 m left on her long tile would be seen (over 3 cm)', {'worst': round(w2, 4), 'with 5 m': round(w3, 4)})
         print('sidefeil:', errs[:3]); await b.close()
 
 if __name__ == "__main__": asyncio.run(main())
