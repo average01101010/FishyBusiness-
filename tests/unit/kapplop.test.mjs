@@ -195,4 +195,14 @@ export default function (t){
     t.ok(A.before.length === 0 && A.st === 'run' && A.after.length === 1, 'påmeldt: ingen overraskelse vist; kastet loss: etappe 1s vises, ikke de andre', A);
     t.eq(A.after[0], B.after[0], 'to forsøk i samme klasse og uke får samme overraskelse på etappe 1');
     t.eq(A.after[0], lopSurp(0, 'middels', K.lopWeek(K.lopMs(1000)).id), 'den som trekkes for uka forsøket startet i'); }
+
+  // 9. after the review (13.11.2026): a surprise under way when the leg ends (the boat on the line) goes on, and is struck only at the
+  // next leg's end if still not done; the race's freight never larger than the room it is made for
+  { const {lopLegClose} = K, r = {id:'lnk-30', pen:[], tasks:[{leg:0, role:'surp', st:'go', k:'slep', stage:'tow', boat:'Terna', p:{x:0, y:0}}, {leg:0, role:'surp', st:'go', k:'foto', fyr:{x:0, y:0, name:'Lista'}}]};
+    lopLegClose(r, 0); t.eq([r.tasks[0].st, r.tasks[0].carry, r.tasks[1].st, r.pen.length], ['go', 1, 'miss', 1], 'etappen over med båten på slep: slepet går videre, bildet som ikke ble tatt, gir 60 minutter');
+    lopLegClose(r, 0); t.eq(r.pen.length, 1, 'samme etappe lukket igjen: ingenting nytt');
+    lopLegClose(r, 1); t.eq([r.tasks[0].st, r.pen.length], ['miss', 2], 'slepet ikke levert innen neste etappe er over: 60 minutter');
+    const r2 = {id:'lnk-31', pen:[], tasks:[{leg:0, role:'surp', st:'go', k:'slep', stage:'tow'}]}; lopLegClose(r2, 0); r2.tasks[0].st = 'done';
+    lopLegClose(r2, 1); t.eq(r2.pen.length, 0, 'slepet levert på neste etappe: ingen tillegg'); }
 }
+

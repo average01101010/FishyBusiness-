@@ -219,10 +219,10 @@ function turBestAt(o, q, h, cls, me){
   return null;
 }
 // fix: fixed harbours (the race's tasks, 09o-kapplop.js, KL1b): {from, to: port ids, kg, rnd: the draw for the goods}; the freight is
-// what the deck and the hold take of kg (at least 20 kg), and loading and landing are the crew's own work (cargoJob)
+// what the deck and the hold take of kg (at least 10 kg: with less room it waits on the quay until there is), and loading and landing are the crew's own work (cargoJob)
 function turFrakt(o, cls, used, me = turMe(), fromId = null, fix = null){
   if (fix){ const f = portById(fix.from), t = portById(fix.to); if (!f || !t) return null;
-    const rnd = fix.rnd || Math.random, g = TUR_GOODS[Math.floor(rnd() * TUR_GOODS.length)], kg = Math.max(20, Math.round(Math.min(fix.kg, cargoRoom() * 0.6) / 10) * 10);
+    const rnd = fix.rnd || Math.random, g = TUR_GOODS[Math.floor(rnd() * TUR_GOODS.length)], kg = Math.max(10, Math.round(Math.min(fix.kg, cargoRoom() * 0.6) / 10) * 10);
     return {k:'frakt', cls:'lop', from:f.id, to:t.id, p:t.p, nm:Math.round(turNm(f.p, t.p)), h:turNm(f.p, t.p) / turV(), kg, what:[g.no, g.en], base:0}; }
   const c = TUR.cls[cls], v = turV(), hi = turHi(cls, me), from = fromId ? portById(fromId) : S.boat.status === 'port' ? portById(S.boat.port) : nearestPort(S.boat.pos); if (!from) return null;
   const way = turWay(), onWay = x => way && turNm(x.q.p, way) < 15 ? 1 : 0;   // (a harbour near where she is going comes first)
@@ -523,7 +523,9 @@ function turSos(Q){
 // among the missions taken (no place, no pay, outside the brake on the board), but the tow, the station, the echo line and the picture
 // are done by the same minute, quay and camera as the missions'
 const turActs = () => { const T = S.turer, a = T && T.act || [], l = typeof lopTasks === 'function' ? lopTasks() : []; return l.length ? a.concat(l) : a; };
-const turTowM = () => turActs().find(m => m.k === 'slep' && m.stage === 'tow' && m.vid === S.cur) || null;
+// (turTowing feeds speedCap and fuelLph every tick: no arrays made here)
+const turTowM = () => { const T = S.turer, f = m => m.k === 'slep' && m.stage === 'tow' && m.vid === S.cur, a = T && T.act.find(f); if (a) return a;
+  const r = S.lop && S.lop.run; return r && r.st === 'run' && r.vid === S.cur && r.tasks ? r.tasks.find(m => m.st === 'go' && f(m)) || null : null; };
 const turTowing = () => !!turTowM();
 // the boats in missions for npcStates (05-vessels.js): lying still where she broke down, then on the line astern of the boat towing her
 function turNpcs(){
@@ -683,7 +685,7 @@ function turProveFish(m){
   if (m.fish) return m.fish;
   const got = Object.entries(m.got || {}).filter(([sp]) => SPECIES[sp]), tot = got.reduce((a, x) => a + x[1], 0) || 1, out = [];
   // (the board's ids are numbers; a race task's is text, 'lnk-1:2f', which made every draw h2(NaN) and ten fish of one length)
-  const id = typeof m.id === 'number' ? m.id : String(m.id).split('').reduce((a, c) => (Math.imul(a, 31) + c.charCodeAt(0)) | 0, 7) & 0xffffff;
+  const id = typeof m.id === 'number' ? m.id : hashStr(String(m.id)) & 0xffffff;
   for (let i = 0; i < 10; i++){
     let r = h2(id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
     const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(id * 31 + i, 733), 0.8)) * 10) / 10;

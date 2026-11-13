@@ -135,7 +135,8 @@ function lopEnd(how){
   if (r.t0 == null){ L.run = null; log('Påmeldingen til kappløpet er strøket.', 'The registration for the race is struck off.', 'nav'); return null; }
   if (r.sos) lopSosEnd(r, S.t, r.lp);
   // the race's freight still aboard goes ashore with the attempt (the tasks are the race's, KL1b)
-  if (r.vid === S.cur && S.cargo) S.cargo = S.cargo.filter(c => !(typeof c.tur === 'string' && c.tur.indexOf(r.id + ':') === 0));
+  const ashore = () => { if (S.cargo) S.cargo = S.cargo.filter(c => !(typeof c.tur === 'string' && c.tur.indexOf(r.id + ':') === 0)); };
+  if (r.vid === S.cur) ashore(); else { const v = vesselById(r.vid); if (v) onVessel(v, ashore); }
   r.t1 = S.t; r.st = how === 'maal' ? 'done' : 'dnf'; r.how = how;
   const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id;
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
@@ -232,8 +233,7 @@ function lopMinute(){
   else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here, to:lopNext(r)}; }
   // a picture in a light that will not come before the leg's time is out (the season has turned since the leg began, or the time is
   // over): an ordinary picture of the light will do (lopLys), read once a game hour
-  if (S.t % 60 === 0) for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'foto' && m.lys && (S.t >= m.due || turLysNext(m, S.t / 60) == null)){ m.lysAlt = m.lys; m.lys = null;
-    log('Kappløpet: ' + TUR_LYS[m.lysAlt].no + ' kommer ikke ved ' + turFyrName(m) + ' innen etappens tid. Et vanlig bilde av fyret holder.', 'The race: ' + TUR_LYS[m.lysAlt].en + ' does not come at ' + turFyrName(m) + ' within the leg\'s time. An ordinary picture of the light will do.', 'nav'); }
+  if (S.t % 60 === 0) for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'foto' && m.lys && (S.t >= m.due || turLysNext(m, S.t / 60) == null)) lopLysDrop(m);
   // the race's freight: loaded at the checkpoint when there is room now, and a word once if she leaves it on the quay
   for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'frakt' && m.stage === 'pick'){
     if (b.status === 'port' && cargoRoom() >= m.kg) lopLoad(m);
@@ -264,7 +264,7 @@ function lopTick(){
 // clock (V2 A). A leg counts at its checkpoint only when its fixed task is done; the surprise left undone then adds task.miss, and the
 // measuring board adds or takes off up to task.meas by how close it was read (kapplop.md: «Nøyaktig måling gir opptil 30
 // spillminutter fradrag, og en dårlig måling gir like mye tillegg»).
-const lopSeed = str => { let h = 2166136261; for (let i = 0; i < str.length; i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return h | 0; };
+const lopSeed = str => hashStr(str) | 0;   // (FNV-1a, 05-vessels.js)
 // the surprise of leg j for a class in a week: its index in LOP.legs[j].surp (the same for all in the class that week)
 function lopSurp(j, cls, wk){ const L = LOP.legs[j]; return L && L.surp.length ? Math.floor(h2(lopSeed(LOP.id + '|' + wk + '|' + cls), j) * L.surp.length) % L.surp.length : -1; }
 // a task as the type does it: the station needs the jig (rigs), so a type without it runs the echo line at the same place
@@ -277,8 +277,11 @@ const lopRnd = seed => { let i = 0; return () => h2(seed, i++); };
 function lopLys(m, H, hTot){
   if (!m.lys) return true; m.hTot = hTot; m.due = Math.round((H + hTot) * 60);
   if (turLysNext(m, H) != null) return true;
-  m.lysAlt = m.lys; m.lys = null; return false;
+  lopLysDrop(m, false); return false;
 }
+// the light given up: any light will do for the picture (said in the deck log when say)
+function lopLysDrop(m, say = true){ m.lysAlt = m.lys; m.lys = null;
+  if (say) log('Kappløpet: ' + TUR_LYS[m.lysAlt].no + ' kommer ikke ved ' + turFyrName(m) + ' innen etappens tid. Et vanlig bilde av fyret holder.', 'The race: ' + TUR_LYS[m.lysAlt].en + ' does not come at ' + turFyrName(m) + ' within the leg\'s time. An ordinary picture of the light will do.', 'nav'); }
 // the words for a task
 function lopTaskWhat(m){
   const P0 = id => portById(id) ? portById(id).name : '';
@@ -311,7 +314,7 @@ function lopMake(run, j, role, spec){
   if (m.k === 'slep') m.stage = 'reach';
   if (m.k === 'frakt') m.stage = 'pick';
   if (m.k === 'foto' && m.lys){ const vm = Math.max(1, +V.vmax || 6), hTot = LOP.legs[j].nm / vm * LOP.task.lysF;
-    if (!lopLys(m, S.t / 60, hTot)) log('Kappløpet: ' + TUR_LYS[m.lysAlt].no + ' kommer ikke ved ' + turFyrName(m) + ' innen etappens tid. Et vanlig bilde av fyret holder.', 'The race: ' + TUR_LYS[m.lysAlt].en + ' does not come at ' + turFyrName(m) + ' within the leg\'s time. An ordinary picture of the light will do.', 'nav'); }
+    if (!lopLys(m, S.t / 60, hTot)) lopLysDrop(m); }
   return m;
 }
 // the tasks of leg j (0 to 5), when the leg begins: the fixed one and the surprise, shown now
@@ -347,8 +350,13 @@ function lopTaskEnd(m, ok, how){
 }
 // the leg j's fixed task done (or failed, or none could be made): the checkpoint counts
 const lopFixDone = (r, j) => !(r.tasks || []).some(m => m.leg === j && m.role === 'fix' && m.st === 'go');
-// the leg j is over: the surprise left undone adds task.miss (a tow left drifting, a picture not taken), and is struck
+// the leg j is over: the surprise left undone adds task.miss (a tow left drifting, a picture not taken), and is struck. One under way
+// (the boat on the line, the station fished and waiting for the board, the echo line begun) goes on to the next leg's end, so she is
+// never struck in the middle of doing it
+const lopUnderway = m => (m.k === 'slep' && m.stage === 'tow') || (m.k === 'prove' && (m.stage === 'measure' || (m.min || 0) > 0 || (m.at || 0) > 0));
 function lopLegClose(r, j){
-  for (const m of r.tasks || []) if (m.leg === j && m.role === 'surp' && m.st === 'go'){ m.st = 'miss'; m.adj = LOP.task.miss; r.pen.push({t:S.t, k:'opp', min:LOP.task.miss, leg:j});
+  for (const m of r.tasks || []) if (m.role === 'surp' && m.st === 'go' && (m.leg === j || (m.leg < j && m.carry))){
+    if (m.leg === j && lopUnderway(m)){ m.carry = 1; continue; }
+    m.st = 'miss'; m.adj = LOP.task.miss; r.pen.push({t:S.t, k:'opp', min:LOP.task.miss, leg:j});
     const w = lopTaskWhat(m), hm = lopHm(LOP.task.miss); log('Kappløpet: overraskelsen (' + w[0] + ') ble ikke gjort, ' + hm[0] + ' lagt til.', 'The race: the surprise (' + w[1] + ') was not done, ' + hm[1] + ' added.', 'nav'); }
 }
