@@ -110,6 +110,7 @@ Hver fase passer én økt, bygges bak et flagg i adressen der det er mulig (`#fo
 - **Hva:** en sjelden ekstrembølge i grov sjø (Hs over 3 m der vindsjø og dønning krysser med over 60°): en bølgegruppe på rundt 2·Hs går gjennom, varslet av mannskapet («Brottsjø forut, hold baugen opp!»), tegnet som en forbigående komponent i 3D (lik for alle som ser samme sted, fra verdensklokka). Tar hun den tvers eller akterfra, får skroget et støt etter Fysikk 3 (`hullHit` med sjøens energi), redskap på dekk kan gå over bord, og mannskapet får en skrekk (trivsel). Slammingen fra F2 får samme vei: gjentatte harde slag i høy fart gir skrammer og skade. Hun synker aldri.
 - **Filer:** `core/03b-sea.js` (hendelsen), `view3d/14-sea.js`, `core/16c-hull.js`, `core/14-crewlife.js`.
 - **Tester:** `hulltest`, `seatest`.
+- **Jonas 13.11.2026 (F7-økta), om hva den gjør:** «Lag det gjerne, men ikke la det skade båten», og på spørsmålet om hva den skal gjøre i stedet: «Bare varsel og skrekk». Brottsjøen og slagene gir varsel fra mannskapet og en skrekk (trivsel), ingen skade på skroget og ingenting over bord.
 
 ### F8. Strøm og tidevannsstrøm (to økter; Jonas valgte 5A, mot anbefalingen)
 
