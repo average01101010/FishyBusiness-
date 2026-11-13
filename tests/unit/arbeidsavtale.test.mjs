@@ -16,7 +16,7 @@ export default function (t){
   // ---- the agreement when someone signs on (§ 3-1), with probation of six months (§ 3-2) ----
   const b = S.boat; b.type = 'sjark'; K.applyVessel(); const pt = K.portById('finnsnes'); b.pos = {x:pt.p.x, y:pt.p.y}; b.status = 'port'; b.port = 'finnsnes';
   S.boatName = 'Havgull'; S.t = at(2027, 3, 1);
-  const mk = (nm, share = 1) => { const c = K.genCrew(); c.name = nm; c.share = c.ask = share; c.hiredT = S.t; c.off = false; c.bi = false; c.morale = 60; c.attr.erf = 3; K.crewDerive(c); return c; };
+  const mk = (nm, share = 1) => { const c = K.genCrew(); c.name = nm; c.attr.erf = 3; K.crewDerive(c); c.share = c.ask = share; c.hiredT = S.t; c.off = false; c.bi = false; c.morale = 60; return c; };   // (the share after crewDerive: one drawn as an apprentice gets the deckhand's share when erf 3 makes them experienced, and the test's share was lost by chance)
   const A = mk('Ola Avtale', 0.9); S.crew = [A];
   const av = K.crewAvt(A);
   t.ok(av.t0 === S.t && av.boat === 'Havgull' && av.share === 0.9, 'avtalen: dagen, båten og lotten', av);
