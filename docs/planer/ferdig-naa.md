@@ -54,4 +54,4 @@
 
 ## Status
 
-13.11.2026: planen skrevet i D5-økta, venter på Jonas' valg.
+13.11.2026: planen skrevet i D5-økta. **Jonas valgte samme dag: 1 A (alle sidene som lager jobber, og Om bord), 2 A (19 kr for alle verkstedjobbene, som i dag), 3 A (betaling inne i spillet med Google Pay, Apple Pay og Link, kortet huskes).** F1 er steg 126 i køen (`docs/planer/start/126.md`), F2 og F3 steg 127 (`docs/planer/start/127.md`).
