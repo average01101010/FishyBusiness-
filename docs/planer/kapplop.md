@@ -1,6 +1,6 @@
 # Kappløp: Lindesnes–Nordkapp (plan 12.11.2026)
 
-Status: **plan, ingenting bygd. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
+Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
 
 ## Hva Jonas ba om
 
@@ -389,3 +389,4 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 - 12.11.2026: Jonas svarte på V1–V7 (V2 A og V3 B, ikke de anbefalte). Planen skrevet om etter svarene; KL1–KL4 lagt i køen som steg 116–119 under lanseringslinja, KL5 utgår; hel startmelding for KL1 i `start/116.md`.
 - 12.11.2026: Jonas: hopp nektes i løpet («Nei i løpet»), selv om ingenting ellers hindrer kjøp av hopp (`docs/planer/hopp.md`).
 - 12.11.2026: KL1 delt i KL1a (steg 116a) og KL1b (steg 116b) av arbeidsrutinen. KL1a bygd (gren `plan/2026-11-12-116`, PR #74): `core/09o-kapplop.js`, løypa målt; systemet står i `docs/systemer/oppdrag-og-kystposten.md` 4.28.
+- 13.11.2026: KL1a rullet ut til testutgaven (1001c029, versjon 631532c5d670). KL1b (steg 116b) er klar.
