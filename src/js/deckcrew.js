@@ -773,6 +773,7 @@ function crewSim(src){
   }
   // everyone straight to their place (the first frame, a change of boat, the clock run on)
   function snap(){ for (const a of A){ a.sub = null; a.put = a.relief = null; a.door = a.out = 0; if (!a.goal){ a.mode = 'in'; continue; } const p = ST.M.at(a.goal.k); a.x = p[0]; a.y = p[1]; a.z = p[2]; a.cell = a.goal.k; a.h = a.goal.h; a.task = a.goal.task; a.mode = a.goal.inside ? a.goal.inside : 'at'; a.path = null; } }
+  const dropY = p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; };
   function tick(dt){
     if (!ready()) return; dt = Math.min(0.1, Math.max(0, dt || 0)); ST.clk += dt; const t = nowS();
     const jump = ST.lastSim == null || Math.abs(S.t - ST.lastSim) > 30 || (src && src.jump && src.jump()); ST.lastSim = S.t;
@@ -928,6 +929,14 @@ function crewSim(src){
     const P = seaAt(a), room = seaRoom(a), t = Math.tan(SJOBEIN.CLIP), base = seaTry(a, P, 0, 0, room); let n = 0;
     for (const [sr, sf] of SEAWAYS(t)){ let b = seaTry(a, P, sr, sf, room) & ~base, c = 0; while (b){ c += b & 1; b >>= 1; } n = Math.max(n, c); }
     return n; }
+  // the tests: where each foot of those at their places stands, in the boat's own frame, and the model's own deck under it (the deck
+  // is flat in her frame, so the deck under the foot is the model's surface there: this is the measure against the model, not against
+  // the plane the sea legs reckoned with). dy: the foot's height over the deck under it, null where the model has nothing there
+  function seaFeet(){ if (!ready()) return null; const out = [];
+    for (const a of A){ const o = a.sl && a.sl.y !== null ? a.sl.o : null; if (a.mode !== 'at' || !o) continue; const w = walkOff(a), x = a.x + w[0], z = a.z + w[1], F = [Math.sin(a.h), -Math.cos(a.h)], Rv = [Math.cos(a.h), Math.sin(a.h)];
+      for (let i = 0; i < 2; i++){ const cf = 1 / Math.hypot(1, o.sf), cr = 1 / Math.hypot(1, o.sr), fx = x + (F[0] * o.fa[i] * cf + Rv[0] * o.fr[i] * cr), fz = z + (F[1] * o.fa[i] * cf + Rv[1] * o.fr[i] * cr);
+        const d = dropY([fx, a.y + 0.6, fz]); out.push({id:a.id, task:a.task, i, lift:+o.lift[i].toFixed(3), dy:d == null ? null : +(a.y - d).toFixed(4)}); } }
+    return out; }
   // (the people at their places now; and every break at every rail place it fits, as clipScan: [places clear, places])
   function seaClip(){ if (!ready()) return null; return A.filter(a => a.mode === 'at' && a.goal && !a.goal.inside).map(a => ({id:a.id, task:a.task, n:seaHits(a), room:seaRoom(a)})); }
   function seaScan(){ if (!ready()) return null; const R = {}; for (const k of ['lean', 'look', 'coffee', 'phone', 'binoc', 'smoke', 'snus', 'aurora', 'back', 'chat', 'knife', 'lunch']){
@@ -995,7 +1004,7 @@ function crewSim(src){
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
   return {tick, agents, visible, anchorOf, on, setPlan, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
     // (for the view: nothing of the boat between two points in her frame, and the first thing of her under a point, its height)
-    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY:p => { if (!ready()) return null; const u = ST.M0.hit(p, [p[0], p[1] - 12, p[2]]); return u < 0 ? null : p[1] - u * 12; }, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setSea, seaRoom:a => ready() ? seaRoom(a) : null, seaRail:a => ready() ? seaRail(a) : null, seaStepOk:(a, dr, da) => ready() && seaStepOk(a, dr, da), seaClip, seaScan, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
+    clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setSea, seaRoom:a => ready() ? seaRoom(a) : null, seaRail:a => ready() ? seaRail(a) : null, seaStepOk:(a, dr, da) => ready() && seaStepOk(a, dr, da), seaClip, seaScan, seaFeet, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
 const CREW3D = crewSim(null);
 // where the lines and the fenders are, in the boat's frame (x to starboard, z aft) from the model's measures (vessel3d.js geoOf), with the

@@ -129,6 +129,14 @@ async def checks(pg):
         worst[(roll, pitch)] = max([sole(g, i) for g in st for i in (0, 1)] or [9])
     w = max(worst.values())
     check(w < 0.01 and nfig >= 3, 'hver fot er innen 1 cm av dekket ved 0, 8 og 15° rulling og 0 og 5° stamping (%d figurer, verst %.1f mm)' % (nfig, w * 1000), {('%d/%d' % k): round(v * 1000, 1) for k, v in worst.items()})
+    # (and against the model itself, not the plane the sea legs reckoned with: the deck is flat in her frame, so the deck under each
+    # foot is the model's own surface there; CREW3D.seaFeet)
+    ft = []
+    for roll, pitch in [(0, 0), (8, 0), (15, 0), (-15, -5)]:
+        await drawn(pg, t, {'roll': roll * DEG, 'pitch': pitch * DEG, 'T': 100.3})
+        ft += [f for f in (await pg.evaluate("CREW3D.seaFeet()") or []) if not f['lift']]
+    miss = [f for f in ft if f['dy'] is None]; off2 = max([abs(f['dy']) for f in ft if f['dy'] is not None] or [9])
+    check(len(ft) >= 8 and not miss and off2 < 0.01, 'og hver fot står på modellens eget dekk, ikke bare på planet (%d føtter, verst %.1f mm)' % (len(ft), off2 * 1000), {'uten dekk under': len(miss), 'verst': round(off2 * 1000, 1)})
     L0 = await drawn(pg, t, {'roll': 8 * DEG, 'pitch': 0, 'T': 100.3}, on=False)
     w0 = max([sole(g, i) for g in L0 if not g['walk'] for i in (0, 1)] or [0])
     check(w0 > 0.012, 'med sjøbeina av (som før) står føttene %.1f mm feil ved 8° rulling' % (w0 * 1000))
