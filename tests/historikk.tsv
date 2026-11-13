@@ -3456,3 +3456,10 @@
 2026-11-12 23:32	plan/2026-11-12-116	ededb80e	hoppshot	FEIL	1614	3d	alene	FEIL staaende: 1c. i roen dempes spoleknappen som kino-knappen {"hop": 0.869312, "kino": 0.869312, "ms": 24435}
 2026-11-12 23:37	plan/2026-11-12-116	ededb80e	heattest	OK	287	3d	alene	
 2026-11-13 00:03	plan/2026-11-12-116	4d5a37c0	hoppshot	OK	1517	3d	alene	
+2026-11-13 01:28	plan/2026-11-13-116b	01f2de47	autonavtest	OK	24	lite	samtidig	
+2026-11-13 01:28	plan/2026-11-13-116b	01f2de47	turtest	OK	17	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	trip2	OK	33	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	booktest	OK	28	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	kapplop	OK	27	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	hopptest	OK	8	lite	samtidig	
+2026-11-13 01:37	plan/2026-11-13-116b	01f2de47	boottest	OK	23	lite	alene	
