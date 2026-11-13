@@ -127,11 +127,13 @@ async def one(p, name, vw, vh):
     await pg.wait_for_timeout(4000)
     # (the camera stands 0.55 rad off her bow, and standing up the view is narrow: the bow turned until the light is in the picture, as a
     # player turns the camera; G3.seen is what the shutter asks)
-    aim = None
-    for off in [0, -0.55, 0.55, -1.1, 1.1, -0.3, 0.3, -0.8, 0.8]:
-        await J("([id, off]) => { const m = S.lop.run.tasks.find(x => x.id === id); S.boat.heading = Math.atan2(m.fyr.x - m.p.x, -(m.fyr.y - m.p.y)) + off; }", [fx, off]); await pg.wait_for_timeout(1500)
-        sn = await J("(id) => { const m = S.lop.run.tasks.find(x => x.id === id), q = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h); return q ? {front:!!q.front, clear:!!q.clear} : null; }", fx)
+    aim = None; tries = []
+    for off in [0, -0.55, 0.55, -0.3, -0.8, 0.3, 0.8, -1.1, 1.1]:
+        await J("([id, off]) => { const m = S.lop.run.tasks.find(x => x.id === id); S.boat.heading = Math.atan2(m.fyr.x - m.p.x, -(m.fyr.y - m.p.y)) + off; }", [fx, off]); await pg.wait_for_timeout(3000)
+        sn = await J("(id) => { const m = S.lop.run.tasks.find(x => x.id === id), q = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h); return q ? {front:!!q.front, clear:!!q.clear, ang:q.ang, half:q.half} : null; }", fx)
+        tries.append([off, sn])
         if sn and sn['front'] and sn['clear']: aim = off; break
+    if aim is None: print('     (kameraet: ' + json.dumps(tries) + ')')
     await J("() => { turFotoUi(); }"); fb = await J(RECT, '#fotoBtn')
     check(fb and fb['shown'], name + ': 4a. utløseren står i 3D innen 3 km av Obrestad fyr', {'pos': pos, 'btn': fb})
     await tap('#fotoBtn'); await pg.wait_for_timeout(2500)
