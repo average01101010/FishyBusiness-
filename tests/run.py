@@ -176,6 +176,12 @@ VECB += ['lukket']
 COVER['tests/lukket.py'] = ['lukket']; COVER['tools/steder/lukkflytt.py'] = ['lukket']
 for _f in ('src/data/mottak.json', 'src/data/steder.json', 'src/js/core/06b-coastports.js', 'src/js/core/06c-steder.js', 'src/js/core/07-harbours.js'):
     COVER[_f] = COVER.get(_f, []) + ['lukket']
+# The ground at the harbour units' walls (13.11.2026, Engenes verft: «utgravninger og tagger»): pictures from the land, near and straight down,
+# and the ground along the back and the sides (G3._debug.unitEdge). 3D, needs dist-vec. On lines of their own, as above
+D3 += ['enhetshot']
+VECB += ['enhetshot']
+COVER['tests/enhetshot.py'] = ['enhetshot']
+COVER['src/js/view3d/03-berths-naust.js'] = COVER.get('src/js/view3d/03-berths-naust.js', []) + ['enhetshot']
 for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcrew.js', 'mobshot'), ('src/js/core/04-crew.js', 'mobtest'), ('src/js/core/13-work.js', 'mobtest'), ('src/js/core/05-vessels.js', 'mobtest'), ('src/js/ui/03-map.js', 'mobtest'), ('src/js/ui/10e-sound.js', 'mobtest')):
     COVER[_f] = COVER.get(_f, []) + [_t]
 # Kvotemarkedet, the core (KM1, 08.11.2026): pure functions tested in tests/unit/kvotemarked.test.mjs (run first by changed); in the game only
