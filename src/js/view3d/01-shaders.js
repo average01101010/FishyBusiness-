@@ -133,10 +133,10 @@
   // seaAt gives: the wind sea's height, the swell's height, how grown the sea is (0 young, 1 the open sea's spectrum), the root of the fetch.
   // The breaking sea (Ø9 F7, brvSet in 14-sea.js): a group the core's rule has on the water (03b-sea.js brottNear), its middle uBr.xy
   // (from the render origin) running along uBr.zw, s metres along now (uBr2.x), 1 / its length and 1 / its width (uBr2.yz), its height
-  // over its life (uBr2.w, 0: none). Within it the carrier wave's group factor goes over to the gain that gives it the height (uBr3: wave
-  // 0's and wave 11's, and whether each carries it), so the shaders and seaH (grpAt) draw the same wave.
+  // over its life (uBr2.w, 0: none). Within it the carrier wave's group factor goes over to the gain that gives it the height (uBr3.x the
+  // gain, uBr3.y which wave carries it: one of the long wind waves 0-3 or the swell's 11), so the shaders and seaH (grpAt) draw the same.
   const SEA_BR = 'uniform vec4 uBr;uniform vec4 uBr2;uniform vec4 uBr3;float brE(vec2 P){if(uBr2.w<=0.0)return 0.0;vec2 q=P-uBr.xy;float a=(dot(q,uBr.zw)-uBr2.x)*uBr2.y;float c=dot(q,vec2(-uBr.w,uBr.z))*uBr2.z;return uBr2.w*exp(-a*a-c*c);}';
-  const BR_GR = (i, P) => i === 0 ? 'gr+=(uBr3.x-gr)*brE(' + P + ')*uBr3.z;' : i === 11 ? 'gr+=(uBr3.y-gr)*brE(' + P + ')*uBr3.w;' : '';
+  const BR_GR = (i, P) => i < 4 || i === 11 ? 'gr+=(uBr3.x-gr)*brE(' + P + ')*float(abs(uBr3.y-' + i + '.0)<0.5);' : '';
   const SEA_STATE = 'uniform vec4 uSea;uniform vec4 uSea2;uniform vec4 uSSN;uniform vec4 uSSW;uniform vec4 uLocal;uniform float uGp[13];uniform vec2 uSeaK;' + SEA_BR +
     '\n#ifdef NOSST\nvec4 seaAt(vec2 P){return uLocal;}\n#else\nuniform sampler2D uSSTn;uniform sampler2D uSSTw;' +
     'vec4 seaAt(vec2 P){vec2 un=(P-uSSN.xy)*uSSN.z;vec2 uw=(P-uSSW.xy)*uSSW.z;vec4 tw=texture2D(uSSTw,uw);vec4 tn=texture2D(uSSTn,un);float r=mix(tw.r,tw.g,uSea2.w);float sf=tw.b;' +

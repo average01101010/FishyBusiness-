@@ -716,19 +716,24 @@ const BRT_SAY = {
     akter:[['Den kom inn over hekken! Hold dokk fast!', 'That one came in over the stern! Hold on!']]},
   slam:[['Hun slår hardt i sjøen. Ta av litt fart, skipper.', 'She is slamming hard. Ease her off a bit, skipper.'], ['Det smell i baugen for hver bølge. Vi må ned i fart.', 'The bow bangs on every sea. We need to slow down.']]
 };
-const FRIGHT = {brott:12, side:{forut:0.3, babord:1, styrbord:1, akter:0.8}, slam:2.5};
+const FRIGHT = {brott:12, side:{forut:0.3, babord:1, styrbord:1, akter:0.8}, slam:2.5, slamFloor:50};
 function crewBrott(kind, side){
   const L = kind === 'slam' ? BRT_SAY.slam : (BRT_SAY[kind] || {})[side]; if (!L) return null;
-  const on = crewAboard(), l = L[((S.t % L.length) + L.length) % L.length], vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
-  if (on.length){
-    const who = on.slice().sort((a, c) => ((c.attr || {}).sjo || 0) - ((a.attr || {}).sjo || 0))[0], nm = who.name.split(' ')[0], no = crewDialect(who, l[0]);
-    log(vt + nm + ': «' + no + '»', vt + nm + ': «' + l[1] + '»', 'nav'); S.sayT = S.t;
+  // (log puts the vessel's name first itself in a fleet, under VTAG; the kontroll 13.11.2026 found it twice. All aboard get the fright,
+  // the watch below in the bunks too; one awake calls it, or one woken when all are asleep)
+  const all = crewAboard(null, true), awake = crewAboard(), on = all, l = L[((S.t % L.length) + L.length) % L.length];
+  if (all.length){
+    const who = (awake.length ? awake : all).slice().sort((a, c) => ((c.attr || {}).sjo || 0) - ((a.attr || {}).sjo || 0))[0], nm = who.name.split(' ')[0], no = crewDialect(who, l[0]);
+    log(nm + ': «' + no + '»', nm + ': «' + l[1] + '»', 'nav'); S.sayT = S.t;
     (who.said = who.said || []).push({t:S.t, no, en:l[1]}); if (who.said.length > 5) who.said.shift();
     if (hooks.onSay && meAboard()) hooks.onSay(who, no, l[1]);
-  } else log(vt + l[0], vt + l[1], 'nav');
+  } else log(l[0], l[1], 'nav');
   const f = kind === 'hit' ? FRIGHT.brott * (FRIGHT.side[side] || 1) : kind === 'slam' ? FRIGHT.slam : 0;
+  // (the slams' small fright never takes anyone under FRIGHT.slamFloor: a long run on the autopilot with nobody easing her off must not
+  // end in notices; the breaking sea is rare enough to be felt in full)
   if (f > 0) for (const c of on){
-    c.morale = clamp(c.morale - f * (c.traits.includes('sjosyk') ? 1.3 : 1) * (1.2 - 0.12 * ((c.attr || {}).sjo || 0)), 0, 100);
+    const df = f * (c.traits.includes('sjosyk') ? 1.3 : 1) * (1.2 - 0.12 * ((c.attr || {}).sjo || 0));
+    c.morale = kind === 'slam' ? (c.morale > FRIGHT.slamFloor ? Math.max(FRIGHT.slamFloor, c.morale - df) : c.morale) : clamp(c.morale - df, 0, 100);
     if (kind === 'hit' && side !== 'forut') lifeStory(c, 'Tok en brottsjø ' + (side === 'akter' ? 'akterfra' : 'tvers') + ' om bord på «' + (S.boatName || 'Havbris') + '».', 'Took a breaking sea ' + (side === 'akter' ? 'from astern' : 'abeam') + ' aboard the «' + (S.boatName || 'Havbris') + '».');
   }
   return f;

@@ -1,9 +1,8 @@
 """The sea at the near terrain's edge seen from 12 km (Ø9 F7 start, 12.11.2026): the near pass's sea ends a near-terrain cell inside the
-square (17-draw.js nearIn), and the near terrain's shallow bed under the water showed in that band as a faint short line on the water
-by an islet at the edge. The view «up2» of 5.20s: camera 12 000 m, pitch 0.75, yaw 2.6, the boat at P(68.9618, 17.091), an east wind of
-11.3 m/s, a clear sky, the sun in the south. Measured: in the band along the near square's edge, the share of sea pixels (the far
-pass's sea round it) whose colour stands far from the sea a little further out; the near terrain's bed shows as darker, browner pixels.
-Picture in tests/out/nearedge_up2.png (and _fft0 for comparison); no GL errors and no page errors."""
+square (17-draw.js nearIn), and the near terrain's shallow bed under the water showed in that band as a faint short line on the water by
+an islet at the edge (5.20s). The view «up2» of 5.20s: camera 12 000 m, pitch 0.75, yaw 2.6, the boat at P(68.9618, 17.091), an east wind
+of 11.3 m/s, a clear sky, the sun in the south. A picture to look at, tests/out/nearedge_up2.png (the line is read off it, not measured:
+before the fix in docs/okter/2026-11-12-43-f7/strek_for.png); no GL errors and no page errors."""
 import asyncio, json, os
 from playwright.async_api import async_playwright
 from _env import *

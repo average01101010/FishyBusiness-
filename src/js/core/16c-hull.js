@@ -73,7 +73,7 @@ function hullMinute(){
   const b = S.boat, d = b.dmg; if (!d || !(d.A > 0 || d.w > 0)) return;
   const Q = hullLeak(b), t = b.tow, P = hullPump(b) + (t && (t.ph === 'hook' || t.ph === 'tow') ? HULL.rsPump : 0) + (b.status === 'port' ? HULL.quayPump : 0);
   const w0 = d.w, lim = hullFlood(b); d.w = Math.max(0, Math.min(lim, d.w + Q - P));
-  const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
+  const vt = '';   // (log puts the vessel's name first in a fleet itself, under VTAG: it stood twice, the kontroll 13.11.2026)
   if (Q > 0 && !d.told){ d.told = true; if (Q <= P){ log(vt + 'Lensepumpa går. Den holder unna lekkasjen (' + Math.round(Q) + ' liter i minuttet). Få skroget reparert på et verft.', vt + 'The bilge pump is running. It keeps up with the leak (' + Math.round(Q) + ' litres a minute). Have the hull mended at a yard.', 'nav'); if (hooks.onBilge) hooks.onBilge('pump', b); } }
   if (d.w > w0 && Q > P){
     const left = Math.max(0, Math.round((lim - d.w) / (Q - P)));
@@ -167,7 +167,8 @@ const SLAM = {n:32, wtop:8, xb:0.35, z:0.2, d:0.5, fall:0.5, hard:1.5, kn:4, ema
 function slamRate(b = S.boat, H = S.t / 60, hard = 1){
   if (!b || !b.pos || !['sailing', 'fishing', 'engine'].includes(b.status) || b.hopHold) return 0;
   const bh = boatHead(H, b); if (!(bh.kn >= SLAM.kn)) return 0;
-  const h = hullOf(b.type), v = bh.kn * 0.5144, q = hsParts(b.pos, H), g = gridGamma(b.pos), xb = SLAM.xb * h.L;
+  const q = hsParts(b.pos, H); if (!(Math.hypot(q.w, q.sw) > 0.3)) return 0;
+  const h = hullOf(b.type), v = bh.kn * 0.5144, g = gridGamma(b.pos), xb = SLAM.xb * h.L;
   const wn = 2 * Math.PI / (2 * Math.PI * Math.sqrt(h.Cb * h.T * 1.8 / (9.81 * h.Cwp))), vth = hard * 0.2 * Math.sqrt(9.81 * h.L), dr = SLAM.d * h.T;
   // (each component's following M, and what the bow would have to do to follow them all: if its significant vertical acceleration passes
   // SLAM.fall g, she cannot, and the following is cut by that share for all of them: the bow drops off the crests and meets the next sea)
@@ -193,8 +194,12 @@ function slamRate(b = S.boat, H = S.t / 60, hard = 1){
 }
 // the hard slams of this game minute (over SLAM.hard times the threshold: the impact's pressure goes as the speed squared, so 2.25 times
 // the least) into a running mean over SLAM.ema minutes; over SLAM.warn a game minute (about 2.4 a real minute) the crew says so, at most every SLAM.gap minutes, and gets a small fright each time. b.slam = {e, t}
+// Only with you aboard (meAboard) and the game open (not while the time away is played in, LANDQ.away): a hired skipper eases her off
+// himself, and nothing is held against you for the time you were away (CLAUDE.md: no punishment for being away).
 function slamMinute(){
-  const b = S.boat; if (!b) return 0; const n = slamRate(b, S.t / 60, SLAM.hard) * BRT.rs, M = b.slam || (b.slam = {e:0, t:-1e9});
+  const b = S.boat; if (!b) return 0; const M = b.slam || (b.slam = {e:0, t:-1e9});
+  if ((typeof meAboard === 'function' && !meAboard()) || (typeof LANDQ !== 'undefined' && LANDQ.away)){ M.e = 0; return 0; }   // (nor while the time the game was closed is played in)
+  const n = slamRate(b, S.t / 60, SLAM.hard) * BRT.rs;
   M.e += (n - M.e) / SLAM.ema; if (!(n > 0) && M.e < 1e-3) M.e = 0;
   if (M.e >= SLAM.warn && S.t - M.t >= SLAM.gap){ M.t = S.t; if (typeof crewBrott === 'function') crewBrott('slam'); }
   return n;

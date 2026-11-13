@@ -209,15 +209,24 @@ function seaDirF(p, H, head){
 // The waves move in real seconds (as the shared sea in 3D does, B4: the world's clock in seconds), BRT.rs real seconds a game minute,
 // so the rate at a point is the share of the waves passing it in real time: 1 / Tz a second (Tz = Tp / 1.29 for JONSWAP, gamma 3.3).
 // A cell's rate is the point's times the cell's area over the area one group sweeps (its width, twice BRT.sw wavelengths, times the
-// way it runs while it is at least half its height): that is where a boat would meet it.
-const BRT = {cell:2, hs:3, cross:60, curKn:2, sysMin:1, B:0.25, life:14, sa:1.2, sw:2.5, lead:30, rs:60 / GAME_RATE, rmax:0.02, look:30, seed:0x5eab7e};
+// way it runs while it is at least half its height, the width where it is at least half its height, 2 x BRT.half x BRT.sw
+// wavelengths): that is where a boat would meet it. BRT.rmax holds a cell's rate (a short sea's groups are small, so its cells' rates are
+// high: 0.07 a minute at Tp 4 s); the hash is read first, and the sea is asked only under it.
+const BRT = {cell:2, hs:3, cross:60, curKn:2, sysMin:1, B:0.25, life:14, sa:1.2, sw:2.5, half:Math.sqrt(Math.log(2)), lead:30, rs:60 / GAME_RATE, rmax:0.12, look:30, lee:0.5, seed:0x5eab7e};
 function brtHash(ix, iy, t, k){
   let h = Math.imul(ix | 0, 0x27d4eb2d) ^ Math.imul(iy | 0, 0x165667b1) ^ Math.imul(t | 0, 0x9e3779b1) ^ Math.imul((k | 0) + 1, 0x85ebca6b) ^ BRT.seed;
   h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h = Math.imul(h ^ (h >>> 12), 0x297a2d39); h ^= h >>> 15; return (h >>> 0) / 4294967296;
 }
 // the sea at p at game hour H that can raise one: null, or the two systems, the height and why (kryss: crossing, strom: against the stream)
+// (the sea from the national layers only, fetchField and not fetchHere: the 25 m detail is in only where a boat has loaded it, and the
+// rule must give the same for every player whatever they have loaded; the kontroll 13.11.2026)
+function brottSea(p, H){
+  const U = weAt(H, p), d = wdAt(H, p), F = fetchField(p, d - gridGamma(p)), S = swellOpen(H, p);
+  return {w:hsWind(U, F), sw:S.hs * swellFactor(p), tp:tpWind(U, F), F, U, dir:d, swDir:S.dir, swTp:S.tp};
+}
 function brottCond(p, H){
-  const q = hsParts(p, H); let af = 1, against = 0;
+  if (isLandFar(p)) return null;
+  const q = brottSea(p, H); let af = 1, against = 0;
   try { const c = seaCur(p, H, q); if (c){ af = c.af || 1; against = c.against || 0; } } catch (e){}
   const w = q.w * af, hs = Math.hypot(w, q.sw); if (!(hs >= BRT.hs)) return null;
   const cross = Math.abs(((q.dir - q.swDir) % 360 + 540) % 360 - 180);
@@ -239,7 +248,7 @@ function brottMake(ix, iy, t, u, cond){
   const c = {x:(ix + brtHash(ix, iy, t, 1)) * BRT.cell, y:(iy + brtHash(ix, iy, t, 2)) * BRT.cell}, C = cond(c, t / 60); if (!C) return null;
   const wind = C.why === 'strom' || brtHash(ix, iy, t, 3) < C.w * C.w / (C.w * C.w + C.sw * C.sw);   // (crossing: the system by its energy)
   const tp = Math.max(3, wind ? C.tp : C.swTp), L = 9.81 * tp * tp / (2 * Math.PI), cg = 9.81 * tp / (4 * Math.PI), life = BRT.life * tp, sw = BRT.sw * L;
-  const area = 2 * sw * cg * life * 2 / 3 / 1e6, lam = BRT.rs / (tp / 1.29) * Math.exp(-8) * BRT.B, rate = Math.min(BRT.rmax, lam * BRT.cell * BRT.cell / area);
+  const area = 2 * BRT.half * sw * cg * life * 2 / 3 / 1e6, lam = BRT.rs / (tp / 1.29) * Math.exp(-8) * BRT.B, rate = Math.min(BRT.rmax, lam * BRT.cell * BRT.cell / area);
   if (u >= rate) return null;
   const from = wind ? C.dir : C.swDir, a = (from - gridGamma(c) + 180) * Math.PI / 180;   // (the way it runs, on the grid)
   return {id:ix + ':' + iy + ':' + t, t, x:c.x, y:c.y, dx:Math.sin(a), dy:-Math.cos(a), from, hs:C.hs, tp, L, cg, life, sa:BRT.sa * L, sw, sys:wind ? 'w' : 'sw', why:C.why};
@@ -269,16 +278,29 @@ function brottSide(e, head){
 // one game minute of the vessel in the minute step (16c-hull.js hullMinute calls it, also while the time away is played in): the crew
 // warns when a group is coming at her within BRT.lead real seconds and will be at least half its height when it reaches her, and when its
 // middle passes her (within the width where it is half its height or more), it has hit her: the crew gets a fright by how she took it
-// (crewBrott, 14-crewlife.js). Nothing on the hull and nothing lost (Jonas 13.11.2026). b.brt: the last group warned of and the last that hit.
+// (crewBrott, 14-crewlife.js). Nothing on the hull and nothing lost (Jonas 13.11.2026). Both are judged on her way through the minute,
+// from where she was to where she is (she moves in game time, the group in the sea's real seconds: six times as fast over the ground as
+// the waves), and only where the sea at her is at least BRT.lee of the group's (not in a lee). b.brt: the last groups warned of and that
+// hit, and where she was.
 function brottMinute(cond){
-  const b = S.boat; if (!b || !b.pos || b.status === 'port' || b.hopHold) return null;
-  const T = S.t, H = T / 60, B = b.brt || (b.brt = {w:null, h:null}); let hit = null;
-  for (const e of brottNear(b.pos, T, cond)){
-    const r0 = brottRel(e, b.pos, T - 1), r1 = brottRel(e, b.pos, T); if (Math.abs(r1.x) > e.sw * 0.83) continue;
+  const b = S.boat; if (!b || !b.pos || b.status === 'port' || b.hopHold){ if (b && b.brt) b.brt.p = null; return null; }
+  const T = S.t, H = T / 60, B = b.brt || (b.brt = {w:[], h:[], p:null}); let hit = null;
+  if (!Array.isArray(B.w)) B.w = B.w ? [B.w] : []; if (!Array.isArray(B.h)) B.h = B.h ? [B.h] : [];
+  const p0 = B.p && Math.hypot(B.p.x - b.pos.x, B.p.y - b.pos.y) < 2 ? B.p : b.pos; B.p = {x:b.pos.x, y:b.pos.y};   // (where she was a minute ago: she moves too)
+  const G = brottNear(b.pos, T, cond); if (!G.length) return null;
+  // (in the lee, where the sea at her is under BRT.lee of the group's, it does not reach her: a bay, behind a holm)
+  let hsHere = null; const here = () => hsHere == null ? (hsHere = (() => { try { const q = brottSea(b.pos, H); return Math.hypot(q.w, q.sw); } catch (e){ return 0; } })()) : hsHere;
+  for (const e of G){
+    const r0 = brottRel(e, p0, T - 1), r1 = brottRel(e, b.pos, T); if (Math.abs(r1.x) > e.sw * 0.83 && Math.abs(r0.x) > e.sw * 0.83) continue;
+    // the closing speed: the group's way and hers along it this minute (at the least the group's own)
+    const dd = Math.max(r0.d - r1.d, e.cg * BRT.rs), fa = u => u >= 0 && u <= e.life ? Math.sin(Math.PI * u / e.life) : 0;
     const head = boatHead(H, b).head, side = brottSide(e, head);
-    if (B.w !== e.id && B.h !== e.id && r1.d > 0 && r1.d <= e.cg * (BRT.lead + BRT.rs) && r1.fp >= 0.5){ B.w = e.id; if (typeof crewBrott === 'function') crewBrott('warn', side); }
-    if (B.h !== e.id && r0.d > 0 && r1.d <= 0 && r1.fp >= 0.5){
-      B.h = e.id; hit = {e, side};
+    if (!B.w.includes(e.id) && !B.h.includes(e.id) && r1.d > 0 && r1.d <= dd * (BRT.lead / BRT.rs + 1) && Math.abs(r1.x) <= e.sw * 0.83 && fa(r1.tau + r1.d / dd * BRT.rs) >= 0.5 && here() >= BRT.lee * e.hs){
+      B.w.push(e.id); if (B.w.length > 6) B.w.shift(); if (typeof crewBrott === 'function') crewBrott('warn', side); }
+    if (!B.h.includes(e.id) && r0.d > 0 && r1.d <= 0){
+      const k = r0.d / (r0.d - r1.d), x = r0.x + (r1.x - r0.x) * k;   // (where and when its middle crossed her track)
+      if (Math.abs(x) > e.sw * 0.83 || fa(r0.tau + k * BRT.rs) < 0.5 || here() < BRT.lee * e.hs) continue;
+      B.h.push(e.id); if (B.h.length > 6) B.h.shift(); hit = {e, side};
       S.incidents = S.incidents || []; S.incidents.push({t:T, k:'brott', boat:S.boatName || 'Havbris', side, hs:+e.hs.toFixed(1), why:e.why}); if (S.incidents.length > 60) S.incidents.shift();
       if (typeof crewBrott === 'function') crewBrott('hit', side);
     }

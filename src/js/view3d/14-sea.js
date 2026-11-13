@@ -473,13 +473,13 @@
     return gr;
   }
   // ---- The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  // long wave lifted to about twice the significant height inside an envelope that runs with the group: the wind sea's longest wave (0,
-  // 96 m) or the swell's main one (11) carries it, whichever sea the group came from. Where it is on the water and when come from the
+  // long wave lifted to about twice the significant height inside an envelope that runs with the group: the long wind wave (0-3, 96 to
+  // 36.5 m) nearest the group's length, or the swell's main one (11), carries it, whichever sea the group came from. Where it is on the water and when come from the
   // core (the place, the time, the weather), so everyone who sees the place sees the same group pass, and it passes her when the minute
   // step says it hits her. Its height: Hs as the wave's amplitude, held under k a 0.42 (where a wave breaks: its crest at the cusp, and
   // the Jacobian foam, F3, whitens it). Looked up once a second; the group's place and height every frame from the game's clock.
   // «#brott0» in the address: off (for the comparison). BRV.fix: a group given by hand (tests/brottshot.py).
-  const BRV = {on:!/brott0/.test(location.hash), t:-9, list:[], e:null, c:[0, 0], D:[0, 1], s:0, ia:0, iw:0, f:0, i:-1, G:1, A:0, fix:null};
+  const BRV = {on:!/brott0/.test(location.hash), t:-9, list:[], e:null, c:[0, 0], D:[0, 1], s:0, ia:0, iw:0, f:0, i:-1, G:1, A:0, gmax:8, fix:null};
   WV.brott = BRV;
   function brvE(x, z){ const qx = x - BRV.c[0], qz = z - BRV.c[1], a = (qx * BRV.D[0] + qz * BRV.D[1] - BRV.s) * BRV.ia, c = (-qx * BRV.D[1] + qz * BRV.D[0]) * BRV.iw; return BRV.f * Math.exp(-a * a - c * c); }
   function brvStep(){
@@ -490,15 +490,20 @@
     let best = null, bw = 0, br = null;
     for (const e of BRV.list){ const r = brottRel(e, p, T), w = r.f * Math.exp(-((r.x / (2 * e.sw)) ** 2) - (r.d / 3000) ** 2); if (w > bw){ bw = w; best = e; br = r; } }
     if (!best) return;
-    const i = best.sys === 'w' ? 0 : 11, c = WV.list[i]; if (!c) return;
-    const Sx = ssAt(bv.x, bv.z), ren = 1 / Math.sqrt(Math.max(1 - 2 * Sx[2] * (1 - Sx[2]) * (1 - WV.dot), 0.05)), am0 = c.swell ? Sx[1] * c.wo : Sx[0] * (Sx[2] * c.wo + (1 - Sx[2]) * c.wy) * ren;
-    BRV.A = Math.min(best.hs, 0.42 / c.k); BRV.G = BRV.A / Math.max(am0, 0.02); BRV.i = i; BRV.e = best;
+    // (the carrier: the swell's 11, or the wind wave of 0-3 nearest the group's own length; the gain from the sea where the group's
+    // middle is, so in a lee or a harbour its waves are lifted by the same share as out there, not to the open sea's height; held at
+    // BRV.gmax, the most an extreme wave stands over its share of the spectrum here)
+    let i = 11; if (best.sys === 'w'){ i = 0; for (let j = 1; j < 4; j++) if (WV.list[j] && Math.abs(Math.log(2 * Math.PI / WV.list[j].k / best.L)) < Math.abs(Math.log(2 * Math.PI / WV.list[i].k / best.L))) i = j; }
+    const c = WV.list[i]; if (!c) return;
+    const mx = best.x * 1000 + best.dx * br.s, mz = best.y * 1000 + best.dy * br.s, Sx = ssAt(mx, mz), ren = 1 / Math.sqrt(Math.max(1 - 2 * Sx[2] * (1 - Sx[2]) * (1 - WV.dot), 0.05));
+    const am0 = c.swell ? Sx[1] * c.wo : Sx[0] * (Sx[2] * c.wo + (1 - Sx[2]) * c.wy) * ren;
+    BRV.A = Math.min(best.hs, 0.42 / c.k); BRV.G = am0 > 0.02 ? Math.min(BRV.gmax, BRV.A / am0) : 1; BRV.i = i; BRV.e = best;
     BRV.c[0] = best.x * 1000; BRV.c[1] = best.y * 1000; BRV.D[0] = best.dx; BRV.D[1] = best.dy; BRV.s = br.s; BRV.ia = 1 / best.sa; BRV.iw = 1 / best.sw; BRV.f = br.f;
   }
   function brvSet(u){
     if (u.uBr == null) return;
     gl.uniform4f(u.uBr, BRV.c[0] - RO.x, BRV.c[1] - RO.z, BRV.D[0], BRV.D[1]); gl.uniform4f(u.uBr2, BRV.s, BRV.ia, BRV.iw, BRV.f);
-    gl.uniform4f(u.uBr3, BRV.G, BRV.G, BRV.i === 0 ? 1 : 0, BRV.i === 11 ? 1 : 0);
+    gl.uniform4f(u.uBr3, BRV.G, BRV.i, 0, 0);
   }
 
 
