@@ -5,10 +5,13 @@ og alt»): each drawer page, the phone's home and each app, the deck log, and th
     node build.mjs
     KYST_LITE=1 python3 tools/ui/designshots.py            -> tests/out/design/<nn>-<name>-<staaende|liggende>.png (JPEG beside, for sending)
     python3 tools/ui/designshots.py hud                    -> only the screen in harbour and at sea, with 3D drawn
+    KYST_LITE=1 python3 tools/ui/designshots.py d6         -> the dialogs, the tip, the toast (tools/ui/scener.py) and the wardrobe
 """
 import os, sys, asyncio, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'tests'))
 from _env import boot, OUT, GAME_RO
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from scener import SCENES, SLOW
 from playwright.async_api import async_playwright
 from PIL import Image
 
@@ -22,14 +25,14 @@ APPS = ['vaer', 'post', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'ordl', 'ne
 
 
 async def main():
-    hud = 'hud' in sys.argv; n = [0]; errs = []
+    hud = 'hud' in sys.argv; d6 = 'd6' in sys.argv; n = [0]; errs = []
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         for tag, w, h in SIZES:
             pg = await b.new_page(viewport={'width': w, 'height': h}); pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg); n[0] = 0
             async def shot(name):
-                n[0] += 1; f = os.path.join(DIR, '%s%02d-%s-%s' % ('hud' if hud else 'rest' if 'rest' in sys.argv else '', n[0], name, tag))
+                n[0] += 1; f = os.path.join(DIR, '%s%02d-%s-%s' % ('hud' if hud else 'd6' if d6 else 'rest' if 'rest' in sys.argv else '', n[0], name, tag))
                 await pg.screenshot(path=f + '.png'); Image.open(f + '.png').convert('RGB').save(f + '.jpg', quality=82)
             async def safe(js, name, wait=350):
                 try: await pg.evaluate(js); await pg.wait_for_timeout(wait); await shot(name)
@@ -37,15 +40,27 @@ async def main():
             try: await pg.wait_for_function("() => { const e = document.getElementById('pic-items'); return !!e && !e.dataset.src; }", timeout=90000)
             except Exception: pass
             await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; renderActs()"); await pg.wait_for_timeout(hud and 6000 or 400)
+            if d6:
+                for name, op, root, cl in SCENES:
+                    try: await pg.evaluate(op); await pg.wait_for_timeout(SLOW.get(name, 350) + 250); await shot(name)
+                    except Exception as e: print('FEIL', name, tag, str(e)[:160])
+                    try: await pg.evaluate(cl)
+                    except Exception: pass
+                await safe("WARD.open()", 'garderoben', 2500)
+                for i in range(1, 4): await safe("(() => { const t = document.querySelectorAll('.wd-tab')[%d]; if (t) t.click(); })()" % i, 'garderoben-fane%d' % (i + 1), 600)
+                await pg.close(); continue
             await shot('havn')
             if hud:
                 # the screen with 3D drawn: in harbour, a shop, the paint shop and the phone over it, at sea, the chart plotter, a route
-                await safe("DOCK.open('fiske')", 'butikk-over-3d', 3000); await safe("DOCK.open('maler')", 'maler-over-3d', 3000); await pg.evaluate("DOCK.close()")
-                await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
+                if 'kort' not in sys.argv:   # (`hud kort`: only harbour, at sea and the plotter; a 3D picture takes minutes in the test environment)
+                    await safe("DOCK.open('fiske')", 'butikk-over-3d', 3000); await safe("DOCK.open('maler')", 'maler-over-3d', 3000); await pg.evaluate("DOCK.close()")
+                    await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
                 await safe("(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); })()", 'til-sjos', 8000)
-                await safe("(() => { const e = document.querySelector('#dock button'); })()", 'til-sjos-knapper', 500)
+                if 'kort' not in sys.argv: await safe("(() => { const e = document.querySelector('#dock button'); })()", 'til-sjos-knapper', 500)
+                # (D6: by day too, so the compass and the strip are seen against snow and hills, not only the winter morning's dark)
+                await safe("(() => { let best = S.t, el = -99; for (let m = 0; m < 1440; m += 20){ const e = sunAt((S.t + m) / 60, S.boat.pos).el; if (e > el){ el = e; best = S.t + m; } } S.t = best; refreshAll(); })()", 'til-sjos-dag', 8000)
                 await safe("openPlotter()", 'kartplotter', 4000)
-                await safe("(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()", 'rute', 1500)
+                if 'kort' not in sys.argv: await safe("(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()", 'rute', 1500)
                 await pg.close(); continue
             if 'rest' in sys.argv:
                 # the tabs under each page and app (every tab after the first), and the deck log's tabs
