@@ -8,7 +8,7 @@
   // they never race with the game's 6x. The worker gets the time the frame after next will show (FFT.lat ahead), and its result goes up
   // when it comes; it is never asked again before it has answered, so it never queues. WebGL 2 only (RGBA16F with the levels from the
   // worker, no extension needed); elsewhere, with «#fft0» in the address, or if the worker fails, the sea is as before.
-  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null};
+  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:!/fftbl0/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0};
   const FFTT = HFFT.tiles;
   function fftWorker(){
     const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips, hfftCapFit].map(f => f.toString()).join('\n') + '\n' +
@@ -32,6 +32,7 @@
   function fftOff(why){
     FFT.why = why; FFT.on = false; FFT.ok = false; FFT.have = false; try { FFT.w && FFT.w.terminate(); } catch (e){} FFT.w = null;
     for (let k = 0; k < 3; k++) if (FFT.tex[k]){ gl.deleteTexture(FFT.tex[k]); FFT.tex[k] = null; }
+    if (FFT.src){ for (const S of FFT.src) for (const tx of S) gl.deleteTexture(tx); FFT.src = null; }
     if (typeof cloudErr === 'function') cloudErr('3D FFT-sjø av: ' + why + ' · ' + GPU, 'view3d fft', '');
   }
   function fftInit(){
@@ -46,6 +47,7 @@
         if (FFT.aniso) gl.texParameterf(gl.TEXTURE_2D, FFT.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(4, gl.getParameter(FFT.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 1));
         FFT.tex[k] = tx; }
       gl.activeTexture(gl.TEXTURE0);
+      fftBlInit();
       FFT.w = fftWorker(); FFT.ok = true;
     } catch (e){ fftOff(String(e && e.message || e)); }
     return FFT.ok;
@@ -62,14 +64,65 @@
     FFT.key = key; FFT.keyT = t; const sp = hfftSp(L0);
     return {dx, dz, so:sp, sy:sp, dv:1, ren:1, ia:WV.ia, wpB:2 * Math.PI / WV.Tb, lc:Math.sqrt(WL[3] * WL[4])};
   }
+  // 5.20v (13.11.2026, Jonas' video: «det ser ut som at det nesten vibrerer litt»): the worker answers when it answers, a frame late as
+  // often as not, so the tiles stood still for a frame and then leapt two while everything else moved evenly (measured with the tiles
+  // every second frame: the fine pattern's likeness from frame to frame went 0.98, 0.89, 0.98, 0.89; even, 0.97). So the tiles drawn
+  // (FFT.tex) are no longer the worker's own: each frame they are blended on the GPU, level by level, between two of its answers (A at
+  // tA, B at tB) at the frame's own time. A third set (C) takes the next answer and waits until the time has reached tB; then A <- B,
+  // B <- C, and the blend goes on from where it was, so nothing ever jumps. The worker is asked fftLead ahead, 2.4 round trips: the
+  // answers come lead / 2 apart, and the frame's time lies between the two. Needs a float framebuffer (EXT_color_buffer_float or
+  // _half_float); without it, or with «#fftbl0», the tiles are the worker's as before. The copies on the CPU (the boat, the spray) are
+  // the newest answer's, up to a lead ahead.
+  const FFT_BL_FS = 'precision highp float;varying vec2 vUV;uniform sampler2D uA;uniform sampler2D uB;uniform float uL;uniform float uF;void main(){gl_FragColor=mix(texture2DLod(uA,vUV,uL),texture2DLod(uB,vUV,uL),uF);}';
+  const fftLead = () => FFT.src ? clamp(2.4 * FFT.lat + 0.012, 0.03, 0.5) : FFT.lat;
+  function fftBlInit(){
+    if (!FFT.bl) return;
+    try {
+      if (!gl.getExtension('EXT_color_buffer_float') && !gl.getExtension('EXT_color_buffer_half_float')) return;
+      if (!FFT.prog) FFT.prog = program(FOAM_VS, FFT_BL_FS, ['aXZ'], 'fftblanding');
+      if (!FFT.fb) FFT.fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, FFT.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, FFT.tex[0], 0);
+      const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      if (st !== gl.FRAMEBUFFER_COMPLETE) return;
+      gl.activeTexture(gl.TEXTURE7);
+      FFT.src = [0, 1, 2].map(() => [0, 1, 2].map(k => { const N = FFTT[k % 2].N, tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texStorage2D(gl.TEXTURE_2D, Math.log2(N) + 1, gl.RGBA16F, N, N);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); return tx; }));
+      gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); FFT.si = [0, 1, 2]; FFT.got = 0; FFT.pend = false; FFT.f = -1;
+    } catch (e){ FFT.src = null; }
+  }
+  // an answer has gone up into the waiting set (C). The first, or one out of order (the clock set back, a long pause): it is the sea at once
+  function fftBlGot(tC){
+    const I = FFT.si;
+    if (FFT.got < 1 || !(tC > FFT.tB) || tC - FFT.tB > 2){ FFT.si = [I[2], I[2], I[0]]; FFT.tA = tC - 1e-3; FFT.tB = tC; FFT.got = 1; FFT.pend = false; FFT.f = -1; FFT.keep = I[1]; return; }
+    FFT.tC = tC; FFT.pend = true;
+  }
+  function fftBlend(now){
+    if (!FFT.got) return;
+    // (the waiting set's turn: the time has reached B. After the first answer A and B were the same set: the spare one is the third)
+    if (FFT.pend && now >= FFT.tB){ const I = FFT.si, spare = I[0] === I[1] ? FFT.keep : I[0]; FFT.si = [I[1], I[2], spare]; FFT.tA = FFT.tB; FFT.tB = FFT.tC; FFT.pend = false; FFT.got = 2; }
+    const f = clamp((now - FFT.tA) / Math.max(FFT.tB - FFT.tA, 1e-4), 0, 1);
+    if (f >= 1 && now > FFT.tB + 0.004) FFT.hold++;   // (frames the sea stood waiting for the worker, for the tests and #fps)
+    if (f === FFT.f) return; FFT.f = f; FFT.tT2 = FFT.tA + f * (FFT.tB - FFT.tA);
+    const A = FFT.src[FFT.si[0]], B = FFT.src[FFT.si[1]], u = FFT.prog.u;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, FFT.fb); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE); gl.useProgram(FFT.prog.p);
+    gl.uniform1i(u.uA, 6); gl.uniform1i(u.uB, 7); gl.uniform1f(u.uF, f); attr(0, SKYQ, 2);
+    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N;
+      gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, A[k]); gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, B[k]);
+      for (let n = N, lv = 0; n >= 1; n >>= 1, lv++){ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, FFT.tex[k], lv); gl.viewport(0, 0, n, n); gl.uniform1f(u.uL, lv); gl.drawArrays(gl.TRIANGLES, 0, 6); } }
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.activeTexture(gl.TEXTURE0);
+  }
   function fftGot(D){
     FFT.busy = false;
     if (D.err){ fftOff('arbeider: ' + D.err); return; }
     if (D.none || !FFT.ok) return;
     const now = performance.now(), t1 = performance.now();
-    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]);
-      let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; } }
+    const C = FFT.src ? FFT.src[FFT.si[2]] : FFT.tex;   // (5.20v: into the set that waits, fftBlend glides to it; without it, straight to the tiles drawn)
+    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, C[k]);
+      let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; }
+      gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]); }
     gl.activeTexture(gl.TEXTURE0);
+    if (FFT.src) fftBlGot(D.t);
     fftKeep(new Float32Array(D.bufs[2])); fftKeepS(D.bufs);
     FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++; FFT.tT = D.t;
     // (the crests' threshold fitted to these tiles, eased over a few frames so its sampling noise never flickers the whitecaps)
@@ -145,8 +198,10 @@
   function fftStep(t){
     if (!FFT.on || !PS || PS.basic || PS.far) return;
     if (!fftInit() || !FFT.w) return;
+    if (FFT.src) fftBlend(t + WV.dT);
     if (FFT.busy){ if (performance.now() - FFT.sentAt > 3000) FFT.busy = false; else return; }   // (a lost answer does not stop it)
-    const P = fftParams(t), msg = {t:t + WV.dT + FFT.lat, P};   // (B4: the world's clock in real seconds, the same for everyone)
+    if (FFT.pend) return;   // (the set that waits is not yet due: nowhere to put another)
+    const P = fftParams(t), msg = {t:t + WV.dT + fftLead(), P};   // (B4: the world's clock in real seconds, the same for everyone)
     if (P) FFT.P = P;
     if (FFT.bufs){ msg.bufs = FFT.bufs; FFT.bufs = null; }
     FFT.busy = true; FFT.sentAt = performance.now(); FFT.sentT = t;
