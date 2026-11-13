@@ -166,7 +166,8 @@ var PAINT = (() => {
   function act(a, d){
     const b = S.boat; if (!pre) pre = copy(b.liv);
     if (a === 'pntsp'){ if (d.k === '' || d.k == null){ delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; } const r = typeof spPaintOf === 'function' ? spPaintOf(d.k) : null, nm = {nf:pre.nf, nc:pre.nc}; pre = copy(b.liv);
-      for (const k of ['nf', 'nc']){ if (nm[k]) pre[k] = nm[k]; else delete pre[k]; }   // (the name's lettering being tried stays: it is not part of the design) if (!r){ if (spNow(b.liv) !== +d.k) return false; PAINTPRE = pre; return true; }   // (an ended design she wears: put back on the try as she has it)
+      for (const k of ['nf', 'nc']){ if (nm[k]) pre[k] = nm[k]; else delete pre[k]; }   // (the name's lettering being tried stays: it is not part of the design)
+      if (!r){ if (spNow(b.liv) !== +d.k) return false; PAINTPRE = pre; return true; }   // (an ended design she wears: put back on the try as she has it)
       pre.sp = r.id; pre.spd = spPaintData(r.data); PAINTPRE = pre; return true; }   // (from the boat's own paint: a colour chosen before is not left under the design to be paid for unseen)
     if (a === 'pntsel'){ if (!HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; pre.hull = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }   // (the own paint is what is being chosen: a partner's design being tried goes off, so the choice shows)
     if (a === 'pntz'){ if (!zoneOk(b, d.d) || !HULLPAL.some(x => x[0] === d.k && palOk(x))) return false; if (d.k === 'orig') delete pre[d.d]; else pre[d.d] = d.k; delete pre.sp; delete pre.spd; PAINTPRE = pre; return true; }
