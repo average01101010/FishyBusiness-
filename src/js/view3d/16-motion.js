@@ -266,7 +266,7 @@
     let hm = 0, st = 0, stN = 0;
     for (let i = 0; i < H.n; i++){
       const zl = H.z[i], x0 = bv.x - fx * zl, z0 = bv.z - fz * zl; let far = 0, nr = 0, hl = 0, hr = 0, nl = 0, nrr = 0;
-      for (const c of HS_ACROSS){ const hh = seaH(x0 + rx * c * Bs, z0 + rz * c * Bs, t), hn = SEA_D[3]; far += hh - hn; nr += hn; if (c < 0){ hl = hh; nl = hn; } else if (c > 0){ hr = hh; nrr = hn; } }
+      for (const c of HS_ACROSS){ const hh = seaH(x0 + rx * c * Bs, z0 + rz * c * Bs, t), hn = NF.on ? SEA_D[3] : 0;   /* (5.20x: with the sea standing in the world she meets the short sea six times too often as well, so it is smoothed with the long) */ far += hh - hn; nr += hn; if (c < 0){ hl = hh; nl = hn; } else if (c > 0){ hr = hh; nrr = hn; } }
       far /= 3; nr /= 3; HSEA.far[i] += (far - HSEA.far[i]) * k;
       HSEA.eta[i] = (HSEA.far[i] - tide) * HSEA.fF[i] + nr * HSEA.fN[i];   // (over the still water)
       hm += far + nr; st += hr - hl; stN += nrr - nl;

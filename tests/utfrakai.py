@@ -7,7 +7,8 @@ ikke fungerer»). Two faults, both seen red before the fix:
    Vangshamn, a new game there: the naust is found with a way out (ver 3), Autonav from its berth to the field ends in the ring with no
    leg over land and «Kast loss» free, and the boat gets away from the quay. For Averøy and Sleneset, also a save with the old naust
    (ver 2, where the old rule put it): it is found again where the boat gets out.
-2. In the sealed harbours (approachPath pt.free: Ålesund, Fosnavåg, Laukvik, Vengsøy) the way out crosses the harbour's own fill by
+2. In the sealed harbours (approachPath pt.free: Ålesund, Fosnavåg, Laukvik, Vengsøy; moved to open quays 13.11.2026 by
+   tools/steder/lukkflytt.py, so free is now 0 there and tests/lukket.py checks the whole coast) the way out crossed the harbour's own fill by
    design, but the route panel's land check did not know it (core/07-harbours.js quayLandLeg): every Autonav route from the plant's
    quay had its first leg «over land», and «Kast loss» stood grey. For each: Autonav from the plant's quay, «Kast loss» not greyed, and
    she gets away.
@@ -120,7 +121,7 @@ async def main():
             r = await asyncio.wait_for(pg.evaluate(PLANT, [pid]), timeout=180)
             tag = '%s (%s), at the plant\'s quay' % (r['n'], pid)
             print('   ', tag, json.dumps({k: r.get(k) for k in ('kind', 'free', 'draft', 'bad', 'lc0', 'btn', 'toasts', 'err')}, ensure_ascii=False)[:300], flush=True)
-            print(ok(r['kind'] == 'main' and r['free'] > 0 and r['draft'] > 0 and r['bad'] < 0 and r['btn'] == 'on'), tag + ': a sealed harbour; Autonav out, no leg «over land», «Kast loss» not greyed', {k: r.get(k) for k in ('kind', 'free', 'draft', 'bad', 'btn')})
+            print(ok(r['kind'] == 'main' and r['free'] == 0 and r['draft'] > 0 and r['bad'] < 0 and r['btn'] == 'on'), tag + ': once sealed, now with its way out over water (tools/steder/lukkflytt.py); Autonav out, no leg «over land», «Kast loss» not greyed', {k: r.get(k) for k in ('kind', 'free', 'draft', 'bad', 'btn')})
             track = []
             for i in range(40):
                 await pg.wait_for_timeout(1000); s = await pg.evaluate(LOOK); track.append(s)

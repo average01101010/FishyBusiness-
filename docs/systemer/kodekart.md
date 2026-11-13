@@ -1170,13 +1170,13 @@ the fish receivers along the whole coast as harbours (05.10.2026, M2 of the coas
 - **143** the ocean vessels at the plants (H0 of docs/planer/havsteget.md, 03.11.2026)
   - 150 `portWhy(pt, type)`
 
-## `src/js/core/06c-steder.js` (46 linjer)
+## `src/js/core/06c-steder.js` (48 linjer)
 
 the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
 
 - **1** the tackle shops and the yards along the coast: the other two places of trade (07.10.2026)
-  - 34 `portServices(pt, berth)`
-  - 42 `placesNear(p, kind, n = 3)`
+  - 36 `portServices(pt, berth)`
+  - 44 `placesNear(p, kind, n = 3)`
 
 ## `src/js/core/06d-plan-felles.js` (70 linjer)
 
@@ -1430,7 +1430,7 @@ harbours: quays, berths and mooring
 - **609** the tackle shop on the quay, in every harbour: hand jig, ice and halibut gear
   - 615 `shopBuy(k, kg, free)`
 
-## `src/js/core/07c-naust.js` (225 linjer)
+## `src/js/core/07c-naust.js` (234 linjer)
 
 Father's naust by the home harbour, and the shop on the Finnsnes quay: where the 3D view sets them (05.10.2026)
 
@@ -1442,15 +1442,15 @@ Father's naust by the home harbour, and the shop on the Finnsnes quay: where the
   - 124 `naustFind(pid)`
   - 141 `naustWayOk(n, pid)`
   - 143 `naustSite()`
-  - 160 `naustFace(pid)`
-  - 170 `shopNearFind(n)`
-  - 176 `shopNear()`
-  - 184 `naustTarget(pt, r)`
-  - 190 `shopSite()`
-- **194** the naust as a home (05.10.2026; Jonas chose it from the list, 4): set it to rights step by step
-  - 209 `naustRest(b)`
-  - 211 `naustWhy(k)`
-  - 219 `naustBuy(k)`
+  - 169 `naustFace(pid)`
+  - 179 `shopNearFind(n)`
+  - 185 `shopNear()`
+  - 193 `naustTarget(pt, r)`
+  - 199 `shopSite()`
+- **203** the naust as a home (05.10.2026; Jonas chose it from the list, 4): set it to rights step by step
+  - 218 `naustRest(b)`
+  - 220 `naustWhy(k)`
+  - 228 `naustBuy(k)`
 
 ## `src/js/core/07d-rorbu.js` (82 linjer)
 
@@ -2902,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1647 linjer)
+## `src/js/ui/phone/07-patch.js` (1652 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1635 `patch()`
+  - 1640 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3802,7 +3802,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 115 `hopVoid(id, why)`
   - 127 `hopDeliver(id, d)`
 
-## `src/js/ui/11-boot.js` (408 linjer)
+## `src/js/ui/11-boot.js` (410 linjer)
 
 ---------- boot ----------
 
@@ -3837,7 +3837,7 @@ put the game on the home screen (Jonas 11.10.2026: «Det er viktig at brukerne l
   - 215 `bootMapLoad()`
   - 246 `chart0Load()`
   - 247 `bootGame()`
-  - 390 `bootFail(e)`
+  - 392 `bootFail(e)`
 
 ## `src/js/ui/11b-watchdog.js` (89 linjer)
 
@@ -4060,7 +4060,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **45** terrain
   - 84 `terrRaw(x, z, dil)`
 
-## `src/js/view3d/03-berths-naust.js` (431 linjer)
+## `src/js/view3d/03-berths-naust.js` (439 linjer)
 
 ---------- The water at the berths the company holds in the coast's harbours (core/07e-havn.js) ----------
 
@@ -4078,28 +4078,28 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 163 `tileH(L, kind, x, z)`
   - 170 `terrH(x, z)`
   - 179 `unitTerr(x, z, h0)`
-  - 204 `terrCoarse(x, z, dil)`
-  - 214 `forestAt(x, z)`
-  - 226 `forestCell(one, LF, ct, c, r)`
-  - 233 `coverAt(x, z, cv, ck, k)`
-  - 261 `satRead(L, x, z)`
-  - 273 `satAt(x, z, cv, o)`
-  - 281 `covBlk(LC, bx, by)`
-  - 285 `coverRing(LC, ix, iz)`
-  - 295 `coverClass(x, z)`
-  - 313 `runAll(g)`
-  - 315 `sliceRun(J, end)`
-  - 316 `meshBegin(x0, z0, sx, sz, n, hf)`
-  - 320 `meshRows(B, until)`
-  - 338 `gridIdx(n)`
-  - 361 `meshEnd(B)`
-  - 362 `makeMesh(x0, z0, sx, sz, n, hf)`
-  - 363 `freeMesh(m)`
-  - 365 `nearSurf(M, x, z)`
-  - 375 `unitPatch(U, M)`
-  - 400 `buildPatches()`
-  - 409 `buildTerrain()`
-  - 418 `stream3d()`
+  - 212 `terrCoarse(x, z, dil)`
+  - 222 `forestAt(x, z)`
+  - 234 `forestCell(one, LF, ct, c, r)`
+  - 241 `coverAt(x, z, cv, ck, k)`
+  - 269 `satRead(L, x, z)`
+  - 281 `satAt(x, z, cv, o)`
+  - 289 `covBlk(LC, bx, by)`
+  - 293 `coverRing(LC, ix, iz)`
+  - 303 `coverClass(x, z)`
+  - 321 `runAll(g)`
+  - 323 `sliceRun(J, end)`
+  - 324 `meshBegin(x0, z0, sx, sz, n, hf)`
+  - 328 `meshRows(B, until)`
+  - 346 `gridIdx(n)`
+  - 369 `meshEnd(B)`
+  - 370 `makeMesh(x0, z0, sx, sz, n, hf)`
+  - 371 `freeMesh(m)`
+  - 373 `nearSurf(M, x, z)`
+  - 383 `unitPatch(U, M)`
+  - 408 `buildPatches()`
+  - 417 `buildTerrain()`
+  - 426 `stream3d()`
 
 ## `src/js/view3d/04-vec-packs.js` (399 linjer)
 
@@ -4468,7 +4468,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 627 `peerFlagTex(n)`
   - 639 `drawPeerFlags(kit, VP, t, H)`
 
-## `src/js/view3d/14-sea.js` (724 linjer)
+## `src/js/view3d/14-sea.js` (726 linjer)
 
 ---------- sea ----------
 
@@ -4482,51 +4482,51 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 76 `waveDTStep(dt)`
   - 82 `updateWaves(dt, H)`
 - **164** the near field: the short sea rides with the boat
-  - 173 `nfStep()`
-  - 215 `nfShift(ex, ez)`
-- **225** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 232 `wakeTrack(x, z, fx, fz, ds)`
-  - 251 `wakeTU(u, ox, oz)`
-  - 252 `updateWake()`
-  - 278 `wakeHFast(x, z)`
-- **291** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 305 `foamFree()`
-  - 306 `foamInit()`
-  - 324 `wavePh()`
-  - 334 `foamStep(dt, t)`
-  - 402 `foamSplash(Dx, Dz)`
-  - 423 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 463 `foamBind(u, t)`
-  - 480 `grpAt(i, c, x, z, t)`
-- **489** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 498 `brvE(x, z)`
-  - 499 `brvStep()`
-  - 517 `brvSet(u)`
-- **549** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 564 `shoalPrep(J)`
-  - 565 `shoalCell(J, k, land, dd)`
-  - 569 `shoalSweep(J, end)`
-  - 583 `shoalPut(J)`
-  - 589 `shTex(u, v, out)`
-  - 596 `shoalAt(x, z)`
-  - 610 `shW(c, SH, out)`
-  - 616 `surfK(h)`
-  - 618 `surfStep(t)`
-  - 624 `shoalBind(u, t)`
-- **632** the sea state over the near terrain and the whole map
-  - 639 `ssLevel(n, unit)`
-  - 641 `ssRect(L)`
-  - 642 `ssWork(L, until)`
-  - 665 `ssStep(rdt)`
-  - 667 `ssBlend(L)`
-  - 669 `ssTex(L, x, z, out)`
-  - 676 `ssAt(x, z)`
-  - 686 `seaQ(S, ren)`
-  - 689 `seaDisp(x, z, t, S, fade, SH)`
-  - 713 `seaFade(x, z)`
-  - 714 `seaH(x, z, t)`
-  - 720 `seaHFast(x, z, t)`
-  - 722 `shoalHere(x, z)`
+  - 175 `nfStep()`
+  - 217 `nfShift(ex, ez)`
+- **227** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 234 `wakeTrack(x, z, fx, fz, ds)`
+  - 253 `wakeTU(u, ox, oz)`
+  - 254 `updateWake()`
+  - 280 `wakeHFast(x, z)`
+- **293** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 307 `foamFree()`
+  - 308 `foamInit()`
+  - 326 `wavePh()`
+  - 336 `foamStep(dt, t)`
+  - 404 `foamSplash(Dx, Dz)`
+  - 425 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 465 `foamBind(u, t)`
+  - 482 `grpAt(i, c, x, z, t)`
+- **491** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 500 `brvE(x, z)`
+  - 501 `brvStep()`
+  - 519 `brvSet(u)`
+- **551** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 566 `shoalPrep(J)`
+  - 567 `shoalCell(J, k, land, dd)`
+  - 571 `shoalSweep(J, end)`
+  - 585 `shoalPut(J)`
+  - 591 `shTex(u, v, out)`
+  - 598 `shoalAt(x, z)`
+  - 612 `shW(c, SH, out)`
+  - 618 `surfK(h)`
+  - 620 `surfStep(t)`
+  - 626 `shoalBind(u, t)`
+- **634** the sea state over the near terrain and the whole map
+  - 641 `ssLevel(n, unit)`
+  - 643 `ssRect(L)`
+  - 644 `ssWork(L, until)`
+  - 667 `ssStep(rdt)`
+  - 669 `ssBlend(L)`
+  - 671 `ssTex(L, x, z, out)`
+  - 678 `ssAt(x, z)`
+  - 688 `seaQ(S, ren)`
+  - 691 `seaDisp(x, z, t, S, fade, SH)`
+  - 715 `seaFade(x, z)`
+  - 716 `seaH(x, z, t)`
+  - 722 `seaHFast(x, z, t)`
+  - 724 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (271 linjer)
 
@@ -4890,7 +4890,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 614 `drawEffects(VP, eye, BM, dt, t)`
   - 747 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (263 linjer)
+## `src/js/view3d/25-controls.js` (273 linjer)
 
 ---------- controls ----------
 

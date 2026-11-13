@@ -269,7 +269,9 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
       'The aluminium skiff can now only be bought at the yard. You have Father’s old wooden boat instead' + (back ? ', and ' + kr(back) + ' back for gear that does not fit her' : '') + '.');
   } }
 { const fixW = w => { if (w && w.port){ const q = portById(w.port); if (q){ w.x = q.p.x; w.y = q.p.y; } } };
-  if (S.boat.status === 'port'){ const q = portById(S.boat.port); S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
+  // (a harbour that is no longer there, a place moved before its id was kept, 13.11.2026: the nearest one, as for a boat on land)
+  if (S.home && !portById(S.home)) S.home = (nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p) || {}).id || null;
+  if (S.boat.status === 'port'){ let q = portById(S.boat.port); if (!q){ q = nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p); S.boat.port = q.id; } S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
   (S.draft || []).forEach(fixW); if (S.plan) S.plan.wps.forEach(fixW); S.trail.forEach(fixW);
   // real coastline: anything that now sits on land is brought back to a harbour
   if ((S.draft || []).some(w => isLand(w))) S.draft = [];
@@ -277,7 +279,7 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
   if (onLand || badPlan){
     const q = PORTS.slice().sort((a, b) => dist(a.p, bb.pos) - dist(b.p, bb.pos))[0];
     S.plan = null; bb.status = 'port'; bb.port = q.id; bb.pos = {x:q.p.x, y:q.p.y}; bb.v = 0; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}];
-    log('Kartet har fått ekte kystlinje. Båten er flyttet til ' + q.name + '.', 'The chart now has the real coastline. The boat was moved to ' + q.name + '.');
+    log('Kartet eller en kai er endret, og ruta gikk over land. Båten er flyttet til ' + q.name + '.', 'The chart or a quay has changed, and the route crossed land. The boat was moved to ' + q.name + '.');
   } }
 { const d = newState(); for (const k of ['equip', 'crew', 'loan', 'member', 'msgs', 'sales', 'order', 'owned', 'stock', 'marks', 'jobs', 'prep', 'tripBuff', 'draftDep', 'navrows', 'company', 'boatName', 'tut', 'incidents', 'lore', 'tattoos', 'tat', 'sets', 'gseq', 'ops', 'lic', 'qseed', 'haill', 'pubE', 'target', 'streak', 'clothes', 'orders', 'rep', 'bors', 'cevt', 'workLog']) if (S[k] === undefined || (k === 'stock' && !S[k])) S[k] = d[k];
   if (!S.fm) S.fm = fmInit();   // blad B from the landing notes kept, and at once for a company that already has a closed-group right
@@ -295,7 +297,7 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
       log('Påbudt utstyr følger nå båten, og det som manglet, er montert gratis: ' + nm('no') + '.', 'Required equipment now comes with the boat, and what was missing has been fitted free: ' + nm('en') + '.'); } }
   karRefund(); applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (S.settings.heatSp && !HEAT.sp.includes(S.settings.heatSp)) delete S.settings.heatSp;
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
-  if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
+  if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && !portById(S.boat.port)) S.boat.port = nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p).id;   /* (the fleet's other vessels as the boat above, 13.11.2026) */ if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
 // every vessel gets its gear locker (saves from before passive gear have none, also on vessels that are not bound)
 for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(); });
 // 08.10.2026: one pot only, the big one («Krabbeteiner»); small pots aboard and in the sea become big ones
