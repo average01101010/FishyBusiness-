@@ -1,5 +1,8 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['styrhus-131126', '13.11.2026', 'Menyene i mørkt glass', 'The menus in dark glass', [
+       ['Skuffene (butikken, mottaket, verftet, banken, mannskapet og Om bord) og appene i telefonen har fått mørke flater med lys tekst, som instrumentene over sjøen. Kystposten er fortsatt avispapir, og dekksdagboka er som før.', 'The drawers (the shop, the plant, the yard, the bank, the crew and Aboard) and the apps on the phone have dark surfaces with light text, like the instruments over the sea. The Coast Post is still newsprint, and the deck log is as before.'],
+       ['Valgt fane er lys, og kjøp og godta er de eneste magenta knappene.', 'The chosen tab is light, and buying and accepting are the only magenta buttons.']]],
     ['varebilder-131126', '13.11.2026', 'Malte bilder av utstyret', 'Painted pictures of the gear', [
        ['Alt utstyret i utstyrsbutikken, på mottaket og på verftet har fått malte bilder i stedet for de små strektegningene: redskapen, halerne, elektronikken, klærne og verftets ombygginger.', 'All the gear at the tackle shop, the plant and the yard has painted pictures instead of the small line drawings: the fishing gear, the haulers, the electronics, the clothes and the yard\'s rebuilds.'],
        ['Kartplotteren på stående nettbrett: tallene i topplinja ble klemt og kuttet. Nå har de plass.', 'The chart plotter on an upright tablet: the numbers in the top bar were squeezed and cut. Now they have room.']]],

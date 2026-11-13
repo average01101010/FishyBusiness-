@@ -63,6 +63,8 @@ Undersøkelsene kjøres bare i liggende format inntil videre (Jonas 04.11.2026).
 
 ## Designsystemet «Kystlys»
 
+> **Endret 13.11.2026:** Jonas valgte retning B «Styrhus» i designombyggingen (`docs/planer/design-ombygging.md`): skuffen og telefonens apper er nå instrument (mørkt glass), ikke lyse kort. Papir, ECDIS og krem står.
+
 Tanken er et styrhus om natta: instrumentene lyser svakt, loggboka ligger på bordet, og en varm lykt viser vei. Hvert av de fire språkene får én rolle og bare den:
 
 | Språk | Rolle | Brukes til |

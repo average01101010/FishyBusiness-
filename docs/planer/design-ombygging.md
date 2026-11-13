@@ -93,6 +93,15 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 
 **D1 bygger dette** som ett sett i `src/styles.css` (knapper, kort, faner, skrift, avstander), uten å flytte innhold. Før D1: uskarp bakgrunn (`backdrop-filter`) over WebGL må måles på nettbrettet; er den for dyr, brukes en tettere flate uten uskarphet.
 
+## D1: Styrhus-paletten i skuffen og telefonen (13.11.2026, bygd)
+
+- **Slik:** `tools/ui/styrhus.py` ga 395 hardkodede farger i `src/styles.css` en rolle (`var(--m-ink,#22323c)`: rollen, med fargen den hadde som reserve). Rollene har verdier bare i `#drawer` og `.ph-appv:not(.ph-paper)` (blokka «Styrhus» nederst i stilarket), så alt utenfor faller tilbake på fargen det hadde. De gamle variablene (`--paper`, `--ink`, `--muted`, `--line`, `--s-card`, `--t-ink`, `--ok` …) er satt til mørke verdier i det samme omfanget. En flate som skal være lys der inne, setter rollen til `initial` (bildeflisene `.ic-pic`, `.bu-ic`, `.net-ic`).
+- **Rollene:** `ink`, `muted`, `card`, `card2`, `line`, `dark` (den marine knappen), `ok`, `bad`, `warn`, `link`, og fire toner (`tint-ok` …). Skriptet leser rollen av lysheten og fargetonen: mørk tekst blir `ink`, grå `muted`, mørk grønn/rød/gul/blå (laget for hvit bunn) blir `ok`/`bad`/`warn`/`link`; hvit bunn `card`, lysegrå `card2`, lys kant `line`. Lys tekst, mettede fyll (stolpene, appfargene, magenta) står.
+- **For hånd i blokka:** skuffen er `rgba(11,23,32,.94)` uten uskarphet (ikke målt på nettbrett), kortene har kant i stedet for skygge, valgt fane er lys, appenes hode er mørkt med appens farge som en linje under (hvit tekst på de lyseste appfargene var under 4,5:1 også før), «Lag driftsplan» er magenta som de andre primærknappene, og det som er dempet (låste kapitler, fredede arter, tomme rekorder), er mindre dempet enn på hvitt.
+- **Målingen:** `tools/ui/kontrast.py` går gjennom 20 skuffesider og 20 apper med fanene og måler hver tekst mot flaten den står på. Første kjøring etter omleggingen: 27 slags tekst under kravet; etter rettingene 0. Stjerner, prikker og piler alene regnes som pynt og måles ikke; tekst over bilder og fargeoverganger måles ikke.
+- **Avvik fra Kystlys** (`docs/planer/ui-redesign.md`, 04.11.2026): der var «Kort (lyst)» rollen for skuffen og appene. Jonas' valg 13.11.2026 gjør dem til instrument (mørkt glass). Papir, ECDIS og krem står som før.
+- **Ikke gjort i D1:** dialogene og tipsene er fortsatt lyse (D6); oppsett, bredder og arkhøyder er urørt (D2); diagrammene i Vær og Kvote er sett på, ikke målt.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
@@ -100,4 +109,4 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 
 ## Status
 
-13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. Neste: D1 i egen økt.
+13.11.2026: runde én og to sendt, planen skrevet. D0 gjort: Jonas valgte retning B «Styrhus». Ingenting av ombyggingen er bygd i spillet; kartplotterens topplinje i stående er rettet underveis. D1 bygd 13.11.2026 (Styrhus-paletten i skuffen og appene). Neste: D2.
