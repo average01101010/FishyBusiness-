@@ -54,10 +54,10 @@ async def main():
           let t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(LG(40 + i * 0.0002, 10 + i * 0.0001), S.t / 60 + i / 60); R.usHs = r1((performance.now() - t1) / 20000 * 1000);
           const pp = LG(41, 11); t1 = performance.now(); for (let i = 0; i < 20000; i++) hsAt(pp, S.t / 60); R.usHsSame = Math.round((performance.now() - t1) / 20000 * 1000 * 100) / 100;
           // the sea state by height (Douglas), krapp in the lee's young sea, and the texts in the Vær panel and the phone
-          R.codes = [0.02, 0.07, 0.3, 1, 2, 3, 5, 7, 10, 15].map(seaState);
+          R.codes = [0.02, 0.07, 0.3, 1, 2, 3, 5, 7, 10, 15].map(seaCode);
           const g1 = GROUNDS[0].p; WX_FORCE = {w:11, d:180}; R.krappLee = seaHere(g1, S.t / 60).krapp; WX_FORCE = {w:11, d:0}; R.krappOpen = seaHere(g1, S.t / 60).krapp;
           S.boat.pos = {...g1}; S.boat.status = 'idle'; S.boat.port = null; const pw = panelWx(); R.panel = /Sjøgang her/.test(pw) && pw.includes(BFS.no[beaufort(11)].replace(/^./, c => c.toLowerCase())) && /Vindsjø · dønning/.test(pw);
-          PHONE.open('vaer'); const ph = document.getElementById('phView').textContent; R.phone = /Vindsjø/.test(ph) && /Dønning/.test(ph) && ph.includes(BFS.no[beaufort(11)]);
+          PHONE.open('vaer'); const ph = document.getElementById('phView').textContent; R.phone = /Vindsjø/.test(ph) && /Dønning/.test(ph) && ph.includes(BFS.no[beaufort(11)]) && !/undefined/.test(ph) && SEAN.no.some(n => ph.includes(n));
           WX_FORCE = null; R.texts = [BFS.no.length, BFS.en.length, SEAN.no.length, SEAN.en.length];
           return R; })()""")
         await pg.screenshot(path='seatest_phone.png'); await pg.evaluate("PHONE.show(false)")

@@ -3,7 +3,8 @@ app, with its tabs, and (D6) the dialogs, the tip and the toast of tools/ui/scen
 other, the opacity of what it is in). Prints each kind of text under 4.5:1 (3:1 from 24 px, or 18.66 px bold) once, with the page it was
 first seen on, and the count. `FEIL` lines are the ones to fix; the last line is the sum.
 
-    node build.mjs && KYST_LITE=1 python3 tools/ui/kontrast.py [side ...]      (e.g. `kontrast.py bank kvote` for those two only)
+    node build.mjs && KYST_LITE=1 python3 tools/ui/kontrast.py [staaende] [side ...]      (e.g. `kontrast.py bank kvote` for those two only;
+                                                                                `staaende` measures in 800 x 1280, without it 1280 x 800)
 """
 import os, sys, asyncio, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'tests'))
@@ -15,7 +16,7 @@ from playwright.async_api import async_playwright
 DRAWER = [('fiske', 'finnsnes'), ('utstyrb', 'finnsnes'), ('service', 'finnsnes'), ('lever', 'botnhamn'), ('is', 'botnhamn'), ('agn', 'botnhamn'), ('oppdrag', 'botnhamn'),
           ('fartoy', 'finnsnes'), ('utstyr', 'finnsnes'), ('maler', 'finnsnes'), ('verksted', 'finnsnes'), ('mannskap', 'finnsnes'), ('bors', 'finnsnes'), ('bank', 'finnsnes'),
           ('havn', 'finnsnes'), ('redskap', 'finnsnes'), ('rigg', 'finnsnes'), ('last', 'finnsnes'), ('beholdning', 'finnsnes'), ('drift', 'finnsnes')]
-APPS = ['vaer', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'ordl', 'nett', 'kaiboden', 'haill', 'sesong', 'guide', 'folk', 'merker', 'redning', 'trim', 'handbok', 'patch', 'tilbake', 'innst']
+APPS = ['vaer', 'post', 'naustp', 'meld', 'rederi', 'salg', 'kvote', 'regler', 'ordl', 'nett', 'kaiboden', 'haill', 'sesong', 'guide', 'folk', 'merker', 'redning', 'trim', 'handbok', 'patch', 'tilbake', 'innst']
 MEASURE = """(root) => {
   const R = document.querySelector(root); if (!R) return [];
   const P = s => { const m = /rgba?\\(([^)]+)\\)/.exec(s); if (!m) return null; const v = m[1].split(/[ ,\\/]+/).map(Number); return [v[0], v[1], v[2], v.length > 3 ? v[3] : 1]; };
@@ -46,10 +47,11 @@ TABS = "[...document.querySelectorAll('%s .ph-sub button')].filter(e => e.offset
 
 
 async def main():
-    only = [a for a in sys.argv[1:] if not a.startswith('-')]; found = {}; errs = []; shut = []
+    # (`staaende`, D5: the same in 800 x 1280; the big phone and the drawer's sheet have other columns and widths standing)
+    tall = 'staaende' in sys.argv; only = [a for a in sys.argv[1:] if not a.startswith('-') and a != 'staaende']; found = {}; errs = []; shut = []
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        pg = await b.new_page(viewport={'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
+        pg = await b.new_page(viewport={'width': 800, 'height': 1280} if tall else {'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; renderActs()"); await pg.wait_for_timeout(400)
         # with something aboard (the independent check 13.11.2026: the first run measured an empty boat): a tired hand, a licence
@@ -89,6 +91,10 @@ async def main():
             try: await pg.evaluate("PHONE.show(true); PHONE.open('%s')" % a); await pg.wait_for_timeout(300)
             except Exception as e: print('kunne ikke åpne', a, str(e)[:80]); continue
             await page('#phView', 'app ' + a)
+            if a == 'naustp':   # (the naust's list as it is at Father's naust, with the steps and the trophy wall)
+                try: await pg.evaluate("(() => { const b = S.boat; S._kb = [b.port, b.berth]; b.port = S.home || b.port; b.berth = 'naust'; PHONE.open('naustp'); })()"); await pg.wait_for_timeout(300); await measure('#phView', 'app naustp, ved naustet')
+                except Exception as e: print('naustp:', str(e)[:100])
+                await pg.evaluate("(() => { if (S._kb){ S.boat.port = S._kb[0]; S.boat.berth = S._kb[1]; delete S._kb; } })()")
             if a == 'rederi':
                 await pg.evaluate("(() => { const d = document.querySelector('#phView details.fl-more'); if (d) d.open = true; })()"); await pg.wait_for_timeout(150); await measure('#phView', 'app rederi, ⋯ åpen')
             if a == 'nett':
