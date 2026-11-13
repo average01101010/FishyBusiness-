@@ -33,9 +33,11 @@ Det som beholdes fra det gamle: metoden, klippene som holder, harde klipp på sl
 
 Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi man kan jo i praksis seile til svalbard, grønland, færøyene, og flere steder.» Kroken og størrelsen sier derfor kysten **og havet utenfor**.
 
+Jonas 13.11.2026: «Jeg tror forresten det også er megaviktig at vi forteller at det er et online-spill». **Online sies derfor tre ganger:** som første ord i kroken, i et eget klipp rett før logoen der andre spilleres båter er i bildet, og på sluttkortet. Ordet «online» står rett ut; «ett felles hav» alene er for vagt.
+
 | Tid (s) | Del | Bilde | Tekst (engelsk utgave) | Tekst (norsk utgave) |
 |---|---|---|---|---|
-| 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys: den eldre kystbåten mot midnattssola, hvalen blåser | A fishing game with the whole Norwegian coast and the sea beyond | Et fiskespill med hele norskekysten og havet utenfor |
+| 0–2,5 | Kroken | Det sterkeste bildet vi har i lavt lys: den eldre kystbåten mot midnattssola, hvalen blåser | An online fishing game. The whole Norwegian coast and the sea beyond. | Et online fiskespill. Hele norskekysten og havet utenfor. |
 | 2,5–7,4 | Hva | Naustet, trebåten i grålysning | You start with your father's old wooden boat | Du begynner med fars gamle trebåt |
 | 7,4–12,4 | Hva | Trebåten på feltet. **Grensesnittet tones inn over samme bilde**, redskapet dras, fisk om bord | You do the fishing | Du fisker selv |
 | 12,4–17,4 | Hva | Mottaket, lossing, sluttseddelen | Land it. Sell it. Buy bigger. | Lever. Tjen. Kjøp større. |
@@ -43,9 +45,9 @@ Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi
 | 19,9–27,4 | Hvor stort og mulighetene | **Båtstigen som match cut,** to slag per båt, samme vinkel, og hver båt på sitt sted og i sin årstid: trebåten (Senja, høst), plastsnekka (Reine, vintersol), havsjarken (Vestfjorden under Lofotfisket), sjarken på 36 fot (midnattssol), den nye hurtigsjarken (kuling ved Vardø), den eldre kystbåten (nordlys) | stedsstempler | stedsstempler |
 | 27,4–32,4 | Mulighetene | Droppet: snøkrabbefartøyet ved Svalbard i lav sol, ett langt tak | stedsstempel | stedsstempel |
 | 32,4–37,4 | Mulighetene | Kystnotbåten under Gisundbrua i midnattssol, det andre lange taket | stedsstempel | stedsstempel |
-| 37,4–41,1 | Mulighetene | Garn, line og teiner på slag, på båtene fra rollelista | Nets. Longlines. Pots. | Garn. Line. Teiner. |
-| 41,1–44,9 | Mulighetene | Mannskapet på dekk, dine båter, andre spilleres båter | Your crew. Your fleet. One shared ocean. | Eget mannskap. Eget rederi. Ett felles hav. |
-| 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free in your browser. detstorebla.no | Spill gratis i nettleseren. detstorebla.no |
+| 37,4–41,1 | Mulighetene | Garn, line og teiner på slag, med mannskapet på dekk, på båtene fra rollelista | Your gear. Your crew. Your fleet. | Eget bruk. Eget mannskap. Eget rederi. |
+| 41,1–44,9 | Online | Mange spilleres båter på samme felt eller i samme havn i lavt lys. Viser spillet navn på de andre båtene, tones de inn her (det tredje spilløyeblikket) | Online. Everyone sails the same sea. | Online. Alle seiler i samme hav. |
+| 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free online. detstorebla.no | Spill gratis online. detstorebla.no |
 
 Teksten er et utkast. Hver påstand sjekkes mot spillet i T1 før den låses (del 7).
 
@@ -85,9 +87,9 @@ Dommen over m2 (kontaktarket `trailer/control-m1/grovklipp-m2-kontaktark.jpg`): 
 9. **Sluttkortet** er logoen fra `tools/brand/logo.py` over et levende bilde, som i m2, men med adressen stor nok til å leses på en telefon.
 10. **«All footage captured in-game»** i liten skrift i åpningen. Det er sant, og det er det folk spør om.
 
-### Én film og fire korte
+### Én film og fem korte
 
-Hovedtraileren festes øverst på profilen og er den som deles videre. Rekkevidden på TikTok kommer fra korte klipp, så de fire delene klippes også som egne filmer på 8–15 s, hver med sin egen åpning og samme sluttkort: «Hva», «Hvor stort», «Mulighetene» og «Trebåten». De koster nesten ingenting når klippene finnes, og de viser hvilken åpning som holder seerne (målingen i del 6).
+Hovedtraileren festes øverst på profilen og er den som deles videre. Rekkevidden på TikTok kommer fra korte klipp, så delene klippes også som egne filmer på 8–15 s, hver med sin egen åpning og samme sluttkort: «Hva», «Hvor stort», «Mulighetene», «Online» og «Trebåten». Den korte om online kan også si det masteren ikke har plass til: havet går videre mens du er borte. De koster nesten ingenting når klippene finnes, og de viser hvilken åpning som holder seerne (målingen i del 6).
 
 ## 5. Fasene
 
@@ -99,14 +101,14 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 | **T2** | Klipp-JSON for de nye klippene (kroken, fisket, mottaket, kartet, mannskapet, flåten, de andre spillerne), med stillbilder herfra til utsnitt og lys. Spillfeil filmen avslører, rettes i spillet på vanlig måte, aldri bare i filmen. | `trailer/shots/*.json`, kontaktark | hvert nytt klipp har et kontaktark uten landvarsler, og Jonas har sett dem |
 | **T3** | Filming på GPU-maskinen i 1080×1920, grovklipp m3 på låta. | `trailer/out/rough/m3.mp4` | m3 er 50 s, alle klipp ligger på slag, kontrollene er grønne |
 | **T4** | Runder. Jonas ser m3 på mobilen og sender notater med tidskode. Klippet går til `ask_gemini` med 10 bilder i sekundet (hakking, hopp, lesbar tekst, om kroken sier «spill»). To til tre runder. | m4, m5 | Jonas sier at bildet er låst |
-| **T5** | Ferdigstilling: full størrelse, lyd til −14 LUFS, sluttkort fra `tools/brand/logo.py`, de fire korte, forsidebilde, teksten under videoen med kildelinja (Kartverket, Mapzen, OpenStreetMap), emneknagger. | Leveransen | fem filer klare til opplasting, og teksten til hver |
+| **T5** | Ferdigstilling: full størrelse, lyd til −14 LUFS, sluttkort fra `tools/brand/logo.py`, de fem korte, forsidebilde, teksten under videoen med kildelinja (Kartverket, Mapzen, OpenStreetMap), emneknagger. | Leveransen | seks filmer i to språk klare til opplasting, og teksten til hver |
 | **T6** | Publisering og måling. `#fra=tiktok` i lenka (egen liten endring i spillet, `core/18-telemetry.js`), så trakten i admin kan deles etter kilde. | Tall i trakten | porten er grønn, lenka er lagt ved, og første ukes tall er lest |
 
 ## 6. Måling
 
 `CLAUDE.md`: «Mål og se». Traileren er en engasjementsendring.
 
-- **På TikTok:** hvor mange som ser de første tre sekundene og hvor mange som ser hele, per film. De fire korte har hver sin åpning; den som holder best, blir åpningen i neste utgave.
+- **På TikTok:** hvor mange som ser de første tre sekundene og hvor mange som ser hele, per film. De fem korte har hver sin åpning; den som holder best, blir åpningen i neste utgave.
 - **I spillet:** `#fra=<kilde>` lagres ved første oppstart og følger med i telemetrien, så trakten (konvolutt → første fangst → første levering → registrert → dag 1/7/30) kan leses per kilde.
 
 ## 7. Det som er antatt eller usikkert
@@ -116,7 +118,7 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 - **Sjøen har kjente feil** i enkelte lys og farter (striper i grunt havnevann, skumkrage, flate skumflak; `docs/BACKLOG.md`). Klippene legges rundt dem som sist.
 - **Om grensesnittet tåler å filmes,** vet vi ikke før prøvebildene i T1. Kartet tror jeg holder; resten er usikkert.
 - **GPU-maskinen:** jeg vet ikke om den fortsatt er leid, eller om m1, m2 og klippene fra 10.11 ligger der. Uten dem filmes alt på nytt (rundt ett minutt per klipp), og det er uansett riktig etter tre dager med endringer i spillet.
-- **«Alle spiller i samme hav»:** andre spilleres båter legges inn i filmoppsettet som `PEERS`, slik side om side-klippet gjorde. Det viser det spillet gjør, men det er satt opp, ikke tatt opp fra ekte spillere.
+- **Online-klippet:** andre spilleres båter legges inn i filmoppsettet som `PEERS`, slik side om side-klippet gjorde. Det viser det spillet gjør, men det er satt opp, ikke tatt opp fra ekte spillere. T1 slår opp hva spilleren faktisk ser av de andre i dag (båtene i sanntid, navn, flagg, tuting), og klippet viser bare det. «I nettleseren» er tatt ut av sluttkortet for å gi plass til «online»; det står i teksten under videoen.
 - **Lengden.** 50 s er langt for kald rekkevidde på TikTok. Planen satser på at kroken og de korte klippene bærer det (V3).
 - **Lyden:** musikken bærer. Semidieselen under åpningen er fortsatt bare mulig med lydrendering i filmoppsettet, som ikke er prøvd.
 
