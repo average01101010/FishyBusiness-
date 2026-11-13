@@ -480,6 +480,16 @@ Jonas etter B6: «Havet har nå ingen repetisjon i mønstre, men jeg synes forts
 - **Glidingen (`fftBlend` i `view3d/14b-fft.js`):** flisene som tegnes (`FFT.tex`), er ikke lenger regnetrådens egne. Hvert bilde blandes de på skjermkortet, nivå for nivå, mellom to svar (A ved tA, B ved tB) på bildets egen tid; et tredje sett (C) tar neste svar og venter til tiden har nådd tB. Regnetråden bes om `fftLead` fram (2,4 rundturer og 2,2 bilder), og hvert svar er senere enn det forrige. **Avslått som standard, på med `#fftbl1` i adressen:** forsøket med faste steg viste fortsatt et ujevnt steg der ett par svar går over i det neste (0,99, 0,99, 0,92; uten glidingen 0,98, 0,89), så den er ikke bevist bedre, og forsøket selv er usikkert (bildelengden som styrer forspranget, var feil i det). Jonas sammenligner på nettbrettet. Trenger flyttalls-rammebuffer; uten det, eller når rundturen er over 90 ms, er flisene regnetrådens som før. Kopiene på CPU (båten, sjørokken) er det nyeste svaret, opptil et forsprang foran. `FFT.hold` teller bilder der sjøen sto og ventet.
 - **Ikke undersøkt** (Geminis andre forslag): den korte flisas ruter på 0,36 m mot bølger ned til 0,8 m, om krusningene dempes med avstanden, og om valget av mipnivå flimrer i flate vinkler på mobil-GPU.
 
+## 5.20w Solglitteret som flimret fra høyden (13.11.2026, Jonas' video)
+
+Jonas etter 5.20v: «Havet ser veldig bra ut nå, det eneste er at refleksjonen fra solen virker å flimre veldig raskt på overflaten.»
+
+- **Kilden:** fra høyden er et bildepunkt større enn de korteste bølgene i den korte flisa (0,8 m). Hellingene som ikke lenger får plass, skal bli ruhet (`lost`, bredere og roligere glans), men den korte flisa ble lest på et mipnivå der enkeltbølger ennå slapp gjennom som glimt på ett bildepunkt, nye for hvert bilde.
+- **Rettingen (`FFT_B2 1.5` i `FFT_FS`, `view3d/01-shaders.js`):** den korte flisa leses halvannet mipnivå grovere (`fftT2(P, FFT_B2)`), og det som da går tapt, regnes inn i ruheten (`l2`). Nær båten er nivået 0 uansett, så sjøen der er som før. Den lange flisa er urørt.
+- **Målt** (mot sola fra høyden, virtuell klokke, 14 ms mellom bildene): andelen lyse glimt som er byttet ut fra ett bilde til det neste, 5,2 % før og 2,6 % etter. Solstripa er bredere og lysere (lyse bildepunkter 3,4 % → 7,4 %).
+- **Rullet ut til testutgaven uten tester** på Jonas' ord («Bare kjør det ut på test med en gang»); `dbg23o` og `monster` grønne etterpå. `sea3d` var rød på skumterskelen ved 8 m/s: det var testen, ikke sjøen. Toppene er der 0,09 % av sjøen, ute i halen der terskelen fra ett kast av flisene spriker (enkeltavlesninger 0,3–2,2 ganger Monahan på bygget før 5.20v, 0,5–1,4 etter). Sjekken leser nå tre ganger med 1,5 s mellom; fire slike målinger ga 0,45–0,57 % mot Monahans 0,46 %. Hele `sea3d` er ikke kjørt om igjen etter det (en time).
+- **Usikkert:** om 1,5 er riktig tall på nettbrettet (målt under SwiftShader i 800×500), og om stripa er blitt for utvasket. Jonas ser.
+
 ## 5.20k Strømmen på bølgene (Fysikk 4, F8b, 11.11.2026)
 
 Jonas 27.10.2026 («5a», strøm som egen fase). Kjernens del står i «F8b» under 5.62 i `fysikk-og-styring.md`; her er det som tegnes.

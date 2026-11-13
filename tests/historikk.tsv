@@ -3741,3 +3741,6 @@
 2026-11-13 09:31	plan/2026-11-13-117	0fb5ab8f	trip2	OK	35	lite	samtidig	
 2026-11-13 09:32	plan/2026-11-13-117	0fb5ab8f	docktest	OK	60	lite	samtidig	
 2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
+2026-11-13 12:54	ccr-899a9674-q3gjp0	a24ac8e1	dbg23o	OK	44	3d	alene	
+2026-11-13 13:56	ccr-899a9674-q3gjp0	a24ac8e1	sea3d	FEIL	3694	3d	alene	FEIL the whitecap threshold gives Monahan's cover within a factor of two (8-25 m/s)
+2026-11-13 14:01	ccr-899a9674-q3gjp0	a24ac8e1	monster	OK	304	3d	alene	

@@ -25,10 +25,13 @@ AMPS = """(() => { const D = G3._debug, WV = D.WV, S = D.ssAt(D.bv.x, D.bv.z), r
 # the foam the crests leave in the map, which the drawn share (foamRendered) has too
 FOAM = """async (U) => {
   WX_FORCE = {w:U, d:315}; G3._debug.WV.init = false; await new Promise(r => setTimeout(r, 2500));
+  // (three readings 1.5 s apart, so three draws of the tiles and of the fitted threshold: at 8 m/s the crests are 0.09 % of the sea, out
+  // where one draw's threshold strays, and single readings came out 0.3 to 2.2 times Monahan before 5.20v and 0.5 to 1.4 after, 13.11.2026)
   const D = G3._debug, t = 37.3; let hit = 0, n = 0, jlo = 0;
+  for (let rep = 0; rep < 3; rep++){ if (rep) await new Promise(r => setTimeout(r, 1500));
   for (const [ox, oz] of [[0, 0], [400, 0], [0, 400], [-400, -400]]) for (let j = 0; j < 150; j++) for (let i = 0; i < 150; i++){
     const x = D.bv.x + ox + (i - 75) * 1.9 + 0.37 * j, z = D.bv.z + oz + (j - 75) * 1.9, F = D.foam.capAt(x, z, t, 1, U);
-    if (F.fv > F.th){ hit++; if (F.J < 0.5) jlo++; } n++; }
+    if (F.fv > F.th){ hit++; if (F.J < 0.5) jlo++; } n++; } }
   const kk = D.foam.capK || 1;
   return {U, share:+(hit / n * 100 / kk).toFixed(2), crests:+(hit / n * 100).toFixed(2), jUnderHalf:+(jlo / Math.max(1, hit) * 100).toFixed(1), monahan:+(3.84e-4 * Math.pow(U, 3.41)).toFixed(2)};
 }"""
