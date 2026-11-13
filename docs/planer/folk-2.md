@@ -1,6 +1,6 @@
 # Folk 2: ny figur og ny bevegelse (plan 13.11.2026)
 
-Status: **FB4 (sjøbeina) har klarsignal og er steg 120 i køen (Jonas 13.11.2026: «Kjør på med FB4 i en ny økt»).** Resten venter på klarsignal. **V2 og V4 er besvart 13.11.2026 (A+, og A, B, C og D).** V1 og V3 er åpne og trengs først før del 2 og 3.
+Status: **FB4 (sjøbeina) er bygd i steg 120 (13.11.2026, Jonas: «Kjør på med FB4 i en ny økt»; `docs/systemer/folk-om-bord.md` 5.19h).** Resten venter på klarsignal; FB3 har hel startmelding som steg 121. **V2 og V4 er besvart 13.11.2026 (A+, og A, B, C og D).** V1 og V3 er åpne og trengs først før del 2 og 3.
 
 ## Hva Jonas ba om
 
@@ -158,7 +158,7 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 - **Samtykke og personvern:** en video av en gjenkjennelig person er personopplysninger. Planen legger til grunn skriftlig samtykke og at videoen blir hos Jonas. Dette er ikke sjekket mot Datatilsynets veiledning; gjøres før FB9.
 - **FB1 er en stor omskriving uten synlig gevinst.** `drawWorker` er rundt 300 tette linjer, og `crewclip` og bildesammenligningen er det som skal fange feil.
 - **FB2 kan ta mer enn én økt** fordi hver oppgave må ses på. Da er steget `pågår` og fortsetter.
-- **Stampingen** er ikke sendt til agentene i dag; hva `03c-stability.js` gir per bilde, sjekkes i FB4.
+- **Stampingen** går til agentene fra steg 120 (13.11.2026): `CREW3D.setSea(bv.roll, bv.pitch, bv.y, Hs)` i `view3d/24-cinema.js`, bildets egen rulling og stamping fra båtens bevegelse, og sjøbeina regner hellingen per person fra dekkets normal.
 - **Tallene** (24 bein, 1 cm, 2 cm, 30 % lening, 12°) er startverdier.
 
 ## Hva planen ikke gjør

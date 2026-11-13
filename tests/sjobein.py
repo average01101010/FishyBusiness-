@@ -255,7 +255,8 @@ async def checks(pg):
         check(r['hs'] > 2 and r['stepLean'] < 0.25 and r['stepHipR'] < 6 and r['stepHipY'] < 4, '%s: ingen dirring: fra ett bilde til neste (1/60 s) endrer leningen seg høyst %.2f°, hofta %.1f mm til siden og %.1f mm opp og ned' % (bt, r['stepLean'], r['stepHipR'], r['stepHipY']))
 
     # 6. the people on another boat close by have them too: your boat put 35 m from one that is fishing, her people's soles on her deck
-    await pg.evaluate("WX_FORCE = {w:6, d:250}")   # (in a gale the others are in port)
+    # (the gale loop leaves the last of the boats; frames() counts the frames of type t, so t goes back on first; and in a gale the others are in port)
+    await pg.evaluate(SET, [t, 'pause', 6] + cam); await frames(pg, t, 3)
     cands = await pg.evaluate("npcStates(S.t / 60).filter(n => n.p && n.st !== 'port' && VESSELS[n.type] && !VESSELS[n.type].hand).sort((a, b) => (b.st === 'fishing') - (a.st === 'fishing')).slice(0, 4).map(n => ({id:n.id, type:n.type, st:n.st, L:n.L || 0}))")
     npc = []; near = None
     for c in cands:
