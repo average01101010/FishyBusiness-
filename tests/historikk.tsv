@@ -3743,3 +3743,5 @@
 2026-11-13 09:33	plan/2026-11-13-117	0fb5ab8f	csptest	OK	90	lite	samtidig	
 2026-11-13 12:54	ccr-535ab52d-bv560n	960c205	boottest	OK	24	lite	alene	
 2026-11-13 13:24	ccr-535ab52d-bv560n	337184d5	workshot	FEIL	1800	3d	alene	FEIL garntrekket: én haler og én plukker fisken ut av garnet  (['frys', 'frys'], {'gaff': 0, 'pick': 2, 'jigup': 0, 'bleed': 1})
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	mobshot	OK	797	3d	alene	
+2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	npcshot	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py, så node build.mjs)
