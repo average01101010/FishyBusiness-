@@ -751,21 +751,22 @@ Kvotemarkedet, the core (KM1 of docs/planer/kvotemarkedet.md; Jonas 07.11.2026: 
 - **159** why the buyer cannot take it (a word), or null. to = {v, how}; kr0 what the bid binds:
   - 162 `kmBuyWhy(item, to, kr0)`
 
-## `src/js/core/03k-hav-fft.js` (142 linjer)
+## `src/js/core/03k-hav-fft.js` (150 linjer)
 
 ---------- the short sea as a wave field: FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
 - **1** the short sea as a wave field: FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026)
-  - 18 `hfftHash(i)`
-  - 23 `hfftLgam(x)`
-  - 32 `hfftSp(L0)`
-  - 39 `hfftPlan(N)`
-  - 46 `hfft1(p, re, im, o, st)`
-  - 55 `hfft2(p, re, im)`
-  - 61 `hfftSpec(T, P)`
-  - 88 `hfftFrame(T, t, out, W, outD)`
-  - 115 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n)`
-  - 133 `hfftMips(out, N)`
+  - 23 `hfftRot(t0, t1, M)`
+  - 25 `hfftHash(i)`
+  - 30 `hfftLgam(x)`
+  - 39 `hfftSp(L0)`
+  - 46 `hfftPlan(N)`
+  - 53 `hfft1(p, re, im, o, st)`
+  - 62 `hfft2(p, re, im)`
+  - 68 `hfftSpec(T, P)`
+  - 95 `hfftFrame(T, t, out, W, outD)`
+  - 122 `hfftCapFit(o1, n1, s1, o2, n2, s2, gs, n, w2 = 1, two = false)`
+  - 141 `hfftMips(out, N)`
 
 ## `src/js/core/04-crew.js` (735 linjer)
 
@@ -2897,12 +2898,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1624 linjer)
+## `src/js/ui/phone/07-patch.js` (1625 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1612 `patch()`
+  - 1613 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3988,29 +3989,29 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (885 linjer)
+## `src/js/view3d/01-shaders.js` (891 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **168** the sea by the shore (Fysikk 4, F4, 09.11.2026)
 - **298** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **396** the boat's own foam, when she has way on
-- **404** where a slam and the spray land (F3b): four patches, fixed names
-- **406** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 773 `cloudStep(dt)`
-  - 780 `skyFrame(u, Hh, tn, bv)`
-  - 798 `glsl3(src, fs)`
-  - 811 `progStart(vs, fs, attrs, nm = '?')`
-  - 821 `progEnd(P)`
-  - 831 `program(vs, fs, attrs, nm = '?')`
-  - 833 `progWait(list)`
-  - 839 `programA(vs, fs, attrs, nm)`
-  - 840 `buf(data, target, usage)`
-  - 845 `airSet(u, terr)`
-  - 860 `sunT0()`
-  - 867 `attr(loc, b, size)`
-  - 883 `upload(pos, col, idx)`
+- **402** the boat's own foam, when she has way on
+- **410** where a slam and the spray land (F3b): four patches, fixed names
+- **412** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 779 `cloudStep(dt)`
+  - 786 `skyFrame(u, Hh, tn, bv)`
+  - 804 `glsl3(src, fs)`
+  - 817 `progStart(vs, fs, attrs, nm = '?')`
+  - 827 `progEnd(P)`
+  - 837 `program(vs, fs, attrs, nm = '?')`
+  - 839 `progWait(list)`
+  - 845 `programA(vs, fs, attrs, nm)`
+  - 846 `buf(data, target, usage)`
+  - 851 `airSet(u, terr)`
+  - 866 `sunT0()`
+  - 873 `attr(loc, b, size)`
+  - 889 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4419,7 +4420,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 596 `mastTop(G)`
   - 600 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (710 linjer)
+## `src/js/view3d/14-sea.js` (724 linjer)
 
 ---------- sea ----------
 
@@ -4434,51 +4435,52 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 82 `updateWaves(dt, H)`
 - **164** the near field: the short sea rides with the boat
   - 173 `nfStep()`
-- **211** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 218 `wakeTrack(x, z, fx, fz, ds)`
-  - 237 `wakeTU(u, ox, oz)`
-  - 238 `updateWake()`
-  - 264 `wakeHFast(x, z)`
-- **277** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 291 `foamFree()`
-  - 292 `foamInit()`
-  - 310 `wavePh()`
-  - 320 `foamStep(dt, t)`
-  - 388 `foamSplash(Dx, Dz)`
-  - 409 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 449 `foamBind(u, t)`
-  - 466 `grpAt(i, c, x, z, t)`
-- **475** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 484 `brvE(x, z)`
-  - 485 `brvStep()`
-  - 503 `brvSet(u)`
-- **535** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 550 `shoalPrep(J)`
-  - 551 `shoalCell(J, k, land, dd)`
-  - 555 `shoalSweep(J, end)`
-  - 569 `shoalPut(J)`
-  - 575 `shTex(u, v, out)`
-  - 582 `shoalAt(x, z)`
-  - 596 `shW(c, SH, out)`
-  - 602 `surfK(h)`
-  - 604 `surfStep(t)`
-  - 610 `shoalBind(u, t)`
-- **618** the sea state over the near terrain and the whole map
-  - 625 `ssLevel(n, unit)`
-  - 627 `ssRect(L)`
-  - 628 `ssWork(L, until)`
-  - 651 `ssStep(rdt)`
-  - 653 `ssBlend(L)`
-  - 655 `ssTex(L, x, z, out)`
-  - 662 `ssAt(x, z)`
-  - 672 `seaQ(S, ren)`
-  - 675 `seaDisp(x, z, t, S, fade, SH)`
-  - 699 `seaFade(x, z)`
-  - 700 `seaH(x, z, t)`
-  - 706 `seaHFast(x, z, t)`
-  - 708 `shoalHere(x, z)`
+  - 215 `nfShift(ex, ez)`
+- **225** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 232 `wakeTrack(x, z, fx, fz, ds)`
+  - 251 `wakeTU(u, ox, oz)`
+  - 252 `updateWake()`
+  - 278 `wakeHFast(x, z)`
+- **291** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 305 `foamFree()`
+  - 306 `foamInit()`
+  - 324 `wavePh()`
+  - 334 `foamStep(dt, t)`
+  - 402 `foamSplash(Dx, Dz)`
+  - 423 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 463 `foamBind(u, t)`
+  - 480 `grpAt(i, c, x, z, t)`
+- **489** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 498 `brvE(x, z)`
+  - 499 `brvStep()`
+  - 517 `brvSet(u)`
+- **549** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 564 `shoalPrep(J)`
+  - 565 `shoalCell(J, k, land, dd)`
+  - 569 `shoalSweep(J, end)`
+  - 583 `shoalPut(J)`
+  - 589 `shTex(u, v, out)`
+  - 596 `shoalAt(x, z)`
+  - 610 `shW(c, SH, out)`
+  - 616 `surfK(h)`
+  - 618 `surfStep(t)`
+  - 624 `shoalBind(u, t)`
+- **632** the sea state over the near terrain and the whole map
+  - 639 `ssLevel(n, unit)`
+  - 641 `ssRect(L)`
+  - 642 `ssWork(L, until)`
+  - 665 `ssStep(rdt)`
+  - 667 `ssBlend(L)`
+  - 669 `ssTex(L, x, z, out)`
+  - 676 `ssAt(x, z)`
+  - 686 `seaQ(S, ren)`
+  - 689 `seaDisp(x, z, t, S, fade, SH)`
+  - 713 `seaFade(x, z)`
+  - 714 `seaH(x, z, t)`
+  - 720 `seaHFast(x, z, t)`
+  - 722 `shoalHere(x, z)`
 
-## `src/js/view3d/14b-fft.js` (193 linjer)
+## `src/js/view3d/14b-fft.js` (205 linjer)
 
 ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
 
@@ -4490,13 +4492,13 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 65 `fftGot(D)`
   - 88 `fftKeep(a)`
   - 95 `fftKeepS(bufs)`
-  - 102 `fftTrH(x, z)`
-  - 115 `fftAt(x, z, lod)`
-  - 127 `fftA0()`
-  - 130 `fftSyncAt(tw)`
-  - 138 `fftStep(t)`
-  - 153 `fftBind(u, eye)`
-  - 182 `seaShared(u, t)`
+  - 104 `fftTrH(x, z, only2)`
+  - 122 `fftAt(x, z, lod)`
+  - 134 `fftA0()`
+  - 137 `fftSyncAt(tw)`
+  - 145 `fftStep(t)`
+  - 160 `fftBind(u, eye)`
+  - 194 `seaShared(u, t)`
 
 ## `src/js/view3d/15-env-mooring.js` (226 linjer)
 
@@ -4545,7 +4547,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 311 `spawn(x, y, z, vx, vy, vz, life, g)`
   - 313 `drawPts(n, mode, VP, col, size, round, off, mx)`
 
-## `src/js/view3d/17-draw.js` (293 linjer)
+## `src/js/view3d/17-draw.js` (296 linjer)
 
 ---------- drawing ----------
 
@@ -4834,7 +4836,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 614 `drawEffects(VP, eye, BM, dt, t)`
   - 747 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (229 linjer)
+## `src/js/view3d/25-controls.js` (231 linjer)
 
 ---------- controls ----------
 

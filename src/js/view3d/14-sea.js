@@ -1,5 +1,5 @@
   // ---------- sea ----------
-  const HALF = 300, PIN_R = 32, PIN_C = 0.5; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
+  const HALF = 300, PIN_R = 32, PIN_C = 2 / 3; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
   function buildPatch(){
     if (PATCH){ gl.deleteBuffer(PATCH.pb); gl.deleteBuffer(PATCH.ib); if (PATCH.ibH) gl.deleteBuffer(PATCH.ibH); }
     const v = new Float32Array((NP + 1) * (NP + 1) * 2); let k = 0;
@@ -141,7 +141,7 @@
     // (a jump, a teleport or the first frame at a place: the shared sea at once, as nothing she saw is carried over)
     const jump = !WV.lb || Math.hypot(bv.x - WV.lb[0], bv.z - WV.lb[1]) > 300; WV.lb = [bv.x, bv.z];
     const pn = performance.now() / 1000, rdt = WV.lt ? clamp(pn - WV.lt, 0, 30) : 0; WV.lt = pn;   // (the glide in real seconds: a slow frame glides as far as its time)
-    if (jump){ NF.ph.fill(0); NF.gp.fill(0); NF.gu.fill(0); NF.gv.fill(0); NF.O.fill(0); }
+    if (jump){ NF.ph.fill(0); NF.gp.fill(0); NF.gu.fill(0); NF.gv.fill(0); NF.O.fill(0); NF.OA.fill(0); NF.OB.fill(0); NF.rp.fill(0); }
     L.forEach((c, i) => { const kx = c.k * c.Dx, kz = c.k * c.Dz, ra = c.Dx * A[0] + c.Dz * A[1], rg = c.Dz * A[0] - c.Dx * A[1];
       const Gs = md(c.ph0 - c.k * ra), GUs = md(-0.09 * c.k * ra + 1.7 * i, 2 * TAU), GVs = md(-0.19 * c.k * rg + 2.3 * i, 2 * TAU), GSs = md(-c.k * (0.083 * ra + 0.041 * rg) + 2.59 * i);
       const K = WV.kd[i];
@@ -169,7 +169,7 @@
   // the foam (wrapped at 64 km, when she is slow). The long waves and the swell stand in the world, so land, buoys and other boats
   // still pass at the game's speed, and what passes the hull passes at her real speed through the water. «#nf0» in the address turns
   // it off, for the comparison.
-  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
+  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), OA:new Float64Array(2), OB:new Float64Array(2), rp:new Float64Array(8), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
   function nfStep(){
     const TAU = 2 * Math.PI, now = performance.now() / 1000, dtr = NF.lt ? Math.max(0, now - NF.lt) : 0, dtn = Math.min(dtr, 0.25); NF.lt = now;
     const dx = NF.lx == null ? 0 : bv.px - NF.lx, dz = NF.lz == null ? 0 : bv.pz - NF.lz; NF.lx = bv.px; NF.lz = bv.pz;
@@ -195,16 +195,30 @@
         // (the wind waves' groups, grpW: the same shift in their own two coordinates, folded modulo 4 pi)
         NF.gu[i] = (NF.gu[i] - 0.09 * c.k * a) % (2 * TAU); NF.gv[i] = (NF.gv[i] - 0.19 * c.k * g) % (2 * TAU); }
       NF.D[0] += ex; NF.D[1] += ez;
-      // (the FFT tiles' own offsets, 14b-fft.js: the short sea rides with her in full, each tile's offset kept within half a tile)
-      for (let k = 0; k < 2; k++){ const Lt = HFFT.tiles[k].L; NF.O[k * 2] += ex; NF.O[k * 2 + 1] += ez; for (let q = 0; q < 2; q++){ const o = k * 2 + q; NF.O[o] -= Lt * Math.round(NF.O[o] / Lt); } }
+      nfShift(ex, ez);
       for (let k = 0; k < 2; k++) if (Math.abs(NF.D[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.D[k]) > 120000)) NF.D[k] -= Math.sign(NF.D[k]) * 65536;
     }
     // B4: the glide back to the shared sea, the short way, no faster than 0.3 m/s and a tenth of each wave's speed (0.15 m/s for the short
     // tile, whose waves are slow): a wave's phase, its group's two offsets, the swell's groups and the tiles' offsets
     // (the waves' and groups' own offsets are folded into WV.G and the rest each frame and glide there, updateWaves; here the tiles')
     if (NF.gl > 0 && dtr > 0){ const g = NF.gl * Math.min(dtr, 30);
-      for (let k = 0; k < 2; k++){ const vm = (k ? 0.15 : 0.3) * g, ox = NF.O[k * 2], oz = NF.O[k * 2 + 1], d = Math.hypot(ox, oz);
-        if (d > 0){ const s = Math.max(0, d - vm) / d; NF.O[k * 2] = ox * s; NF.O[k * 2 + 1] = oz * s; } } }
+      const glide = (A, i, vm) => { const ox = A[i], oz = A[i + 1], d = Math.hypot(ox, oz); if (d > 0){ const s = Math.max(0, d - vm) / d; A[i] = ox * s; A[i + 1] = oz * s; } };
+      glide(NF.O, 0, 0.3 * g); glide(NF.OA, 0, 0.15 * g); glide(NF.OB, 0, 0.15 * g);
+      // (the ripples' phases the short way to none, at the short tile's 0.15 m/s along each)
+      for (let j = 0; j < 8; j++){ const k = RIP[j].k, v = NF.rp[j], d = Math.min(Math.abs(v), 0.15 * g * k); NF.rp[j] = v - Math.sign(v) * d; } }
+  }
+  // The short sea's own offsets as she moves (ex, ez metres in the world). The long tile's in the world, folded by whole tiles (a tile
+  // repeats along x and z). The short tile is read twice turned +-HFFT.mix.rot (B6), and a whole tile along x or z is no whole tile in
+  // either read's frame: folded in the world, its pattern jumped some 6 m every second or so under way (the kontroll 12.11.2026). So each
+  // read keeps its own offset in its own frame (OA, OB), folded there by whole tiles; and the ripples their phases, folded by 2 pi (they
+  // rode on NF.O[2..3] and jumped at the same folds).
+  function nfShift(ex, ez){
+    const L1 = HFFT.tiles[0].L, L2 = HFFT.tiles[1].L, r = hfftRot(ex, ez, HFFT.mix), f = (A, i, L) => { A[i] -= L * Math.round(A[i] / L); };
+    NF.O[0] += ex; NF.O[1] += ez; f(NF.O, 0, L1); f(NF.O, 1, L1);
+    NF.OA[0] += r[0]; NF.OA[1] += r[1]; NF.OB[0] += r[2]; NF.OB[1] += r[3]; for (let i = 0; i < 2; i++){ f(NF.OA, i, L2); f(NF.OB, i, L2); }
+    const w = env.windDir || [0, 1], wp = [-w[1], w[0]];
+    for (let j = 0; j < 8; j++){ const q = RIP[j], dx = w[0] * Math.cos(q.ang) + wp[0] * Math.sin(q.ang), dz = w[1] * Math.cos(q.ang) + wp[1] * Math.sin(q.ang);
+      let v = NF.rp[j] + q.k * (dx * ex + dz * ez); v -= 2 * Math.PI * Math.round(v / (2 * Math.PI)); NF.rp[j] = v; }
   }
 
 
@@ -524,7 +538,7 @@
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
     // B3 (14b-fft.js): with the FFT tiles on, the crests break where the tiles' surface is compressed most, as the shaders have it (capFf)
-    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = Math.max(Math.hypot(sq[0][1], sq[1][1]), 1e-6);
+    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = fftCapSd();
       const crS = (yL + fs * T[1]) / Math.sqrt(saL + (sq[0][2] + sq[1][2]) * fs * fs), F = WCAP.F, fz = T[0] / sz;
       // (the tiles' crests are the share F.k of Monahan's cover: a crest that runs on with the waves leaves a longer tail than the old ones did)
       const Wf = clamp(Wc * (kk === WCAP.k ? F.k : kk), 1e-5, 0.5); let zf = Math.sqrt(-2 * Math.log(Wf)); zf -= (2.515517 + 0.802853 * zf + 0.010328 * zf * zf) / (1 + 1.432788 * zf + 0.189269 * zf * zf + 0.001308 * zf * zf * zf);

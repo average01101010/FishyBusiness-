@@ -55,6 +55,23 @@ export default function (t){
     const zq = w => { let z = Math.sqrt(-2 * Math.log(w)); return z - (2.515517 + 0.802853 * z + 0.010328 * z * z) / (1 + 1.432788 * z + 0.189269 * z * z + 0.001308 * z * z * z); };
     let worst = 0; for (const W of [0.05, 0.01, 0.002]){ const z = zq(W), th = c[0] + c[1] * z + c[2] * z * z, e = rd[Math.floor(rd.length * (1 - W))]; worst = Math.max(worst, Math.abs(th - e)); }
     t.ok(worst < 0.08, 'the threshold fitted to a field is its own quantile read between the texels, at 5, 1 and 0.2 % (worst ' + worst.toFixed(3) + ')'); }
+  // B6: with the short tile weighted (w2) and read twice over sqrt 2, the measure is of unit spread and its threshold is its own quantile:
+  // the long tile empty and the smooth field as the short one, against 200 000 sums of two reads at random places over sqrt 2
+  { const n = 128, o1 = new Float32Array(16 * 16 * 4), o2 = new Float32Array(n * n * 4); let r = 11;
+    const rnd = () => { r = (Math.imul(r, 1664525) + 1013904223) >>> 0; return (r + 0.5) / 4294967296; };
+    const W = []; for (let q = 0; q < 96; q++){ const ang = rnd() * 6.2831853, kk = 2 * Math.PI * (2 + rnd() * 5) / n; W.push([Math.cos(ang) * kk, Math.sin(ang) * kk, rnd() * 6.2831853]); }
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++){ let v = 0; for (const [kx, kz, p] of W) v += Math.sin(kx * i + kz * j + p); o2[(j * n + i) * 4 + 2] = v / Math.sqrt(48); }
+    const c = K.hfftCapFit(o1, 16, 0, o2, n, 1, 0, 40000, K.HFFT.mix.w2, true), rd1 = () => { const u = rnd() * n, w = rnd() * n, i0 = Math.floor(u), j0 = Math.floor(w), fu = u - i0, fw = w - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n, g = (a, b) => o2[(b * n + a) * 4 + 2];
+      return (g(i0, j0) * (1 - fu) + g(i1, j0) * fu) * (1 - fw) + (g(i0, j1) * (1 - fu) + g(i1, j1) * fu) * fw; };
+    const rd = []; for (let q = 0; q < 200000; q++) rd.push((rd1() + rd1()) * Math.SQRT1_2); rd.sort((a, b) => a - b);
+    let worst = 0; for (const [Wq, z] of [[0.05, 1.645], [0.01, 2.326], [0.002, 2.878]]) worst = Math.max(worst, Math.abs(c[0] + c[1] * z + c[2] * z * z - rd[Math.floor(rd.length * (1 - Wq))]));
+    t.ok(worst < 0.08, 'with the short tile weighted and read twice, the fitted threshold is the measure\'s own quantile at 5, 1 and 0.2 % (worst ' + worst.toFixed(3) + ')'); }
+  // hfftRot: the two reads turned +rot and -rot, lengths kept
+  { const M = K.HFFT.mix, r = K.hfftRot(3, 4, M), a = Math.atan2(r[1], r[0]) - Math.atan2(4, 3), b = Math.atan2(r[3], r[2]) - Math.atan2(4, 3);
+    t.ok(Math.abs(Math.hypot(r[0], r[1]) - 5) < 1e-9 && Math.abs(Math.hypot(r[2], r[3]) - 5) < 1e-9 && Math.abs(a - M.rot) < 1e-9 && Math.abs(b + M.rot) < 1e-9, 'the short tile\'s two reads are turned +' + M.rot + ' and -' + M.rot + ' rad, lengths kept'); }
+  // the two tiles never lay down together within a few kilometres: L1 / L2 is far from a ratio of small whole numbers
+  { const [a, b] = K.HFFT.tiles.map(T => T.L); let near = 1; for (let q = 1; q <= 12; q++) near = Math.min(near, Math.abs(a / b * q - Math.round(a / b * q)));
+    t.ok(near > 0.03, 'the tiles are incommensurate: q L1 / L2 is at least 0.03 from a whole number for q up to 12 (' + near.toFixed(3) + ')'); }
   // Parseval: the mean of h^2 over the tile is the sum of |htilde|^2
   let sh = 0; for (let j = 0; j < N; j++) for (let i = 0; i < N; i++){ const [r, im] = ht(i, j); sh += r * r + im * im; }
   t.near(st[2], sh, sh * 1e-4, 'the mean square height is the sum of the amplitudes squared (Parseval)');
