@@ -153,7 +153,7 @@
     stab:'<path d="M8 28c6-6 12-6 18 0s12 6 18 0 8-4 12-2" stroke="' + IC_C.blu + '"/><path d="M16 22h32l-4-10H20z" fill="#fff"/><path d="M32 22v8M28 30h8" />',
     gut:'<rect x="12" y="14" width="40" height="16" rx="3" fill="' + IC_C.soft + '"/><circle cx="22" cy="22" r="4" fill="#fff"/><circle cx="42" cy="22" r="4" fill="#fff"/><path d="M26 22h12" stroke="' + IC_C.red + '"/>' + IC_DECK,
     ice:'<path d="M14 20h36v14H14z" fill="' + IC_C.ice + '"/><path d="M32 6v10M27 8l5 4 5-4M24 26l4-3 4 3 4-3 4 3" stroke="' + IC_C.blu + '"/>'};
-  const buPic = x => { const k = x.ic || x.k; return BU_IC[k] ? icSvg(BU_IC[k]) : ICPIC[k] ? ICPIC[k] : ICPIC.box; };
+  const buPic = x => { const k = x.ic || x.k, a = k === 'ice' ? 'icemaker' : k; if (icHas(a)) return icPic(a); return BU_IC[k] ? icSvg(BU_IC[k]) : ICPIC[k] ? ICPIC[k] : ICPIC.box; };
   const AT = {butikk:['Utstyrsbutikken', 'The tackle shop'], verft:['Verftet', 'The yard']};
   const dots = x => '<span class="bu-d" role="img" aria-label="' + L('trinn ' + x.lv + ' av ' + x.max, 'step ' + x.lv + ' of ' + x.max) + '">' + '●'.repeat(Math.max(0, x.lv)) + '<i>' + '○'.repeat(Math.max(0, x.max - x.lv)) + '</i></span>';
   function kitCard(){ HN = {}; try { return kitCard0(); } finally { HN = null; } }

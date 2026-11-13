@@ -1431,6 +1431,8 @@ body.pm #ecdisTop{visibility:hidden}
 .ph-card.ic{display:grid;grid-template-columns:clamp(72px,30%,150px) 1fr;gap:10px;align-items:start}
 .ic-pic{background:#eef3f6;border-radius:10px;aspect-ratio:8/5;display:flex;align-items:center;justify-content:center;padding:4px}
 .ic-pic svg{width:100%;height:100%}
+.ic-img{display:block;width:100%;aspect-ratio:8/5;background:var(--ic-atlas) no-repeat;background-size:800% 600%;border-radius:6px}
+.bu-ic .ic-img,.net-ic .ic-img{border-radius:4px}
 .ic-b{min-width:0}
 .ic-b h4 small{font-weight:600;color:#5b6c76;font-size:12px;margin-left:4px}
 .ph-card .ic-fx{margin:2px 0 4px;font-size:13px;color:#22323c}

@@ -72,7 +72,33 @@ const ICPIC = {
     '<path d="M14 12l32 12M16 16l30 10" stroke="' + IC_C.mid + '" stroke-width=".9"/><path d="M46 24c5 2 9 6 12 10" stroke="' + IC_C.ink + '"/>' +
     [20, 30, 40].map(x => '<ellipse cx="' + x + '" cy="' + (11 + (x - 12) * 0.35) + '" rx="2.6" ry="1.8" fill="' + IC_C.org + '"/>').join('') + '<path d="M40 36c5-2 10-2 15 0s6 1 8 0" stroke="' + IC_C.blu + '"/>')
 };
-const icPic = k => ICPIC[k] || ICPIC.box;
+// ---- the painted pictures (13.11.2026, Jonas: «skikkelige bilder til alt som selges», gouache, everything but the boats): one atlas,
+// pic-items (src/data/items.b64, made by tools/ui/butikkbilder.py, whose ORDER this is), fetched after the start with the other late data
+// (ui/11-boot.js); until it is in, and in a page without it, the cards draw the SVGs above
+const IC_ATLAS = ['jig', 'kgear', 'jigset', 'hooks', 'net', 'line', 'pot', 'kit', 'heavy',
+  'jukse', 'linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'krabbekar', 'kniv', 'hott',
+  'vhf', 'ais', 'plotter', 'chirp', 'sonar', 'radar', 'radarA', 'brovakt', 'olje',
+  'varme', 'ice', 'bait', 'antigro', 'motor90', 'motor', 'prop', 'hold', 'tank',
+  'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno'];
+const IC_COLS = 8, IC_ROWS = Math.ceil(IC_ATLAS.length / IC_COLS);
+let IC_URL = null;
+// the atlas as a blob URL once its bytes are in (the element's base64, as the letter's pictures), set on the page's root once
+function icAtlas(){
+  if (IC_URL) return IC_URL;
+  const el = typeof document !== 'undefined' && document.getElementById('pic-items'), d = el && !el.dataset.src && el.textContent.trim(); if (!d) return null;
+  try { const bin = atob(d), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    IC_URL = URL.createObjectURL(new Blob([u], {type:'image/webp'})); document.documentElement.style.setProperty('--ic-atlas', 'url(' + IC_URL + ')'); el.textContent = ''; }
+  catch (e){ return null; }
+  return IC_URL;
+}
+const icHas = k => IC_ATLAS.includes(k) && !!icAtlas();
+function icPic(k){
+  const a = IC_ATLAS.includes(k) ? k : ICPIC[k] ? null : 'box';
+  if (a && icAtlas()){ const i = IC_ATLAS.indexOf(a), x = i % IC_COLS, y = Math.floor(i / IC_COLS);
+    return '<span class="ic-img" aria-hidden="true" style="background-position:' + fmtPct(x / (IC_COLS - 1)) + ' ' + fmtPct(y / (IC_ROWS - 1)) + '"></span>'; }
+  return ICPIC[k] || ICPIC.box;
+}
+const fmtPct = v => (Math.round(v * 10000) / 100) + '%';
 // ---- what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
 const ICFX = {
   jig:() => ['Fisker for hånd: torsk, sei og hyse', 'Fishes by hand: cod, saithe and haddock'],
