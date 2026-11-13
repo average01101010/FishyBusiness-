@@ -94,7 +94,9 @@
   // an answer has gone up into the waiting set (C). The first, or one out of order (the clock set back, a long pause): it is the sea at once
   function fftBlGot(tC){
     const I = FFT.si;
-    if (FFT.got < 1 || !(tC > FFT.tB) || tC - FFT.tB > 2){ FFT.si = [I[2], I[2], I[0]]; FFT.tA = tC - 1e-3; FFT.tB = tC; FFT.got = 1; FFT.pend = false; FFT.f = -1; FFT.keep = I[1]; return; }
+    // (nor is it blended when the worker is slow, a round trip over 90 ms: two answers a quarter of a second apart are a third of the
+    // shortest waves' period, and their mean would pulse; such a device has the worker's own tiles as before)
+    if (FFT.got < 1 || !(tC > FFT.tB) || tC - FFT.tB > 2 || FFT.lat > 0.09){ FFT.si = [I[2], I[2], I[0]]; FFT.tA = tC - 1e-3; FFT.tB = tC; FFT.got = 1; FFT.pend = false; FFT.f = -1; FFT.keep = I[1]; return; }
     FFT.tC = tC; FFT.pend = true;
   }
   function fftBlend(now){
