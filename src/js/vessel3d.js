@@ -661,12 +661,12 @@ function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); r
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
 // the part of another player's paint code that changes her model (TP1, steg 108): the colours, the designs and a partner's design
-// (h o d r t v s g x), in that order; the flag, the registration mark and the logo are drawn over the model, so boats painted alike
+// (h o d r t v s g from LIVS, and x), in that order; the flag, the registration mark and the logo are drawn over the model, so boats painted alike
 // share one model and its buffers (view3d/20-trawl-seine.js npcKB). '' when nothing in it changes the model
-const LIVPAINT = ['h', 'o', 'd', 'r', 't', 'v', 's', 'g', 'x'];
+const LIVPAINT = Object.keys(LIVS).filter(k => !['flag', 'mark', 'logo'].includes(k)).map(k => LIVS[k]).concat('x');
 function livPaint(s){
   if (typeof s !== 'string') return s; const by = {};
-  for (const part of s.split(';')){ const i = part.indexOf(':'), k = i > 0 ? part.slice(0, i) : ''; if (LIVPAINT.includes(k) && i < part.length - 1 && !(k in by)) by[k] = part; }
+  for (const part of s.split(';')){ const i = part.indexOf(':'), k = i > 0 ? part.slice(0, i) : ''; if (LIVPAINT.includes(k) && i < part.length - 1) by[k] = part; }   // (the last of a key twice, as livParse reads it)
   return LIVPAINT.filter(k => k in by).map(k => by[k]).join(';');
 }
 // another player's ensign from her paint code ('f:SE.vimpel'; 'f:LOGO.rekt' is her house flag): what she bought, else Norway in a

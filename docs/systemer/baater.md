@@ -81,7 +81,7 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle sek
   - `FLAGS` i `vessel3d.js` har 50 nasjoner, også Sápmi og kvenene, tegnet av noen få former, så de ser like ut på alle enheter.
   - Formene er rektangel, vimpel (strukket 1,7 × 0,8) og splitt. Det norske splittflagget er statsflagget og tilbys ikke (lov om Norges flagg).
   - Norge i rektangel er gratis og det båten kommer med. Alle nasjoner og former er ett kjøp: `des_flagg`, 19 kr, `S.cos.flagg`.
-  - Flagget lagres i `b.liv.flag = {c, s}` og går til de andre som `f:SE.vimpel`. Andre spilleres flagg tegnes ikke ennå.
+  - Flagget lagres i `b.liv.flag = {c, s}` og går til de andre som `f:SE.vimpel`. Andre spilleres flagg tegnes fra TP1 (steg 108, 13.11.2026), se «Det de andre ser» under.
   - **Flaggtidene** (`flagUp(H, p)` i `core/03-simulation.js`, Jonas 07.10.2026): flagget er oppe fra kl. 08 (mars–oktober) eller kl. 09 (november–februar) til solnedgang, senest kl. 21. I Nordland, Troms og Finnmark (nord for 65° N) er det oppe kl. 10–15 fra november til februar. Det følger flaggforskriften fra 1927, som gjelder offentlig flagging. Malerverkstedet viser flagget uansett tid. Vimpelen (4.25) har ingen tider og henger oppe døgnet rundt.
   - Usikkert: noen kilder om flaggskikk til sjøs sier at flagget kan føres hele døgnet under fart. Det har vi ikke kunnet bekrefte i en primærkilde, så spillet bruker de samme tidene til sjøs og i havn.
 - **Registreringsmerke** (steg 5, 07.10.2026):
@@ -118,6 +118,27 @@ Jonas' bestilling ligger i `docs/engasjement.md`, arbeidslista punkt 1. Alle sek
   - `tests/unit/regmerke.test.mjs`: 60 like båter med samme navn og hjemhavn får minst 50 ulike numre, i 100–999 og ingen ekte båts, i Kristiansand, Bømlo, Ålesund, Bodø, Tromsø, Hammerfest og Båtsfjord. `tests/unit/navneklash.test.mjs`: ingen to navn på toppnivå i sidens skript er like.
   - `admintest`: fanen Logoer tegnes i demoen.
   - Navnene er sjekket på bilder fra siden for alle båttypene.
+
+### Det de andre ser: flaggene og bufferne (TP1, steg 108, 13.11.2026)
+
+Jonas 12.11.2026, tilpasning V1 A: «TP1 over linja». Det som er solgt, skal ses av de andre (`docs/planer/tilpasning.md` TP1).
+
+- **Flagget på de andre** (`drawPeerFlags` i `view3d/13-instruments.js`, kalt etter `drawNPCNames` i `view3d/20-trawl-seine.js`):
+  - De seks nærmeste spillerbåtene innen 250 m med glasset inne, som navnene. Flagget står ved båtens flaggstang (`GEO(type).pole`), slik som på egen båt.
+  - Flagget leses av koden hennes med `livFlag` (`vessel3d.js`): det hun har kjøpt, rederiflagget med logoen (laget, eller bildet hennes fra `peerLogo`; Norge til bildet er hentet, som på egen båt), ellers Norge i rektangel.
+  - Flaggtidene er `flagUp` der hun er, spurt én gang per spillminutt. Stikkprøven i januar (`tests/unit/flaggtider.test.mjs`): Kristiansand og Ålesund oppe fra kl. 09 til solnedgang, Hammerfest kl. 10–15.
+  - Bildene ligger i en pool etter flagg, form og logo (høyst 8, den eldste slippes). Hver båt har sin egen duk (høyst 8), regnet én gang per bilde med den tilsynelatende vinden mot hennes kurs og fart (`clothInto`, `clothStep`; egen båt bruker de samme).
+  - NPC-ene får ikke flagg i dette steget. Tellerne: `G3._debug.peerFlags`.
+- **Bufferne** (`npcKB`, `nkbCap` i `view3d/20-trawl-seine.js`; `livPaint`, `npcModelKey`, `npcModelDrop` i `vessel3d.js`):
+  - En spillerbåts modell nøkles bare på den delen av koden som endrer malingen (`h o d r t v s g x`, `livPaint`). Merke, logo og flagg tegnes over modellen. To båter med lik maling deler modell og buffere, og en uten maling deler lokalflåtens umalte modell.
+  - Taket: høyst 12 malte modeller (`NKBP.cap`). Over taket slippes den som lengst ikke har vært tegnet, når det er minst 20 s siden. Bufferne slettes med `gl.deleteBuffer`, og modellen tas ut av `NPCMOD`. En modell som tegnes, slippes aldri, så alle båtene i syne beholder malingen, og taket kan stå over 12 så lenge flere ulikt malte båter er nær. `npcWarm` lager en malt modell på forhånd bare under taket, ellers lages den når båten tegnes første gang (slik det var før Ø3c); ellers ville taket og oppvarmingen bygd de samme modellene om igjen.
+  - Tellerne: `G3._debug.npcBufs` (`models`, `made`, `dropped`, `mb`, `all`).
+  - Stand-in-båtene i målingen (`bench:true`) teller ikke som «andre spillere møtt» i merkene (`core/09f-merker.js`).
+- **Målingen** (`tests/flaggshot.py`, og `#benchpeer` i spillet, `G3.benchPeers`): 20 stand-in-spillere rundt egen båt, først med hver sin maling og hvert sitt merke («ulik»), så med samme maling og hvert sitt merke («lik»). Det som ble sendt til GPU-en, er talt ved WebGL (`bufferData`), så de samme tallene kommer fra et bygg før steget. SwiftShader, 1280×800:
+
+@@MAALING@@
+
+  Tallene som teller, måler Jonas på Pad 3 med `#benchpeer` (`docs/spill-dette/108.md`).
 
 ## 5.1 Båter og utstyr
 

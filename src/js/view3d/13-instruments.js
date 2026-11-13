@@ -620,14 +620,15 @@
   // each boat's cloth its own, waved once a frame in the apparent wind of her course and speed. No flag on the local fleet in this step.
   // PFLAG counts for the tests (G3._debug.peerFlags)
   const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0};
+  const lruDrop = (M, max, del) => { if (M.size < max) return; let old = null; for (const [kk, v] of M) if (!old || v.used < old[1].used) old = [kk, v]; del(old[1]); M.delete(old[0]); };
   let PFCV = null, PFLC = null;
-  const VIMPEL = new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+  const VIMPEL = new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);   // (the pennant's stretch, as the own boat's in 24-cinema.js)
   function peerFlagTex(n){
     const f = livFlag(n.liv); let L = null, img = null, lk = '';
     if (f.code === 'LOGO'){ L = logoParse(n.liv); img = L && L.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), L.ver) : null;
       if (L && (L.kind !== 'u' || (img && img.complete && img.naturalWidth))) lk = L.kind === 'u' ? 'u:' + n.id + '.' + L.ver : logoStr(L); else f.code = 'NO'; }
     const k = f.code + '|' + f.shape + '|' + lk; let e = PFT.get(k);
-    if (!e){ if (PFT.size >= 8){ let old = null; for (const [kk, v] of PFT) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); PFT.delete(old[0]); }
+    if (!e){ lruDrop(PFT, 8, v => gl.deleteTexture(v.tex));
       if (!PFCV){ PFCV = document.createElement('canvas'); PFCV.width = 256; PFCV.height = 188; }
       if (lk && !PFLC){ PFLC = document.createElement('canvas'); PFLC.width = PFLC.height = 256; } if (lk) logoCanvas(PFLC, L, img);
       flagCanvas(PFCV, f.code, f.shape, lk ? PFLC : null); e = {tex:mkTex()}; upTex(e.tex, PFCV); PFT.set(k, e); PFLAG.made++; }
@@ -640,7 +641,7 @@
     for (const [, n] of near.slice(0, 6)){
       const G = GEO(n.K.t), pole = G && G.pole; if (!pole) continue;
       let C = PFC.get(n.id);
-      if (!C){ if (PFC.size >= 8){ let old = null; for (const [kk, v] of PFC) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteBuffer(old[1].pb); PFC.delete(old[0]); }
+      if (!C){ lruDrop(PFC, 8, v => gl.deleteBuffer(v.pb));
         C = {pos:new Float32Array(FW * FH * 18), pb:buf(new Float32Array(FW * FH * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), mn:null, up:false}; PFC.set(n.id, C); }
       C.used = now; if (C.mn !== mn){ C.mn = mn; C.up = flagUp(S.t / 60, n.p); } if (!C.up) continue;
       // the apparent wind where she is, against her course and speed (as the own boat's, 24-cinema.js)

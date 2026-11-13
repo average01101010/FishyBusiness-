@@ -64,7 +64,7 @@ export default function (t){
   t.ok(npcModel('sjark', 0.3, A) !== npcModel('sjark', 0.3, D), 'ulik skrogfarge gir egen modell');
   t.eq(typeof livPaint === 'function' && livPaint(A), 'h:kobolt;r:hvit', 'livPaint: bare malingen blir igjen');
   t.ok(typeof livPaint === 'function' && livPaint(C) !== livPaint(A) && livPaint(C).endsWith('x:-9'), 'livPaint: et sponset design gir en ny nøkkel');
-  t.eq(typeof livPaint === 'function' && [livPaint('f:SE.rekt;m:T.1.LK'), livPaint(3), livPaint('m:T.1.LK;h:hvit;g:1;h:rod')], ['', 3, 'h:hvit;g:1'], 'livPaint: tom uten maling, tallene for lokalflåten som de er, fast rekkefølge');
+  t.eq(typeof livPaint === 'function' && [livPaint('f:SE.rekt;m:T.1.LK'), livPaint(3), livPaint('m:T.1.LK;h:hvit;g:1;h:rod')], ['', 3, 'h:rod;g:1'], 'livPaint: tom uten maling, tallene for lokalflåten som de er, fast rekkefølge, den siste av to like (som livParse)');
   t.eq(typeof livFlag === 'function' && [livFlag(A), livFlag(''), livFlag('h:hvit;f:LOGO.splitt'), livFlag('f:XX.rekt'), livFlag('f:SE.bred')].map(f => f.code + '.' + f.shape),
     ['SE.vimpel', 'NO.rekt', 'LOGO.splitt', 'NO.rekt', 'SE.rekt'], 'livFlag: det kjøpte flagget, ellers Norge i rektangel');
 }
