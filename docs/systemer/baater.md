@@ -136,7 +136,17 @@ Jonas 12.11.2026, tilpasning V1 A: «TP1 over linja». Det som er solgt, skal se
   - Stand-in-båtene i målingen (`bench:true`) teller ikke som «andre spillere møtt» i merkene (`core/09f-merker.js`).
 - **Målingen** (`tests/flaggshot.py`, og `#benchpeer` i spillet, `G3.benchPeers`): 20 stand-in-spillere rundt egen båt, først med hver sin maling og hvert sitt merke («ulik»), så med samme maling og hvert sitt merke («lik»). Det som ble sendt til GPU-en, er talt ved WebGL (`bufferData`), så de samme tallene kommer fra et bygg før steget. SwiftShader, 1280×800:
 
-@@MAALING@@
+  | | Før (arbeidsgrenen 13.11.2026) | Etter (steg 108) |
+  |---|---|---|
+  | 20 båter, hver sin maling og sitt merke: MB sendt til GPU-en | 66,4 | 46,5 |
+  | … buffere laget / slettet | 461 / 50 | 333 / 26 |
+  | … malte modeller laget / i live etterpå | (ingen tellere; én per kode og nivå) | 19 / 20 |
+  | 20 båter, samme maling og hvert sitt merke: MB sendt til GPU-en | 43,3 | 6,2 |
+  | … buffere laget / slettet | 88 / 1 | 11 / 53 |
+  | … malte modeller laget / i live etterpå | (én per merke) | 2 / 12 |
+  | Bildetid (ms, SwiftShader, bare en sjekk) | 275 / 5 933 | 163 / 171 |
+
+  Før steget fikk hver spillerbåt egen modell når merket var ulikt, og ingenting ble sluppet (1 buffer slettet). Etter deler båtene med lik maling modell (2 nye, en per nivå), og de malte modellene som ikke tegnes, slippes over taket (53 buffere slettet). Med hver sin maling sendes det mindre enn før, fordi `npcWarm` ikke lenger lager begge nivåene på forhånd over taket. 5 933 ms i «før, lik» er SwiftShader som hang i ett bilde; tallet sier ingenting.
 
   Tallene som teller, måler Jonas på Pad 3 med `#benchpeer` (`docs/spill-dette/108.md`).
 
