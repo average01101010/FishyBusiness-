@@ -3749,3 +3749,6 @@
 2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	mobshot	OK	797	3d	alene	
 2026-11-13 13:37	ccr-535ab52d-bv560n	3d936180	npcshot	FEIL	0	3d	alene	FEIL hele kysten i tools/map/out/game (python3 tools/map/release.py og game.py, så node build.mjs)
 2026-11-13 13:38	ccr-535ab52d-bv560n	e0868808	boottest	OK	25	lite	alene	
+2026-11-13 16:23	ccr-899a9674-q3gjp0	e6eea931+	docktest	OK	64	lite	alene	
+2026-11-13 16:35	ccr-899a9674-q3gjp0	e6eea931+	dbg23o	OK	48	3d	alene	
+2026-11-13 16:40	ccr-899a9674-q3gjp0	e6eea931+	monster	OK	287	3d	alene	

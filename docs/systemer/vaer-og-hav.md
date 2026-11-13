@@ -490,6 +490,17 @@ Jonas etter 5.20v: «Havet ser veldig bra ut nå, det eneste er at refleksjonen 
 - **Rullet ut til testutgaven uten tester** på Jonas' ord («Bare kjør det ut på test med en gang»); `dbg23o` og `monster` grønne etterpå. `sea3d` var rød på skumterskelen ved 8 m/s: det var testen, ikke sjøen. Toppene er der 0,09 % av sjøen, ute i halen der terskelen fra ett kast av flisene spriker (enkeltavlesninger 0,3–2,2 ganger Monahan på bygget før 5.20v, 0,5–1,4 etter). Sjekken leser nå tre ganger med 1,5 s mellom; fire slike målinger ga 0,45–0,57 % mot Monahans 0,46 %. Hele `sea3d` er ikke kjørt om igjen etter det (en time).
 - **Usikkert:** om 1,5 er riktig tall på nettbrettet (målt under SwiftShader i 800×500), og om stripa er blitt for utvasket. Jonas ser.
 
+## 5.20x Hele sjøen ligger fast i verden: nærfeltet av som standard (13.11.2026, Jonas' to videoer)
+
+Jonas: «Det virker som båten går over vannet i en fart forover, mens skummet bakover går mye fortere. Det samsvarer liksom ikke.» Etter å ha sett `#nf0`: «Ja, det ser riktig ut!» og «La havet også ligge fast i verden … Men havet må fortsatt ikke gå i 6x … Båten skal gå i 6x over havet.» Dette snur valget fra 18.10.2026 (5.20b) og 09.11.2026 (5.20j).
+
+- **Hva:** `NF.on` i `view3d/14-sea.js` er av som standard (`#nf1` slår nærfeltet på igjen til sammenligning). Da er `NF.R` 0: ingen bølge, flis, krusning eller skumtopp flyttes med båten. Bølgene går i ekte tid, og båten krysser dem i spillets fart, som kjølvannet alltid har ligget.
+- **Skroget (`hullSea` i `view3d/16-motion.js`):** den korte sjøen gikk rett inn i oppdriften fordi den fulgte båten. Nå møter hun også den seks ganger for ofte, så den jevnes ut sammen med de lange bølgene og dønningen (`tf`, inntil 0,75 s i fart). Ellers ville hun hamret i krappsjøen og slagene (F7) blitt talt for ofte.
+- **Det som følger av seg selv:** den private sjøen og glidingen tilbake til den felles (B4) har ingenting å gli fra; alle har samme sjø også i fart. Skumtoppenes haler (5.20l) ligger i samme ramme som bølgene uansett.
+- **Sett av Gemini** (ett kall per klipp, 15 bilder/s). Før: bare kjølvannet gikk fort, 5–6 ganger fortere enn sjøen ved siden av, som et mønster på et samlebånd, med en skjærlinje langs kantene. Etter (`#nf0`): kjølvannet og sjøen går bakover i samme fart (rundt 1,5 båtlengder i sekundet), skjærlinja er borte, båten beveger seg rolig uten risting, ingen striper eller sømmer. Den mener sjøen går for fort forbi skroget for en slik båt; det er valget Jonas har tatt.
+- **Geminis andre funn, ikke rettet:** baugskummet kommer i støt som flate flak og blir borte imellom; små runde skumdotter popper inn bak hekken og ute på sjøen; kjølvannet er en rett, jevnbred stripe som ikke sprer seg, og i det første klippet ble det plutselig mye lengre.
+- **Ikke gjort:** koden for nærfeltet står (`nfStep`, `uNFp`, `nfShift`), så `#nf1` virker. Testene som måler nærfeltet (`fellessjo` sjekk 3, `monster` sjekk 4, `hull3d`) legger forskyvningen inn selv eller må kjøres med `#nf1`.
+
 ## 5.20k Strømmen på bølgene (Fysikk 4, F8b, 11.11.2026)
 
 Jonas 27.10.2026 («5a», strøm som egen fase). Kjernens del står i «F8b» under 5.62 i `fysikk-og-styring.md`; her er det som tegnes.

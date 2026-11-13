@@ -2899,12 +2899,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1636 linjer)
+## `src/js/ui/phone/07-patch.js` (1637 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1624 `patch()`
+  - 1625 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4457,7 +4457,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 596 `mastTop(G)`
   - 600 `updateFlag(t, appW)`
 
-## `src/js/view3d/14-sea.js` (724 linjer)
+## `src/js/view3d/14-sea.js` (726 linjer)
 
 ---------- sea ----------
 
@@ -4471,51 +4471,51 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 76 `waveDTStep(dt)`
   - 82 `updateWaves(dt, H)`
 - **164** the near field: the short sea rides with the boat
-  - 173 `nfStep()`
-  - 215 `nfShift(ex, ez)`
-- **225** the boat's own waves (the uniforms of WAKE_GLSL)
-  - 232 `wakeTrack(x, z, fx, fz, ds)`
-  - 251 `wakeTU(u, ox, oz)`
-  - 252 `updateWake()`
-  - 278 `wakeHFast(x, z)`
-- **291** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 305 `foamFree()`
-  - 306 `foamInit()`
-  - 324 `wavePh()`
-  - 334 `foamStep(dt, t)`
-  - 402 `foamSplash(Dx, Dz)`
-  - 423 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 463 `foamBind(u, t)`
-  - 480 `grpAt(i, c, x, z, t)`
-- **489** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 498 `brvE(x, z)`
-  - 499 `brvStep()`
-  - 517 `brvSet(u)`
-- **549** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 564 `shoalPrep(J)`
-  - 565 `shoalCell(J, k, land, dd)`
-  - 569 `shoalSweep(J, end)`
-  - 583 `shoalPut(J)`
-  - 589 `shTex(u, v, out)`
-  - 596 `shoalAt(x, z)`
-  - 610 `shW(c, SH, out)`
-  - 616 `surfK(h)`
-  - 618 `surfStep(t)`
-  - 624 `shoalBind(u, t)`
-- **632** the sea state over the near terrain and the whole map
-  - 639 `ssLevel(n, unit)`
-  - 641 `ssRect(L)`
-  - 642 `ssWork(L, until)`
-  - 665 `ssStep(rdt)`
-  - 667 `ssBlend(L)`
-  - 669 `ssTex(L, x, z, out)`
-  - 676 `ssAt(x, z)`
-  - 686 `seaQ(S, ren)`
-  - 689 `seaDisp(x, z, t, S, fade, SH)`
-  - 713 `seaFade(x, z)`
-  - 714 `seaH(x, z, t)`
-  - 720 `seaHFast(x, z, t)`
-  - 722 `shoalHere(x, z)`
+  - 175 `nfStep()`
+  - 217 `nfShift(ex, ez)`
+- **227** the boat's own waves (the uniforms of WAKE_GLSL)
+  - 234 `wakeTrack(x, z, fx, fz, ds)`
+  - 253 `wakeTU(u, ox, oz)`
+  - 254 `updateWake()`
+  - 280 `wakeHFast(x, z)`
+- **293** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 307 `foamFree()`
+  - 308 `foamInit()`
+  - 326 `wavePh()`
+  - 336 `foamStep(dt, t)`
+  - 404 `foamSplash(Dx, Dz)`
+  - 425 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 465 `foamBind(u, t)`
+  - 482 `grpAt(i, c, x, z, t)`
+- **491** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 500 `brvE(x, z)`
+  - 501 `brvStep()`
+  - 519 `brvSet(u)`
+- **551** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 566 `shoalPrep(J)`
+  - 567 `shoalCell(J, k, land, dd)`
+  - 571 `shoalSweep(J, end)`
+  - 585 `shoalPut(J)`
+  - 591 `shTex(u, v, out)`
+  - 598 `shoalAt(x, z)`
+  - 612 `shW(c, SH, out)`
+  - 618 `surfK(h)`
+  - 620 `surfStep(t)`
+  - 626 `shoalBind(u, t)`
+- **634** the sea state over the near terrain and the whole map
+  - 641 `ssLevel(n, unit)`
+  - 643 `ssRect(L)`
+  - 644 `ssWork(L, until)`
+  - 667 `ssStep(rdt)`
+  - 669 `ssBlend(L)`
+  - 671 `ssTex(L, x, z, out)`
+  - 678 `ssAt(x, z)`
+  - 688 `seaQ(S, ren)`
+  - 691 `seaDisp(x, z, t, S, fade, SH)`
+  - 715 `seaFade(x, z)`
+  - 716 `seaH(x, z, t)`
+  - 722 `seaHFast(x, z, t)`
+  - 724 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (271 linjer)
 
