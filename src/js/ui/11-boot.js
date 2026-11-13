@@ -269,7 +269,8 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
       'The aluminium skiff can now only be bought at the yard. You have Father’s old wooden boat instead' + (back ? ', and ' + kr(back) + ' back for gear that does not fit her' : '') + '.');
   } }
 { const fixW = w => { if (w && w.port){ const q = portById(w.port); if (q){ w.x = q.p.x; w.y = q.p.y; } } };
-  if (S.boat.status === 'port'){ const q = portById(S.boat.port); S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
+  // (a harbour that is no longer there, a place moved before its id was kept, 13.11.2026: the nearest one, as for a boat on land)
+  if (S.boat.status === 'port'){ let q = portById(S.boat.port); if (!q){ q = nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p); S.boat.port = q.id; } S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
   (S.draft || []).forEach(fixW); if (S.plan) S.plan.wps.forEach(fixW); S.trail.forEach(fixW);
   // real coastline: anything that now sits on land is brought back to a harbour
   if ((S.draft || []).some(w => isLand(w))) S.draft = [];
