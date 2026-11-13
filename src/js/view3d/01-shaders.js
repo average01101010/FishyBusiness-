@@ -65,6 +65,16 @@
     return fs.slice(0, i) + 'vec3 sunC=uSunCol*' + (cloudOnly ? 'cloudV(vW)' : 'sunV(vW)') + ';' + fs.slice(i).replace(/\buSunCol\b/g, 'sunC'); };
   const LIT_VS = 'attribute vec3 aPos;attribute vec3 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vC;' +
     'void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vC=aCol;gl_Position=uVP*w;}';
+  // The model program's vertex shader with a skeleton (Folk 2, FB6, steg 124): the new people's figure is one mesh in its rest pose,
+  // and each corner is bent by its four bones (aJ, aW) from the palette uB (figpose.js figGL: three vec4 a bone) before the model
+  // matrix. The fragment shader is the model program's own (LITN_FS, 12-skiff.js), so a figure is lit as everything else on deck;
+  // vP and vNm (the wear's coordinates) are the bent point and normal. nb is how many bones a draw call carries: all 58 where the
+  // device has the vertex uniform vectors for them (174 and the two matrices; WebGL 2 promises 256), else as many as fit (37 with
+  // WebGL 1's least, 128), and the figure is drawn in two or three calls (vessel3d.js figDraws). Not drawn by the 3D view yet (FB7):
+  // G3._debug.progs compiles it on both contexts (f1test), and the wardrobe draws with the same figGL.
+  const figNB = () => figPalette(gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS), 16);
+  const LITN_SKIN_VS = nb => figGL(nb) + 'attribute vec3 aPos;attribute vec3 aNor;attribute vec4 aCol;uniform mat4 uVP;uniform mat4 uM;varying vec3 vW;varying vec3 vN;varying vec4 vC;varying vec3 vP;varying vec3 vNm;' +
+    'void main(){vec3 p=figP(aPos);vec3 n=figN(aNor);vec4 w=uM*vec4(p,1.0);vW=w.xyz;vN=(uM*vec4(n,0.0)).xyz;vC=aCol;vP=p;vNm=n;gl_Position=uVP*w;}';
   const LIT_FS = SUNV('#extension GL_OES_standard_derivatives : enable\nprecision highp float;' +
     'uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform float uEmis;uniform vec4 uHole;uniform vec4 uOver;uniform vec2 uWet;varying vec3 vW;varying vec3 vC;' + PLG + AIR +
     'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec3 n=normalize(cross(dFdx(vW),dFdy(vW)));if(dot(n,vW)>0.0)n=-n;float dif=max(dot(n,uSun),0.0);' +
