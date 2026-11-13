@@ -120,7 +120,7 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 
 ## Valgene
 
-**V1. Hvor langt?**
+**V1. Hvor langt?** **Delvis besvart 13.11.2026: «Kjør på med FB5 i en ny økt».** Del 2 er i gang; del 3 (opptak) avgjøres ved stopp-punktene.
 - **A (anbefalt): hele veien til del 3, med stopp-punktene** etter FB6, FB8 og FB9. Hver del står på egne bein, så det koster ingenting å stoppe.
 - B: bare del 1 (FB0–FB4). Dagens figur, riktig bevegelse. Minst arbeid, og skjøtene i skuldre og albuer blir stående.
 - C: del 1 og 2 uten opptak. Ny kropp, all bevegelse håndskrevet.
@@ -188,3 +188,4 @@ Felles for alle: koden utvides bakover-kompatibelt: en gammel kode gir samme fig
 - 13.11.2026 (senere): Jonas sendte tolv bilder av klær og ba om klær etter forholdene. Skrevet inn som FB5e, referansen for klærne og V5.
 - 13.11.2026 (senere): Jonas svarte «V5 A». Åpent: V1, V3, og om FB5e skal komme tidlig på dagens figur.
 - 13.11.2026 (senere): Jonas: «Klær skal vente til etter den nye kroppen er på plass». FB5e (og FB5c og FB5d) kommer etter FB7. Åpent: V1 og V3.
+- 13.11.2026 (senere): Jonas: «Kjør på med FB5 i en ny økt». FB5 lagt i køen som steg 122 med startmeldingen `docs/planer/start/122.md`; går samtidig med steg 120 fordi den ikke rører `src/js/`.
