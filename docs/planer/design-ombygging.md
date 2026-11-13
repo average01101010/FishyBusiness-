@@ -80,6 +80,17 @@ Etter hver fase: `designshots.py` før og etter, `uishots`, og Jonas på nettbre
 - **Valg 2: A.** Telefonen blir en stor flate på nettbrett som beholder telefonens ramme og statuslinje.
 - **Valg 3:** «Dette bestemmer du selv». Økta valgte **A: knappelinja følger stedet som i dag** (utstyrsbutikk, mottak og verft er tre steder, `docs/handelssteder.md`). Snus ved å bygge Geminis fem faste i D4; ingenting i D1–D3 låser det.
 
+## D0: skissene (13.11.2026)
+
+Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artifact/3fHdvNBptZ29gwPwERw3ZC. Tre skjermer i to retninger, over ekte skjermbilder fra spillet og med de malte bildene:
+
+- **Retning A «Lys kai»:** lyse flater som i dag, ryddet; marine topplinje, magenta bare på kjøp.
+- **Retning B «Styrhus»:** mørkt glass som HUD-en, så menyen hører til 3D-bildet.
+- **Skjermene:** utstyrsbutikken i liggende (kategoriskinne til venstre, to spalter med varer, varen først), telefonen i nettbrettstørrelse (appene i tre grupper og det viktigste nå ved siden av), Om bord i stående (ark på 58 % så båten synes, fire faner på én linje, én linje per redskap med stand).
+- **Ikke sett av økta i en nettleser:** lerretet tegner skissene selv, og økta har ikke åpnet siden. Tallene i skissene er eksempler (standen på redskapen, avstanden til Botnhamn), ikke spilltilstand. Appikonene er bokstaver som plassholdere for spillets egne ikoner.
+
+Jonas velger retning (A, B eller en blanding per skjerm); så bygges D1.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
