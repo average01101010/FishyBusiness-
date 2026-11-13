@@ -902,7 +902,7 @@ function crewSim(src){
   const SEATMP = seaState();
   // (those lines at the deck's furthest one way, with the room given; a full sea, so the feet are at their widest)
   // (and a foot put out to brace where one can be, as he would: seaStepOk)
-  const seaTry = (a, P, sr, sf, room) => { SEATMP.y = null; SEATMP.gOn = SEATMP.stOn = false; return seaLines(P, seaLegs(SEATMP, {sr, sf, y:0, hs:9, room, stepOk:(dr, da) => seaStepOk(a, dr, da)}), sr, sf); };
+  const seaTry = (a, P, sr, sf, room) => { SEATMP.y = null; SEATMP.gOn = SEATMP.stOn = false; SEATMP.st = SEATMP.g = 0; return seaLines(P, seaLegs(SEATMP, {sr, sf, y:0, hs:9, room, stepOk:(dr, da) => seaStepOk(a, dr, da)}), sr, sf); };
   const SEAWAYS = t => [[t, 0], [-t, 0], [0, t], [0, -t], [t * 0.7, t * 0.7], [-t * 0.7, t * 0.7], [t * 0.7, -t * 0.7], [-t * 0.7, -t * 0.7]];
   function seaRoom(a){
     if (a.mode !== 'at') return SEAWALK; const P = seaAt(a), ck = ST.type + '|' + (ST.kitSig || '') + '|' + P.key; if (a.srK === ck) return a.srV;
@@ -1038,7 +1038,8 @@ const SJOBEIN = {
   CROUCH:0.03,    // m the hips come down in a full sea (the knees ready)
   CROUCHMAX:0.04, // m, the most: in a full sea, or as far as the knees have had to take up of the heave lately
   FZ:0.9, ZT:0.6,     // the torso's spring: its own frequency (Hz) and its damping (of critical)
-  HZ:0.6,         // Hz: the knees take up the part of the heave that is faster than this (a slow swell lifts all of him)
+  HEAVE:0.5,      // the share of the deck's way up and down the knees take up, while the legs reach (less in a big sea: as much as they reach)
+  HMEAN:8,        // s: the deck's height is taken about its mean over this long
   HIPUP:0.03, HIPDN:0.11,   // m the hips can rise over and sink under their height standing (the legs straight, the knees deep)
   GRAB:0.14, FREE:0.09, HOLD:1.5, GRABT:0.35, REACH:0.78,   // rad of tilt a free hand takes the rail at and lets go under, s it holds on after, s the hand takes, m it reaches from the shoulder
   CLIP:0.262,     // rad (15°): the roll the room for the body is measured for (deckcrew seaRoom; past it a shoulder may touch what he stands by)
@@ -1049,7 +1050,7 @@ const SJOBEIN = {
 };
 const SEAROOM = {r:[1, 1], f:[1, 1], w:[1, 1], nostep:false};   // the room to either side ([left, right]) and fore and aft ([aft, ahead]), for each foot out ([left, right]), and no room for the bracing step
 // one person's sea legs from frame to frame (the springs, the hand on the rail, the foot put out), and what seaLegs last gave (o)
-function seaState(){ return {qr:0, vr:0, qf:0, vf:0, hy:0, y:null, k:0, env:0, envH:0, cr:0, rm:[1, 1, 1, 1, 1, 1], g:0, gOn:false, gT:0, gh:0, st:0, stOn:false, stT:0, stR:0, stF:0, stFoot:1,
+function seaState(){ return {qr:0, vr:0, qf:0, vf:0, hy:0, y:null, k:0, env:0, envH:0, envP:0, cr:0, rm:[1, 1, 1, 1, 1, 1], g:0, gOn:false, gT:0, gh:0, st:0, stOn:false, stT:0, stR:0, stF:0, stFoot:1,
   o:{sr:0, sf:0, ang:0, k:0, fr:[-0.12, 0.12], fa:[0, 0], fy:[0, 0], lift:[0, 0], kf:[0.07, 0.07], kneeDeg:[0, 0], hipR:0, hipF:0, hipY:0, pelv:0, sqR:0, sqF:0, sqU:1, leanR:0, leanF:0, grab:0, gh:0, step:0, stFoot:1}}; }
 // how much further forward a knee goes when its leg, dref long from hip to ankle before, is dnow long (the thigh and the shin keep
 // their length, so a shorter leg is a knee more bent)
@@ -1073,14 +1074,14 @@ function seaKnee(dref, dnow){ const L2 = SJOBEIN.SEG * SJOBEIN.SEG, a = dref / 2
 function seaLegs(s, inp){
   const C = SJOBEIN, o = s.o, sr = inp.sr || 0, sf = inp.sf || 0, y = inp.y || 0, room = inp.room || SEAROOM, walk = !!inp.walk, dt = inp.dt;
   const tilt = Math.hypot(sr, sf), ang = Math.atan(tilt), snap = s.y === null || !(dt >= 0) || dt > 0.5, kT0 = Math.min(1, Math.max(0, (inp.hs || 0) / C.HSFULL));
-  if (snap){ s.qr = sr; s.qf = sf; s.vr = s.vf = 0; s.hy = y; s.env = ang; s.envH = 0; s.k = Math.max(kT0, Math.min(1, ang / C.ROLLFULL)); }
+  if (snap){ s.qr = sr; s.qf = sf; s.vr = s.vf = 0; s.hy = y; s.env = ang; s.envH = s.envP = 0; s.k = Math.max(kT0, Math.min(1, ang / C.ROLLFULL)); }
   else {
     const n = Math.max(1, Math.ceil(dt / 0.02)), h = dt / n, wn = 2 * Math.PI * C.FZ;
     for (let i = 0; i < n; i++){
       s.vr += (wn * wn * (sr - s.qr) - 2 * C.ZT * wn * s.vr) * h; s.qr += s.vr * h;
       s.vf += (wn * wn * (sf - s.qf) - 2 * C.ZT * wn * s.vf) * h; s.qf += s.vf * h;
     }
-    s.hy += (y - s.hy) * (1 - Math.exp(-dt * 2 * Math.PI * C.HZ));
+    s.hy += (y - s.hy) * (1 - Math.exp(-dt / C.HMEAN));
     s.env = Math.max(ang, s.env * Math.exp(-dt / 20));
     s.k += (Math.max(kT0, Math.min(1, s.env / C.ROLLFULL)) - s.k) * (1 - Math.exp(-dt / 3)); }
   s.y = y;
@@ -1094,18 +1095,20 @@ function seaLegs(s, inp){
   let hipR = uqR * lim(C.HIP * s.qr, C.HIPMAX), hipF = uqF * lim(C.HIP * C.HIPF * s.qf, C.HIPMAX * C.HIPF);
   // (the way from the feet to the hips, a unit: plumb with all the room, along the deck's normal with none)
   const qR = -(1 - uaR) * sr, qF = -(1 - uaF) * sf, ql = Math.hypot(qR, 1, qF), sqR = qR / ql, sqF = qF / ql, sqU = 1 / ql;
-  // the heave: the hips follow the deck's height smoothed (s.hy), so the fast part of its way up and down is taken up in the knees,
-  // softly as far as the legs go from where he stands; he stands lower the more there has been to take up
-  const off = snap ? 0 : s.hy - y; s.envH = snap ? 0 : Math.max(Math.abs(off), s.envH * Math.exp(-dt / 10));
-  const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
-  const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), hipY = -cr + A * Math.tanh(off / A);
+  // the heave: the knees give against the deck's way up and down about its mean (s.hy), by a share of it: HEAVE while the legs
+  // reach that far, less in a big sea (the share of the heave lately, s.envH, that they do reach), so the hips move less than the
+  // deck and never faster than the legs go; he stands lower the more there is to take up
+  const dy = snap ? 0 : y - s.hy, pk = Math.max(Math.abs(dy), s.envP * Math.exp(-(dt || 0) / 15)); s.envP = snap ? 0 : pk; s.envH = snap ? 0 : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
+  const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
+  const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, s.envH)), hipY = -cr - A * Math.tanh(beta * dy / A);
   // the hand to the rail, and the foot put out down the slope
   const step = (on, v, t) => snap || !(t > 0) ? (on ? 1 : 0) : on ? Math.min(1, v + dt / t) : Math.max(0, v - dt / t), rl = !walk && inp.rail ? inp.rail : null, d0 = dt >= 0 ? Math.min(dt, 5) : 0;   // (after a gap the hand and the foot are where the time gone puts them)
   if (rl && !s.gOn && ang > C.GRAB){ const gh = inp.hand != null ? inp.hand : rl[1] >= 0 ? 0 : 1;   // (a rail to one side is for the hand on that side)
     if (rl[1] * (gh ? -1 : 1) >= 0 && Math.hypot(rl[0], rl[2] - 1.42, (rl[1] || (gh ? -0.2 : 0.2)) - (gh ? -0.21 : 0.21)) < C.REACH){ s.gOn = true; s.gh = gh; s.gT = 0; } }
   else if (s.gOn){ if (!rl) s.gOn = false; else if (ang < C.FREE){ s.gT += d0; if (s.gT > C.HOLD) s.gOn = false; } else s.gT = 0; }
   s.g = step(s.gOn, s.g, C.GRABT);
-  if (!walk && !s.stOn && ang > C.STEP){ const dr = -sr / tilt, da = -sf / tilt;
+  // (a foot on its way back in comes all the way in before it is put out again)
+  if (!walk && !s.stOn && s.st === 0 && ang > C.STEP){ const dr = -sr / tilt, da = -sf / tilt;
     if (!room.nostep && (!inp.stepOk || inp.stepOk(dr, da))){ s.stOn = true; s.stT = 0; s.stR = dr; s.stF = da; s.stFoot = Math.abs(dr) > 0.35 ? (dr > 0 ? 1 : 0) : 1; } }
   else if (s.stOn){ if (walk) s.stOn = false; else if (ang < C.STEPBACK){ s.stT += d0; if (s.stT > C.STEPHOLD) s.stOn = false; } else s.stT = 0; }
   s.st = walk ? 0 : step(s.stOn, s.st, C.STEPT);

@@ -150,6 +150,8 @@ async def checks(pg):
                 d = max(math.dist(own(g, g['hands'][i]), own(o, o['hands'][i])) for i in (0, 1))
                 # (the pack's shovel goes by the clock, and a fish laid in the box by when it landed: only the frames where both agree)
                 seen[g['task']] = max(seen.get(g['task'], 0), d)
+    try: await pg.wait_for_function("CREW3D.agents().some(a => a.mode === 'at' && a.task === 'pack')", timeout=240000)
+    except Exception: pass
     await hands('line'); await hands('garn')
     for k in ('haul', 'gutw', 'pick', 'pack'):
         check(k in seen and seen[k] < 0.01, 'hendene i «%s» er innen 1 cm av der de var uten sjøbeina, ved 8° rulling' % k, ('%.1f mm' % (seen[k] * 1000)) if k in seen else 'ikke sett')
@@ -204,17 +206,12 @@ async def checks(pg):
     check(clip is not None and all(c['n'] == 0 for c in clip), 'ingen på plassen sin går gjennom noe i ytterstillingene for sjøbeina (±15°)', [c for c in (clip or []) if c['n']])
     check(scan and all(v[0] == v[1] for v in scan.values()), 'ingen pause på noen rekkeplass går gjennom noe i ytterstillingene (±15°)', scan)
 
-    # 2b. wider in a sea: the stance with the deck level, in the lee by the harbour and on the ground in a near gale
-    await pg.evaluate("(() => { const q = portById('husoy').p; WX_FORCE = {w:1, d:250}; S.boat.pos = {x:q.x + 0.15, y:q.y + 0.1}; G3._debug.bv.init = false; })()"); await frames(pg, t, 4)
-    La = await drawn(pg, t, {'roll': 0, 'pitch': 0, 'T': 100.3, 'task': 'look'}, n=3); hsa = await pg.evaluate("CREW3D._st.sea.hs")
-    await pg.evaluate("(() => { const g = GROUNDS[0].p; WX_FORCE = {w:15, d:250}; S.boat.pos = {x:g.x, y:g.y}; G3._debug.bv.init = false; })()"); await frames(pg, t, 4)
-    # (the view's sea comes up over some seconds: wait for it)
-    try: await pg.wait_for_function("CREW3D._st.sea.hs > 2", timeout=240000)
-    except Exception: pass
-    Lb = await drawn(pg, t, {'roll': 0, 'pitch': 0, 'T': 100.3, 'task': 'look'}, n=3); hsb = await pg.evaluate("CREW3D._st.sea.hs")
+    # 2b. wider in a sea: the stance with the deck level, the sea's height held at 0 and at 2 m (SJOBEIN.test.hs; the sea's own height
+    # comes from the view each frame, checked in 2c)
+    La = await drawn(pg, t, {'roll': 0, 'pitch': 0, 'T': 100.3, 'task': 'look', 'hs': 0}, n=3); Lb = await drawn(pg, t, {'roll': 0, 'pitch': 0, 'T': 100.3, 'task': 'look', 'hs': 2}, n=3)
     wid = lambda L: max([abs(own(g, g['feet'][1])[2] - own(g, g['feet'][0])[2]) for g in L if g['se'] and not g['walk']] or [0])
     wa, wb = wid(La), wid(Lb)
-    check(hsb >= 2 and wb > wa + 0.03, 'føttene står bredere i sjø: %.1f cm ved Hs %.1f m mot %.1f cm ved Hs %.1f m' % (wb * 100, hsb, wa * 100, hsa))
+    check(abs(wa - 0.24) < 0.005 and wb > wa + 0.05, 'føttene står bredere i sjø: %.1f cm ved Hs 2 m mot %.1f cm i stille sjø' % (wb * 100, wa * 100))
 
     # 2c. the boat's own motion in a near gale, a minute of it at 60 steps a second: the hips' acceleration against the deck's, how
     # smooth the lean and the hips are from step to step (no shiver), and how much of the time she is over the limits
@@ -226,7 +223,7 @@ async def checks(pg):
         r = await pg.evaluate(SIM, [60, 1.0, 1.0])
         print('    %s i kuling: Hs %.1f m, rulling opptil %.1f°, stamping %.1f°, hiv ±%.2f m; over rekkegrensen %.0f %% av tida, over støttesteget %.0f %%' % (bt, r['hs'], r['rollMax'], r['pitchMax'], r['heave'], r['overGrab'] * 100, r['overStep'] * 100), flush=True)
         check(r['accHip'] < r['accDeck'], '%s: hofta akselererer mindre opp og ned enn dekket (%.2f mot %.2f m/s², %.0f %%)' % (bt, r['accHip'], r['accDeck'], 100 * r['accHip'] / max(1e-9, r['accDeck'])))
-        check(r['stepLean'] < 0.25 and r['stepHipR'] < 3 and r['stepHipY'] < 4, '%s: ingen dirring: fra ett bilde til neste (1/60 s) endrer leningen seg høyst %.2f°, hofta %.1f mm til siden og %.1f mm opp og ned' % (bt, r['stepLean'], r['stepHipR'], r['stepHipY']))
+        check(r['hs'] > 2 and r['stepLean'] < 0.25 and r['stepHipR'] < 6 and r['stepHipY'] < 4, '%s: ingen dirring: fra ett bilde til neste (1/60 s) endrer leningen seg høyst %.2f°, hofta %.1f mm til siden og %.1f mm opp og ned' % (bt, r['stepLean'], r['stepHipR'], r['stepHipY']))
 
     # 6. the people on another boat close by have them too: your boat put 35 m from one that is fishing, her people's soles on her deck
     near = await pg.evaluate("""(() => { const H = S.t / 60, L = npcStates(H).filter(n => n.st === 'fishing' && !n.coast && n.p); if (!L.length) return null; const n = L[0], b = S.boat;

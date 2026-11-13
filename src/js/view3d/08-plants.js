@@ -161,7 +161,7 @@
   function seaNow(st, h, y){
     const q = st.sea, n = st.dn, a = q.a, s = a.sl || (a.sl = seaState()), I = SEAIN, now = performance.now() / 1000, c = Math.cos(h), sn = Math.sin(h);
     if (!n || n[1] < 0.3) return null;
-    I.sr = -(n[0] * c + n[2] * sn) / n[1]; I.sf = -(n[0] * sn - n[2] * c) / n[1]; I.y = y; I.hs = (CREW3D._st.sea && CREW3D._st.sea.hs) || 0; I.dt = s.tp == null ? undefined : now - s.tp; s.tp = now;
+    I.sr = -(n[0] * c + n[2] * sn) / n[1]; I.sf = -(n[0] * sn - n[2] * c) / n[1]; I.y = y; I.hs = SJOBEIN.test && SJOBEIN.test.hs != null ? SJOBEIN.test.hs : (CREW3D._st.sea && CREW3D._st.sea.hs) || 0; I.dt = s.tp == null ? undefined : now - s.tp; s.tp = now;
     I.walk = !!st.walk; I.room = q.sim.seaRoom(a) || SEAROOM;
     const g = st.walk || st.put || st.crate || st.ev || st.fx || st.blend < 1 ? undefined : st.task == null ? -1 : SEAGRAB[st.task];
     I.rail = g === undefined ? null : q.sim.seaRail(a); I.hand = g === 1 ? 1 : null; I.stepOk = q.ok;
