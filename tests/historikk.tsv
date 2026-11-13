@@ -3936,3 +3936,7 @@
 2026-11-13 21:30	ccr-d5-telefonen	5665a77+	hudtest	OK	109	lite	samtidig	
 2026-11-13 21:30	ccr-d5-telefonen	5665a77+	roetest	OK	118	lite	samtidig	
 2026-11-13 21:31	ccr-d5-telefonen	5665a77+	tabtest	OK	91	lite	samtidig	
+2026-11-13 22:31	ccr-d5-telefonen	2c02c6b1+	docktest	OK	60	lite	samtidig	
+2026-11-13 22:31	ccr-d5-telefonen	2c02c6b1+	uishots	OK	85	lite	samtidig	
+2026-11-13 22:32	ccr-d5-telefonen	2c02c6b1+	tabtest	OK	107	lite	samtidig	
+2026-11-13 22:32	ccr-d5-telefonen	2c02c6b1+	itemcardtest	OK	26	lite	samtidig	
