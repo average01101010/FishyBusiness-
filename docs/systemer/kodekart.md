@@ -2902,12 +2902,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1654 linjer)
+## `src/js/ui/phone/07-patch.js` (1655 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1642 `patch()`
+  - 1643 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4052,29 +4052,29 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (906 linjer)
+## `src/js/view3d/01-shaders.js` (914 linjer)
 
 ---------- shaders ----------
 
 - **1** shaders
 - **178** the sea by the shore (Fysikk 4, F4, 09.11.2026)
 - **308** the foam map (Fysikk 4, F1): the foam the boat and the sea leave in the water
-- **412** the boat's own foam, when she has way on
-- **420** where a slam and the spray land (F3b): four patches, fixed names
-- **422** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 794 `cloudStep(dt)`
-  - 801 `skyFrame(u, Hh, tn, bv)`
-  - 819 `glsl3(src, fs)`
-  - 832 `progStart(vs, fs, attrs, nm = '?')`
-  - 842 `progEnd(P)`
-  - 852 `program(vs, fs, attrs, nm = '?')`
-  - 854 `progWait(list)`
-  - 860 `programA(vs, fs, attrs, nm)`
-  - 861 `buf(data, target, usage)`
-  - 866 `airSet(u, terr)`
-  - 881 `sunT0()`
-  - 888 `attr(loc, b, size)`
-  - 904 `upload(pos, col, idx)`
+- **420** the boat's own foam, when she has way on
+- **428** where a slam and the spray land (F3b): four patches, fixed names
+- **430** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
+  - 802 `cloudStep(dt)`
+  - 809 `skyFrame(u, Hh, tn, bv)`
+  - 827 `glsl3(src, fs)`
+  - 840 `progStart(vs, fs, attrs, nm = '?')`
+  - 850 `progEnd(P)`
+  - 860 `program(vs, fs, attrs, nm = '?')`
+  - 862 `progWait(list)`
+  - 868 `programA(vs, fs, attrs, nm)`
+  - 869 `buf(data, target, usage)`
+  - 874 `airSet(u, terr)`
+  - 889 `sunT0()`
+  - 896 `attr(loc, b, size)`
+  - 912 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 
@@ -4493,7 +4493,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 627 `peerFlagTex(n)`
   - 639 `drawPeerFlags(kit, VP, t, H)`
 
-## `src/js/view3d/14-sea.js` (726 linjer)
+## `src/js/view3d/14-sea.js` (729 linjer)
 
 ---------- sea ----------
 
@@ -4513,45 +4513,45 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 234 `wakeTrack(x, z, fx, fz, ds)`
   - 253 `wakeTU(u, ox, oz)`
   - 254 `updateWake()`
-  - 280 `wakeHFast(x, z)`
-- **293** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
-  - 307 `foamFree()`
-  - 308 `foamInit()`
-  - 326 `wavePh()`
-  - 336 `foamStep(dt, t)`
-  - 404 `foamSplash(Dx, Dz)`
-  - 425 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
-  - 465 `foamBind(u, t)`
-  - 482 `grpAt(i, c, x, z, t)`
-- **491** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
-  - 500 `brvE(x, z)`
-  - 501 `brvStep()`
-  - 519 `brvSet(u)`
-- **551** the sea by the shore (Fysikk 4, F4, 09.11.2026)
-  - 566 `shoalPrep(J)`
-  - 567 `shoalCell(J, k, land, dd)`
-  - 571 `shoalSweep(J, end)`
-  - 585 `shoalPut(J)`
-  - 591 `shTex(u, v, out)`
-  - 598 `shoalAt(x, z)`
-  - 612 `shW(c, SH, out)`
-  - 618 `surfK(h)`
-  - 620 `surfStep(t)`
-  - 626 `shoalBind(u, t)`
-- **634** the sea state over the near terrain and the whole map
-  - 641 `ssLevel(n, unit)`
-  - 643 `ssRect(L)`
-  - 644 `ssWork(L, until)`
-  - 667 `ssStep(rdt)`
-  - 669 `ssBlend(L)`
-  - 671 `ssTex(L, x, z, out)`
-  - 678 `ssAt(x, z)`
-  - 688 `seaQ(S, ren)`
-  - 691 `seaDisp(x, z, t, S, fade, SH)`
-  - 715 `seaFade(x, z)`
-  - 716 `seaH(x, z, t)`
-  - 722 `seaHFast(x, z, t)`
-  - 724 `shoalHere(x, z)`
+  - 283 `wakeHFast(x, z)`
+- **296** the foam map: the foam the boat and the sea leave in the water (Fysikk 4, F1, 27.10.2026)
+  - 310 `foamFree()`
+  - 311 `foamInit()`
+  - 329 `wavePh()`
+  - 339 `foamStep(dt, t)`
+  - 407 `foamSplash(Dx, Dz)`
+  - 428 `foamNPC(qx, qz, Dx, Dz, gx, gz)`
+  - 468 `foamBind(u, t)`
+  - 485 `grpAt(i, c, x, z, t)`
+- **494** The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  - 503 `brvE(x, z)`
+  - 504 `brvStep()`
+  - 522 `brvSet(u)`
+- **554** the sea by the shore (Fysikk 4, F4, 09.11.2026)
+  - 569 `shoalPrep(J)`
+  - 570 `shoalCell(J, k, land, dd)`
+  - 574 `shoalSweep(J, end)`
+  - 588 `shoalPut(J)`
+  - 594 `shTex(u, v, out)`
+  - 601 `shoalAt(x, z)`
+  - 615 `shW(c, SH, out)`
+  - 621 `surfK(h)`
+  - 623 `surfStep(t)`
+  - 629 `shoalBind(u, t)`
+- **637** the sea state over the near terrain and the whole map
+  - 644 `ssLevel(n, unit)`
+  - 646 `ssRect(L)`
+  - 647 `ssWork(L, until)`
+  - 670 `ssStep(rdt)`
+  - 672 `ssBlend(L)`
+  - 674 `ssTex(L, x, z, out)`
+  - 681 `ssAt(x, z)`
+  - 691 `seaQ(S, ren)`
+  - 694 `seaDisp(x, z, t, S, fade, SH)`
+  - 718 `seaFade(x, z)`
+  - 719 `seaH(x, z, t)`
+  - 725 `seaHFast(x, z, t)`
+  - 727 `shoalHere(x, z)`
 
 ## `src/js/view3d/14b-fft.js` (271 linjer)
 
@@ -4881,7 +4881,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (765 linjer)
+## `src/js/view3d/24-cinema.js` (770 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4913,7 +4913,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 578 `scupperWater(VP, eye, BM, dt, t, col)`
   - 612 `splashFoam(x, z, r, a)`
   - 614 `drawEffects(VP, eye, BM, dt, t)`
-  - 747 `updateLabels(VP, eye, W, Hh)`
+  - 752 `updateLabels(VP, eye, W, Hh)`
 
 ## `src/js/view3d/25-controls.js` (273 linjer)
 
