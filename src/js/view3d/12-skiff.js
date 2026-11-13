@@ -61,6 +61,7 @@
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
   const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
     'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';
+  let PRGS = null, FIGNB = 58, NVP = null, NDIRTY = true;   // (the skinned model program and how many bones a draw call of it carries, FB7)
   let PRGN = null, PRGX = null, SK = null, PRGW = null, WKB = null, CHARM_AT = [0.2, 1.6, 0.1];
   const fishOf = sp => SK.fishM[sp] || SK.fishM.torsk;      // a species' fish mesh (tools/fish), 1 m long
   // the places on the starter boat that the live parts and the people use, in its frame; a detailed model (GLB) brings its own
@@ -88,7 +89,7 @@
   const upA = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
   const wkMeshes = kit => { const g = n => n ? upA(wkPart(n, kit)) : null, K = wkKitOf(kit);
-    return {torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
+    return {_kit:kit, torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
   // the life jacket on your own boat's people (Ø11.5, Jonas 28.10.2026: «alltid på dekk til sjøs, ikke i havn eller på kaia»): at sea, on
   // deck; the one at the wheel only where the helm is out on deck (an open boat, the hard top), not inside a wheelhouse
   const ownAtSea = () => { const b = S.boat; return !!b && b.status !== 'port' && !b.land; };
@@ -100,11 +101,38 @@
     const key = wkKitOf(look).key; let m = LOOKM.get(key);
     if (m){ LOOKM.delete(key); LOOKM.set(key, m); return m; }
     m = wkMeshes(look); LOOKM.set(key, m);
-    if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
+    if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); figFree(o); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
     return m;
   }
+  // ---- the new people (Folk 2, FB7, steg 125): a look's whole figure as one skinned mesh (vessel3d.js figMesh), or two or three
+  // where the device's vertex uniforms do not hold all 58 bones (figDraws). Made the first time a look is drawn and kept on the
+  // look's meshes (K.fig), so it lives and is freed with them (LOOKM). Only behind #folk2 (PRGS is null without it).
+  const FIGST = {figs:0, calls:0, tris:0, fr:0, ms:0};   // (the tests and #prof: figures and draw calls since figStat(true), and the ms of the last frames' figures)
+  const FIGGR = {};
+  function figGrips(ex, sex){ if (FIGGR[sex]) return FIGGR[sex]; const o = {}; for (const g in ex.grips[sex]) o[g] = {R:figGripAt(ex, sex, g, 'R'), L:figGripAt(ex, sex, g, 'L')}; return FIGGR[sex] = o; }
+  function figOf(K){
+    if (K.fig !== undefined) return K.fig; if (!PRGS || !glbHas('folk2')) return K.fig = null;
+    const M = figMesh(K._kit, {}); if (!M || !M.cnt) return K.fig = null; const sk = figSkelOf(M.sex), ex = glbLoad('folk2').ex;
+    return K.fig = {sex:M.sex, sk, ex, tris:M.cnt / 3, len:figLens(sk), H0:[figHandRest(ex, M.sex, 'R'), figHandRest(ex, M.sex, 'L')], grip:figGrips(ex, M.sex),
+      draws:figDraws(M, FIGNB).map(d => ({pb:buf(d.p), nb:buf(d.n), cb:buf(d.c), jb:buf(d.j), wb:buf(d.w), n:d.cnt, bones:d.bones}))};
+  }
+  function figFree(K){ const f = K && K.fig; if (!f) return; for (const d of f.draws) for (const b of [d.pb, d.nb, d.cb, d.jb, d.wb]) gl.deleteBuffer(b); K.fig = undefined; }
+  // a figure drawn: Mb the bones' matrices (figpose.js figPose), M its place (the figure's frame to the eye's). The skinned program
+  // takes the frame's light from the last nSetup, and the model program is the one in use again after.
+  function drawFig(f, Mb, M){
+    const t0 = performance.now(), u = PRGS.u; gl.useProgram(PRGS.p); if (NDIRTY){ nUni(u, NVP); NDIRTY = false; }
+    gl.uniformMatrix4fv(u.uM, false, M);
+    for (const d of f.draws){ gl.uniform4fv(u.uB, figPal(Mb, d.bones)); attr(0, d.pb, 3); attr(1, d.nb, 3); attr(2, d.cb, 4);
+      gl.bindBuffer(gl.ARRAY_BUFFER, d.jb); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 4, gl.UNSIGNED_BYTE, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, d.wb); gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 4, gl.UNSIGNED_BYTE, true, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, d.n); FIGST.calls++; }
+    gl.disableVertexAttribArray(3); gl.disableVertexAttribArray(4); gl.useProgram(PRGN.p); FIGST.figs++; FIGST.tris += f.tris; FIGST.ms += performance.now() - t0;
+  }
   function nSetup(VP){
-    gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
+    gl.useProgram(PRGN.p); nUni(PRGN.u, VP); NVP = VP; NDIRTY = true;
+  }
+  function nUni(u, VP){
+    plSet(u);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0); if (u.uAge){ gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); } if (u.uZen){ gl.uniform3fv(u.uZen, env.zen || env.fog); gl.uniform3fv(u.uHor, env.hor || env.fog); } if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0);
   }
   // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none

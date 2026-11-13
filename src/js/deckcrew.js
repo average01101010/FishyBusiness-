@@ -1163,6 +1163,7 @@ function seaKnee(dref, dnow){ const L2 = SJOBEIN.SEG * SJOBEIN.SEG, a = dref / 2
 const LEMMER = {
   on:typeof location !== 'undefined' && /folk2/.test(String(location.hash || '')) && !/ik0/.test(String(location.hash || '')),
   STD:{ua:0.32, fa:0.265, th:0.426, sn:0.426},   // m: upper arm, forearm (to the wrist), thigh, shin (to the ankle)
+  LEN:{},         // the new people's lengths by body ('m', 'f'), read from the skeleton the first time (limbLen)
   HAND:0.085,     // m from the wrist to where a hand holds, for the one-piece glove far off (near, each grip has its own point)
   REACH:0.995,    // the share of its full length a limb is straightened to at most (a joint never locks dead straight)
   BEND:0.6,       // rad (34°): the most the back bends further over to let a hand reach
@@ -1184,7 +1185,13 @@ const LEMMER = {
   log:null        // the tests: an array drawWorker writes the joints it drew to (tests/lemmer.py)
 };
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
-function limbLen(c){ return LEMMER.STD; }
+// (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
+// c.sex; the man's when nothing says), and the shoulders' place over the hips is the skeleton's too; figpose.js figLens)
+function limbLen(c){
+  if (!LEMMER.on || typeof figSkelOf !== 'function' || typeof glbHas !== 'function' || !glbHas('folk2')) return LEMMER.STD;
+  const s = c === 'f' || (c && c.sex === 'f') ? 'f' : 'm'; let L = LEMMER.LEN[s];
+  if (!L){ const sk = figSkelOf(s); if (!sk) return LEMMER.STD; const q = figLens(sk); L = LEMMER.LEN[s] = {ua:q.ua, fa:q.fa, th:q.th, sn:q.sn}; if (s === 'm') LEMMER.SH = [q.sh[0], q.sh[1]]; }
+  return L; }
 // a limb of two parts L1 and L2 from its root Rt towards a target Tg, the joint between them on the side pole points to: where the
 // joint and the end are. The end is the target when the limb reaches it, else on the way to it at its reach (over: m short of it), or,
 // a target nearer the root than the two parts fold to, that near (near: m past it). o is filled and returned ({j, e, over, near,

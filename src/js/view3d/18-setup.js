@@ -149,8 +149,11 @@
       // the programs that have no fallback, started together (read after the sea, below, so the driver compiles them beside it)
       const PG = [progStart(LIT_VS, LIT_FS, ['aPos', 'aCol'], 'lit'), progStart(TER_VS, terFS(0), ['aPos', 'aCol', 'aNor', 'aShd', 'aMat', 'aCov'], 'terreng'), progStart(LITN_VS, LITN_FS, ['aPos', 'aNor', 'aCol'], 'modell'),
         progStart(TEX_VS, TEX_FS, ['aPos', 'aUV'], 'tekstur'), progStart(WK_VS, WK_FS, ['aPos', 'aW', 'aS'], 'kjølvann'), progStart(SKY_VS, SKY_FS, ['aP'], 'himmel'), progStart(PT_VS, PT_FS, ['aPos', 'aA'], 'punkter')];
+      // (the new people's program, FB7: the model program with the bones in its vertex shader, only behind #folk2; #folk2pal=37 in the
+      // address forces the small palette, two draw calls a figure)
+      const PGF = FOLK2 ? progStart(LITN_SKIN_VS(FIGNB = Math.min(figNB(), +(/folk2pal=(\d+)/.exec(location.hash) || [0, 99])[1] || 99)), LITN_FS, ['aPos', 'aNor', 'aCol', 'aJ', 'aW'], 'modellbein') : null;
       // without the extension each is read at once, in the order they had (a failing one stops the start before the sea, as before)
-      if (!KPSC) [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd);
+      if (!KPSC){ [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd); if (PGF) PRGS = progEnd(PGF); }
       WKB = {p:new Float32Array(9000 * 3), w:new Float32Array(9000 * 4), s:new Float32Array(9000), pb:buf(new Float32Array(9000 * 3), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), wb:buf(new Float32Array(9000 * 4), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), sb:buf(new Float32Array(9000), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW)}; // the waves read the sea-state texture in the vertex shader where the GPU can (#novtf in the address tries without)
       SST_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 2 && !/novtf/.test(location.hash); SHT_VS = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) >= 3;   // (the shoal texture, F4: a third unit, else NOSHT and the sea state keeps its two)
       // The sea is the heaviest program, and a phone's driver may refuse to link it with no word why (Adreno 642L, 05.10.2026: «sjø link:
@@ -197,7 +200,7 @@
       try { PSF = PS.basic || PS.far ? PS : await programA('#define NOSST\n' + (PS.mid ? SEA_VS_LITE : SEA_VS), SEAF('#define FAR\n' + SEA_FS), ['aXZ'], 'sjø langt'); }
       catch (e){ if (gl.isContextLost()) throw e; seaWhy.push(e.message); PSF = PS; }
       await glSettle(); seaTryMark(false); goneSet(SEA_GONE, 0); if (seaMidTry){ seaMidMark(false); goneSet(SEA_MIDGONE, 0); }   // the sea came through and the context is still there
-      if (KPSC){ await progWait(PG); [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd); }
+      if (KPSC){ await progWait(PGF ? PG.concat([PGF]) : PG); [PL, PT, PRGN, PRGX, PRGW, PK, PP] = PG.map(progEnd); if (PGF) PRGS = progEnd(PGF); }
       PTS = [PT, null, null];
       if (seaRe){ seaRe = false; seaReSet('ok'); try { localStorage.removeItem(SEA_KEY); } catch (e){}   // the full sea once more came through: level 0 from now on
         if (typeof cloudErr === 'function') cloudErr('3D full sjø på nytt virket, sjønivå 0 · ' + GPU, 'view3d init', ''); }

@@ -190,6 +190,8 @@
     // the detailed figure (tools/harbour/arbeider.py): the harbour workers in blue coveralls and hard hats, the crew on deck in oilskins
     const lk = P.look || (!P.kit && !P.bare && P.id != null ? lookQuay(P.id, idx) : null);      // the people on a plant's quay each have their own look too (core/09i-look.js lookQuay)
     const K = PM.W && (lk ? lookMesh(lk) : PM.W[P.kit || (P.bare ? 'crew' : 'hw')]);      // P.look: the one who does the work, by his look (the skipper's or a crew member's); P.kit: the old kits
+    // (the new people, FB7: the look's whole figure as one skinned mesh, posed from the joints found below; null without #folk2)
+    const FG = PRGS && K ? figOf(K) : null;
     // how low the work takes him (workLow): dip lowers the hips, the back and the head with the knees going forward, bend tips the back over
     const LB = workLow(st, T, idx), bk = st.blend == null ? 1 : st.blend, sit = LB[2] ? bk : 0, sh = st.seat || 0.5, dip = LB[0] * bk, dy = -dip * 0.42 - sit * (0.94 - sh);
     // (sitting, LB[2]: on a low seat, the thighs out level and the shins down to the deck; the seat is drawn with the props)
@@ -205,7 +207,7 @@
     let hands, seaH = SEAHANDS[st.task] || 0;
     const t = T + idx * 1.7;
     // (near, the hands are drawn in their grips, the pose's points being where they hold: a hanging hand's grip is below its wrist)
-    const HMS = K ? handMeshes() : null, near = !!HMS && Math.hypot(...W(0, 1.2, 0)) < 10;
+    const HMS = K ? handMeshes() : null, near = !!HMS && Math.hypot(...W(0, 1.2, 0)) < 10, GRIP = FG ? FG.grip : HMS ? HMS.grip : null;   // (where each grip holds: the new body's own, extras.grips)
     const ease = u => u * u * (3 - 2 * u), lerp3 = (A, B, u) => [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u], norm3 = v => { const l = Math.hypot(v[0], v[1], v[2]) || 1; return [v[0] / l, v[1] / l, v[2] / l]; };
     switch (st.task){
       case 'hose': hands = [W(0.45, 1.15, 0.12), W(0.3, 1.1, -0.1)]; break;
@@ -426,7 +428,7 @@
     // ---- the legs, the torso, the head and the arms (FB2, steg 123; deckcrew.js LEMMER, ik2, armIk, reachBody, legDrop): the hands
     // and the feet are where the work has them, and the joints are found from them with the limbs' own lengths. IK off («#ik0»): the
     // knee and the elbow at the middle pushed out, the limbs stretched between the points, as before.
-    const IK = LEMMER.on, LL = limbLen(st), back = st.task === 'back' && !st.walk, LEG = [null, null];
+    const IK = LEMMER.on, LL = limbLen(FG ? FG.sex : st), back = st.task === 'back' && !st.walk, LEG = [null, null];
     for (const s of [-1, 1]){ const fi = s < 0 ? 0 : 1;
       // (back to the rail with the legs crossed: the feet a little out, the right one over in front of the left)
       let fa = back ? (s > 0 ? 0.3 : 0.2) : sw * s * 0.28, fr = back ? (s > 0 ? -0.05 : -0.13) : s * 0.12, fup = 0.08 + (back ? 0 : Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0)), kf = back ? 0.05 : 0.07 + dip * 0.34;
@@ -450,7 +452,8 @@
     for (const g of LEG){ const hip = g.hip, knee = g.knee, foot = g.foot;
       if (LG){ LG.feet.push([foot[0] + eye[0], foot[1] - 0.08 + eye[1], foot[2] + eye[2]]); LG.hips.push([hip[0] + eye[0], hip[1] + eye[1], hip[2] + eye[2]]); LG.kf.push(g.kf); }
       // (on a deck at sea the boot is flat on the deck; its sole is 8 cm under the ankle along the deck's normal)
-      const BT = SE && st.dn ? bootM([foot[0] + st.dn[0] * 0.08, foot[1] - 0.08 + st.dn[1] * 0.08, foot[2] + st.dn[2] * 0.08], h, st.dn) : chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h));
+      const BT = g.BT = SE && st.dn ? bootM([foot[0] + st.dn[0] * 0.08, foot[1] - 0.08 + st.dn[1] * 0.08, foot[2] + st.dn[2] * 0.08], h, st.dn) : chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h));
+      if (FG){ if (!(SE && st.dn)) g.BT = null; continue; }
       if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, BT); continue; }
       drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, BT); }
     const bend = bend0, dyq = dy - drop;   // (and stoop)
@@ -461,7 +464,7 @@
     // glove at the wrist as before.
     const HS = near ? handSpecs(st, F, R, hands) : null, GP = [hands[0], hands[1]], GA = [null, null];
     if (HS && seaG >= 0) HS[seaG] = {g:'flat', n:[0, -1, 0]};   // (the hand on the rail, flat on its top)
-    const vsh = K && K.vest ? VEST_SH : null;   // (the shoulder under the life jacket, vessel3d.js VEST_SH)
+    const vsh = !FG && K && K.vest ? VEST_SH : null;   // (the shoulder under the life jacket, vessel3d.js VEST_SH)
     // the hips' frame (ahead, up and to his right; with the sea's lean) and the torso's in it: a point of the torso [ahead, up, right]
     // from the hips is bent bT over and turned tw (deckcrew.js torsoPt), as the torso's own matrix TM
     const pv = [tc[0], tc[1] - 0.28, tc[2]], HA = [F[0], 0, F[1]], HU = [0, 1, 0], HR = [R[0], 0, R[1]];
@@ -472,7 +475,7 @@
     // (the wrist a hand's grip asks for, with the forearm as it comes from the shoulder s and the elbow el)
     // (the wrist for a hand pointing z: back from the grip's point in the hand's frame Fr; far off, the one-piece glove: a hand's
     // length back along it)
-    const wristFor = (i, z) => { if (!near) return [sub3(hands[i], mul3(z, LEMMER.HAND)), null]; const sp = HS[i], gd = (HMS.grip[sp.g] || HMS.grip.relax)[i ? 'L' : 'R'], Fr = handFrame(z, sp, i ? -1 : 1); return [sub3(hands[i], inFrame(Fr, gd.at)), Fr]; };
+    const wristFor = (i, z) => { if (!near) return [sub3(hands[i], mul3(z, LEMMER.HAND)), null]; const sp = HS[i], gd = (GRIP[sp.g] || GRIP.relax)[i ? 'L' : 'R'], Fr = handFrame(z, sp, i ? -1 : 1); return [sub3(hands[i], inFrame(Fr, gd.at)), Fr]; };
     // (the way a hand points: along the forearm, from the elbow el to the wrist wr. A grip round a handle or flat on something turns
     // the hand square to it, and with the forearm along the handle there is no such way to find in it: then along the line from the
     // shoulder s, as the hand lay before)
@@ -487,8 +490,8 @@
     const XA = wv(TA), XU = wv(TU), XR = wv(TR), toT = q => { const x = q[0] - pv[0], yy = q[1] - pv[1], z = q[2] - pv[2]; return [x * XA[0] + yy * XA[1] + z * XA[2], x * XU[0] + yy * XU[1] + z * XU[2], x * XR[0] + yy * XR[1] + z * XR[2]]; };
     const ofT = l => [pv[0] + XA[0] * l[0] + XU[0] * l[1] + XR[0] * l[2], pv[1] + XA[1] * l[0] + XU[1] * l[1] + XR[1] * l[2], pv[2] + XA[2] * l[0] + XU[2] * l[1] + XR[2] * l[2]];
     // (the torso's mesh: x to his right, y up along the spine, z back)
-    const TM = new Float32Array([XR[0], XR[1], XR[2], 0, XU[0], XU[1], XU[2], 0, -XA[0], -XA[1], -XA[2], 0, pv[0], pv[1], pv[2], 1]); drawN(K ? K.torso : PM.torso, TM);
-    if (K && K.vest) drawN(K.vest, TM);   // the life jacket over the jacket, on deck at sea (vessel3d.js vestKit, Ø11.5)
+    const TM = new Float32Array([XR[0], XR[1], XR[2], 0, XU[0], XU[1], XU[2], 0, -XA[0], -XA[1], -XA[2], 0, pv[0], pv[1], pv[2], 1]); if (!FG) drawN(K ? K.torso : PM.torso, TM);
+    if (!FG && K && K.vest) drawN(K.vest, TM);   // the life jacket over the jacket, on deck at sea (vessel3d.js vestKit, Ø11.5)
     // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
     let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
     if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
@@ -500,10 +503,10 @@
     // (the head goes with the back when it bends further for a hand; it does not turn with the torso)
     let hd = up3(W(bend, 1.6 + dyq, 0)); if (RB && RB.b){ const l = toH(hd), c = Math.cos(RB.b), sn = Math.sin(RB.b); hd = ofH([l[0] * c + l[1] * sn, -l[0] * sn + l[1] * c, l[2]]); }
     const HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
-    if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
+    if (FG){} else if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
     const LQ = LEMMER.log ? {idx, task:st.task || null, walk:!!st.walk, ev:!!(st.ev || st.fx), put:!!st.put, deck:!!st.deck, sea:!!SE, sit:!!sit, near, on:IK, at:[st.x - eye[0], y - eye[1], st.z - eye[2]], h, rail:st.rail || null, b:RB ? RB.b : 0, t:RB ? RB.t : 0, drop, hip:LEG.map(g => g.hip.slice()), knee:LEG.map(g => g.knee.slice()), foot:LEG.map(g => g.foot.slice()), kf:LEG.map(g => g.kf), lo:LEG.map(g => g.over),
       sh:[], el:[], wr:[], elT:[], tg:[hands[0].slice(), hands[1].slice()], gp:[], ao:[0, 0], gl:[0, 0], wrT:[null, null]} : null;
-    const AO = [0, 0];   // (m each hand is short of its point: the arm at its reach, with the body gone after it)
+    const AO = [0, 0], ARM = [null, null];   // (m each hand is short of its point: the arm at its reach, with the body gone after it)
     [0.21, -0.21].forEach((r, i) => { const sd = i ? -1 : 1; let sh, el, wr, Fr = null, zh = null;
       if (IK){ sh = ofT(SHL[i]); const cl = vsh ? vsh[2] : 0; let z = nrm3(sub3(hands[i], sh)), o = null, wf;
         // (the hand turned towards where the forearm comes from, a few rounds; then the wrist from the hand as it is turned and the
@@ -513,19 +516,39 @@
         if (!wf){ wf = wristFor(i, z); o = armIk(SHL[i], toT(wf[0]), sd, LL, o, cl); }
         el = ofT(o.j); wr = ofT(o.e); Fr = wf[1]; zh = z; AO[i] = Math.hypot(o.over, o.near, o.push); if (LQ){ LQ.ao[i] = AO[i]; LQ.elT.push(o.j.slice()); LQ.wrT[i] = o.e.slice(); } }
       else { sh = up3(vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r)); const eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
-        if (near){ const gd = (HMS.grip[HS[i].g] || HMS.grip.relax)[i ? 'L' : 'R']; Fr = handFrame(nrm3(sub3(hands[i], elOf(hands[i]))), HS[i], sd); wr = sub3(hands[i], inFrame(Fr, gd.at)); el = elOf(wr); } else { wr = hands[i]; el = elOf(wr); }
+        if (near){ const gd = (GRIP[HS[i].g] || GRIP.relax)[i ? 'L' : 'R']; Fr = handFrame(nrm3(sub3(hands[i], elOf(hands[i]))), HS[i], sd); wr = sub3(hands[i], inFrame(Fr, gd.at)); el = elOf(wr); } else { wr = hands[i]; el = elOf(wr); }
         if (LQ) LQ.elT.push(toT(el)); }
       if (LQ){ LQ.sh.push(sh.slice()); LQ.el.push(el.slice()); LQ.wr.push(wr.slice()); }
-      if (near){ const sn = i ? 'L' : 'R', sp = HS[i], gd = (HMS.grip[sp.g] || HMS.grip.relax)[sn];
+      ARM[i] = {el, wr, Fr:null};
+      if (near){ const sn = i ? 'L' : 'R', sp = HS[i], gd = (GRIP[sp.g] || GRIP.relax)[sn];
         if (!IK) Fr = handFrame(nrm3(sub3(wr, el)), sp, sd);
-        drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS[sn][sp.g] || HMS[sn].relax, handMtx(Fr, wr));
+        ARM[i].Fr = Fr; if (!FG){ drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS[sn][sp.g] || HMS[sn].relax, handMtx(Fr, wr)); }
         if (i && st.tape && HMS.tape) drawN(HMS.tape, handMtx(Fr, wr));   // (a cut hand taped, the four hours it is slow)
         if (i && HMS.steel && steelGlove(st, !!P.bare)){ const sm = HMS.steel[sp.g] || HMS.steel.relax; if (sm){ drawN(sm, chain(handMtx(Fr, wr), M4.S(1.07))); DKN.glove = (DKN.glove || 0) + 1; } }   // (the steel glove, OPP5)
         GP[i] = add3(wr, inFrame(Fr, gd.at)); GA[i] = inFrame(Fr, gd.ax); if (LQ) LQ.gl[i] = Math.hypot(gd.at[0], gd.at[1], gd.at[2]); return; }
       if (IK) GP[i] = add3(wr, mul3(zh, LEMMER.HAND));   // (where the far hand holds: along the way its wrist was found from)
+      if (FG) return;
       if (K){ const f = [wr[0] - el[0], wr[1] - el[1], wr[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1;
         drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, wr, 1)); drawN(HMS ? HMS.lo : K.hand, limbM(wr, [wr[0] + f[0] / fl, wr[1] + f[1] / fl, wr[2] + f[2] / fl], 1)); return; }
       drawN(PM.arm, limbM(sh, el, 0.06)); drawN(PM.arm, limbM(el, wr, 0.055)); drawN(PM.hand, M4.T(wr[0], wr[1], wr[2])); });
+    // ---- the new figure (FB7): the joints above in his own frame (x to his right, y up, z back, from where he stands), turned into
+    // the skeleton's turns (figpose.js figFromJoints) and drawn skinned, one draw call (two or three with a small palette). The arms
+    // and the legs are solved again there from the skeleton's own shoulders and hips, so what the hands hold is moved to where the
+    // wrists came out (a few mm when the arm reaches), and the tests get the joints as they were drawn.
+    if (FG){ const O = rel(st.x, y, st.z), tf = v => [v[0] * R[0] + v[2] * R[1], v[1], -(v[0] * F[0] + v[2] * F[1])], tp = q => tf([q[0] - O[0], q[1] - O[1], q[2] - O[2]]), fw = l => [O[0] + R[0] * l[0] - F[0] * l[2], O[1] + l[1], O[2] + R[1] * l[0] - F[1] * l[2]];
+      const arm = i => { const a = ARM[i]; return {el:tp(a.el), wr:tp(a.wr), hand:a.Fr ? figHandTurn(FG.H0[i], tf(a.Fr[0]), tf(a.Fr[1]), tf(a.Fr[2])) : null}; };
+      const leg = g => ({knee:tp(g.knee), foot:tp(g.foot), footR:g.BT ? figCols(tf([g.BT[0], g.BT[1], g.BT[2]]), tf([g.BT[4], g.BT[5], g.BT[6]]), tf([g.BT[8], g.BT[9], g.BT[10]])) : null});
+      const J = {pelvis:tp(pv), hipsR:figCols(tf(HR), tf(HU), tf([-HA[0], -HA[1], -HA[2]])), chestR:figCols(tf(XR), tf(XU), tf([-XA[0], -XA[1], -XA[2]])), headR:figMul3(figRot([0, 1, 0], hy * 180 / Math.PI), figRot([1, 0, 0], hp * 180 / Math.PI)),
+        arms:{R:arm(0), L:arm(1)}, legs:{L:leg(LEG[0]), R:leg(LEG[1])}};
+      const o = figFromJoints(FG.sk, J); for (const i of [0, 1]) figGrip(FG.ex, FG.sex, near && HS[i] ? HS[i].g : 'relax', o.local, i ? 'L' : 'R');
+      const PZ = figPose(FG.sk, o.local, o.root), UM = chain(M4.T(O[0], O[1], O[2]), M4.RY(-h));
+      if (!LEMMER.dry) drawFig(FG, PZ.M, UM);
+      // (the hood up in the cold: the old file's part, on the new head; its frame is from the old neck, 7.5 cm under the head's joint)
+      if (hooded && !LEMMER.dry){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); }
+        if (HD){ const b = FG.sk.ix.head, Rh = PZ.R[b], hj = [PZ.J[b * 3], PZ.J[b * 3 + 1] - 0.075, PZ.J[b * 3 + 2]]; drawN(HD, chain(UM, new Float32Array([Rh[0], Rh[3], Rh[6], 0, Rh[1], Rh[4], Rh[7], 0, Rh[2], Rh[5], Rh[8], 0, hj[0], hj[1], hj[2], 1]))); } }
+      [0, 1].forEach(i => { const sd = i ? 'L' : 'R', w = fw(o.out.wr[sd]), d = sub3(w, ARM[i].wr); GP[i] = add3(GP[i], d); AO[i] = Math.max(AO[i], Math.hypot(d[0], d[1], d[2]) > 0.002 ? Math.hypot(d[0], d[1], d[2]) : 0);
+        if (LQ){ LQ.sh[i] = fw(o.out.sh[sd]); LQ.el[i] = fw(o.out.el[sd]); LQ.wr[i] = w; LQ.elT[i] = toT(LQ.el[i]); } });
+      if (LQ){ LQ.fig = 1; LQ.hip = [fw(o.out.hip.L), fw(o.out.hip.R)]; LQ.knee = [fw(o.out.knee.L), fw(o.out.knee.R)]; LQ.foot = [fw(o.out.foot.L), fw(o.out.foot.R)]; } }
     if (LQ){ LQ.gp = [GP[0].slice(), GP[1].slice()]; LEMMER.log.push(LQ); }
     // (a hand that did not reach its point: what it holds is drawn where the hand is)
     for (const i of [0, 1]) if (AO[i] > 0){ hands[i][0] = GP[i][0]; hands[i][1] = GP[i][1]; hands[i][2] = GP[i][2]; }
