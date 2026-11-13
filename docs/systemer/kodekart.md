@@ -2589,7 +2589,7 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 190 `chartNamesOf(pk, entry, sc, ox, oy)`
   - 203 `chartNamesSvg(vx0, vy0, vx1, vy1, u, taken, part)`
 
-## `src/js/ui/03-map.js` (917 linjer)
+## `src/js/ui/03-map.js` (918 linjer)
 
 ---------- map ----------
 
@@ -2626,24 +2626,24 @@ THE CHART'S VECTORS (phase K7 of the coast plan): the coast by level of detail, 
   - 421 `updateMapButtons()`
   - 437 `tapName(mp, rr)`
   - 456 `renderStatic()`
-  - 563 `portIcon(p, s, u)`
-  - 584 `anchorPath(x, y, s, u)`
-  - 592 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
-  - 611 `scheduleStatic()`
-  - 616 `aisTrack(id, H)`
-  - 621 `aisInfo(n)`
-  - 640 `sjvChartSvg(u, bp)`
-  - 650 `renderAisCard()`
-  - 658 `curArrowsOf(q, u, H, lab, halo)`
-  - 671 `curArrowsSvg(u)`
-  - 689 `renderDyn()`
-  - 778 `pinAdd(mp)`
-  - 783 `pinOpen(id, fresh)`
-  - 803 `pinKb()`
-  - 834 `ptrUp(e)`
-  - 864 `unzoom()`
-  - 871 `portByLabel(pt)`
-  - 876 `addWaypoint(pt)`
+  - 564 `portIcon(p, s, u)`
+  - 585 `anchorPath(x, y, s, u)`
+  - 593 `soundingsSvg(vx0, vy0, vx1, vy1, u, taken)`
+  - 612 `scheduleStatic()`
+  - 617 `aisTrack(id, H)`
+  - 622 `aisInfo(n)`
+  - 641 `sjvChartSvg(u, bp)`
+  - 651 `renderAisCard()`
+  - 659 `curArrowsOf(q, u, H, lab, halo)`
+  - 672 `curArrowsSvg(u)`
+  - 690 `renderDyn()`
+  - 779 `pinAdd(mp)`
+  - 784 `pinOpen(id, fresh)`
+  - 804 `pinKb()`
+  - 835 `ptrUp(e)`
+  - 865 `unzoom()`
+  - 872 `portByLabel(pt)`
+  - 877 `addWaypoint(pt)`
 
 ## `src/js/ui/03b-route.js` (293 linjer)
 
@@ -2722,7 +2722,7 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 67 `renderSetBar()`
   - 81 `setModeEnd(go, stay)`
 
-## `src/js/ui/03e-miniplot.js` (153 linjer)
+## `src/js/ui/03e-miniplot.js` (154 linjer)
 
 ---------- the little chart in 3D (the user's wish 02.10.2026) ----------
 
@@ -2733,7 +2733,7 @@ Driftsplan 2, part 6: the chart plotter in plan mode (docs/planer/driftsplan-2/0
   - 71 `miniFrame(t)`
   - 77 `miniSoundings(g, x0, y0, k, BW, BH, dpr, night)`
   - 91 `miniPaint()`
-  - 135 `miniSjv(ctx, X, Y, p, dpr)`
+  - 136 `miniSjv(ctx, X, Y, p, dpr)`
 
 ## `src/js/ui/03f-search.js` (118 linjer)
 
@@ -2752,7 +2752,7 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 89 `srchCard()`
   - 113 `srchSvg(u)`
 
-## `src/js/ui/04-panels-instruments.js` (352 linjer)
+## `src/js/ui/04-panels-instruments.js` (354 linjer)
 
 ---------- estimates ----------
 
@@ -2775,9 +2775,9 @@ Search in the chart plotter (Jonas 09.10.2026: «Kan du bygge inn en søke-knapp
   - 244 `vnoise2(x, y, s)`
   - 250 `microBottom(p, d)`
 - **252** instruments: GPS and echo sounder
-  - 336 `hudCardOpen(on)`
-  - 343 `hudClasses(stripOn, cardOn)`
-  - 347 `hudFold(which)`
+  - 338 `hudCardOpen(on)`
+  - 345 `hudClasses(stripOn, cardOn)`
+  - 349 `hudFold(which)`
 
 ## `src/js/ui/05-tattoo-art.js` (169 linjer)
 
@@ -2814,7 +2814,7 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
   - 64 `iceCard()`
   - 72 `verksted()`
 
-## `src/js/ui/phone/02-havn-last-agn-ordre.js` (52 linjer)
+## `src/js/ui/phone/02-havn-last-agn-ordre.js` (55 linjer)
 
 the old tabs live on as phone apps
 
@@ -2826,7 +2826,7 @@ the old tabs live on as phone apps
   - 8 `agn()`
   - 35 `oppdrag()`
   - 36 `ordl()`
-  - 41 `ordlBest(tabs)`
+  - 44 `ordlBest(tabs)`
 
 ## `src/js/ui/phone/03-regler.js` (63 linjer)
 
@@ -2898,12 +2898,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1625 linjer)
+## `src/js/ui/phone/07-patch.js` (1629 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1613 `patch()`
+  - 1617 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -3049,7 +3049,7 @@ Kystmegleren: boats players sell to each other (B1–B8 in docs/planer/etter-ton
   - 218 `mgAfter(key, okNo, okEn)`
   - 220 `mgAct(a, d)`
 
-## `src/js/ui/phone/14-act.js` (350 linjer)
+## `src/js/ui/phone/14-act.js` (356 linjer)
 
   - 2 `act(a, d)`
 - **8** the receipt after a buy for kroner (Jonas 06.11.2026, Tony's test: «Det skal ikke være tvil om et kjøp er gjennomført»): one
@@ -3100,7 +3100,7 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 69 `achLong()`
   - 80 `achChip()`
 
-## `src/js/ui/05f-turer.js` (183 linjer)
+## `src/js/ui/05f-turer.js` (191 linjer)
 
 ---------- Turoppdrag in the Oppdrag app (core/09g-turer.js): the board made from where the boat is, and the missions taken ----------
 
@@ -3108,15 +3108,16 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 7 `turCard(m, act, det)`
   - 52 `turAskCards()`
   - 67 `turPage()`
-  - 86 `turGo(id)`
-  - 109 `turSvg(u, inV)`
-- **123** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
-  - 128 `turMeasure(id)`
-- **164** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
-  - 168 `turFotoKeep(id, img)`
-  - 169 `turFotoSrc(id)`
-  - 170 `turFotoUi()`
-  - 174 `turFotoShoot(id)`
+  - 87 `turGo(id)`
+  - 99 `turSail(end, toPort, o = {})`
+  - 117 `turSvg(u, inV)`
+- **131** the measuring board (Havforskningsinstituttet's sample, core turProveFish): each fish lies with its snout against the board's
+  - 136 `turMeasure(id)`
+- **172** the lighthouse picture: the shutter shows within 3 km of the lighthouse while the 3D view is up; without it the card's button
+  - 176 `turFotoKeep(id, img)`
+  - 177 `turFotoSrc(id)`
+  - 178 `turFotoUi()`
+  - 182 `turFotoShoot(id)`
 
 ## `src/js/ui/05g-press.js` (86 linjer)
 
@@ -3184,6 +3185,30 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
   - 30 `ordbok(root)`
   - 46 `ordTip(el, head, text)`
 
+## `src/js/ui/05l-kapplop.js` (200 linjer)
+
+---------- Kappløpet on the screen (KL2, steg 117; docs/planer/kapplop.md KL2; the rules are in core/09o-kapplop.js) ----------
+
+- **1** Kappløpet on the screen (KL2, steg 117; docs/planer/kapplop.md KL2; the rules are in core/09o-kapplop.js)
+  - 22 `lopClock()`
+- **36** the tab
+  - 37 `lopPage()`
+  - 78 `lopButtons(r, mine)`
+  - 92 `lopTaskCard(m)`
+  - 116 `lopReg()`
+  - 118 `lopQuit()`
+  - 125 `lopGo()`
+- **131** the course in the chart, while she is registered: the checkpoints with their names, the finish line, and the legs as thin
+  - 136 `lopLegWay(r, j)`
+  - 141 `lopSvg(u, inV)`
+- **159** the card at a checkpoint and at the finish (once each; a checkpoint passed with the game closed shows when it opens, within a day)
+  - 160 `lopUi()`
+  - 169 `lopCpHtml(r)`
+  - 176 `lopGoalHtml(e)`
+  - 183 `lopPop(inner)`
+- **192** the card in the Sesong app: the race this week and your best time (the board for everyone is KL3)
+  - 193 `lopSeasonCard()`
+
 ## `src/js/ui/06-logbook.js` (115 linjer)
 
 ---------- deck log ----------
@@ -3215,7 +3240,7 @@ Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, cor
 
 - **1** Father's naust: setting it to rights and the trophy wall (core/07c-naust.js, core/09b-records.js)
 
-## `src/js/ui/06d-season-folk.js` (78 linjer)
+## `src/js/ui/06d-season-folk.js` (79 linjer)
 
 the phone's Sesong and Folk apps (05.10.2026; the rules are in core/09c-seasons.js and core/09d-folk.js)
 
