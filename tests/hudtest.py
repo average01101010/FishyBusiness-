@@ -234,7 +234,7 @@ async def d6(p):
             check('vplot' in f['cls'] and not f['open'], tag + ': a tap on «Kart» opens the plotter, and the button is not shown there', f['cls'])
         print('errors (%s):' % tag, errs[:3]); await ctx.close()
     u, l = box.get('D6 800x1280'), box.get('D6 1280x800')
-    check(u and l and u['hud'] and l['hud'] and u['hud']['w'] == l['hud']['w'] and u['g'] == l['g'] and u['rules'] == l['rules'], 'D6: the box upright and on its side is as wide and says the same', {'upright': u and u['hud'], 'side': l and l['hud']})
+    check(u and l and u['hud'] and l['hud'] and u['g'] == l['g'] == 4 and u['rules'] == l['rules'] and u['rules'], 'D6: the box upright and on its side says the same (the gauges and the rules row; upright it is 250 px wide as the little chart, so the compass line keeps its degrees)', {'upright': u and u['hud'], 'side': l and l['hud']})
     await br.close()
 
 

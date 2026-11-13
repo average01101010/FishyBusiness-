@@ -1974,7 +1974,6 @@ body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-na
   body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}
   body.v3d.dk-open #plotOpen{visibility:hidden!important}
 }
-@media (orientation:portrait) and (min-width:561px){body.v3d{--mW:270px}}   /* (a tablet upright has the whole box, as wide as on its side) */
 @media (orientation:landscape) and (min-height:521px){body.v3d{--pmT:var(--bTop);--pmW:var(--bW);--pmH:var(--mH)}}
 @media (max-height:520px){body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}}
 /* under way: the dot is the instruments' blue, not magenta */

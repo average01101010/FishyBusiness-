@@ -199,3 +199,16 @@ Fase U2-8 i `docs/planer/ui-2-staaende.md` (kap. 5; Jonas' valg V1 A 06.11.2026:
 - **Det som så rart ut** (alle størrelsene, tydeligst på 1440×900): kartets kildelinje (Kartverket, OpenStreetMap) begynte under dagbokfanen; den står nå til høyre for fanen i 3D (`left: 44px`, like langt fra høyre kant som før). Telefonknappens hjørne stakk fram bak telefonens runde hjørne på nettbrett liggende og PC; knappen er skjult mens telefonen er åpen (`#app:has(> #phone:not([hidden]))`); telefonen lå over knappen i alle størrelser, så den kunne ikke trykkes da heller. Dagbokfanen på telefon liggende sa «DEKKSDAGBO» (92 px høy); den er 100 px.
 - **Testet:** `hudtest` med 29 nye sjekker i seks størrelser (sett røde på bygget før, 16 FEIL; 61 OK etter), `uishots` (45, 0 funn), `kartlegging` (57; ingen endring i målene i stående), `dockrow` (16), `docktest` (116), `navbarshot` (5), `roetest` (23), enhetstestene (2432). Ikke kjørt: `tut.py`, fordi ingenting veiledningen peker på flytter seg (boksens topp, linje 3, minikartet og knappelinja står der de sto; tipset lukker skuffen før det peker utenfor den).
 - **Antatt eller usikkert:** boksen i liggende uten reserve er sett i havn, stille og underveis uten 3D, ikke på Jonas' nettbrett med 3D bak. Kildelinja er bare flyttet i 3D; i plotteren står den der den sto.
+
+## Designombyggingen D6: HUD-en, dialogene og tipsene (13.11.2026)
+
+Hele beskrivelsen står i `docs/planer/design-ombygging.md` («D6»). Det som gjelder for den som endrer UI-et etterpå:
+
+- **Statusboksen:** et nettbrett i stående har hele boksen i 3D, som liggende (søylene, «Regler ✓»). Stripa står på telefonen (opp til 560 px bred, eller opp til 520 px høy), over skuffens ark i stående og i kartplotteren i stående. `hudPortrait()` er nå «telefon», `hudSheet()` er «stående med arket åpent eller i kartplotteren» (`ui/04-panels-instruments.js`). Dette endrer U2-1 («stående er alltid stripa») for nettbrettet.
+- **«Kart»** (`#plotOpen`) står ved det lille kartets nedre høyre hjørne og åpner kartplotteren. Plassen kommer fra `--pmT`, `--pmW` og `--pmH`, som settes fra sonene (`--sTop`/`--mW` i stående og på telefon, `--bTop`/`--bW` i liggende).
+- **Det lille kartet er mørkt hele døgnet** (`MINI_NIGHT` i `ui/03e-miniplot.js`). Det som tegnes i det, må leses mot mørk bunn.
+- **Dialoger, tips og toast er mørkt glass.** Rollene (`--m-ink`, `--m-card` …) har verdier i `#modal .box`, `#tip`, `#turMeas .tm-box` og `#lopPop .lp-box` (blokka «D6» i `src/styles.css`). En ny dialog gjennom `modal()` får dem av seg selv; en ny flate utenfor disse omfangene må inn i lista. `tools/ui/scener.py` har scenene `tools/ui/kontrast.py` måler: en ny dialog legges inn der.
+- **Hovedknappen er blå (`--a-main`) overalt.** Magenta får bare kjøp og godta: lista i D3-blokka for skuffen og appene, og `#regGo`, `#hopGo` og `[data-act=tow]` utenfor. Ruta og veipunktene i kartet er magenta som sjøkartets farge.
+- **Glasset over 3D** er `rgba(11,23,32,.78)` for boksen, GPS-stripa, de runde knappene og linja over knappelinja; kompasslinja har et bånd bak seg.
+- **Testet:** `hudtest` (61 + 15 nye, de nye sett røde mot bygget før), `docktest` (118), `dockrow` (16), `uishots` (45), `navbarshot` (5), `roetest` (23), `kystkarttest` (5), `kontrast.py` 0.
+
