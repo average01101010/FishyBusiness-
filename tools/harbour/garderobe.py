@@ -292,7 +292,7 @@ def vests(A, P, W):
     return out
 
 
-def vest(A, name, obst, RC):
+def vest(A, name, obst, RC, neck_y=-0.012):
     """one vest over the obstacles (its jackets and the head). RC: the collar's middle from the neck's axis, clear of the jackets' own
     collars (the work jacket's 0.098, the oilskin's 0.122, the parka's rolled hood 0.142, and 4 cm more)"""
     C = A.C; GAP = 0.003
@@ -315,7 +315,7 @@ def vest(A, name, obst, RC):
                     d = (h - V(p)).dot(n)
                     if best is None or d > best: best = d
         return None if best is None else V(p) + n * best
-    NECK = V((0, -0.012, 0))
+    NECK = V((0, neck_y, 0))       # (the new body of kropp_bygg.py has its neck further back: it passes its own)
     # ---- the belt: a 40 mm band round the waist, 3 mm off the outermost surface over its height ----
     B = Acc(name + '_belt'); zb0, zb1 = 1.088, 1.128; NB = 56; RB = []
     for k in range(NB):

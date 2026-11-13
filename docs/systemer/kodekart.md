@@ -4020,7 +4020,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 156 `ridged(x, y)`
   - 157 `rng(seed)`
 
-## `src/js/view3d/01-shaders.js` (891 linjer)
+## `src/js/view3d/01-shaders.js` (896 linjer)
 
 ---------- shaders ----------
 
@@ -4030,19 +4030,19 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
 - **402** the boat's own foam, when she has way on
 - **410** where a slam and the spray land (F3b): four patches, fixed names
 - **412** the whitecaps, as the sea shader finds them (WCAPS, F3): where the waves break, the compression of the surface over the
-  - 779 `cloudStep(dt)`
-  - 786 `skyFrame(u, Hh, tn, bv)`
-  - 804 `glsl3(src, fs)`
-  - 817 `progStart(vs, fs, attrs, nm = '?')`
-  - 827 `progEnd(P)`
-  - 837 `program(vs, fs, attrs, nm = '?')`
-  - 839 `progWait(list)`
-  - 845 `programA(vs, fs, attrs, nm)`
-  - 846 `buf(data, target, usage)`
-  - 851 `airSet(u, terr)`
-  - 866 `sunT0()`
-  - 873 `attr(loc, b, size)`
-  - 889 `upload(pos, col, idx)`
+  - 784 `cloudStep(dt)`
+  - 791 `skyFrame(u, Hh, tn, bv)`
+  - 809 `glsl3(src, fs)`
+  - 822 `progStart(vs, fs, attrs, nm = '?')`
+  - 832 `progEnd(P)`
+  - 842 `program(vs, fs, attrs, nm = '?')`
+  - 844 `progWait(list)`
+  - 850 `programA(vs, fs, attrs, nm)`
+  - 851 `buf(data, target, usage)`
+  - 856 `airSet(u, terr)`
+  - 871 `sunT0()`
+  - 878 `attr(loc, b, size)`
+  - 894 `upload(pos, col, idx)`
 
 ## `src/js/view3d/02-mesh-terrain.js` (108 linjer)
 

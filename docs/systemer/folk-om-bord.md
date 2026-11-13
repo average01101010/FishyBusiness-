@@ -336,6 +336,50 @@ Første fase av `docs/planer/folk-2.md` (Jonas 13.11.2026: «Jeg ønsker å se u
 - **Garderoben** (`WARD`): et eget skjermbilde med en liten WebGL-visning (samme deler som spillet), dreibar, hel figur eller ansikt, faner for kropp, hud, hår, skjegg, hatt, jakke, bukser og sko, og knappene Ferdig, Avbryt, Tilfeldig og Tilbake til start. Liggende og stående.
 - **Ikke gjort ennå:** butikk, fortjente plagg og sesongplagg, og bar hånd i stedet for hansker. Andre spillere ser figuren via `presence.lk`/`ck` (migrering `20261010140000_look.sql`, `lookFromKey`; sendes bare med `pos_put` når serveren kjenner feltene, ellers `WORLDP.noLk`).
 
+## 5.33b Den nye figuren: kroppen, skjelettet og fila `folk2.b64` (FB5, steg 122, 13.11.2026; pågår)
+
+Fase FB5 i `docs/planer/folk-2.md`. **Spillet leser ikke fila ennå** (FB6 gjør det): `src/data/worker.b64`, `src/js/` og malen er urørt, og figuren i spillet er den gamle (5.33).
+
+**Hva Jonas avgjorde underveis (13.11.2026):**
+- **Kroppen er en innkjøpt modell**, ikke vår egen: «Er dette noe vi kan bruke?» (RenderHub, «Realistic White Male and Female Low Poly» av novisoj, «Extended Use License»), og «Bruk modellen nå» da økta spurte. Kilden, lisensen og det økta ikke fikk lest (den fulle avtalen), står i `tools/harbour/kilde/LISENS.md`. Økta hadde først formet egne kropper av avrundede former (`kropp.py` `prims`); de brukes ikke til kroppen lenger.
+- **Mann og kvinne er to kropper**: «Du kan ikke lage en felles kropp for begge. Menn har tross alt ikke pupper og hofter.» To nett, to sett ledd, egne jakker, ermer, bukser, sko og hansker (`…F`).
+- **Ingen bygninger**: «Du trenger sikkert ikke tynn, tykk de forskjellige kroppsvariasjonene, det holder med mann og kvinne med gode modeller.» Formene (tynn, tung, muskler, kurver, alder, høyde) bygges og skrives ikke; koden står avslått (`kropp_bygg.py former`), og «Ferdig når» punkt 2 i startmeldingen gjelder dermed ikke.
+- **Ingenting fra den gamle figuren**: «Da funker det ikke å bruke noe fra den gamle. Det blir ikke bra.» Hendene er derfor modellens egne (se under). **Fortsatt gammelt, og skal lages på nytt i samme steg:** håret (17 deler), skjeggene (5), hattene (7), støvelen og de to skoene, og redningsvestene (6). De er flyttet over på det nye hodet og de nye føttene så fila er hel, ikke fordi de skal bli.
+- **Høyden er som før**: begge er skalert til 1,776 m (den gamle 1,774), hoftene 0,93 (0,92), nakken 1,49 (1,50), skuldrene 1,415 opp og 0,185 ut (1,42 og 0,21, målt med jakke), så dører, rekker og styreplasser passer.
+- **Sokk i lave sko**: «Leggen mangler jo» (huden under klær tegnes ikke, og buksa slutter over ankelen): `shoe` og `sneaker` har en sokk opp i buksebeinet.
+
+**Skriptene** (alle i `tools/harbour/`; oppsett `python3.11 -m pip install bpy==4.5.4 scikit-image scipy`):
+- `kropp.py` (uten Blender): leddene (`BASE`, målt på nettene), fingrene funnet i nettet (`fingers`), beina (`BONES`), vektene (`weights`), stillingene (`POSES`), grepene (`GRIPS`, `grip_turns`, `grip_point`) og vinkelgrensene (`LIMITS`).
+- `kropp_plagg.py`: jakkene med buksetoppen, ermene og buksebeina, bygd som ordnede nett rundt kroppen med stråler mot huden.
+- `kropp_bygg.py`: bygger alt i Blender og skriver `src/data/folk2.b64` (`dry`: bare `out/folk2.glb`). `kropp_glb.py`: skriveren og en leser uten Blender.
+- `kropp_bilder.py`: kontrollen (leser fila slik spillet skal) og kontrollbildene. `kropp_se.py`: bare for de egne formene.
+- `garderobe.py` fikk én parameter (`vest(..., neck_y)`); `arbeider.py` og `worker.b64` er som før.
+
+**Skjelettet: 58 bein.** Kroppen 24 (hofte, tre i ryggen, nakke, hode, krageben, overarm, underarm, hånd, lår, legg, fot, tå), **vribein** midt på overarm, underarm og lår (`utw`, `ftw`, `ttw`: de bærer en del av lemmets rull om egen lengde, så et vridd håndledd ikke vrir huden som et godteripapir), og 15 fingerbein per hånd (`thumb1–3`, `index1–3`, `middle1–3`, `ring1–3`, `little1–3`). Leddene står der nettet faktisk roterer (målt på tverrsnitt), ikke på dagens faste tall. Alle bein har hvilestilling uten rotasjon (verdens akser), så et beins matrise er `T(ledd i stilling) · R · T(−ledd i hvile)`. Hvilestillingen er modellens: armene 18° (mann) og 21° (kvinne) ut, albuen lett bøyd.
+
+**Vektene er en funksjon av stedet i hvilestillingen** (`kropp.weights`), den samme for huden og alt som bæres. To ting på samme sted beveger seg likt, så et plagg følger kroppen under, og sømmene (armhullet, albuen, kneet, buksas beinhull) er de samme punktene i begge deler. Bøyen spres rundt hvert ledd (`SPREAD`, i fila som `spread`).
+
+**Grepene er fingerstillinger**, ikke tolv håndnett: `extras.grips[kjønn][grep]` har hver fingers lokale rotasjon (`turn`, kvaternion) og hvor det som holdes sitter (`at`, `ax`, fra håndleddet i hvilestillingen). `hR_<grep>` og `hL_<grep>` finnes som navn (lagringene og koden kjenner dem), men alle peker på samme hanske (`glove`, høyre og venstre halvdel); kvinnens heter `hRF` og `hLF` (`gloveF`). Hansken er kroppens egen hånd gjort 1,6 mm tykkere, med en mansjett som går utenpå ermet. Vinklene er startverdier og må ses på nettbrettet.
+
+**Vinkelgrensene** (`extras.limits`) er startverdier fra vanlige tabeller for leddutslag; de er ikke slått opp i en kilde i dette steget.
+
+**Formatet (`folk2/1`)**: GLB i spillets ramme (x mot personens høyre, y opp, z bakover; personen ser mot −z), meter, bakken i y = 0.
+- **Skjelettet:** én node per bein med avstanden fra forelderen (mannens hvile); to `skins` (`folk_m`, `folk_f`) med hver sin `inverseBindMatrices`. `extras.rest[kjønn][bein]` har hvilestedene.
+- **Skinnede deler** (huden, jakkene, ermene, buksebeina, sko, hansker, vester): `POSITION` float32 i hvilestillingen, `NORMAL` int8, `COLOR_0` (farge med bakt skygge, a = glans), `_PAINT` (sone, skygge), `JOINTS_0` og `WEIGHTS_0` (4 bein). Noden har `skin`.
+- **Stive deler på hodet** (hår, skjegg, hatter): som i `worker.b64` (`POSITION` int16 med nodens `translation` og `scale`), noden er barn av beinets node, målt fra hodets ledd. Begge kjønn bruker de samme (hodeskallene ligger likt sett fra hvert sitt ledd, innen 0,4 mm).
+- **Deler som er et utsnitt av en annens punkter** (samme punkter, et utsnitt av indeksene): `head` og `handbare` av `body`, `headF` og `handbareF` av `bodyF`, grepene av `glove`.
+- **`extras.cover`**: hudens indeksområder per gruppe (`head`, `hands`, `arms`, `torso`, `legs`, `feet`). Under klær tegnes bare `head` (hodet og halsen fra kragekanten) og, uten hansker, `hands`. Øynene og øyenbrynene (sone 5) ligger i `head`.
+- **`extras.parts[navn]`**: `skinned` eller `bone`, `sex`, `tris`, og `of` for et utsnitt.
+
+**Det som er målt** (`python3.11 tools/harbour/kropp_bilder.py src/data/folk2.b64 tall`, 13.11.2026):
+- **Navn:** alle 69 delene i `worker.b64` finnes med samme navn; fila har 84 (de nye er `…F`-delene, `body`, `bodyF`, `headF`, `handbareF`, `glove`, `gloveF`, `hRF`, `hLF`).
+- **Trekanter, påkledd figur nært, alle 30 240 utseender i katalogen:** i dag 7 508–15 334 (median 10 508), ny 5 789–13 297 (median 8 576). Ingen utseender har flere enn i dag; minste besparelse er 1 706. (Planens anslag på 5–6 000 var for lavt: hendene alene er 3 136 i dag.)
+- **Fila:** 2,48 MB mot 1,96 MB (GLB-byte). Hodet er telt ned fra rundt 3 100 til 1 500 trekanter.
+- **Kryssende flater** i tre antrekk × seks stillinger (stående og de fem ytterstillingene), delt i tre: **synlig** (to ting i ulik farge) 3 746, **samme stoff** (erme mot jakke, bukseben mot sete: samme malesone) 3 334, **sitter på** (hår og skjegg i huden, som i dag) 17 280. Stående: skipper 26, kvinne 59, mannskap 282. **Kravet om null holder ikke.** Det meste av det synlige er redningsvesten (gammel del) mot oljehyra og armene, og jakkekanten mot låret i dyp knebøy; skjegg og hestehale går i kragen.
+
+**Det som står igjen i steget** (steget er `pågår`): hår, skjegg, hatter, sko, støvler og vester på nytt; de synlige kryssene ned; lepper og øyenfarge; grepene og ytterstillingene sett av Jonas; `/kontroll`.
+
+
 ## 5.6d Navngitte folk på kysten: Tony Hjelmseth i Husøy (Jonas 06.11.2026)
 
 Jonas 06.11.2026 etter besøket: «Legg inn en NPC-fisker på Husøya som heter Tony Hjelmseth … spøkefugl født 10. mai 1998 … jobbet på en garnbåt med fast havn på Husøy noen år … tidligere kjøpmann på butikk før han startet som røkter på oppdrettsanlegg, men nå er han fisker på fulltid», og så: «Tony er ikke en båt, men en man skal kunne ansette som mannskap.»
