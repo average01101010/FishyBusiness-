@@ -28,12 +28,12 @@ async def main():
     hud = 'hud' in sys.argv; d6 = 'd6' in sys.argv; n = [0]; errs = []
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
-        for tag, w, h in SIZES:
+        for tag, w, h in [z for z in SIZES if not ({'staaende', 'liggende'} & set(sys.argv)) or z[0] in sys.argv]:   # (`hud kort liggende`: one format alone)
             pg = await b.new_page(viewport={'width': w, 'height': h}); pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg); n[0] = 0
             async def shot(name):
                 n[0] += 1; f = os.path.join(DIR, '%s%02d-%s-%s' % ('hud' if hud else 'd6' if d6 else 'rest' if 'rest' in sys.argv else '', n[0], name, tag))
-                await pg.screenshot(path=f + '.png'); Image.open(f + '.png').convert('RGB').save(f + '.jpg', quality=82)
+                await pg.screenshot(path=f + '.png', timeout=600000 if hud else 30000); Image.open(f + '.png').convert('RGB').save(f + '.jpg', quality=82)
             async def safe(js, name, wait=350):
                 try: await pg.evaluate(js); await pg.wait_for_timeout(wait); await shot(name)
                 except Exception as e: print('FEIL', name, tag, str(e)[:160])
