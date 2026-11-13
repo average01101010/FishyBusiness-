@@ -112,6 +112,26 @@ async def main():
               'an uploaded picture is made 256 × 256 and small enough to share, tried on the boat and then put on', {k: lg[k] for k in ('upInfo', 'wh', 'upSet')})
         check(rm['L'] is None and rm['flag'] == {'c': 'NO', 's': 'rekt'} and 'Støtende innhold' in rm['msg'] and 'uten å betale' in rm['msg'] and rm['own'],
               'a picture the admin took away is gone from the boat and the flag at the next start, the player is told why and may upload another without paying', rm)
+        # the name's lettering and ink (TP2, steg 109): three letterings and the inks on a card of its own, tried on the boat before it is
+        # bought (nothing on the boat, a buy button with the price), bought (a test) it is the account's, on the boat and in what the others
+        # see with the home port; an ink that does not read against the paint under some of the name says so; automatic takes it off
+        nv = await pg.evaluate("""(async () => { const q = s => document.querySelector('#drawerBody ' + s), txt = () => document.getElementById('drawerBody').innerText;
+          const card = {fonts:[...document.querySelectorAll('#drawerBody [data-pa=pntnf]')].map(e => e.dataset.k), inks:document.querySelectorAll('#drawerBody [data-pa=pntnc]').length,
+            on:(q('[data-pa=pntnf].on') || {}).dataset, auto:!!q('[data-pa=pntnc][data-k=auto].on'), price:(q('#pnt-navn .pnt-own') || {}).textContent};
+          q('[data-pa=pntnf][data-k=a]').click(); q('.pnt-sw[data-pa=pntnc][data-k=gull]').click();
+          const tried = {pre:{nf:PAINTPRE.nf, nc:PAINTPRE.nc}, own:PAINT.owned('navn'), buy:!!q('[data-pa=pntbuy][data-d=navn]'), note:txt().includes('Du prøver navnet'), boat:S.boat.liv && S.boat.liv.nf || null, on:(q('[data-pa=pntnf].on') || {dataset:{}}).dataset.k};
+          q('[data-pa=pntbuy][data-d=navn]').click(); await new Promise(r => setTimeout(r, 50));
+          const after = {own:PAINT.owned('navn'), nf:S.boat.liv && S.boat.liv.nf, nc:S.boat.liv && S.boat.liv.nc, str:livStr(S.boat), home:S.home, seen:livName(livStr(S.boat))};
+          q('.pnt-sw[data-pa=pntnc][data-k=' + S.boat.liv.hull + ']').click(); const weak = txt().includes('leses dårlig');
+          q('[data-pa=pntnc][data-k=auto]').click(); q('[data-pa=pntnf][data-k=s]').click(); const noWeak = !txt().includes('leses dårlig');
+          q('[data-pa=pntgo]').click(); const go = {nf:S.boat.liv.nf, nc:S.boat.liv.nc || null, str:livStr(S.boat)};
+          return {card, tried, after, weak, noWeak, go}; })()""")
+        cd, tr, af, go = nv['card'], nv['tried'], nv['after'], nv['go']
+        check(cd['fonts'] == ['b', 's', 'a'] and cd['inks'] >= 18 and cd['on'] and cd['on'].get('k') == 'b' and cd['auto'] and '29 kr' in (cd['price'] or '')
+              and tr['pre'] == {'nf': 'a', 'nc': 'gull'} and not tr['own'] and tr['buy'] and tr['note'] and tr['boat'] is None and tr['on'] == 'a'
+              and af['own'] and af['nf'] == 'a' and af['nc'] == 'gull' and 'n:a.gull' in af['str'] and ('k:' + af['home']) in af['str'] and af['seen'] == {'f': 'a', 'c': 'gull'}
+              and nv['weak'] and nv['noWeak'] and go['nf'] == 's' and go['nc'] is None and 'n:s.auto' in go['str'],
+              "the name: three letterings and the inks (automatic, white, black, gold and the palette's), tried on the boat before it is bought (29 kr), then the account's, on the boat and in what the others see with the home port; an ink that does not read says so; automatic takes the ink off", nv)
         # too little money (with the overdraft used up, Økonomi 2): the button is off
         c = await pg.evaluate("""(() => { S.cash = 100 - kkLimit(); document.querySelector('#drawerBody .pnt-sw[data-k=gul]').click(); const btn = document.querySelector('#drawerBody [data-pa=pntgo]');
           return {dis:btn.disabled, note:document.getElementById('drawerBody').innerText.includes('ikke nok penger')}; })()""")
