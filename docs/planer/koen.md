@@ -59,7 +59,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 - `ccr-013bxxie-fb2ik` (Jonas' økt): steg 123 FB2, faste armer og bein (to-ledds IK). Eier `deckcrew.js`, `view3d/08-plants.js` (`drawWorker` og hjelperne over), `view3d/13-instruments.js` (bare `limbM` og `armTo`), `view3d/20-trawl-seine.js` (bare `drawDeckCrew` og `npcCrewDraw`), ny `tests/lemmer.py`, ny enhetstest i `tests/unit/`, `tests/sjobein.py`, `tests/crewclip.py`, `tests/run.py` (`D3`, `COVER`), `ui/phone/07-patch.js`.
 
-- Designombyggingen: D1, D2 og D3 ferdig 13.11.2026 (grenen `ccr-061ea8a6-pt4l71`, flettet inn i arbeidsgrenen og rullet ut til testutgaven, versjon `8bf04369dcfa`; Jonas ser `docs/spill-dette/D2-skuffen.md` og `D3-butikkflyten.md`). **D6 klar** (`docs/planer/start/D6-hud-dialoger.md`; Jonas 13.11.2026: «D6 når D3 er levert»), startes i ny økt. D6 eier `src/styles.css`, `ui/10c-dock.js`, `ui/07-guide.js`, HUD-koden og `tools/ui/`. D4 er ikke bestemt, D5 ikke startet.
+- Designombyggingen: D1, D2 og D3 ferdig 13.11.2026 (grenen `ccr-061ea8a6-pt4l71`, flettet inn i arbeidsgrenen og rullet ut til testutgaven, versjon `13c7c7009beb`; Jonas ser `docs/spill-dette/D2-skuffen.md` og `D3-butikkflyten.md`). **D6 klar** (`docs/planer/start/D6-hud-dialoger.md`; Jonas 13.11.2026: «D6 når D3 er levert»), startes i ny økt. D6 eier `src/styles.css`, `ui/10c-dock.js`, `ui/07-guide.js`, HUD-koden og `tools/ui/`. D4 er ikke bestemt, D5 ikke startet.
 
 
 ## Valg som venter på Jonas

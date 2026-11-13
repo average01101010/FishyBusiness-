@@ -106,6 +106,34 @@ def check_tris(R, old):
     return int((d > 0).sum())
 
 
+def check_stretch(R):
+    """the weights' own check: an edge of a part that a pose pulls out to more than twice its length in the rest pose is a vertex
+    going with the wrong bone (a spike, a web under an arm). Per outfit and pose: how many such edges, and the worst one."""
+    tot = 0
+    for ln, L in LOOKS.items():
+        names = look_parts(R, L); rest = {}
+        for n in names: v, t, _ = posed(R, n, L['sex'], 'hvile'); rest[n] = v
+        for pose in K.CHECK_POSES:
+            bad = {}; worst = (1.0, '')
+            for n in names:
+                v, t, _ = posed(R, n, L['sex'], pose); e = np.concatenate([t[:, [0, 1]], t[:, [1, 2]], t[:, [2, 0]]])
+                l0 = np.linalg.norm(rest[n][e[:, 0]] - rest[n][e[:, 1]], axis=1); l1 = np.linalg.norm(v[e[:, 0]] - v[e[:, 1]], axis=1); r = l1 / np.maximum(l0, 1e-6); r = r[l0 > 0.004]
+                k = int((r > 2.0).sum())
+                if k: bad[n] = k
+                if len(r) and r.max() > worst[0]: worst = (float(r.max()), n)
+            tot += sum(bad.values())
+            print('STREKK %-9s %-16s kanter over 2x: %4d  verst %.1fx (%s)  %s' % (ln, pose, sum(bad.values()), worst[0], worst[1], ', '.join('%s %d' % kv for kv in sorted(bad.items(), key=lambda q: -q[1])[:6])))
+    # the grips: the gloves and the bare hands with the fingers bent (an edge at a knuckle's outside may grow, to 2.5x; more is a vertex with the wrong finger)
+    for sex, names in (('m', ['hR_relax', 'hL_relax', 'handbare']), ('f', ['hRF', 'hLF', 'handbareF'])):
+        for g in K.GRIPS:
+            k = 0; worst = 1.0
+            for n in names:
+                v0, t, _ = posed(R, n, sex, 'hvile'); v, t, _ = posed(R, n, sex, 'hvile', g); e = np.concatenate([t[:, [0, 1]], t[:, [1, 2]], t[:, [2, 0]]])
+                l0 = np.linalg.norm(v0[e[:, 0]] - v0[e[:, 1]], axis=1); r = np.linalg.norm(v[e[:, 0]] - v[e[:, 1]], axis=1) / np.maximum(l0, 1e-6); r = r[l0 > 0.002]; k += int((r > 2.5).sum()); worst = max(worst, float(r.max()))
+            tot += k; print('STREKK grep %s %-6s kanter over 2,5x: %3d  verst %.1fx' % (sex, g, k, worst))
+    print('STREKK i alt: %d kanter over 2x' % tot); return tot
+
+
 def check_cross(R, poses=None):
     poses = poses or K.CHECK_POSES; tot = np.zeros(3, int); table = {}
     for ln, L in LOOKS.items():
@@ -217,5 +245,5 @@ def pictures(R):
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if a != 'tall']; path = args[0] if args else os.path.join(OUT, 'folk2.glb')
     R = GLB.Reader(path); print('FIL: %s, %.2f MB (worker.b64: %.2f MB)' % (os.path.relpath(path, ROOT), R.size / 1e6, len(base64.b64decode(open(os.path.join(ROOT, 'src', 'data', 'worker.b64')).read())) / 1e6))
-    old = check_names(R); check_tris(R, old); check_cross(R)
+    old = check_names(R); check_tris(R, old); check_stretch(R); check_cross(R)
     if 'tall' not in sys.argv: pictures(R)

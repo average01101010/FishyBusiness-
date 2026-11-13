@@ -116,6 +116,7 @@ def fingers(sex):
     th = chain(thumb, None, 0.012, (0.50, 0.50)); mcp = th[0]; cmc = w + (mcp - w) * 0.30 + d * 0.004
     F['thumb'] = [cmc, mcp, th[1], th[3]]
     side = np.cross(n, d); side = side if side @ (F['index'][0] - F['little'][0]) > 0 else -side; F['side'] = side
+    F['verts'] = {name: np.array(cc) for name, cc in zip(FINGERS[1:], cs)}; F['verts']['thumb'] = np.array(thumb); F['hand'] = hand; F['adj'] = adj          # (the mesh's own split: which vertices are which finger's)
     _FING[sex] = F; return F
 
 
@@ -431,7 +432,7 @@ def _seg_d(p, a, b):
 SPREAD = {'knee': 0.13, 'hip': 0.16, 'elbow': 0.085, 'shoulder': 0.10, 'wrist': 0.04, 'ankle': 0.05, 'toe': 0.035, 'spine': 0.075, 'neck': 0.045, 'head': 0.035}
 
 
-def weights(J, pts, top=4):
+def weights(J, pts, top=4, cls='body'):
     """the weights of points (N, 3) in the rest pose J: (idx (N, top), w (N, top)), the bones as BONES. Along each chain (the back, an
     arm, a leg) a point takes its place along the chain's line and the weights cross over smoothly round each joint; between the
     chains (the arm and the chest, the two legs, the legs and the pelvis) the nearest chain wins, blended over a few centimetres."""
@@ -474,7 +475,20 @@ def weights(J, pts, top=4):
         # (the armpit: what is inside and under a plane through it, tipped up and out, is the chest's, however near the arm's line)
         pit = (sg * x - (sh[0] * sg - 0.020)) * 0.94 + (p[:, 2] - (sh[2] - 0.085)) * 0.34
         # (and only what is within a sleeve's reach of the arm's own line: the arm hangs close to the hip, and a jacket's hem there is the body's)
-        ka = _ss(ta, -0.055, 0.075) * _ss(da, 0.098, 0.068) * side * np.maximum(_ss(pit, -0.020, 0.030), _ss(ta, 0.16, 0.24))
+        # (from the wrist out the reach is a hand's: the thumb and the spread fingers stand further from the arm's line than a sleeve does)
+        tw = (p - A('hand_' + sd)) @ ((A('hand_' + sd) - el) / np.linalg.norm(A('hand_' + sd) - el)); reach = 0.068 + 0.045 * _ss(tw, -0.03, 0.01)
+        ka = _ss(ta, -0.055, 0.075) * _ss(da, reach + 0.030, reach) * side * np.maximum(_ss(pit, -0.020, 0.030), _ss(ta, 0.16, 0.24))
+        # (below the armpit the arm hangs close along the body: the arm's is what lies outside a line down the arm's inner side, however
+        # near the two are. The arm's own line at each height, less the arm's half thickness there.)
+        wr_ = A('hand_' + sd); tip_ = wr_ + (wr_ - el) / np.linalg.norm(wr_ - el) * 0.20
+        zs_ = [tip_[2], wr_[2], el[2], sh[2]]; xl = np.interp(p[:, 2], zs_, [tip_[0] * sg, wr_[0] * sg, el[0] * sg, sh[0] * sg]); rin = np.interp(p[:, 2], zs_, [0.082, 0.080, 0.076, 0.078])          # (wider than a sleeve, a cuff or a glove seen level: the arm leans)
+        below = _ss(p[:, 2], sh[2] - 0.075, sh[2] - 0.115)
+        ka = ka * (1 - below + below * _ss(sg * x - (xl - rin), -0.007, 0.007))
+        if cls == 'torso':          # a jacket's body and a vest never go with the arm below the armhole: only the sleeves do
+            ka = ka * _ss(p[:, 2], sh[2] - 0.24, sh[2] - 0.13)
+        else:
+            ka = np.maximum(ka, _ss(tw, -0.02, 0.01) * _ss(da, 0.125, 0.100) * side)          # the hand is the arm's, whole
+            if cls == 'arm': ka = np.maximum(ka, _ss(ta, 0.05, 0.10) * side)                          # a sleeve and a glove are the arm's from the armhole out (at the armhole's rim as the jacket there)
         # the collar bone itself: a share of the shoulder's top, on its side
         kc = side * _ss(p[:, 2], sh[2] - 0.10, sh[2] + 0.01) * _ss(sg * x, 0.03, sh[0] * sg - 0.02) * 0.6 * (1 - ka)
         arm = wa.copy(); arm[:, 0] = 0.0; tot = arm.sum(1, keepdims=True); arm = np.where(tot > 1e-9, arm / np.maximum(tot, 1e-9), 0.0); arm[:, 1] += (tot[:, 0] <= 1e-9)
@@ -495,8 +509,9 @@ def weights(J, pts, top=4):
                     ab = b_ - a_; L = cum[k + 1] - cum[k]; hh = ((pm - a_) @ ab) / (L * L); hc = np.clip(hh, 0, 1); dd = np.linalg.norm(pm - a_ - hc[:, None] * ab, axis=1)
                     if k == 2: dd = np.where(hh > 1, np.linalg.norm(pm - a_ - np.minimum(hh, 1.6)[:, None] * ab, axis=1), dd); hc = np.clip(hh, 0, 1.6)
                     bt = dd < dmin; dmin = np.where(bt, dd, dmin); sarc = np.where(bt, cum[k] + hc * L, sarc)
-                rad = 0.019 if fn == 'thumb' else 0.0135
-                near = _ss(dmin, rad, rad - 0.004) * _ss(sarc, -0.004, 0.012 if fn != 'thumb' else 0.02); take = (dmin < best) & (near > 0); best = np.where(take, dmin, best)
+                # (round the knuckle the finger's reach is the hand's thickness: the back of the hand over the knuckle goes with the finger)
+                rad = (0.019 if fn == 'thumb' else 0.0135) + 0.012 * (1 - _ss(sarc, 0.006, 0.030))
+                near = _ss(dmin, rad, rad - 0.004) * _ss(sarc, -0.014, 0.014 if fn != 'thumb' else 0.02); take = (dmin < best) & (near > 0); best = np.where(take, dmin, best)
                 u2 = _ss(sarc, cum[1] - 0.008, cum[1] + 0.008); u3 = _ss(sarc, cum[2] - 0.007, cum[2] + 0.007)
                 row = np.zeros((len(pm), len(BONES))); row[:, BI['%s1_%s' % (fn, sd)]] = near * (1 - u2); row[:, BI['%s2_%s' % (fn, sd)]] = near * u2 * (1 - u3); row[:, BI['%s3_%s' % (fn, sd)]] = near * u2 * u3
                 row[:, BI['hand_' + sd]] = 1 - near; wf = np.where(take[:, None], row, wf)
@@ -525,6 +540,49 @@ def weights(J, pts, top=4):
     W = np.maximum(W, 0); W /= W.sum(1, keepdims=True)
     idx = np.argsort(-W, 1)[:, :top]; w = np.take_along_axis(W, idx, 1); w /= w.sum(1, keepdims=True)
     return idx, w
+
+
+def finger_weights(sex):
+    """the hands' weights by the mesh's own split into fingers (a vertex of a finger goes with that finger's bones and no other's):
+    (positions (M, 3) of both hands' vertices in the rest pose, shares (M, len(BONES)) of what the hand and its fingers hold of each).
+    Along a finger the joints cross over; round the knuckle the finger hands over to the hand. kropp_bygg.py lays these over what
+    weights() gives the skin's hands and the gloves made of them."""
+    v, _ = load_obj(sex); F = fingers(sex); J = joints(sex); T = tails(J); pos = []; sh = []
+    owner = {}
+    for fn, ids in F['verts'].items():
+        for i in ids: owner[int(i)] = fn
+    for sd, sg in (('R', 1), ('L', -1)):
+        mir = np.array([sg, 1, 1.0])
+        chains = {fn: [np.array(J['%s%d_%s' % (fn, k, sd)], float) for k in (1, 2, 3)] + [np.array(T['%s3_%s' % (fn, sd)], float)] for fn in FINGERS}
+        def along(p, pts):
+            best = 1e9; s_ = 0.0; cum = [0.0]
+            for a, b in zip(pts[:-1], pts[1:]): cum.append(cum[-1] + float(np.linalg.norm(b - a)))
+            for k, (a, b) in enumerate(zip(pts[:-1], pts[1:])):
+                ab = b - a; L = cum[k + 1] - cum[k]; h = float((p - a) @ ab) / (L * L); hc = min(max(h, -1.0 if k == 0 else 0.0), 1.8 if k == 2 else 1.0); d = float(np.linalg.norm(p - a - min(max(h, 0), 1) * ab))
+                if d < best: best = d; s_ = cum[k] + hc * L
+            return s_, best, cum
+        for i in F['hand']:
+            p = v[i] * mir; row = np.zeros(len(BONES)); fn = owner.get(int(i))
+            if fn is None:           # the palm and the back of the hand: a little of the nearest finger just at its knuckle
+                cand = [(along(p, chains[f])[1], f) for f in FINGERS]; d_, fn = min(cand); s_, d_, cum = along(p, chains[fn]); sv = F['side'] * mir; pts_ = chains[fn]; u_ = (pts_[1] - pts_[0]) / np.linalg.norm(pts_[1] - pts_[0]); lat = abs(float((p - pts_[0] - u_ * ((p - pts_[0]) @ u_)) @ sv))
+                # (in the finger's own column across the hand, whatever side of the hand: the knuckle's back and its pad go with the finger's root)
+                k1 = float(_ss(s_, -0.012, 0.010)) * (float(_ss(lat, 0.013, 0.007)) if fn != 'thumb' else float(_ss(d_, 0.026, 0.014)))
+                row[BI['%s1_%s' % (fn, sd)]] = k1; row[BI['hand_' + sd]] = 1 - k1
+            else:
+                s_, d_, cum = along(p, chains[fn]); k1 = float(_ss(s_, -0.012, 0.010)); u2 = float(_ss(s_, cum[1] - 0.007, cum[1] + 0.007)); u3 = float(_ss(s_, cum[2] - 0.006, cum[2] + 0.006))
+                row[BI['hand_' + sd]] = 1 - k1; row[BI['%s1_%s' % (fn, sd)]] = k1 * (1 - u2); row[BI['%s2_%s' % (fn, sd)]] = k1 * u2 * (1 - u3); row[BI['%s3_%s' % (fn, sd)]] = k1 * u2 * u3
+            pos.append(p); sh.append(row)
+    # the web between two fingers and the fingers' roots beside it: the shares are evened out over the mesh's own neighbours, so no
+    # edge runs from a vertex wholly the hand's to one wholly a finger's
+    sh = np.array(sh); nh = len(F['hand']); at = {int(i): k for k, i in enumerate(F['hand'])}
+    for _ in range(3):
+        new = sh.copy()
+        for half in (0, nh):
+            for i in F['hand']:
+                nb = [at[j] + half for j in F['adj'][int(i)]]; k = at[int(i)] + half
+                if nb: new[k] = 0.4 * sh[k] + 0.6 * sh[nb].mean(0)
+        sh = new
+    return np.array(pos), sh
 
 
 # ---------------- the pose ----------------
