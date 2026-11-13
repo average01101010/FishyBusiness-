@@ -22,7 +22,7 @@ MEASURE = """(root) => {
   const hex = c => '#' + c.slice(0, 3).map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
   const out = [], seen = new Set(), W = document.createTreeWalker(R, NodeFilter.SHOW_TEXT);
   for (let n; (n = W.nextNode()); ){
-    if (n.textContent.trim().length < 2 || !/[\\p{L}\\p{N}]/u.test(n.textContent)) continue;   // (stars, dots and arrows alone are ornaments, not text)
+    { const t = n.textContent.trim(), press = n.parentElement && n.parentElement.closest('button,summary,a'); if (!t || (!press && (t.length < 2 || !/[\\p{L}\\p{N}]/u.test(t)))) continue; }   // (stars, dots and arrows alone are ornaments, not text, except on something to press: the «⋯» of a menu)
  const e = n.parentElement; if (!e || seen.has(e) || !e.getClientRects().length) continue; seen.add(e);
     const cs = getComputedStyle(e); if (cs.visibility === 'hidden') continue; const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
     // the fills under the text, from the element outwards, until one is opaque; a picture or a gradient under it: not measured
@@ -50,6 +50,9 @@ async def main():
         pg = await b.new_page(viewport={'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg)
         await pg.evaluate("S.cash = 500000; S.boat.status = 'port'; S.crew = S.crew || []; renderActs()"); await pg.wait_for_timeout(400)
+        # with something aboard (the independent check 13.11.2026: the first run measured an empty boat): a tired hand, a licence
+        try: await pg.evaluate("S.crew = [genCrew()].map(c => Object.assign(c, {bi:false, off:false, fatigue:78})); S.lic = S.lic || {id:'u7', since:2026}; renderActs()")
+        except Exception as e: print('tilstand:', str(e)[:100])
 
         async def measure(root, where):
             for x in await pg.evaluate(MEASURE, root):
@@ -69,12 +72,25 @@ async def main():
             try: await pg.evaluate("(() => { const b = S.boat, q = portById('%s'); if (b.port !== q.id){ b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; } DOCK.open('%s'); })()" % (port, name)); await pg.wait_for_timeout(300)
             except Exception as e: print('kunne ikke åpne', name, str(e)[:80]); continue
             await page('#drawer', 'skuff ' + name)
+        if not only or 'arbeid' in only:
+            # the menus that open on a press: the «⋯» on a hand's card, and the choices of the operations plan's wizard
+            try:
+                await pg.evaluate("DOCK.open('arbeid')"); await pg.wait_for_timeout(300); await page('#drawer', 'skuff arbeid')
+                await pg.evaluate("DOCK.open('arbeid')"); await pg.wait_for_timeout(300); await pg.evaluate("(() => { const m = document.querySelector('#drawer .wk-more'); if (m) m.click(); })()"); await pg.wait_for_timeout(200); await measure('#drawer', 'skuff arbeid, ⋯ åpen')
+                await pg.evaluate("DOCK.open('drift'); (() => { const b = [...document.querySelectorAll('#drawer .ph-btn.p')][0]; if (b) b.click(); })()"); await pg.wait_for_timeout(400); await measure('#drawer', 'skuff drift, veiviseren')
+                for i in range(3):
+                    await pg.evaluate("(() => { const r = document.querySelectorAll('#drawer .dr-row, #drawer .dr-big')[%d]; if (r) r.click(); })()" % i); await pg.wait_for_timeout(250); await measure('#drawer', 'skuff drift, veiviseren %d' % (i + 1))
+            except Exception as e: print('arbeid/drift:', str(e)[:100])
         await pg.evaluate("DOCK.close()")
         for a in APPS:
             if only and a not in only: continue
             try: await pg.evaluate("PHONE.show(true); PHONE.open('%s')" % a); await pg.wait_for_timeout(300)
             except Exception as e: print('kunne ikke åpne', a, str(e)[:80]); continue
             await page('#phView', 'app ' + a)
+            if a == 'rederi':
+                await pg.evaluate("(() => { const d = document.querySelector('#phView details.fl-more'); if (d) d.open = true; })()"); await pg.wait_for_timeout(150); await measure('#phView', 'app rederi, ⋯ åpen')
+            if a == 'nett':
+                await pg.evaluate("(() => { const b = document.querySelector('#phone [data-pa=sub][data-s=megler]'); if (b) b.click(); })()"); await pg.wait_for_timeout(300); await page('#phView', 'app nett, megleren')
         await b.close()
     rows = sorted(found.values(), key=lambda x: (x['where'], x['k']))
     for x in rows: print('FEIL %-22s %4.1f  %s på %s  %2d px  ×%-3d %s  «%s»%s' % (x['where'], x['k'], x['fg'], x['bg'], x['px'], x['n'], x['sel'], x['t'], '  [style: ' + x['inl'][:60] + ']' if x['inl'] else ''))

@@ -1798,7 +1798,7 @@ body.booting #lopPop{visibility:hidden!important}
    The drawer and the phone's apps are dark glass like the HUD, so a menu belongs to the picture of the sea it lies over. The colours
    above carry roles (var(--m-ink,#22323c): tools/ui/styrhus.py), and the roles have values only here, so everything outside the drawer
    and the apps keeps the colour it had. The newspaper and the notes (.ph-paper) keep their paper. Measured by tools/ui/kontrast.py:
-   no text under 4.5:1. No backdrop blur until it is measured on a tablet. */
+   no text under 4.5:1. The drawer is solid: no blur until it is measured on a tablet, and without it what lies under showed through. */
 #drawer,.ph-appv:not(.ph-paper){
   --m-ink:#EEF4F7; --m-muted:#A9BEC8; --m-card:#15252F; --m-card2:#1E3240; --m-line:#2A4252; --m-dark:#2C4656;
   --m-ok:#6FD3A0; --m-bad:#FF8A80; --m-warn:#F0B94A; --m-link:#7CC4E0;
@@ -1808,7 +1808,7 @@ body.booting #lopPop{visibility:hidden!important}
   --ok:#6FD3A0; --warn:#F0B94A; --bad:#FF8A80; --water:#7CC4E0; --magSoft:rgba(224,90,174,.16);
   color-scheme:dark;
 }
-#drawer{background:rgba(11,23,32,.94);color:#EEF4F7;border-left:1px solid #2A4252}
+#drawer{background:#0B1720;color:#EEF4F7;border-left:1px solid #2A4252}
 @media (orientation:portrait){#drawer{border-left:0;border-top:1px solid #2A4252}}
 .ph-appv:not(.ph-paper){background:#0B1720;color:#EEF4F7;min-height:100%}
 #drawer .dr-head{background:#0B1720;border-bottom:1px solid #2A4252}
@@ -1816,7 +1816,7 @@ body.booting #lopPop{visibility:hidden!important}
 /* the chosen tab is the light one (one tab style, as the sketch) */
 #drawer .ph-sub button.on,.ph-appv:not(.ph-paper) .ph-sub button.on{background:#EEF4F7;color:#0B1720;border-color:#EEF4F7}
 /* the painted pictures were made on the light tile and keep it */
-.ic-pic,.bu-ic,.net-ic{--m-card:initial;--m-card2:initial}
+.ic-pic,.bu-ic,.net-ic{--m-card:initial;--m-card2:initial;--m-tint-link:initial}
 #drawer,.ph-appv:not(.ph-paper){--a-primary:#C22A86;--mut:#A9BEC8}
 #drawer .ph-panel,.ph-appv:not(.ph-paper) .ph-panel{--paper:#15252F;--ink:#EEF4F7;--muted:#A9BEC8;--line:#2A4252;--chrome:#0F1E28}
 /* an app's head: dark like the rest, the app's own colour as a line under it (white on the lighter app colours was under 4.5:1) */
@@ -1831,3 +1831,18 @@ body.booting #lopPop{visibility:hidden!important}
 .ph-appv .fl-tag,#drawer .fl-tag{color:#F5A3D3}
 /* the species' own colours were made for white; in the text of «Nå» they read as plain bold here (the bars keep the colours) */
 .ph-appv .gd-now p b[style]{color:var(--m-ink)!important}
+/* ---- after the independent check (13.11.2026) ----
+   one chosen state everywhere: the light one (tabs, chips, the months, the choices in the operations plan, Kaiboden's tabs) */
+:is(#drawer,.ph-appv:not(.ph-paper)) :is(.kb-tab.on,.chip-b.on,.gd-mon button.on,.ru-chips button.on,.ph-kv button.on,.dr-kv button.on,.ops-days button.on,.dr-big.on,.wk-more.on,.seg button.on){background:#EEF4F7;color:#0B1720;border-color:#EEF4F7}
+:is(#drawer,.ph-appv:not(.ph-paper)) .fl-more[open] summary{background:#EEF4F7;color:#0B1720}
+:is(#drawer,.ph-appv:not(.ph-paper)) .dr-big.on :is(small,.dr-k){color:#2C4656}
+/* fills that carry white text: dark enough for it */
+:is(#drawer,.ph-appv:not(.ph-paper)) .dr-onoff.on{background:#1F6B43} :is(#drawer,.ph-appv:not(.ph-paper)) .rv-warn{color:#0B1720}
+/* colours made for white that had no role: the race clock, a tired hand, the landing in the plan, plain links */
+:is(#drawer,.ph-appv:not(.ph-paper)) .lop-clock{color:#C9A8F0} :is(#drawer,.ph-appv:not(.ph-paper)) .wk-eff.e3{color:var(--m-bad)} :is(#drawer,.ph-appv:not(.ph-paper)) .dr-ev.land span:last-child{color:var(--m-link)}
+:is(#drawer,.ph-appv:not(.ph-paper)) a:not([class]){color:var(--m-link)}
+/* fields: the palette's own surface, not the browser's dark grey; the placeholder readable */
+:is(#drawer,.ph-appv:not(.ph-paper)) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){background-color:#0F1E28;color:#EEF4F7;border:1px solid #2A4252}
+:is(#drawer,.ph-appv:not(.ph-paper)) ::placeholder{color:#9DB3BE;opacity:1}
+:is(#drawer,.ph-appv:not(.ph-paper)) svg text[fill="#778899"]{fill:#A9BEC8}
+:is(#drawer,.ph-appv:not(.ph-paper)) .dr-why b{opacity:1}
