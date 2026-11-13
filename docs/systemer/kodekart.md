@@ -2882,12 +2882,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1620 linjer)
+## `src/js/ui/phone/07-patch.js` (1622 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1608 `patch()`
+  - 1610 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4677,7 +4677,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (490 linjer)
+## `src/js/view3d/20-trawl-seine.js` (515 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4701,20 +4701,22 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 277 `npcKB(t, lod, liv)`
-  - 280 `npcMesh(n, lod)`
-  - 294 `npcWarm(eye)`
-  - 309 `seineAnch(G)`
-  - 319 `npcClock(Hf)`
-  - 327 `npcHead(n, t)`
-  - 342 `npcFollow(n, t)`
-  - 361 `npcRev(n)`
-  - 370 `npcPhase(id)`
-  - 375 `kvDraw(n, eye, t)`
-  - 383 `kvRibDraw(n, R, G, M, eye, t)`
-  - 409 `npcFrame(H)`
-  - 410 `drawNPC(eye, t, H, VP)`
-  - 469 `npcCrewDraw(n, K, eye, t)`
+  - 282 `npcGear(n)`
+  - 289 `npcGearT(n)`
+  - 301 `npcKB(t, lod, liv)`
+  - 304 `npcMesh(n, lod)`
+  - 318 `npcWarm(eye)`
+  - 333 `seineAnch(G)`
+  - 343 `npcClock(Hf)`
+  - 351 `npcHead(n, t)`
+  - 366 `npcFollow(n, t)`
+  - 385 `npcRev(n)`
+  - 394 `npcPhase(id)`
+  - 399 `kvDraw(n, eye, t)`
+  - 407 `kvRibDraw(n, R, G, M, eye, t)`
+  - 433 `npcFrame(H)`
+  - 434 `drawNPC(eye, t, H, VP)`
+  - 494 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 

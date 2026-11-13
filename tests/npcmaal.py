@@ -37,6 +37,7 @@ def lofoten_key():
     D = json.load(open(os.path.join(HERE, '..', 'src', 'data', 'flaate.json'))); G = D['meta']['gear']
     ok = lambda g, L: (g in ('snurrevad', 'not', 'tral') and L >= 8) or (g == 'teine' and 7 <= L < 13) or (g == 'line' and L >= 13)
     n = [(sum(1 for bi, L, gi in v if ok(G[gi], L)), k) for k, v in D['h'].items() if k.split('.')[0] in ('13:9', '14:9')]
+    if not n or max(n)[0] == 0: raise SystemExit('FEIL ingen havn med redskapsmodellenes båter i Lofoten-flisene 13:9 og 14:9 (flaate.json)')
     return max(n)[1]
 CAM = """() => { for (const b of document.querySelectorAll('button[data-close], button')) if (/^Til sjøs|^To sea/.test(b.textContent.trim())) b.click(); const c = G3._debug.cam; c.helm = false; c.dist = 40; c.pitch = 0.06; c.yaw = 0; return true; }"""
 COUNT = """async () => { const C = window.__DC, fr = n => new Promise(r => { let k = 0; const f = () => { if (++k >= n) r(); else requestAnimationFrame(f); }; requestAnimationFrame(f); });
