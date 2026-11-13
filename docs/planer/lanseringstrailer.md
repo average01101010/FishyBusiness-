@@ -42,7 +42,7 @@ Jonas 13.11.2026: «husk bare at spillet gjelder ikke baaare norge lengre, fordi
 | 17,4–19,9 | Hvor stort | Kartet zoomer ut fra båten: kysten, så Svalbard, Færøyene og Grønland | From Hvaler to Kirkenes. And beyond. | Fra Hvaler til Kirkenes. Og videre. |
 | 19,9–27,4 | Hvor stort og mulighetene | **Båtstigen som match cut,** to slag per båt, samme vinkel, og hver båt på sitt sted og i sin årstid: trebåten (Senja, høst), plastsnekka (Reine, vintersol), havsjarken (Vestfjorden under Lofotfisket), sjarken på 36 fot (midnattssol), den nye hurtigsjarken (kuling ved Vardø), den eldre kystbåten (nordlys) | stedsstempler | stedsstempler |
 | 27,4–32,4 | Mulighetene | Droppet: snøkrabbefartøyet ved Svalbard i lav sol, ett langt tak | stedsstempel | stedsstempel |
-| 32,4–37,4 | Mulighetene | Kystnotbåten under Gisundbrua i midnattssol, det andre lange taket | stempel etter V5 | stempel etter V5 |
+| 32,4–37,4 | Mulighetene | Kystnotbåten under Gisundbrua i midnattssol, det andre lange taket | stedsstempel | stedsstempel |
 | 37,4–41,1 | Mulighetene | Garn, line og teiner på slag, på båtene fra rollelista | Nets. Longlines. Pots. | Garn. Line. Teiner. |
 | 41,1–44,9 | Mulighetene | Mannskapet på dekk, dine båter, andre spilleres båter | Your crew. Your fleet. One shared ocean. | Eget mannskap. Eget rederi. Ett felles hav. |
 | 44,9–50 | Oppfordringen | Logo på slaget, så adressen | Play free in your browser. detstorebla.no | Spill gratis i nettleseren. detstorebla.no |
@@ -68,7 +68,7 @@ Den brukte hurtigsjarken, skiffen og autolineren er reserver. Havbåtene som er 
 
 Jonas 13.11.2026: «Jeg tenker det er viktig å bevist bruke ringnotbåten i traileren fordi den er en av "end-game"-stjernene i spillet sammen med krabbebåten, så det er viktig å vise dem også, spesielt siden mange fiskere jobber på slike båter og kan relatere til det og kanskje ønsker å komme til det stadiet selv en dag.»
 
-Hun får derfor sitt eget lange tak rett etter droppet, i klippet der hun er best (under Gisundbrua i midnattssol). Det som er sant om henne i spillet i dag: hun står i Båthandelen med «Kan ikke kjøpes ennå» (`ui/phone/10-fartoy.js`), ringnottillatelsen finnes i kvotedataene (`core/03d-quota.js`), men spilleren har ikke ringnot som redskap (`GEAR` i `core/10-gear.js` har garn, line, teine, autoline og snøkrabbeteine). Å låse henne opp er altså ikke en bryter; det er havsteget etter lansering. Hvordan filmen sier det, er valg V5.
+Hun får derfor sitt eget lange tak rett etter droppet, i klippet der hun er best (under Gisundbrua i midnattssol). Det som er sant om henne i spillet i dag: hun står i Båthandelen med «Kan ikke kjøpes ennå» (`ui/phone/10-fartoy.js`), ringnottillatelsen finnes i kvotedataene (`core/03d-quota.js`), men spilleren har ikke ringnot som redskap (`GEAR` i `core/10-gear.js` har garn, line, teine, autoline og snøkrabbeteine). Å låse henne opp er altså ikke en bryter; det er havsteget etter lansering. Jonas har avgjort hvordan filmen viser henne (V5): som en båt på lik linje med de andre, fordi hun kommer straks.
 
 ## 4b. Stilen
 
@@ -127,7 +127,7 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 - **V3 A:** «Fjord at Dawn», 50 s.
 - **V4:** «i løpet av de nærmeste dagene», ingen fast dag. Filmingen venter på Jonas' «klar».
 - **Språk:** to utgaver av de samme klippene, én norsk og én engelsk (Jonas 13.11.2026: «Du kan lage en norsk og en engelsk»). Stedsnavnene og «Det Store Blå» er like i begge.
-- **V5 (åpent, Jonas): hva står det på kystnotbåten?** **A (anbefalt, og det planen bygger på til han svarer):** et lite stempel i samme stil som stedsstemplene, «Ringnot · kommer» / «Purse seiner · coming soon». Det er sant, det gir fiskerne som jobber på slike båter en grunn til å følge kontoen, og det svarer på spørsmålet før det kommer i kommentarfeltet. B: ingen tekst på henne, og en festet kommentar som sier at hun kommer. C: hun vises i Båthandelen med spillets egen «Kan ikke kjøpes ennå». Valget kan snus helt til sammensettingen: det er ett stempel i `titles.py`.
+- **V5 (Jonas 13.11.2026):** «ringnotbåten kommer straks, så vi viser den i traileren som om at den er like tilgjengelig som alle de andre båtene.» Hun får ingen «kommer»-tekst og vises som krabbebåten: en båt spilleren kan komme til. **Det som følger av planens egen regel (del 9):** T1 og sluttkontrollen før opplasting sjekker at hun kan kjøpes på detstorebla.no den dagen filmen legges ut (`lock` borte i `VESSELS`, og et redskap hun kan fiske med). Er hun ikke ute hos spillerne da, sier økta fra til Jonas før filmen lastes opp; valget mellom å vente på slippet eller legge på stempelet «Ringnot · kommer» er hans, og stempelet er én linje i `titles.py`.
 
 ## 9. Hva planen ikke gjør
 
@@ -140,4 +140,4 @@ Hver fase er én økt. T3 og T5 går på GPU-maskinen; resten kan gjøres her.
 
 ## 10. Status
 
-13.11.2026: planen skrevet, valgene tatt, stilen lagt til (del 4b) med stilarket `trailer/stil/stilark-1.jpg`. Rollelista og kystnotbåtens plass lagt inn samme dag; V5 er åpent. Neste er T1 (faktasjekk og prøvebilder), som kan gjøres uten GPU. T3 venter på Jonas' «klar».
+13.11.2026: planen skrevet, valgene tatt, stilen lagt til (del 4b) med stilarket `trailer/stil/stilark-1.jpg`. Rollelista og kystnotbåtens plass lagt inn samme dag; V5 tatt samme dag: kystnotbåten vises som de andre båtene. Neste er T1 (faktasjekk og prøvebilder), som kan gjøres uten GPU. T3 venter på Jonas' «klar».
