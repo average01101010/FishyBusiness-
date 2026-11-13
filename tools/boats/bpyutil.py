@@ -187,6 +187,37 @@ def cut(o, cutters, keep=False):
     return o
 
 
+def ease_cut_fans(o, rims, step=0.2, reach=2.5):
+    """the faces round holes cut by a boolean, split so the shade baked at the hole does not run across the plate (tilbakemelding #5 fra
+    testutgaven, 13.11.2026: dark streaks across the hurtigsjark's transom). The cut leaves a fan of long thin triangles from the hole's
+    rim to the plate's far edges; the shade is baked per corner (bake_ao), dark at the rim, and the triangles spread it 1-4 m. Every face
+    with a corner at a rim is cut into triangles and every edge of them longer than 1.5 step gets points step apart, so the dark stays
+    within some step of the hole. The rest of the plate round the hole (faces in its plane within reach of it) is split the same way,
+    since the shade of what stands on the plate (the ladder's brackets on the transom) ran across its long triangles too; only the faces
+    in the paint of the hole's own faces (the yellow transom, not the white bulwark over it, whose shade is even). rims:
+    [(centre, normal, radius, depth)], a corner at a rim lies within radius of the centre in the plane and depth along the normal."""
+    rims = [(V(c), V(n).normalized(), r, d) for c, n, r, d in rims]
+    def at(p, c, n, r, d):
+        w = p - c; h = w.dot(n); return abs(h) <= d and (w - n * h).length <= r
+    me = o.data; bm = bmesh.new(); bm.from_mesh(me); bm.normal_update()
+    fs = set()
+    for c, n, r, d in rims:
+        rf = [f for f in bm.faces if any(at(v.co, c, n, r, d) for v in f.verts)]; mats = {f.material_index for f in rf}
+        fs.update(rf)
+        fs.update(f for f in bm.faces if f.material_index in mats and abs(f.normal.dot(n)) > 0.98 and at(f.calc_center_median(), c, n, reach, max(d, reach * 0.1)))
+    fs = list(fs)
+    if fs:
+        fs = bmesh.ops.triangulate(bm, faces=fs)['faces']
+        by = {}
+        for e in {e for f in fs for e in f.edges}:
+            L = e.calc_length()
+            if L > 1.5 * step: by.setdefault(int(math.ceil(L / step)) - 1, []).append(e)
+        for k, es in by.items(): bmesh.ops.subdivide_edges(bm, edges=es, cuts=k, use_grid_fill=False)
+        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    bm.to_mesh(me); bm.free(); me.update()
+    return len(fs)
+
+
 def rrect(cx, cy, w, h, r, n=4, skew=0.0):
     """a rounded rectangle in 2D (u, v) centred at (cx, cy); skew moves the top edge along u (raked windows)"""
     r = min(r, w / 2 - 1e-4, h / 2 - 1e-4); pts = []
