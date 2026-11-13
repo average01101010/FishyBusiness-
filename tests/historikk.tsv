@@ -3893,6 +3893,22 @@
 2026-11-13 17:33	ccr-432150cd-kkjoez	891278f	boottest	OK	28	lite	samtidig	
 2026-11-13 17:34	ccr-432150cd-kkjoez	891278f	docktest	OK	63	lite	samtidig	
 2026-11-13 17:34	ccr-432150cd-kkjoez	891278f	lukket	OK	17	lite	samtidig	
+2026-11-13 22:13	ccr-432150cd-kkjoez	f917ee39+	rorbutest	OK	15	lite	samtidig	
+2026-11-13 22:13	ccr-432150cd-kkjoez	f917ee39+	naustleia	OK	8	lite	samtidig	
+2026-11-13 22:14	ccr-432150cd-kkjoez	f917ee39+	utfrakai	OK	92	lite	samtidig	
+2026-11-13 22:14	ccr-432150cd-kkjoez	f917ee39+	trip2	OK	34	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	dyntest	FEIL	259	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	autonavtest	FEIL	24	lite	samtidig	FEIL 9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen  {'zmin': 3.3, 'draftSet': 2.95, 'lineq'
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	obstest	OK	7	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	harbourtest	OK	13	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	r4test	OK	13	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	sleeptest	OK	11	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	boottest	OK	26	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	savestest	OK	8	lite	samtidig	
+2026-11-13 22:18	ccr-432150cd-kkjoez	f917ee39+	lukket	OK	15	lite	samtidig	
+2026-11-13 22:22	ccr-432150cd-kkjoez	f917ee39+	sitetest	FEIL	257	3d	alene	avsluttet med kode 1
+2026-11-13 22:24	ccr-432150cd-kkjoez	f917ee39+	driftsplan2test	FEIL	101	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-13 22:25	ccr-432150cd-kkjoez	f917ee39+	routetest	OK	43	lite	alene	
 2026-11-13 18:07	ccr-d6-hud-dialoger	d35e50b	boottest	OK	30	lite	samtidig	
 2026-11-13 18:07	ccr-d6-hud-dialoger	d35e50b	docktest	OK	63	lite	samtidig	
 2026-11-13 18:09	ccr-d6-hud-dialoger	d35e50b	hudtest	OK	114	lite	samtidig	
@@ -3944,3 +3960,11 @@
 2026-11-13 16:27	fb/2026-11-13-mottak-sjovei	aee7d6c8	starttest	OK	103	lite	samtidig	
 2026-11-13 22:38	ccr-d5-telefonen	db5e245a	boottest	OK	33	lite	samtidig	
 2026-11-13 22:40	ccr-d5-telefonen	db5e245a	telefonflate	OK	141	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	boottest	OK	40	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	trip2	OK	44	lite	samtidig	
+2026-11-13 22:42	ccr-432150cd-kkjoez	f8e9aa6b	rorbutest	OK	15	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	utfrakai	OK	92	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	lukket	OK	16	lite	samtidig	
+2026-11-13 22:43	ccr-432150cd-kkjoez	f8e9aa6b	docktest	OK	64	lite	samtidig	
+2026-11-13 22:45	ccr-432150cd-kkjoez	f8e9aa6b+	docktest	OK	60	lite	alene	
+2026-11-13 22:47	ccr-432150cd-kkjoez	f076b7fd	docktest	OK	60	lite	alene	

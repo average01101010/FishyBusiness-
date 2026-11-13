@@ -18,8 +18,13 @@ const HIND = {C:250, idx:null, key:'', list:[], stamp:0, ctx:null, br:new WeakMa
 // how high the boat stands over the water (m; an estimate from her length: a 7 m snekke 2.5 m, a 15 m sjark 5 m, a 28 m ocean boat
 // 10 m), and 1 m for the tide and the sea
 const obsAir = () => Math.min(16, Math.max(2, (BOAT.len || 8) * 0.35)) + 1;
-// how near a leg may pass (m): half the boat's beam and a margin
-const obsClr = () => (BOAT.beam || 3) / 2 + 6;
+// how near a leg may pass (m): half the boat's beam and a margin, which grows with her length (13.11.2026, tests/allesteder.py: the 21 m
+// coastal vessel on Autonav cut the turn under the bridge at Reine and by a mark at Bøvågen and struck them at 3-5 knots with 6 m; a long
+// boat swings wider off the line in a turn)
+const obsClr = () => HIND.clrMin ? (BOAT.beam || 3) / 2 + 2 : (BOAT.beam || 3) / 2 + Math.max(6, (BOAT.len || 8) * 0.5);
+// a way round with the full margin first, and where there is none (a narrow lead with marks on both sides: Bøvågen, 13.11.2026, where the
+// leg was left passing 4 m from a mark and she struck it), one with two metres beside her half beam; null when neither is found
+function obsDetourAny(a, b){ let d = obsDetour(a, b); if (d) return d; HIND.clrMin = true; try { d = obsDetour(a, b); } finally { HIND.clrMin = false; } return d; }
 const obsMarkR = {M:3, m:1, P:1, D:0.5, L:0.5, B:1, C:1, S:0.5, K:1.5, I:1, i:0.5, A:1, a:0.5, Y:1, y:0.5};   // (I, A, Y and their beacons: Ø13 K3, 01e-marks.js)
 // a bridge's piers and deck pieces (as bridgeInto builds them), worked out once per bridge
 function obsBridge(br){
@@ -149,6 +154,9 @@ function obsRock(a, b){
 }
 function obsSafe(a, b, ref){
   const sd = safeDepth(), h = legHazardMemo(a, b, sd);
+  // (the second try round a thing, obsDetourAny: a leg deep enough for the boat and 8 m from rocks will do, where none as good as the
+  // drawn leg goes round it; that leg ran over the mark)
+  if (HIND.clrMin) return h.minD >= Math.min(sd, leiaLim()) - 0.2 && (h.rocks === 0 || obsRock(a, b) >= 0.008);
   if (h.minD < Math.min(sd, ref ? ref.minD : sd) - 0.2) return false;
   if (h.rocks === 0) return true;
   if (!ref || !ref.rocks) return false;
@@ -217,7 +225,7 @@ function obsDetour(a, b, depth = 3, ref){
 // a route's waypoints (after a) with the detours put in; a leg with no way round is left as it was
 function obsRoute(a, wps){
   const out = []; let p = a;
-  for (const q of wps){ const d = obsClear(p, q) ? [] : obsDetour(p, q); if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true})); out.push(q); p = q; }
+  for (const q of wps){ const d = obsClear(p, q) ? [] : obsDetourAny(p, q); if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true})); out.push(q); p = q; }
   return out;
 }
 // the coast's packs along a way (km points), and the tiles decoded: a route is checked against what is there, so the packs come
@@ -244,7 +252,7 @@ function obsSail(pl, b){
   const w = pl.wps[pl.idx], ctx = HIND.ctx; HIND.ctx = {free:[[b.pos.x * 1000, b.pos.y * 1000]].concat(w.port ? [[w.x * 1000, w.y * 1000]] : []), freeR:40};
   try {
     if (obsClear(b.pos, w)) return;
-    const d = obsDetour(b.pos, w); if (!d || !d.length) return;
+    const d = obsDetourAny(b.pos, w); if (!d || !d.length) return;
     pl.wps.splice(pl.idx, 0, ...d.map(p => ({x:p.x, y:p.y, port:null, fish:0, obs:true}))); if (pl.unsafe) pl.unsafe.splice(pl.idx, 0, ...d.map(() => false)); pl.obsK = key();
   } finally { HIND.ctx = ctx; }
 }

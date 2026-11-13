@@ -77,7 +77,7 @@ function restMinute(){
 // (a rorbu whose quay was looked for on the shore and not found has no berth and no mark on the chart: rorbuSite, 07d-rorbu.js; one not
 // worked out yet, its map block not in, is kept)
 const rorbuUsable = R => { try { rorbuSite(R); } catch (e){} return R.site !== null; };
-function rorbuTip(p){ const rb = p ? rorbuNear(p, 120).find(e => rorbuUsable(e.R)) : null; return rb ? {name:rb.R.name, nm:rb.d / NM} : null; }
+function rorbuTip(p){ const rb = p && siteFits(S.boat.type) ? rorbuNear(p, 120).find(e => rorbuUsable(e.R)) : null; return rb ? {name:rb.R.name, nm:rb.d / NM} : null; }
 // «Nærmeste rorbu er i Husa, 3 nm unna.» (the toast, the log and the handbook's drip say it the same way)
 const rorbuLine = r => { const n = r.nm < 0.5 ? ['under 1', 'under 1'] : [String(Math.round(r.nm)), String(Math.round(r.nm))];
   return ['Nærmeste rorbu er i ' + r.name + ', ' + n[0] + ' nm unna.', 'The nearest rorbu is in ' + r.name + ', ' + n[1] + ' nm away.']; };

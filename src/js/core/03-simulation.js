@@ -804,7 +804,7 @@ const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
 // (openness and the distance to the shore)
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) && depthHas(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p)); }
+function depthF(p){ return siteDredge(p, unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) && depthHas(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p))); }   // (the rorbuer's and the naust's berths: siteDredge, 07-harbours.js)
 // whether the four cells depthWater reads at p all lie in blocks some pack has: at a tile's seaward edge the next cell's block can be
 // one no pack covers (open sea), and that is the model's water, not an error (Autonav over open sea threw «depth block has no
 // pack», 08.10.2026). A block a pack has but is not loaded yet still throws, as it should.
