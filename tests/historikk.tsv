@@ -3479,3 +3479,7 @@
 2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	kapplop	OK	27	lite	samtidig	
 2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	hopptest	OK	8	lite	samtidig	
 2026-11-13 01:37	plan/2026-11-13-116b	01f2de47	boottest	OK	23	lite	alene	
+2026-11-13 02:20	ccr-013bxxie-f7brott	2e473c2	brottshot	OK	1244	3d	alene	
+2026-11-13 02:21	ccr-013bxxie-f7brott	2e473c2	trip2	OK	38	lite	samtidig	
+2026-11-13 02:22	ccr-013bxxie-f7brott	2e473c2	hulltest	OK	84	lite	samtidig	
+2026-11-13 02:22	ccr-013bxxie-f7brott	2e473c2	seatest	OK	16	lite	samtidig	
