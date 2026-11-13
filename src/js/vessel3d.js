@@ -1455,6 +1455,20 @@ function figMesh(kit, opt){
     M.j.set(o.j.subarray(a * 4, (a + cnt) * 4), at * 4); M.w.set(o.w.subarray(a * 4, (a + cnt) * 4), at * 4); M.parts.push([name, at, cnt]); at += cnt; }
   return M;
 }
+// the trunk's profile of a body in what it wears (figpose.js figProfile): the body's garment over the trunk (torso: the part's
+// name), the trousers' top under its hem, and the life jacket over it when one is worn (vest: its part's name). Measured once for
+// each. And the head's measures for a body (figHead).
+const FIGPROF = {}, FIGHEAD = {};
+function figProfOf(sex, torso, vest){
+  const k = (sex === 'f' ? 'f' : 'm') + '|' + torso + '|' + (vest || ''); if (k in FIGPROF) return FIGPROF[k];
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, sk = G && G.sk ? figSkelOf(sex) : null; if (!sk) return null;
+  return FIGPROF[k] = figProfile([glbPeek(G, sex === 'f' ? 'thighF' : 'thigh'), glbPeek(G, torso), vest ? glbPeek(G, vest) : null], sk);
+}
+function figHeadOf(sex){
+  const k = sex === 'f' ? 'f' : 'm'; if (k in FIGHEAD) return FIGHEAD[k];
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, sk = G && G.sk ? figSkelOf(sex) : null, o = sk ? glbPeek(G, k === 'f' ? 'headF' : 'head') : null; if (!o) return FIGHEAD[k] = null;
+  const H = figHead(o, sk); H.P = figProfile([o], sk, FIG_HEADP); return FIGHEAD[k] = H;   // (P: the head's own profile, the face's front by height and side)
+}
 // The new figure built once into a mesh (FB7: the people in the skiff and on boats seen from outside): posed standing or seated on
 // the processor (figpose.js figStand, figFromJoints, figSkin) and added to the builder B with its feet at (x, y, z), facing -z, at
 // the size people have on board (WK_S). hands as figureVB's: [left, right] where given. False when the new people are not on.

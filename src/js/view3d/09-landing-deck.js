@@ -391,7 +391,8 @@
   // the cup …) tried against every body drawn the same time (LEMMER.bodies: the new figure's joints). A body is its core: the trunk
   // from the hips to the chest and on to the neck, the head, the thighs, the shins and the upper arms as rounded rods (the forearms
   // and the hands hold the things, and are left out). A thing is its mesh's corners and points over its triangles, read back from
-  // the buffer once (WebGL 2). Returns what is deeper in than tol (m): [{task, own (his own thing), name, part, cm, n points}].
+  // the buffer once (WebGL 2). With the new figure the trunk and the head are their own profiles, both from the mesh
+  // that is drawn (figpose.js figProfile, figHead), not rods. Returns what is deeper in than tol (m): [{task, own (his own thing), name, part, cm, n points}].
   const THINGCPU = new Map();
   function thingPts(m){
     let P = THINGCPU.get(m); if (P) return P; P = [];
@@ -401,15 +402,28 @@
         for (let i = 0; i <= n; i++) for (let j = 0; i + j <= n; j++){ const u = i / n, v = j / n, w = 1 - u - v; P.push(A[0] * w + B[0] * u + C[0] * v, A[1] * w + B[1] * u + C[1] * v, A[2] * w + B[2] * u + C[2] * v); } } }
     P = new Float32Array(P); THINGCPU.set(m, P); return P; }
   function thingName(m){ for (const k in PM){ const v = PM[k]; if (v === m) return k; if (v && typeof v === 'object' && !v.pb) for (const q in v) if (v[q] === m) return k + '.' + q; } for (const k in KITM) if (KITM[k] === m) return k; if (HANDM) for (const k of ['tape']) if (HANDM[k] === m) return 'hånd.' + k; return m.n + ' hjørner'; }
+  // (the things' own measures: each mesh drawn with a worker by its name, its box in its own frame [min, max] in cm; the tests and
+  // the session read the grips' places off them, deckcrew.js HOLDT)
+  function thingBox(){ const out = {}; for (const th of LEMMER.things || []){ const nm = thingName(th.m); if (out[nm]) continue; const P = thingPts(th.m), mn = [1e9, 1e9, 1e9], mx = [-1e9, -1e9, -1e9];
+      for (let i = 0; i < P.length; i += 3) for (let k = 0; k < 3; k++){ if (P[i + k] < mn[k]) mn[k] = P[i + k]; if (P[i + k] > mx[k]) mx[k] = P[i + k]; } out[nm] = [mn.map(v => Math.round(v * 1000) / 10), mx.map(v => Math.round(v * 1000) / 10)]; } return out; }
   function thingClip(tol){
     tol = tol == null ? 0.01 : tol; const T = LEMMER.things || [], B = LEMMER.bodies || [], out = {};
     const segD = (p, a, b) => { const ab = sub3(b, a), l2 = dot3(ab, ab) || 1e-9, t = Math.max(0, Math.min(1, dot3(sub3(p, a), ab) / l2)); return Math.hypot(p[0] - a[0] - ab[0] * t, p[1] - a[1] - ab[1] * t, p[2] - a[2] - ab[2] * t); };
+    // (the trunk by its own profile, measured on the mesh (figpose.js figProfile), where the body has one: a point is taken into the
+    // rest pose along the line hip joints - chest - neck as it is bent and turned now, the hips' breadth low and the shoulders' high)
+    const trunk = (b, p) => { const g = b.tr; let sg = g.s[0], t = dot3(sub3(p, sg.A), sg.u); if (t > sg.len){ sg = g.s[1]; t = dot3(sub3(p, sg.A), sg.u); }
+      const up0 = sg.a[1] + sg.d[1] * t, k = Math.max(0, Math.min(1, up0 / g.top)), Rt0 = add3(mul3(g.Rh, 1 - k), mul3(g.Rs, k)), Rt = nrm3(sub3(Rt0, mul3(sg.u, dot3(Rt0, sg.u)))), f = crs3(sg.u, Rt), q = sub3(p, sg.A), pa = dot3(q, f);
+      return [figProfIn(b.P, sg.a[0] + sg.d[0] * t + sg.d[1] * pa, sg.a[1] + sg.d[1] * t - sg.d[0] * pa, dot3(q, Rt)), up0 < g.s[1].a[1] ? 'kroppen' : 'brystet']; };
     for (const b of B){ const J = b.J, up = nrm3(sub3(J.head, J.neck)), hc = add3(J.head, mul3(up, 0.09));
-      b.rods = [['kroppen', J.hips, J.spine3, 0.115], ['brystet', J.spine3, J.neck, 0.105], ['hodet', hc, hc, 0.095], ['låret', J.thigh_R, J.shin_R, 0.065], ['låret', J.thigh_L, J.shin_L, 0.065], ['leggen', J.shin_R, J.foot_R, 0.045], ['leggen', J.shin_L, J.foot_L, 0.045], ['overarmen', J.uarm_R, J.farm_R, 0.04], ['overarmen', J.uarm_L, J.farm_L, 0.04]]; }
+      if (b.P && b.sk && !b.tr){ const r = n => b.sk.rest[b.sk.ix[n]], h0 = r('thigh_R'), rs = n => [h0[2] - r(n)[2], r(n)[1] - h0[1]], O = mul3(add3(J.thigh_R, J.thigh_L), 0.5);
+        const sgm = (A, a, Bw, bb) => { const d = [bb[0] - a[0], bb[1] - a[1]], l = Math.hypot(d[0], d[1]); return {A, a, u:nrm3(sub3(Bw, A)), d:[d[0] / l, d[1] / l], len:Math.hypot(...sub3(Bw, A))}; };
+        b.tr = {s:[sgm(O, [0, 0], J.spine3, rs('spine3')), sgm(J.spine3, rs('spine3'), J.neck, rs('neck'))], top:rs('neck')[1], Rh:nrm3(sub3(J.thigh_R, J.thigh_L)), Rs:nrm3(sub3(J.uarm_R, J.uarm_L))}; }
+      b.rods = [['kroppen', J.hips, J.spine3, b.tr ? 0 : 0.115], ['brystet', J.spine3, J.neck, b.tr ? 0 : 0.105], ['hodet', hc, hc, b.hd ? 0 : 0.095], ['låret', J.thigh_R, J.shin_R, 0.065], ['låret', J.thigh_L, J.shin_L, 0.065], ['leggen', J.shin_R, J.foot_R, 0.045], ['leggen', J.shin_L, J.foot_L, 0.045], ['overarmen', J.uarm_R, J.farm_R, 0.04], ['overarmen', J.uarm_L, J.farm_L, 0.04]]; }
     for (const th of T){ const P = thingPts(th.m), M = th.M, e = th.eye, nm = thingName(th.m);
       for (const b of B){ const c = b.J.spine3; if (Math.hypot(M[12] + e[0] - c[0], M[13] + e[1] - c[1], M[14] + e[2] - c[2]) > 4) continue;
         for (let i = 0; i < P.length; i += 3){ const x = P[i], y = P[i + 1], z = P[i + 2], p = [M[0] * x + M[4] * y + M[8] * z + M[12] + e[0], M[1] * x + M[5] * y + M[9] * z + M[13] + e[1], M[2] * x + M[6] * y + M[10] * z + M[14] + e[2]];
-          for (const r of b.rods){ const d = r[3] - segD(p, r[1], r[2]); if (d > tol){ const k = b.task + '|' + (th.i === b.i ? 'egen' : 'annens') + '|' + nm + '|' + r[0], o = out[k] || (out[k] = {task:b.task, own:th.i === b.i, name:nm, part:r[0], cm:0, n:0}); o.n++; if (d * 100 > o.cm) o.cm = +(d * 100).toFixed(1); } } } } }
+          const tq = b.tr ? trunk(b, p) : null, hq = b.hd ? [(q => figProfIn(b.hd.H.P, -dot3(q, b.hd.ax[2]), dot3(q, b.hd.ax[1]), dot3(q, b.hd.ax[0])))(sub3(p, b.hd.O)), 'hodet'] : null, more = tq && hq ? [tq, hq] : tq ? [tq] : hq ? [hq] : null;
+          for (const r of more ? more.concat(b.rods) : b.rods){ const own = r === tq || r === hq, d = own ? r[0] : r[3] - segD(p, r[1], r[2]), r0 = own ? r[1] : r[0]; if (d > tol){ const k = b.task + '|' + (th.i === b.i ? 'egen' : 'annens') + '|' + nm + '|' + r0, o = out[k] || (out[k] = {task:b.task, own:th.i === b.i, name:nm, part:r0, cm:0, n:0}); o.n++; if (d * 100 > o.cm) o.cm = +(d * 100).toFixed(1); } } } } }
     return Object.values(out).sort((a, b) => b.cm - a.cm); }
   // what each hand does in each pose: the grip, the way the palm faces (n) or the axis held (a), as directions in the figure's frame
   // (forward, up, right); the knife's way (st.kd) is set here for the props after

@@ -113,7 +113,7 @@
   function figOf(K){
     if (K.fig !== undefined) return K.fig; if (!PRGS || !glbHas('folk2')) return K.fig = null;
     const M = figMesh(K._kit, {}); if (!M || !M.cnt) return K.fig = null; const sk = figSkelOf(M.sex), ex = glbLoad('folk2').ex;
-    return K.fig = {sex:M.sex, sk, ex, tris:M.cnt / 3, len:figLens(sk), H0:[figHandRest(ex, M.sex, 'R'), figHandRest(ex, M.sex, 'L')], grip:figGrips(ex, M.sex),
+    return K.fig = {sex:M.sex, sk, ex, prof:figProfOf(M.sex, M.parts[0][0], (M.parts.find(q => /^vest/.test(q[0])) || [null])[0]), head:figHeadOf(M.sex), hj:(q => [sk.rest[sk.ix.thigh_R][2] - q[2], q[1] - sk.rest[sk.ix.thigh_R][1]])(sk.rest[sk.ix.head]), tris:M.cnt / 3, len:figLens(sk), H0:[figHandRest(ex, M.sex, 'R'), figHandRest(ex, M.sex, 'L')], grip:figGrips(ex, M.sex),
       draws:figDraws(M, FIGNB).map(d => ({pb:buf(d.p), nb:buf(d.n), cb:buf(d.c), jb:buf(d.j), wb:buf(d.w), n:d.cnt, bones:d.bones}))};
   }
   function figFree(K){ const f = K && K.fig; if (!f) return; for (const d of f.draws) for (const b of [d.pb, d.nb, d.cb, d.jb, d.wb]) gl.deleteBuffer(b); K.fig = undefined; }

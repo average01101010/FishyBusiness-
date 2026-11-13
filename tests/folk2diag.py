@@ -1,15 +1,16 @@
 """The new people (steg 125, FB7): where the hands miss their points and what goes into bodies, a pose at a time on the line haul's places (a diagnosis that prints tables, no checks). python3 tests/folk2diag.py [scene]"""
 from _env import boot, GAME
 from lemmer import SET, BOATS, TASKS, frames
-import asyncio, json, sys
+import asyncio, json, os, sys
 from playwright.async_api import async_playwright
 DIAG = """(([tasks, n]) => { const R = {}, own = (g, p) => { const F = [Math.sin(g.h), -Math.cos(g.h)], Rv = [Math.cos(g.h), Math.sin(g.h)]; return [(p[0] - g.at[0]) * F[0] + (p[2] - g.at[2]) * F[1], p[1] - g.at[1], (p[0] - g.at[0]) * Rv[0] + (p[2] - g.at[2]) * Rv[1]].map(v => +v.toFixed(2)); };
-  const C = {}; LEMMER.log = [];
+  const C = {}, BX = {}; LEMMER.log = [];
   for (const task of tasks) for (let k = 0; k < n; k++){ const T = 100 + k * 0.37; SJOBEIN.test = {roll:0, pitch:0, T, task}; LEMMER.log.length = 0; LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw();
     for (const g of LEMMER.log){ const key = (g.walk ? 'gå' : g.task || 'står') + (g.ev ? '*' : ''); for (const i of [0, 1]){ const k2 = key + (i ? ' V' : ' H'), r = R[k2] || (R[k2] = {n:0, nb:0, ao:0, fo:0}); r.n++; if (g.ao[i] > 0.02) r.nb++; if (g.fo && g.fo[i] > r.fo) r.fo = +g.fo[i].toFixed(3);
         if (g.ao[i] > r.ao){ r.ao = +g.ao[i].toFixed(3); r.ov = g.ov[i] && g.ov[i].map(v => +v.toFixed(2)); r.tg = own(g, g.tg[i]); r.idx = g.idx; r.T = +(g.T % 1000).toFixed(2); r.b = +(g.b * 57.3).toFixed(0); r.t = +(g.t * 57.3).toFixed(0); } } }
+    Object.assign(BX, G3._debug.thingBox());
     for (const o of G3._debug.thingClip(0.01)){ const k3 = o.task + '|' + (o.own ? 'egen' : 'annens') + '|' + o.name + '|' + o.part, c = C[k3]; if (!c || o.cm > c) C[k3] = o.cm; } }
-  SJOBEIN.test = null; LEMMER.log = null; LEMMER.things = null; LEMMER.bodies = null; return {R, C}; })"""
+  SJOBEIN.test = null; LEMMER.log = null; LEMMER.things = null; LEMMER.bodies = null; return {R, C, BX}; })"""
 async def main():
     scene = sys.argv[1] if len(sys.argv) > 1 else 'arbeid'
     async with async_playwright() as p:
@@ -21,12 +22,20 @@ async def main():
         try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
         except Exception: pass
         await pg.evaluate("LEMMER.log = []"); await frames(pg, t, 1)
-        o = await pg.evaluate(DIAG, [TASKS, 30])
+        only = os.environ.get('KYST_DIAG_TASKS')   # (a few poses only: KYST_DIAG_TASKS=gaff,pack)
+        o = await pg.evaluate(DIAG, [only.split(',') if only else TASKS, 30])
         print('--- hender (ao: m fra målet; ov: [utenfor rekkevidde, for nær, i egen kropp]; tg: målet [fram, opp, høyre]; fo: figurens håndledd mot løserens)')
         for k, r in sorted(o['R'].items(), key=lambda q: -q[1]['ao']):
             if r['ao'] > 0.005 or r['fo'] > 0.005: print('%-12s' % k, json.dumps(r))
         print('--- ting i kropper (cm)')
-        for k, c in sorted(o['C'].items(), key=lambda q: -q[1]): print('%5.1f  %s' % (c, k))
+        for k, c in sorted(o['C'].items(), key=lambda q: -q[1]):
+            if '|egen|' in k: print('%5.1f  %s' % (c, k))
+        print('--- andres ting (alle står i samme stilling på linetrekkets plasser i sveipet; spillet slik det går: tests/folk2deck.py)')
+        for k, c in sorted(o['C'].items(), key=lambda q: -q[1])[:400]:
+            if '|egen|' not in k and c >= 5: print('%5.1f  %s' % (c, k))
+        print('--- tingenes egne mål (cm, [min, maks] i tingens ramme)')
+        for k in ('fbox', 'pause:krus', 'pause:kikk', 'fish:hott', 'fish:spade', 'fish:spade_skaft', 'pause:mat', 'pause:sig', 'pause:tlf', 'pause:snus', 'broom', 'fish:kniv', 'slo'):
+            if k in o['BX']: print('%-18s' % k, o['BX'][k])
         print('feil:', errs[:3], 'gl', await pg.evaluate("G3._debug.glErr()"))
         await br.close()
 asyncio.run(main())

@@ -1180,10 +1180,34 @@ const LEMMER = {
   CHEST:0.13,     // m ahead of the spine a wrist keeps before the chest and the belly (never in his own body)
   FRONT:0.2,      // and when it is well across him, beyond his middle (it goes round before the belly, not through it)
   BELLY:0.13,     // m ahead of the spine an elbow keeps when it is before the torso (a hand reaching across him)
+  WRIST:0.035,    // m a wrist keeps clear of the trunk's own profile with the new people (its half thickness with the sleeve; figpose.js figProfile)
+  prof:null,      // the trunk's profile of the figure being solved (drawWorker sets it for its arms and takes it away after); none: CHEST and FRONT as before
   KNEE:[1, 0.15], // the way a knee points: ahead and a little up
   fr:0,           // the tests: how many times the people on deck have been drawn (view3d/20-trawl-seine.js drawDeckCrew)
   dry:false,      // the tests: inside LEMMER.redraw, where nothing is drawn
   log:null        // the tests: an array drawWorker writes the joints it drew to (tests/lemmer.py)
+};
+// What a hand holds close to the body, by its own measures (FB7, steg 125; Jonas 13.11.2026: «Sørg for at objekter ikke kan clippe
+// inn i menneskene»; rules 7 and 10 of «Arkitekturen for bevegelsen», docs/planer/folk-2.md): the thing has its grips in its own
+// frame, it is put clear of the trunk's profile first (figpose.js figProfile, the mesh that is drawn), and the hands are solved to
+// its grips after. drawWorker (view3d/08-plants.js holdClear) reads this (HOLD is the cinema's in the 3D view); the things' measures are their models' own
+// (G3._debug.thingBox, python3 tests/folk2diag.py).
+const HOLDT = {
+  GAP:0.02,      // m between a thing and the body's clothes at the least
+  FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
+  HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
+  box:{depth:0.19, half:0.39, lo:-0.1, hi:0.2, grip:[0.41, 0.1]},   // the fish box carried across him: half its depth and its length, its bottom under and its ice over the grips; a grip from its middle [to either side, up from its bottom]
+  shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
+  gaff:{r:0.022, grip:[0.48, 0.82], butt:0.91, org:0.66},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle
+  cup:{r:0.05, sip:[0.05, -0.04, 0.035]},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
+  food:{r:0.04, bite:[0.035, -0.015, 0.025]}, // the food in the hand, and its point from the mouth at a bite
+  smoke:{r:0.015, at:[0.045, 0, 0.015]},      // the cigarette between the fingers, from the mouth at a draw
+  snus:{at:[0.025, 0.015, 0.02]},             // the fingers at the upper lip
+  blow:{at:[0.085, -0.05, 0.035]},            // the hands blown into, from the mouth
+  phone:{r:0.04},
+  blade:{r:0.15},                             // the shovel's blade: its half width
+  kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line
 };
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
 // (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
@@ -1246,6 +1270,20 @@ function armIk(s, tg, sd, L, o, cl){
   // belly the wrist keeps CHEST ahead of the spine, and well across him FRONT, going round before the belly; how far it was moved
   // is in push. The edges soft)
   const C0 = LEMMER, k01 = v => v < 0 ? 0 : v > 1 ? 1 : v, wu = k01((tg[1] + 0.05) / 0.08) * k01((C0.SH[0] + 0.05 - tg[1]) / 0.08);
+  // (the new people: the trunk is its own profile, measured on the mesh that is drawn (figpose.js figProfile), and the wrist keeps
+  // WRIST clear of it: out ahead of it, out to its side when that is nearer (a hand hanging by the hip), or out behind a back it is
+  // behind already; a wrist across his middle goes round before the belly as before. The solver's own turn, then, without the profile)
+  const PF = C0.prof;
+  if (PF){ const y = tg[1], r = tg[2], f = figProfAt(PF, y, r), bk = figProfAt(PF, y, r, true), pm = figProfAt(PF, y, 0);
+    const lx = pm > 0 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * k01((-0.05 - r * sd) / 0.1) - tg[0] : 0;
+    if (f > 0 || bk > 0 || lx > 1e-4){ const W = C0.WRIST, hw = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, la = f + W - tg[0], lb = tg[0] + bk + W, ls = hw + W - Math.abs(r);
+      if ((la > 1e-4 && lb > 1e-4 && ls > 1e-4) || lx > 1e-4){ let da = 0, ds = 0;
+        if (lx > 1e-4 && lx >= la) da = Math.min(0.4, lx);
+        else if (lb < la && lb < ls) da = -lb;
+        else { const w = k01((la - ls) / 0.04 + 0.5); da = Math.min(0.4, la) * (1 - w); ds = ls * w; }
+        C0.prof = null; try { o = armIk(s, [tg[0] + da + (da >= 0 ? 1e-3 : -1e-3), y, r + (Math.abs(r) < 0.02 ? sd : Math.sign(r)) * ds], sd, L, o, cl); } finally { C0.prof = PF; }
+        o.push = Math.hypot(da, ds); return o; } }
+    C0.prof = null; try { return armIk(s, tg, sd, L, o, cl); } finally { C0.prof = PF; } }
   const need = Math.max(C0.CHEST * Math.sqrt(Math.max(0, 1 - tg[2] * tg[2] / 0.0361)), C0.FRONT * k01((-0.05 - tg[2] * sd) / 0.1)) * wu, lack = tg[0] < -0.2 ? 0 : Math.min(0.4, (need - tg[0]) * k01(need / 0.03) * k01((tg[0] + 0.2) / 0.05));   // (the torso round: 0.19 m to either side; nothing asked of a wrist out beside it, nor of one behind his back, which is not pulled through him)
   if (lack > 1e-4){ o = armIk(s, [tg[0] + lack + 1e-3, tg[1], tg[2]], sd, L, o, cl); o.push = lack; return o; }
   // (a hand up by the shoulder or over it, the cup at the mouth, the binoculars, an arm up: the elbow down under it, not back)
