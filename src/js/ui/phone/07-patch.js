@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['sjobein-131126', '13.11.2026', 'Sjøbein', 'Sea legs', [
+       ['Mannskapet står støtt i sjøgang: føttene står på dekket slik det krenger, knærne tar opp sjøen, de står bredere når det blåser opp, og den som står ledig, tar rekka med en hånd eller setter en fot ut når hun ruller tungt.', 'The crew stand steady in a seaway: their feet are on the deck as it heels, their knees take up the sea, they stand wider as it blows up, and someone standing free takes the rail with a hand or puts a foot out when she rolls heavily.']]],
     ['fiskebat-131126', '13.11.2026', 'Fiskebåtene etter redskapet', 'The fishing boats by their gear', [
        ['Fiskebåtene langs kysten ser ut som det de fisker med: snurrevadbåter med nottrommel og galge, notbåter med kraftblokk og not, reketrålere med galge og trålbord, teinebåter med teinestabler og haler, og kystlinebåter med lukket ly og haleluke.', 'The fishing boats along the coast look like what they fish with: Danish seiners with their net drum and gantry, purse seiners with the power block and the seine, shrimp trawlers with the gantry and the doors, pot boats with their stacks of pots and the hauler, and coastal longliners with the closed shelter deck and the hauling port.']]],
     ['brott-131126', '13.11.2026', 'Brottsjøen', 'The breaking sea', [

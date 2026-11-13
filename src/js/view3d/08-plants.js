@@ -146,6 +146,36 @@
   const HOODTOP = {oilskin:1, parka:1}, HOODHAT = {none:1, beanie:1}, HOODOFF = {bun:1, pony:1, braid:1, long:1};   // (a peak or a brim keeps the hood down; a bun, a tail or long hair is inside it)
   // (a look for the cold: the same, with a knitted cap on a bare head; kept by the look's key)
   function coldLook(l){ if (!l || typeof l !== 'object' || HOODTOP[l.tp] || (l.ht && l.ht !== 'none')) return l; const key = lookSig(l); let o = COLDL.get(key); if (!o){ o = Object.assign({}, l, {ht:'beanie'}); if (COLDL.size > 60) COLDL.clear(); COLDL.set(key, o); } return o; }
+  // ---- the sea legs in the drawing (FB4, steg 120; deckcrew.js seaLegs and SJOBEIN): for someone on a deck at sea (st.sea: whose
+  // sea legs, seaSet; st.dn: the deck's normal in the world) the deck's slopes his way and its height go to seaLegs, and drawWorker
+  // puts the feet, the knees, the hips, the torso and the head where it says. The hands of the work stay where the work is.
+  const SEAIN = {sr:0, sf:0, y:0, hs:0, dt:0, walk:false, room:null, rail:null, hand:null, stepOk:null};
+  // (who has a hand free for the rail: -1 either, 1 the left only (the cup in the right); whose hands are his body's own and go with
+  // it as it leans: 1 the right, 2 the left, 3 both; the rest hold the work, which stays where it is)
+  const SEAGRAB = {look:-1, aurora:-1, chat:-1, coffee:1}, SEAHANDS = {back:3, chat:3, phone:3, coffee:3, lunch:3, binoc:3, aurora:3, cold:3, knife:3, snus:3, smoke:1, cut:3, bleedst:3, carry:3, tally:3, remote:3};
+  // whose sea legs (a deckcrew agent a of the boat's crewSim sim) on a deck whose frame is M (hers in the eye's frame); null with the sea legs off
+  function seaSet(sim, a, M){
+    if (!SJOBEIN.on || !sim.seaRoom) return null; let q = a.slQ; if (!q) q = a.slQ = {sim, a, ok:(dr, da) => sim.seaStepOk(a, dr, da)};
+    return q; }
+  function deckN(M){ const l = Math.hypot(M[4], M[5], M[6]) || 1; return [M[4] / l, M[5] / l, M[6] / l]; }
+  function seaNow(st, h, y){
+    const q = st.sea, n = st.dn, a = q.a, s = a.sl || (a.sl = seaState()), I = SEAIN, now = performance.now() / 1000, c = Math.cos(h), sn = Math.sin(h);
+    if (!n || n[1] < 0.3) return null;
+    I.sr = -(n[0] * c + n[2] * sn) / n[1]; I.sf = -(n[0] * sn - n[2] * c) / n[1]; I.y = y; I.hs = (CREW3D._st.sea && CREW3D._st.sea.hs) || 0; I.dt = s.tp == null ? undefined : now - s.tp; s.tp = now;
+    I.walk = !!st.walk; I.room = q.sim.seaRoom(a) || SEAROOM;
+    const g = st.walk || st.put || st.crate || st.ev || st.fx || st.blend < 1 ? undefined : st.task == null ? -1 : SEAGRAB[st.task];
+    I.rail = g === undefined ? null : q.sim.seaRail(a); I.hand = g === 1 ? 1 : null; I.stepOk = q.ok;
+    return seaLegs(s, I); }
+  // a boot flat on the deck: turned his way and tipped to the deck's normal n
+  function bootM(foot, h, n){
+    const f = [Math.sin(h), 0, -Math.cos(h)], d = f[0] * n[0] + f[2] * n[2], z = [-(f[0] - d * n[0]), d * n[1], -(f[2] - d * n[2])], zl = Math.hypot(z[0], z[1], z[2]) || 1; z[0] /= zl; z[1] /= zl; z[2] /= zl;
+    const x = [n[1] * z[2] - n[2] * z[1], n[2] * z[0] - n[0] * z[2], n[0] * z[1] - n[1] * z[0]];
+    return new Float32Array([x[0], x[1], x[2], 0, n[0], n[1], n[2], 0, z[0], z[1], z[2], 0, foot[0] - n[0] * 0.08, foot[1] - n[1] * 0.08, foot[2] - n[2] * 0.08, 1]); }
+  // a turn about a level axis that tips «up» by lr to the right and lf ahead of someone heading h (rad): the torso's lean
+  function leanM(h, lr, lf){
+    const dx = Math.cos(h) * lr + Math.sin(h) * lf, dz = Math.sin(h) * lr - Math.cos(h) * lf, th = Math.hypot(dx, dz); if (th < 1e-6) return null;
+    const kx = dz / th, kz = -dx / th, c = Math.cos(th), sn = Math.sin(th), v = 1 - c;
+    return new Float32Array([c + kx * kx * v, kz * sn, kx * kz * v, 0, -kz * sn, c, kx * sn, 0, kx * kz * v, -kx * sn, c + kz * kz * v, 0, 0, 0, 0, 1]); }
   function drawWorker(P, st, eye, T, idx){
     // (OB14: seated with the lunch or the cup; deckcrew.js matPlace)
     if (st.task === 'sitmat' || st.task === 'sitkaffe'){ st.seated = true; st.task = st.task === 'sitmat' ? 'lunch' : 'coffee'; }
@@ -161,14 +191,34 @@
     // how low the work takes him (workLow): dip lowers the hips, the back and the head with the knees going forward, bend tips the back over
     const LB = workLow(st, T, idx), bk = st.blend == null ? 1 : st.blend, sit = LB[2] ? bk : 0, sh = st.seat || 0.5, dip = LB[0] * bk, dy = -dip * 0.42 - sit * (0.94 - sh);
     // (sitting, LB[2]: on a low seat, the thighs out level and the shins down to the deck; the seat is drawn with the props)
-    for (const s of [-1, 1]){ let hip = W(dip * 0.06, 0.92 + dy, s * 0.11), foot = W(sw * s * 0.28, 0.08 + Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0), s * 0.12), kf = 0.07 + dip * 0.34, knee = [(hip[0] + foot[0]) / 2 + F[0] * kf, (hip[1] + foot[1]) / 2 + dip * 0.05, (hip[2] + foot[2]) / 2 + F[1] * kf];
+    // the sea legs (seaNow): SE what the sea asks of him, hy0 the hips' way up or down, ox/oz their shift in the world and lx/lz the
+    // torso's lean per metre over them; up3 moves a point of the upper body at height hh with it
+    // (the hips are over the feet along SE.sq: plumb, or along the deck's normal where there is no room to stand upright)
+    const SE = st.sea && !sit && !LB[2] ? seaNow(st, h, y) : null, hH = 0.92 + dy, hS = SE ? hH + SE.hipY : hH, hy0 = SE ? hS * SE.sqU - hH : 0, hR = SE ? SE.hipR + hS * SE.sqR : 0, hF = SE ? SE.hipF + hS * SE.sqF : 0;
+    // (the upper body turns about the hips with the torso's lean, lth towards [ldx, ldz], and goes with the hips: up3 moves a point of it)
+    const ox = SE ? R[0] * hR + F[0] * hF : 0, oz = SE ? R[1] * hR + F[1] * hF : 0, lth = SE ? Math.hypot(SE.leanR, SE.leanF) : 0, ldx = lth > 1e-9 ? (R[0] * SE.leanR + F[0] * SE.leanF) / lth : 0, ldz = lth > 1e-9 ? (R[1] * SE.leanR + F[1] * SE.leanF) / lth : 0;
+    const lcs = Math.cos(lth), lsn = Math.sin(lth), bend0 = LB[1] * bk + (st.slump || 0) * 0.45, Pv = SE ? W(bend0 * 0.4, hH, 0) : null;
+    const up3 = SE ? q => { const vx = q[0] - Pv[0], u = q[1] - Pv[1], vz = q[2] - Pv[2], a = vx * ldx + vz * ldz, a2 = a * lcs + u * lsn; q[0] += ox + (a2 - a) * ldx; q[1] = Pv[1] + hy0 - a * lsn + u * lcs; q[2] += oz + (a2 - a) * ldz; return q; } : q => q;
+    const LG = SJOBEIN.log && st.dn ? {idx, npc:!st.deck, task:st.task, walk:!!st.walk, ev:!!(st.ev || st.fx), on:!!SE, x:st.x, y, z:st.z, h, n:st.dn || null, feet:[], hips:[], kf:[]} : null;
+    for (const s of [-1, 1]){ const fi = s < 0 ? 0 : 1, back = st.task === 'back' && !st.walk;
+      // (back to the rail with the legs crossed: the feet a little out, the right one over in front of the left)
+      let fa = back ? (s > 0 ? 0.3 : 0.2) : sw * s * 0.28, fr = back ? (s > 0 ? -0.05 : -0.13) : s * 0.12, fup = 0.08 + (back ? 0 : Math.max(0, Math.cos(ph) * s) * 0.07 * (st.walk ? 1 : 0)), kf = back ? 0.05 : 0.07 + dip * 0.34;
+      let hip = W((back ? 0.05 : dip * 0.06) + hF, 0.92 + dy + hy0 + (SE ? s * 0.11 * SE.pelv : 0), s * 0.11 + hR), foot;
+      if (SE){ const d0 = Math.hypot(0.84 + dy - (fup - 0.08), (back ? 0.05 : dip * 0.06) - fa, s * 0.11 - fr);   // (the leg's length without the sea)
+        if (!back){ fa += SE.fa[fi]; fr = SE.fr[fi]; fup += SE.lift[fi]; }
+        foot = W(fa, fup + fa * SE.sf + fr * SE.sr, fr); kf = Math.max(0.02, kf + seaKnee(d0, Math.hypot(hip[0] - foot[0], hip[1] - foot[1], hip[2] - foot[2]))); }
+      else foot = W(fa, fup, fr);
+      let knee = [(hip[0] + foot[0]) / 2 + F[0] * kf, (hip[1] + foot[1]) / 2 + (back ? 0.02 : dip * 0.05), (hip[2] + foot[2]) / 2 + F[1] * kf];
+      // (sitting, LB[2]: on a low seat, the thighs out level and the shins down to the deck; the seat is drawn with the props)
       if (sit){ hip = W(-0.04, sh, s * 0.12); knee = W(0.38, sh + 0.02, s * 0.15); foot = W(0.44, sh - 0.42, s * 0.17); }
-      // back to the rail with the legs crossed: the feet a little out, the right one over in front of the left
-      if (st.task === 'back' && !st.walk){ hip = W(0.05, 0.92 + dy, s * 0.11); foot = s > 0 ? W(0.3, 0.08, -0.05) : W(0.2, 0.08, -0.13); knee = [(hip[0] + foot[0]) / 2 + F[0] * 0.05, (hip[1] + foot[1]) / 2 + 0.02, (hip[2] + foot[2]) / 2 + F[1] * 0.05]; }
-      if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); continue; }
-      drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h))); }
+      if (LG){ LG.feet.push([foot[0] + eye[0], foot[1] - 0.08 + eye[1], foot[2] + eye[2]]); LG.hips.push([hip[0] + eye[0], hip[1] + eye[1], hip[2] + eye[2]]); LG.kf.push(kf); }
+      // (on a deck at sea the boot is flat on the deck; its sole is 8 cm under the ankle along the deck's normal)
+      const BT = SE && st.dn ? bootM([foot[0] + st.dn[0] * 0.08, foot[1] - 0.08 + st.dn[1] * 0.08, foot[2] + st.dn[2] * 0.08], h, st.dn) : chain(M4.T(foot[0], foot[1] - 0.08, foot[2]), M4.RY(-h));
+      if (K){ drawN(K.thigh, limbM(hip, knee, 1)); drawN(K.shin, limbM(knee, foot, 1)); drawN(K.boot, BT); continue; }
+      drawN(PM.leg, limbM(hip, knee, 0.075)); drawN(PM.leg, limbM(knee, foot, 0.065)); drawN(PM.boot, BT); }
     const bend = LB[1] * bk + (st.slump || 0) * 0.45;   // (and stoop)
-    const tc = W(bend * 0.4, 1.2 + dy, 0), TM = chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)); drawN(K ? K.torso : PM.torso, TM);
+    const LM = SE ? leanM(h, SE.leanR, SE.leanF) : null, tc = W(bend * 0.4, 1.2 + dy, 0); if (SE){ tc[0] += ox; tc[1] += hy0; tc[2] += oz; }
+    const TM = LM ? chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), LM, M4.RY(-h), M4.RX(-bend)) : chain(M4.T(tc[0], tc[1] - 0.28, tc[2]), M4.RY(-h), M4.RX(-bend)); drawN(K ? K.torso : PM.torso, TM);
     if (K && K.vest) drawN(K.vest, TM);   // the life jacket over the jacket, on deck at sea (vessel3d.js vestKit, Ø11.5)
     // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
     let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
@@ -178,9 +228,9 @@
     const HP = {cold:-0.16, phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04, cut:-0.5, slip:-0.25};
     // (the tired look down, st.slump)
     const hp = (HP[st.task] || 0) - (st.slump || 0) * 0.5; if (st.task === 'chat') hy += Math.sin(T * 0.7 + idx) * 0.12; if (st.task === 'aurora') hy += Math.sin(T * 0.15 + idx) * 0.4; if (st.task === 'binoc') hy += Math.sin(T * 0.22 + idx) * 0.25;
-    const hd = W(bend, 1.6 + dy, 0), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
+    const hd = up3(W(bend, 1.6 + dy, 0)), HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
     if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
-    let hands;
+    let hands, seaH = SEAHANDS[st.task] || 0;
     const t = T + idx * 1.7;
     // (near, the hands are drawn in their grips, the pose's points being where they hold: a hanging hand's grip is below its wrist)
     const HMS = K ? handMeshes() : null, near = !!HMS && Math.hypot(...W(0, 1.2, 0)) < 10;
@@ -385,8 +435,13 @@
         if (u > 0.62){ const c = ease(Math.min(1, (u - 0.62) / 0.14)) * (1 - ease(Math.max(0, (u - 0.88) / 0.12))); hands[0] = lerp3(hands[0], W(0.06, 1.72, 0.1), c); } break; }
       // at the door: a hand out to it before going in
       case 'door': hands = [W(0.38, 1.05, 0.16), W(0.0, 0.82, -0.22)]; break;
-      default: { const hy = near ? 0.76 : 0.82; hands = [W(-sw * 0.15, hy, 0.26), W(sw * 0.15, hy, -0.26)]; }
+      default: { const hy = near ? 0.76 : 0.82; hands = [W(-sw * 0.15, hy, 0.26), W(sw * 0.15, hy, -0.26)]; seaH = 3; }
     }
+    // the sea legs: the hands that are his body's own go with it as it leans; a free hand takes the rail when she rolls (SE.grab), on
+    // its top as in «lean», where the deck has it now
+    let seaG = -1;
+    if (SE){ if (!st.ev && !st.fx) for (const i of [0, 1]) if (seaH & (i + 1)) up3(hands[i]);
+      if (SE.grab > 0 && SEAIN.rail){ const rl = SEAIN.rail, i = SE.gh, ra = rl[0], rr = rl[1] || (i ? -0.2 : 0.2); hands[i] = lerp3(hands[i], W(ra, rl[2] + 0.04 + ra * SE.sf + rr * SE.sr, rr), SE.grab); if (SE.grab > 0.6) seaG = i; } }
     // the break's thing put away before the walk to work (deckcrew.js a.put): the last of it (a sip, a draw), the hand to the pocket
     // (the binoculars to the chest, the butt over the side) and it is gone (st.gone), then the hands down
     if (st.put){ const u = st.put.u, ph = st.put.task, hy = near ? 0.76 : 0.82, fin = u < 0.35 ? Math.sin(u / 0.35 * Math.PI) : 0, go = ease(clamp((u - 0.35) / 0.4, 0, 1)), back = ease(clamp((u - 0.8) / 0.2, 0, 1));
@@ -400,8 +455,9 @@
     // the wrist is found back from it, and what the hand holds is drawn in the grip (GP, GA). Far off (and on the old figure) the one-piece
     // glove at the wrist as before.
     const HS = near ? handSpecs(st, F, R, hands) : null, GP = [hands[0], hands[1]], GA = [null, null];
+    if (HS && seaG >= 0) HS[seaG] = {g:'flat', n:[0, -1, 0]};   // (the hand on the rail, flat on its top)
     const vsh = K && K.vest ? VEST_SH : null;   // (the shoulder under the life jacket, vessel3d.js VEST_SH)
-    [0.21, -0.21].forEach((r, i) => { const sh = vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r), eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
+    [0.21, -0.21].forEach((r, i) => { const sh = up3(vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r)), eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
       if (near){ const sd = i ? 'L' : 'R', sp = HS[i], gd = (HMS.grip[sp.g] || HMS.grip.relax)[sd], tg = hands[i];
         let Fr = handFrame(nrm3(sub3(tg, elOf(tg))), sp, i ? -1 : 1); const wr = sub3(tg, inFrame(Fr, gd.at)), el = elOf(wr);
         Fr = handFrame(nrm3(sub3(wr, el)), sp, i ? -1 : 1);
@@ -413,6 +469,9 @@
       if (K){ const f = [hd2[0] - el[0], hd2[1] - el[1], hd2[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1;
         drawN(K.uarm, limbM(sh, el, 1)); drawN(K.farm, limbM(el, hd2, 1)); drawN(HMS ? HMS.lo : K.hand, limbM(hd2, [hd2[0] + f[0] / fl, hd2[1] + f[1] / fl, hd2[2] + f[2] / fl], 1)); return; }
       drawN(PM.arm, limbM(sh, el, 0.06)); drawN(PM.arm, limbM(el, hd2, 0.055)); drawN(PM.hand, M4.T(hd2[0], hd2[1], hd2[2])); });
+    // (the tests: what was drawn, in the world; tests/sjobein.py)
+    if (LG){ const wd = q => [q[0] + eye[0], q[1] + eye[1], q[2] + eye[2]]; LG.hands = [wd(GP[0]), wd(GP[1])]; LG.head = wd(hd); LG.hipc = wd(tc); LG.id = st.sea ? st.sea.a.id : null;
+      LG.se = SE ? {sr:SE.sr, sf:SE.sf, k:SE.k, hipR:SE.hipR, hipF:SE.hipF, hipY:SE.hipY, leanR:SE.leanR, leanF:SE.leanF, grab:SE.grab, gh:SE.gh, step:SE.step, stFoot:SE.stFoot, fr:SE.fr.slice(), kneeDeg:SE.kneeDeg.slice()} : null; SJOBEIN.log.push(LG); }
     // the break's things in the hands (tools/deck/pause.py), where the page has them; the old cup otherwise
     const pz = nm => kit('pause', nm), atH = (q, ...m) => chain(M4.T(q[0], q[1], q[2]), M4.RY(-h), ...m);
     if (st.task === 'coffee' && !st.gone){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([GP[0][0], GP[0][1] - 0.045, GP[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
@@ -420,7 +479,7 @@
     if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(GP[1], st.steel.dir)); }
     if (st.task === 'lunch' && !st.gone){ const M = pz('mat'); if (M) drawN(M, atH(GP[1], M4.RX(0.35), M4.S(0.75))); }
     if (st.task === 'phone' && !st.gone){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
-    if (st.task === 'binoc' && !st.gone){ const B = pz('kikk'); if (B){ const c = st.put ? [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2] : W(0.13, 1.57, 0); drawN(B, atH(c, M4.RY(-hy))); } }
+    if (st.task === 'binoc' && !st.gone){ const B = pz('kikk'); if (B){ const c = st.put ? [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2] : up3(W(0.13, 1.57, 0)); drawN(B, atH(c, M4.RY(-hy))); } }
     if (st.task === 'smoke' && !st.gone){ const C = pz('sig'); if (C) drawN(C, atH(GP[0], M4.RY(0.6), M4.RX(0.25)));
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
       if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = W(0.2, 1.52, 0.02); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
