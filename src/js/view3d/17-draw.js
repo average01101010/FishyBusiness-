@@ -67,6 +67,7 @@
     const thr = dryThr(eye, near || !NEARM);   // (with no near grid yet the far one is drawn in both passes: one height for it, the lower)
     const one = (m, hole, ground) => {
       const D = thr !== null && m.gn && m.h ? dryIdx(m, thr) : null; if (D && !D.n) return;
+      if (u.uNSea){ if (m === NEARM){ const e = nearIn(); gl.uniform4f(u.uNSea, m.x0 + e - eye[0], m.z0 + e - eye[2], m.x0 + m.sx - e - eye[0], m.z0 + m.sz - e - eye[2]); } else gl.uniform4f(u.uNSea, -1e9, -1e9, 1e9, 1e9); }   // (the bed in the band outside the near sea, terFS)
       gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, Math.min(env.tide || 0, COAST3.top - 0.15)); gl.uniform1f(u.uSwash, clamp(0.5 * (WV.hs + WV.swHs), 0, COAST3.swash));
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
       if (LRECT) gl.uniform4fv(u.uGRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]);

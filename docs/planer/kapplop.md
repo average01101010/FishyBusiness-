@@ -1,6 +1,6 @@
 # Kappløp: Lindesnes–Nordkapp (plan 12.11.2026)
 
-Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
+Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene underveis, steg 116b) bygd og rullet ut til testutgaven 13.11.2026 (92e389ec, versjon ecf2207b3148); KL2 (skjermen, steg 117) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
 
 ## Hva Jonas ba om
 
@@ -130,6 +130,23 @@ Kortet starter med «Påmeldt i Lindesnes» krysset av, så ingenting starter p�
   - **Frakta** lastes av folk om bord (`cargoJob`). Den som er alene, bruker lengre tid.
   - **Prøvestasjonen** er én spilltime fiske og målebrettet. Nøyaktig måling gir opptil 30 spillminutter fradrag, og en dårlig måling gir like mye tillegg. Den krever juksa, som havfartøyene ikke har (`rigs`). Havklassen får ekkoloddlinja i stedet.
   - **Havsnød** kommer fra sjøen (`sosMinute`), tilfeldig og gratis, med tida trukket fra.
+
+**Bygd i KL1b (13.11.2026, steg 116b, arbeidsrutinen):** oppgavene per etappe (`LOP.legs` i `core/09o-kapplop.js`), lagt der ruta faktisk går. Fyrene i tabellen «Løypa og tidene» var en gjetning før rutene var målt: Autonav-ruta går innaskjærs, så Marstein, Myken, Træna, Skomvær og Fruholmen ligger 12 km eller mer fra den. Oppgavene står derfor ved fyr innen 5 km fra havsjarkens rute og i åpent vann på den (lest av 13.11.2026):
+
+| Etappe | Fast oppgave | Overraskelsen trekkes blant |
+|---|---|---|
+| 1 Lindesnes–Bergen | bilde av Obrestad fyr | Lista fyr i lav sol, prøvestasjon ved Kvitsøy, slep utenfor Egersund (til Hellvik) |
+| 2 Bergen–Ålesund | 300 kg frakt Bergen–Ålesund (det dekk og rom tar, minst 20 kg) | Kråkenes fyr, Svinøy fyr mens det lyser, ekkoloddlinja ved Bulandet |
+| 3 Ålesund–Rørvik | prøvestasjon på Frohavet | Kya fyr mens det lyser, Bjørnsund fyr i lav sol, slep til Kristiansund |
+| 4 Rørvik–Bodø | slep til Lurøy | ekkoloddlinja og prøvestasjonen på leia sør for Sandnessjøen, Kalsholmen fyr i lav sol |
+| 5 Bodø–Tromsø | bilde av Tranøy fyr | prøvestasjon i Vestfjorden, slep til Harstad, Landegode fyr i lav sol |
+| 6 Tromsø–Nordkapp | Skjervøy fyr mens det lyser | Vorterøy fyr, ekkoloddlinja i Sørøysundet, slep til Forsøl |
+
+- Prøvestasjonen er ekkoloddlinja på samme sted for en type uten juksa i `rigs` (havfartøyene).
+- Lyset som ikke kommer innen etappens lengde delt på typens toppfart ganger 2,5 (`lopLys`, med `turLysNext`), gir et vanlig fyrbilde. Skjervøy fyr «mens fyret lyser» står derfor bare utenfor midnattssola.
+- Sjekkpunktet og mållinja teller først når etappens faste oppgave er gjort. En oppgave som går galt (båten på slep driver i land før hun kommer), teller som gjort med 60 minutter tillegg.
+- **Valg tatt av rutinen (kan snus):** overraskelsen er frivillig, og den som lar den ligge, får 60 spillminutter lagt til når etappen er over (A, valgt). Da blir den et vagt valg: et fyrbilde på veien tar noen minutter og gjøres, en lang omvei eller lys som lar vente, kan lønne seg å hoppe over. B: overraskelsen må gjøres, som den faste. C: overraskelsen gir bare fradrag når den gjøres. Snus med `LOP.task.miss` (C: 0) eller med å la `lopFixDone` kreve begge (B).
+- **Uka overraskelsen trekkes for** er uka forsøket startet i (`lopWeek(lopMs(run.t0))`), så den ikke skifter midt i et forsøk som går over midnatt mandag.
 
 **Klassene:** etter toppfarten uten trim (`vmax`), og havfartøyene (`cls: 'hav'`) for seg (V4). Oppgraderinger som propellen gir fart innenfor klassen. Klassen leses av typens eget tall, ikke av den oppgraderte farten.
 
@@ -390,3 +407,4 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 - 12.11.2026: Jonas: hopp nektes i løpet («Nei i løpet»), selv om ingenting ellers hindrer kjøp av hopp (`docs/planer/hopp.md`).
 - 12.11.2026: KL1 delt i KL1a (steg 116a) og KL1b (steg 116b) av arbeidsrutinen. KL1a bygd (gren `plan/2026-11-12-116`, PR #74): `core/09o-kapplop.js`, løypa målt; systemet står i `docs/systemer/oppdrag-og-kystposten.md` 4.28.
 - 13.11.2026: KL1a rullet ut til testutgaven (1001c029, versjon 631532c5d670). KL1b (steg 116b) er klar.
+- 13.11.2026: KL1b bygd av arbeidsrutinen (gren `plan/2026-11-13-116b`, PR #75) og rullet ut til testutgaven (92e389ec, versjon ecf2207b3148): oppgavene underveis, se «Bygd i KL1b» over og `oppdrag-og-kystposten.md` 4.28. Hel startmelding for KL2 i `start/117.md`.

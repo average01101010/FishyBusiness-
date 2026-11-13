@@ -3416,6 +3416,22 @@
 2026-11-12 22:53	ccr-013bxxig-n7skip	7ff341e+	ferrytest	OK	22	lite	samtidig	
 2026-11-12 22:54	ccr-013bxxig-n7skip	7ff341e+	trip2	OK	31	lite	alene	
 2026-11-12 21:55	plan/2026-11-12-45b	023beed7	boottest	OK	25	lite	alene	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	seatest	OK	20	lite	samtidig	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	calib	LES	17	lite	samtidig	
+2026-11-13 00:48	ccr-013bxxie-f7brott	34c249e	simday	LES	14	lite	samtidig	
+2026-11-13 00:49	ccr-013bxxie-f7brott	34c249e	progweek	LES	53	lite	samtidig	
+2026-11-13 00:49	ccr-013bxxie-f7brott	34c249e	trip2	OK	42	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	hulltest	OK	72	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	crewlifetest	OK	10	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	fleet2test	OK	35	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	worktest	OK	23	lite	samtidig	
+2026-11-13 00:50	ccr-013bxxie-f7brott	34c249e	towtest	OK	15	lite	samtidig	
+2026-11-13 00:56	ccr-013bxxie-f7brott	142718c	seatrytest	OK	316	3d	alene	
+2026-11-13 00:57	ccr-013bxxie-f7brott	142718c	dbg23o	OK	42	3d	alene	
+2026-11-13 01:39	ccr-013bxxie-f7brott	edf505d	hull3d	OK	2574	3d	alene	
+2026-11-13 01:42	ccr-013bxxie-f7brott	edf505d	brottaar	OK	159	lite	alene	
+2026-11-13 01:57	ccr-013bxxie-f7brott	edf505d+	brottshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-13 01:59	ccr-013bxxie-f7brott	edf505d+	brottaar	OK	85	lite	alene	
 2026-11-12 22:40	plan/2026-11-12-116	b5f4c6bd	trip2	OK	37	lite	samtidig	
 2026-11-12 22:40	plan/2026-11-12-116	6dd24f8c	docktest	OK	63	lite	samtidig	
 2026-11-12 22:41	plan/2026-11-12-116	6dd24f8c	csptest	OK	88	lite	samtidig	
@@ -3639,3 +3655,14 @@
 2026-11-13 03:10	regresjon/2026-11-13	3571f69	tut	OK	1818	lite	alene	
 2026-11-13 03:14	regresjon/2026-11-13	3571f69	mobtest	OK	202	lite	alene	
 2026-11-13 03:15	regresjon/2026-11-13	3571f69	synctest	FEIL	58	lite	alene	FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": t
+2026-11-13 01:28	plan/2026-11-13-116b	01f2de47	autonavtest	OK	24	lite	samtidig	
+2026-11-13 01:28	plan/2026-11-13-116b	01f2de47	turtest	OK	17	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	trip2	OK	33	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	booktest	OK	28	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	kapplop	OK	27	lite	samtidig	
+2026-11-13 01:29	plan/2026-11-13-116b	01f2de47	hopptest	OK	8	lite	samtidig	
+2026-11-13 01:37	plan/2026-11-13-116b	01f2de47	boottest	OK	23	lite	alene	
+2026-11-13 02:20	ccr-013bxxie-f7brott	2e473c2	brottshot	OK	1244	3d	alene	
+2026-11-13 02:21	ccr-013bxxie-f7brott	2e473c2	trip2	OK	38	lite	samtidig	
+2026-11-13 02:22	ccr-013bxxie-f7brott	2e473c2	hulltest	OK	84	lite	samtidig	
+2026-11-13 02:22	ccr-013bxxie-f7brott	2e473c2	seatest	OK	16	lite	samtidig	

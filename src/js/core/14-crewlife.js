@@ -700,3 +700,41 @@ function laerDone(c, boat, hp){
   msg('Mannskap', c.name + ' gikk i lære hos deg og fører nå sin egen båt, «' + boat + '», fra ' + (hp ? hp.name : c.home) + '. Du er læremester.', c.name + ' learnt the trade with you and now skippers a boat of their own, the «' + boat + '», out of ' + (hp ? hp.name : c.home) + '. You are a master of the trade.');
   laerEv('done');
 }
+// ---- The breaking sea and the slamming (Ø9 F7; Jonas 13.11.2026: «Bare varsel og skrekk»): the most seasoned hand aboard calls it, at
+// once (not held back by crewSay's quarter of an hour), and when it has hit, all aboard get a fright by how she took it: on the bow little,
+// abeam the most, from astern nearly as much (their mood, c.morale, which comes back over the hours as crewTick eases it towards its
+// target). Less for one with more seamanship, more for one who is seasick. Nothing is damaged and nothing lost. With nobody aboard but you,
+// the warning is in the log. kind: 'warn' and 'hit' with the side (03b-sea.js brottSide), 'slam' (16c-hull.js slamMinute).
+const BRT_SAY = {
+  warn:{forut:[['Brottsjø forut! Hold baugen opp!', 'Breaking sea ahead! Keep her head up!']],
+    babord:[['Brottsjø om babord! Snu baugen mot den!', 'Breaking sea on the port side! Turn her head into it!']],
+    styrbord:[['Brottsjø om styrbord! Snu baugen mot den!', 'Breaking sea on the starboard side! Turn her head into it!']],
+    akter:[['Brottsjø akterfra! Snu henne opp mot sjøen!', 'Breaking sea astern! Bring her head round to the sea!']]},
+  hit:{forut:[['Den tok vi på baugen. Godt styrt.', 'We took that one on the bow. Well steered.']],
+    babord:[['Den tok oss tvers! E alle hel?', 'That one took us abeam! Everyone all right?']],
+    styrbord:[['Den tok oss tvers! E alle hel?', 'That one took us abeam! Everyone all right?']],
+    akter:[['Den kom inn over hekken! Hold dokk fast!', 'That one came in over the stern! Hold on!']]},
+  slam:[['Hun slår hardt i sjøen. Ta av litt fart, skipper.', 'She is slamming hard. Ease her off a bit, skipper.'], ['Det smell i baugen for hver bølge. Vi må ned i fart.', 'The bow bangs on every sea. We need to slow down.']]
+};
+const FRIGHT = {brott:12, side:{forut:0.3, babord:1, styrbord:1, akter:0.8}, slam:2.5, slamFloor:50};
+function crewBrott(kind, side){
+  const L = kind === 'slam' ? BRT_SAY.slam : (BRT_SAY[kind] || {})[side]; if (!L) return null;
+  // (log puts the vessel's name first itself in a fleet, under VTAG; the kontroll 13.11.2026 found it twice. All aboard get the fright,
+  // the watch below in the bunks too; one awake calls it, or one woken when all are asleep)
+  const all = crewAboard(null, true), awake = crewAboard(), on = all, l = L[((S.t % L.length) + L.length) % L.length];
+  if (all.length){
+    const who = (awake.length ? awake : all).slice().sort((a, c) => ((c.attr || {}).sjo || 0) - ((a.attr || {}).sjo || 0))[0], nm = who.name.split(' ')[0], no = crewDialect(who, l[0]);
+    log(nm + ': «' + no + '»', nm + ': «' + l[1] + '»', 'nav'); S.sayT = S.t;
+    (who.said = who.said || []).push({t:S.t, no, en:l[1]}); if (who.said.length > 5) who.said.shift();
+    if (hooks.onSay && meAboard()) hooks.onSay(who, no, l[1]);
+  } else log(l[0], l[1], 'nav');
+  const f = kind === 'hit' ? FRIGHT.brott * (FRIGHT.side[side] || 1) : kind === 'slam' ? FRIGHT.slam : 0;
+  // (the slams' small fright never takes anyone under FRIGHT.slamFloor: a long run on the autopilot with nobody easing her off must not
+  // end in notices; the breaking sea is rare enough to be felt in full)
+  if (f > 0) for (const c of on){
+    const df = f * (c.traits.includes('sjosyk') ? 1.3 : 1) * (1.2 - 0.12 * ((c.attr || {}).sjo || 0));
+    c.morale = kind === 'slam' ? (c.morale > FRIGHT.slamFloor ? Math.max(FRIGHT.slamFloor, c.morale - df) : c.morale) : clamp(c.morale - df, 0, 100);
+    if (kind === 'hit' && side !== 'forut') lifeStory(c, 'Tok en brottsjø ' + (side === 'akter' ? 'akterfra' : 'tvers') + ' om bord på «' + (S.boatName || 'Havbris') + '».', 'Took a breaking sea ' + (side === 'akter' ? 'from astern' : 'abeam') + ' aboard the «' + (S.boatName || 'Havbris') + '».');
+  }
+  return f;
+}

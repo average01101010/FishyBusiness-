@@ -131,7 +131,13 @@
   // open swell's height. uSea2: the overlap of the young and the grown wind-sea spectrum, the steepness, the sector blends. uLocal: the same
   // at the boat, for when there is no texture (NOSST: the far pass's vertices, and phones with no texture lookups in the vertex shader).
   // seaAt gives: the wind sea's height, the swell's height, how grown the sea is (0 young, 1 the open sea's spectrum), the root of the fetch.
-  const SEA_STATE = 'uniform vec4 uSea;uniform vec4 uSea2;uniform vec4 uSSN;uniform vec4 uSSW;uniform vec4 uLocal;uniform float uGp[13];uniform vec2 uSeaK;' +
+  // The breaking sea (Ø9 F7, brvSet in 14-sea.js): a group the core's rule has on the water (03b-sea.js brottNear), its middle uBr.xy
+  // (from the render origin) running along uBr.zw, s metres along now (uBr2.x), 1 / its length and 1 / its width (uBr2.yz), its height
+  // over its life (uBr2.w, 0: none). Within it the carrier wave's group factor goes over to the gain that gives it the height (uBr3.x the
+  // gain, uBr3.y which wave carries it: one of the long wind waves 0-3 or the swell's 11), so the shaders and seaH (grpAt) draw the same.
+  const SEA_BR = 'uniform vec4 uBr;uniform vec4 uBr2;uniform vec4 uBr3;float brE(vec2 P){if(uBr2.w<=0.0)return 0.0;vec2 q=P-uBr.xy;float a=(dot(q,uBr.zw)-uBr2.x)*uBr2.y;float c=dot(q,vec2(-uBr.w,uBr.z))*uBr2.z;return uBr2.w*exp(-a*a-c*c);}';
+  const BR_GR = (i, P) => i < 4 || i === 11 ? 'gr+=(uBr3.x-gr)*brE(' + P + ')*float(abs(uBr3.y-' + i + '.0)<0.5);' : '';
+  const SEA_STATE = 'uniform vec4 uSea;uniform vec4 uSea2;uniform vec4 uSSN;uniform vec4 uSSW;uniform vec4 uLocal;uniform float uGp[13];uniform vec2 uSeaK;' + SEA_BR +
     '\n#ifdef NOSST\nvec4 seaAt(vec2 P){return uLocal;}\n#else\nuniform sampler2D uSSTn;uniform sampler2D uSSTw;' +
     'vec4 seaAt(vec2 P){vec2 un=(P-uSSN.xy)*uSSN.z;vec2 uw=(P-uSSW.xy)*uSSW.z;vec4 tw=texture2D(uSSTw,uw);vec4 tn=texture2D(uSSTn,un);float r=mix(tw.r,tw.g,uSea2.w);float sf=tw.b;' +
     'float e=uSSN.w*smoothstep(0.0,0.06,min(min(un.x,un.y),min(1.0-un.x,1.0-un.y)));r=mix(r,mix(tn.r,tn.g,uSea2.z),e);sf=mix(sf,tn.b,e);r*=24.495;' +
@@ -260,7 +266,7 @@
   // speed through it; the long waves (0-3) and the swell too away from land (09.11.2026), and in the world within 0.4 km of the shore.
   // The frame shift is a phase offset per wave (uNFp, and uNFg for its group); the ripples and the crests' grain take the shifted
   // position P-uNFD. The foam that lies in the water (the wake's, the whitecaps', the streaks) stays in the world (Jonas 09.11.2026).
-  const SEA_VS_WAVE = (i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*cl));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=' + (i < 10 ? 'grpW(wxz,a,b,' + i + '.0,vec2(uGp[' + i + '],uNFg[' + i + ']))' : 'grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F ? 'fe2+=am*am;am*=1.0-uFvP.z;' : '') + 'am*=gr*att;' +
+  const SEA_VS_WAVE = (i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.5,5.0,6.2832/(a.z*cl));float am=ampOf(a,b,S);float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float gr=' + (i < 10 ? 'grpW(wxz,a,b,' + i + '.0,vec2(uGp[' + i + '],uNFg[' + i + ']))' : 'grpOf(wxz,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';' + BR_GR(i, 'wxz') + 'float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F ? 'fe2+=am*am;am*=1.0-uFvP.z;' : '') + 'am*=gr*att;' +
     'float f=a.z*dot(a.xy,wxz)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);d.x+=Q*sg.y*am*a.x*c;d.z+=Q*sg.y*am*a.y*c;d.y+=am*sin(f);}';
   // after the waves, by the shore (F4): the surf wave from the energy they brought in, and the whole capped where it would pass
   // McCowan's limit (the crests cut: what breaks has gone into foam)
@@ -282,7 +288,7 @@
   // one wave's slope, height and lost roughness in the fragment shader (W: whether it counts for the wind sea's crests)
   // (W: also the three sums of the Jacobian of the horizontal shift, for the whitecaps, F3: jxx, jxz and the trace jtr, with the
   // variance of the compression jv, as sa is the crest's; and the short waves' own compression jsc, 4-9, with its variance jsv)
-  const SEA_WAVE = (W, i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=' + (i < 10 ? 'grpW(P,a,b,' + i + '.0,vec2(uGp[' + i + '],uNFg[' + i + ']))' : 'grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F && i >= 4 ? 'fe2+=am*am;' : '') +
+  const SEA_WAVE = (W, i, F) => '\n{vec4 a=uWa[' + i + '];vec4 b=uWb[' + i + '];float att=smoothstep(2.0,7.0,6.2832/(a.z*px));float am=ampOf(a,b,S);float gr=' + (i < 10 ? 'grpW(P,a,b,' + i + '.0,vec2(uGp[' + i + '],uNFg[' + i + ']))' : 'grpOf(P,a,b,uGp[' + i + ']-uNFg[' + i + '])') + ';' + BR_GR(i, 'P') + 'float Q=b.x>0.5?0.3:Qw;vec3 sg=shW(a,SH);float e2=am*am*sg.x*sg.x*gr*gr;Et+=e2*(1.0-b.x);Eu+=e2*b.x;Es+=e2*sg.z;am*=sg.x*sqrt(max(1.0-sg.z,0.0));' + (F && i >= 4 ? 'fe2+=am*am;' : '') +
     'float f=a.z*dot(a.xy,P)-b.y*uTime+b.z-uNFp[' + i + '];float c=cos(f);float s=sin(f);float wa=a.z*sg.y*am*gr;' + (F && i >= 4 ? 'float wn=wa*(1.0-uFftP.z);' : 'float wn=wa;') + 'N.x-=a.x*wn*c*att;N.z-=a.y*wn*c*att;N.y-=Q*wn*s*att;lost+=wn*wn*(1.0-att);' +
     (W ? 'y+=am*gr*s*att;sa+=am*am*0.228;float jw=Q*wa*s*att;jxx+=jw*a.x*a.x;jxz+=jw*a.x*a.y;jtr+=jw;float qk=Q*a.z*sg.y*am*att;jv+=qk*qk*0.228;' + (i >= 4 ? 'jsc+=jw;jsv+=qk*qk*0.228;' : '') : '') + '}';
   // The fragment shader reads the waves from copies of its own (uFWa, uFWb, uFGp): the same uniform array in both stages is the only
@@ -592,11 +598,14 @@
     'foam=max(foam,band*smoothstep(0.35,0.72,ln+band*0.2)*(0.3+0.7*clamp(hl*1.6,0.0,1.0))*(0.7+0.3*sw)*ef);}}' +
     'if(uDbg>0.5){gl_FragColor=vec4(vec3(clamp(foam,0.0,1.0)),1.0);return;}' +
     'col=mix(col,fc,clamp(foam,0.0,1.0)*0.85);gl_FragColor=vec4(fin(col,vW),1.0);}');
-  const terFS = q => SUNV('#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;' +
+  const terFS = q => SUNV('#extension GL_OES_standard_derivatives : enable\n#define MATQ ' + q + '\nprecision highp float;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uGnd;uniform vec3 uFog;uniform float uFogD;uniform vec4 uHole;uniform vec4 uNSea;' +
     'uniform sampler2D uGround;uniform sampler2D uLand;uniform vec4 uGRect;uniform float uGOn;uniform float uLOn;uniform float uTideY;uniform float uSwash;uniform vec3 uSand;uniform vec2 uWet;uniform float uExpo;varying vec3 vW;varying vec3 vC;varying vec3 vN;varying vec3 vP;varying float vS;varying vec4 vM;varying vec4 vV;uniform vec4 uMP;uniform vec4 uMQ;' + NOISE + PLG + AIR +
     // the ground near the water is cut where the shore texture (buildLandMask: the foreshore's own height, h = r * 8 - 4) lies under
     // the tide, so the waterline is the coast's own line at high water and the foreshore's at ebb, whatever the mesh's cells
-    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
+    // the near grid's bed under the water outside the near pass's sea (uNSea, 17-draw.js nearIn: the band of a near-terrain cell along the
+    // square's edge) is cut, so the far pass's sea under it is seen there; drawn, it was a short pale line on the water by an islet at
+    // the edge from 12 km (5.20s, Ø9 F7 12.11.2026). Elsewhere uNSea is the whole plane
+    'void main(){if(vW.x>uHole.x&&vW.x<uHole.z&&vW.z>uHole.y&&vW.z<uHole.w)discard;if(vP.y<uTideY){float mg=2.0+0.004*length(vW);if(vW.x<uNSea.x+mg||vW.x>uNSea.z-mg||vW.z<uNSea.y+mg||vW.z>uNSea.w-mg)discard;}vec2 luv=(vW.xz-uGRect.xy)*uGRect.zw;' +
     'if(uLOn>0.5&&vP.y>uTideY-3.5&&vP.y<uTideY+4.0&&luv.x>0.0&&luv.y>0.0&&luv.x<1.0&&luv.y<1.0&&texture2D(uLand,luv).r*8.0-4.0<uTideY-uSwash)discard;vec2 wp=mod(vP.xz,4096.0);float d=length(vW);float det=1.0-smoothstep(900.0,5000.0,d);' +
         // the ground's own surface (Jonas 18.10.2026: terrain first, and smooth on every device): the vertex colour is the vegetation, and
     // vM carries the weights of rock, wood, snow and a harbour's fill from recolor. MATQ 0 blends them plainly (the low quality, as before);
