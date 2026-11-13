@@ -44,7 +44,7 @@ async def main():
                 await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
                 await safe("(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); })()", 'til-sjos', 8000)
                 await safe("(() => { const e = document.querySelector('#dock button'); })()", 'til-sjos-knapper', 500)
-                await safe("(() => { setBodyView(false); refreshAll(); })()", 'kartplotter', 3000)
+                await safe("openPlotter()", 'kartplotter', 4000)
                 await safe("(() => { const r = document.getElementById('ecRoute'); if (r && r.offsetParent) r.click(); })()", 'rute', 1500)
                 await pg.close(); continue
             if 'rest' in sys.argv:

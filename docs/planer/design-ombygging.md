@@ -51,6 +51,29 @@ Etter hver fase: `designshots.py` før og etter, `uishots`, og Jonas på nettbre
 3. **Knappelinja:** A: som i dag, etter stedet (anbefalt; følger handelsstedsregelen). B: Geminis fem faste.
 4. **Retning for utseendet:** velges fra skissene i D0, ikke nå.
 
+## Runde to (13.11.2026): underfanene, dagboka og skjermene over 3D
+
+99 bilder i ett kall: 86 av underfanene i skuffene og appene, dagbokas faner og innlastingen (`rest..`), og 13 med 3D tegnet (`hud..`: havn, telefonen og malerverkstedet over 3D, til sjøs, kartplotter, rute).
+
+**Det Gemini fant som står seg:**
+
+- **Menyene over 3D:** malerverkstedet i stående dekker rundt 85 % og lar båten stå i en stripe på toppen; telefonen i stående dekker «Verft» og «Om bord» i knappelinja. Den trakk derfor tilbake «ark etter innholdet»: i stående trengs et tak (55–60 %) over knappelinja, og en bredere skuff i liggende krever at kameraet flytter båten til venstre. En telefon i nettbrettstørrelse må være en egen flate som skjuler knappelinja, ikke flyte over den.
+- **HUD-en:** kompasstapen øverst har ingen bakgrunn og forsvinner mot fjell og båt; statuskortet i stående mangler «Regler ✓ Lov her» og søylene som liggende har; det lille kartet skifter mellom mørkt, beige og lyst varmekart.
+- **Til sjøs:** fiske, anker og Om bord er lette å finne; det finnes ingen synlig knapp til kartet (man må vite at det lille kartet åpner det).
+- **Faner uten tegn på at de ruller:** Milepæler (sju faner, tre synlige), Kvote (fire, pluss fem underfaner på to linjer), båthandelens fire filtre på to linjer.
+- **Tette skjermer som trenger mest:** Kvote (din kvote først), Regler › Sjekk (32 valg før svaret; svaret for båten din her og nå først), Kystbanken › Regnskap (tre tall først, resten under «Detaljer»).
+- **Dekksdagboka:** fanene Sesonger, Hendelser, Utstyr og Salg overlapper Fiskeguiden, Kystposten, Redskap og Salgslaget; i stående blir boka liten med håndskrift rundt 8–9 px. Gemini vil løse den opp. **Økta er uenig:** i runde én kalte den selv boka «standout worldbuilding», og fiksjonen er Jonas' valg. Lesbarheten i stående er det ekte problemet.
+
+**Feil i skjermbildene, ikke i spillet (skriptet, rettet eller notert):**
+
+- **Kartplotteren og ruta** (`hud07`, `hud08`) viste sjø uten kart: skriptet åpnet den med `setBodyView(false)` i stedet for `openPlotter()`. Rettet i skriptet. **`tests/uishots.py` hadde samme feil** og har fotografert en tom plotter; med kartet på plass fant testen at feltene i topplinja var 3–6 px for smale i stående nettbrett. Rettet i `src/styles.css` (feltene holder bredden, ekkoloddforklaringen gir etter), `uishots` rød før og grønn etter.
+- **Innlastingen** (`rest43`) var et grått bilde: tatt etter 0,6 s, før bildet av naustet var hentet. Punkt 6 og beslutning 10 hos Gemini faller.
+- **Kystbanken fane 2–7** var samme bilde: skriptet trykket på knapper som ikke er faner. `skuff-arbeid` og `skuff-beholdning` er samme skuff («Om bord») åpnet på ulik fane, ikke to sider.
+
+**Fortsatt ikke tatt:** Garderoben og underfanene i Tilbakemelding og Innstillinger (åpnes ikke fra skriptet), åpningen etter «Start» (brevet, veiledningen), dialogene, og tilstander med fangst, mannskap og redskap i sjøen.
+
+**Geminis beslutningsliste** (ti A/B-valg) står i svaret. De som er nye i forhold til valgene under: tak på arkhøyden i stående, kameraet som flytter båten når skuffen åpnes, en synlig kartknapp til sjøs, lik HUD i begge formater, én kartpalett, og bakgrunn på kompasset og meldingene.
+
 ## Usikkert
 
 - Hvor mye D2 og D5 koster i ytelse og testing er ikke målt.
@@ -58,4 +81,4 @@ Etter hver fase: `designshots.py` før og etter, `uishots`, og Jonas på nettbre
 
 ## Status
 
-13.11.2026: runde én sendt, planen skrevet, ingenting bygd. Venter på Jonas.
+13.11.2026: runde én og to sendt, planen skrevet. Ingenting av ombyggingen er bygd; kartplotterens topplinje i stående er rettet underveis. Venter på Jonas.

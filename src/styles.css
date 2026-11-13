@@ -628,6 +628,8 @@ body.vplot #instr{flex-wrap:wrap-reverse;max-width:calc(100% - var(--sidew) - 84
 #heatBox .hb-menu{position:absolute;z-index:9;right:0;top:100%;margin-top:4px;display:flex;flex-direction:column;min-width:140px;max-height:min(50vh,320px);overflow-y:auto;padding:4px;border-radius:10px;background:#0b1e2b;border:1px solid #2c5269;box-shadow:0 8px 22px rgba(0,0,0,.45);-webkit-overflow-scrolling:touch}
 #heatBox .hb-menu button{height:40px;padding:0 12px;border:0;border-radius:7px;background:none;color:#e6f6ff;font:600 13px var(--sans);text-align:left;cursor:pointer;white-space:nowrap}
 #heatBox .hb-menu button.on{background:#1d4660;color:#f6e868}
+/* (13.11.2026: upright on a tablet the fields beside the echo legend were squeezed 3-6 px narrower than their text; the fields keep their width, the legend gives way) */
+@media (max-width:980px){#ecdisTop .ec-f{flex:none;padding:0 7px} #ecdisTop .ec-echo{flex:1 1 0;overflow:hidden} #ecdisTop .ec-echo .hb-lab{display:none} #ecdisTop .ec-echo .hb-bar{width:64px}}
 #ecdisTop #ecSet.on{background:#e6f6ff;color:#0a1620}
 /* the GPS box's route lines in the bar (the user's wish 02.10.2026), only while a route is sailed; the least needed fields give way */
 #ecdisTop .ec-nav{display:none} body.navon #ecdisTop .ec-nav{display:flex}
