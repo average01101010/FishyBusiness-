@@ -162,6 +162,9 @@ Hver fase passer én økt og slutter med `/lever` og `/okt-slutt`, med skjermbil
 | **U2-5** Rederi | 4.6 etter V5 A | `ui/phone/11-rederi.js`, `ui/phone/14-act.js` (`vboard`, `vfollow`), `styles.css` | `fleet2test`, telefontestene, `uishots` |
 | **U2-6** Hjemskjermen | 4.6 etter V6, ikonene og flisene | `ui/phone/00-shell.js`, `ui/phone/08-home-papers-merker.js`, `styles.css` | telefontestene, `uishots` |
 | **U2-7** Skuffen og sidene | Ett ark på 88 % for alle sider i stående, stripa synlig over arket; Mannskap-siden med én hovedknapp per person og resten bak ⋯; samme regel på sidene med flere like tunge knapper (U2-0 lister dem) | `styles.css`, `ui/10c-dock.js` (`TALL`), `ui/05b-work.js` | `dockrow`, `driftsplan2gui`, `worktest` |
+
+> **Endret 13.11.2026 (designombyggingen D2):** arket i stående er så høyt som innholdet, høyst 88 %, og 56 % i malerverkstedet og ved prøving av utstyr. Se `docs/planer/design-ombygging.md`.
+
 | **U2-8** Nettbrett og PC arver | De fem størrelsene: hele boksen der det er plass, søyla i liggende, viftene; det som ser rart ut på 1440×900 | `styles.css` | `uishots` i alle fem |
 | **U2-9** Måling etter og regresjon | Tellingen etter, patchnotes, `/regresjon`, fletting inn i arbeidsgrenen | | `/regresjon` |
 

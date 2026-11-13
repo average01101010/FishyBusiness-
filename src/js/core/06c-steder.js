@@ -11,7 +11,9 @@
   const used = {}, nearTown = (x, y) => { let best = null, bd = Infinity; for (const q of PORTS) if (q.mottak && !q.sted && q.xy){ const d = Math.hypot(q.xy[0] - x, q.xy[1] - y); if (d < bd){ bd = d; best = q; } } return best ? best.name : ''; };
   for (const r of STEDER_D.r){
     const [x, y, a, len, depth, kind, town] = r, k = kind ? 'verft' : 'utstyrsbutikk';
-    const id = (kind ? 'sv' : 'sb') + Math.round(x * 1000) + '_' + Math.round(y * 1000);
+    // (a place moved to another face keeps the id it had, which saves hold as the boat's port, home and waypoints: steder.json's «was»,
+    // tools/steder/lukkflytt.py, 13.11.2026)
+    const key = (kind ? 'sv' : 'sb') + Math.round(x * 1000) + '_' + Math.round(y * 1000), id = (STEDER_D.was && STEDER_D.was[key]) || key;
     // a place with no postal town in Kartverket's register (one yard on the Varanger peninsula, 12.11.2026: «Verft verft», against
     // «navn etter stedet»): the town of the nearest plant, whose names come from the same register (06b-coastports.js, before this)
     let name = (town || nearTown(x, y) || (kind ? 'Verft' : 'Butikk')) + ' ' + k;

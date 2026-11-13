@@ -167,9 +167,11 @@
   // (4-9), the ripples and the foam's mottle are therefore carried along with the boat at 1 - 1/rate of her movement over the ground
   // (5/6 at 6x; nothing at real time), as a phase offset per wave (exact, kept within a turn) and a shifted position for the ripples and
   // the foam (wrapped at 64 km, when she is slow). The long waves and the swell stand in the world, so land, buoys and other boats
-  // still pass at the game's speed, and what passes the hull passes at her real speed through the water. «#nf0» in the address turns
-  // it off, for the comparison.
-  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), OA:new Float64Array(2), OB:new Float64Array(2), rp:new Float64Array(8), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
+  // still pass at the game's speed, and what passes the hull passes at her real speed through the water. Off since 13.11.2026 (5.20x,
+  // Jonas: «La havet også ligge fast i verden ... Båten skal gå i 6x over havet»): the wake lies in the world and streamed aft six times
+  // faster than the sea round it. The whole sea now stands in the world and she crosses it at the game's speed; «#nf1» in the address
+  // turns the near field on again, for the comparison.
+  const NF = {on:/nf1/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), OA:new Float64Array(2), OB:new Float64Array(2), rp:new Float64Array(8), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
   function nfStep(){
     const TAU = 2 * Math.PI, now = performance.now() / 1000, dtr = NF.lt ? Math.max(0, now - NF.lt) : 0, dtn = Math.min(dtr, 0.25); NF.lt = now;
     const dx = NF.lx == null ? 0 : bv.px - NF.lx, dz = NF.lz == null ? 0 : bv.pz - NF.lz; NF.lx = bv.px; NF.lz = bv.pz;
