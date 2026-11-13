@@ -1,10 +1,12 @@
 # Folk 2: ny figur og ny bevegelse (plan 13.11.2026)
 
-Status: **plan, venter på klarsignal.** Ingenting er bygd. Valgene V1–V3 nederst er Jonas'.
+Status: **FB4 (sjøbeina) har klarsignal og er steg 120 i køen (Jonas 13.11.2026: «Kjør på med FB4 i en ny økt»).** Resten venter på klarsignal. Valgene V1–V4 nederst er Jonas' og trengs først før del 2.
 
 ## Hva Jonas ba om
 
 Jonas 13.11.2026, etter å ha funnet «procedural animation»: «Jeg vurderer å gjøre en full redesign av hvordan mennersker ser ut og beveger seg i spillet. Hvor ligger taket for hva vi kan gjøre for at de skal bevege seg så realistisk som mulig?» Svaret i økta var fire trinn, med taket for oss på trinn 3 (skjelett, ekte bevegelse i bunnen, prosedyriske lag oppå). Samme dag: «ja, lag en plan med /planlegg».
+
+Jonas 13.11.2026 (senere, mens FB4 ble lagt i køen): «Menneskene trenger forresten også et sterkt grafisk løft, og større mulighet for tilpasning». Det gjelder del 2 (FB5–FB7) og er skrevet inn der og i V2; det endrer ikke del 1.
 
 Tidligere ord som fortsatt gjelder: «no teleporting» (17.10.2026), «Alle deler av arbeidsprosessene må ha egne animasjoner» (20.10.2026), «Sørg også for at mannskapet aldri "clipper" gjennom vegger, rekka eller andre ting» (23.10.2026), «at arbeidet ombord utføres på en så ekte måte som mulig» (09.11.2026).
 
@@ -34,6 +36,8 @@ Tidligere ord som fortsatt gjelder: «no teleporting» (17.10.2026), «Alle dele
 - **Testene som dekker dette:** `crewclip`, `crewwalk`, `walktest`, `selfcrew`, `worktest`, `workshot`, `deckshot`, `looktest`, `profshot`, `helmjit`, og enhetstestene (`deckcrew.js` er i `UNIT_SRC`).
 
 ## Fasene
+
+**Rekkefølgen (Jonas 13.11.2026: «Jeg ønsker å se umiddelbar forskjell i spillet jeg har nå»):** det synlige først. **FB4** (sjøbeina, steg 120), så **FB3** (føttene i gange, med faste beinlengder), så **FB0** (målingen, før del 2), så **FB1 og FB2** (oppryddingen og armene), så del 2 og 3 som de står. Fasene under står i den opprinnelige nummereringen. Det koster litt: FB4 og FB3 skrives i `drawWorker` slik den er og flyttes av FB1, og armene strekker seg fortsatt til FB2. Regnestykkene for balansen og stegene legges derfor i `deckcrew.js` (uten WebGL, med enhetstester), så FB1 bare flytter kallene.
 
 Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset er FB (figur og bevegelse). «Ferdig når» står per fase; startmeldingen skrives fra dem når steget legges i køen.
 
@@ -68,7 +72,11 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 **FB5. Kroppen og skjelettet i Blender.** Mann og kvinne som én sammenhengende kropp hver, med et skjelett på rundt 24 bein (hofte, tre i ryggen, nakke, hode, krageben, overarm, underarm, hånd, lår, legg, fot, tå). Alle delene i garderoben vektes til det samme skjelettet (vektene overføres fra kroppen under plagget). Hendene med de seks grepene beholdes som de er og festes på håndleddet (økta velger dette; fingre med bein kan komme senere uten å gjøre om noe).
 - Filer: `tools/harbour/arbeider.py`, `garderobe.py`, `vestarm.py`, ny eksport ved siden av `worker.b64` (den gamle står urørt). Skill: `/blender`. Kontrollbilder: hver del i hvilestilling og i fem ytterstillinger (armene opp, dyp knebøy, sittende, bøyd over rekka, vridd).
 - Ferdig når: (1) hver av de 69 delene har en utgave med samme navn, (2) ingen flate går gjennom en annen i de fem ytterstillingene (målt, som `garderobe_bilder.py` gjør for hår og hatt), (3) trekantene per figur er ikke flere enn i dag, (4) fila er ikke større enn dagens med mer enn det FB0-budsjettet og nedlastingen tåler (måles og skrives).
-- Utseendet følger V2.
+- Utseendet følger V2. **Jonas 13.11.2026: «et sterkt grafisk løft, og større mulighet for tilpasning».** FB5 er derfor ikke bare dagens figur med skjelett: kroppen, ansiktet, hendene og stoffet lages på nytt med mer form og bedre materialer, og kroppen bygges slik at den kan tilpasses (se FB5b). Løftet hentes først der det ikke koster bilder i sekundet (form, proporsjoner, farger, bakt lys, folder i nettet), og trekantene og nedlastingen settes av målingen i FB0.
+
+**FB5b. Tilpasningen (ny, etter Jonas 13.11.2026).** Hva spilleren kan endre på figuren sin utover dagens kode (kropp, hud, frisyre, hårfarge, skjegg, hatt, jakke, bukser, sko, med farger). Hva som skal inn, er V4. Koden utvides bakover-kompatibelt: en gammel kode gir samme figur som før, og nye felt har en startverdi.
+- Filer: `core/09i-look.js` (koden og katalogen), `tools/harbour/garderobe.py`, `ui/10g-wardrobe.js`, `presence.lk` (lengden på koden mot skyen sjekkes; trengs en migrering, kjører Jonas den på testprosjektet først). Tester: `looktest` (gamle koder gir samme figur), garderoben i begge formater.
+- Ferdig når: (1) hver gammel kode i `looktest` gir samme utseende som før, (2) de nye valgene synes i garderoben og på dekk og for andre spillere, (3) mannskapet trekker fra de samme nye valgene, så ingen to er like, (4) ingenting av det nye er til salgs (butikken er fase 5 i `docs/karaktersystem.md` og ekte penger går som PR til Jonas).
 
 **FB6. Skinning i motoren, sett i garderoben.** GLB-leseren (`glbParse`, `vessel3d.js:375`) leser bein og vekter, en variant av lysprogrammet bøyer kroppen etter beinmatrisene (WebGL 2 og 1), og `figpose.js` gir beinmatriser fra de samme leddene som i dag. Garderoben viser den nye figuren bak `#folk2`, med den gamle ved siden av.
 - Filer: `vessel3d.js`, `view3d/01-shaders.js`, `ui/10g-wardrobe.js`, `figpose.js`. Tester: `looktest`, `f1test` (begge kontekstene), nytt skjermbildeløp av garderoben i begge formater.
@@ -103,6 +111,14 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 - B: merkbart mer realistisk (flere detaljer, ansikter med trekk). Flere trekanter og større nedlasting, og småfeil i bevegelsen synes mer.
 - C: tydelig stilisert. Tilgir mest, men bryter med båtene og landskapet.
 - Uansett valg: referansebilder fra Jonas av det han ser for seg, før FB5.
+- **Etter Jonas 13.11.2026 («et sterkt grafisk løft»):** A slik den sto, er for lite. Valget står nå mellom **A+ (anbefalt): dagens stil løftet kraftig**, altså ny kropp, nytt ansikt, nye hender og nytt stoff med mer form og bedre materialer, men fortsatt i slekt med båtene og landskapet, og **B: mot det realistiske**. Anbefalingen er A+ fordi telefonen ga 12 bilder/s, og fordi småfeil i bevegelsen synes mer jo mer ekte kroppen ser ut. Referansebildene avgjør.
+
+**V4. Hva betyr «større mulighet for tilpasning»?** (styrer FB5b; flere kan velges)
+- **A (anbefalt): kroppen.** Høyde og bygning (for eksempel tre av hver), og alder som synes.
+- **B (anbefalt): ansiktet.** Noen ansiktsformer, øyenbryn, øyenfarge, og flere skjegg og frisyrer.
+- C: flere plagg og mønstre (flere jakker, bukser, hodeplagg, hansker, mønster og striper på genser og lue).
+- D: små ting (briller, snusleppe, tatoveringer, klokke, øredobb).
+- A og B er anbefalt først fordi de må bygges inn i den nye kroppen fra starten; C og D kan legges til når som helst etterpå og er det butikken senere kan selge.
 
 **V3. Hvor kommer arbeidsbevegelsene fra?** (styrer FB9; kan vente til FB8 er sett)
 - **A (anbefalt): Jonas filmer ekte fiskere med telefonen, med skriftlig samtykke.** Det nærmeste «så ekte måte som mulig» det går an å komme, og ingen andre har det.
@@ -124,7 +140,7 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 ## Hva planen ikke gjør
 
 - Ingen ansiktsanimasjon, ingen stoffsimulering, ingen kropper styrt av fysikk (trinn 4 i samtalen: for tungt for nettbrettet).
-- Ingen nye plagg, ingen butikk (fase 5 i `docs/karaktersystem.md` er sin egen).
+- Ingen butikk og ingenting til salgs (fase 5 i `docs/karaktersystem.md` er sin egen). Nye plagg bare om V4 C velges.
 - Ingen endring i hva mannskapet gjør, tjener eller koster (`workAssign`, `crewEffort`); gangtidene holdes.
 - Ingen endring i lagringene, utseendekodene eller skyen.
 - Måkene, fisken og dyrene er ikke med.
@@ -141,3 +157,5 @@ Hver fase er én økt og synes i spillet alene (unntatt FB0 og FB1). Prefikset e
 ## Status
 
 - 13.11.2026: planen skrevet (Jonas' økt, grenen `ccr-535ab52d-bv560n`). Venter på V1–V3 og klarsignal. Ikke lagt i køen.
+- 13.11.2026 (senere): Jonas: «Menneskene trenger forresten også et sterkt grafisk løft, og større mulighet for tilpasning». Skrevet inn i FB5, ny FB5b, V2 (A+ eller B) og nytt V4.
+- 13.11.2026 (senere): rekkefølgen snudd etter Jonas' ønske om synlig forskjell straks, og FB4 lagt i køen som steg 120 under lanseringslinja med startmeldingen `docs/planer/start/120.md`. Jonas: «Kjør på med FB4 i en ny økt».
