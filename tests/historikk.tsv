@@ -3975,3 +3975,5 @@
 2026-11-13 22:43	plan/2026-11-13-118	dde010a3	hudtest	OK	118	lite	samtidig	
 2026-11-13 22:44	plan/2026-11-13-118	dde010a3	kapplop	OK	28	lite	samtidig	
 2026-11-13 22:44	plan/2026-11-13-118	dde010a3	admintest	OK	10	lite	samtidig	
+2026-11-13 23:27	plan/2026-11-13-118	5ce89b64	kapplopshot	OK	2564	3d	alene	
+2026-11-13 23:27	plan/2026-11-13-118	5ce89b64+	admintest	OK	10	lite	alene	
