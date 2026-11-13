@@ -56,7 +56,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 
 - `plan/2026-11-13-108` (arbeidsrutinen): steg 108 TP1, flagget på de andre spillernes båter og bufferne. Eier `view3d/13-instruments.js` (flaggpoolen, `drawPeerFlags`), `view3d/20-trawl-seine.js` (bare `npcKB`, `npcMesh` og kallet etter `drawNPCNames`), `vessel3d.js` (`npcModel`, `livPaint`), `view3d/25-controls.js` (`#bench`), `tests/unit/vessel3d.test.mjs`, `tests/maletest.py`. Ikke `24-cinema.js` (FB4).
-- Designombyggingen: D1 og D2 bygd 13.11.2026 på `ccr-061ea8a6-pt4l71` (ikke flettet inn i arbeidsgrenen). **D3 klar** (`docs/planer/start/D3-butikkflyten.md`), startes i ny økt på den grenen. Eier `src/styles.css`, `ui/10c-dock.js`, `ui/05a-itemcard.js`, `ui/phone/13b-nettet.js`, `ui/phone/10-fartoy.js`, `ui/phone/12-utstyr-redskap.js`, `tools/ui/`.
+- Designombyggingen: D1 og D2 bygd 13.11.2026 på `ccr-061ea8a6-pt4l71` (ikke flettet inn i arbeidsgrenen). **D3 pågår** (`docs/planer/start/D3-butikkflyten.md`, 13.11.2026). Eier `src/styles.css`, `ui/10c-dock.js`, `ui/05a-itemcard.js`, `ui/phone/13b-nettet.js`, `ui/phone/10-fartoy.js`, `ui/phone/12-utstyr-redskap.js`, `tools/ui/`.
 - `ccr-535ab52d-bv560n` (Jonas' økt): steg 120 FB4, sjøbeina. Eier `deckcrew.js`, `view3d/08-plants.js`, `view3d/24-cinema.js`, `view3d/20-trawl-seine.js` (bare `drawDeckCrew` og `npcCrewDraw`), ny `tests/sjobein.py`, ny `tests/unit/sjobein.test.mjs`, `ui/phone/07-patch.js` (én linje).
 
 
