@@ -131,7 +131,9 @@ async def one(p, name, vw, vh):
     ticked = await J("() => !!document.querySelector('#phone .lop-l.ok')")
     check(ticked, name + ': 2. kortet starter med «Påmeldt i Lindesnes» krysset av')
     t_go = time.monotonic(); await tap('#phone [data-pa="lopgo"]')
-    try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=480000)
+    # (the way Lindesnes–Bergen with 3D drawn took 455 s and 481 s on the working branch's own build in the container 13.11.2026, steg 118:
+    # the route search shares the CPU with SwiftShader; 900 s)
+    try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=900000)
     except Exception as e:
         print('     (ikke i gang:', await J("() => ({toast:(document.getElementById('toast') || {}).textContent, plan:!!S.plan, st:S.boat.status, run:S.lop && S.lop.run && S.lop.run.st, busy:typeof LEIA_RUN !== 'undefined' ? LEIA_RUN.length : null})"), ')'); raise
     print('     (ruta Lindesnes–Bergen funnet på %.1f s)' % (time.monotonic() - t_go))
