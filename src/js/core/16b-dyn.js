@@ -669,8 +669,14 @@ function dynAuto(d, dtG){
     // route, at a knot and a half, then three (not the model's: the fenders and a hand on the quay do that, and she has neither
     // yet; the turn at the harbour point is often a hairpin, which the old follower pivoted through too)
     const sScr = Math.max(T.back + T.turnL, T.sOut + T.turnL);
-    if (T.back > 0 && T.s < sScr){
-      const vS = T.s < T.back + T.turnL ? 0.8 : Math.min(1.5, 0.8 + (T.s - T.back - T.turnL) * 0.05), psi0 = d.psi; T.s = Math.min(T.s + vS * h, sScr + 0.01); const q = dynLineAt(T, T.s), hd = dynLineHd(T, T.s, 3);
+    // stuck against a quay, a pier or a breakwater on the way (13.11.2026, tests/allesteder.py: the 21 m coastal vessel at Skjervøy, Fredvang,
+    // Uthaug, Roan and Nordmela knocked against the quay by the line for good, «Smell i kaia» every minute and no way on: the line passes
+    // a corner closer than she turns): the same hands take her on along the line for three of her lengths (60 m at least), as they do
+    // out from the quay, and the model has her again after it. «Stuck»: knocks within the last two minutes and under 5 m along the line in three
+    if (!T.prog || T.s > T.prog.s + 5) T.prog = {s:T.s, t:S.t};
+    else if (!(T.assist > T.s) && S.t - T.prog.t >= 3 && b.hits && b.hits.length && S.t - b.hits[b.hits.length - 1].t <= 2){ T.assist = Math.min(T.end - 1, T.s + Math.max(60, 3 * L)); T.prog = {s:T.s, t:S.t}; }
+    if ((T.back > 0 && T.s < sScr) || T.assist > T.s){
+      const sTo = Math.max(T.back > 0 ? sScr : 0, T.assist || 0), vS = T.back > 0 && T.s < T.back + T.turnL ? 0.8 : Math.min(1.5, 0.8 + Math.max(0, T.s - T.back - T.turnL) * 0.05), psi0 = d.psi; T.s = Math.min(T.s + vS * h, sTo + 0.01); const q = dynLineAt(T, T.s), hd = dynLineHd(T, T.s, 3);
       d.X = q[0]; d.Y = q[1]; if (hd !== null) d.psi = hd; d.u = T.s < T.back ? -vS : vS; d.v = 0; d.r = dynAng(psi0, d.psi) / h; d.dl = 0; continue;
     }
     // arrived at a harbour: within two lengths of its point and slow, the quay's lines take her the rest of the way (3D moorStep)
@@ -690,7 +696,7 @@ function dynAuto(d, dtG){
     // (vc and the manoeuvring speed are through the water; what the corners and the stops ask is over the ground, vG, which the
     // stream along her is taken from, so she is on the point with no way over the ground: F8b)
     let vCmd = pl.replan ? 0 : vc, vG = 1e9;
-    if (T.back > 0 && T.s < T.sOut + T.turnL + 20) vCmd = Math.min(vCmd, 3 * KN_MS);   // (just out from a quay: manoeuvring speed)
+    if ((T.back > 0 && T.s < T.sOut + T.turnL + 20) || T.assist > T.s - 20) vCmd = Math.min(vCmd, 3 * KN_MS);   // (just out from a quay: manoeuvring speed)
     const vBase = vCmd;
     // (into a corner she slows with how sharp it is, but a planing hull no slower than a third of her cruising speed: below that her
     // rudder has no bite without the screw's race, and at two knots she ran 50 m past the corner before it took, 19.10.2026)

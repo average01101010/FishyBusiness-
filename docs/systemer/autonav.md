@@ -274,6 +274,15 @@ Samme feil i rutepanelets landsjekk gjaldt **alle fire forseglede havner (Ålesu
 
 **Ikke rettet, står i backloggen:** krasjene i kartvisningen (sju på to uker fra tre spillere, seks på iPhone; en ny spiller i Troms 06.11.2026 åpnet kartplotteren på steget `gps` og ble borte etter ett livstegn), Smøla nord uten rute fra mottakskaia til feltet 17.09.2027 (fra naustet går den via åpent vann), og oppstartens sjekk av planen (`ui/11-boot.js`, `legClear`), som ikke kjenner `quayLandLeg` (ikke sett feile i testen).
 
+## 4.12o Fra alle steder med den eldre kystbåten (13.11.2026)
+
+Jonas 13.11.2026: «Test å start fra alle kaiplasser, butikker, verft, rorbuer, fiskemottak med den eldre kystbåten … Jeg MÅ vite at alle stedene i spillet fungerer som de skal og at spillere ikke blir stuck NOEN steder.» `tests/allesteder.py` (LITE, hele kysten): kystbåten (21 m, 3,4 m) fra hver havn og kystbåten på 14,99 m fra hver rorbu og hvert naust. Testen sjekker at skroget ligger på vann med dypgående under seg ved laveste lavvann, at Autonav finner en rute til en havn 2–80 km unna eller til åpent vann (nå og over 12 timer med tidevann), og at båten seiler den med båtmodellen (`dynTick` som spillets løkke) og legger til uten å gå på grunn eller skade skroget. Havneplassene i NPC-havnene (`KYST_ALLE=havn`): veien ut fra alle, og seilt fra hver tiende.
+
+Det testen fant, og rettingene:
+- **Fast mot kaia etter «Kast loss»** (Skjervøy, Fredvang, Uthaug, Roan, Nordmela): linja gikk så tett forbi et kaihjørne at båtmodellen slo i kaia hvert minutt og ikke kom videre. Står autopiloten fast (smell de siste to minuttene og under 5 m framdrift på tre), tar «hendene» som fører henne ut fra kaia, henne videre langs linja i tre båtlengder (minst 60 m), og så tar modellen over igjen (`T.assist` i `dynAuto`, `core/16b-dyn.js`).
+- **Brupilarer og sjømerker** (Reine, Bøvågen): ruta holdt halve bredden + 6 m fra dem, og en 21 m båt kuttet svingen og traff i 3–5 knop. Margen vokser nå med lengden: halve bredden + den største av 6 m og halve lengden (`obsClr`, `core/11b-obstacles.js`). Der ingen omvei med full margin finnes (en smal led med merker på begge sider), prøves en med 2 m klaring, dyp nok for båten (`obsDetourAny`).
+- **Rorbuer og naust:** se 5.25j i `havner-og-mottak.md` (grensen på 15 m, mudringen og veien ut).
+
 ## 4.12n Hopp over resten av ruta (HO1, steg 104, 12.11.2026)
 
 Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet som åpen en rute der det står en kostnad for å skippe resten av ruten, altså teleportere seg til målet.» Planen, valgene og prisene står i `docs/planer/hopp.md`. HO1 er kjernen uten knapp og betaling. Knappen er HO2 (steg 105), kjøpet HO3 (steg 106).
