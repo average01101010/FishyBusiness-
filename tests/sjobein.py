@@ -139,44 +139,49 @@ async def checks(pg):
     check(len(ft) >= 8 and not miss and off2 < 0.01, 'og hver fot står på modellens eget dekk, ikke bare på planet (%d føtter, verst %.1f mm)' % (len(ft), off2 * 1000), {'uten dekk under': len(miss), 'verst': round(off2 * 1000, 1)})
     # (and the drawn body answers the same numbers: the head over the hips is 0.68 m along the way the torso leans, leanR/leanF from
     # the hips' own line, which is what the clip guard reckons with; so the guard's geometry is the one that is drawn)
-    bad = []
+    bad = []; base = {}; nb = 0
     for roll, pitch in [(0, 0), (15, 0), (-15, 0), (0, 5), (12, -4)]:
-        for g in await drawn(pg, t, {'roll': roll * DEG, 'pitch': pitch * DEG, 'T': 100.3, 'task': 'look'}):
+        for g in await drawn(pg, t, {'roll': roll * DEG, 'pitch': pitch * DEG, 'T': 100.3, 'task': 'look', 'hs': 0}):
             e = g['se']
             if not e or g['walk']: continue
             hc = [(g['hips'][0][k] + g['hips'][1][k]) / 2 for k in (0, 1, 2)]; v = [g['head'][k] - hc[k] for k in (0, 1, 2)]
-            F = [math.sin(g['h']), 0, -math.cos(g['h'])]; R = [math.cos(g['h']), 0, math.sin(g['h'])]
-            th = math.hypot(e['leanR'], e['leanF']); ct, st_ = math.cos(th), math.sin(th)
-            dR = e['leanR'] / th if th > 1e-9 else 0; dF = e['leanF'] / th if th > 1e-9 else 0
-            want = [0.68 * (st_ * dF), 0.68 * ct, 0.68 * (st_ * dR)]   # (ahead, up, right in his own frame)
-            got = [dot(v, F), v[1], dot(v, R)]
-            d = math.dist(want, got)
+            F = [math.sin(g['h']), 0, -math.cos(g['h'])]; R = [math.cos(g['h']), 0, math.sin(g['h'])]; got = [dot(v, F), v[1], dot(v, R)]
+            if roll == 0 and pitch == 0: base[g['idx']] = got; continue
+            v0 = base.get(g['idx'])
+            if not v0: continue
+            # (the head over the hips on a level deck, turned by the lean about the hips: towards [dF, dR] by th)
+            th = math.hypot(e['leanR'], e['leanF']); dR = e['leanR'] / th if th > 1e-9 else 0; dF = e['leanF'] / th if th > 1e-9 else 0
+            a = v0[0] * dF + v0[2] * dR; pp = -v0[0] * dR + v0[2] * dF; a2 = a * math.cos(th) + v0[1] * math.sin(th); u2 = -a * math.sin(th) + v0[1] * math.cos(th)
+            want = [a2 * dF - pp * dR, u2, a2 * dR + pp * dF]; d = math.dist(want, got); nb += 1
             if d > 0.01: bad.append({'roll': roll, 'pitch': pitch, 'avvik_mm': round(d * 1000, 1), 'lean': round(math.degrees(th), 1)})
-    check(not bad, 'den tegnede kroppen svarer til tallene vakten regner med: hodet står 0,68 m over hofta langs leningen (±15° og stamping)', bad[:3])
+    check(nb >= 8 and not bad, 'den tegnede kroppen svarer til tallene vakten regner med: hodet over hofta er dreid med leningen, innen 1 cm (%d stillinger ved ±15° og stamping)' % nb, bad[:3])
     L0 = await drawn(pg, t, {'roll': 8 * DEG, 'pitch': 0, 'T': 100.3}, on=False)
     w0 = max([sole(g, i) for g in L0 if not g['walk'] for i in (0, 1)] or [0])
     check(w0 > 0.012, 'med sjøbeina av (som før) står føttene %.1f mm feil ved 8° rulling' % (w0 * 1000))
 
     # 3. the hands of the work where they were (the same frame time, the sea legs on and off), at 8° of roll; the net haul for «pick»
     seen = {}
-    async def hands(scene):
+    async def hands(bt, scene, want):
         if scene == 'garn':
             await pg.evaluate("""(() => { const b = S.boat, g = GROUNDS[0].p; b.rig = 'garn'; S.pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:4, cond:1}]; b.gop = {op:'haul', kind:'garn', n:6, done:2, prog:0.3, sub:0, sl:3, hooksPer:0, a:{x:g.x, y:g.y}, b:{x:g.x + 0.6, y:g.y}, lead:0, kg:0, rel:0, dead:0}; CREW3D.reset(); })()""")
-            await frames(pg, t, 3)
-            try: await pg.wait_for_function("CREW3D.agents().some(a => a.mode === 'at' && a.task === 'pick')", timeout=240000)
+            await frames(pg, bt, 3)
+        # (the same frame time with the sea legs on and off; the stations change and the fish come, so a few goes at it)
+        for go in range(6):
+            if all(k in seen for k in want): break
+            try: await pg.wait_for_function("(w) => CREW3D.agents().some(a => a.mode === 'at' && w.includes(a.task === 'gut' ? 'gutw' : a.task))", arg=[k for k in want if k not in seen], timeout=90000)
             except Exception: pass
-        for sign in (1, -1):
-            A = await drawn(pg, t, {'roll': sign * 8 * DEG, 'pitch': 0, 'T': 100.3}); B = await drawn(pg, t, {'roll': sign * 8 * DEG, 'pitch': 0, 'T': 100.3}, on=False)
+            sign = 1 if go % 2 == 0 else -1
+            A = await drawn(pg, bt, {'roll': sign * 8 * DEG, 'pitch': 0, 'T': 100.3}); B = await drawn(pg, bt, {'roll': sign * 8 * DEG, 'pitch': 0, 'T': 100.3}, on=False)
             bi = {g['idx']: g for g in B}
             for g in A:
                 o = bi.get(g['idx'])
-                if not o or g['walk'] or g['ev'] or o['ev'] or g['task'] != o['task'] or g['task'] not in ('haul', 'gutw', 'pick', 'pack'): continue
-                d = max(math.dist(own(g, g['hands'][i]), own(o, o['hands'][i])) for i in (0, 1))
-                # (the pack's shovel goes by the clock, and a fish laid in the box by when it landed: only the frames where both agree)
-                seen[g['task']] = max(seen.get(g['task'], 0), d)
-    try: await pg.wait_for_function("CREW3D.agents().some(a => a.mode === 'at' && a.task === 'pack')", timeout=240000)
-    except Exception: pass
-    await hands('line'); await hands('garn')
+                if not o or g['walk'] or g['ev'] or o['ev'] or g['task'] != o['task'] or g['task'] not in want: continue
+                seen[g['task']] = max(seen.get(g['task'], 0), max(math.dist(own(g, g['hands'][i]), own(o, o['hands'][i])) for i in (0, 1)))
+    await hands(t, 'line', ('haul', 'gutw', 'pack')); await hands(t, 'garn', ('pick',))
+    for bt in boats:   # (a station not manned on this boat in the time given: the other boats)
+        if all(k in seen for k in ('haul', 'gutw', 'pack')) or bt == t: continue
+        await pg.evaluate(SET, [bt, 'arbeid', 1] + cam); await frames(pg, bt, 3); await pg.evaluate("clearInterval(window.FEED); window.CATCHQ = []"); await hands(bt, 'line', ('haul', 'gutw', 'pack'))
+    await pg.evaluate(SET, [t, 'arbeid', 1] + cam); await frames(pg, t, 3)
     for k in ('haul', 'gutw', 'pick', 'pack'):
         check(k in seen and seen[k] < 0.01, 'hendene i «%s» er innen 1 cm av der de var uten sjøbeina, ved 8° rulling' % k, ('%.1f mm' % (seen[k] * 1000)) if k in seen else 'ikke sett')
 
@@ -218,7 +223,7 @@ async def checks(pg):
     L = await drawn(pg, t, {'roll': 13 * DEG, 'pitch': 0, 'T': 100.3, 'task': 'look'}, n=3)
     stp = [g for g in L if g['se'] and g['se']['step'] > 0.99]
     check(len(stp) >= 1 and all(sole(g, i) < 0.01 for g in stp for i in (0, 1)), 'ved 13° rulling setter han en fot ut til støtte, og den står på dekket (%d av %d)' % (len(stp), len(L)), [round(abs(g['se']['fr'][g['se']['stFoot']]) * 100) for g in stp])
-    await pg.evaluate("SJOBEIN.test = {roll:2 * Math.PI / 180, pitch:0, T:100.3, task:'look'}"); await frames(pg, t, 5)
+    await pg.evaluate("SJOBEIN.test = {roll:2 * Math.PI / 180, pitch:0, T:100.3, task:'look'}"); await frames(pg, t, 3); await pg.wait_for_timeout(4000); await frames(pg, t, 3)
     await pg.evaluate("SJOBEIN.log = []"); await frames(pg, t, 1); L = await pg.evaluate("(() => { const L = SJOBEIN.log; SJOBEIN.log = null; return L; })()")
     check(L and all(g['se']['grab'] == 0 and g['se']['step'] == 0 for g in L if g['se']), 'når hun har lagt seg (2°), slipper han rekka og tar foten inn')
     # (the gait is as it was: slower over 0.14 rad, stopped over 0.21; deckcrew.js tick, untouched)
@@ -250,12 +255,13 @@ async def checks(pg):
         check(r['hs'] > 2 and r['stepLean'] < 0.25 and r['stepHipR'] < 6 and r['stepHipY'] < 4, '%s: ingen dirring: fra ett bilde til neste (1/60 s) endrer leningen seg høyst %.2f°, hofta %.1f mm til siden og %.1f mm opp og ned' % (bt, r['stepLean'], r['stepHipR'], r['stepHipY']))
 
     # 6. the people on another boat close by have them too: your boat put 35 m from one that is fishing, her people's soles on her deck
+    await pg.evaluate("WX_FORCE = {w:6, d:250}")   # (in a gale the others are in port)
     cands = await pg.evaluate("npcStates(S.t / 60).filter(n => n.p && n.st !== 'port' && VESSELS[n.type] && !VESSELS[n.type].hand).sort((a, b) => (b.st === 'fishing') - (a.st === 'fishing')).slice(0, 4).map(n => ({id:n.id, type:n.type, st:n.st, L:n.L || 0}))")
     npc = []; near = None
     for c in cands:
         near = c
         ok = await pg.evaluate("""(c) => { const n = npcStates(S.t / 60).find(q => q.id === c.id && (q.L || 0) === c.L); if (!n) return false; const b = S.boat;
-          WX_FORCE = {w:9, d:250}; b.status = 'idle'; b.gop = null; b.pos = {x:n.p.x + 0.03, y:n.p.y}; b.v = 0; G3._debug.bv.init = false; const cm = G3._debug.cam; cm.yaw = 1.57; cm.pitch = 0.3; cm.dist = 30; return true; }""", c)
+          b.status = 'idle'; b.gop = null; b.pos = {x:n.p.x + 0.03, y:n.p.y}; b.v = 0; G3._debug.bv.init = false; const cm = G3._debug.cam; cm.yaw = 1.57; cm.pitch = 0.3; cm.dist = 30; return true; }""", c)
         if not ok: continue
         await frames(pg, t, 5)
         for k in range(5):

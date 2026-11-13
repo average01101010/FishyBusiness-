@@ -1050,6 +1050,7 @@ const SJOBEIN = {
   FZ:0.9, ZT:0.6,     // the torso's spring: its own frequency (Hz) and its damping (of critical)
   HEAVE:0.5,      // the share of the deck's way up and down the knees take up, while the legs reach (less in a big sea: as much as they reach)
   HMEAN:8,        // s: the deck's height is taken about its mean over this long
+  HSHEAVE:0.3,    // the heave each way that is expected of a sea, as a share of its significant wave height (measured in tests/sjobein.py: ±1.6–2.4 m at Hs 5.9 m)
   HIPUP:0.03, HIPDN:0.11,   // m the hips can rise over and sink under their height standing (the legs straight, the knees deep)
   GRAB:0.14, FREE:0.09, HOLD:1.5, GRABT:0.35, REACH:0.78,   // rad of tilt a free hand takes the rail at and lets go under, s it holds on after, s the hand takes, m it reaches from the shoulder
   CLIP:0.262,     // rad (15°): the roll the room for the body is measured for (deckcrew seaRoom; past it a shoulder may touch what he stands by)
@@ -1108,7 +1109,8 @@ function seaLegs(s, inp){
   // the heave: the knees give against the deck's way up and down about its mean (s.hy), by a share of it: HEAVE while the legs
   // reach that far, less in a big sea (the share of the heave lately, s.envH, that they do reach), so the hips move less than the
   // deck and never faster than the legs go; he stands lower the more there is to take up
-  const dy = snap ? 0 : y - s.hy, pk = Math.max(Math.abs(dy), s.envP * Math.exp(-(dt || 0) / 15)); s.envP = snap ? 0 : pk; s.envH = snap ? 0 : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
+  // (before the heave has been seen, a first frame or after a gap, it is taken from the sea's height: HSHEAVE of Hs each way)
+  const dy = snap ? 0 : y - s.hy, pk0 = C.HSHEAVE * (inp.hs || 0), pk = Math.max(Math.abs(dy), pk0, snap ? 0 : s.envP * Math.exp(-dt / 15)); s.envP = pk; s.envH = snap ? pk : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
   const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
   const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, pk)), hipY = -cr - A * Math.tanh(beta * dy / A);
   // the hand to the rail, and the foot put out down the slope
