@@ -1959,6 +1959,10 @@ body.booting #lopPop{visibility:hidden!important}
 /* ---- the HUD ---- */
 /* the compass line: a band of glass behind it, fading out with the line, so the course reads against snow, hills and the boat */
 body.v3d #compass3d{background:linear-gradient(90deg,rgba(6,16,24,0),rgba(6,16,24,.62) 24%,rgba(6,16,24,.62) 76%,rgba(6,16,24,0));border-radius:8px}
+/* the box, the GPS strip, the round buttons and the line over the dock: the glass is tighter (.78, --s-glass, as the catch cards), so the
+   dimmed text holds 4.5:1 over snow in daylight too (at .56 white text was 4.4:1 over white and the dimmed 3.2:1; worked out, not seen) */
+body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(11,23,32,.78)!important}
+body.v3d .ov,body.v3d #dockInfo{background:rgba(11,23,32,.78)}
 /* the little chart: its ground while it loads is the dark chart's, not white */
 body.v3d #miniPlot{background:#09141F;border-color:rgba(238,244,247,.28)}
 /* «Kart»: the button beside the little chart that opens the plotter (the chart itself still does) */
