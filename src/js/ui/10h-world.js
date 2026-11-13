@@ -163,6 +163,58 @@ function evCloseTick(){
     const t = evTop(e.id, q.y); if (t && t.busy) continue;
     if (!t || t.err || t.data){ evClose(e, q.y, t && t.data ? t.data : null); S.evPending = S.evPending.filter(x => x !== q); } }
 }
+// ---- the race Lindesnes–Nordkapp in the cloud (KL3, steg 118; supabase/migrations/20261113200000_kapplop.sql, core/09o-kapplop.js) ----
+// lopSync: the attempt under way and the ones finished or broken (S.lop.out) go up as they come: the cast-off (lop_start), each leg
+// with its track in order (lop_leg, lopLegPut), and the end (lop_end). How far each has come is kept on it (cs: {s, n, e}), so a race
+// sailed with the game closed or offline goes up in order the next time; the server checks each leg (the time, the track, a hop) and
+// keeps a time that cannot have been sailed off the board without a word. An attempt from before the track (no trk) does not go. A
+// server without the functions (404) is left alone for ten minutes, another error waits a minute, then longer.
+const LOPS = {busy:false, off:0, next:0};
+async function lopSync(){
+  if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user || LOPS.busy || Date.now() < LOPS.off || Date.now() < LOPS.next || !S || !S.lop) return;
+  if (TAB.held || TAB.lost || TAB.wait) return;   // (only the page that has the game sends)
+  const L = S.lop, items = (L.out || []).slice(); if (L.run && L.run.t0 != null && L.run.trk) items.push(L.run);
+  if (!items.length) return;
+  LOPS.busy = true; let wait = 0;
+  try {
+    for (const R of items){
+      // (over: ended, read off the attempt itself; it may end while this waits for the network, and then the copy in out shares cs)
+      const cs = R.cs || (R.cs = {s:0, n:0, e:0}), over = R.st === 'done' || R.st === 'dnf';
+      if (cs.dead){ if (over) L.out = (L.out || []).filter(x => x.id !== R.id); continue; }   // (refused five times: given up)
+      // waiting after a refusal: the ones after it wait too, so a later attempt's lop_start never closes this one on the server first
+      if (cs.at && Date.now() < cs.at) break;
+      try {
+        if (!cs.s){ await cloudRpc('lop_start', {rid:lopRid(R), vtype:R.type, boat:R.name || '', t0:R.t0, vid:R.vid || ''}); cs.s = 1; }
+        while (cs.n < (R.legs || []).length){ const a = lopLegPut(R, cs.n); if (!a) break; await cloudRpc('lop_leg', a); cs.n++; }
+        if (over && !cs.e && cs.n >= (R.legs || []).length){
+          await cloudRpc('lop_end', {rid:lopRid(R), st:R.st, how:R.how || '', t1:R.t1, min:+(+R.min || 0).toFixed(1)}); cs.e = 1;
+          L.out = (L.out || []).filter(x => x.id !== R.id); for (const k in LTOP) if (LTOP[k] && typeof LTOP[k] === 'object') LTOP[k].at = 0; }
+        cs.f = 0; delete cs.at;
+      } catch (e){
+        if (/ 404$/.test(e.message)){ LOPS.off = Date.now() + 600000; return; }
+        if (!/ 400$/.test(e.message)){ wait = 60000; break; }   // (offline, the server busy: all of it again in a minute)
+        // refused (400): the server may not have the attempt any more (a guest taken over by an account, a database restored), so it
+        // goes from the start, a minute, then longer, later (the server takes a repeat with ok); one it refuses five times is given up
+        cs.f = (cs.f || 0) + 1; cs.s = 0; cs.n = 0; cs.e = 0; cs.at = Date.now() + 60000 * Math.min(10, Math.pow(2, cs.f - 1));
+        if (cs.f >= 5){ cs.dead = 1; delete cs.at; if (over) L.out = (L.out || []).filter(x => x.id !== R.id); }
+      }
+    }
+  } finally { LOPS.busy = false; if (wait) LOPS.next = Date.now() + wait; }
+}
+// the week's board (lop_top): per class the top 20, how many and your place; fetched at most once a minute while it is shown, the
+// Oppdrag app (the race's tab) and the Sesong app drawn again when it comes. null without the cloud; a server without it (404) is
+// remembered and asked no more this session, and the tab shows your own time as before
+const LTOP = {};
+function lopTop(wk){
+  if (typeof CLOUD === 'undefined' || !CLOUD.on || !CLOUD.user || LTOP.off) return null;
+  const e = LTOP[wk] || (LTOP[wk] = {at:0, data:null, busy:false, err:false});
+  if (!e.busy && Date.now() - e.at > 60000){
+    e.busy = true;
+    cloudRpc('lop_top', {wk}).then(d => { e.data = d; e.err = false; }).catch(x => { e.err = true; if (/ 404$/.test(x.message)) LTOP.off = true; })
+      .finally(() => { e.busy = false; e.at = Date.now(); if (PHONE.isOpen() && (PHONE.app === 'ordl' || PHONE.app === 'sesong')) PHONE.render(); });
+  }
+  return e;
+}
 // ---- the real-time relay (Ø16, S2 in docs/planer/sanntid-posisjoner.md, 05.11.2026; Jonas «kjør på» 03.11.2026: «like smooth som når
 // man spiller call of duty»). While the game is open, seen and signed in on detstorebla.no, a WebSocket to the relay on the same server
 // (tools/server/rt/server.mjs behind Caddy, wss://detstorebla.no/rt) carries this boat's position up 5 times a second under way and once
@@ -310,6 +362,7 @@ function worldStart(){
   setTimeout(worldTick, 3000); setInterval(worldTick, 15000);
   setInterval(() => { if (WORLDP.put && !WORLDP.busy && Date.now() - WORLDP.put > 3000 && worldSig() !== WORLDP.sig) worldTick(); }, 1000);
   setInterval(() => { try { evCloseTick(); } catch (e){ console.warn('evClose', e); } }, 20000);
+  setTimeout(lopSync, 25000); setInterval(lopSync, 30000);   // the race's attempts to the cloud (KL3)
   if (typeof pressStart === 'function') pressStart();   // Kystposten's stories to and from the cloud (ui/05g-press.js)
   document.addEventListener('visibilitychange', () => { if (!document.hidden) worldTick(); });
   setInterval(() => { if (PEERS.length && Date.now() - WORLDP.last > 60000) PEERS.length = 0; }, 10000);   // gone quiet (offline)

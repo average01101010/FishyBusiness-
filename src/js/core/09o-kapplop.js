@@ -20,7 +20,11 @@
 // S.lop = {run (the attempt now: null, or {id, vid, type, cls, name, reg, t0, legs:[{t, pid}], pen:[{t, k, min}], ded:[{t0, t1, min, k}],
 //          sos (the help under way), lp (her place the minute before), st:'reg'|'run', tasks:[the legs' tasks, lopLegTasks], surp:[the
 //          surprise drawn for each leg, as it is shown]}), hist:[finished or broken attempts, newest first],
-//          best:{week id: the best finished time in game minutes}, legsN (legs sailed in all), seq}
+//          best:{week id: the best finished time in game minutes}, legsN (legs sailed in all), seq,
+//          out:[the last finished or broken attempts with their legs and track, until the cloud has them: lopSync, KL3]}
+// KL3 (steg 118): the attempt carries its track for the server's check, trk:[[game minute, x, y]] from the cast-off and once a game
+// hour, each leg its end {t, pid, p:[x, y], tr: a trim was on during it (for the admin's sums only, V7 A)}, and cs, how far the cloud has
+// it (ui/10h-world.js lopSync: {s: started, n: legs sent, e: ended})
 const LOP = {
   id:'lnk',   // Lindesnes–Nordkapp (KL3 keeps the attempts under this id; another course is another entry, kapplop.md «Det planen ikke gjør»)
   name:['Lindesnes–Nordkapp', 'Lindesnes–Nordkapp'],
@@ -90,6 +94,39 @@ function lopWeek(ms){
 // game hours. vmax is the boat's own with her equipment (the 90 hp outboard gives the skiff 30 kn, applyVessel), not the type's: the
 // class is the type's (V4 A), the speed the boat's. The server checks each leg against the same rule in KL3
 function lopMinH(nm, vmax, trim){ const v = (+vmax || 0) * Math.max(1, +trim || 1); return v > 0 && nm > 0 ? nm / v * LOP.margin : 0; }
+// the highest top speed a type can have without trim (knots), the server's vmax for it (cheat_vt.vmax, KL3): her own, or the fastest
+// engine the gear lets her carry (EQUIP boost: the 90 hp outboard), with the yard's last propeller and engine step, as one sum as in
+// applyVessel (speedSum), rounded up to a tenth. The server holds each leg and the track against it times the trim it has delivered
+function lopVcap(type){
+  const V = VESSELS[type]; if (!V) return 0;
+  let v = +V.vmax || 0;
+  for (const k in EQUIP){ const bo = EQUIP[k].boost; if (bo && +bo.vmax > v && equipFits(k, type)) v = +bo.vmax; }
+  const X = speedSum({type, propLv:PROPUP.length, engLv:ENGUP.length}, V, null);
+  return Math.ceil(v * (1 + X.sp) * 10 - 1e-9) / 10;
+}
+// a point of the track: the game minute and the place in the chart's grid (km), to ten metres
+const lopPt = (t, p) => [t, Math.round(p.x * 100) / 100, Math.round(p.y * 100) / 100];
+// the end of a leg (at the checkpoint's quay, or over the line): its time, the port, the place, and whether a trim was on during it;
+// the next leg's trim begins with what is on now
+function lopLegEnd(r, pid, p){ const e = {t:S.t, pid, p:lopPt(0, p).slice(1), tr:r.tr ? 1 : 0}; r.tr = trimOn(S.boat) ? 1 : 0; return e; }
+// out holds three: a broken one goes first, so a finished time not yet sent is the last to go
+function lopOutCap(o){ while (o.length > 3){ const i = o.findIndex(x => x.st !== 'done'); o.splice(i >= 0 ? i : 0, 1); } return o; }
+// the attempt's id in the cloud: the game's id with the game minute it cast off, so a save taken back or a new game (S.lop.seq starts
+// again) never sends an id the server already has for another attempt
+const lopRid = run => run.id + '-' + Math.round(run.t0 || 0);
+// leg j of an attempt as the server takes it (lop_leg, ui/10h-world.js lopSync): the game minutes it began and ended, the place it ended,
+// the track's points from its start to its end (leg 1 begins with the point at the cast-off; a leg over 400 game hours, lying in harbour
+// for days, is thinned evenly to 400 with its first and last point kept), and for the admin the trim, what was added and taken off, and the tasks. null before the leg is over
+function lopLegPut(run, j){
+  const lg = run.legs || [], e = lg[j]; if (!e || run.t0 == null) return null;
+  const t0 = j ? lg[j - 1].t : run.t0, t1 = e.t, inLeg = t => j ? t > t0 && t <= t1 : t >= t0 && t <= t1;
+  const sum = (a, f) => (a || []).filter(f).reduce((s, x) => s + (+x.min || 0), 0);
+  let pts = (run.trk || []).filter(q => inLeg(q[0]));
+  if (pts.length > 400){ const k = Math.ceil(pts.length / 399); pts = pts.filter((q, i) => i % k === 0 || i === pts.length - 1); }
+  return {rid:lopRid(run), leg:j, t0, t1, p:e.p || null, pts,
+    d:{tr:e.tr ? 1 : 0, pen:sum(run.pen, x => inLeg(x.t)), ded:sum(run.ded, x => inLeg(x.t1)),
+      opp:(run.tasks || []).filter(m => m.leg === j).map(m => [m.role, m.k, m.st, m.adj || 0])}};
+}
 // the attempt's time in game minutes, at `now` if not finished: one clock from casting off (V2 A), with the penalties added and the help
 // taken off (when the help is over); the split at each checkpoint is the time on the clock there (with what was added and taken off by then)
 function lopTime(run, now){
@@ -138,9 +175,11 @@ function lopEnd(how){
   const ashore = () => { if (S.cargo) S.cargo = S.cargo.filter(c => !(typeof c.tur === 'string' && c.tur.indexOf(r.id + ':') === 0)); };
   if (r.vid === S.cur) ashore(); else { const v = vesselById(r.vid); if (v) onVessel(v, ashore); }
   r.t1 = S.t; r.st = how === 'maal' ? 'done' : 'dnf'; r.how = how;
-  const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id;
+  const T = lopTime(r), wk = lopWeek(lopMs(r.t1)).id; r.min = T.min;   // (on the attempt too: lopSync may hold it while it ends)
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
   L.hist.unshift(e); if (L.hist.length > LOP.hist) L.hist.length = LOP.hist;
+  // what the cloud still needs of it (KL3, lopSync): the legs and the track go with it until they are sent, the last three kept
+  if (r.trk) L.out = lopOutCap((L.out || []).concat([{id:r.id, vid:r.vid, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs, trk:r.trk, pen:r.pen, ded:r.ded, tasks:(r.tasks || []).map(m => ({leg:m.leg, role:m.role, k:m.k, st:m.st, adj:m.adj || 0})), st:r.st, how, min:T.min, cs:r.cs || null}]));
   if (r.st === 'done' && !(L.best[wk] != null && L.best[wk] <= T.min)) L.best[wk] = T.min;
   L.run = null;
   const hm = lopHm(T.min);
@@ -157,7 +196,7 @@ function lopHm(min){ const m = Math.max(0, Math.round(min)), d = Math.floor(m / 
 function lopDepart(){
   const L = S.lop, r = L && L.run; if (!r || r.vid !== S.cur || r.st !== 'reg') return;
   const b = S.boat; if (b.status !== 'port' || lopCpOf(b.port) !== 0) return;
-  r.t0 = S.t; r.st = 'run'; r.lp = {x:b.pos.x, y:b.pos.y};
+  r.t0 = S.t; r.st = 'run'; r.lp = {x:b.pos.x, y:b.pos.y}; r.trk = [lopPt(S.t, b.pos)]; r.tr = trimOn(b) ? 1 : 0;
   log('Kappløpet er i gang. Klokka går til mållinja ved ' + LOP.goal.name + '.', 'The race is on. The clock runs to the finish line at ' + LOP.goal.name + '.', 'nav');
   lopLegTasks(r, 0);   // leg 1's task and its surprise, shown at the start (KL1b)
 }
@@ -173,7 +212,7 @@ function lopDock(pid){
   if (!lopFixDone(r, next - 1)){ const m = r.tasks.find(x => x.leg === next - 1 && x.role === 'fix' && x.st === 'go'), w = lopTaskWhat(m);
     log('Sjekkpunkt ' + LOP.cps[k - 1].name + ' teller når etappens oppgave er gjort: ' + w[0] + '.', 'Checkpoint ' + LOP.cps[k - 1].name + ' counts when the leg\'s task is done: ' + w[1] + '.', 'nav'); return; }
   lopLegClose(r, next - 1);
-  r.legs.push({t:S.t, pid}); L.legsN = (L.legsN || 0) + 1;
+  r.legs.push(lopLegEnd(r, pid, S.boat.pos)); L.legsN = (L.legsN || 0) + 1;
   const T = lopTime(r), hm = lopHm(T.min);
   log('Sjekkpunkt ' + LOP.cps[k - 1].name + ': etappe ' + next + ' av ' + (LOP.cps.length + 1) + '. Klokka står på ' + hm[0] + '.', 'Checkpoint ' + LOP.cps[k - 1].name + ': leg ' + next + ' of ' + (LOP.cps.length + 1) + '. The clock is at ' + hm[1] + '.', 'nav');
   if (typeof cloudEv === 'function') cloudEv('lop_leg', {cls:r.cls, leg:next, min:Math.round(T.min)});
@@ -227,6 +266,9 @@ function lopMinute(){
   // and 40 from the front, so neither their length nor an index tells what is new)
   for (const x of S.farv || []) if (!x.lop && x.vid === r.vid && x.k === 'fart' && x.t >= r.t0){ x.lop = 1; r.pen.push({t:x.t, k:'fart', min:LOP.pen.fart}); }
   for (const x of S.nearMiss || []) if (!x.lop && x.vid === r.vid && (x.give === 'a' || x.give === 'both') && x.t >= r.t0){ x.lop = 1; r.pen.push({t:x.t, k:'vik', min:LOP.pen.vik}); }
+  // the track for the server (KL3): one point a game hour, and whether a trim was on during the leg (the admin's sums only)
+  if (r.trk && S.t % 60 === 0 && S.t > r.trk[r.trk.length - 1][0]) r.trk.push(lopPt(S.t, here));
+  if (trimOn(b)) r.tr = 1;
   // the help: from the answer to its end, less the way made
   const sid = lopSosNow();
   if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here, to:lopNext(r)};
@@ -242,7 +284,7 @@ function lopMinute(){
   const over = r.legs.length === LOP.cps.length && lopCross(r.lp, here, Math.max(BOAT.vmax || 0, (VESSELS[r.type] || {}).vmax || 0) || 30);
   if (over && !lopFixDone(r, LOP.cps.length)){ if (!r.goalW){ r.goalW = 1; const m = r.tasks.find(x => x.leg === LOP.cps.length && x.role === 'fix' && x.st === 'go'), w = lopTaskWhat(m);
     log('Mållinja teller når etappens oppgave er gjort: ' + w[0] + '.', 'The finish line counts when the leg\'s task is done: ' + w[1] + '.', 'nav'); } }
-  else if (over){ lopLegClose(r, LOP.cps.length); r.legs.push({t:S.t, pid:null}); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
+  else if (over){ lopLegClose(r, LOP.cps.length); r.legs.push(lopLegEnd(r, null, here)); L.legsN = (L.legsN || 0) + 1; r.lp = here; lopEnd('maal'); return; }
   r.lp = here;
 }
 // once a minute from step, outside the vessels: a race boat no longer in the fleet (sold) ends the attempt; else her minute

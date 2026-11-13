@@ -4,8 +4,10 @@
 // sentences. The course in the chart while she is registered (lopSvg, from 03-map.js; the tasks' rings are turSvg's, which reads
 // turActs). The race clock in the GPS box in 3D, the little chart's foot and the chart plotter's bar while a leg is sailed (lopClock).
 // The card at each checkpoint with the leg's time, and at the finish with the time and the week (lopUi, once a tick from 08-actions.js).
-// The card in the Sesong app with the week's best time (lopSeasonCard; the board in the cloud is KL3). Nothing here points to a place
-// where money is spent (kapplop.md «Det som ikke selges», V7 A): the race is sailed.
+// The card in the Sesong app with the week's best time (lopSeasonCard). The week's board from the cloud (KL3, steg 118; lopTop in
+// ui/10h-world.js): the top 20 of a class and your place in the tab (lopBoard), the class's leader and your place in the Sesong card;
+// without the cloud, or before the migration (404), only your own time, as before. Trim is never shown (V7 A). Nothing here points to
+// a place where money is spent (kapplop.md «Det som ikke selges», V7 A): the race is sailed.
 const lopKv = (k, v, cls) => '<div class="kv' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span><b>' + v + '</b></div>';
 const lopHmL = min => { const a = lopHm(min); return lopL(a[0], a[1]); };
 // the clock short, for the GPS strip, the little chart's foot and the plotter's bar: «52 min», «3:07», «4 d 18:12» (the whole course
@@ -30,6 +32,9 @@ const lopPast = () => P(71.215, 25.86);
 // «Begynn på nytt» asks once more (the time of the first tap, put back when the tab is drawn more than 8 s after it, so the button
 // always says what a tap does); LOP_TAB: the Oppdrag app opens on the race's tab (the card at a checkpoint, outside the phone)
 let LOP_QUIT = 0, LOP_TAB = false;
+// the class whose board the tab shows when another is tapped: {k, cls: your own class then, t}; it lasts ten minutes and while your own
+// class is the same (null: the race boat's, or the boat's you are aboard)
+let LOP_CLS = null;
 // the race as it stands, read without making S.lop (only registering makes it: lopState)
 const lopRead = () => S.lop || {run:null, hist:[], best:{}};
 
@@ -59,6 +64,8 @@ function lopPage(){
   // the leg's tasks: the fixed one and the surprise when it is shown (and one carried on from the leg before)
   if (going){ const ts = (r.tasks || []).filter(m => m.leg === done || (m.st === 'go' && m.carry));
     if (ts.length) h.push('<h4 class="tur-sec">' + lopL('Etappe ' + (done + 1) + ': oppgavene', 'Leg ' + (done + 1) + ': the tasks') + '</h4>' + ts.map(lopTaskCard).join('')); }
+  // the week's board in the cloud (KL3)
+  h.push(lopBoard(cls, wk));
   // the attempts before
   if ((L.hist || []).length) h.push('<h4 class="tur-sec">' + lopL('Forsøkene dine', 'Your attempts') + '</h4><div class="ph-card">' + L.hist.slice(0, 5).map(e => {
     const w = lopWeek(lopMs(e.t1)).w;
@@ -73,6 +80,28 @@ function lopPage(){
     ['Klassen er båttypens toppfart. Uka går fra mandag til søndag, og den beste tida di den uka står.', 'The class is the boat type\'s top speed. The week runs Monday to Sunday, and your best time that week stands.']
   ].map(x => '<li>' + lopL(x[0], x[1]) + '</li>').join('') + '</ul></div>');
   return h.join('');
+}
+// the week's board for a class (KL3): the top 20 with the boat, the player's name and the time, your place under them when you are
+// further down, and how many have finished; the other classes a tap away. '' without the cloud (the tab shows your own time)
+function lopBoard(cls0, wk){
+  const T = typeof lopTop === 'function' ? lopTop(wk.id) : null; if (!T) return '';
+  if (LOP_CLS && LOP_CLS.cls == null) LOP_CLS.cls = cls0;
+  const pick = LOP_CLS && LOP.cls.keys.includes(LOP_CLS.k) && LOP_CLS.cls === cls0 && Date.now() - LOP_CLS.t < 600000 ? LOP_CLS.k : null;
+  const en = S.lang === 'en', cls = pick || cls0, d = T.data, C = d && d.cls ? d.cls[cls] : null, rows = C ? C.rows || [] : [];
+  // (your row: the race boat's name as the server has it, not the boat you are aboard now)
+  const esc = turEsc, me0 = esc(S.boatName || lopL('Deg', 'You')), me = r => (r && r.boat && peerName(r.boat) !== '–' ? esc(peerName(r.boat)) : me0) + ' <small>(' + lopL('deg', 'you') + ')</small>';
+  const nm = r => { const bn = peerName(r.boat), un = r.user ? peerName(r.user) : ''; return (bn === '–' ? lopL('Ukjent båt', 'Unknown boat') : esc(bn)) + (un && un !== '–' ? '<br><small class="ph-note">' + esc(un) + '</small>' : ''); };
+  const tabs = '<div class="ph-sub" style="padding:0 0 8px">' + LOP.cls.keys.map(k => '<button class="' + (k === cls ? 'on' : '') + '" data-pa="lopcls" data-s="' + k + '">' + lopClsName(k, en) + '</button>').join('') + '</div>';
+  const body = !d ? '<p class="ph-note">' + (T.err ? lopL('Tavla kan ikke hentes nå.', 'The board cannot be fetched now.') : lopL('Henter tavla …', 'Fetching the board …')) + '</p>'
+    : !rows.length ? '<p class="ph-note">' + lopL('Ingen i klassen ' + lopClsName(cls).toLowerCase() + ' har kommet i mål denne uka ennå.', 'No one in the class ' + lopClsName(cls, true).toLowerCase() + ' has finished this week yet.') + '</p>'
+    : '<table class="ph-tbl lop-top"><tr><th>#</th><th>' + lopL('Båt', 'Boat') + '</th><th class="n">' + lopL('Tid', 'Time') + '</th></tr>' +
+      rows.map(r => '<tr class="' + (r.me ? 'me' : '') + '"><td>' + r.rank + '</td><td>' + (r.me ? me(r) : nm(r)) + '</td><td class="n">' + lopHmS(r.min) + '</td></tr>').join('') +
+      (C.mine && C.mine.rank > rows.length ? '<tr class="me"><td>' + C.mine.rank + '</td><td>' + me(C.mine) + '</td><td class="n">' + lopHmS(C.mine.min) + '</td></tr>' : '') + '</table>';
+  const n = C ? C.n || 0 : 0, guest = typeof isGuest === 'function' && isGuest();
+  return '<h4 class="tur-sec">' + lopL('Ukas tavle', 'This week\'s board') + '</h4><div class="ph-card lop-board">' + tabs + body +
+    '<p class="ph-note">' + (n ? lopL(n + (n === 1 ? ' båt' : ' båter') + ' i mål i klassen denne uka. ', n + (n === 1 ? ' boat' : ' boats') + ' finished in the class this week. ') : '') +
+    lopL('Den beste tida til hver båt i uka står. Ny tavle mandag kl. 00.', 'Each boat\'s best time of the week stands. A new board on Monday at 00:00.') +
+    (guest ? ' ' + lopL('Som gjest ser du bare din egen tid, og står ikke på tavla for andre.', 'As a guest you see only your own time, and are not on the board for others.') : '') + '</p></div>';
 }
 // the course card's buttons: «Meld på» (or why not, with the way to Lindesnes), «Kast loss mot …» / «Kjør til …», and «Begynn på nytt»
 function lopButtons(r, mine){
@@ -192,8 +221,13 @@ function lopPop(inner){
 // ---- the card in the Sesong app: the race this week and your best time (the board for everyone is KL3) ----
 function lopSeasonCard(){
   const L = lopRead(), wk = lopWeek(lopMs(S.t)), best = (L.best || {})[wk.id], c = lopClock(), r = L.run;
+  // the week's leader in the class and your place (KL3), when the board has come
+  // (fetched only for one who races: an attempt now or a time this week)
+  const cls = r ? r.cls : lopCls(VESSELS[S.boat.type]), T = (r || best != null) && typeof lopTop === 'function' ? lopTop(wk.id) : null, C = T && T.data && T.data.cls ? T.data.cls[cls] : null, top = C && C.rows && C.rows[0];
+  const lead = top ? lopKv(lopL('Ukas beste, ' + lopClsName(cls).toLowerCase(), 'This week\'s best, ' + lopClsName(cls, true).toLowerCase()), (top.me ? lopL('deg', 'you') : turEsc(peerName(top.boat))) + ' · ' + lopHmS(top.min)) +
+    (C.mine ? lopKv(lopL('Din plass', 'Your place'), C.mine.rank + lopL(' av ', ' of ') + (C.n || 0)) : '') : '';
   return '<div class="ph-card lop-s"><h4>' + lopTitle(wk) + '</h4><p class="ph-note">' + lopL('Kappløpet fra Lindesnes til Nordkapp er åpent hele uka. Meld deg på ved kaia i Lindesnes, under Oppdrag › Kappløp.', 'The race from Lindesnes to the North Cape is open all week. Register at the quay in Lindesnes, under Orders › Race.') + '</p>' +
-    (best != null ? lopKv(lopL('Din beste tid denne uka', 'Your best time this week'), lopHmL(best)) : '') +
+    (best != null ? lopKv(lopL('Din beste tid denne uka', 'Your best time this week'), lopHmL(best)) : '') + lead +
     (c ? lopKv(lopL('Forsøket ditt nå', 'Your attempt now'), lopL('etappe ', 'leg ') + c.leg + '/' + c.n + ' · ' + lopHmL(c.min)) : r && r.st === 'reg' ? lopKv(lopL('Forsøket ditt nå', 'Your attempt now'), lopL('påmeldt i Lindesnes', 'registered in Lindesnes')) : '') +
     '<div class="tur-b"><button class="ph-btn" data-pa="loptab">' + lopL('Til kappløpet', 'To the race') + '</button></div></div>';
 }

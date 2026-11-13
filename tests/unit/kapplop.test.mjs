@@ -204,5 +204,43 @@ export default function (t){
     lopLegClose(r, 1); t.eq([r.tasks[0].st, r.pen.length], ['miss', 2], 'slepet ikke levert innen neste etappe er over: 60 minutter');
     const r2 = {id:'lnk-31', pen:[], tasks:[{leg:0, role:'surp', st:'go', k:'slep', stage:'tow'}]}; lopLegClose(r2, 0); r2.tasks[0].st = 'done';
     lopLegClose(r2, 1); t.eq(r2.pen.length, 0, 'slepet levert på neste etappe: ingen tillegg'); }
+
+  // 10. KL3 (steg 118): what the server gets. The highest top speed of each type without trim is at least what the boat reaches with
+  // the yard's last propeller and engine step and the fastest engine her gear takes (applyVessel), so the server never flags an honest
+  // boat for the speed; the track has one point a game hour; a leg as lop_leg takes it; a finished attempt waits in out for the cloud
+  { const {lopVcap, applyVessel, BOAT, EQUIP, equipFits, PROPUP, ENGUP, lopLegPut, lopMinute, lopEnd} = K, S9 = newState(); K.set('S', S9);
+    const over = [];
+    for (const k in VESSELS){ S9.boat.type = k; S9.boat.propLv = PROPUP.length; S9.boat.engLv = ENGUP.length; delete S9.boat.trim;
+      S9.equip = Object.fromEntries(Object.keys(EQUIP).filter(e => EQUIP[e].boost && equipFits(e, k)).map(e => [e, 1]));
+      applyVessel(); if (!(BOAT.vmax <= lopVcap(k) + 1e-9 && BOAT.vmax >= lopVcap(k) - 0.1)) over.push(k + ' ' + BOAT.vmax + '/' + lopVcap(k)); }
+    t.eq(over, [], 'lopVcap er toppfarten med verftets siste propell- og motortrinn og den raskeste motoren utstyret tar, rundet opp til en tidel, for hver type');
+    t.eq(lopVcap('skiff'), 30, 'aluminiumsbåten med 90-hesteren: 30 knop'); t.eq(lopVcap('ukjent'), 0, 'en ukjent type: 0');
+    S9.boat.type = 'sjark'; S9.boat.propLv = 0; S9.boat.engLv = 0; S9.equip = {}; applyVessel(); S9.cur = S9.cur || 'v1'; S9.fleet = [{id:S9.cur}];
+    const run = {id:'lnk-40', vid:S9.cur, type:'sjark', cls:'middels', t0:30, legs:[], pen:[], ded:[], st:'run', tasks:[], trk:[[30, 1, 1]], tr:0};
+    S9.lop = {run, hist:[], best:{}, legsN:0, seq:40}; S9.boat.lop = 'lnk-40'; S9.boat.status = 'sailing'; S9.boat.pos = {x:5, y:6};
+    for (const m of [59, 60, 61, 119, 120, 120]){ S9.t = m; lopMinute(); }
+    t.eq(run.trk, [[30, 1, 1], [60, 5, 6], [120, 5, 6]], 'sporet: punktet ved avgangen og ett hver hele spilltime, aldri to på samme minutt');
+    S9.boat.trim = {k:'turbo', until:1e9}; S9.t = 121; lopMinute(); t.eq(run.tr, 1, 'trim på i etappen: merket for admin');
+    run.legs = [{t:130, pid:'a', p:[5, 6], tr:1}];
+    run.pen = [{t:40, k:'fart', min:15}, {t:200, k:'vik', min:15}]; run.ded = [{t0:50, t1:100, k:'m', min:20}];
+    run.tasks = [{leg:0, role:'fix', k:'foto', st:'done', adj:0}, {leg:0, role:'surp', k:'slep', st:'miss', adj:60}, {leg:1, role:'fix', k:'frakt', st:'go'}];
+    const p0 = lopLegPut(run, 0);
+    t.eq([p0.rid, p0.leg, p0.t0, p0.t1, p0.p, p0.pts, p0.d], ['lnk-40-30', 0, 30, 130, [5, 6], [[30, 1, 1], [60, 5, 6], [120, 5, 6]],
+      {tr:1, pen:15, ded:20, opp:[['fix', 'foto', 'done', 0], ['surp', 'slep', 'miss', 60]]}], 'etappe 1 som serveren tar den: tidene, stedet, sporet fra avgangen, trim, tillegg, fradrag og oppgavene');
+    run.trk.push([180, 7, 8]); run.legs.push({t:200, pid:null, p:[9, 9], tr:0});
+    const p1 = lopLegPut(run, 1); t.eq([p1.t0, p1.t1, p1.pts, p1.d.pen], [130, 200, [[180, 7, 8]], 15], 'etappe 2: fra sjekkpunktet, punktene etter det');
+    t.eq(lopLegPut(run, 2), null, 'en etappe som ikke er over: ingenting');
+    // (after the independent check, 13.11.2026) a leg over 400 game hours (days in harbour) is thinned to at most 400 points, the first
+    // and the last kept; the id in the cloud carries the minute she cast off, so a save taken back never repeats one
+    const long = {id:'lnk-1', t0:0, legs:[{t:60 * 1000, p:[1, 1]}], trk:[[0, 0, 0]].concat(Array.from({length:1000}, (_, i) => [(i + 1) * 60, 0, 0])), pen:[], ded:[], tasks:[]};
+    const pl = lopLegPut(long, 0).pts; t.ok(pl.length <= 400 && pl[0][0] === 0 && pl[pl.length - 1][0] === 60000 && pl.every((q, i) => !i || q[0] > pl[i - 1][0]), 'tusen spilltimer i én etappe: høyst 400 punkter, det første og det siste med', pl.length);
+    t.ok(K.lopRid({id:'lnk-1', t0:30}) !== K.lopRid({id:'lnk-1', t0:9000}), 'samme id i en lagring tatt tilbake, en annen avgang: en annen id i skyen');
+    run.cs = {s:1, n:1, e:0}; S9.t = 200; const e = lopEnd('maal'), o = S9.lop.out || [];
+    t.ok(e && o.length === 1 && o[0].id === 'lnk-40' && o[0].vid === S9.cur && run.min === e.min && o[0].trk.length === 4 && o[0].legs.length === 2 && o[0].st === 'done' && o[0].cs.n === 1 && o[0].min === e.min,
+      'over mål: forsøket med etappene, sporet og hvor langt skyen har det, venter i out', o[0]);
+    for (let i = 0; i < 4; i++){ S9.lop.run = {id:'lnk-5' + i, vid:S9.cur, type:'sjark', cls:'middels', t0:0, legs:[], pen:[], ded:[], st:'run', tasks:[], trk:[[0, 1, 1]]}; lopEnd('avbrutt'); }
+    t.eq(S9.lop.out.map(x => x.id), ['lnk-40', 'lnk-52', 'lnk-53'], 'out holder tre, og et brutt forsøk går før en fullført tid som ikke er sendt');
+    S9.lop.run = {id:'lnk-60', vid:S9.cur, type:'sjark', cls:'middels', t0:0, legs:[], pen:[], ded:[], st:'run', tasks:[]}; lopEnd('avbrutt');
+    t.eq(S9.lop.out.map(x => x.id).includes('lnk-60'), false, 'et forsøk uten spor (startet før KL3) går ikke til skyen'); }
 }
 

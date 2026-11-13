@@ -21,9 +21,15 @@ async def main():
         for t in tabs:
             await pg.click('nav button[data-t="%s"]' % t); await pg.wait_for_timeout(150)
             seen[t] = await pg.evaluate("document.querySelector('main').innerText.length")
-            if t in ('oversikt', 'tid', 'penger', 'mediekort'): await pg.wait_for_timeout(300 if t == 'mediekort' else 0); await pg.screenshot(path='admin_%s.png' % t, full_page=True)
+            if t in ('oversikt', 'tid', 'penger', 'mediekort', 'kapplop'): await pg.wait_for_timeout(300 if t == 'mediekort' else 0); await pg.screenshot(path='admin_%s.png' % t, full_page=True)
         demo = await pg.evaluate("!!document.querySelector('.demo') && !document.getElementById('login')")
-        check(len(tabs) == 19 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        check(len(tabs) == 20 and all(v > 40 for v in seen.values()), 'every tab of the dashboard draws in the demo', seen)
+        # the race (KL3, steg 118, admin_lop): the sums, the share with trim and with a hop to the start, the flags, never a name
+        await pg.click('nav button[data-t="kapplop"]'); await pg.wait_for_timeout(200); lp = await pg.evaluate("document.querySelector('main').innerText")
+        check(all(s in lp for s in ('Påmeldt', 'I mål', 'Brutt', 'Med trim i en etappe', 'Hoppet til startstreken', 'Snittida per klasse', 'Sakte', 'Havfartøy', 'Hvorfor forsøkene ble brutt', 'Forsøkene med merke', 'Sporet (sprang)')),
+              'Kappløp: påmeldt, i mål, brutt og hvorfor, snittida per klasse, andelen med trim og med hopp til startstreken, og forsøkene med merke, som summer', lp[:200])
+        jw = await pg.evaluate("jkWhy({kind:'lop', data:{rid:'lnk-1-30', vtype:'trebat', k:'fast', leg:0, h:16.17, min_h:20.54, vmax:8.5, trim:1}})")
+        check('Kappløpet' in jw and 'For rask etappe' in jw and 'etappe 1' in jw and 'Fjern merket' in jw, 'Juks: et merke fra kappløpet sier sjekken, etappen og tallene', jw)
         # the feedback agent: its report in the Agent tab, and under a feedback its suggestion, which «Bruk forslaget» only fills in
         await pg.click('nav button[data-t="agent"]'); await pg.wait_for_timeout(150); ag = await pg.evaluate("document.querySelector('main').innerText")
         await pg.click('nav button[data-t="tilbake"]'); await pg.wait_for_selector('[data-fbai]', timeout=5000)

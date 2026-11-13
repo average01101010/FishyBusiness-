@@ -17,7 +17,9 @@ everything tapped as CDP touch:
   6. the card at the checkpoint in Bergen with the leg's time, «Se kappløpet» by touch opens the tab
   7. «Begynn på nytt» by touch, twice: the attempt is broken off («avbrutt»)
   8. no page errors
-Screenshots: tests/out/kapplop-{for,under,klokke,kart,sjekkpunkt}-{staaende,liggende}.jpg. KYST_KL_ONE=liggende (or staaende): one format.
+  9. KL3 (steg 118): the week's board from a fake cloud: the class's top 20 and your place, another class by touch, the Sesong card's
+     leader and place, a guest's note, and without lop_top (404) the tab as before
+Screenshots: tests/out/kapplop-{for,tavle,under,klokke,kart,sjekkpunkt}-{staaende,liggende}.jpg. KYST_KL_ONE=liggende (or staaende): one format.
 python3 tests/kapplopshot.py (3D). Prints OK or FEIL lines."""
 import asyncio, json, os, time
 from _env import boot
@@ -90,13 +92,48 @@ async def one(p, name, vw, vh):
     bad = await J("() => [...document.querySelectorAll('#phone .ph-c [data-pa]')].map(x => x.dataset.pa).filter(k => /shop|trim|haill|buy|nett|sk/.test(k))")
     check(bad == [], name + ': 1. ingen knapp i fanen peker til butikken eller Trim-appen', bad)
     await shot('for')
+    # 9. KL3 (steg 118): the week's board from a fake cloud (as eventtest): the class's top 20 with the boat and the player's name, your
+    # place under them, another class by touch, the leader and your place in the Sesong card; a guest's note; a server without lop_top
+    # (404): no board and no error, your own time as before
+    FAKE = """(o) => { window.__rpc0 = window.__rpc0 || window.cloudRpc; window.__c0 = window.__c0 || {on:CLOUD.on, user:CLOUD.user, guest:CLOUD.guest};
+      const wk = lopWeek(lopMs(S.t)).id, rows = [];
+      for (let i = 1; i <= 20; i++) rows.push({rank:i, boat:['Havbris', 'Nordstjerna', 'Måsøy', 'Sjøblomsten', 'Kvitbjørn'][i % 5] + (i > 5 ? ' ' + i : ''), user:i % 3 ? 'Fisker' + i : '', type:'sjark', min:5400 + i * 37, me:false, id:'x' + i});
+      const T = {wk, cls:{middels:{rows, n:23, mine:{rank:23, min:6800}}, sakte:{rows:rows.slice(0, 4).map(r => Object.assign({}, r, {type:'trebat', min:r.min + 2000})), n:4, mine:null}}};
+      window.cloudRpc = async (fn, a) => { if (o.e404) throw new Error(fn + ' 404'); return fn === 'lop_top' ? T : null; };
+      CLOUD.on = true; CLOUD.user = 'u1'; CLOUD.guest = !!o.guest; for (const k in LTOP) delete LTOP[k]; LOP_CLS = null; return wk; }"""
+    UNFAKE = "() => { window.cloudRpc = window.__rpc0; Object.assign(CLOUD, window.__c0); for (const k in LTOP) delete LTOP[k]; LOP_CLS = null; }"
+    BOARD = """() => { const b = document.querySelector('#phone .lop-board'); if (!b) return null; const q = b.getBoundingClientRect(), ph = document.querySelector('#phone').getBoundingClientRect();
+      return {rows:[...b.querySelectorAll('table tr')].slice(1).map(r => [...r.children].map(c => c.innerText.trim())), me:[...b.querySelectorAll('tr.me')].map(r => r.children[0].innerText.trim()),
+        on:(b.querySelector('.ph-sub .on') || {}).innerText, txt:b.innerText, w:q.width, inside:q.left >= ph.left - 1 && q.right <= ph.right + 1,
+        wide:[...b.querySelectorAll('td,th')].some(c => c.scrollWidth > c.clientWidth + 2)}; }"""
+    await J(FAKE, {}); await tab(); await pg.wait_for_timeout(600); await J("() => PHONE.render()"); await pg.wait_for_timeout(300)
+    bd = await J(BOARD)
+    check(bd and len(bd['rows']) == 21 and bd['rows'][0][0] == '1' and bd['me'] == ['23'] and bd['on'] == 'Middels' and '23 båter i mål' in bd['txt'] and bd['inside'] and not bd['wide'] and 'trim' not in bd['txt'].lower(),
+          name + ': 9. ukas tavle i klassen middels: topp 20 med båt og navn, din plass (23) under, ingen trim', bd and {k: bd[k] for k in ('me', 'on', 'inside', 'wide')})
+    await tap('#phone .lop-board .ph-sub button[data-s="sakte"]'); await pg.wait_for_timeout(400); bs = await J(BOARD)
+    await tap('#phone .lop-board .ph-sub button[data-s="rask"]'); await pg.wait_for_timeout(400); br_ = await J(BOARD)
+    check(bs and len(bs['rows']) == 4 and bs['on'] == 'Sakte' and br_ and br_['rows'] == [] and 'Ingen i klassen rask' in br_['txt'], name + ': 9. en annen klasse med berøring: sakte har fire, rask ingen ennå', {'sakte': bs and bs['rows'][:2], 'rask': br_ and br_['txt'][:120]})
+    await tap('#phone .lop-board .ph-sub button[data-s="middels"]'); await pg.wait_for_timeout(300)
+    await J("() => document.querySelector('#phone .lop-board').scrollIntoView({block:'start'})"); await shot('tavle')
+    # (the Sesong card asks for the board only for one who races: a time this week, put in for the look and taken out after)
+    sc = await J("""() => { const L = lopState(), wk = lopWeek(lopMs(S.t)).id; L.best[wk] = 7000; PHONE.open('sesong');
+      return new Promise(r => setTimeout(() => { PHONE.render(); setTimeout(() => { const c = document.querySelector('#phone .lop-s'); delete L.best[wk]; r(c ? c.innerText : null); }, 400); }, 500)); }""")
+    check(sc and 'Ukas beste, middels' in sc and 'Din plass' in sc and '23 av 23' in sc, name + ': 9. Sesong-kortet: ukas beste i klassen og din plass', sc)
+    await J(FAKE, {'guest': True}); await tab(); await pg.wait_for_timeout(600); await J("() => PHONE.render()"); await pg.wait_for_timeout(300); bg = await J(BOARD)
+    check(bg and 'Som gjest ser du bare din egen tid' in bg['txt'], name + ': 9. en gjest får vite at tavla bare viser egen tid', bg and bg['txt'][-160:])
+    n0 = len(errs); await J(FAKE, {'e404': True}); await tab(); await pg.wait_for_timeout(600); await J("() => PHONE.render()"); await pg.wait_for_timeout(300)
+    b404 = await J(BOARD); off = await J("() => !!LTOP.off"); t404 = await J(TAB)
+    check(b404 is None and off and t404 and 'Reglene' in t404['txt'] and len(errs) == n0, name + ': 9. uten lop_top (404): ingen tavle, fanen som før, ingen feil', {'off': off, 'errs': errs[n0:]})
+    await J(UNFAKE)
     # 2. «Meld på» and «Kast loss mot Bergen» by touch
     await tap('#phone [data-pa="lopreg"]'); r = await J(RUN); t = await J(TAB)
     check(r['st'] == 'reg' and t and 'Påmeldt i Lindesnes' in t['txt'], name + ': 2. påmeldt med berøring, «Påmeldt i Lindesnes» krysset av', {'run': r, 'btns': t and t['btns']})
     ticked = await J("() => !!document.querySelector('#phone .lop-l.ok')")
     check(ticked, name + ': 2. kortet starter med «Påmeldt i Lindesnes» krysset av')
     t_go = time.monotonic(); await tap('#phone [data-pa="lopgo"]')
-    try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=480000)
+    # (the way Lindesnes–Bergen with 3D drawn took 455 s and 481 s on the working branch's own build in the container 13.11.2026, steg 118:
+    # the route search shares the CPU with SwiftShader; 900 s)
+    try: await pg.wait_for_function("S.lop && S.lop.run && S.lop.run.st === 'run'", timeout=900000)
     except Exception as e:
         print('     (ikke i gang:', await J("() => ({toast:(document.getElementById('toast') || {}).textContent, plan:!!S.plan, st:S.boat.status, run:S.lop && S.lop.run && S.lop.run.st, busy:typeof LEIA_RUN !== 'undefined' ? LEIA_RUN.length : null})"), ')'); raise
     print('     (ruta Lindesnes–Bergen funnet på %.1f s)' % (time.monotonic() - t_go))

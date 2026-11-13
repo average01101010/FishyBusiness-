@@ -87,7 +87,7 @@ async function load(){
   catch (e){ if (SES){ $('#app').innerHTML = '<main><div class="card warn">' + esc(e.message) + '</div><button id="reLogin">Logg inn på nytt</button></main>';
     $('#reLogin').onclick = () => { SES = null; sessionStorage.clear(); render(); }; } }   // (no onclick in the HTML: the page's CSP allows only its own script)
 }
-const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['juks', 'Juks'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
+const TABS = [['oversikt', 'Oversikt'], ['trakt', 'Trakt'], ['tid', 'Spilletid'], ['frafall', 'Frafall'], ['bruk', 'Spillbruk'], ['okonomi', 'Økonomi i spillet'], ['penger', 'Penger'], ['teknikk', 'Teknikk'], ['geo', 'Geografi'], ['tilbake', 'Tilbakemeldinger'], ['agent', 'Agent'], ['logoer', 'Logoer'], ['navn', 'Brukernavn'], ['avis', 'Kystposten'], ['merker', 'Merker'], ['juks', 'Juks'], ['kapplop', 'Kappløp'], ['kommer', 'Kommer'], ['sponsorer', 'Sponsorer'], ['mediekort', 'Mediekort']];
 function render(){
   if (!DEMO && !SES) return loginView();
   if (!DATA) { $('#app').innerHTML = '<main class="note">Henter …</main>'; return load(); }
@@ -512,6 +512,11 @@ async function jkLoad(){ await null; try { JK = DEMO ? (JK || jkDemo()) : await 
 function jkWhy(r){ const d = r.data || {}, kr = v => nf(+v || 0, 0) + ' kr', kg = v => nf(+v || 0, 0) + ' kg';
   if (r.kind === 'cash') return 'Kassa ' + kr(d.cash0) + ' → ' + kr(d.cash1) + ' på ' + nf(+d.hours || 0, 1) + ' t. Forklart: landinger ' + kr(d.land) + ', megler og kvotemarked ' + kr(d.ledger) + ', tak etter flåten ' + kr(d.cap) +
     (+d.sale ? ', solgt båt ' + kr(d.sale) : '') + (+d.equity ? '. Større flåte teller ' + kr(d.equity) : '') + (d.unexplained != null ? '. Uforklart ' + kr(d.unexplained) + ', siste døgn ' + kr(d.day) : '') + (d.first ? '. Kontoens første lagring' : '') + '. ' + esc(d.type0 || '') + (d.type1 !== d.type0 ? ' → ' + esc(d.type1 || '') : '') + ', ' + (+d.fleet1 || 1) + ' båt' + ((+d.fleet1 || 1) > 1 ? 'er' : '');
+  // the race (KL3, admin_lop): the check that failed (LP_FLAG in the tab Kappløp), the leg and the numbers behind it
+  if (r.kind === 'lop') return 'Kappløpet, forsøket ' + esc(d.rid || '') + ' (' + esc(d.vtype || '') + '): ' + esc(LP_FLAG[d.k] || d.k || '') + (d.leg != null ? ', etappe ' + (+d.leg + 1) : '') +
+    (d.k === 'fast' && d.h != null ? '. Seilt på ' + nf(+d.h, 2) + ' t, minst ' + nf(+d.min_h, 2) + ' t med ' + nf(+d.vmax, 1) + ' kn × trim ' + nf(+d.trim, 2) : '') +
+    (d.k === 'fast' && d.least != null ? '. Tida ' + nf(+d.min, 0) + ' min, minst ' + nf(+d.least, 0) + ' min' : '') +
+    (d.k === 'trk' && d.km != null ? '. ' + nf(+d.km, 1) + ' km på ' + nf(+d.h, 2) + ' t' : '') + '. «Fjern merket» setter forsøkene tilbake på tavla.';
   if (d.why === 'catch') return 'Landet ' + kg(d.landed4d) + ' på fire døgn, meldt fangst ' + kg(d.caught4d) + ' (lasten ' + kg(d.hold) + ')';
   return 'Landet ' + kg(d.kg) + ', lasten er ' + kg(d.hold) + ', og flåten kunne ha tatt ' + nf(+d.had || 0, 1) + ' laster siden sist'; }
 VIEW.juks = () => {
@@ -523,8 +528,8 @@ VIEW.juks = () => {
     '<div class="card"><button id="jkR">Oppdater</button> <button id="jkSw"' + (JK.on ? '' : ' class="p"') + '>' + (JK.on ? 'Slå av: la kontoer med merke stå i topplistene' : 'Slå på: hold kontoer med merke ute av topplistene') + '</button>' +
       '<p class="note">Et merke skrives når kassa stiger mer enn serverens egne tall forklarer (landingene, megleren, kvotemarkedet og et tak per time etter flåten) med over 300 000 kr på et døgn, eller når en konto lander mer enn flåten kan ha tatt eller har meldt som fangst. Lagringen og landingen tas imot som før, ingenting slettes, og spilleren får ingen beskjed. Med bryteren på er en konto med merke ute av topplistene, fiskarlagets mål, «Ukas beste fisker» og summen for åpen gruppe, men ser seg selv som før. «Fjern merket» tar kontoen inn igjen. «La stå» betyr at du har sett på det, og kontoen blir ute.</p></div>' +
     (rows.length ? card('Merkene', '<table><tr><th>Konto</th><th>Hva</th><th>Over</th><th>Ganger</th><th>Sist</th><th></th></tr>' + rows.map(r => '<tr class="jkrow' + (r.cleared ? ' jkoff' : '') + '"><td>' + esc(r.who) +
-        (r.name || r.boat ? '<br><span class="note">' + esc(r.name || '') + (r.name && r.boat ? ' · ' : '') + (r.boat ? '«' + esc(r.boat) + '»' : '') + (r.guest ? ' (gjest)' : '') + '</span>' : '') + '</td><td>' + (r.kind === 'cash' ? 'Kronene' : 'Landingene') + '</td><td>' +
-        nf(+r.over || 0, 0) + (r.kind === 'cash' ? ' kr' : ' kg') + '</td><td>' + nf(+r.n || 1, 0) + '</td><td class="note">' + when(r.last) + '</td><td>' +
+        (r.name || r.boat ? '<br><span class="note">' + esc(r.name || '') + (r.name && r.boat ? ' · ' : '') + (r.boat ? '«' + esc(r.boat) + '»' : '') + (r.guest ? ' (gjest)' : '') + '</span>' : '') + '</td><td>' + (r.kind === 'cash' ? 'Kronene' : r.kind === 'lop' ? 'Kappløpet' : 'Landingene') + '</td><td>' +
+        nf(+r.over || 0, 0) + (r.kind === 'cash' ? ' kr' : r.kind === 'lop' ? ' min' : ' kg') + '</td><td>' + nf(+r.n || 1, 0) + '</td><td class="note">' + when(r.last) + '</td><td>' +
         (r.cleared ? '<span class="note">Fjernet ' + when(r.cleared) + '</span>' : (r.kept ? '<span class="warn">Står, sett ' + when(r.kept) + '</span> ' : '<button data-jkkeep="' + (+r.id) + '">La stå</button> ') + '<button data-jkclr="' + (+r.id) + '">Fjern merket</button>') + '</td></tr><tr class="jkd' + (r.cleared ? ' jkoff' : '') + '"><td colspan="6" class="note">' + jkWhy(r) + '</td></tr>').join('') + '</table>',
         'Kontoen vises med den offentlige ID-en (den samme som under Brukernavn). «Over» er det største som er sett mens merket har stått, og «Ganger» hvor mange lagringer eller landinger som gikk over.')
       : '<p class="note">Ingen merker.</p>');
@@ -544,6 +549,28 @@ function jkWire(){
 let NW = null;
 const NW_KIND = {boat:'Båtkjøp', name:'Båtdåp', aground:'Grunnstøting', rescue:'Redning', salv:'Berging', foto:'Fyrbilde', fish:'Storfisk', fs:'Fartstid', ach:'Merker', as:'Aksjeselskap'};
 async function nwLoad(){ await null; try { NW = DEMO ? [{id:1, at:new Date(Date.now() - 36e5).toISOString(), kind:'aground', boat:'Havørn', company:'', d:{type:'sjark'}, removed:false, user:'Havfisker88'}] : await rpc('admin_news', {lim:200}); } catch (e){ NW = {err:e.message}; } if (TAB === 'avis') render(); }
+// ---------- Kappløpet (KL3, steg 118; supabase/migrations/20261113200000_kapplop.sql admin_lop): the attempts of the period as sums,
+// never names: registered (the event lop_start, only from players who share statistics), cast off, finished, broken and why, the
+// average time per class, the share with a trim on during a leg (V7 A: trim is shown only here), the share that hopped to the start in the
+// six hours before casting off, and the attempts the server flagged (who: the tab Juks). Read before anything in the race is adjusted
+let LPA = null;
+const LP_CLS = {sakte:'Sakte', middels:'Middels', rask:'Rask', hav:'Havfartøy'}, LP_WHY = {slep:'Slep', salg:'Båten solgt', bytte:'Båten byttet', avbrutt:'Avbrutt av spilleren', ny:'Nytt forsøk startet', maal:'Mål'},
+  LP_FLAG = {fast:'For rask etappe eller tid', trk:'Sporet (sprang)', start:'Ikke fra kaia i Lindesnes', cp:'Ikke ved sjekkpunktet eller mållinja', hopp:'Hopp i løpet', seq:'Etappene henger ikke sammen', legs:'Mål uten alle etappene'};
+async function lpaLoad(){ await null; try { LPA = DEMO ? {days:28, reg:41, started:33, run:6, done:19, dnf:8, why:{avbrutt:4, slep:2, ny:1, salg:1}, cls:{sakte:{n:9, avg:9860}, middels:{n:6, avg:6930}, rask:{n:3, avg:3410}, hav:{n:1, avg:5280}}, trim:38, hop:21, flag:2, flags:{fast:1, trk:1}, weeks:{'2026-W46':8, '2026-W47':11}}
+    : await rpc('admin_lop', {days:DAYS}); } catch (e){ LPA = {err:e.message}; } LPA.days = LPA.days || DAYS; LPA.at = DAYS; if (TAB === 'kapplop') render(); }
+const lpHm = m => { m = Math.round(m || 0); const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60); return (d ? d + ' d ' : '') + h + ' t ' + (m % 60) + ' min'; };
+VIEW.kapplop = () => {
+  if (!LPA || (!LPA.loading && LPA.at !== DAYS)){ LPA = {loading:true}; lpaLoad(); return card('Kappløpet', '<p class="note">Henter …</p>'); }   // (again when the period changes)
+  if (LPA.loading) return card('Kappløpet', '<p class="note">Henter …</p>');
+  if (LPA.err) return card('Kappløpet', '<p class="warn">' + esc(LPA.err) + '</p>', 'Er migreringen supabase/migrations/20261113200000_kapplop.sql kjørt?');
+  const A = LPA, ob = (o, names) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({k:names[k] || k, n}));
+  return '<div class="grid">' + kpi('Påmeldt', nf(A.reg, 0), 'hendelsen lop_start') + kpi('Kastet loss', nf(A.started, 0)) + kpi('I mål', nf(A.done, 0)) + kpi('Brutt', nf(A.dnf, 0)) + kpi('Underveis', nf(A.run, 0)) +
+      kpi('Med trim i en etappe', A.trim == null ? '–' : nf(A.trim, 0) + ' %') + kpi('Hoppet til startstreken', A.hop == null ? '–' : nf(A.hop, 0) + ' %', 'de seks timene før') + kpi('Med merke', nf(A.flag, 0)) + '</div>' +
+    card('Snittida per klasse (i mål, uten merke)', table(Object.keys(LP_CLS).filter(k => A.cls && A.cls[k]).map(k => ({cls:LP_CLS[k], n:A.cls[k].n, avg:A.cls[k].avg})), [['cls', 'Klasse'], ['n', 'I mål'], ['avg', 'Snittid (spilltid)', v => esc(lpHm(v))]])) +
+    card('Hvorfor forsøkene ble brutt', table(ob(A.why, LP_WHY), [['k', 'Grunn'], ['n', 'Antall']])) +
+    card('Forsøkene med merke', table(ob(A.flags, LP_FLAG), [['k', 'Sjekken'], ['n', 'Antall']]), 'Et forsøk med merke står aldri på tavla. Hvem som har merket, står under Juks, der «Fjern merket» setter forsøkene tilbake på tavla.') +
+    card('I mål per uke', table(Object.entries(A.weeks || {}).sort().reverse().map(([w, n]) => ({w, n})), [['w', 'Uke'], ['n', 'I mål']]), 'Summer for de siste ' + nf(A.days, 0) + ' dagene, aldri navn. Trim vises bare her, aldri på tavla.');
+};
 VIEW.avis = () => {
   if (!NW){ nwLoad(); return '<p class="note">Henter …</p>'; }
   if (NW.err) return card('Kystposten', '<p class="warn">' + esc(NW.err) + '</p>', 'Er migreringen supabase/migrations/20261007170000_news.sql kjørt?');

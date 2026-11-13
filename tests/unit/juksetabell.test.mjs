@@ -24,4 +24,20 @@ export default function (t){
   // the game reports no catch (catch_put) for a species with a stock layer of its own (takeStock: stk or shell)
   const N = Object.fromEntries((sp || []).map(r => [r[0], r[2]]));
   t.eq(Object.keys(SPECIES).filter(k => N[k] !== !!(SPECIES[k].stk || SPECIES[k].shell)), [], 'cheat_sp.nocatch er satt for artene spillet ikke melder fangst for (stk eller shell), og bare dem');
+
+  // KL3 (20261113200000_kapplop.sql, steg 118): the race's checks on the server read the type's highest top speed without trim and its
+  // class (cheat_vt.vmax, vcls), and the course (lop_legs). A type the table has no vmax for is checked at 60 knots, and a course that
+  // differs from LOP would flag honest attempts at the checkpoints: both held against the game here
+  const {LOP, lopVcap, lopCls} = t.K, src = f => readFileSync(join(dir, f), 'utf8'), files = readdirSync(dir).sort();
+  let vm = null, legs = null;
+  for (const f of files){ const s = src(f), m = s.match(/update public\.cheat_vt v set vmax = x\.vmax, vcls = x\.vcls from \(values([\s\S]*?)\) as x/);
+    if (m) vm = Object.fromEntries([...m[1].matchAll(/\('([a-z0-9_]+)',\s*([0-9.]+),\s*'([a-z]+)'\)/g)].map(r => [r[1], [+r[2], r[3]]]));
+    const g = s.match(/insert into public\.lop_legs \([^)]*\) values([\s\S]*?)on conflict/);
+    if (g) legs = [...g[1].matchAll(/\('([a-z]+)',\s*(\d+),\s*([-0-9.,\s]+)\)/g)].map(r => [r[1], +r[2]].concat(r[3].split(',').map(Number))); }
+  t.ok(vm && Object.keys(vm).length > 0, 'en migrering setter cheat_vt.vmax og vcls');
+  t.eq(Object.keys(VESSELS).filter(k => !vm || !vm[k] || vm[k][0] !== lopVcap(k) || vm[k][1] !== lopCls(VESSELS[k])), [],
+    'cheat_vt.vmax er lopVcap og vcls er lopCls for hver båttype; en ny eller endret båt trenger en ny migrering');
+  const pts = [LOP.start].concat(LOP.cps), r2 = v => Math.round(v * 100) / 100, want = LOP.legs.map((L, j) => { const a = pts[j], b = LOP.cps[j];
+    return ['lnk', j, L.nm, 0, r2(a.p.x), r2(a.p.y), a.r].concat(b ? [r2(b.p.x), r2(b.p.y), b.r] : [r2(LOP.goal.p.x), r2(LOP.goal.p.y), LOP.goal.north]); });
+  t.eq(legs, want, 'lop_legs er løypa i LOP: veien per etappe, start og sjekkpunktene med radiusen, og mållinja nord for kappet');
 }
