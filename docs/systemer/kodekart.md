@@ -1600,7 +1600,7 @@ Merker: «Første uke på sjøen» and the long badges (Jonas 07.10.2026; docs/e
 - **229** the first tow and the first repair are free (core/05-vessels.js rescue, hullRepair)
   - 230 `freeFirst(k)`
 
-## `src/js/core/09g-turer.js` (1008 linjer)
+## `src/js/core/09g-turer.js` (1038 linjer)
 
 Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md point 4)
 
@@ -1628,69 +1628,69 @@ Turoppdrag: missions from where the boat is (07.10.2026; docs/engasjement.md poi
   - 198 `turOrder(cand, me)`
   - 200 `turBest(o, cls, used, me = turMe()`
   - 207 `turBestAt(o, q, h, cls, me)`
-  - 221 `turFrakt(o, cls, used, me = turMe()`
-- **234** something happens under way
-  - 237 `turEventRoll(m)`
-  - 243 `turTipAt(m)`
-  - 250 `turEventFire(m, b)`
-- **269** the search: where does the species stand
-  - 272 `turLeteSamples(c, sp, H)`
-  - 280 `turLeteQs(c, sp, samples)`
-  - 297 `turLete(o, cls, me = turMe()`
-  - 319 `turLeteMinute(m, b)`
-  - 332 `turLetePlace(p)`
-  - 340 `turLeteAnswer(id, qi, opt)`
-- **357** the people: who sends a mission, and what they remember
-  - 362 `turManagerSays(m, n)`
-  - 372 `turAsk(T = turState()`
-- **386** the chain: three links for a manager who knows the boat (docs/planer/oppdrag-2.md K1, Jonas 30.10.2026 «Ja»)
-  - 396 `turChainNext(prev)`
-  - 417 `turChainEnd(m, ok)`
-- **426** the first mission
-  - 429 `turFirst(o)`
-  - 444 `turFirstEnsure(T = turState()`
-  - 455 `turGarn(o)`
-  - 473 `turValue(L)`
-  - 478 `turSlep(o, cls)`
-  - 498 `turSos(Q)`
-  - 516 `turNpcs()`
-  - 529 `turMinute()`
-  - 558 `turStuck(T, b)`
-  - 567 `turProveMinute(m, b)`
-  - 591 `turSesong(o)`
-  - 612 `turStages(m)`
-  - 619 `turSesongStage(m)`
-- **632** survey fishing for Havforskningsinstituttet
-  - 637 `turProve(o, cls)`
-  - 664 `turProveFish(m)`
-  - 675 `turProveDone(m)`
-  - 682 `turEkkoSaw(m)`
-- **690** a picture of a lighthouse for Kystposten
-  - 700 `turLysNext(m, from)`
-  - 701 `turFoto(o, cls, near = null)`
-  - 722 `turFotoAt()`
-  - 725 `turFotoTake(m, seen, img)`
-  - 745 `turMake()`
-  - 771 `turEnsure(force)`
-  - 792 `turWay()`
-  - 799 `turDetour(m, way = turWay()`
-- **811** taking, doing and finishing
-  - 812 `turTake(id)`
-  - 840 `turDrop(id)`
-  - 845 `cargoJob(kg, no, en, out)`
-  - 846 `turLoad(m)`
-  - 855 `turSpawn(m)`
-  - 874 `turEnd(m, ok, why, how)`
-  - 892 `turPayOut(m, from, no, en, part)`
-  - 900 `turDock(pid)`
-  - 915 `turSale(pid, bySp)`
-  - 928 `turHauled(s)`
-  - 932 `turHour()`
-  - 951 `turWhat(m)`
-- **963** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
-  - 977 `turSay(who, no, en, k)`
-  - 982 `turDepart()`
-  - 1002 `turMechanic()`
+  - 223 `turFrakt(o, cls, used, me = turMe()`
+- **239** something happens under way
+  - 242 `turEventRoll(m)`
+  - 248 `turTipAt(m)`
+  - 255 `turEventFire(m, b)`
+- **274** the search: where does the species stand
+  - 277 `turLeteSamples(c, sp, H)`
+  - 285 `turLeteQs(c, sp, samples)`
+  - 302 `turLete(o, cls, me = turMe()`
+  - 324 `turLeteMinute(m, b)`
+  - 337 `turLetePlace(p)`
+  - 345 `turLeteAnswer(id, qi, opt)`
+- **362** the people: who sends a mission, and what they remember
+  - 367 `turManagerSays(m, n)`
+  - 377 `turAsk(T = turState()`
+- **391** the chain: three links for a manager who knows the boat (docs/planer/oppdrag-2.md K1, Jonas 30.10.2026 «Ja»)
+  - 401 `turChainNext(prev)`
+  - 422 `turChainEnd(m, ok)`
+- **431** the first mission
+  - 434 `turFirst(o)`
+  - 449 `turFirstEnsure(T = turState()`
+  - 460 `turGarn(o)`
+  - 478 `turValue(L)`
+  - 485 `turSlep(o, cls, fix = null)`
+  - 507 `turSos(Q)`
+  - 531 `turNpcs()`
+  - 544 `turMinute()`
+  - 573 `turStuck(T, b)`
+  - 582 `turProveMinute(m, b)`
+  - 606 `turSesong(o)`
+  - 627 `turStages(m)`
+  - 634 `turSesongStage(m)`
+- **647** survey fishing for Havforskningsinstituttet
+  - 654 `turProve(o, cls, fix = null)`
+  - 684 `turProveFish(m)`
+  - 697 `turProveDone(m)`
+  - 704 `turEkkoSaw(m)`
+- **712** a picture of a lighthouse for Kystposten
+  - 722 `turLysNext(m, from)`
+  - 725 `turFoto(o, cls, near = null, fix = null)`
+  - 748 `turFotoAt()`
+  - 751 `turFotoTake(m, seen, img)`
+  - 771 `turMake()`
+  - 797 `turEnsure(force)`
+  - 818 `turWay()`
+  - 825 `turDetour(m, way = turWay()`
+- **837** taking, doing and finishing
+  - 838 `turTake(id)`
+  - 866 `turDrop(id)`
+  - 871 `cargoJob(kg, no, en, out)`
+  - 872 `turLoad(m)`
+  - 881 `turSpawn(m)`
+  - 900 `turEnd(m, ok, why, how)`
+  - 919 `turPayOut(m, from, no, en, part)`
+  - 928 `turDock(pid)`
+  - 945 `turSale(pid, bySp)`
+  - 958 `turHauled(s)`
+  - 962 `turHour()`
+  - 981 `turWhat(m)`
+- **993** the trip as it starts: when it will be there, and a word from the crew (or the memory of Father, alone aboard)
+  - 1007 `turSay(who, no, en, k)`
+  - 1012 `turDepart()`
+  - 1032 `turMechanic()`
 
 ## `src/js/core/09h-press.js` (262 linjer)
 
@@ -2043,31 +2043,43 @@ Ukas fangst: the Sunday card (docs/planer/oppdrag-2.md U1, docs/engasjement.md a
   - 34 `ukeDue()`
   - 40 `ukeLast()`
 
-## `src/js/core/09o-kapplop.js` (214 linjer)
+## `src/js/core/09o-kapplop.js` (363 linjer)
 
 Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
 
 - **1** Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.md, Jonas 12.11.2026)
-  - 46 `lopState()`
-  - 48 `lopCls(V)`
-  - 57 `lopLastSun(y, m)`
-  - 58 `lopOslo(ms)`
-  - 61 `lopWeek(ms)`
-  - 73 `lopMinH(nm, vmax, trim)`
-  - 76 `lopTime(run, now)`
-  - 85 `lopOn(vid)`
-  - 88 `lopCpOf(pid)`
-  - 93 `lopWhyNot()`
-  - 102 `lopStart()`
-  - 113 `lopEnd(how)`
-  - 132 `lopHm(min)`
-  - 135 `lopDepart()`
-  - 142 `lopDock(pid)`
-  - 153 `lopCross(a, c, vmax)`
-  - 158 `lopSosNow()`
-  - 174 `lopSosEnd(r, t, p)`
-  - 184 `lopMinute()`
-  - 207 `lopTick()`
+  - 65 `lopState()`
+  - 67 `lopCls(V)`
+  - 76 `lopLastSun(y, m)`
+  - 77 `lopOslo(ms)`
+  - 80 `lopWeek(ms)`
+  - 92 `lopMinH(nm, vmax, trim)`
+  - 95 `lopTime(run, now)`
+  - 104 `lopOn(vid)`
+  - 107 `lopCpOf(pid)`
+  - 112 `lopWhyNot()`
+  - 121 `lopStart()`
+  - 132 `lopEnd(how)`
+  - 154 `lopHm(min)`
+  - 157 `lopDepart()`
+  - 166 `lopDock(pid)`
+  - 185 `lopCross(a, c, vmax)`
+  - 190 `lopSosNow()`
+  - 206 `lopSosEnd(r, t, p)`
+  - 216 `lopMinute()`
+  - 249 `lopTick()`
+- **257** the tasks on the way (KL1b, steg 116b; kapplop.md «Oppgavene underveis (x-faktoren)», V5 B)
+  - 269 `lopSurp(j, cls, wk)`
+  - 271 `lopKind(spec, V)`
+  - 277 `lopLys(m, H, hTot)`
+  - 283 `lopLysDrop(m, say = true)`
+  - 286 `lopTaskWhat(m)`
+  - 296 `lopTasks()`
+  - 298 `lopMake(run, j, role, spec)`
+  - 321 `lopLegTasks(run, j)`
+  - 335 `lopLoad(m)`
+  - 337 `lopTaskEnd(m, ok, how)`
+  - 357 `lopLegClose(r, j)`
 
 ## `src/js/core/11-route.js` (707 linjer)
 
