@@ -140,6 +140,8 @@ LITE += ['mobtest']
 LITE += ['rundshot']
 COVER['tests/rundshot.py'] = ['rundshot']
 COVER['src/js/core/06j-hopp.js'] = ['hopptest']; COVER['tests/hopptest.py'] = ['hopptest']
+LITE += ['kapplop']   # kappløpet Lindesnes–Nordkapp, kjernen (KL1, steg 116a); trenger hele kysten i bygget
+COVER['src/js/core/09o-kapplop.js'] = ['kapplop', 'hopptest']; COVER['src/js/core/11-route.js'] = COVER.get('src/js/core/11-route.js', []) + ['kapplop']; COVER['tests/kapplop.py'] = ['kapplop']; COVER['tests/unit/kapplop.test.mjs'] = []
 COVER['src/js/ui/10u-hopp.js'] = ['hopptest', 'hoppshot', 'fasittest']; COVER['supabase/migrations/20261112200000_hopp.sql'] = ['sqltest', 'fasittest']; COVER['tests/hoppshot.py'] = ['hoppshot']; COVER['src/js/core/06j-hopp.js'] += ['hoppshot']
 D3 += ['hoppshot']   # spoleknappen, kortet og hoppet i 3D i begge formater (HO2, steg 105)
 LONG['hoppshot'] = 2400   # (both formats, and the first frames after a hop draw every pack round the stop: minutes in SwiftShader; out on time at 900 s 12.11.2026)

@@ -684,6 +684,7 @@ function step(){
   if (S.t % 60 === 0){ seasonDay(H); pressDay(H); bkNews(H); lbNews(H); }   // ... and the Greenland halibut's opening and stop (03d-quota.js)   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
+  lopTick();                          // the race Lindesnes–Nordkapp: the finish, the penalties, a tow (09o-kapplop.js)
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
   fsMinute();                         // sea time with you aboard (09e-fartstid.js)
 }
@@ -982,6 +983,7 @@ function dock(pid, berth){
     const why = restStart(); if (why && typeof toast === 'function') toast(S.lang === 'no' ? why[0] : why[1]); }
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
+  lopDock(pid);   // a checkpoint of the race (09o-kapplop.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   // (Driftsplan 2 is told at a rorbu too: a rorbu is often the plan's home, and a call it was not told of made the day again at once,
   // out again every quarter of an hour all night (GUI review F2, 05.11.2026))
@@ -1357,6 +1359,7 @@ function rescueAis(H){
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
+  if (lopOn() && S.lop.run.st === 'run') lopEnd('slep');   // a tow ends the race (09o-kapplop.js), also from the quay, where no 'tow' is seen
   // the first is free, with the catch kept (core/09f-merker.js freeFirst; Jonas 07.10.2026: learn without the consequences)
   const first = !S.member && freeFirst('tow'); if (first) keepCatch = true;
   // the tow goes to the nearest yard, where the hull is mended (Jonas 08.10.2026: a tow to a plant left a player stuck there, #48);
