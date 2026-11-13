@@ -3965,3 +3965,13 @@
 2026-11-13 21:30	ccr-d5-telefonen	5665a77+	hudtest	OK	109	lite	samtidig	
 2026-11-13 21:30	ccr-d5-telefonen	5665a77+	roetest	OK	118	lite	samtidig	
 2026-11-13 21:31	ccr-d5-telefonen	5665a77+	tabtest	OK	91	lite	samtidig	
+2026-11-13 22:38	plan/2026-11-13-118	dde010a3	boottest	OK	33	lite	samtidig	
+2026-11-13 22:41	plan/2026-11-13-118	dde010a3	telefonflate	OK	191	lite	samtidig	
+2026-11-13 22:41	plan/2026-11-13-118	dde010a3	docktest	OK	65	lite	samtidig	
+2026-11-13 22:41	plan/2026-11-13-118	dde010a3	uishots	OK	95	lite	samtidig	
+2026-11-13 22:41	plan/2026-11-13-118	dde010a3	navbarshot	OK	30	lite	samtidig	
+2026-11-13 22:41	plan/2026-11-13-118	dde010a3	dockrow	OK	43	lite	samtidig	
+2026-11-13 22:43	plan/2026-11-13-118	dde010a3	roetest	OK	123	lite	samtidig	
+2026-11-13 22:43	plan/2026-11-13-118	dde010a3	hudtest	OK	118	lite	samtidig	
+2026-11-13 22:44	plan/2026-11-13-118	dde010a3	kapplop	OK	28	lite	samtidig	
+2026-11-13 22:44	plan/2026-11-13-118	dde010a3	admintest	OK	10	lite	samtidig	
