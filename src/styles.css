@@ -2014,7 +2014,7 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
   .ph-status{padding:10px 28px 6px;font-size:13px} #phNet{font-size:12px}
   .ph-nav{padding:6px 28px 10px} .ph-nav button{width:64px;height:44px;font-size:26px} .ph-nav .ph-home{width:150px;height:5px}
   /* the home screen: the clock beside the weather, the goals and the «Nå» cards, then the groups two and two */
-  .ph-homescr{box-sizing:border-box;padding:24px 28px 28px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px 30px;align-content:start}
+  .ph-homescr{box-sizing:border-box;padding:24px 28px 28px;display:grid;grid-template-columns:minmax(0,1fr);gap:22px 30px;align-content:center}   /* (the air above and under the apps alike, not all of it under them)*/
   .ph-nowcol{display:grid;grid-template-columns:minmax(150px,.42fr) minmax(0,1fr);grid-template-areas:"clock widget" "date goals" "date now";gap:8px 24px;align-items:start;min-width:0}
   .ph-nowcol .ph-clock{grid-area:clock;margin:0;align-self:end;font-size:56px} .ph-nowcol .ph-date{grid-area:date;margin:0;font-size:14px}
   .ph-nowcol .ph-widget{grid-area:widget;margin:0;font-size:14px;padding:11px 14px} .ph-nowcol .ph-goals{grid-area:goals;margin:0} .ph-nowcol .ph-nowc{grid-area:now;margin:0}
@@ -2022,25 +2022,28 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
   #phone.ph-w2 .ph-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 30px;align-items:start}
   .ph-tiles{gap:16px 6px} .ph-app{font-size:12.5px;gap:6px} .ph-app .ic{width:58px;height:58px} .ph-app .ic svg{width:29px;height:29px}
   /* the apps: the title bar and the tabs over the whole surface, the content in a column in the middle of it */
-  .ph-top{padding:14px 28px;font-size:18px} .ph-top .ic{width:32px;height:32px} .ph-top .ic svg{width:20px;height:20px}
+  .ph-top{padding:12px 22px;font-size:18px} .ph-top .ic{width:32px;height:32px} .ph-top .ic svg{width:20px;height:20px}
   .ph-appv{--phw:940px}
   .ph-appv > :not(.ph-top){box-sizing:border-box;max-width:var(--phw);margin-left:auto;margin-right:auto}
-  .ph-appv > .ph-c{padding:14px 28px 26px} .ph-appv > :is(.ph-sub,.kb-tabs){padding-left:28px;padding-right:28px}
-  /* the cards in two columns that fill from the top (no hole beside a tall card); a heading, a note and a row of tabs go across both */
-  #phone.ph-w2 .ph-appv > .ph-c{column-count:2;column-gap:14px}
-  .ph-appv > .ph-c > *,.ph-appv > .ph-c > .ph-c > *{column-span:all;min-width:0}
-  .ph-appv > .ph-c > .ph-card,.ph-appv > .ph-c > .ph-c > .ph-card{column-span:none;break-inside:avoid}
-  .ph-appv > .ph-c > .ph-c{display:contents}
-  .ph-appv > .ph-c > .ph-sub{padding-left:0;padding-right:0}
+  .ph-appv > .ph-c{padding:12px 22px 22px} .ph-appv > :is(.ph-sub,.kb-tabs){padding-left:22px;padding-right:22px}
+  /* (a card straight in the app, outside its column, as Vær's fuel: the same edges as the cards in it) */
+  .ph-appv > .ph-card{width:calc(100% - 44px);max-width:calc(var(--phw) - 44px);margin-bottom:12px}
+  /* the cards in rows of two (pairCards in ui/phone/06-render.js marks .ph-half); a heading, a note, a row of tabs and a card alone go
+     across. Two cards in a row are as tall as each other. .ph-meas: while they are measured, each at its own height */
+  #phone.ph-w2 .ph-appv > .ph-c{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px;align-items:stretch}
+  #phone.ph-w2 .ph-appv > .ph-c > *,#phone.ph-w2 .ph-appv > .ph-c > .ph-c > *{grid-column:1 / -1;min-width:0}
+  #phone.ph-w2 .ph-appv > .ph-c :is(.ph-half){grid-column:auto}
+  #phone.ph-w2 .ph-appv > .ph-c > .ph-c{display:contents}
+  #phone.ph-w2 .ph-meas .ph-appv > .ph-c{align-items:start}
+  .ph-appv > .ph-c > .ph-sub{padding-left:0;padding-right:0;margin:2px 0 12px}   /* (a row of tabs inside the column: not on the card under it) */
   .ph-appv > .ph-c > p{max-width:34rem}
+  .ph-appv[data-app=post] > .ph-sub{padding-left:0;padding-right:0}   /* (Kystposten's tabs under the masthead's edge, not 14 px in from it) */
   /* the pages that are read: one column with a line that can be read */
   .ph-appv:is([data-app=naustp],[data-app=tilbake],[data-app=folk],[data-app=gbook]){--phw:37rem}
   .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=post],[data-app=regler][data-sub=laer]){--phw:32.5rem}
-  #phone .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=tilbake],[data-app=folk],[data-app=gbook],[data-app=regler][data-sub=laer]) > .ph-c{column-count:1}
+  #phone .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=tilbake],[data-app=folk],[data-app=gbook],[data-app=regler][data-sub=laer]) > .ph-c .ph-half{grid-column:1 / -1}
   /* (the text a little larger where it is read, which also gives the line its length) */
   .ph-appv:is([data-app=handbok],[data-app=patch],[data-app=meld],[data-app=regler][data-sub=laer]) :is(.ph-card p,.patchc ul,.ph-note){font-size:15px;line-height:1.5}
-  /* the fish guide: the species two and two, the month's card across */
-  .ph-appv > .ph-c.gd > .gd-row{column-span:none;break-inside:avoid} .ph-appv > .ph-c.gd > .ph-card{column-span:all}
 }
 @media (min-width:561px) and (min-height:521px) and (orientation:landscape){
   #phone{top:max(12px,calc(100vh - 972px));left:max(12px,calc(var(--ph-hr,0px) + 14px),calc(100vw - 1092px))}

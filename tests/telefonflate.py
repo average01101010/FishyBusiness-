@@ -32,7 +32,12 @@ LINES = """(() => { let max = 0, at = ''; const v = document.getElementById('phV
 COLS = """(() => { const v = document.getElementById('phView'), q = v.getBoundingClientRect();
   const xs = [...new Set([...v.querySelectorAll('.ph-appv > .ph-c > .ph-card, .ph-appv > .ph-c > .ph-c > .ph-card')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().left)))];
   const out = [...v.querySelectorAll('.ph-appv *')].filter(e => e.offsetParent && e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().right > q.right + 1 && !e.closest('svg, table, .ph-sub, .gd-mon, .ru-tbl')).map(e => e.className || e.tagName).slice(0, 3);
-  return {cols:xs.length, out}; })()"""
+  // (Jonas 13.11.2026, after the first D5: holes beside short cards and a card alone in half a row) the cards in rows: side by side
+  // only two of about the same height, and then as tall as each other; a card in half a row has a neighbour in it
+  const cards = [...v.querySelectorAll('.ph-appv > .ph-c > :is(.ph-card,.gd-row), .ph-appv > .ph-c > .ph-c > :is(.ph-card,.gd-row)')].filter(e => e.offsetParent).map(e => e.getBoundingClientRect()), full = v.querySelector('.ph-appv > .ph-c');
+  const W = full ? full.getBoundingClientRect().width : 0, half = cards.filter(r => r.width < W * 0.6), bad = [];
+  for (const r of half){ const n = half.find(o => o !== r && Math.abs(o.top - r.top) < 2); if (!n) bad.push('alene ' + Math.round(r.top)); else if (Math.abs(n.height - r.height) > 2) bad.push('ulik høyde ' + Math.round(r.top)); }
+  return {cols:xs.length, out, bad:bad.slice(0, 3), pairs:half.length / 2}; })()"""
 # tiles of one group whose icons lie on each other
 OVER = """(() => { const out = []; for (const g of document.querySelectorAll('#phone .ph-tiles')){ const r = [...g.querySelectorAll('.ph-app .ic')].map(e => e.getBoundingClientRect());
   for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (r[i].left < r[j].right - 1 && r[j].left < r[i].right - 1 && r[i].top < r[j].bottom - 1 && r[j].top < r[i].bottom - 1) out.push([Math.round(r[i].left), Math.round(r[j].left)]); }
@@ -75,9 +80,11 @@ async def tablet(b, w, h, tag):
     check(tp >= 48, tag + ': flisene er store nok for en finger', tp)
     ov = await pg.evaluate(OVER); check(not ov, tag + ': ingen fliser ligger på hverandre', ov)
     # the apps with something to compare: two columns, and nothing out of the view
+    pairs = []
     for a in TWO:
         await pg.evaluate("a => { if (a === 'rederi') S.form = 'AS'; PHONE.open(a); }", a); await pg.wait_for_timeout(250)
-        c = await pg.evaluate(COLS); check(c['cols'] >= 2 and not c['out'], tag + ': %s har kortene i to spalter og ingenting utenfor flata' % a, c)
+        c = await pg.evaluate(COLS); check(not c['bad'] and not c['out'], tag + ': %s har kortene i rader uten hull og ingenting utenfor flata' % a, c); pairs.append(c['pairs'])
+    check(sum(1 for x in pairs if x) >= 4, tag + ': kort side om side i minst fire av appene med noe å sammenligne', dict(zip(TWO, pairs)))
     await pg.evaluate("PHONE.open('nett'); document.querySelector('#phone [data-pa=sub][data-s=shop]').click()"); await pg.wait_for_timeout(300)
     nx = await pg.evaluate("[...new Set([...document.querySelectorAll('#phView .ph-card.ic')].filter(e => e.offsetParent).map(e => Math.round(e.getBoundingClientRect().left)))].length")
     check(nx >= 2, tag + ': varekortene i Nettbutikken står i to spalter', nx)
@@ -110,7 +117,7 @@ async def phone(b, w, h, tag):
     want = [0, 0, w, h] if w <= 560 else [w - min(380, round(0.62 * w)), 0, w, h]
     check([round(ph[k]) for k in 'ltrb'] == want and nc == 'contents' and cam == 'none' and tiles == 'flex', tag + ': telefonen på en telefon er som før (fyller skjermen uten ramme, én spalte)', [[round(ph[k]) for k in 'ltrb'], nc, cam, tiles])
     await pg.evaluate("PHONE.open('kvote')"); await pg.wait_for_timeout(250); c = await pg.evaluate(COLS)
-    check(c['cols'] == 1 and not c['out'], tag + ': appene har én spalte på en telefon', c)
+    check(c['cols'] == 1 and not c['out'] and not c['pairs'], tag + ': appene har én spalte på en telefon', c)
     await pg.evaluate("PHONE.open('regler')"); await pg.wait_for_timeout(250); c = await pg.evaluate(COLS)
     check(not c['out'], tag + ': «Hvor du er» i Regler holder seg i kortet', c)
     check(not errs, tag + ': ingen sidefeil', errs[:3]); await pg.close()

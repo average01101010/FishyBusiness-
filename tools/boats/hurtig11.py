@@ -454,6 +454,13 @@ def cut_holes(target, cuts=None):
     bm.to_mesh(me2); bm.free()
     for i in reversed(ci): me2.materials.pop(index=i)
     bpy.data.objects.remove(c)
+    # the fans of long triangles the cut leaves round each hole, split so its baked shade stays at the hole (tilbakemelding #5 fra
+    # testutgaven: the exhaust's shade ran as dark streaks across the transom)
+    rims = []
+    for o, u, v, poly, d in (cuts or cutters()):
+        o, u, v = V(o), V(u), V(v)
+        rims.append((o, u.cross(v), max(math.hypot(p, q) for p, q in poly) + 0.01, d + 0.01))
+    bpyutil.ease_cut_fans(target, rims)
 
 def tube(A, ring, d, depth, m, m_end=None):
     """the inside of a hole, from its outline ring along d, depth deep, its faces turned in; closed at the end with m_end (else open)"""

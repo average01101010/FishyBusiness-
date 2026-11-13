@@ -184,6 +184,14 @@ D3 += ['enhetshot']
 VECB += ['enhetshot']
 COVER['tests/enhetshot.py'] = ['enhetshot']
 COVER['src/js/view3d/03-berths-naust.js'] = COVER.get('src/js/view3d/03-berths-naust.js', []) + ['enhetshot']
+# Every place a boat can lie, with the older coastal vessel (13.11.2026; tests/allesteder.py, around 80 minutes for the harbours, the
+# rorbuer and the naust, a few hours with the coast's harbours): only for the rorbuer's and the naust's places and the test itself; the
+# whole regression runs it. Needs the whole coast. On lines of their own, as above
+LITE += ['allesteder']
+VECB += ['allesteder']
+COVER['tests/allesteder.py'] = ['allesteder']
+for _f in ('src/js/core/07c-naust.js', 'src/js/core/07d-rorbu.js'):
+    COVER[_f] = COVER.get(_f, []) + ['allesteder']
 for _f, _t in (('src/js/view3d/21-rescue-anchor.js', 'mobshot'), ('src/js/deckcrew.js', 'mobshot'), ('src/js/deckcrew.js', 'lemmer'), ('src/js/core/04-crew.js', 'mobtest'), ('src/js/core/13-work.js', 'mobtest'), ('src/js/core/05-vessels.js', 'mobtest'), ('src/js/ui/03-map.js', 'mobtest'), ('src/js/ui/10e-sound.js', 'mobtest')):
     COVER[_f] = COVER.get(_f, []) + [_t]
 # Kvotemarkedet, the core (KM1, 08.11.2026): pure functions tested in tests/unit/kvotemarked.test.mjs (run first by changed); in the game only

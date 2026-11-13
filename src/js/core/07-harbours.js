@@ -79,6 +79,32 @@ const PIERBOX = (() => {
 // are in; none (null) where no face near has room, and the boat lies as before (berthSlot).
 const QUAY_DEPTH_UNKNOWN = 3;
 const quayFit = (f, L, T) => f.hl * 2 * 0.9 >= L + 2 && (f.depth == null ? QUAY_DEPTH_UNKNOWN : f.depth) >= T + 0.5;
+// The rorbuer's and Father's naust's pile quays take boats up to SITE_MAXLEN m (Jonas 13.11.2026, «Grense ved 15 m»: «Rorbua og naustet
+// tar båter opp til 15 m, uansett dybde ved kaia. Større båter avvises»; the older 21 m coastal vessel lay there with 2-2.5 m under her
+// and Autonav found no way out). Over it the rorbu and the naust are not offered (rorbuTarget, naustTarget, moorAll), a boat that lies
+// there is moved to the nearest harbour that takes her (ui/11-boot.js), and the naust's berth reads as the plant's (berthKind).
+const SITE_MAXLEN = 15;
+const siteFits = type => ((VESSELS[type] || {}).len || 0) <= SITE_MAXLEN;
+// «uansett dybde ved kaia»: the water at the rorbuer's and the naust's berths is the deepest draught of those boats (kyst15, 3.0 m) and half a
+// metre at the lowest tide (siteDredge, in depthF: the berth's pocket dredged in the simulation, as the units' basins are, unitDredge;
+// the 3D view digs its pit, view3d/03-berths-naust.js), and a rorbu or a naust is only put where that boat gets out by water
+// (naustWay with SITE_DRAFT, rorbuSite and naustFind). The 21 m coastal vessel lay with 2-2.5 m under her and found no way out
+const SITE_DRAFT = Math.max(...Object.values(VESSELS).filter(V => (V.len || 0) <= SITE_MAXLEN).map(V => V.draft || 0));
+// the pocket in front of the quay's face (m): SITE_POCK.a along it each way, w out from it, rising SITE_POCK.slope outside
+const SITE_POCK = {a:12, w:14, slope:0.5};
+// how far (m) x, z lies outside the pocket of a site {o (the face's middle), u (along it; out to sea [-u[1], u[0]])}: 0 in it, Infinity behind the face or far off
+function sitePockE(s, x, z){
+  const R = SITE_POCK.a + SITE_POCK.w + (SITE_DRAFT + 0.5) / SITE_POCK.slope; if (!s || !s.o || !s.u || Math.abs(x - s.o[0]) > R || Math.abs(z - s.o[1]) > R) return Infinity;
+  const dx = x - s.o[0], dz = z - s.o[1], a = Math.abs(dx * s.u[0] + dz * s.u[1]), n = -dx * s.u[1] + dz * s.u[0];
+  return n < 0 ? Infinity : Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w);
+}
+function siteDredge(p, d){
+  const want = SITE_DRAFT + 0.5; if (!(d > 0) || d >= want) return d;
+  const x = p.x * 1000, z = p.y * 1000, one = s => { const e = sitePockE(s, x, z); if (e < Infinity) d = Math.max(d, want - SITE_POCK.slope * e); };
+  if (typeof S !== 'undefined' && S && S.naust) one(S.naust);
+  if (typeof rorbuIn === 'function') for (const Rb of rorbuIn(p.x - 0.7, p.y - 0.7, p.x + 0.7, p.y + 0.7)) one(Rb.site);
+  return d;
+}
 // ===== L1 (01.11.2026; Jonas: «Båtene skal benytte seg av de ekte kaiene vi har laget modeller av og som vi har plassert rundt om i
 // verden», «Det er urealistisk at en stor sjark bare fortøyes rett i fjæra»): a boat lies only at a quay that stands in the 3D world =====
 // quayReal(f): kind 0 (the edge of a pier mapped as an area: slabInto draws it), kind 2 (a quay line: pierBoxes gives it a 6 m deck
@@ -537,7 +563,7 @@ const SHIFT_MPM = 3 * 1852 / 60;   // metres a minute at 3 knots in the harbour
 // for the fishing fleet, up to 1,500 l/min; H2e 06.11.2026): at the coastal boats' 90 l/min her 300 m³ tank took over two days
 const PUMP = {petrol:45, diesel:90, hav:800, hose:1.5, stow:1};
 // where she lies: 'main' (the plant's quay), 'bunker' or 'naust' (Father's pile quay in the home harbour; 'main' until it is found)
-const berthKind = b => b.berth === 'naust' && !quayFace(b.port, 'naust') ? 'main' : (b.berth || 'main');
+const berthKind = b => b.berth === 'naust' && (!siteFits(b.type) || !quayFace(b.port, 'naust')) ? 'main' : (b.berth || 'main');
 // where the boat lies: at Father's naust its berth, not the harbour point the simulation keeps her at (tilbakemelding #20: Autonav
 // and the chart plotter started the route at the plant); else her position
 function quayPos(b){
