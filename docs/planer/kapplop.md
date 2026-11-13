@@ -1,6 +1,6 @@
 # Kappløp: Lindesnes–Nordkapp (plan 12.11.2026)
 
-Status: **plan, ingenting bygd. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
+Status: **KL1a bygd og rullet ut til testutgaven 13.11.2026 (steg 116a, `core/09o-kapplop.js`); KL1b (oppgavene underveis, steg 116b) bygd og rullet ut til testutgaven 13.11.2026 (92e389ec, versjon ecf2207b3148); KL2 (skjermen, steg 117) er neste. Valgene er tatt** (Jonas 12.11.2026): V1 A tidsløp, V2 A én klokke, V3 B alltid åpent med ny tavle hver ekte uke, V4 A klasser etter toppfarten, V5 B faste oppgaver og én overraskelse, V6 B synlig premie og kroner, V7 A trim vises ikke. Fasene KL1–KL4 står under lanseringslinja i køen som steg 116–119; KL5 utgår.
 
 ## Hva Jonas ba om
 
@@ -56,7 +56,7 @@ Hopp over resten av ruta (teleport mot betaling) er ikke lov i løpet. Det sto a
 - **AIS-kortet:** `aisInfo` i `ui/03-map.js` viser eier og fartstid for andre spillere.
 - **Merkene:** `ACHL` i `core/09f-merker.js`, Milepæler-appen i `ui/05e-merker.js`.
 
-## Løypa og tidene (anslått, regnes i KL1)
+## Løypa og tidene (anslått her; målt i KL1a 12.11.2026, se under tabellene)
 
 Forslaget er seks etapper mellom havner med diesel, og mållinja nord for Nordkapp. Distansene er rett linje mellom mottakene i `src/data/mottak.json` (km i spillets ramme, delt på 1,852):
 
@@ -80,6 +80,8 @@ Rutene hoppet ble målt på (`autonav.md` 4.12n), var 8–37 % lengre enn rett l
 | Kystbåten 15 m | 11,5 kn | 17,4 | 8,7 | 898 nm | 561 nm |
 | Hurtigsjarken (brukt) 10,99 m | 22 kn | 9,1 | 4,5 | 374 nm | 196 nm |
 | Aluminiumsbåten 5,9 m | 24 kn | 8,3 | 4,2 | 115 nm | 60 nm |
+
+**Målt 12.11.2026 (KL1a):** løypa er 1 107 nm for trebåten, havsjarken og hurtigsjarken og 1 122 nm for kystbåten 15 m (som går utenom på etappe 2), 12 % over rett linje. Hele løypa tar 27,1 ekte timer for trebåten (13,7 med turbo hele veien), 19,0 (9,6) for havsjarken, 16,9 (8,7) for kystbåten 15 m og 8,9 (4,6) for hurtigsjarken i stille vær; trebåten bunkrer én gang uten trim og fem med turbo. Tallene per etappe står i `docs/systemer/oppdrag-og-kystposten.md` 4.28. Anslaget under var:
 
 En etappe på rundt 200 nm tar 1,5–5 ekte timer. Trim gir flere bunkringsstopp: trebåten må bunkre rundt seks ganger uten trim og ni med turbo, og aluminiumsbåten ti og nitten. Det kommer av formelen for dieselen, ikke av løpet.
 
@@ -106,7 +108,7 @@ Kortet starter med «Påmeldt i Lindesnes» krysset av, så ingenting starter p�
 - **Trim er lov** (Jonas). Skippertak og «Ferdig nå» på verftet følger samme regel: de korter ned en ekte friksjon.
 - **Hopp er ikke lov** fra påmeldingen til mål, eller til forsøket er brutt (Jonas 12.11.2026, etter at han hadde sagt at ingenting skal hindre kjøp av hopp: «Nei i løpet». Det er den eneste nektingen utenom det en rute under seiling krever). `hopWhy` sier «Ikke i kappløpet». Hopp **til startstreken** og **hjem fra mål** er lov.
 - **Slep fra Redningsselskapet eller en annen spiller bryter forsøket.** Det er hjelp utenfra, som i ekte kappseilas. Det samme gjør salg av båten. Etappene som er seilt, teller på merket.
-- **Hjelpeplikten** (sjøloven § 135): svarer spilleren på havsnød (`sosMinute`) eller et nødanrop, trekkes tida fra svaret til hun er tilbake på ruta. Kappseilingsreglene gjør det samme (World Sailing, Racing Rules of Sailing, regel 1.1 og 62.1 c, lest i sammendrag). Sosialt er additivt: å hjelpe koster ingen plass.
+- **Hjelpeplikten** (sjøloven § 135): svarer spilleren på havsnød (`sosMinute`) eller et nødanrop, trekkes tida fra svaret til hun er tilbake på ruta. *(KL1a 12.11.2026: regnet som tida hjelpen tok minus veien hun kom nærmere neste sjekkpunkt i toppfart, så et anrop som besvares og ignoreres ikke gir gratis tid; `oppdrag-og-kystposten.md` 4.28.)* Kappseilingsreglene gjør det samme (World Sailing, Racing Rules of Sailing, regel 1.1 og 62.1 c, lest i sammendrag). Sosialt er additivt: å hjelpe koster ingen plass.
 - **Regelbrudd for hånd** gir tidstillegg:
   - en passering over fartsgrensa som `farvRec` skriver ned: 15 spillminutter
   - en passering der spilleren hadde vikeplikt (`S.nearMiss`): 15 spillminutter
@@ -128,6 +130,23 @@ Kortet starter med «Påmeldt i Lindesnes» krysset av, så ingenting starter p�
   - **Frakta** lastes av folk om bord (`cargoJob`). Den som er alene, bruker lengre tid.
   - **Prøvestasjonen** er én spilltime fiske og målebrettet. Nøyaktig måling gir opptil 30 spillminutter fradrag, og en dårlig måling gir like mye tillegg. Den krever juksa, som havfartøyene ikke har (`rigs`). Havklassen får ekkoloddlinja i stedet.
   - **Havsnød** kommer fra sjøen (`sosMinute`), tilfeldig og gratis, med tida trukket fra.
+
+**Bygd i KL1b (13.11.2026, steg 116b, arbeidsrutinen):** oppgavene per etappe (`LOP.legs` i `core/09o-kapplop.js`), lagt der ruta faktisk går. Fyrene i tabellen «Løypa og tidene» var en gjetning før rutene var målt: Autonav-ruta går innaskjærs, så Marstein, Myken, Træna, Skomvær og Fruholmen ligger 12 km eller mer fra den. Oppgavene står derfor ved fyr innen 5 km fra havsjarkens rute og i åpent vann på den (lest av 13.11.2026):
+
+| Etappe | Fast oppgave | Overraskelsen trekkes blant |
+|---|---|---|
+| 1 Lindesnes–Bergen | bilde av Obrestad fyr | Lista fyr i lav sol, prøvestasjon ved Kvitsøy, slep utenfor Egersund (til Hellvik) |
+| 2 Bergen–Ålesund | 300 kg frakt Bergen–Ålesund (det dekk og rom tar, minst 20 kg) | Kråkenes fyr, Svinøy fyr mens det lyser, ekkoloddlinja ved Bulandet |
+| 3 Ålesund–Rørvik | prøvestasjon på Frohavet | Kya fyr mens det lyser, Bjørnsund fyr i lav sol, slep til Kristiansund |
+| 4 Rørvik–Bodø | slep til Lurøy | ekkoloddlinja og prøvestasjonen på leia sør for Sandnessjøen, Kalsholmen fyr i lav sol |
+| 5 Bodø–Tromsø | bilde av Tranøy fyr | prøvestasjon i Vestfjorden, slep til Harstad, Landegode fyr i lav sol |
+| 6 Tromsø–Nordkapp | Skjervøy fyr mens det lyser | Vorterøy fyr, ekkoloddlinja i Sørøysundet, slep til Forsøl |
+
+- Prøvestasjonen er ekkoloddlinja på samme sted for en type uten juksa i `rigs` (havfartøyene).
+- Lyset som ikke kommer innen etappens lengde delt på typens toppfart ganger 2,5 (`lopLys`, med `turLysNext`), gir et vanlig fyrbilde. Skjervøy fyr «mens fyret lyser» står derfor bare utenfor midnattssola.
+- Sjekkpunktet og mållinja teller først når etappens faste oppgave er gjort. En oppgave som går galt (båten på slep driver i land før hun kommer), teller som gjort med 60 minutter tillegg.
+- **Valg tatt av rutinen (kan snus):** overraskelsen er frivillig, og den som lar den ligge, får 60 spillminutter lagt til når etappen er over (A, valgt). Da blir den et vagt valg: et fyrbilde på veien tar noen minutter og gjøres, en lang omvei eller lys som lar vente, kan lønne seg å hoppe over. B: overraskelsen må gjøres, som den faste. C: overraskelsen gir bare fradrag når den gjøres. Snus med `LOP.task.miss` (C: 0) eller med å la `lopFixDone` kreve begge (B).
+- **Uka overraskelsen trekkes for** er uka forsøket startet i (`lopWeek(lopMs(run.t0))`), så den ikke skifter midt i et forsøk som går over midnatt mandag.
 
 **Klassene:** etter toppfarten uten trim (`vmax`), og havfartøyene (`cls: 'hav'`) for seg (V4). Oppgraderinger som propellen gir fart innenfor klassen. Klassen leses av typens eget tall, ikke av den oppgraderte farten.
 
@@ -233,7 +252,7 @@ Et forsøk som ikke kan være ekte, får merke i `cheat_flags` (slaget `lop`) og
 
 ## Fasene
 
-Hver fase er én økt. KL1 venter til HO3 (steg 106) er levert, fordi den økta eier `core/06j-hopp.js` nå.
+Hver fase er én økt. KL1 venter til HO3 (steg 106) er levert, fordi den økta eier `core/06j-hopp.js` nå. **KL1 er delt i to av arbeidsrutinen 12.11.2026** (fem filer med logikk og to systemer, løpet og turoppdragene): **KL1a** (steg 116a) kjernen: løypa, klokka, klassene, uka, reglene, sjekkpunktene, målingene; **KL1b** (steg 116b) oppgavene underveis: fast sted i generatorene, `S.lop`-oppgavene, overraskelsen og lysalternativet.
 
 ### KL1 Kjernen: løypa, klokka, reglene og oppgavene (uten sky og uten egen skjerm)
 
@@ -358,11 +377,11 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 
 ## Det som er antatt eller usikkert
 
-- **Løypas lengde** (1 100–1 300 nm) og tidene i tabellen er regnet av rett linje og toppfart, ikke seilt. Det gjelder også rekkevidden fra dieselformelen. KL1 måler dem.
-- **Om åpne båter kommer over Stad, Hustadvika og Vestfjorden** innaskjærs og innenfor grensene sine i sommervær, og om sjekkpunkthavnene tar imot havfartøyene. Gjør de ikke det, står havklassen utenfor første runde.
+- ~~**Løypas lengde** og tidene~~: målt i KL1a 12.11.2026 (1 107–1 122 nm; tidene og bunkringen i `oppdrag-og-kystposten.md` 4.28).
+- ~~**Om åpne båter kommer fram og sjekkpunkthavnene tar imot havfartøyene**~~: målt i KL1a 12.11.2026: `leiaRoute` finner en rute for trebåten, havsjarken, kystbåten og hurtigsjarken på alle seks etappene, og alle 15 typene har minst én kai som tar imot dem ved start og hvert sjekkpunkt (`portWhy`). Hvordan åpne båter klarer Stad og Vestfjorden i dårlig vær, avgjør Autonavs egne grenser («Autonav går inn ved»), som før.
 - **Tilleggene og fradragene** (15 minutter per regelbrudd, opptil 30 minutter for målebrettet) og marginen på 10 % i serverens sjekk er startverdier.
 - **At slep bryter forsøket**, og at Skippertak og «Ferdig nå» er lov som trim, er øktas forslag. Begge kan snus i KL1 med én linje.
-- **Kappseilingsreglene 1.1 og 62.1 c** er bare lest i sammendrag, fra en eldre utgave. Sjøloven § 135 er lest i sammendrag, som i `sjofart-og-lover.md` 7.1. Begge sjekkes før KL1 skriver tekstene.
+- **Sjøloven § 135 tredje ledd** er lest på Lovdata 12.11.2026 (KL1a): skipsføreren skal hjelpe enhver i havsnød så langt det kan skje uten særlig fare for skipet eller de om bord (første ledd gjelder skipets egen havsnød). Kappseilingsreglene 1.1 og 62.1 c brukes ikke i noen tekst i spillet, bare som forbilde for fradraget, og er derfor ikke slått opp.
 - **Pengespilloven** er ikke sjekket for et løp med premie der trim kjøpt for ekte penger gir fart (KL4). Spilleren kjøper en kjent vare og satser ingenting, og premien er spillets kroner. Det må likevel slås opp.
 - **Været er ulikt for hvert forsøk** i et tidsløp. Det er rettferdig bare i den forstand at alle har samme varsel og velger selv når de går, slik rekordforsøk til sjøs gjøres.
 - **Om oppgaver som krever spilleren** (fyrbildet, målebrettet, bunkringen) gjør løpet til en prøve i å være til stede. Med én klokke (V2 A) taper den som er borte når båten venter på bunkring eller lyset, tid. Det er Jonas' valg («den kjappeste tiden»). Hvor mye det betyr, ses i trakten (`lop_dnf` med hvorfor, og tida i havn per forsøk).
@@ -386,3 +405,6 @@ Utgår: Jonas valgte tidsløp (V1 A, 12.11.2026).
 - 12.11.2026: planen skrevet i Jonas' økt (bare dokument). Ingenting er bygd.
 - 12.11.2026: Jonas svarte på V1–V7 (V2 A og V3 B, ikke de anbefalte). Planen skrevet om etter svarene; KL1–KL4 lagt i køen som steg 116–119 under lanseringslinja, KL5 utgår; hel startmelding for KL1 i `start/116.md`.
 - 12.11.2026: Jonas: hopp nektes i løpet («Nei i løpet»), selv om ingenting ellers hindrer kjøp av hopp (`docs/planer/hopp.md`).
+- 12.11.2026: KL1 delt i KL1a (steg 116a) og KL1b (steg 116b) av arbeidsrutinen. KL1a bygd (gren `plan/2026-11-12-116`, PR #74): `core/09o-kapplop.js`, løypa målt; systemet står i `docs/systemer/oppdrag-og-kystposten.md` 4.28.
+- 13.11.2026: KL1a rullet ut til testutgaven (1001c029, versjon 631532c5d670). KL1b (steg 116b) er klar.
+- 13.11.2026: KL1b bygd av arbeidsrutinen (gren `plan/2026-11-13-116b`, PR #75) og rullet ut til testutgaven (92e389ec, versjon ecf2207b3148): oppgavene underveis, se «Bygd i KL1b» over og `oppdrag-og-kystposten.md` 4.28. Hel startmelding for KL2 i `start/117.md`.

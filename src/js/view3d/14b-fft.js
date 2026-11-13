@@ -192,6 +192,7 @@
   // place (P + RO), so the shaders get small numbers. Before, they ran on the view's clock in the frame of the render origin.
   const GSTA = [[0.0021, 0.0013, 0], [-0.0009, 0.0024, 1.3], [0.0047, -0.0031, 2.1], [0.0019, 0.0067, 4.0]];
   function seaShared(u, t){
+    brvSet(u);   // (the breaking sea, Ø9 F7, 14-sea.js)
     if (u.uGst == null && u.uRp0 == null && u.uPaw == null) return;
     const TAU = 2 * Math.PI, md = (v, P) => ((v % P) + P) % P, tw = t + WV.dT, w = env.windDir || [0, 1], wp = [-w[1], w[0]];
     if (u.uGst != null){ const gx = RO.x - w[0] * 1.2 * tw, gz = RO.z - w[1] * 1.2 * tw; gl.uniform4f(u.uGst, ...GSTA.map(([a, b, c]) => md(a * gx + b * gz + c, TAU))); }

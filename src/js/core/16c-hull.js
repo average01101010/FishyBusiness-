@@ -67,10 +67,13 @@ function hullGround(p, kn, b = S.boat){
 // one game minute of the hull: the water in by the hole, out by the bilge pump (and the rescue boat's pumps when she is fast, the
 // yard's or the quay's in port); full to the engine room, the engine stops and the crew calls the rescue boat
 function hullMinute(){
+  // the sea on her (Ø9 F7): the breaking sea (03b-sea.js) and the slamming, with a warning and a fright and nothing on the hull
+  if (typeof brottMinute === 'function') brottMinute();
+  slamMinute();
   const b = S.boat, d = b.dmg; if (!d || !(d.A > 0 || d.w > 0)) return;
   const Q = hullLeak(b), t = b.tow, P = hullPump(b) + (t && (t.ph === 'hook' || t.ph === 'tow') ? HULL.rsPump : 0) + (b.status === 'port' ? HULL.quayPump : 0);
   const w0 = d.w, lim = hullFlood(b); d.w = Math.max(0, Math.min(lim, d.w + Q - P));
-  const vt = S.fleet && S.fleet.length > 1 ? '«' + S.boatName + '»: ' : '';
+  const vt = '';   // (log puts the vessel's name first in a fleet itself, under VTAG: it stood twice, the kontroll 13.11.2026)
   if (Q > 0 && !d.told){ d.told = true; if (Q <= P){ log(vt + 'Lensepumpa går. Den holder unna lekkasjen (' + Math.round(Q) + ' liter i minuttet). Få skroget reparert på et verft.', vt + 'The bilge pump is running. It keeps up with the leak (' + Math.round(Q) + ' litres a minute). Have the hull mended at a yard.', 'nav'); if (hooks.onBilge) hooks.onBilge('pump', b); } }
   if (d.w > w0 && Q > P){
     const left = Math.max(0, Math.round((lim - d.w) / (Q - P)));
@@ -145,4 +148,59 @@ function hullMended(j, b = S.boat){
   if (m){ d.s = Math.max(0, d.s - m.s); d.h = Math.max(0, d.h - m.h); d.A = Math.max(0, d.A - m.A); if (m.flood) d.flood = false; }
   else { d.s = 0; d.h = 0; d.A = 0; d.flood = false; }
   d.w = 0; d.told = false; d.rise = false; hullSync(b);
+}
+
+// ---- The slamming in the minute step (Ø9 F7; Jonas 13.11.2026: «Bare varsel og skrekk»): repeated hard slams at speed make the crew
+// warn and give them a fright; the hull takes no harm. The 3D view has the slams themselves (F2, 16-motion.js); this is the same sea in
+// game time, with the game closed too. Ochi's way (M. K. Ochi, «Prediction of occurrence and severity of ship slamming at sea», 5th
+// Symposium on Naval Hydrodynamics, 1964): the bow's motion relative to the sea is a narrow Gaussian process, and a slam is the forefoot
+// coming out of the water (relative motion over its draft) and going back in faster than a threshold, so the slams a second are
+//   (1 / 2 pi) (sigma_v / sigma_r) exp(-d^2 / (2 m0) - v^2 / (2 m2)),
+// m0 and m2 the relative motion's spectral moments at the encounter frequency. Each sea (wind sea and swell) as JONSWAP (gamma 3.3) on
+// SLAM.n frequencies; the bow (SLAM.xb of her length forward of the middle) heaves and pitches with the waves longer than her (motionAt's
+// fL) as a damped oscillator at her own period (stabOf's Tz, damping SLAM.z), with the phase lag that makes the relative motion large at
+// resonance and beyond; and as far as the bow can follow the waves below her own frequency: the significant downward acceleration it
+// would need for them, over SLAM.fall g, cuts their following by that share (the bow drops off the crests; the linear theory alone has a small boat ride a long sea without a slam). The threshold is the 3D model's (0.2 sqrt(g L), about 2 m/s for the sjark, 03c-stability.js hullSlamV), the
+// forefoot's draft SLAM.d of hers. From the beam the waves are averaged over her breadth, not her length. The rate is in the sea's real seconds,
+// BRT.rs of them a game minute (as the brottsjø's, 03b-sea.js).
+const SLAM = {n:32, wtop:8, xb:0.35, z:0.2, d:0.5, fall:0.5, hard:1.5, kn:4, ema:5, warn:0.4, gap:30, fright:2.5};
+function slamRate(b = S.boat, H = S.t / 60, hard = 1){
+  if (!b || !b.pos || !['sailing', 'fishing', 'engine'].includes(b.status) || b.hopHold) return 0;
+  const bh = boatHead(H, b); if (!(bh.kn >= SLAM.kn)) return 0;
+  const q = hsParts(b.pos, H); if (!(Math.hypot(q.w, q.sw) > 0.3)) return 0;
+  const h = hullOf(b.type), v = bh.kn * 0.5144, g = gridGamma(b.pos), xb = SLAM.xb * h.L;
+  const wn = 2 * Math.PI / (2 * Math.PI * Math.sqrt(h.Cb * h.T * 1.8 / (9.81 * h.Cwp))), vth = hard * 0.2 * Math.sqrt(9.81 * h.L), dr = SLAM.d * h.T;
+  // (each component's following M, and what the bow would have to do to follow them all: if its significant vertical acceleration passes
+  // SLAM.fall g, she cannot, and the following is cut by that share for all of them: the bow drops off the crests and meets the next sea)
+  const C = [];
+  for (const [hs, tp, from] of [[q.w, q.tp, q.dir - g], [q.sw, q.swTp, q.swDir - g]]){
+    if (!(hs > 0.05) || !(tp > 0.5)) continue;
+    const wp = 2 * Math.PI / tp, rel = (from + 180) * Math.PI / 180 - bh.head, cm = Math.abs(Math.cos(rel)), w0 = 0.5 * wp, dw = (Math.max(3 * wp, SLAM.wtop) - w0) / SLAM.n;
+    let e = 0; const S0 = [];
+    for (let i = 0; i < SLAM.n; i++){ const w = w0 + (i + 0.5) * dw, sg = w <= wp ? 0.07 : 0.09, s = Math.pow(w, -5) * Math.exp(-1.25 * (wp / w) ** 4) * Math.pow(3.3, Math.exp(-((w - wp) ** 2) / (2 * sg * sg * wp * wp))); S0.push(s); e += s * dw; }
+    const nrm = (hs / 4) ** 2 / e;
+    for (let i = 0; i < SLAM.n; i++){
+      const w = w0 + (i + 0.5) * dw, k = w * w / 9.81, we = Math.abs(w - k * v * Math.cos(rel)), x = we / wn;
+      const fL = 1 / (1 + (k * Math.max(h.L * cm, h.B) / Math.PI) ** 2), M = fL * Math.sqrt(1 + (k * xb * cm) ** 2) / Math.sqrt((1 - x * x) ** 2 + (2 * SLAM.z * x) ** 2);
+      C.push([S0[i] * nrm * dw, we, M, Math.atan2(2 * SLAM.z * x, 1 - x * x)]);
+    }
+  }
+  let a2 = 0; for (const [s, we, M] of C) if (we < wn) a2 += s * (M * we * we) ** 2;
+  const cut = Math.min(1, SLAM.fall * 9.81 / Math.max(2 * Math.sqrt(a2), 1e-9));
+  let m0 = 0, m2 = 0;
+  for (const [s, we, M0, ph] of C){ const M = we < wn ? M0 * cut : M0, R2 = 1 + M * M - 2 * M * Math.cos(ph); m0 += s * R2; m2 += s * R2 * we * we; }
+  if (!(m0 > 1e-6) || !(m2 > 1e-8)) return 0;
+  return Math.sqrt(m2 / m0) / (2 * Math.PI) * Math.exp(-dr * dr / (2 * m0) - vth * vth / (2 * m2));
+}
+// the hard slams of this game minute (over SLAM.hard times the threshold: the impact's pressure goes as the speed squared, so 2.25 times
+// the least) into a running mean over SLAM.ema minutes; over SLAM.warn a game minute (about 2.4 a real minute) the crew says so, at most every SLAM.gap minutes, and gets a small fright each time. b.slam = {e, t}
+// Only with you aboard (meAboard) and the game open (not while the time away is played in, LANDQ.away): a hired skipper eases her off
+// himself, and nothing is held against you for the time you were away (CLAUDE.md: no punishment for being away).
+function slamMinute(){
+  const b = S.boat; if (!b) return 0; const M = b.slam || (b.slam = {e:0, t:-1e9});
+  if ((typeof meAboard === 'function' && !meAboard()) || (typeof LANDQ !== 'undefined' && LANDQ.away)){ M.e = 0; return 0; }   // (nor while the time the game was closed is played in)
+  const n = slamRate(b, S.t / 60, SLAM.hard) * BRT.rs;
+  M.e += (n - M.e) / SLAM.ema; if (!(n > 0) && M.e < 1e-3) M.e = 0;
+  if (M.e >= SLAM.warn && S.t - M.t >= SLAM.gap){ M.t = S.t; if (typeof crewBrott === 'function') crewBrott('slam'); }
+  return n;
 }

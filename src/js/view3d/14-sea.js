@@ -158,6 +158,7 @@
     // the same at the boat: for the vertex shader on a GPU that cannot read textures there, and until the textures are ready
     WV.loc = [Math.min(WV.cap, WV.C * rF), WV.swHs * swellFactor(p), clamp(2 * Math.log(Math.max(rF, 1)) / WV.lnFcap, 0, 1), rF];
     env.windDir = [Math.sin(dirT), -Math.cos(dirT)]; env.wind = WV.W;
+    brvStep();   // the breaking sea (Ø9 F7)
   }
 
   // ---------- the near field: the short sea rides with the boat ----------
@@ -378,7 +379,7 @@
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
     if (typeof fftBind === 'function') fftBind(u, [bv.x, 0, bv.z]);   // (B3: the tiles for the crests that break)
-    const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, new Float32Array(NF.ph)); gl.uniform1fv(u.uNFg, ph.gq);
+    const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, new Float32Array(NF.ph)); gl.uniform1fv(u.uNFg, ph.gq); brvSet(u);
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     foamSplash(Dx, Dz); if (u.uSp0 != null){ const V = FOAM.spv; gl.uniform4fv(u.uSp0, V[0]); gl.uniform4fv(u.uSp1, V[1]); gl.uniform4fv(u.uSp2, V[2]); gl.uniform4fv(u.uSp3, V[3]); }
@@ -478,9 +479,45 @@
   // the wind waves' groups (grpW in 01-shaders.js) and the swell's (grpOf), as the shaders have them
   function grpAt(i, c, x, z, t){
     const a = c.Dx * x + c.Dz * z, g = c.Dz * x - c.Dx * z, tw = t + WV.dT;
-    if (i >= 10) return 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + WV.GS[i] - NF.gp[i]);
-    const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + WV.GU[i] + NF.gu[i], v = 0.19 * c.k * g + WV.GV[i] + NF.gv[i];
-    return 1.352 * Math.sin(u + 1.3 * Math.sin(0.5 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.5 * u + 2.1 * i));
+    let gr;
+    if (i >= 10) gr = 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + WV.GS[i] - NF.gp[i]);
+    else { const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + WV.GU[i] + NF.gu[i], v = 0.19 * c.k * g + WV.GV[i] + NF.gv[i];
+      gr = 1.352 * Math.sin(u + 1.3 * Math.sin(0.5 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.5 * u + 2.1 * i)); }
+    if (BRV.f > 0 && BRV.i === i) gr += (BRV.G - gr) * brvE(x, z);   // (the breaking sea, as the shaders' BR_GR)
+    return gr;
+  }
+  // ---- The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  // long wave lifted to about twice the significant height inside an envelope that runs with the group: the long wind wave (0-3, 96 to
+  // 36.5 m) nearest the group's length, or the swell's main one (11), carries it, whichever sea the group came from. Where it is on the water and when come from the
+  // core (the place, the time, the weather), so everyone who sees the place sees the same group pass, and it passes her when the minute
+  // step says it hits her. Its height: Hs as the wave's amplitude, held under k a 0.42 (where a wave breaks: its crest at the cusp, and
+  // the Jacobian foam, F3, whitens it). Looked up once a second; the group's place and height every frame from the game's clock.
+  // «#brott0» in the address: off (for the comparison). BRV.fix: a group given by hand (tests/brottshot.py).
+  const BRV = {on:!/brott0/.test(location.hash), t:-9, list:[], e:null, c:[0, 0], D:[0, 1], s:0, ia:0, iw:0, f:0, i:-1, G:1, A:0, gmax:8, fix:null};
+  WV.brott = BRV;
+  function brvE(x, z){ const qx = x - BRV.c[0], qz = z - BRV.c[1], a = (qx * BRV.D[0] + qz * BRV.D[1] - BRV.s) * BRV.ia, c = (-qx * BRV.D[1] + qz * BRV.D[0]) * BRV.iw; return BRV.f * Math.exp(-a * a - c * c); }
+  function brvStep(){
+    BRV.f = 0; BRV.e = null; if (!BRV.on || typeof brottNear !== 'function' || !WV.list.length) return;
+    const now = performance.now() / 1000, T = S.t + currentFrac(), p = {x:bv.x / 1000, y:bv.z / 1000};
+    if (BRV.fix) BRV.list = [BRV.fix];
+    else if (now - BRV.t > 1 || now < BRV.t){ BRV.t = now; try { BRV.list = brottNear(p, T); } catch (e){ BRV.list = []; } }
+    let best = null, bw = 0, br = null;
+    for (const e of BRV.list){ const r = brottRel(e, p, T), w = r.f * Math.exp(-((r.x / (2 * e.sw)) ** 2) - (r.d / 3000) ** 2); if (w > bw){ bw = w; best = e; br = r; } }
+    if (!best) return;
+    // (the carrier: the swell's 11, or the wind wave of 0-3 nearest the group's own length; the gain from the sea where the group's
+    // middle is, so in a lee or a harbour its waves are lifted by the same share as out there, not to the open sea's height; held at
+    // BRV.gmax, the most an extreme wave stands over its share of the spectrum here)
+    let i = 11; if (best.sys === 'w'){ i = 0; for (let j = 1; j < 4; j++) if (WV.list[j] && Math.abs(Math.log(2 * Math.PI / WV.list[j].k / best.L)) < Math.abs(Math.log(2 * Math.PI / WV.list[i].k / best.L))) i = j; }
+    const c = WV.list[i]; if (!c) return;
+    const mx = best.x * 1000 + best.dx * br.s, mz = best.y * 1000 + best.dy * br.s, Sx = ssAt(mx, mz), ren = 1 / Math.sqrt(Math.max(1 - 2 * Sx[2] * (1 - Sx[2]) * (1 - WV.dot), 0.05));
+    const am0 = c.swell ? Sx[1] * c.wo : Sx[0] * (Sx[2] * c.wo + (1 - Sx[2]) * c.wy) * ren;
+    BRV.A = Math.min(best.hs, 0.42 / c.k); BRV.G = am0 > 0.02 ? Math.min(BRV.gmax, BRV.A / am0) : 1; BRV.i = i; BRV.e = best;
+    BRV.c[0] = best.x * 1000; BRV.c[1] = best.y * 1000; BRV.D[0] = best.dx; BRV.D[1] = best.dy; BRV.s = br.s; BRV.ia = 1 / best.sa; BRV.iw = 1 / best.sw; BRV.f = br.f;
+  }
+  function brvSet(u){
+    if (u.uBr == null) return;
+    gl.uniform4f(u.uBr, BRV.c[0] - RO.x, BRV.c[1] - RO.z, BRV.D[0], BRV.D[1]); gl.uniform4f(u.uBr2, BRV.s, BRV.ia, BRV.iw, BRV.f);
+    gl.uniform4f(u.uBr3, BRV.G, BRV.i, 0, 0);
   }
 
 

@@ -248,7 +248,7 @@ Jonas' valg: 2 A (oppdiktede navn på alle fartøy), 4 A (vikingen bare i egen v
 **Antatt og kjent:**
 - Lisenstekstene (NLOD hos data.norge.no og Enturs side om dataene) lot seg ikke lese fra økta (vertene er stengt). At uttrekket er NLOD, er hentet fra `docs/planer/npc-flaaten.md` og allmenn kunnskap om Entur, og kildelinja i fila følger NLODs vanlige form.
 - Navnelistene er ikke sjekket mot et skipsregister. Navnene er satt sammen så de ikke ligner vanlige ferjenavn.
-- Ferjene tegnes som den samme kassa på 44 m uansett klasse til N7.
+- Ferjene tegnes med egne modeller fra N7 (4.18c); kassa er bare igjen utenfor 1,5 km.
 - En ferje snur på stedet ved kaia (de fleste er pendelferjer og snur ikke i virkeligheten).
 
 #### 4.18b Kystruta, hurtigbåtene og passasjerferjene (Ø15 N4, 12.11.2026)
@@ -276,7 +276,7 @@ Jonas' valg som i 4.18 (2 A, 4 A, valg 35 V2 A). Samme datafil, samme skript og 
 - **Uvær:** en hurtigbåt blir liggende fra 16 m/s ved kaia (der sterk kuling begynner, 17,2 m/s, med litt margin for sjøen en lett katamaran møter), en passasjerferje fra 18 m/s; bilferjene som før (20, 22 og 25 m/s). `FERJE_WIND[y][k]`.
 - **Utdelingen** (`ferjeChain`): når ingen båt ligger ved kaia en tur begynner fra, går en som ligger ved en annen kai i sambandet, over tom dit i tide, når én legg binder de to sammen (høyst en time). Før fikk Arendals byferge 25 båter og Drøbak 31; nå seiles hele landets 36 788 avganger i uka av 398 fartøy (bilferjer, hurtigbåter og passasjerferjer), mot 532 uten. Bilferjene får også færre der det samme gjelder (Garten–Storfosna).
 
-**I 3D** (`drawNPC`, `view3d/20-trawl-seine.js`): ferjekassa (52 × 13 m) skaleres til båtens egen lengde og bredde, med lanternene, så en passasjerferje på 20 m ikke stikker 8 m inn i kaia og to ved samme kai ikke går i hverandre (funnet av kontrollen 12.11.2026). Kystrutekassa (112 m) skaleres ikke.
+**I 3D** (`drawNPC`, `view3d/20-trawl-seine.js`; fra N7 bare utenfor 1,5 km, 4.18c): ferjekassa (52 × 13 m) skaleres til båtens egen lengde og bredde, med lanternene, så en passasjerferje på 20 m ikke stikker 8 m inn i kaia og to ved samme kai ikke går i hverandre (funnet av kontrollen 12.11.2026). Kystrutekassa (112 m) skaleres ikke.
 
 **AIS-kortet** (`aisInfo`): kystruteskipet leser kallesignal, eier, lengde, bredde og dypgående fra skipet, som ferjene (den hardkodede raden er borte).
 
@@ -285,7 +285,41 @@ Jonas' valg som i 4.18 (2 A, 4 A, valg 35 V2 A). Samme datafil, samme skript og 
 **Antatt og kjent:**
 - At ruta går hver dag med 11 skip, er hentet fra kjent kunnskap om Statens kystrute, ikke lest fra økta (regjeringen.no ble ikke åpnet).
 - Kallesignalene er diktet (`LAK*`); de er ikke sjekket mot ITU-registeret og kan tilfeldigvis høre til et ekte skip. Navnene er ikke sjekket mot et skipsregister.
-- Hurtigbåtene, passasjerferjene og kystruta tegnes som de gamle kassene (ferjekassa på 44 m og kystrutekassa) til N7.
+- Hurtigbåtene, passasjerferjene og kystruta har egne modeller fra N7 (4.18c).
+
+
+#### 4.18c Modellene for ferjene, hurtigbåtene, passasjerferjene og kystruta (Ø15 N7, steg 36, 12.11.2026)
+
+Jonas' valg: 2 A (05.11.2026, oppdiktede navn på alle fartøy: ingen ekte navn, rederi, merke eller logo på modellene, heller ikke på skorsteinen), båtmodellene bare utsiden (CLAUDE.md), og 01.11.2026 at grensen 75/100 i `docs/planer/om-bord.md` gjelder spillerens båter, ikke NPC-modellene, som skal se ekte ut på 30–500 m.
+
+**Modellene** (`tools/ships/`, ett skript per modell, felles kode i `shiplib.py`, de lukkede bilferjene i `lukketferje.py`; ikke `tools/boats/`, som er spillerens båter; skriptene bruker `tools/boats/bpyutil.py` uten å endre den):
+
+| Modell | Skript → data | Mål (L × B × T) | Hva | Trekanter nær / enkel |
+|---|---|---|---|---|
+| Bilferje, liten | `ferje34.py` → `ship-ferje34.b64` | 34 × 9,6 × 2,6 m | pendelferje med ramper i begge ender, åpent bildekk, salong langs styrbord side, styrhuset på ei bru over bildekket | 4 192 / 680 |
+| Bilferje, middels | `ferje64.py` → `ship-ferje64.b64` | 64 × 13,4 × 3,4 m | pendelferje med lukket bildekk (tre felt), salongdekk og et dekk til, styrhus med vinger, én skorstein, mast i hver ende | 4 760 / 794 |
+| Bilferje, stor | `ferje112.py` → `ship-ferje112.b64` | 112 × 17,5 × 4,4 m | som den middels med fire felt, tre dekk over bildekket og to skorsteiner, flåter og MOB-båt | 5 392 / 846 |
+| Hurtigbåt | `hurtig.py` → `ship-hurtig.b64` | 35 × 10,5 × 1,6 m | katamaran i aluminium: to slanke skrog, lav salong med vindusbånd, styrhuset hevet forut | 5 068 / 773 |
+| Passasjerferje | `passasjer.py` → `ship-passasjer.b64` | 28 × 8 × 2,4 m | enkeltskrog med salong, styrhus over den, åpent fordekk med en liten kran | 4 164 / 652 |
+| Kystruteskip | `kystrute.py` → `ship-kystrute.b64` | 125 × 21 × 4,9 m | pæreformet baug, mørkt skrog med to vindusrader, åtte dekk overbygg trappet ned akter, livbåtene i davitene under overhenget, broa forut med vinger, panoramasalong over, skorsteinen akter, kran på fordekket, sideport | 6 810 / 907 |
+
+- **Målene** er spillets egne (`FERJE_SIZE`, `KYST_SIZE`); alt annet (dybden til bildekket, fri høyde 4,6–5,0 m, dekkshøydene, huset) er antatt etter typen og står som antatt i skriptene. `check()` i hvert skript regner lengden, bredden, deplasementet (et anslag for typen), den frie høyden og lanternene.
+- **Lanternene etter sjøveisreglene** (FOR-1975-12-01-5 vedlegg I, som `kv.py` leste på Lovdata 10.11.2026): én topplanterne under 50 m, to fra 50 m (den aktre minst 4,5 m høyere og minst halve lengden aktenfor, den forre høyst en firedel av lengden fra stevnen), topplanterna minst bredden over skroget (6–12 m), sidelanternene høyst 3/4 av den høyden og ikke forut for den forre topplanterna, rød om babord. Hurtigbåten etter 13 a (høyhastighetsfartøy): grunnvinkelen i trekanten topplanterne–sidelanterner minst 27° (40°). `check()` sjekker alt dette; lanternene ligger i GLB-ens `anchors.lights` og tennes av `lanterns` (`vessel3d.js`) som for de andre.
+- **Pendelferjene snur ikke.** `ferjeAt` (`core/05b-ferje.js`) legger en ferje ved kaia med baugen inn og snur kursen en halv runde når hun går. Modellene er like i begge ender, men ikke på begge sider (den lille har salongen langs styrbord, den middels skorsteinen på styrbord kasse), så tegnet etter kursen hoppet salongen over til den andre siden ved hver avgang (funnet av kontrollen 12.11.2026). `npcRev` (`view3d/20-trawl-seine.js`) husker for hver bilferje om hun tegnes andre veien: når klokkas kurs snur mer enn 150° på en gang, byttes det, og modellen tegnes en halv runde snudd, så hun går videre med den andre enden først og ingenting flytter seg; lanternene snus tilbake til fartsretningen (`drawNPCLights`, `n.rev`), så rød er alltid om babord og topplanterna forut. Hun har alltid ei rampe mot land. `ferjeAt` er ikke endret (startmeldingen spurte om pendelferjene kunne gå baklengs tilbake; det gjør de nå i 3D, mens klokka og AIS-en har kursen som før). Masten i hver ende har den lave og den høye topplanterna, som på de ekte pendelferjene.
+- **Farger:** nøytrale, mørkeblått skrog med rød stripe og hvitt overbygg på bilferjene og kystruta, hvitt skrog med blå stripe på hurtigbåten og passasjerferja; rød skorstein med svart topp på kystruta, hvit med rød topp på bilferjene. Ingen logo eller navn.
+- **Vinduene** er mørke flater i skroget (en NPC tegnes uten glass), 3 cm ut fra veggen. Midtpunktene ligger i `anchors.win`, og om natta lyser de (`drawNPCLights` i `view3d/22-docks-air.js`): alle på ferjene, rundt to av tre på kystruta (lugarene). Kystrutekassas gamle vindusrader brukes bare når skipet er kassa (utenfor 1,5 km).
+
+**I spillet** (`drawNPC`, `view3d/20-trawl-seine.js`, `shipT`): modellen velges etter feltene, aldri navnet: `type` `coastal` er kystruteskipet, `ferry` med `ex` 1 hurtigbåten og `ex` 2 passasjerferja, og en bilferje (uten `ex`) størrelsesklassen nærmest lengden (grensene er de geometriske midtene 46,6 og 84,7 m, så Senjas «MF Senjasund» på 49,9 m er den middels). Modellen skaleres til fartøyets egen lengde og bredde som fiskebåtene (`npcMesh`): hurtigbåten på 27 m er katamaranen på 35 m skalert, passasjerferja på 19,9 m den på 28 m. **LOD:** nær modell (GLB-ens `lod0`) innen 500 m (`npcNear`), den enkle (`lod1`) ut til 1,5 km, og de gamle kassene i `19-wildlife-npc.js` (`N.ferry`, `N.coastal`) utenfor, og før modellene er lastet. Skipene tegnes i en egen liste (`shl`), bare skrog og hus, uten mannskap og uten glass (vinduene er i skroget). `npcWarm` lager dem før de kommer i syne, som fiskebåtene. `G3._debug.ships` viser hvilken modell og hvilket nivå hvert skip har.
+
+**Målt i Bergen havn** (`tests/npcmaal.py`, 1280×800, SwiftShader, båten 350 m ut fra Strandkaien, 16.06.2027): før (arbeidsgrenen uten N7) og etter, 12 bilder per måling. **Kl. 12:** 143 tegnekall og 760 530 trekanter per bilde før, 107 og 778 698 etter (+2,4 %; fire hurtigbåter nær, 5 068 trekanter hver). **Kl. 15** (kystruta i Bergen): 144 og 762 942 før, 111 og 786 114 etter (+3,0 %; kystruta enkel på 630 m, passasjerferja nær). Færre tegnekall etter, fordi kassene ble tegnet i flere deler og en modell er ett kall. SwiftShader sier ingenting om tida på et nettbrett; Jonas' `#prof` i Bergen er det som avgjør. Byen har ingen bygninger i testbygget (vec-pakkene er ikke med uten `KYST_VEC=1`).
+
+**Tester:** `tests/npcshot.py` (liggende) og `npcshot_st.py` (stående) i `D3`: hver modell ved kai og under fart, dag (juni) og natt (november; stående bare dag, lysene er de samme i begge formater), med klokka nesten holdt (`S.mult`, som `anchor3d.py`) og fartsbildene fra spillets eget testkamera (`npcLook`), med en sjekklinje per bilde om at fartøyet er tegnet med sin egen modell nær og ikke kassa, at vinduene lyser om natta, og (liggende) nivåene etter avstanden for kystruteskipet i Bergen. Stedene: liten ferje Hansnes–Reinskard, middels Skarberget–Bognes, stor Sandvikvåg–Halhjem, hurtigbåt og passasjerferje (Kleppestø) ved Strandkaien, kystruta i Bergen. Trenger hele kysten i bygget.
+
+**Antatt og kjent:**
+- Formene og målene utenom L, B og T er anslått etter typen, ikke målt fra tegninger (ingen tegning er brukt). Selvvurderingen mot skalaen i `om-bord.md` er ikke tatt (den gjelder spillerens båter).
+- Lasteskip, tankskip, cruiseskip, fiskebåtene etter redskap i kystflåten, fritidsbåt og seilbåt er ikke laget i denne økta; steget står som `pågår` med dem (køen). Kystvakta har sine fra steg 100 (`kv.py`), havflåten sine (spillerens havbåter).
+- Kystruteskipet ligger ved kaia der leggen ender, med baugen i leggens retning (`ferjeAt`, N4), så om hun ligger langs kaia, avhenger av leggen (i Tromsø og Bergen gjør hun det). Målt 12.11.2026: 0 av 15 punkter over skroget på land og 10–23 m dyp ved Bergen Jektevik, Tromsø Prostneset, Finnsnes og Ålesund. `core/05b-ferje.js` er ikke endret her.
+- **Stikkprøven** (12.11.2026, bygget med vec-pakkene, juni): Bergen (kystruta nær, hurtigbåtene enkle på 1 km, passasjerferja som kasse på 1,8 km), Bodø (tre hurtigbåter nær), Tromsø (kystruta og tre hurtigbåter, enkle på 550–610 m), Finnsnes (kystruta nær); alle fartøy innen 1,4 km hadde modell, ingen sidefeil. Bildene i `docs/okter/2026-11-12-36/`.
 
 ## 5.14 NPC-flåte og kartplotter
 

@@ -60,6 +60,9 @@ function hopWhy(){
   if (typeof TAB !== 'undefined' && TAB && (TAB.lost || TAB.held)) return ['Spillet er åpent et annet sted.', 'The game is open somewhere else.'];
   // (the operations plan's route is the fleet's, not one the player has started: no button there, ui/10u-hopp.js hopShown)
   if (pl.ops || pl.p2) return ['Driftsplanen styrer båten. Hopp går bare på en rute du har lagt selv.', 'The operations plan runs the boat. A hop is only possible on a route you set yourself.'];
+  // the race Lindesnes–Nordkapp, from the registration to the finish (Jonas 12.11.2026: «Nei i løpet»; 09o-kapplop.js): a hop to the
+  // start and home after is allowed
+  if (lopOn()) return ['Ikke i kappløpet.', 'Not in the race.'];
   // the time the game was closed, not yet played in (the world's clock ahead of S.t, ui/08-actions.js CATCH_LEFT): the hop would count
   // minutes the catch-up sails anyway, and the time saved and the price would be too high. It passes by itself; the card waits for it
   if (hopCatching()) return ['Spillet henter fortsatt inn tida det var lukket. Vent litt.', 'The game is still catching up on the time it was closed. Wait a little.'];
