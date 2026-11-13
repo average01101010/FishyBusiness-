@@ -14,7 +14,12 @@
 # Only q (the face) of the plants in src/data/mottak.json changes, and the entry in src/data/steder.json. Reads the vector packs
 # (tools/map/out/game) and the built game; run it after landflytt.py, and build again after it (a second run finds nothing to move).
 # tests/lukket.py checks every harbour along the coast the same way.
-#   KYST_VEC=1 KYST_DIST=dist-vec node build.mjs && python3 tools/steder/lukkflytt.py [--dry]
+# --vei (13.11.2026, steg 126 AS1; Jonas: «Flytt alle»): the harbours the older coastal vessel (kyst21, 21 m, 3.4 m) has no way out from
+# at any tide, as tests/allesteder.py finds them (KYST_LUKKET=id or name,...; without it the ports with no route in
+# tests/out/allesteder.json): the face is good only when she lies there with her draught under her at the lowest tide and Autonav finds
+# her a way from it (leiaRoute, as the test: to one of the three nearest trade places 2-200 km off or open water within 3 km, now or at
+# any third hour over the next twelve). Up to 3 km from the old face.
+#   KYST_VEC=1 KYST_DIST=dist-vec node build.mjs && python3 tools/steder/lukkflytt.py [--dry] [--vei]
 import os, sys, json, math, asyncio
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(ROOT, 'tools', 'mottak')); sys.path.insert(0, os.path.join(ROOT, 'tools', 'map'))
@@ -27,6 +32,9 @@ from landflytt import land_gap, bad, cost, GAPOK, STEDER, MOTTAK, RORBU
 
 REACHES = (0.5, 1.0, 1.5, 3.0)
 NCAND = 30       # faces tried in the game per place, at most
+VEI = '--vei' in sys.argv
+PER = 10         # (--vei) faces per ring of REACHES
+if VEI: NCAND = 4 * PER
 
 # the harbours with no way in over water, their map round them loaded: [id, name, free or 0 when none was found]
 SHUT = r"""async (only) => { const R = [], E = [];
@@ -36,6 +44,29 @@ SHUT = r"""async (only) => { const R = [], E = [];
     let a; try { a = approachPath(pt); } catch (e){ E.push([pt.id, String(e && e.message).slice(0, 80)]); continue; }
     if (!a.length || pt.free) R.push([pt.id, pt.name, pt.free || 0]); }
   return {R, E}; }"""
+# --vei: the places listed (by id or name), as [id, name, 0]
+LISTED = r"""async (only) => { const R = [], E = [];
+  for (const k of only){ const pt = portById(k) || PORTS.find(q => q.name === k && q.coastal); if (!pt || !UNITS[pt.id]){ E.push([k, 'not a place with a unit']); continue; } R.push([pt.id, pt.name, 0]); }
+  return {R, E}; }"""
+# --vei: the older coastal vessel at the place just set down: her hull on water with her draught under it at the lowest tide, and a way
+# out by Autonav over the next twelve hours (as tests/allesteder.py ALS.go without the sailing)
+WAYOUT = r"""async (id) => { const pt = portById(id), b = S.boat; TAB.held = true; S.tut = 0;
+  if (b.type !== 'kyst21'){ b.type = 'kyst21'; if (!S.owned.includes('kyst21')) S.owned.push('kyst21'); applyVessel(); }
+  for (const k in BERTHPOSE) delete BERTHPOSE[k];
+  S.plan = null; b.status = 'port'; b.port = id; b.berth = 'main'; b.pos = {x:pt.p.x, y:pt.p.y}; b.dyn = null;
+  const V = VESSELS[b.type], bp = berthPose(id, b.type, 'main'); if (!bp) return {ok:false, why:'no berth for her'};
+  const fx = Math.sin(bp.hd), fz = -Math.cos(bp.hd), sx = Math.cos(bp.hd), sz = Math.sin(bp.hd), X = bp.x * 1000, Z = bp.y * 1000;
+  const pts = [[0, 0], [bp.Lb / 2 - 1, 0], [-bp.Lb / 2 + 1, 0], [0, bp.Bb / 2 - 0.3], [0, -bp.Bb / 2 + 0.3]].map(([l, s2]) => ({x:(X + fx * l + sx * s2) / 1000, y:(Z + fz * l + sz * s2) / 1000}));
+  if (pts.some(p => isLand(p))) return {ok:false, why:'hull on land'};
+  const dmin = Math.min(...pts.map(p => depthF(p))); if (dmin < V.draft) return {ok:false, why:'shallow at the berth ' + dmin.toFixed(1)};
+  const from = {...(quayPos(b) || b.pos)};
+  const cands = PORTS.filter(q => !q.havOnly && q.id !== id && dist(q.p, from) > 2 && dist(q.p, from) < 200).sort((a, c) => dist(a.p, from) - dist(c.p, from)).slice(0, 3).map(q => ({p:q.p, id:q.id}));
+  let open = null; for (let rr = 0.5; rr <= 3 && !open; rr += 0.25) for (let a = 0; a < 6.28; a += 0.26){ const c = {x:from.x + Math.cos(a) * rr, y:from.y + Math.sin(a) * rr}; try { if (!isLand(c) && depthF(c) > 15 && coastDist(c) > 0.3){ open = {p:c, id:null}; break; } } catch (e){} }
+  if (open) cands.push(open);
+  const T0 = S.t; let r = null;
+  try { for (let h = 0; h <= 12; h += 3){ S.t = T0 + h * 60;
+    for (const q of cands){ await mapPreload([q.p], [['sim', 3], ['chart', 3]]); try { r = await leiaRoute(from, q.p, id, q.id); } catch (e){ r = null; } if (r && r.wps) return {ok:true, h, nm:+r.nm.toFixed(1)}; } } } finally { S.t = T0; }
+  return {ok:false, why:'no way out'}; }"""
 # the place set down on the face x, y (km), a (the normal's angle), as 06b-coastports.js and 06c-steder.js set it, and its way in searched
 TRY = r"""async ([id, x, y, a, len]) => { const pt = portById(id), U = UNITS[id], nx = Math.cos(a), nz = Math.sin(a), cx = x * 1000, cz = y * 1000;
   const hl = Math.max(8, len / 2), ux = -nz, uz = nx;
@@ -61,6 +92,7 @@ def cands(u, ref, pts, Q, S):
     out = []; taken = set()
     for reach in REACHES:
         d = np.hypot(X - x0, Y - y0); near = np.nonzero(d < reach)[0]; near = near[np.argsort(d[near])]
+        n0 = len(out)   # (--vei: at most PER faces from each ring, so the far ones are tried too: a shoal across the whole bay shuts in every face near the old one, Flekkerøy)
         for sp, tier in ((SPACE, 0), (max(0.6, min(SPACE, nn)), 0), (max(0.6, min(SPACE, nn)), 1), (max(0.6, min(SPACE, nn)), 2), (max(0.6, min(SPACE, nn)), 3), (max(0.6, min(SPACE, nn)), 4), (0.6, 3), (0.6, 4)):
             bucket = []; seen = 0
             for j in near:
@@ -82,6 +114,7 @@ def cands(u, ref, pts, Q, S):
                 if len(bucket) >= 8 or seen > 80: break
             for c in sorted(bucket): out.append((c[1], c[2])); taken.add(c[1])
             if len(out) >= NCAND: return out[:NCAND]
+            if VEI and len(out) - n0 >= PER: break
     return out
 
 async def game(work):
@@ -100,7 +133,10 @@ def main():
     pts = [(x['q'][0], x['q'][1], ('m', x['id'])) for x in M['m'] if x.get('q')] + [(r[0], r[1], ('s', i)) for i, r in enumerate(S['r'])]
     pts += [(r[0], r[1], ('r', i)) for i, r in enumerate(RB)] + [(56.058, 53.575, ('f', 0)), (hx, hy, ('n', 0))]
     only = [s for s in os.environ.get('KYST_LUKKET', '').split(',') if s]
-    shut = asyncio.run(game(lambda pg: pg.evaluate(SHUT, only)))
+    if VEI and not only:
+        R = json.load(open(os.path.join(ROOT, 'tests', 'out', 'allesteder.json')))
+        only = [r['id'] for r in R if r.get('kind') == 'port' and str(r.get('why', '')).startswith(('route', 'no harbour'))]
+    shut = asyncio.run(game(lambda pg: pg.evaluate(LISTED if VEI else SHUT, only)))
     if shut['E']: print('not checked:', shut['E'])
     for s in shut['R']: print('shut in', s)
     places = {(u.ref): u for u in F.load_places()[0] if hasattr(u, 'ref')}
@@ -116,13 +152,14 @@ def main():
             for j, km in cs:
                 if any(math.hypot(float(X[j]) - a, float(Y[j]) - b) < 0.6 for a, b in taken): continue
                 r = await pg.evaluate(TRY, [pid, float(X[j]), float(Y[j]), float(A[j]), float(Ln[j])])
+                if r.get('ok') and VEI: r = await pg.evaluate(WAYOUT, pid); print('    %-22s %4d m: %s' % (name, round(km * 1000), r), flush=True)
                 if r.get('ok'): res[pid] = (j, km); taken.append((float(X[j]), float(Y[j]))); break
             else: res[pid] = None
         return res
     res = asyncio.run(game(trial)) if work else {}
     moved = []; report = []
     for pid, name, ref, u, cs in work:
-        if not res.get(pid): report.append((pid, name, 'no face with a way out over water within 3 km (%d tried)' % len(cs))); continue
+        if not res.get(pid): report.append((pid, name, 'no face with a way out %s within 3 km (%d tried)' % ('for the older coastal vessel' if VEI else 'over water', len(cs)))); continue
         j, km = res[pid]; new = [round(float(X[j]), 4), round(float(Y[j]), 4), round(float(A[j]), 3), round(float(Ln[j]), 1), round(float(D[j]), 2), int(K[j])]
         pts = [(new[0], new[1], r) if r == ref else (a, b, r) for a, b, r in pts]
         moved.append((ref, u.kind, name, round(km * 1000), new))
@@ -135,6 +172,12 @@ def main():
                 x = next(e for e in M['m'] if e['id'] == ref[1]); p = x['p']; x['q'] = new + [round(math.hypot(new[0] - p[0], new[1] - p[1]) * 1000)]
             else: move_sted(S, ref[1], new)
         nm = sum(1 for r in moved if r[0][0] == 'm'); ns = len(moved) - nm
+        if VEI:
+            S['meta']['utflytt'] = '%d places moved to a quay the older coastal vessel (21 m, 3.4 m) gets out from (Jonas 13.11.2026: «Flytt alle»), tools/steder/lukkflytt.py --vei' % len(moved)
+            if any(r[0][0] == 'm' for r in moved): M['meta']['utflytt'] = '%d plants moved to a quay the older coastal vessel gets out from, tools/steder/lukkflytt.py --vei' % sum(1 for r in moved if r[0][0] == 'm')
+            S['r'].sort(key=lambda o: (o[0], o[1]))
+            json.dump(M, open(MOTTAK, 'w'), ensure_ascii=False, separators=(',', ':')); json.dump(S, open(STEDER, 'w'), ensure_ascii=False, separators=(',', ':'))
+            print(len(moved), 'moved,', len(report), 'unsolved'); return
         S['meta']['lukkflytt'] = '%d places moved out of basins shut in by their own quay and fill (%d plants, %d yards/shops), tools/steder/lukkflytt.py' % (len(moved), nm, ns)
         M['meta']['lukkflytt'] = '%d plants moved out of basins shut in by their own quay and fill, tools/steder/lukkflytt.py' % nm
         S['r'].sort(key=lambda o: (o[0], o[1]))

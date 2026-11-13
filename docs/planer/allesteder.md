@@ -4,6 +4,8 @@ Jonas 13.11.2026: «Test å start fra alle kaiplasser, butikker, verft, rorbuer,
 
 Valg: «Grense ved 15 m» for rorbuer og naust (13.11.2026; 5.25j i `docs/systemer/havner-og-mottak.md`).
 
+Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke kommer ut ved noe tidevann, fordi sjøkartet er grunt i innseilingen (Flekkerøy, Helligvær, Mandal verft, Arendal verft, Halden verft og de andre): Jonas: **«Flytt alle»**, til en kai der kystbåten kommer ut, også når det blir opptil 3 km fra det ekte stedet. Alle båter kan bruke alle steder (mot «Flytt, ellers avvis» og «Avvis, flytt ikke»).
+
 ## Ferdig når
 
 1. `tests/allesteder.py` er grønn på hele kysten: kystbåten (21 m) fra hver havn og kystbåten på 14,99 m fra hver rorbu og hvert naust finner en vei ut (til en havn eller åpent vann, innen 12 timer med tidevannet), seiler den med båtmodellen og legger til uten grunnstøting, kollisjon eller skade.
