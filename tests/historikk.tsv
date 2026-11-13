@@ -3902,3 +3902,17 @@
 2026-11-13 18:59	ccr-d6-hud-dialoger	f90d006c+	boottest	OK	32	lite	samtidig	
 2026-11-13 19:01	ccr-d6-hud-dialoger	f90d006c+	hudtest	OK	121	lite	samtidig	
 2026-11-13 19:27	ccr-899a9674-q3gjp0	d0d9a935+	dbg23o	OK	46	3d	alene	
+2026-11-13 20:02	ccr-d5-telefonen	1ad2ee6+	docktest	OK	70	lite	samtidig	
+2026-11-13 20:03	ccr-d5-telefonen	1ad2ee6+	tabtest	OK	135	lite	samtidig	
+2026-11-13 20:04	ccr-d5-telefonen	1ad2ee6+	uishots	OK	118	lite	samtidig	
+2026-11-13 20:04	ccr-d5-telefonen	1ad2ee6+	navbarshot	OK	36	lite	samtidig	
+2026-11-13 20:06	ccr-d5-telefonen	1ad2ee6+	roetest	OK	132	lite	samtidig	
+2026-11-13 20:06	ccr-d5-telefonen	1ad2ee6+	kystkarttest	OK	16	lite	samtidig	
+2026-11-13 20:06	ccr-d5-telefonen	1ad2ee6+	itemcardtest	OK	28	lite	samtidig	
+2026-11-13 20:07	ccr-d5-telefonen	1ad2ee6+	hudtest	OK	136	lite	samtidig	
+2026-11-13 20:07	ccr-d5-telefonen	1ad2ee6+	dockrow	OK	48	lite	samtidig	
+2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	telefonflate	OK	116	lite	samtidig	
+2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	hbtest	OK	22	lite	samtidig	
+2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	merketest	OK	22	lite	samtidig	
+2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	gbtest	OK	9	lite	samtidig	
+2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	skiptest	OK	24	lite	samtidig	
