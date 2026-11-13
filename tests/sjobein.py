@@ -137,6 +137,22 @@ async def checks(pg):
         ft += [f for f in (await pg.evaluate("CREW3D.seaFeet()") or []) if not f['lift']]
     miss = [f for f in ft if f['dy'] is None]; off2 = max([abs(f['dy']) for f in ft if f['dy'] is not None] or [9])
     check(len(ft) >= 8 and not miss and off2 < 0.01, 'og hver fot står på modellens eget dekk, ikke bare på planet (%d føtter, verst %.1f mm)' % (len(ft), off2 * 1000), {'uten dekk under': len(miss), 'verst': round(off2 * 1000, 1)})
+    # (and the drawn body answers the same numbers: the head over the hips is 0.68 m along the way the torso leans, leanR/leanF from
+    # the hips' own line, which is what the clip guard reckons with; so the guard's geometry is the one that is drawn)
+    bad = []
+    for roll, pitch in [(0, 0), (15, 0), (-15, 0), (0, 5), (12, -4)]:
+        for g in await drawn(pg, t, {'roll': roll * DEG, 'pitch': pitch * DEG, 'T': 100.3, 'task': 'look'}):
+            e = g['se']
+            if not e or g['walk']: continue
+            hc = [(g['hips'][0][k] + g['hips'][1][k]) / 2 for k in (0, 1, 2)]; v = [g['head'][k] - hc[k] for k in (0, 1, 2)]
+            F = [math.sin(g['h']), 0, -math.cos(g['h'])]; R = [math.cos(g['h']), 0, math.sin(g['h'])]
+            th = math.hypot(e['leanR'], e['leanF']); ct, st_ = math.cos(th), math.sin(th)
+            dR = e['leanR'] / th if th > 1e-9 else 0; dF = e['leanF'] / th if th > 1e-9 else 0
+            want = [0.68 * (st_ * dF), 0.68 * ct, 0.68 * (st_ * dR)]   # (ahead, up, right in his own frame)
+            got = [dot(v, F), v[1], dot(v, R)]
+            d = math.dist(want, got)
+            if d > 0.01: bad.append({'roll': roll, 'pitch': pitch, 'avvik_mm': round(d * 1000, 1), 'lean': round(math.degrees(th), 1)})
+    check(not bad, 'den tegnede kroppen svarer til tallene vakten regner med: hodet står 0,68 m over hofta langs leningen (±15° og stamping)', bad[:3])
     L0 = await drawn(pg, t, {'roll': 8 * DEG, 'pitch': 0, 'T': 100.3}, on=False)
     w0 = max([sole(g, i) for g in L0 if not g['walk'] for i in (0, 1)] or [0])
     check(w0 > 0.012, 'med sjøbeina av (som før) står føttene %.1f mm feil ved 8° rulling' % (w0 * 1000))
