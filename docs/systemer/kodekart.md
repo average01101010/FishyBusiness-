@@ -854,7 +854,7 @@ crew: people with skills, habits and moods
   - 722 `flyOut(c)`
   - 730 `flyTick()`
 
-## `src/js/core/05-vessels.js` (1430 linjer)
+## `src/js/core/05-vessels.js` (1445 linjer)
 
 ---------- other vessels (deterministic, so every player sees the same traffic) ----------
 
@@ -884,85 +884,86 @@ crew: people with skills, habits and moods
   - 282 `dockInHarbour(x, z)`
   - 288 `moorBlocked(x, z, r)`
   - 297 `moorFree(p, hd, L, B, others)`
-  - 316 `docksIn(x0, z0, x1, z1)`
-  - 317 `dockFree(d, others, placed)`
-  - 334 `moorAround(h, p)`
-  - 340 `moorHarbour(h)`
-  - 423 `moorKey(h)`
-  - 426 `moorStill(h)`
-  - 427 `coastMoor(b)`
-  - 439 `seaward(p, c)`
-  - 441 `coastSpot(gr, dI, i)`
-  - 444 `coastCast(b, gr, dI, i, kc, Hc, spot)`
-- **458** The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»)
-  - 467 `coastGearKind(b)`
-  - 473 `coastSet(b, k, pI, i, H)`
-  - 482 `coastNear(H, only)`
-  - 506 `npcStates(H, only)`
-  - 548 `peerName(s)`
-  - 563 `peerRouteStr(p, wps, idx)`
-  - 573 `peerRoute(s)`
-  - 579 `routeWalk(p, R, d, hd0)`
-  - 586 `ptPred(q, w, t)`
-  - 601 `ptPose(T, now)`
-  - 609 `ptTake(q, now)`
-  - 623 `peerStates()`
-  - 639 `newState()`
-  - 651 `log(no, en, k)`
-  - 653 `navHour()`
-  - 669 `nearestPort(p)`
-  - 671 `nearestYard(p)`
-  - 673 `step()`
-  - 694 `holdMinute(H, p)`
-  - 703 `vesselStep(H)`
-  - 798 `plantFuel(b)`
-  - 801 `sailV(H, hs)`
-  - 817 `sail(H, W, hs)`
-  - 849 `sailWaiting()`
-  - 850 `sailReplan(pl, b, gp)`
-  - 878 `iceWhy(p, tried)`
-  - 880 `sailStop(pl, b, why)`
-  - 888 `haltPlan(need)`
-  - 898 `arrive(w)`
-  - 916 `unstuckWhy()`
-  - 922 `unstuckSpot()`
-  - 929 `unstuck()`
-- **943** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
-  - 951 `moorPhase(b)`
-  - 966 `dock(pid, berth)`
-  - 994 `catchFactors(H, W, hs)`
-  - 1007 `stockDev(p, sp)`
-  - 1013 `fish(H, W, hs)`
-  - 1119 `endFishing(why)`
-  - 1140 `bycHere(how)`
-  - 1144 `bycAdd(sp, kg, how)`
-  - 1148 `bycConf()`
-  - 1151 `addCatch(sp, kg, cls, hook, opt)`
-- **1173** work on deck: gutting and icing take hands and time
-  - 1189 `deckHands()`
-  - 1192 `deckPending()`
-  - 1193 `deckEta(hands)`
-  - 1198 `moveKg(x, kg, patch)`
-  - 1206 `iceMinute()`
-  - 1213 `iceOut(out)`
-  - 1219 `deckMinute()`
-- **1244** lying to in a storm (H1b R8, 05.11.2026)
-  - 1261 `quayFar(b)`
-  - 1265 `lieTo(W, hs)`
-  - 1272 `lieToStep(W, hs)`
-  - 1282 `risk(W, hs)`
-  - 1310 `hullRepair()`
-  - 1313 `svcOverdue()`
-- **1314** the rescue boat (plan E3, 05.10.2026)
-  - 1340 `rescueBases()`
-  - 1349 `rescueBase(p)`
-  - 1356 `rescueAis(H)`
-  - 1360 `rescue(keepCatch)`
-  - 1385 `towSea(p)`
-  - 1390 `towRoutes(b)`
-  - 1401 `towStep(H)`
-  - 1413 `towDone(t)`
-  - 1419 `towPose(frac)`
+  - 313 `quayClear(f, a, L, out, others)`
+  - 330 `docksIn(x0, z0, x1, z1)`
+  - 331 `dockFree(d, others, placed)`
+  - 348 `moorAround(h, p)`
+  - 355 `moorHarbour(h)`
+  - 438 `moorKey(h)`
+  - 441 `moorStill(h)`
+  - 442 `coastMoor(b)`
+  - 454 `seaward(p, c)`
+  - 456 `coastSpot(gr, dI, i)`
+  - 459 `coastCast(b, gr, dI, i, kc, Hc, spot)`
+- **473** The coast boats' own gear in the sea (Jonas 02.11.2026: «Garn, liner og annet utstyr skal være synlig og vises i kartplotteren»)
+  - 482 `coastGearKind(b)`
+  - 488 `coastSet(b, k, pI, i, H)`
+  - 497 `coastNear(H, only)`
+  - 521 `npcStates(H, only)`
+  - 563 `peerName(s)`
+  - 578 `peerRouteStr(p, wps, idx)`
+  - 588 `peerRoute(s)`
+  - 594 `routeWalk(p, R, d, hd0)`
+  - 601 `ptPred(q, w, t)`
+  - 616 `ptPose(T, now)`
+  - 624 `ptTake(q, now)`
+  - 638 `peerStates()`
+  - 654 `newState()`
+  - 666 `log(no, en, k)`
+  - 668 `navHour()`
+  - 684 `nearestPort(p)`
+  - 686 `nearestYard(p)`
+  - 688 `step()`
+  - 709 `holdMinute(H, p)`
+  - 718 `vesselStep(H)`
+  - 813 `plantFuel(b)`
+  - 816 `sailV(H, hs)`
+  - 832 `sail(H, W, hs)`
+  - 864 `sailWaiting()`
+  - 865 `sailReplan(pl, b, gp)`
+  - 893 `iceWhy(p, tried)`
+  - 895 `sailStop(pl, b, why)`
+  - 903 `haltPlan(need)`
+  - 913 `arrive(w)`
+  - 931 `unstuckWhy()`
+  - 937 `unstuckSpot()`
+  - 944 `unstuck()`
+- **958** making fast and casting off with people (OB2, 09.11.2026; docs/planer/om-bord.md F1-F3): the short spells round a quay, on the
+  - 966 `moorPhase(b)`
+  - 981 `dock(pid, berth)`
+  - 1009 `catchFactors(H, W, hs)`
+  - 1022 `stockDev(p, sp)`
+  - 1028 `fish(H, W, hs)`
+  - 1134 `endFishing(why)`
+  - 1155 `bycHere(how)`
+  - 1159 `bycAdd(sp, kg, how)`
+  - 1163 `bycConf()`
+  - 1166 `addCatch(sp, kg, cls, hook, opt)`
+- **1188** work on deck: gutting and icing take hands and time
+  - 1204 `deckHands()`
+  - 1207 `deckPending()`
+  - 1208 `deckEta(hands)`
+  - 1213 `moveKg(x, kg, patch)`
+  - 1221 `iceMinute()`
+  - 1228 `iceOut(out)`
+  - 1234 `deckMinute()`
+- **1259** lying to in a storm (H1b R8, 05.11.2026)
+  - 1276 `quayFar(b)`
+  - 1280 `lieTo(W, hs)`
+  - 1287 `lieToStep(W, hs)`
+  - 1297 `risk(W, hs)`
+  - 1325 `hullRepair()`
+  - 1328 `svcOverdue()`
+- **1329** the rescue boat (plan E3, 05.10.2026)
+  - 1355 `rescueBases()`
+  - 1364 `rescueBase(p)`
+  - 1371 `rescueAis(H)`
+  - 1375 `rescue(keepCatch)`
+  - 1400 `towSea(p)`
+  - 1405 `towRoutes(b)`
+  - 1416 `towStep(H)`
+  - 1428 `towDone(t)`
+  - 1434 `towPose(frac)`
 
 ## `src/js/core/05b-ferje.js` (189 linjer)
 
@@ -2898,12 +2899,12 @@ the rig: one kind of fishing at a time, changed here aboard (under Beholdning) w
 - **48** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 52 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1629 linjer)
+## `src/js/ui/phone/07-patch.js` (1632 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1617 `patch()`
+  - 1620 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (124 linjer)
 
@@ -4723,7 +4724,7 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (490 linjer)
+## `src/js/view3d/20-trawl-seine.js` (522 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4747,20 +4748,22 @@ THE WATCHDOG (L1d, 10.11.2026, docs/planer/lansering-plan.md; Jonas, valg 16 V4 
   - 220 `shipCraneAim(C, pose)`
   - 227 `drawShipCrane(t, G, M, pose)`
   - 237 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 277 `npcKB(t, lod, liv)`
-  - 280 `npcMesh(n, lod)`
-  - 294 `npcWarm(eye)`
-  - 309 `seineAnch(G)`
-  - 319 `npcClock(Hf)`
-  - 327 `npcHead(n, t)`
-  - 342 `npcFollow(n, t)`
-  - 361 `npcRev(n)`
-  - 370 `npcPhase(id)`
-  - 375 `kvDraw(n, eye, t)`
-  - 383 `kvRibDraw(n, R, G, M, eye, t)`
-  - 409 `npcFrame(H)`
-  - 410 `drawNPC(eye, t, H, VP)`
-  - 469 `npcCrewDraw(n, K, eye, t)`
+  - 282 `npcGear(n)`
+  - 293 `npcGearT(n)`
+  - 307 `npcKB(t, lod, liv)`
+  - 310 `npcMesh(n, lod)`
+  - 324 `npcWarm(eye)`
+  - 339 `seineAnch(G)`
+  - 349 `npcClock(Hf)`
+  - 357 `npcHead(n, t)`
+  - 372 `npcFollow(n, t)`
+  - 391 `npcRev(n)`
+  - 400 `npcPhase(id)`
+  - 405 `kvDraw(n, eye, t)`
+  - 413 `kvRibDraw(n, R, G, M, eye, t)`
+  - 439 `npcFrame(H)`
+  - 440 `drawNPC(eye, t, H, VP)`
+  - 501 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 
