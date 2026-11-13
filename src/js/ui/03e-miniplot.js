@@ -152,7 +152,5 @@ function miniSjv(ctx, X, Y, p, dpr){
   ctx.restore();
 }
 // four times a second while she moves, so her position on it keeps up (once a second when she lies still)
-// (D6: and a button with a name beside it, «Kart»: that the little chart itself opens the plotter had to be known)
-{ const po = $('plotOpen'); if (po) po.addEventListener('click', e => { e.stopPropagation(); openPlotter(); }); }
 if (MINIP.el){ MINIP.el.addEventListener('click', () => openPlotter()); let last = 0;
   setInterval(() => { if (document.hidden || !S || !window.chartReady) return; const now = performance.now(), st = S.boat.status; if ((now - last < 950 && !(st === 'sailing' || st === 'tow' || helmOn()))) return; last = now; miniPaint(); }, 250); }

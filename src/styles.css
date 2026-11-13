@@ -1966,17 +1966,6 @@ body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(11,23,
 body.v3d .ov,body.v3d #dockInfo{background:rgba(11,23,32,.78)}
 /* the little chart: its ground while it loads is the dark chart's, not white */
 body.v3d #miniPlot{background:#09141F;border-color:rgba(238,244,247,.28)}
-/* «Kart»: the button beside the little chart that opens the plotter (the chart itself still does) */
-#plotOpen{display:none}
-body.v3d #plotOpen{display:flex;z-index:5;left:calc(8px + var(--pmW,176px) + 6px);top:calc(var(--pmT,130px) + var(--pmH,176px) - 44px);height:44px;padding:0 13px 0 10px;gap:6px;border-radius:22px;font:700 13px var(--sans);background:rgba(6,16,24,.62);border-color:rgba(238,244,247,.3)}
-body.v3d.plotmin #plotOpen{top:calc(var(--pmT,130px) + 42px);height:36px}   /* (the chart folded: beside the box under the GPS strip, under the compass line, which reaches down to 34 px there) */
-body.hudoff #plotOpen,body.kino-clean #plotOpen,body.in-pub #plotOpen,body.in-naust #plotOpen{display:none!important}
-@media (orientation:portrait){
-  body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}
-  body.v3d.dk-open #plotOpen{visibility:hidden!important}
-}
-@media (orientation:landscape) and (min-height:521px){body.v3d{--pmT:var(--bTop);--pmW:var(--bW);--pmH:var(--mH)}}
-@media (max-height:520px){body.v3d{--pmT:var(--sTop);--pmW:var(--mW);--pmH:var(--mH)}}
 /* (a tablet upright has the whole box now: a tap folds it there too, and the 3D view is not dragged through it) */
 @media (orientation:portrait) and (min-width:561px){body.v3d #hud{pointer-events:auto;cursor:pointer}}
 /* «Regler ✓ Lov her ›» opens the rules: a row high enough for a finger */
