@@ -3446,3 +3446,13 @@
 2026-11-12 23:08	plan/2026-11-12-116	5e482214	hopptest	OK	11	lite	samtidig	
 2026-11-12 23:08	plan/2026-11-12-116	5e482214	kapplop	OK	27	lite	samtidig	
 2026-11-12 23:09	plan/2026-11-12-116	5e482214	routetest	OK	51	lite	alene	
+2026-11-12 23:25	plan/2026-11-12-116	f7949b14	boottest	OK	37	lite	samtidig	
+2026-11-12 23:25	plan/2026-11-12-116	f7949b14	kapplop	FEIL	33	lite	samtidig	FEIL 2. tida med tillegget for fartsgrensa (15 min) og mellomtida i Bergen {"raw": 1187, "pen": 15, "ded": 0, "min": 1202, "splits": [1201]}
+2026-11-12 23:25	plan/2026-11-12-116	f7949b14	hopptest	OK	10	lite	samtidig	
+2026-11-12 23:25	plan/2026-11-12-116	f7949b14	obstest	OK	10	lite	samtidig	
+2026-11-12 23:26	plan/2026-11-12-116	f7949b14	autonavtest	OK	25	lite	samtidig	
+2026-11-12 23:27	plan/2026-11-12-116	f7949b14	routetest	OK	53	lite	alene	
+2026-11-12 23:28	plan/2026-11-12-116	f7949b14+	kapplop	OK	24	lite	alene	
+2026-11-12 23:32	plan/2026-11-12-116	ededb80e	hoppshot	FEIL	1614	3d	alene	FEIL staaende: 1c. i roen dempes spoleknappen som kino-knappen {"hop": 0.869312, "kino": 0.869312, "ms": 24435}
+2026-11-12 23:37	plan/2026-11-12-116	ededb80e	heattest	OK	287	3d	alene	
+2026-11-13 00:03	plan/2026-11-12-116	4d5a37c0	hoppshot	OK	1517	3d	alene	
