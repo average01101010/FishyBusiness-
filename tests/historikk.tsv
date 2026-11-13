@@ -3779,3 +3779,7 @@
 2026-11-13 17:04	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	146	3d	alene	avsluttet med kode 1
 2026-11-13 17:13	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	533	3d	alene	avsluttet med kode 1
 2026-11-13 17:16	ccr-432150cd-kkjoez	4fc2ffc+	unittest	FEIL	129	3d	alene	avsluttet med kode 1
+2026-11-13 17:28	ccr-432150cd-kkjoez	e221fb1+	boottest	OK	32	lite	samtidig	
+2026-11-13 17:28	ccr-432150cd-kkjoez	e221fb1+	savestest	OK	9	lite	samtidig	
+2026-11-13 17:28	ccr-432150cd-kkjoez	e221fb1+	trip2	OK	36	lite	samtidig	
+2026-11-13 17:29	ccr-432150cd-kkjoez	e221fb1+	utfrakai	OK	89	lite	samtidig	

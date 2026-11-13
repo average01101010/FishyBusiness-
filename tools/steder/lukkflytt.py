@@ -22,7 +22,7 @@ os.environ['KYST_DIST'] = os.environ.get('KYST_DIST') or os.path.join(ROOT, 'dis
 import numpy as np
 import fotavtrykk as F
 import mottak
-from steder import good, SPACE, YARDS
+from steder import good, SPACE, YARDS, sted_key, sted_id, move_sted
 from landflytt import land_gap, bad, cost, GAPOK, STEDER, MOTTAK, RORBU
 
 REACHES = (0.5, 1.0, 1.5, 3.0)
@@ -47,10 +47,6 @@ TRY = r"""async ([id, x, y, a, len]) => { const pt = portById(id), U = UNITS[id]
   let w; try { w = approachPath(pt); } catch (e){ return {err:String(e && e.message).slice(0, 80)}; }
   return {ok:!!w.length && !pt.free, n:w.length, free:pt.free || 0}; }"""
 
-# a shop's or yard's id in the game is made of its face (06c-steder.js), and saves hold it (the boat's port, home, the plan's waypoints): a
-# place moved keeps the id it had, through steder.json's «was» (its new id to the one it had first)
-def sted_key(r): return ('sv' if r[5] else 'sb') + '%d_%d' % (round(r[0] * 1000), round(r[1] * 1000))
-def sted_id(r, S): return (S.get('was') or {}).get(sted_key(r)) or sted_key(r)
 def ref_of(pid, M, S):
     if pid.startswith('m'): return ('m', pid[1:])
     for i, r in enumerate(S['r']):
@@ -115,11 +111,12 @@ def main():
         cs = cands(u, ref, pts, Q, S); print('  %-22s %d faces to try' % (name, len(cs)), flush=True)
         work.append((pid, name, ref, u, cs))
     async def trial(pg):
-        res = {}
+        res = {}; taken = []   # (the places moved in this run keep SPACE km to one another too; 0.6 km where a village has no other quay)
         for pid, name, ref, u, cs in work:
             for j, km in cs:
+                if any(math.hypot(float(X[j]) - a, float(Y[j]) - b) < 0.6 for a, b in taken): continue
                 r = await pg.evaluate(TRY, [pid, float(X[j]), float(Y[j]), float(A[j]), float(Ln[j])])
-                if r.get('ok'): res[pid] = (j, km); break
+                if r.get('ok'): res[pid] = (j, km); taken.append((float(X[j]), float(Y[j]))); break
             else: res[pid] = None
         return res
     res = asyncio.run(game(trial)) if work else {}
@@ -136,9 +133,7 @@ def main():
         for ref, kind, name, m, new in moved:
             if ref[0] == 'm':
                 x = next(e for e in M['m'] if e['id'] == ref[1]); p = x['p']; x['q'] = new + [round(math.hypot(new[0] - p[0], new[1] - p[1]) * 1000)]
-            else:
-                r = S['r'][ref[1]]; was = sted_id(r, S); S.setdefault('was', {}).pop(sted_key(r), None); r[:5] = new[:5]
-                if sted_key(r) != was: S['was'][sted_key(r)] = was
+            else: move_sted(S, ref[1], new)
         nm = sum(1 for r in moved if r[0][0] == 'm'); ns = len(moved) - nm
         S['meta']['lukkflytt'] = '%d places moved out of basins shut in by their own quay and fill (%d plants, %d yards/shops), tools/steder/lukkflytt.py' % (len(moved), nm, ns)
         M['meta']['lukkflytt'] = '%d plants moved out of basins shut in by their own quay and fill, tools/steder/lukkflytt.py' % nm

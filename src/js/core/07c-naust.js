@@ -142,7 +142,16 @@ function naustWayOk(n, pid){ const N = [-n.u[1], n.u[0]]; return !!naustWay(naus
 // Father's naust at the home harbour: {o, u} or null where none was found (or its map is not in yet)
 function naustSite(){
   const pid = S.home || HOME0;
-  if (S.naust && S.naust.port === pid && S.naust.ver === 3) return S.naust.o ? S.naust : null;
+  // a naust is asked again once when its harbour's quay is not the one it was found or last asked against (qk; tools/steder/lukkflytt.py
+  // moved the plants in Ålesund, Fosnavåg, Laukvik and Vengsøy out of basins shut in by their own quay and fill, 13.11.2026, and at
+  // Fosnavåg the boat no longer got out from the naust found by the old quay): as one from before the way out was asked for (ver 2,
+  // below), kept where the boat gets out from it, else found again by the new quay. A save from before qk is asked once too.
+  const pt0 = portById(pid), f0 = pt0 && quayFace(pid, 'main'), qk = pt0 ? Math.round(f0 ? f0.x : pt0.p.x * 1000) + ',' + Math.round(f0 ? f0.z : pt0.p.y * 1000) : '';
+  if (S.naust && S.naust.port === pid && S.naust.ver === 3){
+    const n = S.naust;
+    if (!n.o || !pt0 || n.qk === qk) return n.o ? n : null;
+    n.ver = 2; n.qk = qk;
+  }
   const kept = () => S.naust && S.naust.port === pid && S.naust.o ? S.naust : null;
   // the water within NAUST_WAY.km must be in for the way out to be read (else a narrow mouth could look shut on the core's 200 m land)
   const pt = portById(pid); if (!pt || !mapReadyAt(pt.p, 0.4)) return kept();
@@ -152,7 +161,7 @@ function naustSite(){
   // a naust found before the way out was asked for (ver 2) stays where it is when the boat gets out from it; one she cannot leave
   // (Averøy, Sleneset) is found again, and the boat lying there lies at the new one (berthPose reads the site)
   if (S.naust && S.naust.port === pid && S.naust.ver === 2 && S.naust.o && naustWayOk(S.naust, pid)){ S.naust.ver = 3; return S.naust; }
-  S.naust = naustFind(pid); return S.naust.o ? S.naust : null;
+  S.naust = naustFind(pid); S.naust.qk = qk; return S.naust.o ? S.naust : null;
 }
 // Father's naust as a berth in the home harbour (Jonas 05.10.2026: «Nye spillere skal starte ved det nye naustet», and «fast
 // liggeplass»): the face of its pile quay (naust.py QUAY: x -8.6 .. 7.6 along the face, the deck at QTOP), as quayFace gives the
