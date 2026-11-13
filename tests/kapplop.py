@@ -84,11 +84,14 @@ SEA = """async (o) => { const t0 = S.t, b = S.boat, step = o && o.closed ? 60 : 
   for (let i = 0; i < 40000 && idle < 600; i++){ DYN.on = false; const t1 = S.t; playMinutes(step, true); CATCH_LEFT = 0; while (sailWaiting()) await new Promise(r => setTimeout(r, 30));
     if (S.t === t1){ idle++; await mapNeed(b.pos, 2).catch(() => {}); await new Promise(r => setTimeout(r, 50)); } else idle = 0;
     if (!['sailing', 'unmooring'].includes(b.status)) break; }
-  return {st:b.status, min:S.t - t0}; }"""
-# the picture of the task id, taken where she lies (without the 3D view: within 1.5 km), waiting for its light up to a day
-FOTO = """async (id) => { const m = S.lop.run.tasks.find(x => x.id === id), t0 = S.t; let why = turFotoTake(m, null, null), n = 0;
-  while (why && m.lys && n++ < 24 * 4){ playMinutes(15, true); CATCH_LEFT = 0; why = turFotoTake(m, null, null); }
-  return {why, waited:S.t - t0, st:m.st, d:+dist(S.boat.pos, m.fyr).toFixed(2)}; }"""
+  return {st:b.status, min:S.t - t0, idle, plan:S.plan ? [S.plan.idx, S.plan.wps.length] : null, log:S.log.slice(-3).map(l => l.no)}; }"""
+# the picture of the task id, taken where she lies (without the 3D view: within 1.5 km)
+FOTO = """(id) => { const m = S.lop.run.tasks.find(x => x.id === id), why = turFotoTake(m, null, null);
+  return {why, st:m.st, d:+dist(S.boat.pos, m.fyr).toFixed(2), lys:m.lys}; }"""
+# the time going until the light a picture asks for has come (at most a day), as a player waits for it
+LYS = """(id) => { const m = S.lop.run.tasks.find(x => x.id === id), t0 = S.t; let n = 0;
+  while (m.lys && !TUR_LYS[m.lys].ok(S.t / 60, m.fyr) && n++ < 24 * 4){ playMinutes(15, true); CATCH_LEFT = 0; }
+  return {waited:S.t - t0, ok:!m.lys || TUR_LYS[m.lys].ok(S.t / 60, m.fyr)}; }"""
 
 OPP = """async (TYPER) => {
   const b = S.boat, ends = [LOP.start].concat(LOP.cps).map(c => portById(c.port)), out = [];
@@ -183,7 +186,7 @@ async def main():
         await J("() => farvRec({k:'fart', kn:5, v:9.2, name:'Lindesnes'})")
         tk = await J(TASKS); fx = [m for m in (tk or []) if m['leg'] == 0 and m['role'] == 'fix']; sp = [m for m in (tk or []) if m['leg'] == 0 and m['role'] == 'surp']
         check(len(fx) == 1 and fx[0]['k'] == 'foto' and fx[0]['fyr'] == 'Obrestad' and fx[0]['st'] == 'go' and len(sp) == 1, '2. etappe 1: oppgaven (Obrestad fyr) og overraskelsen vist ved start', tk)
-        b0 = await J("() => ({slots:turState().slots, done:turState().done.length, act:turState().act.length, cash:S.cash})")
+        b0 = await J("() => ({slots:turState().slots, done:turState().done.length, act:turState().act.length, oppdrag:(S.ledger || []).filter(l => l.p && l.p.oppdrag).length})")
         # (a quay in Bergen before the picture: lopDock is what dock calls there; she is still on the way, so the clock is not touched)
         nb = await J("() => { lopDock(LOP.cps[0].port); return {legs:S.lop.run.legs.length, log:S.log.slice(-2).map(l => l.no).join(' | ')}; }")
         check(nb['legs'] == 0 and 'teller når' in nb['log'], '2. sjekkpunktet i Bergen før bildet av Obrestad: teller ikke', nb)
@@ -194,8 +197,8 @@ async def main():
         check(s['st'] == 'port' and r['legs'] == [await J("() => LOP.cps[0].port")], '2. sjekkpunkt Bergen etter oppgaven: etappe 1', {'s': s, 'legs': r['legs']})
         T = r['T']; check(T and T['pen'] == 15 + 60 and abs(T['min'] - (T['raw'] + 75)) < 1e-9 and T['splits'] and abs(T['splits'][0] - (r['legT'][0] - r['t0'] + 75)) < 1e-9,
                           '2. tida med tillegget for fartsgrensa (15 min), overraskelsen som ikke ble gjort (60 min), og mellomtida i Bergen', T)
-        b1 = await J("() => ({slots:turState().slots, done:turState().done.length, act:turState().act.length, cash:S.cash})")
-        check(b1['done'] == b0['done'] and b1['act'] == b0['act'] and b1['slots'] >= b0['slots'] and b1['cash'] <= b0['cash'], '2. ingen betaling, ingen plass og ingenting i tavlas historikk for oppgaven', {'før': b0, 'etter': b1})
+        b1 = await J("() => ({slots:turState().slots, done:turState().done.length, act:turState().act.length, oppdrag:(S.ledger || []).filter(l => l.p && l.p.oppdrag).length})")
+        check(b1['done'] == b0['done'] and b1['act'] == b0['act'] and b1['slots'] >= b0['slots'] and b1['oppdrag'] == b0['oppdrag'], '2. ingen betaling, ingen plass og ingenting i tavlas historikk for oppgaven', {'før': b0, 'etter': b1})
         leg1 = r['t'] - r['t0']; print('ETAPPE 1 seilt på ' + str(leg1) + ' spillminutter med oppgaven (' + str(rt.get('nm')) + ' nm rett til Bergen)')
         tk = await J(TASKS); fr = [m for m in tk if m['leg'] == 1 and m['role'] == 'fix']
         jb = await J("() => ({cargo:(S.cargo || []).map(c => [c.tur, c.kg]), jobs:(S.jobs || []).map(j => j.kind)})")
@@ -232,8 +235,11 @@ async def main():
         tk = await J(TASKS); fu = [m for m in tk if m['leg'] == 5 and m['role'] == 'fix']
         check(len(fu) == 1 and fu[0]['fyr'] == 'Skjervøya', '5. etappe 6: bildet av Skjervøy fyr' + (' mens fyret lyser' if fu and fu[0]['lys'] else ' (lyset kommer ikke: et vanlig bilde)'), fu)
         g = await J(GOTO, {'id': fu[0]['id']}); check(not g.get('err'), '5. ruta ut til Skjervøy fyr', g)
-        await J(SEA); f = await J(FOTO, fu[0]['id'])
-        check(f['why'] is None and f['st'] == 'done', '5. bildet av Skjervøy fyr er tatt (ventet ' + str(f['waited']) + ' spillminutter på lyset)', f)
+        await J(SEA); f = await J(FOTO, fu[0]['id']); w = {'waited': 0}
+        if f['why'] and f['lys']:
+            # the light has not come: she waits (and drifts: too deep to anchor by the light), then goes back to the place and takes it
+            w = await J(LYS, fu[0]['id']); await J(GOTO, {'id': fu[0]['id']}); await J(SEA); f = await J(FOTO, fu[0]['id'])
+        check(f['why'] is None and f['st'] == 'done', '5. bildet av Skjervøy fyr er tatt (ventet ' + str(w['waited']) + ' spillminutter på at fyret lyser)', f)
         rt = await J(GOTO, {'pt': await J("() => P(71.215, 25.86)")}); check(not rt.get('err'), 'ruta Skjervøy–forbi Nordkapp', rt)
         s = await J(SAIL, {'untilEnd': True}); r = await J(RUN)
         h0 = r['hist'][0] if r['hist'] else {}
@@ -266,6 +272,19 @@ async def main():
           await mapNeed(A.p, 2); const r = await leiaRoute({x:A.p.x, y:A.p.y}, {x:B.p.x, y:B.p.y}, A.id, B.id); b.type = ty; applyVessel();
           return r.why ? {why:r.why[0]} : {nm:+r.nm.toFixed(1), by:r.st && r.st.by, split:r.st && r.st.split}; }""")
         check(not h.get('why') and h.get('nm', 0) > 150, '8. et havfartøy (autolineren) finner ruta Rørvik–Bodø', h)
+        # 9. every type gets every task on every leg (KL1b): the station where the rules do not let her fish cod with the jig, or for a
+        # type without the jig, is the echo line at the same place (after the independent check, 13.11.2026)
+        al = await J("""async () => { const b = S.boat, ty0 = b.type, ends = [LOP.start].concat(LOP.cps).map(c => portById(c.port)), miss = [], ekko = {};
+          for (const ty in VESSELS){ b.type = ty; applyVessel();
+            for (let j = 0; j < 6; j++){ const A = ends[j]; await mapNeed(A.p, 2); b.status = 'port'; b.port = A.id; b.pos = {x:A.p.x, y:A.p.y}; S.cargo = []; S.hold = [];
+              const run = {id:'lnk-a', vid:S.cur, type:ty, cls:lopCls(VESSELS[ty]), t0:S.t, legs:[], pen:[], ded:[], st:'run', tasks:[]};
+              for (const [role, spec] of [['fix', LOP.legs[j].fix]].concat(LOP.legs[j].surp.map(x => ['surp', x]))){ if (spec.p) await mapNeed(spec.p, 1);
+                const m = lopMake(run, j, role, spec); if (!m) miss.push(ty + ' ' + (j + 1) + ' ' + role + ' ' + spec.k); else if (spec.k === 'prove' && m.kind === 'ekko') (ekko[ty] = ekko[ty] || []).push(j + 1); } } }
+          b.type = ty0; applyVessel(); return {miss, ekko}; }""")
+        # (the 21 m boat may fish cod with the jig at these places: ruBlockMsg asked for cod in the game, 13.11.2026)
+        hav = await J("() => Object.keys(VESSELS).filter(k => !(VESSELS[k].rigs || []).includes('juksa'))")
+        check(al['miss'] == [] and all(t in al['ekko'] for t in hav) and all(t in hav for t in al['ekko']),
+              '9. alle typene får alle oppgavene på alle etappene, og typene uten juksa (' + ', '.join(hav) + ') ekkoloddlinja i stedet for stasjonen', al)
         check(errs == [], '7. ingen sidefeil', errs[:3])
         await br.close()
     print('KAPPLOP ' + ('OK' if not FAIL else 'FEIL: ' + '; '.join(FAIL)))

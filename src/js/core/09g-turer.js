@@ -682,10 +682,12 @@ function turProve(o, cls, fix = null){
 function turProveFish(m){
   if (m.fish) return m.fish;
   const got = Object.entries(m.got || {}).filter(([sp]) => SPECIES[sp]), tot = got.reduce((a, x) => a + x[1], 0) || 1, out = [];
+  // (the board's ids are numbers; a race task's is text, 'lnk-1:2f', which made every draw h2(NaN) and ten fish of one length)
+  const id = typeof m.id === 'number' ? m.id : String(m.id).split('').reduce((a, c) => (Math.imul(a, 31) + c.charCodeAt(0)) | 0, 7) & 0xffffff;
   for (let i = 0; i < 10; i++){
-    let r = h2(m.id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
-    const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(m.id * 31 + i, 733), 0.8)) * 10) / 10;
-    out.push({sp, cm, c0:Math.floor(cm - 24 * (0.3 + 0.45 * h2(m.id * 31 + i, 911)))});
+    let r = h2(id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
+    const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(id * 31 + i, 733), 0.8)) * 10) / 10;
+    out.push({sp, cm, c0:Math.floor(cm - 24 * (0.3 + 0.45 * h2(id * 31 + i, 911)))});
   }
   m.meas = m.meas || []; return m.fish = out;
 }

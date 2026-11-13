@@ -170,4 +170,29 @@ export default function (t){
       t.ok(S7.lop.run === run && run.legs.length === LOP.cps.length && run.goalW === 1, 'over mållinja før bildet av Fruholmen: teller ikke');
       run.tasks[0].st = 'done'; run.lp = {x:G.x - 0.1, y:G.y - 3}; lopMinute();
       t.ok(!S7.lop.run && S7.lop.hist[0].st === 'done' && S7.lop.hist[0].legs === LOP.cps.length + 1, 'med bildet tatt: over mållinja, fullført', S7.lop.hist[0]); } }
+
+  // 8. after the independent check (13.11.2026): the measuring board for a race task (its id is text) draws ten fish, not one length ten
+  // times; a light that will not come before the leg's time is out is dropped while she sails; the surprise is shown only when the leg
+  // begins, and is the same for two attempts in the class that week
+  { const {turProveFish, lopMinute, lopDepart, lopSurp, FYR} = K, S8 = newState(); K.set('S', S8);
+    const f1 = turProveFish({id:'lnk-1:2f', got:{torsk:40, hyse:20}}), f2 = turProveFish({id:'lnk-2:2f', got:{torsk:40, hyse:20}});
+    t.ok(new Set(f1.map(f => f.cm)).size > 3, 'målebrettet i løpet: ti fisk med ulike lengder (' + f1.map(f => f.cm).join(', ') + ')');
+    t.ok(f1.map(f => f.cm).join() !== f2.map(f => f.cm).join(), 'to forsøk får hver sine fisk');
+    t.eq(turProveFish({id:7, got:{torsk:40}}).map(f => f.cm).join(), turProveFish({id:7, got:{torsk:40}}).map(f => f.cm).join(), 'tavlas stasjon (tall-id) som før: de samme fiskene hver gang');
+    // the light: «mens fyret lyser» at Skjervøy, the leg's time over: an ordinary picture, read on the hour
+    S8.cur = 'v1'; S8.fleet = [{id:'v1'}]; S8.boat.type = 'sjark'; S8.boat.status = 'sailing'; S8.boat.lop = 'lnk-8'; S8.boat.pos = {x:900, y:300};
+    const sk = FYR.find(f => f[3] === 'Skjervøya'), mf = {id:'lnk-8:5f', lop:'lnk-8', vid:'v1', st:'go', leg:5, role:'fix', k:'foto', fyr:{x:sk[0], y:sk[1], name:sk[3]}, lys:'natt', due:120, t0:0};
+    S8.lop = {run:{id:'lnk-8', vid:'v1', type:'sjark', cls:'middels', t0:0, legs:LOP.cps.map(c => ({t:1, pid:c.port})), pen:[], ded:[], st:'run', tasks:[mf], lp:{x:900, y:300}}, hist:[], best:{}, legsN:0, seq:8};
+    S8.t = 150; lopMinute(); t.eq(mf.lys, 'natt', 'ikke på timen: lyset står');
+    S8.t = 180; lopMinute(); t.ok(mf.lys === null && mf.lysAlt === 'natt', 'etappens tid er ute og lyset er ikke kommet: et vanlig bilde av fyret holder', mf);
+    // the surprise is shown when the leg begins (cast off in Lindesnes), not at the registration, and the same for two attempts
+    const start = K.PORTS.find(q => K.lopCpOf(q.id) === 0);
+    t.ok(!!start, 'en havn i Lindesnes (' + (start && start.id) + ')');
+    const surp = id => { S8.boat.status = 'port'; S8.boat.port = start.id; S8.boat.pos = {x:start.p.x, y:start.p.y}; S8.boat.lop = id; S8.t = 1000;
+      const r = {id, vid:'v1', type:'sjark', cls:'middels', reg:S8.t, t0:null, t1:null, legs:[], pen:[], ded:[], sos:null, lp:null, st:'reg', tasks:[], surp:[]};
+      S8.lop = {run:r, hist:[], best:{}, legsN:0, seq:0}; const before = r.surp.slice(); lopDepart(); return {before, after:r.surp.slice(), st:r.st}; };
+    const A = surp('lnk-20'), B = surp('lnk-21');
+    t.ok(A.before.length === 0 && A.st === 'run' && A.after.length === 1, 'påmeldt: ingen overraskelse vist; kastet loss: etappe 1s vises, ikke de andre', A);
+    t.eq(A.after[0], B.after[0], 'to forsøk i samme klasse og uke får samme overraskelse på etappe 1');
+    t.eq(A.after[0], lopSurp(0, 'middels', K.lopWeek(K.lopMs(1000)).id), 'den som trekkes for uka forsøket startet i'); }
 }

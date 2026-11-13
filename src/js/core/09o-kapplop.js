@@ -230,6 +230,10 @@ function lopMinute(){
   const sid = lopSosNow();
   if (sid && !r.sos) r.sos = {id:sid, t:S.t, p:r.lp || here, to:lopNext(r)};
   else if (r.sos && sid !== r.sos.id){ lopSosEnd(r, S.t, here); if (sid) r.sos = {id:sid, t:S.t, p:here, to:lopNext(r)}; }
+  // a picture in a light that will not come before the leg's time is out (the season has turned since the leg began, or the time is
+  // over): an ordinary picture of the light will do (lopLys), read once a game hour
+  if (S.t % 60 === 0) for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'foto' && m.lys && (S.t >= m.due || turLysNext(m, S.t / 60) == null)){ m.lysAlt = m.lys; m.lys = null;
+    log('Kappløpet: ' + TUR_LYS[m.lysAlt].no + ' kommer ikke ved ' + turFyrName(m) + ' innen etappens tid. Et vanlig bilde av fyret holder.', 'The race: ' + TUR_LYS[m.lysAlt].en + ' does not come at ' + turFyrName(m) + ' within the leg\'s time. An ordinary picture of the light will do.', 'nav'); }
   // the race's freight: loaded at the checkpoint when there is room now, and a word once if she leaves it on the quay
   for (const m of r.tasks || []) if (m.st === 'go' && m.k === 'frakt' && m.stage === 'pick'){
     if (b.status === 'port' && cargoRoom() >= m.kg) lopLoad(m);
@@ -292,7 +296,12 @@ function lopMake(run, j, role, spec){
   const V = VESSELS[run.type] || {}, sp = lopKind(spec, V), o = turHere(), rnd = lopRnd(lopSeed(LOP.id + '|' + j + '|' + role + '|' + sp.k));
   let m = null;
   if (sp.k === 'foto') m = turFoto(o, 'lop', null, {fyr:sp.fyr, lys:sp.lys || null, rnd});
-  else if (sp.k === 'prove' || sp.k === 'ekko') m = turProve(o, 'lop', {p:sp.p, kind:sp.k === 'ekko' ? 'ekko' : 'stasjon', rnd});
+  else if (sp.k === 'prove' || sp.k === 'ekko'){ m = turProve(o, 'lop', {p:sp.p, kind:sp.k === 'ekko' ? 'ekko' : 'stasjon', rnd});
+    // the station where the rules do not let this boat fish with the jig (ruBlockMsg: a boat of 21 to 27.99 m may not fish cod inside
+    // the baseline, J-forskriften), is the echo line at the same place, as for a type without the jig
+    // (asked for cod too: the jig takes mostly cod, and the board's own question, any species, lets the 21 m boat through)
+    let no = !m; if (m && m.kind === 'stasjon') try { no = !!ruBlockMsg({p:m.p, len:BOAT.len, gear:'juksa', sp:'torsk', hand:!(S.equip && S.equip.jukse > 0)}); } catch (e){}
+    if (no && sp.k === 'prove') m = turProve(o, 'lop', {p:sp.p, kind:'ekko', rnd}); }
   else if (sp.k === 'slep') m = turSlep(o, 'lop', {p:sp.p, rnd});
   else if (sp.k === 'frakt'){ const b = S.boat, from = b.status === 'port' ? b.port : null, cp = LOP.cps[j];
     if (from && cp) m = turFrakt(o, 'lop', new Set(), turMe(), null, {from, to:cp.port, kg:sp.kg, rnd}); }
