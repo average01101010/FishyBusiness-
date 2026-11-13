@@ -104,7 +104,9 @@
   function fftBlend(now){
     if (!FFT.got) return;
     // (the waiting set's turn: the time has reached B. After the first answer A and B were the same set: the spare one is the third)
-    if (FFT.pend && now >= FFT.tB){ const I = FFT.si, spare = I[0] === I[1] ? FFT.keep : I[0]; FFT.si = [I[1], I[2], spare]; FFT.tA = FFT.tB; FFT.tB = FFT.tC; FFT.pend = false; FFT.got = 2; }
+    // (after an answer taken at once, got 1, the next one's turn comes straight away, and the glide to it starts from now: the tile
+    // drawn was asked a lead ahead, and waiting for the time to reach it the short sea stood still for up to half a second)
+    if (FFT.pend && (now >= FFT.tB || FFT.got === 1)){ const I = FFT.si, spare = I[0] === I[1] ? FFT.keep : I[0]; FFT.si = [I[1], I[2], spare]; FFT.tA = FFT.got === 1 ? Math.min(FFT.tB, now - 1e-3) : FFT.tB; FFT.tB = FFT.tC; FFT.pend = false; FFT.got = 2; }
     const f = clamp((now - FFT.tA) / Math.max(FFT.tB - FFT.tA, 1e-4), 0, 1);
     if (f >= 1 && now > FFT.tB + 0.004) FFT.hold++;   // (frames the sea stood waiting for the worker, for the tests and #fps)
     if (f === FFT.f) return; FFT.f = f; FFT.tT2 = FFT.tA + f * (FFT.tB - FFT.tA);
