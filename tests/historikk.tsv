@@ -3793,3 +3793,4 @@
 2026-11-13 16:16	plan/2026-11-13-109	5df26318	cloudtest	FEIL	54	lite	samtidig	FEIL TP2: a code longer than 160 goes up whole with the home port and the name's lettering last, and another player's lettering and home port (Båtsfjord) come d
 2026-11-13 16:18	plan/2026-11-13-109	5df26318	kjoptest	OK	165	lite	samtidig	
 2026-11-13 16:19	plan/2026-11-13-109	5df26318	dbg23o	OK	47	3d	alene	
+2026-11-13 16:48	plan/2026-11-13-109	c4553748	navnshot	FEIL	1752	3d	alene	FEIL kyst15 med marineblått skrog: antikva i gull (fargen leses mot malingen)  [{"txt": "Havbris", "line": "name", "kind": "house", "f": "a", "ink": "#111214", 

@@ -662,7 +662,7 @@ function livStr(b){
   // TP2: the home port under her name on her transom, the harbour's id, which every game knows (PORTS: the plants of the whole coast,
   // Senja's harbours and Father's naust; the same as her own transom shows, ownPort), and the name's lettering (her own, also under a
   // partner's design). Last, so a server that still cuts at 160 cuts these and not the logo
-  const hm = typeof S !== 'undefined' && b === S.boat ? S.home || (typeof HOME0 !== 'undefined' ? HOME0 : '') : ''; if (hm && /^[a-z0-9_]{1,24}$/.test(hm)) out.push('k:' + hm);
+  const hm = typeof S !== 'undefined' && b === S.boat ? S.home || (typeof HOME0 !== 'undefined' ? HOME0 : '') : ''; if (hm && /^[A-Za-z0-9_]{1,24}$/.test(hm)) out.push('k:' + hm);   // (the plants' ids have capitals: 'mVA94')
   { const ns = nameStyle(L0); if (ns.f !== 'b' || ns.c !== 'auto') out.push('n:' + ns.f + '.' + ns.c); }
   return out.join(';');
 }
@@ -1300,7 +1300,7 @@ const inkRGB = c => NAMEINK[c] ? NAMEINK[c][2].slice() : palRGB(c);
 function nameStyle(L){ return {f:L && NAMEFONT[L.nf] ? L.nf : 'b', c:L && L.nc && L.nc !== 'auto' && inkRGB(L.nc) ? L.nc : 'auto'}; }
 // another player's lettering and home port from her paint code ('n:a.gull', 'k:m1234')
 function livName(s){ const m = /(?:^|;)n:([a-z])\.([a-z]+)(?:;|$)/.exec(String(s || '')); return nameStyle(m ? {nf:m[1], nc:m[2]} : null); }
-function livHome(s){ const m = /(?:^|;)k:([a-z0-9_]{1,24})(?:;|$)/.exec(String(s || '')); return m ? m[1] : ''; }
+function livHome(s){ const m = /(?:^|;)k:([A-Za-z0-9_]{1,24})(?:;|$)/.exec(String(s || '')); return m ? m[1] : ''; }
 // the ink of the name over the paint under it (rgb): the chosen colour where it reads, 3:1 or more, else white or black, whichever reads best
 function nameInk(under, c){
   const k = c && c !== 'auto' ? inkRGB(c) : null; if (k && contrastOf(k, under) >= NAMEMIN) return k;

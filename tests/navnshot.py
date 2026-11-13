@@ -65,16 +65,20 @@ async def main():
         check({'Havbris', 'Nordkapp Senior', 'Åsheim', 'Fjordbris', 'Storegga', 'Måken'} <= names, 'seks spillerbåter innen 250 m får navnet tegnet', sorted(names))
         def one(txt, line='name'): return [s for s in oth if s['txt'] == txt and s['line'] == line]
         kb, ns, sj = one('Havbris'), one('Nordkapp Senior'), one('Åsheim')
-        check(kb and all(s['f'] == 'a' and s['ink'] == '#d4a333' for s in kb), 'kyst15 med marineblått skrog: antikva i gull (fargen leses mot malingen)', kb[:3])
+        # (kyst15's name on the wheelhouse front lies on its light grey house, where gold does not read: black there; on the navy transom gold)
+        check(kb and all(s['f'] == 'a' for s in kb) and {s['ink'] for s in kb if s['kind'] == 'stern'} == {'#d4a333'} and {s['ink'] for s in kb if s['kind'] == 'house'} == {'#111214'},
+              'kyst15 med marineblått skrog: antikva, i gull på hekken der det leses, svart på det lysegrå styrhuset der gull ikke leses', kb[:4])
         check(ns and all(s['f'] == 's' for s in ns) and any(s['ink'] == '#f7f7f4' for s in ns), 'breisjarken: smal blokk, hvitt der det leses', ns[:3])
-        check(sj and all(s['f'] == 'b' for s in sj) and all(s['ink'] in ('#111214', '#f7f7f4') for s in sj), 'sjarken med gult skrog og gul skrift: fargen leses ikke og faller tilbake til svart eller hvitt', sj[:3])
+        # (the sjark's wheelhouse front is her own dark red, where yellow reads)
+        check(sj and all(s['f'] == 'b' for s in sj) and {s['ink'] for s in sj if s['kind'] == 'stern'} == {'#111214'} and {s['ink'] for s in sj if s['kind'] == 'house'} == {'#f2bd1f'},
+              'sjarken med gult skrog og gul skrift: på hekken leses den ikke og blir svart, på det mørkerøde styrhuset står den gul', sj[:4])
         ports = {s['txt'] for s in oth if s['line'] == 'port'}
         check({'Kristiansand S', 'Averøy', 'Båtsfjord'} <= ports and not ({'Fjordbris', 'Storegga', 'Måken'} & ports),
               'de andre ser hjemhavna under navnet på hekken (stikkprøven: Kristiansand S, Averøy, Båtsfjord); en kode uten k: gir ingen', sorted(ports))
         pk = [s for s in oth if s['line'] == 'port' and s['txt'] == 'Kristiansand S']
         check(pk and all(s['f'] == 'a' for s in pk), 'hjemhavna står i samme skrift som navnet', pk[:2])
         # the own boat: as she is painted (bought: the test's shop gives at once)
-        await pg.evaluate("(() => { giveCos('navn'); S.boat.liv = Object.assign({}, S.boat.liv, {nf:'s', nc:'gull'}); G3._debug.names = []; })()")
+        await pg.evaluate("(() => { giveCos('navn'); S.unnamed = false; S.boatName = 'Havørn'; S.boat.liv = Object.assign({}, S.boat.liv, {nf:'s', nc:'gull'}); G3._debug.names = []; })()")
         await pg.wait_for_timeout(4000)
         own = [s for s in (await pg.evaluate("G3._debug.names || []")) if not s['other']]
         check(own and all(s['f'] == 's' for s in own), 'egen båt tegner navnet i sin egen skrift', own[:3])

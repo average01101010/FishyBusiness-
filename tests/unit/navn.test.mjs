@@ -77,6 +77,7 @@ export default function (t){
     t.ok(!/(^|;)[nk]:/.test(livStr({type:'sjark', liv:{hull:'sort'}})), 'en annen båt enn din egen og uten valg sender ingen n: og k:');
     t.eq(livName(code), {f:'a', c:'gull'}, 'de andre leser skriften og fargen');
     t.eq(livName('h:hvit;n:q.gull'), {f:'b', c:'gull'}, 'en skrift de ikke kjenner, blir blokk');
-    t.eq([livHome(code), livHome('h:hvit'), livHome('k:Bad<x>'), livHome('k:' + 'a'.repeat(30))], ['m1234', '', '', ''], 'hjemhavna leses bare som en kort id');
+    t.eq([livHome(code), livHome('h:hvit'), livHome('k:Bad<x>'), livHome('k:' + 'a'.repeat(30)), livHome('h:hvit;k:mVA94;n:a.gull')], ['m1234', '', '', '', 'mVA94'], 'hjemhavna leses bare som en kort id, også med store bokstaver som mottakenes (mVA94, Kristiansand S)');
+    S.home = 'mVA94'; t.ok(/(^|;)k:mVA94(;|$)/.test(livStr(b)), 'en hjemhavn med store bokstaver i id-en sendes også (k:mVA94)');
   }
 }
