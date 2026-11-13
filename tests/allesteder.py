@@ -12,7 +12,8 @@ own), the rorbuer (src/data/rorbuer.json, where their shore is found) and Father
     and lies in the harbour she was sent to, without running aground, within the time the route takes and a margin.
 Needs the whole coast (dist-vec). LITE. Prints a FEIL line per place that fails (allesteder: kind name lat lon what), then OK or FEIL per check.
 KYST_ALLE=ports,rorbu,naust,havn picks the kinds (havn: the coast's 3 300 harbours, the way out found from each, sailed from every
-KYST_ALLE_SAIL-th, 10); KYST_ALLE_N=20 takes every n-th place only (a quick look); KYST_ALLE_ID=id,id those places."""
+KYST_ALLE_SAIL-th, 10); KYST_ALLE_N=20 takes every n-th place only (a quick look); KYST_ALLE_ID=id,id those places; KYST_ALLE_H=hours starts the clock
+so many hours later."""
 import asyncio, json, os, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.environ['KYST_DIST'] = os.environ.get('KYST_DIST') or os.path.join(ROOT, 'dist-vec')
@@ -27,11 +28,13 @@ TYPE = os.environ.get('KYST_ALLE_TYPE', 'kyst21')
 # the rorbuer and the naust take boats up to 15 m (SITE_MAXLEN, Jonas 13.11.2026 «Grense ved 15 m»): sailed from with the biggest of those,
 # and the older coastal vessel must be turned away there
 SMALL = os.environ.get('KYST_ALLE_SMALL', 'kyst15')
+# the clock moved on so many hours from the start (a place that failed in the whole run, tried alone at the time it came up there)
+HOURS = float(os.environ.get('KYST_ALLE_H', '0'))
 
-SETUP = r"""(type) => { TAB.held = true; const b = S.boat; S.tut = 0; S.cash = Math.max(S.cash, 1e9);
+SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.cash = Math.max(S.cash, 1e9);
   b.type = type; if (!S.owned.includes(type)) S.owned.push(type); applyVessel(); b.fuel = BOAT.fuelCap;
   // summer noon, light wind from the south-west: the weather is not what is tested
-  S.t = Math.round((Date.UTC(2027, 5, 15, 11) - EPOCH) / 6e4); WX_FORCE = {w:3, d:225};
+  S.t = Math.round((Date.UTC(2027, 5, 15, 11) - EPOCH) / 6e4) + Math.round(hh * 60); WX_FORCE = {w:3, d:225};
   window.ALS = {
     // the harbours a route may go to: the plants, shops and yards (the trade places), and Senja's
     dests:PORTS.filter(q => !q.havOnly),
@@ -67,10 +70,12 @@ SETUP = r"""(type) => { TAB.held = true; const b = S.boat; S.tut = 0; S.cash = M
       let a = from, bad = 0; for (const w of S.plan.wps){ if (!legClear(a, w)) bad++; a = w; } R.overLand = bad;
       const T0 = S.t, L0 = S.log.length; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
       // the game's loop (ui/08-actions.js): the model each frame, the minute step on the clock; she must lie in port at the end in time
-      const limit = 60 + Math.ceil(r.nm / Math.max(3, BOAT.vcruise) * 60 * 1.6); let acc = 0, k = 0, best = 1e9, lastBest = S.t, stuck = null;
+      const limit = 60 + Math.ceil(r.nm / Math.max(3, BOAT.vcruise) * 60 * 1.6); let acc = 0, k = 0, best = 1e9, lastBest = S.t, stuck = null, nh = (b.hits || []).length; const pl0 = S.plan;
       while (S.t - T0 < limit){
         if (!simAreaReady()){ await mapNeed(b.pos, 4); await new Promise(r2 => setTimeout(r2, 20)); continue; }
         dynTick(0.25); acc += 0.25 * simRate() / 60; while (acc >= 1){ step(); acc -= 1; }
+        // what she struck, and where: every knock the model counts (b.hits), with her position then (the log says only «støt»)
+        if (b.hits && b.hits.length > nh){ for (const hh of b.hits.slice(nh)){ const l = natLL(b.pos); R.hits = (R.hits || []).concat([[hh.k, hh.kn, +l.lat.toFixed(5), +l.lon.toFixed(5), pl0 ? pl0.idx : -1]]).slice(-8); } nh = b.hits.length; }
         if (++k % 400 === 0) await new Promise(r2 => setTimeout(r2, 0));
         if (b.status === 'aground'){ stuck = 'aground'; break; }
         if (b.status === 'port' && !S.plan) break;
@@ -82,11 +87,13 @@ SETUP = r"""(type) => { TAB.held = true; const b = S.boat; S.tut = 0; S.cash = M
       R.log = S.log.slice(L0).map(e => e.no || '').filter(t => /grunn|traff|kollisjon|Kollisjon|støtte|Vann i båten|Motorrommet|slep|Slep|fast|venter|Venter|ly\b/i.test(t)).slice(0, 4);
       R.min = S.t - T0; R.end = b.status; R.at = b.port === to.id; R.left = +dist(b.pos, from).toFixed(2); R.km = +dist(b.pos, to.p).toFixed(2);
       if (!to.id) R.at = R.km < 0.3;
-      R.dmg = typeof hullBad === 'function' && hullBad(b); if (R.dmg && !stuck){ R.log = S.log.slice(L0).map(e => e.no || '').filter(t => !/^Kl\.|klokka|Posisjon/.test(t)).slice(-6); stuck = 'hull damaged on the way (' + R.log.join(' | ').slice(0, 300) + ')'; }
+      R.dmg = typeof hullBad === 'function' && hullBad(b); if (R.dmg && !stuck){ R.log = S.log.slice(L0).map(e => e.no || '').filter(t => !/^Kl\.|klokka|Posisjon/.test(t)).slice(-6); stuck = 'hull damaged on the way (' + (R.hits ? 'struck ' + JSON.stringify(R.hits) + ' ' : '') + R.log.join(' | ').slice(0, 300) + ')'; }
+      if (typeof asleep === 'function' && asleep()) R.asleep = true;
       if (stuck) R.why = stuck + ' ' + R.left + ' km out'; else if (!R.at) R.why = 'not in ' + to.name + ' after ' + R.min + ' min (' + b.status + ', ' + R.km + ' km off)';
       S.plan = null; return R; },
     // she is put at the place: in port, at its berth (main; the naust's for the naust)
-    put(pid, kind){ const b = S.boat, pt = portById(pid); S.plan = null; S.draft = []; S.jobs = []; b.status = 'port'; b.port = pid; b.berth = kind; b.v = 0; b.land = null; b.landQ = null; b.anch = null; b.dyn = null; b.fuel = BOAT.fuelCap; b.damage = 0; b.dmg = null; b.tow = null; b.tripBad = false; b.engineUntil = null; b.prev = null; b.engH = 0; b.svcAt = 0;   /* (one boat sails a thousand trips here: her engine hours are not what is tested) */
+    put(pid, kind){ const b = S.boat, pt = portById(pid); S.plan = null; S.draft = []; S.jobs = []; b.status = 'port'; b.port = pid; b.berth = kind; b.v = 0; b.land = null; b.landQ = null; b.anch = null; b.dyn = null; b.fuel = BOAT.fuelCap; b.damage = 0; b.dmg = null; b.tow = null; b.tripBad = false; b.engineUntil = null; b.prev = null; b.engH = 0; b.svcAt = 0; b.hits = [];   /* (one boat sails a thousand trips here: her engine hours are not what is tested) */
+      S.energy = 100; S.sleep = null; S.drowsy = false; S.rest = null;   /* (nor the skipper's sleep: a thousand trips without rest put him to sleep at the helm, «Du sovnet av utmattelse», and the boat drifted: Ålesund 13.11.2026) */
       b.pos = {x:pt.p.x, y:pt.p.y}; S.trail = [{x:pt.p.x, y:pt.p.y, port:pid}]; ALS.clear(); DYN.line = null; }
   }; return true; }"""
 
@@ -102,7 +109,7 @@ ONE = r"""async ([kind, id, type, big]) => { const R = {kind, id, type}; let pt;
     R.bigOffered = kind === 'rorbu' ? !!rorbuTarget(at, 0.3) || moorAll(at, 0.3).some(m => m.id === pid) : !!naustTarget(at, 0.3) || moorAll(at, 0.3).some(m => m.berth === 'naust');
     if (kind === 'naust'){ b.berth = 'naust'; b.port = pid; R.bigNaustKind = berthKind(b); }
     b.type = t0; applyVessel(); }
-  ALS.put(pid, berth); R.lie = ALS.lie(pid, berth);
+  R.h = +((S.t - Math.round((Date.UTC(2027, 5, 15, 11) - EPOCH) / 6e4)) / 60).toFixed(2); ALS.put(pid, berth); R.lie = ALS.lie(pid, berth);
   try { Object.assign(R, await ALS.go(pid)); } catch (e){ R.why = 'error: ' + String(e && e.message).slice(0, 100); }
   return R; }"""
 
@@ -139,7 +146,10 @@ async def main():
         pg = await (await br.new_context(viewport={'width': 1280, 'height': 800})).new_page(); errs = []
         pg.on('pageerror', lambda e: errs.append(str(e)))
         await boot(pg, GAME + ('' if 'no3d' in GAME else ',no3d'))
-        await pg.evaluate(SETUP, TYPE)
+        # a slower machine (KYST_ALLE_CPU=4: four times slower): the model's step reads the wall clock between frames (dynCatch), so a
+        # slow tablet is not the same as a fast one
+        if os.environ.get('KYST_ALLE_CPU'): await (await pg.context.new_cdp_session(pg)).send('Emulation.setCPUThrottlingRate', {'rate': float(os.environ['KYST_ALLE_CPU'])})
+        await pg.evaluate(SETUP, [TYPE, HOURS])
         todo = []
         if 'ports' in KINDS: todo += [('port', i) for i in await pg.evaluate("() => PORTS.filter(q => !q.havOnly).map(q => q.id)")]
         if 'rorbu' in KINDS: todo += [('rorbu', i) for i in await pg.evaluate("() => [...RBID.keys()]")]
@@ -155,7 +165,7 @@ async def main():
             else: r = await pg.evaluate(ONE, [kind, pid, TYPE if kind == 'port' else SMALL, None if kind == 'port' else TYPE])
             res.append(r)
             bad = r.get('why') or (r.get('lie', {}).get('land') if r.get('lie') else None)
-            if bad: print('allesteder:', kind, r.get('name'), r.get('ll'), json.dumps({k: r.get(k) for k in ('why', 'to', 'nm', 'min', 'end', 'log')}, ensure_ascii=False), flush=True)
+            if bad: print('allesteder:', kind, r.get('name'), r.get('ll'), json.dumps({k: r.get(k) for k in ('why', 'to', 'nm', 'min', 'end', 'log', 'hits', 'asleep', 'h')}, ensure_ascii=False), flush=True)
             if i % 25 == 0: print('   ', i, '/', len(todo), round(time.time() - t0), 's', flush=True)
         json.dump(res, open(os.path.join(ROOT, 'tests', 'out', 'allesteder%s.json' % ('_' + TYPE if TYPE != 'kyst21' else '')), 'w'), ensure_ascii=False, indent=0)
         done = [r for r in res if not r.get('skip')]
