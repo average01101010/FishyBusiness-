@@ -23,7 +23,8 @@ ZW = [0.0, 0.0]
 
 def set_lights():
     z0 = wh_floor(H, WH[0], WH[1]); z1 = z0 + WH[3]
-    LT.update({'masthead': (WH[1] - 0.35, 0.0, z1 + 2.5), 'port': (WH[1] - 0.6, WH[2] + 0.12, z0 + 1.45), 'stbd': (WH[1] - 0.6, -(WH[2] + 0.12), z0 + 1.45),
+    LT.update({'masthead': (WH[1] - 0.35, 0.0, z1 + 3.8),   # (high enough that a boat of the register's 27.5 m, the model scaled, has it the beam over her hull, vedlegg I 2(a)(i))
+                'port': (WH[1] - 0.6, WH[2] + 0.12, z0 + 1.45), 'stbd': (WH[1] - 0.6, -(WH[2] + 0.12), z0 + 1.45),
                'stern': (0.15, 0.0, D + BW + 0.35)})
 
 def build(fine=True):
@@ -66,7 +67,7 @@ def check():
     return fishing_check(T_ID, H, LT, D + BW, [
         (XD + RD + 0.2 < 5.4 - 0.62, 'nottrommelen (til %.1f m) og tauspolene (fra %.1f m) står klar av hverandre' % (XD + RD, 5.4 - 0.62)),
         (1.25 + ZD - D < 3.9, 'trommelen under galgen'),
-        (H.hw(XD / L, D) > WD / 2 + 0.3, 'trommelen (%.1f m bred) innenfor skutesida (%.1f m)' % (WD, 2 * H.hw(XD / L, D)))])
+        (H.hw(XD / L, D) > WD / 2 + 0.3, 'trommelen (%.1f m bred) innenfor skutesida (%.1f m)' % (WD, 2 * H.hw(XD / L, D)))], scale_to=24.5)
 
 if __name__ == '__main__':
     run(sys.modules[__name__])

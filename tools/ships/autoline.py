@@ -64,7 +64,7 @@ def check():
     set_lights()
     return fishing_check(T_ID, H, LT, D, [
         (ZW0 - T >= 1.0, 'haleluka %.1f m over vannlinja' % (ZW0 - T)),
-        (14.2 > WH[0] - 1.0, 'haleluka forut, under styrhuset')], cb=(0.42, 0.62))
+        (14.2 > WH[0] - 1.0, 'haleluka forut, under styrhuset')], cb=(0.42, 0.62), scale_to=22.1)
 
 if __name__ == '__main__':
     run(sys.modules[__name__])

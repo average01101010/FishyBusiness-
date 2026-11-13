@@ -427,7 +427,7 @@ def check_lights(H, L, hull_z, say):
         say(mh >= min(12.0, max(6.0, H.B)) - 1e-6, 'den forre topplanterna %.1f m over skroget (2(a)(i))' % mh)
         d2 = zz('masthead2') - zz('masthead'); sep = xx('masthead') - xx('masthead2')
         say(d2 >= 4.5 - 1e-6, 'den aktre topplanterna %.1f m høyere (2(a)(ii): minst 4,5 m)' % d2)
-        say(sep >= min(100.0, LOA / 2) - 1e-6, '%.1f m mellom topplanternene (3(a): minst halve lengden, %.1f m)' % (sep, LOA / 2))
+        say(sep >= min(100.0, LOA / 2) - 1e-6, '%.1f m mellom topplanternene (3(a): minst halve lengden, men ikke over 100 m: %.1f m)' % (sep, min(100.0, LOA / 2)))
         say(LOA - xx('masthead') <= LOA / 4 + 1e-6, 'den forre %.1f m fra stevnen (3(a): høyst en firedel av lengden)' % (LOA - xx('masthead')))
     sh = zz('port') - hull_z
     say(sh <= 0.75 * mh + 1e-6, 'sidelanternene %.1f m over skroget, høyst 3/4 av topplanterna (2(g))' % sh)

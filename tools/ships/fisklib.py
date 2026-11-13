@@ -96,7 +96,7 @@ def fishing_anchors(H, LT, WIN, skipper, crew, deck_z, gw):
             'deck': {'y': round(deck_z - H.T, 3), 'z': 0.0}, 'gw': round(gw - H.T, 3), 'stern': H.L / 2, 'bow': -H.L / 2, 'side': H.HB, 'beam': H.B,
             'open': False, 'hand': False, 'liv': True}
 
-def fishing_check(T_ID, H, LT, hull_z, more, cb=(0.40, 0.60), what='en fiskebåt med skjegg og kjøl', disp=None):
+def fishing_check(T_ID, H, LT, hull_z, more, cb=(0.40, 0.60), what='en fiskebåt med skjegg og kjøl', disp=None, scale_to=None):
     ok = [True]
     def say(good, txt):
         ok[0] = ok[0] and good; print(('OK   ' if good else 'FEIL ') + T_ID + ': ' + txt)
@@ -107,4 +107,9 @@ def fishing_check(T_ID, H, LT, hull_z, more, cb=(0.40, 0.60), what='en fiskebåt
     if disp: say(disp[0] <= v * 1.025 <= disp[1], 'deplasementet %.1f t innenfor %.1f-%.1f t for typen (antatt)' % (v * 1.025, disp[0], disp[1]))
     for good, txt in more: say(good, txt)
     check_lights(H, LT, hull_z, say)
+    # the model is drawn scaled to each boat of the register it stands for (npcMesh: the beam as 0.3 L + 0.9, flaate.json; the height by
+    # the mean of the two): from 20 m the masthead light must stand the beam over the hull (6-12 m, vedlegg I 2(a)(i)) on the longest too
+    if scale_to:
+        Lx = scale_to; Bx = 0.3 * Lx + 0.9; sy = (Bx / H.B + Lx / H.L) / 2; mh = (LT['masthead'][2] - hull_z) * sy
+        say(Lx < 20 or mh >= min(12.0, max(6.0, Bx)) - 1e-6, 'skalert til %.1f m (%.2f m bred): topplanterna %.1f m over skroget (minst %.1f m fra 20 m)' % (Lx, Bx, mh, min(12.0, max(6.0, Bx))))
     return ok[0]

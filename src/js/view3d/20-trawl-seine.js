@@ -493,8 +493,8 @@
   const NCREW = new Map();
   function npcCrewDraw(n, K, eye, t){
     if (typeof crewSim !== 'function' || !K.geo || K.geo.hand) return false;
-    const type = K.t; let E = NCREW.get(n.id);
-    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(n.id, E); }
+    const type = K.t, nk = n.coast ? n.id + '|' + n.L : n.id; let E = NCREW.get(nk);   // (two of the coast's boats can share an id: hers by her length too)
+    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(nk, E); }
     E.st.n = n; const gap = t - E.t; E.t = t; const sim = E.sim; if (!sim.on()) return false;
     if (gap > 5) sim._st.lastSim = null;   // out of sight a while: everyone straight to their place
     sim.tick(Math.min(0.1, Math.max(0, gap)));

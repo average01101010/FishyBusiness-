@@ -71,7 +71,8 @@ FSETUP = """async ([kind, mode, dark, key, gear, a, b]) => { const [tk, hi] = ke
   for (let i = 0; i < 80 && !t; i++){ t = vecTile(tx, ty); if (!t) await new Promise(r => setTimeout(r, 250)); }
   const h = t && t.npc && t.npc[+hi]; if (!h) return {err:'no harbour ' + key};
   // (not a boat whose right a player holds: npcStates leaves those out, 05-vessels.js heldShare)
-  const boats = h.boats.filter(q => q.gear === gear && q.L >= a && q.L < b && !(q.lg != null && q.lg < 3 && hash(hashStr(q.id) % 1000003 * 5 + 17) < heldShare(q.lg))); if (!boats.length) return {err:'no boat ' + key};
+  // (and one whose id no other boat of the harbour shares: the test camera, npcLook, follows the first boat of an id)
+  const boats = h.boats.filter(q => q.gear === gear && q.L >= a && q.L < b && h.boats.filter(o => o.id === q.id).length === 1 && !(q.lg != null && q.lg < 3 && hash(hashStr(q.id) % 1000003 * 5 + 17) < heldShare(q.lg))); if (!boats.length) return {err:'no boat ' + key};
   for (const q of boats) q.h = h;
   const st = (q, H) => { const A = coastState(q, H, hodOf(H)), B = coastState(q, H - 1 / 60, hodOf(H - 1 / 60)); return {A, v:dist(A.p, B.p) / gridScale(A.p) / NM * 60}; };
   const m0 = dark ? 17 * 60 : mode === 'kai' ? 12 * 60 : 8 * 60, m1 = dark ? m0 + 600 : 16 * 60; let found = null;   // (by day in daylight: March's sun is up 07-17 in the north)
@@ -103,7 +104,8 @@ FSETUP = """async ([kind, mode, dark, key, gear, a, b]) => { const [tk, hi] = ke
   return {id:q.id, name:q.name, L:q.L, B:q.B, gear, p:A.p, hd:A.hd, t:S.t, T, off, min:found.m, key, look:Math.atan2(-off.x, off.y) - A.hd}; }"""
 
 # ---- the merchant ships (NPC_SHOT_SET=skip): one put into npcStates by the test, lying still or going at her speed off Bergen ----
-SKIP = {'last': ('cargo', 88.0, 14.0, 12), 'tank': ('tanker', 130.0, 21.0, 12), 'cruise': ('cruise', 240.0, 31.0, 15)}
+SKIP = {'last': ('cargo', 88.0, 14.0, 12), 'tank': ('tanker', 130.0, 21.0, 12), 'cruise': ('cruise', 240.0, 31.0, 15),
+        'fritid': ('fritid', 7.6, 2.6, 18), 'seil': ('seil', 10.4, 3.4, 6)}   # (the leisure boats too: N6's traffic, steg 38)
 MSETUP = """async ([kind, mode, dark, type, L, B, kn]) => { const F = ferjeInit(); WX_FORCE = {w:3, d:200};
   const day = Math.round(((dark ? Date.UTC(2027, 10, 17) : Date.UTC(2027, 5, 16)) - EPOCH) / 6e4), bt = S.boat; bt.status = 'idle'; bt.port = null; S.plan = null; S.draft = []; bt.v = 0;
   const sk = F.q.find(q => q.name === 'Strandkaien'); S.t = day + (dark ? 18 : 12) * 60; S.mult = 0.00001; await mapNeed(sk.p, MAPD.simR);
@@ -115,7 +117,7 @@ MSETUP = """async ([kind, mode, dark, type, L, B, kn]) => { const F = ferjeInit(
   const H0 = S.t / 60, v = mode === 'kai' ? 0 : kn, id = 'npcshot-' + kind;
   window.__FK = [H => { const s = v * 1.852 * (H - H0) * gridScale(at.c); return {id, name:'Prøveskip', type, L, B, T:6, p:{x:at.c.x + Math.sin(at.h) * s, y:at.c.y - Math.cos(at.h) * s}, hd:at.h, cog:at.h, v, st:v ? 'transit' : 'anchor'}; }];
   if (!window.__npcW){ const o = npcStates; window.__npcW = true; npcStates = function(H, only){ const r = o.apply(this, arguments); return window.__FK && !only ? r.concat(window.__FK.map(f => f(H))) : r; }; }
-  const n = window.__FK[0](H0 + 2 / 60), r = Math.max(0.12, Math.min(0.45, L * 1.6 / 1000)); let off = null;
+  const n = window.__FK[0](H0 + 2 / 60), r = Math.max(L < 20 ? 0.05 : 0.12, Math.min(0.45, L * (L < 20 ? 6 : 1.6) / 1000)); let off = null;
   for (const da of [Math.PI / 2, -Math.PI / 2, 1.2, -1.2, 2.0, -2.0]) for (const k of [1, 1.3, 0.8]){ if (off) break; const a = n.hd + da, c = {x:n.p.x + Math.sin(a) * r * k, y:n.p.y - Math.cos(a) * r * k}; if (!isLand(c) && depthF(c) > 3) off = {x:c.x - n.p.x, y:c.y - n.p.y}; }
   if (!off) off = {x:r, y:0};
   bt.pos = {x:n.p.x + off.x, y:n.p.y + off.y}; bt.heading = Math.atan2(-off.x, off.y); if (!G3.isActive()) G3.show(true);
@@ -147,7 +149,7 @@ async def shot(pg, kind, mode, dark, fmt, R):
         l = await pg.evaluate(LOOK, [r['id'], r['off'], None, Lm]); await pg.wait_for_timeout(250)
     else:   # under way: the game's own test camera on her (npcLook), off her bow quarter, as she goes
         # (a fishing boat at her berth: from the water side SETUP found clear of quays and land, a little from above, over the quay's edge)
-        dm = max(45 if kind in FISK else 70, min(280 if kind in KINDS else 520, r['L'] * 2.2)); pitch, off = (0.3, r['look']) if mode == 'kai' else (0.12, 2.1)
+        dm = max(30 if r['L'] < 12 else 45 if kind in FISK else 70, min(280 if kind in KINDS else 520, r['L'] * (3.5 if r['L'] < 12 else 2.2))); pitch, off = (0.3, r['look']) if mode == 'kai' else (0.12, 2.1)
         for w in (2500, 2500, 2500, 2000): await pg.evaluate("([id, d, pt, o]) => (G3._debug.npcLook || G3.npcLook)(id, d, pt, o)", [r['id'], dm, pitch, off]); await pg.wait_for_timeout(w)
     await pg.screenshot(path=os.path.join(OUT, f'npc3d_{name}.png'), timeout=300000)
     if mode != 'kai' or kind in FISK: l = await pg.evaluate(SEEN, [r['id'], Lm]); await pg.evaluate("(G3._debug.npcLook || G3.npcLook)(null)")   # (read after the shot: the camera takes seconds to come round)

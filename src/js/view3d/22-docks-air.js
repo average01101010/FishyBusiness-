@@ -239,7 +239,7 @@
       // anchor light, one not under command two reds; at the quay none
       const stN = sjvLanternSt(n), len = n.L || (n.K ? 8 : 20);
       const M = n.K ? (n.rev ? chain(n.M, n.K.S, M4.RY(Math.PI)) : chain(n.M, n.K.S)) : n.M, px = n.K ? (n.K.geo && n.K.geo.ship ? 900 : n.L < 14 ? 260 : 600) : NPCM.lightPx[n.type] || 900;
-      const G = n.K ? n.K.geo : (() => { const LG = NPCM.lanG || (NPCM.lanG = {}); return LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || (SHIPTY[n.type] && NPCM.lights.ferry) || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])}); })();
+      const G = n.K ? n.K.geo : (() => { const LG = NPCM.lanG || (NPCM.lanG = {}); return LG[n.type] || (LG[n.type] = {lights:(NPCM.lights[n.type] || (SHIPTY[n.type] ? NPCM.lights.ferry : LEISM[n.type] ? NPCM.lights.sjark : null) || []).map(([lx, ly, lz, c]) => [[lx, ly, lz], NLC[c]])}); })();
       for (const [p, col, lk] of lampsMore(lanterns(G, {len, vmax:n.K ? 10 : 12}, stN), stN, len)){
         if (!lampArc(M, p, lk)) continue;
         const q = xf(M, p), a = A0 * lampFade(Math.hypot(q[0], q[1], q[2]), lk === 'side' || lk === 'stern' || lk === 'kv' ? lk : lk === 'masthead' || lk === 'masthead2' ? 'masthead' : 'allround', len, LF);

@@ -269,6 +269,10 @@ COVER['tools/ships/shiplib.py'] = ['npcshot', 'npcshot_fisk']; COVER['tools/ship
 D3 += ['npcshot_fisk']; VECB.append('npcshot_fisk'); LONG['npcshot_fisk'] = 4500; COVER['tests/npcshot_fisk.py'] = ['npcshot_fisk']; COVER['tests/npcshot.py'] = COVER['tests/npcshot.py'] + ['npcshot_fisk']
 for _k in ('snurrevad', 'not', 'tral', 'teine', 'autoline'): COVER['src/data/ship-%s.b64' % _k] = ['npcshot_fisk']
 for _k in ('snurrevad', 'notbat', 'reketral', 'teine', 'autoline', 'fisklib'): COVER['tools/ships/%s.py' % _k] = ['npcshot_fisk']
+# (the merchant ships and the leisure boats are not in the page until N5 and N6 add their lines: no test of run.py can see them, so
+# their files are in no list here. Their pictures are npcshot_skip.py's, run by hand with KYST_DIST on a build of the test's own with
+# the lines (its docstring), and their models' checks are `python3.11 tools/ships/<model>.py check`; N5 and N6 give them their tests)
+for _k in ('last', 'tank', 'cruise', 'fritid', 'seil'): COVER['src/data/ship-%s.b64' % _k] = []; COVER['tools/ships/%s.py' % _k] = []
 for _f in ('src/js/view3d/20-trawl-seine.js', 'src/js/view3d/22-docks-air.js'): COVER[_f] = list(dict.fromkeys(COVER.get(_f, []) + ['npcshot', 'npcshot_fisk']))
 COVER['src/data/ferje.json'] += ['kystshot', 'kystshot_st']; COVER['src/js/core/05b-ferje.js'] += ['kystshot', 'kystshot_st']
 # Ø13 K1 (11.11.2026): the fine ground along the sea, the layer 'fin'. fintest: Low and Middle fetch and unpack nothing, High does;
