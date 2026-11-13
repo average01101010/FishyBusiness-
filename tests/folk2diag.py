@@ -1,4 +1,4 @@
-"""Scratch (steg 125): where the hands miss and what goes into people, a pose at a time. python3 tests/_fb7diag.py [scene]"""
+"""The new people (steg 125, FB7): where the hands miss their points and what goes into bodies, a pose at a time on the line haul's places (a diagnosis that prints tables, no checks). python3 tests/folk2diag.py [scene]"""
 from _env import boot, GAME
 from lemmer import SET, BOATS, TASKS, frames
 import asyncio, json, sys

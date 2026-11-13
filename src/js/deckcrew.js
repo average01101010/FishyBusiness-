@@ -1190,7 +1190,10 @@ const LEMMER = {
 function limbLen(c){
   if (!LEMMER.on || typeof figSkelOf !== 'function' || typeof glbHas !== 'function' || !glbHas('folk2')) return LEMMER.STD;
   const s = c === 'f' || (c && c.sex === 'f') ? 'f' : 'm'; let L = LEMMER.LEN[s];
-  if (!L){ const sk = figSkelOf(s); if (!sk) return LEMMER.STD; const q = figLens(sk); L = LEMMER.LEN[s] = {ua:q.ua, fa:q.fa, th:q.th, sn:q.sn}; if (s === 'm') LEMMER.SH = [q.sh[0], q.sh[1]]; }
+  if (!L){ const sk = figSkelOf(s); if (!sk) return LEMMER.STD; const q = figLens(sk); L = LEMMER.LEN[s] = {ua:q.ua, fa:q.fa, th:q.th, sn:q.sn}; if (s === 'm'){ LEMMER.SH = [q.sh[0], q.sh[1]];
+      // (and the nearest a wrist comes its own shoulder is the elbow folded as far as it goes, 150 degrees of bend: 14.5 cm on this arm.
+      // The 20 cm of the old, longer arm kept a hand at the mouth 30 cm off its cup and its binoculars)
+      LEMMER.FOLD = Math.sqrt(q.ua * q.ua + q.fa * q.fa - 2 * q.ua * q.fa * Math.cos(Math.PI / 6)) + 0.005; } }
   return L; }
 // a limb of two parts L1 and L2 from its root Rt towards a target Tg, the joint between them on the side pole points to: where the
 // joint and the end are. The end is the target when the limb reaches it, else on the way to it at its reach (over: m short of it), or,
