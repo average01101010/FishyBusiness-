@@ -57,7 +57,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 
 - `ccr-013bxxie-fb2ik` (Jonas' økt): steg 123 FB2, faste armer og bein (to-ledds IK). Eier `deckcrew.js`, `view3d/08-plants.js` (`drawWorker` og hjelperne over), `view3d/13-instruments.js` (bare `limbM` og `armTo`), `view3d/20-trawl-seine.js` (bare `drawDeckCrew` og `npcCrewDraw`), ny `tests/lemmer.py`, ny enhetstest i `tests/unit/`, `tests/sjobein.py`, `tests/crewclip.py`, `tests/run.py` (`D3`, `COVER`), `ui/phone/07-patch.js`.
 
-- Designombyggingen: D1, D2, D3 og **D6 ferdig** 13.11.2026. D6 (HUD-en, dialogene, tipsene, én kartpalett; «Kart»-knappen tatt bort igjen etter Jonas' ord 13.11.2026): ferdig (2640583, 13.11.2026, versjon `5ecaf1e5ee53`), rullet ut til testutgaven; Jonas ser `docs/spill-dette/D2-skuffen.md`, `D3-butikkflyten.md` og `D6-hud.md`. Grenen `ccr-d6-hud-dialoger` er flettet inn og eier ingenting lenger. D4 er ikke bestemt. **D5 har startmelding** (`docs/planer/start/D5-telefonen.md`; valg 2 A er tatt) og venter på at Jonas sier start.
+- Designombyggingen: D1, D2, D3 og **D6 ferdig** 13.11.2026. D6 (HUD-en, dialogene, tipsene, én kartpalett; «Kart»-knappen tatt bort igjen etter Jonas' ord 13.11.2026): ferdig (e4f8bf42, 13.11.2026, versjon `12fe8e037073`), rullet ut til testutgaven; Jonas ser `docs/spill-dette/D2-skuffen.md`, `D3-butikkflyten.md` og `D6-hud.md`. Grenen `ccr-d6-hud-dialoger` er flettet inn og eier ingenting lenger. D4 er ikke bestemt. **D5 har startmelding** (`docs/planer/start/D5-telefonen.md`; valg 2 A er tatt) og venter på at Jonas sier start.
 
 
 ## Valg som venter på Jonas
