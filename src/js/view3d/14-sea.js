@@ -1,5 +1,5 @@
   // ---------- sea ----------
-  const HALF = 300, PIN_R = 32, PIN_C = 0.5; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
+  const HALF = 300, PIN_R = 32, PIN_C = 2 / 3; let NP = 150, curFov = 0.96, PIN = null;   // the wave patch: 600 m, 150 cells a side (4 m), 300 on ultra (2 m)
   function buildPatch(){
     if (PATCH){ gl.deleteBuffer(PATCH.pb); gl.deleteBuffer(PATCH.ib); if (PATCH.ibH) gl.deleteBuffer(PATCH.ibH); }
     const v = new Float32Array((NP + 1) * (NP + 1) * 2); let k = 0;
@@ -141,7 +141,7 @@
     // (a jump, a teleport or the first frame at a place: the shared sea at once, as nothing she saw is carried over)
     const jump = !WV.lb || Math.hypot(bv.x - WV.lb[0], bv.z - WV.lb[1]) > 300; WV.lb = [bv.x, bv.z];
     const pn = performance.now() / 1000, rdt = WV.lt ? clamp(pn - WV.lt, 0, 30) : 0; WV.lt = pn;   // (the glide in real seconds: a slow frame glides as far as its time)
-    if (jump){ NF.ph.fill(0); NF.gp.fill(0); NF.gu.fill(0); NF.gv.fill(0); NF.O.fill(0); }
+    if (jump){ NF.ph.fill(0); NF.gp.fill(0); NF.gu.fill(0); NF.gv.fill(0); NF.O.fill(0); NF.OA.fill(0); NF.OB.fill(0); NF.rp.fill(0); }
     L.forEach((c, i) => { const kx = c.k * c.Dx, kz = c.k * c.Dz, ra = c.Dx * A[0] + c.Dz * A[1], rg = c.Dz * A[0] - c.Dx * A[1];
       const Gs = md(c.ph0 - c.k * ra), GUs = md(-0.09 * c.k * ra + 1.7 * i, 2 * TAU), GVs = md(-0.19 * c.k * rg + 2.3 * i, 2 * TAU), GSs = md(-c.k * (0.083 * ra + 0.041 * rg) + 2.59 * i);
       const K = WV.kd[i];
@@ -158,6 +158,7 @@
     // the same at the boat: for the vertex shader on a GPU that cannot read textures there, and until the textures are ready
     WV.loc = [Math.min(WV.cap, WV.C * rF), WV.swHs * swellFactor(p), clamp(2 * Math.log(Math.max(rF, 1)) / WV.lnFcap, 0, 1), rF];
     env.windDir = [Math.sin(dirT), -Math.cos(dirT)]; env.wind = WV.W;
+    brvStep();   // the breaking sea (Ø9 F7)
   }
 
   // ---------- the near field: the short sea rides with the boat ----------
@@ -168,7 +169,7 @@
   // the foam (wrapped at 64 km, when she is slow). The long waves and the swell stand in the world, so land, buoys and other boats
   // still pass at the game's speed, and what passes the hull passes at her real speed through the water. «#nf0» in the address turns
   // it off, for the comparison.
-  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
+  const NF = {on:!/nf0/.test(location.hash), ph:new Float64Array(13), gp:new Float64Array(13), gu:new Float64Array(13), gv:new Float64Array(13), O:new Float64Array(4), OA:new Float64Array(2), OB:new Float64Array(2), rp:new Float64Array(8), gl:1, lt:0, D:new Float64Array(2), lx:null, lz:null, R:0};
   function nfStep(){
     const TAU = 2 * Math.PI, now = performance.now() / 1000, dtr = NF.lt ? Math.max(0, now - NF.lt) : 0, dtn = Math.min(dtr, 0.25); NF.lt = now;
     const dx = NF.lx == null ? 0 : bv.px - NF.lx, dz = NF.lz == null ? 0 : bv.pz - NF.lz; NF.lx = bv.px; NF.lz = bv.pz;
@@ -194,16 +195,30 @@
         // (the wind waves' groups, grpW: the same shift in their own two coordinates, folded modulo 4 pi)
         NF.gu[i] = (NF.gu[i] - 0.09 * c.k * a) % (2 * TAU); NF.gv[i] = (NF.gv[i] - 0.19 * c.k * g) % (2 * TAU); }
       NF.D[0] += ex; NF.D[1] += ez;
-      // (the FFT tiles' own offsets, 14b-fft.js: the short sea rides with her in full, each tile's offset kept within half a tile)
-      for (let k = 0; k < 2; k++){ const Lt = HFFT.tiles[k].L; NF.O[k * 2] += ex; NF.O[k * 2 + 1] += ez; for (let q = 0; q < 2; q++){ const o = k * 2 + q; NF.O[o] -= Lt * Math.round(NF.O[o] / Lt); } }
+      nfShift(ex, ez);
       for (let k = 0; k < 2; k++) if (Math.abs(NF.D[k]) > 65536 && (bv.spd < 1 || Math.abs(NF.D[k]) > 120000)) NF.D[k] -= Math.sign(NF.D[k]) * 65536;
     }
     // B4: the glide back to the shared sea, the short way, no faster than 0.3 m/s and a tenth of each wave's speed (0.15 m/s for the short
     // tile, whose waves are slow): a wave's phase, its group's two offsets, the swell's groups and the tiles' offsets
     // (the waves' and groups' own offsets are folded into WV.G and the rest each frame and glide there, updateWaves; here the tiles')
     if (NF.gl > 0 && dtr > 0){ const g = NF.gl * Math.min(dtr, 30);
-      for (let k = 0; k < 2; k++){ const vm = (k ? 0.15 : 0.3) * g, ox = NF.O[k * 2], oz = NF.O[k * 2 + 1], d = Math.hypot(ox, oz);
-        if (d > 0){ const s = Math.max(0, d - vm) / d; NF.O[k * 2] = ox * s; NF.O[k * 2 + 1] = oz * s; } } }
+      const glide = (A, i, vm) => { const ox = A[i], oz = A[i + 1], d = Math.hypot(ox, oz); if (d > 0){ const s = Math.max(0, d - vm) / d; A[i] = ox * s; A[i + 1] = oz * s; } };
+      glide(NF.O, 0, 0.3 * g); glide(NF.OA, 0, 0.15 * g); glide(NF.OB, 0, 0.15 * g);
+      // (the ripples' phases the short way to none, at the short tile's 0.15 m/s along each)
+      for (let j = 0; j < 8; j++){ const k = RIP[j].k, v = NF.rp[j], d = Math.min(Math.abs(v), 0.15 * g * k); NF.rp[j] = v - Math.sign(v) * d; } }
+  }
+  // The short sea's own offsets as she moves (ex, ez metres in the world). The long tile's in the world, folded by whole tiles (a tile
+  // repeats along x and z). The short tile is read twice turned +-HFFT.mix.rot (B6), and a whole tile along x or z is no whole tile in
+  // either read's frame: folded in the world, its pattern jumped some 6 m every second or so under way (the kontroll 12.11.2026). So each
+  // read keeps its own offset in its own frame (OA, OB), folded there by whole tiles; and the ripples their phases, folded by 2 pi (they
+  // rode on NF.O[2..3] and jumped at the same folds).
+  function nfShift(ex, ez){
+    const L1 = HFFT.tiles[0].L, L2 = HFFT.tiles[1].L, r = hfftRot(ex, ez, HFFT.mix), f = (A, i, L) => { A[i] -= L * Math.round(A[i] / L); };
+    NF.O[0] += ex; NF.O[1] += ez; f(NF.O, 0, L1); f(NF.O, 1, L1);
+    NF.OA[0] += r[0]; NF.OA[1] += r[1]; NF.OB[0] += r[2]; NF.OB[1] += r[3]; for (let i = 0; i < 2; i++){ f(NF.OA, i, L2); f(NF.OB, i, L2); }
+    const w = env.windDir || [0, 1], wp = [-w[1], w[0]];
+    for (let j = 0; j < 8; j++){ const q = RIP[j], dx = w[0] * Math.cos(q.ang) + wp[0] * Math.sin(q.ang), dz = w[1] * Math.cos(q.ang) + wp[1] * Math.sin(q.ang);
+      let v = NF.rp[j] + q.k * (dx * ex + dz * ez); v -= 2 * Math.PI * Math.round(v / (2 * Math.PI)); NF.rp[j] = v; }
   }
 
 
@@ -364,7 +379,7 @@
     gl.uniform4fv(u.uSea, [WV.C, WV.cap, WV.lnFcap, WV.swHs]); gl.uniform4fv(u.uSea2, [WV.dot, WV.steep, ssBlend(SSL.n), ssBlend(SSL.w)]); gl.uniform4fv(u.uLocal, WV.loc);
     if (u.uSeaK != null) gl.uniform2f(u.uSeaK, WV.KO, WV.KY);
     if (typeof fftBind === 'function') fftBind(u, [bv.x, 0, bv.z]);   // (B3: the tiles for the crests that break)
-    const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, new Float32Array(NF.ph)); gl.uniform1fv(u.uNFg, ph.gq);
+    const ph = wavePh(); gl.uniform4fv(u.uWa, WV.ua); gl.uniform4fv(u.uWb, ph.ub); gl.uniform1fv(u.uGp, ph.gp); gl.uniform1fv(u.uNFp, new Float32Array(NF.ph)); gl.uniform1fv(u.uNFg, ph.gq); brvSet(u);
     gl.uniform4fv(u.uWk0, [WK.u0[0] - Dx - FOAM.ox, WK.u0[1] - Dz - FOAM.oz, WK.u0[2], WK.u0[3]]); gl.uniform4fv(u.uWk1, WK.u1); gl.uniform4fv(u.uWk2, WK.u2); gl.uniform4fv(u.uWk3, WK.u3); wakeTU(u, Dx + FOAM.ox, Dz + FOAM.oz);
     gl.uniform4f(u.uFB, pb[0] - FOAM.ox, pb[1] - FOAM.oz, qx - FOAM.ox, qz - FOAM.oz); gl.uniform4f(u.uFH, pb[2], pb[3], fx, fz);
     foamSplash(Dx, Dz); if (u.uSp0 != null){ const V = FOAM.spv; gl.uniform4fv(u.uSp0, V[0]); gl.uniform4fv(u.uSp1, V[1]); gl.uniform4fv(u.uSp2, V[2]); gl.uniform4fv(u.uSp3, V[3]); }
@@ -464,9 +479,45 @@
   // the wind waves' groups (grpW in 01-shaders.js) and the swell's (grpOf), as the shaders have them
   function grpAt(i, c, x, z, t){
     const a = c.Dx * x + c.Dz * z, g = c.Dz * x - c.Dx * z, tw = t + WV.dT;
-    if (i >= 10) return 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + WV.GS[i] - NF.gp[i]);
-    const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + WV.GU[i] + NF.gu[i], v = 0.19 * c.k * g + WV.GV[i] + NF.gv[i];
-    return 1.352 * Math.sin(u + 1.3 * Math.sin(0.5 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.5 * u + 2.1 * i));
+    let gr;
+    if (i >= 10) gr = 0.62 + 0.38 * Math.sin(c.k * (0.083 * a + 0.041 * g) - c.om * tw * 0.0415 + WV.GS[i] - NF.gp[i]);
+    else { const u = 0.09 * (c.k * a - 0.5 * c.om * tw) + WV.GU[i] + NF.gu[i], v = 0.19 * c.k * g + WV.GV[i] + NF.gv[i];
+      gr = 1.352 * Math.sin(u + 1.3 * Math.sin(0.5 * v + 0.9 * i + 1.1)) * Math.sin(v + 1.2 * Math.sin(0.5 * u + 2.1 * i)); }
+    if (BRV.f > 0 && BRV.i === i) gr += (BRV.G - gr) * brvE(x, z);   // (the breaking sea, as the shaders' BR_GR)
+    return gr;
+  }
+  // ---- The breaking sea in the view (Ø9 F7, 03b-sea.js): the group the core's rule has on the water near her (brottNear), drawn as one
+  // long wave lifted to about twice the significant height inside an envelope that runs with the group: the long wind wave (0-3, 96 to
+  // 36.5 m) nearest the group's length, or the swell's main one (11), carries it, whichever sea the group came from. Where it is on the water and when come from the
+  // core (the place, the time, the weather), so everyone who sees the place sees the same group pass, and it passes her when the minute
+  // step says it hits her. Its height: Hs as the wave's amplitude, held under k a 0.42 (where a wave breaks: its crest at the cusp, and
+  // the Jacobian foam, F3, whitens it). Looked up once a second; the group's place and height every frame from the game's clock.
+  // «#brott0» in the address: off (for the comparison). BRV.fix: a group given by hand (tests/brottshot.py).
+  const BRV = {on:!/brott0/.test(location.hash), t:-9, list:[], e:null, c:[0, 0], D:[0, 1], s:0, ia:0, iw:0, f:0, i:-1, G:1, A:0, gmax:8, fix:null};
+  WV.brott = BRV;
+  function brvE(x, z){ const qx = x - BRV.c[0], qz = z - BRV.c[1], a = (qx * BRV.D[0] + qz * BRV.D[1] - BRV.s) * BRV.ia, c = (-qx * BRV.D[1] + qz * BRV.D[0]) * BRV.iw; return BRV.f * Math.exp(-a * a - c * c); }
+  function brvStep(){
+    BRV.f = 0; BRV.e = null; if (!BRV.on || typeof brottNear !== 'function' || !WV.list.length) return;
+    const now = performance.now() / 1000, T = S.t + currentFrac(), p = {x:bv.x / 1000, y:bv.z / 1000};
+    if (BRV.fix) BRV.list = [BRV.fix];
+    else if (now - BRV.t > 1 || now < BRV.t){ BRV.t = now; try { BRV.list = brottNear(p, T); } catch (e){ BRV.list = []; } }
+    let best = null, bw = 0, br = null;
+    for (const e of BRV.list){ const r = brottRel(e, p, T), w = r.f * Math.exp(-((r.x / (2 * e.sw)) ** 2) - (r.d / 3000) ** 2); if (w > bw){ bw = w; best = e; br = r; } }
+    if (!best) return;
+    // (the carrier: the swell's 11, or the wind wave of 0-3 nearest the group's own length; the gain from the sea where the group's
+    // middle is, so in a lee or a harbour its waves are lifted by the same share as out there, not to the open sea's height; held at
+    // BRV.gmax, the most an extreme wave stands over its share of the spectrum here)
+    let i = 11; if (best.sys === 'w'){ i = 0; for (let j = 1; j < 4; j++) if (WV.list[j] && Math.abs(Math.log(2 * Math.PI / WV.list[j].k / best.L)) < Math.abs(Math.log(2 * Math.PI / WV.list[i].k / best.L))) i = j; }
+    const c = WV.list[i]; if (!c) return;
+    const mx = best.x * 1000 + best.dx * br.s, mz = best.y * 1000 + best.dy * br.s, Sx = ssAt(mx, mz), ren = 1 / Math.sqrt(Math.max(1 - 2 * Sx[2] * (1 - Sx[2]) * (1 - WV.dot), 0.05));
+    const am0 = c.swell ? Sx[1] * c.wo : Sx[0] * (Sx[2] * c.wo + (1 - Sx[2]) * c.wy) * ren;
+    BRV.A = Math.min(best.hs, 0.42 / c.k); BRV.G = am0 > 0.02 ? Math.min(BRV.gmax, BRV.A / am0) : 1; BRV.i = i; BRV.e = best;
+    BRV.c[0] = best.x * 1000; BRV.c[1] = best.y * 1000; BRV.D[0] = best.dx; BRV.D[1] = best.dy; BRV.s = br.s; BRV.ia = 1 / best.sa; BRV.iw = 1 / best.sw; BRV.f = br.f;
+  }
+  function brvSet(u){
+    if (u.uBr == null) return;
+    gl.uniform4f(u.uBr, BRV.c[0] - RO.x, BRV.c[1] - RO.z, BRV.D[0], BRV.D[1]); gl.uniform4f(u.uBr2, BRV.s, BRV.ia, BRV.iw, BRV.f);
+    gl.uniform4f(u.uBr3, BRV.G, BRV.i, 0, 0);
   }
 
 
@@ -487,7 +538,7 @@
     let zt = Math.sqrt(-2 * Math.log(W)); zt -= (2.515517 + 0.802853 * zt + 0.010328 * zt * zt) / (1 + 1.432788 * zt + 0.189269 * zt * zt + 0.001308 * zt * zt * zt);
     const js = jsc / Math.sqrt(jsv);
     // B3 (14b-fft.js): with the FFT tiles on, the crests break where the tiles' surface is compressed most, as the shaders have it (capFf)
-    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = Math.max(Math.hypot(sq[0][1], sq[1][1]), 1e-6);
+    if (typeof fftFoam === 'function' && fftFoam()){ const fs = Math.sqrt(fe2 / fftA0()), T = fftTrH(x, z), sq = FFT.st, sz = fftCapSd();
       const crS = (yL + fs * T[1]) / Math.sqrt(saL + (sq[0][2] + sq[1][2]) * fs * fs), F = WCAP.F, fz = T[0] / sz;
       // (the tiles' crests are the share F.k of Monahan's cover: a crest that runs on with the waves leaves a longer tail than the old ones did)
       const Wf = clamp(Wc * (kk === WCAP.k ? F.k : kk), 1e-5, 0.5); let zf = Math.sqrt(-2 * Math.log(Wf)); zf -= (2.515517 + 0.802853 * zf + 0.010328 * zf * zf) / (1 + 1.432788 * zf + 0.189269 * zf * zf + 0.001308 * zf * zf * zf);

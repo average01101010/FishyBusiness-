@@ -67,6 +67,7 @@
     const thr = dryThr(eye, near || !NEARM);   // (with no near grid yet the far one is drawn in both passes: one height for it, the lower)
     const one = (m, hole, ground) => {
       const D = thr !== null && m.gn && m.h ? dryIdx(m, thr) : null; if (D && !D.n) return;
+      if (u.uNSea){ if (m === NEARM){ const e = nearIn(); gl.uniform4f(u.uNSea, m.x0 + e - eye[0], m.z0 + e - eye[2], m.x0 + m.sx - e - eye[0], m.z0 + m.sz - e - eye[2]); } else gl.uniform4f(u.uNSea, -1e9, -1e9, 1e9, 1e9); }   // (the bed in the band outside the near sea, terFS)
       gl.uniformMatrix4fv(u.uM, false, relM(m)); gl.uniform3fv(u.uPO, [m.o[0] - RO.x, 0, m.o[1] - RO.z]); gl.uniform4fv(u.uHole, hole || NOHOLE); gl.uniform1f(u.uGOn, ground && GTEX ? 1 : 0); gl.uniform1f(u.uLOn, ground && LMTEX && LMON ? 1 : 0); gl.uniform1f(u.uTideY, Math.min(env.tide || 0, COAST3.top - 0.15)); gl.uniform1f(u.uSwash, clamp(0.5 * (WV.hs + WV.swHs), 0, COAST3.swash));
       if (ground && LMTEX){ gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, LMTEX); gl.uniform1i(u.uLand, 2); gl.activeTexture(gl.TEXTURE0); }
       if (LRECT) gl.uniform4fv(u.uGRect, [LRECT[0] - eye[0], LRECT[1] - eye[2], LRECT[2], LRECT[3]]);
@@ -280,8 +281,11 @@
       gl.uniform2fv(u.uScale, [1, 1]); gl.uniform2fv(u.uOrigin, [ox - RO.x, oz - RO.z]); gl.uniform3fv(u.uOriginRel, [ox - eye[0], -eye[1] + (env.tide || 0), oz - eye[2]]);
       // the fine patch round the boat first (PIN, 14-sea.js), then the grid with its hole, pushed back a little in depth where the two
       // overlap by a cell, so the fine one is the surface seen there and the two never flicker in turn
-      const pin = PIN_ON() && u.uInner != null;
-      if (pin){ gl.uniform4f(u.uInner, PIN_C, PIN.b0, PIN.b1, 0); if (u.uInB != null) gl.uniform2f(u.uInB, bv.x - ox, bv.z - oz); attr(0, PIN.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PIN.ib); gl.drawElements(gl.TRIANGLES, PIN.n, gl.UNSIGNED_SHORT, 0);
+      // (from 180 m off the patch's cell goes over to the grid's, so at 260 m it is the grid's own surface and is left out with nothing
+      // changing on the screen: its corners cost as much as half the grid's, and from there the short waves are a pixel or two; the boat
+      // floats on the fine sea either way, seaCell)
+      const ed = Math.hypot(eye[0] - bv.x, eye[1] - bv.y, eye[2] - bv.z), cf = sstep(180, 260, ed), pin = PIN_ON() && u.uInner != null && cf < 1;
+      if (pin){ gl.uniform4f(u.uInner, lerp(PIN_C, step, cf), PIN.b0, PIN.b1, lerp(0, fvLod(), cf)); if (u.uInB != null) gl.uniform2f(u.uInB, bv.x - ox, bv.z - oz); attr(0, PIN.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, PIN.ib); gl.drawElements(gl.TRIANGLES, PIN.n, gl.UNSIGNED_SHORT, 0);
         gl.uniform4f(u.uInner, 0, 0, 1, 0); gl.enable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(1, 2); }
       attr(0, PATCH.pb, 2); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, pin ? PATCH.ibH : PATCH.ib); gl.drawElements(gl.TRIANGLES, pin ? PATCH.nH : PATCH.n, PATCH.i32 ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, 0);
       if (pin){ gl.disable(gl.POLYGON_OFFSET_FILL); gl.polygonOffset(0, 0); }
