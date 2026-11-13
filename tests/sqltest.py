@@ -1756,6 +1756,8 @@ def main():
             LP['who'] = sorted(r['id'] for r in sak.get('rows', [])) == sorted(sql("select left(md5('dsb' || '%s'), 10)" % w['sub']) for w in (LA, LE, LF, LH))
             LP['mineA'] = sak.get('mine'); LP['nA'] = sak.get('n'); LP['rask'] = [r['type'] for r in ta['cls'].get('rask', {}).get('rows', [])]
             LP['guest'] = [(r['me'], r['type']) for c in top(LG)['cls'].values() for r in c['rows']]
+            # (after the review: the flagged player sees the own time where it would stand, and is told nothing; the others never see it)
+            LP['selfFlag'] = [r['me'] for r in top(LB)['cls']['sakte']['rows'] if r['me']]
             LP['week'] = [sql("select public.lop_wk('2026-11-15 22:59+00')"), sql("select public.lop_wk('2026-11-15 23:00+00')"), sql("select public.lop_wk('2026-06-14 22:00+00')")]
             # cheat_on: F with an open cash mark is out for A, and sees himself
             sql("insert into public.cheat_flags (player_id, kind, over) values ('user_01LOPF', 'cash', 400000)")
@@ -1770,6 +1772,10 @@ def main():
             sql("select public.lop_start('lnk-2', 'trebat', 'Havbris', %r)" % (NOWM - 600), LA, 'authenticated')
             LP['ahead'] = sql("select public.lop_leg('lnk-2', 0, %r, %r, '[1,1]'::jsonb, '[]'::jsonb)" % (NOWM - 600, NOWM + 3000), LA, 'authenticated', expect_err=True)[0]
             LP['order'] = sql("select public.lop_leg('lnk-2', 2, %r, %r, '[1,1]'::jsonb, '[]'::jsonb)" % (NOWM - 600, NOWM - 10), LA, 'authenticated', expect_err=True)[0]
+            # (after the review) a leg sent again with another end, from an older save: it takes the place of the one stored
+            lg2 = lambda t1: sql("select public.lop_leg('lnk-2', 0, %r, %r, '[1,1]'::jsonb, '[]'::jsonb)" % (NOWM - 600, t1), LA, 'authenticated')
+            lg2(NOWM - 400); lg2(NOWM - 400); lg2(NOWM - 300)
+            LP['redo'] = sql("select jsonb_array_length(legs) || '/' || ((legs -> 0 ->> 't1')::double precision = %r)::text from public.lop_runs where player_id = 'user_01LOPA' and rid = 'lnk-2'" % (NOWM - 300))
             LP['oneOpen'] = sql("select string_agg(rid || ':' || st, ',' order by rid) from public.lop_runs where player_id = 'user_01LOPA'")
             LP['twice'] = [sql("select public.lop_leg('lnk-1', 0, 0, 1, '[1,1]'::jsonb, '[]'::jsonb)", LA, 'authenticated'), sql("select jsonb_array_length(legs) from public.lop_runs where player_id = 'user_01LOPA' and rid = 'lnk-1'")]
             LP['closed'] = [sql("select count(*) from public.lop_runs", LA, 'authenticated', expect_err=True)[0], sql("select public.lop_top(null)", {}, 'anon', expect_err=True)[0]]
@@ -1796,13 +1802,13 @@ def main():
               'KL3: a leg faster than lopMinH (12 kn in a trebåt), a point 60 km off the track and a hop made with the race boat in the race are flagged and marked lop; 15 kn with a turbo delivered, the guest, the honest, a hop with another boat or to the start and a leg without points are not', LP.get('flags'), LP.get('marks'), LP.get('err', ''))
         print(ok(not LP.get('err') and LP.get('who') and LP.get('boardA', [None])[0][3] is False and ('Havbris', 'Kystkaren', 2, True) in LP.get('boardA', []) and LP.get('mineA') and LP['mineA']['rank'] == 2 and LP['mineA'].get('boat') == 'Havbris'
                  and LP.get('nA') == 4 and LP.get('rask') == ['skiff'] and LP.get('guest') == [(True, 'trebat')] and LP.get('top20') == [20, 29, 27]
-                 and LP.get('cheatOn') == [3, [True]] and LP.get('week') == ['2026-W46', '2026-W47', '2026-W25']),
+                 and LP.get('cheatOn') == [3, [True]] and LP.get('selfFlag') == [True] and LP.get('week') == ['2026-W46', '2026-W47', '2026-W25']),
               'KL3: the week\'s board per class has the honest and the turbo (never the flagged or the guest), your place, at most 20 rows of 29; a guest sees only themselves; cheat_on keeps a marked account out for the others; lop_wk is lopWeek', LP.get('boardA'), LP.get('mineA'), LP.get('nA'), LP.get('top20'), LP.get('guest'), LP.get('cheatOn'), LP.get('week'))
         print(ok(not LP.get('err') and LP.get('ahead') and LP.get('order') and LP.get('oneOpen') == 'lnk-1:done,lnk-2:run' and LP.get('twice') == ['{"ok": true}', '6'] and LP.get('closed') == [True, True]
-                 and LP.get('legs5') == (None, 'legs')),
-              'KL3: no leg ahead of the world\'s clock, legs in order and once, one open attempt, the tables closed and anon refused; «done» after five legs is flagged', LP.get('ahead'), LP.get('order'), LP.get('oneOpen'), LP.get('twice'), LP.get('closed'), LP.get('legs5'))
-        print(ok(not LP.get('err') and (LP.get('admin') or {}).get('started') == 11 and LP['admin'].get('done') == 10 and LP['admin'].get('dnf') == 1 and LP['admin'].get('flag') == 4
-                 and LP['admin'].get('flags') == {'fast': 1, 'trk': 1, 'hopp': 1, 'legs': 1} and LP['admin'].get('trim') is not None and LP.get('adminNo') == [True, True] and LP.get('adminNames') is False
+                 and LP.get('legs5') == (None, 'legs') and LP.get('redo') == '1/true'),
+              'KL3: no leg ahead of the world\'s clock, legs in order and once, one open attempt, the tables closed and anon refused; «done» after five legs is flagged', LP.get('ahead'), LP.get('order'), LP.get('oneOpen'), LP.get('twice'), LP.get('closed'), LP.get('legs5'), LP.get('redo'))
+        print(ok(not LP.get('err') and (LP.get('admin') or {}).get('started') == 11 and LP['admin'].get('done') == 10 and LP['admin'].get('dnf') == 1 and LP['admin'].get('flag') == 5
+                 and LP['admin'].get('flags') == {'fast': 2, 'trk': 1, 'hopp': 1, 'legs': 1} and LP['admin'].get('trim') is not None and LP.get('adminNo') == [True, True] and LP.get('adminNames') is False
                  and LP.get('cleared') == [None, True] and LP.get('news') == {'k': 'done', 'cls': 'sakte', 'min': 9500, 'wk': '2026-W47'} and (LP.get('rerun') or [1])[:2] == [0, True]),
               'KL3: admin_lop gives the sums without names, only to the admin with aal2; «Fjern merket» puts the attempt back on the board; Kystposten keeps a race story without trim; the file runs twice with nothing lost or doubled', LP.get('admin'), LP.get('adminNo'), LP.get('cleared'), LP.get('news'), LP.get('rerun'))
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs

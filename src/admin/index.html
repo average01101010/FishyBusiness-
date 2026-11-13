@@ -557,10 +557,10 @@ let LPA = null;
 const LP_CLS = {sakte:'Sakte', middels:'Middels', rask:'Rask', hav:'Havfartøy'}, LP_WHY = {slep:'Slep', salg:'Båten solgt', bytte:'Båten byttet', avbrutt:'Avbrutt av spilleren', ny:'Nytt forsøk startet', maal:'Mål'},
   LP_FLAG = {fast:'For rask etappe eller tid', trk:'Sporet (sprang)', start:'Ikke fra kaia i Lindesnes', cp:'Ikke ved sjekkpunktet eller mållinja', hopp:'Hopp i løpet', seq:'Etappene henger ikke sammen', legs:'Mål uten alle etappene'};
 async function lpaLoad(){ await null; try { LPA = DEMO ? {days:28, reg:41, started:33, run:6, done:19, dnf:8, why:{avbrutt:4, slep:2, ny:1, salg:1}, cls:{sakte:{n:9, avg:9860}, middels:{n:6, avg:6930}, rask:{n:3, avg:3410}, hav:{n:1, avg:5280}}, trim:38, hop:21, flag:2, flags:{fast:1, trk:1}, weeks:{'2026-W46':8, '2026-W47':11}}
-    : await rpc('admin_lop', {days:Math.min(365, Math.max(7, DAYS))}); } catch (e){ LPA = {err:e.message}; } if (TAB === 'kapplop') render(); }
+    : await rpc('admin_lop', {days:DAYS}); } catch (e){ LPA = {err:e.message}; } LPA.days = LPA.days || DAYS; LPA.at = DAYS; if (TAB === 'kapplop') render(); }
 const lpHm = m => { m = Math.round(m || 0); const d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60); return (d ? d + ' d ' : '') + h + ' t ' + (m % 60) + ' min'; };
 VIEW.kapplop = () => {
-  if (!LPA){ LPA = {loading:true}; lpaLoad(); return card('Kappløpet', '<p class="note">Henter …</p>'); }
+  if (!LPA || (!LPA.loading && LPA.at !== DAYS)){ LPA = {loading:true}; lpaLoad(); return card('Kappløpet', '<p class="note">Henter …</p>'); }   // (again when the period changes)
   if (LPA.loading) return card('Kappløpet', '<p class="note">Henter …</p>');
   if (LPA.err) return card('Kappløpet', '<p class="warn">' + esc(LPA.err) + '</p>', 'Er migreringen supabase/migrations/20261113200000_kapplop.sql kjørt?');
   const A = LPA, ob = (o, names) => Object.entries(o || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => ({k:names[k] || k, n}));

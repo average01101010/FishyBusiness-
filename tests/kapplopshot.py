@@ -115,7 +115,9 @@ async def one(p, name, vw, vh):
     check(bs and len(bs['rows']) == 4 and bs['on'] == 'Sakte' and br_ and br_['rows'] == [] and 'Ingen i klassen rask' in br_['txt'], name + ': 9. en annen klasse med berøring: sakte har fire, rask ingen ennå', {'sakte': bs and bs['rows'][:2], 'rask': br_ and br_['txt'][:120]})
     await tap('#phone .lop-board .ph-sub button[data-s="middels"]'); await pg.wait_for_timeout(300)
     await J("() => document.querySelector('#phone .lop-board').scrollIntoView({block:'start'})"); await shot('tavle')
-    sc = await J("() => { PHONE.open('sesong'); return new Promise(r => setTimeout(() => { const c = document.querySelector('#phone .lop-s'); r(c ? c.innerText : null); }, 500)); }")
+    # (the Sesong card asks for the board only for one who races: a time this week, put in for the look and taken out after)
+    sc = await J("""() => { const L = lopState(), wk = lopWeek(lopMs(S.t)).id; L.best[wk] = 7000; PHONE.open('sesong');
+      return new Promise(r => setTimeout(() => { PHONE.render(); setTimeout(() => { const c = document.querySelector('#phone .lop-s'); delete L.best[wk]; r(c ? c.innerText : null); }, 400); }, 500)); }""")
     check(sc and 'Ukas beste, middels' in sc and 'Din plass' in sc and '23 av 23' in sc, name + ': 9. Sesong-kortet: ukas beste i klassen og din plass', sc)
     await J(FAKE, {'guest': True}); await tab(); await pg.wait_for_timeout(600); await J("() => PHONE.render()"); await pg.wait_for_timeout(300); bg = await J(BOARD)
     check(bg and 'Som gjest ser du bare din egen tid' in bg['txt'], name + ': 9. en gjest får vite at tavla bare viser egen tid', bg and bg['txt'][-160:])

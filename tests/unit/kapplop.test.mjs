@@ -239,7 +239,7 @@ export default function (t){
     t.ok(e && o.length === 1 && o[0].id === 'lnk-40' && o[0].vid === S9.cur && run.min === e.min && o[0].trk.length === 4 && o[0].legs.length === 2 && o[0].st === 'done' && o[0].cs.n === 1 && o[0].min === e.min,
       'over mål: forsøket med etappene, sporet og hvor langt skyen har det, venter i out', o[0]);
     for (let i = 0; i < 4; i++){ S9.lop.run = {id:'lnk-5' + i, vid:S9.cur, type:'sjark', cls:'middels', t0:0, legs:[], pen:[], ded:[], st:'run', tasks:[], trk:[[0, 1, 1]]}; lopEnd('avbrutt'); }
-    t.eq(S9.lop.out.map(x => x.id), ['lnk-51', 'lnk-52', 'lnk-53'], 'out holder de tre siste');
+    t.eq(S9.lop.out.map(x => x.id), ['lnk-40', 'lnk-52', 'lnk-53'], 'out holder tre, og et brutt forsøk går før en fullført tid som ikke er sendt');
     S9.lop.run = {id:'lnk-60', vid:S9.cur, type:'sjark', cls:'middels', t0:0, legs:[], pen:[], ded:[], st:'run', tasks:[]}; lopEnd('avbrutt');
     t.eq(S9.lop.out.map(x => x.id).includes('lnk-60'), false, 'et forsøk uten spor (startet før KL3) går ikke til skyen'); }
 }

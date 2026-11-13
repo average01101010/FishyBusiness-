@@ -32,7 +32,8 @@ const lopPast = () => P(71.215, 25.86);
 // «Begynn på nytt» asks once more (the time of the first tap, put back when the tab is drawn more than 8 s after it, so the button
 // always says what a tap does); LOP_TAB: the Oppdrag app opens on the race's tab (the card at a checkpoint, outside the phone)
 let LOP_QUIT = 0, LOP_TAB = false;
-// the class whose board the tab shows (null: the race boat's, or the boat's you are aboard)
+// the class whose board the tab shows when another is tapped: {k, cls: your own class then, t}; it lasts ten minutes and while your own
+// class is the same (null: the race boat's, or the boat's you are aboard)
 let LOP_CLS = null;
 // the race as it stands, read without making S.lop (only registering makes it: lopState)
 const lopRead = () => S.lop || {run:null, hist:[], best:{}};
@@ -84,7 +85,9 @@ function lopPage(){
 // further down, and how many have finished; the other classes a tap away. '' without the cloud (the tab shows your own time)
 function lopBoard(cls0, wk){
   const T = typeof lopTop === 'function' ? lopTop(wk.id) : null; if (!T) return '';
-  const en = S.lang === 'en', cls = LOP_CLS && LOP.cls.keys.includes(LOP_CLS) ? LOP_CLS : cls0, d = T.data, C = d && d.cls ? d.cls[cls] : null, rows = C ? C.rows || [] : [];
+  if (LOP_CLS && LOP_CLS.cls == null) LOP_CLS.cls = cls0;
+  const pick = LOP_CLS && LOP.cls.keys.includes(LOP_CLS.k) && LOP_CLS.cls === cls0 && Date.now() - LOP_CLS.t < 600000 ? LOP_CLS.k : null;
+  const en = S.lang === 'en', cls = pick || cls0, d = T.data, C = d && d.cls ? d.cls[cls] : null, rows = C ? C.rows || [] : [];
   // (your row: the race boat's name as the server has it, not the boat you are aboard now)
   const esc = turEsc, me0 = esc(S.boatName || lopL('Deg', 'You')), me = r => (r && r.boat && peerName(r.boat) !== '–' ? esc(peerName(r.boat)) : me0) + ' <small>(' + lopL('deg', 'you') + ')</small>';
   const nm = r => { const bn = peerName(r.boat), un = r.user ? peerName(r.user) : ''; return (bn === '–' ? lopL('Ukjent båt', 'Unknown boat') : esc(bn)) + (un && un !== '–' ? '<br><small class="ph-note">' + esc(un) + '</small>' : ''); };
@@ -219,7 +222,8 @@ function lopPop(inner){
 function lopSeasonCard(){
   const L = lopRead(), wk = lopWeek(lopMs(S.t)), best = (L.best || {})[wk.id], c = lopClock(), r = L.run;
   // the week's leader in the class and your place (KL3), when the board has come
-  const cls = r ? r.cls : lopCls(VESSELS[S.boat.type]), T = typeof lopTop === 'function' ? lopTop(wk.id) : null, C = T && T.data && T.data.cls ? T.data.cls[cls] : null, top = C && C.rows && C.rows[0];
+  // (fetched only for one who races: an attempt now or a time this week)
+  const cls = r ? r.cls : lopCls(VESSELS[S.boat.type]), T = (r || best != null) && typeof lopTop === 'function' ? lopTop(wk.id) : null, C = T && T.data && T.data.cls ? T.data.cls[cls] : null, top = C && C.rows && C.rows[0];
   const lead = top ? lopKv(lopL('Ukas beste, ' + lopClsName(cls).toLowerCase(), 'This week\'s best, ' + lopClsName(cls, true).toLowerCase()), (top.me ? lopL('deg', 'you') : turEsc(peerName(top.boat))) + ' · ' + lopHmS(top.min)) +
     (C.mine ? lopKv(lopL('Din plass', 'Your place'), C.mine.rank + lopL(' av ', ' of ') + (C.n || 0)) : '') : '';
   return '<div class="ph-card lop-s"><h4>' + lopTitle(wk) + '</h4><p class="ph-note">' + lopL('Kappløpet fra Lindesnes til Nordkapp er åpent hele uka. Meld deg på ved kaia i Lindesnes, under Oppdrag › Kappløp.', 'The race from Lindesnes to the North Cape is open all week. Register at the quay in Lindesnes, under Orders › Race.') + '</p>' +

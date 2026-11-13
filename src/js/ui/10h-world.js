@@ -180,7 +180,9 @@ async function lopSync(){
     for (const R of items){
       // (over: ended, read off the attempt itself; it may end while this waits for the network, and then the copy in out shares cs)
       const cs = R.cs || (R.cs = {s:0, n:0, e:0}), over = R.st === 'done' || R.st === 'dnf';
-      if (cs.at && Date.now() < cs.at) continue;
+      if (cs.dead){ if (over) L.out = (L.out || []).filter(x => x.id !== R.id); continue; }   // (refused five times: given up)
+      // waiting after a refusal: the ones after it wait too, so a later attempt's lop_start never closes this one on the server first
+      if (cs.at && Date.now() < cs.at) break;
       try {
         if (!cs.s){ await cloudRpc('lop_start', {rid:lopRid(R), vtype:R.type, boat:R.name || '', t0:R.t0, vid:R.vid || ''}); cs.s = 1; }
         while (cs.n < (R.legs || []).length){ const a = lopLegPut(R, cs.n); if (!a) break; await cloudRpc('lop_leg', a); cs.n++; }
@@ -192,10 +194,9 @@ async function lopSync(){
         if (/ 404$/.test(e.message)){ LOPS.off = Date.now() + 600000; return; }
         if (!/ 400$/.test(e.message)){ wait = 60000; break; }   // (offline, the server busy: all of it again in a minute)
         // refused (400): the server may not have the attempt any more (a guest taken over by an account, a database restored), so it
-        // goes from the start, a minute, then longer, later (the server takes a repeat with ok); a finished one it refuses five times
-        // is let go, the one under way is kept
+        // goes from the start, a minute, then longer, later (the server takes a repeat with ok); one it refuses five times is given up
         cs.f = (cs.f || 0) + 1; cs.s = 0; cs.n = 0; cs.e = 0; cs.at = Date.now() + 60000 * Math.min(10, Math.pow(2, cs.f - 1));
-        if (over && cs.f >= 5) L.out = (L.out || []).filter(x => x.id !== R.id);
+        if (cs.f >= 5){ cs.dead = 1; delete cs.at; if (over) L.out = (L.out || []).filter(x => x.id !== R.id); }
       }
     }
   } finally { LOPS.busy = false; if (wait) LOPS.next = Date.now() + wait; }

@@ -109,6 +109,8 @@ const lopPt = (t, p) => [t, Math.round(p.x * 100) / 100, Math.round(p.y * 100) /
 // the end of a leg (at the checkpoint's quay, or over the line): its time, the port, the place, and whether a trim was on during it;
 // the next leg's trim begins with what is on now
 function lopLegEnd(r, pid, p){ const e = {t:S.t, pid, p:lopPt(0, p).slice(1), tr:r.tr ? 1 : 0}; r.tr = trimOn(S.boat) ? 1 : 0; return e; }
+// out holds three: a broken one goes first, so a finished time not yet sent is the last to go
+function lopOutCap(o){ while (o.length > 3){ const i = o.findIndex(x => x.st !== 'done'); o.splice(i >= 0 ? i : 0, 1); } return o; }
 // the attempt's id in the cloud: the game's id with the game minute it cast off, so a save taken back or a new game (S.lop.seq starts
 // again) never sends an id the server already has for another attempt
 const lopRid = run => run.id + '-' + Math.round(run.t0 || 0);
@@ -177,7 +179,7 @@ function lopEnd(how){
   const e = {id:r.id, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs.length, min:T.min, pen:T.pen, ded:T.ded, splits:T.splits, st:r.st, how, week:wk};
   L.hist.unshift(e); if (L.hist.length > LOP.hist) L.hist.length = LOP.hist;
   // what the cloud still needs of it (KL3, lopSync): the legs and the track go with it until they are sent, the last three kept
-  if (r.trk) L.out = (L.out || []).concat([{id:r.id, vid:r.vid, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs, trk:r.trk, pen:r.pen, ded:r.ded, tasks:(r.tasks || []).map(m => ({leg:m.leg, role:m.role, k:m.k, st:m.st, adj:m.adj || 0})), st:r.st, how, min:T.min, cs:r.cs || null}]).slice(-3);
+  if (r.trk) L.out = lopOutCap((L.out || []).concat([{id:r.id, vid:r.vid, type:r.type, cls:r.cls, name:r.name, t0:r.t0, t1:r.t1, legs:r.legs, trk:r.trk, pen:r.pen, ded:r.ded, tasks:(r.tasks || []).map(m => ({leg:m.leg, role:m.role, k:m.k, st:m.st, adj:m.adj || 0})), st:r.st, how, min:T.min, cs:r.cs || null}]));
   if (r.st === 'done' && !(L.best[wk] != null && L.best[wk] <= T.min)) L.best[wk] = T.min;
   L.run = null;
   const hm = lopHm(T.min);

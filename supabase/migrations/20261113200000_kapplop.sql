@@ -25,8 +25,8 @@
 --   fast   faster than the way at the type's vmax times the trim the server has delivered to the account (the largest of the grants'
 --          trims, any time: a trim adds its hours and may lie unused), less the 10 % margin (lopMinH)
 --   start  the track's first point is not at the quay in Lindesnes at the cast-off
---   trk    a point of the track farther from the one before than that speed reaches with 10 % and 5 km («Sitter båten fast?» moves her
---          up to 4 km), or points out of order or outside the leg. The number of points is not checked: the game closed for longer than
+--   trk    a point of the track farther from the one before than that speed with the strongest current in a sound (8 kn, core/06e-anchor.js
+--          CUR.max) reaches, with 10 % and 5 km («Sitter båten fast?» moves her up to 4 km), or points out of order or outside the leg. The number of points is not checked: the game closed for longer than
 --          catchUp plays (14 game days) leaves a hole in an honest track, and a leg over 400 game hours is thinned by the game (lopLegPut);
 --          a track left out gives only the line from the start to the end, which the speed check over the leg holds anyway
 --   cp     the leg does not end at its checkpoint (within its radius and 1 km) or, the last, at the line
@@ -128,8 +128,15 @@ begin
   select * into r from lop_runs x where x.player_id = me and x.rid = lop_leg.rid;
   if r.id is null then raise exception 'no attempt'; end if;
   n := jsonb_array_length(r.legs);
-  if lop_leg.leg is not null and lop_leg.leg < n then return jsonb_build_object('ok', true); end if;   -- (sent before)
+  if r.st <> 'run' and lop_leg.leg is not null and lop_leg.leg < n then return jsonb_build_object('ok', true); end if;   -- (sent before)
   if r.st <> 'run' then raise exception 'attempt over'; end if;
+  -- a leg sent before: the same end is ok; another end (an older save loaded mid-race and the legs sailed again) takes the place of the
+  -- one stored and the ones after it, and is checked as new (a flag already written stays)
+  if lop_leg.leg is not null and lop_leg.leg >= 0 and lop_leg.leg < n then
+    if t1 is not null and abs(coalesce((r.legs -> lop_leg.leg ->> 't1')::double precision, -1e9) - t1) <= 0.5 then return jsonb_build_object('ok', true); end if;
+    r.legs := coalesce((select jsonb_agg(a.e order by a.i) from jsonb_array_elements(r.legs) with ordinality a(e, i) where a.i <= lop_leg.leg), '[]'::jsonb);
+    update lop_runs x set legs = r.legs where x.id = r.id; n := lop_leg.leg;
+  end if;
   if lop_leg.leg is distinct from n then raise exception 'out of order'; end if;
   select * into g from lop_legs x where x.course = r.course and x.leg = n;
   if g.leg is null then raise exception 'no such leg'; end if;
@@ -143,7 +150,7 @@ begin
   if jsonb_typeof(d) is distinct from 'object' or length(d::text) > 2000 then d := '{}'::jsonb; end if;
   ex := (p ->> 0)::double precision; ey := (p ->> 1)::double precision;
   vc := coalesce((select v.vmax from cheat_vt v where v.vtype = r.vtype), 60);
-  trx := lop_trim(me); spd := vc * trx * 1.852;   -- km an hour
+  trx := lop_trim(me); spd := (vc * trx + 8) * 1.852;   -- km an hour over the ground: the top speed with the trim, and the strongest current in a sound (CUR.max, 8 kn)
   -- seq: where the leg before ended
   pv := case when n = 0 then r.t0 else (r.legs -> (n - 1) ->> 't1')::double precision end;
   if abs(t0 - pv) > 0.5 or t1 <= t0 then fl := jsonb_build_object('k', 'seq', 'leg', n, 'from', pv, 't0', t0, 't1', t1); end if;
@@ -217,16 +224,17 @@ begin
 end $$;
 
 -- the week's board (wk 'YYYY-Www', this week when left out): per class the best finished time of each account that week, ranked, the
--- top 20, how many, and your place. Never a flagged attempt; a guest and an account out by cheat_on only for themselves
+-- top 20, how many, and your place. A flagged attempt, a guest and an account out by cheat_on only for themselves (the player is told
+-- nothing: they see their own time where it would stand, as on the other lists), never for the others
 create or replace function public.lop_top(wk text default null) returns jsonb
 language plpgsql stable security definer set search_path = public as $$
-declare me text := pid(); w text := case when lop_top.wk ~ '^[0-9]{4}-W[0-9]{2}$' then lop_top.wk else lop_wk(now()) end; g boolean := is_guest(); co boolean := cheat_on();
+declare me text := pid(); w text := case when lop_top.wk ~ '^[0-9]{4}-W[0-9]{2}$' then lop_top.wk else lop_wk(now()) end; g boolean := is_guest();
 begin
   if me is null then raise exception 'not signed in'; end if;
   return (
-    with l as (select x.* from lop_runs x where x.course = 'lnk' and x.st = 'done' and x.week = w and x.flag is null
-                 and (x.player_id = me or (not g and not exists (select 1 from players gp where gp.id = x.player_id and gp.guest)
-                      and not (co and exists (select 1 from cheat_flags cf where cf.player_id = x.player_id and cf.cleared_at is null))))),
+    with l as (select x.* from lop_runs x where x.course = 'lnk' and x.st = 'done' and x.week = w
+                 and (x.player_id = me or (not g and x.flag is null and not exists (select 1 from players gp where gp.id = x.player_id and gp.guest)
+                      and not cheat_out(x.player_id)))),
     b as (select distinct on (l.player_id, l.cls) l.* from l order by l.player_id, l.cls, l.min, l.id),
     r as (select b.*, rank() over (partition by b.cls order by b.min) rk from b),
     c as (select distinct cls from r)
