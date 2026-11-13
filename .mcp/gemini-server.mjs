@@ -1,17 +1,20 @@
 #!/usr/bin/env node
-// gemini-reviewer: a local MCP server (stdio) with one tool, ask_gemini, so a
-// Claude Code session can ask Gemini for a second opinion: visual checks of
-// screenshots and clips, and architecture/performance/aliasing reviews of
-// shaders and water physics. Development tooling only; nothing in the game
-// uses it. Registered in .mcp.json; needs GEMINI_API_KEY (runs npm ci itself
+// gemini-reviewer: a local MCP server (stdio) with two tools. ask_gemini lets a
+// Claude Code session ask Gemini for a second opinion: visual checks of
+// screenshots and clips (UI, UX, GUI and the game's graphics), and
+// architecture/performance/aliasing reviews of shaders and water physics.
+// generate_game_asset asks Google's image model for a raster image (an
+// illustration, a background, a texture, a sketch for an icon) and writes it
+// to a file in the repo. Development tooling only; nothing in the game uses it. Registered in .mcp.json; needs GEMINI_API_KEY (runs npm ci itself
 // when node_modules/ is missing).
 //
 // A session where the MCP tool is not loaded can ask from the shell instead:
 //   node .mcp/gemini-server.mjs --ask "<question>" [--fps 15] <file> [<file> ...]
+//   node .mcp/gemini-server.mjs --image "<description>" --out <path> [--aspect 16:9] [--size 2K] [<reference image> ...]
 //
 // stdout is the MCP channel (or the answer with --ask): log only to stderr.
 
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, stat, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -20,6 +23,22 @@ import { fileURLToPath } from 'node:url';
 // The only model this server talks to. Checked against ai.models.list() on
 // first use (listed as models/gemini-4-hydrogen on 13.11.2026).
 const MODEL = 'gemini-4-hydrogen';
+
+// The only image model generate_game_asset talks to (listed as
+// models/gemini-3-pro-image, «Nano Banana Pro», on 13.11.2026). Image models
+// answer through generateContent with an image part; ai.models.generateImages
+// (Imagen) is deprecated in the SDK and refused by this API. They have no free
+// quota: the key's project must have billing on.
+const IMAGE_MODEL = 'gemini-3-pro-image';
+const ASPECTS = ['1:1', '2:3', '3:2', '3:4', '4:3', '9:16', '16:9', '21:9'];
+const SIZES = ['1K', '2K'];
+// Appended to every image prompt. Text in the game is drawn by the UI in two
+// languages, and no real company or organisation name may appear in the game.
+const IMAGE_RULES = 'No text, letters, numbers, logos, brand names, flags of organisations, signatures or watermarks anywhere in the image.';
+// Where a generated image may never be written: the game data is made by the
+// scripts in tools/ (never by hand), and the rest is not ours to fill.
+const NO_WRITE = ['src/data', 'src/legal', '.git', '.claude', '.mcp', 'node_modules', 'dist', 'supabase'];
+const EXT_OF_MIME = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp' };
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -64,18 +83,45 @@ function client() {
   return ai;
 }
 
-let modelChecked = null;
-async function checkModel() {
-  if (modelChecked) return modelChecked;
-  modelChecked = (async () => {
-    const pager = await client().models.list({ config: { pageSize: 200 } });
-    for await (const m of pager) {
-      if (m.name === `models/${MODEL}` || m.name === MODEL) return true;
+let modelNames = null;
+async function checkModel(model = MODEL) {
+  if (!modelNames) {
+    modelNames = (async () => {
+      const names = new Set();
+      const pager = await client().models.list({ config: { pageSize: 200 } });
+      for await (const m of pager) names.add(String(m.name).replace(/^models\//, ''));
+      return names;
+    })();
+    modelNames.catch(() => { modelNames = null; });
+  }
+  if (!(await modelNames).has(model)) throw new Error(`Model ${model} is not in ai.models.list() for this API key.`);
+  return true;
+}
+
+// A 429 is one of three things. A limit of 0 (the image models on a free key)
+// is not a rate limit and goes straight back. A per-minute limit is waited out
+// once, for as long as the API asks, and tried again. A daily limit (the free
+// tier gave gemini-4-hydrogen 20 requests a day on 13.11.2026, shared by every
+// session on the key) is said plainly, with when it opens again.
+async function withRateRetry(model, call) {
+  try {
+    return await call();
+  } catch (e) {
+    const m = String(e?.message ?? e);
+    if (!/429|RESOURCE_EXHAUSTED/.test(m) || /limit: 0/.test(m)) throw e;
+    const d = m.match(/retryDelay"?\s*:\s*"?(\d+(?:\.\d+)?)s/);
+    const secs = d ? Math.ceil(Number(d[1])) : 30;
+    if (secs > 65) {
+      const lim = m.match(/limit: (\d+)[^*"]*?requests per day/i);
+      const h = Math.floor(secs / 3600);
+      const min = Math.round((secs % 3600) / 60);
+      throw new Error(`${model}: the quota on this API key is used up` + (lim ? ` (${lim[1]} requests a day, shared by every session)` : '') +
+        `. It opens again in ${h} h ${min} min. Say so in the message to Jonas and carry on without Gemini; do not wait for it.`);
     }
-    throw new Error(`Model ${MODEL} is not in ai.models.list() for this API key.`);
-  })();
-  modelChecked.catch(() => { modelChecked = null; });
-  return modelChecked;
+    log(`rate limited (429), waiting ${secs + 1} s and trying once more`);
+    await new Promise((r) => setTimeout(r, (secs + 1) * 1000));
+    return call();
+  }
 }
 
 function resolvePath(p) {
@@ -161,10 +207,10 @@ async function askGemini({ prompt, filePaths = [], videoFps }) {
   const { mediaParts, textBlocks, notes, uploaded } = await collectFiles(filePaths, fps);
   try {
     const fullPrompt = textBlocks.length ? `${prompt}\n\n## Files\n\n${textBlocks.join('\n\n')}` : prompt;
-    const res = await client().models.generateContent({
+    const res = await withRateRetry(MODEL, () => client().models.generateContent({
       model: MODEL,
       contents: [{ role: 'user', parts: [...mediaParts, { text: fullPrompt }] }],
-    });
+    }));
     const answer = res.text ?? '(empty answer)';
     const tok = res.usageMetadata?.promptTokenCount;
     const cost = tok ? `; ${tok} prompt tokens` : '';
@@ -173,6 +219,103 @@ async function askGemini({ prompt, filePaths = [], videoFps }) {
   } finally {
     await Promise.all(uploaded.map((name) =>
       client().files.delete({ name }).catch((e) => log('could not delete', name, e.message))));
+  }
+}
+
+// Where a generated image is allowed to land: inside the repo, outside the
+// folders in NO_WRITE, with an image extension, and never on top of a file
+// that is already there unless the caller says so.
+function outputTarget(outputPath, overwrite) {
+  if (!outputPath) throw new Error('outputPath is required.');
+  const abs = path.resolve(REPO, outputPath);
+  const rel = path.relative(REPO, abs);
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`outputPath must be inside the repo (got ${outputPath}).`);
+  const relPosix = rel.split(path.sep).join('/');
+  const bad = NO_WRITE.find((d) => relPosix === d || relPosix.startsWith(d + '/'));
+  if (bad) throw new Error(`outputPath may not be under ${bad}/ (got ${relPosix}). Write to tools/ui/out/ and let a script in tools/ build the game data.`);
+  if (path.basename(abs).startsWith('.env')) throw new Error('outputPath may not be an .env file.');
+  if (!IMAGE_MIME[path.extname(abs).toLowerCase()]) throw new Error(`outputPath must end in .png, .jpg, .jpeg or .webp (got ${relPosix}).`);
+  if (!overwrite && existsSync(abs)) throw new Error(`${relPosix} exists already. Pick another name, or pass overwrite to replace it.`);
+  return abs;
+}
+
+// Free-tier keys have a limit of 0 on the image models, and the API says so in
+// a long 429. Say what it means instead.
+function imageError(e) {
+  const m = String(e?.message ?? e);
+  if (/429|RESOURCE_EXHAUSTED/.test(m) && /free_tier/.test(m) && /limit: 0/.test(m)) {
+    return new Error(`${IMAGE_MODEL} has no free quota on this API key (free tier, limit 0). ` +
+      'Image generation works once billing is on for the key\'s Google AI project; that is Jonas\' call (real money). Nothing was generated.');
+  }
+  return e instanceof Error ? e : new Error(m);
+}
+
+async function generateGameAsset({ prompt, outputPath, aspectRatio = '1:1', imageSize = '1K', referencePaths = [], overwrite = false }) {
+  if (!prompt || !prompt.trim()) throw new Error('prompt is required.');
+  if (!ASPECTS.includes(aspectRatio)) throw new Error(`aspectRatio must be one of ${ASPECTS.join(', ')} (got ${aspectRatio}).`);
+  if (!SIZES.includes(imageSize)) throw new Error(`imageSize must be one of ${SIZES.join(', ')} (got ${imageSize}).`);
+  const abs = outputTarget(outputPath, overwrite);
+  // Reference images (a screenshot of the UI as it is, an earlier asset) carry the style better than adjectives do.
+  const refs = [];
+  const notes = [];
+  for (const p of referencePaths) {
+    const rabs = resolvePath(p);
+    const mimeType = IMAGE_MIME[path.extname(rabs).toLowerCase()];
+    if (!mimeType) throw new Error(`reference must be an image (.png .jpg .jpeg .webp): ${p}`);
+    let buf;
+    try { buf = await readFile(rabs); } catch { throw new Error(`reference not found: ${p}`); }
+    if (buf.length > INLINE_IMAGE_MAX) throw new Error(`reference over 15 MB: ${p}`);
+    refs.push({ inlineData: { mimeType, data: buf.toString('base64') } });
+    notes.push(path.basename(rabs));
+  }
+  await checkModel(IMAGE_MODEL);
+  let res;
+  try {
+    res = await withRateRetry(IMAGE_MODEL, () => client().models.generateContent({
+      model: IMAGE_MODEL,
+      contents: [{ role: 'user', parts: [...refs, { text: `${prompt.trim()}\n\n${IMAGE_RULES}` }] }],
+      config: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio, imageSize } },
+    }));
+  } catch (e) { throw imageError(e); }
+  const cand = res.candidates?.[0];
+  const img = (cand?.content?.parts ?? []).find((p) => p.inlineData?.data);
+  if (!img) {
+    const why = cand?.finishReason || res.promptFeedback?.blockReason || 'no image part in the answer';
+    throw new Error(`${IMAGE_MODEL} returned no image (${why}). ${res.text ? 'It said: ' + res.text.slice(0, 300) : ''}`.trim());
+  }
+  // The model decides the format; the file gets the extension of what it actually is.
+  const ext = EXT_OF_MIME[img.inlineData.mimeType];
+  let target = abs;
+  if (ext && IMAGE_MIME[path.extname(abs).toLowerCase()] !== img.inlineData.mimeType) {
+    target = abs.slice(0, -path.extname(abs).length) + ext;
+    if (!overwrite && existsSync(target)) throw new Error(`${path.relative(REPO, target)} exists already (the model answered with ${img.inlineData.mimeType}).`);
+  }
+  const buf = Buffer.from(img.inlineData.data, 'base64');
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, buf);
+  const rel = path.relative(REPO, target).split(path.sep).join('/');
+  const ref = notes.length ? `; references: ${notes.join(', ')}` : '';
+  return `[${IMAGE_MODEL}; ${aspectRatio}, ${imageSize}${ref}]\n\nSaved ${rel} (${img.inlineData.mimeType}, ${Math.round(buf.length / 1024)} KB). ` +
+    'Look at it before it is used (Read the file), and show it to Jonas before it goes into the game.';
+}
+
+// --image: one image from the shell, no MCP.
+const im0 = process.argv.indexOf('--image');
+if (im0 > 0) {
+  const rest = process.argv.slice(im0 + 1);
+  const prompt = rest.shift();
+  const opt = (flag) => { const i = rest.indexOf(flag); return i >= 0 ? rest.splice(i, 2)[1] : undefined; };
+  const outputPath = opt('--out');
+  const aspectRatio = opt('--aspect');
+  const imageSize = opt('--size');
+  const oi = rest.indexOf('--overwrite');
+  const overwrite = oi >= 0 ? (rest.splice(oi, 1), true) : false;
+  try {
+    console.log(await generateGameAsset({ prompt, outputPath, aspectRatio, imageSize, referencePaths: rest, overwrite }));
+    process.exit(0);
+  } catch (e) {
+    log(e.message);
+    process.exit(1);
   }
 }
 
@@ -219,6 +362,35 @@ server.registerTool(
     } catch (e) {
       log(e);
       return { isError: true, content: [{ type: 'text', text: `ask_gemini failed: ${e.message}` }] };
+    }
+  },
+);
+
+server.registerTool(
+  'generate_game_asset',
+  {
+    title: 'Generate game asset',
+    description:
+      `Generate one raster image with Google's image model (${IMAGE_MODEL}) and save it in the repo: an illustration, a background, ` +
+      'a panel or paper texture, or a sketch for an icon that is then drawn as SVG. Not for icons, buttons and HUD parts themselves: ' +
+      'those are CSS and SVG in this game. Every prompt gets "no text, no logos" added. The file is a draft until Jonas has seen it; ' +
+      'write it under tools/ui/out/ (not in git), never under src/data/. Needs billing on the API key (the image models have no free quota).',
+    inputSchema: {
+      prompt: z.string().describe('Exact visual description: the motif, the framing, the light, the palette (the game\'s own colours), the background.'),
+      outputPath: z.string().describe('Where to save it, relative to the repo root, e.g. tools/ui/out/ekkolodd-skisse.png. Folders are created.'),
+      aspectRatio: z.enum(ASPECTS).default('1:1').describe('Aspect ratio.'),
+      imageSize: z.enum(SIZES).default('1K').describe('1K (default) or 2K on the long side.'),
+      referencePaths: z.array(z.string()).optional().describe(
+        'Images that show the style to match: a screenshot of the game\'s UI as it is, or an earlier asset. Prefer this over style adjectives.'),
+      overwrite: z.boolean().default(false).describe('Replace the file when it exists already.'),
+    },
+  },
+  async (args) => {
+    try {
+      return { content: [{ type: 'text', text: await generateGameAsset(args) }] };
+    } catch (e) {
+      log(e);
+      return { isError: true, content: [{ type: 'text', text: `generate_game_asset failed: ${e.message}` }] };
     }
   },
 );
