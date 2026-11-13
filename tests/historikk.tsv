@@ -3922,3 +3922,5 @@
 2026-11-13 17:33	ccr-432150cd-kkjoez	891278f	boottest	OK	28	lite	samtidig	
 2026-11-13 17:34	ccr-432150cd-kkjoez	891278f	docktest	OK	63	lite	samtidig	
 2026-11-13 17:34	ccr-432150cd-kkjoez	891278f	lukket	OK	17	lite	samtidig	
+2026-11-13 18:19	plan/2026-11-13-109	f04274cd	boottest	OK	36	lite	samtidig	
+2026-11-13 18:19	plan/2026-11-13-109	f04274cd	maletest	OK	23	lite	samtidig	
