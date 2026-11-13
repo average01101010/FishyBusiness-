@@ -443,3 +443,13 @@ Samme arbeid som trebåten (over), på skiffens egne plasser (`skiff59.py` `anch
 - **Den tomme båtens vannlinje** (valg 18 A): `WLE = WL − 0,05` i `to_game` og ankrene (`deck.y`, `gw`), så spillet legger skroget 5 cm høyere enn tegningen; `check()` veier den tomme båten ved `WLE` (11,99 t mot 12).
 - **`STAB_AT` mot modellen:** `tests/unit/trim.test.mjs` leser hurtigsjarkens eksporterte ankre fra `src/data/boat-hurtig11.b64` (GLB-ens `scenes[0].extras.anchors`) og sjekker hele `STAB_AT.hurtigsjark` (dy, benken, karet, stampene, garnet, haleren, roret, luka, hekken) innen 2 cm. Neste fase kan gjøre det samme for sin båt.
 - **Bremmen på et tak som går ut over skansen** (valg 26): på hurtigsjarken står takkanten alt utenfor veggene (over skansen over skjulet, visiret foran), så bremmen bygges innover fra den gamle kanten (`BRIM_I` 0,10 inn, `BRIM_H` 0,18 opp), og underslaget og takhøyden er som før.
+
+## Levende fisk på vei opp (13.11.2026)
+
+Jonas 13.11.2026: «fisken som kommer opp når man fisker spreller litt helt til den er bløgget. Gjerne også at snøret dras i litt ulike retninger og at fisken plasker litt i vannet når den kommer opp. Det samme gjelder egentlig på liner, garn og andre redskaper.»
+
+- **Hjelperne** står i `view3d/09-landing-deck.js` ved `DKEV`: `flap(T, w, k)` gir halens slag og hodets kast, i støt med korte pauser (`flapK`), hver fisk i sin egen takt (`w`), `k` er livet som er igjen (1 levende, 0 bløgget). `tug(T, w, m)` er hvor fisken drar snøret på tvers, sakte til sidene og et rykk med slagene. `fishSplash(E, kg, n)` kaster små dråper i sjøsprøyten (`SD`, `24-cinema.js`), større for større fisk. `fishSurf(id, y, E, kg, T, w)` plasker én gang når fisken krysser overflata (`FS_Y` −0,3 m i båtens ramme, der snørene går i sjøen i tegningene) og nå og da når den slår i overflata.
+- **Juksa og juksamaskinene** (`drawSkiff`, `13-instruments.js`): fisken på snøret spreller og drar snøret, mest dypt nede; i handa spreller den til kuttet og dør ut over et halvt sekund etter; i kastet til karet ligger den stille.
+- **Lina, autolina og garnet ved haleren** (`drawGearOp`, `10-gear.js`, `liveFish`): fisken på kroken eller i maskene spreller og plasker; garnets fisk drar mindre (holdt i maskene). Garnet over ripa for hånd det samme.
+- **Dekksfolket** (`08-plants.js`, `live`): fisken på gaffen, i garnet ved plukkingen, på juksa (`jigup`, med drag og plask) og i handa til bløggeren spreller; etter kuttet dør den ut. Fisken som slippes ut igjen (`slip`), spreller også.
+- **Testen:** `tests/sprelltest.py` (D3) teller plaskene (`G3._debug.dk.n.fsplash`) for juksa, maskin, line og garn og tar tre bilder av hver.

@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['sprell-131126', '13.11.2026', 'Levende fisk på vei opp', 'Live fish on the way up', [
+       ['Fisken spreller nå på vei opp og i handa til den er bløgget, på juksa, juksamaskinene, lina og i garnet. Den drar snøret litt til sidene og plasker når den kommer opp av sjøen.', 'The fish now kicks on the way up and in the hand until it is bled, on the hand jig, the jigging machines, the line and in the nets. It pulls the line a little to the sides and splashes as it breaks the surface.']]],
     ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [
        ['Mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy og butikkene i Vanse og Søndeled lå i lommer der båten ikke kom ut. De har fått nye kaier med fritt vann ut.', 'The plants in Ålesund, Fosnavåg, Laukvik and Vengsøy and the shops in Vanse and Søndeled lay in pockets the boat could not get out of. They have new quays with open water out.'],
        ['Bakken bak og ved sidene av kaiene går nå rett inn til kaikanten, uten grøfter og tagger langs veggen.', 'The ground behind and beside the quays now runs straight up to the quay edge, with no trenches or jagged teeth along the wall.']]],

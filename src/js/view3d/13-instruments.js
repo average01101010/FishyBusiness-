@@ -298,11 +298,13 @@
     if (S.haill && haillF() > 0){ const CM = chain(BMrel, M4.T(CHARM_AT[0], CHARM_AT[1], CHARM_AT[2]), M4.RZ(Math.sin(T * 1.3) * 0.18), M4.RX(Math.sin(T * 0.9) * 0.12)); drawN(SK.cstr, CM);
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
     const L2R = q => xf(BMrel, q), fsc = kg => clamp(0.42 * Math.cbrt(kg), 0.28, 1.2);
-    const hang = (sp, kg, P, w) => drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + w) * 0.45), M4.S(fsc(kg))));
+    // (k: the life left in it, flap in 09-landing-deck.js: it kicks on the line and in the hand until it is bled, and lies still in the toss)
+    const hang = (sp, kg, P, w, k) => { const Fl = flap(T, w, k); drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(fsc(kg)))); };
+    const fw = f => ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283;   // (each fish its own phase)
     const WT = karB && GEO(vtype()).work ? GEO(vtype()).work.tub : null, TUB = WT ? [WT[0], WT[1] + 0.42, WT[2]] : [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;   // (an open boat with tubs: into the bleeding tub, where the one who guts takes them)
     // fish swung from the rail into the tub
     for (let i = A.fly.length - 1; i >= 0; i--){ const f = A.fly[i]; f.u += dt / 0.75; if (f.u >= 1){ A.fly.splice(i, 1); continue; }
-      const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i); }
+      const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i, 0); }
     if (mode && atRail){
       const FP = chain(M4.T(F[0], F[1], F[2]), M4.RY(-Math.PI / 2)); drawN(SK.fisher, chain(BMrel, FP));
       const shY = SK.wk ? WK_SH : 1.3, shR = xf(FP, [0.2, shY, 0]), shL = xf(FP, [-0.2, shY, 0]); let hR, hL;
@@ -342,7 +344,9 @@
           let low = null;
           for (let i = A.fish.length - 1; i >= 0; i--){ const f = A.fish[i], y = end + i * 0.55;       // pilk at the end, fly hooks above it
             if (y >= RL[1] - 0.1){ A.bq.push({...f, a:[WX - 0.05, RL[1], C[2]], u:0}); A.fish.splice(i, 1); continue; }
-            const P = [WX + 0.04 * Math.sin(T * 3 + i), y, C[2]]; if (y > -0.2) hang(f.sp, f.kg, P, i + 1); low = low || P; }
+            // (the fish pulls the line to the sides on its way up, the most deep down, and splashes as it breaks the surface)
+            const w = fw(f), tg = tug(T, w, 0.14 * clamp((RL[1] - y) / 1.5, 0.15, 1)), P = [WX + tg[0], y, C[2] + tg[1]]; fishSurf(f, y, L2R(P), f.kg, T, w);
+            if (y > -0.2) hang(f.sp, f.kg, P, w); low = low || P; }
           SK.lines.push([L2R(top), L2R(low || [WX, Math.min(RL[1], end), C[2]])]);
           if (!A.fish.length && A.t > 0.8){ A.st = 'jig'; A.t = 0; }
         }
@@ -364,7 +368,8 @@
           else { const end = m.d0 + m.t * 1.3; let low = null;
             for (let i = m.fish.length - 1; i >= 0; i--){ const f = m.fish[i], y = end + i * 0.5;
               if (y >= tip[1] - 0.35){ A.bq.push({...f, a:[tip[0] - 0.2, tip[1] - 0.35, tip[2]], u:0}); m.fish.splice(i, 1); busy = tip; continue; }
-              const Pf = [tip[0], y, tip[2]]; if (y > -0.2) hang(f.sp, f.kg, Pf, i + k * 3); low = low || Pf; if (y > tip[1] - 1.0) busy = tip; }
+              const w = fw(f), tg = tug(T, w, 0.12 * clamp((tip[1] - y) / 1.5, 0.15, 1)), Pf = [tip[0] + tg[0], y, tip[2] + tg[1]]; fishSurf(f, y, L2R(Pf), f.kg, T, w);
+              if (y > -0.2) hang(f.sp, f.kg, Pf, w); low = low || Pf; if (y > tip[1] - 1.0) busy = tip; }
             SK.lines.push([L2R(tip), L2R(low || [tip[0], Math.min(tip[1], end), tip[2]])]);
             if (!m.fish.length && m.t > 0.6){ m.st = 'jig'; m.t = 0; } } }
         hR = busy ? [busy[0] - 0.35, busy[1] - 0.45, busy[2] + 0.08] : [F[0] + 0.43, F[1] + 0.92, F[2] + 0.12]; hL = busy ? [busy[0] - 0.4, busy[1] - 0.5, busy[2] - 0.08] : [F[0] + 0.43, F[1] + 0.92, F[2] - 0.12];
@@ -373,8 +378,9 @@
       // throat and the blood running, and tosses it in the tub; the machines and the line wait meanwhile (one at a time, the next one queued)
       let kDir = null; if (!A.bl && A.bq.length) A.bl = {f:A.bq.shift(), t:0};
       if (A.bl){ const B = A.bl, f = B.f, c = (B.t += dt), ch = [F[0] + 0.36, F[1] + shY - 0.18, F[2] - 0.08], kU = [F[0] + 0.3, F[1] + shY - 0.05, F[2] + 0.2], kD = [F[0] + 0.42, F[1] + shY - 0.24, F[2] - 0.02], ease = u => u * u * (3 - 2 * u), L3 = (P, Q2, u) => [P[0] + (Q2[0] - P[0]) * u, P[1] + (Q2[1] - P[1]) * u, P[2] + (Q2[2] - P[2]) * u];
-        if (c < 0.4){ hL = L3(f.a, ch, ease(c / 0.4)); hang(f.sp, f.kg, hL, 2); }
-        else if (c < 1.45){ hL = ch; hang(f.sp, f.kg, hL, 2 + Math.sin(c * 7) * 0.1); hR = L3(kU, kD, ease(clamp((c - 0.45) / 0.35, 0, 1)));
+        // (alive in his hand until the cut, the last kicks fading after it)
+        if (c < 0.4){ hL = L3(f.a, ch, ease(c / 0.4)); hang(f.sp, f.kg, hL, fw(f)); }
+        else if (c < 1.45){ hL = ch; hang(f.sp, f.kg, hL, fw(f), clamp(1 - (c - 0.75) / 0.55, 0, 1)); hR = L3(kU, kD, ease(clamp((c - 0.45) / 0.35, 0, 1)));
           kDir = [0.6, -0.6, -0.4];   // (the knife is drawn in the right hand's grip, below with the arms)
           if (c > 0.75){ const sc = fsc(f.kg), th = xf(BMrel, [ch[0], ch[1] - sc * 0.12, ch[2]]), U = xf(BMrel, TUB); for (let i = 0; i < 10; i++){ const u = ((c - 0.75) * 1.6 + hash(i * 5) * 0.6) % 1; DKBLOOD.push([th[0] + (U[0] - th[0]) * 0.2 * u + (hash(i) - 0.5) * 0.03, th[1] - 0.9 * u * u, th[2] + (U[2] - th[2]) * 0.2 * u + (hash(i + 3) - 0.5) * 0.03]); } } }
         else { A.fly.push({sp:f.sp, kg:f.kg, a:ch, u:0}); A.bl = null; A.nb = (A.nb || 0) + 1; } }   // (nb: bled, for the tests)

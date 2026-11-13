@@ -440,6 +440,26 @@
   // an event at its place on the rail (boat frame); the nearest hand at work there plays it (drawWorker), so the fish he handles is the
   // one that came up. DKBLOOD: the drops of the cut, drawn as points after the people.
   const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKWATER = [], DKSMOKE = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
+  // a live fish (Jonas 13.11.2026: «fisken som kommer opp spreller litt helt til den er bløgget, snøret dras i litt ulike retninger og
+  // fisken plasker litt i vannet når den kommer opp»): bursts of hard kicks with short rests between, each fish out of step with the
+  // others (w its own phase), k how much life is left (1 alive, fading to 0 once the throat is cut). [the tail's sweep, the head's toss]
+  function flapK(T, w){ return clamp(0.55 + 0.6 * Math.sin(T * 1.3 + w * 2.1) + 0.35 * Math.sin(T * 3.7 + w * 0.7), 0, 1); }
+  function flap(T, w, k){ const kk = k == null ? 1 : k, b = flapK(T, w) * kk; return [Math.sin(T * 16 + w * 5) * (0.08 * kk + 0.55 * b), Math.sin(T * 9.5 + w * 3) * 0.22 * b]; }
+  // where the fish pulls the line on its way up: a slow wander to both sides and a jerk with the kicks (m metres at most, across [x, z])
+  function tug(T, w, m){ const j = 0.3 * flapK(T, w) * Math.sin(T * 13 + w * 4); return [m * (0.6 * Math.sin(T * 1.1 + w * 1.9) + j), m * (0.6 * Math.cos(T * 0.8 + w * 2.7) + 0.3 * Math.sin(T * 3.1 + w * 1.3))]; }
+  // a fish breaking the surface: a few small drops thrown up where it is (E eye-relative), in the sea's own spray (SD, 24-cinema.js)
+  function fishSplash(E, kg, n){ const s = clamp(Math.cbrt(kg || 2) * 0.6, 0.4, 1.4);
+    for (let j = 0; j < n; j++){ const i = SD.n = (SD.n + 1) % SDN, a = Math.random() * 6.2832, v = (0.2 + Math.random() * 0.6) * s;
+      SD.x[i] = E[0] + lastEye[0] + Math.sin(a) * 0.08; SD.z[i] = E[2] + lastEye[2] + Math.cos(a) * 0.08; SD.y[i] = E[1] + lastEye[1]; SD.vx[i] = Math.sin(a) * v; SD.vz[i] = Math.cos(a) * v;
+      SD.vy[i] = (0.7 + Math.random() * 1.3) * s; SD.age[i] = 0; SD.life[i] = 0.35 + Math.random() * 0.4; }
+    DKN.fsplash = (DKN.fsplash || 0) + 1; }   // (counted for the tests)
+  // the surface by a fish on the line (y in the boat's frame, FS_Y where the lines go into the sea in these drawings): a splash once as it
+  // comes out, and now and then while it kicks just at the surface. id: the fish (kept a few seconds to see it cross)
+  const FS_Y = -0.3, FSURF = new Map();
+  function fishSurf(id, y, E, kg, T, w){ const now = performance.now(), o = FSURF.get(id); FSURF.set(id, {y, t:now});
+    if (FSURF.size > 80) for (const [k, v] of FSURF) if (now - v.t > 3000) FSURF.delete(k);
+    if (o && now - o.t < 400 && o.y < FS_Y && y >= FS_Y) fishSplash(E, kg, 12);
+    else if (y > FS_Y - 0.25 && y < FS_Y + 0.2 && flapK(T, w) > 0.8 && Math.random() < 0.06) fishSplash(E, kg, 4); }
   const ASLIDE = [];   // the autoliner's gaffed fish sliding into the chute's mouth (e.chute, 10-gear.js drawAutoSlides; H2d2)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }
