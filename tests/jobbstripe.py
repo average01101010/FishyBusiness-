@@ -47,12 +47,14 @@ async def run(p, vw, vh):
     # «Kjøp og monter» in the shop: two taps on the first thing that can be fitted here
     await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(250)
     k = await pg.evaluate("(() => { const e = [...document.querySelectorAll('#drawerBody [data-pa=equip]:not([disabled])')][0]; return e ? e.dataset.k : null; })()")
+    check(k is not None, tag + ': noe å montere i butikken')
+    if k is None: await b.close(); return
     for _ in range(2):
         await pg.evaluate("document.querySelector('#drawerBody [data-pa=equip][data-k=%s]').click()" % k); await pg.wait_for_timeout(250)
     r = json.loads(await J("{jobs:(S.jobs || []).map(j => [j.kind, j.until != null])}"))
     check(r['jobs'] and r['jobs'][0] == ['fit', True], tag + ': «Kjøp og monter» la en monteringsjobb i køen (' + str(k) + ')', r)
     s = json.loads(await J(STRIP))
-    check(s and s['top'] and len(s['rows']) == 1 and re.fullmatch(r'\d\d:\d\d', s['rows'][0]['t'] or ''), tag + ': rett etter kjøpet står stripa øverst i butikken med mm:ss', s)
+    check(s and s['top'] and len(s['rows']) == 1 and re.fullmatch(r'(\d+:)?\d\d:\d\d', s['rows'][0]['t'] or ''), tag + ': rett etter kjøpet står stripa øverst i butikken med mm:ss', s)
     await pg.screenshot(path='jobbstripe-%s-butikk.png' % tag)
 
     # a yard job and the crew's own beside it: the strip on every page that makes jobs, and in Om bord
@@ -61,7 +63,7 @@ async def run(p, vw, vh):
     for a in PAGES:
         await pg.evaluate("DOCK.open(%r)" % a); await pg.wait_for_timeout(250)
         s = json.loads(await J(STRIP))
-        ok = s and s['top'] and len(s['rows']) == 2 and all(re.fullmatch(r'\d\d:\d\d', x['t']) for x in s['rows']) and all(x['w'] is not None for x in s['rows']) and s['fits'] and s['sw'] <= s['cw'] + 1
+        ok = s and s['top'] and len(s['rows']) == 2 and all(re.fullmatch(r'(\d+:)?\d\d:\d\d', x['t']) for x in s['rows']) and all(x['w'] is not None for x in s['rows']) and s['fits'] and s['sw'] <= s['cw'] + 1
         if not ok: miss.append([a, s])
         if a in ('verksted', 'beholdning', 'fiske'): await pg.screenshot(path='jobbstripe-%s-%s.png' % (tag, a))
     check(not miss, tag + ': stripa øverst med begge jobbene, mm:ss og stolpe, innenfor skuffen på ' + ', '.join(PAGES), miss)
@@ -115,6 +117,15 @@ async def run(p, vw, vh):
     await pg.wait_for_timeout(900)
     s = json.loads(await J(STRIP))
     check(s and not s['now'], tag + ': under 5 minutter igjen: ingen «Ferdig nå»', s and s['nowTxt'])
+    # a fleet: another boat chosen on Oppgrader shows her own job and time, and no «Ferdig nå» (it would be bought for the boat aboard)
+    await pg.evaluate("""(() => { S.jobs = []; storeVessel(curVessel()); const v2 = JSON.parse(JSON.stringify(curVessel())); v2.id = 'vJs'; v2.boatName = 'Andrebåt'; v2.crew = [];
+      v2.jobs = [{kind:'hull', h:3, until:S.t + 150, no:'Skrogrens på slipp', en:'Hull cleaning on the slip'}]; S.fleet.push(v2); DOCK.open('utstyr'); })()""")
+    await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('#drawerBody [data-pa=vsel][data-id=vJs]').click()"); await pg.wait_for_timeout(600)
+    s = json.loads(await J(STRIP))
+    check(s and len(s['rows']) == 1 and s['rows'][0]['n'] == 'Skrogrens på slipp' and re.fullmatch(r'(\d+:)?\d\d:\d\d', s['rows'][0]['t']) and not s['now'], tag + ': flåten: den valgte båtens jobb med tid, uten «Ferdig nå»', s)
+    await pg.evaluate("document.querySelector('#drawerBody [data-pa=vsel][data-id=' + S.cur + ']').click()"); await pg.wait_for_timeout(400)
+    check(not await pg.evaluate("!!document.querySelector('#drawerBody .jstrip')"), tag + ': flåten: båten om bord uten jobber har ingen stripe')
     check(not errs, tag + ': sidefeil', errs)
     await b.close()
 

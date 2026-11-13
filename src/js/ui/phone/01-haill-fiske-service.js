@@ -78,17 +78,19 @@
   // before the page's .ph-c, so pairCards never pairs it and it takes the whole width
   const JOB_PAGES = ['fiske', 'utstyrb', 'service', 'utstyr', 'verksted', 'fartoy', 'maler', 'beholdning'];
   const yardNowOk = () => (S.jobs || []).some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t + YARD_NOW_MIN);
-  function jobStrip(){
+  function jobStrip(aboard){
     const jobs = S.jobs || []; if (!jobs.length) return '';
     const h = ['<div class="jstrip" data-v="' + S.cur + '"><div class="js-h"><b>' + L('Arbeid på båten', 'Work on the boat') + '</b><span>' + jobs.length + ' / 6</span></div>'];
     // (the end of a crew job moves every game minute with the hands on it, core/13-work.js jobMinute: the time and «ferdig kl.» are read
     // from the job by jobTick, not written here, so the HTML stays the same while it runs)
     jobs.forEach((j, i) => {
-      h.push('<div class="js-row' + (j.until != null ? ' run' : '') + '" data-i="' + i + '"><span class="js-n">' + (S.lang === 'no' ? j.no : j.en) + '</span>' +
+      h.push('<div class="js-row' + (j.until != null ? ' run' : '') + '" data-i="' + i + '" data-k="' + j.kind + '"><span class="js-n">' + (S.lang === 'no' ? j.no : j.en) + '</span>' +
         (j.until != null ? '<span class="js-k"></span><b class="js-t"></b><div class="js-b"><i></i></div>' : '<span class="js-k">' + (crewJob(j) ? L('venter', 'waiting') : inPort() ? durBoth(j.h * 60) : L('venter på havn', 'waits for port')) + '</span>') + '</div>');
     });
     // (shopLabel and shopFine as on Vedlikehold: «Snart i salg» where the shop is shut, P5; the test without payment for the admin)
-    if (yardNowOk()){ const m = shopMode();
+    // (only for the boat you are aboard: the purchase is made for her (S.cur when the payment comes back, ui/10i-shop.js), so on a fleet
+    // page with another boat chosen it is not offered: the code review 13.11.2026)
+    if (yardNowOk() && (aboard == null || aboard === S.cur)){ const m = shopMode();
       h.push('<div class="js-now"><button class="ph-btn p" data-pa="yardnow">' + (m === 'live' ? L('Ferdig nå · ', 'Done now · ') + realKr(YARD_NOW_NOK) : m === 'test' ? L('Ferdig nå', 'Done now') + ' · ' + shopLabel(YARD_NOW_NOK) : shopLabel(YARD_NOW_NOK)) + '</button>' +
         '<span class="js-k">' + L('Verftet gjør alle verftsjobbene på båten ferdige med én gang.', 'The yard finishes all the yard\'s jobs on the boat at once.') + '</span>' + shopFine() + '</div>'); }
     h.push('</div>');
@@ -102,9 +104,10 @@
     const strips = (root || document).querySelectorAll('.jstrip'); if (!strips.length) return;
     const t = S.t + (typeof liveFrac === 'function' ? liveFrac() : 0), rate = simRate(); let over = null;
     for (const st of strips){
-      const v = st.dataset.v, V = v === S.cur || typeof vesselById !== 'function' ? null : vesselById(v), jobs = (V ? V.jobs : S.jobs) || [];
+      const v = st.dataset.v, V = v === S.cur || typeof vesselById !== 'function' ? null : vesselById(v); if (v !== S.cur && !V) continue;   // (a boat sold while her page is open)
+      const jobs = (V ? V.jobs : S.jobs) || [];
       for (const r of st.querySelectorAll('.js-row.run')){
-        const j = jobs[+r.dataset.i]; if (!j || j.until == null) continue;
+        const j = jobs[+r.dataset.i]; if (!j || j.until == null || j.kind !== r.dataset.k) continue;   // (the queue changed since it was drawn: the page draws itself anew)
         const u = j.until, left = Math.max(0, Math.ceil((u - t) / rate * 60)), tm = r.querySelector('.js-t'), k = r.querySelector('.js-k'), bi = r.querySelector('.js-b i');
         const s = left >= 3600 ? Math.floor(left / 3600) + ':' + String(Math.floor(left / 60) % 60).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0') : String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
         const kt = L('ferdig kl. ', 'done at ') + hm(u / 60);

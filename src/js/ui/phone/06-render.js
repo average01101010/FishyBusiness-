@@ -66,7 +66,7 @@
   function shell(a){ const kb = KBT.includes(a); if (kb) kbLast = a; const h = kb ? 'kaiboden' : a, d = APPS.find(x => x[0] === h) || PAGE_HEAD[a] || [a, a, a, '#28507f'], f = jobPage(a, PAGES()[a]); return '<div class="ph-appv' + (a === 'post' || a === 'naustp' ? ' ph-paper' : '') + '" data-app="' + a + '" data-sub="' + (sub[a] || '') + '"><div class="ph-top" style="background:' + d[3] + '"><span class="ic">' + (IC[d[4] || h] || '') + '</span>' + L(d[1], d[2]) + '</div>' + (kb ? kbTabs(a) : '') + (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) + '</div>'; }
   // a page for the drawer, and an action tapped there: it runs as if that page were the open app, and says which page shows next
   // (FN1: the pages that make jobs, and Om bord, have the work on the boat at the top, for the boat the page is about: inside withSel)
-  const jobPage = (a, f) => f && JOB_PAGES.includes(a) ? () => jobStrip() + f() : f;
+  const jobPage = (a, f) => { const me = S.cur; return f && JOB_PAGES.includes(a) ? () => jobStrip(me) + f() : f; };   // (me: the boat you are aboard, before withSel binds the chosen one)
   function page(a){ const f = jobPage(a, PAGES()[a]); return f ? (SEL_APPS.includes(a) ? selRow() + withSel(f) : f()) : ''; }
   function dact(cur, a, d){
     const keep = app; let done; app = cur;
