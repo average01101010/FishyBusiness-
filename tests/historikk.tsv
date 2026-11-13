@@ -3916,3 +3916,8 @@
 2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	merketest	OK	22	lite	samtidig	
 2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	gbtest	OK	9	lite	samtidig	
 2026-11-13 20:09	ccr-d5-telefonen	1ad2ee6+	skiptest	OK	24	lite	samtidig	
+2026-11-13 20:41	ccr-d5-telefonen	effdec8	tut	OK	773	lite	alene	
+2026-11-13 20:57	ccr-d5-telefonen	effdec8+	tut	OK	941	lite	alene	
+2026-11-13 20:58	ccr-d5-telefonen	effdec8+	seatest	OK	24	lite	samtidig	
+2026-11-13 21:00	ccr-d5-telefonen	effdec8+	telefonflate	OK	150	lite	samtidig	
+2026-11-13 21:00	ccr-d5-telefonen	effdec8+	boottest	OK	36	lite	samtidig	
