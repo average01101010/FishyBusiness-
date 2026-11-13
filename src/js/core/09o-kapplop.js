@@ -44,17 +44,18 @@ const LOP = {
   hist:20,      // the attempts kept
   // the tasks on the way (KL1b, V5 B, Jonas 12.11.2026: «oppgavene som kommer underveis i løpet kan være x-faktoren som gjør det mer
   // spennende og balanserer spillet»): per leg the fixed one (fix) and the list the surprise is drawn from (surp), at fixed places by the
-  // way (measured on the Autonav routes 13.11.2026, kapplop.md «Oppgavene underveis»). Kinds: 'foto' a picture of the light fyr (in the
+  // way: the lights within 5 km of the havsjark's Autonav route and open water on it, read off 13.11.2026 (the route goes inside the
+  // skerries, so Marstein, Myken and Fruholmen of the plan lie 12 km or more off it; kapplop.md «Oppgavene underveis»). Kinds: 'foto' a picture of the light fyr (in the
   // light lys), 'prove' the survey station (one game hour of fishing and the measuring board; a type without the jig in rigs, the ocean
   // vessels, runs the echo line at p instead), 'ekko' the echo line from p, 'slep' a boat with engine failure at p towed to the
   // harbour nearest her, 'frakt' kg of freight from the checkpoint the leg starts at to the next. nm: the leg's way, measured in KL1a
   legs:[
-    {nm:194, fix:{k:'foto', fyr:'Marstein'}, surp:[{k:'foto', fyr:'Lista', lys:'sol'}, {k:'prove', p:P(59.30, 4.95)}, {k:'slep', p:P(58.75, 5.45)}]},
-    {nm:157, fix:{k:'frakt', kg:300}, surp:[{k:'foto', fyr:'Kråkenes'}, {k:'foto', fyr:'Svinøy', lys:'natt'}, {k:'ekko', p:P(61.60, 4.85)}]},
-    {nm:210, fix:{k:'prove', p:P(63.85, 9.25)}, surp:[{k:'foto', fyr:'Grip', lys:'natt'}, {k:'foto', fyr:'Sklinna', lys:'sol'}, {k:'slep', p:P(63.10, 7.40)}]},
-    {nm:175, fix:{k:'foto', fyr:'Myken', lys:'sol'}, surp:[{k:'foto', fyr:'Træna'}, {k:'prove', p:P(66.00, 12.40)}, {k:'slep', p:P(66.60, 13.00)}]},
-    {nm:192, fix:{k:'slep', p:P(68.05, 15.30)}, surp:[{k:'prove', p:P(68.40, 15.80)}, {k:'ekko', p:P(69.00, 16.50)}, {k:'foto', fyr:'Hekkingen'}]},
-    {nm:181, fix:{k:'foto', fyr:'Fruholmen', lys:'natt'}, surp:[{k:'foto', fyr:'Helneset'}, {k:'ekko', p:P(70.50, 21.00)}, {k:'prove', p:P(70.80, 23.00)}]}],
+    {nm:194, fix:{k:'foto', fyr:'Obrestad'}, surp:[{k:'foto', fyr:'Lista', lys:'sol'}, {k:'prove', p:P(58.9955, 5.3527)}, {k:'slep', p:P(58.4275, 5.8232)}]},
+    {nm:157, fix:{k:'frakt', kg:300}, surp:[{k:'foto', fyr:'Kråkenes'}, {k:'foto', fyr:'Svinøy', lys:'natt'}, {k:'ekko', p:P(61.3042, 4.5525)}]},
+    {nm:210, fix:{k:'prove', p:P(63.7724, 9.3127)}, surp:[{k:'foto', fyr:'Kya', lys:'natt'}, {k:'foto', fyr:'Bjørnsund', lys:'sol'}, {k:'slep', p:P(63.1622, 7.6705)}]},
+    {nm:175, fix:{k:'slep', p:P(66.3772, 12.9642)}, surp:[{k:'ekko', p:P(65.8689, 12.3801)}, {k:'prove', p:P(66.6331, 13.0879)}, {k:'foto', fyr:'Kalsholmen', lys:'sol'}]},
+    {nm:192, fix:{k:'foto', fyr:'Tranøy'}, surp:[{k:'prove', p:P(68.1068, 15.1829)}, {k:'slep', p:P(68.7763, 16.8129)}, {k:'foto', fyr:'Landegode', lys:'sol'}]},
+    {nm:181, fix:{k:'foto', fyr:'Skjervøya', lys:'natt'}, surp:[{k:'foto', fyr:'Vorterøy'}, {k:'ekko', p:P(70.4619, 22.3459)}, {k:'slep', p:P(70.7903, 23.7850)}]}],
   // game minutes: a surprise not done when the leg ends, or a task that failed (the boat drifted ashore before she came); the most the
   // measuring board takes off for an exact reading or adds for a bad one (kapplop.md); the light waited for within the leg's time at
   // the type's top speed times lysF, or the picture is taken in any light
