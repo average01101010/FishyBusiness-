@@ -1165,7 +1165,8 @@ const LEMMER = {
   STD:{ua:0.32, fa:0.265, th:0.426, sn:0.426},   // m: upper arm, forearm (to the wrist), thigh, shin (to the ankle)
   LEN:{},         // the new people's lengths by body ('m', 'f'), read from the skeleton the first time (limbLen)
   HAND:0.085,     // m from the wrist to where a hand holds, for the one-piece glove far off (near, each grip has its own point)
-  REACH:0.995,    // the share of its full length a limb is straightened to at most (a joint never locks dead straight)
+  get REACH(){ return this.on ? FIG_REACH : this.REACH0; },   // the share of its full length a limb is straightened to at most: figpose.js FIG_REACH (0.98) with the new people
+  REACH0:0.995,   // the same without «#folk2», as before step 125 (goes out with the old figure)
   BEND:0.6,       // rad (34°): the most the back bends further over to let a hand reach
   BACK:0.12,      // rad (7°): the most it leans back for one
   TWIST:0.6,      // rad (34°): the most the torso turns either way for one

@@ -100,10 +100,14 @@ function figTwist(R, a){
   const v = [(R[7] - R[5]) / (4 * w), (R[2] - R[6]) / (4 * w), (R[3] - R[1]) / (4 * w)];
   return 2 * Math.atan2(figDot(v, figNrm(a)), w) * 180 / Math.PI;
 }
+// The share of its full length a limb is straightened to at most (Jonas 13.11.2026, rule 11 of «Arkitekturen for bevegelsen» in
+// docs/planer/folk-2.md: 97.5-98 %. Near straight the joint's angle runs away with a small move of the target, the snap in elbow and
+// knee). The one number: the solver in deckcrew.js (LEMMER.REACH) reads it too.
+const FIG_REACH = 0.98;
 // a limb of two parts from its root S to the target T, the joint on the side of the point pole: [joint, end, m short of the target]
 function figIk(S, T, l1, l2, pole){
   let u = figSub(T, S); const D = Math.hypot(u[0], u[1], u[2]); u = D < 1e-6 ? [0, -1, 0] : figScl(u, 1 / D);
-  const d = Math.min(Math.max(D, Math.abs(l1 - l2) + 1e-4), (l1 + l2) * 0.9995), a = (d * d + l1 * l1 - l2 * l2) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
+  const d = Math.min(Math.max(D, Math.abs(l1 - l2) + 1e-4), (l1 + l2) * FIG_REACH), a = (d * d + l1 * l1 - l2 * l2) / (2 * d), h = Math.sqrt(Math.max(0, l1 * l1 - a * a));
   let p = figSub(pole, S); p = figSub(p, figScl(u, figDot(p, u)));
   if (Math.hypot(p[0], p[1], p[2]) < 1e-6) p = Math.abs(u[1]) < 0.9 ? figCrs(u, [1, 0, 0]) : [0, 0, -1];
   p = figNrm(p);

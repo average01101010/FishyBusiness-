@@ -16,7 +16,8 @@ export default function (t){
     const sk = K.figSkel(X, sex), LN = K.figLens(sk), jt = (P, n) => { const i = sk.ix[n]; return [P.J[i * 3], P.J[i * 3 + 1], P.J[i * 3 + 2]]; };
     t.ok(LN.ua > 0.24 && LN.ua < 0.33 && LN.fa > 0.22 && LN.fa < 0.3 && LN.th > 0.38 && LN.th < 0.47 && LN.sn > 0.38 && LN.sn < 0.45, sex + ': the skeleton\'s lengths are a person\'s (ua ' + LN.ua.toFixed(3) + ', fa ' + LN.fa.toFixed(3) + ', th ' + LN.th.toFixed(3) + ', sn ' + LN.sn.toFixed(3) + ' m)');
     // the poses: [name, bend deg, twist deg, pelvis, right wrist, right elbow side, left wrist, left elbow side, right ankle, left ankle]
-    const hipY = LN.hip, shY = LN.hip + LN.sh[0];
+    // (a limb is straightened to FIG_REACH, 98 %, at most: he stands with the knees a little bent, the hips that much lower)
+    const hipY = LN.hip - (1 - K.FIG_REACH) * (LN.th + LN.sn) - 0.002, shY = hipY + LN.sh[0];
     const POS = [
       ['standing, the hands low before him', 0, 0, [0, hipY, 0], [0.2, 0.95, -0.2], [0.3, 1.1, 0.1], [-0.2, 0.95, -0.2], [-0.3, 1.1, 0.1], [0.1, LN.ankle, 0], [-0.1, LN.ankle, 0]],
       ['bent 40 over the rail, the hands out', 40, 0, [0, hipY - 0.03, 0], [0.18, 0.9, -0.5], [0.3, 1.0, -0.2], [-0.18, 0.9, -0.5], [-0.3, 1.0, -0.2], [0.11, LN.ankle, 0.05], [-0.11, LN.ankle, 0.05]],
