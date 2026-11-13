@@ -99,6 +99,9 @@ JS = """((breaks) => { const R = {}, b = S.boat, t0 = b.type, g = GROUNDS[2].p; 
     for (let i = 0; i < 600; i++){ if (i % 30 === 0){ FORCE = [breaks[(i / 30) % breaks.length], breaks[(i / 30 + 5) % breaks.length], breaks[(i / 30 + 11) % breaks.length]]; S.t += 13; CREW3D._st.lastSim = S.t; }
       CREW3D.tick(0.1); const h = (CREW3D.bodyHits() || []).concat((CREW3D.clipNow() || []).filter(x => x.n > 0 && CREW3D.agents().some(a => a.id === x.id && a.mode === 'at'))); r.walk += h.length; r.walked += CREW3D.agents().filter(a => a.mode === 'walk').length; if (h.length) (r.walkAt = r.walkAt || []).push(...h.map(x => x.which + ':' + x.near + ':' + x.mode)); }
     FORCE = null;
+    // (FB4, steg 120, 13.11.2026: the sea legs at their furthest, the deck 15° either way and fore and aft: every break at every rail place it
+    // fits, [clear, fits]; deckcrew.js seaScan. A build from before has none: red)
+    r.sea = CREW3D.seaScan ? CREW3D.seaScan() : null;
     r.scan = CREW3D.clipScan(); }
   window.idleAssign = orig; b.type = t0; applyVessel(); CREW3D.reset(); return R; })"""
 
@@ -147,6 +150,8 @@ async def main():
         gone = {vt: r['gone'] for vt, r in R.items() if r and r.get('gone')}
         print(ok(not gone), 'rigged with all of it, everyone has a place on deck or inside (nobody without one; OB10 runde 4)', gone)
         print(ok(not kit and sum(len(r.get('kit', {})) for r in R.values() if r) >= 10), 'rigged with all the line or the nets she carries, nobody stands in the gear on deck (the tubs, the nets, the pots), at a break or on the way (kitHits; OB10 runde 4)', kit)
+        seaBad = {vt: ({k: v for k, v in r['sea'].items() if v[0] != v[1]} if r.get('sea') else 'ingen seaScan') for vt, r in R.items() if r and (not r.get('sea') or any(v[0] != v[1] for v in r['sea'].values()))}
+        print(ok(not seaBad), 'nor with the sea legs at their furthest, the deck 15° either way: no leg, spine, shoulder or head through anything at any break\'s place (FB4; %d places)' % sum(v[1] for r in R.values() if r and r.get('sea') for v in r['sea'].values()), seaBad)
         walk = {vt: [r['walk'], r['walked'], r.get('walkAt')] for vt, r in R.items() if r and r['walk']}
         print(ok(not walk and all(r['walked'] > 50 for r in R.values() if r)), 'nor a body on the way between them (shoulders, chest and back, every tenth of a second)', walk)
         given = {}

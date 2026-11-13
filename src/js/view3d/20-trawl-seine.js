@@ -119,6 +119,11 @@
   // view nobody is drawn at the wheel, where the eye is (the skipper, or a hand who has the helm)
   function drawDeckCrew(BMrel, eye, VP, t, G){
     nSetup(VP); let idx = 20; if (!GB) buildGear();
+    // (the tests hold the crew's deck at a roll and a pitch of their own, where the boat is and heading her way, hold everyone's beat
+    // still (T), put everyone at a place in one pose (task), and take the time of this function: SJOBEIN.test, tests/sjobein.py)
+    const SJT = SJOBEIN.test, sjp0 = SJT && SJT.prof ? performance.now() : 0;
+    if (SJT && SJT.roll != null) BMrel = model(BMrel[12], BMrel[13], BMrel[14], -bv.head, SJT.pitch || 0, SJT.roll || 0);
+    const DN = deckN(BMrel);   // (the deck's normal in the world, for the sea legs: view3d/08-plants.js seaNow)
     const b = S.boat, d = G.deck || {y:G.gw, z:0}, gw = G.gw || d.y + 0.9, railH = clamp(gw - d.y, 0.6, 1.1), now = performance.now() / 1000, DW = deckWork(G), ST = CREW3D._st, V = VESSELS[vtype()] || {}, K = G.kit || {};
     dkTick(); DKGULL = null; DKBM = BMrel;   // (the boat's frame for the wet deck, 09-landing-deck.js dkWetPts)
     const rel = q => xf(BMrel, q), A = CREW3D.visible();
@@ -147,8 +152,8 @@
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
       const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h + (a.sqA || 0) * Math.PI / 2), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
       const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)], sg = a.x >= 0 ? 1 : -1;
-      const g0 = CREW3D.holds(a), ef = a.ef == null ? 1 : a.ef, ta = a.tk != null ? a.tk : t;   // (the place still held; each one's own beat, deckcrew.js a.tk)
-      st.age = a.c ? a.c.age : 45; st.deck = true; st.bp = lp; st.rail = a.mode === 'at' && g0 ? g0.rail || null : null; if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;
+      const g0 = CREW3D.holds(a), ef = a.ef == null ? 1 : a.ef, ta = SJT && SJT.T != null ? SJT.T : a.tk != null ? a.tk : t;   // (the place still held; each one's own beat, deckcrew.js a.tk)
+      st.age = a.c ? a.c.age : 45; st.deck = true; st.bp = lp; st.dn = DN; st.sea = b.status === 'port' && !SJT ? null : seaSet(CREW3D, a, BMrel); if (SJT && SJT.task && a.mode === 'at' && !ev) st.task = SJT.task; st.rail = a.mode === 'at' && g0 ? g0.rail || null : null; if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;
       st.slump = clamp((0.96 - ef) * 1.6, 0, 0.35); st.tape = !!(a.c && a.c.cut && S.t < a.c.cut); if (a.put) st.put = {task:a.put.task, u:clamp(a.putU || 0, 0, 1)};
       // a moment (G3.crewFx, 14-crewlife.js crewSlip): a fish slips over the side, the knife slips and a hand is cut
       const fx = CFX.get(a.id);
@@ -176,6 +181,7 @@
         else if (a.task === 'jig' && !machines){ const rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; st.Rl = rel(rl); st.Wt = rel([rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]); } }
       if (a.sub && a.sub.carry === 'crate'){ st.crate = true; st.csp = i => packed(hash(i * 7 + 1)); if (a.mode === 'at') st.s = ST.clk - (a.sub.done - (a.sub.hold || 2)); }
       drawWorker(P, st, eye, ta, idx++); }
+    if (sjp0){ SJT.prof.ms += performance.now() - sjp0; SJT.prof.n += A.length; SJT.prof.f++; }
     dkBloodDraw(VP);
     if (HELM_KIT[vtype()] && G.skipperAt && cam.dist < 80) drawHelmKit(BMrel, eye, G);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
@@ -280,7 +286,8 @@
   // has no model, are the player's boat nearest her length and beam as before (npcKit). By the vessel's fields, never her name.
   const NGEAR = new Map();
   function npcGear(n){
-    if (n.mainGear) return n.mainGear; if (!n.coast || typeof VEC === 'undefined') return null;   // (npcStates carries it, core/05-vessels.js; the lookup below for an entry without it) const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
+    if (n.mainGear) return n.mainGear; if (!n.coast || typeof VEC === 'undefined') return null;   // (npcStates carries it, core/05-vessels.js; the lookup below for an entry without it)
+    const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
     // (two boats can share a berth and so its id, flaate.json's «shared»: the one of her length; two of the same length on one berth get
     // the first one's gear, a picture's error only. A boat that is not the register's (a trip's, the coast guard's) has none, kept so)
     const m = /^c(-?\d+):(-?\d+)\.(\d+)\./.exec(String(n.id)), keep = g => { if (NGEAR.size > 4000) NGEAR.clear(); NGEAR.set(k, g); return g; };
@@ -505,12 +512,13 @@
     E.st.n = n; const gap = t - E.t; E.t = t; const sim = E.sim; if (!sim.on()) return false;
     if (gap > 5) sim._st.lastSim = null;   // out of sight a while: everyone straight to their place
     sim.tick(Math.min(0.1, Math.max(0, gap)));
-    const G = K.geo, sv = K.sv, h0 = n.hd; let idx = 40 + (lookHash(String(n.id)) % 50);
+    const G = K.geo, sv = K.sv, h0 = n.hd, DN = deckN(n.M); let idx = 40 + (lookHash(String(n.id)) % 50);
     for (const a of sim.visible()){
       const lp = a.mode === 'helm' && G.skipperAt ? G.skipperAt : [a.x, a.y, a.z], wl = xf(n.M, [lp[0] * sv[0], lp[1] * sv[1], lp[2] * sv[2]]), wy = wl[1] + eye[1];
       const look = npcLook(a.me ? 'skip' : 'crew', n, a.c ? (a.c.id.endsWith('1') ? 1 : 0) : 0);
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look};
-      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:h0 + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0}, eye, t, idx++); }
+      // (her people have the sea legs too where she rolls in the drawing, FB4: n.M is her frame with her roll and pitch)
+      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:h0 + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0, dn:DN, sea:n.st === 'port' ? null : seaSet(sim, a, n.M)}, eye, t, idx++); }
     if (NCREW.size > 24) for (const [id, e] of NCREW) if (t - e.t > 60) NCREW.delete(id);
     return true;
   }
