@@ -171,8 +171,9 @@ def put(R, mat_, name, sex, pose, x, colours, y=0.0, turn=0.0, plain=None, grip=
     for i, d in enumerate(lay.data): d.color = (col[i][0], col[i][1], col[i][2], 1.0)
     # the normals as the file has them
     me.materials.append(mat_); o = BU.link(bpy.data.objects.new(name, me)); me.shade_smooth()
-    try: me.normals_split_custom_set_from_vertices([tuple(q) for q in from_game_n(P, sex, pose)])
-    except Exception: pass
+    if not P['bone']:                    # (the parts on the head are drawn with smooth normals: Blender fell over setting the file's own on them)
+        try: me.normals_split_custom_set_from_vertices([tuple(q) for q in from_game_n(P, sex, pose)])
+        except Exception: pass
     o.location = (x, y, 0); o.rotation_euler = (0, 0, turn); return o
 
 
@@ -192,7 +193,9 @@ def pictures(R):
     def fig(ln, pose, x, turn=0.0, y=0.0):
         L = LOOKS[ln]
         for n in look_parts(R, L): put(R, m, n, L['sex'], pose, x, L['c'], y, turn)
+    only = os.environ.get('KROPP_ARK')          # (KROPP_ARK=haar,hatter: only the sheets whose name holds one of these)
     def shot(name, loc, look, lens=50, w=2000, h=1000):
+        if only and not any(q in name for q in only.split(',')): return
         BU.setup_render(w, h, samples=40); BU.camera(loc, look, lens=lens); BU.render(os.path.join(OUT, name))
     # 1. the bodies: the man and the woman, from the front, the side and three quarters, and from behind
     for i, (sex, nm) in enumerate((('m', 'body'), ('f', 'bodyF'))):
@@ -229,11 +232,15 @@ def pictures(R):
             for n in look_parts(R, L): put(R, m, n, L['sex'], 'stå', -((r * 5 + i) - 4.5) * 0.8, L['c'], turn=-0.35 if (r * 5 + i) % 2 else 0.25)
     shot('k2_jakker.png', (0.0, 9.6, 1.1), (0.0, 0, 0.90), 50, 2600, 760)
     shot('k2_jakker_bak.png', (0.0, -9.6, 1.1), (0.0, 0, 0.90), 50, 2600, 760); clear()
+    # 6b. the shoes close: the boot, the ankle boot and the deck shoe, from the side and from above in front
+    for i, (sh_, col) in enumerate((('boot', (0.07, 0.07, 0.08)), ('shoe', (0.35, 0.24, 0.14)), ('sneaker', (0.20, 0.36, 0.64)))):
+        for n in (sh_, 'shin'): put(R, m, n, 'm', 'hvile', -(i - 1) * 0.55, {7: col, 3: (0.40, 0.41, 0.43)}, turn=-0.9)
+    shot('k2_sko.png', (0.0, 1.9, 0.42), (0.0, 0, 0.14), 60, 2400, 760); clear()
     # 7. the heads with every hair, beard and hat
     hs = [n for n in R.names if n.startswith('hair_') and not n.endswith('_h')] + [n for n in R.names if n.startswith('b_')]
     for i, n in enumerate(hs):
-        r, c = divmod(i, 7); put(R, m, 'head', 'm', 'hvile', -(c - 3) * 0.36, {}, y=0); o = put(R, m, n, 'm', 'hvile', -(c - 3) * 0.36, {})
-        for q in bpy.data.objects[-2:]: q.location.z = -r * 0.36
+        r, c = divmod(i, 7)
+        for q in ('head', n): o = put(R, m, q, 'm', 'hvile', -(c - 3) * 0.36, {}, turn=-0.45); o.location.z = -r * 0.36
     shot('k2_haar.png', (0.0, 3.6, 1.66 - 0.18), (0.0, 0, 1.63 - 0.18), 60, 2400, 760); clear()
     hts = ['hardhat', 'beanie', 'skippercap', 'hat_bobble', 'hat_flat', 'hat_ball', 'hat_bucket']
     for r, (sex, hd, hair) in enumerate((('m', 'head', 'hair_short_h'), ('f', 'headF', 'hair_long_h'))):
