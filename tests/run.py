@@ -321,6 +321,14 @@ for _f in ('src/js/ui/phone/13-mannskap-bank-meld.js', 'src/js/core/04-crew.js',
 COVER['tests/farttest.py'] = ['farttest']; COVER['src/data/fart.json'] = ['farttest']; COVER['src/data/fart-r.b64'] = ['farttest']; COVER['tools/fart/fart.py'] = []; COVER['src/js/ui/03a-chart.js'] = COVER.get('src/js/ui/03a-chart.js', []) + ['farttest']
 for _f in ('src/js/core/05e-sjovei.js', 'src/js/core/14b-sikkerhet.js', 'src/js/ui/03-map.js', 'src/js/ui/04-panels-instruments.js'): COVER[_f] = COVER.get(_f, []) + ['farttest']
 
+# Folk 2, FB6 (steg 124): the new skinned figure (folk2.b64) read by the game and shown in the wardrobe behind #folk2. folk2shot is the
+# wardrobe's pictures and the shader's skinning against the processor's on WebGL 2 and 1 (no 3D view: LITE); the unit test
+# (tests/unit/figpose.test.mjs) holds figpose.js to kropp.py's numbers (figpose.fasit.json, written by tools/harbour/kropp_fasit.py)
+LITE += ['folk2shot']
+COVER['tests/folk2shot.py'] = ['folk2shot']; COVER['src/js/figpose.js'] = ['folk2shot', 'f1test']; COVER['src/data/folk2.b64'] = ['folk2shot', 'boottest']
+COVER['tests/unit/figpose.test.mjs'] = []; COVER['tests/unit/figpose.fasit.json'] = []; COVER['tools/harbour/kropp_fasit.py'] = []
+for _f in ('src/js/ui/10g-wardrobe.js', 'src/js/vessel3d.js'): COVER[_f] = COVER.get(_f, []) + ['folk2shot']
+
 
 def changed_tests():
     git = lambda *a: subprocess.run(['git'] + list(a), cwd=ROOT, capture_output=True, text=True).stdout.split()
@@ -420,7 +428,7 @@ def report(r):
 
 # what the unit tests read: the core, the boat models (tests/unit/vessel3d.test.mjs builds every model from src/data/ in Node, 01.11.2026),
 # the fishing data (tests/unit/fiske.test.mjs, B1 01.11.2026), and the fishing grounds (tests/unit/felt.test.mjs, Ø14 F1 08.11.2026)
-UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/js/deckcrew.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
+UNIT_SRC = ('src/js/core/', 'tests/unit/', 'src/js/vessel3d.js', 'src/js/figpose.js', 'src/data/folk2.b64', 'src/js/deckcrew.js', 'src/data/boat-', 'src/data/fiske.json', 'tools/npc/fiske.py', 'src/data/rules.json', 'build.mjs', 'src/data/felt', 'tools/npc/felt.py')
 
 
 def main():
