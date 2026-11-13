@@ -106,27 +106,37 @@ async def one(p, name, vw, vh):
     t = await tab()
     check(t and 'oppgaven' in t['txt'].lower() and 'overraskelsen' in t['txt'].lower() and 'Obrestad' in t['txt'] and 'Klokka' in t['txt'], name + ': 2. fanen under forsøket: klokka, etappe 1 og oppgavene', t and t['txt'][:400])
     await shot('under')
-    # 3. the clock in 3D and in the plotter's bar
-    await J("() => PHONE.show(false)"); await pg.wait_for_timeout(900)
+    # 3. the clock in 3D and in the plotter's bar, with a time as long as a real race has (the start put 4 d 18 h back: the whole course
+    # is 4 to 7 game days)
+    await J("() => { PHONE.show(false); S.lop.run.t0 -= 4 * 1440 + 18 * 60; }"); await pg.wait_for_timeout(900)
     foot = await J("() => GPS3D && GPS3D.lop")
     check(foot and foot.get('t'), name + ': 3. klokka i kartplotterens fot i 3D', foot)
     await J("() => { S.settings.plotMin = true; document.body.classList.add('plotmin'); INSTR.renderGPS(); }"); await pg.wait_for_timeout(600)
     g = await J(RECT, '#gps3d'); gl = await J(RECT, '#gps3d .glop')
-    check(g and g['shown'] and gl and gl['shown'] and gl['r'] <= g['r'] + 1, name + ': 3. klokka i GPS-stripa i 3D', {'gps': g, 'lop': gl})
+    rows = await J("() => new Set([...document.querySelectorAll('#gps3d .gstrip > *')].map(e => Math.round(e.getBoundingClientRect().top))).size")
+    check(g and g['shown'] and gl and gl['shown'] and gl['r'] <= g['r'] + 1 and ' d ' in gl['t'] and rows <= 2, name + ': 3. klokka i GPS-stripa i 3D med dager på, uten ny linje', {'gps': g, 'lop': gl, 'rader': rows})
     await J("() => { S.settings.plotMin = false; document.body.classList.remove('plotmin'); INSTR.renderGPS(); }"); await pg.wait_for_timeout(900)
     await shot('klokke')
+    await J("() => { S.lop.run.t0 += 4 * 1440 + 18 * 60; }")
     # 4a. the shutter at Obrestad fyr, in 3D, the boat a kilometre off with her bow and the camera on it
     fx = await J("() => S.lop.run.tasks.find(m => m.role === 'fix').id")
     pos = await J("""async (id) => { const m = S.lop.run.tasks.find(x => x.id === id), b = S.boat; await mapNeed(m.p, 2);
       b.pos = {x:m.p.x, y:m.p.y}; b.status = 'idle'; b.v = 0; S.plan = null; b.heading = Math.atan2(m.fyr.x - m.p.x, -(m.fyr.y - m.p.y));
       return {d:+dist(b.pos, m.fyr).toFixed(2), lys:m.lys}; }""", fx)
     await pg.wait_for_timeout(4000)
+    # (the camera stands 0.55 rad off her bow, and standing up the view is narrow: the bow turned until the light is in the picture, as a
+    # player turns the camera; G3.seen is what the shutter asks)
+    aim = None
+    for off in [0, -0.55, 0.55, -1.1, 1.1, -0.3, 0.3, -0.8, 0.8]:
+        await J("([id, off]) => { const m = S.lop.run.tasks.find(x => x.id === id); S.boat.heading = Math.atan2(m.fyr.x - m.p.x, -(m.fyr.y - m.p.y)) + off; }", [fx, off]); await pg.wait_for_timeout(1500)
+        sn = await J("(id) => { const m = S.lop.run.tasks.find(x => x.id === id), q = G3.seen(m.fyr.x, m.fyr.y, m.fyr.h); return q ? {front:!!q.front, clear:!!q.clear} : null; }", fx)
+        if sn and sn['front'] and sn['clear']: aim = off; break
     await J("() => { turFotoUi(); }"); fb = await J(RECT, '#fotoBtn')
     check(fb and fb['shown'], name + ': 4a. utløseren står i 3D innen 3 km av Obrestad fyr', {'pos': pos, 'btn': fb})
     await tap('#fotoBtn'); await pg.wait_for_timeout(2500)
     r = await J(RUN); st = [x for x in r['tasks'] if x[0] == fx]
     toast = await J("() => (document.getElementById('toast') || {}).textContent || ''")
-    check(st and st[0][4] == 'done', name + ': 4a. bildet av Obrestad fyr er tatt med utløseren', {'task': st, 'toast': toast})
+    check(st and st[0][4] == 'done', name + ': 4a. bildet av Obrestad fyr er tatt med utløseren', {'aim': aim, 'task': st, 'toast': toast})
     # 4b. the measuring board at a station (leg 3's fixed task, the station on Frohavet, made here for the screen): fished, then measured by touch
     s = await J(MAKE, {'j': 2, 'role': 'fix', 'k': 'st'})
     check(s.get('k') == 'prove' and s.get('kind') == 'stasjon', name + ': 4b. prøvestasjonen laget', s)
@@ -147,18 +157,23 @@ async def one(p, name, vw, vh):
     await pg.wait_for_function("S.plan && S.boat.status !== 'idle'", timeout=60000)
     r = await J(RUN); st = [x for x in r['tasks'] if x[0] == w['id']]; to = await J("(id) => S.lop.run.tasks.find(x => x.id === id).to", w['id'])
     check(st and st[0][5] == 'tow' and r['plan'] and r['plan']['port'] == to, name + ': 4c. slepet festet: ruta til havna er funnet', {'task': st, 'plan': r['plan'], 'to': to})
-    # 5. the chart with the course (the way found in the background)
-    await J("() => { S.plan = null; S.boat.status = 'idle'; G3.show(false); openPlotter(); }"); await pg.wait_for_timeout(800)
+    # 5. the chart with the course: «Kjør til Bergen» from the tab (by touch), so the leg sailed now is her own Autonav route
+    await J("() => { S.plan = null; S.boat.status = 'idle'; S.boat.v = 0; }")
+    await tab(); await tap('#phone [data-pa="lopgo"]')
+    await pg.wait_for_function("S.plan && S.plan.wps.length > 1 && S.plan.wps[S.plan.wps.length - 1].port === LOP.cps[0].port", timeout=300000)
+    await J("() => { S.boat.status = 'idle'; S.boat.v = 0; PHONE.show(false); G3.show(false); openPlotter(); }"); await pg.wait_for_timeout(800)
     await J("""() => { const P = [LOP.start.p].concat(LOP.cps.map(c => c.p), [LOP.goal.p]), y0 = Math.min(...P.map(q => q.y)), y1 = Math.max(...P.map(q => q.y)), x0 = Math.min(...P.map(q => q.x)), x1 = Math.max(...P.map(q => q.x)), r = document.getElementById('map').getBoundingClientRect();
       view.cx = (x0 + x1) / 2; view.cy = (y0 + y1) / 2; view.z = MAP_H / Math.max((y1 - y0) * 1.2, (x1 - x0) * 1.25 * r.height / r.width); applyView(); renderStatic(); }""")
-    await pg.wait_for_function("LOP_WAY.w && !LOP_WAY.busy", timeout=300000); await J("() => { renderStatic(); }"); await pg.wait_for_timeout(1500)
-    k = await J("() => ({lines:document.querySelectorAll('#map .lopmk').length, now:[...document.querySelectorAll('#map .lopmk.now')].map(e => e.getAttribute('points').split(' ').length), cps:document.querySelectorAll('#map .lopcp').length, goal:document.querySelectorAll('#map .lopgoal').length, way:LOP_WAY.w.length})")
+    await J("() => { renderStatic(); }"); await pg.wait_for_timeout(1500)
+    k = await J("() => ({lines:document.querySelectorAll('#map .lopmk').length, now:[...document.querySelectorAll('#map .lopmk.now')].map(e => e.getAttribute('points').split(' ').length), cps:document.querySelectorAll('#map .lopcp').length, goal:document.querySelectorAll('#map .lopgoal').length, plan:S.plan.wps.length})")
     check(k['lines'] == 6 and k['cps'] == 6 and k['goal'] == 1 and k['now'] and k['now'][0] > 2, name + ': 5. løypa i kartet: Autonav-veien for etappen som seiles, de andre etappene, sjekkpunktene og mållinja', k)
     bar = await J(RECT, '#ecLop'); bars = await J("() => [...document.querySelectorAll('#ecdisTop > .ec-f')].map(e => { const q = e.getBoundingClientRect(), cs = getComputedStyle(e); return cs.display === 'none' ? null : [e.className, Math.round(q.left), Math.round(q.right)]; }).filter(Boolean)")
     ov = [1 for i in range(len(bars) - 1) if bars[i][2] > bars[i + 1][1] + 1]
     vw_ok = all(b[2] <= vw + 1 for b in bars)
     check(bar and bar['shown'] and bar['t'] and not ov and vw_ok, name + ': 3. klokka i kartplotterens linje, uten overlapp og innenfor skjermen', {'lop': bar, 'bar': bars})
     await shot('kart')
+    # (the Oppdrag app on another tab first, so «Se kappløpet» below has to open the race's tab itself)
+    await J("() => { PHONE.show(true); PHONE.open('ordl'); }"); await pg.wait_for_timeout(400); await tap('#phone .ph-sub button[data-s="turer"]'); await J("() => PHONE.show(false)")
     # 6. the card at the checkpoint in Bergen (the leg's fixed task is done: the dock counts it, as the core does when she moors there)
     await J("() => { G3.show(true); }"); await pg.wait_for_function("G3.isActive()", timeout=120000)
     c = await J("""async () => { const r = S.lop.run, pt = portById(LOP.cps[0].port), b = S.boat; await mapNeed(pt.p, 3);
@@ -174,7 +189,7 @@ async def one(p, name, vw, vh):
     await shot('sjekkpunkt')
     await tap('#lopPop [data-x="see"]'); await pg.wait_for_timeout(600)
     t = await J(TAB); hid = await J("() => { const e = document.getElementById('lopPop'); return !e || e.hidden; }")
-    check(hid and t and t['on'] == 'Kappløp' and 'Etappe 2' in t['txt'], name + ': 6. «Se kappløpet» med berøring åpner fanen', {'on': t and t['on']})
+    check(pop and pop['shown'] and hid and t and t['on'] == 'Kappløp' and 'Etappe 2' in t['txt'], name + ': 6. «Se kappløpet» med berøring åpner fanen', {'on': t and t['on']})
     # 6b. north: the last leg from Tromsø, «Kjør til Nordkapp» by touch: Autonav's way ends past the finish line (the stikkprøve's north;
     # south is Lindesnes, Obrestad and the tow off Egersund, the middle the station on Frohavet)
     n = await J("""async () => { const r = S.lop.run, pt = portById(LOP.cps[4].port), b = S.boat; await mapNeed(pt.p, 3);

@@ -8,6 +8,10 @@
 // where money is spent (kapplop.md «Det som ikke selges», V7 A): the race is sailed.
 const lopKv = (k, v, cls) => '<div class="kv' + (cls ? ' ' + cls : '') + '"><span>' + k + '</span><b>' + v + '</b></div>';
 const lopHmL = min => { const a = lopHm(min); return lopL(a[0], a[1]); };
+// the clock short, for the GPS strip, the little chart's foot and the plotter's bar: «52 min», «3:07», «4 d 18:12» (the whole course
+// is 4 to 7 game days, and the long form «4 d 18 t 12 min» wrapped the strip)
+const lopHmS = min => { const m = Math.max(0, Math.round(min)), d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), mm = String(m % 60).padStart(2, '0');
+  return d ? d + ' d ' + String(h).padStart(2, '0') + ':' + mm : h ? h + ':' + mm : m + ' min'; };
 const lopLegsN = () => LOP.cps.length + 1;
 // the leg j's two ends (0: Lindesnes–Bergen … 5: Tromsø–Nordkapp)
 const lopLegFrom = j => j ? LOP.cps[j - 1].name : LOP.start.name;
@@ -125,32 +129,25 @@ async function lopGo(){
 }
 
 // ---- the course in the chart, while she is registered: the checkpoints with their names, the finish line, and the legs as thin
-// dotted lines between them; the leg she sails now as the way Autonav takes, her own route when it ends at the checkpoint, else found
-// once (as «Kjør dit» finds one, leiaRoute, one search: never the whole course in the background, which would hold the route
-// search's things in the water and its tide for minutes, 11-route.js LEIA_RUN, and pull the map of the whole coast)
-const LOP_WAY = {key:null, w:null, busy:false, t:0};
+// dotted lines between them; the leg she sails now as the way Autonav takes when her own route ends at the checkpoint (or past the
+// line after Tromsø). No route is searched for the chart: a search holds the route search's things in the water and its tide
+// (11-route.js LEIA_RUN) for every search under way while it runs, so one in the background would change the way she finds herself
+// with «Kjør dit» or Autonav (kontrollen 13.11.2026)
 function lopLegWay(r, j){
-  const b = S.boat, last = S.plan && S.plan.wps && S.plan.wps[S.plan.wps.length - 1], to = j < LOP.cps.length ? LOP.cps[j].port : null;
-  // her own route to the checkpoint (or past the line after Tromsø), from where she is
-  if (r.vid === S.cur && last && S.plan.idx < S.plan.wps.length && (to ? last.port === to : !last.port && last.y < LOP.goal.p.y)) return [b.pos].concat(S.plan.wps.slice(S.plan.idx));
-  const key = r.id + '|' + j + '|' + r.type;
-  if (LOP_WAY.key === key && LOP_WAY.w) return LOP_WAY.w;
-  if (LOP_WAY.busy || typeof leiaRoute !== 'function' || (LOP_WAY.key === key && Date.now() - LOP_WAY.t < 120000)) return null;   // (a way not found is tried again after two minutes)
-  const a = portById(j ? LOP.cps[j - 1].port : LOP.start.port), c = to ? portById(to) : null; if (!a) return null;
-  LOP_WAY.busy = true; LOP_WAY.key = key; LOP_WAY.w = null; LOP_WAY.t = Date.now();
-  leiaRoute({x:a.p.x, y:a.p.y}, c ? {x:c.p.x, y:c.p.y} : lopPast(), a.id, c ? c.id : null).then(res => { if (LOP_WAY.key === key && !res.why) LOP_WAY.w = [a.p].concat(res.wps.map(p => ({x:p.x, y:p.y}))); })
-    .catch(e => console.warn('lop way', e)).finally(() => { LOP_WAY.busy = false; if (LOP_WAY.w && typeof renderStatic === 'function') try { renderStatic(); } catch (e){} });
-  return null;
+  const b = S.boat, P = S.plan, last = P && P.wps && P.wps[P.wps.length - 1], to = j < LOP.cps.length ? LOP.cps[j].port : null;
+  if (r.vid !== S.cur || !last || P.idx >= P.wps.length) return null;
+  return (to ? last.port === to : !last.port && last.y < LOP.goal.p.y) ? [b.pos].concat(P.wps.slice(P.idx)) : null;
 }
 function lopSvg(u, inV){
   const r = S.lop && S.lop.run; if (!r || !(r.st === 'reg' || r.st === 'run')) return '';
   const g = [], pts = [LOP.start.p].concat(LOP.cps.map(c => c.p)), done = r.st === 'run' ? r.legs.length : 0;
   for (let j = 0; j < lopLegsN(); j++){ const a = pts[j], c = j < LOP.cps.length ? pts[j + 1] : lopPast(), w = j === done ? lopLegWay(r, j) : null, line = w && w.length > 1 ? w : [a, c];
     g.push('<polyline points="' + line.map(q => q.x.toFixed(3) + ',' + q.y.toFixed(3)).join(' ') + '" class="lopmk' + (j < done ? ' done' : j === done ? ' now' : '') + '" fill="none" stroke-width="' + ((w ? 2.6 : 1.4) * u) + '"' + (w ? '' : ' stroke-dasharray="' + (1.5 * u) + ' ' + (4 * u) + '"') + '/>'); }
-  // the checkpoints: a square at each, ticked off when passed, with the name when the chart is close enough or far out (the course is long)
+  // the checkpoints: a square at each, filled when passed, with the name on the sea side (left of it: the course runs up the west
+  // coast, and the chart's own names for the towns stand right of their dots, so the two never lie on each other; kontrollen 13.11.2026)
   pts.forEach((p, i) => { if (!inV(p.x, p.y)) return; const s = 7 * u, ok = i === 0 ? r.st === 'run' : i <= done;
     g.push('<rect x="' + (p.x - s) + '" y="' + (p.y - s) + '" width="' + 2 * s + '" height="' + 2 * s + '" transform="rotate(45 ' + p.x + ' ' + p.y + ')" class="lopcp' + (ok ? ' ok' : '') + '" stroke-width="' + (1.8 * u) + '"/>');
-    g.push(txt({x:p.x + 10 * u, y:p.y + 4 * u}, turEsc(i === 0 ? LOP.start.name : LOP.cps[i - 1].name), 'lbl-lop', 11 * u, 'stroke-width="' + (2.5 * u) + '"')); });
+    g.push(txt({x:p.x - 11 * u, y:p.y + 4 * u}, turEsc(i === 0 ? LOP.start.name : LOP.cps[i - 1].name), 'lbl-lop', 11 * u, 'text-anchor="end" stroke-width="' + (2.5 * u) + '"')); });
   // the finish line: due north in the chart's grid from the cape, 40 km out (lopCross)
   const G = LOP.goal, X = G.p.x, y0 = G.p.y + 0.3, y1 = G.p.y - G.north;
   if (inV(X, (y0 + y1) / 2) || inV(X, y0) || inV(X, y1)){
@@ -163,7 +160,7 @@ function lopSvg(u, inV){
 function lopUi(){
   const L = S.lop, c = lopClock(), bd = document.body, on = !!c;
   if (bd.classList.contains('lopon') !== on) bd.classList.toggle('lopon', on);
-  if (on){ const el = $('ecLop'); if (el){ const t = lopHmL(c.min); if (el.textContent !== t) el.textContent = t; } const l2 = $('ecLopL'); if (l2){ const t = lopL('KAPPLØP ', 'RACE ') + c.leg + '/' + c.n; if (l2.textContent !== t) l2.textContent = t; } }
+  if (on){ const el = $('ecLop'); if (el){ const t = lopHmS(c.min); if (el.textContent !== t) el.textContent = t; } const l2 = $('ecLopL'); if (l2){ const t = lopL('KAPPLØP ', 'RACE ') + c.leg + '/' + c.n; if (l2.textContent !== t) l2.textContent = t; } }
   if (!L || (typeof tutOn === 'function' && tutOn())) return;
   const r = L.run, e = L.hist && L.hist[0];
   if (r && r.st === 'run' && r.vid === S.cur && (r.seenN || 0) < r.legs.length){ r.seenN = r.legs.length; const l = r.legs[r.legs.length - 1]; if (S.t - l.t < 1440) lopPop(lopCpHtml(r)); }

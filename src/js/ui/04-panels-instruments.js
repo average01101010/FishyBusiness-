@@ -279,7 +279,7 @@ const INSTR = (() => {
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
     const cg = cogUi(pose, sog);   // (her course over the ground where a stream sets her off her heading, F8b)
     // (the race clock while a leg is sailed, ui/05l-kapplop.js lopClock, KL2)
-    const lc = typeof lopClock === 'function' ? lopClock() : null, lop = lc ? {t:lopHmL(lc.min), leg:lc.leg + '/' + lc.n} : null;
+    const lc = typeof lopClock === 'function' ? lopClock() : null, lop = lc ? {t:lopHmS(lc.min), leg:lc.leg + '/' + lc.n} : null;
     GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg, lop};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }

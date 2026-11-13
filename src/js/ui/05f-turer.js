@@ -87,7 +87,7 @@ function turPage(){
 async function turGo(id){
   const m = turActs().find(x => String(x.id) === String(id)); if (!m) return;
   const sea = m.k === 'garn' || m.k === 'prove' || m.k === 'foto' || m.k === 'lete' || (m.k === 'slep' && m.stage !== 'tow'), ekko = m.k === 'prove' && m.kind === 'ekko';
-  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : sea ? null : m.to;
+  const toPort = m.k === 'frakt' && m.stage === 'pick' ? m.from : sea ? null : m.to; if (toPort && !portById(toPort)) return;   // (a harbour no longer there: nothing, as before)
   const end = toPort ? portById(toPort).p : ekko ? m.pts[m.at || 0] : m.k === 'prove' || m.k === 'foto' || m.k === 'lete' ? m.p : {x:m.p.x + (m.k === 'slep' ? 0.06 : 0.12), y:m.p.y};
   // at a station she starts fishing as she comes (the time it still needs); an echo line goes on through its other points
   const fish = m.k === 'prove' && m.kind === 'stasjon' ? Math.round(((m.need - (m.min || 0)) / 60 + 0.1) * 10) / 10 : 0;
