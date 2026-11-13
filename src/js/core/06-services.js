@@ -226,6 +226,7 @@ function depart(){
   // those given time off sit this trip out: the landing after it brings them back (ui/08-actions.js sell)
   if (b.status === 'port') for (const c of S.crew) if (c.off) c.offTrip = true;
   if (b.status === 'port') provFill();   // an ocean vessel's stores filled by the chandler as she casts off (04-crew.js, H2b)
+  if (b.status === 'port') lopDepart();   // from the start of the race the clock begins (09o-kapplop.js)
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = null; S.prep = {};

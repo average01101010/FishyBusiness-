@@ -218,7 +218,12 @@ function turBestAt(o, q, h, cls, me){
   }
   return null;
 }
-function turFrakt(o, cls, used, me = turMe(), fromId = null){
+// fix: fixed harbours (the race's tasks, 09o-kapplop.js, KL1b): {from, to: port ids, kg, rnd: the draw for the goods}; the freight is
+// what the deck and the hold take of kg (at least 10 kg: with less room it waits on the quay until there is), and loading and landing are the crew's own work (cargoJob)
+function turFrakt(o, cls, used, me = turMe(), fromId = null, fix = null){
+  if (fix){ const f = portById(fix.from), t = portById(fix.to); if (!f || !t) return null;
+    const rnd = fix.rnd || Math.random, g = TUR_GOODS[Math.floor(rnd() * TUR_GOODS.length)], kg = Math.max(10, Math.round(Math.min(fix.kg, cargoRoom() * 0.6) / 10) * 10);
+    return {k:'frakt', cls:'lop', from:f.id, to:t.id, p:t.p, nm:Math.round(turNm(f.p, t.p)), h:turNm(f.p, t.p) / turV(), kg, what:[g.no, g.en], base:0}; }
   const c = TUR.cls[cls], v = turV(), hi = turHi(cls, me), from = fromId ? portById(fromId) : S.boat.status === 'port' ? portById(S.boat.port) : nearestPort(S.boat.pos); if (!from) return null;
   const way = turWay(), onWay = x => way && turNm(x.q.p, way) < 15 ? 1 : 0;   // (a harbour near where she is going comes first)
   const pick = !fromId && S.boat.status === 'port' ? 0 : turNm(o, from.p) / v;
@@ -475,18 +480,22 @@ function turValue(L){ let i = 1; while (i < TUR_VAL.length - 1 && L > TUR_VAL[i]
 // 1 within a few hundred metres of land), never more than the value
 const turSalvage = (m, danger) => Math.min(m.value, Math.round((turPay(m.h, TUR.cls[m.cls].f) + m.value * (0.03 + 0.12 * clamp(danger, 0, 1))) * (m.pf || 1) / 100) * 100);
 const turDanger = p => { try { return clamp(1 - (coastDistFar(p) - 0.2) / 2, 0, 1); } catch (e){ return 0.5; } };
-function turSlep(o, cls){
-  const c = TUR.cls[cls], v = turV(), tv = Math.min(TUR_TOWV, v * 0.75);
-  for (let tries = 0; tries < 24; tries++){
-    const a = Math.random() * Math.PI * 2, nm = 1.5 + Math.random() * Math.max(0.5, Math.min(c.h[1] * v * 0.5, 14) - 1.5), d = nm * NM / TUR.detour;
-    const p = {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
+// fix: a fixed place (the race's tasks, 09o-kapplop.js, KL1b): {p, rnd: the draw for the boat}. She is towed to the harbour with a quay
+// nearest her (the pier the board's tows need too), and she lies 0.5 to 8 km off the shore (null if not)
+function turSlep(o, cls, fix = null){
+  const c = TUR.cls[cls] || TUR.cls.kort, v = turV(), tv = Math.min(TUR_TOWV, v * 0.75), rnd = fix && fix.rnd || Math.random;
+  for (let tries = 0; tries < (fix ? 1 : 24); tries++){
+    const a = rnd() * Math.PI * 2, nm = 1.5 + rnd() * Math.max(0.5, Math.min(c.h[1] * v * 0.5, 14) - 1.5), d = nm * NM / TUR.detour;
+    const p = fix ? {x:fix.p.x, y:fix.p.y} : {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
     try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (cd < 0.5 || cd > 8) continue; } catch (e){ continue; }
-    const port = nearestPort(p); if (!port || !port.pier) continue;
-    const h = turNm(o, p) / v + turNm(p, port.p) / tv + 0.5; if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false) || !turCan(p, port.p, h, false)) continue;
-    const L = Math.round(clamp((BOAT.len || 7) * (0.75 + Math.random() * 0.2), 5.5, 12) * 10) / 10;
-    const m = {k:'slep', cls, to:port.id, p, nm:Math.round(turNm(o, p) + turNm(p, port.p)), h, reach:turNm(o, p) / v, boat:TUR_BOATS[Math.floor(Math.random() * TUR_BOATS.length)],
-      owner:TUR_OWNERS[Math.floor(Math.random() * TUR_OWNERS.length)], L, B:Math.round(L * 0.34 * 10) / 10, T:Math.round(L * 0.13 * 10) / 10, hd:Math.random() * Math.PI * 2, liv:Math.floor(Math.random() * 4),
+    let port = fix ? null : nearestPort(p); if (fix){ let bd = 1e9; for (const q of PORTS) if (q.pier && !q.naust){ const dd = dist(q.p, p); if (dd < bd){ bd = dd; port = q; } } }
+    if (!port || !port.pier) continue;
+    const h = turNm(o, p) / v + turNm(p, port.p) / tv + 0.5; if (!fix && (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, false) || !turCan(p, port.p, h, false))) continue;
+    const L = Math.round(clamp((BOAT.len || 7) * (0.75 + rnd() * 0.2), 5.5, 12) * 10) / 10;
+    const m = {k:'slep', cls:fix ? 'lop' : cls, to:port.id, p, nm:Math.round(turNm(o, p) + turNm(p, port.p)), h, reach:turNm(o, p) / v, boat:TUR_BOATS[Math.floor(rnd() * TUR_BOATS.length)],
+      owner:TUR_OWNERS[Math.floor(rnd() * TUR_OWNERS.length)], L, B:Math.round(L * 0.34 * 10) / 10, T:Math.round(L * 0.13 * 10) / 10, hd:rnd() * Math.PI * 2, liv:Math.floor(rnd() * 4),
       value:turValue(L), hTot:h * 2.5 + 12};
+    if (fix){ m.base = 0; return m; }
     m.payLo = turSalvage(m, 0); m.payHi = turSalvage(m, 1); m.base = turSalvage(m, turDanger(p));
     return m;
   }
@@ -510,14 +519,20 @@ function turSos(Q){
   if (typeof cloudEv === 'function') cloudEv('tur_take', {id:m.id, k:m.k, cls:m.cls, nm:m.nm, min:turMinR(m.h), allow:turMinR(m.hTot), sos:1});
   return m;
 }
-const turTowM = () => { const T = S.turer; return T && T.act.find(m => m.k === 'slep' && m.stage === 'tow' && m.vid === S.cur) || null; };
+// the missions taken and the race's tasks under way (09o-kapplop.js lopTasks, KL1b): the tasks lie in S.lop.run, not on the board and not
+// among the missions taken (no place, no pay, outside the brake on the board), but the tow, the station, the echo line and the picture
+// are done by the same minute, quay and camera as the missions'
+const turActs = () => { const T = S.turer, a = T && T.act || [], l = typeof lopTasks === 'function' ? lopTasks() : []; return l.length ? a.concat(l) : a; };
+// (turTowing feeds speedCap and fuelLph every tick: no arrays made here)
+const turTowM = () => { const T = S.turer, f = m => m.k === 'slep' && m.stage === 'tow' && m.vid === S.cur, a = T && T.act.find(f); if (a) return a;
+  const r = S.lop && S.lop.run; return r && r.st === 'run' && r.vid === S.cur && r.tasks ? r.tasks.find(m => m.st === 'go' && f(m)) || null : null; };
 const turTowing = () => !!turTowM();
 // the boats in missions for npcStates (05-vessels.js): lying still where she broke down, then on the line astern of the boat towing her
 function turNpcs(){
   const Q = typeof sosNpc === 'function' ? sosNpc() : null;   // (the boat that called on channel 16 while the call stands, 14b-sikkerhet.js)
-  const T = S.turer; if (!T || !T.act.length) return Q ? [Q] : [];
+  const A = turActs(); if (!A.length) return Q ? [Q] : [];
   const out = Q ? [Q] : [];
-  for (const m of T.act){ if (m.k !== 'slep') continue;
+  for (const m of A){ if (m.k !== 'slep') continue;
     let p = m.p, hd = m.hd || 0, v = 0, st = 'idle';
     if (m.stage === 'tow'){ const bt = m.vid === S.cur ? S.boat : ((S.fleet || []).find(x => x.id === m.vid) || {}).boat;
       if (bt && bt.pos){ hd = bt.heading || 0; const back = 0.035 + (m.L || 8) / 2000 + (BOAT.len || 7) / 2000; p = {x:bt.pos.x - Math.sin(hd) * back, y:bt.pos.y + Math.cos(hd) * back}; v = bt.status === 'sailing' ? bt.v || 0 : 0; st = 'tow'; m.p = p; m.hd = hd; } }
@@ -527,10 +542,10 @@ function turNpcs(){
 }
 // every minute while a tow is to be made: lying still within 150 m of her, the line goes over, and the way to the harbour is found
 function turMinute(){
-  const T = S.turer; if (!T || !T.act.length) return;
+  const T = S.turer, A = turActs(); if (!A.length) return;
   const b = S.boat;
-  turStuck(T, b);
-  for (const m of T.act.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b); if (m.k === 'lete' && m.vid === S.cur) try { turLeteMinute(m, b); } catch (e){ console.warn('turLete', e); }
+  if (T && T.act.length) turStuck(T, b);
+  for (const m of A.slice()){ if (m.k === 'prove' && m.vid === S.cur) turProveMinute(m, b); if (m.k === 'lete' && m.vid === S.cur) try { turLeteMinute(m, b); } catch (e){ console.warn('turLete', e); }
     if (m.ev && !m.ev.done && m.vid === S.cur && ['sailing', 'fishing'].includes(b.status) && S.t - m.t0 >= m.ev.at) try { turEventFire(m, b); } catch (e){ m.ev.done = true; console.warn('turEvent', e); }
     if (m.k !== 'slep') continue;
     // she drifts with the wind, about 3 % of it, toward the side it blows to; never so fast that she reaches land before three times
@@ -634,25 +649,30 @@ function turSesongStage(m){
 const TUR_LEN = {torsk:[45, 95], hyse:[38, 62], sei:[45, 85], lange:[60, 120], brosme:[40, 70], kveite:[70, 140], steinbit:[45, 85], uer:[28, 45], breiflabb:[50, 100], lysing:[40, 80], makrell:[30, 40], sild:[25, 35], blakveite:[50, 90], rognkjeks:[30, 45], flyndre:[25, 40]};
 const turGearOk = () => !!(S.boat.gear || (S.equip && S.equip.jukse > 0));
 const turHoldSp = () => (S.hold || []).reduce((a, x) => (a[x.sp] = (a[x.sp] || 0) + x.kg, a), {});
-function turProve(o, cls){
-  const c = TUR.cls[cls], v = turV(), ekko = !turGearOk() || Math.random() < 0.4;
-  for (let tries = 0; tries < 40; tries++){
-    const a = Math.random() * Math.PI * 2, nm = 1 + Math.random() * Math.max(0.5, Math.min(c.h[1] * v * 0.6, 40) - 1), d = nm * NM / TUR.detour;
-    const p = {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
-    try { if (isLandFar(p)) continue; const cd = coastDistFar(p); if (cd < 0.6 || cd > 15) continue; } catch (e){ continue; }
+// fix: a fixed place (the race's tasks, 09o-kapplop.js, KL1b): {p, kind:'stasjon' or 'ekko', rnd: the draw for the line's points}. The
+// station is one game hour of fishing (kapplop.md), and the place must be open water 0.6 to 15 km off the shore (null if not)
+function turProve(o, cls, fix = null){
+  const c = TUR.cls[cls] || TUR.cls.kort, v = turV(), rnd = fix && fix.rnd || Math.random, ekko = fix ? fix.kind === 'ekko' : !turGearOk() || Math.random() < 0.4;
+  for (let tries = 0; tries < (fix ? 12 : 40); tries++){
+    const a = rnd() * Math.PI * 2, nm = 1 + rnd() * Math.max(0.5, Math.min(c.h[1] * v * 0.6, 40) - 1), d = nm * NM / TUR.detour;
+    const p = fix ? {x:fix.p.x, y:fix.p.y} : {x:o.x + Math.sin(a) * d, y:o.y - Math.cos(a) * d};
+    try { if (isLandFar(p)) { if (fix) return null; continue; } const cd = coastDistFar(p); if (cd < 0.6 || cd > 15){ if (fix) return null; continue; } } catch (e){ if (fix) return null; continue; }
     if (ekko){
       // three points on, each 0.8-1.6 km from the last, in open water all the way
-      const pts = [p]; let ok = true, ang = Math.random() * Math.PI * 2;
-      for (let k = 1; k < 3 && ok; k++){ ang += (Math.random() - 0.5) * 1.2; const L = 0.8 + Math.random() * 0.8, q0 = pts[k - 1], q = {x:q0.x + Math.sin(ang) * L, y:q0.y - Math.cos(ang) * L};
+      const pts = [p]; let ok = true, ang = rnd() * Math.PI * 2;
+      for (let k = 1; k < 3 && ok; k++){ ang += (rnd() - 0.5) * 1.2; const L = 0.8 + rnd() * 0.8, q0 = pts[k - 1], q = {x:q0.x + Math.sin(ang) * L, y:q0.y - Math.cos(ang) * L};
         try { ok = !isLandFar(q) && !isLandFar({x:(q.x + q0.x) / 2, y:(q.y + q0.y) / 2}) && coastDistFar(q) >= 0.4; } catch (e){ ok = false; } pts.push(q); }
       if (!ok) continue;
       const len = (dist(pts[0], pts[1]) + dist(pts[1], pts[2])) / NM, h = turNm(o, p) / v + len / Math.min(v, TUR.ekkoV);
+      if (fix) return {k:'prove', kind:'ekko', cls:'lop', p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, base:0};
       // out, along the line and home again on her tank (it ends at sea, as the lost gear does)
       if (h < c.h[0] || h >= c.h[1] || 2 * (turNm(o, p) + len) > 0.75 * turRange() || !turCan(o, p, h, true)) continue;
       return {k:'prove', kind:'ekko', cls, p, pts, at:0, nm:Math.round(turNm(o, p) + len), h, base:turPay(h, c.f), hTot:h * 2.5 + 12};
     }
     // a station: fish there an hour (two on a middle trip), where fishing with the jig is allowed
-    const need = cls === 'kort' ? 60 : 120, h = turNm(o, p) / v + need / 60;
+    const need = fix || cls === 'kort' ? 60 : 120, h = turNm(o, p) / v + need / 60;
+    if (fix){ try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) return null; } catch (e){}
+      return {k:'prove', kind:'stasjon', cls:'lop', p, need, min:0, nm:Math.round(turNm(o, p)), h, base:0, bonusMax:0}; }
     if (h < c.h[0] || h >= c.h[1] || !turCan(o, p, h, true)) continue;
     try { if (typeof ruBlockMsg === 'function' && ruBlockMsg({p, len:BOAT.len, gear:'juksa', sp:null, hand:!(S.equip && S.equip.jukse > 0)})) continue; } catch (e){}
     const base = turPay(h, TUR.keepF * 1.5);   // the catch at the station is the player's; the measuring is the work
@@ -664,10 +684,12 @@ function turProve(o, cls){
 function turProveFish(m){
   if (m.fish) return m.fish;
   const got = Object.entries(m.got || {}).filter(([sp]) => SPECIES[sp]), tot = got.reduce((a, x) => a + x[1], 0) || 1, out = [];
+  // (the board's ids are numbers; a race task's is text, 'lnk-1:2f', which made every draw h2(NaN) and ten fish of one length)
+  const id = typeof m.id === 'number' ? m.id : hashStr(String(m.id)) & 0xffffff;
   for (let i = 0; i < 10; i++){
-    let r = h2(m.id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
-    const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(m.id * 31 + i, 733), 0.8)) * 10) / 10;
-    out.push({sp, cm, c0:Math.floor(cm - 24 * (0.3 + 0.45 * h2(m.id * 31 + i, 911)))});
+    let r = h2(id * 31 + i, 517) * tot, sp = got.length ? got[0][0] : 'torsk'; for (const [k, kg] of got){ if (r < kg){ sp = k; break; } r -= kg; }
+    const R = TUR_LEN[sp] || [30, 70], cm = Math.round((R[0] + (R[1] - R[0]) * Math.pow(h2(id * 31 + i, 733), 0.8)) * 10) / 10;
+    out.push({sp, cm, c0:Math.floor(cm - 24 * (0.3 + 0.45 * h2(id * 31 + i, 911)))});
   }
   m.meas = m.meas || []; return m.fish = out;
 }
@@ -698,16 +720,20 @@ const TUR_LYS = {
 const turFyrName = m => /fyr/i.test(m.fyr.name) ? m.fyr.name : m.fyr.name + ' fyr';
 // the next time the light it asks for comes, within the deadline (game hours), or null
 function turLysNext(m, from){ if (!m.lys) return from; const end = (m.due || S.t + m.hTot * 60) / 60; for (let t = from; t <= end; t += 0.25) if (TUR_LYS[m.lys].ok(t, m.fyr)) return t; return null; }
-function turFoto(o, cls, near = null){
+// fix: a fixed place instead of the draw (the race's tasks, 09o-kapplop.js, KL1b): {fyr: the light's name in fyr.json, lys: the light it
+// asks for or null, rnd: the draw for the place to take it from}. No class, no range and no pay: the board never asks with fix
+function turFoto(o, cls, near = null, fix = null){
   if (!FYR || !FYR.length) return null;
-  const c = TUR.cls[cls], v = turV(), H = S.t / 60, open = (VESSELS[S.boat.type] || {}).cls === 'open', warn = (BOAT.risk || [1.5])[0];
-  const cand = FYR.map(f => ({f, h:turNm(o, {x:f[0], y:f[1]}) / v + 0.3})).filter(x => x.h >= c.h[0] && x.h < c.h[1] && (!near || turNm(near, {x:x.f[0], y:x.f[1]}) <= 15));
+  const c = TUR.cls[cls] || TUR.cls.kort, v = turV(), H = S.t / 60, open = (VESSELS[S.boat.type] || {}).cls === 'open', warn = (BOAT.risk || [1.5])[0], rnd = fix && fix.rnd || Math.random;
+  const cand = fix ? FYR.filter(f => f[3] === fix.fyr).map(f => ({f, h:turNm(o, {x:f[0], y:f[1]}) / v + 0.3}))
+    : FYR.map(f => ({f, h:turNm(o, {x:f[0], y:f[1]}) / v + 0.3})).filter(x => x.h >= c.h[0] && x.h < c.h[1] && (!near || turNm(near, {x:x.f[0], y:x.f[1]}) <= 15));
   for (let n = 0; n < 12 && cand.length; n++){
-    const {f, h} = cand.splice(Math.floor(Math.random() * cand.length), 1)[0], L = {x:f[0], y:f[1]};
+    const {f, h} = cand.splice(Math.floor(rnd() * cand.length), 1)[0], L = {x:f[0], y:f[1]};
     // where to take it from: open water half a kilometre to a kilometre and a bit off the light
     let ap = null;
-    for (let k = 0; k < 12 && !ap; k++){ const a = k * Math.PI / 6 + Math.random() * 0.4, r = 0.5 + Math.random() * 0.7, q = {x:L.x + Math.sin(a) * r, y:L.y - Math.cos(a) * r};
+    for (let k = 0; k < 12 && !ap; k++){ const a = k * Math.PI / 6 + rnd() * 0.4, r = 0.5 + rnd() * 0.7, q = {x:L.x + Math.sin(a) * r, y:L.y - Math.cos(a) * r};
       try { if (!isLandFar(q) && coastDistFar(q) >= 0.15) ap = q; } catch (e){} }
+    if (fix){ if (!ap) return null; return {k:'foto', cls:'lop', p:ap, fyr:{x:L.x, y:L.y, h:f[2], name:f[3]}, lys:fix.lys || null, nm:Math.round(turNm(o, ap)), h, base:0}; }
     if (!ap || !turCan(o, ap, h, true)) continue;   // out and home again
     // a light it asks for only when it comes (an hour of it at least) between arriving and the deadline; heavy weather not for an open
     // boat, nor more sea than she is rated for
@@ -719,7 +745,7 @@ function turFoto(o, cls, near = null){
   return null;
 }
 // the lighthouse mission the boat is near enough to take its picture
-function turFotoAt(){ const T = S.turer; return T && T.act.find(m => m.k === 'foto' && m.vid === S.cur && dist(S.boat.pos, m.fyr) <= TUR.fotoR) || null; }
+function turFotoAt(){ return turActs().find(m => m.k === 'foto' && m.vid === S.cur && dist(S.boat.pos, m.fyr) <= TUR.fotoR) || null; }
 // the picture: seen is the 3D view's word on it (G3.seen: in front and nothing in the way), null without the 3D view (then 1.5 km is
 // near enough); img the picture itself (kept on this device only, for the paper). A reason it is not taken, or null when it is
 function turFotoTake(m, seen, img){
@@ -872,6 +898,7 @@ function turSpawn(m){
 // 'ashore' the drifting boat reached land, 'rescue' the rescue service took the tow over. The event carries the mission's id (joins its
 // tur_take) and frac, the share of the time allowed that was used, so the deadlines can be read against how long the jobs took
 function turEnd(m, ok, why, how){
+  if (m.lop){ if (why) log(why, why); lopTaskEnd(m, ok, how); return; }   // (a task in the race: no record, no count, no event of the board's)
   const T = turState(); T.act = T.act.filter(x => x !== m);
   if (ok && m.to && ['best', 'frakt', 'sesong'].includes(m.k)){ const R = turRep(T), r = R[m.to] || (R[m.to] = {n:0}); r.n = (r.n || 0) + 1; r.last = S.t; }   // (the place remembers the boat)
   // the chain (turChainNext): her own order done starts it, a link done brings the next, the third done ends it; a link lost ends it
@@ -890,6 +917,7 @@ function turEnd(m, ok, why, how){
   if (typeof cloudEv === 'function') cloudEv(ok ? 'tur_done' : 'tur_fail', Object.assign({id:m.id, k:m.k, cls:m.cls, nm:m.nm, trim:!!trimOn(S.boat), min:Math.round((S.t - m.t0) / GAME_RATE), frac, pay:ok ? Math.round(m.pay || 0) : Math.round(m.paid || 0)}, m.first ? {first:1} : {}, m.ask ? {ask:1} : {}, ok ? {} : {how:how || 'other', stage:m.k === 'sesong' ? m.stage || 0 : undefined}));
 }
 function turPayOut(m, from, no, en, part){
+  if (m.lop){ msg(from, no, en); lopTaskEnd(m, true); return; }   // (a task in the race is not paid: 09o-kapplop.js, KL1b)
   const amt = part != null ? part : m.pay;
   if (m.k !== 'best'){ book('oppdrag', amt, 'Oppdrag fullført', 'Mission completed'); bankAfterIncome(amt); }
   if ((m.cls === 'lang' || m.k === 'sesong') && ['sesong', 'best', 'frakt'].includes(m.k)) pressPut('tur', {k:m.k, to:m.to || '', from:m.from || undefined, sp:m.sp || undefined, kg:Math.round(m.k === 'sesong' ? m.got || m.kg : m.kg || 0), nm:m.nm || 0});   // Kystposten (09h-press.js)
@@ -898,13 +926,15 @@ function turPayOut(m, from, no, en, part){
 }
 // at the quay: freight picked up or delivered
 function turDock(pid){
-  const T = S.turer; if (!T || !T.act.length) return;
+  const T = S.turer; if (T && T.act.length)
   for (const m of T.act.slice()){ if (m.k !== 'frakt' || m.vid !== S.cur) continue;
     if (m.stage === 'pick' && pid === m.from) turLoad(m);
     else if (m.stage === 'go' && pid === m.to){ S.cargo = (S.cargo || []).filter(c => c.tur !== m.id); cargoJob(m.kg, 'Lossing av ' + m.what[0], 'Landing the ' + m.what[1], true);
       const n = turRepN(m.to), mem = n === 2 ? [' Tredje lasta du kommer med hit. Folk på kaia vet hvem du er nå.', ' The third load you bring here. People on the quay know who you are now.'] : n >= 5 ? [' Som vanlig, trygt levert.', ' As usual, safely landed.'] : ['', ''];
       turPayOut(m, portById(pid).name, 'Takk for at du kom med ' + m.what[0] + '.' + mem[0], 'Thank you for bringing the ' + m.what[1] + '.' + mem[1]); } }
-  for (const m of T.act.slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){
+  // (the race's tow too, 09o-kapplop.js: no salvage reward and nothing in the paper, it is a task in the race)
+  for (const m of turActs().slice()) if (m.k === 'slep' && m.vid === S.cur && m.stage === 'tow' && pid === m.to){
+    if (m.lop){ msg(m.owner, '«' + m.boat + '» ligger trygt ved kai i ' + portById(pid).name + '. Tusen takk for hjelpen.', 'The «' + m.boat + '» lies safe at the quay in ' + portById(pid).name + '. Thank you so much for the help.'); lopTaskEnd(m, true); continue; }
     m.pay = turSalvage(m, m.danger || 0);
     pressPut('salv', Object.assign({towed:TUR_BOATS.indexOf(m.boat), port:pid, pay:m.pay, val:m.value}, m.sos ? {sos:1} : {}));   // Kystposten (09h-press.js)
     if (m.sos){ if (typeof achAdd === 'function') achAdd('sos'); if (typeof mobRec === 'function') mobRec({k:'sos', sk:'eng', boat:m.boat, out:'own'}); }   // honour after a PAN-PAN (Ø11.7, § 135)
