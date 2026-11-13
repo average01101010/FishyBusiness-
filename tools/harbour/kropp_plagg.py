@@ -1,12 +1,9 @@
-"""The garments on the new body (FB5, steg 122): the jackets with their trouser tops, the sleeves and the trouser legs, built as
-structured meshes round the body of kropp.py, and the parts kept from arbeider.py, garderobe.py and hender.py (the hair, the beards,
-the hats, the boots and shoes, the hands in their grips, the vests) moved onto it. Used by kropp_bygg.py.
+"""The garments on the new body (FB5, steg 122): the jackets with their trouser tops, the sleeves and the trouser legs, the boots
+and shoes and the life vests, built as structured meshes round the body of kropp.py. Nothing is taken from arbeider.py, garderobe.py
+or hender.py (Jonas 13.11.2026). The hair, the beards and the hats are kropp_hode.py's; the gloves are made of the body's own hands
+in kropp_bygg.py. Used by kropp_bygg.py.
 
-How a garment gets the body's forms: it is built again on the body in each form with the same vertices in the same order, and the
-form is the difference (so cloth hangs from a belly as cloth does, not as skin). What is kept from the old scripts takes the form of
-the skin under it (Body.field), or simply follows its bone.
-
-Every builder takes a Ctx (a body in one form) and returns the same mesh topology whatever the form."""
+Every builder takes a Ctx (a body) and returns a Mesh."""
 import math
 import numpy as np
 from mathutils import Vector
@@ -194,6 +191,22 @@ def legs(c, upper):
     return M
 
 
+def arm_inside(c):
+    """how far out a jacket's side may stand at each height before the sleeve hanging beside it goes into it: (heights, the
+    least x of the sleeve's cloth there) with the arms as the game holds them standing (13 degrees out) and in the rest pose.
+    Jonas 13.11.2026: «Clipper den ene armen gjennom siden på jakken?» (measured: the sleeves went into the side of all ten jackets)"""
+    if getattr(c, '_arm_in', None) is None:
+        rings = [np.array(arm_ring(c, k)) for k in range(12)]; pts = []
+        for a_, b_ in zip(rings[:-1], rings[1:]):
+            for t in np.linspace(0, 1, 7): pts.append(a_ * (1 - t) + b_ * t)
+        pts = np.concatenate(pts); idx, w = K.weights(c.J, pts, cls='arm'); L, root = K.POSES(c.J)['stå']; Mx, _ = K.pose_mats(c.J, L, root)
+        q = np.concatenate([K.skin(pts, idx, w, Mx), pts]); q = q[q[:, 0] > 0]; zs = np.arange(0.70, c.J['uarm_R'][2], 0.01)
+        lim = np.array([q[np.abs(q[:, 2] - z) < 0.012][:, 0].min() if (np.abs(q[:, 2] - z) < 0.012).any() else 9.0 for z in zs])
+        ok = np.where(lim < 5)[0]; lim[:ok[0]] = lim[ok[0]] - 0.012          # (below the cuff: the glove, a little wider than the cuff it goes over)
+        c._arm_in = (zs, lim)
+    return c._arm_in
+
+
 def jacket(c, kind):
     """a jacket with its sleeves' holes, its collar and what is on it, and the trousers' top under it (the seat). The armholes' rims are
     the sleeves' first rings and the seat's leg holes the legs' first rings, vertex for vertex."""
@@ -224,6 +237,17 @@ def jacket(c, kind):
     if kind == 'parka':
         for i in range(1, nz, 2): rg[i] = rg[i] + 0.008                                                       # the quilting
     if kind == 'oilskin': rg[0] = rg[0] + 0.006 + 0.004 * np.cos(np.array(th) * 2); rg[1] = rg[1] + 0.002 * np.cos(np.array(th) * 2)   # stiff: it stands out in a few broad folds
+    # the sides stay inside the hanging sleeves: under the armhole no row stands further out than the sleeve's inner side there, less
+    # a few millimetres (but never inside the body, and over the trousers' top as above)
+    za, xa = arm_inside(c)
+    for i in range(nz):
+        z = zrows[i]; lim = float(np.interp(z, za, xa)) - 0.004; g = float(K._ss(z, sh[2] - 0.10, sh[2] - 0.15))
+        if lim > 5 or g <= 0: continue
+        floor_ = rb[i] + ease * 0.3
+        if z < zt + 0.03: floor_ = np.maximum(floor_, _smooth_ring(rb[i] + SEAT_EASE, 1) + 0.011)
+        for k in range(NC):
+            dx = abs(dirs[i][k][0])
+            if dx > 1e-6 and rg[i][k] * dx > lim: rg[i][k] = max(rg[i][k] * (1 - g) + (lim / dx) * g, floor_[k]) if lim / dx < rg[i][k] else rg[i][k]
     P = [[org[i][k] + dirs[i][k] * rg[i][k] for k in range(NC)] for i in range(nr)]
     # the neck's opening: a clean ring round the neck itself (the rays from the chest meet the neck unevenly)
     nc_ = np.array([0.0, J['neck'][1] + 0.006, J['neck'][2] + 0.004]); rn = _smooth_ring([c.out(nc_, (math.cos(a), math.sin(a), 0.0), 0.2, 0.06) for a in th], 3) + 0.010 + ease * 0.4
@@ -304,6 +328,149 @@ def _surf(P, org, i, kf, off):
     p = (P[i0][k0] * (1 - fk) + P[i0][k1] * fk) * (1 - fi) + (P[i1][k0] * (1 - fk) + P[i1][k1] * fk) * fi
     o = org[i0][0] * (1 - fi) + org[i1][0] * fi; d = p - o; d[2] *= 0.3; d /= np.linalg.norm(d)
     return p + d * off
+
+
+# ---------------- the shoes: built on the body's own feet (Jonas 13.11.2026: nothing of the old; «at sålene på skoene ikke er firkanter») ----------------
+SHOES = {   # sole: its thickness; shaft: the heights of the shaft's rings (none: a low shoe); sock: a sock up into the trouser leg
+    'boot':    dict(sole=0.022, shaft=[0.10, 0.16, 0.23, 0.295, 0.318], roll=True, sock=False, solem='sole', cap=False),      # a rubber deck boot
+    'shoe':    dict(sole=0.024, shaft=[0.085, 0.115, 0.142], roll=False, sock=True, solem='sole', cap=False),                  # an ankle boot
+    'sneaker': dict(sole=0.028, shaft=[], roll=False, sock=True, solem='cream', cap=True),                                    # a deck shoe: a light sole and toe cap
+}
+
+
+def foot_shape(c, n=11):
+    """the right foot seen from above and from the side: its line from the heel to the toes, and at n places along it how far it
+    reaches to the inside and the outside and how high it stands (the instep; the leg above the ankle is not the foot's)"""
+    v = c.B.v; f = v[(v[:, 0] > 0) & (v[:, 2] < 0.16)]; low = f[f[:, 2] < 0.05]
+    c0 = low[low[:, 1] < low[:, 1].min() + 0.03].mean(0); c1 = low[low[:, 1] > low[:, 1].max() - 0.03].mean(0); ax = (c1 - c0)[:2]; ax /= np.linalg.norm(ax); nx = np.array([ax[1], -ax[0]])
+    t = (f[:, :2] - c0[:2]) @ ax; u = (f[:, :2] - c0[:2]) @ nx; ts = np.linspace(t.min(), t.max(), n); lo = []; hi = []; top = []
+    for tk in ts:
+        m = np.abs(t - tk) < 0.016; q = f[m]; lo.append(u[m].min()); hi.append(u[m].max()); zz = q[q[:, 2] < 0.112][:, 2]; top.append(zz.max() if len(zz) else 0.05)
+    sm = lambda a: np.convolve(np.pad(np.array(a, float), 1, mode='edge'), [0.25, 0.5, 0.25], mode='valid')
+    return c0[:2], ax, nx, ts, sm(lo), sm(hi), sm(top)
+
+
+def shoes(c, kind):
+    """a pair of shoes on the body's feet: the upper over the foot's own outline and instep, a sole that follows the same outline
+    (rounded at the heel and the toe), the shaft round the leg, and for the low ones a sock up into the trouser leg"""
+    S = SHOES[kind]; M = Mesh(); o, ax, nx, ts, lo, hi, top = foot_shape(c); n = len(ts); sh = S['sole']
+    P3 = lambda t, u, z: np.array([o[0] + ax[0] * t + nx[0] * u, o[1] + ax[1] * t + nx[1] * u, z])
+    rings = []; tt = list(ts); tt[0] -= 0.006; tt[-1] += 0.008
+    for k in range(n):
+        e = min(k, n - 1 - k); kw = (0.62, 0.90)[e] if e < 2 else 1.0                    # the heel and the toe round off
+        uc = (lo[k] + hi[k]) / 2; hw = (hi[k] - lo[k]) / 2 * kw + 0.006; tp = max(sh + 0.018, top[k] + 0.008) * (0.80 if e == 0 else 1.0)
+        r = [P3(tt[k], uc - hw * 0.94, 0.0), P3(tt[k], uc + hw * 0.94, 0.0), P3(tt[k], uc + hw + 0.003, sh)]
+        for ph in range(20, 161, 20):
+            a = math.radians(ph); cu = math.copysign(abs(math.cos(a)) ** 0.8, math.cos(a)); r.append(P3(tt[k], uc + hw * cu, sh + (tp - sh) * math.sin(a) ** 0.75))
+        r.append(P3(tt[k], uc - hw - 0.003, sh)); rings.append(r)
+    def side(mir):
+        ids = [[M.add(p * mir) for p in r] for r in rings]; nr = len(rings[0])
+        for k in range(n - 1):
+            cen = (sum(rings[k]) + sum(rings[k + 1])) / (2 * nr) * mir
+            for j in range(nr):
+                j1 = (j + 1) % nr; m = S['solem'] if j in (0, 1, nr - 1) else ('cream' if S['cap'] and k >= n - 3 else 'boot')
+                M.face((ids[k][j], ids[k][j1], ids[k + 1][j1], ids[k + 1][j]), m, cen)
+        for k, back in ((0, -1), (n - 1, 1)):                                              # the heel's and the toe's ends
+            cp = sum(rings[k]) / nr + np.array([ax[0], ax[1], 0.0]) * back * 0.004; ic = M.add(cp * mir); cen = sum(rings[k]) / nr * mir - np.array([ax[0] * mir[0], ax[1], 0.0]) * back * 0.05
+            for j in range(nr):
+                j1 = (j + 1) % nr; M.face((ids[k][j], ids[k][j1], ic), S['solem'] if j in (0, 1, nr - 1) else ('cream' if S['cap'] and k else 'boot'), cen)
+        # the shaft round the leg, and the sock
+        kn, an = c.J['shin_R'], c.J['foot_R']
+        def tube(zs, rad, m, turn=False, rmax=0.067):
+            prev = None
+            for i, z in enumerate(zs):
+                cc = an + (kn - an) * (z - an[2]) / (kn[2] - an[2]); ring = []
+                for q in range(NS):
+                    a = 2 * math.pi * q / NS; d = np.array([math.cos(a), math.sin(a), 0.0]); rb = c.out(cc, d, 0.2, 0.05) if rad is None else rad - 0.011
+                    rr = min(max(rb + 0.011, 0.050), rmax)
+                    if turn and i == len(zs) - 1: rr = rr - 0.008 if not S['roll'] else rr
+                    if S['roll'] and m == 'boot' and i == len(zs) - 2: rr += 0.004
+                    ring.append(M.add((cc + d * rr) * mir))
+                if prev is not None:
+                    cen = np.array([cc[0], cc[1], z - 0.02]) * mir
+                    for q in range(NS): q1 = (q + 1) % NS; M.face((prev[q], prev[q1], ring[q1], ring[q]), m, cen, inside=(turn and i == len(zs) - 1 and not S['roll']))
+                prev = ring
+        if S['shaft']: tube([0.045] + S['shaft'] + [S['shaft'][-1] - (0.0 if S['roll'] else 0.004)], None, 'boot', turn=True)
+        if S['sock']: tube([0.05, 0.12, 0.19], 0.047, 'wool', rmax=0.047)
+    side(np.array([1, 1, 1.0])); side(np.array([-1, 1, 1.0]))
+    return M
+
+
+# ---------------- the inflatable lifejacket, new (Jonas' references 28.10.2026, described in docs/planer/lover-og-regler.md L6: a collar
+# round the neck running down the chest in two thick tubes, a black belt with a buckle, a crotch strap, a red pull handle) ----------------
+VEST_GROUPS = [('vest', ['torso', 'sweater', 'fleece']), ('vest_o', ['oilskin']), ('vest_p', ['parka']), ('vestF', ['jacketF', 'sweaterF', 'fleeceF']), ('vest_oF', ['oilskinF']), ('vest_pF', ['parkaF'])]
+VEST_FOR = {j: v for v, js in VEST_GROUPS for j in js}
+VEST_HAIR = {'long': 'bun', 'pony': 'bun', 'braid': 'bun'}            # long hair is put up under the vest's collar (as today)
+
+
+def vest(c, hit):
+    """a vest over what hit(origin, direction) meets: hit casts a ray from far out in toward origin + direction * far and gives the
+    outermost point of the jackets (and the neck) there, or None. Laid 4 mm off it."""
+    M = Mesh(); J = c.J; sh = J['uarm_R']; nk = J['neck']; GAP = 0.004
+    zb = c.z(1.105); yc = c.yc(zb); cen = np.array([0.0, yc, zb])
+    # the belt
+    NB = 24; ring = []
+    for k in range(NB):
+        a = 2 * math.pi * k / NB; d = np.array([math.cos(a), math.sin(a), 0.0]); r = 0.0
+        for dz in (-0.02, 0.0, 0.02):
+            h = hit(cen + np.array([0, 0, dz]), d)
+            if h is not None: r = max(r, float((h - cen) @ d))
+        ring.append((d, (r or 0.2) + GAP + 0.004))
+    rows = [[M.add(cen + d * (r + dr) + np.array([0, 0, dz])) for d, r in ring] for dz, dr in ((-0.02, 0.0), (-0.02, 0.005), (0.02, 0.005), (0.02, 0.0))]
+    M.grid(rows, 'belt', lambda i, j: cen + np.array([0, 0, (-0.3, 0.0, 0.3)[i]]) if i != 1 else cen)
+    fr = cen + ring[NB // 4][0] * (ring[NB // 4][1] + 0.005)
+    for sx in (-1, 1):                                  # the buckle's two halves
+        b = [M.add(fr + np.array([sx * dx, 0.006, dz])) for dx, dz in ((0.002, -0.017), (0.030, -0.017), (0.030, 0.017), (0.002, 0.017))]; M.face(b, 'buckle', cen)
+    # the two tubes and the collar: a path from the right tube's foot on the belt, up the chest, over the shoulder beside the neck and
+    # round behind it to the middle of the back; the left is the mirror
+    path = []
+    def front(x, z):
+        o = np.array([x, yc, z]); h = hit(o, (0, 1, 0)); return (h if h is not None else o + np.array([0, 0.12, 0])), np.array([0, 1.0, 0])
+    zs = sh[2] - 0.02
+    for i in range(8):
+        f = i / 7; p, n = front(0.070 + 0.022 * f, zb + 0.012 + (zs - zb - 0.012) * f); path.append((p, n, 0.074, 0.030))
+    cs = np.array([0.0, nk[1] - 0.004, zs - 0.05])
+    for i in range(1, 7):                               # over the shoulder: the ray turns from the front, over the top, to the back
+        al = math.radians(18 + 26 * i); x = 0.092 - 0.004 * i; o = np.array([x, cs[1], cs[2]]); d = np.array([0.0, math.cos(al), math.sin(al)])
+        h = hit(o, d); path.append(((h if h is not None else o + d * 0.14), d, 0.070, 0.028))
+    for i in range(1, 4):                               # round the back of the neck to the middle
+        x = 0.076 * (1 - i / 3); o = np.array([x, nk[1], nk[2] + 0.012]); d = np.array([0.35 * x / 0.076, -1.0, 0.25]); d /= np.linalg.norm(d)
+        h = hit(o, d); path.append(((h if h is not None else o + d * 0.09), d, 0.066, 0.026))
+    def tube(mir):
+        prev = None; n = len(path)
+        for i, (p, nrm, w, t) in enumerate(path):
+            p = p * mir; nrm = nrm * mir; a = path[min(i + 1, n - 1)][0] * mir - path[max(i - 1, 0)][0] * mir; a /= np.linalg.norm(a); side = np.cross(a, nrm); side /= np.linalg.norm(side)
+            e = min(i, 3) / 3.0; w2 = w * (0.6 + 0.4 * e); t2 = t * (0.5 + 0.5 * e)
+            ring = []
+            for sx, tz in ((-1, 0.0), (-0.85, 0.75), (0, 1.0), (0.85, 0.75), (1, 0.0)):          # each point on the cloth under itself: a tube's edge does not dip into a rounded chest
+                b0 = p + side * (w2 / 2 * sx); h = hit(b0 - nrm * 0.10, nrm); lift = max(0.0, float((h - b0) @ nrm)) if h is not None else 0.0
+                ring.append(M.add(b0 + nrm * (min(lift, 0.075) + GAP + 0.006 + (0.008 if i >= len(path) - 4 else 0.0) + t2 * tz)))          # (more room round the neck)
+            if prev is not None:
+                for q in range(4):
+                    cc = (M.v[prev[q]] + M.v[ring[q + 1]]) / 2 - nrm * 0.05
+                    m = 'vest'
+                    if q in (1, 2) and (i in (5, 6) or i >= n - 2): m = 'refl'
+                    if (q == 0 and mir[0] > 0) or (q == 3 and mir[0] < 0): m = 'vestzip'
+                    M.face((prev[q], prev[q + 1], ring[q + 1], ring[q]), m, cc)
+            else:
+                M.face(ring, 'vest', p + a * 0.05)
+            prev = ring
+        return prev
+    eR = tube(np.array([1, 1, 1.0])); eL = tube(np.array([-1, 1, 1.0]))
+    # the pull handle under the left tube's foot (the wearer's left)
+    f0 = path[0][0] * np.array([-1, 1, 1.0]) + np.array([0, 0.012, -0.03]); tip = M.add(f0 + np.array([0, 0, -0.05])); rr = [M.add(f0 + np.array([0.011 * math.cos(q * 2.094), 0.006 * math.sin(q * 2.094) + 0.004, 0.0])) for q in range(3)]
+    for q in range(3): M.face((rr[q], rr[(q + 1) % 3], tip), 'toggle', f0 + np.array([0, 0, -0.02]))
+    # the crotch strap: from the belt's front, down between the legs, up to the belt's back
+    hp = np.array([0.0, yc, c.crotch() + 0.07]); strap = []
+    for i in range(13):
+        al = math.radians(-8 + 196 * i / 12); d = np.array([0.0, math.cos(al), -math.sin(al)]); r = 0.0
+        for dx in (-0.012, 0.0, 0.012):
+            h = hit(hp + np.array([dx, 0, 0]), d)
+            if h is not None: r = max(r, float((h - hp) @ d))
+        if d[2] < -1e-6: r = min(r or 0.12, 0.085 / -d[2])          # (never below the trousers' crotch: between the legs the outermost thing a ray meets is a trouser leg far down)
+        p = hp + d * ((r or 0.12) + GAP + 0.009); strap.append([M.add(p + np.array([-0.0125, 0, 0])), M.add(p + np.array([0.0125, 0, 0]))])
+    M.grid(strap, 'belt', hp, closed=False)
+    return M
 
 
 BUILDERS = {

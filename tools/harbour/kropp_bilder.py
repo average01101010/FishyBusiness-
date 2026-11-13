@@ -113,7 +113,7 @@ def check_stretch(R):
     for ln, L in LOOKS.items():
         names = look_parts(R, L); rest = {}
         for n in names: v, t, _ = posed(R, n, L['sex'], 'hvile'); rest[n] = v
-        for pose in K.CHECK_POSES:
+        for pose in K.CHECK_POSES + K.WEIGHT_POSES:
             bad = {}; worst = (1.0, '')
             for n in names:
                 v, t, _ = posed(R, n, L['sex'], pose); e = np.concatenate([t[:, [0, 1]], t[:, [1, 2]], t[:, [2, 0]]])
@@ -132,6 +132,24 @@ def check_stretch(R):
                 l0 = np.linalg.norm(v0[e[:, 0]] - v0[e[:, 1]], axis=1); r = np.linalg.norm(v[e[:, 0]] - v[e[:, 1]], axis=1) / np.maximum(l0, 1e-6); r = r[l0 > 0.002]; k += int((r > 2.5).sum()); worst = max(worst, float(r.max()))
             tot += k; print('STREKK grep %s %-6s kanter over 2,5x: %3d  verst %.1fx' % (sex, g, k, worst))
     print('STREKK i alt: %d kanter over 2x' % tot); return tot
+
+
+def check_grips(R):
+    """the grips hold something: in the pinch the thumb's pad meets the index finger's (the nearest two points of their last joints'
+    skin), and in the grip the fingers close round a shaft of 35 mm laid where the grip holds a thing (per finger: how far its last
+    joint's skin is from the shaft's surface at the nearest; negative is into the shaft)"""
+    for sex, name in (('m', 'handbare'), ('f', 'handbareF')):
+        J = K.joints(sex); P = R.part(name); top = P['joints'][np.arange(len(P['joints'])), np.argmax(P['weights'], 1)]
+        of = lambda bone: np.where(top == K.BI[bone])[0]
+        v0, _, _ = posed(R, name, sex, 'hvile'); v, _, _ = posed(R, name, sex, 'hvile', 'pinch')
+        d = lambda q: float(np.sqrt(((q[of('thumb3_R')][:, None] - q[of('index3_R')][None]) ** 2).sum(2)).min())
+        print('GREP %s pinch  tommel til pekefinger: %.1f mm (i hvile %.1f mm)' % (sex, d(v) * 1000, d(v0) * 1000))
+        v, _, _ = posed(R, name, sex, 'hvile', 'grip'); at, ax = K.grip_point(sex, 'grip', 'R'); at = at + np.array(J['hand_R'], float); ax = ax / np.linalg.norm(ax)
+        row = []
+        for fn in K.FINGERS:
+            q = v[of(fn + '3_R')] - at; r = np.linalg.norm(q - np.outer(q @ ax, ax), axis=1); row.append('%s %+.1f' % (fn, (r.min() - 0.0175) * 1000))
+        q = v[top == K.BI['hand_R']] - at; q = q[np.abs(q @ ax) < 0.04]; r = np.linalg.norm(q - np.outer(q @ ax, ax), axis=1)          # (the palm across the shaft's 8 cm in the hand)
+        print('GREP %s grip   skaft 35 mm, avstand fra ytterleddets hud til skaftet (mm): %s; håndflata %+.1f' % (sex, ', '.join(row), (r.min() - 0.0175) * 1000))
 
 
 def check_cross(R, poses=None):
@@ -171,8 +189,9 @@ def put(R, mat_, name, sex, pose, x, colours, y=0.0, turn=0.0, plain=None, grip=
     for i, d in enumerate(lay.data): d.color = (col[i][0], col[i][1], col[i][2], 1.0)
     # the normals as the file has them
     me.materials.append(mat_); o = BU.link(bpy.data.objects.new(name, me)); me.shade_smooth()
-    try: me.normals_split_custom_set_from_vertices([tuple(q) for q in from_game_n(P, sex, pose)])
-    except Exception: pass
+    if not P['bone']:                    # (the parts on the head are drawn with smooth normals: Blender fell over setting the file's own on them)
+        try: me.normals_split_custom_set_from_vertices([tuple(q) for q in from_game_n(P, sex, pose)])
+        except Exception: pass
     o.location = (x, y, 0); o.rotation_euler = (0, 0, turn); return o
 
 
@@ -192,7 +211,9 @@ def pictures(R):
     def fig(ln, pose, x, turn=0.0, y=0.0):
         L = LOOKS[ln]
         for n in look_parts(R, L): put(R, m, n, L['sex'], pose, x, L['c'], y, turn)
+    only = os.environ.get('KROPP_ARK')          # (KROPP_ARK=haar,hatter: only the sheets whose name holds one of these)
     def shot(name, loc, look, lens=50, w=2000, h=1000):
+        if only and not any(q in name for q in only.split(',')): return
         BU.setup_render(w, h, samples=40); BU.camera(loc, look, lens=lens); BU.render(os.path.join(OUT, name))
     # 1. the bodies: the man and the woman, from the front, the side and three quarters, and from behind
     for i, (sex, nm) in enumerate((('m', 'body'), ('f', 'bodyF'))):
@@ -229,11 +250,15 @@ def pictures(R):
             for n in look_parts(R, L): put(R, m, n, L['sex'], 'stå', -((r * 5 + i) - 4.5) * 0.8, L['c'], turn=-0.35 if (r * 5 + i) % 2 else 0.25)
     shot('k2_jakker.png', (0.0, 9.6, 1.1), (0.0, 0, 0.90), 50, 2600, 760)
     shot('k2_jakker_bak.png', (0.0, -9.6, 1.1), (0.0, 0, 0.90), 50, 2600, 760); clear()
+    # 6b. the shoes close: the boot, the ankle boot and the deck shoe, from the side and from above in front
+    for i, (sh_, col) in enumerate((('boot', (0.07, 0.07, 0.08)), ('shoe', (0.35, 0.24, 0.14)), ('sneaker', (0.20, 0.36, 0.64)))):
+        for n in (sh_, 'shin'): put(R, m, n, 'm', 'hvile', -(i - 1) * 0.55, {7: col, 3: (0.40, 0.41, 0.43)}, turn=-0.9)
+    shot('k2_sko.png', (0.0, 1.9, 0.42), (0.0, 0, 0.14), 60, 2400, 760); clear()
     # 7. the heads with every hair, beard and hat
     hs = [n for n in R.names if n.startswith('hair_') and not n.endswith('_h')] + [n for n in R.names if n.startswith('b_')]
     for i, n in enumerate(hs):
-        r, c = divmod(i, 7); put(R, m, 'head', 'm', 'hvile', -(c - 3) * 0.36, {}, y=0); o = put(R, m, n, 'm', 'hvile', -(c - 3) * 0.36, {})
-        for q in bpy.data.objects[-2:]: q.location.z = -r * 0.36
+        r, c = divmod(i, 7)
+        for q in ('head', n): o = put(R, m, q, 'm', 'hvile', -(c - 3) * 0.36, {}, turn=-0.45); o.location.z = -r * 0.36
     shot('k2_haar.png', (0.0, 3.6, 1.66 - 0.18), (0.0, 0, 1.63 - 0.18), 60, 2400, 760); clear()
     hts = ['hardhat', 'beanie', 'skippercap', 'hat_bobble', 'hat_flat', 'hat_ball', 'hat_bucket']
     for r, (sex, hd, hair) in enumerate((('m', 'head', 'hair_short_h'), ('f', 'headF', 'hair_long_h'))):
@@ -245,5 +270,5 @@ def pictures(R):
 if __name__ == '__main__':
     args = [a for a in sys.argv[1:] if a != 'tall']; path = args[0] if args else os.path.join(OUT, 'folk2.glb')
     R = GLB.Reader(path); print('FIL: %s, %.2f MB (worker.b64: %.2f MB)' % (os.path.relpath(path, ROOT), R.size / 1e6, len(base64.b64decode(open(os.path.join(ROOT, 'src', 'data', 'worker.b64')).read())) / 1e6))
-    old = check_names(R); check_tris(R, old); check_stretch(R); check_cross(R)
+    old = check_names(R); check_tris(R, old); check_stretch(R); check_grips(R); check_cross(R)
     if 'tall' not in sys.argv: pictures(R)

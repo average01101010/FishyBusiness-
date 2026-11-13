@@ -1909,3 +1909,84 @@ body.booting #lopPop{visibility:hidden!important}
 /* the hold's bar and the tick boxes are not purchases */
 :is(#drawer,.ph-appv:not(.ph-paper)) .bar i{background:#7CC4E0}
 :is(#drawer,.ph-appv:not(.ph-paper)) :is(.tog input,.range input){accent-color:#7CC4E0}
+
+/* ===== D6 (designombyggingen, 13.11.2026): the HUD, the dialogs, the tips and the rest in Styrhus =====
+   The dialogs, the tip, the toast and the small boxes that lie over the 3D picture are dark glass like the drawer (D1), with the same
+   roles; the roles get their values here, in these scopes only, so the chart plotter (ECDIS) and the paper keep theirs. Magenta only on
+   what buys or accepts, here too: every other main action is the blue --a-main (the dock's hero, «Kjør dit», the tip's OK, the
+   plotter's buttons). The route, the waypoints and the set line in the chart stay magenta: that is the chart's own colour.
+   Measured by tools/ui/kontrast.py (the dialogs, the tip and the toast opened): no text under 4.5:1. */
+:root{--a-main:#2F6F8F}
+#modal .box,#tip,#turMeas .tm-box,#lopPop .lp-box{
+  --m-ink:#EEF4F7; --m-muted:#A9BEC8; --m-card:#15252F; --m-card2:#1E3240; --m-line:#2A4252; --m-dark:#2C4656;
+  --m-ok:#6FD3A0; --m-bad:#FF8A80; --m-warn:#F0B94A; --m-link:#7CC4E0;
+  --m-tint-ok:rgba(79,192,138,.16); --m-tint-bad:rgba(239,106,95,.18); --m-tint-warn:rgba(240,185,74,.16); --m-tint-link:rgba(124,196,224,.16);
+  --paper:#0F1E28; --chrome:#0B1720; --ink:#EEF4F7; --muted:#A9BEC8; --line:#2A4252; --grid:rgba(238,244,247,.08);
+  --s-card:#15252F; --s-card-2:#1E3240; --t-ink:#EEF4F7; --t-muted:#A9BEC8;
+  --ok:#6FD3A0; --warn:#F0B94A; --bad:#FF8A80; --water:#7CC4E0; --magSoft:rgba(224,90,174,.16); --a-primary:#C22A86; --mag:#C22A86; --mut:#A9BEC8;
+  color-scheme:dark;
+}
+/* the dialog: the drawer's glass, a line round it, what is under it dimmed */
+#modal{background:rgba(3,9,14,.62)}
+#modal .box{background:#0F1E28;color:#EEF4F7;border:1px solid #2A4252;border-radius:var(--r-card);box-shadow:0 16px 44px rgba(0,0,0,.55)}
+#modal .box :is(h2,h3,h4){color:#EEF4F7}
+#modal .box a:not([class]){color:var(--m-link)}
+:where(#modal,#turMeas,#lopPop) .btn{min-height:44px;background:#15252F;border-color:#2A4252;color:#EEF4F7}   /* (:where: the main and the danger button keep their own) */
+#modal .box :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea){background-color:#0B1720;color:#EEF4F7;border:1px solid #2A4252}
+#modal .box ::placeholder{color:#9DB3BE;opacity:1}
+#modal .box :is(.tog input,.range input){accent-color:#7CC4E0} #modal .box .bar i{background:#7CC4E0}
+/* (tiles and bars inside the dialogs were shades of black on paper) */
+#modal .aw-t,#modal .ob.achc .ach-list li{background:#15252F;border:1px solid #2A4252} #modal .aw-bar{background:rgba(238,244,247,.14)}
+#modal .ob.reg .reg-have div{background:#15252F;border-color:#2A4252} #modal .ob.reg .reg-warn{background:rgba(240,185,74,.14)}
+#modal .aw-h,#modal .aw-big small,#modal .aw-t span,#modal .ob.achc .ach-list li span,#modal .hop-test{opacity:1;color:var(--m-muted)}
+/* (the small print under a paid action was half as strong as it could be read at on the dark) */
+#modal .ph-note.shop-fine{opacity:.9}
+/* the measuring board and the race's box */
+#turMeas .tm-box,#lopPop .lp-box{background:#0F1E28;color:#EEF4F7;border:1px solid #2A4252;box-shadow:0 16px 44px rgba(0,0,0,.55)}
+#lopPop .lp-box{border-top:5px solid #9B6FD0}
+/* the main action: blue; magenta only where the button buys or accepts (the register, the paid hop, the tow) */
+.btn.primary:not(:disabled){background:var(--a-main);border-color:var(--a-main);box-shadow:none}
+.btn.primary:is(#regGo,#hopGo,[data-act=tow]):not(:disabled){background:var(--a-primary);border-color:var(--a-primary)}
+:is(#modal,#lopPop,#turMeas) .ph-btn.p:not(:disabled){background:var(--a-main);border-color:var(--a-main);box-shadow:none}
+/* the tip: a lighter glass than what it points at (the drawer is dark too), the guide's yellow as its edge, the arrow of the same */
+#tip{background:#223B4A;color:#EEF4F7;box-shadow:none;filter:drop-shadow(0 0 1px rgba(232,201,106,.95)) drop-shadow(0 10px 22px rgba(0,0,0,.5))}
+.tip-arrow{background:#223B4A}
+.tip-b button{min-height:44px;padding:5px 14px;background:rgba(238,244,247,.12);color:#EEF4F7} .tip-b #tipOk{background:var(--a-main);color:#fff} #tipAlt{color:#C6D6DE!important}
+#tip.small{opacity:1}
+/* the toast, the update bar and the «showing» chip: the same glass in a light and a dark system (they were --ink on --paper, so light on a dark one) */
+#toast,#updBar,#showChip{background:rgba(11,23,32,.94);color:#EEF4F7;border:1px solid #2A4252;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#toast{border-radius:10px;background:rgba(30,50,64,.96);border-color:#4A6B7E}   /* (a lighter glass with a clearer edge: over a dark sea at night the darkest one all but vanished) */
+#updBar #updX{color:#EEF4F7} #showChip button{background:#EEF4F7;color:#0B1720}
+/* ---- the HUD ---- */
+/* the compass line: a band of glass behind it, fading out with the line, so the course reads against snow, hills and the boat */
+body.v3d #compass3d{background:linear-gradient(90deg,rgba(6,16,24,0),rgba(6,16,24,.62) 24%,rgba(6,16,24,.62) 76%,rgba(6,16,24,0));border-radius:8px}
+/* the box, the GPS strip, the round buttons and the line over the dock: the glass is tighter (.78, --s-glass, as the catch cards), so the
+   dimmed text holds 4.5:1 over snow in daylight too (at .56 white text was 4.4:1 over white and the dimmed 3.2:1; worked out, not seen) */
+body.v3d #hud,body.v3d #gps3d:not([hidden]),body.v3d #gps{background:rgba(11,23,32,.78)!important}
+body.v3d .ov,body.v3d #dockInfo{background:rgba(11,23,32,.78)}
+/* the little chart: its ground while it loads is the dark chart's, not white */
+body.v3d #miniPlot{background:#09141F;border-color:rgba(238,244,247,.28)}
+/* (a tablet upright has the whole box now: a tap folds it there too, and the 3D view is not dragged through it) */
+@media (orientation:portrait) and (min-width:561px){body.v3d #hud{pointer-events:auto;cursor:pointer}}
+/* «Regler ✓ Lov her ›» opens the rules: a row high enough for a finger */
+#hud .row.rlink{min-height:36px;align-items:center}
+/* under way: the dot is the instruments' blue, not magenta */
+#hud .dot.go{background:#7CC4E0}
+/* ---- magenta only on what buys or accepts: the dock, the box, the plotter ---- */
+.dk-b.pri .dk-i{background:var(--a-main);border-color:#5FA6C8}
+.dk-b.hero .dk-i{box-shadow:0 0 0 4px rgba(95,166,200,.3),0 4px 14px rgba(0,0,0,.35)}
+.dk-go{background:var(--a-main)}
+#hud .hnow .row .hgo{background:var(--a-main)}
+#plotTop #plotClose,#ecdisTop #ecClose,.viewbtn,.zoom button.rt.on,.btn.leia.on,.zoom button#zsearch.on,#srchCard .pin-b button[data-s=go],#setBar button.go{background:var(--a-main);border-color:var(--a-main)}
+.zoom button.rt.play{background:var(--a-main);border-color:var(--a-main);box-shadow:0 4px 14px rgba(47,111,143,.45)}
+#tabs button[aria-selected="true"]{border-bottom-color:var(--a-main)}
+/* (the bars, the sliders and the tick boxes in the plotter's side panel: the blue too; the drawer's are light blue, D3) */
+.bar i{background:var(--a-main)} .range input,.tog input{accent-color:var(--a-main)}
+/* the strip in the chart plotter over the day chart: the same glass as in 3D (it was .38, light text on light grey over the white chart) */
+body.vplot #hud{background:rgba(11,23,32,.78)!important}
+.ov.cam.on{background:rgba(47,111,143,.9)}
+/* ---- the wardrobe: the same glass, the chosen one light, «Ferdig» the blue main action ---- */
+.wd{background:linear-gradient(#15252F,#0B1720);color:#EEF4F7}
+.wd-side{background:rgba(11,23,32,.9);border-color:#2A4252}
+.wd-tab.on{background:#EEF4F7;color:#0B1720} .wd-chip.on{border-color:#EEF4F7;background:rgba(238,244,247,.14)}
+.wd-ok{background:var(--a-main)} .wd-sw.on{box-shadow:0 0 0 2px #EEF4F7} .wd-sub{color:#A9BEC8} .wd-note{color:#C6D6DE}

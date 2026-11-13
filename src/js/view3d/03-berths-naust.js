@@ -189,6 +189,14 @@
         }
       }
       const dB = blockOut(lx, lz, g), dF = fillOut(U, lx, lz), dG = Math.min(dB, dF);
+      // on the block's back and sides (unitPatch has a row of points on its walls) the ground is what lies just outside the wall: the fill
+      // and the land at the deck's height, or the seabed where the side stands in the water. It was the walls' foot there, so the ground
+      // fell 9-14 m in the last 2 m to the wall, in a sawtooth trench along the land side where the sea showed (Jonas 13.11.2026,
+      // Engenes verft: «utgravninger og tagger»)
+      if (!dB && (Math.abs(lx) > g.E - 0.01 || lz < -g.B + 0.01) && lz < -0.01){
+        const w = unitW(U, lx + (Math.abs(lx) > g.E - 0.01 ? Math.sign(lx) * 0.05 : 0), lz < -g.B + 0.01 ? lz - 0.05 : lz);
+        return unitTerr(w[0], w[1], h0);
+      }
       if (!dB) return g.bot;
       if (dG >= UNIT_LIFT) continue;
       if (!dF) return Math.max(UNIT_TOP, Math.min(h0, UNIT_TOP + 0.45 * dB));   // on the fill: flat, or rising with the land behind it

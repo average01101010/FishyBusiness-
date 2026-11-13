@@ -1,5 +1,5 @@
 """Measures the contrast of every text in the drawer and the phone's apps (designombyggingen D1, 13.11.2026): each drawer page and each
-app, with its tabs, and for every visible text its colour against the background it really stands on (the fills under it laid over each
+app, with its tabs, and (D6) the dialogs, the tip and the toast of tools/ui/scener.py (`kontrast.py dialoger` for those only), and for every visible text its colour against the background it really stands on (the fills under it laid over each
 other, the opacity of what it is in). Prints each kind of text under 4.5:1 (3:1 from 24 px, or 18.66 px bold) once, with the page it was
 first seen on, and the count. `FEIL` lines are the ones to fix; the last line is the sum.
 
@@ -8,6 +8,8 @@ first seen on, and the count. `FEIL` lines are the ones to fix; the last line is
 import os, sys, asyncio, json
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'tests'))
 from _env import boot
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from scener import SCENES, SLOW
 from playwright.async_api import async_playwright
 
 DRAWER = [('fiske', 'finnsnes'), ('utstyrb', 'finnsnes'), ('service', 'finnsnes'), ('lever', 'botnhamn'), ('is', 'botnhamn'), ('agn', 'botnhamn'), ('oppdrag', 'botnhamn'),
@@ -44,7 +46,7 @@ TABS = "[...document.querySelectorAll('%s .ph-sub button')].filter(e => e.offset
 
 
 async def main():
-    only = [a for a in sys.argv[1:] if not a.startswith('-')]; found = {}; errs = []
+    only = [a for a in sys.argv[1:] if not a.startswith('-')]; found = {}; errs = []; shut = []
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await b.new_page(viewport={'width': 1280, 'height': 800}); pg.on('pageerror', lambda e: errs.append(str(e)))
@@ -91,9 +93,20 @@ async def main():
                 await pg.evaluate("(() => { const d = document.querySelector('#phView details.fl-more'); if (d) d.open = true; })()"); await pg.wait_for_timeout(150); await measure('#phView', 'app rederi, ⋯ åpen')
             if a == 'nett':
                 await pg.evaluate("(() => { const b = document.querySelector('#phone [data-pa=sub][data-s=megler]'); if (b) b.click(); })()"); await pg.wait_for_timeout(300); await page('#phView', 'app nett, megleren')
+        # D6: the dialogs, the tip and the toast (tools/ui/scener.py), each opened, measured and closed
+        await pg.evaluate("PHONE.show(false)")
+        for name, op, root, cl in SCENES:
+            if only and name not in only and 'dialoger' not in only: continue
+            try:
+                await pg.evaluate(op); await pg.wait_for_timeout(SLOW.get(name, 350))
+                if not await pg.evaluate("(r) => { const e = document.querySelector(r); return !!e && e.getClientRects().length > 0; }", root): print('FEIL åpnet ikke', name); shut.append(name)
+                else: await measure(root, name)
+            except Exception as e: print('FEIL kunne ikke åpne', name, str(e)[:100]); shut.append(name)
+            try: await pg.evaluate(cl)
+            except Exception: pass
         await b.close()
     rows = sorted(found.values(), key=lambda x: (x['where'], x['k']))
     for x in rows: print('FEIL %-22s %4.1f  %s på %s  %2d px  ×%-3d %s  «%s»%s' % (x['where'], x['k'], x['fg'], x['bg'], x['px'], x['n'], x['sel'], x['t'], '  [style: ' + x['inl'][:60] + ']' if x['inl'] else ''))
-    print('sidefeil', errs[:5]); print(('OK  ' if not rows else 'FEIL') + ' %d slags tekst under kravet' % len(rows))
+    print('sidefeil', errs[:5]); print(('OK  ' if not rows and not shut else 'FEIL') + ' %d slags tekst under kravet' % len(rows) + (', %d scener åpnet ikke (%s)' % (len(shut), ', '.join(shut)) if shut else ''))   # (a scene that did not open is not measured, so it is not a pass)
 
 asyncio.run(main())

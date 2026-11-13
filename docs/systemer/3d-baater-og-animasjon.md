@@ -239,6 +239,7 @@
     - Ved laveste lavvann (summen av `TIDE_C` er 1,55 m) er det minst 5 m vann langs hele fronten.
   - **Terrenget i 3D:**
     - `unitTerr` senker land som er høyere enn dekket ved sidene og bak, og går tilbake til det opprinnelige innen 22 m (`UNIT_REACH`).
+    - **Bakken ved veggene** (Jonas 13.11.2026, Engenes verft: «utgravninger og tagger»): det fine terrengstykket (`unitPatch`) har en rad punkter rett på blokkas bak- og sidevegger. De fikk veggfotens høyde (−9 m, verftet −14 m), så bakken falt 9–14 m de siste 2 m inn mot veggen: en grøft i sagtagger langs hele landsiden der sjøen synes. Nå får et punkt på bak- eller sideveggen (ikke de fremste 1 cm ved fronten) bakken like utenfor veggen: fyllingen og landet i dekkhøyde, eller sjøbunnen der siden står i vannet. `tests/enhetshot.py` (3D, alene) tar bildene fra land, nær og rett ovenfra, og måler bakken langs bak- og sidene med `G3._debug.unitEdge`: rød før (Engenes 42 punkter under dekket, ned til −16,35 m), grønn etter.
     - **Fyllingen bak blokka** (Jonas 04.10.2026: «det er viktig at fiskemottaket ser ut som det hører hjemme med omgivelsene»):
       - Sju av åtte blokker sto ute i vannet med 10–60 m sjø bak seg i 3D-terrenget.
       - `UNITS[k].f` er omrisset av en fylling i enhetens ramme, fra baksiden til 3 m inn på fast land (0,5 m og over i minst 10 m). Den er målt per meter langs baksiden fra høydepakkene, der landet ligger innen 70 m, og er minst 4 m dyp overalt.

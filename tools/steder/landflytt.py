@@ -22,7 +22,7 @@ import numpy as np
 from shapely.geometry import Point
 import fotavtrykk as F
 import mottak
-from steder import good, SPACE, YARDS
+from steder import good, SPACE, YARDS, move_sted
 
 STEDER = os.path.join(ROOT, 'src', 'data', 'steder.json'); MOTTAK = os.path.join(ROOT, 'src', 'data', 'mottak.json'); RORBU = os.path.join(ROOT, 'src', 'data', 'rorbuer.json')
 REACHES = (0.5, 1.0, 1.5, 3.0)
@@ -108,7 +108,7 @@ def main():
         for ref, kind, name, m, new, g, g2 in moved:
             if ref[0] == 'm':
                 x = next(e for e in M['m'] if e['id'] == ref[1]); p = x['p']; x['q'] = new + [round(math.hypot(new[0] - p[0], new[1] - p[1]) * 1000)]
-            else: S['r'][ref[1]][:5] = new[:5]
+            else: move_sted(S, ref[1], new)
         nm = sum(1 for r in moved if r[0][0] == 'm'); ns = len(moved) - nm
         S['meta']['landflytt'] = '%d places moved to a quay face with land behind it (%d plants, %d yards/shops), tools/steder/landflytt.py' % (len(moved), nm, ns)
         M['meta']['landflytt'] = '%d plants moved to a quay face with land behind it, tools/steder/landflytt.py' % nm

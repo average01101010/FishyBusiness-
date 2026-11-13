@@ -1,0 +1,60 @@
+[gemini-4-hydrogen; files: image: docs/okter/2026-11-13-122/hender.jpg; image: docs/okter/2026-11-13-122/stillinger_mannskap.jpg; image: docs/okter/2026-11-13-122/stillinger_skipper.jpg; image: docs/okter/2026-11-13-122/hatter.jpg; image: docs/okter/2026-11-13-122/haar.jpg; image: docs/okter/2026-11-13-122/sko.jpg; image: docs/okter/2026-11-13-122/jakker.jpg; image: docs/okter/2026-11-13-120/etter_kyst21_arbeid_bris_liggende.jpg; 9240 prompt tokens]
+
+Her er en konkret gjennomgang basert på det jeg ser i bildene (og tydelig merket der jeg antar noe):
+
+### 1. Pigger i hendene, vinger under armene og strukket/revet stoff
+* **Pigger i hendene er borte:** Jeg **ser** i `hender.jpg` at alle de fem blå hanskene (nr. 2–6 fra venstre) har jevne knoker og fingre uten pigger som stikker ut. På den bare hånden helt til venstre (nr. 1) er selve håndleddskanten øverst taggete/åpen der meshet slutter, men fingrene og knokene er glatte.
+* **Vinger under armene er borte:** Jeg **ser** i `stillinger_mannskap.jpg` og `stillinger_skipper.jpg` (stilling 2, armer rett opp) at armhulene nå er rene uten flaggermusvinger ned mot midjen. Under armen på høyre side i bildet buler riktignok overkroppen/jakken litt ut midt på ribbeina i begge bildene.
+* **Hvor stoffet fortsatt strekker seg eller ser revet/klemt ut:**
+  * **Knebøy og halvsittende (`stillinger_mannskap.jpg`, stilling 3 og 4):** Her **ser** jeg tydelig at det lange oransje jakkeskjørtet strekker seg stramt bakover og danner en hengematte/flate mellom baken og baksiden av lårene (spesielt tydelig i stilling 4, der det også blir en mørk stripe/glippe opp mellom beina). Den kortere skipperjakken (`stillinger_skipper.jpg`, stilling 3 og 4) unngår dette og ser mye renere ut.
+  * **Fremoverbøyd og stående vridning (`stillinger_mannskap.jpg`, stilling 5 og 6):** Mellom lårene i stilling 5 og 6 **ser** jeg en mørk, loddrett stripe/flate som stikker ned mellom beina (ser ut som innsiden av skjørtet/skrittet som bretter seg synlig). I stilling 6 **ser** jeg også at jakken og redningsvesten får en skarp, klemt bulk ved beltehøyde på figurens venstre side (høyre i bildet).
+  * **Skuldre i vridning (`stillinger_skipper.jpg`, stilling 6):** På figurens høyre skulder (venstre i bildet) blir overgangen mellom skulder og overarm litt kantete og spiss.
+
+---
+
+### 2. Grepene i `hender.jpg`
+*Merk:* Jeg **ser** bare **6 hender** i `hender.jpg` (én bar hånd til venstre, deretter fem blå hansker – altså mangler to av de åtte positurene du nevner, trolig kvinnehånd og `hook` eller at bildet er beskåret). Jeg vurderer de fem hanskene fra venstre til høyre som nr. 2 (`relax`), nr. 3 (`flat`), nr. 4 (`grip`), nr. 5 (`hold`) og nr. 6 (`pinch`/`hook`):
+* **Hvilke som ser ut som de holder noe:**
+  * **Nr. 4 (`grip`):** Ser ut som et fast grep/knyttneve rundt et tynt tau eller skaft – fingrene er krøllet inn og tommelen legger seg inn mot pekefingeren.
+  * **Nr. 5 (`hold`):** Ser ut som en hånd som holder eller støtter noe bredere (som en kassekant eller rekkverk), fordi fingrene danner en C-form.
+  * **Nr. 6:** Ligner til dels på et klype-/krokegrep mellom tommel og pekefinger, mens de tre siste fingrene er bøyd unna.
+* **Hvilket som er dårligst:** **Nr. 6** (helt til høyre) ser minst naturlig ut – jeg **ser** at pekefingeren bøyer seg skarpt skrått innover under tommelen i en unaturlig, nesten «brukket» vinkel, mens de tre andre fingrene er trukket brått inn i håndflaten. I **nr. 5** ser også de fire fingertuppene veldig flate og firkantede ut på linje (som en spade), og tommelen ligger litt bak/ved siden av i stedet for å gripe tydelig imot.
+
+---
+
+### 3. Hatter, hår og skjegg (`hatter.jpg`, `haar.jpg`)
+* **Tynn, svevende «tråd» på pannen og under hatter:**
+  * I `haar.jpg` (nederste rad, hode nr. 2 fra venstre, med viker) **ser** jeg en klar feil: en tynn, mørk strek/kant som svever rett over pannen mellom tinningene.
+  * Den samme mørke linjen **ser** jeg stikke ut gjennom huden eller rett under bremmen på tinningen på alle de mannlige hodene i `hatter.jpg` (øverste rad, hode nr. 1–5 fra venstre). Jeg **antar** det er en resterende hårkant/mesh-linje som klipper ut.
+* **Løs dusk på toppluen:** I `hatter.jpg` (nederste rad, hode nr. 4 fra venstre) og `jakker.jpg` (gul oljehyre med rød lue, nr. 2 og nr. 7 av de hele figurene) **ser** jeg at den runde dusken sitter helt ytterst på tuppen av luen med minimal kontakt, så den ser nesten løs/svevende ut.
+* **Hår og øyenbryn:**
+  * Kort hår i `haar.jpg` (øverste rad) ser ut som en stram, glatt hjelm med kantete hakk ved tinningene. Det lange kvinnehåret (`haar.jpg` øverst nr. 4 og `hatter.jpg` nederst) henger ned som en stiv, mørk søyle bak nakken, med spisse mørke fliker ved kinn/ører.
+  * På flere hoder i `haar.jpg` (spesielt nederste rad nr. 3–6) **ser** jeg små svarte prikker rett utenfor ytterkanten av øyenbrynene.
+* **Skjegg (`haar.jpg`, nederste rad):**
+  * Fippskjegget (nr. 4) ser ut som en liten, kantete kloss under haken.
+  * Helskjeggene (nr. 5 og 6) ser minst naturlige ut: nr. 5 har skarpe, geometriske 90-graders hjørner på kinnene som en rem rundt kjeven, og nr. 6 henger ned som en stiv, flat halskrage/smekke under haken.
+
+---
+
+### 4. Skoene (`sko.jpg`)
+* **Sålene:** Ja, jeg **ser** tydelige, flate såler i kontrastfarge (svart såle på de mørke og brune skoene, tykk hvit såle og tåhette på den blå joggeskoen) som skiller sålen godt fra overlæret.
+* **Formen:** På avstand fungerer de som sko, men nært innpå i `sko.jpg` **ser** jeg at tåpartiet er veldig firkantet/avkuttet (loddrett frontvegg), og oppe ved ankelen under buksebeinet stikker det opp en litt klumpete, firkantet flik/sylinder (særlig synlig på de brune skoene i midten og den blå til høyre).
+
+---
+
+### 5. Redningsvesten og jakkene (`jakker.jpg`, pluss `stillinger_mannskap.jpg`)
+* **Går gjennom kragen:** I `jakker.jpg` **ser** jeg tydelig at redningsvesten klipper gjennom jakkekragene på alle de fire figurene som har vest:
+  * **Vinrød jakke (hel figur nr. 4) og blå jakke (hel figur nr. 5):** De høye jakkekragene stikker rett gjennom eller sluker øvre del av de røde veststroppene på begge sider av halsen.
+  * **Gule oljehyrer (hel figur nr. 2 og nr. 7):** Toppen av vesten går inn i den høye gule kragen på sidene av halsen.
+* **Svever/klemmer ved belte og vridning:**
+  * På den **vinrøde** og **blå jakken** i `jakker.jpg` (nr. 4 og 5) sitter det svarte magebeltet helt nede ved jakkekanten og ser ut til å gape litt på sidene.
+  * I `stillinger_mannskap.jpg` (stilling 6, til høyre) **ser** jeg at vesten vrir seg og delvis forsvinner inn i brystpartiet på jakken når overkroppen roterer, og i fremoverbøyd/sittende stilling (stilling 4 og 5) løfter nederkanten/skulderen av vesten seg litt fra jakken.
+  * Jeg **ser** også en mørk vertikal flik mellom lårene på figurene med vinrød og blå jakke i `jakker.jpg` (nr. 4 og 5).
+
+---
+
+### 6. De tre tingene som trekker mest ned på 3–8 meters hold (`etter_kyst21_arbeid_bris_liggende.jpg` sett mot nærbildene)
+Når man ser mannskapet på dekk i spillet (`etter_kyst21_arbeid_bris_liggende.jpg`), ser det allerede ryddig ut uten åpenbare pigger eller flaggermusvinger. Det som fortsatt trekker mest ned på 3–8 meters avstand er:
+1. **Strukket jakkeskjørt og mørk glippe mellom beina i arbeidsstillinger (`stillinger_mannskap.jpg` stilling 3–6):** Når figurer i lang oljehyre bøyer seg eller sitter på huk, strekker skjørtet seg som en flate under baken og viser mørkt skritt/innside mellom lårene. På dekk der folk lener seg over sløyebord og rekke, gir det stive silhuetter rundt hofter og skuldre.
+2. **Redningsvest som klipper i krager og forskyver seg (`jakker.jpg` nr. 2, 4, 5, 7 og `stillinger_mannskap.jpg` stilling 6):** Den sterke rødfargen mot gul/blå/vinrød jakke gjør at gjennomtrengning i kragen og klemming/vridning over brystet synes godt også på flere meters avstand.
+3. **Geometrisk/påklistret skjegg og stive detaljer på hode/skuldre (`haar.jpg` nr. 5–6, `hatter.jpg` nr. 4, `etter_kyst21_arbeid_bris_liggende.jpg`):** De skarpe, kragelignende skjeggene, den løse dusken på toppluen (synlig på mannen ved sløyebordet i spillbildet) og litt kantete skulder-/armledd kombinert med veldig knallblå hansker gjør at figurene fortsatt virker litt «dukkeaktige» i bevegelse på dekk. (Og brukes hodet med viker uten hatt, vil den svevende svarte pannelinjen i `haar.jpg` være veldig synlig – jeg **antar** det er et lettfikset mesh-uhell.)

@@ -460,10 +460,10 @@ const DOCK = (() => {
     if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
     if (sb) PHONE.dact(pg, 'sub', {s:sb});
-    dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render();
+    dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render(); if (typeof renderHud === 'function') renderHud();   // (D6: upright the box folds to the strip over the sheet)
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});
   }
-  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open', 'dk-wide', 'dk-low'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); }
+  function close(){ if (typeof WORK !== 'undefined' && WORK.shut) WORK.shut(); page = null; dr.hidden = true; document.body.classList.remove('dk-open', 'dk-wide', 'dk-low'); shown = ''; html = ''; if (PAINT) PAINT.live(false); if (typeof G3 !== 'undefined' && G3.trying) G3.tryView(null); render(); if (typeof renderHud === 'function') renderHud(); }
   dTabs.addEventListener('click', e => { const el = e.target.closest('[data-pg]'); if (el){ page = el.dataset.pg; shown = ''; draw(false); if (SHOP_PAGES.includes(page) && typeof cloudEv === 'function') cloudEv('shop_view', {pg:page}); } });
   $('drawerClose').addEventListener('click', close);
   dBody.addEventListener('click', e => {
