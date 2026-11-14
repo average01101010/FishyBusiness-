@@ -479,6 +479,42 @@
   // an event at its place on the rail (boat frame); the nearest hand at work there plays it (drawWorker), so the fish he handles is the
   // one that came up. DKBLOOD: the drops of the cut, drawn as points after the people.
   const DKEV = [], DKDUR = {bleed:3.0, gaff:2.4, pick:2.4, jigup:2.2}, DKDROP = {gaff:1.75, pick:2.0}, DKBLOOD = [], DKWATER = [], DKSMOKE = [], DKDECK = [], DKF = {t:0, jig:{}}, DKN = {gaff:0, pick:0, jigup:0, bleed:0};   // DKN: the events played (the tests)
+  // a live fish (Jonas 13.11.2026: «fisken som kommer opp spreller litt helt til den er bløgget, snøret dras i litt ulike retninger og
+  // fisken plasker litt i vannet når den kommer opp»): bursts of hard kicks with short rests between, each fish out of step with the
+  // others (w its own phase), k how much life is left (1 alive, fading to 0 once the throat is cut). [the whole body's sweep, the head's
+  // toss, the bend's amplitude at the tail (in the fish's 1 m), its phase, the wave and the stiff head] (the bend: bendOn, LITN_VS uBend in 12-skiff.js; the body
+  // swings a little against the tail, as a fish's head does)
+  // How each species moves (Jonas 13.11.2026: «bevegelsen kan brukes på andre typer fiskearter også»): [the bend's strength, the wave
+  // over the body (radians: about 3.5 for the cod's kind, which swims with the after half, 6 or more for the ling and the tusk, which
+  // swim with the whole long body as an eel does), the stiff head (share of the length), the beat's pace]. The redfish is stiff with its
+  // spines, the halibuts slap slow and heavy (lying on the blind side the sweep is up and down, as a halibut on deck does). A species not
+  // here moves as the cod; the crabs are never bent.
+  const SWIM = {torsk:[1, 3.6, 0.22, 1], sei:[0.95, 3.4, 0.25, 1.15], hyse:[0.9, 3.6, 0.22, 1.1], lyr:[0.95, 3.4, 0.24, 1.1], uer:[0.6, 3.0, 0.3, 0.85],
+    lange:[1.1, 6.5, 0.08, 0.75], brosme:[1.05, 5.5, 0.1, 0.8], kveite:[1.1, 3.2, 0.25, 0.6], blakveite:[1.0, 3.4, 0.22, 0.7]};
+  // each fish its own temper (Jonas: «noen fisk spreller mer enn andre»), from its phase w: how hard it fights (0.3-1.5 of the
+  // species'), how long it rests between the bursts and how often they come, and its own pace; a big fish beats slower
+  const fh = (w, n) => { const x = Math.sin(w * 12.9898 + n * 78.233) * 43758.5453; return x - Math.floor(x); };
+  function flapK(T, w){ const a = 0.9 + 0.9 * fh(w, 1), c = 2.6 + 2.2 * fh(w, 2), r = 0.05 + 0.65 * fh(w, 3);
+    return clamp(r + 0.6 * Math.sin(T * a + w * 2.1) + 0.35 * Math.sin(T * c + w * 0.7), 0, 1); }
+  function flap(T, w, k, sp, kg){ const Sw = SWIM[sp] || SWIM.torsk, kk = k == null ? 1 : k, b = flapK(T, w) * kk * (0.3 + 1.2 * fh(w, 4)),
+      rate = Sw[3] * (0.85 + 0.35 * fh(w, 5)) * Math.pow(clamp((kg || 3) / 3, 0.2, 20), -0.12), ph = T * 15 * rate + w * 5;
+    return [-Math.sin(ph) * (0.03 * kk + 0.16 * b) * Sw[0], Math.sin(T * 9.5 * rate + w * 3) * 0.2 * b, kk > 0 ? (0.03 * kk + 0.17 * b) * Sw[0] : 0, ph, Sw[1], Sw[2]]; }
+  // where the fish pulls the line on its way up: a slow wander to both sides and a jerk with the kicks (m metres at most, across [x, z])
+  function tug(T, w, m){ const j = 0.3 * flapK(T, w) * Math.sin(T * 13 + w * 4); return [m * (0.6 * Math.sin(T * 1.1 + w * 1.9) + j), m * (0.6 * Math.cos(T * 0.8 + w * 2.7) + 0.3 * Math.sin(T * 3.1 + w * 1.3))]; }
+  // a fish breaking the surface: a few small drops thrown up where it is (E eye-relative), in the sea's own spray (SD, 24-cinema.js)
+  function fishSplash(E, kg, n){ const s = clamp(Math.cbrt(kg || 2) * 0.6, 0.4, 1.4);
+    for (let j = 0; j < n; j++){ const i = SD.n = (SD.n + 1) % SDN, a = Math.random() * 6.2832, v = (0.2 + Math.random() * 0.6) * s;
+      SD.x[i] = E[0] + lastEye[0] + Math.sin(a) * 0.08; SD.z[i] = E[2] + lastEye[2] + Math.cos(a) * 0.08; SD.y[i] = E[1] + lastEye[1]; SD.vx[i] = Math.sin(a) * v; SD.vz[i] = Math.cos(a) * v;
+      SD.vy[i] = (0.7 + Math.random() * 1.3) * s; SD.age[i] = 0; SD.life[i] = 0.35 + Math.random() * 0.4; }
+    DKN.fsplash = (DKN.fsplash || 0) + 1; }   // (counted for the tests)
+  // the surface by a fish on the line (y in the boat's frame, FS_Y where the lines go into the sea in these drawings): a splash once as it
+  // comes out, and now and then while it kicks just at the surface. id: the fish (kept a few seconds to see it cross)
+  const FS_Y = -0.3, FSURF = new Map(); FSURF.sl = 0;
+  function fishSurf(id, y, E, kg, T, w){ const now = performance.now(), o = FSURF.get(id); FSURF.set(id, {y, t:now});
+    if (FSURF.size > 80) for (const [k, v] of FSURF) if (now - v.t > 3000) FSURF.delete(k);
+    // (the crossing seen across frames up to 1.5 s apart, a slow tablet included; the kicks at the surface at most one in 0.7 s, whatever the frame rate)
+    if (o && now - o.t < 1500 && o.y < FS_Y && y >= FS_Y) fishSplash(E, kg, 12);
+    else if (y > FS_Y - 0.25 && y < FS_Y + 0.2 && flapK(T, w) > 0.8 && now - FSURF.sl > 700){ FSURF.sl = now; fishSplash(E, kg, 4); } }
   const ASLIDE = [];   // the autoliner's gaffed fish sliding into the chute's mouth (e.chute, 10-gear.js drawAutoSlides; H2d2)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }
