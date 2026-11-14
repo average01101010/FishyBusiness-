@@ -1198,6 +1198,8 @@ const HOLDT = {
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
+  LEG:[0.075, 0.055],   // m: half a thigh and half a shin with the trousers (what he holds keeps clear of his legs too)
+  fish:{r:0.11, at:[0.25, 0.5, 0.8]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length)
   // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
@@ -1205,7 +1207,12 @@ const HOLDT = {
   // squat: how far down the hips come for a box at the deck (the share of workLow's dip), lean: rad he leans back carrying it,
   // most: m it is moved out ahead of him at the most
   box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:0.55, lean:0.07, most:0.14},
-  shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
+  // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m). The shovel is stiff: len from
+  // the D grip in the upper hand to the blade's socket (the model's metre drawn at this), low the lower hand's place down it; hip where
+  // the upper hand would be, from his hips [ahead, up, to his right] (the shaft goes from the blade towards it), and turn the share of
+  // the way round to the blade his body turns on its feet and the angle (rad) the blade is kept to the right of where he then faces
+  // (the upper hand is his left: the shovel is before him and to his right, never across him or behind his own hand)
+  shaft:{r:0.02, at:[0.12, 0.24, 0.36], len:0.72, low:0.38, hip:[0.1, -0.05, -0.3], turn:[0.85, 0.3]},
   gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, far:0.28},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle; far: how far from before his belly its middle goes at the most
   cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
   broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
@@ -1216,7 +1223,7 @@ const HOLDT = {
   snus:{at:[0.025, 0.015, 0.02]},             // the fingers at the upper lip
   blow:{at:[0.085, -0.05, 0.035]},            // the hands blown into, from the mouth
   phone:{r:0.04},
-  blade:{r:0.15},                             // the shovel's blade: its half width
+  blade:{r:0.15, legs:[0.3, 0.36]},           // the shovel's blade: its half width, and the room his legs have of it under the hips (m ahead of them and to either side: its socket keeps outside that)
   kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line
 };
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
