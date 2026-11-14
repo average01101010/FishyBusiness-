@@ -1,0 +1,216 @@
+OK   s01-dagdrift: telefonen → Driftsplan-appen åpner siden med «Lag driftsplan»  {"trykk": 2, "sveip": 0, "sek": 1.8}
+OK   s01-dagdrift: en ny plan kommer utfylt og klar: dagen, de sju radene og «Start planen»  {"start": "Start planen", "ops": {"home": "rb130", "rig": "juksa", "places": ["juks"]}}
+OK   s01-dagdrift: Start: planen lages og går  {"fra telefonen": {"trykk": 4, "sveip": 0, "sek": 9.4}, "fra Lag driftsplan": {"trykk": 2, "sveip": 0, "sek": 4.7}}
+  · s01-dagdrift: hele siden med planen på: sveip fra toppen til «Slett driftsplanen»  {"sveip": 1, "fmt": "800x1280", "hoyde": 1307, "synlig": 980}
+  (s01-dagdrift: 18 s)
+OK   s02-ikke-klar: «Ikke klar ennå» med grunnen (skipper og styrmann)  {"knapp": "Ikke klar ennå"}
+  · s02-ikke-klar: Mannskap-raden  "Mannskap Ingen skipper · ingen styrmann ›"
+FEIL s02-ikke-klar: U13: grunnen er en knapp, og et trykk på den åpner Mannskap-siden i samme skuff  {"grunnen": "Når du ikke er om bord, må både en skipper og en styrmann være utnevnt. Gjør det på Mannsk", "skuffen viser": "beholdning", "DOCK.open kalt med": ["arbeid"]}
+FEIL s02-ikke-klar: fant ikke Mannskap i dokka
+  · s02-ikke-klar: omveien: Mannskap-knappen i dokka  {"skuffen viser": "beholdning"}
+OK   s02-ikke-klar: skipper og styrmann utnevnt med trykk, og tilbake på Driftsplan er Start klar  {"roller": {"sk": "Ole Mikalsen", "mate": "Per Hansen"}, "trykk": {"trykk": 4, "sveip": 0, "sek": 12.5}, "knapp": "Start planen"}
+OK   s02-ikke-klar: U10: skipperens kort tilbyr ikke «Gjør til styrmann»  false
+OK   s02-ikke-klar: planen går uten deg om bord  {"trykk": 5, "sveip": 0, "sek": 13.1}
+  (s02-ikke-klar: 18 s)
+OK   s03-line: Redskap-raden: juksa og line velges med trykk, raden sier stampene per type  "Redskap Line: 4 hyseline, 10 bankline · og juksa (markkroker) ▾"
+OK   s03-line: et felt fra eget fangstmerke legges til med ett trykk  [{"k": "juks", "n": null, "soak": null, "lk": null}, {"k": "felt", "n": 5, "soak": 8, "lk": "bank"}]
+OK   s03-line: typebryteren bytter linetype; + stopper ved stampene båten eier, og sier fra  {"lk": ["bank", "hyse"], "felt": {"n": 4, "lk": "hyse", "own": 4}, "toast": ["Båten har ikke flere stamper hyseline til dette feltet."], "antall_toast": 14}
+OK   s03-line: ståtida går i steg på 1 t for line  [8, 9]
+OK   s03-line: rekkefølgen endres med ↑  ["juks,felt", "felt,juks"]
+  (s03-line: 26 s)
+OK   s04-kart: «Velg i kartet …» åpner kartplotteren i planmodus
+OK   s04-kart: et trykk på nåla åpner kortet  {"kort": "Felt 1\n×\nLine\nHyseline ⇄\nStamper\n−\n4 stamper av 4\n+\nStåtid\n−\n9 t\n+\nLenka 3,6 km\n↶\netter kursen\n↷\n2,7 nm fra hjem · sist ", "sentrert": false}
+  · s04-kart kort-felt 384x853: overflyt False panel [] utenfor [] overlapp ['pmCard×nål', 'pmCard×nål'] kuttet []
+OK   s04-kart: kortets − og + virker  [4, 3, 9, 10]
+OK   s04-kart: lenkeretningen settes med ↷ (avvist retning sies med toast)  {"trykk": 1, "avvist": 0, "kort": "Felt 1\n×\nLine\nHyseline ⇄\nStamper\n−\n3 stamper av 4\n+\nStåtid\n−\n10 t\n+\nLenka 2,7 km\n↶\n17°\n↷\nfri\n2,7 nm fra hjem · sist 3,2 kg per stamp etter 10 t\n↑\n↓\nFjern"}
+  · s04-kart kort-retning 384x853: overflyt False panel [] utenfor [] overlapp ['pmCard×nål', 'pmCard×nål'] kuttet []
+OK   s04-kart: «fri» tar retningen bort igjen
+OK   s04-kart: et trykk på land avvises med toast  ["Det er land der."]
+  · s04-kart land-avvist 384x853: overflyt False panel [] utenfor [] overlapp ['pmCard×nål', 'pmCard×nål'] kuttet []
+OK   s04-kart: et trykk i sjøen legger til et felt  {"plasser": [{"k": "felt", "n": 3, "lk": "hyse"}, {"k": "juks", "n": null, "lk": null}, {"k": "felt", "n": 5, "lk": "bank"}], "toast": []}
+OK   s04-kart: nåla dras til et nytt sted  [{"x": 852.0827026367188, "y": 329.8356018066406}, {"x": 851.4774780273438, "y": 329.4993591308594}]
+OK   s04-kart: Juksplass og et trykk i sjøen legger til en juksplass  ["felt", "juks", "felt", "juks"]
+OK   s04-kart: kortets ↑ og ↓ flytter plassen i rekkefølgen  [["felt", "juks", "felt", "juks"], ["felt", "juks", "juks", "felt"], ["felt", "juks", "felt", "juks"]]
+OK   s04-kart: lista viser dagens lengde etter endringene  "Dagen blir 12,6 t, hjemme kl. 18:45"
+OK   s04-kart: Fjern tar bort plassen (uten å spørre)
+  · s04-kart: trykk og sveip i kartet  {"trykk": 14, "sveip": 0, "sek": 23.3}
+  · s04-kart: plotterens egen 3D-knapp i planmodus  {"synlig": false}
+OK   s04-kart: «Ferdig» går tilbake til Driftsplan-siden med plassene  {"rad": "Plasser 2 felt, 1 juksplass ▾"}
+  (s04-kart: 28 s)
+OK   s05-garn: garn: raden sier garna, et felt fra merket, ståtida i steg på 6 t  {"rad": "Redskap Garn, 12 garn · og juksa (markkroker) ›", "felt": [{"n": 12, "soak": 24}, {"n": 12, "soak": 30}]}
+OK   s05-garn: garnplanen starter
+  (s05-garn: 10 s)
+OK   s06-teiner: teiner: et felt med 48 t ståtid, og dagen nevner agnet  {"felt": {"n": 10, "soak": 48}, "agn": "er på juksplass 1 til kl. 19:29 (13,2 t)\n19:39\nKjøper 15 kg agn i Husøy\n20:00\nHjem til Husa\n20:00\nHviler til kl. 22:41\nFelt"}
+  (s06-teiner: 8 s)
+OK   s07-uten-haler: uten haler er line, garn og teiner låst, med grunnen på knappen  {"line": "Line Båten mangler linehaler", "garn": "Garn Båten mangler garnhaler", "teiner": "Teiner Båten mangler teinehaler"}
+  · s07-uten-haler: et trykk på en låst rigg  {"rig": "juksa", "toast": []}
+OK   s07-uten-haler: U13: grunnen «Legg ut minst ett felt» åpner Plasser-raden  null
+OK   s07-uten-haler: U9: uten blåsesett er Start låst, med grunnen og veien til utstyrsbutikken  {"start": "Ikke klar ennå", "start_låst": true, "veien": "Autonav til Skaland utstyrsbutikk · 8,3 nm"}
+  · s07-uten-haler: Start uten blåsesett  {"knapp": "Ikke klar ennå", "låst": true}
+  (s07-uten-haler: 16 s)
+OK   s08-levering: levering: valgt mottak, hver tur, hvert N. døgn (2–7) og tilbake til nærmeste og full last  {"rad": ["Levering Senjahopen · når lasten er full ▾", "Levering Senjahopen · hver tur ▾", "Levering Senjahopen · hvert 7. døgn ▾"], "land": [{"mode": "port", "port": "senjahopen", "when": "full", "days": 2}, {"mode": "port", "port": "senjahopen", "when": "days", "days": 7}, {"mode": "near", "port": null, "when": "full", "days": 7}]}
+  (s08-levering: 16 s)
+OK   s09-vaer: vær: forhåndsvalgene, og + stopper ved båtens grenser  {"valg": {"safe": {"wind": 10, "hs": 1.5}, "tough": {"wind": 15, "hs": 3.5}, "normal": {"wind": 13, "hs": 2.5}}, "topp": {"wind": 15, "hs": 3.6, "wmax": 15, "hmax": 3.6}, "toast_ved_grensen": []}
+OK   s09-vaer: «Tøff» holder seg innenfor vinden + stopper ved (båtens grense)  {"Tøff": {"wind": 15, "hs": 3.5}, "grense": 15}
+  · s09-vaer: Vær-raden ved grensen  {"rad": "Vær Inntil 15 m/s og 3,6 m ▾", "forhåndsvalg_markert": 0}
+  (s09-vaer: 16 s)
+OK   s10-flerdogn: sjark med deg og to: døgndrift låst med grunn, flerdøgnstur åpen (køyer)  {"døgn": "Døgndrift Krever fire om bord, deg medregnet (dere er 3): ansett 1 til", "fler": "Turer over flere døgn Mannskapet hviler om bord underveis. Hjem når turen er over."}
+OK   s10-flerdogn: flerdøgnstur: døgn og avgang med −/+  {"ops": {"rhythm": "multi", "days": 4, "dep": 5.5}, "rad": "Rytme Turer på 4 døgn, ut kl. 05:30 ▾"}
+OK   s10-flerdogn: flerdøgnsturen starter
+  (s10-flerdogn: 14 s)
+OK   s11-dogndrift: døgndrift er åpen med fire om bord og seks køyer  "Døgndrift To vakter på tolv timer: skipperen 06–18 (du, når du er om bord), styrmannen 18–"
+OK   s11-dogndrift: døgndriften starter  {"fra telefonen": {"trykk": 6, "sveip": 1, "sek": 8.2}, "fra Lag driftsplan": {"trykk": 4, "sveip": 1, "sek": 6.9}}
+    07:18 fishing  fish   None   gop=None vent=None  energi= 96 slit=[0, 3, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    08:18 fishing  fish   None   gop=None vent=None  energi= 92 slit=[0, 8, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    09:18 fishing  fish   None   gop=None vent=None  energi= 88 slit=[0, 12, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    10:18 fishing  fish   None   gop=None vent=None  energi= 83 slit=[0, 17, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+  · s11-dogndrift i-gang 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+    11:18 fishing  fish   None   gop=None vent=None  energi= 79 slit=[0, 21, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    12:19 fishing  fish   None   gop=None vent=None  energi= 75 slit=[0, 26, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    13:19 fishing  fish   None   gop=None vent=None  energi= 75 slit=[0, 30, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    14:19 fishing  fish   None   gop=None vent=None  energi= 71 slit=[0, 35, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    15:19 fishing  fish   None   gop=None vent=None  energi= 67 slit=[0, 40, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    16:19 fishing  fish   None   gop=None vent=None  energi= 62 slit=[0, 44, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    17:19 fishing  fish   None   gop=None vent=None  energi= 58 slit=[0, 49, 0] hvil=False steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 06:27 Jukser på juksplass 1 til i morgen kl. 06:26 (24,0 t) ←
+    18:19 fishing  fish   None   gop=None vent=None  energi= 58 slit=[2, 41, 2] hvil=True  steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 18:00 Vakt B til i morgen kl. 06:00: Ole Mikalsen, Kari Nilsen ←
+    19:19 fishing  fish   None   gop=None vent=None  energi= 67 slit=[6, 33, 8] hvil=True  steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 18:00 Vakt B til i morgen kl. 06:00: Ole Mikalsen, Kari Nilsen ←
+    20:19 fishing  fish   None   gop=None vent=None  energi= 76 slit=[10, 25, 13] hvil=True  steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 18:00 Vakt B til i morgen kl. 06:00: Ole Mikalsen, Kari Nilsen ←
+    21:19 fishing  fish   None   gop=None vent=None  energi= 84 slit=[14, 17, 19] hvil=True  steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 18:00 Vakt B til i morgen kl. 06:00: Ole Mikalsen, Kari Nilsen ←
+    22:19 fishing  fish   None   gop=None vent=None  energi= 93 slit=[19, 5, 26] hvil=True  steg=avgang@06:19 | Nå: Jukser til kl. 06:26 | ← 18:00 Vakt B til i morgen kl. 06:00: Ole Mikalsen, Kari Nilsen ←
+OK   s11-dogndrift: døgndriften går ut og fisker  ["fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing", "fishing"]
+  · s11-dogndrift kveld 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+  (s11-dogndrift: 31 s)
+OK   s12-faa-koyer: fem om bord og fire køyer: døgndrift låst med «køyer til alle (4 av 5)»  "Døgndrift Krever køyer til alle om bord (4 av 5)"
+  · s12-faa-koyer laast 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+OK   s12-faa-koyer: med deg i land er de fire om bord med fire køyer, og døgndrift åpner  "Døgndrift To vakter på tolv timer: skipperen 06–18 (du, når du er om bord), styrmannen 18–"
+  (s12-faa-koyer: 7 s)
+OK   s13-uten-koyer: U2: snekke uten køyer: døgndrift låst med båtens grense først («Båten har … køyer»), og flerdøgnstur låst  {"døgn": "Døgndrift Båten har verken styrhus eller køyer", "fler": "Turer over flere døgn Krever køyer om bord"}
+  · s13-uten-koyer: grunnen på døgndrift for en båt som verken har køyer eller plass til fire  "Døgndrift Båten har verken styrhus eller køyer"
+OK   s13-uten-koyer: Hjem-raden skiller mellom der mannskapet sover godt og dårlig  null
+  (s13-uten-koyer: 12 s)
+OK   s14-en-mann: én-manns båt: «Du er skipper» om bord, «Går bare med deg om bord» i land  {"om bord": "Mannskap Du er skipper ›", "i land": "Mannskap Går bare med deg om bord ›", "start": "Start planen"}
+OK   s14-en-mann: bare deg, uten mannskap: «Du er skipper», og planen starter  {"rad": "Mannskap Du er skipper ›", "start": "Start planen"}
+  · s14-en-mann: dokka uten mannskap, med planen på  "Mottak | Bygd | Om bord | Ved kaia · Husøy"
+  (s14-en-mann: 10 s)
+FEIL s15-stor-bat: scenarioet stoppet: Error("Page.evaluate: TypeError: Cannot read properties of undefined (reading 'x')\n    at eval (eval at evaluate (:311:30), <anonymous>:27:63)\n    at async <anonymous>:337:30")
+  (s15-stor-bat: 0 s)
+OK   s16-hjem: Hjem: naust, rorbu og mottakskai velges med trykk  {"naustet": {"id": "finnsnes", "valgt": true, "rad": "Hjem Finnsnes ▾", "tekst": "Finnsnes (naustet) Du sover i naustet · mannskapet sover godt · 18,3 nm til plassene"}, "rorbu": {"id": "rb130", "valgt": true, "rad": "Hjem Husa ▾", "tekst": "Husa (rorbu) Du sover på rorbua (150 kr natta) · mannskapet sover godt · 0,6 nm til plassene"}, "fiskemottak": {"id": "husoy", "valgt": true, "rad": "Hjem Husøy ▾", "tekst": "Husøy (fiskemottak) Du sover i køya · mannskapet sover godt · 1,3 nm til plassene"}}
+  · s16-hjem: hjem-typene i lista  ["Finnsnes (naustet) Du sover i naustet · mannskapet sover godt · 18,3 nm til plassene", "Husa (rorbu) Du sover på rorbua (150 kr natta) · mannskapet sover godt · 0,6 nm til plassene", "Senjahopen (rorbu) Du sover på rorbua (150 kr natta) · mannskapet sover godt · 3,4 nm til plassene", "Blomdalen (rorbu) Du sover på rorbua (150 kr natta) · mannskapet sover godt · 4,4 nm til plassene", "Austein (rorbu) Du sover på rorbua (150 kr natta) · mannskapet sover godt · 10,3 nm til plassene", "Husøy (fiskemottak) Du sover i køya · mannskapet sover godt · 1,3 nm til plassene", "Senjahopen (fiskemottak) D
+  (s16-hjem: 8 s)
+OK   s17-i-drift: line- og juksplanen starter
+    23:24 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    00:24 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    01:24 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    02:25 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    03:25 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    04:25 port     None   husoy        gop=None fisk=False vent=dep    energi=100 slit=[0, 0] hvil=False steg=None         | Nå: Neste tur går kl. 05:00. | ← None
+    05:25 fishing  fish   None         gop=None fisk=True  vent=None   energi= 98 slit=[0, 0] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 05:23 Setter 4 lenker autoline på felt 1 ←
+        logg 05:00 Gikk ut på driftsplanen med deg som skipper.
+        dagen nå: 05:00 Kjøper 34,7 t agn for turen i Husøy (blekksprut og saury) | 05:23 Setter 4 lenker autoline på felt 1 ← | 07:14 Venter ved felt 1 til ståtida er ute kl. 13:14 | 13:14 Trekker felt 1 (sto 6,0 t) | 21:14 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen) | Felt 1: står til ståtida er ute i morgen kl. 05:05 | Døgndrift med lagene; turen går til lasten, agnet, drivstoffet eller provianten sier stopp.
+    06:25 fishing  fish   None         gop=None fisk=True  vent=None   energi= 94 slit=[4, 4] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 05:23 Setter 4 lenker autoline på felt 1 ←
+        logg 06:00 Ole: «På sånne dager pleide vi å prøve nordvest for Husøy. Der står torsk gjerne nu.»
+    07:25 fishing  fish   None         gop=None fisk=True  vent=None   energi= 90 slit=[8, 10] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 07:14 Venter ved felt 1 til ståtida er ute kl. 13:14 ←
+    08:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 86 slit=[13, 15] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 07:14 Venter ved felt 1 til ståtida er ute kl. 13:14 ←
+    09:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 82 slit=[17, 21] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 07:14 Venter ved felt 1 til ståtida er ute kl. 13:14 ←
+    10:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 77 slit=[22, 26] hvil=False steg=sett@05:23   | Nå: Venter ved redskapet til kl. 11:20 | ← 07:14 Venter ved felt 1 til ståtida er ute kl. 13:14 ←
+    11:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 73 slit=[26, 32] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 11:24 Setter 4 lenker autoline på felt 1 ←
+        dagen nå: 11:24 Går fra der båten ligger | 11:24 Setter 4 lenker autoline på felt 1 ← | 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 | 19:15 Trekker felt 1 (sto 6,0 t) | 03:15 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen) | 05:06 Venter ved felt 1 til ståtida er ute i morgen kl. 11:06 | 11:06 Trekker felt 1 (sto 6,0 t) | 19:06 Setter de 4 lenkene ut igjen på felt 1 (egnemaskinen) | Felt 1: står til ståtida er ute om 2 døgn, kl. 02:57
+    12:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 69 slit=[31, 37] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 11:24 Setter 4 lenker autoline på felt 1 ←
+    13:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 65 slit=[35, 43] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+    14:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 61 slit=[40, 48] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+    15:26 fishing  fish   None         gop=None fisk=True  vent=None   energi= 57 slit=[45, 54] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+  · s17-i-drift natt 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+    16:27 fishing  fish   None         gop=None fisk=True  vent=None   energi= 52 slit=[49, 59] hvil=False steg=avgang@11:24 | Nå: Venter ved redskapet til kl. 17:24 | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+    17:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 48 slit=[54, 65] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+    18:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 44 slit=[46, 57] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 13:15 Venter ved felt 1 til ståtida er ute kl. 19:15 ←
+    19:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 40 slit=[38, 49] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+    20:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 36 slit=[30, 41] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+    21:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 31 slit=[22, 33] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+    22:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 27 slit=[10, 21] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+    23:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 23 slit=[0, 9] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+        logg 23:01 Du begynner å bli sliten. Arbeidet ditt går tregere. Gå ned i køya og hvil.
+    00:27 adrift   fish   None         gop=None fisk=False vent=None   energi= 19 slit=[0, 0] hvil=False steg=avgang@11:24 | Nå: På vei ut | ← 19:15 Trekker felt 1 (sto 6,0 t) ←
+        logg 00:00 Per: «Skipper, du ser sliten ut. Bør du ikkje hvile litt?»
+OK   s17-i-drift: «Nå» stemmer med det båten gjør, time for time i 26 t  []
+OK   s17-i-drift: dagdrift: ingen avganger mellom kl. 20 og 04 (hjem er en rorbu)  {"avganger": ["05:00"], "hjem": "rb130 rorbu=true"}
+OK   s17-i-drift: «I dag» har pila «←» på steget båten er på  [null, null, null, null, null, null, "05:23 Setter 4 lenker autoline på felt 1 ←", "05:23 Setter 4 lenker autoline på felt 1 ←"]
+OK   s17-i-drift: statistikken etter et døgn  "Levert\t0 kg\t0 kg\t0 kg"
+  · s17-i-drift: «Mer» åpnet, så tegner siden seg på nytt  {"fant_mer": true, "åpen": true, "åpen_etter": true, "raden_fortsatt_åpen": true}
+OK   s17-i-drift: stoppet plan: grunnen og knappen som åpner Plasser  "Endre plassene"
+  (s17-i-drift: 52 s)
+  · s17b-hent: lina i sjøen etter  {"min": 1230, "nå": "Nå: Venter: du har tatt over båten"}
+FEIL s17b-hent: Pause slår planen av; redskap i sjøen gir «Hent redskapet»  {"i sjøen": 0, "knapp": null}
+  · s17b-hent: etter Pause: hva båten gjør og hva siden viser  {"status": "port", "tur": null, "nå-linja": "Nå: På pause siden kl. 21:04. Båten ligger i Husøy.", "pila": null, "overskrift": "Når du starter igjen · ut kl. 05:00"}
+OK   s17b-hent: U4: Pause stopper båten der den er, og siden sier det (ikke «I dag ←»)  {"status": "port", "tur": null, "nå-linja": "Nå: På pause siden kl. 21:04. Båten ligger i Husøy.", "pila": null, "overskrift": "Når du starter igjen · ut kl. 05:00"}
+  · s17b-hent pause 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+  (s17b-hent: 12 s)
+OK   s18-kopier-slett: kopier til en annen båt med ett trykk, og toasten sier det  {"kopi": {"v": 4, "on": false, "places": 1}, "toast": ["Planen er kopiert til «Kystværing». Sjekk den og start den der."]}
+  · s18-kopier-slett kopier 384x853: overflyt False panel [] utenfor [] overlapp ['drawer×div#toast.on'] kuttet []
+OK   s18-kopier-slett: P7: Slett spør i spillets egen dialog med båtens navn og redskapet i sjøen: «Behold» beholder planen, «Slett» sletter den  {"dialog": "Slette driftsplanen for «T-658-LK»?\n\nHjem, redskap, plassene, levering, vær, rytme og statistikken for planen blir borte.\n\nIngen redskap fra planen står i sjøen.\n\nBehold planen\nSlett planen", "nettleserdialoger": 0}
+  (s18-kopier-slett: 14 s)
+FEIL s19-rederi: prikken på Mannskap-knappen når planen har stoppet
+  · s19-rederi: telefonens hjem  []
+OK   s19-rederi: Rederi-siden sier at driftsplanen har stoppet  ["Driftsplanen har stoppet: Felt 1 er stengt (test)."]
+OK   s19-rederi: varselets «Åpne» på Rederi-siden går til planen  {"skuff": "drift", "telefon": false}
+FEIL s19-rederi: fant ikke Mannskap i dokka
+FEIL s19-rederi: fant ikke Åpne (Driftsplan-linja)
+FEIL s19-rederi: Mannskap-siden: linja sier «Stoppet» og «Åpne» går til planen  null
+  (s19-rederi: 19 s)
+  · s20-engelsk kort 384x853: overflyt False panel [] utenfor [] overlapp ['pmCard×nål', 'pmCard×nål'] kuttet []
+FEIL s20-engelsk: engelsk: ingen norske ord på siden, i lista og på kortet  ["8 t"]
+  (s20-engelsk: 17 s)
+OK   s01-dagdrift-1280x800: telefonen → Driftsplan-appen åpner siden med «Lag driftsplan»  {"trykk": 2, "sveip": 0, "sek": 1.3}
+OK   s01-dagdrift-1280x800: en ny plan kommer utfylt og klar: dagen, de sju radene og «Start planen»  {"start": "Start planen", "ops": {"home": "rb130", "rig": "juksa", "places": ["juks"]}}
+OK   s01-dagdrift-1280x800: Start: planen lages og går  {"fra telefonen": {"trykk": 4, "sveip": 0, "sek": 2.4}, "fra Lag driftsplan": {"trykk": 2, "sveip": 0, "sek": 1.1}}
+OK   s11-dogndrift-1280x800: døgndrift er åpen med fire om bord og seks køyer  "Døgndrift To vakter på tolv timer: skipperen 06–18 (du, når du er om bord), styrmannen 18–"
+OK   s11-dogndrift-1280x800: døgndriften starter  {"fra telefonen": {"trykk": 6, "sveip": 2, "sek": 5.5}, "fra Lag driftsplan": {"trykk": 4, "sveip": 2, "sek": 4.2}}
+OK   s01-dagdrift-384x853: telefonen → Driftsplan-appen åpner siden med «Lag driftsplan»  {"trykk": 2, "sveip": 0, "sek": 1.3}
+OK   s01-dagdrift-384x853: en ny plan kommer utfylt og klar: dagen, de sju radene og «Start planen»  {"start": "Start planen", "ops": {"home": "rb130", "rig": "juksa", "places": ["juks"]}}
+OK   s01-dagdrift-384x853: Start: planen lages og går  {"fra telefonen": {"trykk": 4, "sveip": 0, "sek": 2.4}, "fra Lag driftsplan": {"trykk": 2, "sveip": 0, "sek": 1.1}}
+OK   s11-dogndrift-384x853: døgndrift er åpen med fire om bord og seks køyer  "Døgndrift To vakter på tolv timer: skipperen 06–18 (du, når du er om bord), styrmannen 18–"
+OK   s11-dogndrift-384x853: døgndriften starter  {"fra telefonen": {"trykk": 6, "sveip": 3, "sek": 6.5}, "fra Lag driftsplan": {"trykk": 4, "sveip": 3, "sek": 5.2}}
+
+Trykk til en plan som går:
+  S01 800x1280       fra telefonen {'trykk': 4, 'sveip': 0, 'sek': 9.4} · fra «Lag driftsplan» {'trykk': 2, 'sveip': 0, 'sek': 4.7}
+  S11 800x1280       fra telefonen {'trykk': 6, 'sveip': 1, 'sek': 8.2} · fra «Lag driftsplan» {'trykk': 4, 'sveip': 1, 'sek': 6.9}
+  S01 1280x800       fra telefonen {'trykk': 4, 'sveip': 0, 'sek': 2.4} · fra «Lag driftsplan» {'trykk': 2, 'sveip': 0, 'sek': 1.1}
+  S11 1280x800       fra telefonen {'trykk': 6, 'sveip': 2, 'sek': 5.5} · fra «Lag driftsplan» {'trykk': 4, 'sveip': 2, 'sek': 4.2}
+  S01 384x853        fra telefonen {'trykk': 4, 'sveip': 0, 'sek': 2.4} · fra «Lag driftsplan» {'trykk': 2, 'sveip': 0, 'sek': 1.1}
+  S11 384x853        fra telefonen {'trykk': 6, 'sveip': 3, 'sek': 6.5} · fra «Lag driftsplan» {'trykk': 4, 'sveip': 3, 'sek': 5.2}
+
+Målinger per format (tilstander med funn / alle):
+  800x1280  tilstander 46 · sideveis overflyt 0 · panel over kanten 0 · overlapp 0 · kuttet tekst 0 · knapper utenfor 0 · små trykkflater (ulike) 0
+OK   maalinger: 800x1280: ingen sideveis overflyt på siden eller i panelene  []
+OK   maalinger: 800x1280: planlista og kortet dekker ikke hverandre  []
+OK   maalinger: 800x1280: kortet dekker ikke den valgte nåla  []
+OK   maalinger: 800x1280: planlista og kortet dekker ikke plotterens egne knapper  []
+OK   maalinger: 800x1280: skuffen er ikke dekket av fangstlista eller dokka  {"tilstander": [], "hva": []}
+OK   maalinger: 800x1280: ingen kuttet tekst  []
+OK   maalinger: 800x1280: ingen knapper utenfor skjermen  []
+OK   maalinger: 800x1280: trykkflatene er minst 44 × 44 px (docs/planer/ui-redesign.md)  []
+  1280x800  tilstander 46 · sideveis overflyt 0 · panel over kanten 0 · overlapp 0 · kuttet tekst 0 · knapper utenfor 0 · små trykkflater (ulike) 0
+OK   maalinger: 1280x800: ingen sideveis overflyt på siden eller i panelene  []
+OK   maalinger: 1280x800: planlista og kortet dekker ikke hverandre  []
+OK   maalinger: 1280x800: kortet dekker ikke den valgte nåla  []
+OK   maalinger: 1280x800: planlista og kortet dekker ikke plotterens egne knapper  []
+OK   maalinger: 1280x800: skuffen er ikke dekket av fangstlista eller dokka  {"tilstander": [], "hva": []}
+OK   maalinger: 1280x800: ingen kuttet tekst  []
+OK   maalinger: 1280x800: ingen knapper utenfor skjermen  []
+OK   maalinger: 1280x800: trykkflatene er minst 44 × 44 px (docs/planer/ui-redesign.md)  []
+  384x853   tilstander 46 · sideveis overflyt 0 · panel over kanten 0 · overlapp 10 · kuttet tekst 0 · knapper utenfor 0 · små trykkflater (ulike) 0
+OK   maalinger: 384x853: ingen sideveis overflyt på siden eller i panelene  []
+OK   maalinger: 384x853: planlista og kortet dekker ikke hverandre  []
+OK   maalinger: 384x853: kortet dekker ikke den valgte nåla  []
+OK   maalinger: 384x853: planlista og kortet dekker ikke plotterens egne knapper  []
+OK   maalinger: 384x853: skuffen er ikke dekket av fangstlista eller dokka  {"tilstander": [], "hva": []}
+OK   maalinger: 384x853: ingen kuttet tekst  []
+OK   maalinger: 384x853: ingen knapper utenfor skjermen  []
+OK   maalinger: 384x853: trykkflatene er minst 44 × 44 px (docs/planer/ui-redesign.md)  []
+
+dekkede trykk: 0 []
+dialoger: []
+konsollfeil fra skyen (401, ventet uten innlogging): 1
+OK   maalinger: ingen sidefeil (pageerror/console.error, utenom skyens 401)  []
+
+OK 93 · FEIL 9 · 377 s
+sidefeil: []
