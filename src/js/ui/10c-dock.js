@@ -426,7 +426,7 @@ const DOCK = (() => {
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
-    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); tabInView(); } dBody.scrollTop = y;
+    const h = dress(page, PHONE.page(page)); if (h !== shown){ shown = h; dBody.innerHTML = h; fold(); ordbok(dBody); tabInView(); PHONE.jobTick(dBody, true); } dBody.scrollTop = y;   // (FN1: the strip's clock filled before it shows)
   }
   // the page's own row of tabs (.ph-sub) scrolls sideways when it is wider than the drawer: the chosen tab is kept in view (Om bord's five
   // tabs on a phone, U2-2)
