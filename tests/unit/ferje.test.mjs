@@ -46,6 +46,11 @@ export default function (t){
     t.ok(under.length === 1, `${q0.name}–${q1.name}: den samme ferja er midt i leia midtveis (${under.length ? under[0].v + ' kn, ' + R.len.toFixed(1) + ' km på ' + dur + ' min' : 'ingen'})`);
     const after = K.ferjeStates(s, H(m + dur + 0.4), false).find(n => under.length && n.id === under[0].id);
     t.ok(after && after.v === 0 && dist(after.p, q1.p) <= off, `${q0.name}–${q1.name}: hun ligger ved ${q1.name} etter overfartstida`);
+    // (AS1 14.11.2026: under way she says where she will lie and when, for one who keeps clear of her, colregSit's dock; where another
+    // ferry lies at the quay already, she lies a length and 15 m behind her, which the dock does not know: Bognes, 127 m)
+    const dk = under.length && under[0].dock, dd = dk && after ? dist(dk, after.p) : 9, row = (s.L + 15) / 1000;
+    t.ok(!!dk && Math.abs(dk.t * 60 - dur / 2) < 0.6 && [0, 1, 2, 3].some(k => Math.abs(dd - k * row) < 0.003), `${q0.name}–${q1.name}: midtveis vet hun hvor hun skal ligge og når (om ${dk ? (dk.t * 60).toFixed(1) : '?'} min, ${dk && after ? Math.round(dist(dk, after.p) * 1000) : '?'} m fra der hun ligger etterpå)`);
+    t.ok(lying.every(n => !n.dock), `${q0.name}–${q1.name}: ved kaia har hun ingen kai å gå til`);
     t.ok(JSON.stringify(K.ferjeStates(s, H(m + 7.25), false)) === JSON.stringify(K.ferjeStates(s, H(m + 7.25), false)), `${a}–${b}: samme klokke gir samme posisjon`);
     t.ok(mid.every(n => n.type === 'ferry' && n.L === s.L && n.B === s.B && n.T === s.T && /^MF [A-ZÆØÅ]/.test(n.name)), `${a}–${b}: typen ferry, lengde, bredde og dypgående fra størrelsesklassen (${s.L} × ${s.B} m), oppdiktet navn (${mid.map(n => n.name).join(', ')})`);
   }
