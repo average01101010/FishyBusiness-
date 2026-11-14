@@ -168,6 +168,16 @@ Jonas 05.10.2026: «Vi skal lage en blender-modell av en rorbu med kaiplass. Dis
 - **Tester**: `tests/rorbutest.py` (plassene, fjæra ved Gryllefjord og på et le-sted, Autonav dit, knappene, natt og hvile på 6 timer, neste natt, åpen båt ved mottakskai, kartplotteren, lagring) og `coast3d.py` (rorbua i 3D ved Gryllefjord, `coast_rorbu.png`).
 - **Ikke gjort ennå:** kameraet kan gå inn i huset, og lykta ved døra lyser ikke.
 
+## 5.25j Rorbuer og naust tar båter opp til 15 m (13.11.2026)
+
+Jonas 13.11.2026, etter testen fra alle steder med den eldre kystbåten (21 m, 3,4 m dypgående), som lå ved rorbukaiene (14 m, 3,4 m) og naustkaia (16 m) med 2–2,5 m vann under seg og ikke fant noen vei ut. Han valgte «Grense ved 15 m»: «Rorbua og naustet tar båter opp til 15 m, uansett dybde ved kaia. Større båter avvises».
+
+- **Grensen** (`SITE_MAXLEN` og `siteFits` i `core/07-harbours.js`): en båt over 15 m får ikke tilbud om rorbua eller naustet. Det gjelder trykk i kartet (`03-map.js`, `03b-route.js`), Autonav-målet (`rorbuTarget`, `naustTarget`), «Fortøy» (`moorAll`), driftsplanens hjem (`05d-plan2.js`; en lagret plan med rorbua som hjem sier fra i `06h-plan2-engine.js`) og hviletipset (`rorbuTip`). Naustets liggeplass leses som mottakets for henne (`berthKind`, `dock`).
+- **Lagringene:** en båt over 15 m som alt ligger ved en rorbu, flyttes ved oppstart til nærmeste havn som tar henne, med en linje i loggen (`ui/11-boot.js`, `siteOut`; også flåtens andre båter).
+- **Dybden «uansett»:** liggeplassen ved rorbuene og naustet mudres i simuleringen til den dypeste båten under 15 m (`SITE_DRAFT`, kystbåten på 14,99 m med 3,0 m) og 0,5 m ved laveste lavvann (`siteDredge` i `depthF`; lomma er 12 m til hver side og 14 m ut, `SITE_POCK`, og bunnen stiger 1:2 utenfor). Gropen i 3D er like dyp (`view3d/03-berths-naust.js`).
+- **Veien ut:** en rorbu (`rorbuSite`) og naustet (`naustFind`, `naustWay`) legges bare der den båten kommer ut til åpent vann eller en havn. Lomma regnes som mudret under sjekken. Før gjaldt kravet til naustet bare båten spilleren hadde da naustet ble funnet, og rorbuene hadde ikke noe krav. Et naust sjekkes én gang mot kaia det ble funnet ved (`qk`), og de gamle naustene sjekkes én gang med det nye kravet.
+- `tests/unit/siteplass.test.mjs` og `tests/allesteder.py` (kystbåten på 14,99 m ved hver rorbu og hvert naust, og at den på 21 m avvises der).
+
 ## Havner, mottak og fortøyning (B1–B5, godkjent 29.09.2026)
 
 **Fra 02.10.2026 står havneenheten i alle de åtte mottakshavnene** (se 5.13). Den erstatter de genererte mottakene i B3, bunkerskaiene i B5 og kaifrontene i `QUAYS` for disse havnene. Sommarøy, Brensholmen og Frovåg har nå også bunkers. Tidslinjene for landing, forhaling, bunkring og is er de samme. Finnsnes har som før sin kai i `QUAYS` og fyller der båten ligger.

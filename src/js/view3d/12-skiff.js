@@ -66,6 +66,7 @@
   const TEX_VS = 'attribute vec3 aPos;attribute vec2 aUV;uniform mat4 uVP;uniform mat4 uM;varying vec2 vUV;varying vec3 vW;void main(){vec4 w=uM*vec4(aPos,1.0);vW=w.xyz;vUV=aUV;gl_Position=uVP*w;}';
   const TEX_FS = 'precision mediump float;uniform sampler2D uTex;uniform float uLit;uniform vec3 uN;uniform vec3 uSun;uniform vec3 uSunCol;uniform vec3 uAmb;uniform vec3 uFog;uniform float uFogD;varying vec2 vUV;varying vec3 vW;' + AIR +
     'void main(){vec4 t=texture2D(uTex,vUV);if(t.a<0.05)discard;vec3 c=uLit>0.5?t.rgb*(uAmb+uSunCol*max(dot(uN,uSun),0.0)):t.rgb;gl_FragColor=vec4(fin(c,vW),t.a);}';
+  let PRGS = null, FIGNB = 58, NVP = null, NDIRTY = true;   // (the skinned model program and how many bones a draw call of it carries, FB7)
   let PRGN = null, PRGX = null, SK = null, PRGW = null, WKB = null, CHARM_AT = [0.2, 1.6, 0.1];
   const fishOf = sp => SK.fishM[sp] || SK.fishM.torsk;      // a species' fish mesh (tools/fish), 1 m long
   // the places on the starter boat that the live parts and the people use, in its frame; a detailed model (GLB) brings its own
@@ -88,12 +89,12 @@
     'foam*=vS;aer*=vS;float d=length(vP);float fg=1.0-exp(-uFogD*uFogD*d*d);' +
     'float al=clamp(max(foam,aer),0.0,0.95);vec3 base=vW4.w<0.5?uAer:uArm;vec3 c=mix(base,uCol,clamp(foam/max(al,0.001),0.0,1.0));gl_FragColor=vec4(mix(c,uFog,fg),al*(1.0-fg));}';
   // builder with normals and gloss: the geometry is VB() (vessel3d.js), this adds the GL buffers
-  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}, g); return o; }
+  function NB(){ const o = VB(); o.mesh = g => withOrigin({pb:buf(relTo(o.p, g)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3, fig2:o.fig2 || null}, g); return o; }
   // arrays {p, n, c} as a mesh to draw
   const upA = o => o ? {pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3} : null;
   // the figure's parts for one kit (vessel3d.js wkPart), to pose joint by joint
   const wkMeshes = kit => { const g = n => n ? upA(wkPart(n, kit)) : null, K = wkKitOf(kit);
-    return {torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
+    return {_kit:kit, torso:g(K.torso), vest:g(K.vest), head:g('head'), hat:g(K.hat), hair:g(K.hairP), beard:g(K.beard), uarm:g('uarm'), farm:g('farm'), thigh:g('thigh'), shin:g('shin'), boot:g(K.shoe || 'boot'), hand:g('hand')}; };
   // the life jacket on your own boat's people (Ø11.5, Jonas 28.10.2026: «alltid på dekk til sjøs, ikke i havn eller på kaia»): at sea, on
   // deck; the one at the wheel only where the helm is out on deck (an open boat, the hard top), not inside a wheelhouse
   const ownAtSea = () => { const b = S.boat; return !!b && b.status !== 'port' && !b.land; };
@@ -105,11 +106,38 @@
     const key = wkKitOf(look).key; let m = LOOKM.get(key);
     if (m){ LOOKM.delete(key); LOOKM.set(key, m); return m; }
     m = wkMeshes(look); LOOKM.set(key, m);
-    if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
+    if (LOOKM.size > 40){ const k0 = LOOKM.keys().next().value, o = LOOKM.get(k0); LOOKM.delete(k0); figFree(o); for (const q in o){ const x = o[q]; if (x && x.pb){ gl.deleteBuffer(x.pb); gl.deleteBuffer(x.nb); gl.deleteBuffer(x.cb); } } }
     return m;
   }
+  // ---- the new people (Folk 2, FB7, steg 125): a look's whole figure as one skinned mesh (vessel3d.js figMesh), or two or three
+  // where the device's vertex uniforms do not hold all 58 bones (figDraws). Made the first time a look is drawn and kept on the
+  // look's meshes (K.fig), so it lives and is freed with them (LOOKM). Only behind #folk2 (PRGS is null without it).
+  const FIGST = {figs:0, calls:0, tris:0, fr:0, ms:0};   // (the tests and #prof: figures and draw calls since figStat(true), and the ms of the last frames' figures)
+  const FIGGR = {};
+  function figGrips(ex, sex){ if (FIGGR[sex]) return FIGGR[sex]; const o = {}; for (const g in ex.grips[sex]) o[g] = {R:figGripAt(ex, sex, g, 'R'), L:figGripAt(ex, sex, g, 'L')}; return FIGGR[sex] = o; }
+  function figOf(K){
+    if (K.fig !== undefined) return K.fig; if (!PRGS || !glbHas('folk2')) return K.fig = null;
+    const M = figMesh(K._kit, {}); if (!M || !M.cnt) return K.fig = null; const sk = figSkelOf(M.sex), ex = glbLoad('folk2').ex;
+    return K.fig = {sex:M.sex, sk, ex, prof:figProfOf(M.sex, M.parts[0][0], (M.parts.find(q => /^vest/.test(q[0])) || [null])[0]), head:figHeadOf(M.sex), hj:(q => [sk.rest[sk.ix.thigh_R][2] - q[2], q[1] - sk.rest[sk.ix.thigh_R][1]])(sk.rest[sk.ix.head]), tris:M.cnt / 3, len:figLens(sk), H0:[figHandRest(ex, M.sex, 'R'), figHandRest(ex, M.sex, 'L')], grip:figGrips(ex, M.sex),
+      draws:figDraws(M, FIGNB).map(d => ({pb:buf(d.p), nb:buf(d.n), cb:buf(d.c), jb:buf(d.j), wb:buf(d.w), n:d.cnt, bones:d.bones}))};
+  }
+  function figFree(K){ const f = K && K.fig; if (!f) return; for (const d of f.draws) for (const b of [d.pb, d.nb, d.cb, d.jb, d.wb]) gl.deleteBuffer(b); K.fig = undefined; }
+  // a figure drawn: Mb the bones' matrices (figpose.js figPose), M its place (the figure's frame to the eye's). The skinned program
+  // takes the frame's light from the last nSetup, and the model program is the one in use again after.
+  function drawFig(f, Mb, M){
+    const t0 = performance.now(), u = PRGS.u; gl.useProgram(PRGS.p); if (NDIRTY){ nUni(u, NVP); NDIRTY = false; }
+    gl.uniformMatrix4fv(u.uM, false, M);
+    for (const d of f.draws){ gl.uniform4fv(u.uB, figPal(Mb, d.bones)); attr(0, d.pb, 3); attr(1, d.nb, 3); attr(2, d.cb, 4);
+      gl.bindBuffer(gl.ARRAY_BUFFER, d.jb); gl.enableVertexAttribArray(3); gl.vertexAttribPointer(3, 4, gl.UNSIGNED_BYTE, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, d.wb); gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4, 4, gl.UNSIGNED_BYTE, true, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, d.n); FIGST.calls++; }
+    gl.disableVertexAttribArray(3); gl.disableVertexAttribArray(4); gl.useProgram(PRGN.p); FIGST.figs++; FIGST.tris += f.tris; FIGST.ms += performance.now() - t0;
+  }
   function nSetup(VP){
-    gl.useProgram(PRGN.p); const u = PRGN.u; plSet(u);
+    gl.useProgram(PRGN.p); nUni(PRGN.u, VP); NVP = VP; NDIRTY = true;
+  }
+  function nUni(u, VP){
+    plSet(u);
     gl.uniformMatrix4fv(u.uVP, false, VP); gl.uniform3fv(u.uSun, env.lightDir); gl.uniform3fv(u.uSunCol, env.sunCol); gl.uniform3fv(u.uAmb, env.amb); gl.uniform3fv(u.uGnd, env.gnd); gl.uniform3fv(u.uFog, env.fog); gl.uniform1f(u.uFogD, env.fogD); airSet(u); gl.uniform1f(u.uAlpha, 1); gl.uniform1f(u.uEmis, 0); gl.uniform4fv(u.uWear, WEAR0); if (u.uAge){ gl.uniform4fv(u.uAge, ZERO4); gl.uniform4fv(u.uWL, ZERO4); } if (u.uZen){ gl.uniform3fv(u.uZen, env.zen || env.fog); gl.uniform3fv(u.uHor, env.hor || env.fog); } if (u.uWet) gl.uniform2f(u.uWet, WETON ? env.wet || 0 : 0, 0);
   }
   // your own hull's wear for the next draws (core/16c-hull.js b.dmg), and back to none
@@ -148,7 +176,9 @@
   // a fish's bend for the next draws (LITN_VS uBend; Fl from flap in 09-landing-deck.js: [sweep, toss, amp, phase]), and back to none
   function bendOn(Fl){ const u = PRGN && PRGN.u.uBend; if (u && Fl && Fl[2]) gl.uniform4f(u, Fl[2], Fl[3], Fl[4] || 3.6, Fl[5] || 0.22); }
   function bendOff(){ const u = PRGN && PRGN.u.uBend; if (u) gl.uniform4f(u, 0, 0, 0, 0); }
-  function drawN(m, M){ gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
+  // (a figure that is not built in, fig2: where it stands is kept for its arms, which draw all of it; armTo, figLive)
+  let FIGLV = null;
+  function drawN(m, M){ if (m.fig2){ FIGLV = {M:m.o ? relM(m) : M, seated:m.fig2.seated, arms:{}}; return; } gl.uniformMatrix4fv(PRGN.u.uM, false, m.o ? relM(m) : M); attr(0, m.pb, 3); attr(1, m.nb, 3); gl.bindBuffer(gl.ARRAY_BUFFER, m.cb); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 0, 0); gl.drawArrays(gl.TRIANGLES, 0, m.n); }
   // a decal strip following a curved surface: bottom and top point rows, texture u runs along the rows
   function texStrip(Pb, Pt){ const p = [], uv = [], n = Pb.length - 1; for (let i = 0; i < n; i++){ const u0 = i / n, u1 = (i + 1) / n; p.push(...Pb[i], ...Pb[i + 1], ...Pt[i + 1], ...Pb[i], ...Pt[i + 1], ...Pt[i]); uv.push(u0, 1, u1, 1, u1, 0, u0, 1, u1, 0, u0, 0); } return {pb:buf(new Float32Array(p)), ub:buf(new Float32Array(uv)), n:p.length / 3}; }
   function texQuad(P0, P1, P2, P3){ const p = new Float32Array([...P0, ...P1, ...P2, ...P0, ...P2, ...P3]), uv = new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]); return {pb:buf(p), ub:buf(uv), n:6}; }
@@ -351,6 +381,9 @@
     const nq = [strip(-1, sb, sa), strip(1, sa, sb)];
     // the skipper at the wheel and a crewman on the cooler seat, with rounded shapes
     const person = PERSON = (B, x, y, z, seated, hands, kit) => {
+      // (the new people, FB7: built in as the old, and the one whose arms are drawn live, hands false, is not built at all: the
+      // whole figure is drawn skinned with its arms each frame, drawN and armTo in 13-instruments.js)
+      if (PRGS && glbHas('folk2')){ if (hands === false){ B.fig2 = {seated:!!seated}; return; } if (figBake(B, x, y, z, seated, hands, kit)) return; }
       if (glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);      // the detailed figure: the skipper in his cap, the crew in oilskins
       const JAC = [0.14, 0.26, 0.58, 0.25], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
       const hip = y + (seated ? 0.46 : 0.82);

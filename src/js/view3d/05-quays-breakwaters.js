@@ -88,6 +88,7 @@
   function markInto(m, mk, tag, solid = true){
     const x = mk[0] * 1000, z = mk[1] * 1000, base = Math.max(terrH(x, z), 0.2), ty = mk[2], cat = mk[3];
     if (ty === 'M' && fyrNear(x, z)) return;
+    if (terrH(x, z) < 0.5 && markOnBridge(mk)) return;   // hung on a bridge, no post in the water (core/11b-obstacles.js)
     if (ty === 'M'){ if (solid) camSolid(x, z, 3.6, 3.6, 0.3, base, base + 15.4, tag); m.box(x, base, z, 3.4, 11, 3.4, [0.95, 0.95, 0.93], 0.3); m.box(x, base + 11, z, 3.6, 2.2, 3.6, [0.75, 0.1, 0.08], 0.3); m.box(x, base + 13.2, z, 2.2, 2.2, 2.2, [0.9, 0.92, 0.9], 0.3, [0.2, 0.2, 0.22]); }
     else if (ty === 'm' || ty === 'P'){ m.box(x, base, z, 0.9, 4.2, 0.9, [0.94, 0.94, 0.92], 0); m.box(x, base + 4.2, z, 1.1, 0.9, 1.1, [0.8, 0.12, 0.1], 0); }
     // Norway's stakes and beacons that are no IALA mark (D, sjomerker.py): the iron rod (jernstang) with its arrow (viser) towards the
@@ -120,7 +121,9 @@
   // the coast's sea marks (01e-marks.js): a mesh a tile, built when its marks and its ground are in
   // Senja's embedded marks (SEAMARKS) a mesh of their own, built again when a tile's data has corrected some of them (01e-marks.js
   // marksSenja; Ø13 K3); before K3 they were part of the quays' mesh (buildStatics), built once
-  const MKM = new Map(); let MKV = -1, MKS = -1;
+  const MKM = new Map(), MKB = new Set(); let MKV = -1, MKS = -1;
+  // a tile's marks built before its bridges came (the vec pack decoded later) are built again when they come, without those on a deck
+  VEC.came.push(t => { if (!t.bridges.length || !MKM.has(t.k) || MKB.has(t.k)) return; const old = MKM.get(t.k); if (old) freeMesh(old); camDropTag('mk' + t.k); MKM.delete(t.k); MKV = -1; });
   function marksStatics(){
     if (STAT && MKS !== MARKS.senja){ const old = MKM.get('senja'); if (old) freeMesh(old); const m = MB(); for (const mk of SEAMARKS.marks) markInto(m, mk, 'mkS', MKS < 0); MKM.set('senja', m.p.length ? m.mesh(mapMid()) : null); MKS = MARKS.senja; }
     if (MKV === MARKS.ver) return; let all = true; const T = MAPD.man ? MAPD.man.tile * 1000 : 50000;
@@ -128,7 +131,7 @@
     for (const t of MARKS.tiles.values()){
       if (!t || MKM.has(t.k)) continue; const fy = fyrIn(t); if (!t.marks.length && !fy.length) continue;
       const vp = MAPD.byTile.get('view:' + t.k); if (vp && !vp.buf){ all = false; continue; }
-      const m = MB(); for (const mk of t.marks) markInto(m, mk, 'mk' + t.k); for (const f of fy) fyrInto(m, f); MKM.set(t.k, m.p.length ? m.mesh([(t.tx + 0.5) * T, (t.ty + 0.5) * T]) : null);
+      if (VEC.tiles.has(t.k)) MKB.add(t.k); const m = MB(); for (const mk of t.marks) markInto(m, mk, 'mk' + t.k); for (const f of fy) fyrInto(m, f); MKM.set(t.k, m.p.length ? m.mesh([(t.tx + 0.5) * T, (t.ty + 0.5) * T]) : null);
     }
     if (all) MKV = MARKS.ver;
   }

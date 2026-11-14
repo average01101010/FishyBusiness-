@@ -308,8 +308,10 @@ function crewSim(src){
     for (const l of ST.PT.lean || []){ if (!M.ok(l.k) || !free(l.k, id)) continue; const p = M.at(l.k); if (Math.cos((l.h || 0) - hq) < 0.7 || p[0] * sd < 0) continue;
       const dz = T ? Math.hypot(p[0] - T.B[0], p[2] - T.B[2]) : 2.2, dy = T ? Math.abs(p[1] - T.B[1]) : 0; if (dz < 1.5) continue;
       // (a step back from a close rail, so the hand at his side is inside it)
-      const h = l.h || hq, rl = railAt(l.k, h), st = rl && rl[0] < 0.4 ? 0.4 - rl[0] : 0, off = st ? [-Math.sin(h) * st, Math.cos(h) * st] : null;
-      const v = Math.abs(dz - 2.2) + dy * 3 + (livePart(l.k) ? 0 : 4) + (poseHits('signal', l.k, h, null, off) + poseHits('look', l.k, h, null, off)) * 2; if (v < bv){ bv = v; best = {k:l.k, h, off, task:'signal', dyn:'luke'}; } }
+      // (FB2: and a little further back where the raised arm's elbow would be in a high bulwark or what stands on it)
+      const h = l.h || hq, rl = railAt(l.k, h); let off = null, hits = 99;
+      for (const need of LEMMER.on ? [0.4, 0.5, 0.6] : [0.4]){ const st = rl && rl[0] < need ? need - rl[0] : 0, o2 = st ? [-Math.sin(h) * st, Math.cos(h) * st] : null, n = poseHits('signal', l.k, h, null, o2) + poseHits('look', l.k, h, null, o2); if (n < hits){ hits = n; off = o2; } if (!n) break; }
+      const v = Math.abs(dz - 2.2) + dy * 3 + (livePart(l.k) ? 0 : 4) + hits * 2; if (v < bv){ bv = v; best = {k:l.k, h, off, task:'signal', dyn:'luke'}; } }
     return best; }
   // the ice box on deck (the model's place, else by the packer's place as the view stands it: view3d/09-landing-deck.js iceBoxAt)
   function iceBox(){ const K = (ST.G.kit || {}).iskasse; if (K) return [K[0], K[1], K[2], K[3] || 0, K[4] || 1]; const q = ST.PT.is; if (!q || !ST.M0.ok(q.k)) return null;
@@ -598,7 +600,9 @@ function crewSim(src){
     RAIL.set(key, out); return out; }
   // each pose as its limbs and what it holds, segments in the person's own frame [forward, up, right] from the feet, as drawWorker draws
   // it (at the furthest reach of its movement): rail is [ahead, height] of the rail's top (facing it), the hands on it 4 cm over
-  function poseSegs(k, rail){
+  function poseSegs(k, rail){ return LEMMER.on ? poseSegsIk(k, rail) : poseSegs0(k, rail); }
+  // (as before FB2: each limb one line from the root to the hand or the foot; used while the solver is off, LEMMER.on)
+  function poseSegs0(k, rail){
     const R = rail || [0.42, 1.0], d = R[0] + 0.02, top = R[1] + 0.04;
     const legs = [[[0, 0.92, 0.11], [0, 0.1, 0.12]], [[0, 0.92, -0.11], [0, 0.1, -0.12]]], torso = [[[0, 0.95, 0], [0, 1.45, 0]], [[0.12, 1.0, 0], [0.12, 1.38, 0]], [[-0.12, 1.0, 0], [-0.12, 1.38, 0]], [[0, 1.42, 0.21], [0, 1.42, -0.21]]];
     const head = [[[0, 1.5, 0], [0, 1.8, 0]], [[0.13, 1.64, 0], [-0.13, 1.64, 0]]], arms = (r, l) => [[[0.02, 1.42, 0.21], r], [[0.02, 1.42, -0.21], l]], std = (r, l, ...more) => legs.concat(torso, head, arms(r, l), more);
@@ -650,10 +654,84 @@ function crewSim(src){
       case 'aurora': case 'look': default: return std([0, 0.93, 0.19], [0, 0.93, -0.19]);
     }
   }
+  function poseSegsIk(k, rail){
+    const R = rail || [0.42, 1.0], d = R[0] + 0.02, top = R[1] + 0.04;
+    // (FB2, steg 123: the limbs as they are drawn, with the solver that draws them: the knee and the elbow where ik2 and armIk put
+    // them, each limb two lines, and the torso, the shoulders and the head gone after a hand out of reach, reachBody. The back's own
+    // bend at the work (view3d/08-plants.js workLow) is not in these lines, as before: b0 is 0 until the pose is read from the drawing, FB1)
+    const C = LEMMER, L0 = limbLen(null), HY = 0.92, b0 = 0, HX = 0, SHL = [[0, C.SH[0], C.SH[1]], [0, C.SH[0], -C.SH[1]]];
+    // (the lines of one limb are one limb to poseHits, which counts limbs through something as before: tagged g)
+    let gid = 0; const limb = segs => { gid++; for (const q of segs) q.g = gid; return segs; };
+    const leg = (hip, foot, pole) => { const o = ik2(hip, foot, L0.th, L0.sn, pole || [C.KNEE[0], C.KNEE[1], 0]); return limb([[hip, o.j], [o.j, o.e]]); };
+    // (an arm from a shoulder at sh to a hand at hd, the torso standing straight under the shoulder: the wrist a hand's length back)
+    const tip = (el, wr) => { const f = [wr[0] - el[0], wr[1] - el[1], wr[2] - el[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1; return [wr[0] + f[0] / fl * C.HAND, wr[1] + f[1] / fl * C.HAND, wr[2] + f[2] / fl * C.HAND]; };
+    const arm = (sh, hd, sd) => { const s0 = SHL[sd > 0 ? 0 : 1], o = armHand(s0, [hd[0] - sh[0] + s0[0], hd[1] - sh[1] + s0[1], hd[2] - sh[2] + s0[2]], sd, L0);
+      const w = q => [q[0] - s0[0] + sh[0], q[1] - s0[1] + sh[1], q[2] - s0[2] + sh[2]], el = w(o.j), wr = w(o.e); return limb([[sh, el], [el, wr], [wr, o.over > 0 || o.near > 0 || o.push > 0 ? tip(el, wr) : hd]]); };
+    // (standing: the knee as the drawn leg has it, to the ankle 8 cm up; the shin's line ends 10 cm over the deck, as the leg's line did)
+    const stand = (hip, r) => { const o = ik2(hip, [0, 0.08, r], L0.th, L0.sn, [C.KNEE[0], C.KNEE[1], 0]), k = o.j, t = (k[1] - 0.1) / (k[1] - o.e[1]); return limb([[hip, k], [k, [k[0] + (o.e[0] - k[0]) * t, 0.1, k[2] + (o.e[2] - k[2]) * t]]]); };
+    const legs = stand([0, HY, 0.11], 0.12).concat(stand([0, HY, -0.11], -0.12));
+    const std = (r, l, ...more) => { const hips = q => [q[0] - HX, q[1] - HY, q[2]], wrist = (hd, i) => { const s = torsoPt(SHL[i], b0, 0), q = hips(hd), v = [q[0] - s[0], q[1] - s[1], q[2] - s[2]], n = Math.hypot(v[0], v[1], v[2]) || 1; return [q[0] - v[0] / n * C.HAND, q[1] - v[1] / n * C.HAND, q[2] - v[2] / n * C.HAND]; };
+      const rb = reachBody(SHL, [wrist(r, 0), wrist(l, 1)], (L0.ua + L0.fa) * C.REACH, b0), bT = b0 + rb.b, tw = rb.t, at = (q, t) => { const p = torsoPt([q[0], q[1] - HY, q[2]], bT, t == null ? tw : t); return [p[0] + HX, p[1] + HY, p[2]]; }, seg = (A, B, t) => [at(A, t), at(B, t)];
+      const out = stand([0, HY, 0.11], 0.12).concat(stand([0, HY, -0.11], -0.12), [seg([0, 0.95, 0], [0, 1.45, 0]), seg([0.12, 1.0, 0], [0.12, 1.38, 0]), seg([-0.12, 1.0, 0], [-0.12, 1.38, 0]), seg([0, 1.42, 0.21], [0, 1.42, -0.21]), seg([0, 1.5, 0], [0, 1.8, 0], 0), seg([0.13, 1.64, 0], [-0.13, 1.64, 0], 0)]);
+      for (const i of [0, 1]){ const sd = i ? -1 : 1, hd = i ? l : r, o = armHand(SHL[i], torsoInv(hips(hd), bT, tw), sd, L0), sh = at([0, 1.42, sd * C.SH[1]]), el = at([o.j[0], o.j[1] + HY, o.j[2]]), wr = at([o.e[0], o.e[1] + HY, o.e[2]]);
+        for (const q of limb([[sh, el], [el, wr], [wr, o.over > 0 || o.near > 0 || o.push > 0 ? tip(el, wr) : hd]])) out.push(q); }
+      return out.concat(more); };
+    // (seated: the knees up and ahead)
+    const SITP = [0.3, 1, 0];
+    switch (k){
+      case 'lean': return std([d, top, 0.2], [d, top, -0.2]);
+      case 'coffee': return std([0.18, 1.5, 0.04], [0.05, 0.85, -0.25], [[0.12, 0.0, -0.32], [0.12, 0.32, -0.32]]);
+      // (the feet out before him: the hips come down until the legs reach them, legDrop, and the body with them)
+      case 'back': { const ft = [[0.3, 0.08, -0.05], [0.2, 0.08, -0.13]], dr = legDrop([[0.05, HY, 0.11], [0.05, HY, -0.11]], ft, L0), y = v => v - dr;
+        return leg([0.05, y(0.92), 0.11], ft[0]).concat(leg([0.05, y(0.92), -0.11], ft[1]), [[[0.05, y(0.95), 0], [-0.07, y(1.45), 0]], [[-0.17, y(1.0), 0], [-0.19, y(1.38), 0]], [[-0.07, y(1.5), 0], [-0.1, y(1.8), 0]]],
+          arm([0.02, y(1.42), 0.21], [0.17, 1.18, -0.07], 1), arm([0.02, y(1.42), -0.21], [0.17, 1.16, 0.07], -1)); }
+      case 'sit': return leg([-0.04, 0.5, 0.12], [0.44, 0.08, 0.17], SITP).concat(leg([-0.04, 0.5, -0.12], [0.44, 0.08, -0.17], SITP), [[[0, 0.55, 0], [0.1, 1.05, 0]],
+        [[0.15, 1.08, 0], [0.22, 1.36, 0]]], arm([0.06, 1.0, 0.2], [0.36, 0.7, 0.05], 1), arm([0.06, 1.0, -0.2], [0.36, 0.7, -0.05], -1), [[[-0.31, 0.2, 0], [0.19, 0.2, 0]], [[-0.06, 0.2, 0.25], [-0.06, 0.2, -0.25]], [[-0.06, 0.02, 0], [-0.06, 0.45, 0]]]);
+      case 'chat': return std([0.34, 1.3, 0.2], [0.04, 0.92, -0.22]);
+      case 'knife': return std([0.45, 1.2, 0.13], [0.3, 1.02, -0.06], [[0.3, 1.02, -0.06], [0.42, 1.3, 0.03]]);
+      case 'lunch': return std([0.13, 1.5, 0.03], [0.3, 1.03, -0.1], [[0.3, 1.03, -0.2], [0.3, 1.03, 0.0]]);
+      case 'phone': return std([0.26, 1.13, 0.035], [0.26, 1.12, -0.035]);
+      case 'binoc': return std([0.15, 1.56, 0.07], [0.15, 1.56, -0.07], [[0.15, 1.57, 0], [0.3, 1.57, 0]]);
+      case 'seasick': return legs.concat([[[0.03, 0.95, 0], [0.44, 1.42, 0]], [[0.5, 1.5, 0], [0.62, 1.66, 0]]], arm([0.44, 1.42, 0.21], [d, top, 0.24], 1), arm([0.44, 1.42, -0.21], [d, top, -0.24], -1));
+      case 'gear': return legs.concat([[[0.03, 0.92, 0], [0.26, 1.4, 0]], [[0.3, 1.48, 0], [0.34, 1.74, 0]]], arm([0.26, 1.4, 0.21], [0.45, 0.72, 0.15], 1), arm([0.26, 1.4, -0.21], [0.45, 0.72, -0.15], -1));
+      case 'smoke': return std([0.24, 1.52, 0.17], [d, top, -0.2]);
+      case 'snus': return std([0.26, 1.47, 0.02], [0.26, 1.1, -0.04]).concat(std([d, top, 0.2], [d, top, -0.2]));   // (the can and the portion, then the hands on the rail)
+      case 'sweep': return std([0.25, 1.0, 0.1], [0.35, 0.8, -0.05], [[0.25, 1.0, 0.1], [0.8, 0.12, 0]], [[0.8, 0.06, 0.42], [0.8, 0.06, -0.42]]);
+      case 'hose': return std([0.45, 1.15, 0.12], [0.3, 1.1, -0.1], [[0.12, 0.02, 0.62], [0.12, 0.46, 0.62]], [[0.12, 0.3, 0.5], [0.45, 1.15, 0.12]]);
+      // the work at its places (the stations' own places from the models; tested, not chosen)
+      // (at the rail, rail is its top as at a break: the jig hauled up over it, the hauler's lever and the line just over it; at the gutting
+      // table rail[1] is the table's top, the hands working on it)
+      case 'jig': return rail ? std([d, top + 0.4, 0.16], [d - 0.04, top + 0.01, -0.16]) : std([0.34, 1.3, 0.16], [0.3, 0.9, -0.16]);
+      case 'haul': return rail ? std([d + 0.06, top + 0.1, 0.2], [d + 0.1, top + 0.24, -0.06]) : std([0.42, 1.08, 0.2], [0.52, 1.22, -0.06]);
+      case 'bleedst': return std([0.3, 0.92, 0.2], [0.28, 0.95, -0.18]);
+      case 'pick': return rail ? std([d + 0.04, top + 0.03, 0.14], [d + 0.04, top + 0.03, -0.14]) : std([0.48, 0.92, 0.16], [0.48, 0.92, -0.16]);
+      case 'tend': return std([0.48, 0.92, 0.16], [0.48, 0.92, -0.16]);
+      // (setting: the hands on the gear just inside the rail, paying it out over it; rail is [ahead, height] of where it goes over)
+      case 'sett': return rail ? std([R[0] + 0.1, R[1] + 0.08, 0.13], [R[0] + 0.1, R[1] + 0.08, -0.13]) : std([0.5, 1.1, 0.13], [0.5, 1.1, -0.13]);
+      case 'mend': return std([0.42, 1.0, 0.12], [0.42, 1.02, -0.1]);
+      // (OB4, the landing and the ice: the signs to the crane driver, the arms up to the load, a hand at the ring of the sling, the
+      // crane's remote, the end of the ice hose held over the box before him; view3d/08-plants.js drawWorker)
+      case 'signal': return std([0.26, 1.72, 0.4], [0.25, 0.95, -0.22]);
+      case 'guide': return std([0.42, 1.62, 0.22], [0.42, 1.62, -0.22]);
+      case 'unhook': return std([0.36, 1.87, 0.1], [0.35, 1.3, -0.18]);
+      case 'remote': return std([0.3, 1.05, 0.11], [0.3, 1.05, -0.11]);
+      case 'nozzle': return std([0.42, 0.85, 0.06], [0.36, 0.98, -0.12]);
+      // (OB14: the packed lunch and the coffee seated on an upturned tub, the lunch box on the knee and the flask on the deck beside him;
+      // the cold: the arms beaten round the chest and swung out again, the hands rubbed before it; view3d/08-plants.js drawWorker)
+      case 'sitmat': case 'sitkaffe': return leg([-0.04, 0.5, 0.12], [0.44, 0.08, 0.17], SITP).concat(leg([-0.04, 0.5, -0.12], [0.44, 0.08, -0.17], SITP), [[[0, 0.55, 0], [0.1, 1.05, 0]],
+        [[0.15, 1.08, 0], [0.22, 1.36, 0]]], arm([0.06, 1.0, 0.2], [0.2, 1.1, 0.04], 1), arm([0.06, 1.0, -0.2], [0.34, 0.68, -0.1], -1), [[[-0.31, 0.2, 0], [0.19, 0.2, 0]], [[-0.06, 0.2, 0.25], [-0.06, 0.2, -0.25]], [[-0.06, 0.02, 0], [-0.06, 0.45, 0]]],
+        k === 'sitkaffe' ? [[[0.1, 0.0, -0.36], [0.1, 0.32, -0.36]]] : []);
+      case 'cold': return std([0.2, 1.36, -0.14], [0.2, 1.36, 0.14]).concat(std([0.14, 1.22, 0.56], [0.14, 1.22, -0.56]), arm([0, 1.42, 0.21], [0.28, 1.46, 0.03], 1));   // (round the chest, flung out, and up to the mouth)
+      case 'helm': return std([0.3, 1.1, 0.17], [0.3, 1.1, -0.17]);
+      case 'gut': { const tt = rail ? rail[1] : 0.9; return std([0.42, tt + 0.28, 0.2], [0.36, tt + 0.06, -0.12]); }
+      case 'pack': return std([0.4, 0.95, 0.15], [0.2, 1.02, -0.2]);
+      case 'aurora': case 'look': default: return std([0, 0.93, 0.19], [0, 0.93, -0.19]);
+    }
+  }
   // how many of a pose's limbs pass through the model at a place and heading, standing off it by off ([x, z] in the boat's frame)
   function poseHits(k, cell, h, rail, off){ const M = ST.M, p = M.at(cell), F = [Math.sin(h), -Math.cos(h)], Rv = [Math.cos(h), Math.sin(h)], o = off || [0, 0];
     const W = q => [p[0] + o[0] + F[0] * q[0] + Rv[0] * q[2], p[1] + q[1], p[2] + o[1] + F[1] * q[0] + Rv[1] * q[2]];
-    let n = 0; for (const [a, b] of poseSegs(k, rail)) if (M.hit(W(a), W(b)) >= 0) n++; return n; }
+    let n = 0, last = 0; for (const q of poseSegs(k, rail)) if (!(q.g && q.g === last) && M.hit(W(q[0]), W(q[1])) >= 0){ n++; last = q.g || 0; } return n; }
   // a break at a rail place, its pose clear of everything: the heading (facing out, or inboard with the back to the rail), the rail's top
   // where the hands rest, and leaning back the place moved back until the back is at the rail
   // how a pose stands at a rail place: facing out, a step back when the rail is closer than 0.2 m (a thick bulwark); facing inboard, the
@@ -703,7 +781,9 @@ function crewSim(src){
       if (g.task === 'gut'){ const W0 = ST.G.work, d0 = ST.G.deck || {y:ST.G.gw || 0}, top = W0 && W0.own && W0.top != null ? W0.top : (d0.y || 0) + 0.885; return {rail:[0.4, top - M.at(k)[1]], off:null}; }
       return {rail:null, off:null}; };
     let f = fit(g.k, h0); if (!poseHits(g.task, g.k, h0, f.rail, f.off)){ g.rail = f.rail; g.off = f.off; return g; }
-    const p0 = M.at(g.k), C = []; for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !free(k, id)) continue; const q = M.at(k), d = Math.hypot(q[0] - p0[0], q[2] - p0[2]); if (d <= 0.5 && Math.abs(q[1] - p0[1]) < 0.2) C.push([d, k]); }
+    // (FB2, F19: never to within 0.55 m of someone else's place: the second at a table was moved 0.4 m from the first when the guard got the elbows)
+    const p0 = M.at(g.k), C = [], apart = q => { for (const [t0, who] of TAKEN){ if (who === id) continue; const u = M.at(t0); if (Math.hypot(u[0] - q[0], u[2] - q[2]) < 0.55) return false; } return true; };
+    for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k) || !free(k, id)) continue; const q = M.at(k), d = Math.hypot(q[0] - p0[0], q[2] - p0[2]); if (d <= 0.5 && Math.abs(q[1] - p0[1]) < 0.2 && (!LEMMER.on || apart(q))) C.push([d, k]); }
     C.sort((a, b) => a[0] - b[0]);
     for (const dh of [0, 0.25, -0.25]) for (const [, k] of C){ const h = h0 + dh; f = fit(k, h); if (!poseHits(g.task, k, h, f.rail, f.off)){ TAKEN.delete(g.k); g.k = k; g.h = h; g.rail = f.rail; g.off = f.off; TAKEN.set(k, id); return g; } }
     f = fit(g.k, h0); g.rail = f.rail; g.off = f.off; return g; }
@@ -898,8 +978,10 @@ function crewSim(src){
       return [o.hipF + hH * o.sqF + a2 * dF - p * dR, hH * o.sqU + u2, o.hipR + hH * o.sqR + a2 * dR + p * dF]; };
     const hipJ = i => [o.hipF + hH * o.sqF, hH * o.sqU + (i ? 0.11 : -0.11) * o.pelv, o.hipR + hH * o.sqR + (i ? 0.11 : -0.11)];
     const foot = i => [o.fa[i] + 0.1 * n[0], o.fy[i] + 0.1 * n[1], o.fr[i] + 0.1 * n[2]];   // (the ankle, 10 cm over where the foot stands on the deck)
-    const segs = [[hipJ(0), foot(0)], [hipJ(1), foot(1)], [at(0.95), at(1.45)], [at(0.95, -0.17), at(1.42, -0.21)], [at(0.95, 0.17), at(1.42, 0.21)],
-      [at(1.0, 0, 0.12), at(1.38, 0, 0.12)], [at(1.0, 0, -0.12), at(1.38, 0, -0.12)], [at(1.42, -0.21), at(1.42, 0.21)], [at(1.5), at(1.8)], [at(1.64, 0, 0.13), at(1.64, 0, -0.13)], [at(1.66, -0.1), at(1.66, 0.1)]];
+    // (FB2: each leg as it is drawn, the knee from the solver; a foot the leg does not reach is moved in, as drawWorker moves it)
+    const L0 = limbLen(null), kn = LEMMER.on ? [0, 1].map(i => ik2(hipJ(i), foot(i), L0.th, L0.sn, [LEMMER.KNEE[0], LEMMER.KNEE[1], 0])) : null;
+    const segs = (kn ? [[hipJ(0), kn[0].j], [kn[0].j, kn[0].e], [hipJ(1), kn[1].j], [kn[1].j, kn[1].e]] : [[hipJ(0), foot(0)], [hipJ(1), foot(1)]]).concat([[at(0.95), at(1.45)], [at(0.95, -0.17), at(1.42, -0.21)], [at(0.95, 0.17), at(1.42, 0.21)],
+      [at(1.0, 0, 0.12), at(1.38, 0, 0.12)], [at(1.0, 0, -0.12), at(1.38, 0, -0.12)], [at(1.42, -0.21), at(1.42, 0.21)], [at(1.5), at(1.8)], [at(1.64, 0, 0.13), at(1.64, 0, -0.13)], [at(1.66, -0.1), at(1.66, 0.1)]]);
     let bits = 0; for (let i = 0; i < segs.length; i++) if (M.hit(B(segs[i][0]), B(segs[i][1])) >= 0) bits |= 1 << i; return bits; };
   const SEATMP = seaState();
   // (those lines at the deck's furthest one way, with the room given; a full sea, so the feet are at their widest)
@@ -911,10 +993,11 @@ function crewSim(src){
     const hit = SEAR.get(ck); if (hit){ a.srK = ck; a.srV = hit; return hit; }
     const M = ST.M, C = SJOBEIN, W = P.W, t = Math.tan(C.CLIP); let out;
     // (first with the bracing step where seaStepOk lets a foot out; if that still puts something through, without it at this place)
-    for (const nostep of [false, true]){ out = {r:[0, 0], f:[0, 0], w:[0, 0], nostep};
+    // (FB2: and if a knee still goes into what he stands at, with less of the crouch, k: the knees bend further ahead the lower he stands)
+    for (const [nostep, kq] of LEMMER.on ? [[false, 1], [true, 1], [true, 0.5], [true, 0]] : [[false, 1], [true, 1]]){ out = {r:[0, 0], f:[0, 0], w:[0, 0], nostep, k:kq};
       for (const i of [0, 1]){ const s = i ? 1 : -1; out.w[i] = M.hit(W(0, 0.92, s * 0.11), W(0, 0.1, s * (0.12 + C.WIDE + 0.02))) < 0 ? 1 : 0; }
       // (what goes through something on a level deck already is not the sea legs' doing; the most room that adds nothing to it)
-      const base = seaTry(a, P, 0, 0, out), trial = {r:[0, 0], f:[0, 0], w:out.w, nostep};
+      const base = seaTry(a, P, 0, 0, out), trial = {r:[0, 0], f:[0, 0], w:out.w, nostep, k:kq};
       for (const i of [0, 1]){ const s = i ? 1 : -1;
         // (from none upwards, as far as every step is clear: what is clear at CLIP with a share of the room is clear with all of it at that share of CLIP)
         for (const u of [0.25, 0.5, 0.75, 1]){ trial.r[0] = trial.r[1] = u; trial.f[0] = trial.f[1] = 0; if (seaTry(a, P, s * t, 0, trial) & ~base) break; out.r[i] = u; }
@@ -1002,7 +1085,7 @@ function crewSim(src){
     if (a.mode !== 'walk' || !a.path || a.pi < a.path.length - 1) return [0, 0]; const u = clamp(1 - (a.near || 0) / 0.6, 0, 1); return [o[0] * u, o[1] * u]; }
   function clipWhy(k){ if (!ready()) return null; const M = ST.M; return (ST.PT.lean || []).filter(l => M.ok(l.k)).map(q => { const f = fitPlace(k, q), p = M.at(q.k), F = [Math.sin(f.h), -Math.cos(f.h)], Rv = [Math.cos(f.h), Math.sin(f.h)], o = f.off || [0, 0];
     const W = v => [p[0] + o[0] + F[0] * v[0] + Rv[0] * v[2], p[1] + v[1], p[2] + o[1] + F[1] * v[0] + Rv[1] * v[2]]; return {rail:railAt(q.k, q.h), fit:f.rail, off:f.off, hits:poseSegs(k, f.rail).map(([a, b], i) => M.hit(W(a), W(b)) >= 0 ? i : -1).filter(i => i >= 0)}; }); }
-  return {tick, agents, visible, anchorOf, on, setPlan, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
+  return {tick, agents, visible, anchorOf, on, setPlan, poseLines:(k, rail) => poseSegs(k, rail), hitsAt:(k, cell, h, rail, off) => { const M = ST.M, p = M.at(cell), F = [Math.sin(h), -Math.cos(h)], Rv = [Math.cos(h), Math.sin(h)], o = off || [0, 0]; return poseSegs(k, rail).map((q, i) => M.hit([p[0] + o[0] + F[0] * q[0][0] + Rv[0] * q[0][2], p[1] + q[0][1], p[2] + o[1] + F[1] * q[0][0] + Rv[1] * q[0][2]], [p[0] + o[0] + F[0] * q[1][0] + Rv[0] * q[1][2], p[1] + q[1][1], p[2] + o[1] + F[1] * q[1][0] + Rv[1] * q[1][2]]) >= 0 ? i : -1).filter(i => i >= 0); }, landSlots:() => ready() ? landSlots() : [], landNow, iceBox:() => ready() ? iceBox() : null, setCrane, setIce,
     // (for the view: nothing of the boat between two points in her frame, and the first thing of her under a point, its height)
     clearLine:(a, b) => !ready() || ST.M0.hit(a, b) < 0, dropY, quaySide:() => ready() ? quaySide() : 1, netTubs:n => ready() ? netTubs(n) : [], gear:() => ready() && !src && S.pgear ? rigGear() : null, magOn:() => ready() && magOn(), NET_TUB, setJig, setRoll, setSea, seaRoom:a => ready() ? seaRoom(a) : null, seaRail:a => ready() ? seaRail(a) : null, seaStepOk:(a, dr, da) => ready() && seaStepOk(a, dr, da), seaClip, seaScan, seaFeet, setHelm, setMoor, moorMan, moorHands, moorAt, places:() => ready() ? places() : null, reset, clipNow, clipScan, clipWhy, bodyHits, kitHits, kitAt:(k, off) => ready() && kitAt(k, off), walkOff, holds, railAt:(k, h) => ready() ? railAt(k, h) : null, railNear:a => ready() ? railNear(a) : null, _st:ST};
 }
@@ -1066,6 +1149,181 @@ function seaState(){ return {qr:0, vr:0, qf:0, vf:0, hy:0, y:null, k:0, env:0, e
 // how much further forward a knee goes when its leg, dref long from hip to ankle before, is dnow long (the thigh and the shin keep
 // their length, so a shorter leg is a knee more bent)
 function seaKnee(dref, dnow){ const L2 = SJOBEIN.SEG * SJOBEIN.SEG, a = dref / 2, b = dnow / 2; return Math.sqrt(Math.max(0, L2 - b * b)) - Math.sqrt(Math.max(0, L2 - a * a)); }
+// ---- the limbs (FB2, steg 123, 13.11.2026; docs/planer/folk-2.md; Jonas: «Kjør på med FB2 i en ny økt»): the upper arm, the forearm,
+// the thigh and the shin keep their length. A hand or a foot is where the work has it, and the elbow or the knee is found from it
+// (ik2, the reckoning armTo had for the skiff's skipper); a hand further off than the arm reaches takes the body with it (reachBody:
+// the back bends, the torso turns), a foot further off lowers the hips (legDrop), and only what is left moves the hand or the foot in.
+// The numbers are here and nowhere else. The lengths are one person's (limbLen), so a build can have its own (FB5b); the start
+// values are the figure's as drawWorker drew it standing before (tests/lemmer.py measured them: 0.575 m from the shoulder to the
+// wrist with the arm hanging, drawn as 0.39 + 0.21 with the elbow low; here the same arm, 0.585 m, shared as a body shares it, 55 to
+// 45; 0.84 m from the hip to the ankle with the knee 7 cm ahead, 0.426 + 0.426).
+// It is on only behind «#folk2» in the address, with the new people (Jonas 13.11.2026: «det er disse kroppene som skal brukes i det
+// ferdige resultatet»: the hands' points are tuned on the new body, FB7); without it the limbs are drawn, and the clip guard reckons,
+// as before the step. «#ik0» turns it off there too.
+const LEMMER = {
+  on:typeof location !== 'undefined' && /folk2/.test(String(location.hash || '')) && !/ik0/.test(String(location.hash || '')),
+  STD:{ua:0.32, fa:0.265, th:0.426, sn:0.426},   // m: upper arm, forearm (to the wrist), thigh, shin (to the ankle)
+  LEN:{},         // the new people's lengths by body ('m', 'f'), read from the skeleton the first time (limbLen)
+  HAND:0.085,     // m from the wrist to where a hand holds, for the one-piece glove far off (near, each grip has its own point)
+  get REACH(){ return this.on ? FIG_REACH : this.REACH0; },   // the share of its full length a limb is straightened to at most: figpose.js FIG_REACH (0.98) with the new people
+  REACH0:0.995,   // the same without «#folk2», as before step 125 (goes out with the old figure)
+  get BEND(){ return this.on ? 0.72 : 0.6; },   // rad (34°; 41° with the new people, whose arms are shorter and never quite straight): the most the back bends further over to let a hand reach
+  BACK:0.12,      // rad (7°): the most it leans back for one
+  TWIST:0.6,      // rad (34°): the most the torso turns either way for one
+  TWISTW:2,       // how much dearer a turn is than a bend (the back bends before the torso turns)
+  CROSS:[0.1, 1.4],  // a hand that reaches across him turns the torso after it first: from this far past his middle (m), this many rad a metre further (with the new people)
+  DROP:0.06,      // m: the most the hips come down to let a foot reach the deck (the stride walking, a foot put out)
+  SH:[0.5, 0.21], // m: the shoulder joint over the hips along the spine, and out from it
+  ELBOW:[-0.5, -1, 0.1],   // the way an elbow points in the torso's frame [ahead, up, out]: down, back and a very little out (more, and it went into what he stands beside: tests/crewclip.py)
+  ELBOWHI:0,      // straight down instead of back and out, with the hand up by the shoulder (from 25 cm under it to 5 cm over): the elbow under a raised hand
+  CLEAR:0.22,     // m out from the spine an elbow keeps when it is beside the torso (the torso's half width and the arm's, the sleeve against the jacket)
+  FOLD:0.2,       // m from the shoulder a wrist keeps at the least (an elbow does not fold further than some 40°)
+  CHEST:0.13,     // m ahead of the spine a wrist keeps before the chest and the belly (never in his own body)
+  FRONT:0.2,      // and when it is well across him, beyond his middle (it goes round before the belly, not through it)
+  BELLY:0.13,     // m ahead of the spine an elbow keeps when it is before the torso (a hand reaching across him)
+  WRIST:0.035,    // m a wrist keeps clear of the trunk's own profile with the new people (its half thickness with the sleeve; figpose.js figProfile)
+  prof:null,      // the trunk's profile of the figure being solved (drawWorker sets it for its arms and takes it away after); none: CHEST and FRONT as before
+  KNEE:[1, 0.15], // the way a knee points: ahead and a little up
+  fr:0,           // the tests: how many times the people on deck have been drawn (view3d/20-trawl-seine.js drawDeckCrew)
+  dry:false,      // the tests: inside LEMMER.redraw, where nothing is drawn
+  log:null        // the tests: an array drawWorker writes the joints it drew to (tests/lemmer.py)
+};
+// What a hand holds close to the body, by its own measures (FB7, steg 125; Jonas 13.11.2026: «Sørg for at objekter ikke kan clippe
+// inn i menneskene»; rules 7 and 10 of «Arkitekturen for bevegelsen», docs/planer/folk-2.md): the thing has its grips in its own
+// frame, it is put clear of the trunk's profile first (figpose.js figProfile, the mesh that is drawn), and the hands are solved to
+// its grips after. drawWorker (view3d/08-plants.js holdClear) reads this (HOLD is the cinema's in the 3D view); the things' measures are their models' own
+// (G3._debug.thingBox, python3 tests/folk2diag.py).
+const HOLDT = {
+  GAP:0.02,      // m between a thing and the body's clothes at the least
+  FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
+  HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
+  // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
+  // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
+  // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
+  // what is left between it and his clothes
+  // squat: how far down the hips come for a box at the deck (the share of workLow's dip), lean: rad he leans back carrying it,
+  // most: m it is moved out ahead of him at the most
+  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:0.55, lean:0.07, most:0.14},
+  shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
+  gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, far:0.28},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle; far: how far from before his belly its middle goes at the most
+  cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
+  broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
+  // the work he keeps his eyes on: he does not look up at the camera from it
+  eyes:{sweep:1, gutw:1, gut:1, knife:1, cut:1, pack:1, ice:1, haul:1, pick:1, bleed:1, bleedst:1, egn:1, strip:1, mend:1, phone:1, stack:1, stow:1, carry:1, jig:1, jigup:1, gaff:1, sett:1, tend:1, unhook:1, coil:1},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
+  food:{r:0.04, bite:[0.035, -0.015, 0.025]}, // the food in the hand, and its point from the mouth at a bite
+  smoke:{r:0.015, at:[0.045, 0, 0.015]},      // the cigarette between the fingers, from the mouth at a draw
+  snus:{at:[0.025, 0.015, 0.02]},             // the fingers at the upper lip
+  blow:{at:[0.085, -0.05, 0.035]},            // the hands blown into, from the mouth
+  phone:{r:0.04},
+  blade:{r:0.15},                             // the shovel's blade: its half width
+  kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line
+};
+// one person's lengths (c: who; everyone the same until the builds, FB5b)
+// (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
+// c.sex; the man's when nothing says), and the shoulders' place over the hips is the skeleton's too; figpose.js figLens)
+function limbLen(c){
+  if (!LEMMER.on || typeof figSkelOf !== 'function' || typeof glbHas !== 'function' || !glbHas('folk2')) return LEMMER.STD;
+  const s = c === 'f' || (c && c.sex === 'f') ? 'f' : 'm'; let L = LEMMER.LEN[s];
+  if (!L){ const sk = figSkelOf(s); if (!sk) return LEMMER.STD; const q = figLens(sk); L = LEMMER.LEN[s] = {ua:q.ua, fa:q.fa, th:q.th, sn:q.sn}; if (s === 'm'){ LEMMER.SH = [q.sh[0], q.sh[1]];
+      // (and the nearest a wrist comes its own shoulder is the elbow folded as far as it goes, 150 degrees of bend: 14.5 cm on this arm.
+      // The 20 cm of the old, longer arm kept a hand at the mouth 30 cm off its cup and its binoculars)
+      LEMMER.FOLD = Math.sqrt(q.ua * q.ua + q.fa * q.fa - 2 * q.ua * q.fa * Math.cos(Math.PI / 6)) + 0.005; } }
+  return L; }
+// a limb of two parts L1 and L2 from its root Rt towards a target Tg, the joint between them on the side pole points to: where the
+// joint and the end are. The end is the target when the limb reaches it, else on the way to it at its reach (over: m short of it), or,
+// a target nearer the root than the two parts fold to, that near (near: m past it). o is filled and returned ({j, e, over, near,
+// push, d}; push is armIk's: m the wrist was kept out of his own body).
+function ik2(Rt, Tg, L1, L2, pole, o){
+  o = o || {j:[0, 0, 0], e:[0, 0, 0], over:0, near:0, push:0, d:0};
+  let ux = Tg[0] - Rt[0], uy = Tg[1] - Rt[1], uz = Tg[2] - Rt[2]; const D = Math.hypot(ux, uy, uz);
+  if (D < 1e-6){ ux = 0; uy = -1; uz = 0; } else { ux /= D; uy /= D; uz /= D; }
+  const d = Math.min(Math.max(D, Math.abs(L1 - L2) + 1e-4), (L1 + L2) * LEMMER.REACH), a = (d * d + L1 * L1 - L2 * L2) / (2 * d), h = Math.sqrt(Math.max(0, L1 * L1 - a * a));
+  // (the pole square to the limb's own line; along it, any way square to it)
+  const k = pole[0] * ux + pole[1] * uy + pole[2] * uz; let px = pole[0] - k * ux, py = pole[1] - k * uy, pz = pole[2] - k * uz, pl = Math.hypot(px, py, pz);
+  if (pl < 1e-6){ if (Math.abs(uy) < 0.9){ px = -ux * uy; py = 1 - uy * uy; pz = -uz * uy; } else { px = 1 - ux * ux; py = -uy * ux; pz = -uz * ux; } pl = Math.hypot(px, py, pz) || 1; }
+  o.j[0] = Rt[0] + ux * a + px / pl * h; o.j[1] = Rt[1] + uy * a + py / pl * h; o.j[2] = Rt[2] + uz * a + pz / pl * h;
+  o.e[0] = Rt[0] + ux * d; o.e[1] = Rt[1] + uy * d; o.e[2] = Rt[2] + uz * d; o.over = Math.max(0, D - d); o.near = Math.max(0, d - D); o.push = 0; o.d = d; return o; }
+// a point of the torso [ahead, up, right] from the hips, turned by tw about the spine and then bent b over ahead (as the torso is drawn)
+function torsoPt(q, b, tw){ const ct = Math.cos(tw), st = Math.sin(tw), cb = Math.cos(b), sb = Math.sin(b), a = q[0] * ct - q[2] * st; return [a * cb + q[1] * sb, -a * sb + q[1] * cb, q[0] * st + q[2] * ct]; }
+// (and back: a point in the hips' frame, in the torso's own)
+function torsoInv(q, b, tw){ const ct = Math.cos(tw), st = Math.sin(tw), cb = Math.cos(b), sb = Math.sin(b), a = q[0] * cb - q[1] * sb; return [a * ct + q[2] * st, q[0] * sb + q[1] * cb, -a * st + q[2] * ct]; }
+// the body goes after a hand it cannot reach: how much further the back bends (b, rad; less than 0 leaning back) and the torso turns
+// (t, rad; more than 0 the right shoulder back and the left ahead, torsoPt) for both shoulders to come within reach of their hands. sh the two
+// shoulders in the torso's own frame ([ahead, up, right] from the hips, standing straight), tg the two wrists' targets in the hips'
+// frame (null: that hand is free), reach the arm's, b0 the bend the work has already. Nothing when both reach; the least that does
+// it otherwise (a damped step at a time from nothing, so a target moving out takes the body with it evenly), within LEMMER's limits.
+// over is what is still missing then (m), which the arm takes by moving the hand in.
+function reachBody(sh, tg, reach, b0, o){
+  o = o || {b:0, t:0, over:0, n:0}; const C = LEMMER; let b = 0, t = 0;
+  const miss = (i, bb, tt) => { if (!tg[i]) return 0; const p = torsoPt(sh[i], b0 + bb, tt); return Math.hypot(tg[i][0] - p[0], tg[i][1] - p[1], tg[i][2] - p[2]) - reach; };
+  let e0 = miss(0, 0, 0), e1 = miss(1, 0, 0); o.n = 0;
+  if (e0 > 1e-4 || e1 > 1e-4) for (let it = 0; it < 8; it++){ const E = 0.01, J = [], e = [];
+      for (const i of [0, 1]){ const ei = i ? e1 : e0; if (ei <= 0) continue; e.push(ei); J.push([(miss(i, b + E, t) - ei) / E, (miss(i, b, t + E) - ei) / E / C.TWISTW]); }
+      if (!e.length) break; o.n++;
+      // (the least step that takes the missing reach away: (JtJ + l) x = -Jt e)
+      let A = 1e-3, B = 0, Cc = 1e-3, g0 = 0, g1 = 0; for (let r = 0; r < e.length; r++){ A += J[r][0] * J[r][0]; B += J[r][0] * J[r][1]; Cc += J[r][1] * J[r][1]; g0 += J[r][0] * e[r]; g1 += J[r][1] * e[r]; }
+      const det = A * Cc - B * B || 1e-9; b = Math.min(C.BEND, Math.max(-C.BACK, b - (Cc * g0 - B * g1) / det)); t = Math.min(C.TWIST, Math.max(-C.TWIST, t - (A * g1 - B * g0) / det / C.TWISTW));
+      e0 = miss(0, b, t); e1 = miss(1, b, t); if (e0 < 1e-3 && e1 < 1e-3) break; }
+  o.b = b; o.t = t; o.over = Math.max(0, e0, e1); return o; }
+// an arm in the torso's frame ([ahead, up, right] from the hips; the torso standing straight in it): the elbow and the wrist for
+// the shoulder s and the wrist's target tg, sd 1 the right arm and -1 the left. The elbow points down, back and a little out
+// (LEMMER.ELBOW), and further out when that would put it in the torso's side (CLEAR, and cl more under a life jacket), so it never
+// goes through the body.
+function armIk(s, tg, sd, L, o, cl){
+  // (a wrist is never folded right up into its own shoulder: nearer than FOLD it is moved out to that, down, ahead and out of it the
+  // nearer it was; how far it was moved is in near)
+  { const dx = tg[0] - s[0], dy = tg[1] - s[1], dz = tg[2] - s[2], D = Math.hypot(dx, dy, dz), F = LEMMER.FOLD;
+    if (D < F){ const k = F - D, vx = dx + 0.3 * k * 4, vy = dy - 0.8 * k * 4, vz = dz + 0.5 * sd * k * 4, l = Math.hypot(vx, vy, vz) || 1, t2 = [s[0] + vx / l * F * 1.001, s[1] + vy / l * F * 1.001, s[2] + vz / l * F * 1.001];
+      o = armIk(s, t2, sd, L, o, cl); o.near = Math.hypot(t2[0] - tg[0], t2[1] - tg[1], t2[2] - tg[2]); return o; } }
+  // (a wrist is never in his own body, and a hand across him by the far hip is not reached through it: before the chest and the
+  // belly the wrist keeps CHEST ahead of the spine, and well across him FRONT, going round before the belly; how far it was moved
+  // is in push. The edges soft)
+  const C0 = LEMMER, k01 = v => v < 0 ? 0 : v > 1 ? 1 : v, wu = k01((tg[1] + 0.05) / 0.08) * k01((C0.SH[0] + 0.05 - tg[1]) / 0.08);
+  // (the new people: the trunk is its own profile, measured on the mesh that is drawn (figpose.js figProfile), and the wrist keeps
+  // WRIST clear of it: out ahead of it, out to its side when that is nearer (a hand hanging by the hip), or out behind a back it is
+  // behind already; a wrist across his middle goes round before the belly as before. The solver's own turn, then, without the profile)
+  const PF = C0.prof;
+  if (PF){ const y = tg[1], r = tg[2], f = figProfAt(PF, y, r), bk = figProfAt(PF, y, r, true), pm = figProfAt(PF, y, 0);
+    // (only a wrist that is across him and before him: one that is out past his far side is clear of him, the elbow's matter)
+    const hw0 = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, xk = k01((-0.05 - r * sd) / 0.1) * k01((hw0 + C0.WRIST + 0.02 - Math.abs(r)) / 0.04), lx = pm > 0 && xk > 0 && tg[0] > -0.2 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * xk - tg[0] : 0;
+    if (f > 0 || bk > 0 || lx > 1e-4){ const W = C0.WRIST, hw = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, la = f + W - tg[0], lb = tg[0] + bk + W, ls = hw + W - Math.abs(r);
+      if ((la > 1e-4 && lb > 1e-4 && ls > 1e-4) || lx > 1e-4){ let da = 0, ds = 0;
+        if (lx > 1e-4 && lx >= la) da = Math.min(0.4, lx);
+        else if (lb < la && lb < ls) da = -lb;
+        else { const w = k01((la - ls) / 0.04 + 0.5); da = Math.min(0.4, la) * (1 - w); ds = ls * w; }
+        C0.prof = null; C0.own = true; try { o = armIk(s, [tg[0] + da + (da >= 0 ? 1e-3 : -1e-3), y, r + (Math.abs(r) < 0.02 ? sd : Math.sign(r)) * ds], sd, L, o, cl); } finally { C0.prof = PF; C0.own = false; }
+        o.push = Math.hypot(da, ds); if (C0.log) o.dbg = [tg[0], y, r, f, bk, hw, la, lb, ls, lx].map(v => +v.toFixed(3)); return o; } }
+    C0.prof = null; C0.own = true; try { return armIk(s, tg, sd, L, o, cl); } finally { C0.prof = PF; C0.own = false; } }
+  const need = Math.max(C0.CHEST * Math.sqrt(Math.max(0, 1 - tg[2] * tg[2] / 0.0361)), C0.FRONT * k01((-0.05 - tg[2] * sd) / 0.1)) * wu, lack = tg[0] < -0.2 ? 0 : Math.min(0.4, (need - tg[0]) * k01(need / 0.03) * k01((tg[0] + 0.2) / 0.05));   // (the torso round: 0.19 m to either side; nothing asked of a wrist out beside it, nor of one behind his back, which is not pulled through him)
+  if (lack > 1e-4 && !C0.own){ o = armIk(s, [tg[0] + lack + 1e-3, tg[1], tg[2]], sd, L, o, cl); o.push = lack; return o; }   // (own: the profile has had its say already)
+  // (a hand up by the shoulder or over it, the cup at the mouth, the binoculars, an arm up: the elbow down under it, not back)
+  const C = LEMMER, P = C.ELBOW, CL = C.CLEAR + (cl || 0), up = Math.min(1, Math.max(0, (tg[1] - s[1] + 0.25) / 0.3)), hi = up * up * (3 - 2 * up); o = ik2(s, tg, L.ua, L.fa, [P[0] + (C.ELBOWHI - P[0]) * hi, P[1], P[2] * sd * (1 - hi * Math.min(1, Math.max(0, (tg[2] * sd - s[2] * sd) / 0.1)))], o);   // (and not out, under a hand raised out to his side)
+  const e = o.j, side = e[2] * sd;
+  // (beside or in the torso: between the hips and the shoulders, not well ahead of the chest or behind the back; the edges soft)
+  const w = Math.min(1, (0.2 - Math.abs(e[0])) / 0.06, (e[1] + 0.05) / 0.06, (C.SH[0] + 0.08 - e[1]) / 0.06); if (side >= CL || w <= 0) return o;
+  // the elbow is on a circle about the arm's own line: turned on it the least that takes it out to CLEAR, or as far out as it goes
+  const d = o.d, ux = (o.e[0] - s[0]) / d, uy = (o.e[1] - s[1]) / d, uz = (o.e[2] - s[2]) / d, a = (d * d + L.ua * L.ua - L.fa * L.fa) / (2 * d), cx = s[0] + ux * a, cy = s[1] + uy * a, cz = s[2] + uz * a;
+  const px = e[0] - cx, py = e[1] - cy, pz = e[2] - cz, qx = uy * pz - uz * py, qy = uz * px - ux * pz, qz = ux * py - uy * px, A = sd * pz, B = sd * qz, M = Math.hypot(A, B); if (M < 1e-6) return o;
+  const K = side + (CL - side) * w - sd * cz, f0 = Math.atan2(B, A), n = x => x - 2 * Math.PI * Math.round(x / (2 * Math.PI)); let f = f0;
+  if (K < M){ const dl = Math.acos(Math.max(-1, K / M)), f1 = n(f0 + dl), f2 = n(f0 - dl); f = Math.abs(f1) < Math.abs(f2) ? f1 : f2; }
+  // (a hand far across him: the elbow cannot get out to his side, and goes out ahead of the belly as well)
+  const v = Math.min(1, (K - 0.85 * M) / (0.3 * M)); if (v > 0) f += n(Math.atan2(B + qx, A + px) - f) * v;
+  let c = Math.cos(f), sn = Math.sin(f), ea = cx + px * c + qx * sn, er = (cz + pz * c + qz * sn) * sd;
+  // (still in the belly, a hand reaching across him: turned on, the least that takes the elbow out ahead of it)
+  if (er < 0.17 && Math.abs(ea) < C.BELLY){ const M2 = Math.hypot(px, qx), K2 = C.BELLY - cx; if (M2 > 1e-6){ const g0 = Math.atan2(qx, px); if (K2 < M2){ const dl = Math.acos(Math.max(-1, K2 / M2)), g1 = n(g0 + dl - f), g2 = n(g0 - dl - f); f += Math.abs(g1) < Math.abs(g2) ? g1 : g2; } else f = g0; c = Math.cos(f); sn = Math.sin(f); } }
+  e[0] = cx + px * c + qx * sn; e[1] = cy + py * c + qy * sn; e[2] = cz + pz * c + qz * sn; return o; }
+// an arm to a hand's point hd (where it holds): the wrist a hand's length back from it along the hand, the hand along the forearm
+// (a few rounds, as drawWorker turns it), in the torso's frame. o.w is the wrist's target
+function armHand(s, hd, sd, L, o, cl){ const H = LEMMER.HAND; let zx = hd[0] - s[0], zy = hd[1] - s[1], zz = hd[2] - s[2], l = Math.hypot(zx, zy, zz) || 1; zx /= l; zy /= l; zz /= l;
+  for (let n = 0; n < 4; n++){ o = armIk(s, [hd[0] - zx * H, hd[1] - zy * H, hd[2] - zz * H], sd, L, o, cl); if (n === 3 || o.over > 0) break;
+    let fx = o.e[0] - o.j[0], fy = o.e[1] - o.j[1], fz = o.e[2] - o.j[2]; l = Math.hypot(fx, fy, fz) || 1; fx = fx / l - zx; fy = fy / l - zy; fz = fz / l - zz; if (Math.abs(fx) + Math.abs(fy) + Math.abs(fz) < 0.01) break;
+    zx += fx * 0.8; zy += fy * 0.8; zz += fz * 0.8; l = Math.hypot(zx, zy, zz) || 1; zx /= l; zy /= l; zz /= l; }
+  return o; }
+// how far the hips come down for both feet to be within the legs' reach: hips and feet as [x, up, z] in any level frame
+function legDrop(hips, feet, L){ const C = LEMMER, R = (L.th + L.sn) * C.REACH; let dr = 0;
+  for (const i of [0, 1]){ const hx = hips[i][0] - feet[i][0], hz = hips[i][2] - feet[i][2], h2 = hx * hx + hz * hz, v = hips[i][1] - feet[i][1]; dr = Math.max(dr, h2 >= R * R ? C.DROP : v - Math.sqrt(R * R - h2)); }
+  return Math.min(C.DROP, Math.max(0, dr)); }
 // the sea legs of one person standing or walking on a deck: s his state (seaState), inp what the deck does where he stands, in his own
 // frame (ahead and to his right, level in the world):
 //   sr, sf   the deck's slope to his right and ahead (m up per m; from the deck's normal, so roll and pitch seen his way)
@@ -1111,7 +1369,8 @@ function seaLegs(s, inp){
   // deck and never faster than the legs go; he stands lower the more there is to take up
   // (before the heave has been seen, a first frame or after a gap, it is taken from the sea's height: HSHEAVE of Hs each way)
   const dy = snap ? 0 : y - s.hy, pk0 = C.HSHEAVE * (inp.hs || 0), pk = Math.max(Math.abs(dy), pk0, snap ? 0 : s.envP * Math.exp(-dt / 15)); s.envP = pk; s.envH = snap ? pk : s.envH + (pk - s.envH) * (1 - Math.exp(-dt / 1));
-  const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
+  // (room.k: less of the crouch where the knees have no room ahead)
+  const crT = Math.min(C.CROUCHMAX, C.CROUCH * s.k + C.HEAVE * s.envH) * (room.k == null ? 1 : room.k); s.cr = snap ? crT : s.cr + (crT - s.cr) * (1 - Math.exp(-dt / 2));
   const cr = s.cr, A = Math.min(C.HIPUP + cr, C.HIPDN - cr), beta = Math.min(C.HEAVE, A / Math.max(1e-3, pk)), hipY = -cr - A * Math.tanh(beta * dy / A);
   // the hand to the rail, and the foot put out down the slope
   const step = (on, v, t) => snap || !(t > 0) ? (on ? 1 : 0) : on ? Math.min(1, v + dt / t) : Math.max(0, v - dt / t), rl = !walk && inp.rail ? inp.rail : null, d0 = dt >= 0 ? Math.min(dt, 5) : 0;   // (after a gap the hand and the foot are where the time gone puts them)

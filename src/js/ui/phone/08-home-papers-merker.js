@@ -2,6 +2,8 @@
   // then the next goal and the milestones as one row of two cards (the first week while it is on, then the sea time: both open
   // Milepæler), the «Nå» cards, and the apps in groups with a heading each (GROUPS), on glass tiles with the dock's stroke icons and one
   // accent, the badges. A group with no app shown is left out. The same in a phone standing and lying, on a tablet and a PC
+  // D5 (13.11.2026): what matters now (the clock to the «Nå» cards) is one block, .ph-nowcol: beside the apps in the big phone on a tablet
+  // lying down and above them standing; in a phone it is no box at all (display:contents)
   function home(){
     const H = S.t / 60, W = windAt(H), na = alerts().length;
     // the counts on the tiles; «ny» on an app the player has not opened since it came, when it has no count
@@ -13,9 +15,9 @@
     const grp = GROUPS.map(([k, no, en, ids]) => [k, no, en, ids.map(id => shown.find(a => a[0] === id)).filter(Boolean)]);
     grp[grp.length - 1][3].push(...shown.filter(a => !GROUPS.some(g => g[3].includes(a[0]))));
     const g = goals()[0], goal = g ? '<button class="ph-goal" data-pa="open" data-a="fartoy"><span>' + L('Neste mål: ', 'Next goal: ') + '<b>' + g.n + '</b></span><small>' + (g.txt || kr(Math.min(Math.max(0, S.cash), g.need)) + ' / ' + kr(g.need)) + '</small><span class="gb"><i style="width:' + (g.pc * 100).toFixed(1) + '%"></i></span></button>' : '';
-    return '<div class="ph-homescr"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
+    return '<div class="ph-homescr"><div class="ph-nowcol"><div class="ph-clock">' + hm(H) + '</div><div class="ph-date">' + dayStr(H) + '</div>' +
       '<div class="ph-widget"><span class="w1">' + dirName(windDir(H)) + ' ' + fmt(W, 0) + ' m/s · ' + fmt(Math.round(airTemp(H)) || 0, 0) + ' °C</span><span class="w2">' + kr(S.cash) + '</span></div>' +
-      '<div class="ph-goals">' + goal + ((typeof achChip === 'function' ? achChip() : '') || fsChip()) + '</div>' + nowCards(na) +
+      '<div class="ph-goals">' + goal + ((typeof achChip === 'function' ? achChip() : '') || fsChip()) + '</div>' + nowCards(na) + '</div>' +
       '<div class="ph-grid">' + grp.filter(x => x[3].length).map(([k, no, en, as]) => '<section class="ph-grp" data-g="' + k + '"><h5>' + L(no, en) + '</h5><div class="ph-tiles">' + as.map(tile).join('') + '</div></section>').join('') + '</div></div>';
   }
   // «Nå» on the home screen (U7, docs/planer/ui-redesign.md, V4 A): the phone answers before it is asked. Each card opens the app that has

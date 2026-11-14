@@ -5,6 +5,7 @@ og alt»): each drawer page, the phone's home and each app, the deck log, and th
     node build.mjs
     KYST_LITE=1 python3 tools/ui/designshots.py            -> tests/out/design/<nn>-<name>-<staaende|liggende>.png (JPEG beside, for sending)
     python3 tools/ui/designshots.py hud                    -> only the screen in harbour and at sea, with 3D drawn
+    python3 tools/ui/designshots.py hud telefon liggende   -> only the phone over 3D (D5), one format alone
     KYST_LITE=1 python3 tools/ui/designshots.py d6         -> the dialogs, the tip, the toast (tools/ui/scener.py) and the wardrobe
 """
 import os, sys, asyncio, json
@@ -52,6 +53,10 @@ async def main():
             await shot('havn')
             if hud:
                 # the screen with 3D drawn: in harbour, a shop, the paint shop and the phone over it, at sea, the chart plotter, a route
+                if 'telefon' in sys.argv:   # (`hud telefon`, D5: only the phone over 3D, its home screen and one app, in harbour and at sea)
+                    await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await safe("PHONE.open('salg')", 'telefon-app-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
+                    await safe("(() => { const b = S.boat, g = GROUNDS[0].p; b.status = 'idle'; b.port = null; b.pos = {x:g.x, y:g.y}; b.v = 0; refreshAll(); PHONE.show(true); })()", 'telefon-til-sjos', 8000)
+                    await pg.close(); continue
                 if 'kort' not in sys.argv:   # (`hud kort`: only harbour, at sea and the plotter; a 3D picture takes minutes in the test environment)
                     await safe("DOCK.open('fiske')", 'butikk-over-3d', 3000); await safe("DOCK.open('maler')", 'maler-over-3d', 3000); await pg.evaluate("DOCK.close()")
                     await safe("PHONE.show(true)", 'telefon-over-3d', 3000); await pg.evaluate("PHONE.show(false)")
@@ -94,13 +99,17 @@ async def main():
                     await pg.wait_for_timeout(6000); await shot('aapning-litt-senere')
                 except Exception as e: print('FEIL åpning', tag, str(e)[:120])
                 await pg.close(); continue
-            for page, port in DRAWER:
+            for page, port in ([] if 'apper' in sys.argv else DRAWER):   # (`apper`, D5: only the phone's home screen and its apps)
                 await safe("(() => { const b = S.boat, q = portById('%s'); if (b.port !== q.id){ b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; b.berth = 'main'; } DOCK.open('%s'); })()" % (port, page), 'skuff-' + page)
             await pg.evaluate("DOCK.close()")
             await safe("PHONE.show(true)", 'telefon-hjem')
             for a in APPS: await safe("PHONE.open('%s')" % a, 'app-' + a)
             await safe("PHONE.open('nett'); document.querySelector('#phone [data-pa=sub][data-s=shop]').click()", 'app-nett-butikk')
             await pg.evaluate("PHONE.show(false)")
+            if 'apper' in sys.argv:
+                for a, i in (('regler', 1), ('regler', 2), ('kvote', 1), ('kvote', 2), ('kvote', 3), ('salg', 1), ('salg', 2), ('merker', 1), ('merker', 3), ('ordl', 1), ('naustp', 0), ('drift', 0), ('gbook', 0), ('logg', 0)):
+                    await safe("PHONE.open('%s'); (() => { const t = [...document.querySelectorAll('#phone .ph-sub button')]; if (%d && t[%d]) t[%d].click(); })()" % (a, i, i, i), 'app-%s-fane%d' % (a, i + 1))
+                await pg.evaluate("PHONE.show(false)"); await pg.close(); continue
             await safe("BOOK.open()", 'dekksdagbok', 600)
             await pg.close()
         await b.close()

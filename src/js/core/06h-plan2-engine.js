@@ -33,6 +33,7 @@ async function plan2Make(o, cb){
   try {
     const C = plan2Check(o); if (!C.ok) throw C.errors[0];
     const P = o.places, mid = {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length}, home = portById(o.home), big = (BOAT.len || 0) >= DRP.bigLen;
+    if (home && home.rorbu && !siteFits(S.boat.type)) throw gL('Rorbua i ' + home.name + ' tar bare båter opp til ' + SITE_MAXLEN + ' m. Velg mottaket eller en havneplass som hjem.', 'The rorbu at ' + home.name + ' only takes boats up to ' + SITE_MAXLEN + ' m. Choose the plant or a harbour berth as home.');   // (SITE_MAXLEN, 07-harbours.js)
     try { await mapNeed(mid, 14); await mapNeed(home.p, 6); for (const q of P) await mapNeed(q, p2Sno(o) ? 6 + DRP2.sno.row * Math.ceil(q.n / DRP2.sno.cols) + DRP2.sno.cols * DRP2.sno.col / 2 : 2); } catch (e){}
     // (the snow crab's strings, H3c: their room checked again now the map round them is in)
     if (p2Sno(o)){ P2SNO_FIT.clear(); const C2 = plan2Check(o); if (!C2.ok) throw C2.errors[0]; }
