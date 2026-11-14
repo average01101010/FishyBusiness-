@@ -4423,3 +4423,43 @@
 2026-11-14 15:05	ccr-as1-alle	91e992a4	dbg23o	OK	41	3d	alene	
 2026-11-14 15:20	ccr-as1-alle	91e992a4	kaishot	FEIL	900	3d	alene	gikk ut på tid
 2026-11-14 15:35	ccr-as1-alle	91e992a4	npcshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 16:44	ccr-as1-alle	43a99c55	tutfull	OK	8	lite	samtidig	
+2026-11-14 16:45	ccr-as1-alle	43a99c55	krabbefabrikktest	OK	24	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	colregtest	OK	729	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	keeptest	OK	15	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	autonavtest	OK	26	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	turtest	OK	17	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	decktest	OK	14	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	trip2	OK	37	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	worktest	OK	26	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	npctest	OK	9	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	towtest	OK	15	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	tattest	OK	24	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	peergear	OK	5	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	mobtest	OK	203	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	turlinjetest	OK	9	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	kaiover	OK	141	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	ferrytest	OK	23	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	hulltest	OK	73	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	boottest	OK	38	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	hudtest	OK	152	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	havflaate	OK	18	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	lanterntest	OK	21	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	farttest	OK	391	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	fabrikktest	OK	19	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	kotest	OK	23	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	naustleia	OK	10	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	harbourtest	OK	22	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	rorbutest	OK	17	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	havntest	OK	24	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	havtur	FEIL	141	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	utfrakai	OK	97	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	lukket	OK	21	lite	samtidig	
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	dyntest	FEIL	264	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	helmtest	FEIL	27	lite	samtidig	FEIL rattet til styrbord svinger henne til styrbord, og det går tilbake til midten når du slipper  {'rud': 1, 'deg': -173.3, 'after': 0}
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	docktest	OK	69	lite	samtidig	
+2026-11-14 17:14	ccr-as1-alle	fc0c2cc1	dyntest	FEIL	263	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:14	ccr-as1-alle	fc0c2cc1	helmtest	OK	26	lite	samtidig	
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	dyntest	FEIL	265	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	helmtest	OK	26	lite	samtidig	
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	helmtest	OK	26	lite	alene	
