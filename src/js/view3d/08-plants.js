@@ -94,6 +94,8 @@
     if (LEMMER.on && k === 'stack') return [HOLDT.box.squat * (1 - (Math.sin((tOf(T, idx)) * 1.4) + 1) / 2), 0.1];
     if (LEMMER.on && k === 'stow'){ const u = Math.min(1, Math.max(0, stowS(st) / 1.6)); return [HOLDT.box.squat * u * u * (3 - 2 * u), 0.1]; }
     if (LEMMER.on && k === 'carry' && st.crate !== false) return [0, -HOLDT.box.lean];
+    // (the new people's gaff: down on the knees as its tip goes over the rail to the fish, and up with it)
+    if (LEMMER.on && k === 'gaff' && e && c < 1.2){ const u = c < 0.5 ? c / 0.5 : c < 0.75 ? 1 : 1 - (c - 0.75) / 0.45; return [HOLDT.gaff.dip * u * u * (3 - 2 * u), 0.06]; }
     if (k === 'hose' || k === 'coil' || k === 'stack' || k === 'gut' || k === 'haul') return [0, 0.12];
     if (k === 'ice') return [0, 0.22];
     if (k === 'lean') return [0, 0.1];
@@ -132,7 +134,15 @@
   }
   // he turns from his place towards what he reaches for: the gutter to the bleeding tub for the next fish, the bleeder to the tub as he
   // throws, the packer to the crate at his side (the place and its heading stay; the body turns on the feet)
+  // the new people's gaff (Jonas 13.11.2026: «Sørg for at objekter ikke kan clippe inn i menneskene»): the tub the fish goes into
+  // is beside or behind the hauler, and the old take swung the tip straight through where he stands. He turns on his feet towards
+  // where the fish is let go (gaffTurn: rad from his place's heading, HOLDT.gaff.turn at the most) and back, and the tip is led
+  // round him before him (case 'gaff'). gaffIn: the share of the turn at second c of the take, slow at first while the fish is
+  // lifted over the rail
+  const gaffTurn = (st, eye) => { let d = Math.atan2(st.ev.U[0] + eye[0] - st.x, -(st.ev.U[2] + eye[2] - st.z)) - st.h; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return clamp(d, -HOLDT.gaff.turn, HOLDT.gaff.turn); };
+  const gaffIn = c => { const ez = u => u * u * (3 - 2 * u); if (c < 0.65) return 0; if (c < 1.35){ const u = ez((c - 0.65) / 0.7); return u * u; } return c < 1.7 ? 1 : 1 - ez(Math.min(1, (c - 1.7) / 0.6)); };
   function workTurn(st, eye, T, idx){
+    if (LEMMER.on && st.task === 'gaff' && st.ev && st.ev.k < DKDUR.gaff) return gaffTurn(st, eye) * gaffIn(st.ev.k);
     const to = q => { if (!q) return 0; let d = Math.atan2(q[0] + eye[0] - st.x, -(q[2] + eye[2] - st.z)) - st.h; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d) < 0.35 ? 0 : clamp(d, -1.3, 1.3); };
     const ez = u => u * u * (3 - 2 * u);
     if (st.task === 'hose' && st.deck && !st.walk) return 0.4 * Math.sin(T * 0.8 + idx);   // (the jet over the deck from side to side, deckcrew.js WASH_SW)
@@ -299,6 +309,34 @@
       // the gaff (linehøtt) at the hauler (the event: dkFor, seconds st.ev.k): out over the rail and down to the fish on the line, a
       // jerk as it bites, up and in over the rail with the fish hanging on it, shaken off into the bleeding tub, back to the ready
       case 'gaff': { const e = st.ev, c = e ? e.k : 99, ready = W(0.55, 1.75, 0.18); let tip = ready; st.gaffFish = false; st.gaffDrop = -1;
+        if (LEMMER.on){
+          // (the new people. A man does not carry a gaff's tip from place to place: his hands stay before him and the stiff shaft
+          // turns in them. The take is four holds, each the back hand's place and the way the shaft points, in his own frame
+          // [ahead, up from the deck, to his right] as he is turned (workTurn): the ready with the tip up, the reach to the fish as far
+          // out over the rail as he gets (HOLDT.gaff.reach from his chest), the lift with the tip up over the rail, and the tub with
+          // the tip down in it, he turned to it. Between them the hand goes straight and the shaft turns evenly, so the tip
+          // swings out before him and never through him. A hold is found from where its tip is: the back hand as near its home
+          // before his hip as the shaft's length lets it (HOLDT.gaff.home))
+          const Gf = HOLDT.gaff, hold = (tp, hip) => { const hm = [Gf.home[0], hip + Gf.home[1], Gf.home[2]], n = norm3([tp[0] - hm[0], tp[1] - hm[1], tp[2] - hm[2]]); return {b:[tp[0] - n[0] * Gf.grip[1], tp[1] - n[1] * Gf.grip[1], tp[2] - n[2] * Gf.grip[1]], n}; };
+          const mix = (A, B, u) => { const d = clamp(A.n[0] * B.n[0] + A.n[1] * B.n[1] + A.n[2] * B.n[2], -1, 1), th = Math.acos(d), sn = Math.sin(th), ka = sn > 1e-4 ? Math.sin((1 - u) * th) / sn : 1 - u, kb = sn > 1e-4 ? Math.sin(u * th) / sn : u;
+            return {b:lerp3(A.b, B.b, u), n:norm3([A.n[0] * ka + B.n[0] * kb, A.n[1] * ka + B.n[1] * kb, A.n[2] * ka + B.n[2] * kb])}; };
+          const K0 = hold([0.55, 1.75, 0.18], 0.92); let Hd = K0;
+          if (e && c < DKDUR.gaff){ const y0 = y - eye[1], lx = e.W[0] + eye[0] - st.x, lz = e.W[2] + eye[2] - st.z, O = Gf.chest;
+            let wl = [lx * F0[0] + lz * F0[1], e.W[1] - y0, lx * R0[0] + lz * R0[1]]; { const v = [wl[0] - O[0], wl[1] - O[1], wl[2] - O[2]], l = Math.hypot(v[0], v[1], v[2]); if (l > Gf.reach) wl = [O[0] + v[0] * Gf.reach / l, O[1] + v[1] * Gf.reach / l, O[2] + v[2] * Gf.reach / l]; }
+            const ux = e.U[0] + eye[0] - st.x, uz = e.U[2] + eye[2] - st.z, aT = gaffTurn(st, eye); let aL = Math.atan2(ux, -uz) - st.h - aT; while (aL > Math.PI) aL -= 2 * Math.PI; while (aL < -Math.PI) aL += 2 * Math.PI; if (Math.abs(aL) > 1.6) aL = 0;   /* (a tub right behind him, reached the other way round) */
+            const rU = Math.max(Gf.out, Math.hypot(ux, uz)), K1 = hold(wl, 0.92 - Gf.dip * 0.42), K2 = hold([Gf.lift[0], clamp(e.R[1] - y0 + Gf.lift[1], 1.3, 1.65), Gf.lift[2]], 0.92), K3 = hold([Math.cos(aL) * rU, e.U[1] - y0 + 0.55, Math.sin(aL) * rU], 0.92);
+            const dn = (K, d) => ({b:[K.b[0], K.b[1] + d, K.b[2]], n:K.n});
+            if (c < 0.5) Hd = mix(K0, K1, ease(c / 0.5));
+            else if (c < 0.65) Hd = dn(K1, -0.06 * Math.sin((c - 0.5) / 0.15 * Math.PI));
+            else if (c < 1.35){ const u = ease((c - 0.65) / 0.7); Hd = u < 0.5 ? mix(K1, K2, u * 2) : mix(K2, K3, u * 2 - 1); }
+            else if (c < 1.7) Hd = dn(K3, Math.sin((c - 1.35) / 0.35 * Math.PI * 4) * 0.05);
+            else { const u = ease(Math.min(1, (c - 1.7) / 0.7)); Hd = u < 0.45 ? mix(K3, K2, u / 0.45) : mix(K2, K0, (u - 0.45) / 0.55); }
+            st.gaffFish = c >= 0.5 && c < 1.45; st.gaffDrop = c >= 1.45 && c < 1.75 ? (c - 1.45) / 0.3 : -1; }
+          // (the gaff where the hold has it: the hands at its grips, deckcrew.js HOLDT.gaff; holdClear turns it about the tip if a
+          // hand or the butt is in him still)
+          const bw = W(Hd.b[0], Hd.b[1], Hd.b[2]), f0 = W(0, 0, 0), f1 = W(1, 0, 0), r1 = W(0, 0, 1), n = norm3([(f1[0] - f0[0]) * Hd.n[0] + (r1[0] - f0[0]) * Hd.n[2], Hd.n[1], (f1[2] - f0[2]) * Hd.n[0] + (r1[2] - f0[2]) * Hd.n[2]]);
+          const at = s2 => [bw[0] + n[0] * (Gf.grip[1] - s2), bw[1] + n[1] * (Gf.grip[1] - s2), bw[2] + n[2] * (Gf.grip[1] - s2)];
+          st.gaff = {g:at(Gf.org), n, tip:at(0)}; hands = [bw, at(Gf.grip[0])]; break; }
         if (e && c < DKDUR.gaff){ const up = [e.R[0], e.R[1] + 0.55, e.R[2]], U = [e.U[0], e.U[1] + 0.55, e.U[2]];
           if (c < 0.5) tip = lerp3(ready, e.W, ease(c / 0.5));
           else if (c < 0.65) tip = [e.W[0], e.W[1] - 0.06 * Math.sin((c - 0.5) / 0.15 * Math.PI), e.W[2]];
@@ -306,10 +344,8 @@
           else if (c < 1.7) tip = [U[0], U[1] + Math.sin((c - 1.35) / 0.35 * Math.PI * 4) * 0.05, U[2]];
           else tip = lerp3(U, ready, ease(Math.min(1, (c - 1.7) / 0.7)));
           st.gaffFish = c >= 0.5 && c < 1.45; st.gaffDrop = c >= 1.45 && c < 1.75 ? (c - 1.45) / 0.3 : -1; }
-        // (the new people: the shaft passes before his belly, the back hand there and the fore hand ahead of him, not through the
-        // chest; holdClear puts the hands at the gaff's own grips, deckcrew.js HOLDT.gaff)
-        const ch = FH ? W(0.36, 1.0, 0.04) : W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
-        const gd = Math.hypot(g[0] - ch[0], g[1] - ch[1], g[2] - ch[2]); const gm = FH ? HOLDT.gaff.far : 0.55; if (gd > gm) g = lerp3(ch, g, gm / gd);
+        const ch = W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
+        const gd = Math.hypot(g[0] - ch[0], g[1] - ch[1], g[2] - ch[2]); const gm = 0.55; if (gd > gm) g = lerp3(ch, g, gm / gd);
         const n = norm3([tip[0] - g[0], tip[1] - g[1], tip[2] - g[2]]); st.gaff = {g, n, tip:[g[0] + n[0] * 0.66, g[1] + n[1] * 0.66, g[2] + n[2] * 0.66]};
         hands = [g, [g[0] - n[0] * 0.38, g[1] - n[1] * 0.38, g[2] - n[2] * 0.38]]; break; }
       // bleeding a jigged fish (the event st.ev): he takes it off at the rail, lifts it by the head, cuts the throat with the knife (the
