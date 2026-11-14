@@ -97,8 +97,9 @@ async def run(p, w, h, tag):
     # the drawer: ice from the plant, at the side lying; standing one sheet from 12 % of the height for every page, with the strip
     # visible over it (UI 2, U2-7; until then the trade pages opened at 55 % and the middle of the screen stayed free)
     await tap_el('#dockFan [data-dk=is]'); await pg.wait_for_timeout(300)
-    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(), u = document.getElementById('hud').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, hud:[u.top, u.bottom], title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
-    side = r['x'] > w * 0.55 if w > h else (r['y'] >= h * 0.11 and r['y'] + r['h'] >= h * 0.9 and r['h'] <= h * 0.78 and r['hud'][1] <= r['y'] and r['hud'][0] >= 0)
+    r = json.loads(await J("(() => { const r = document.getElementById('drawer').getBoundingClientRect(), u = document.getElementById('hud').getBoundingClientRect(); return {x:r.x, y:r.y, w:r.width, h:r.height, hud:[u.top, u.bottom], hudR:u.right, title:document.getElementById('drawerTitle').textContent, ice:!!document.querySelector('#drawerBody [data-pa=shop][data-k=ice]')}; })()"))
+    # (lying down every page has the wide drawer from 14.11.2026, Jonas' choice «Én bred for alle»: at the right edge, and clear of the status box)
+    side = (r['x'] >= w * 0.4 and r['x'] + r['w'] >= w - 1 and r['hudR'] <= r['x']) if w > h else (r['y'] >= h * 0.11 and r['y'] + r['h'] >= h * 0.9 and r['h'] <= h * 0.78 and r['hud'][1] <= r['y'] and r['hud'][0] >= 0)
     check(r['title'] == 'Is' and r['ice'] and side, 'skuffen med is ' + ('ligger til høyre' if w > h else 'er et ark fra bunnen, så høyt som innholdet (aldri over 12 %), med stripa over'), r)
     await pg.screenshot(path='dock_drawer_' + tag + '.png')
     ice0 = await pg.evaluate("S.boat.ice")
