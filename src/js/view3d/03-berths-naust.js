@@ -102,13 +102,15 @@
     }
     // (the pit as deep as the simulation dredges the berth, SITE_DRAFT and half a metre at the lowest tide, below mean sea level: siteDredge,
     // 13.11.2026; a boat up to 15 m lies there whatever she draws)
-    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w), a});
+    // (and out as far as the quay is built to her, siteOut, as the pocket is: the naust on Kvitsøy, 14.11.2026; not known till the fine
+    // coast is in, and then the sites are made again)
+    const V = VESSELS[S.boat.type] || {}, pit = (a, o) => { const q = siteOut(o); if (q !== q) SITEK = ''; return {d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w) + (q === q ? q : 0), a}; };
     if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
-      SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16), clear:[[-14, -1, 14, 16]]}); }
+      SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16, n), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the
     // map's houses go
     if (glbHas('rorbu')) for (const R of RBNEAR.l){ const o = R.site.o, u = R.site.u, n = [-u[1], u[0]], M = siteModel('rorbu:' + R.v);
-      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, lift:siteLift(SFOOT.rorbu, o, u, n), pit:pit(14), clear:[[-15, -1, 15, 21]]});
+      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, lift:siteLift(SFOOT.rorbu, o, u, n), pit:pit(14, R.site), clear:[[-15, -1, 15, 21]]});
       // its bollards (the model's anchors, x along the face and z out to sea) take the mooring lines (drawMooring)
       if (M && M.A.bollards) QB[faceKey({x:o[0], z:o[1]})] = M.A.bollards.map(q => ({x:o[0] + u[0] * q[0] + n[0] * q[2], z:o[1] + u[1] * q[0] + n[1] * q[2], a:q[0]})); }
     // a site that came after the ground round it was built: those terrain chunks and the near mesh are made again with its ground

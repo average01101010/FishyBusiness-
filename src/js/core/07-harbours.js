@@ -93,10 +93,22 @@ const SITE_DRAFT = Math.max(...Object.values(VESSELS).filter(V => (V.len || 0) <
 // the pocket in front of the quay's face (m): SITE_POCK.a along it each way, w out from it, rising SITE_POCK.slope outside
 const SITE_POCK = {a:12, w:14, slope:0.5};
 // how far (m) x, z lies outside the pocket of a site {o (the face's middle), u (along it; out to sea [-u[1], u[0]])}: 0 in it, Infinity behind the face or far off
+// (the pocket reaches as far out as the quay is built to her, siteOut: at the naust on Kvitsøy and Smøla nord the fine coast lay 16 m
+// out from the naust's face, the berth 20 m out, and the pocket's 14 m left her on 2.0 m; steg 126, 14.11.2026, tests/allesteder.py)
 function sitePockE(s, x, z){
-  const R = SITE_POCK.a + SITE_POCK.w + (SITE_DRAFT + 0.5) / SITE_POCK.slope; if (!s || !s.o || !s.u || Math.abs(x - s.o[0]) > R || Math.abs(z - s.o[1]) > R) return Infinity;
+  const R = SITE_POCK.a + SITE_POCK.w + QOUT.max + (SITE_DRAFT + 0.5) / SITE_POCK.slope; if (!s || !s.o || !s.u || Math.abs(x - s.o[0]) > R || Math.abs(z - s.o[1]) > R) return Infinity;
   const dx = x - s.o[0], dz = z - s.o[1], a = Math.abs(dx * s.u[0] + dz * s.u[1]), n = -dx * s.u[1] + dz * s.u[0];
-  return n < 0 ? Infinity : Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w);
+  if (n < 0) return Infinity; const out = siteOut(s);
+  return Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w - (out === out ? out : 0));
+}
+// how far (m) the quay is built out from a site's face to the water a boat up to 15 m lies in (quayOut with SITE_MAXLEN; QOUT.max when
+// the water is further off), the same for every boat that lies there, so the berth, the pocket and the 3D pit agree. NaN while the fine
+// coast round it is not in (not kept then)
+const SITE_OUT = new Map();
+function siteOut(s){
+  if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) + ',' + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
+  q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); if (q !== q) return NaN; if (q < 0) q = QOUT.max;
+  if (SITE_OUT.size > 500) SITE_OUT.clear(); SITE_OUT.set(k, q); return q;
 }
 function siteDredge(p, d){
   const want = SITE_DRAFT + 0.5; if (!(d > 0) || d >= want) return d;

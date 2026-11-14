@@ -172,7 +172,10 @@ function naustSite(){
 function naustFace(pid){
   if (pid !== (S.home || HOME0)) return null;
   const n = naustSite(); if (!n) return null;
-  return {x:n.o[0] - n.u[0] * 0.5, z:n.o[1] - n.u[1] * 0.5, ux:n.u[0], uz:n.u[1], nx:-n.u[1], nz:n.u[0], hl:8.1, depth:3.4, naust:true};
+  // (the quay out to her the same for every boat up to 15 m, siteOut, so she lies in the pocket dredged for the deepest of them; till the
+  // fine coast is in, berthPose works it out for her and does not keep it)
+  const F = {x:n.o[0] - n.u[0] * 0.5, z:n.o[1] - n.u[1] * 0.5, ux:n.u[0], uz:n.u[1], nx:-n.u[1], nz:n.u[0], hl:8.1, depth:3.4, naust:true}, out = siteOut(n);
+  if (out === out) F.out = out; return F;
 }
 // The tackle shop by Father's naust where the home is not Finnsnes (Jonas 05.10.2026: «Utstyrbutikken må alltid være i nærheten av
 // naustet slik at det går ganske fort å gå dit uansett hvor man er i landet»): a stretch of shore near the
