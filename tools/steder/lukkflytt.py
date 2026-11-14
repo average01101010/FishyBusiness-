@@ -30,11 +30,11 @@ import mottak
 from steder import good, SPACE, YARDS, sted_key, sted_id, move_sted
 from landflytt import land_gap, bad, cost, GAPOK, STEDER, MOTTAK, RORBU
 
-REACHES = (0.5, 1.0, 1.5, 3.0)
+REACHES = tuple(float(v) for v in os.environ['KYST_REACH'].split(',')) if os.environ.get('KYST_REACH') else (0.5, 1.0, 1.5, 3.0)   # (KYST_REACH=0.5,1,1.5,3,4.5,6: farther where nothing within 3 km holds, --vei)
 NCAND = 30       # faces tried in the game per place, at most
 VEI = '--vei' in sys.argv
 PER = 10         # (--vei) faces per ring of REACHES
-if VEI: NCAND = 4 * PER
+if VEI: NCAND = len(REACHES) * PER
 
 # the harbours with no way in over water, their map round them loaded: [id, name, free or 0 when none was found]
 SHUT = r"""async (only) => { const R = [], E = [];
@@ -159,7 +159,7 @@ def main():
     res = asyncio.run(game(trial)) if work else {}
     moved = []; report = []
     for pid, name, ref, u, cs in work:
-        if not res.get(pid): report.append((pid, name, 'no face with a way out %s within 3 km (%d tried)' % ('for the older coastal vessel' if VEI else 'over water', len(cs)))); continue
+        if not res.get(pid): report.append((pid, name, 'no face with a way out %s within %g km (%d tried)' % ('for the older coastal vessel' if VEI else 'over water', REACHES[-1], len(cs)))); continue
         j, km = res[pid]; new = [round(float(X[j]), 4), round(float(Y[j]), 4), round(float(A[j]), 3), round(float(Ln[j]), 1), round(float(D[j]), 2), int(K[j])]
         pts = [(new[0], new[1], r) if r == ref else (a, b, r) for a, b, r in pts]
         moved.append((ref, u.kind, name, round(km * 1000), new))
@@ -173,7 +173,8 @@ def main():
             else: move_sted(S, ref[1], new)
         nm = sum(1 for r in moved if r[0][0] == 'm'); ns = len(moved) - nm
         if VEI:
-            S['meta']['utflytt'] = '%d places moved to a quay the older coastal vessel (21 m, 3.4 m) gets out from (Jonas 13.11.2026: «Flytt alle»), tools/steder/lukkflytt.py --vei' % len(moved)
+            n0 = int(str(S['meta'].get('utflytt', '0')).split(' ')[0] or 0)   # (one run after another adds up)
+            S['meta']['utflytt'] = '%d places moved to a quay the older coastal vessel (21 m, 3.4 m) gets out from (Jonas 13.11.2026: «Flytt alle»), tools/steder/lukkflytt.py --vei' % (len(moved) + n0)
             if any(r[0][0] == 'm' for r in moved): M['meta']['utflytt'] = '%d plants moved to a quay the older coastal vessel gets out from, tools/steder/lukkflytt.py --vei' % sum(1 for r in moved if r[0][0] == 'm')
             S['r'].sort(key=lambda o: (o[0], o[1]))
             json.dump(M, open(MOTTAK, 'w'), ensure_ascii=False, separators=(',', ':')); json.dump(S, open(STEDER, 'w'), ensure_ascii=False, separators=(',', ':'))
