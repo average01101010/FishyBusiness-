@@ -240,7 +240,7 @@
       case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
         st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35);   // (the new people: the upper hand, his left, stays on its own side of him) hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35); /* (the new people: the upper hand, his left, stays on its own side of him) */ hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
       case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = st.seated ? [toFace(0, W(0.3, sh + 0.22, 0.12), 'mouth', HOLDT.cup.sip, k, W(0.2, sh + 0.64, 0.04)), W(0.34, sh + 0.2, -0.1)] : [toFace(0, W(0.28, 1.05, 0.14), 'mouth', HOLDT.cup.sip, k, W(0.18, 1.5, 0.04)), W(0.05, 0.85, -0.25)]; break; }
       // the cold (OB14, F14): the arms beaten round the chest and flung out again a few times, then the hands rubbed before the chest
@@ -331,7 +331,7 @@
         const c = ((T + idx * 1.7) % 2.6) / 2.6, sw0 = c < 0.3 ? 0 : c < 0.55 ? ease((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - ease((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = rB + sw0 * (rT - rB), a = aB + sw0 * (aT - aB), up = (hB + 0.17) + sw0 * (hT - hB - 0.17) - lo * 0.15 + Math.sin(sw0 * Math.PI) * 0.25;
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35);   // (the new people: the upper hand, his left, stays on its own side of him) hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35); /* (the new people: the upper hand, his left, stays on its own side of him) */ hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
       case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.34 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
