@@ -256,7 +256,7 @@ function obsRoute(a, wps){
       const ref = {minD:Infinity, rocks:0, rock:Infinity, a:p, b:wps[j]};
       for (const [u, v] of legs){ const h = legHazardMemo(u, v, sd); ref.minD = Math.min(ref.minD, h.minD); if (h.rocks){ ref.rocks = Math.max(ref.rocks, h.rocks); ref.rock = Math.min(ref.rock, obsRock(u, v)); } }
       if (!ref.rocks) ref.rock = undefined;
-      let d2 = null; try { d2 = obsDetour(p, wps[j], 3, ref); } catch (e){ d2 = null; }
+      let d2 = null; try { d2 = obsDetour(p, wps[j], 3, ref); if (!d2){ HIND.clrMin = true; try { d2 = obsDetour(p, wps[j], 3, ref); } finally { HIND.clrMin = false; } } } catch (e){ d2 = null; }
       if (d2 && obsTurnable(p, d2, wps[j], pre)){ d = d2; k = j; break; } }
     if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true}));
     out.push(wps[k]); p = wps[k]; i = k;
