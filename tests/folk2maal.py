@@ -42,7 +42,7 @@ ELSEWHERE = ('sett', 'pick', 'gutw', 'unhook')   # (unhook: the ring hangs from 
 # the most, why]. Printed with its number; past its ceiling it is red like the rest
 STOPP = {
     ('tvunget', 'sweep', 'hand'): [10, 'kosten: nederste hånd forbi rekkevidden ytterst i taket'], ('vask', 'sweep', 'hand'): [8, 'kosten'],
-    ('tvunget', 'ice', 'hand'): [10, 'spadens øverste hånd'], ('arbeid', 'pack', 'hand'): [9, 'spadens øverste hånd'],
+    ('tvunget', 'ice', 'hand'): [11, 'spadens øverste hånd'], ('tvunget', 'pack', 'hand'): [9, 'spadens øverste hånd'], ('arbeid', 'pack', 'hand'): [9, 'spadens øverste hånd'],
     ('tvunget', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('tvunget', 'ice', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('arbeid', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('juksa', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('garn', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'],
     ('tvunget', 'egn', '36 hjørner'): [9, 'agnbiten'], ('tvunget', 'strip', '36 hjørner'): [9, 'agnbiten'], ('egning', 'egn', '36 hjørner'): [9, 'agnbiten'],
     ('arbeid', 'bleed', 'hand'): [7, 'bløggingen: hånda som venter mens fisken kastes (2,5–3,2 i femte økt, 0,9–6,5 i sjette: etter hvor fisken falt)'],

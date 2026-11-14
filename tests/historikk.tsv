@@ -4363,3 +4363,6 @@
 2026-11-14 13:55	ccr-013bxxif-fb7dekk	8ff8530	lemmer	FEIL	354	3d	alene	FEIL løseren er på bak #folk2 og av uten merket (og av med #ik0)  [True, True]
 2026-11-14 14:01	ccr-013bxxif-fb7dekk	8ff8530	folk2deck	FEIL	336	3d	alene	FEIL uten #folk2 finnes ikke skinnprogrammet, og ingen skinnet figur tegnes  {'nb': 58, 'prog': True, 'maxV': 4096, 'figs': 24, 'calls': 24, 'tris': 155292, 'fr
 2026-11-14 15:55	ccr-013bxxif-fb7dekk	6df6e30	crewclip	FEIL	25	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 16:05	ccr-013bxxif-fb7dekk	bfc4077	crewclip	FEIL	31	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5148, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 16:05	ccr-013bxxif-fb7dekk	bfc4077	looktest	OK	14	lite	alene	
+2026-11-14 16:11	ccr-013bxxif-fb7dekk	bfc4077+	folk2deck	OK	358	3d	alene	
