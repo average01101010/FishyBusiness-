@@ -1201,7 +1201,9 @@ const HOLDT = {
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
   // what is left between it and his clothes
-  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005},
+  // squat: how far down the hips come for a box at the deck (the share of workLow's dip), lean: rad he leans back carrying it,
+  // most: m it is moved out ahead of him at the most
+  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:0.55, lean:0.07, most:0.14},
   shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
   gaff:{r:0.022, grip:[0.48, 0.82], butt:0.91, org:0.66},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle
   cup:{r:0.05, sip:[0.05, -0.04, 0.035]},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
@@ -1279,14 +1281,14 @@ function armIk(s, tg, sd, L, o, cl){
   // behind already; a wrist across his middle goes round before the belly as before. The solver's own turn, then, without the profile)
   const PF = C0.prof;
   if (PF){ const y = tg[1], r = tg[2], f = figProfAt(PF, y, r), bk = figProfAt(PF, y, r, true), pm = figProfAt(PF, y, 0);
-    const lx = pm > 0 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * k01((-0.05 - r * sd) / 0.1) - tg[0] : 0;
+    const xk = k01((-0.05 - r * sd) / 0.1), lx = pm > 0 && xk > 0 && tg[0] > -0.2 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * xk - tg[0] : 0;   // (only a wrist that is across him)
     if (f > 0 || bk > 0 || lx > 1e-4){ const W = C0.WRIST, hw = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, la = f + W - tg[0], lb = tg[0] + bk + W, ls = hw + W - Math.abs(r);
       if ((la > 1e-4 && lb > 1e-4 && ls > 1e-4) || lx > 1e-4){ let da = 0, ds = 0;
         if (lx > 1e-4 && lx >= la) da = Math.min(0.4, lx);
         else if (lb < la && lb < ls) da = -lb;
         else { const w = k01((la - ls) / 0.04 + 0.5); da = Math.min(0.4, la) * (1 - w); ds = ls * w; }
         C0.prof = null; try { o = armIk(s, [tg[0] + da + (da >= 0 ? 1e-3 : -1e-3), y, r + (Math.abs(r) < 0.02 ? sd : Math.sign(r)) * ds], sd, L, o, cl); } finally { C0.prof = PF; }
-        o.push = Math.hypot(da, ds); return o; } }
+        o.push = Math.hypot(da, ds); if (C0.log) o.dbg = [tg[0], y, r, f, bk, hw, la, lb, ls, lx].map(v => +v.toFixed(3)); return o; } }
     C0.prof = null; try { return armIk(s, tg, sd, L, o, cl); } finally { C0.prof = PF; } }
   const need = Math.max(C0.CHEST * Math.sqrt(Math.max(0, 1 - tg[2] * tg[2] / 0.0361)), C0.FRONT * k01((-0.05 - tg[2] * sd) / 0.1)) * wu, lack = tg[0] < -0.2 ? 0 : Math.min(0.4, (need - tg[0]) * k01(need / 0.03) * k01((tg[0] + 0.2) / 0.05));   // (the torso round: 0.19 m to either side; nothing asked of a wrist out beside it, nor of one behind his back, which is not pulled through him)
   if (lack > 1e-4){ o = armIk(s, [tg[0] + lack + 1e-3, tg[1], tg[2]], sd, L, o, cl); o.push = lack; return o; }

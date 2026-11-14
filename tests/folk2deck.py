@@ -41,12 +41,17 @@ async def measure(pg, t, mark):
     out['ms'] = await pg.evaluate("(() => { let best = 9e9; for (let k = 0; k < 3; k++) best = Math.min(best, LEMMER.bench(4)); return best; })()")
     await pg.evaluate("LEMMER.log = null; SJOBEIN.test = null")
     if not mark: return out
-    R = {}
-    for scene in ('arbeid', 'garn'):
+    R = {}; C = {}
+    for scene in ('arbeid', 'garn', 'pause'):
         await at_work(pg, t, scene, 2)
         for _ in range(3):
             await pg.evaluate("LEMMER.log = []"); await frames(pg, t, 3)
             R = await pg.evaluate("(R) => { const L = LEMMER.log; LEMMER.log = null; return (%s)(L, R); }" % AGG, R)
+            # nothing through a person (Jonas 13.11.2026): the things of one frame against the bodies of the same frame, as the game runs
+            await pg.evaluate("LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw()")
+            for o in await pg.evaluate("(() => { const o = G3._debug.thingClip(0.01); LEMMER.things = null; LEMMER.bodies = null; return o; })()"):
+                k = '%s|%s|%s|%s' % (o['task'], 'egen' if o['own'] else 'annens', o['name'], o['part']); C[k] = max(C.get(k, 0), o['cm'])
+    out['C'] = C
     out['R'] = R; out['len'] = await pg.evaluate("({m:limbLen('m'), f:limbLen('f'), sh:LEMMER.SH})")
     return out
 
@@ -65,6 +70,11 @@ async def checks(br):
     seen = [k for k in HOLD if k in R]; check(len(seen) == len(HOLD), 'haul, gutw, pick og pack er sett i spillet slik det går', sorted(R.keys()))
     for k in seen:
         r = R[k]; w = max(r['miss'], r['over']); check(w <= 0.02, '%s: hendene er innen 2 cm av det de holder (verst %.1f mm; %d figurer)' % (k, w * 1000, r['n']), {'flyttet_cm': round(r['over'] * 100, 1)} if r['over'] > 0 else '')
+    # (punkt 12: nothing he holds himself is in him; held to the face up to 3 cm. Another's thing in him is printed, a place's matter)
+    own = {k: v for k, v in B['C'].items() if '|egen|' in k and not (k.endswith('|hodet') and v <= 3.0)}
+    check(not own, 'ingen ting han selv holder, går mer enn 1 cm inn i ham (hodet tåler 3 cm), i linetrekk, garntrekk og pause slik spillet går', dict(sorted(own.items(), key=lambda q: -q[1])[:12]))
+    oth = {k: v for k, v in B['C'].items() if '|annens|' in k and v >= 3}
+    print('andres ting i en kropp (cm, 3 og over):', json.dumps(dict(sorted(oth.items(), key=lambda q: -q[1])[:15]), ensure_ascii=False), flush=True)
     std = L['m']
     for nm, no in (('ua', 'overarm'), ('fa', 'underarm'), ('th', 'lår'), ('sn', 'legg')):
         lo = min(r[nm][0] for r in R.values()); hi = max(r[nm][1] for r in R.values())

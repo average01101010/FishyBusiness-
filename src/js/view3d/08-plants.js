@@ -84,6 +84,11 @@
     const k = st.task, e = st.ev, c = e ? e.k : 99;
     if (st.seated) return [0, 0.2, 1];   // (the packed lunch on an upturned tub, OB14)
     if (k === 'cold') return [0.04 * Math.max(0, Math.sin(T * 5.2 + idx)), 0.1];   // (hunched, and a little on the knees with the beat)
+    // (the new people lift with the knees, Jonas 14.11.2026 with a picture of a box lifted from the floor: the hips come down for the
+    // box low and up with it; lowering it into the hold the same; carrying it he leans a little back against its weight)
+    if (LEMMER.on && k === 'stack') return [HOLDT.box.squat * (1 - (Math.sin((T + idx * 1.7) * 1.4) + 1) / 2), 0.1];
+    if (LEMMER.on && k === 'stow'){ const u = Math.min(1, Math.max(0, (st.s || 0) / 1.6)); return [HOLDT.box.squat * u * u * (3 - 2 * u), 0.1]; }
+    if (LEMMER.on && k === 'carry' && st.crate !== false) return [0, -HOLDT.box.lean];
     if (k === 'hose' || k === 'coil' || k === 'stack' || k === 'gut' || k === 'haul') return [0, 0.12];
     if (k === 'ice') return [0, 0.22];
     if (k === 'lean') return [0, 0.1];
@@ -229,7 +234,7 @@
       case 'coil': { const a = t * 3; hands = [W(0.35 + Math.cos(a) * 0.12, 1.05 + Math.sin(a) * 0.15, 0.12), W(0.3, 1.0, -0.15)]; break; }
       // (FB7, Jonas 13.11.2026 «Sørg for at objekter ikke kan clippe inn i menneskene»: the fish box is 78 cm long and was carried end on,
       // 11 cm into his belly. With the new people it is carried across him by its ends, the hands 82 cm apart, 19 cm clear of him)
-      case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2, cw = LEMMER.on; const bg = HOLDT.box.grip; hands = cw ? [W(0.36, 0.8 + k * 0.28, bg[0]), W(0.36, 0.8 + k * 0.28, -bg[0])] :   /* (from the thighs to the chest: lower, and the knees must bend for it, FB8) */ [W(0.35, 0.7 + k * 0.6, 0.2), W(0.35, 0.7 + k * 0.6, -0.2)]; break; }
+      case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2, cw = LEMMER.on; const bg = HOLDT.box.grip; hands = cw ? [W(0.36, 0.56 + k * 0.5, bg[0]), W(0.36, 0.56 + k * 0.5, -bg[0])] :   /* (from the knees to the chest, the hips down for it: workLow) */ [W(0.35, 0.7 + k * 0.6, 0.2), W(0.35, 0.7 + k * 0.6, -0.2)]; break; }
       case 'carry': hands = LEMMER.on ? [W(0.36, 1.02, HOLDT.box.grip[0]), W(0.36, 1.02, -HOLDT.box.grip[0])] : [W(0.3, 1.0, 0.2), W(0.3, 1.0, -0.2)]; break;
       // icing: the shovel goes into the ice bin on his left, swings over to the box of fish on his right and tips the ice over the fish
       case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
@@ -271,7 +276,7 @@
           st.gaffFish = c >= 0.5 && c < 1.45; st.gaffDrop = c >= 1.45 && c < 1.75 ? (c - 1.45) / 0.3 : -1; }
         // (the new people: the shaft passes by his right hip, the back hand there and the fore hand ahead of him, not through the
         // chest; holdClear puts the hands at the gaff's own grips, deckcrew.js HOLDT.gaff)
-        const ch = FH ? W(0.2, 1.02, 0.24) : W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
+        const ch = FH ? W(0.34, 1.0, 0.18) : W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
         const gd = Math.hypot(g[0] - ch[0], g[1] - ch[1], g[2] - ch[2]); if (gd > 0.55) g = lerp3(ch, g, 0.55 / gd);
         const n = norm3([tip[0] - g[0], tip[1] - g[1], tip[2] - g[2]]); st.gaff = {g, n, tip:[g[0] + n[0] * 0.66, g[1] + n[1] * 0.66, g[2] + n[2] * 0.66]};
         hands = [g, [g[0] - n[0] * 0.38, g[1] - n[1] * 0.38, g[2] - n[2] * 0.38]]; break; }
@@ -328,7 +333,7 @@
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
         const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
-      case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.12 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
+      case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.34 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
       // bucket at his right, on the hook, and the baited hook laid down in the tub; stripping takes the old bait off into the bucket and
       // now and then throws the bucket's bits over the rail (st.Tu the tub, st.Bk the bucket, st.Of over the rail)
@@ -517,7 +522,7 @@
         // (the fish box across him: its near side over its height and its length)
         case 'carry': case 'stack': case 'stow': { const c = mid(), B = H.box; let d = 0;
           for (const u of [B.lo, (B.lo + B.hi) / 2, B.hi]) for (const r of [-1, -0.5, 0, 0.5, 1]) d = Math.max(d, lack([c[0] - HA[0] * B.grip[1] + HR[0] * r * B.half, c[1] + u, c[2] - HA[2] * B.grip[1] + HR[2] * r * B.half], B.depth, 0.03, B.gap));
-          if (d > 0){ mv(hands[0], d); mv(hands[1], d); } break; }
+          if (d > 0){ d = Math.min(d, B.most); mv(hands[0], d); mv(hands[1], d); } break; }   // (no further than his arms hold it: he does not chase it with his back)
         // (the shovel: the fist at the shaft's upper end and the shaft down from it; the blade is where the ice is)
         case 'pack': case 'ice': { if (!st.blade || hands[1] === undefined) break; const G = hands[1], B = st.blade; { const d = lack(B, H.blade.r, 0.08); if (d > 0) mv(B, d); }
           for (let n = 0; n < 2; n++){ const L = Math.hypot(...sub3(B, G)) || 1, u = mul3(sub3(B, G), 1 / L); let d = lack(G, H.FIST, 0.02);
@@ -536,6 +541,10 @@
       // (and a hand's own point is never in the trunk: laid on it at the nearest)
       for (const q of hands){ const l = inT(q); if (Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0)) continue;   // (a hand by his side is the elbow's and the wrist's own matter, armIk)
         const d = lack(q, H.HAND, 0, 0); if (d > 0) mv(q, d); }
+      // (nor its wrist, which is a hand's length back from the point towards the shoulder: the hand is moved out until the wrist is
+      // clear, so the arm is solved to a point it can hold and what the hand holds is where the hand is)
+      for (const i of [0, 1]) for (let n = 0; n < 2; n++){ const q = hands[i], s0 = ofH(torsoPt(SHL[i], b, t2)), w = wristFor(i, nrm3(sub3(q, s0)))[0], l = inT(w);
+        if (Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0)) break; const d = lack(w, LEMMER.WRIST, 0, 0.006); if (d <= 0) break; mv(q, d); }
     } : null;
     let bT = bend, tw = 0, RB = null;
     if (IK) for (let ps = 0; ps < (holdClear ? 2 : 1); ps++){ if (holdClear) holdClear(bT, tw);
@@ -570,7 +579,7 @@
         for (let n = 0; n < 4; n++){ wf = wristFor(i, z); o = armIk(SHL[i], toT(wf[0]), sd, LL, o, cl); if (n === 3 || o.over > 0) break; const z2 = handDir(i, sh, ofT(o.j), ofT(o.e)), dz = sub3(z2, z); if (Math.abs(dz[0]) + Math.abs(dz[1]) + Math.abs(dz[2]) < 0.01) break;
           z = nrm3(add3(z, mul3(dz, 0.8))); wf = null; }
         if (!wf){ wf = wristFor(i, z); o = armIk(SHL[i], toT(wf[0]), sd, LL, o, cl); }
-        el = ofT(o.j); wr = ofT(o.e); Fr = wf[1]; zh = z; AO[i] = Math.hypot(o.over, o.near, o.push); if (LQ){ LQ.ao[i] = AO[i]; LQ.ov[i] = [o.over, o.near, o.push]; LQ.elT.push(o.j.slice()); LQ.wrT[i] = o.e.slice(); } }
+        el = ofT(o.j); wr = ofT(o.e); Fr = wf[1]; zh = z; AO[i] = Math.hypot(o.over, o.near, o.push); if (LQ){ LQ.ao[i] = AO[i]; LQ.ov[i] = [o.over, o.near, o.push].concat(o.push > 0 && o.dbg ? o.dbg : []); LQ.elT.push(o.j.slice()); LQ.wrT[i] = o.e.slice(); } }
       else { sh = up3(vsh ? W(bend * 0.8, 1.42 + dy - vsh[1], r + Math.sign(r) * vsh[0]) : W(bend * 0.8, 1.42 + dy, r)); const eo = r * 0.25 + (vsh ? Math.sign(r) * vsh[2] : 0), elOf = q => [(sh[0] + q[0]) / 2 - F[0] * 0.05 + R[0] * eo, (sh[1] + q[1]) / 2 - 0.08, (sh[2] + q[2]) / 2 - F[1] * 0.05 + R[1] * eo];
         if (near){ const gd = (GRIP[HS[i].g] || GRIP.relax)[i ? 'L' : 'R']; Fr = handFrame(nrm3(sub3(hands[i], elOf(hands[i]))), HS[i], sd); wr = sub3(hands[i], inFrame(Fr, gd.at)); el = elOf(wr); } else { wr = hands[i]; el = elOf(wr); }
         if (LQ) LQ.elT.push(toT(el)); }
