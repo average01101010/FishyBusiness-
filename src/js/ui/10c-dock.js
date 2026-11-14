@@ -417,8 +417,7 @@ const DOCK = (() => {
   let shown = '';
   // (D2) the drawer by what it holds: wide lying down for the pages with cards to compare, low standing where the boat is to be seen
   // (the paint shop, gear being tried on); the stylesheet does the rest (body.dk-wide, body.dk-low)
-  const WIDE = ['fiske', 'utstyrb', 'fartoy', 'utstyr', 'bors', 'havn'];
-  function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && WIDE.includes(page)); b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
+  function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && page !== 'maler');   /* (Jonas 14.11.2026, «menyer er i mange forskjellige størrelser», valg «Én bred for alle»: every page the wide drawer, so it never changes size from page to page; the paint shop keeps the narrow one, the boat is to be seen. Before, only the shops, the boats, the upgrades, the crew exchange and the harbour were wide) */ b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
   function draw(keep){
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)

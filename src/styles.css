@@ -1452,7 +1452,7 @@ body.pm #ecdisTop{visibility:hidden}
 .ic-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ic-more{display:inline-block;margin-top:6px;padding:4px 0;border:0;background:none;color:var(--m-link,#1f6fa8);font:600 12px var(--sans);cursor:pointer;min-height:30px}
 .ic-rows{margin-top:4px}
-@media (max-width:420px){.ph-card.ic{grid-template-columns:1fr}.ic-pic{max-width:180px}}
+@media (max-width:420px){.ph-card.ic{grid-template-columns:76px 1fr;gap:10px}}   /* (Jonas 14.11.2026: most play on the phone upright. The picture stood alone over the card, 180 px wide, and one item filled the screen; it is a small picture beside the name now, as on the tablet) */
 .ph-c > .ph-c{padding:0}  /* the shop's gear inside the tackle page (fiske() wraps redskap('kjop')) */
 /* the shop on the quay and the Net (M2, ui/phone/13b-nettet.js): the keeper, what is ordered here, what the boat needs, the web shop */
 .ph-card.shop-k{display:flex;gap:10px;align-items:flex-start}

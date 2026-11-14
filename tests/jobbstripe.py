@@ -33,6 +33,7 @@ async def run(p, vw, vh):
     pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
     tag = await fmt(pg)
+    if vw < 500: tag = 'telefon'
     print('--- %s %dx%d' % (tag, vw, vh))
     J = lambda js: pg.evaluate("JSON.stringify(" + js + ")")
     await pg.evaluate("S.cash = 900000; S.boat.status = 'port'; S.jobs = []; renderActs()")
@@ -146,5 +147,7 @@ async def main():
     async with async_playwright() as p:
         if os.environ.get('KYST_TUT_ONE') != 'staaende': await run(p, 1280, int(os.environ.get('KYST_JS_H', '800')))
         if os.environ.get('KYST_TUT_ONE') != 'liggende': await run(p, 800, 1280)
+        # the phone upright, where most play (Jonas 14.11.2026: «90 prosent av brukerne våre kommer til å spille på mobiltelefonen sin»)
+        if os.environ.get('KYST_TUT_ONE') != 'liggende': await run(p, 390, 844)
 
 asyncio.run(main())
