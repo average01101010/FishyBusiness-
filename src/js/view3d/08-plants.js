@@ -273,6 +273,9 @@
       const G = W(0.08, 1.02, r * 0.35), B = st.blade; return [[G[0] + (B[0] - G[0]) * 0.5, G[1] + (B[1] - G[1]) * 0.5, G[2] + (B[2] - G[2]) * 0.5], G]; };
     const toFace = (i, low, what, off, k, old) => { if (!FH) return low ? lerp3(low, old, k) : old; faceH |= i + 1; const p = FH[what], sd = i ? -1 : 1, l = [FG.hj[0] - p[2] + off[0], FG.hj[1] + p[1] + off[1], off[2] * sd];
       FQ[i] = {low, l, k}; const A = W(l[0] + FG.hj[1] * Math.sin(bend0), hH + l[1] * Math.cos(bend0), l[2]); return low ? lerp3(low, A, k) : A; };
+    // (a hand that hangs by his hip, the new people: as far out as the trunk is wide at that height and the wrist's clearance, not the
+    // 19 cm the old body had; the arm then hangs where it is asked to and is not pushed out)
+    const sideZ = yy => { const PF = LEMMER.on && FG && FG.prof; return PF ? Math.max(0.19, (PF.half[Math.floor((yy - hH - PF.lo) / PF.dy)] || 0) + LEMMER.WRIST + HOLDT.HANG) : 0.19; };
     switch (st.task){
       case 'hose': hands = [W(0.45, 1.15, 0.12), W(0.3, 1.1, -0.1)]; break;
       case 'coil': { const a = t * 3; hands = [W(0.35 + Math.cos(a) * 0.12, 1.05 + Math.sin(a) * 0.15, 0.12), W(0.3, 1.0, -0.15)]; break; }
@@ -469,7 +472,7 @@
       // on an upturned tub, the elbows on the knees and the hands together
       case 'sit': hands = [W(0.36, sh + 0.2, 0.05), W(0.36, sh + 0.18, -0.05)]; break;
       // talking: one tells it with a hand now and then, the other listens with the arms crossed
-      case 'chat': { const k = Math.pow(Math.max(0, Math.sin(t * 1.1)), 2); hands = idx % 2 === 0 ? [W(0.22 + k * 0.12, 0.98 + k * 0.32, 0.2), W(0.04, 0.92, -0.22)] : [W(0.17, 1.18, -0.07), W(0.17, 1.16, 0.07)]; break; }
+      case 'chat': { const k = Math.pow(Math.max(0, Math.sin(t * 1.1)), 2); hands = idx % 2 === 0 ? [W(0.22 + k * 0.12, 0.98 + k * 0.32, 0.2), W(0.04, 0.92, -Math.max(0.22, sideZ(0.92)))] : [W(0.17, 1.18, -0.07), W(0.17, 1.16, 0.07)]; break; }
       // the knife along the honing steel, one side and then the other (the steel in the left hand, its tip up and out)
       case 'knife': { const S0 = W(0.3, 1.02, -0.06), sd = norm3([F[0] * 0.35 + R[0] * 0.25, 0.9, F[1] * 0.35 + R[1] * 0.25]), c = (t * 1.4) % 1, side = Math.floor(t * 1.4) % 2 ? 1 : -1, u = ease(c), al = 0.06 + u * 0.2;
         const kp = [S0[0] + sd[0] * al + R[0] * side * 0.025, S0[1] + sd[1] * al, S0[2] + sd[2] * al + R[1] * side * 0.025]; hands = [[kp[0] + R[0] * 0.13, kp[1] - 0.02, kp[2] + R[1] * 0.13], S0]; st.steel = {at:S0, dir:sd}; break; }
@@ -484,7 +487,7 @@
         const o = i => { const lat = Kk.wide * (i ? -1 : 1), a = a0 * c - lat * s, l2 = a0 * s + lat * c; return [a - a0 + Kk.eye, -Kk.low, l2 * (i ? -1 : 1)]; };
         hands = [toFace(0, null, 'eye', o(0), 1, W(0.15, 1.56, 0.07)), toFace(1, null, 'eye', o(1), 1, W(0.15, 1.56, -0.07))]; break; }
       // the hands in the pockets, the head up at the sky
-      case 'aurora': hands = [W(0.0, 0.93, 0.19), W(0.0, 0.93, -0.19)]; break;
+      case 'aurora': { const z = sideZ(0.93); hands = [W(0.0, 0.93, z), W(0.0, 0.93, -z)]; break; }
       // over the rail, holding on
       case 'seasick': { const r = st.rail || [0.42, 0.96]; hands = [W(r[0] + 0.02, r[1] + 0.04, 0.24), W(r[0] + 0.02, r[1] + 0.04, -0.24)]; break; }
       // going over the gear: the hands at it, low, turning it over
@@ -492,9 +495,9 @@
       // a smoke: the cigarette to the mouth every few seconds, the other hand on the rail (facing out) or in a pocket (aft, under way)
       case 'smoke': { const k = Math.pow(Math.max(0, Math.sin(t * 0.8)), 10); hands = [toFace(0, W(0.24, 1.02, 0.17), 'mouth', HOLDT.smoke.at, k, W(0.13, 1.52, 0.02)), st.lean === false || !st.rail ? W(0.0, 0.93, -0.19) : W(st.rail[0] + 0.02, st.rail[1] + 0.04, -0.2)]; st.puff = k; break; }
       // snus: the can out of the pocket, a portion under the lip, the can back; then the hands on the rail
-      case 'snus': { const c = (t % 24) / 24; if (c < 0.28){ const u = ease(Math.min(1, c / 0.1)); hands = [lerp3(W(0.0, 0.95, 0.19), W(0.26, 1.13, 0.02), u), W(0.26, 1.1, -0.04)]; st.can = true; }
+      case 'snus': { const c = (t % 24) / 24; if (c < 0.28){ const u = ease(Math.min(1, c / 0.1)); hands = [lerp3(W(0.0, 0.95, sideZ(0.95)), W(0.26, 1.13, 0.02), u), W(0.26, 1.1, -0.04)]; st.can = true; }
         else if (c < 0.4){ const u = Math.sin((c - 0.28) / 0.12 * Math.PI); hands = [toFace(0, W(0.26, 1.13, 0.02), 'mouth', HOLDT.snus.at, u, W(0.12, 1.47, 0.03)), W(0.26, 1.1, -0.04)]; st.can = true; }
-        else { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.0, 0.95, 0.19), W(0.0, 0.95, -0.19)]; } break; }
+        else { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.0, 0.95, sideZ(0.95)), W(0.0, 0.95, -sideZ(0.95))]; } break; }
       // a cut hand (14-crewlife.js crewSlip): the left hand up before him and shaken, the knife held away low in the right
       case 'cut': { const u = st.cutU || 0, up = ease(Math.min(1, u / 0.12)) * (1 - ease(Math.max(0, (u - 0.85) / 0.15))), sh = u > 0.12 ? Math.sin(u * 46) * 0.05 * (1 - u) : 0;
         hands = [W(0.22, 0.92, 0.3), lerp3(W(0.35, 1.0, -0.12), W(0.3, 1.22 + sh, -0.04 + sh * 0.5), up)]; break; }
@@ -504,8 +507,8 @@
         hands = [lerp3(W(0.32, 1.05, 0.09), [L2[0] + R[0] * 0.08, L2[1], L2[2] + R[1] * 0.08], g), lerp3(W(0.32, 1.05, -0.09), [L2[0] - R[0] * 0.08, L2[1], L2[2] - R[1] * 0.08], g)];
         if (u > 0.62){ const c = ease(Math.min(1, (u - 0.62) / 0.14)) * (1 - ease(Math.max(0, (u - 0.88) / 0.12))); hands[0] = lerp3(hands[0], W(0.06, 1.72, 0.1), c); } break; }
       // at the door: a hand out to it before going in
-      case 'door': hands = [W(0.38, 1.05, 0.16), W(0.0, 0.82, -0.22)]; break;
-      default: { const hy = near ? 0.76 : 0.82; hands = [W(-sw * 0.15, hy, 0.26), W(sw * 0.15, hy, -0.26)]; seaH = 3; }
+      case 'door': hands = [W(0.38, 1.05, 0.16), W(0.0, 0.82, -Math.max(0.22, sideZ(0.82)))]; break;
+      default: { const hy = (near ? 0.76 : 0.82) + (LEMMER.on ? HOLDT.HANGY : 0);   /* (the new arm is 4 cm shorter: the hand hangs where it reaches) */ hands = [W(-sw * 0.15, hy, 0.26), W(sw * 0.15, hy, -0.26)]; seaH = 3; }
     }
     // the sea legs: the hands that are his body's own go with it as it leans; a free hand takes the rail when she rolls (SE.grab), on
     // its top as in «lean», where the deck has it now
@@ -590,6 +593,9 @@
       const legOut = (q, rad) => { let best = null; for (const g of LEG) for (const [a, b2, r] of [[g.hip, g.knee, H.LEG[0]], [g.knee, g.foot, H.LEG[1]]]){ const ab = sub3(b2, a), t = clamp(dot3(sub3(q, a), ab) / (dot3(ab, ab) || 1e-9), 0, 1), v = sub3(q, add3(a, mul3(ab, t))), l = Math.hypot(v[0], v[1], v[2]), d = r + rad + H.GAP - l;
         if (d > 0 && (!best || d > best[0])) best = [d, l > 1e-6 ? mul3(v, 1 / l) : [HA[0], HA[1], HA[2]]]; } return best; };
       const mv = (q, d) => { q[0] += AH[0] * d; q[1] += AH[1] * d; q[2] += AH[2] * d; }, mid = () => [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2];
+      // (a hand by his side, hanging at the hip or behind him, is the arm's own matter (armIk); one before him is moved out ahead. The new
+      // people's trunk is 15 to 19 cm deep before the hip joints: a hand 12 cm off his middle is before his belly, not beside it)
+      const beside = l => LEMMER.on ? Math.abs(l[2]) > (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) - HOLDT.SIDE || l[0] < 0.02 : Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0);
       // (a hand at the face: where the face is with the back bent as it is now)
       for (const i of [0, 1]) if (FQ[i]){ const q = FQ[i], A = ofH(torsoPt(q.l, b, 0)); hands[i] = q.low ? lerp3([q.low[0], q.low[1] - drop, q.low[2]], A, q.k) : A; }
       switch (st.task){
@@ -626,12 +632,13 @@
         case 'phone': case 'binoc': case 'tally': case 'remote': { const d = lack(mid(), (H[st.task] || H.phone).r, 0.04); if (d > 0){ mv(hands[0], d); mv(hands[1], d); } break; }
       }
       // (and a hand's own point is never in the trunk: laid on it at the nearest)
-      for (const q of hands){ const l = inT(q); if (Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0)) continue;   // (a hand by his side is the elbow's and the wrist's own matter, armIk)
+      for (const q of hands){ const l = inT(q); if (beside(l)) continue;   // (a hand by his side is the elbow's and the wrist's own matter, armIk)
         const d = lack(q, H.HAND, 0, 0); if (d > 0) mv(q, d); }
       // (nor its wrist, which is a hand's length back from the point towards the shoulder: the hand is moved out until the wrist is
       // clear, so the arm is solved to a point it can hold and what the hand holds is where the hand is)
       for (const i of [0, 1]) for (let n = 0; n < 3; n++){ const q = hands[i], s0 = ofH(torsoPt(SHL[i], b, t2)), w = wristFor(i, nrm3(sub3(q, s0)))[0], l = inT(w);
-        const d = lack(w, LEMMER.WRIST, 0.02, 0.02); if (d <= 0 || (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) + LEMMER.WRIST - Math.abs(l[2]) < d) break; mv(q, d); }   // (nearer out to his side than ahead: the arm's own matter, armIk)
+        const d = lack(w, LEMMER.WRIST, 0.02, 0.02), bySide = beside(inT(q));   /* (steg 125, fifth: a hand before his middle, the snuff box, the coil, the board, has its wrist in his belly on the line from the shoulder; pushed out to the side by armIk the hand left its point by 10 cm. Only a hand that is itself by his side is left to the arm) */
+        if (d <= 0 || (bySide && (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) + LEMMER.WRIST - Math.abs(l[2]) < d)) break; mv(q, d); }   // (nearer out to his side than ahead: the arm's own matter, armIk)
     } : null;
     let bT = bend, tw = 0, RB = null;
     if (IK) for (let ps = 0; ps < (holdClear ? 2 : 1); ps++){ if (holdClear) holdClear(bT, tw);

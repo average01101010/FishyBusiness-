@@ -1239,6 +1239,9 @@ const HOLDT = {
   GAP:0.02,      // m between a thing and the body's clothes at the least
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  SIDE:0.03,     // m inside the trunk's half width a hand's point still counts as by his side (the arm's matter, not moved out ahead)
+  HANG:0.012,    // m a hand hanging by the hip keeps beyond the trunk's half width and the wrist's clearance
+  HANGY:0.04,    // m higher the hanging hands of one who stands or walks are than the old body's (the new arm is that much shorter)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
   LEG:[0.075, 0.055],   // m: half a thigh and half a shin with the trousers (what he holds keeps clear of his legs too)
   fish:{r:0.11, at:[0.25, 0.5, 0.8]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length)
