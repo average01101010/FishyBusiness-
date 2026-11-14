@@ -4010,3 +4010,5 @@
 2026-11-14 00:56	ccr-fn1-jobbstripe	c6e6f470	boottest	OK	27	lite	alene	
 2026-11-14 01:44	ccr-013bxxif-fb7dekk	3da6529	boottest	OK	28	lite	samtidig	
 2026-11-14 01:44	ccr-013bxxif-fb7dekk	3da6529	looktest	OK	17	lite	samtidig	
+2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	boottest	OK	24	lite	samtidig	
+2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	looktest	OK	12	lite	samtidig	

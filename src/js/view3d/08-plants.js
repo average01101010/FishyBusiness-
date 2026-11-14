@@ -674,7 +674,9 @@
     if ((st.task === 'pick' || st.task === 'jigup') && st.ev && fishy){ const e = st.ev; if (st.held) fishAt(st.held, e.sp, e.kg, st.hrz != null ? st.hrz : Math.sin(T * 7) * 0.25);
       if (st.fall){ const u = clamp(st.fall.u, 0, 1), A0 = st.fall.A, B0 = st.fall.B; lie([A0[0] + (B0[0] - A0[0]) * u, A0[1] + (B0[1] + 0.05 - A0[1]) * u * u, A0[2] + (B0[2] - A0[2]) * u], e.sp, clamp(0.42 * Math.cbrt(e.kg || 2), 0.28, 1.2), -h + u * 1.5); } }
     if (st.line) for (let i = 0; i + 1 < st.line.length; i++) drawN(PM.wire, limbM(st.line[i], st.line[i + 1], 0.004));
-    if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(GP[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
+    // (the line is in the hand that jerks it, runs through the hand at the rail and out over it; Jonas 14.11.2026: «Feil hånd napper i
+    // snøret»: it was drawn from the still hand only)
+    if (st.task === 'jig' && st.Rl && !st.ev){ drawN(PM.wire, limbM(GP[0], GP[1], 0.004)); drawN(PM.wire, limbM(GP[1], st.Rl, 0.004)); drawN(PM.wire, limbM(st.Rl, st.Wt || [st.Rl[0], st.Rl[1] - 2, st.Rl[2]], 0.004)); }
     if (kn && st.task === 'bleedst') drawN(kn, toolM(GP[0], st.kd || [F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]));
     if (st.task === 'gutw'){ const sp = st.gsp || 'torsk', sc = st.gsc || 0.46, yaw = Math.PI / 2 - h, HD = kit('pause', 'hode');
       // (on the table the fish lies across him, its head to his left where the head is cut; cut, it is drawn a little shorter at the head
