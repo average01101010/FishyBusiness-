@@ -192,7 +192,14 @@
           if (LEMMER.on && st.task === 'gutw'){ const tb = dkTub(G), gs = A.filter(q => q !== a && q.task === 'gut' && q.mode === 'at').map(q => [q.x, q.z]);
             if (VENT.inWay([a.x, a.z], [tb[0], tb[2]], gs, VENT.pass)){ const lat = (DW.table[0] - a.x) * R0[0] + (DW.table[2] - a.z) * R0[1], lim = (V.len || 0) >= 10 ? HOLDT.table.benk : HOLDT.table.bord, sd = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, k = lat - clamp(lat, -lim, lim) + sd * VENT.table[0],   /* (lat less what the table reaches: his own part of it, straight before him while he stands within its length) */ ah = (DW.table[0] - a.x) * F0[0] + (DW.table[2] - a.z) * F0[1];
               st.Ub = rel([a.x + F0[0] * ah + R0[0] * k, DW.table[1] + VENT.table[1], a.z + F0[1] * ah + R0[1] * k]); } } const n = Math.floor((ta + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
-          if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
+          // (steg 125b, Jonas 14.11.2026, choice A: his fish come from a crate of bled fish beside him and go to a crate on his other side, HOLDT.gutbox. The side
+          // of the bled fish is the tub's, where the deck is free and nobody stands there; with no room for them he does as before)
+          if (LEMMER.on && st.task === 'gutw'){ const Gb = HOLDT.gutbox, tb = dkTub(G), s0 = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, Mq = ST.M;
+            const at = s => [a.x + R0[0] * s * Gb.side + F0[0] * Gb.ahead, a.z + R0[1] * s * Gb.side + F0[1] * Gb.ahead], free = q => Mq && Mq.near(q[0], q[1], 0.25) >= 0 && !A.some(o => o !== a && o.mode === 'at' && Math.hypot(o.x - q[0], o.z - q[1]) < Gb.room);
+            for (const s of [s0, -s0]){ const src = at(s), out = at(-s); if (!free(src) || !free(out)) continue;
+              st.Bx = rel([src[0], a.y, src[1]]); st.Ox = rel([out[0], a.y, out[1]]); st.Ub = [st.Bx[0], st.Bx[1] + Gb.stack * Gb.h + Gb.grab + 0.14, st.Bx[2]]; st.Cr = st.Ox; st.crTop = Gb.h; break; } }
+          if (st.Bx){ /* (his own crate: the packer's is not where the fish lands) */ }
+          else if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
           // no packer on an open boat: he throws the gutted fish into the fish tub being filled himself (Jonas 04.11.2026)
           else if (tubs && tubs.length){ const ti = karFilling(vtype()); st.Cr = rel(tubs[ti].at); st.crTop = karTop(vtype(), ti); } }
         else if (a.task === 'pack'){ const C = crateOf(a); st.Cr = rel(C.p); st.crTop = C.top; st.crTub = C.tub; st.fill = ST.crateFill || 0; st.csp = i => packed(hash(i * 7 + 1)); const L = DKLAY[a.id]; st.lay = SJT && SJT.lay != null ? SJT.lay : L ? now - L.t : -1;   /* (the tests ask for the moment of the laying too, SJOBEIN.test.lay: tests/folk2maal.py) */

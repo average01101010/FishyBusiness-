@@ -413,10 +413,14 @@ function crewSim(src){
       // the rail round to a)
       const ang = (x, z) => Math.atan2(z - h0[1], -sg * (x - h0[0])) * 180 / Math.PI, swept = (a, x, z, mg) => { const r = Math.hypot(x - h0[0], z - h0[1]), ap = ang(x, z); return r < B.sweep && r > 0.2 && ap * a > 0 && Math.abs(ap) > Math.abs(a) - mg; };
       const PPL = NEAR.filter(q => q[3]), okDrop = (x, z) => { const a = ang(x, z); return Math.abs(a) >= 10 && lay(x, z) >= 0 && !PPL.some(q => swept(a, q[0], q[1], 25)); };
-      if (!okDrop(drop[0], drop[1])){ let best = null, bv = 1e9, wide = null, wv = -1, free2 = null, fv = 1e9;
-        for (const r of B.dropR) for (let a = -80; a <= 80; a += 10){ if (!a) continue; const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
-          const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (okDrop(x, z) && d < bv){ bv = d; best = [x, z]; } if (m >= 0 && d < fv){ fv = d; free2 = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }
-        const q = best || free2 || wide; PL.tight = best ? 0 : free2 ? 1 : 2;   /* (a deck with no such spot: clear of them at least; else the most room. PL.tight and tightB: for the tests) */ if (q){ drop[0] = q[0]; drop[1] = q[1]; } }
+      // (steg 125b, Jonas 14.11.2026: the fish is let fall before him to his side, along the rail, not behind him: he stood with his back to it and turned 130
+      // degrees round in every take. side: a spot at least B.side degrees round from straight inboard, so within his reach as he faces the rail; such a spot first)
+      const side0 = Math.abs(ang(drop[0], drop[1])) >= B.side;
+      if (!okDrop(drop[0], drop[1]) || !side0){ let best = null, bv = 1e9, wide = null, wv = -1, free2 = null, fv = 1e9, sideB = null, sv = 1e9;
+        for (const r of B.dropR) for (let a = -90; a <= 90; a += 10){ if (!a) continue; const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
+          const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (okDrop(x, z) && Math.abs(a) >= B.side && d < sv){ sv = d; sideB = [x, z]; } if (okDrop(x, z) && d < bv){ bv = d; best = [x, z]; } if (m >= 0 && d < fv){ fv = d; free2 = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }
+        if (sideB) best = sideB; else if (okDrop(drop[0], drop[1])) best = [drop[0], drop[1]];   /* (no spot to his side on this deck: where it was) */
+        const q = best || free2 || wide; PL.tight = best ? 0 : free2 ? 1 : 2; PL.dropSide = !!sideB;   /* (a deck with no such spot: clear of them at least; else the most room. PL.tight and tightB: for the tests) */ if (q){ drop[0] = q[0]; drop[1] = q[1]; } }
       const aD = ang(drop[0], drop[1]), seg = (px, pz, ax, az, bx, bz) => { const vx = bx - ax, vz = bz - az, u = clamp(((px - ax) * vx + (pz - az) * vz) / (vx * vx + vz * vz || 1e-9), 0, 1); return Math.hypot(ax + vx * u - px, az + vz * u - pz); };
       let best = -1, bv = 1e9, wide = -1, wv = -1e9, any = -1, av = -1e9;
       for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const c = M.at(k); if (y0 != null && Math.abs(c[1] - y0) > 0.25) continue; const dd = Math.hypot(c[0] - drop[0], c[2] - drop[1]); if (dd < B.from[0] || dd > B.from[1]) continue;
@@ -827,7 +831,7 @@ function crewSim(src){
   // from the hauler where it is tried (dropR); from: how far from the fish the bleeder stands, and best the distance he had before; room: m from each other place of work
   // (the hauler, the second hauler, the net picker and the pot hand, the packer and the gutter, the packer's box and the shovel's way
   // to it, the ice box; throw: the hauler and the packer from the line of the bleeder's throw to the tub; squat: the ice box from his way down to the fish)
-  const BLEED = {drop:0.6, drop2:0.3, dropIce:0.6, sweep:1.3, dropR:[0.45, 0.55, 0.65, 0.8], from:[0.4, 0.9], best:0.6, room:{haul:0.95, haul2:0.7, pick:0.7, is:0.8, box:0.6, ice:0.75, throw:0.4, squat:0.7}};
+  const BLEED = {side:70, drop:0.6, drop2:0.3, dropIce:0.6, sweep:1.3, dropR:[0.45, 0.55, 0.65, 0.8], from:[0.4, 0.9], best:0.6, room:{haul:0.95, haul2:0.7, pick:0.7, is:0.8, box:0.6, ice:0.75, throw:0.4, squat:0.7}};
   // ---- a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre) ----
   const TAKEN = new Map();
   // (the new people are as wide as people: 0.55 m between two places, as at the table and the tub, deckAt and beside)
@@ -1239,6 +1243,11 @@ const HOLDT = {
   GAP:0.02,      // m between a thing and the body's clothes at the least
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  // the gutter's two crates (steg 125b, Jonas 14.11.2026, choice A: the bleeding tub stands 1.4 to 4.1 m from the gutting table on the coast's boats, behind him or
+  // across the deck, and no arm reaches it): a crate of bled fish on a stack of upturned ones beside him, and a crate on the deck on his other side for the gutted fish.
+  // side and ahead: m from where he stands to a crate's middle; stack: how many crates the bled fish stand on (their top at the table's height); h: a crate's
+  // height; grab: m over the crate's top his hand takes the fish; room: m a crate keeps from another man
+  gutbox:{side:0.8, ahead:0.12, stack:3, h:0.3, grab:0.08, room:0.5},
   table:{bord:0.32, benk:0.55, off:0.15},   // m along the gutting table from its middle a gutter's own part of it may be (the plastic table is 1.15 m long, the steel bench 1.60, the fish 0.4), and how far past that he may stand and still reach it; further along he guts standing free
   SIDE:0.03,     // m inside the trunk's half width a hand's point still counts as by his side (the arm's matter, not moved out ahead)
   // rad his back may be bent (the pose's bend and what the reach adds) and still count as straight, for the poses named: only then is a hand before his belly

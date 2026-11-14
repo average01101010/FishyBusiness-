@@ -10,7 +10,7 @@ export const data = true;
 
 export default function (t){
   const K = t.K; K.set('S', K.newState()); const S = K.get('S'), {VESSELS, CREW3D, applyVessel, LEMMER} = K, b = S.boat;
-  const BOATS = ['snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21'], TIGHT = {kyst15:0.45};
+  const BOATS = ['snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21'], TIGHT = {kyst15:0.45, breisjark:0.8}   /* (breisjark, steg 125b: with the fish let fall to the hauler's side along the rail the bleeder has 0.84 m to him; one of the two tightest decks) */;
   const d = (a, c) => Math.hypot(a[0] - c[0], a[1] - c[1]), was = LEMMER.on;
   for (const on of [false, true]){ LEMMER.on = on; const bad = [], seen = [];
     for (const vt of BOATS){ S.tut = 0; S.me = S.cur; b.type = vt; applyVessel(); CREW3D.reset(); if (!CREW3D.on()){ bad.push(vt + ': ikke noe dekk'); continue; }

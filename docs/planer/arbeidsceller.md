@@ -59,6 +59,18 @@ Hver av dem er en stilling som regner seg fram til et mål som står et tilfeldi
 
 **Klippene:** `tests/folk2klipp.py` er skrevet. Første forsøk med hele dekket ga 53 s per bilde (40 min for ett klipp), kameraet sto ikke på sløyeren, og HUD-en og sjøen var ikke skrudd av. Ikke sendt til Gemini. Det hvite rommet (12 s per bilde) virker, men viser ikke bordet og karet.
 
+## Bygd etter valg A (14.11.2026, samme dag; rullet ut til testadressen, venter på Jonas)
+
+Jonas valgte gjennom samtalen med Gemini: **A** for sløyeren (kasser ved bordet), haleren slipper fisken foran til siden, bløggeren beholder kastet til karet, havbåtene holdes utenfor, stillbilder i stedet for klipp om det hvite rommet stritter imot.
+
+- **Sløyerens to kasser** (`HOLDT.gutbox`, `drawDeckCrew` og `drawWorker`, bak `LEMMER.on`): en kasse med bløgget fisk på en stabel på tre ved siden av ham (toppen i bordhøyde, 0,8 m til siden, på karets side når dekket er fritt der), og en kasse på dekket på den andre sida for den sløyde fisken. Hånda går helt til kassa, og kroppen lener seg etter. Er det ikke plass til kassene, gjør han som før. Pakkeren legger ikke lenger fisken rett når sløyeren har egen kasse (fisken lander ikke hos ham).
+- **Haleren:** fisken slippes ved siden av ham langs rekka (minst 70° rundt fra rett innenbords, `BLEED.side`), der dekket har en slik plass. Bløggerens plass følger slippstedet som før.
+- **`node tests/unit/run.mjs arbeidssone`** holder nå de åtte kystbåtene til sonen: 66 ting, alt innenfor utenom ett kjent (snekka har ingen plass ved halerens side; fisken slippes bak ham som før). Bløggerens kast til karet er 1,1–1,5 m. Havbåtene er bare opplysning (6 ting utenfor). `arbeidsplass`: breisjarken har fått unntak 0,8 m (bløggeren står 0,84 m fra haleren med det nye slippstedet; før var grensa 0,95).
+- **Målt i nettleseren** (`folk2maal arbeid juksa`): sløyeren 1,1/0,2 cm, ingen ting over 3 cm i egen eller andres kropp ut over stopplista; juksa med to sløyere 1,1/0,9 cm.
+- **Ikke sett.** Tre forsøk på stillbilder på det ekte dekket: ett brukbart (`docs/okter/2026-11-14-125/125b-sloyer-kasse-ovenfra.png`: sløyeren lent mot kassa ved bordet, sett ovenfra, for bratt til å se hånda), to med kameraet inne i veggen eller utenfor skroget. Ingenting sendt til Gemini. Om hånda treffer kassa, om stabelen ser riktig ut, og hvordan haleren ser ut når han slipper fisken til siden, er ikke sett av noen: `docs/spill-dette/125.md` punkt 14.
+- **Ikke bygd:** færre stasjoner på små dekk og «inne» for dem uten stasjon; banen rundt kroppen som én regel; gripepunkter for pakkeren, bløggeren og egneren; folk som går, går gjennom sløyerens kasser (dekkskartet kjenner dem ikke).
+- **Dette var andre og siste økt i runden.** Neste skritt er Jonas' på nettbrettet.
+
 ## Valgene som må tas før det bygges (Jonas)
 
 - A/B: færre samtidige stasjoner på de minste dekkene, eller trangere celler der.
