@@ -187,7 +187,7 @@
   // worker's body as it was drawn (LEMMER.bodies), so what he holds and what stands by him can be tried against people: thingClip)
   function drawWorker(P, st, eye, T, idx){
     if (!LEMMER.things) return drawWorker0(P, st, eye, T, idx);
-    const d0 = drawN; drawN = (m, M) => { if (m && !m.fig2 && M) LEMMER.things.push({i:idx, m, M:new Float32Array(M), eye:[eye[0], eye[1], eye[2]]}); d0(m, M); };
+    const d0 = drawN; drawN = (m, M) => { if (m && !m.fig2 && !m.wear && M) LEMMER.things.push({i:idx, m, M:new Float32Array(M), eye:[eye[0], eye[1], eye[2]]}); d0(m, M); };
     try { return drawWorker0(P, st, eye, T, idx); } finally { drawN = d0; }
   }
   function drawWorker0(P, st, eye, T, idx){
@@ -240,7 +240,7 @@
       case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
         st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35);   // (the new people: the upper hand, his left, stays on its own side of him) hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
       case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = st.seated ? [toFace(0, W(0.3, sh + 0.22, 0.12), 'mouth', HOLDT.cup.sip, k, W(0.2, sh + 0.64, 0.04)), W(0.34, sh + 0.2, -0.1)] : [toFace(0, W(0.28, 1.05, 0.14), 'mouth', HOLDT.cup.sip, k, W(0.18, 1.5, 0.04)), W(0.05, 0.85, -0.25)]; break; }
       // the cold (OB14, F14): the arms beaten round the chest and flung out again a few times, then the hands rubbed before the chest
@@ -331,7 +331,7 @@
         const c = ((T + idx * 1.7) % 2.6) / 2.6, sw0 = c < 0.3 ? 0 : c < 0.55 ? ease((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - ease((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = rB + sw0 * (rT - rB), a = aB + sw0 * (aT - aB), up = (hB + 0.17) + sw0 * (hT - hB - 0.17) - lo * 0.15 + Math.sin(sw0 * Math.PI) * 0.25;
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
-        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
+        const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35);   // (the new people: the upper hand, his left, stays on its own side of him) hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
       case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.34 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
@@ -522,7 +522,7 @@
         // (the fish box across him: its near side over its height and its length)
         case 'carry': case 'stack': case 'stow': { const c = mid(), B = H.box; let d = 0;
           for (const u of [B.lo, (B.lo + B.hi) / 2, B.hi]) for (const r of [-1, -0.5, 0, 0.5, 1]) d = Math.max(d, lack([c[0] - HA[0] * B.grip[1] + HR[0] * r * B.half, c[1] + u, c[2] - HA[2] * B.grip[1] + HR[2] * r * B.half], B.depth, 0.03, B.gap));
-          if (d > 0){ d = Math.min(d, B.most); mv(hands[0], d); mv(hands[1], d); } break; }   // (no further than his arms hold it: he does not chase it with his back)
+          if (d > 0){ if (st.task !== 'carry') d = Math.min(d, B.most); mv(hands[0], d); mv(hands[1], d); } break; }   // (no further than his arms hold it: he does not chase it with his back)
         // (the shovel: the fist at the shaft's upper end and the shaft down from it; the blade is where the ice is)
         case 'pack': case 'ice': { if (!st.blade || hands[1] === undefined) break; const G = hands[1], B = st.blade; { const d = lack(B, H.blade.r, 0.08); if (d > 0) mv(B, d); }
           for (let n = 0; n < 2; n++){ const L = Math.hypot(...sub3(B, G)) || 1, u = mul3(sub3(B, G), 1 / L); let d = lack(G, H.FIST, 0.02);
@@ -570,7 +570,7 @@
     // (the head goes with the back when it bends further for a hand; it does not turn with the torso)
     let hd = up3(W(bend, 1.6 + dyq, 0)); if (RB && RB.b){ const l = toH(hd), c = Math.cos(RB.b), sn = Math.sin(RB.b); hd = ofH([l[0] * c + l[1] * sn, -l[0] * sn + l[1] * c, l[2]]); }
     const HM = chain(M4.T(hd[0], hd[1] - 0.1, hd[2]), M4.RY(-h + hy), M4.RX(hp));
-    if (FG){} else if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
+    if (FG){} else if (K){ drawN(K.head, HM); for (const m of [hooded && HOODOFF[lk.hs] ? null : K.hair, K.beard, K.hat]) if (m) drawN(m, HM); if (hooded){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; if (HD) HD.wear = true; HOODK.set(K, HD); } if (HD) drawN(HD, HM); } } else drawN(P.bare ? PM.headB : PM.head, HM);
     const LQ = LEMMER.log ? {idx, task:st.task || null, walk:!!st.walk, ev:!!(st.ev || st.fx), put:!!st.put, deck:!!st.deck, sea:!!SE, sit:!!sit, near, on:IK, L:LL, at:[st.x - eye[0], y - eye[1], st.z - eye[2]], h, rail:st.rail || null, b:RB ? RB.b : 0, t:RB ? RB.t : 0, drop, hip:LEG.map(g => g.hip.slice()), knee:LEG.map(g => g.knee.slice()), foot:LEG.map(g => g.foot.slice()), kf:LEG.map(g => g.kf), lo:LEG.map(g => g.over),
       sh:[], el:[], wr:[], elT:[], tg:[hands[0].slice(), hands[1].slice()], gp:[], ao:[0, 0], ov:[null, null], T, gl:[0, 0], wrT:[null, null]} : null;
     const AO = [0, 0], ARM = [null, null];   // (m each hand is short of its point: the arm at its reach, with the body gone after it)
@@ -613,7 +613,7 @@
       const PZ = figPose(FG.sk, o.local, o.root), UM = chain(M4.T(O[0], O[1], O[2]), M4.RY(-h));
       if (!LEMMER.dry) drawFig(FG, PZ.M, UM);
       // (the hood up in the cold: the old file's part, on the new head; its frame is from the old neck, 7.5 cm under the head's joint)
-      if (hooded && !LEMMER.dry){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; HOODK.set(K, HD); }
+      if (hooded && !LEMMER.dry){ let HD = HOODK.get(K); if (HD === undefined){ const kc = wkKitOf(lk); HD = kc && kc.top ? hoodOf(kc.top) : null; if (HD) HD.wear = true; HOODK.set(K, HD); }
         if (HD){ const b = FG.sk.ix.head, Rh = PZ.R[b], hj = [PZ.J[b * 3], PZ.J[b * 3 + 1] - 0.075, PZ.J[b * 3 + 2]]; drawN(HD, chain(UM, new Float32Array([Rh[0], Rh[3], Rh[6], 0, Rh[1], Rh[4], Rh[7], 0, Rh[2], Rh[5], Rh[8], 0, hj[0], hj[1], hj[2], 1]))); } }
       [0, 1].forEach(i => { const sd = i ? 'L' : 'R', w = fw(o.out.wr[sd]), d = sub3(w, ARM[i].wr); GP[i] = add3(GP[i], d); AO[i] = Math.max(AO[i], Math.hypot(d[0], d[1], d[2]) > 0.002 ? Math.hypot(d[0], d[1], d[2]) : 0);
         if (LQ){ LQ.fo = LQ.fo || [0, 0]; LQ.fo[i] = Math.hypot(d[0], d[1], d[2]); LQ.ao[i] = AO[i]; LQ.sh[i] = fw(o.out.sh[sd]); LQ.el[i] = fw(o.out.el[sd]); LQ.wr[i] = w; LQ.elT[i] = toT(LQ.el[i]); } });
