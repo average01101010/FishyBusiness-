@@ -40,9 +40,12 @@
     const quayMod = (f, L) => { let yaw = Math.atan2(-f.uz, f.ux); if (-f.uz * f.nx + f.ux * f.nz < 0) yaw += Math.PI;
       const out = f.out || 0, inl = f.kind === 3 ? 3 : f.tre ? 0.5 : 1.5, y0 = f.kind === 3 ? 0 : -0.012;
       const tre = DKM.ktre && (f.tre || f.kind === 3 && L < 15 && out <= 2.2), M = tre ? DKM.ktre : DKM.kaib, n = Math.ceil((L + 4) / 6);
+      // (timber: the row along her where she lies, and a gangway one bay wide in to the pile quay behind, as a jetty is built: before
+      // 14.11.2026 every row went her whole length, a 17 by 24 m deck of timber at the naust on Kvitsøy, 16 m out; Jonas: «Hvorfor er det
+      // bygget 4 kaier utpå hverandre? det ser jo helt sykt ut»)
       const rows = tre ? Math.max(1, Math.ceil((out + inl) / 4.2)) : 1;
       for (let r = 0; r < rows; r++){ const bk = (tre ? 2.3 + 4.2 * r : 0) - out;
-        for (let k = 0; k < n; k++){ const a = (k - (n - 1) / 2) * 6; drawN(M, model(f.x + f.ux * a - f.nx * bk - eye[0], y0 - eye[1], f.z + f.uz * a - f.nz * bk - eye[2], yaw, 0, 0)); } }
+        for (let k = 0; k < n; k++){ const a = r ? 0 : (k - (n - 1) / 2) * 6; if (r && k) break; drawN(M, model(f.x + f.ux * a - f.nx * bk - eye[0], y0 - eye[1], f.z + f.uz * a - f.nz * bk - eye[2], yaw, 0, 0)); } }
       const D = out + inl - 5; if (tre || D <= 0.05 || !DKM.fill) return;
       const sx = n * 6, sy = FDOCK.QTOP + 3;   // (M4.S is uniform: the box is scaled on its own axes here)
       drawN(DKM.fill, chain(model(f.x + f.nx * (out - 5) - eye[0], y0 - 3 - eye[1], f.z + f.nz * (out - 5) - eye[2], yaw, 0, 0), new Float32Array([sx,0,0,0, 0,sy,0,0, 0,0,D,0, 0,0,0,1]))); };
