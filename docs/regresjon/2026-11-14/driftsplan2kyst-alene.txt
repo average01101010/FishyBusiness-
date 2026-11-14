@@ -1,0 +1,296 @@
+== Bergen
+OK   Bergen: the Drift page draws its home list with the harbours as far as 25 km out, whose map may not be in yet (MAPD.simR is 4 km) None
+  mottak ['mH85', 'Bøvågen'] vec 4 plassene [['felt', 3, 149], ['felt', 3, 268], ['juks', 3, 235]] hjem ['hs:15wv4ku', 'Småholmane havn', 'havneplass']
+  hjem-lista:
+     ['rb435', 'Marøy', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 1,8 nm til plassene']
+     ['rb438', 'Herdla', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 6,7 nm til plassene']
+     ['rb432', 'Fedje', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 8,7 nm til plassene']
+     ['rb431', 'Steine', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 11,4 nm til plassene']
+     ['hs:15wv4ku', 'Småholmane havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 0,9 nm til plassene']
+     ['hs:1u1vnbu', 'Grønholmen havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 0,9 nm til plassene']
+     ['mH85', 'Bøvågen', 'fiskemottak', 'Egnebu · du sover i køya · mannskapet sover godt · 1,4 nm til plassene']
+     ['hs:za6li1', 'Vågenes havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 1,7 nm til plassene']
+  havneplasser: [['hs:r76uqd', 'Småholmane havn', 'quay', 0.9], ['hs:1u1vnbu', 'Grønholmen havn', 'quay', 0.9], ['hs:1p4vb5s', 'Marøy havn', 'quay', 2.3], ['hs:za6li1', 'Vågenes havn', 'quay', 2.8], ['hs:1pz41p6', 'Hestholmen havn', 'quay', 3.2], ['hs:kp8nm4', 'Hellaneset havn', 'quay', 6], ['hs:vtnzl1', 'Førehjelmo havn', 'quay', 7.3], ['hs:3v89d2', 'Toska havn', 'quay', 7.4], ['hs:1q1b9io', 'Hellesundet havn', 'quay', 7.4], ['hs:17scp7s', 'Trettholmen havn', 'quay', 8.3], ['hs:18wsr4y', 'Hellesøyna havn', 'dock', 8.4], ['hs:9sq4pw', 'Rotøyna havn', 'quay', 9], ['hs:1kzhryl', 'Steinholmen havn', 'quay', 9.5], ['hs:nfxl1s', 'Stura havn', 'quay', 9.6], ['hs:qyfarp', 'Inste Kontosen havn', 'quay', 9.9], ['hs:14o90s6', 'Skarvholmen havn', 'quay', 10.1], ['hs:1ria5na', 'Sulo havn', 'quay', 10.2], ['hs:1b9tn4r', 'Lisla Lyngøyna havn', 'dock', 10.2], ['hs:1cbd7ny', 'Sirset havn', 'quay', 10.4], ['hs:c327pf', 'Trollholmen havn', 'quay', 10.9], ['hs:va8dww', 'Berfjord havn', 'quay', 11.3], ['hs:mvruly', 'Skjeljanger havn', 'quay', 11.3], ['hs:1u22ieq', 'Stormark havn', 'dock', 11.6], ['hs:1riw2no', 'Sauøyna havn', 'quay', 13], ['hs:38gs3j', 'Søre Inneskiten havn', 'quay', 13.2], ['hs:7clpct', 'Gardsendholmen havn', 'quay', 13.4], ['hs:139mfxt', 'Bogno havn', 'quay', 13.7], ['hs:w4jps8', 'Måsholmen havn', 'quay', 14], ['hs:syy5sl', 'Herdla havn', 'quay', 14.1], ['hs:1216jhu', 'Heggholmen havn', 'quay', 14.3], ['hs:1rmkush', 'Fedje havn', 'quay', 14.7], ['hs:1fr15xk', 'Herdla havn', 'quay', 14.9], ['hs:bskwtw', 'Herdla havn', 'quay', 15.2], ['hs:1o5zaob', 'Herdla havn', 'quay', 15.5], ['hs:1lgj9yv', 'Herdla havn', 'quay', 16.8], ['hs:yoezv6', 'Vardnesholmen havn', 'quay', 17.4], ['hs:gvncqr', 'Skipavik havn', 'quay', 18.6], ['hs:1odina5', 'Vettås havn', 'quay', 19.2], ['hs:5ton', 'Manger havn', 'quay', 19.4], ['hs:dbcn4r', 'Manger havn', 'quay', 20.3], ['hs:y3gy0t', 'Manger havn', 'quay', 20.5], ['hs:2szzuy', 'Manger havn', 'dock', 20.9], ['hs:vqzvof', 'Holmengrå havn', 'quay', 21.6], ['hs:1csqe0m', 'Kalvøyna havn', 'quay', 21.9], ['hs:bmfpyc', 'Notholmen havn', 'quay', 22.5], ['hs:mc810', 'Bøvågen havn', 'quay', 23.7], ['hs:dr592z', 'Lommannstraumen havn', 'quay', 24.4], ['hs:13ygjbm', 'Bøvågen havn', 'quay', 24.7]] 
+OK   Bergen: B the plan made from the page (line 2 + 2, a jig place) is made and starts [None, 'mH85', []]
+  B (hjem ['hs:15wv4ku', 'Småholmane havn', 'havneplass']):
+     D1 05:00 | 05:00 Går fra Bøvågen | 05:24 Setter 2 stamper hyseline på felt 1 | 05:43 Setter 2 stamper hyseline på felt 2 | 05:58 Jukser på juksplass 1 til kl. 11:34 (5,6 t) | 11:48 Trekker felt 1 (sto 6,0 t) | 12:36 Trekker felt 2 (sto 6,0 t) | 13:22 Jukser på juksplass 1 til kl. 17:26 (4,1 t) | 17:40 Leverer i Bøvågen | 19:01 Hjem til Småholmane havn | 19:01 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:41
+     ['D1 03:01', '-:port@mH85?dep', 100, 0, 0]
+     ['D1 05:00', 'fish:unmooring@mH85#0', 100, 0, 0]
+     ['D1 05:01', 'fish:sailing#0', 100, 0, 0]
+     ['D1 05:29', 'fish:fishing/set-line#0', 98, 0, 0]
+     ['D1 05:40', 'fish:fishing#0', 97, 0, 0]
+     ['D1 05:41', 'fish:sailing#0', 97, 0, 0]
+     ['D1 05:58', 'fish:fishing/set-line#0', 96, 0, 0]
+     ['D1 06:18', 'fish:fishing#0', 95, 2, 0]
+     ['D1 06:19', 'fish:sailing#0', 95, 2, 0]
+     ['D1 06:33', 'fish:fishing#0', 98, 2, 0]
+     ['D1 12:09', 'fish:sailing#0', 74, 29, 479]
+     ['D1 12:25', 'fish:fishing/haul-line#0', 73, 29, 479]
+     ['D1 13:11', 'fish:fishing#0', 74, 34, 554]
+     ['D1 13:12', 'fish:sailing#0', 74, 34, 554]
+     ['D1 13:29', 'fish:fishing/haul-line#0', 73, 34, 554]
+     ['D1 14:28', 'fish:fishing#0', 69, 38, 586]
+     ['D1 14:29', 'fish:sailing#0', 68, 38, 586]
+     ['D1 14:43', 'fish:fishing#0', 68, 38, 586]
+     ['D1 18:49', 'fish:sailing#0', 54, 56, 1093]
+     ['D1 19:06', '-:port@mH85#7', 53, 59, 1093]
+     ['D1 19:07', '-:port@mH85/land#7', 53, 59, 1093]
+     ['D1 19:18', '-:port@mH85#8', 56, 59, 0]
+     ['D1 19:25', '-:port@mH85?jobs#8', 57, 59, 0]
+     ['D1 21:24', 'home:unmooring@mH85#8', 82, 25, 0]
+     ['D1 21:25', 'home:sailing#8', 82, 25, 0]
+     ['D1 21:50', '-:port@hs:15wv4ku#8', 80, 25, 0]
+     ['D1 21:51', '-:port@hs:15wv4ku?rest#10', 80, 25, 0]
+     ['D1 22:21', '-:port@hs:15wv4ku?dep#11', 87, 9, 0]
+    redskap [('D1 05:40', 'D1 13:11', 6.9, 75), ('D1 06:18', 'D1 14:28', 7.5, 32)]
+    stats [['2028-03-06', 1093, 15905, 1, 0, 'mH85']] fin {'en': 100, 'fat': [0], 'cash': 1014776, 'hold': 0, 'status': 'port', 'port': 'hs:15wv4ku', 'sets': []}
+    logg [['D1 21:51', 'Havneavgift i Småholmane havn: 190 kr for døgnet.']] meld []
+OK   Bergen: B one day on the plan from the page: out once, both fields set and hauled after 6-8.5 h, landed at Bøvågen, home, the plan still on [[('D1 05:40', 6.9), ('D1 06:18', 7.5)], [['2028-03-06', 1093, 15905, 1, 0, 'mH85']], {'D1': 1}, 'hs:15wv4ku', None]
+OK   Bergen: U14 the home list: the rorbuer first, no yard, every line says the distance ['rorbu', 'rorbu', 'rorbu', 'rorbu', 'kai', 'kai', 'fiskemottak', 'kai']
+OK   Bergen: U14 a harbour berth stands in the list when the harbours have one [48, ['hs:15wv4ku', 'hs:1u1vnbu', 'hs:za6li1']]
+  F2: {"h": ["rb435", "Marøy", "rorbu", "Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 1,8 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "rb435", "atHome": true, "held": false, "en": 100}, "rorbu": 2, "due": 0}
+     D1 05:00 | 05:00 Går fra Bøvågen | 05:24 Setter 2 stamper hyseline på felt 1 | 05:43 Setter 2 stamper hyseline på felt 2 | 05:58 Jukser på juksplass 1 til kl. 11:34 (5,6 t) | 11:48 Trekker felt 1 (sto 6,0 t) | 12:36 Trekker felt 2 (sto 6,0 t) | 13:22 Jukser på juksplass 1 til kl. 17:18 (3,9 t) | 17:31 Leverer i Bøvågen | 19:01 Hjem til Marøy | 19:01 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:41
+     D2 05:00 | 05:00 Går fra Marøy | 05:34 Setter 2 stamper hyseline på felt 1 | 05:53 Setter 2 stamper hyseline på felt 2 | 06:08 Jukser på juksplass 1 til kl. 11:44 (5,6 t) | 11:58 Trekker felt 1 (sto 6,0 t) | 12:46 Trekker felt 2 (sto 6,0 t) | 13:32 Jukser på juksplass 1 til kl. 17:18 (3,8 t) | 17:31 Leverer i Bøvågen | 19:01 Hjem til Marøy | 19:01 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:41
+    stats [['2028-03-06', 1127, 15947, 1, 0, 'mH85'], ['2028-03-07', 1074, 14712, 1, 0, 'mH85']]
+OK   Bergen: F2 a rorbu as home (Marøy): out once a day for two days, lands each day, back at the rorbu, and you rest there each night [{'D1': 1, 'D2': 1}, [['2028-03-06', 1127], ['2028-03-07', 1074]], {'status': 'port', 'port': 'rb435', 'atHome': True, 'held': False, 'en': 100}, 2]
+  H: {"h": ["hs:15wv4ku", "Småholmane havn", "kai", "Ingen egnebu · du sover i køya · mannskapet sover godt · 0,9 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "hs:15wv4ku", "atHome": true, "held": true, "en": 100}, "rorbu": 0, "due": 2}
+     D1 05:00 | 05:00 Går fra Bøvågen | 05:24 Setter 2 stamper hyseline på felt 1 | 05:43 Setter 2 stamper hyseline på felt 2 | 05:58 Jukser på juksplass 1 til kl. 11:34 (5,6 t) | 11:48 Trekker felt 1 (sto 6,0 t) | 12:36 Trekker felt 2 (sto 6,0 t) | 13:22 Jukser på juksplass 1 til kl. 17:26 (4,1 t) | 17:40 Leverer i Bøvågen | 19:01 Hjem til Småholmane havn | 19:01 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:41
+     D2 05:00 | 05:00 Går fra Småholmane havn | 05:10 Setter 2 stamper hyseline på felt 1 | 05:29 Setter 2 stamper hyseline på felt 2 | 05:45 Jukser på juksplass 1 til kl. 11:20 (5,6 t) | 11:34 Trekker felt 1 (sto 6,0 t) | 12:23 Trekker felt 2 (sto 6,0 t) | 13:08 Jukser på juksplass 1 til kl. 17:26 (4,3 t) | 17:40 Leverer i Bøvågen | 19:01 Hjem til Småholmane havn | 19:01 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:41
+    stats [['2028-03-06', 1121, 15999, 1, 0, 'mH85'], ['2028-03-07', 1070, 14575, 1, 0, 'mH85']]
+OK   Bergen: a harbour berth as home (Småholmane havn): out once a day for two days, lands, comes back to the berth it holds, and pays the due [{'D1': 1, 'D2': 1}, [['2028-03-06', 1121], ['2028-03-07', 1070]], {'status': 'port', 'port': 'hs:15wv4ku', 'atHome': True, 'held': True, 'en': 100}, 2]
+  pause P: {'st': 'fishing', 'min': 161, 'at': '06:11', 'depth': 89, 'spot': 'deep', 'anch': False, 'drift': 'deep', 'moved': 253, 'says': 'På pause siden kl. 05:41. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}}
+OK   Bergen: Pause at sea (89 m, fishing): anchors or drifts and says why [89, 'deep', False, 'deep', 'På pause siden kl. 05:41. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.']
+OK   Bergen: Start after the pause: she goes on {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}
+  pause PA: {'st': 'sailing', 'min': 136, 'at': '05:46', 'depth': 20, 'spot': 'ok', 'anch': True, 'drift': None, 'moved': 69, 'says': 'På pause siden kl. 05:16. Båten ligger til ankers der den var, og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}}
+OK   Bergen: Pause at sea (20 m, sailing): anchors where she can [20, 'ok', True, None, 'På pause siden kl. 05:16. Båten ligger til ankers der den var, og mannskapet venter på deg.']
+OK   Bergen: Start after the pause: she goes on and the anchor comes up when she goes {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}
+== Bodø
+OK   Bodø: the Drift page draws its home list with the harbours as far as 25 km out, whose map may not be in yet (MAPD.simR is 4 km) None
+  mottak ['mN905', 'Bodø'] vec 4 plassene [['felt', 3, 148], ['felt', 3, 282], ['juks', 2, 55]] hjem ['hs:1sq8wwi', 'Bodø havn', 'havneplass']
+  hjem-lista:
+     ['rb230', 'Bodø', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 1,2 nm til plassene']
+     ['rb231', 'Kvalvåg', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 7,3 nm til plassene']
+     ['rb233', 'Bliksvær', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 8,4 nm til plassene']
+     ['rb227', 'Misten', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 12,1 nm til plassene']
+     ['hs:1sq8wwi', 'Bodø havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 0,1 nm til plassene']
+     ['mN905', 'Bodø', 'fiskemottak', 'Egnebu · du sover i køya · mannskapet sover godt · 0,1 nm til plassene']
+     ['hs:1tu64cg', 'Breivikholmen havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 0,8 nm til plassene']
+     ['hs:zyywv0', 'Nyholmsundet havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 0,8 nm til plassene']
+  havneplasser: [['hs:1a535z5', 'Bodø havn', 'quay', 0.1], ['hs:zyywv0', 'Nyholmsundet havn', 'quay', 1.4], ['hs:1tu64cg', 'Breivikholmen havn', 'quay', 1.5], ['hs:llx310', 'Hernes havn', 'quay', 2.1], ['hs:bnbn11', 'Hjartøysundet havn', 'quay', 1.8], ['hs:ujw15g', 'Skagen havn', 'quay', 2.7], ['hs:1p1kkzy', 'Bodø nordøst havn', 'quay', 4.2], ['hs:uxa6bn', 'Litle Hysa havn', 'quay', 6.2], ['hs:jtge5b', 'Mørkvedbukta havn', 'quay', 8], ['hs:38mr9c', 'Valnes havn', 'quay', 10.4], ['hs:mchap6', 'Åsen havn', 'dock', 11.3], ['hs:4eur0v', 'Ripnes havn', 'quay', 12.5], ['hs:6i7xsu', 'Indre Sundan havn', 'quay', 12.5], ['hs:1er8ac8', 'Draugholmen havn', 'quay', 13.1], ['hs:2eb5l4', 'Indre Vikan havn', 'quay', 14.7], ['hs:168fd1o', 'Løding havn', 'quay', 15], ['hs:57jjxd', 'Bliksvær havn', 'quay', 15.6], ['hs:1w3jts2', 'Øver-botnholmen havn', 'quay', 15.7], ['hs:18vu29y', 'Botnholmen havn', 'quay', 15.7], ['hs:coocun', 'Kvalvåg nordøst havn', 'quay', 15.9], ['hs:1hdvcb0', 'Sandholmen havn', 'quay', 16.3], ['hs:18wcwyb', 'Mjelde havn', 'quay', 18.1], ['hs:5wzoa9', 'Ertenvågosen havn', 'quay', 18.3], ['hs:1xg3u6h', 'Eggløysa havn', 'quay', 18.5], ['hs:v5l18p', 'Vågsbotn havn', 'quay', 19.2], ['hs:1e60zu1', 'Holand havn', 'quay', 20.8], ['hs:12t2hh9', 'Nordarnøya havn', 'quay', 21.4], ['hs:jbu3bu', 'Bulråtholmen havn', 'quay', 21.4], ['hs:cmt86j', 'Ytre Bogøya havn', 'quay', 22.7], ['hs:13svg2q', 'Indre Kjelling havn', 'quay', 23.2], ['hs:9j2c2w', 'Sponskivika havn', 'quay', 23.3], ['hs:11o2wxn', 'Sør-Arnøy havn', 'quay', 23.5], ['hs:93ipdv', 'Gjømmerholmen havn', 'quay', 23.7], ['hs:10izru5', 'Øksnøya havn', 'quay', 24], ['hs:c2cmsf', 'Agnesvika havn', 'quay', 24.2], ['hs:6hans6', 'Tvillingsholman havn', 'quay', 24.6], ['hs:1moz9cq', 'Hestøysundet havn', 'quay', 24.2], ['hs:1bt39mr', 'Oppsåttet havn', 'quay', 24.7], ['hs:11e3j2k', 'Store Sørøya havn', 'quay', 24.6]] 
+OK   Bodø: B the plan made from the page (line 2 + 2, a jig place) is made and starts [None, 'mN905', []]
+  B (hjem ['hs:1sq8wwi', 'Bodø havn', 'havneplass']):
+     D1 05:00 | 05:00 Går fra Bodø | 05:13 Setter 2 stamper hyseline på felt 1 | 06:14 Setter 2 stamper hyseline på felt 2 | 06:55 Jukser på juksplass 1 til kl. 11:23 (4,5 t) | 11:40 Trekker felt 1 (sto 6,0 t) | 13:11 Trekker felt 2 (sto 6,0 t) | 14:22 Jukser på juksplass 1 til kl. 17:42 (3,3 t) | 17:51 Leverer i Bodø | 18:54 Hjem til Bodø havn | 18:54 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:34
+     ['D1 03:01', '-:port@mN905?dep', 100, 0, 0]
+     ['D1 05:00', 'fish:unmooring@mN905#0', 100, 0, 0]
+     ['D1 05:01', 'fish:sailing#0', 100, 0, 0]
+     ['D1 05:17', 'fish:fishing/set-line#0', 99, 0, 0]
+     ['D1 05:29', 'fish:fishing#0', 98, 0, 0]
+     ['D1 05:30', 'fish:sailing#0', 98, 0, 0]
+     ['D1 06:24', 'fish:fishing/set-line#0', 94, 1, 0]
+     ['D1 06:45', 'fish:fishing#0', 93, 1, 0]
+     ['D1 06:46', 'fish:sailing#0', 93, 1, 0]
+     ['D1 07:22', 'fish:fishing#0', 90, 3, 0]
+     ['D1 11:52', 'fish:sailing#0', 71, 20, 348]
+     ['D1 12:10', 'fish:fishing/haul-line#0', 70, 22, 348]
+     ['D1 12:58', 'fish:fishing#0', 67, 22, 370]
+     ['D1 12:59', 'fish:sailing#0', 67, 22, 370]
+     ['D1 13:53', 'fish:fishing/haul-line#0', 63, 24, 370]
+     ['D1 14:56', 'fish:fishing#0', 59, 27, 391]
+     ['D1 14:57', 'fish:sailing#0', 59, 27, 391]
+     ['D1 15:32', 'fish:fishing#0', 56, 29, 391]
+     ['D1 18:50', 'fish:sailing#0', 42, 41, 697]
+     ['D1 19:02', '-:port@mN905#7', 42, 44, 697]
+     ['D1 19:03', '-:port@mN905/land#7', 42, 44, 697]
+     ['D1 19:11', '-:port@mN905#8', 43, 44, 0]
+     ['D1 19:18', 'home:unmooring@mN905#8', 45, 44, 0]
+     ['D1 19:19', 'home:sailing#8', 45, 44, 0]
+     ['D1 19:25', '-:port@hs:1sq8wwi#8', 44, 44, 0]
+     ['D1 19:26', '-:port@hs:1sq8wwi?rest#10', 45, 44, 0]
+     ['D1 21:25', '-:port@hs:1sq8wwi?dep#11', 69, 10, 0]
+    redskap [('D1 05:29', 'D1 12:58', 6.8, 22), ('D1 06:45', 'D1 14:56', 7.5, 21)]
+    stats [['2028-03-06', 697, 11191, 1, 0, 'mN905']] fin {'en': 100, 'fat': [0], 'cash': 1009490, 'hold': 0, 'status': 'port', 'port': 'hs:1sq8wwi', 'sets': []}
+    logg [['D1 19:26', 'Havneavgift i Bodø havn: 190 kr for døgnet.']] meld []
+OK   Bodø: B one day on the plan from the page: out once, both fields set and hauled after 6-8.5 h, landed at Bodø, home, the plan still on [[('D1 05:29', 6.8), ('D1 06:45', 7.5)], [['2028-03-06', 697, 11191, 1, 0, 'mN905']], {'D1': 1}, 'hs:1sq8wwi', None]
+OK   Bodø: U14 the home list: the rorbuer first, no yard, every line says the distance ['rorbu', 'rorbu', 'rorbu', 'rorbu', 'kai', 'fiskemottak', 'kai', 'kai']
+OK   Bodø: U14 a harbour berth stands in the list when the harbours have one [39, ['hs:1sq8wwi', 'hs:1tu64cg', 'hs:zyywv0']]
+  F2: {"h": ["rb230", "Bodø", "rorbu", "Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 1,2 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "rb230", "atHome": true, "held": false, "en": 100}, "rorbu": 2, "due": 0}
+     D1 05:00 | 05:00 Går fra Bodø | 05:13 Setter 2 stamper hyseline på felt 1 | 06:14 Setter 2 stamper hyseline på felt 2 | 06:55 Jukser på juksplass 1 til kl. 11:23 (4,5 t) | 11:40 Trekker felt 1 (sto 6,0 t) | 13:11 Trekker felt 2 (sto 6,0 t) | 14:22 Jukser på juksplass 1 til kl. 17:32 (3,2 t) | 17:41 Leverer i Bodø | 18:54 Hjem til Bodø | 18:54 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:34
+     D2 05:00 | 05:00 Går fra Bodø | 05:06 Setter 2 stamper hyseline på felt 1 | 06:08 Setter 2 stamper hyseline på felt 2 | 06:48 Jukser på juksplass 1 til kl. 11:16 (4,5 t) | 11:33 Trekker felt 1 (sto 6,0 t) | 13:05 Trekker felt 2 (sto 6,0 t) | 14:15 Jukser på juksplass 1 til kl. 17:32 (3,3 t) | 17:41 Leverer i Bodø | 18:54 Hjem til Bodø | 18:54 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:34
+    stats [['2028-03-06', 603, 9717, 1, 0, 'mN905'], ['2028-03-07', 527, 8284, 1, 0, 'mN905']]
+OK   Bodø: F2 a rorbu as home (Bodø): out once a day for two days, lands each day, back at the rorbu, and you rest there each night [{'D1': 1, 'D2': 1}, [['2028-03-06', 603], ['2028-03-07', 527]], {'status': 'port', 'port': 'rb230', 'atHome': True, 'held': False, 'en': 100}, 2]
+  H: {"h": ["hs:1sq8wwi", "Bodø havn", "kai", "Ingen egnebu · du sover i køya · mannskapet sover godt · 0,1 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "hs:1sq8wwi", "atHome": true, "held": true, "en": 100}, "rorbu": 0, "due": 2}
+     D1 05:00 | 05:00 Går fra Bodø | 05:13 Setter 2 stamper hyseline på felt 1 | 06:14 Setter 2 stamper hyseline på felt 2 | 06:55 Jukser på juksplass 1 til kl. 11:23 (4,5 t) | 11:40 Trekker felt 1 (sto 6,0 t) | 13:11 Trekker felt 2 (sto 6,0 t) | 14:22 Jukser på juksplass 1 til kl. 15:42 (1,3 t) | 15:51 Leverer i Bodø | 16:54 Hjem til Bodø havn | 16:54 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 17:34
+     D2 05:00 | 05:00 Går fra Bodø havn | 05:13 Setter 2 stamper hyseline på felt 1 | 06:14 Setter 2 stamper hyseline på felt 2 | 06:55 Jukser på juksplass 1 til kl. 11:23 (4,5 t) | 11:40 Trekker felt 1 (sto 6,0 t) | 13:11 Trekker felt 2 (sto 6,0 t) | 14:22 Jukser på juksplass 1 til kl. 15:42 (1,3 t) | 15:51 Leverer i Bodø | 16:54 Hjem til Bodø havn | 16:54 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 17:34
+    stats [['2028-03-06', 506, 8097, 1, 0, 'mN905'], ['2028-03-07', 455, 7301, 1, 0, 'mN905']]
+OK   Bodø: a harbour berth as home (Bodø havn): out once a day for two days, lands, comes back to the berth it holds, and pays the due [{'D1': 1, 'D2': 1}, [['2028-03-06', 506], ['2028-03-07', 455]], {'status': 'port', 'port': 'hs:1sq8wwi', 'atHome': True, 'held': True, 'en': 100}, 2]
+  pause P: {'st': 'fishing', 'min': 149, 'at': '05:59', 'depth': 162, 'spot': 'deep', 'anch': False, 'drift': 'deep', 'moved': 807, 'says': 'På pause siden kl. 05:29. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'fishing', 'gone': 400, 'wait': None}}
+OK   Bodø: Pause at sea (162 m, fishing): anchors or drifts and says why [162, 'deep', False, 'deep', 'På pause siden kl. 05:29. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.']
+OK   Bodø: Start after the pause: she goes on {'on': True, 'anch': False, 'status': 'fishing', 'gone': 400, 'wait': None}
+  pause PA: {'st': 'sailing', 'min': 167, 'at': '06:17', 'depth': 34, 'spot': 'ok', 'anch': True, 'drift': None, 'moved': 104, 'says': 'På pause siden kl. 05:47. Båten ligger til ankers der den var, og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'sailing', 'gone': 80, 'wait': None}}
+OK   Bodø: Pause at sea (34 m, sailing): anchors where she can [34, 'ok', True, None, 'På pause siden kl. 05:47. Båten ligger til ankers der den var, og mannskapet venter på deg.']
+OK   Bodø: Start after the pause: she goes on and the anchor comes up when she goes {'on': True, 'anch': False, 'status': 'sailing', 'gone': 80, 'wait': None}
+== Hammerfest
+OK   Hammerfest: the Drift page draws its home list with the harbours as far as 25 km out, whose map may not be in yet (MAPD.simR is 4 km) None
+  mottak ['mF771', 'Forsøl'] vec 4 plassene [['felt', 3, 181], ['felt', 3, 234], ['juks', 2, 80]] hjem ['hs:13kbp1a', 'Forsøl havn', 'havneplass']
+  hjem-lista:
+     ['rb42', 'Forsøl', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 2,6 nm til plassene']
+     ['rb48', 'Mellafjorden', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 8,6 nm til plassene']
+     ['rb37', 'Akkarfjord', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 11,0 nm til plassene']
+     ['rb31', 'Skavika', 'rorbu', 'Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 12,8 nm til plassene']
+     ['hs:13kbp1a', 'Forsøl havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 1,3 nm til plassene']
+     ['mF771', 'Forsøl', 'fiskemottak', 'Egnebu · du sover i køya · mannskapet sover godt · 1,3 nm til plassene']
+     ['hs:1gclt5l', 'Kvalfjordholmen havn', 'kai', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 2,1 nm til plassene']
+     ['sb1069407_186603', 'Hammerfest utstyrsbutikk', 'butikk', 'Ingen egnebu · du sover i køya · mannskapet sover godt · 5,6 nm til plassene']
+  havneplasser: [['hs:csn1qe', 'Forsøl havn', 'quay', 0.3], ['hs:1gclt5l', 'Kvalfjordholmen havn', 'quay', 1.5], ['hs:mj09wa', 'Hammerfest vest havn', 'quay', 8], ['hs:1qcgsr6', 'Hammerfest havn', 'quay', 8.1], ['hs:1dx4w90', 'Meland havn', 'quay', 8.1], ['hs:1oqgdxl', 'Melkøya havn', 'quay', 8.9], ['hs:1j8f015', 'Rypefjord havn', 'quay', 10.6], ['hs:1g0hxb0', 'Rypefjord nordvest havn', 'quay', 10.9], ['hs:d4tuxu', 'Rypefjorden havn', 'quay', 11], ['hs:1ccmtu0', 'Indrefjorden havn', 'quay', 11.3], ['hs:q5f1ey', 'Kirkegårdsøya havn', 'quay', 11.8], ['hs:1q5vofw', 'Rypefjord nord havn', 'quay', 12.1], ['hs:ee6la', 'Finnøya havn', 'quay', 12.1], ['hs:ucw8s6', 'Akkarfjord havn', 'quay', 12.7], ['hs:6iihcw', 'Rypefjord havn', 'quay', 15.2], ['hs:19en9fg', 'Rypefjord havn', 'quay', 16.1], ['hs:sml1ds', 'Akkarfjord havn', 'quay', 16.9], ['hs:oyxsqy', 'Skippernesfjorden havn', 'quay', 16.9], ['hs:lr6jsv', 'Akkarfjorden havn', 'quay', 17.3], ['hs:ortzsf', 'Akkarfjord sørvest havn', 'quay', 18.2], ['hs:1kktexm', 'Akkarfjord sørvest havn', 'quay', 18.6], ['hs:14q5nul', 'Rypefjord havn', 'quay', 18.6], ['hs:cnzlfs', 'Akkarfjord havn', 'quay', 19.3], ['hs:1quhrif', 'Rypefjord havn', 'quay', 20.2], ['hs:4juix9', 'Rypefjord havn', 'quay', 20.6], ['hs:19c7049', 'Akkarfjord havn', 'quay', 21.2], ['hs:f453hn', 'Langstrand havn', 'quay', 23.3], ['hs:3da50d', 'Langstrand havn', 'quay', 23.8], ['hs:1b6vsds', 'Nordmannsneset havn', 'quay', 24.1]] 
+OK   Hammerfest: B the plan made from the page (line 2 + 2, a jig place) is made and starts [None, 'mF771', []]
+  B (hjem ['hs:13kbp1a', 'Forsøl havn', 'havneplass']):
+     D1 05:00 | 05:00 Går fra Forsøl | 05:11 Setter 2 stamper hyseline på felt 1 | 05:27 Setter 2 stamper hyseline på felt 2 | 05:43 Jukser på juksplass 1 til kl. 11:21 (5,6 t) | 11:31 Trekker felt 1 (sto 6,0 t) | 12:17 Trekker felt 2 (sto 6,0 t) | 13:03 Jukser på juksplass 1 til kl. 17:50 (4,8 t) | 18:02 Leverer i Forsøl | 19:05 Hjem til Forsøl havn | 19:05 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:45
+     ['D1 03:01', '-:port@mF771?dep', 100, 0, 0]
+     ['D1 05:00', 'fish:unmooring@mF771#0', 100, 0, 0]
+     ['D1 05:01', 'fish:sailing#0', 100, 0, 0]
+     ['D1 05:16', 'fish:fishing/set-line#0', 99, 0, 0]
+     ['D1 05:34', 'fish:fishing#0', 98, 0, 0]
+     ['D1 05:35', 'fish:sailing#0', 98, 0, 0]
+     ['D1 05:50', 'fish:fishing/set-line#0', 97, 0, 0]
+     ['D1 06:10', 'fish:fishing#0', 95, 2, 0]
+     ['D1 06:11', 'fish:sailing#0', 95, 2, 0]
+     ['D1 06:26', 'fish:fishing#0', 94, 2, 0]
+     ['D1 12:02', 'fish:sailing#0', 71, 32, 308]
+     ['D1 12:15', 'fish:fishing/haul-line#0', 70, 32, 308]
+     ['D1 13:19', 'fish:fishing#0', 65, 37, 333]
+     ['D1 13:20', 'fish:sailing#0', 65, 37, 333]
+     ['D1 13:35', 'fish:fishing/haul-line#0', 64, 37, 333]
+     ['D1 14:39', 'fish:fishing#0', 60, 42, 351]
+     ['D1 14:40', 'fish:sailing#0', 60, 42, 351]
+     ['D1 14:55', 'fish:fishing#0', 59, 42, 351]
+     ['D1 19:43', 'fish:sailing#0', 39, 67, 795]
+     ['D1 19:59', '-:port@mF771#7', 38, 67, 795]
+     ['D1 20:00', '-:port@mF771/land#7', 38, 67, 795]
+     ['D1 20:08', '-:port@mF771#8', 39, 50, 0]
+     ['D1 20:15', 'home:unmooring@mF771#8', 41, 50, 0]
+     ['D1 20:16', 'home:sailing#8', 41, 50, 0]
+     ['D1 20:23', '-:port@hs:13kbp1a#8', 40, 50, 0]
+     ['D1 20:24', '-:port@hs:13kbp1a?rest#10', 41, 50, 0]
+     ['D1 22:22', '-:port@hs:13kbp1a?dep#11', 65, 17, 0]
+    redskap [('D1 05:34', 'D1 13:19', 7.1, 25), ('D1 06:10', 'D1 14:39', 7.8, 18)]
+    stats [['2028-03-06', 795, 23671, 1, 0, 'mF771']] fin {'en': 100, 'fat': [0], 'cash': 1022797, 'hold': 0, 'status': 'port', 'port': 'hs:13kbp1a', 'sets': []}
+    logg [['D1 20:24', 'Havneavgift i Forsøl havn: 190 kr for døgnet.']] meld []
+OK   Hammerfest: B one day on the plan from the page: out once, both fields set and hauled after 6-8.5 h, landed at Forsøl, home, the plan still on [[('D1 05:34', 7.1), ('D1 06:10', 7.8)], [['2028-03-06', 795, 23671, 1, 0, 'mF771']], {'D1': 1}, 'hs:13kbp1a', None]
+OK   Hammerfest: U14 the home list: the rorbuer first, no yard, every line says the distance ['rorbu', 'rorbu', 'rorbu', 'rorbu', 'kai', 'fiskemottak', 'kai', 'butikk']
+OK   Hammerfest: U14 a harbour berth stands in the list when the harbours have one [29, ['hs:13kbp1a', 'hs:1gclt5l']]
+  F2: {"h": ["rb42", "Forsøl", "rorbu", "Ingen egnebu · du sover på rorbua (150 kr natta) · mannskapet sover godt · 2,6 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "rb42", "atHome": true, "held": false, "en": 100}, "rorbu": 2, "due": 0}
+     D1 05:00 | 05:00 Går fra Forsøl | 05:11 Setter 2 stamper hyseline på felt 1 | 05:27 Setter 2 stamper hyseline på felt 2 | 05:43 Jukser på juksplass 1 til kl. 11:21 (5,6 t) | 11:31 Trekker felt 1 (sto 6,0 t) | 12:17 Trekker felt 2 (sto 6,0 t) | 13:03 Jukser på juksplass 1 til kl. 17:27 (4,4 t) | 17:38 Leverer i Forsøl | 19:05 Hjem til Forsøl | 19:05 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:45
+     D2 05:00 | 05:00 Går fra Forsøl | 05:24 Setter 2 stamper hyseline på felt 1 | 05:40 Setter 2 stamper hyseline på felt 2 | 05:56 Jukser på juksplass 1 til kl. 11:34 (5,6 t) | 11:44 Trekker felt 1 (sto 6,0 t) | 12:30 Trekker felt 2 (sto 6,0 t) | 13:16 Jukser på juksplass 1 til kl. 17:27 (4,2 t) | 17:38 Leverer i Forsøl | 19:05 Hjem til Forsøl | 19:05 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 19:45
+    stats [['2028-03-06', 779, 23202, 1, 0, 'mF771'], ['2028-03-07', 780, 24070, 1, 0, 'mF771']]
+OK   Hammerfest: F2 a rorbu as home (Forsøl): out once a day for two days, lands each day, back at the rorbu, and you rest there each night [{'D1': 1, 'D2': 1}, [['2028-03-06', 779], ['2028-03-07', 780]], {'status': 'port', 'port': 'rb42', 'atHome': True, 'held': False, 'en': 100}, 2]
+  H: {"h": ["hs:13kbp1a", "Forsøl havn", "kai", "Ingen egnebu · du sover i køya · mannskapet sover godt · 1,3 nm til plassene"], "chosen": true, "start": {"on": true, "err": null, "errors": []}, "outs": {"D1": 1, "D2": 1}, "end": {"status": "port", "port": "hs:13kbp1a", "atHome": true, "held": true, "en": 100}, "rorbu": 0, "due": 2}
+     D1 05:00 | 05:00 Går fra Forsøl | 05:11 Setter 2 stamper hyseline på felt 1 | 05:27 Setter 2 stamper hyseline på felt 2 | 05:43 Jukser på juksplass 1 til kl. 11:21 (5,6 t) | 11:31 Trekker felt 1 (sto 6,0 t) | 12:17 Trekker felt 2 (sto 6,0 t) | 13:03 Jukser på juksplass 1 til kl. 14:56 (1,9 t) | 15:08 Leverer i Forsøl | 16:12 Hjem til Forsøl havn | 16:12 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 16:52
+     D2 05:00 | 05:00 Går fra Forsøl havn | 05:11 Setter 2 stamper hyseline på felt 1 | 05:27 Setter 2 stamper hyseline på felt 2 | 05:43 Jukser på juksplass 1 til kl. 11:21 (5,6 t) | 11:31 Trekker felt 1 (sto 6,0 t) | 12:17 Trekker felt 2 (sto 6,0 t) | 13:03 Jukser på juksplass 1 til kl. 14:56 (1,9 t) | 15:08 Leverer i Forsøl | 16:12 Hjem til Forsøl havn | 16:12 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 16:52
+    stats [['2028-03-06', 540, 16068, 1, 0, 'mF771'], ['2028-03-07', 630, 19531, 1, 0, 'mF771']]
+OK   Hammerfest: a harbour berth as home (Forsøl havn): out once a day for two days, lands, comes back to the berth it holds, and pays the due [{'D1': 1, 'D2': 1}, [['2028-03-06', 540], ['2028-03-07', 630]], {'status': 'port', 'port': 'hs:13kbp1a', 'atHome': True, 'held': True, 'en': 100}, 2]
+  pause P: {'st': 'fishing', 'min': 151, 'at': '06:01', 'depth': 219, 'spot': 'deep', 'anch': False, 'drift': 'deep', 'moved': 536, 'says': 'På pause siden kl. 05:31. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}}
+OK   Hammerfest: Pause at sea (219 m, fishing): anchors or drifts and says why [219, 'deep', False, 'deep', 'På pause siden kl. 05:31. Båten driver med vinden der den var: for dypt til å ankre (over 40 m), og mannskapet venter på deg.']
+OK   Hammerfest: Start after the pause: she goes on {'on': True, 'anch': False, 'status': 'sailing', 'gone': 0, 'wait': None}
+  pause PA: {'st': 'sailing', 'min': 123, 'at': '05:33', 'depth': 15, 'spot': 'ok', 'anch': True, 'drift': None, 'moved': 53, 'says': 'På pause siden kl. 05:03. Båten ligger til ankers der den var, og mannskapet venter på deg.', 'after': {'on': True, 'anch': False, 'status': 'sailing', 'gone': 80, 'wait': None}}
+OK   Hammerfest: Pause at sea (15 m, sailing): anchors where she can [15, 'ok', True, None, 'På pause siden kl. 05:03. Båten ligger til ankers der den var, og mannskapet venter på deg.']
+OK   Hammerfest: Start after the pause: she goes on and the anchor comes up when she goes {'on': True, 'anch': False, 'status': 'sailing', 'gone': 80, 'wait': None}
+== G: garn ved Ålesund med ett felt i Borgundfjorden (stengt 1.3.-31.5.), fra 29.2. og fra 27.5. i åtte døgn, torskekvoten nesten brukt, været som det kommer, lukket
+   {"err": null, "M": ["mM317", "Ålesund"], "d": [1, 3], "why": "Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.", "push1": [["ops-v1", "2028-03-01T00:01", "Driftsplanen for T-658-LK stopper: felt 1 er stengt etter reglene fra i dag. Velg en ny plass."]], "wall1": 366, "stop": {"k": "closed", "no": "Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.", "fix": "places", "at": "2028-03-01T05:00"}, "push2": [["ops-v1", "2028-03-01T05:00", "Driftsplanen for T-658-LK har stoppet: Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang."]], "left": [["garn", 6, "g1"], ["garn", 6, "g2"]], "quota": {"lim": 8100, "used": 8060}, "wait": {"k": "closed", "no": "Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang. Planen venter til 1.6.", "until": "2028-05-28T03:01", "open": "2028-06-01T05:00"}, "push3": [["p2-closed", "2028-06-01T04:59", "Feltet er åpent igjen. T-658-LK går ut."]], "wall": [400, 141, 417, 428, 118, 223, 358, 675], "stats": [["2028-02-29", 0, 0, 0, 0], ["2028-06-01", 0, 0, 0, 0], ["2028-06-02", 371, 4203, 8, 1], ["2028-06-03", 388, 4766, 13, 1]], "fin": {"on": true, "stop": null, "wait": "Ikke noe å gjøre i dag: står til ståtida er ute i morgen kl. 06:51; står til ståtida er ute i morgen kl. 08:13.", "port": "mM317", "status": "port", "q": 8060, "conf": 21}, "wx": [[7.1, 0.2], [8, 0.2], [9.2, 0.1], [7.8, 0.2], [4.4, 0.7], [6.4, 0.2], [4.4, 0.2], [7.8, 0.3]]}
+     ['06-01T05:23', 24.2, '', 186, 'g1']
+     ['06-01T06:14', 24.7, '', 185, 'g2']
+     ['06-02T06:07', 24.2, '', 202, 'g1']
+     ['06-02T07:24', 24.3, '', 186, 'g2']
+     ['06-03T06:51', None, '', 0, 'g1']
+     ['06-03T08:13', None, '', 0, 'g2']
+     06-01T05:05 Avgangen venter til arbeidet på kaia er ferdig.
+     06-02T05:05 Avgangen venter til arbeidet på kaia er ferdig.
+     06-02T05:18 Fremme. Båten er rigget for garn, så den ligger og venter i 0.3 t.
+     06-02T07:52 Vederlag for ilandføring av det inndratte: 40 kr (20 % av verdien).
+     06-03T05:05 Avgangen venter til arbeidet på kaia er ferdig.
+     06-03T05:18 Fremme. Båten er rigget for garn, så den ligger og venter i 1 t.
+     06-03T08:41 Vederlag for ilandføring av det inndratte: 78 kr (20 % av verdien).
+OK   G from 29 February: the plan stops on 1 March, when Borgundfjorden closes for three months (longer than it waits), with the reason and the place to change {'k': 'closed', 'no': 'Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.', 'fix': 'places', 'at': '2028-03-01T05:00'}
+OK   G push: «Driftsplanen … stopper» for 1 March while the app is away the day before, and «har stoppet» when it has [[['ops-v1', '2028-03-01T00:01', 'Driftsplanen for T-658-LK stopper: felt 1 er stengt etter reglene fra i dag. Velg en ny plass.']], [['ops-v1', '2028-03-01T05:00', 'Driftsplanen for T-658-LK har stoppet: Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang.']]]
+INFO G: garna som sto da planen stoppet: [['garn', 6, 'g1'], ['garn', 6, 'g2']] (står i et felt som er stengt for alt fiske; se backloggen)
+OK   G from 27 May: Borgundfjorden opens on 1 June, within the month: the plan waits and says until when {'k': 'closed', 'no': 'Felt 1 er stengt: Alt fiske er forbudt i Borgundfjorden 1.3–31.5, unntatt med håndsnøre og fiskestang. Planen venter til 1.6.', 'until': '2028-05-28T03:01', 'open': '2028-06-01T05:00'}
+OK   G push: «Feltet er åpent igjen» on 1 June, not the next day the plan looks again [['p2-closed', '2028-06-01T04:59', 'Feltet er åpent igjen. T-658-LK går ut.']]
+OK   G nothing set in Borgundfjorden before 1 June, then both fields set, and the nets hauled after 24-27 h [['06-01T05:23', 24.2, ''], ['06-01T06:14', 24.7, ''], ['06-02T06:07', 24.2, ''], ['06-02T07:24', 24.3, ''], ['06-03T06:51', None, ''], ['06-03T08:13', None, '']]
+OK   G the cod over the open group's quota is confiscated at the landing and counted in the plan's statistics [21, {'on': True, 'stop': None, 'wait': 'Ikke noe å gjøre i dag: står til ståtida er ute i morgen kl. 06:51; står til ståtida er ute i morgen kl. 08:13.', 'port': 'mM317', 'status': 'port', 'q': 8060, 'conf': 21}]
+OK   G eight days closed (playMinutes) in under 30 s, and the plan still on [[400, 141, 417, 428, 118, 223, 358, 675], {'on': True, 'stop': None, 'wait': 'Ikke noe å gjøre i dag: står til ståtida er ute i morgen kl. 06:51; står til ståtida er ute i morgen kl. 08:13.', 'port': 'mM317', 'status': 'port', 'q': 8060, 'conf': 21}]
+== T: teiner ved Bodø, 10 + 10 ved 48 t på den nye hurtigsjarken, mannskapet alene, første døgn åpent og tre døgn lukket
+   {"M": ["mN905", "Bodø"], "sets": [["teine", 6, "03-06T05:24"], ["teine", 6, "03-06T05:37"]], "push": [["gear-s45", "11-14T06:26", "Teinene har stått i 40 timer. Etter to døgn begynner krabben å dø."], ["gear-s46", "11-14T06:29", "Teinene har stått i 40 timer. Etter to døgn begynner krabben å dø."]], "wall_ms": 1052, "gear": [["03-06T05:24", 48.3, "", 0], ["03-06T05:37", 48.4, "", 3], ["03-08T05:52", null, "", 0], ["03-08T06:11", null, "", 0]], "stats": [["2028-03-06", 0, 0, 0], ["2028-03-07", 0, 0, 0], ["2028-03-08", 0, 0, 0], ["2028-03-09", 3, 1349, 1]], "fin": {"on": true, "stop": null, "wait": "Ikke noe å gjøre i dag: står til ståtida er ute i morgen kl. 05:52; står til ståtida er ute i morgen kl. 06:11.", "port": "mN905", "status": "port"}}
+OK   T two strings in the sea after day 1, and push tells when they have soaked [[['teine', 6, '03-06T05:24'], ['teine', 6, '03-06T05:37']], [['gear-s45', '11-14T06:26', 'Teinene har stått i 40 timer. Etter to døgn begynner krabben å dø.'], ['gear-s46', '11-14T06:29', 'Teinene har stått i 40 timer. Etter to døgn begynner krabben å dø.']]]
+OK   T the pots are hauled after 48 h (a string lost in the weather is not), three days closed [[['03-06T05:24', 48.3, '', 0], ['03-06T05:37', 48.4, '', 3], ['03-08T05:52', None, '', 0], ['03-08T06:11', None, '', 0]], 1052]
+OK   T landed, and the plan still on after four days [[['2028-03-06', 0, 0, 0], ['2028-03-07', 0, 0, 0], ['2028-03-08', 0, 0, 0], ['2028-03-09', 3, 1349, 1]], {'on': True, 'stop': None, 'wait': 'Ikke noe å gjøre i dag: står til ståtida er ute i morgen kl. 05:52; står til ståtida er ute i morgen kl. 06:11.', 'port': 'mN905', 'status': 'port'}]
+== M: flerdøgnstur fra Hammerfest på sjarken med køyer, deg og én i mannskapet, tre døgn per tur, levering hvert 3. døgn
+     D1 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 17:40 (4,5 t) | 17:52 Hviler ved kaia til kl. 21:07 | 17:52 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:32 | 17:52 Hviler om bord til kl. 21:07
+     D2 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 17:40 (4,5 t) | 17:40 Beholder 574 kg om bord til i morgen | 17:52 Hviler ved kaia til kl. 21:07 | 17:52 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:32
+     D3 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 16:25 (3,2 t) | 16:36 Leverer i Forsøl | 18:03 Hjem til Forsøl | 18:03 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:43
+     D4 05:00 | 05:00 Går fra Forsøl | 05:31 Setter 2 stamper hyseline på felt 1 | 05:46 Setter 2 stamper hyseline på felt 2 | 06:05 Jukser på juksplass 1 til kl. 11:41 (5,6 t) | 11:49 Trekker felt 1 (sto 6,0 t) | 12:34 Trekker felt 2 (sto 6,0 t) | 13:22 Jukser på juksplass 1 til kl. 17:40 (4,3 t) | 17:52 Hviler ved kaia til kl. 21:07 | 17:52 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:32 | 17:52 Hviler om bord til kl. 21:07
+     ['D1 03:01', '-:port@mF771?dep', 100, 0, 0]
+     ['D1 05:00', 'fish:unmooring@mF771#0', 100, 0, 0]
+     ['D1 05:01', 'fish:sailing#0', 100, 0, 0]
+     ['D1 05:23', 'fish:fishing/set-line#0', 98, 0, 0]
+     ['D1 05:42', 'fish:fishing#0', 97, 0, 0]
+     ['D1 05:43', 'fish:sailing#0', 97, 0, 0]
+     ['D1 05:57', 'fish:fishing/set-line#0', 96, 0, 0]
+     ['D1 06:18', 'fish:fishing#0', 95, 2, 0]
+     ['D1 06:19', 'fish:sailing#0', 95, 2, 0]
+     ['D1 06:36', 'fish:fishing#0', 97, 2, 0]
+     ['D1 12:12', 'fish:sailing#0', 74, 35, 284]
+     ['D1 12:22', 'fish:fishing/haul-line#0', 73, 35, 284]
+     ['D1 13:26', 'fish:fishing#0', 73, 41, 345]
+     ['D1 13:27', 'fish:sailing#0', 73, 41, 345]
+     ['D1 13:41', 'fish:fishing/haul-line#0', 72, 41, 345]
+     ['D1 14:46', 'fish:fishing#0', 67, 46, 377]
+     ['D1 14:47', 'fish:sailing#0', 67, 46, 377]
+     ['D1 15:05', 'fish:fishing#0', 66, 49, 377]
+     ['D1 19:35', 'fish:sailing#0', 51, 71, 574]
+     ['D1 19:51', '-:port@mF771#7', 50, 71, 574]
+     ['D1 19:52', '-:port@mF771?rest#7', 50, 71, 574]
+     ['D1 22:08', '-:port@mF771?dep#10', 79, 21, 574]
+     ['D2 05:00', 'fish:port@mF771#0', 100, 0, 574]
+     ['D2 05:08', 'fish:unmooring@mF771#0', 100, 0, 574]
+     ['D2 05:09', 'fish:sailing#0', 100, 0, 574]
+     ['D2 05:32', 'fish:fishing/set-line#0', 98, 0, 574]
+     ['D2 05:51', 'fish:fishing#0', 97, 0, 574]
+     ['D2 05:52', 'fish:sailing#0', 97, 0, 574]
+     ['D2 06:07', 'fish:fishing/set-line#0', 96, 1, 574]
+     ['D2 06:28', 'fish:fishing#0', 94, 1, 574]
+     ['D2 06:29', 'fish:sailing#0', 94, 1, 574]
+     ['D2 06:47', 'fish:fishing#0', 97, 1, 574]
+     ['D2 12:23', 'fish:sailing#0', 74, 33, 899]
+     ['D2 12:34', 'fish:fishing/haul-line#0', 77, 33, 899]
+     ['D2 13:40', 'fish:fishing#0', 72, 39, 940]
+     ['D2 13:41', 'fish:sailing#0', 72, 39, 940]
+     ['D2 13:55', 'fish:fishing/haul-line#0', 71, 39, 940]
+     ['D2 15:02', 'fish:fishing#0', 67, 50, 968]
+     ['D2 15:03', 'fish:sailing#0', 67, 50, 968]
+     ['D2 15:21', 'fish:fishing#0', 65, 50, 968]
+     ['D2 19:51', 'fish:sailing#0', 51, 72, 1116]
+     ['D2 20:06', '-:port@mF771#8', 50, 74, 1116]
+     ['D2 20:07', '-:port@mF771?rest#8', 50, 74, 1116]
+     ['D2 23:08', '-:port@mF771?dep#11', 88, 24, 1116]
+     ['D3 05:00', 'fish:port@mF771#0', 100, 0, 1116]
+     ['D3 05:08', 'fish:unmooring@mF771#0', 100, 0, 1116]
+     ['D3 05:09', 'fish:sailing#0', 100, 0, 1116]
+     ['D3 05:30', 'fish:fishing/set-line#0', 98, 0, 1116]
+     ['D3 05:49', 'fish:fishing#0', 97, 0, 1116]
+     ['D3 05:50', 'fish:sailing#0', 97, 0, 1116]
+    netter ['D1 22:08 -:port@mF771?dep#10', 'D2 23:08 -:port@mF771?dep#11', 'D3 21:23 -:port@rb42?dep#11', 'D4 22:08 -:port@mF771?dep#10']
+    stats [['2028-03-06', 0, 0, 1, 0, ''], ['2028-03-07', 0, 0, 1, 0, ''], ['2028-03-08', 1550, 51238, 1, 0, 'mF771'], ['2028-03-09', 0, 0, 1, 0, '']] fin {'en': 100, 'fat': [0], 'cash': 1049368, 'hold': 604, 'status': 'port', 'port': 'mF771', 'sets': []}
+    logg [['D3 19:30', 'Fortøyd ved rorbua i Forsøl.'], ['D3 19:32', 'Du tok inn på rorbua i Forsøl for 150 kr natta.'], ['D4 05:00', 'Du gikk ned fra rorbua og om bord. Energi 100 %.']] []
+OK   M a trip of three days: home only on the last night, out from home once (she started at the plant) [[], ['D1 22:08 -:port@mF771?dep#10', 'D2 23:08 -:port@mF771?dep#11', 'D3 21:23 -:port@rb42?dep#11', 'D4 22:08 -:port@mF771?dep#10']]
+OK   M the first two nights of the trip are out (at anchor or a quay out there), not at home (Forsøl) ['D1 22:08 -:port@mF771?dep#10', 'D2 23:08 -:port@mF771?dep#11', 'D3 21:23 -:port@rb42?dep#11', 'D4 22:08 -:port@mF771?dep#10']
+OK   M the catch is landed on the trip's third and last day, before home, not on day 1, nor on day 4, the next trip's first (Levering every third day; Jonas 08.11.2026: A), and the plan is still on [[['2028-03-06', 0, 0, 1, 0, ''], ['2028-03-07', 0, 0, 1, 0, ''], ['2028-03-08', 1550, 51238, 1, 0, 'mF771'], ['2028-03-09', 0, 0, 1, 0, '']], None]
+== M2: den samme flerdøgnsturen med levering hvert 2. døgn (valg 14 A: turens siste dag, og hvert 2. døgn fra turens første)
+     D1 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 17:40 (4,5 t) | 17:52 Hviler ved kaia til kl. 21:07 | 17:52 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:32 | 17:52 Hviler om bord til kl. 21:07
+     D2 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 16:25 (3,2 t) | 16:36 Leverer i Forsøl | 17:36 Hviler ved kaia til kl. 20:45 | 17:36 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:16
+     D3 05:00 | 05:00 Går fra Forsøl | 05:19 Setter 2 stamper hyseline på felt 1 | 05:34 Setter 2 stamper hyseline på felt 2 | 05:52 Jukser på juksplass 1 til kl. 11:29 (5,6 t) | 11:36 Trekker felt 1 (sto 6,0 t) | 12:21 Trekker felt 2 (sto 6,0 t) | 13:10 Jukser på juksplass 1 til kl. 16:25 (3,2 t) | 16:36 Leverer i Forsøl | 18:03 Hjem til Forsøl | 18:03 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:43
+     D4 05:00 | 05:00 Går fra Forsøl | 05:31 Setter 2 stamper hyseline på felt 1 | 05:46 Setter 2 stamper hyseline på felt 2 | 06:05 Jukser på juksplass 1 til kl. 11:41 (5,6 t) | 11:49 Trekker felt 1 (sto 6,0 t) | 12:34 Trekker felt 2 (sto 6,0 t) | 13:22 Jukser på juksplass 1 til kl. 17:40 (4,3 t) | 17:52 Hviler ved kaia til kl. 21:07 | 17:52 Mannskapet egner 4 stamper underveis eller ved kai, klar senest kl. 18:32 | 17:52 Hviler om bord til kl. 21:07
+    netter ['D1 22:08 -:port@mF771?dep#10', 'D2 21:16 -:port@mF771?dep#11', 'D3 22:25 -:port@rb42?dep#11', 'D4 22:08 -:port@mF771?dep#10']
+    stats [['2028-03-06', 0, 0, 1, 0, ''], ['2028-03-07', 1049, 35944, 1, 0, 'mF771'], ['2028-03-08', 420, 13631, 1, 0, 'mF771'], ['2028-03-09', 0, 0, 1, 0, '']] fin {'en': 100, 'fat': [0], 'cash': 1047771, 'hold': 576, 'status': 'port', 'port': 'mF771', 'sets': []}
+OK   M2 levering hvert 2. døgn på en tur på 3: levert dag 2 (lasten under 80 %, så etter regelen, ikke full last) og dag 3 (turens siste), ikke dag 1 eller 4 (Jonas 08.11.2026, valg 14: A) [[2, 3], [['2028-03-06', 0, 0, 1, 0, ''], ['2028-03-07', 1049, 35944, 1, 0, 'mF771'], ['2028-03-08', 420, 13631, 1, 0, 'mF771'], ['2028-03-09', 0, 0, 1, 0, '']], 6500]
+OK   M2 Levering-raden sier «hvert 2. døgn og turens siste dag» Nærmeste mottak · hvert 2. døgn og turens siste dag
+OK   M2 leveringen dag 2 avslutter ikke turen: natta ute, hjem dag 3 ['D1 22:08 -:port@mF771?dep#10', 'D2 21:16 -:port@mF771?dep#11', 'D3 22:25 -:port@rb42?dep#11', 'D4 22:08 -:port@mF771?dep#10']
+sidefeil: []
