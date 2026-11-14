@@ -439,9 +439,18 @@ const DOCK = (() => {
   const PLACEN = {mottak:['fiskemottaket', 'the fish plant', 'Mottak', 'Plant'], butikk:['utstyrsbutikken', 'the tackle shop', 'Butikk', 'Shop'], verft:['verftet', 'the yard', 'Verft', 'Yard']};
   const NEARCARD = /<div class="ph-card"><p class="ph-note">(?:Nærmeste|Nearest) [^<]*<b>[^<]*<\/b>[^<]*<\/p><button class="ph-btn" data-pa="goplace" data-id="[^"]*">[^<]*<\/button><\/div>/g;
   const OWNTOP = ['fiske', 'utstyrb'];
+  // the boat chosen on a fleet page (PHONE.sel) when she is another than the one followed and does not lie at this kind of place
+  const atPlace = (bt, k) => !!bt && bt.status === 'port' && !!portServices(portById(bt.port), berthKind(bt))[k];
+  function selAway(k){ if (!PHONE.SEL_APPS.includes(page) || PHONE.sel === S.cur) return null; const v = vesselById(PHONE.sel); return v && !atPlace(v.boat, k) ? v : null; }
   function dress(pg, h){
     const k = PLACE[pg]; if (!k || typeof portServices !== 'function') return h;
     const b = S.boat, here = b.status === 'port' && !!portServices(portById(b.port), berthKind(b))[k], N = PLACEN[k];
+    // (Jonas 14.11.2026: «får ikke til å montere utstyr på båten»: with another boat of the fleet chosen on the page, one that does not lie
+    // here, every buy button was dashed and nothing said why. The page says whose it is and that she is not here, and each button too)
+    { const sv = selAway(k); if (sv){ const nm = vget(sv, 'boatName'), why = L('«' + nm + '» ligger ikke her', '«' + nm + '» is not here');
+        h = '<div class="pl-away"><span>' + L('Du ser på «' + nm + '», som ikke ligger ved ' + N[0] + '. Det som kjøpes og monteres her, gjelder båten ved kaia.', 'You are looking at the «' + nm + '», which is not at ' + N[1] + '. What is bought and fitted here is for the boat at the quay.') + '</span>' +
+          (here ? '<button class="ph-btn" data-pa="vsel" data-id="' + S.cur + '">' + L('Vis «' + S.boatName + '»', 'Show the «' + S.boatName + '»') + '</button>' : '') + '</div>' +
+          h.replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled'); } }
     if (here && OWNTOP.includes(pg)) return h.replace(NEARCARD, '');   // (D3: the shop's own compact top says the place, phone/13b-nettet.js shopTop)
     if (here) return '<div class="pl-head here"><span>' + L('Du er her', 'You are here') + '</span><b>' + portById(b.port).name + '</b></div>' + h.replace(NEARCARD, '');
     const n = placesNear(b.pos, k, 1)[0];
@@ -459,6 +468,9 @@ const DOCK = (() => {
     if (pg === 'arbeid'){ pg = 'beholdning'; sb = sb || 'crew'; }   // the crew page is Om bord's fifth tab (U2-2): the plan's «Til Mannskap-siden» and the tests land there
     if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
+    // (a trade page opens on the boat that lies here: the choice of another boat hung on from the last time the page was open, and the
+    // shop then stood with every button dashed, Jonas 14.11.2026)
+    if (was !== pg && PLACE[pg] && typeof portServices === 'function' && atPlace(S.boat, PLACE[pg]) && selAway(PLACE[pg])) PHONE.dact(pg, 'vsel', {id:S.cur});
     if (sb) PHONE.dact(pg, 'sub', {s:sb});
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render(); if (typeof renderHud === 'function') renderHud();   // (D6: upright the box folds to the strip over the sheet)
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});
