@@ -1823,8 +1823,6 @@ body.booting #lopPop{visibility:hidden!important}
 #drawer .ph-panel,.ph-appv:not(.ph-paper) .ph-panel{--paper:#15252F;--ink:#EEF4F7;--muted:#A9BEC8;--line:#2A4252;--chrome:#0F1E28}
 /* an app's head: dark like the rest, the app's own colour as a line under it (white on the lighter app colours was under 4.5:1) */
 .ph-appv:not(.ph-paper) .ph-top{background-image:linear-gradient(#0B1720,#0B1720)!important;background-repeat:no-repeat!important;background-size:100% calc(100% - 3px)!important}
-/* one primary: magenta, in the operations plan too */
-#drawer .dr-page .ph-btn.p{background:var(--a-primary);border-color:var(--a-primary);box-shadow:none}
 /* what is dimmed stays readable on the dark: less dimming than on white */
 #drawer .gd-row.dim,.ph-appv .gd-row.dim{opacity:.94} #drawer .ach-ch.locked,.ph-appv .ach-ch.locked{opacity:.85} #drawer .nb-rec.empty,.ph-appv .nb-rec.empty{opacity:.9}
 #drawer .stars.apx,.ph-appv .stars.apx{opacity:.85} #drawer .ach-l .stars i,.ph-appv .ach-l .stars i{color:rgba(238,244,247,.22)}
@@ -1859,7 +1857,7 @@ body.booting #lopPop{visibility:hidden!important}
   body.dk-wide #drawerBody .ph-c{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 10px;align-items:start}
   body.dk-wide #drawerBody .ph-c > *{grid-column:1 / -1}
   body.dk-wide #drawerBody .ph-c > :is(.ph-card.ic,.ph-card.crewc,.ph-card.vcard){grid-column:auto}
-  body.dk-wide #drawerBody .ph-c > .ph-c{display:grid}
+  body.dk-wide #drawerBody .ph-c > .ph-c{display:contents}   /* (D3: the gear's cards flow on in the shop's two columns, no half-empty row before them) */
 }
 @media (orientation:portrait){
   /* (the top the sheet may reach: under the strip in 3D, under the plotter's stripe in the chart; U2-7's 88 % is now the most, not the rule) */
@@ -1870,6 +1868,47 @@ body.booting #lopPop{visibility:hidden!important}
   body.dk-low #drawer,body.v3d.dk-open.dk-low:not(.hudoff) #drawer,body.vplot.dk-open.dk-low:not(.hudoff) #drawer{max-height:calc(56% - var(--drBot))}
 }
 #drawer > .dr-head,#drawerTabs{flex:none}
+
+/* ===== D3 (designombyggingen, 13.11.2026): the shops and the purchase =====
+   The item first: the shop's top is one compact block (the place, the keeper's line, what is ordered here, what the boat needs, what a
+   fitting binds) and «Du er her» is one line on the other pages. Magenta only on what buys or accepts; a page's other main action is the
+   blue --a-main (white on it 5.5:1). The yard's upgrades are item cards (.upc). */
+.shop-top{display:flex;flex-direction:column;gap:8px;margin:0 0 10px;padding:10px 12px;border:1px solid var(--m-line,#e3eaee);border-radius:var(--r-card);background:var(--m-card,#fff)}
+.shop-top .shop-k{display:flex;gap:10px;align-items:center}
+.shop-top .shop-kp{flex:0 0 34px;height:34px;font-size:15px}
+.st-t{flex:1;min-width:0}
+.st-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap} .st-h b{font:700 var(--fs-body)/1.2 var(--sans);color:var(--m-ink,#15252f)}
+.st-here{font:600 var(--fs-cap)/1.2 var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--m-ok,#1e8c6e)}
+.shop-top .shop-say{margin:2px 0 0;font-size:13px;line-height:1.35;color:var(--m-ink,#22323c);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.shop-top .buyl{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap} .shop-top .buyl-c{margin:0}
+.st-l{font:600 12px/1.3 var(--sans);color:var(--m-muted,#5b6c76)}
+.shop-top .pick h4{margin:0;font:700 13px/1.3 var(--sans)} .shop-top .pick h4 small{font-weight:500;color:var(--m-muted,#5b6c76);margin-left:4px}
+.st-fit{margin:0;font-size:12.5px;line-height:1.35;color:var(--m-muted,#5b6c76)} .st-fit .ic-more{margin:0;padding:0 4px;min-height:36px;vertical-align:middle}
+#drawerBody .ph-c > p.st-fit{margin:0 2px 8px}
+/* «Du er her» on the other pages: one line, no box */
+.pl-head.here{margin:8px 14px 0;padding:2px 0;background:none;gap:8px;align-items:baseline}
+.pl-head.here b{order:1;flex:0 1 auto} .pl-head.here span{order:2;flex:0 0 auto}
+/* under a buy button: what it binds */
+.ic-sub{flex:1 0 100%;display:block;font:500 12px/1.35 var(--sans);color:var(--m-muted,#5b6c76)}
+/* the yard's upgrades in the item card's layout */
+.upc h4 small{font-weight:600} .ph-card .up-d{margin:2px 0 6px}
+.up-l{display:flex;gap:8px;margin-top:3px;font-size:13px;line-height:1.35} .up-l span{flex:0 0 78px;color:var(--m-muted,#5b6c76)} .up-l b{flex:1;min-width:0;font-weight:600;color:var(--m-ink,#15252f)}
+.ph-card .up-st{margin:0;font-size:13px}
+/* (after the review of the pictures: «Nå» and «Neste trinn» need the width to be compared, so an upgrade card takes the whole row lying down) */
+@media (orientation:landscape){body.dk-wide #drawerBody .ph-c > :is(.ph-card.ic.upc,.upc ~ .ph-card.ic){grid-column:1 / -1}}   /* (and the yard's equipment after them, so no card stands alone in half a row) */
+/* (the operations plan's older green primary must not show through on a disabled button) */
+#drawer .dr-page .ph-btn.p:disabled{background:transparent;box-shadow:none}
+/* the boat you own: a tag, not a frame */
+.vcard.mine{outline:0}
+.v-mine{display:inline-block;align-self:flex-start;margin-bottom:3px;padding:1px 7px;border-radius:4px;background:var(--m-tint-ok,#e3f3ea);color:var(--m-ok,#1e8c6e);font:700 11px/1.5 var(--sans);font-style:normal;letter-spacing:.04em;text-transform:uppercase}
+/* magenta only on what buys or accepts (the list: the actions that take money or bind the player); the rest of the main actions blue */
+:is(#drawer,.ph-appv:not(.ph-paper)){--a-main:#2F6F8F}
+:is(#drawer,.ph-appv:not(.ph-paper)) :is(.ph-btn.p,.btn.primary):not(:disabled){background:var(--a-main);border-color:var(--a-main);box-shadow:none}
+:is(#drawer,.ph-appv:not(.ph-paper)) .ph-btn.p:is([data-pa=equip],[data-pa=shop],[data-pa=propup],[data-pa=upg],[data-pa=engup],[data-pa=holdup],[data-pa=cloth],[data-pa=buy],[data-pa=ptake],[data-pa=ptakeall],[data-pa=pord],[data-pa=ordtake],[data-pa=turtake],[data-pa=pttake],[data-pa=kmtake],[data-pa=mbbid],[data-pa=kmbid],[data-pa=kasko],[data-pa=hullfix],[data-pa=hullclean],[data-pa=bhire],[data-pa=trimbuy],[data-pa=skipbuy],[data-pa=yardnow],[data-pa=haillbuy],[data-pa=lopreg],[data-pa=cloudReg],[data-pa=grbuy],[data-pa=buylic],[data-pa=naustbuy],[data-pa=gregn],[data-pa=frYes]):not(:disabled),
+:is(#drawer,.ph-appv:not(.ph-paper)) .btn.primary[data-act=tow]:not(:disabled){background:var(--a-primary);border-color:var(--a-primary)}
+/* the hold's bar and the tick boxes are not purchases */
+:is(#drawer,.ph-appv:not(.ph-paper)) .bar i{background:#7CC4E0}
+:is(#drawer,.ph-appv:not(.ph-paper)) :is(.tog input,.range input){accent-color:#7CC4E0}
 /* Kaiboden's pictures (14.11.2026): the painted tile at the top of each card, the same light tile as the shop's */
 .kb-pic{display:flex;justify-content:center;margin:0 0 8px;--m-card:initial;--m-card2:initial;--m-tint-link:initial}
 .kb-pic .ic-img{max-width:260px;border-radius:10px}

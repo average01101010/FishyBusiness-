@@ -52,7 +52,8 @@ const DOCK = (() => {
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
-    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Elektronikk og haler', 'Electronics and haulers'], fiske:['Fiskeutstyr', 'Tackle'], service:['Service', 'Service'],
+    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Utstyrsbutikken', 'The tackle shop'], fiske:['Utstyrsbutikken', 'The tackle shop'],   // (D3: one title for the shop; its two tabs say which counter)
+    service:['Service', 'Service'],
     redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Om bord', 'Aboard']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
   TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
@@ -419,9 +420,9 @@ const DOCK = (() => {
   const WIDE = ['fiske', 'utstyrb', 'fartoy', 'utstyr', 'bors', 'havn'];
   function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && WIDE.includes(page)); b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
   function draw(keep){
-    shape();
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
+    shape();   // (after the try-on is taken off, so the low sheet does not hang on for a tick on the next page)
     if (!page) return;
     const y = keep ? dBody.scrollTop : 0, t0 = TITLE[page] || [page, page];
     dTitle.textContent = L(t0[0], t0[1]); drawTabs();
@@ -437,9 +438,11 @@ const DOCK = (() => {
   const PLACE = {lever:'mottak', is:'mottak', agn:'mottak', fiske:'butikk', utstyrb:'butikk', service:'butikk', fartoy:'verft', utstyr:'verft', verksted:'verft', maler:'verft'};
   const PLACEN = {mottak:['fiskemottaket', 'the fish plant', 'Mottak', 'Plant'], butikk:['utstyrsbutikken', 'the tackle shop', 'Butikk', 'Shop'], verft:['verftet', 'the yard', 'Verft', 'Yard']};
   const NEARCARD = /<div class="ph-card"><p class="ph-note">(?:Nærmeste|Nearest) [^<]*<b>[^<]*<\/b>[^<]*<\/p><button class="ph-btn" data-pa="goplace" data-id="[^"]*">[^<]*<\/button><\/div>/g;
+  const OWNTOP = ['fiske', 'utstyrb'];
   function dress(pg, h){
     const k = PLACE[pg]; if (!k || typeof portServices !== 'function') return h;
     const b = S.boat, here = b.status === 'port' && !!portServices(portById(b.port), berthKind(b))[k], N = PLACEN[k];
+    if (here && OWNTOP.includes(pg)) return h.replace(NEARCARD, '');   // (D3: the shop's own compact top says the place, phone/13b-nettet.js shopTop)
     if (here) return '<div class="pl-head here"><span>' + L('Du er her', 'You are here') + '</span><b>' + portById(b.port).name + '</b></div>' + h.replace(NEARCARD, '');
     const n = placesNear(b.pos, k, 1)[0];
     const head = '<div class="pl-head"><span>' + L('Nærmeste ' + N[0], 'Nearest ' + N[1]) + '</span><b>' + (n ? n.pt.name + ' · ' + fmt(n.d / NM, 1) + ' nm' : '–') + '</b>' + (n ? '<button class="ph-btn p" data-pa="goplace" data-id="' + n.pt.id + '">' + L('Autonav dit', 'Autonav there') + '</button>' : '') + '</div>';

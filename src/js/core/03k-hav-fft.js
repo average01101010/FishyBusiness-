@@ -76,7 +76,10 @@ function hfftSpec(T, P){
     if (k < kLo || k >= kHi || i === N / 2 || j === N / 2){ S.h0r[c] = S.h0i[c] = 0; S.w[c] = Math.sqrt(g * Math.max(k, 1e-6)); continue; }
     const w = Math.sqrt(g * k), so = Math.exp(0.5 * lgS(w, P.so)) / (Math.SQRT2 * P.so.n), sy = Math.exp(0.5 * lgS(w, P.sy)) / (Math.SQRT2 * P.sy.n);
     const A = P.ren * (P.dv * so + (1 - P.dv) * sy), S1 = A * A;   // S(w), the blend of the two as the Gerstner bands blend their amplitudes
-    const f = w / P.wpB, s = f < 1.05 ? 6.97 * Math.pow(f, 4.06) : 9.77 * Math.pow(f, -2.33 - 1.45 * (ia - 1.17)), sq = Math.round(s * 200);
+    // (5.20v: the exponent never under 2. Far above the peak the rule falls to 0.1-0.7, the same in all directions, and two fifths of the
+    // short waves' slopes then ran against the wind: waves that meet stand and boil in place, the «vibrating» of Jonas' video 13.11.2026.
+    // At 2 a twelfth runs against it and the slopes across the wind are 0.7 of those along it, as Cox and Munk measured)
+    const f = w / P.wpB, s = Math.max(2, f < 1.05 ? 6.97 * Math.pow(f, 4.06) : 9.77 * Math.pow(f, -2.33 - 1.45 * (ia - 1.17))), sq = Math.round(s * 200);
     // D(theta) = cos^2s(theta/2) / Z(s), Z = 2 sqrt(pi) Gamma(s + 1/2) / Gamma(s + 1) (memoised on s to 0.005)
     const Z = zc[sq] || (zc[sq] = 2 * Math.sqrt(Math.PI) * Math.exp(hfftLgam(sq / 200 + 0.5) - hfftLgam(sq / 200 + 1)));
     const ct = Math.max(-1, Math.min(1, (kx * P.dx + kz * P.dz) / k)), D = Math.pow(Math.max(0, (1 + ct) / 2), sq / 200) / Z;   // cos^2s(t/2) = ((1 + cos t) / 2)^s
