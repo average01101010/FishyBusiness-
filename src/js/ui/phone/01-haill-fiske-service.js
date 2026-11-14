@@ -69,6 +69,56 @@
     if (!here) h.push(nearHint('mottak'));
     return h.join('');
   }
+  // FN1 (steg 127, docs/planer/ferdig-naa.md F1; Jonas 13.11.2026: «alle sider i butikker der det tar tid å installere utstyr og det lages
+  // en arbeidskø burde vise en timer, samt muligheten til å skippe ventetiden med betaling»; valg 1 A, 2 A): «Arbeid på båten» at the top
+  // of every page where a purchase puts a job in the queue, and in Om bord, while the queue has a job: each job with the real time left
+  // (mm:ss) and a bar, and «Ferdig nå» for the yard's jobs, the same purchase as before (yardnow). The time is the job's own end
+  // (j.until), not an offer that runs out. The HTML holds only what changes when a job does (the page is compared and drawn anew only
+  // then, the drawer every 0.7 s, ui/10c-dock.js draw); the clock and the bars are filled in place by jobTick. Not a .ph-card: it stands
+  // before the page's .ph-c, so pairCards never pairs it and it takes the whole width
+  const JOB_PAGES = ['fiske', 'utstyrb', 'service', 'utstyr', 'verksted', 'fartoy', 'maler', 'beholdning'];
+  const yardNowOk = () => (S.jobs || []).some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t + YARD_NOW_MIN);
+  function jobStrip(aboard){
+    const jobs = S.jobs || []; if (!jobs.length) return '';
+    const h = ['<div class="jstrip" data-v="' + S.cur + '"><div class="js-h"><b>' + L('Arbeid på båten', 'Work on the boat') + '</b><span>' + jobs.length + ' / 6</span></div>'];
+    // (the end of a crew job moves every game minute with the hands on it, core/13-work.js jobMinute: the time and «ferdig kl.» are read
+    // from the job by jobTick, not written here, so the HTML stays the same while it runs)
+    jobs.forEach((j, i) => {
+      h.push('<div class="js-row' + (j.until != null ? ' run' : '') + '" data-i="' + i + '" data-k="' + j.kind + '"><span class="js-n">' + (S.lang === 'no' ? j.no : j.en) + '</span>' +
+        (j.until != null ? '<span class="js-k"></span><b class="js-t"></b><div class="js-b"><i></i></div>' : '<span class="js-k">' + (crewJob(j) ? L('venter', 'waiting') : inPort() ? durBoth(j.h * 60) : L('venter på havn', 'waits for port')) + '</span>') + '</div>');
+    });
+    // (shopLabel and shopFine as on Vedlikehold: «Snart i salg» where the shop is shut, P5; the test without payment for the admin)
+    // (only for the boat you are aboard: the purchase is made for her (S.cur when the payment comes back, ui/10i-shop.js), so on a fleet
+    // page with another boat chosen it is not offered: the code review 13.11.2026)
+    if (yardNowOk() && (aboard == null || aboard === S.cur)){ const m = shopMode();
+      h.push('<div class="js-now"><button class="ph-btn p" data-pa="yardnow">' + (m === 'live' ? L('Ferdig nå · ', 'Done now · ') + realKr(YARD_NOW_NOK) : m === 'test' ? L('Ferdig nå', 'Done now') + ' · ' + shopLabel(YARD_NOW_NOK) : shopLabel(YARD_NOW_NOK)) + '</button>' +
+        '<span class="js-k">' + L('Verftet gjør alle verftsjobbene på båten ferdige med én gang.', 'The yard finishes all the yard\'s jobs on the boat at once.') + '</span>' + shopFine() + '</div>'); }
+    h.push('</div>');
+    return h.join('');
+  }
+  // the strips on the screen (the phone's view and the drawer) counted down in place, four times a second; a job that has run out draws
+  // the page anew once, so it goes from the strip and the strip goes with the last of them
+  let jobAt = 0, jobOver = null;
+  function jobTick(root, force){
+    const now = performance.now(); if (!force && now - jobAt < 250) return; jobAt = now;
+    const strips = (root || document).querySelectorAll('.jstrip'); if (!strips.length) return;
+    const t = S.t + (typeof liveFrac === 'function' ? liveFrac() : 0), rate = simRate(); let over = null;
+    for (const st of strips){
+      const v = st.dataset.v, V = v === S.cur || typeof vesselById !== 'function' ? null : vesselById(v); if (v !== S.cur && !V) continue;   // (a boat sold while her page is open)
+      const jobs = (V ? V.jobs : S.jobs) || [];
+      for (const r of st.querySelectorAll('.js-row.run')){
+        const j = jobs[+r.dataset.i]; if (!j || j.until == null || j.kind !== r.dataset.k) continue;   // (the queue changed since it was drawn: the page draws itself anew)
+        const u = j.until, left = Math.max(0, Math.ceil((u - t) / rate * 60)), tm = r.querySelector('.js-t'), k = r.querySelector('.js-k'), bi = r.querySelector('.js-b i');
+        const s = left >= 3600 ? Math.floor(left / 3600) + ':' + String(Math.floor(left / 60) % 60).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0') : String(Math.floor(left / 60)).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0');
+        const kt = L('ferdig kl. ', 'done at ') + hm(u / 60);
+        if (tm && tm.textContent !== s) tm.textContent = s; if (k && k.textContent !== kt) k.textContent = kt;
+        if (bi){ const w = Math.round(clamp(1 - (u - t) / (j.h * 60), 0, 1) * 1000) / 10 + '%'; if (bi.style.width !== w) bi.style.width = w; }
+        if (left <= 0 && over == null) over = u;
+      }
+    }
+    // (the phone's own view: the drawer draws a page anew by itself when its HTML changes, every 0.7 s)
+    if (over != null && over !== jobOver && !force && isOpen && view.querySelector('.jstrip .js-row.run')){ jobOver = over; render(); }
+  }
   function verksted(){
     const b = S.boat, V = VESSELS[b.type], jobs = S.jobs || [], h = [(atKind('verft') ? '' : nearHint('verft')) + '<div class="ph-c"><p class="ph-note">' + L('Verkstedet tar ' + durBoth(YARD_H * 60) + ' per jobb, og jobbene går samtidig mens båten ligger i havn. Perfekt når det blåser. En planlagt avgang venter til alt er ferdig.', 'The yard takes ' + durBoth(YARD_H * 60) + ' a job, and the jobs run side by side while the boat is in port. Perfect when it blows. A planned departure waits until everything is done.') + '</p>'];
     // the hull's damage and its repair, and the hull insurance (Fysikk 3, core/16c-hull.js): what the blows and the groundings did, what
@@ -92,9 +142,7 @@
         kv(L('Fart', 'Speed'), '−' + fmt(15 * f, 1) + ' %') + kv(L('Drivstoff', 'Fuel'), '+' + fmt(25 * f, 1) + ' %') + '<p class="ph-note">' + L('Groe og rur vokser på skroget, raskest om sommeren. ', 'Weed and barnacles grow on the hull, fastest in summer. ') + (S.equip.antigro ? L('Antigro-belegget holder det nede.', 'The antifouling coat keeps it down.') : L('Antigro-belegg under Oppgrader gjør at det gror tre ganger så sakte.', 'An antifouling coat under Upgrade makes it grow three times as slowly.')) + '</p>' +
         (queued ? '<p><b>' + L('På slippen', 'On the slip') + '</b></p>' : '<button class="ph-btn p" data-pa="hullclean"' + (!atKind('verft') || spendable() < c || f < 0.02 ? ' disabled' : '') + '>' + L('Skrogrens på slipp · ', 'Hull cleaning on the slip · ') + kr(c) + ' · ' + durBoth(YARD_H * 60) + '</button>') + '</div>'); }
     h.push('<div class="ph-card"><h4>' + L('Arbeidskø', 'Work queue') + ' (' + jobs.length + '/6)</h4>');
-    // Jonas 05.10.2026: shortening the wait is sold for real money, 19 kr for all the boat's running jobs at once
-    if (jobs.some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t + YARD_NOW_MIN)) h.push('<div class="ph-card haillc"><h4>' + L('Ferdig nå', 'Done now') + ' · ' + realKr(YARD_NOW_NOK) + '</h4><p>' + L('Hopp over ventetida: verftet gjør alle verftsjobbene på båten ferdig med én gang, så du kommer deg ut på sjøen nå mens fisken biter. Utstyrsbutikkens og mannskapets arbeid går som før.', 'Skip the wait: the yard finishes all the yard\'s jobs on the boat at once, so you get out on the water now while the fish are biting. The tackle shop\'s and the crew\'s work goes on as before.') + '</p>' +
-      '<button class="ph-btn p" data-pa="yardnow">' + shopLabel(YARD_NOW_NOK) + '</button>' + shopFine() + '</div>');
+    // («Ferdig nå», Jonas 05.10.2026, stands in the strip at the top of the page now, as on the other pages that make jobs: jobStrip)
     if (!jobs.length) h.push('<p class="ph-note">' + L('Ingen jobber.', 'No jobs.') + '</p>');
     jobs.forEach((j, i) => {
       const run = j.until != null, pct = run ? clamp(1 - (j.until - S.t) / (j.h * 60), 0, 1) : 0;
