@@ -56,4 +56,4 @@
 
 13.11.2026: planen skrevet i D5-økta. **Jonas valgte samme dag: 1 A (alle sidene som lager jobber, og Om bord), 2 A (19 kr for alle verkstedjobbene, som i dag), 3 A (betaling inne i spillet med Google Pay, Apple Pay og Link, kortet huskes).** F1 er steg 127 i køen (`docs/planer/start/127.md`), F2 og F3 steg 128 (`docs/planer/start/128.md`).
 
-13.11.2026: **F1 bygd** (steg 127, gren `ccr-fn1-jobbstripe`): stripa «Arbeid på båten» med nedtelling og «Ferdig nå» på de åtte sidene; se «Arbeid på båten» i `docs/systemer/handel-og-steder.md`.
+14.11.2026: **F1 ferdig** (steg 127, 721c675c, versjon `5f97b41690aa` på testutgaven): stripa «Arbeid på båten» med nedtelling og «Ferdig nå» på de åtte sidene; se «Arbeid på båten» i `docs/systemer/handel-og-steder.md`.
