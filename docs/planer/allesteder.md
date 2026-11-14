@@ -67,7 +67,8 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - **Sjømerke eller kai** (8): rorbuene Røst (67.4996 N 12.0541 Ø, 6,3 knop), Hofset, Ylvisåker, Veo og Ytre Bruvik (samme merke ved 60.3841 N 5.3170 Ø, 4,2 knop), Buvika; naustene Kvaløya sør, Helligvær (kaia).
 - **Skadet ellers på veien** (4): rorbuene Årset, Buene, Eikemo; naustet Melbu.
 - **Ingen framdrift** (3): Træna utstyrsbutikk (også på arbeidsgrenen alene), rorbuene Rise og Otterskreda (slep).
-- **Etappe over land** og **hendene på 25 av 1 037 steder** (grensen er ett av hundre): Brønnøysund, Revsnes, Bremnes, Fitjar verft, Lysekloster verft, Hellvik verft, Averøy utstyrsbutikk, Tvedestrand verft, Harstad verft, rorbuene Stikkelvåg, Vardø, Hestnes og flere.
+- **Etappe over land** (4, de samme som 13.11.2026: Selvær, Trondheim verft, Træna verft, naustet på Selvær).
+- **Hendene på 25 av 1 037 steder** (grensen er ett av hundre): Brønnøysund, Revsnes, Bremnes, Fitjar verft, Lysekloster verft, Hellvik verft, Averøy utstyrsbutikk, Tvedestrand verft, Harstad verft, rorbuene Stikkelvåg, Vardø, Hestnes og flere.
 
 ## Funnene etter fjerde del (14.11.2026, bygget før de to siste rettingene; stoppet etter 450 av 1 045 steder fordi 3D-testene delte maskinen)
 
