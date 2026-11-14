@@ -115,8 +115,15 @@ function colregSit(a, b, o = {}){
   const gs = o.gs || 1, ka = (a.v || 0) * NM * gs, kb = (b.v || 0) * NM * gs;
   const ca = a.cog != null ? a.cog : a.hd, cb = b.cog != null ? b.cog : b.hd;
   const rx = b.p.x - a.p.x, ry = b.p.y - a.p.y, vx = Math.sin(cb) * kb - Math.sin(ca) * ka, vy = -Math.cos(cb) * kb + Math.cos(ca) * ka;
-  const v2 = vx * vx + vy * vy, rv = rx * vx + ry * vy, t = v2 > 1e-9 ? -rv / v2 : 0;
-  const cx = rx + vx * t, cy = ry + vy * t, rng = Math.hypot(rx, ry) / gs * 1000, cpa = Math.hypot(cx, cy) / gs * 1000;
+  const v2 = vx * vx + vy * vy, rv = rx * vx + ry * vy;
+  let t = v2 > 1e-9 ? -rv / v2 : 0, cx = rx + vx * t, cy = ry + vy * t, wx = vx, wy = vy;
+  // b on her way to lie at a quay (b.dock: where, and in how many hours; a ferry or the coastal route's ship, ferjeAt): past that hour she
+  // lies still there, so the closest point is with her at the quay and a going on (AS1 14.11.2026, Fitjar: one who passed astern of the ferry
+  // by rule 15 met her lying at her quay right on the line)
+  const D = b.dock; if (D && kb > 0 && D.t >= 0 && t > D.t){
+    const ex = D.x - (a.p.x + Math.sin(ca) * ka * D.t), ey = D.y - (a.p.y - Math.cos(ca) * ka * D.t), ux = -Math.sin(ca) * ka, uy = Math.cos(ca) * ka, u2 = ux * ux + uy * uy;
+    const t2 = u2 > 1e-9 ? Math.max(0, -(ex * ux + ey * uy) / u2) : 0; t = D.t + t2; cx = ex + ux * t2; cy = ey + uy * t2; wx = ux; wy = uy; }
+  const rng = Math.hypot(rx, ry) / gs * 1000, cpa = Math.hypot(cx, cy) / gs * 1000;
   const brg = Math.atan2(rx, -ry), relA = sjvWrap(brg - (a.hd || 0)), relB = sjvWrap(brg + Math.PI - (b.hd || 0)), closing = rv < 0;
   const lim = o.lim || colregLim(a.L, b.L), still = (a.v || 0) < 1 && (b.v || 0) < 1, risk = t > 0 && cpa < lim && !still;   // (two lying still: nothing closes)
   const clsA = a.cls || 'pow', clsB = b.cls || 'pow', ra = COLREG_RANK[clsA] || 0, rb = COLREG_RANK[clsB] || 0;
@@ -138,7 +145,7 @@ function colregSit(a, b, o = {}){
   }
   else if (clsA === 'fish'){ sit = '18c'; give = 'both'; }
   else { sit = '18'; give = 'none'; }
-  return {sit, give, cpa, rng, tcpa:t * 60, risk, lim, relA, relB, closing, cx, cy, vx, vy, clsA, clsB};
+  return {sit, give, cpa, rng, tcpa:t * 60, risk, lim, relA, relB, closing, cx, cy, vx:wx, vy:wy, clsA, clsB};
 }
 // the smallest offset (km, true) to side sg (+1 starboard of heading hd) that opens the CPA of R (colregSit) to want (m), the mover being
 // 'b' (an NPC) or 'a' (the boat you follow): the parallel track moves the CPA by the offset's part across the relative motion

@@ -123,7 +123,10 @@ function ferjeAt(s, v, w, ok){
   for (let j = 0; j < n; j++){
     const dep = j ? T[2 * j - 1] : 0, arr = T[2 * j], R = P.R[j], o = off(R);
     if (e < dep){ const R0 = P.R[j - 1], a = atRoute(R0, R0.len - off(R0)); return {p:a.p, hd:a.hd, v:0, q:P.q[j], R:R0, end:true, o:off(R0)}; }
-    if (e < arr){ const run = R.len - 2 * o, a = atRoute(R, o + run * (e - dep) / (arr - dep)); return {p:a.p, hd:a.hd, v:Math.round(run / ((arr - dep) / 60) / NM / gridScale(a.p) * 10) / 10}; }
+    // (under way: where she will lie at the end of the leg, and in how many hours, so one who keeps clear of her knows she stops there:
+    // colregSit's dock, AS1 14.11.2026, Fitjar, where she laid to at her quay right on the line of one who passed astern of her)
+    if (e < arr){ const run = R.len - 2 * o, a = atRoute(R, o + run * (e - dep) / (arr - dep)), q = atRoute(R, R.len - o).p;
+      return {p:a.p, hd:a.hd, v:Math.round(run / ((arr - dep) / 60) / NM / gridScale(a.p) * 10) / 10, dock:{x:q.x, y:q.y, t:(arr - e) / 60}}; }
   }
   return lie(P.R[n - 1], true);
 }
@@ -153,6 +156,7 @@ function ferjeStates(s, H, wx = true, C = ferjeClock(H), only){
     if (a.R && !s.lg){ const k = at.get(a.q) || 0; at.set(a.q, k + 1); if (k){ const d = Math.min(a.o + k * (s.L + 15) / 1000, a.R.len * 0.45), q = atRoute(a.R, a.end ? a.R.len - d : d); a.p = q.p; } }
     const id = s.id || 'j' + s.i + '.' + vi; if (only && only !== id) continue;
     const n = {id, name:ferjeName(s, vi), type:'ferry', p:s.lg ? berthShift(a.p, 'ferje', true) : a.p, hd:a.hd, v:a.v, L:s.L, B:s.B, T:s.T}; if (s.cs){ n.cs = s.cs; n.own = s.own; }   // (her made-up call sign and owner, for the AIS card)
+    if (a.dock && !s.lg) n.dock = a.dock;
     if (s.y) n.ex = s.y;   // an express boat (1) or a passenger ferry (2), for the AIS card
     out.push(n);
   }
@@ -168,7 +172,8 @@ function kystStates(H, only){
     const id = 'kyst' + sh.i; if (only && only !== id) continue;
     const d = d0 - (((d0 - sh.i) % K.n) + K.n) % K.n, a = ferjeAt(sh, K.v, t - (d * 1440 + K.dep), null);
     if (a.R){ const k = at.get(a.q) || 0; at.set(a.q, k + 1); if (k){ const dd = Math.min(a.o + k * (sh.L + 15) / 1000, a.R.len * 0.45), q = atRoute(a.R, a.end ? a.R.len - dd : dd); a.p = q.p; } }   // (two at one quay: one behind the other, as the ferries)
-    out.push({id, name:sh.name, type:'coastal', p:a.p, hd:a.hd, v:a.v, L:sh.L, B:sh.B, T:sh.T, cs:sh.cs, own:KYST_OWN});
+    const n = {id, name:sh.name, type:'coastal', p:a.p, hd:a.hd, v:a.v, L:sh.L, B:sh.B, T:sh.T, cs:sh.cs, own:KYST_OWN}; if (a.dock) n.dock = a.dock;
+    out.push(n);
   }
   return out;
 }
