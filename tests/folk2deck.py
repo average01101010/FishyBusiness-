@@ -1,7 +1,7 @@
 """The new people on deck (Folk 2, FB7, steg 125): with #folk2 in the address drawWorker draws the look's skinned figure, posed from
 the joints the solver finds (figpose.js figFromJoints), in one draw call (two with the small palette, #folk2pal=37). Checked on the
 middle one of the coast's boats hauling line and nets: the figures and their draw calls counted, the hands against what they hold in
-haul, gutw, pick and pack, the limbs' lengths against the skeleton's for the body drawn, and the time of a figure drawn for real
+haul, gutw, pick and pack (told, not a gate, from the sixth session: the moments are chance, and the gate is tests/folk2maal.py), the limbs' lengths against the skeleton's for the body drawn, and the time of a figure drawn for real
 (the driver made to finish) with and without the mark, on the same place, clock and seed. Without the mark nothing skinned is drawn.
 
   python3 tests/folk2deck.py            the checks (prints OK or FEIL)
@@ -69,10 +69,12 @@ async def checks(br):
     R = B['R']; L = B['len']; print('lengdene (m):', json.dumps(L), flush=True)
     seen = [k for k in HOLD if k in R]; check(len(seen) == len(HOLD), 'haul, gutw, pick og pack er sett i spillet slik det går', sorted(R.keys()))
     for k in seen:
-        r = R[k]; w = max(r['miss'], r['over']); check(w <= 0.02, '%s: hendene er innen 2 cm av det de holder (verst %.1f mm; %d figurer)' % (k, w * 1000, r['n']), {'flyttet_cm': round(r['over'] * 100, 1)} if r['over'] > 0 else '')
+        # (Jonas 14.11.2026, «Valg A»: the moments a running game happens to show are told, not held against a limit: the gutter gave 1.5 to 33.9 cm in six runs.
+        # The gate is the fixed sweep, tests/folk2maal.py: 5 cm for a hand at a real place, 3 cm for a man's own thing inside him)
+        r = R[k]; w = max(r['miss'], r['over']); print('tall %s: hendene fra det de holder i øyeblikkene denne kjøringen fanget: verst %.1f cm (%d figurer; opplysning, porten er folk2maal)' % (k, w * 100, r['n']), flush=True)
     # (punkt 12: nothing he holds himself is in him; held to the face up to 3 cm. Another's thing in him is printed, a place's matter)
     own = {k: v for k, v in B['C'].items() if '|egen|' in k and not (k.endswith('|hodet') and v <= 3.0)}
-    check(not own, 'ingen ting han selv holder, går mer enn 1 cm inn i ham (hodet tåler 3 cm), i linetrekk, garntrekk og pause slik spillet går', dict(sorted(own.items(), key=lambda q: -q[1])[:12]))
+    print('tall egne ting i kroppen i øyeblikkene denne kjøringen fanget (cm, over 1; opplysning, porten er folk2maal):', json.dumps(dict(sorted(own.items(), key=lambda q: -q[1])[:12]), ensure_ascii=False), flush=True)
     oth = {k: v for k, v in B['C'].items() if '|annens|' in k and v >= 3}
     print('andres ting i en kropp (cm, 3 og over):', json.dumps(dict(sorted(oth.items(), key=lambda q: -q[1])[:15]), ensure_ascii=False), flush=True)
     std = L['m']

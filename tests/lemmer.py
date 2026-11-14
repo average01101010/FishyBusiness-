@@ -33,7 +33,7 @@ BOATS = "Object.keys(VESSELS).filter(t => VESSELS[t].cls !== 'hav' && VESSELS[t]
 
 # the boat on a ground with three hands: hauling line (one hauls, one bleeds, one guts, one packs), hauling nets, jigging by hand,
 # baiting or mending nets lying still (as tests/workshot.py sets them up), or lying idle (the breaks)
-SET = """((a) => { const [type, scene, wind, yaw, pitch, dist] = a, b = S.boat, g = GROUNDS[0].p; S.tut = 0; S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4);
+SET = """((a) => { const [type, scene, wind, yaw, pitch, dist] = a, b = S.boat, g = GROUNDS[0].p; S.tut = 0; clearInterval(window.MOORHOLD); S.t = Math.round((Date.UTC(2027, 2, 12, 11) - EPOCH) / 6e4);
   WX_FORCE = {w:wind, d:250};
   b.type = type; applyVessel(); G3.vesselChanged(); S.boatName = 'Havbris'; S.equip = {linehaler:true, garnhaler:true}; S.jobs = []; S.cargo = []; b.gop = null; S.plan = null; S.settings.gut = true; S.settings.ice = true; S.settings.careAuto = false;
   S.pgear = newPGear(); S.sets = []; b.ice = 300; b.fuel = BOAT.fuelCap; b.deckStop = false; S.me = S.cur; S.myJob = null; S.rest = null;
@@ -41,15 +41,20 @@ SET = """((a) => { const [type, scene, wind, yaw, pitch, dist] = a, b = S.boat, 
   S.crew = [hand(), hand(), hand()];
   const fish = (kg, gut, iced) => ({sp:'torsk', cls:SPECIES.torsk.ref, kg, n:Math.round(kg / 3), bled:true, iced, hr:Math.floor(S.t / 60), fresh:100, gut, hook:true});
   S.hold = scene === 'pause' ? [] : [fish(220, false, false), fish(12, true, false), fish(30, true, true)];
-  b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.gear = null;
+  b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0; b.gear = null; b.land = null; b.deckT = null; b.iceUntil = 0; b.moorT = null; b.berth = null;
   const gop = (kind, sl) => ({op:'haul', kind, n:6, done:2, prog:0.3, sub:0, sl, hooksPer:kind === 'line' ? 600 : 0, a:{x:g.x, y:g.y}, b:{x:g.x + 0.6, y:g.y}, lead:0, kg:0, rel:0, dead:0});
   if (scene === 'pause'){ b.status = 'idle'; b.fishUntil = null; b.rig = 'line'; }
   else if (scene === 'garn'){ b.status = 'fishing'; b.fishUntil = S.t + 600; b.rig = 'garn'; S.pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:4, cond:1}]; b.gop = gop('garn', 3); }
   else if (scene === 'juksa'){ b.status = 'fishing'; b.fishUntil = S.t + 600; b.rig = 'juksa'; b.gear = 'juksa'; S.equip = {}; }
   else if (scene === 'egning'){ b.status = 'idle'; b.fishUntil = null; b.rig = 'line'; S.hold = []; S.pgear.lines.hyse.n = 5; S.pgear.lines.hyse.baited = 1; baitOf(S.pgear).makrell = 100; egnSelf('hyse', 3); }
+  else if (scene === 'setting' || scene === 'settgarn'){ const kind = scene === 'setting' ? 'line' : 'garn'; b.status = 'fishing'; b.fishUntil = S.t + 600; b.rig = kind; S.hold = []; S.pgear.lines.hyse.n = 4; S.pgear.lines.hyse.baited = 4; S.pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:4, cond:1}]; b.gop = Object.assign(gop(kind, kind === 'line' ? 6 : 3), {op:'set'}); }
+  else if (scene === 'teiner'){ b.status = 'fishing'; b.fishUntil = S.t + 600; b.rig = 'teiner'; S.hold = []; S.equip.teinehaler = true; b.gop = gop('teine', 6); }
+  else if (scene === 'kai' || scene === 'fortoy'){ const q = portById('husoy'); b.status = 'port'; b.port = 'husoy'; b.berth = 'main'; b.pos = {...q.p}; b.rig = 'line'; S.hold = [];   /* (steg 125: the landing at the plant's crane, and the lines round the quay) */
+    if (scene === 'kai'){ b.moorT = S.t - 90; b.land = {pid:'husoy', t0:S.t, until:S.t + 20, kind:'tub', n:2, lifts:2, kg:800, own:false, wash:0}; b.iceUntil = S.t + 30; } else window.MOORHOLD = setInterval(() => { S.boat.moorT = S.t - MOOR_IN - 0.2; }, 30); }   /* (the lines last one game minute: held, so the two at the cleat can be measured and seen) */
+  else if (scene === 'vask'){ b.status = 'idle'; b.fishUntil = null; b.rig = 'line'; S.hold = []; b.deckT = S.t - WASH.after; }
   else if (scene === 'boting'){ b.status = 'idle'; b.fishUntil = null; b.rig = 'garn'; S.hold = []; S.pgear.nets = [{id:'n1', mesh:180, ty:'bunn', n:6, cond:0.3, max:0.95}]; mendSelf('n1'); }
   else { b.status = 'fishing'; b.fishUntil = S.t + 600; b.rig = 'line'; S.pgear.lines.hyse.n = 4; S.pgear.lines.hyse.baited = 2; b.gop = gop('line', 6); }
-  window.CATCHQ = []; clearInterval(window.FEED); if (scene !== 'pause' && scene !== 'egning' && scene !== 'boting') window.FEED = setInterval(() => { const Q = window.CATCHQ; if (Q.length < 3) Q.push({sp:Math.random() < 0.75 ? 'torsk' : 'hyse', kg:2 + Math.random() * 4, t:performance.now()}); }, 900);
+  window.CATCHQ = []; clearInterval(window.FEED);  if (['arbeid', 'garn', 'juksa', 'line', 'teiner'].includes(scene) || !['pause', 'egning', 'boting', 'setting', 'settgarn', 'kai', 'fortoy', 'vask'].includes(scene)) window.FEED = setInterval(() => { const Q = window.CATCHQ; if (Q.length < 3) Q.push({sp:Math.random() < 0.75 ? 'torsk' : 'hyse', kg:2 + Math.random() * 4, t:performance.now()}); }, 900);
   CREW3D.reset();
   const c = G3._debug.cam; c.helm = false; c.pitch = pitch; c.yaw = yaw; c.dist = dist; })"""
 

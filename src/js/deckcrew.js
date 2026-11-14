@@ -413,10 +413,14 @@ function crewSim(src){
       // the rail round to a)
       const ang = (x, z) => Math.atan2(z - h0[1], -sg * (x - h0[0])) * 180 / Math.PI, swept = (a, x, z, mg) => { const r = Math.hypot(x - h0[0], z - h0[1]), ap = ang(x, z); return r < B.sweep && r > 0.2 && ap * a > 0 && Math.abs(ap) > Math.abs(a) - mg; };
       const PPL = NEAR.filter(q => q[3]), okDrop = (x, z) => { const a = ang(x, z); return Math.abs(a) >= 10 && lay(x, z) >= 0 && !PPL.some(q => swept(a, q[0], q[1], 25)); };
-      if (!okDrop(drop[0], drop[1])){ let best = null, bv = 1e9, wide = null, wv = -1, free2 = null, fv = 1e9;
-        for (const r of B.dropR) for (let a = -80; a <= 80; a += 10){ if (!a) continue; const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
-          const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (okDrop(x, z) && d < bv){ bv = d; best = [x, z]; } if (m >= 0 && d < fv){ fv = d; free2 = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }
-        const q = best || free2 || wide; PL.tight = best ? 0 : free2 ? 1 : 2;   /* (a deck with no such spot: clear of them at least; else the most room. PL.tight and tightB: for the tests) */ if (q){ drop[0] = q[0]; drop[1] = q[1]; } }
+      // (steg 125b, Jonas 14.11.2026: the fish is let fall before him to his side, along the rail, not behind him: he stood with his back to it and turned 130
+      // degrees round in every take. side: a spot at least B.side degrees round from straight inboard, so within his reach as he faces the rail; such a spot first)
+      const side0 = Math.abs(ang(drop[0], drop[1])) >= B.side;
+      if (!okDrop(drop[0], drop[1]) || !side0){ let best = null, bv = 1e9, wide = null, wv = -1, free2 = null, fv = 1e9, sideB = null, sv = 1e9;
+        for (const r of B.dropR) for (let a = -90; a <= 90; a += 10){ if (!a) continue; const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
+          const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (okDrop(x, z) && Math.abs(a) >= B.side && d < sv){ sv = d; sideB = [x, z]; } if (okDrop(x, z) && d < bv){ bv = d; best = [x, z]; } if (m >= 0 && d < fv){ fv = d; free2 = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }
+        if (sideB) best = sideB; else if (okDrop(drop[0], drop[1])) best = [drop[0], drop[1]];   /* (no spot to his side on this deck: where it was) */
+        const q = best || free2 || wide; PL.tight = best ? 0 : free2 ? 1 : 2; PL.dropSide = !!sideB;   /* (a deck with no such spot: clear of them at least; else the most room. PL.tight and tightB: for the tests) */ if (q){ drop[0] = q[0]; drop[1] = q[1]; } }
       const aD = ang(drop[0], drop[1]), seg = (px, pz, ax, az, bx, bz) => { const vx = bx - ax, vz = bz - az, u = clamp(((px - ax) * vx + (pz - az) * vz) / (vx * vx + vz * vz || 1e-9), 0, 1); return Math.hypot(ax + vx * u - px, az + vz * u - pz); };
       let best = -1, bv = 1e9, wide = -1, wv = -1e9, any = -1, av = -1e9;
       for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const c = M.at(k); if (y0 != null && Math.abs(c[1] - y0) > 0.25) continue; const dd = Math.hypot(c[0] - drop[0], c[2] - drop[1]); if (dd < B.from[0] || dd > B.from[1]) continue;
@@ -827,7 +831,7 @@ function crewSim(src){
   // from the hauler where it is tried (dropR); from: how far from the fish the bleeder stands, and best the distance he had before; room: m from each other place of work
   // (the hauler, the second hauler, the net picker and the pot hand, the packer and the gutter, the packer's box and the shovel's way
   // to it, the ice box; throw: the hauler and the packer from the line of the bleeder's throw to the tub; squat: the ice box from his way down to the fish)
-  const BLEED = {drop:0.6, drop2:0.3, dropIce:0.6, sweep:1.3, dropR:[0.45, 0.55, 0.65, 0.8], from:[0.4, 0.9], best:0.6, room:{haul:0.95, haul2:0.7, pick:0.7, is:0.8, box:0.6, ice:0.75, throw:0.4, squat:0.7}};
+  const BLEED = {side:70, drop:0.6, drop2:0.3, dropIce:0.6, sweep:1.3, dropR:[0.45, 0.55, 0.65, 0.8], from:[0.4, 0.9], best:0.6, room:{haul:0.95, haul2:0.7, pick:0.7, is:0.8, box:0.6, ice:0.75, throw:0.4, squat:0.7}};
   // ---- a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre) ----
   const TAKEN = new Map();
   // (the new people are as wide as people: 0.55 m between two places, as at the table and the tub, deckAt and beside)
@@ -1239,9 +1243,25 @@ const HOLDT = {
   GAP:0.02,      // m between a thing and the body's clothes at the least
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  // the gutter's two crates (steg 125b, Jonas 14.11.2026, choice A: the bleeding tub stands 1.4 to 4.1 m from the gutting table on the coast's boats, behind him or
+  // across the deck, and no arm reaches it): a crate of bled fish on a stack of upturned ones beside him, and a crate on the deck on his other side for the gutted fish.
+  // side and ahead: m from where he stands to a crate's middle; stack: how many crates the bled fish stand on (their top at the table's height); h: a crate's
+  // height; grab: m over the crate's top his hand takes the fish; room: m a crate keeps from another man
+  gutbox:{side:0.8, ahead:0.12, stack:3, h:0.3, grab:0.08, room:0.5},
+  table:{bord:0.32, benk:0.55, off:0.15},   // m along the gutting table from its middle a gutter's own part of it may be (the plastic table is 1.15 m long, the steel bench 1.60, the fish 0.4), and how far past that he may stand and still reach it; further along he guts standing free
+  SIDE:0.03,     // m inside the trunk's half width a hand's point still counts as by his side (the arm's matter, not moved out ahead)
+  // rad his back may be bent (the pose's bend and what the reach adds) and still count as straight, for the poses named: only then is a hand before his belly
+  // moved out ahead (the packer bent 0.9 to 1.2 over his crate: «ahead» of the torso points down into it there). Not a rule for every pose: measured 14.11.2026
+  // with 0.3 and 0.42 for all, the gutter at the tub, the baiter on his seat and the one who unhooks got 6 to 13 cm back, which the rule had taken away
+  STRAIGHT:{pack:0.6},
+  HANG:0.012,    // m a hand hanging by the hip keeps beyond the trunk's half width and the wrist's clearance
+  HANGY:0.04,    // m higher the hanging hands of one who stands or walks are than the old body's (the new arm is that much shorter)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
   LEG:[0.075, 0.055],   // m: half a thigh and half a shin with the trousers (what he holds keeps clear of his legs too)
-  fish:{r:0.11, at:[0.25, 0.5, 0.8]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length)
+  seat:0.9,      // the upturned box he sits on, its height's scale (0.98 with the old figure): its top is under the new thighs, which were 4 cm down in it
+  egn:{at:[0.16, 0.3, 0.4], box:[0.6, 0.59]},   // the baiter's bucket from where he sits [ahead, up, to his right] (m): on an upturned box by his right knee; the box's scale (its width and its height: 0.3 m)
+  bleed:{dip:0.95, knee:[0.62, 0.24, 0.25]},   // how far down in his knees the bleeder goes for a fish that lies on the deck (workLow's dip; 0.62 with the old figure, whose arm was longer: the hand was 12 cm short of the fish), and where the hand that waits hangs meanwhile, down by his right foot [ahead, up, to his right]
+  fish:{r:0.11, at:[0.25, 0.5, 0.8], swap:[0.08, 0.55], round:0.36, thr:[0.1, 0.15, 0.85, 1.4]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length); swap: m nearer his right shoulder than his left the tub is for the right hand to take the fish out of it, and the share of the way to the table's edge where it changes hands; round: m from his own middle the gutted fish keeps on its way through the air to the crate (thrown round him when the crate is behind him), thr: his middle m ahead of his feet, the shares of the throw between which its nearest point to him is looked for, and how many times what it lacks the bow may be
   // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
@@ -1256,7 +1276,8 @@ const HOLDT = {
   // the upper hand would be, from his hips [ahead, up, to his right] (the shaft goes from the blade towards it), and turn the share of
   // the way round to the blade his body turns on its feet and the angle (rad) the blade is kept to the right of where he then faces
   // (the upper hand is his left: the shovel is before him and to his right, never across him or behind his own hand)
-  shaft:{r:0.02, at:[0.12, 0.24, 0.36], len:0.72, low:0.38, hip:[0.1, -0.05, -0.3], turn:[0.85, 0.3]},
+  // full: the share of the way back to its round from which there is ice on the blade again; back: s the shovel takes from over the crate, where he takes it up again after laying a fish straight, to where its round has it
+  shaft:{r:0.02, at:[0.12, 0.24, 0.36], len:0.72, low:0.38, hip:[0.1, -0.05, -0.3], turn:[0.85, 0.3], back:0.4, full:0.95},
   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle. home: where
   // the back hand would be, from his hips [ahead, up, to his right]; chest and reach: how far from his chest [ahead, up from the
   // deck, right] the tip gets over the rail; lift: the tip over the rail on its way in [ahead, over where the fish comes aboard,
@@ -1275,6 +1296,28 @@ const HOLDT = {
   blade:{r:0.15, legs:[0.3, 0.36]},           // the shovel's blade: its half width, and the room his legs have of it under the hips (m ahead of them and to either side: its socket keeps outside that)
   kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0, scan:[0.22, 0.25]}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line; scan: how fast and how far (rad) he turns his head with them, the hands going with them
 };
+// The waiting rule (FB7, steg 125 sixth session; Jonas 14.11.2026, «Valg A»): nobody starts a take while another stands in the way of
+// the thing. Between two people it is this, not geometry in the pose, that keeps one man's thing out of another: the hauler does not
+// gaff the next fish while the bleeder is down at the last one in the gaff's sweep (view3d/09-landing-deck.js dkWaits), the gutter
+// who has the man beside him between himself and the tub takes his fish from the table (view3d/20-trawl-seine.js drawDeckCrew), and
+// the packer holds his shovel over the crate while somebody walks past the ice or works a fish there. Only behind LEMMER.on.
+// Two who stand at their own places inside each other's reach all the time are the places' matter (docs/planer/arbeidsceller.md).
+const VENT = {
+  bleed:1.0,     // s of the bleeder's take (down to the fish on the deck and up with it) the hauler waits before the next fish is gaffed in
+  pass:0.45,     // m from the way between a gutter and the tub another gutter stands in it
+  table:[0.22, 0.2],   // where the fish is taken from the table instead: m along it towards the tub's side from his own part of it, and over its top
+  shovel:0.6,    // m from the way between the packer and the ice somebody who walks or works a fish is in the shovel's way
+  own:0.6,       // m out from the packer towards the ice that way begins (nearer him the blade is not: one who stands by him is not in its way)
+  bin:0.4,       // m ahead of him the ice bin at his side is (view3d/08-plants.js shovelPath, aB)
+  ease:0.35,     // s the wait comes on and goes over (the shovel to over the crate and back to its round)
+  // m from p to the way from a to b, on the deck [x, z]
+  seg(p, a, b){ const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz, u = l2 > 1e-12 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / l2)) : 0; return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); },
+  // is one of the others within r of the way from a to b (and of b itself: the one who stands just past the ice is in the shovel's way too)
+  inWay(a, b, others, r){ for (const o of others) if (VENT.seg(o, a, b) < r) return true; return false; },
+  // the wait's share (0 at work, 1 waiting) dt s on, towards waiting or back; closed in the time, so a slow tablet waits as long
+  blend(w, wait, dt){ const d = Math.max(0, dt) / VENT.ease; return Math.max(0, Math.min(1, w + (wait ? d : -d))); }
+};
+
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
 // (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
 // c.sex; the man's when nothing says), and the shoulders' place over the hips is the skeleton's too; figpose.js figLens)

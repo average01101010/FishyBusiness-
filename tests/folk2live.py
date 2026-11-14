@@ -158,4 +158,4 @@ def main():
             n = len(r['shots']); cols = min(4, n); rows = (n + cols - 1) // cols; sheet = Image.new('RGB', (480 * cols, 360 * rows), 'white')
             for k, f in enumerate(r['shots']): sheet.paste(Image.open(f).convert('RGB').resize((480, 360)), ((k % cols) * 480, (k // cols) * 360))
             sheet.save(os.path.join(LIVE, 'ark.jpg'), quality=88); print(os.path.join(LIVE, 'ark.jpg'), [os.path.basename(f)[:-4] for f in r['shots']])
-main()
+if __name__ == '__main__': main()
