@@ -190,8 +190,15 @@ function obsWays(o, a, b){
       const u = (s - d.s0) / Math.max(0.01, d.s1 - d.s0), mx = d.ax + (d.bx - d.ax) * u, mz = d.az + (d.bz - d.az) * u, nx = -d.uz, nz = d.ux, sd = (ax - mx) * nx + (az - mz) * nz >= 0 ? 1 : -1;
       const p1 = km(mx + nx * D * sd, mz + nz * D * sd), p2 = km(mx - nx * D * sd, mz - nz * D * sd);
       out.push([p1, p2]);
-      // and back onto the leg itself a little beyond the bridge (and off it a little before), so the way on is the leg's own
-      const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25) / LL, on = t => km(ax + lx * t, az + lz * t);
+      // straight through the gap's middle, where the legs to it and on from it turn by little (40 degrees at most): the 21 m coastal
+      // vessel under Karmsundbrua (14.11.2026, tests/allesteder.py, steg 126) was given a way out 24 m to the side and back over 25 m
+      // along, turned at right angles, and backed and filled before the bridge for good
+      const ma = Math.hypot(mx - ax, mz - az), mb = Math.hypot(bx - mx, bz - mz);
+      if (ma > 1 && mb > 1 && ((mx - ax) * (bx - mx) + (mz - az) * (bz - mz)) / (ma * mb) > Math.cos(0.7)) out.push([km(mx, mz)]);
+      // and back onto the leg itself beyond the bridge (and off it before), so the way on is the leg's own: as far along as the gap's
+      // middle is off the leg two and a half times, so she steps over to it at 20 degrees or less
+      const off = Math.abs((mx - ax) * lz - (mz - az) * lx) / LL;
+      const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25 + 2.5 * off) / LL, on = t => km(ax + lx * t, az + lz * t);
       if (u0 + du < 0.97) out.push([p1, p2, on(u0 + du)]);
       if (u0 + du < 0.97 && u0 - du > 0.03) out.push([on(u0 - du), p1, p2, on(u0 + du)]);
     }
@@ -205,7 +212,15 @@ function obsWays(o, a, b){
     for (let i = 0; i < 4; i++){ out.push([km(K[i][0], K[i][1])]); out.push([km(K[i][0], K[i][1]), km(K[(i + 1) % 4][0], K[(i + 1) % 4][1])]); out.push([km(K[(i + 1) % 4][0], K[(i + 1) % 4][1]), km(K[i][0], K[i][1])]); }
   }
   const len = w => { let s = dist(a, w[0]); for (let i = 1; i < w.length; i++) s += dist(w[i - 1], w[i]); return s + dist(w[w.length - 1], b); };
-  return out.filter(w => w.every(p => !isLand(p))).sort((x, y) => len(x) - len(y)).slice(0, 9);
+  // a way she cannot turn through comes last: a corner needs her radius times tan(half the turn) of each leg beside it, and a leg
+  // between two corners both their shares (her radius taken as twice her length; a sharper way is still better than none)
+  const R = 2 * (BOAT.len || 8) / 1000, turnable = w => { const q = [a].concat(w, [b]); let prev = 0;
+    for (let i = 1; i < q.length; i++){ const l = dist(q[i - 1], q[i]); let nxt = 0;
+      if (i < q.length - 1){ const ux = q[i].x - q[i - 1].x, uy = q[i].y - q[i - 1].y, vx = q[i + 1].x - q[i].x, vy = q[i + 1].y - q[i].y, n = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+        nxt = n > 0 ? R * Math.tan(Math.min(2.6, Math.acos(clamp((ux * vx + uy * vy) / n, -1, 1))) / 2) : 0; }
+      if (prev + nxt > l + 1e-6) return false; prev = nxt; }
+    return true; };
+  return out.filter(w => w.every(p => !isLand(p))).map(w => [w, len(w) + (turnable(w) ? 0 : 1e3)]).sort((x, y) => x[1] - y[1]).slice(0, 9).map(x => x[0]);
 }
 // the points to put between a and b so every leg keeps clear of land and of the things (depth: how many things in a row it goes
 // round); [] when a-b is clear already, null when no way was found
