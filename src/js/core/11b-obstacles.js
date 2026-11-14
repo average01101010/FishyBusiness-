@@ -190,13 +190,10 @@ function obsWays(o, a, b){
       const u = (s - d.s0) / Math.max(0.01, d.s1 - d.s0), mx = d.ax + (d.bx - d.ax) * u, mz = d.az + (d.bz - d.az) * u, nx = -d.uz, nz = d.ux, sd = (ax - mx) * nx + (az - mz) * nz >= 0 ? 1 : -1;
       const p1 = km(mx + nx * D * sd, mz + nz * D * sd), p2 = km(mx - nx * D * sd, mz - nz * D * sd);
       out.push([p1, p2]);
-      // straight through the gap's middle, where the legs to it and on from it turn by little (40 degrees at most): the 21 m coastal
-      // vessel under Karmsundbrua (14.11.2026, tests/allesteder.py, steg 126) was given a way out 24 m to the side and back over 25 m
-      // along, turned at right angles, and backed and filled before the bridge for good
-      const ma = Math.hypot(mx - ax, mz - az), mb = Math.hypot(bx - mx, bz - mz);
-      if (ma > 1 && mb > 1 && ((mx - ax) * (bx - mx) + (mz - az) * (bz - mz)) / (ma * mb) > Math.cos(0.7)) out.push([km(mx, mz)]);
       // and back onto the leg itself beyond the bridge (and off it before), so the way on is the leg's own: as far along as the gap's
-      // middle is off the leg two and a half times, so she steps over to it at 20 degrees or less
+      // middle is off the leg two and a half times, so she steps over to it at 20 degrees or less (Karmsundbrua, 14.11.2026, steg 126:
+      // the 21 m coastal vessel was given a way out 24 m to the side and back over 25 m along, turned at right angles, and backed and
+      // filled before the bridge for good)
       const off = Math.abs((mx - ax) * lz - (mz - az) * lx) / LL;
       const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25 + 2.5 * off) / LL, on = t => km(ax + lx * t, az + lz * t);
       if (u0 + du < 0.97) out.push([p1, p2, on(u0 + du)]);
@@ -213,7 +210,7 @@ function obsWays(o, a, b){
   }
   const len = w => { let s = dist(a, w[0]); for (let i = 1; i < w.length; i++) s += dist(w[i - 1], w[i]); return s + dist(w[w.length - 1], b); };
   // a way she cannot turn through comes last: a corner needs her radius times tan(half the turn) of each leg beside it, and a leg
-  // between two corners both their shares (her radius taken as twice her length; a sharper way is still better than none)
+  // between two corners both their shares (obsTurnable; a sharper way is still better than none)
   return out.filter(w => w.every(p => !isLand(p))).map(w => [w, len(w) + (obsTurnable(a, w, b) ? 0 : 1e3)]).sort((x, y) => x[1] - y[1]).slice(0, 9).map(x => x[0]);
 }
 // can she turn through a, the points w, b (and pre, the point she comes to a from, when there is one): a corner needs of each leg beside

@@ -68,7 +68,7 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
       if (!to.id) S.plan.wps[S.plan.wps.length - 1].leia = true;   // (open water: she stops there)
       // no leg over land (the route panel's check)
       let a = from, bad = 0; for (const w of S.plan.wps){ if (!legClear(a, w)) bad++; a = w; } R.overLand = bad;
-      const T0 = S.t, L0 = S.log.length, H0 = DYN.hands || 0; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
+      const T0 = S.t, L0 = S.log.length, H0 = DYN.hands || 0, HK0 = {...(DYN.handsK || {})}; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
       // the game's loop (ui/08-actions.js): the model each frame, the minute step on the clock; she must lie in port at the end in time
       const limit = 60 + Math.ceil(r.nm / Math.max(3, BOAT.vcruise) * 60 * 1.6); let acc = 0, k = 0, best = 1e9, lastBest = S.t, stuck = null, nh = (b.hits || []).length; const pl0 = S.plan;
       while (S.t - T0 < limit){
@@ -85,7 +85,7 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
         if (d < best - 0.03){ best = d; lastBest = S.t; } else if (S.t - lastBest > 40){ stuck = 'no headway for 40 min (' + b.status + ', at ' + JSON.stringify(natLL(b.pos)).slice(0, 60) + ', leg ' + (pl ? pl.idx + '/' + pl.wps.length : '-') + ')'; break; }
       }
       R.log = S.log.slice(L0).map(e => e.no || '').filter(t => /grunn|traff|kollisjon|Kollisjon|støtte|Vann i båten|Motorrommet|slep|Slep|fast|venter|Venter|ly\b/i.test(t)).slice(0, 4);
-      R.min = S.t - T0; R.end = b.status; R.hands = (DYN.hands || 0) - H0;   /* (the hands took her along the line: stuck, or a sharp corner by a mark, 16b-dyn.js) */ R.at = b.port === to.id; R.left = +dist(b.pos, from).toFixed(2); R.km = +dist(b.pos, to.p).toFixed(2);
+      R.min = S.t - T0; R.end = b.status; R.hands = (DYN.hands || 0) - H0; R.handsK = {}; for (const k in (DYN.handsK || {})) if (DYN.handsK[k] - (HK0[k] || 0)) R.handsK[k] = DYN.handsK[k] - (HK0[k] || 0);   /* (the hands took her along the line: stuck, or a sharp corner by a mark, 16b-dyn.js) */ R.at = b.port === to.id; R.left = +dist(b.pos, from).toFixed(2); R.km = +dist(b.pos, to.p).toFixed(2);
       if (!to.id) R.at = R.km < 0.3;
       R.dmg = typeof hullBad === 'function' && hullBad(b); if (R.dmg && !stuck){ const all = S.log.slice(L0).map(e => e.no || ''), why = all.filter(t => /støt|Støt|Smell|grunn|Grunn|Sammenstøt|skade|Skade|lekk/.test(t)); R.log = why.length ? why.slice(0, 6) : all.filter(t => !/^Kl\.|klokka|Posisjon/.test(t)).slice(-6); stuck = 'hull damaged on the way (' + (R.hits ? 'struck ' + JSON.stringify(R.hits) + ' ' : '') + R.log.join(' | ').slice(0, 300) + ')'; }
       if (typeof asleep === 'function' && asleep()) R.asleep = true;
@@ -183,7 +183,14 @@ async def main():
         print(ok(not shallow), 'her draught under her at the lowest tide where she lies (kyst21 3.4 m at the harbours, kyst15 3.0 m at the rorbuer and the naust; %d with less)' % len(shallow), [(r['kind'], r.get('name'), r['lie']['dmin']) for r in shallow[:6]])
         print(ok(not any(r.get('overLand') for r in done)), 'no leg of a route over land')
         hd = [r for r in done if r.get('hands')]
-        print('places where the hands took her along the line (the last way out, Jonas 14.11.2026; %d places, %d times):' % (len(hd), sum(r['hands'] for r in hd)), [(r['kind'], r.get('name'), r['hands']) for r in hd[:20]])
+        kinds = {}
+        for r in hd:
+            for k, n in (r.get('handsK') or {}).items(): kinds[k] = kinds.get(k, 0) + n
+        print('places where the hands took her along the line (the last way out, Jonas 14.11.2026; %d places, %d times, by kind %s):' % (len(hd), sum(r['hands'] for r in hd), json.dumps(kinds)), [(r['kind'], r.get('name'), r.get('handsK')) for r in hd[:30]])
+        # (the hands are the last way out, «i enkelte situasjoner»: stuck or held is a place the model does not solve; a sharp corner by a
+        # mark is the hands' own job. Red when the stuck and held ones are more than one place in a hundred)
+        sh = [r for r in hd if (r.get('handsK') or {}).get('stuck') or (r.get('handsK') or {}).get('held')]
+        print(ok(len(sh) <= max(1, len(done) // 100)), 'the hands took her on where she was stuck or held at no more than one place in a hundred (%d of %d)' % (len(sh), len(done)), [(r['kind'], r.get('name')) for r in sh[:12]])
         tb = [r for r in done if r.get('tideBound')]
         print('places she leaves only nearer high water (not stuck; %d):' % len(tb), [(r['kind'], r.get('name'), r['tideBound']) for r in tb[:12]])
         print('errors:', errs[:4]); await br.close()
