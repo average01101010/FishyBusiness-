@@ -1,6 +1,6 @@
 # Arbeidscellene: faste mål per stasjon på dekk (forslag til eget steg etter steg 125)
 
-**Status: forslag, ikke planlagt og ikke bygd.** Jonas 14.11.2026, i femte økt av steg 125: «kan du huske dette som noe vi burde jobbe med etter steg 125». Steget begynner med `/planlegg` (valgene under er hans), og ikke før steg 125 er levert. Raden står i `docs/planer/koen.md` som 125b.
+**Status: valgt og startet 14.11.2026 (se «Valgt 14.11.2026» under; det som står over valgene, er forslaget slik det var, og faste cellemål er IKKE valgt).** Jonas 14.11.2026, i femte økt av steg 125: «kan du huske dette som noe vi burde jobbe med etter steg 125». Steget begynner med `/planlegg` (valgene under er hans), og ikke før steg 125 er levert. Raden står i `docs/planer/koen.md` som 125b.
 
 ## Spørsmålet og svaret (14.11.2026, fjerde økt)
 
@@ -32,6 +32,16 @@ Hver av dem er en stilling som regner seg fram til et mål som står et tilfeldi
 - Båtene skal fortsatt se ulike ut: cellens indre mål standardiseres (mannen og det han rekker), ikke hvor på dekket cella ligger.
 
 **Foreslått rekkefølge:** (1) fire–fem celletyper med mål (haler, bløgger, sløyer, pakker, egner); (2) inn i ankerne båt for båt; (3) stillingene forenkles til å lese cellens mål. Stillingene som er rettet i steg 125, leser allerede målene sine fra ett sted (`HOLDT`, `BLEED` i `src/js/deckcrew.js`) og taper ikke på det.
+
+## Valgt 14.11.2026 (Jonas, etter samtalen med Gemini; «Ja, jeg er enig»)
+
+- **Ikke standardiserte stasjoner.** Jonas: «Jeg ønsker jo i utgangspunktet ikke at det skal være standardiserte arbeidsstasjoner ombord i båtene, da jeg vil ha litt variasjon for realismens del.» Ingen faste avstander mellom utstyret, og ingenting flyttes i modellene.
+- **Arbeidssonen i stedet:** de faste tingene (haleren, bordet, karet, iskassa, luka) leses der de står på hver båt. **Mannens ståplass regnes ut fra tingene**, så det han arbeider med, ligger i en romslig sone foran ham (innen rekkevidde, uten å vri seg rundt). De løse tingene (fiskekassa, agnbøtta, isbaljen ved siden av ham, stedet fisken slippes) settes ut av koden i forhold til ham. Fotavtrykkene overlapper ikke.
+- **Færre stasjoner på små dekk**, ikke trangere soner. De uten stasjon er inne; på åpne båter vises ikke flere på dekk enn det er stasjoner til. Fangsten endres ikke (figurene er utsikt).
+- **Ankerne og gripepunktene i koden**, ikke i Blender.
+- **Der ingen ståplass har alt i sonen,** er valget Jonas': slå sammen stasjoner, eller flytte en ting i modellen. Økta velger ikke selv.
+- **Rekkefølgen:** (1) en test i Node som for hver båttype og stasjon sier om tingene ligger i sonen, og lister dem som ikke gjør det; lista vises Jonas før stillingene røres om mange faller utenfor; (2) stillingene leser gripepunktene; (3) banen rundt kroppen (én regel i stedet for lappene fra sjette økt). Første runde: haler, bløgger, sløyer, pakker, egner. Pausene, kaia, håndbåten og gangen røres ikke.
+- **Rammene:** reglene i `CLAUDE.md` («Animasjon stemmes ikke i det uendelige», bildeklipp). **Høyst to økter**, så utrulling til testadressen og Jonas avgjør på nettbrettet.
 
 ## Valgene som må tas før det bygges (Jonas)
 
