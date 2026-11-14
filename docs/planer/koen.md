@@ -58,7 +58,7 @@ MVP-en er dermed **en fiskers hverdag om bord i kystflåten, så ekte som mulig*
 - `ccr-as1-alle` (arbeidsrutinen): steg 126 AS1, andre del. Eier `tests/allesteder.py`, `docs/planer/allesteder.md` og delene av `core/16b-dyn.js`, `core/11b-obstacles.js`, `core/11-route.js`, `core/05e-sjovei.js`, `core/07c-naust.js`, `core/07d-rorbu.js`, `core/06b-coastports.js` som funnene peker på, `tests/autonavtest.py`.
 
 
-- `ccr-013bxxif-fb7dekk` (Jonas' økt, ny økt startet 13.11.2026, samme gren og samme steg; ikke flettet inn ennå): steg 125 FB7, skjelettfiguren på dekk og kai, med resten av FB2. Eier `view3d/08-plants.js` (`drawWorker`), `view3d/12-skiff.js`, `view3d/19-wildlife-npc.js`, `view3d/20-trawl-seine.js`, `view3d/09-landing-deck.js`, `view3d/18-setup.js`, `vessel3d.js`, `figpose.js`, `deckcrew.js`, `tests/lemmer.py`, `tests/sjobein.py`, `tests/crewclip.py`, ny enhetstest.
+- `ccr-013bxxif-fb7dekk` (Jonas' økt, andre økt avsluttet 14.11.2026; **steget fortsetter i en ny økt på samme gren**, ikke flettet inn, ikke rullet ut; hvor langt: `docs/planer/start/125.md` på grenen): steg 125 FB7, skjelettfiguren på dekk og kai, med resten av FB2. Eier `view3d/08-plants.js` (`drawWorker`), `view3d/12-skiff.js`, `view3d/19-wildlife-npc.js`, `view3d/20-trawl-seine.js`, `view3d/09-landing-deck.js`, `view3d/18-setup.js`, `vessel3d.js`, `figpose.js`, `deckcrew.js`, `tests/lemmer.py`, `tests/sjobein.py`, `tests/crewclip.py`, ny enhetstest.
 
 
 
