@@ -43,6 +43,22 @@ Hver av dem er en stilling som regner seg fram til et mål som står et tilfeldi
 - **Rekkefølgen:** (1) en test i Node som for hver båttype og stasjon sier om tingene ligger i sonen, og lister dem som ikke gjør det; lista vises Jonas før stillingene røres om mange faller utenfor; (2) stillingene leser gripepunktene; (3) banen rundt kroppen (én regel i stedet for lappene fra sjette økt). Første runde: haler, bløgger, sløyer, pakker, egner. Pausene, kaia, håndbåten og gangen røres ikke.
 - **Rammene:** reglene i `CLAUDE.md` («Animasjon stemmes ikke i det uendelige», bildeklipp). **Høyst to økter**, så utrulling til testadressen og Jonas avgjør på nettbrettet.
 
+## Sonetesten, første kjøring (14.11.2026): stoppet her, lista til Jonas
+
+`node tests/unit/run.mjs arbeidssone` (ny, `tests/unit/arbeidssone.test.mjs`; uten nettleser, samme svar hver gang) leser plassene og tingene på hver båttype og sier om det mannen arbeider med, ligger i sonen foran ham (holder: 0,3–0,75 m og 60° til hver side; henter eller kaster: inntil 1,05 m og 110°). **52 av 93 ting ligger utenfor, på 37 av 52 stasjoner, og mønsteret er det samme på alle åtte kystbåtene:**
+
+- **Sløyeren og bløggekaret:** karet står 1,4–4,1 m fra sløyeren, bak ham eller på den andre sida av dekket (sjarken 2,3 m, nysjarken 4,1 m, 21-meteren 1,9 m; bare snekka har det nær, 0,5 m, men rett bak ham). Stillingen i dag strekker hånda en halv meter i karets retning og tar en fisk ut av lufta. Det kan ingen stilling rette: det er ikke en bevegelse som finnes.
+- **Sløyeren og pakkerens kasse:** 1,2–4,0 m unna og bak ham. Den sløyde fisken kastes dit i dag.
+- **Bløggeren og karet:** 1,3–1,7 m (kastet), i retning 14–53° (foran ham: det er greit som kast, men lenger enn sonen).
+- **Haleren og stedet fisken slippes:** 0,45–0,8 m rett bak ham (120–160°). Derfor snur han seg 130° i høttetaket.
+- **Pakkeren og iskassa:** i sonen der den finnes; på snekka 1,5 m.
+- Innenfor på alle: haleren ved haleren, sløyeren ved bordet (utenom autolineren og ringnota), bløggeren ved fisken.
+- Havbåtene (snøkrabbe, trålerne, ringnot) har karet 6–16 m fra plassene: de har fabrikk og er ikke med i første runde.
+
+**Dette er et valg om spillet, ikke om animasjon (Jonas):** hva tar sløyeren fisken fra, og hvor legger han den? Se meldingen til Jonas 14.11.2026 og svaret hans her når det kommer. Stillingene er ikke rørt.
+
+**Klippene:** `tests/folk2klipp.py` er skrevet. Første forsøk med hele dekket ga 53 s per bilde (40 min for ett klipp), kameraet sto ikke på sløyeren, og HUD-en og sjøen var ikke skrudd av. Ikke sendt til Gemini. Det hvite rommet (12 s per bilde) virker, men viser ikke bordet og karet.
+
 ## Valgene som må tas før det bygges (Jonas)
 
 - A/B: færre samtidige stasjoner på de minste dekkene, eller trangere celler der.
