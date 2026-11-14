@@ -4288,3 +4288,6 @@
 2026-11-14 03:08	ccr-013bxxif-fb7dekk	8733211	boottest	OK	21	lite	alene	
 2026-11-14 03:37	ccr-013bxxif-fb7dekk	61d5e26+	boottest	OK	36	lite	samtidig	
 2026-11-14 03:37	ccr-013bxxif-fb7dekk	61d5e26+	looktest	OK	17	lite	samtidig	
+2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	boottest	OK	37	lite	samtidig	
+2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	d4dorer	OK	38	lite	samtidig	
+2026-11-14 04:17	ccr-fn1-jobbstripe	0d57684d+	docktest	OK	60	lite	samtidig	
