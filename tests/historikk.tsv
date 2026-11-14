@@ -4336,3 +4336,12 @@
 2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	boottest	OK	37	lite	samtidig	
 2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	d4dorer	OK	38	lite	samtidig	
 2026-11-14 04:17	ccr-fn1-jobbstripe	0d57684d+	docktest	OK	60	lite	samtidig	
+2026-11-14 04:27	ccr-as1-alle	db5abbae	boottest	OK	27	lite	alene	
+2026-11-14 05:19	ccr-as1-alle	a7ba247f	trackfollow	OK	1819	3d	alene	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	colregtest	OK	733	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	helmtest	OK	26	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	trip2	OK	40	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	autonavtest	OK	23	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	obstest	OK	7	lite	samtidig	
+2026-11-14 05:54	ccr-as1-alle	b4ea2e77	routetest	OK	42	lite	alene	
+2026-11-14 06:18	ccr-as1-alle	13a3d337	trackfollow	OK	1426	3d	alene	
