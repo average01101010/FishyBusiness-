@@ -41,12 +41,12 @@ async def main():
           const spot = window.CRABSPOT; atSea(spot); b.status = 'fishing'; b.fishUntil = S.t + 480; for (let i = 0; i < 480; i++) step();
           R.jigCrab = S.hold.filter(x => x.sp === 'krabbe').length; R.jigKg = Math.round(holdTotal()); S.hold = [];
           b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.pgear = newPGear(); const c0 = S.cash;
-          S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
+          S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; DOCK.open('fiske');
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
           R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=big]'), click('[data-pa=grbuy][data-w=kit]')];
           // the bait is bought at the plant, not in the shop (Jonas 07.10.2026): over to Botnhamn for it, and the page is drawn again
-          const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click(); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
-          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
+          const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; DOCK.open('fiske'); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
+          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; DOCK.open('fiske');
           R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.big, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
           R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine || 0; R.potWhy = (buyGate('pot', 'big') || [''])[0]; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
@@ -210,7 +210,7 @@ async def main():
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; R.inSea = (rigBlock('teiner') || [''])[0];
           // an old save with pots in the sea and no rig: rigged for pots
           S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
-          DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig.on h4') || {}).textContent || '';
+          DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig-r.on .rig-t') || {}).textContent || '';
           dr.querySelector('[data-pa=rig][data-r=line]').click(); R.byTap = rigOf(); DOCK.close();
           b.type = 'sjark'; applyVessel(); b.rig = 'juksa'; S.equip.linehaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
         print('rig:', json.dumps(r, ensure_ascii=False))

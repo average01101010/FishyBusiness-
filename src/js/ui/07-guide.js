@@ -292,14 +292,10 @@ function panelPort(){
     h.push(portSlip());
   } else h.push('<p class="note">' + t('not_port') + '</p>');
   h.push('<h3>' + t('prices') + '</h3><div style="overflow-x:auto"><table class="tbl"><thead><tr><th>' + t('port_col') + '</th>' + SP.map(sp => '<th>' + spName(sp) + '</th>').join('') + '</tr></thead><tbody>');
-  plantsNear(S.boat.pos, 10).map(x => x.pt).forEach(p => h.push('<tr' + (b.port === p.id && b.status === 'port' ? ' class="here"' : '') + '><td>' + p.name + '</td>' + SP.map(sp => '<td>' + fmt(price(p, sp, H), 0) + '</td>').join('') + '</tr>'));
+  (b.status === 'port' && plantFor(portById(b.port), b.type) ? [portById(b.port)] : plantsNear(S.boat.pos, 3).map(x => x.pt)).forEach(p => h.push('<tr' + (b.port === p.id && b.status === 'port' ? ' class="here"' : '') + '><td>' + p.name + '</td>' + SP.map(sp => '<td>' + fmt(price(p, sp, H), 0) + '</td>').join('') + '</tr>'));
   h.push('</tbody></table></div><p class="note">' + t('prices_n') + '</p>');
-  h.push('<h3>' + t('stats') + '</h3>');
-  h.push('<div class="kv"><span>' + t('rev') + '</span><span>' + kr(S.stats.revenue) + '</span></div>');
-  h.push('<div class="kv"><span>' + t('costs') + '</span><span>' + kr(S.stats.costs) + '</span></div>');
-  h.push('<div class="kv"><span>' + t('net') + '</span><span>' + kr(S.stats.revenue - S.stats.costs) + '</span></div>');
-  h.push('<div class="kv"><span>' + t('landed') + '</span><span>' + fmt(S.stats.kg, 0) + ' kg</span></div>');
-  h.push('<div class="kv"><span>' + t('trips') + '</span><span>' + S.stats.trips + '</span></div>');
+  // (D4, Jonas 13.11.2026 «Enig»: the accounts stand in Kystbanken and Rederi only; the harbour has the prices where you are, and
+  // Salgslaget the whole coast)
   // («Start på nytt» stood here under the accounts; it is in Innstillinger, in red, UI review 04.11.2026)
   return h.join('');
 }
@@ -431,7 +427,7 @@ function landPage(){
   else if (!plantFor(p, b.type)) h.push('<p class="note">' + t('no_mottak') + '</p>');
   else if (tutOn() && p.id !== tutLand()) h.push('<p class="note">' + LN('På første tur leverer du i ' + tutLandN() + '.', 'On the first trip you land in ' + tutLandN() + '.') + '</p>');
   else if (tot > 0.5) h.push(landWarn(p) + '<div class="btns">' + (mottakOpen(S.t / 60) ? '<button class="btn primary" data-act="sell">' + t('sell', fmt(tot, 0)) + '</button>' : mottakShut()) + '</div>');
-  h.push('<h3>' + LN('Lasterom', 'Hold') + '</h3>' + panelHold());
+  h.push('<h3>' + LN('Last', 'Catch aboard') + '</h3>' + panelHold());
   h.push(portSlip());
   return h.join('');
 }

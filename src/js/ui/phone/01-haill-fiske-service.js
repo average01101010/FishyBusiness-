@@ -40,6 +40,9 @@
     return h.join('');
   }
   // the tackle shop's service (Jonas 08.10.2026): the shop mends and changes in half the time for a fee, and buys the gear back
+  // true when the shop has something to mend or change on the gear aboard (the same quotes the Service tab's buttons ask for)
+  function svcWorn(){ if (!S.pgear) return false; const pg = careInit(S.pgear);
+    return ['hyse', 'bank'].some(lk => pg.lines[lk].n && (careQuote('hooks', lk, true) || careQuote('line', lk, true))) || pg.nets.some(l => careQuote('net', l.id, true)) || !!(potsAboard(pg) && careQuote('pot', 0, true)); }
   function service(){
     const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt, pg = careInit(S.pgear), h = ['<div class="ph-c">'];
     if (!here) h.push(nearHint('butikk'));
@@ -59,6 +62,8 @@
     for (const k of ['mark', 'kveite']) if (pg.jig[k].n > 0) rest.push(sell('jig', k, 1, L('reservesett: ', 'spare set: ') + CARE.jig[k][S.lang].toLowerCase()));
     if (pg.kits.n > 0) rest.push(sell('kit', 0, 1, L('blåsesett', 'buoy set'))); if (pg.kits.heavy > 0) rest.push(sell('heavy', 0, 1, L('tung dregg', 'heavy anchor'))); if (pg.hooks >= 100) rest.push(sell('hooks', 0, 100, L('100 kroker', '100 hooks')));
     if (rest.length) h.push('<div class="ph-card"><h4>' + L('Annet utstyr', 'Other gear') + '</h4><div class="ph-btncol">' + rest.join('') + '</div></div>');
+    // (D4: as a tab of the shop it is often opened with nothing to do: it says so instead of standing empty under its heading)
+    if (!h.some(x => x.includes('ph-btncol'))) h.push('<p class="ph-note svc-none">' + L('Ingen redskap om bord trenger service, og det er ingenting å selge tilbake.', 'No gear aboard needs service, and there is nothing to sell back.') + '</p>');
     return h.join('') + '</div>';
   }
   function iceCard(){

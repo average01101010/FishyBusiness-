@@ -71,7 +71,7 @@ async def main():
         r = json.loads(await J("{say:(document.querySelector('#drawerBody .shop-say') || {}).textContent || '', pick:[...document.querySelectorAll('#drawerBody .pick-r')].map(x => x.textContent), tabs:[...document.querySelectorAll('#drawerTabs button')].map(x => x.textContent), need:[...document.querySelectorAll('#drawerBody .buyl .chip-b')].map(x => x.textContent)}"))
         check(r['say'].startswith('Solveig:') and len(r['say']) > 15, 'kjøpmannen i Finnsnes er Solveig, med en linje', r['say'])
         check(len(r['pick']) == 2 and 'Linehaler' in r['pick'][0], 'det som er bestilt hit, står øverst med «Hent»', r['pick'])
-        check(r['tabs'] == ['Redskap', 'Elektronikk og haler'], 'butikken har fanene Redskap og Elektronikk og haler', r['tabs'])
+        check(r['tabs'] == ['Redskap', 'Elektronikk og haler', 'Service'], 'butikken har fanene Redskap, Elektronikk og haler og Service', r['tabs'])
         check(any('Klær' in x for x in r['need']), 'lista over det båten trenger nå, har klær til alle om bord', r['need'])
         await pg.screenshot(path='nett_butikk_liggende.png')
         c0 = await pg.evaluate("S.cash")
@@ -99,9 +99,10 @@ async def main():
         await pg.screenshot(path='nett_utstyr_liggende.png')
 
         # Service under Inventory › Gear at the shop's quay, not at the plant
-        await pg.evaluate("DOCK.open('beholdning:gear')"); await pg.wait_for_timeout(300)
+        # (D4: the card is a short cut to the shop's Service tab, shown when gear aboard is worn)
+        await pg.evaluate("S.pgear = S.pgear || newPGear(); const L0 = careInit(S.pgear).lines.hyse; L0.n = Math.max(2, L0.n); L0.cond = 0.5; DOCK.open('beholdning:gear')"); await pg.wait_for_timeout(300)
         r = json.loads(await J("{svc:!!document.querySelector('#drawerBody .svc-l [data-a=service]')}"))
-        check(r['svc'], 'Beholdning › Redskap har Service når båten ligger ved butikken', r)
+        check(r['svc'], 'Om bord › Redskap har snarveien til Service når redskap er slitt og båten ligger ved butikken', r)
         await pg.evaluate("document.querySelector('#drawerBody .svc-l [data-a=service]').click()"); await pg.wait_for_timeout(300)
         check(await pg.evaluate("DOCK.page") == 'service', 'knappen åpner Service')
         await pg.evaluate("const q = portById('botnhamn'); S.boat.port = 'botnhamn'; S.boat.pos = {x:q.p.x, y:q.p.y}; DOCK.open('beholdning:gear')"); await pg.wait_for_timeout(300)

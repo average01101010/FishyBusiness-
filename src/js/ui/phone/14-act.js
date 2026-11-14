@@ -1,4 +1,4 @@
-  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'shopgear', 'salgW', 'salgG', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
+  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'salgW', 'salgG', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
   function act(a, d){
     const was = app, done = SEL_APPS.includes(app) && !NAV.has(a) ? withSel(() => act0(a, d)) : act0(a, d);
     // a link to a page that lives in the drawer now (Neste mål, Rederi's «Åpne») closes the phone and opens the drawer
@@ -48,7 +48,6 @@
     else if (a === 'back'){ app = 'home'; }
     else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg || Date.now() - shopPend.t > IC_CONFIRM_MS){ shopPend = {k, kg, t:Date.now()}; return true; } shopPend = null; const free = tutFree(k); buyMark(); const why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else { if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } if (k !== 'ice') shopBought(k === 'jig' ? 'Håndjuksa' : 'Kveiteutstyr', k === 'jig' ? 'Hand jig' : 'Halibut gear'); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'shop', k}); receipt(k === 'ice' ? L(fmt(kg, 0) + ' kg is', fmt(kg, 0) + ' kg ice') : k === 'jig' ? L('Håndjuksa', 'Hand jig') : L('Kveiteutstyr', 'Halibut gear'), 'shop', k); } }
     else if (a === 'shop0'){ }
-    else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (/^gd[A-Z]/.test(a)){ if (!GUIDE.act(a, d)) return false; }   // the fish guide (ui/06f-fishguide.js)
     else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }
@@ -232,6 +231,7 @@
       log('Admin: tok ' + VESSELS[d.k].name.no + ' gratis til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(pid).name + '.', 'Admin: took the ' + VESSELS[d.k].name.en + ' into the fleet for free. She is called «' + v.boatName + '» and lies at ' + portById(pid).name + '.');
       toast(L('«' + v.boatName + '» er din. Du følger henne nå.', '«' + v.boatName + '» is yours. You follow her now.')); refreshAll();
     }
+    else if (a === 'accOpen'){ sub.accOpen = !sub.accOpen; }   // (the bank's «Detaljer», kept open when the page is drawn anew)
     else if (a === 'vsel'){ selV = d.id; }
     else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
     else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }
@@ -276,22 +276,22 @@
       for (const c of S.crew) c.morale = clamp(c.morale, 0, 100); S.cevt = null; }
     else if (a === 'turtake'){ const e = turTake(+d.id); if (e) toast(e); }
     else if (a === 'turdrop'){ turDrop(+d.id); }
-    else if (a === 'ukecard'){ show(false); ukeShow(+d.w); return false; }   // Ukas fangst (ui/05i-ukas.js)
-    else if (a === 'kkmap'){ show(false); kkChart(true); return false; }   // Kystkartet over the chart (ui/05h-kystkart.js)
+    else if (a === 'ukecard'){ show(false); if (typeof DOCK !== 'undefined' && DOCK.page === 'oppdrag') DOCK.close(); ukeShow(+d.w); return false; }   // Ukas fangst (ui/05i-ukas.js)
+    else if (a === 'kkmap'){ show(false); if (typeof DOCK !== 'undefined' && DOCK.page === 'oppdrag') DOCK.close(); kkChart(true); return false; }   // Kystkartet over the chart (ui/05h-kystkart.js)
     // (a mission's id is a number, a race task's text, 'lnk-1:2f': turGo, turMeasure and turFotoShoot compare them as text, KL2)
-    else if (a === 'turgo'){ turGo(d.id); show(false); return false; }
-    else if (a === 'turmeas'){ show(false); turMeasure(d.id); return false; }
+    else if (a === 'turgo'){ turGo(d.id); show(false); if (typeof DOCK !== 'undefined' && DOCK.page === 'oppdrag') DOCK.close(); return false; }   // (D4: Oppdrag is also a page of the drawer: it closes with the phone when the act goes to the chart)
+    else if (a === 'turmeas'){ show(false); if (typeof DOCK !== 'undefined' && DOCK.page === 'oppdrag') DOCK.close(); turMeasure(d.id); return false; }
     // the race's tab (ui/05l-kapplop.js, KL2): register, start again, the way to the next checkpoint, and from the Sesong app's card
     else if (a === 'lopreg'){ if (!lopReg()) return; }
     else if (a === 'lopquit'){ lopQuit(); }
-    else if (a === 'lopgo'){ lopGo(); show(false); return false; }
-    else if (a === 'loptab'){ sub.ordl = 'lop'; show(true, 'ordl'); return false; }
+    else if (a === 'lopgo'){ lopGo(); show(false); if (typeof DOCK !== 'undefined' && DOCK.page === 'oppdrag') DOCK.close(); return false; }
+    else if (a === 'loptab'){ sub.ordl = sub.oppdrag = 'lop'; show(true, 'ordl'); return false; }
     else if (a === 'turans'){ turLeteAnswer(+d.id, +d.q, d.o); }
     else if (a === 'pttake'){ const o = (PTOW._P.open || []).find(x => String(x.id) === String(d.id)); if (o) PTOW.take(o); show(false); return false; }
     else if (a === 'ptgo'){ const H = S.ptowH; show(false); if (H && typeof leiaTo === 'function'){ if (typeof openPlotter === 'function') openPlotter(); leiaTo({x:H.x, y:H.y}); } return false; }
     else if (a === 'ptdrop'){ PTOW.drop(); }
     else if (a === 'turfoto'){ turFotoShoot(d.id); }
-    else if (a === 'ordtake'){ const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
+    else if (a === 'ordtake'){ if (S.boat.status !== 'port'){ toast(L('Bestillinger tar du når båten ligger i havn.', 'Orders are taken when the boat is in port.')); return; } const O = ordState(), o = O.offers.find(x => x.id === +d.id); if (!o || O.active.length >= 3) return; O.offers.splice(O.offers.indexOf(o), 1); o.due = S.t + o.days * 1440; O.active.push(o); log('Tok en bestilling fra ' + CUSTOMERS.find(c => c.id === o.cust).no + '.', 'Took an order from ' + CUSTOMERS.find(c => c.id === o.cust).no + '.'); }
     else if (a === 'cloth'){ buyMark(); const why = clothBuy(d.k); if (why){ toast(why); return true; } receipt(CLOTHES[d.k][S.lang], 'cloth', d.k); }
     else if (a === 'haillbuy'){ if (tutFree('haill') && d.k !== 'luksus') return; const k = d.k, got = () => { giveHaill(k, 'shop'); toast(HAILL[k][S.lang] + L(' ligger i beholdningen. Trykk «Aktiver» når du vil bruke den.', ' is in store. Tap «Switch on» when you want it.')); };
       if (tutFree('haill')){ tutMark('free_haill'); got(); } else payBuy(k, got); }

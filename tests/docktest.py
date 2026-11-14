@@ -64,7 +64,7 @@ async def run(p, w, h, tag):
 
     # pages in the yard and the village
     for m, it, title, sel in (('verft', 'oppgr', 'Oppgraderinger', '[data-pa=equip]'), ('butikk', 'fiskeutstyr', 'Utstyrsbutikken', '[data-pa=grbuy]'), ('butikk', 'elektronikk', 'Utstyrsbutikken', '[data-pa=equip]'), ('verft', 'batmarked', 'Båthandel', '[data-pa=mksel]'),
-                              ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskap', '.ph-card')):
+                              ('verft', 'vedlikehold', 'Vedlikehold', '[data-pa=svc]'), ('bygd', 'bank', 'Kystbanken', '.ph-big'), ('bygd', 'oppdrag', 'Oppdrag', '.ph-card'), ('bygd', 'mannskap', 'Mannskapsbørsen', '.ph-card')):
         await tap_el('#dock [data-dk=' + m + ']'); await fan_up()
         await tap_el('#dockFan [data-dk=' + it + ']'); await pg.wait_for_timeout(300)
         ok = await pg.evaluate("document.getElementById('drawerTitle').textContent === '" + title + "' && !!document.querySelector('#drawerBody " + sel + "')")
@@ -92,7 +92,7 @@ async def run(p, w, h, tag):
     await tap_el('#dock [data-dk=marked]'); await fan_up()
     f = await pg.evaluate("[...document.querySelectorAll('#dockFan [data-dk]')].map(x => x.dataset.dk)")
     off = await pg.evaluate("document.querySelector('#dockFan [data-dk=lever]').classList.contains('off')")
-    check(f == ['lever', 'is', 'agn', 'bunker'] and not off, 'viften for Mottak: Lever, Is, Agn og Bunkring', [f, off])
+    check(f == ['lever', 'is', 'agn', 'oppdrag', 'bunker'] and not off, 'viften for Mottak: Lever, Is, Agn, Oppdrag og Bunkring', [f, off])
 
     # the drawer: ice from the plant, at the side lying; standing one sheet from 12 % of the height for every page, with the strip
     # visible over it (UI 2, U2-7; until then the trade pages opened at 55 % and the middle of the screen stayed free)
@@ -113,15 +113,19 @@ async def run(p, w, h, tag):
     # Om bord (U2-2): five tabs, the crew page as the fifth, and the old «arbeid» lands on it; the dot on the button with a quarrel aboard
     await tap_el('#dock [data-dk=beh]'); await pg.wait_for_timeout(300)
     tabs = await pg.evaluate("[...document.querySelectorAll('#drawerBody .ph-sub button')].map(x => x.textContent)")
-    check(tabs == ['Redskap', 'Rigg', 'Lasterom', 'Båten', 'Mannskap'] and await pg.evaluate("document.getElementById('drawerTitle').textContent") == 'Om bord', 'Om bord har fanene Redskap, Rigg, Lasterom, Båten og Mannskap', tabs)
-    await tap_el('#drawerBody .ph-sub button:nth-child(5)'); await pg.wait_for_timeout(300)
-    cr = await pg.evaluate("(() => { const b = document.getElementById('drawerBody'); return {on:(b.querySelector('.ph-sub button.on') || {}).textContent, wk:!!b.querySelector('.wk'), ans:!!b.querySelector('[data-pa=open][data-a=mannskap]'), bors:!!b.querySelector('[data-pa=open][data-a=bors]'), arbeid:!document.querySelector('#dock [data-dk=arbeid]')}; })()")
-    check(cr['on'] == 'Mannskap' and cr['wk'] and cr['ans'] and cr['bors'] and cr['arbeid'], 'fanen Mannskap viser Mannskap-siden med veien til Ansatte og Mannskapsbørsen, og linja har ingen Mannskap-knapp', cr)
-    await tap_el('#drawerBody [data-pa=open][data-a=bors]'); await pg.wait_for_timeout(300)
-    check(await pg.evaluate("DOCK.page") == 'bors', 'Mannskapsbørsen åpnes fra fanen')
+    check(tabs == ['Redskap', 'Last', 'Mannskap og drift', 'Båten'] and await pg.evaluate("document.getElementById('drawerTitle').textContent") == 'Om bord', 'Om bord har fanene Redskap, Last, Mannskap og drift og Båten (D4)', tabs)
+    rg = await pg.evaluate("(() => { const b = document.getElementById('drawerBody'); return {rig:b.querySelectorAll('.rigc .rig-r').length, on:b.querySelectorAll('.rigc .rig-r.on').length, shop:b.querySelectorAll('[data-a=fiske],[data-a=utstyrb],[data-pa=shopgear]').length}; })()")
+    check(rg['rig'] >= 3 and rg['on'] == 1 and rg['shop'] == 0, 'Redskap har riggen som ett kort med en rad per rigg, og ingen lenke til butikken', rg)
+    to = await pg.evaluate("(() => { const r = {}; for (const a of ['rigg', 'last', 'redskap']){ DOCK.close(); PHONE.open(a); r[a] = [DOCK.page, (document.querySelector('#drawerBody .ph-sub button.on') || {}).textContent]; } DOCK.close(); DOCK.open('beholdning:gear'); return r; })()")
+    check(to == {'rigg':['beholdning', 'Redskap'], 'last':['beholdning', 'Last'], 'redskap':['beholdning', 'Redskap']}, 'de gamle dørene (rigg, last, redskap) lander på fanen i Om bord', to)
+    await tap_el('#drawerBody .ph-sub button:nth-child(3)'); await pg.wait_for_timeout(300)
+    cr = await pg.evaluate("(() => { const b = document.getElementById('drawerBody'); return {on:(b.querySelector('.ph-sub button.on') || {}).textContent, wk:!!b.querySelector('.wk'), ans:!!b.querySelector('[data-pa=open][data-a=mannskap]') && !!b.querySelector('.dr-line'), bors:!!b.querySelector('[data-pa=open][data-a=bors]'), arbeid:!document.querySelector('#dock [data-dk=arbeid]')}; })()")
+    check(cr['on'] == 'Mannskap og drift' and cr['wk'] and cr['ans'] and not cr['bors'] and cr['arbeid'], 'fanen Mannskap og drift har arbeidet om bord, driftsplanens linje og veien til Ansatte; Mannskapsbørsen står ikke der, og linja har ingen Mannskap-knapp', cr)
+    bg = await pg.evaluate("(() => { const it = DOCK.items('bygd').find(x => x.id === 'mannskap'); DOCK.open(it.page); return [it.page, DOCK.page, document.getElementById('drawerTitle').textContent, document.getElementById('drawerTabs').hidden]; })()")
+    check(bg == ['bors', 'bors', 'Mannskapsbørsen', True], 'Bygd har Mannskapsbørsen for å ansette, uten faner', bg)
     await tap_el('#drawerClose'); await pg.wait_for_timeout(200)
     aw = await pg.evaluate("(() => { DOCK.open('arbeid'); const b = document.getElementById('drawerBody'), r = {page:DOCK.page, on:(b.querySelector('.ph-sub button.on') || {}).textContent}; DOCK.close(); return r; })()")
-    check(aw == {'page':'beholdning', 'on':'Mannskap'}, 'DOCK.open(arbeid) lander på fanen Mannskap i Om bord', aw)
+    check(aw == {'page':'beholdning', 'on':'Mannskap og drift'}, 'DOCK.open(arbeid) lander på fanen Mannskap og drift i Om bord', aw)
     dq = await pg.evaluate("(() => { const q = () => !!document.querySelector('#dock [data-dk=beh] .dk-dot'); const d0 = q(); S.cevt = {a:null, b:null, t:S.t}; renderActs(); const d1 = q(); S.cevt = null; renderActs(); return [d0, d1, q()]; })()")
     check(dq == [False, True, False], 'prikken for krangel om bord står på Om bord-knappen', dq)
 
