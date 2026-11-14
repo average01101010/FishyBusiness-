@@ -1,0 +1,114 @@
+"""The people in the white room, a session that stays open (steg 125; Jonas 14.11.2026: «Bygg de fire små nå»). The game is started
+once, with the new people in the white room (G3._debug.studio) and the eye on one man alone (G3._debug.camOn); pictures of a pose at
+a moment that is asked for, and numbers changed while it runs, then take seconds instead of minutes. Not in run.py.
+
+  python3 tests/folk2live.py serve &          build (stops if the build fails), start the game, wait for orders (two hours at most)
+  python3 tests/folk2live.py shot kaffe-slurk royk-trekk coffee:1.2 ...     pictures: a moment's name (MOMENT) or task:t
+        [--who 0] [--face 0.5] [--dist 2.6] [--pitch 0.1] [--alle] [--scene pause|arbeid|garn]    and one sheet of them all
+  python3 tests/folk2live.py js "HOLDT.cup.tip = 0.9"      a number changed in the running game (HOLDT, LEMMER, SJOBEIN are the page's own)
+  python3 tests/folk2live.py reload           build again and load the page again (after a change in src/)
+  python3 tests/folk2live.py quit
+
+The pictures are tests/out/live/<name>.png and tests/out/live/ark.jpg (the sheet, in the order asked for)."""
+import asyncio, json, os, subprocess, sys, time
+HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
+LIVE = os.path.join(HERE, 'out', 'live'); CMD = os.path.join(LIVE, 'cmd.json'); RES = os.path.join(LIVE, 'res.json')
+# a pose at a moment of its round: [task, t] (t is the man's own clock, view3d/08-plants.js tOf; SJOBEIN.test.t)
+MOMENT = {'kaffe-slurk': ['coffee', 3.14], 'kaffe-paa-vei': ['coffee', 2.5], 'kaffe-nede': ['coffee', 0.0], 'royk-trekk': ['smoke', 1.96], 'royk-nede': ['smoke', 0.0],
+          'mat-bit': ['lunch', 2.86], 'snus-leppa': ['snus', 8.16], 'snus-boks': ['snus', 4.0], 'kulde-blaas': ['cold', 6.4], 'kulde-slaa': ['cold', 1.5], 'kulde-gni': ['cold', 4.5],
+          'kost-fram': ['sweep', 0.714], 'kost-bak': ['sweep', 2.142], 'juksa-napp': ['jig', 0.604], 'juksa-nede': ['jig', 0.0], 'kasse-nede': ['stack', 3.366], 'kasse-oppe': ['stack', 1.122],
+          'spade-is': ['pack', 0.4], 'spade-sving': ['pack', 1.1], 'spade-tipp': ['pack', 1.7], 'is-sving': ['ice', 1.1], 'kikkert': ['binoc', 0.0], 'baering': ['carry', 0.0], 'senking': ['stow', 0.0],
+          'hotte': ['gaff', 0.0], 'mobil': ['phone', 0.0], 'lene': ['lean', 0.0], 'kors': ['back', 0.0], 'sitte': ['sit', 0.0], 'prat': ['chat', 1.4], 'bryne': ['knife', 0.3], 'boting': ['mend', 0.5],
+          'kveil': ['coil', 0.5], 'egning': ['egn', 1.0], 'spyling': ['hose', 0.0], 'sloying-hent': ['gutw', 0.4], 'sloying-snitt': ['gutw', 2.2], 'sloying-slo': ['gutw', 3.2], 'sloying-kast': ['gutw', 4.6]}
+
+
+def build():
+    """The build first: a session or a picture of a build that failed is of the old one (seen 14.11.2026)."""
+    r = subprocess.run(['node', 'build.mjs'], cwd=ROOT, capture_output=True, text=True)
+    if r.returncode != 0 or 'does not compile' in (r.stdout + r.stderr): print('BYGGET FEILET:\n' + (r.stdout + r.stderr)[-600:], flush=True); return False
+    print((r.stdout.strip().split('\n') or [''])[-3][:120], flush=True); return True
+
+
+async def serve():
+    sys.path.insert(0, HERE)
+    if not build(): sys.exit(1)
+    from playwright.async_api import async_playwright
+    from _env import boot, GAME
+    from lemmer import SET, BOATS, frames
+    os.makedirs(LIVE, exist_ok=True)
+    for f in (CMD, RES):
+        if os.path.exists(f): os.remove(f)
+    async with async_playwright() as p:
+        br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
+        pg = await br.new_page(viewport={'width': 640, 'height': 480}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+        st = {'scene': None, 't': None}
+        async def start(scene='pause'):
+            await pg.goto('about:blank')   # (the same address again is no new page: the old game would go on)
+            await boot(pg, GAME + ',folk2'); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(2000)
+            st['t'] = (await pg.evaluate(BOATS))[1]; await scene_set(scene)
+        async def scene_set(scene):
+            await pg.evaluate("G3._debug.studio(false)"); await pg.evaluate(SET, [st['t'], scene, 1, -0.9, 0.3, 6]); await frames(pg, st['t'], 2)
+            try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
+            except Exception: pass
+            await pg.evaluate("G3._debug.studio(true)"); st['scene'] = scene
+        await start(); print('klar', flush=True); t_end = time.time() + 7100
+        while time.time() < t_end:
+            if not os.path.exists(CMD): await asyncio.sleep(0.2); continue
+            try: c = json.load(open(CMD))
+            except Exception: await asyncio.sleep(0.1); continue
+            os.remove(CMD); out = {'ok': True}; t0 = time.time()
+            try:
+                if c['op'] == 'quit': json.dump(out, open(RES, 'w')); break
+                elif c['op'] == 'js': out['value'] = await pg.evaluate(c['code'])
+                elif c['op'] == 'reload':
+                    if not build(): out = {'ok': False, 'err': 'bygget feilet'}
+                    else: await start(st['scene'] or 'pause')
+                elif c['op'] == 'shot':
+                    if c.get('scene') and c['scene'] != st['scene']: await scene_set(c['scene'])
+                    await pg.evaluate("([w, d, p, f, s]) => G3._debug.camOn(w, d, p, f, s)", [c.get('who', 0), c.get('dist', 2.6), c.get('pitch', 0.1), c.get('face', 0.5), not c.get('alle')])
+                    out['shots'] = []
+                    for name, task, t in c['shots']:
+                        await pg.evaluate("([task, t]) => { SJOBEIN.test = {roll:0, pitch:0, T:103.1, task, t}; }", [task, t]); await frames(pg, st['t'], 2)
+                        f = os.path.join(LIVE, name + '.png'); await pg.screenshot(path=f, timeout=400000); out['shots'].append(f)
+                    await pg.evaluate("SJOBEIN.test = null")
+                out['gl'] = await pg.evaluate("G3._debug.glErr()"); out['feil'] = errs[:3]; del errs[:]
+            except Exception as e: out = {'ok': False, 'err': str(e)[:400]}
+            out['s'] = round(time.time() - t0, 1); json.dump(out, open(RES, 'w'))
+        await br.close()
+
+
+def send(c, wait=900):
+    os.makedirs(LIVE, exist_ok=True)
+    if os.path.exists(RES): os.remove(RES)
+    json.dump(c, open(CMD + '.tmp', 'w')); os.replace(CMD + '.tmp', CMD); t0 = time.time()
+    while time.time() - t0 < wait:
+        if os.path.exists(RES):
+            time.sleep(0.05)
+            try: return json.load(open(RES))
+            except Exception: pass
+        time.sleep(0.2)
+    return {'ok': False, 'err': 'ikke noe svar (går «serve»?)'}
+
+
+def main():
+    a = sys.argv[1:]
+    if not a or a[0] == 'serve': asyncio.run(serve()); return
+    if a[0] in ('quit', 'reload'): print(json.dumps(send({'op': a[0]}), ensure_ascii=False)); return
+    if a[0] == 'js': print(json.dumps(send({'op': 'js', 'code': a[1]}), ensure_ascii=False)); return
+    if a[0] == 'shot':
+        c = {'op': 'shot', 'shots': []}; i = 1
+        while i < len(a):
+            x = a[i]
+            if x == '--alle': c['alle'] = True
+            elif x in ('--who', '--face', '--dist', '--pitch', '--scene'): i += 1; c[x[2:]] = a[i] if x == '--scene' else float(a[i]) if x != '--who' else int(a[i])
+            elif x in MOMENT: c['shots'].append([x] + MOMENT[x])
+            elif ':' in x: task, t = x.split(':'); c['shots'].append(['%s-%s' % (task, t), task, float(t)])
+            else: print('ukjent øyeblikk:', x, '(finnes:', ' '.join(sorted(MOMENT)), ')'); return
+            i += 1
+        r = send(c); print(json.dumps({k: v for k, v in r.items() if k != 'shots'}, ensure_ascii=False))
+        if r.get('shots'):
+            from PIL import Image
+            n = len(r['shots']); cols = min(4, n); rows = (n + cols - 1) // cols; sheet = Image.new('RGB', (480 * cols, 360 * rows), 'white')
+            for k, f in enumerate(r['shots']): sheet.paste(Image.open(f).convert('RGB').resize((480, 360)), ((k % cols) * 480, (k // cols) * 360))
+            sheet.save(os.path.join(LIVE, 'ark.jpg'), quality=88); print(os.path.join(LIVE, 'ark.jpg'), [os.path.basename(f)[:-4] for f in r['shots']])
+main()
