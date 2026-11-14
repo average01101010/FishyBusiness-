@@ -2810,7 +2810,7 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
 - **1** the phone
   - 68 `setBadge()`
 
-## `src/js/ui/phone/01-haill-fiske-service.js` (160 linjer)
+## `src/js/ui/phone/01-haill-fiske-service.js` (165 linjer)
 
 --- workshop: service, fitting and getting the gear ready, one job after the other while the boat is in port
 
@@ -2818,13 +2818,14 @@ The item card (M1 in docs/planer/butikker-og-sponsorer.md, 30.10.2026)
   - 2 `haill()`
 - **23** the tackle shop on the quay: a purchase takes two taps, the second one confirms the price
   - 30 `fiske()`
-  - 43 `service()`
-  - 64 `iceCard()`
-  - 81 `jobStrip(aboard)`
-  - 102 `jobTick(root, force)`
-  - 122 `verksted()`
+  - 44 `svcWorn()`
+  - 46 `service()`
+  - 69 `iceCard()`
+  - 86 `jobStrip(aboard)`
+  - 107 `jobTick(root, force)`
+  - 127 `verksted()`
 
-## `src/js/ui/phone/02-havn-last-agn-ordre.js` (55 linjer)
+## `src/js/ui/phone/02-havn-last-agn-ordre.js` (60 linjer)
 
 the old tabs live on as phone apps
 
@@ -2834,9 +2835,10 @@ the old tabs live on as phone apps
   - 5 `lever()`
   - 6 `isApp()`
   - 8 `agn()`
-  - 35 `oppdrag()`
-  - 36 `ordl()`
-  - 44 `ordlBest(tabs)`
+  - 39 `ordPage(key, first)`
+  - 52 `oppdrag()`
+  - 53 `ordl()`
+  - 54 `ordEarlier()`
 
 ## `src/js/ui/phone/03-regler.js` (63 linjer)
 
@@ -2883,16 +2885,16 @@ Kvotemarkedet: Kvote → Marked (KM3 of docs/planer/kvotemarkedet.md; Jonas 07.1
   - 176 `kxBoatRow(v)`
   - 183 `kmAct(a, d)`
 
-## `src/js/ui/phone/05-rigg-innst-admin.js` (94 linjer)
+## `src/js/ui/phone/05-rigg-innst-admin.js` (102 linjer)
 
-the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
+the rig: one kind of fishing at a time, chosen in Om bord › Redskap when none of the boat's gear is in the sea (D4, Jonas 13.11.2026:
 
-  - 2 `rigg()`
-  - 14 `beholdning()`
-  - 26 `crewTab()`
-  - 33 `logg()`
-  - 34 `innst()`
-  - 72 `admin()`
+  - 4 `rigg()`
+  - 15 `beholdning()`
+  - 30 `crewTab()`
+  - 41 `logg()`
+  - 42 `innst()`
+  - 80 `admin()`
 
 ## `src/js/ui/phone/06-render.js` (117 linjer)
 
@@ -2912,12 +2914,12 @@ D5: where the big phone stands on a tablet, and how wide it is. It leaves the st
 - **98** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 102 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1664 linjer)
+## `src/js/ui/phone/07-patch.js` (1665 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1652 `patch()`
+  - 1653 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (126 linjer)
 
@@ -2980,7 +2982,7 @@ the home screen (UI 2, U2-6; Jonas 06.11.2026, V6 A and V2 A in docs/planer/ui-2
   - 45 `rederi()`
 - **87** equipment
 
-## `src/js/ui/phone/12-utstyr-redskap.js` (260 linjer)
+## `src/js/ui/phone/12-utstyr-redskap.js` (261 linjer)
 
 the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the shop's (electronics, haulers, the jigging machine and the clothes)
 
@@ -2994,7 +2996,7 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
   - 158 `careAboard(inPort, p)`
   - 185 `redskap(tab0)`
 
-## `src/js/ui/phone/13-mannskap-bank-meld.js` (219 linjer)
+## `src/js/ui/phone/13-mannskap-bank-meld.js` (222 linjer)
 
 --- crew
 
@@ -3012,11 +3014,11 @@ the yard's upgrades (hold, engine, the antifouling coat and the outboard) or the
 - **90** bank (Økonomi 2, Ø1): two tabs, the accounts with the statement, and the year's accounts (core/03-simulation.js book, ACCT)
   - 97 `ledger()`
   - 108 `accounts()`
-  - 131 `bank()`
-- **181** messages
-  - 182 `meld()`
-- **189** actions
-  - 196 `switchVessel(k)`
+  - 134 `bank()`
+- **184** messages
+  - 185 `meld()`
+- **192** actions
+  - 199 `switchVessel(k)`
 
 ## `src/js/ui/phone/13b-nettet.js` (158 linjer)
 
@@ -3223,30 +3225,22 @@ Driftsplan 2, part 5: the page (docs/planer/driftsplan-2/02-design.md 4.1). The 
 - **192** the card in the Sesong app: the race this week and your best time (the board for everyone is KL3)
   - 193 `lopSeasonCard()`
 
-## `src/js/ui/06-logbook.js` (115 linjer)
+## `src/js/ui/06-logbook.js` (116 linjer)
 
 ---------- deck log ----------
 
 - **1** deck log
   - 7 `longDate(day)`
 
-## `src/js/ui/06b-book-tabs.js` (175 linjer)
+## `src/js/ui/06b-book-tabs.js` (72 linjer)
 
----------- the deck log's other tabs: seasons, events, gear and sales ----------
+---------- the deck log's other tab: the sales (D4, 14.11.2026: the tabs for seasons, events and gear went out, Jonas 13.11.2026) ----------
 
-- **1** the deck log's other tabs: seasons, events, gear and sales
-  - 11 `bkPages(items, per, head, empty)`
-- **20** seasons: this year's rules and the months each species fetches more or less than usual
-  - 21 `bookSeasons()`
-- **44** events: what moved the prices these last four weeks, and the rules that changed
-  - 45 `bookEvents()`
-- **71** gear: every set that has stood in the sea, with the hours as tally marks
-  - 80 `bookGear()`
-- **96** sales: the landing notes, one to a page
-  - 107 `bookSales()`
-  - 151 `gearLogEntry(s)`
-  - 157 `bkSplit(items, now, per, head, headNow, emptyOver, emptyNow)`
-  - 163 `bookTabPages(t, spread)`
+- **1** the deck log's other tab: the sales (D4, 14.11.2026: the tabs for seasons, events and gear went out, Jonas 13.11.2026)
+- **9** sales: the landing notes, one to a page
+  - 20 `bookSales()`
+  - 64 `gearLogEntry(s)`
+  - 68 `bookTabPages(t, spread)`
 
 ## `src/js/ui/06c-notebook.js` (44 linjer)
 
@@ -3276,7 +3270,7 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
 - **116** the year view
 - **124** the species card
 
-## `src/js/ui/07-guide.js` (449 linjer)
+## `src/js/ui/07-guide.js` (445 linjer)
 
   - 1 `renderClock()`
   - 10 `mottakShut()`
@@ -3296,14 +3290,14 @@ the phone's Fiskeguide app (08.10.2026; Jonas: «en intuitiv app til telefonen d
   - 249 `deckText(short)`
   - 269 `quayText(short)`
   - 275 `panelPort()`
-  - 309 `portSlip()`
-  - 387 `landWarn(p)`
-  - 405 `landQText(short)`
-  - 413 `landQOthers()`
-  - 422 `landPage()`
-  - 438 `panelLog()`
-  - 443 `renderPanel()`
-  - 447 `panelBusy()`
+  - 305 `portSlip()`
+  - 383 `landWarn(p)`
+  - 401 `landQText(short)`
+  - 409 `landQOthers()`
+  - 418 `landPage()`
+  - 434 `panelLog()`
+  - 439 `renderPanel()`
+  - 443 `panelBusy()`
 
 ## `src/js/ui/07b-first-trip.js` (328 linjer)
 
@@ -3499,15 +3493,15 @@ passive gear on screen: the action bar, the fish panel, the chart and the route
   - 224 `wpActCycle(w)`
   - 229 `gearDoAct(act, el)`
 
-## `src/js/ui/10c-dock.js` (595 linjer)
+## `src/js/ui/10c-dock.js` (602 linjer)
 
 ---------- the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side ----------
 
 - **1** the dock: round buttons along the bottom that follow what the boat is doing, and the drawer at the side
-- **412** the drawer
-- **501** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
-  - 568 `renderActs()`
-  - 581 `showroomTick()`
+- **414** the drawer
+- **508** the calm (UI 2, U2-4, 07.11.2026; docs/planer/ui-2-staaende.md 4.5, Jonas' V8 A 06.11.2026)
+  - 575 `renderActs()`
+  - 588 `showroomTick()`
 
 ## `src/js/ui/10d-helm.js` (51 linjer)
 
@@ -4938,7 +4932,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
 - **94** frame
   - 98 `fpsEl()`
 
-## `src/js/view3d/24-cinema.js` (770 linjer)
+## `src/js/view3d/24-cinema.js` (787 linjer)
 
 ---------- cinema (the user's wish 03.10.2026; a director of fourteen shots 01.11.2026) ----------
 
@@ -4961,36 +4955,37 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 216 `gfxNaN(eye, VPn)`
   - 226 `gfxEnd(now, eye, VPn, W, Hh)`
   - 268 `frameClock(raw)`
-  - 280 `frame()`
-  - 285 `frame0()`
-  - 482 `snapTake()`
-  - 487 `drawRoute(VP, eye)`
-  - 510 `driftSpray(VP, eye, dt, t, col)`
-  - 537 `drawSmoke(VP, eye, BM, dt)`
-  - 578 `scupperWater(VP, eye, BM, dt, t, col)`
-  - 612 `splashFoam(x, z, r, a)`
-  - 614 `drawEffects(VP, eye, BM, dt, t)`
-  - 752 `updateLabels(VP, eye, W, Hh)`
+  - 281 `frame()`
+  - 286 `frame0()`
+  - 499 `snapTake()`
+  - 504 `drawRoute(VP, eye)`
+  - 527 `driftSpray(VP, eye, dt, t, col)`
+  - 554 `drawSmoke(VP, eye, BM, dt)`
+  - 595 `scupperWater(VP, eye, BM, dt, t, col)`
+  - 629 `splashFoam(x, z, r, a)`
+  - 631 `drawEffects(VP, eye, BM, dt, t)`
+  - 769 `updateLabels(VP, eye, W, Hh)`
 
-## `src/js/view3d/25-controls.js` (273 linjer)
+## `src/js/view3d/25-controls.js` (278 linjer)
 
 ---------- controls ----------
 
 - **1** controls
-  - 19 `paintView(on)`
-  - 24 `paintAim(C, yawW)`
-  - 35 `tryView(k)`
-  - 36 `hoist(k)`
-  - 38 `tryEq()`
-  - 44 `liftY(k)`
-  - 48 `showroom(type)`
-  - 57 `show(on, auto)`
-  - 73 `bench(ks, ns)`
-  - 96 `benchPeers(n)`
-- **123** the profile (#prof, F1)
-  - 133 `pqInit()`
-  - 141 `pqPoll()`
-  - 150 `profBegin(rdt, j0)`
-  - 153 `profMark(k)`
-  - 157 `profEnd()`
-  - 167 `prof(sets)`
+  - 14 `studioHud()`
+  - 24 `paintView(on)`
+  - 29 `paintAim(C, yawW)`
+  - 40 `tryView(k)`
+  - 41 `hoist(k)`
+  - 43 `tryEq()`
+  - 49 `liftY(k)`
+  - 53 `showroom(type)`
+  - 62 `show(on, auto)`
+  - 78 `bench(ks, ns)`
+  - 101 `benchPeers(n)`
+- **128** the profile (#prof, F1)
+  - 138 `pqInit()`
+  - 146 `pqPoll()`
+  - 155 `profBegin(rdt, j0)`
+  - 158 `profMark(k)`
+  - 162 `profEnd()`
+  - 172 `prof(sets)`
