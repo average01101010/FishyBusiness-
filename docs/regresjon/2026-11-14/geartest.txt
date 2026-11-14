@@ -1,0 +1,67 @@
+buy: {"spNoCrab": true, "jigCrab": 0, "jigKg": 429, "clicked": [true, true, false, true, true], "pg": {"nets": [6], "hyse": 4, "pots": 0, "kits": 1, "bait": 20}, "spent": 20260, "potRoom": 0, "potWhy": "Denne båten kan ikke rigges for teiner: det er ikke plass til teiner om bord.", "expect": 20260, "fullNets": true, "elSkiff": true, "elSjark": false, "garnhalerSjark": true}
+OK   king crab is outside the fish list, and a day of jigging on a crab spot takes no crab
+OK   buying in the Gear app: nets, tubs, a buoy set and bait, sized to the wooden boat’s room, paid exactly; no pots, there is no room for them (OB1)
+OK   the line hauler fits every boat and is just called a line hauler; the net hauler is for the sjark
+rules: {"alone": true, "withOne": null, "twoCrew": null, "set1": null, "set2": null, "set81": ["Innenfor fjordlinja kan du ha høyst 80 torskegarn i sjøen."], "nets": 80, "hooks8": ["Du har ikke så mange egnede stamper om bord."], "hooks7": null, "geo": [[true, true, true, true, 1120], [true, true, true, true, 1120]]}
+OK   nets need two aboard: not alone; you and one crew, or two crew without you
+OK   inside the fjord line: 80 nets and no more, 5,000 hooks (8 tubs of haddock line at 600 hooks, not 9)
+OK   each string lies at sea between its buoys, clear of land, on at least 5 m, 28 m a net
+soak: {"line": [33, 69, 82, 18], "fresh": [100, 36], "netFresh": {"winter": 71, "summer": 49}, "pots": [792, 600], "dead60": 88, "mesh": [3.4, 5.21]}
+OK   line: a day gives more than twice four hours; after two days the amphipods have taken much of it
+OK   line: after 4 hours the fish is alive and top grade, after 30 hours it is not
+OK   nets: the fish keeps better in cold water than in summer
+OK   pots: half the catch by 20 hours, and crab dies after two days
+OK   200 mm nets take bigger cod than 156 mm
+haul: {"afterNet": {"hook": true, "pend": 400, "kg": 400, "nets": [[10, 0.92]], "left": 1}, "afterLine": {"hook": true, "kg": 38, "un": 2}, "potSet": null, "crab": {"n": 226, "kg": 340, "cls": [0, 1, 2, 3, 4, 5, 6], "clsOk": true}, "marks": [{"g": "line", "kgu": 19.2, "q": 0.21}, {"g": "teine", "kgu": 8.5, "q": 0.43}], "crabPend": 0, "nonCrab": 1.74, "sale": {"fine": 0, "dead": 1.2, "minOk": true, "krPerKg": 201, "ffAdd": 1.74, "gear": ["juksa", "garn", "line", "teine"], "msgs": ["Brønnøysundregistrene", "Leif på mottaket i Senjahopen", "Senjahopen"], "why": ["Turen ga 54 kg i timen med håndjuksa. Det sto godt med fisk. Redskapet ga lite denne gangen: feltet var hardt fisket.", "The trip gave 54 kg an hour with a hand jig. There was plenty of fish. The gear gave little this time: the ground had been fished hard."]}}
+OK   nets come up: net fish is not hook-caught, it goes to the bleeding tub, the nets are aboard again and worn a little
+OK   line comes up hook-caught, and the tubs are unbaited
+OK   king crab: all of it is kept (J-138-2026 § 5) and sorted by sex, weight and damage into Råfisklaget’s classes
+OK   the catch mark gives kilos per line (the whole line) and per pot [{'g': 'line', 'kgu': 19.2, 'q': 0.21}, {'g': 'teine', 'kgu': 8.5, 'q': 0.43}] 340
+OK   the landing note says how the three hauls fished against usual ones for the soak, in words (Ø8b S2) ['Turen ga 54 kg i timen med håndjuksa. Det sto godt med fisk. Redskapet ga lite denne gangen: feltet var hardt fisket.', 'The trip gave 54 kg an hour with a hand jig. There was plenty of fish. The gear gave little this time: the ground had been fished hard.']
+OK   live king crab is paid at least the minimum price of its class and dead crab nothing; no fine, and crab is outside the fresh-fish scheme
+care: {"lost": true, "lostMsg": true, "alert": true, "rep": true, "gone": true, "kv": true, "warn48": true, "fdir": true, "tore": true, "left": 0, "mend": null, "mendH": 4.6, "mended": 0.95, "botHusoy": true, "bot": null, "botFee": 11700, "botBack": 0.95, "egn": null, "egnFee": 1180, "egnExpect": 1180, "beforeReady": 0, "afterReady": 2, "self": null, "selfH": 0.9, "selfExpect": 0.9, "selfDone": 4}
+OK   a storm takes the gear: a message and an alert, and reporting it to the Coast Guard clears it
+OK   two days in the sea brings a warning, the fourth day the Directorate’s reminder
+OK   nets worn thin go to pieces when hauled
+OK   mending: the crew in port, or the net loft in Finnsnes for a fee, back a day later
+OK   baiting: the shed charges fee and bait and has it ready later; the crew baits at about 560 hooks an hour each
+plan: {"err": null, "days": [[23], [47], [71]], "sales": [], "stop": null, "oneHand": true, "said": ["Neste tur g\u00e5r kl. 05:00.", "Garn krever minst to om bord: deg og \u00e9n til. Planen venter til det er to om bord."]}
+FEIL standing plan: the net station is hauled and set again every day, and the catch is landed
+OK   with one hand the skipper will not run a plan with nets
+rig: {"def": "juksa", "noHauler": "Båten mangler linehaler. Den kjøpes og monteres i Butikk › Elektronikk og haler.", "garnSkiff": "", "juksa": ["Båten er allerede rigget for dette."], "toLine": null, "line": "line", "choices": ["line"], "atSea": null, "potsSkiff": "Denne båten kan ikke rigges for teiner: det er ikke plass til teiner om bord.", "netRule": "Båten er rigget for line. Rigg om til garn under Om bord.", "setLine": null, "jigKg": 56.7, "dockJig": 1, "inSea": "Trekk alt redskap i sjøen først.", "guess": "teiner", "page": 2, "pageOn": "Bare juksa · rigget nå", "byTap": "line", "sjarkLine": "Båten mangler linehaler. Den kjøpes og monteres i Butikk › Elektronikk og haler."}
+OK   a new boat is rigged for jigging; line needs a hauler; the skiff takes nets by hand, and no pots (no room)
+OK   with the electric hauler the skiff rigs for line, and only line can be set
+OK   at sea the rig can be changed aboard when nothing is in the sea; fishing hours with a line rig still give a jig catch, and the Jig button stays
+OK   gear in the sea blocks re-rigging; an old save takes the rig from the gear in the sea
+OK   the Rig page in the drawer offers what the skiff can rig (line, and nets by hand; not pots) and re-rigs on a tap; a sjark needs the hydraulic line hauler
+reload: {"sets": ["sz"], "nets": [["nz", 5, 0.8]], "v2": true}
+OK   gear in the sea and aboard survives a reload; an old save gets a gear locker on every vessel
+chart/3d: {"buoys": 2} {"why": null}
+OK   the chart draws two buoys for the set, and setting pots runs in 3D
+calibration: {"linePerTub": 68, "lineHyse": 69, "netPerNet": 61, "potPerPot": 9.14, "jigOneHand8h": 434}
+OK   haddock line, 12 hours in February on the eight best haddock spots: 60–115 kg a tub (600 hooks), mostly haddock
+OK   cod nets of 180 mm, 20 hours in March west of Gryllefjord: 55–95 kg a net (ERS 2024-2026, 15-21 m: median 72 kg of cod a net in March, 05.11.2026)
+OK   big king crab pots, 24 hours in September in West Finnmark: 2–12 kg a pot (an estimate)
+bait: {"f": [1.4, 1.8, 0.6, 1, 1.6, 1.4], "cod": [152, 68], "own": 50, "ownBait": 50, "quota": 50, "left": 10}
+OK   bait: shrimp takes more cod than krill, and own saithe as bait leaves the hold and counts on the quota
+bait choice: {"egn": null, "ejBait": "sild", "pref": "sild", "sild": 20, "bt1": {"makrell": 2, "sild": 2}, "strip": null, "stripH": 0.3, "egnH": 1, "during": {"n": 2, "owned": 4}, "chain": "sild", "bt2": {"makrell": 0, "sild": 4}, "bait2": {"makrell": 10, "sild": 10}, "short": "1 stamp trenger 5 kg reke, og du har 0 kg.", "ch": ["sild:4"], "chAll": ["1 stamp hyseline · ikke egnet"], "strip2": null, "free": 1, "auto": null, "autoN": 1, "bare": 1, "kvGate": "Kveitepilk trenger du først når du har kveiteutstyr om bord.", "markGate": null, "kvOk": null}
+OK   baiting with a chosen bait: the tubs get it, and it is remembered as the default
+OK   stripping takes a third of the baiting time, the tubs are with the crew meanwhile, the old bait is thrown away, and they are baited again with the new bait
+OK   baiting with a bait not aboard says how much there is; the set choices go by the bait on the tubs, the unbaited tub as a row of its own 1 stamp trenger 5 kg reke, og du har 0 kg. ['sild:4'] ['1 stamp hyseline · ikke egnet']
+OK   a strip with nothing after keeps the tub bare: baiting with no bait named (as the crew does by itself) takes only the other unbaited tub 1 1 1
+OK   a halibut pilk set is sold only with the halibut gear aboard (buyGate) Kveitepilk trenger du først når du har kveiteutstyr om bord.
+nets: {"buy": ["ok", "ok", "ok", "no"], "types": ["bunn:156", "flyt:156", "kveite:360"], "join": false, "k": {"bunn": {"torsk": 337.16637497619695, "hyse": 7.594279899750961, "sei": 178.26558080377782, "lyr": 3.923707114877472, "lange": 0.5388820889855513, "brosme": 0.9038269285780022, "uer": 0.07062167840313135, "kveite": 0.4437405177820893}, "flyt": {"sei": 620.9441039947467, "torsk": 98.24847358717014, "hyse": 2.541411842287615, "lyr": 0.6589725969931831, "uer": 0.020752420980763738}, "kv": {"kveite": 5.329668080092373, "lange": 1.2954358066090113, "brosme": 1.7465714552988079, "torsk": 47.14543133695824, "hyse": 0.4067415541809037, "sei": 30.385239892202616, "uer": 0.05608258055348622}}, "lbl": "bl\u00e5kveitegarn 360 mm"}
+OK   three kinds of net: bought by type, a floating net and a cod net are not joined, 200 mm floating is not sold
+OK   the floating net takes much more saithe against cod than the bottom net, the halibut net more Greenland halibut and halibut
+slices: {"net": {"sl": 3, "n": 6, "ups": 18, "firstUnit": 2, "big": 24.3, "kg": 316, "had": 333, "left": 0}, "line": {"sl": 6, "n": 2, "ups": 12, "firstUnit": 5, "big": 19.4, "kg": 107, "had": 120, "left": 0}, "who": {"net2": {"st": "haling,haling", "bl": 1, "ms": 5.1939669895932035}, "net3": {"st": "blogg,haling,haling", "bl": 1, "ms": 4.121738293245006}, "line2": {"st": "blogg,haling", "bl": 0, "ms": NaN}, "line3": {"st": "blogg,haling,sloy", "bl": 0, "ms": NaN}}, "cap": 300, "slow": [1, 1, 1, 0.6, 0.2], "slowSet": 1}
+OK   a haddock-line tub of 600 hooks comes aboard in six slices, several of them in the first tub
+OK   a net comes aboard in thirds
+OK   everything the strings held has been landed or released when they are up
+OK   a net takes two at the hauler, one pulling and one picking (who bleeds when nobody else does), and the next hand bleeds; a line takes one at the hauler, the next bleeds, and a third guts (Jonas 20.10.2026 #75, and 23.10.2026: the fish over the rail are bled first) {'net2': {'st': 'haling,haling', 'bl': 1, 'ms': 5.1939669895932035}, 'net3': {'st': 'blogg,haling,haling', 'bl': 1, 'ms': 4.121738293245006}, 'line2': {'st': 'blogg,haling', 'bl': 0, 'ms': nan}, 'line3': {'st': 'blogg,haling,sloy', 'bl': 0, 'ms': nan}}
+OK   the haul goes at full pace up to half a tub, then slower, to a fifth at a full tub; setting is not slowed [1, 1, 1, 0.6, 0.2]
+minutter per enhet per trinn (OPP2): {"line": [22.667, 20.4, 18.133], "garn": [5.14, 4.626, 4.112], "teine": [1.605, 1.444, 1.284], "lineHott": 16.32, "lset": [4.532, 3.625, 2.946, 4.532], "gset": [0.823, 0.617]}
+OK   the hauler at tiers 2 and 3 takes 10 and 20 % off a tub, a net and a pot hauled {'line': [22.667, 20.4, 18.133], 'garn': [5.14, 4.626, 4.112], 'teine': [1.605, 1.444, 1.284]}
+OK   line hauler 3 and gaff 3: 28 % off a tub (the shares add up) 16.32
+OK   the line setter takes 20 and 35 % off a tub set; the hauler's tier nothing [4.532, 3.625, 2.946, 4.532]
+OK   the net chute takes 25 % off a net set [0.823, 0.617]
+errors: []

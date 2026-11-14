@@ -249,8 +249,14 @@ async def main():
         sp = []
         # 23 kn to a fishing stop: the simulation brakes from 23 to 8 knots in one minute and the follower came past the point it steers
         # for and turned round for it (the user's test 04.10.2026: a pirouette before the stop)
-        for spd, fish, far in ((16, 0, 1), (5, 0, 1), (23, 1, 2)):
-            sp.append(await pg.evaluate("""([spd, fish, far]) => { TAB.held = true; const b = S.boat, c = tutField().p; b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
+        # OPP3 (12.11.2026): the speed sjark at her top speed with propeller 3 and the engine at step 2 (30.7 kn), and with turbo trim on top
+        # (52.7 kn), to a fishing stop: she brakes in time and comes to the point without turning round (the stop lengths are measured up to
+        # her own top speed, dynCalOf)
+        FAST = {'type': 'hurtigsjark', 'propLv': 3, 'engLv': 2}
+        for spd, fish, far, o in ((16, 0, 1, None), (5, 0, 1, None), (23, 1, 2, None), (0, 1, 2, FAST), (0, 1, 2, dict(FAST, trim=1))):   # (2 km as the 23 kn: 3 and 4 km from the field end in shallow water)
+            sp.append(await pg.evaluate("""([spd, fish, far, o]) => { TAB.held = true; const b = S.boat, c = tutField().p, keep = {type:b.type, propLv:b.propLv, engLv:b.engLv, trim:b.trim};
+              if (o){ b.type = o.type; b.propLv = o.propLv; b.engLv = o.engLv; if (o.trim) b.trim = {k:'turbo', t0:S.t, until:S.t + 72 * 60}; else delete b.trim; applyVessel(); spd = BOAT.vmax; }
+              b.status = 'idle'; b.port = null; b.pos = {x:c.x, y:c.y}; b.v = 0;
               const end = {x:c.x + 0.9 * far, y:c.y - 0.6 * far, fish}; b.heading = Math.atan2(0.9, 0.6); S.plan = {wps:[end], idx:0, speed:spd}; b.status = 'sailing';
               const D = G3._debug; D.bv.init = false; D.stepBoat(0, 0, 0); let frac = 0, turn = 0, prev = null, idleK = -1; const R = 1 / 30;
               // the distance to the point is read as she stops (the route over), and the turning up to two seconds after it: from the next
@@ -262,8 +268,10 @@ async def main():
                 if (b.status !== 'sailing' && idleK < 0){ idleK = k; endD = d; }
                 if ((d < 500 || idleK >= 0) && (idleK < 0 || k - idleK <= 60)){ if (prev !== null){ let a = bv.cog - prev; while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; turn += Math.abs(a); } prev = bv.cog; }
                 if (idleK >= 0 && k - idleK > 600){ drift = d; break; } }
-              TAB.held = false; lastWall = Date.now(); return {spd, turn:+(turn * 180 / Math.PI).toFixed(1), end:endD == null ? null : +endD.toFixed(1), drift:drift == null ? null : +drift.toFixed(1), st:b.status, model:!!S.boat.dyn}; }""", [spd, fish, far]))
+              const vtop = BOAT.vmax; if (o){ b.type = keep.type; if (keep.propLv) b.propLv = keep.propLv; else delete b.propLv; if (keep.engLv) b.engLv = keep.engLv; else delete b.engLv; if (keep.trim) b.trim = keep.trim; else delete b.trim; applyVessel(); }
+              TAB.held = false; lastWall = Date.now(); return {spd:+spd.toFixed(1), vtop:+vtop.toFixed(1), turn:+(turn * 180 / Math.PI).toFixed(1), end:endD == null ? null : +endD.toFixed(1), drift:drift == null ? null : +drift.toFixed(1), st:b.status, model:!!S.boat.dyn}; }""", [spd, fish, far, o]))
         check(all(v['end'] is not None and v['turn'] < 30 and v['end'] < 5 for v in sp), 'båten i 3D kommer inn til siste veipunkt og til et stopp i 23 knop, og stopper der uten å snurre (gammel kode: 360 grader); etterpå driver hun av punktet (drift)', sp)
+        check(len(sp) == 5 and abs(sp[3]['spd'] - 30.7) < 0.1 and abs(sp[4]['spd'] - 52.7) < 0.1 and all(v['end'] is not None and v['end'] < 5 and v['turn'] < 30 and v['st'] == 'fishing' for v in sp[3:]), 'hurtigsjarken med propell 3 og motor 2 går til stoppet i 30,7 kn, og med turbotrim i 52,7 kn (summen, OPP3), og begge stopper på punktet', sp[3:])
         print('sidefeil', errs)
         await b.close()
 

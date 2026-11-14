@@ -199,8 +199,10 @@ const PUB3 = (() => {
     fire(){ const st = lorePub(); panel('fire', '<p>' + L('Du varmer hendene ved peisen. ', 'You warm your hands at the fire. ') + (st ? esc(st[S.lang === 'no' ? 0 : 1]) : '') + '</p>'); },
     who(){ panel('who', PUBSOC.whoHtml()); PUBSOC.greetFetch(() => { if (panelKey === 'who') PANELS.who(); }); }
   };
-  function spin(){
-    if (WH.busy) return; const d = PUBW.draw(); if (!d){ PANELS.wheel(); return; }
+  // (HS4 11.11.2026: with the cloud the wheel is drawn on the server, PUBW.round; no round came of it: its words in the panel)
+  async function spin(){
+    if (WH.busy || WH.ask) return; WH.ask = true; let d; try { d = await PUBW.round(); } finally { WH.ask = false; }
+    if (!d || d.err){ PANELS.wheel(); if (d && d.err && panelKey === 'wheel'){ const p = document.querySelector('.pb-why') || document.querySelector('.pb-odds'); if (p) p.insertAdjacentHTML('beforebegin', '<p class="pb-why">' + esc(d.err) + '</p>'); } return; }
     const A = (P.A.wheel && P.A.wheel.segs) || [], g = A.find(s => s[0] === d.seg.k && Math.abs(s[1] - d.seg.s0) < 0.5) || [d.seg.k, d.seg.s0, d.seg.s1];
     const at = g[1] + (g[2] - g[1]) * (0.2 + 0.6 * Math.random()), cur = WH.a % (2 * Math.PI), aim = (360 - at) * Math.PI / 180;
     WH.from = cur; WH.to = cur + 5 * 2 * Math.PI + (((aim - cur) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); WH.t0 = performance.now() / 1000; WH.busy = true;

@@ -100,7 +100,9 @@
       if (hs.length === 9){ hs.sort((a, b) => a - b); SITES.push({k:'shop', near:true, o:sn.o, u:sn.u, n:nn, lev:clamp(hs[4], 1.2, 30), clear:[[SHOP_APRON[0], 0, SHOP_APRON[1], SHOP_APRON[3]]]}); }
       else SITEK = '';   // the ground is not in yet: try again next frame
     }
-    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1), w:(V.beam || 3) + 8, a});
+    // (the pit as deep as the simulation dredges the berth, SITE_DRAFT and half a metre at the lowest tide, below mean sea level: siteDredge,
+    // 13.11.2026; a boat up to 15 m lies there whatever she draws)
+    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w), a});
     if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
       SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the
@@ -189,6 +191,14 @@
         }
       }
       const dB = blockOut(lx, lz, g), dF = fillOut(U, lx, lz), dG = Math.min(dB, dF);
+      // on the block's back and sides (unitPatch has a row of points on its walls) the ground is what lies just outside the wall: the fill
+      // and the land at the deck's height, or the seabed where the side stands in the water. It was the walls' foot there, so the ground
+      // fell 9-14 m in the last 2 m to the wall, in a sawtooth trench along the land side where the sea showed (Jonas 13.11.2026,
+      // Engenes verft: «utgravninger og tagger»)
+      if (!dB && (Math.abs(lx) > g.E - 0.01 || lz < -g.B + 0.01) && lz < -0.01){
+        const w = unitW(U, lx + (Math.abs(lx) > g.E - 0.01 ? Math.sign(lx) * 0.05 : 0), lz < -g.B + 0.01 ? lz - 0.05 : lz);
+        return unitTerr(w[0], w[1], h0);
+      }
       if (!dB) return g.bot;
       if (dG >= UNIT_LIFT) continue;
       if (!dF) return Math.max(UNIT_TOP, Math.min(h0, UNIT_TOP + 0.45 * dB));   // on the fill: flat, or rising with the land behind it

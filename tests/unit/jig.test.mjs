@@ -36,4 +36,30 @@ export default function (t){
   // rail's step to the high aft bulwark stands a metre further aft to starboard). Three of her six machines stood in the plating)
   { const A = anchorsOf('boat-malo36.b64'), n = (A.jigZ || []).length;
     t.ok(n >= 2 && V.breisjark.jukseMax === 2 && V.breisjark.jukseMax <= n, 'breisjark: plass til ' + V.breisjark.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen'); }
+  // (and the kyst15, OB12: her side is the shelter's closed wall but for the hauling station's opening and the after hatch, both to
+  // starboard: two places aft of the bleeding tub in the station and two in the hatch, an arm's length apart. Before, three places 0.7 m
+  // apart on the station's sill, and the rest of her eight machines' hands jigged from the shelter deck's rail, 3 m over the sea)
+  { const A = anchorsOf('boat-kyst15.b64'), J = A.jigZ || [], n = J.length, zs = J.map(q => q[1]).sort((a, b) => a - b), gap = Math.min(...zs.slice(1).map((z, i) => z - zs[i]));
+    t.ok(n >= 4 && V.kyst15.jukseMax === 4 && V.kyst15.jukseMax <= n, 'kyst15: plass til ' + V.kyst15.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen');
+    t.ok(gap >= 0.95, 'kyst15: minst en armlengde mellom to juksaplasser (' + gap.toFixed(2) + ' m)');
+    // (each place is the point on the sill itself, [side, z, x, y]: 13-instruments.js railPt looks for the rail under the outermost point
+    // of the slice, which on her flared side is the shelter deck's cap 1.5 m higher, and put two of the four on the strake under the sill)
+    const bad = J.filter(q => !(q.length >= 4 && Math.abs(q[3] - A.gw) < 0.02 && q[2] * q[0] > A.haulerFoot[0] + 0.1 && q[2] * q[0] < A.side));
+    t.ok(!bad.length, 'kyst15: hver juksaplass er et punkt på terskelen (ripa ' + A.gw + ' m), innenfor ytterhuden' + (bad.length ? ': ' + JSON.stringify(bad) : '')); }
+  // (and the kyst21, OB13: eight places from the model, four to port along the open working deck and four to starboard along the side
+  // deck by the house, a metre or more between two on a side, each a point on the bulwark's cap. Before, the places were searched along
+  // the rails: three stood shoulder to shoulder to starboard forward of the wheelhouse and one between the gallows' legs, F21)
+  { const A = anchorsOf('boat-kyst21.b64'), J = A.jigZ || [], n = J.length, side = sd => J.filter(q => q[0] === sd).map(q => q[1]).sort((a, b) => a - b);
+    const gaps = [1, -1].flatMap(sd => { const zs = side(sd); return zs.slice(1).map((z, i) => z - zs[i]); }), gap = gaps.length ? Math.min(...gaps) : 0;
+    t.ok(n === 8 && V.kyst21.jukseMax === 8, 'kyst21: plass til ' + V.kyst21.jukseMax + ' juksamaskiner, ' + n + ' juksaplasser i modellen');
+    t.ok(side(1).length === 4 && side(-1).length === 4, 'kyst21: fire juksaplasser på hver side (styrbord ' + side(1).length + ', babord ' + side(-1).length + ')');
+    t.ok(gap >= 1.0, 'kyst21: minst en meter mellom to juksaplasser på samme side (' + gap.toFixed(2) + ' m)');
+    const hz = A.hauler ? A.hauler[2] : 0, bad = J.filter(q => !(q.length >= 4 && q[3] > A.deck.y + 0.35 && q[3] < A.deck.y + 1.3 && q[2] * q[0] > A.side - 0.5 && q[2] * q[0] < A.side && !(q[0] === 1 && Math.abs(q[1] - hz) < 1.5)));
+    t.ok(!bad.length, 'kyst21: hver juksaplass er et punkt på ripa (0,35–1,3 m over dekket), og ingen ved haleren' + (bad.length ? ': ' + JSON.stringify(bad) : '')); }
+  // ---- the tiers' money back when a boat takes fewer reels than a save has (OB12, the kyst15 from eight to four; ui/11-boot.js): a tier
+  // that gives nothing at the new count for every reel it was bought for, the tiers she keeps for the reels that go ashore ----
+  t.eq(K.jigTierBack('kyst15', 8, 3), {lv:2, kr:24000 * 8 + 12000 * 4}, 'kyst15 med åtte maskiner på trinn 3: trinn 3 tilbake for alle åtte, trinn 2 for de fire som går i land');
+  t.eq(K.jigTierBack('kyst15', 4, 2), {lv:2, kr:0}, 'kyst15 med fire på trinn 2: ingenting å betale tilbake');
+  t.eq(K.jigTierBack('kyst15', 8, 1), {lv:1, kr:0}, 'uten trinn: ingenting');
+  t.eq(K.jigTierBack('kyst21', 8, 3), {lv:3, kr:0}, 'kyst21 med åtte på trinn 3: trinnet gir noe, ingenting tilbake');
 }

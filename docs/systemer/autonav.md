@@ -77,7 +77,7 @@ Jonas: «Autonav burde være så bra at den fint klarer å lage en rute fra Oslo
   - Langs nettet gjelder den strenge regelen først (sikker dybde og 25 m fra skjær, som rutelistas varsler); en etappe som ikke kan legges om, beholdes hvis den holder båtens eget minimum (`st.soft`). Har nettets rute slike etapper og strekningen er under 400 km, regnes rutenettet også, og ruta med færrest slike etapper velges (Bergen–Florø: rutenettet, 0 av 36).
   - Målt: Oslo verft–Bugøynes (nærmeste havn til Kirkenes) 1459 nm, 198 punkter, ingen etappe på grunn eller land, 35 s. Reine–Bergsfjord (fant ingen vei før) 6 s, Vannareid–Honningsvåg under 2 s.
 - **Trinn 1, fint søk ved endene** (`leiaLane` i `core/11-route.js`): en ende i trangt vann (100 m-cellen har land eller er under 150 m fra land) får en vei på kartets 25 m-maske ut til åpent vann, bredde først, gjennom vann dypt nok for båten, uten å skjære et landhjørne eller krysse en molo, innen 2,5 km. Det grove søket leter 8 km etter åpent vann ved endene.
-- **Havner som var stengt inne** (`approachPath` i `core/07-harbours.js`): 6 av 359 havner (mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy, utstyrsbutikkene i Vanse og Søndeled) lå i lommer der kaia og fyllingen stengte vannet. Da regnes land innen 80, 150, 250 og 400 m av havnepunktet som passerbart (`pt.free`, `quayLand`). Søndeled utstyrsbutikk er fortsatt stengt (data).
+- **Havner som var stengt inne** (`approachPath` i `core/07-harbours.js`): 6 av 359 havner (mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy, utstyrsbutikkene i Vanse og Søndeled) lå i lommer der kaia og fyllingen stengte vannet. Da regnes land innen 80, 150, 250 og 400 m av havnepunktet som passerbart (`pt.free`, `quayLand`). **13.11.2026 flyttet til kaier med fritt vann ut** (`tools/steder/lukkflytt.py`, «Steder i lukkede bassenger» i `docs/handelssteder.md`): ingen havn langs kysten har `pt.free` lenger, og `tests/lukket.py` holder det slik. `pt.free` og `quayLandLeg` står igjen som reserve for en havn som en ny kartrelease stenger inne.
 - **Land i grunnsjekken** (`groundCheck` i `core/01-world.js`): land midt på en etappe er grunnstøting, ikke bare grunt vann, sjekket hver 5. m (dybden hver 20. m). Autonav sjekker land hver 2. m (`leiaLegFail`): en holme tynnere enn 4 m gled mellom prøvene på Bodø–Olderdalen.
 - **Bakt leinett** (`tools/leia/bake.py`, Jonas: «Kan mye av leinettet kodes inn på en slik måte at det tar mye kortere tid å lage lange ruter?»): spillet kjøres uten skjerm, og hver etappe i nettet sjekkes én gang som båten seiler den (`leiaLegFail`). Den sjekkes først strengt (startbåtens sikre dybde og 25 m fra skjær), ellers legges den om (`leiaMend`). Holder ingen av delene, beholdes den med båtens eget minimum (`soft`, tre ganger så dyr i Dijkstra), og ellers kuttes den. Så rettes hver led ut der en rett etappe holder samme regel, men aldri forbi et kryss (da faller nettet fra hverandre). Resultatet er `baked: true`, `soft` per etappe og dybden bakingen brukte (`sd`, `draft`).
   - Kjøres slik: `node build.mjs && python3 tools/leia/leinett.py && python3 tools/leia/bake.py` (rundt 1,5 min med hele kysten i bygget). Skriptet nekter å bake et nett som alt er bakt.
@@ -145,6 +145,8 @@ Jonas 05.11.2026: «Start r6 i en ny økt». Målet i planen (R6 i `docs/planer/
 - **Nettbrettet er ikke målt.** Tallene er fra skymaskinen.
 
 **Rettet 05.11.2026, etter utrullingen av R6 og R7:** CI-sjekken av alle mottaksparene («Autonav langs hele kysten», `tests/allpairs.py`) ble rød på ett par (mM416 → mM2187 på Sunnmøre): en etappe på 8,6 km gikk over en holme på rundt 20 m ved 62,396° N 5,830° E. Avstandslaget (`coastDist`, flisenes 100 m-lag) kjenner ikke holmen og sier 0,5 km til land der den står, så `legRuns` kalte stykket åpent hav og den fine sjekken gikk ikke der. Nå leses også strekningen et åpent punkt står inne for, med `isLand` hver 5. m (`LEGOPEN.land`, `legLandIn`); land der gjør punktet nært, og stykket sjekkes fint som før R6. Det koster lite (20 000 oppslag i masken tar rundt 10 ms her). Holmer tynnere enn 5 m som avstandslaget heller ikke kjenner, kan fortsatt gli mellom punktene på åpent hav (BACKLOG 10.3).
+
+- **En lang vei uten rute i ett stykke deles ved åpent vann** (`leiaSplit`, 12.11.2026, kappløpets steg KL1a). Målt: en autoliner (3,8 m dypgang, trygg dybde 6 m) fra mottaket i Rørvik til Bodø og til Træna fant ingen rute. Leinettets lei går gjennom et sund som er kartlagt til 3,6 m (ved x 618, y 790), og rutenettets grove søk for så lang vei startet i et basseng mellom øyene som 400 m-cellene stenger inne (16 celler utvidet). Rørvik–Sklinna fant det fine rutenettet, og Sklinna–Træna fant det grove søket over åpent hav. Når hele veien ikke gir noen rute og den er minst 60 km, prøves den nå i to stykker. Delepunktet ligger på åpent vann, minst 2 km fra land og med båtens trygge dybde, 30–60 km ut fra den ene enden mot den andre. Punktet nærmest målet prøves først, med høyst åtte forsøk. Dette skjer bare når hele veien feilet, så en rute som finnes i dag, blir den samme. Rørvik–Træna ble 106 nm, delt 7 km ut fra Rørvik. `tests/kapplop.py` punkt 8 var rød før (`Fant ingen rute dit.`) og er grønn nå.
 
 ## 4.12h Ut av fjordene til havet hele året (havsteget H1b R8, 05.11.2026)
 
@@ -246,7 +248,7 @@ Jonas (video fra Tufjord, 04.11.2026): «Båter går gjennom landmassen i autona
 
 ## 4.12l Autonav viker (Ø11.1, 06.11.2026)
 
-Autonav (og Driftsplan, som seiler med den) viker for fartøy båten du følger har vikeplikt for etter sjøveisreglene, innen 1,2 km: et avvik til styrbord fra linja som autopiloten styrer etter (`sjvAuto`, ett kall i `dynAuto`), eller 35° fra etappen i minuttsteget (`sjvSail`, ett kall i `sail`), og tilbake til ruta når de er klare. Ved et stopp, når hun rygger eller snur fra land, og når grunnsjekken finner grunn foran, går avviket tilbake og hun slakker av i stedet. Bare med spillet åpent; i `catchUp` viker ingen. Se `docs/systemer/sjofart-og-lover.md`, kap. 3.3.
+Autonav (og Driftsplan, som seiler med den) viker for fartøy båten du følger har vikeplikt for etter sjøveisreglene, innen 1,2 km: et avvik til styrbord fra linja som autopiloten styrer etter (`sjvAuto`, ett kall i `dynAuto`), eller 35° fra etappen i minuttsteget (`sjvSail`, ett kall i `sail`), og tilbake til ruta når de er klare. Ved et stopp, når hun rygger eller snur fra land, og når grunnsjekken finner grunn foran, går avviket tilbake og hun slakker av i stedet. Bare med spillet åpent; i `catchUp` viker ingen. Fra 12.11.2026 (TB1) også tidligere mot raske fartøy (`sjvLead`), med avslakking når avviket alene ikke holder, og tilbake til ruta først når veien dit holder klar av den andre (`sjvBackClear`, regel 8 d). Se `docs/systemer/sjofart-og-lover.md`, kap. 3.3 og 5.10.
 
 ## 4.12m Ut fra kaia: fars naust, feltet på første tur og de forseglede havnene (08.11.2026)
 
@@ -271,3 +273,120 @@ Samme feil i rutepanelets landsjekk gjaldt **alle fire forseglede havner (Ålesu
 - **Etapper over en forseglet havns egen fylling** (`core/07-harbours.js` `quayLandLeg`, lest av `legClearMemo` i `core/01-world.js`, altså rutepanelets `estimate` og kartplotterens tegning): en etappe som berører sonen `pt.free` rundt havnepunktet, er klar når landet den krysser er `quayLand`, og den bare krysser kystlinja inne i sonen, samme regel som havnas egen vei ut. `pt.free` er kjent først når havnas vei inn er funnet, så `quayLandLeg` finner den for havnene innen 0,5 km av etappens ender først.
 
 **Ikke rettet, står i backloggen:** krasjene i kartvisningen (sju på to uker fra tre spillere, seks på iPhone; en ny spiller i Troms 06.11.2026 åpnet kartplotteren på steget `gps` og ble borte etter ett livstegn), Smøla nord uten rute fra mottakskaia til feltet 17.09.2027 (fra naustet går den via åpent vann), og oppstartens sjekk av planen (`ui/11-boot.js`, `legClear`), som ikke kjenner `quayLandLeg` (ikke sett feile i testen).
+
+## 4.12o Fra alle steder med den eldre kystbåten (13.11.2026)
+
+Jonas 13.11.2026: «Test å start fra alle kaiplasser, butikker, verft, rorbuer, fiskemottak med den eldre kystbåten … Jeg MÅ vite at alle stedene i spillet fungerer som de skal og at spillere ikke blir stuck NOEN steder.» `tests/allesteder.py` (LITE, hele kysten): kystbåten (21 m, 3,4 m) fra hver havn og kystbåten på 14,99 m fra hver rorbu og hvert naust. Testen sjekker at skroget ligger på vann med dypgående under seg ved laveste lavvann, at Autonav finner en rute til en havn 2–80 km unna eller til åpent vann (nå og over 12 timer med tidevann), og at båten seiler den med båtmodellen (`dynTick` som spillets løkke) og legger til uten å gå på grunn eller skade skroget. Havneplassene i NPC-havnene (`KYST_ALLE=havn`): veien ut fra alle, og seilt fra hver tiende.
+
+Det testen fant, og rettingene:
+- **Fast mot kaia etter «Kast loss»** (Skjervøy, Fredvang, Uthaug, Roan, Nordmela): linja gikk så tett forbi et kaihjørne at båtmodellen slo i kaia hvert minutt og ikke kom videre. Står autopiloten fast (smell de siste to minuttene og under 5 m framdrift på tre), tar «hendene» som fører henne ut fra kaia, henne videre langs linja i tre båtlengder (minst 60 m), og så tar modellen over igjen (`T.assist` i `dynAuto`, `core/16b-dyn.js`).
+- **Brupilarer og sjømerker** (Reine, Bøvågen): ruta holdt halve bredden + 6 m fra dem, og en 21 m båt kuttet svingen og traff i 3–5 knop. Margen vokser nå med lengden: halve bredden + den største av 6 m og halve lengden (`obsClr`, `core/11b-obstacles.js`). Der ingen omvei med full margin finnes (en smal led med merker på begge sider), prøves en med 2 m klaring, dyp nok for båten (`obsDetourAny`).
+- **Rorbuer og naust:** se 5.25j i `havner-og-mottak.md` (grensen på 15 m, mudringen og veien ut).
+- **Hårnålssving like etter havnepunktet** (Vannvåg, andre del 13.11.2026): «hendene» slapp henne ved havnepunktet, og 15 m etter kom en sving på over 90 grader. Der krøp hun i halvannen knop uten bitt i roret og gikk en runde over 100 m bred, inn i merkene i leia. Nå tar hendene henne også rundt de skarpe svingene (over 60 grader) som kommer innen tre båtlengder etter havnepunktet (`dynLineBuild`, `sOut`).
+- **Merker og pilarer i svingene** (Vannvåg, Bøvågen, Napp, Sund i Lofoten): ruta holder margen fra merkene, men ikke buene båten svinger på. Autopiloten ser nå etter merker, pæler og brupilarer foran seg (fra en halv lengde akter til tolv sekunders fart og to lengder forut) og styrer unna, så de passerer med halv bredde og 4 m (`dynAvoid`, `core/16b-dyn.js`); står merket på innsida av svingen, holder hun leggen til det er tvers, står det på utsida, svinger hun så tidlig radien krever. Farten endres ikke (bremset hun, mistet roret bittet). Bøvågen og Napp gikk rene etterpå; Vannvåg og Stamsund traff fortsatt i 1–6 knop (se planen).
+- **Omveien under en bru** (Karmsundbrua, tredje del 14.11.2026): rutens to punkter lå 50 m på hver side av brua, og omveien til et gap 24 m til siden gikk i rett vinkel ut og inn igjen. Nå går omveien rett gjennom gapets midte når svingene dit og videre er under 40 grader, punktene på leggen ligger så langt unna som gapet ligger til siden (2,5 ganger), og en omvei hun ikke kan svinge gjennom, kommer sist (`obsWays`, `obsTurnable`, `core/11b-obstacles.js`).
+- **Omveien rundt et merke eller en pilar mellom to tette rutepunkter** (Bokn, Vannvåg, Mathopen, Revsnes): omveien ble en sikksakk av 35–40 m lange legger som kystbåten (radius 47–54 m) gikk vidt gjennom og traff merket i 4–6 knop. Kan omveien ikke svinges gjennom (`obsTurnable`: radius 2,5 × lengden og en halv lengde til roret per hjørne, svingen inn fra punktet før med), prøves omveien fra punktet før til punktet etter, opptil to vanlige punkter hoppet over, og bare en som er like dyp og like langt fra skjær som den verste av leggene den erstatter (`obsRoute`).
+- **Back and fill:** når hun snur fra land (`T.bow`) og må rygge, legges roret til motsatt side, så hver rygging snur henne samme vei. Med roret midtskips opphevet ryggingen svingen hun fikk framover (nord for Karmsundbrua).
+- **Holdt mot grunna sakte:** linja gikk inn i grunna, og hun sto med full gass mot den for godt (sundet sør for Egersund). Nå finnes en vei rundt etter et halvt spillminutt som i fart (`sailReplan`, høyst tre ganger, så stopper hun og sier det).
+- **Hendene som siste utvei** (Jonas 14.11.2026: «båten kan få lov til å bryte fysikkens regler og lover i enkelte situasjoner slik at vi ikke ødelegger for oss selv mer enn vi må … men jeg ønsker jo helst at vi klarer å løse problemet på en annen måte»): de samme hendene som tar henne ut fra kaia (`T.assist`), fører henne langs linja uten båtmodellen (1) når hun ikke har kommet framover langs linja på fire spillminutter uten støt, borte fra en stopp, uten å vente på en vei rundt, mot strøm eller ved vikeplikt; (2) når hun holdes sakte mot grunna igjen innen 20 spillminutter etter en vei rundt; (3) rundt et hjørne over 60 grader med et merke, en påle eller en pilar innen to lengder, halv bredde og 4 m av de første fem lengdene av leggen ut eller de to siste inn (`dynTight`, spurt når hun kommer dit og pakkene er inne). Linja holder rutens margin, så hun treffer ikke merket der. Grunnsjekken etter steget holder henne ikke tilbake mens hendene fører henne, og hendene går aldri forbi neste stopp. `allesteder.py` teller hvor ofte de trår til (`DYN.hands`); rettingene av rutene står først, så hendene tar bare det som er igjen.
+
+## 4.12n Hopp over resten av ruta (HO1, steg 104, 12.11.2026)
+
+Jonas 12.11.2026: «Under seiling så dukker det opp en liten knapp i hjørnet som åpen en rute der det står en kostnad for å skippe resten av ruten, altså teleportere seg til målet.» Planen, valgene og prisene står i `docs/planer/hopp.md`. HO1 er kjernen uten knapp og betaling. Knappen er HO2 (steg 105), kjøpet HO3 (steg 106).
+
+- **Hvor hoppet går** (`hopStop` i `core/06j-hopp.js`): til neste stopp på ruta, altså en havn, en fiskeplass, redskapsarbeid, en ankring eller rutas siste punkt (`wpStop`, `w.anchor`). Ved målet gjør `arrive(w)` det samme som når båten seiler fram: legger til kai, begynner å fiske, setter eller trekker redskapet, eller ligger stille.
+- **Klokka står stille.** Verdens klokke flytter seg ikke, så alt annet enn tida går som om båten seilte (Jonas: «Ja, med vilkår»):
+  - **Tørrkjøringen** (`hopRun`) seiler resten av veien minutt for minutt som `sail()`. Den bruker `sailV` for farten, med fartsgrensene, bremsingen inn mot stoppet og sjøen, og trimmen til den går ut. Vind og sjø er der båten er hvert minutt (`windAt`, `hsAt`), og dieselen regnes med `fuelLph`. Ingenting i spillet endres: plassen, farten, kursen og rutas indeks settes tilbake.
+  - **En trim som går ut underveis** går ut i tørrkjøringen der den ville gått ut (`trimEnd`, med toppfarten og rutas fart ned som i `vesselStep`), og settes tilbake etterpå.
+  - **Hoppet** (`hopDo`):
+    - trekker dieselen (`fuelUse`, også på turens felleskostnader) og legger til motortimene
+    - tar trimmen og Skippertak for minuttene de ville gått (`b.trim.until`, `S.skip.until`)
+    - hvert minutt der båten ville vært: lar fangsten holde seg og hendene på dekk sløye og ise (`holdMinute`, trukket ut av `vesselStep` i `core/05-vessels.js`), bruker provianten (`provMinute`) og gir mannskapet om bord slitasjen (`crewSeaFat`, trukket ut av `crewTick` i `core/04-crew.js`, med natta etter klokka og arbeidsandelen fra `workAssign`: den ved roret og i byssa arbeider hele tida)
+    - hver time: turens timer på sjøen (`tripHour`), autolinas kroker (`autoFixHour`) og den levende snøkrabben i tankene (`snoTankHour`)
+    - gir energien din som `energyMinute` ville gitt (`hopEnergy`: ned på sjøen, opp i køya, søvn ved null, brovakta som når du sovner)
+    - legger punktene båten passerer, i sporet (`S.trail`, som `arrive` gjør for hvert), så veien hjem og kartet følger ruta
+- **Det som tjenes ved å seile, tjenes ikke ved å hoppe:** ingen fartstid (`fsMinute`), ingen distanse (`tatAdd('nm')`), ingen merker for vær, natt eller spillere møtt (`achMinute`) og ingen sjøtimer til mannskapets erfaring. Ingen av dem kalles. Det som kommer av å legge til kai, kommer som ved enhver ankomst: «Havner besøkt» (`achVisitPort`) og tatoveringen for en trygg tur (`tatTripEnd`) i `dock`.
+- **Nektet før kjøpet** (`hopWhy`, så `hopRun`), med en grunn og uten at noe endres:
+  - ingen rute som seiles
+  - Driftsplanen (`pl.ops`, `pl.p2`)
+  - båten stopper («Stopp båten», `pl.halt`), eller Autonav finner en vei rundt grunt vann (`pl.replan`)
+  - ankeret er ute, eller båten ligger bi
+  - noen er i sjøen (`S.mob`, Autonav mot den: `pl.mob`)
+  - du sleper en annen spiller (`S.ptowH.st === 'tow'`; på vei til en som trenger slep går hoppet)
+  - første tur
+  - tida fra et lukket spill er ikke spilt inn ennå (`WCLOCK.on` og `worldT()` foran `S.t`): hoppet ville talt minutter innhentingen seiler uansett
+  - et turoppdrag i gang med denne båten
+  - (før 12.11.2026: været på veien; nå nekter været aldri, se under)
+  - for lite diesel
+  - nesten fremme (under ett ekte minutt)
+- **Været nekter aldri hoppet** (Jonas 12.11.2026: «uavhengig av været eller andre ting», og om kortet som sa nei for 11 m/s på testutgaven: «Jeg trodde vi ble enig om at hoppet skulle fungere uavhengig av været?»). Tørrkjøringen regner vinden og sjøen for farten og dieselen, men nekter ikke for dem. **Betalt** (`hopGo(true)`, HO3) går hoppet også med for lite diesel og nesten fremme.
+- **Ingen hindringer, og bare fisken merker tida** (Jonas 12.11.2026: «Ingenting skal være en hindring for å kjøpe "hopp". Det er dårlig business. Det eneste som taper seg med tiden som forsvinner er kvaliteten på fisken i lasterommet.»):
+  - `hopWhy` nekter bare når ingen rute seiles, under Driftsplanen (der står ingen knapp), når spillet er åpent et annet sted (`TAB`), og mens tida borte spilles inn. Det siste venter kortet på, i høyst 15 s.
+  - `hopRun` nekter bare en rute som er for lang til å regne ut (`HOP.maxMin`).
+  - `hopDo` lar fisken og isen i lasterommet eldes minutt for minutt langs sporet (`holdMinute`), og snøkrabben i tankene hver time (`snoTankHour`). Ingenting annet blir rørt: dieselen, motortimene, trimmen, Skippertak, energien, mannskapet og provianten er som før.
+  - Et anker, «ligger bi» og «Stopp båten» tas bort ved stoppet.
+  - Det som står under om diesel, energi, mannskap og trim i hoppet, gjaldt HO1 og HO2 til 12.11.2026.
+- **Prisen** (`hopPrice`, `HOP.steps`) er 75 øre per spart ekte minutt den første timen, 50 øre de neste tre timene og 25 øre etter det, minst 5 kr og uten tak. Trinnene virker som skattetrinn, så prisen stiger alltid med tida.
+- **Kartet ved målet** lastes før hoppet (`hopGo`: stoppet fra ruta, `mapNeed` der med en tidsgrense på `HOP.mapMs` = 20 s, så én tørrkjøring med verden slik den er da). Kommer ikke kartet, blir det ikke noe hopp: «Kartet ved målet kom ikke. Prøv igjen om litt.» Hånda på roret trenger ingen egen sjekk, fordi roret tar bort ruta (`helmOn` krever at det ikke er noen rute).
+- **Spoleknappen og kortet** (HO2, steg 105, `ui/10u-hopp.js`; Jonas 12.11.2026: «Jeg tenker selve knappen kan legges her på skjermen, og vises som et "fast forward"-symbol, nesten som en spoleknapp. Den skal være kontekstuell og kun komme opp når en rute er i gang.»):
+  - `#hopBtn` (⏩, `.ov.hop`) står i 3D til høyre, rett under kamera- og kino-knappen og like stor. Den vises bare mens en rute seiles (`hopShown`: ikke Driftsplanen, ikke med hånda på roret, ikke mens båten stopper eller Autonav finner en vei rundt, ikke mens tida fra et lukket spill spilles inn, `CATCH_LEFT`), ikke i kartplotteren, i kinoens rene visning eller mens kinoens «Skjul» står på plassen. I roen (U2-4) dempes den som kamera- og kino-knappen. Hvert bildetikk kaller `hopUi` (`ui/08-actions.js`, ved siden av `turFotoUi`).
+  - Kortet (`hopOpen`, `hopCard`, `modal`) åpner med «Regner ut turen …» og fylles når tørrkjøringen er ferdig, så trykket ikke fryser skjermen. Det sier hvor båten hopper («Til Vangshamn», eller «Til neste stopp på ruta, ved Husøy»), den ekte tida spart (`hopSaved`) og prisen med 💎 (`realKr`), eller grunnen fra `hopQuote`.
+  - «Hopp» (`hopPress`) gjør skjermen mørk (`#hopFade`, to bilder før arbeidet, så mørket er tegnet), venter på `hopGo` og så på alle pakkene kartet og 3D leser rundt målet, slik start langs kysten laster dem (`mapPreload` med sim, chart, view, vec og far, høyst `HOPUI.packMs` = 15 s), lagrer og viser skjermen igjen.
+  - **Testbryteren:** Admin-appens «Hopp over ruta (test)» (`S.adm.hopp`, `admHopp`) viser knappen og gir et gratis hopp, bare for admin (`adminOk`; `11-boot.js` slår den av for andre), og kortet sier det. Ingen spiller kan hoppe gratis. Fra HO3 vises knappen også der butikken selger (under «Kjøpet»).
+  - **Det de andre ser:** båten forsvinner ved avgangen og dukker opp ved målet. Et sprang over `PT_SNAP` (1,5 km) mellom to rapporter hoppes, ikke glis (`ptTake`), og det er ikke noe nytt felt i `pos_put`.
+  - **Testen:** `tests/hoppshot.py` (3D, begge formater: knappen under kino-knappen, kortet, hoppet til kaia uten land under, knappen borte ved kaia og med bryteren av).
+- **Stikkprøven langs kysten** (12.11.2026, med hele kysten fra kart-31): `KYST_HOPP_FRA=<havn> python3 tests/hopptest.py` i Kristiansand, Kristiansund og Båtsfjord. Dagens vær der (8–10 m/s, 1,3–1,6 m sjø) var over trebåtens risiko, og hoppet ble riktig nok nektet. Sammenligningene går derfor i stille vær (`WX_FORCE` 3 m/s) for både seilingen og hoppet.
+- **Stikkprøven i 3D** (12.11.2026, `KYST_HOPP_FRA=<havn> KYST_HOPP_TIL=<havn> python3 tests/hoppshot.py`, liggende, uten noe kart lastet langs veien):
+  - Kristiansand–Bergen verft, 222 nm: 6 t 10 min spart, ved kaia etter 1,7 s med kartet og 3D-pakkene ved målet.
+  - Kristiansund–Ålesund, 68 nm: 1 t 50 min, 2,0 s.
+  - Tromsø–Hammerfest, 120 nm: 3 t 19 min, 1,3 s.
+  - På Senja (16 nm): 0,6–0,7 s.
+  - Det første bildet etter et langt hopp tar minutter med SwiftShader på testmaskinen, fordi alle pakkene rundt målet tegnes. Skjermbildet etter hoppet har derfor 10 minutter. Hvor lenge det tar på et nettbrett, måler Jonas (`docs/spill-dette/105.md`).
+- **Tida tørrkjøringen tar** (målt 12.11.2026 på testmaskinen, hele kysten, trebåten, `hopRun`): Bodø–Tromsø 193 nm på 222 ms, Kristiansand–Bergen 222 nm på 263 ms og Ålesund–Bodø 384 nm på 400 ms. Det gir 5,4, 6,2 og 10,7 ekte timer spart, til 156, 168 og 235 kr. `hopGo` kjører den to ganger, og kortet én. På et nettbrett er det trolig to til tre ganger så lenge, og Jonas måler det (`docs/spill-dette/105.md`).
+- **Kjøpet** (HO3, steg 106, 12.11.2026; Jonas: «Gjør helt ferdig og rull ut på test med en gang.»; `supabase/migrations/20261112200000_hopp.sql`):
+  - **Knappen** vises der butikken selger (`shopMode()` er `live` eller `test`, ikke `off`: ingen sky på et offentlig nettsted, eller butikken stengt for kontoen, P5). Admin-bryteren gir fortsatt et gratis hopp for testing.
+  - **Kortets knapp er kjøpet:** «Kjøp · 💎 N kr» med vilkårslinja (`shopLabel`, `shopFine`). Gjester får registreringsspørsmålet (`payBuy`).
+  - **Prisen** regnes på hele ekte minutter (`q.realMin`), og serveren regner den samme (`hop_price`, `shop_quote_hop`). `shop-checkout` sender beløpet til Stripe som `price_data` og lagrer minuttene, stoppet (`{x, y, port}`), båten og prisen i kjøpet (`purchases.data`).
+  - **Holdet** (Jonas 12.11.2026: «Når brukeren trykker på hopp-knappen stopper båten momentant som om den var fryst i tiden»; `hopHoldOn`, `hopHeld`, `b.hopHold = {t0, until, to, pay}`):
+    - ⏩ fryser båten før kortet vises. `vesselStep` (`core/05-vessels.js`) og `dynCan` (`core/16b-dyn.js`) lar henne ligge der hun er: ingen fart, ingen diesel, ingen værvending og ingen motortrøbbel.
+    - Verdens klokke, fisken og mannskapet går som før.
+    - Holdet står i lagringen, så det varer mens siden er hos Stripe og mens tida borte spilles inn.
+    - Holdet slutter ved hoppet, ved «Avbryt», ved `?kjop=avbrutt` (`shopStart`), når ruta endres (`hopMatch` mot stoppet), når siden skjules med kortet åpent, når betalingssida ikke ble åpnet (gjest, feil i `shopGo`: `hopHoldTick`), og etter `HOP.holdReal` = 35 ekte minutter.
+    - Stripe-økta for et hopp utløper etter 31 minutter (`shop-checkout` `expires_at`).
+  - **Leveringen:** grantet fra webhooken har de samme dataene. `srvApply` (`ui/10i-shop.js`, 5b) gjør hoppet når båten det ble kjøpt for, ligger holdt for det samme stoppet (`hopHoldFor`):
+    - Det skjer med `hopDeliver` → `hopPress` → `hopGo(true, minutter)`, uansett vær. Er tida borte ikke spilt inn ennå, eller kom ikke kartet ved målet, ventes det i høyst `HOPUI.waitMs` = 3 min (`hopWait`: `hopCatching`, også `CATCH_LEFT`).
+    - Serveren får beskjed med `hopUse` (`hop_use`), én gang om gangen. Id-en står i `S.hopQ` til serveren har svart. Svarer den `false`, var hoppet alt brukt, og det telles (`hop_twice`).
+    - Turen må være dekket av minuttene i kjøpet (`hopCovers`, `hopCoverMax`: en tidel og to minutter mer er lov).
+    - Kvitteringen (`shopThanks`, `shopWhat(k, g)`) har prisen og minuttene fra grantet.
+    - Ingenting er tilgode etter hoppet (Jonas 12.11.2026: «Når spilleren har kommet fram til endepunktet av ruten ved hjelp av hoppet er tjenesten levert og spilleren skal ikke ha noe "hopp" tilgode»), og hopp selges bare ved ⏩ («Hopp skal ikke selges i kaiboden»). Kaiboden-ordningen er tatt bort.
+  - **Et kjøp som ikke kan gjøres** blir merket for refusjon (`hopVoid`, `S.hopVoid`, hendelsen `hop_void` for admin), og loggen, Meldinger og skjermen sier det én gang. Det gjelder når holdet var sluppet da betalingen kom, når turen er tydelig lengre enn kjøpet, og når noe i `hopWhy` gjelder. Grantet blir liggende ubrukt på serveren til Jonas refunderer i Stripe, og da tar `shop_refund` det tilbake. En side som har mistet spillet (`TAB`), leverer ingenting; den som har spillet, gjør det.
+  - **Refusjonen:** `shop_refund` tar tilbake et hopp og en «Ferdig nå» som er levert og ikke brukt, som en haill. Et brukt hopp står.
+  - **Havne-id-en** i kjøpet beholdes som spillet har den (en kaiplass er `'hs:'` + en hash, et mottak kan hete `mØF50`); `shop-checkout` stryker bare kontrolltegn.
+  - **Testene:**
+    - `tests/sqltest.py` HO3 sjekker `hop_price`, `shop_quote_hop`, grantet i `shop_state`, `hop_use` og refusjonen.
+    - `tests/kjoptest.py` steg j og k (kjør med `fasittest`) sjekker:
+      - at ⏩ stopper båten
+      - kjøpet fra kortet og `shop-checkout` med minuttene og stoppet
+      - at båten ligger stille etter retur fra Stripe, også når tida borte er spilt inn
+      - at hoppet gjøres fra holdet når betalingen kommer, og at kvitteringen har prisen og minuttene
+      - at et grant for en båt som ikke er holdt, merkes for refusjon én gang, uten noe i Kaiboden
+      - at hoppet venter på innhentingen (`CATCH_LEFT`)
+      - at et kjøp for 1 minutt ikke gjøres på en tur på 15
+      - at et avbrutt kjøp slipper båten
+    - `tests/hopptest.py` 4d sjekker at båten står stille i 30 spillminutter uten diesel, og at holdet slutter når ruta endres og etter 35 ekte minutter.
+    - `tests/hoppshot.py` 4d tar skjermbildet av kortet slik spillerne ser det, «Kjøp · 💎 N kr» med vilkårslinja, i begge formater. 4e sjekker at ⏩ stopper båten og at «Avbryt» slipper henne.
+    - `tests/unit/hopp.test.mjs` sjekker holdet, `hopWait`, `hopCovers`, `hopMatch` med en id uten kolon og `TAB`.
+  - **Kontrollene av HO3** (12.11.2026) fant blant annet:
+    - kvitteringens pris
+    - kaiplass-id-en
+    - at minuttene ikke ble sjekket
+    - at refusjonen ikke tok hopp tilbake
+    - at et betalt hopp kunne komme mens tida borte ble spilt inn
+    - at grunnene i meldingene ikke stemte
+    - at `hop_use` ble sendt to ganger
+    - at en fane som hadde mistet spillet, kunne hoppe
+
+    Alt er rettet med tester som ble sett røde først. Den andre kontrollen kom før Jonas bestemte holdet; holdet har fått en egen kontroll.
+- **Ikke med:** maskinhavari og sjø over ripa i grov sjø (`risk`): hoppet går i all slags vær, og det som kunne ha skjedd underveis, hoppes over, og måltidene underveis (`mealMinute` går etter klokka, som står stille; de verken serveres eller telles som hoppet over, og i havn spiser mannskapet i land).
+- **Testene:** `tests/unit/hopp.test.mjs` (prisstigen, neste stopp, nektingene, tida i ord, energien, mannskapets slitasje og det de andre ser) og `tests/hopptest.py` (LITE, Senja: hoppet mot den samme ruta seilt med `playMinutes`, med og uten en hånd om bord, trim som varer og trim som går ut underveis, et stopp midt på ruta, nektingene og betalt hopp).
+- **Kontrollen** (`/kontroll`, 12.11.2026) fant at sporet manglet de hoppede punktene, at proviant, snøkrabbe i tankene, turens timer, mannskapets arbeidsandel og Skippertak ikke gikk som om båten seilte, at mann over bord og slep av en annen spiller ikke ble nektet, at en trim som gikk ut underveis ga et for raskt og billig hopp, at et kart som ikke kom ble hoppet til likevel, og «1 t 60 min» i loggen. Alt er rettet med tester.

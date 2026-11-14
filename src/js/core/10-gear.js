@@ -291,6 +291,15 @@ function tierGate(k, lv){
   if (b.status !== 'port' || !portServices(portById(b.port), berthKind(b)).butikk) return [gL(E.name.no + ' kjøper du ved utstyrsbutikkens kai.', 'You buy the ' + E.name.en.toLowerCase() + ' at the tackle shop\'s quay.')];
   return null;
 }
+// what the tiers of a boat's reels are worth back when her datasheet takes fewer reels than a save has aboard (OB12, the kyst15 from
+// eight to four; ui/11-boot.js): a tier that gives nothing at the new count (one person tends all she carries with the tier under it,
+// as tierGate says) for every reel it was bought for, and the tiers she keeps for the reels that go ashore. {lv, kr}
+function jigTierBack(type, n0, lv){
+  const T = EQUIP.jukseLv.tiers, max = (VESSELS[type] || {}).jukseMax || 0, over = Math.max(0, n0 - max); let kr = 0;
+  while (lv > 1 && T[lv - 2].tend >= max){ kr += T[lv - 1].kr * n0; lv--; }
+  for (let i = 1; i < lv; i++) kr += T[i].kr * over;
+  return {lv, kr};
+}
 // the next tier, paid and aboard at once (no fitting: the crew takes them in hand)
 function tierBuy(k, lv){
   const gate = tierGate(k, lv); if (gate) return gate;
@@ -368,7 +377,7 @@ function gearRules(kind, spec, p){
     if (spec.bait && BAITS[spec.bait] ? (baitOf(pg)[spec.bait] || 0) < kg - 1e-9 : !baitPick(pg, kg)) return [gL('Teinene trenger agn: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' ' + BAITS[spec.bait].no.toLowerCase() : '') + '.', 'The pots need bait: ' + fmt(kg, 0) + ' kg' + (spec.bait && BAITS[spec.bait] ? ' of ' + BAITS[spec.bait].en.toLowerCase() : '') + '.')]; }
   // the rules where the gear goes (03e-rules.js): the fjord lines by length, the baseline zones, closed areas; then the limits on gear
   // in the sea inside the fjord lines (§ 33 hooks, in six Finnmark fjords inside their own lines in winter; § 33a cod nets)
-  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? potSp(spec.pot) : null, egn:kind === 'line' && isAuto(spec.lk)}); if (rb) return [rb];
+  const rb = ruBlockMsg({p, len:BOAT.len, gear:kind === 'teine' ? 'teiner' : kind, sp:kind === 'teine' ? potSp(spec.pot) : null, egn:kind === 'line' && isAuto(spec.lk), mesh:kind === 'garn' ? ((pg.nets.find(x => x.id === spec.nid) || {}).mesh || undefined) : undefined}); if (rb) return [rb];   // (mesh: the nursery areas south of 62° N take nets of 160 mm and more only, Ø10c)
   const lim = fjordLimits(p);
   if (lim){
     const inside = mySets().filter(s => fjordLimits(setMid(s)));
@@ -660,7 +669,7 @@ function finishHaul(g, H){
 
 // ---- a station on a route or the standing plan: haul what stands here and set it again, or set new gear if nothing stands here.
 // Before a gale (over 17 m/s within 36 hours) the gear is brought home instead of set again.
-// n: how many units the standing plan's field wants (06d-drift.js); a string of nets longer than that is split, a shorter one goes as it is
+// n: how many units the standing plan's field wants (06g-plan2.js); a string of nets longer than that is split, a shorter one goes as it is
 function cycleSpec(kind, want, n){
   const pg = S.pgear;
   if (kind === 'garn'){ const ok = x => !want || (x.mesh === want.mesh && netTy(x) === netTy(want)), L = pg.nets.filter(ok).length ? pg.nets.filter(ok) : pg.nets;
@@ -698,7 +707,7 @@ function opsGearNeeds(o){
   if (!acts.length || !pg) return null;
   if (acts.includes('garn') && handsAboard() < 2) miss.push(gL('garn krever to om bord', 'nets need two aboard'));
   { const n = (o.wps || []).filter(w => w.act && w.act.only === 'set').length; if (n > pg.kits.n) miss.push(gL('for få blåsesett om bord (' + pg.kits.n + ' av ' + n + ')', 'too few buoy sets aboard (' + pg.kits.n + ' of ' + n + ')')); }
-  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = potsAboard(pg) * potBaitKg(potK()) - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak && driftStock().bait){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
+  if (acts.includes('teine')){ const k = BAITS[pg.baitPref] ? pg.baitPref : 'makrell', need = potsAboard(pg) * potBaitKg(potK()) - (baitOf(pg)[k] || 0); if (need > 0 && p && p.mottak){ const kg = Math.ceil(need), c = kg * BAITS[k].kr; if (c <= spendable()){ book('agn', -c, 'Agn til teinene', 'Bait for the pots'); baitOf(pg)[k] = (baitOf(pg)[k] || 0) + kg; } } }
   if (acts.includes('line') && !pg.lines.hyse.baited && !pg.lines.bank.baited && !autoL(pg) && !mySets().some(s => s.kind === 'line')) miss.push(gL('lina er ikke egnet', 'the line is not baited'));
   return miss.length ? miss : null;
 }
@@ -723,7 +732,9 @@ function soakHour(s, H){
     const mw = KC.mean;
     if (lam > 0){ add('krabbe', lam * mw, lam); tot += lam * mw; takeStock(mid, lam * mw, 'krabbe'); }
     // (the fish in the pots get the haill as the crab does: «+100 % fiskelykke på alle arter», 06.11.2026; it was left out here)
-    for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * luck(sp) * g; if (r > 0) add(sp, r, r / SPECIES[sp].size[0]); }
+    // (and they are the sea's: taken from the stock as the nets' are, without the haill's extra, step 103; before, they were taken from nothing)
+    let fsh = 0; for (const sp in SELQ.teine){ const r = 30 * GEAR.teine.q * s.n * SELQ.teine[sp] * density(sp, mid, H) * luck(sp) * g; if (r > 0){ add(sp, r, r / SPECIES[sp].size[0]); if (!SPECIES[sp].stk) fsh += r; else if (!s.dry) takeStock(mid, r, sp); } }
+    if (fsh > 0 && !s.dry) takeStock(mid, fsh);
     // after two days the crab starts to die in the pots
     if (a > 48 && acc.krabbe && acc.krabbe.n > 0){ const fr = a > 72 ? 0.05 : 0.02, K = acc.krabbe; s.dead += K.n * fr; K.n *= 1 - fr; K.kg *= 1 - fr; K.ts *= 1 - fr; }
     return tot;

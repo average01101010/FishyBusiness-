@@ -36,6 +36,16 @@ export default function (t){
   t.eq(['hurtigsjark', 'sjarkny', 'breisjark', 'kyst21'].map(v => VESSELS[v].gearMax.teine), [6, 12, 6, 30], 'teinene båtene har plass til: 6, 12, 6 og 30 (stablene på dekk)');
   // (the new hurtigsjark, OB10: as many as her model's stacks hold; two of the four places from OB16 stood inside her houses)
   { const P = anchorsOf('boat-hs11.b64').kit.pots.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.sjarkny.gearMax.teine, 'sjarkny: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabler)'); }
+  // (the kyst21, OB13 round 2: three stacks of ten across the working deck forward of the hatch, as many as gearMax.teine; the hatch
+  // is where a hauled pot is emptied)
+  { const P = anchorsOf('boat-kyst21.b64').kit.pots.at; t.eq([P.length, P.reduce((a, q) => a + q[4], 0)], [3, VESSELS.kyst21.gearMax.teine], 'kyst21: gearMax.teine er det modellens tre stabler rommer');
+    t.ok(P.every((q, i) => P.every((r, j) => i === j || Math.hypot(q[0] - r[0], q[2] - r[2]) >= 1.45)), 'kyst21: stablene (ring 1,45 m) står fri av hverandre');
+    // (OB13 round 2: her own place where a hauled pot is emptied, on the hatch's cover: the ring and the pot tipped over its inboard edge
+    // (view3d/10-gear.js tipM: to the smaller x, 0.7 m past the ring) on the cover (2.2 x 2.4 m round anchors.hatch), clear of the stacks;
+    // without it the game's default stood on the tub and the table, and on the deck aft of the tub the tipped pot stood in the coaming)
+    const A = anchorsOf('boat-kyst21.b64'), S = A.kit.pots.spot, H = A.hatch;
+    t.ok(Array.isArray(S) && S[1] > A.deck.y + 0.4 && S[0] + 0.725 <= H[0] + 1.1 && S[0] - 0.725 - 0.7 >= H[0] - 1.1 && Math.abs(S[2] - H[2]) + 0.725 <= 1.2 && P.every(q => Math.hypot(q[0] - S[0], q[2] - S[2]) >= 1.45),
+      'kyst21: teina tømmes på luka og tippes på lukedekselet, fri av stablene (kit.pots.spot ' + JSON.stringify(S) + ', luka ' + JSON.stringify(H) + ')'); }
   // (the breisjark, OB11: one stack on the open aft deck, and the place where a hauled pot is emptied is the model's own)
   { const KP = anchorsOf('boat-malo36.b64').kit.pots, P = KP.at; t.eq(P.reduce((a, q) => a + q[4], 0), VESSELS.breisjark.gearMax.teine, 'breisjark: gearMax.teine er det modellens stabler rommer (' + P.length + ' stabel)');
     t.ok(Array.isArray(KP.spot) && KP.spot[0] > 0.5 && KP.spot[2] > 1.2, 'breisjark: teina tømmes på modellens egen plass i den åpne sida (kit.pots.spot ' + JSON.stringify(KP.spot) + ')'); }

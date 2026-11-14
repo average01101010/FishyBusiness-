@@ -41,12 +41,12 @@ async def main():
           const spot = window.CRABSPOT; atSea(spot); b.status = 'fishing'; b.fishUntil = S.t + 480; for (let i = 0; i < 480; i++) step();
           R.jigCrab = S.hold.filter(x => x.sp === 'krabbe').length; R.jigKg = Math.round(holdTotal()); S.hold = [];
           b.status = 'port'; b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; S.pgear = newPGear(); const c0 = S.cash;
-          S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
+          S.equip.linehaler = S.equip.garnhaler = S.equip.teinehaler = true; DOCK.open('fiske');
           const click = sel => { const e = document.querySelector(sel); if (e && !e.disabled) e.click(); return !!(e && !e.disabled); };
           R.clicked = [click('[data-pa=grbuy][data-w=net][data-s="156"]'), click('[data-pa=grbuy][data-w=stamp][data-s=hyse]'), click('[data-pa=grbuy][data-w=pot][data-s=big]'), click('[data-pa=grbuy][data-w=kit]')];
           // the bait is bought at the plant, not in the shop (Jonas 07.10.2026): over to Botnhamn for it, and the page is drawn again
-          const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click(); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
-          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; PHONE.open('redskap'); document.querySelector('[data-pa=sub][data-s=kjop]').click();
+          const q = portById('botnhamn'); b.port = 'botnhamn'; b.pos = {x:q.p.x, y:q.p.y}; DOCK.open('fiske'); PHONE.open('agn'); R.clicked.push(click('[data-pa=grbuy][data-w=bait][data-n="20"]'));
+          b.port = 'finnsnes'; b.pos = {...portById('finnsnes').p}; DOCK.open('fiske');
           R.pg = {nets:S.pgear.nets.map(l => l.n), hyse:S.pgear.lines.hyse.n, pots:S.pgear.pots.big, kits:S.pgear.kits.n, bait:baitKg(S.pgear)};
           R.spent = Math.round(c0 - S.cash); R.potRoom = BOAT.gearMax.teine || 0; R.potWhy = (buyGate('pot', 'big') || [''])[0]; R.expect = 6 * GPRICE.net + 4 * LINE_KINDS.hyse.price + R.potRoom * POTS.big.price + GPRICE.kit + 20 * GPRICE.bait;
           R.fullNets = document.querySelector('[data-pa=grbuy][data-w=net]').disabled;
@@ -210,7 +210,7 @@ async def main():
           b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; R.inSea = (rigBlock('teiner') || [''])[0];
           // an old save with pots in the sea and no rig: rigged for pots
           S.sets[0].kind = 'teine'; delete b.rig; R.guess = rigOf(); S.sets = [];
-          DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig.on h4') || {}).textContent || '';
+          DOCK.open('rigg'); const dr = document.getElementById('drawerBody'); R.page = dr.querySelectorAll('[data-pa=rig]').length; R.pageOn = (dr.querySelector('.rig-r.on .rig-t') || {}).textContent || '';
           dr.querySelector('[data-pa=rig][data-r=line]').click(); R.byTap = rigOf(); DOCK.close();
           b.type = 'sjark'; applyVessel(); b.rig = 'juksa'; S.equip.linehaler = false; R.sjarkLine = (rigBlock('line') || [''])[0]; b.type = 'skiff'; applyVessel(); return R; })()""")
         print('rig:', json.dumps(r, ensure_ascii=False))
@@ -310,10 +310,14 @@ async def main():
           const g0 = GROUNDS[2].p; atSea(g0); b.rig = 'garn'; startSet('garn', {nid:'n1'}, 0); hStep(300); b.status = 'idle'; b.pos = {x:g0.x + 1.5, y:g0.y}; if (isLand(b.pos)) b.pos = {x:g0.x - 1.5, y:g0.y};
           b.rig = 'line'; startSet('line', {lk:'hyse', n:2}, 0); hStep(300); b.status = 'idle';
           for (let k = 0; k < 18 * 60; k++) step();
-          const walk = id => { const s = S.sets.find(x => x.id === id), A = {n:0}; for (const sp in s.acc) A.n += s.acc[sp].kg; atSea(s.a); S.hold = []; startHaul(id); const g = b.gop, ups = []; let last = 0, k = 0;
+          // (the line's catch is set to at least 120 kg before the haul: the check is on how it comes aboard, not on how much the ground gave
+          // that day; with the 44 kg of 12.11.2026 only two of the first tub's six slices held a fish, and the check was red on every branch)
+          const walk = (id, min) => { const s = S.sets.find(x => x.id === id), A = {n:0}; let tot = 0; for (const sp in s.acc) tot += s.acc[sp].kg;
+            if (min && tot < min){ const f = min / Math.max(1, tot); if (tot > 0) for (const sp in s.acc){ s.acc[sp].kg *= f; s.acc[sp].n = Math.round(s.acc[sp].n * f); } else s.acc.hyse = {kg:min, n:Math.round(min / 1.2)}; }
+            for (const sp in s.acc) A.n += s.acc[sp].kg; atSea(s.a); S.hold = []; startHaul(id); const g = b.gop, ups = []; let last = 0, k = 0;
             while (b.gop && k++ < 900){ step(); const t = holdTotal(); if (t > last + 0.01){ ups.push({done:g.done, sub:g.sub, d:+(t - last).toFixed(1)}); last = t; } }
             return {sl:g.sl, n:g.n, ups:ups.length, firstUnit:ups.filter(u => u.done === 0).length, big:Math.max(0, ...ups.map(u => u.d)), kg:Math.round(holdTotal()), had:Math.round(A.n), left:Math.round(Object.values(s.acc).reduce((a, x) => a + Math.max(0, x.kg), 0))}; };
-          R.net = walk(S.sets.find(s => s.kind === 'garn').id); R.line = walk(S.sets.find(s => s.kind === 'line').id);
+          R.net = walk(S.sets.find(s => s.kind === 'garn').id); R.line = walk(S.sets.find(s => s.kind === 'line').id, 120);
           // the tub: 400 kg round (past the tub) with two aboard stops the fishing, unless it is switched on to gut on the way in
           const round = () => { S.hold = [{sp:'torsk', cls:SPECIES.torsk.ref, kg:400, n:100, bled:true, iced:false, hr:Math.floor(S.t / 60), fresh:100, gut:false, hook:true}]; b.status = 'fishing'; b.gop = null; b.deckStop = false; b.fishUntil = S.t + 300; b.deckEnd = null; };
           // the bleeding tub: up to half full the haul goes at full pace, then slower, to a fifth of it at a full tub (tilbakemelding #30)

@@ -77,7 +77,50 @@ function toplist(w){
   rows.push({name:S.boatName || (S.lang === 'no' ? 'Deg' : 'You'), port:hp ? hp.name : 'Finnsnes', kg:Math.round(myKg(w * 168, (w + 1) * 168)), me:true});
   return rows.sort((a, b) => b.kg - a.kg);
 }
+// ---- the fishing grounds in the pub and the paper (Ø14 F3 of docs/planer/fangstfelt.md, 11.11.2026) ----
+// The pub's rumour: among the named fishing grounds within 20 km of the harbour the boat lies in that have the species in the month (the
+// months the fishermen gave Fiskeridirektoratet, g.sm), the ground and species with the most worth now: the sea's own density at a point
+// inside the ground × the price at the harbour's plant (the nearest one where the harbour has none). Before this the rumour chose among
+// Senja's six for every player, so one in Bergen heard of Husøy. A ground whose waters are not loaded is left out (rumourNeed fetches
+// them when the pub is looked at). {f, n, sp, p}, or null when nobody has anything to tell.
+const RUMOUR_R = 20, NEWS_FELT_R = 20, RUMOUR = {key:'', busy:false, t:0}, NEWS_THIN = new Map();
+function rumourAt(pt, H){
+  if (!pt) return null; const mo = gDate(H).getUTCMonth(), land = pt.mottak ? pt : (plantsNear(pt.p, 1)[0] || {}).pt; if (!land) return null;
+  const near = feltNear(pt.p, RUMOUR_R);
+  // (where no ground near has a species in the month, as by Båtsfjord in March with four grounds for the summer: the jig's species on
+  // the grounds all the same, so a round that drew the rumour is not for nothing; the sea's own density knows the season)
+  for (const all of [false, true]){ let best = null, bv = 0;
+    for (const q of near) for (const sp of all ? FELTW.jig : Object.keys(q.g.sm)){ if ((!all && !((q.g.sm[sp] >> mo) & 1)) || !SPECIES[sp] || SPECIES[sp].npc || !feltLawful(sp, q.p, H)) continue;
+      let v = 0; try { v = density(sp, q.p, H) * price(land, sp, H); } catch (e){ continue; }   // (a block not loaded: leave the ground)
+      if (v > bv){ bv = v; best = {f:q.f, n:q.n, sp, p:q.p}; } }
+    if (best) return best; }
+  return null;
+}
+// the waters of the grounds the rumour may name, fetched once per harbour (nothing waits for it); a fetch that failed, or one asked
+// before the grounds were read, is tried again, no sooner than half a minute later
+function rumourNeed(pt){
+  if (!pt || RUMOUR.key === pt.id || RUMOUR.busy || typeof mapNeed !== 'function' || Date.now() - (RUMOUR.t || 0) < 30000) return;
+  const near = feltNear(pt.p, RUMOUR_R); if (!near.length) return; RUMOUR.t = Date.now();
+  let P = null; try { P = Promise.all(near.map(q => mapNeed(q.p, 0.5))); } catch (e){ return; }
+  RUMOUR.busy = true; P.then(() => { RUMOUR.key = pt.id; RUMOUR.t = 0; }, () => {}).then(() => { RUMOUR.busy = false; });
+}
+// the grounds of a list (feltNear) that go into the season of a species in the month (the month's bit set and the month before's not), the
+// nearest first, one line per ground (cod first, then the game's order); with H, only a species the rules let be fished there then
+function feltSeasonIn(near, mo, H){
+  const pm = (mo + 11) % 12, out = [];
+  for (const q of near){ const sp = ['torsk'].concat(PLAYSP).find(k => q.g.sm[k] && ((q.g.sm[k] >> mo) & 1) && !((q.g.sm[k] >> pm) & 1) && (H == null || feltLawful(k, q.p, H))); if (sp) out.push({q, sp}); }
+  return out;
+}
+// the ground near the home harbour with the thinnest stock under 0.62, for the paper's «Tynt fiske på …» (kept for the game hour: the
+// paper is read many times a minute by the phone's badge)
+function newsThin(hp, day, mo){
+  const key = hp.id + ',' + day + ',' + Math.floor(S.t / 60) + ',' + FELTW.gen; if (NEWS_THIN.has(key)) return NEWS_THIN.get(key);
+  let g = null, gv = 0.62;
+  for (const q of feltNear(hp.p, NEWS_FELT_R)){ const sp = FELTW.jig.find(k => (q.g.sm[k] >> mo) & 1); if (!sp) continue; const v = stockAt(q.p, sp, day * 24 + 12); if (v < gv){ gv = v; g = q; } }
+  if (NEWS_THIN.size > 24) NEWS_THIN.clear(); NEWS_THIN.set(key, g); return g;
+}
 // local news, generated from the same world everyone plays in
+const newsHome = () => portById(S.home || HOME0) || PORTS[0];   // (the calm-day story named Gisundet for every home harbour until Ø14 F3)
 const dayOf2 = t0 => Math.floor(t0 / 60 / 24);
 function newsForDay(day){
   const H0 = day * 24, out = [], mo = gDate(H0).getUTCMonth(), dd = gDate(H0).getUTCDate(), L = (no, en) => ({no, en});
@@ -85,7 +128,7 @@ function newsForDay(day){
   const pick = (arr) => arr[Math.floor(h2(day, 31) * arr.length) % arr.length];
   if (mx >= 20.8) out.push(pick([[L('Storm på kysten', 'Storm on the coast'), L('Vinden nådde ' + Math.round(mx) + ' m/s, og hele sjarkflåten ble liggende i havn.', 'Winds reached ' + Math.round(mx) + ' m/s and the whole small-boat fleet stayed in port.')], [L('Uvær stengte fjordene', 'Storm closes the fjords'), L('Med ' + Math.round(mx) + ' m/s i kastene var det ingen som gikk ut. Fortøyningene ble sjekket to ganger.', 'With gusts of ' + Math.round(mx) + ' m/s nobody went out. Moorings were checked twice.')]]));
   else if (mx >= 13.9) out.push(pick([[L('Kuling stoppet fisket', 'Gale halts fishing'), L('Mange lot båten ligge etter varsel om kuling. Skippere minner om å sjekke prognosen før man går ut.', 'Many stayed in after a gale warning. Skippers urge everyone to check the forecast before heading out.')], [L('Kulingvarsel på kysten', 'Gale warning on the coast'), L('Meteorologene varslet opp mot ' + Math.round(mx) + ' m/s. Småbåter bør holde seg inne.', 'Forecasters warned of up to ' + Math.round(mx) + ' m/s. Small boats should stay in.')], [L('Tungt vær på bankene', 'Heavy weather on the banks'), L('De som var ute, snudde tidlig. Det er fisk å hente når det løyer.', 'Those who went out turned back early. The fish will still be there when it eases.')]]));
-  else if (mx < 7 && h2(day, 33) < 0.6) out.push(pick([[L('Blikkstille og godt fiskevær', 'Flat calm and good fishing weather'), L('Små båter kunne gå helt ut på bankene.', 'Small boats could run all the way out to the banks.')], [L('Speilblank sjø i Gisundet', 'Mirror-flat Gisundet'), L('Rolig vær ga travle kaier og mange landinger.', 'Calm weather meant busy quays and plenty of landings.')], [L('Fint vær, fulle mottak', 'Fine weather, busy plants'), L('Mottakene melder om god tilførsel etter flere rolige dager.', 'The fish plants report steady supply after several calm days.')]]));
+  else if (mx < 7 && h2(day, 33) < 0.6) out.push(pick([[L('Blikkstille og godt fiskevær', 'Flat calm and good fishing weather'), L('Små båter kunne gå helt ut på bankene.', 'Small boats could run all the way out to the banks.')], [L('Speilblank sjø ved ' + newsHome().name, 'Mirror-flat sea off ' + newsHome().name), L('Rolig vær ga travle kaier og mange landinger.', 'Calm weather meant busy quays and plenty of landings.')], [L('Fint vær, fulle mottak', 'Fine weather, busy plants'), L('Mottakene melder om god tilførsel etter flere rolige dager.', 'The fish plants report steady supply after several calm days.')]]));
   const nat0 = out.length;   // the quota and regulation news is the whole coast's (Kystposten's front page, 09h-press.js)
   { const y = yearH(H0), d0 = doyH(H0 + 12), Y = qyAt(H0 + 12), MN = ['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'], MNe = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const jun29 = Math.floor((Date.UTC(y, 5, 29) - Date.UTC(y, 0, 1)) / 864e5), jun1 = Math.floor((Date.UTC(y, 5, 1) - Date.UTC(y, 0, 1)) / 864e5), dsN = d => { const t = new Date(Date.UTC(y, 0, 1 + d)); return [t.getUTCDate() + '. ' + MN[t.getUTCMonth()], t.getUTCDate() + ' ' + MNe[t.getUTCMonth()]]; };
@@ -118,11 +161,19 @@ function newsForDay(day){
     if (d0 === jun1) out.push([L('Uerfisket åpner for juksa', 'Redfish opens for jigs'), L('Fra 1. juni til 31. august kan båter under 15 meter fiske uer med juksa. Resten av året er uer bare tillatt som bifangst.', 'From 1 June to 31 August boats under 15 m may fish redfish with jigs. The rest of the year redfish is only allowed as bycatch.')]); }
   const nat1 = out.length;
   if (supplyFactor(H0 + 7) >= 1.025) out.push([L('Uværet ga toppris på fisken', 'Bad weather sends fish prices up'), L('Få båter har kommet seg ut, og mottakene betaler godt for fisken som kommer inn.', 'Few boats have made it out, and the plants are paying well for what comes in.')]);
-  if (day % 3 === 0 && S && S.stock){ const g = GROUNDS.slice(0, 4).filter(q => stockAt(q.p, 'torsk') < 0.62)[0]; if (g) out.push([L('Tynt fiske på ' + g.name.no.replace(/^./, c => c.toLowerCase()), 'Poor fishing ' + g.name.en.replace(/^./, c => c.toLowerCase())), L('Mange båter har fisket hardt her, og fangstene faller. Flere prøver seg på nye plasser.', 'Many boats have fished hard here and catches are falling. Several are trying new spots.')]); }
   const p1 = avgPrice('torsk', H0, 1), p0 = avgPrice('torsk', H0 - 72, 1), ch = (p1 / p0 - 1) * 100;
   if (Math.abs(ch) > 4) out.push([L('Torskeprisen ' + (ch > 0 ? 'stiger' : 'faller'), 'Cod price ' + (ch > 0 ? 'rises' : 'falls')), L('Snittprisen for torsk hos mottakene er ' + Math.round(p1) + ' kr/kg, ' + (ch > 0 ? 'opp' : 'ned') + ' ' + Math.abs(Math.round(ch)) + ' % på tre dager.', 'The average cod price at the plants is NOK ' + Math.round(p1) + '/kg, ' + (ch > 0 ? 'up' : 'down') + ' ' + Math.abs(Math.round(ch)) + '% in three days.')]);
   // the news is from where you fish: the home harbour and the plants nearest it
   const hp = portById(S.home || HOME0) || PORTS[0], hn = hp.name, np = plantsNear(hp.p, 2).map(x => x.pt.name), atSenja = dist(hp.p, (portById('finnsnes') || hp).p) < 80;
+  // the fishing grounds near the home harbour (Ø14 F3, 11.11.2026: Fiskeridirektoratet's grounds along the whole coast, not Senja's four):
+  // thin fishing on one of them every third day, and at most one story a week when a ground goes into its season. Never how much fish
+  // stands there (V4), and no push.
+  { if (day % 3 === 0 && S && S.stock){ const g = newsThin(hp, day, mo), pa = g && feltPa(g.n);
+      if (g) out.push([L('Tynt fiske ' + pa.no, 'Poor fishing ' + pa.en), L('Mange båter har fisket hardt her, og fangstene faller. Flere prøver seg på nye plasser.', 'Many boats have fished hard here and catches are falling. Several are trying new spots.')]); }
+    if (dd % 7 === 1 && dd < 29){ const e = feltSeasonIn(feltNear(hp.p, NEWS_FELT_R), mo, H0 + 12)[(dd - 1) / 7];
+      if (e){ const sn = SPECIES[e.sp], pa = feltPa(e.q.n), skrei = e.sp === 'torsk' && mo < 4 && !feltDesc(e.q.n) && natLL(e.q.f).lat > 62;
+        out.push(skrei ? [L('Skreia er kommet til ' + e.q.n, 'The skrei has come to ' + e.q.n), L('Fiskerne er tilbake ' + pa.no + '. Fra denne måneden pleier det å fiskes torsk der, etter Fiskeridirektoratets kart over fiskeplassene.', 'The fishermen are back ' + pa.en + '. From this month cod is usually fished there, by the Directorate of Fisheries’ chart of the fishing grounds.')]
+          : [L('Sesongen for ' + sn.no.toLowerCase() + ' er i gang ' + pa.no, 'The ' + sn.en.toLowerCase() + ' season has begun ' + pa.en), L('Fra denne måneden pleier fiskerne å fiske ' + sn.no.toLowerCase() + ' ' + pa.no + ', etter Fiskeridirektoratets kart over fiskeplassene.', 'From this month the fishermen usually fish ' + sn.en.toLowerCase() + ' ' + pa.en + ', by the Directorate of Fisheries’ chart of the fishing grounds.')]); } } }
   const SEAS = [
     [L('Skreia er på vei inn', 'The skrei is coming in'), L('De første skreifangstene er landet. Sesongen tar seg opp utover måneden.', 'The first spawning cod has been landed. The season picks up through the month.')],
     [L('Skreia står på bankene', 'Spawning cod on the banks'), L('Skreisesongen er i gang, og det meldes om god fangst på juksa utenfor ' + hn + '.', 'The skrei season is on, with good catches on jigs off ' + hn + '.')],
@@ -152,10 +203,9 @@ function autoRestock(){
   // only what the harbour sells: ice down the plant's chute (where she lies at the plant's quay), then fuel at the bunker quay,
   // which takes her over there and runs the pump
   const b = S.boat, pt = portById(b.port) || {};
-  const st = driftStock();
-  if (st.ice && pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= spendable()){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
-  if (st.fuel && pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && spendable() > 0) startFueling(true);
-  if (st.gear && !b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
+  if (pt.ice && catchIce() && berthKind(b) === 'main'){ const kg = Math.max(0, BOAT.iceCap - b.ice), c = kg * PRICE.ice; if (kg > 0 && c <= spendable()){ b.ice += kg; book('is', -c, 'Is fra isrenna', 'Ice from the chute'); iceChute(kg); } }
+  if (pt.fuel && BOAT.fuelCap - b.fuel > 0.5 && spendable() > 0) startFueling(true);
+  if (!b.gear && PRICE.gear <= spendable()){ b.gear = true; book('redskap', -PRICE.gear, 'Håndjuksa', 'Hand jig'); tripAdd(b, 'jigKr', PRICE.gear); }
 }
 function depart(){
   const b = S.boat;
@@ -176,6 +226,7 @@ function depart(){
   // those given time off sit this trip out: the landing after it brings them back (ui/08-actions.js sell)
   if (b.status === 'port') for (const c of S.crew) if (c.off) c.offTrip = true;
   if (b.status === 'port') provFill();   // an ocean vessel's stores filled by the chandler as she casts off (04-crew.js, H2b)
+  if (b.status === 'port') lopDepart();   // from the start of the race the clock begins (09o-kapplop.js)
   if (b.status === 'port'){ S.stats.trips++; log('Kastet loss fra ' + portById(b.port).name + '.', 'Cast off from ' + portById(b.port).name + '.'); if (S.tripOwner) loreDepart(); tatTripStart(); }
   if (access() === 'none' && !(S.plan && S.plan.ops && !S.tripOwner) && !(S.target === 'kveite' && b.kgear)) log('Båten har ikke adgang til å fiske torsk, hyse og sei. De kan bare være bifangst, høyst 10 % av landingen.', 'The boat has no access to fish cod, haddock and saithe. They can only be bycatch, at most 10% of the landing.');
   S.tripBuff = null; S.prep = {};
@@ -186,8 +237,21 @@ function depart(){
   return true;
 }
 // jobs: yard service, fitting equipment (the old «Klargjøring til neste tur» jobs, 'prep', were taken out 08.10.2026: the gear's own wear and service replace them)
+// a yard job on the hull (the engine, the hold, a rebuild, the propeller) that is no longer for this boat: she was traded in while it waited
+// (j.ty, the type it was ordered for; the yard's work is the hull's, OPP3, Jonas 12.11.2026: «A»), or its step is no longer the next.
+// The yard pays back what was paid (j.kr; a job from before has none, and an old one without j.ty is fitted as before)
+function yardStale(j, b){
+  if (j.ty && j.ty !== b.type) return true;
+  if (j.kind === 'eng') return VESSELS[b.type].outboard || (b.engLv || 0) !== j.lv - 1;
+  if (j.kind === 'hold') return (b.holdLv || 0) !== j.lv - 1;
+  if (j.kind === 'upg') return !UPGS[j.u] || upgLv(b, j.u) !== j.lv - 1 || !UPGS[j.u].fit(VESSELS[b.type]);
+  if (j.kind === 'prop') return !propFits(VESSELS[b.type]) || propLvOf(b) !== j.lv - 1;
+  return false;
+}
 function finishJob(j){
   const b = S.boat;
+  if (['eng', 'hold', 'upg', 'prop'].includes(j.kind) && (j.ty || j.kind === 'prop') && yardStale(j, b)){ const back = j.kr || 0; if (back > 0) book('verft', back, 'Tilbakebetalt: ' + (j.no || ''), 'Paid back: ' + (j.en || ''));
+    log((j.no || 'Jobben') + ' passer ikke denne båten lenger. Verftet betalte tilbake ' + kr(back) + '.', (j.en || 'The job') + ' no longer suits this vessel. The yard paid back ' + kr(back) + '.'); return; }
   if (j.kind === 'svc'){ b.svcAt = b.engH || 0; S.svcTold = false; log('Service på motoren er ferdig.', 'The engine service is done.'); turMechanic(); }
   else if (j.kind === 'fit'){ const E = EQUIP[j.k];
     // the boat may have been traded for one the equipment does not suit while it waited: the yard pays back
@@ -196,6 +260,8 @@ function finishJob(j){
     else { if (E.multi) S.equip[j.k] = (S.equip[j.k] || 0) + 1; else S.equip[j.k] = true; applyVessel(); log('Montert: ' + E.name.no + '.', 'Fitted: ' + E.name.en + '.'); if (hooks.onEquip) hooks.onEquip(); } }
   else if (j.kind === 'repair'){ if (typeof hullMended === 'function') hullMended(j); else b.damage = 0; log('Skroget er reparert.', 'The hull is repaired.'); }
   else if (j.kind === 'eng'){ b.engLv = j.lv; applyVessel(); log('Ny motor montert: ' + BOAT.hp + ' hk, ' + fmt(BOAT.vmax, 1) + ' knop.', 'New engine fitted: ' + BOAT.hp + ' hp, ' + fmt(BOAT.vmax, 1) + ' knots.'); }
+  // the propeller (OPP3); a job for another boat or a step no longer the next was paid back above (yardStale)
+  else if (j.kind === 'prop'){ b.propLv = j.lv; applyVessel(); const st = PROPUP[j.lv - 1]; log('Ny propell montert, trinn ' + j.lv + ': ' + st.no.toLowerCase() + '. Toppfart ' + fmt(BOAT.vmax, 1) + ' knop.', 'New propeller fitted, step ' + j.lv + ': ' + st.en.toLowerCase() + '. Top speed ' + fmt(BOAT.vmax, 1) + ' knots.'); }
   else if (j.kind === 'hull'){ b.foul = 0; log('Skroget er renset på slipp.', 'The hull is cleaned on the slip.'); }
   else if (j.kind === 'upg'){ b.upg = Object.assign({}, b.upg, {[j.u]:j.lv}); applyVessel(); const st = UPGS[j.u].steps[j.lv - 1]; log('Ombygd: ' + st.no + '.', 'Rebuilt: ' + st.en + '.'); }
   else if (j.kind === 'hold'){ b.holdLv = j.lv; applyVessel(); if (BOAT.karN) log('Plass til ett fiskekar til: ' + BOAT.karN + ' kar, ' + fmt(BOAT.holdCap, 0) + ' kg.', 'Room for one more fish tub: ' + BOAT.karN + ' tubs, ' + fmt(BOAT.holdCap, 0) + ' kg.'); else log('Lasterommet er bygd om: ' + fmt(BOAT.holdCap, 0) + ' kg.', 'The hold is rebuilt: ' + fmt(BOAT.holdCap, 0) + ' kg.'); }
@@ -208,7 +274,7 @@ function finishJob(j){
 // once (Jonas 05.10.2026: «Montering av utstyr og vedlikehold skal ta 30 ekte minutter, og man kan gjøre flere oppgaver samtidig»): 30
 // minutes at GAME_RATE game minutes a minute. Servicing the engine yourself (self) is cheaper and takes twice as long. The work on the
 // quay (rigging, baiting, mending) keeps its own hours, also side by side.
-const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'upg', 'repair'];
+const YARD_H = 30 * GAME_RATE / 60, YARD_KINDS = ['fit', 'svc', 'hull', 'hold', 'eng', 'prop', 'upg', 'repair'];
 const YARD_NOW_NOK = 19;
 // «Ferdig nå» is offered only while a yard job has this many game minutes left (5 real minutes): with a minute left it was offered, the job
 // finished during the payment and the purchase finished nothing (the review 07.11.2026); one that still comes to nothing is kept as a
@@ -225,6 +291,7 @@ function jobOk(j){
 function queueJob(j){ S.jobs = S.jobs || []; if (S.jobs.length >= 6) return false; S.jobs.forEach(jobOk); jobOk(j); S.jobs.push(j); if (S.boat.status === 'port' || (crewJob(j) && seaWork())) j.until = S.t + j.h * 60; if (crewJob(j)) jobW(j); return true; }
 // true when everything queued is the crew's own work (baiting, mending, hooks) and not the yard's: the labels then say so
 const jobsCrewOnly = () => !!(S.jobs && S.jobs.length) && S.jobs.every(crewJob);
+const jobsFreight = () => !!(S.jobs && S.jobs.length) && S.jobs.every(j => j.kind === 'last');   // only freight going aboard or ashore (09g-turer.js cargoJob)
 function jobsDone(){ if (!S.jobs || !S.jobs.length) return null; let m = null; for (const j of S.jobs) if (j.until != null) m = Math.max(m || 0, j.until); return m; }
 
 // in a wind over the turn-back limit the boat goes by Autonav to the nearest quay (S.settings.autoTo 'near', the default; Jonas

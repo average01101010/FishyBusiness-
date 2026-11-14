@@ -119,8 +119,18 @@
   // view nobody is drawn at the wheel, where the eye is (the skipper, or a hand who has the helm)
   function drawDeckCrew(BMrel, eye, VP, t, G){
     nSetup(VP); let idx = 20; if (!GB) buildGear();
+    // (the tests hold the crew's deck at a roll and a pitch of their own, where the boat is and heading her way, hold everyone's beat
+    // still (T), put everyone at a place in one pose (task), and take the time of this function: SJOBEIN.test, tests/sjobein.py)
+    const SJT = SJOBEIN.test, sjp0 = SJT && SJT.prof ? performance.now() : 0;
+    // (the tests go through the people again with another pose or beat without a whole frame: LEMMER.redraw, tests/lemmer.py. Nothing
+    // is drawn then, the joints are only reckoned and logged: thousands of figures a second were minutes of work for a software GPU)
+    LEMMER.fr++; if (LEMMER.log && !LEMMER.dry){ const B0 = BMrel; LEMMER.redraw = () => { const d0 = drawN; LEMMER.dry = true; drawN = () => {}; try { drawDeckCrew(B0, eye, VP, t, G); } finally { drawN = d0; LEMMER.dry = false; } };
+      // (and drawn for real n times with the driver made to finish, for the time a figure costs: tests/folk2deck.py. ms a figure)
+      LEMMER.bench = n => { const px = new Uint8Array(4), lg = LEMMER.log; LEMMER.log = null; gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); try { for (let i = 0; i < n; i++) drawDeckCrew(B0, eye, VP, t, G); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } finally { LEMMER.log = lg; } return (performance.now() - t0) / n / Math.max(1, CREW3D.visible().length); }; }
+    if (SJT && SJT.roll != null) BMrel = model(BMrel[12], BMrel[13], BMrel[14], -bv.head, SJT.pitch || 0, SJT.roll || 0);
+    const DN = deckN(BMrel);   // (the deck's normal in the world, for the sea legs: view3d/08-plants.js seaNow)
     const b = S.boat, d = G.deck || {y:G.gw, z:0}, gw = G.gw || d.y + 0.9, railH = clamp(gw - d.y, 0.6, 1.1), now = performance.now() / 1000, DW = deckWork(G), ST = CREW3D._st, V = VESSELS[vtype()] || {}, K = G.kit || {};
-    dkTick(); DKGULL = null;
+    dkTick(); DKGULL = null; DKBM = BMrel;   // (the boat's frame for the wet deck, 09-landing-deck.js dkWetPts)
     const rel = q => xf(BMrel, q), A = CREW3D.visible();
     // jigging by hand without machines: the real catch (CATCHQ) comes up on the lines of those at the rail, one fish at a time each
     const machines = S.equip && S.equip.jukse > 0 && !(S.target === 'kveite' && b.kgear) && SK && SK.machG;
@@ -129,7 +139,9 @@
         const f = Q.shift(), F0 = [Math.sin(a.h), -Math.cos(a.h)], rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; DKF.jig[a.id] = now;
         dkEvent('jigup', rl, f.sp, f.kg, {for:a.id, wait:8, Wat:[rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]}); } }
     // the fish lying on the deck where they were shaken off the hook or let fall from the net, until the bleeder takes them up
-    if (SK && SK.fishM) for (const f of DKDECK) drawN(fishOf(f.sp), chain(BMrel, M4.T(f.at[0], f.at[1] + 0.05, f.at[2]), M4.RY(f.yaw), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2))));
+    // (not yet bled, it flaps on the deck: on its side the bend slaps the tail up and down, in bursts, flap in 09-landing-deck.js)
+    if (SK && SK.fishM){ const tf = performance.now() / 1000; for (const f of DKDECK){ const Fl = flap(tf, (f.kg || 2) * 2.7 + f.yaw * 3, 0.6, f.sp, f.kg); bendOn(Fl);
+      drawN(fishOf(f.sp), chain(BMrel, M4.T(f.at[0], f.at[1] + 0.05, f.at[2]), M4.RY(f.yaw + Fl[0] * 0.5), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2)))); } bendOff(); }
     // where the gutted fish go: the packer's crate on his right (a hold boat), else the open boat's tub nearest him (kit.tubs)
     const pk = A.find(a => a.st === 'is' && a.mode === 'at'), tubs = V.kar ? karPlaces(vtype()) : null;
     // (an open boat: the tub being filled now, the fish landing on its heap, core/07f-kar.js)
@@ -142,13 +154,19 @@
       const go = CREW3D.walkOff(a);
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x + go[0], a.y, a.z + go[1]], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:seaLook(a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0), a.mode === 'helm')};
-      const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
+      // (the tests: the last event of a kind played again by the one whose work it is, at the moment asked for, SJOBEIN.test.ev and .t)
+      // (the new people: the fish comes in at the first hauler's place, and the gaff's sweep and where the fish is let fall are laid
+      // out from there, deckcrew.js places; the second hauler does not gaff across him)
+      const evK = LEMMER.on && a.task === 'haul' && a.slot > 0 && A.some(q => q !== a && q.task === 'haul' && q.slot === 0 && q.mode === 'at') ? 'haul2' : a.task;   /* (alone at the hauler, the second gaffs as before: else no fish came aboard) */
+      const evT = SJT && SJT.ev && DKLAST[SJT.ev] && a.mode === 'at' && (DKPLAY[evK] || [])[0] === SJT.ev ? DKLAST[SJT.ev] : null;
+      const ev = evT || (a.mode === 'at' ? dkFor(a.id, lp, evK) : null);   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
       const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h + (a.sqA || 0) * Math.PI / 2), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
+      if (evT && SJT.t != null) st.ev.k = SJT.t;
       const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)], sg = a.x >= 0 ? 1 : -1;
-      const g0 = CREW3D.holds(a), ef = a.ef == null ? 1 : a.ef, ta = a.tk != null ? a.tk : t;   // (the place still held; each one's own beat, deckcrew.js a.tk)
-      st.age = a.c ? a.c.age : 45; st.deck = true; st.rail = a.mode === 'at' && g0 ? g0.rail || null : null; if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;
+      const g0 = CREW3D.holds(a), ef = a.ef == null ? 1 : a.ef, ta = SJT && SJT.T != null ? SJT.T : a.tk != null ? a.tk : t;   // (the place still held; each one's own beat, deckcrew.js a.tk)
+      st.age = a.c ? a.c.age : 45; st.deck = true; st.bp = lp; st.dn = DN; st.sea = b.status === 'port' && !SJT ? null : seaSet(CREW3D, a, BMrel); if (SJT && SJT.task && a.mode === 'at' && !ev) st.task = SJT.task; st.rail = a.mode === 'at' && g0 && !(SJT && SJT.norail) ? g0.rail || null : null;   /* (norail: a pose the tests put on him stands free, the same wherever the break place he happens to have is: tests/folk2maal.py) */ if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;
       st.slump = clamp((0.96 - ef) * 1.6, 0, 0.35); st.tape = !!(a.c && a.c.cut && S.t < a.c.cut); if (a.put) st.put = {task:a.put.task, u:clamp(a.putU || 0, 0, 1)};
       // a moment (G3.crewFx, 14-crewlife.js crewSlip): a fish slips over the side, the knife slips and a hand is cut
       const fx = CFX.get(a.id);
@@ -161,21 +179,49 @@
               st.h += dh * ease(Math.min(1, age / 0.3)) * (1 - ease(Math.max(0, (age / dur - 0.8) / 0.2))); } } } }
       if (a.mode === 'at' && !ev && !st.fx){
         // gutting at the table: the fish from the bleeding tub, the guts over the rail, the gutted fish to the packer
-        if (a.task === 'gut'){ st.task = 'gutw'; st.Tb = table; st.Ub = tubTop; st.Of = offal; const n = Math.floor((ta + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
-          if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
+        if (a.task === 'gut'){ st.task = 'gutw'; st.Tb = table;
+          // (the new people, steg 125: a second gutter stands 0.55 to 0.7 m along the table from the first and worked at the table's middle all the
+          // same: his hands 37 cm short of it, his knife and his fish in the first man. Each has the part of the table that is before him,
+          // as far along it as the table goes (the plastic table 1.15 m, the steel bench from 10 m 1.60: HOLDT.table); one who stands past
+          // its end guts the fish in his hands, standing free ('gut'))
+          if (LEMMER.on){ const Tq = HOLDT.table, lat = (DW.table[0] - a.x) * R0[0] + (DW.table[2] - a.z) * R0[1], lim = (V.len || 0) >= 10 ? Tq.benk : Tq.bord, sft = clamp(lat, -lim, lim);
+            if (Math.abs(lat - sft) > Tq.off){ st.task = 'gut'; st.Tb = null; } else if (Math.abs(sft) > 0.02) st.Tb = rel([DW.table[0] - R0[0] * sft, DW.table[1], DW.table[2] - R0[1] * sft]); }
+          st.Ub = tubTop; st.Of = offal;
+          // (the waiting rule, deckcrew.js VENT: another gutter stands between him and the tub: he takes his fish from the table on the tub's side of his own
+          // part of it, not from the tub through the man beside him, whose body the fish went 6 to 13 cm into)
+          if (LEMMER.on && st.task === 'gutw'){ const tb = dkTub(G), gs = A.filter(q => q !== a && q.task === 'gut' && q.mode === 'at').map(q => [q.x, q.z]);
+            if (VENT.inWay([a.x, a.z], [tb[0], tb[2]], gs, VENT.pass)){ const lat = (DW.table[0] - a.x) * R0[0] + (DW.table[2] - a.z) * R0[1], lim = (V.len || 0) >= 10 ? HOLDT.table.benk : HOLDT.table.bord, sd = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, k = lat - clamp(lat, -lim, lim) + sd * VENT.table[0],   /* (lat less what the table reaches: his own part of it, straight before him while he stands within its length) */ ah = (DW.table[0] - a.x) * F0[0] + (DW.table[2] - a.z) * F0[1];
+              st.Ub = rel([a.x + F0[0] * ah + R0[0] * k, DW.table[1] + VENT.table[1], a.z + F0[1] * ah + R0[1] * k]); } } const n = Math.floor((ta + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
+          // (steg 125b, Jonas 14.11.2026, choice A: his fish come from a crate of bled fish beside him and go to a crate on his other side, HOLDT.gutbox. The side
+          // of the bled fish is the tub's, where the deck is free and nobody stands there; with no room for them he does as before)
+          if (LEMMER.on && st.task === 'gutw'){ const Gb = HOLDT.gutbox, tb = dkTub(G), s0 = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, Mq = ST.M;
+            const at = s => [a.x + R0[0] * s * Gb.side + F0[0] * Gb.ahead, a.z + R0[1] * s * Gb.side + F0[1] * Gb.ahead], free = q => Mq && Mq.near(q[0], q[1], 0.25) >= 0 && !A.some(o => o !== a && o.mode === 'at' && Math.hypot(o.x - q[0], o.z - q[1]) < Gb.room);
+            for (const s of [s0, -s0]){ const src = at(s), out = at(-s); if (!free(src) || !free(out)) continue;
+              st.Bx = rel([src[0], a.y, src[1]]); st.Ox = rel([out[0], a.y, out[1]]); st.Ub = [st.Bx[0], st.Bx[1] + Gb.stack * Gb.h + Gb.grab + 0.14, st.Bx[2]]; st.Cr = st.Ox; st.crTop = Gb.h; break; } }
+          if (st.Bx){ /* (his own crate: the packer's is not where the fish lands) */ }
+          else if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
           // no packer on an open boat: he throws the gutted fish into the fish tub being filled himself (Jonas 04.11.2026)
           else if (tubs && tubs.length){ const ti = karFilling(vtype()); st.Cr = rel(tubs[ti].at); st.crTop = karTop(vtype(), ti); } }
-        else if (a.task === 'pack'){ const C = crateOf(a); st.Cr = rel(C.p); st.crTop = C.top; st.crTub = C.tub; st.fill = ST.crateFill || 0; st.csp = i => packed(hash(i * 7 + 1)); const L = DKLAY[a.id]; st.lay = L ? now - L.t : -1;
+        else if (a.task === 'pack'){ const C = crateOf(a); st.Cr = rel(C.p); st.crTop = C.top; st.crTub = C.tub; st.fill = ST.crateFill || 0; st.csp = i => packed(hash(i * 7 + 1)); const L = DKLAY[a.id]; st.lay = SJT && SJT.lay != null ? SJT.lay : L ? now - L.t : -1;   /* (the tests ask for the moment of the laying too, SJOBEIN.test.lay: tests/folk2maal.py) */
           // the ice bin on the side away from the gutter
           const gt = A.find(q => q.st === 'sloy' && q !== a); st.binR = gt && (gt.x - a.x) * R0[0] + (gt.z - a.z) * R0[1] < 0 ? 0.55 : -0.55;
           // the ice from the ice box that stands on deck (its ice's top), when it is within his reach
-          const IB = iceBoxTop(vtype()); st.Bin = IB && Math.hypot(IB[0] - a.x, IB[2] - a.z) < 1.35 ? rel(IB) : null; }
-        else if (a.task === 'egn' || a.task === 'strip'){ const PLs = CREW3D.places() || {tubs:[]}, T0 = PLs.tubs[(a.goal && a.goal.tub || 0) % 8]; if (T0) st.Tu = rel([T0[0], (PLs.tubY != null ? PLs.tubY : a.y) + 0.38, T0[1]]); st.Bk = rel([a.x + R0[0] * 0.38 - F0[0] * 0.12, a.y, a.z + R0[1] * 0.38 - F0[1] * 0.12]);
+          const IB = iceBoxTop(vtype()); st.Bin = IB && Math.hypot(IB[0] - a.x, IB[2] - a.z) < 1.35 ? rel(IB) : null;
+          // (the waiting rule, deckcrew.js VENT: he holds the shovel over the crate while somebody walks past the ice or works a fish there, a.shW the wait's share;
+          // those who stand at their own places are not waited for. The tests ask for the wait themselves, SJOBEIN.test.shW)
+          if (LEMMER.on){ const bin = st.Bin ? [IB[0], IB[2]] : [a.x + R0[0] * st.binR + F0[0] * VENT.bin, a.z + R0[1] * st.binR + F0[1] * VENT.bin], bl = Math.hypot(bin[0] - a.x, bin[1] - a.z) || 1, o = Math.min(VENT.own, bl) / bl, from = [a.x + (bin[0] - a.x) * o, a.z + (bin[1] - a.z) * o];   /* (from: the way begins where the blade is clear of himself, so one who stands by him and not by the ice is not waited for) */
+            const busy = A.filter(q => q !== a && (q.mode === 'walk' || DKEV.some(e => e.who === q.id && now >= e.t0 && now - e.t0 < DKDUR[e.kind]))).map(q => [q.x, q.z]);
+            if (SJT) a.shW = SJT.shW || 0; else if (!LEMMER.dry) a.shW = VENT.blend(a.shW || 0, VENT.inWay(from, bin, busy, VENT.shovel), now - (a.shT || now)); a.shT = now; st.shW = a.shW || 0; } }
+        else if (a.task === 'egn' || a.task === 'strip'){ const PLs = CREW3D.places() || {tubs:[]}, T0 = PLs.tubs[(a.goal && a.goal.tub || 0) % 8]; if (T0) st.Tu = rel([T0[0], (PLs.tubY != null ? PLs.tubY : a.y) + 0.38, T0[1]]); { const Eg = LEMMER.on ? HOLDT.egn.at : [-0.12, 0, 0.38]; st.Bk = rel([a.x + R0[0] * Eg[2] + F0[0] * Eg[0], a.y + Eg[1], a.z + R0[1] * Eg[2] + F0[1] * Eg[0]]); }   /* (the new people: the bucket on an upturned box by his right knee, where his hand reaches it; on the deck behind his seat it was 31 cm out of his reach) */
           st.Of = rel([sg * ((G.beam || 3) / 2 + 1.4), -0.1, a.z]); if (a.task === 'strip' && ((t + idx * 3.1) % 25) < 2.2) DKGULL = [st.Of[0] + eye[0], (env.tide || 0), st.Of[2] + eye[2]]; }
         else if (a.task === 'mend') st.Nt = rel([a.x + F0[0] * 0.42, a.y + railH - 0.02, a.z + F0[1] * 0.42]);
         else if (a.task === 'jig' && !machines){ const rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; st.Rl = rel(rl); st.Wt = rel([rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]); } }
       if (a.sub && a.sub.carry === 'crate'){ st.crate = true; st.csp = i => packed(hash(i * 7 + 1)); if (a.mode === 'at') st.s = ST.clk - (a.sub.done - (a.sub.hold || 2)); }
+      // (alone in the white room: only the one the eye is on, the others out of the way; Jonas 14.11.2026: «Du har også lov å fjerne
+      // de andre fra mannskapet om de er i veien på bildene». The count goes on, so his beat is the same with and without them)
+      if (cam.solo && cam.whoId != null && a.id !== cam.whoId){ idx++; continue; }
       drawWorker(P, st, eye, ta, idx++); }
+    if (sjp0){ SJT.prof.ms += performance.now() - sjp0; SJT.prof.n += A.length; SJT.prof.f++; }
     dkBloodDraw(VP);
     if (HELM_KIT[vtype()] && G.skipperAt && cam.dist < 80) drawHelmKit(BMrel, eye, G);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
@@ -248,7 +294,7 @@
     if (G.trawl) drawTrawl(t, G.trawl, BMrel, performance.now() / 1000);
     if (G.seine) drawSeine(t, G.seine, BMrel, VP, performance.now() / 1000);
     gl.disableVertexAttribArray(2);
-    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawCall(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...ownLogo()); }
+    if (named && SK){ if (!S.unnamed) drawNames(t, BMrel, VP, liv, S.boatName, ownPort()); drawMark(t, BMrel, VP, liv); drawCall(t, BMrel, VP, liv); drawLogo(t, BMrel, VP, ...hullLogo()); }
     gl.useProgram(PL.p);
   }
   // the local fleet near you: the kit model nearest each boat (vessel3d.js npcKit), scaled to her length and beam, at lod 1 within
@@ -261,15 +307,71 @@
   // the coast guard's ship (steg 100, tools/boats/kv.py) is her own model too, kv47 or kv90 (kvNpcs' vtype), not in VESSELS: she cannot be
   // bought; until her model is in she is the kit's boat of her size, as before. She is drawn near out to 500 m (there is only one of her,
   // her near model is 28-36 thousand triangles, and the 93 m ship lies 180 m off the vessel she inspects)
-  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
-  const NKN = {}; function npcNear(n){ const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }
+  // the ferries, the express boats, the passenger ferries and the coastal route's ships (Ø15 N7, steg 36, tools/ships/) are their own
+  // models, chosen by the vessel's fields and never her name: a car ferry by her length, the size class nearest it (34, 64 and 112 m,
+  // core/05b-ferje.js FERJE_SIZE; the bounds the geometric means between them, so Senja's 49.9 m ferry is the 64 m one), an express boat (ex 1) the catamaran, a passenger ferry (ex 2) the monohull, a coastal ship (type 'coastal') the route's
+  // ship; each scaled to her own length and beam as the fleet is (npcMesh). Near (the GLB's lod0) within 500 m, the simple version (lod1)
+  // out to 1.5 km, the old boxes (19-wildlife-npc.js N.ferry, N.coastal) beyond, and the boxes too until the models are in
+  // the merchant ships (N5's traffic, steg 37; the models from the second part of N7) by their type: cargo, tanker, cruise. Their
+  // models are in tools/ships/ and src/data/ship-last, ship-tank, ship-cruise; the page has them once N5 adds their lines to
+  // src/index.html, and until then (glbHas false) they are the scaled ferry box like a ferry beyond 1.5 km
+  const SHIPM = {coastal:'ship-kystrute', cargo:'ship-last', tanker:'ship-tank', cruise:'ship-cruise'};
+  const SHIPTY = {ferry:1, coastal:1, cargo:1, tanker:1, cruise:1};   // (the types drawn as ships: steady in the sea, the box scaled to them)
+  const shipT = n => { if (!SHIPTY[n.type]) return null;
+    const t = SHIPM[n.type] || (n.ex === 1 ? 'ship-hurtig' : n.ex === 2 ? 'ship-passasjer' : !(n.L > 0) ? null : n.L < 46.6 ? 'ship-ferje34' : n.L < 84.7 ? 'ship-ferje64' : 'ship-ferje112');
+    return t && glbHas(t) ? t : null; };
+  // the coast's fishing boats by their main gear (N7's second part, 12.11.2026): the register's gear of each boat (flaate.json, the boat
+  // npcStates read; read here by her id, as npcStates' entry does not carry it), and the model that shows that gear where there is one
+  // for her length (tools/ships/: snurrevad, not, tral, teine, autoline); the net, jig and short line boats, and every boat whose gear
+  // has no model, are the player's boat nearest her length and beam as before (npcKit). By the vessel's fields, never her name.
+  const NGEAR = new Map();
+  function npcGear(n){
+    if (n.mainGear) return n.mainGear; if (!n.coast || typeof VEC === 'undefined') return null;   // (npcStates carries it, core/05-vessels.js; the lookup below for an entry without it)
+    const k = n.id + '|' + n.L, c = NGEAR.get(k); if (c !== undefined) return c;
+    // (two boats can share a berth and so its id, flaate.json's «shared»: the one of her length; two of the same length on one berth get
+    // the first one's gear, a picture's error only. A boat that is not the register's (a trip's, the coast guard's) has none, kept so)
+    const m = /^c(-?\d+):(-?\d+)\.(\d+)\./.exec(String(n.id)), keep = g => { if (NGEAR.size > 4000) NGEAR.clear(); NGEAR.set(k, g); return g; };
+    if (!m) return keep(null);
+    const t = VEC.tiles.get(m[1] + ':' + m[2]); if (!t) return null;   // (the tile not in yet: asked again)
+    const h = t.npc && t.npc[+m[3]], b = h && h.boats && (h.boats.find(q => q.id === n.id && q.L === n.L) || h.boats.find(q => q.id === n.id));
+    return keep(b ? b.gear || null : null);
+  }
+  const GEARM = [['snurrevad', 'ship-snurrevad', 8, 99], ['not', 'ship-not', 8, 99], ['tral', 'ship-tral', 8, 99], ['teine', 'ship-teine', 7, 13], ['line', 'ship-autoline', 13, 99]];
+  function npcGearT(n){ if (!n.coast || n.player) return null; if (n._gT !== undefined) return n._gT;   // (once per boat's entry: asked several times a frame)
+    const g = npcGear(n); if (!g) return null; let r = null;
+    for (const [k, t, a, b] of GEARM) if (g === k && n.L >= a && n.L < b){ r = glbHas(t) ? t : null; break; }
+    return n._gT = r; }
+  // the summer's leisure boats (N6's traffic, steg 38; the models from N7's second part): a motor boat and a sailing boat by their type,
+  // drawn as the fleet is (the kit's list: the sailing boat's sails set at sea and furled in port, drawSail); the page has them once N6
+  // adds their lines to src/index.html
+  const LEISM = {fritid:'ship-fritid', seil:'ship-seil'};
+  const leisT = n => LEISM[n.type] && glbHas(LEISM[n.type]) ? LEISM[n.type] : null;
+  const npcType = n => (n.player || n.hav) && SPEC3D[n.vtype] ? n.vtype : n.kv && n.vtype && glbHas(n.vtype) ? n.vtype : shipT(n) || npcGearT(n) || leisT(n) || npcKit(n.L, n.B);   // the ocean fleet (05d-hav.js) as their own kind too
+  const NKN = {}; function npcNear(n){ if (!n.player && shipT(n)) return 500; if (npcGearT(n) || leisT(n)) return 300; const k = n.player ? 'p|' + n.vtype : n.kv ? 'kv' : n.L + '|' + n.B; if (!(k in NKN)) NKN[k] = n.kv ? 500 : glbHas(npcType(n)) ? 150 : 300; return NKN[k]; }   // (a gear model is some 4 000 triangles: near within 300 m as the kit's own)
   const NKB = {};
-  // a model's buffers by type, lod and livery (npcMesh and npcWarm)
-  function npcKB(t, lod, liv){ const k = t + '|' + lod + '|' + liv;
-    if (!(k in NKB)){ const m = VESSELS[t] ? npcModel(t, lod, liv) : glbModel(t, lod, null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, hull:up(m.o), glass:lod >= 1 ? up(m.glass) : null, geo:m.geo} : null; }
-    return NKB[k]; }
+  // a model's buffers by type, lod and livery (npcMesh and npcWarm). Another player's by her paint only (TP1, steg 108: vessel3d.js
+  // livPaint; her flag, mark and logo are drawn over it), so boats painted alike share them, and one with nothing painted shares the
+  // local fleet's unpainted model (0). The painted ones (NKBP.n) are held up to NKBP.cap: past it, the one longest out of use (not drawn
+  // for NKBP.idle s) is let go, its buffers deleted and its model (vessel3d.js NPCMOD) with it; never one still in use, so every boat
+  // in view keeps her paint. NKBP counts what is made, let go and sent to the GPU (G3._debug.npcBufs)
+  const spX = liv => typeof liv === 'string' && typeof spPaintIn === 'function' && spPaintIn(liv) ? '|x' : '';   // (a partner's design found in the list or not: steg 44, as vessel3d.js npcModel)
+  const NKBP = {n:0, cap:12, idle:20, made:0, dropped:0, bytes:0, up:0};   // (bytes: the painted models alive; up: all the painted ever sent)
+  const LPM = new Map(), nkbLiv = liv => { if (typeof liv !== 'string') return liv; let v = LPM.get(liv); if (v === undefined){ if (LPM.size > 256) LPM.clear(); v = livPaint(liv) || 0; LPM.set(liv, v); } return v; };
+  const nkbKey = (t, lod, liv) => { const lp = nkbLiv(liv); return t + '|' + lod + '|' + lp + spX(lp); };
+  function npcKB(t, lod, liv){ const lp = nkbLiv(liv), k = nkbKey(t, lod, liv);
+    if (!(k in NKB)){ const G = VESSELS[t] ? null : glbLoad(t), m = VESSELS[t] ? npcModel(t, lod, lp) : glbModel(t, lod, G && G.ex.anchors && G.ex.anchors.liv && typeof lp === 'number' && LIVERY[lp % LIVERY.length] ? {hull:LIVERY[lp % LIVERY.length].hull} : null), up = o => ({pb:buf(asF32(o.p)), nb:buf(asF32(o.n)), cb:buf(asF32(o.c)), n:o.p.length / 3}); NKB[k] = m ? {t, lod, hull:up(m.o), glass:lod >= 1 && !(m.geo && m.geo.ship) ? up(m.glass) : null, geo:m.geo} : null;   // (a ship's windows are in her hull: no glass drawn)
+      const B = NKB[k]; if (B && typeof lp === 'string'){ const by = (B.hull.n + (B.glass ? B.glass.n : 0)) * 36; B.peer = {k, mk:npcModelKey(t, lod, lp), by, used:performance.now()}; NKBP.n++; NKBP.made++; NKBP.bytes += by; NKBP.up += by; nkbCap(); } }   // (36: position, normal and colour, three floats each)
+    const B = NKB[k]; if (B && B.peer) B.peer.used = performance.now(); return B; }
+  function nkbCap(){
+    while (NKBP.n > NKBP.cap){ let old = null; const now = performance.now();
+      for (const kk in NKB){ const B = NKB[kk]; if (B && B.peer && now - B.peer.used > NKBP.idle * 1000 && (!old || B.peer.used < old.peer.used)) old = B; }
+      if (!old) return;
+      for (const kk in NKM) if (NKM[kk] && NKM[kk].hull === old.hull) delete NKM[kk];   // (the boats' own views of it)
+      for (const q of [old.hull, old.glass]) if (q) for (const b of [q.pb, q.nb, q.cb]) gl.deleteBuffer(b);
+      delete NKB[old.peer.k]; npcModelDrop(old.peer.mk); NKBP.n--; NKBP.dropped++; NKBP.bytes -= old.peer.by; }
+  }
   function npcMesh(n, lod){
-    const kk = n.id + '|' + lod + '|' + (n.player ? n.vtype + '|' + n.liv : n.kv ? npcType(n) : ''); if (kk in NKM) return NKM[kk];   // a player's repaint is a new key (and the coast guard's other ship)
+    const kk = n.id + '|' + (n.coast ? n.L + '|' : '') + lod + '|' + (n.player ? n.vtype + '|' + n.liv + spX(n.liv) : n.kv ? npcType(n) : SHIPTY[n.type] || LEISM[n.type] ? npcType(n) + '|' + n.L + '|' + n.B : n.coast ? npcGearT(n) || '' : ''); if (kk in NKM){ const e = NKM[kk]; if (e && e.peer) e.peer.used = performance.now(); return e; }   // (a painted model in use is not let go, nkbCap)   // (a coast boat's gear model once it is read in)   // a player's repaint is a new key (and the coast guard's other ship)
     const t = npcType(n), B = npcKB(t, lod, n.liv || 0); if (!B) return NKM[kk] = null;
     const V = VESSELS[t] || (GLBM[t] && GLBM[t].ex) || {len:n.L, beam:n.B}, sx = n.B / V.beam, sz = n.L / V.len, sy = (sx + sz) / 2;
     return NKM[kk] = Object.assign({}, B, {sv:[sx, sy, sz], S:new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1])});
@@ -285,9 +387,11 @@
   function npcWarm(eye){
     if (NWARM.busy || !ready) return; const now = performance.now(); if (!NWARM.t0) NWARM.t0 = now; if (now - NWARM.t0 < 4000) return;
     let best = null, bd = Infinity;
-    for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav)) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
+    for (const n of npcNow){ if (!(n.fleet || n.coast || n.player || n.hav || shipT(n) || leisT(n))) continue; const d = Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) / ZF();
       for (const [lod, r] of [[0.3, 5000], [1, 1500]]){ if (d > r || d + (lod === 1 ? 5000 : 0) >= bd) continue; const t = npcType(n);
-        if (!((t + '|' + lod + '|' + (n.liv || 0)) in NKB)){ best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } } }
+        if (nkbKey(t, lod, n.liv || 0) in NKB) continue;
+        if (typeof nkbLiv(n.liv || 0) === 'string' && NKBP.n >= NKBP.cap) continue;   // (a painted model is made ahead only under the cap, so the cap never lets go of what this makes again)
+        best = {t, lod, liv:n.liv || 0}; bd = d + (lod === 1 ? 5000 : 0); } }
     if (!best) return;
     NWARM.busy = true; const idle = window.requestIdleCallback || (f => setTimeout(f, 50));
     idle(() => { try { if (!ready) return; NWARM.n++;
@@ -342,8 +446,22 @@
     const s1 = Math.hypot(E.vx, E.vz); E.w = s0 > 1 && s1 > 1 ? angDiff(h0, Math.atan2(E.vx, -E.vz)) / dt : 0;   // her turn rate (rad/s)
     E.px = X; E.pz = Z; E.t = t; return E;
   }
+  // A car ferry is double-ended (Ø15 N7, steg 36: tools/ships/ferje34.py, lukketferje.py): she does not turn at the quay. The clock
+  // (core/05b-ferje.js ferjeAt) has her lie with her bow in and turns her heading half round when she leaves; a ferry model is the same
+  // at both ends but not on both sides (the small one's saloon to one side, the middle one's funnel), so drawn by that heading her saloon
+  // jumped across at every departure (found by the step's check). Each car ferry keeps whether she is drawn the other way round: the
+  // clock's heading turning more than 150° at once flips it, and her model is drawn turned half round, so she goes on with her other end
+  // first and nothing moves; her lanterns are turned back to the way she goes (drawNPCLights, n.rev). The boxes beyond 1.5 km as before.
+  const NPCREV = new Map();
+  function npcRev(n){
+    const E = NPCREV.get(n.id), h = n.hd; if (!E){ NPCREV.set(n.id, {h, rev:false}); return false; }
+    if (Math.abs(angDiff(E.h, h)) > 2.6) E.rev = !E.rev; E.h = h;
+    if (NPCREV.size > 800) NPCREV.clear();
+    return E.rev;
+  }
   // a boat's own phase for her rocking (0 to 2π, fixed by her id)
   const NPHS = new Map();
+  const NPCFS = new Map();   // the ferry box's scale by length and beam (drawNPC)
   function npcPhase(id){ let p = NPHS.get(id); if (p == null){ p = (lookHash(String(id)) % 6283) / 1000; if (NPHS.size > 2000) NPHS.clear(); NPHS.set(id, p); } return p; }
   // the coast guard's ship on her inspection (core/09j-kystvakt.js kvNpcs, steg 100): her model, the skipper on her bridge and two hands
   // on deck, and at sea her RIB (the GLB's part 'rib', V2 A) through kvRib's stages over the game's minutes: lowered from the starboard
@@ -388,7 +506,7 @@
     if (!NPCM) return;
     { const F = npcFrame(H); H = F.H;
     npcNow = F.v.filter(n => !n.rs && Math.hypot(n.p.x * 1000 - eye[0], n.p.y * 1000 - eye[2]) < 16000); }   // the rescue boat has her own model (RB)
-    const kit = [], kvl = [];
+    const kit = [], kvl = [], shl = [];
     // (a test camera following a boat of the fleet, G3.npcLook: aimed at her and from astern of her as she goes)
     if (SIGNV.npc){ const f = npcNow.find(q => q.id === SIGNV.npc.id); if (f){ SIGNV.look = [f.p.x * 1000, (env.tide || 0) + 3, f.p.y * 1000]; cam.yaw = f.hd + SIGNV.npc.off - bv.head; } }
     for (const n of npcNow){
@@ -399,25 +517,34 @@
       n.ptow = null;
       if (n.player && bv.init && S.ptowH && S.ptowH.st === 'tow' && n.id === S.ptowH.pid){ const back = (GEO(vtype()).stern || 3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x - Math.sin(bv.head) * back) / 1000, y:(bv.z + Math.cos(bv.head) * back) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'tail'; }
       else if (n.player && bv.init && S.ptow && S.ptow.st === 'tow' && n.id === S.ptow.pid){ const fwd = -(GEO(vtype()).bow || -3) + 30 + (n.L || 8) / 2; n.p = {x:(bv.x + Math.sin(bv.head) * fwd) / 1000, y:(bv.z - Math.cos(bv.head) * fwd) / 1000}; n.hd = n.cog = bv.head; n.ptow = 'head'; }
+      const rv = n.type === 'ferry' && !n.ex && !n.player ? npcRev(n) : false;   // (the clock's own heading, before the drawing's turns)
       let heel = 0;
       if (!n.player && !n.ptow && !(n.tur && n.st === 'tow')){
         const F = npcFollow(n, t), sp = Math.hypot(F.vx, F.vz), k = clamp((sp - 1) / 2, 0, 1);   // (m/s on the screen)
         n.p = {x:F.x / 1000, y:F.z / 1000};
         if (k > 0) n.hd = n.hd + angDiff(n.hd, Math.atan2(F.vx, -F.vz)) * k;
-        heel = clamp(-F.w * sp * 0.012, -0.12, 0.12) * (n.type === 'coastal' || n.type === 'ferry' ? 0.3 : 1);
+        heel = clamp(-F.w * sp * 0.012, -0.12, 0.12) * (SHIPTY[n.type] ? 0.3 : 1);
       }
       if (!n.ptow && !(n.tur && n.st === 'tow')) n.hd = npcHead(n, t);
       // (the rocking's phase is the boat's own, from her id: it was her place in metres, so a boat under way at the game's pace, tens of
       // metres a second on the screen, pitched and rolled several times a second, a shudder; Jonas' video 03.11.2026)
-      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = n.type === 'coastal' || n.type === 'ferry' || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
-      n.M = model(x - eye[0], y - eye[1], z - eye[2], -n.hd, big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, roll);
-      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
-      if (n.K) (n.kv ? kvl : kit).push(n); else drawLit(NPCM[n.type], n.M);
+      const x = n.p.x * 1000, z = n.p.y * 1000, ph = npcPhase(n.id), big = SHIPTY[n.type] || n.kv, y = big ? (env.tide || 0) : (env.tide || 0) + (seaH(x, z, t) - (env.tide || 0)) * 0.8, roll = heel + (big ? Math.sin(t * 0.4 + ph) * 0.01 : Math.sin(t * 1.1 + ph) * 0.05 * (0.3 + WV.hs));
+      const d = Math.hypot(x - eye[0], z - eye[2]); n.K = (n.fleet || n.coast || n.player || n.hav || shipT(n) || leisT(n)) && d / ZF() < 1500 * QUAL.lodK[QUAL.lvl] ? npcMesh(n, d / ZF() < npcNear(n) * QUAL.lodK[QUAL.lvl] ? 1 : 0.3) : null;
+      n.rev = !!(rv && n.K);   // a double-ended ferry's model drawn the other way round (npcRev), her heel with it
+      n.M = model(x - eye[0], y - eye[1], z - eye[2], -(n.hd + (n.rev ? Math.PI : 0)), big ? 0 : Math.sin(t * 0.9 + ph * 1.7) * 0.03, n.rev ? -roll : roll);
+      // beyond the ship models' 1.5 km (or before they are in) a ferry, an express boat or a passenger ferry is the one ferry box (N.ferry,
+      // 52 × 13 m) scaled to her own length and beam (N4, 12.11.2026: a passenger ferry of 20 m drawn 52 m long stuck 8 m into the quay);
+      // her lanterns go with it (they are placed by n.M)
+      // (a merchant ship, N5, the same until she has a box of her own)
+      // (and a leisure boat, N6, the sjark box, 10.5 × 3.8 m, scaled to her the same way)
+      if (!n.K && (n.type === 'ferry' || (SHIPTY[n.type] && !NPCM[n.type]) || LEISM[n.type]) && n.L){ const sb = LEISM[n.type] ? [3.8, 10.5] : [13, 52], k = NPCFS.get(n.L * 100 + n.B + (LEISM[n.type] ? 0.5 : 0)) || (() => { const sx = n.B / sb[0], sz = n.L / sb[1], sy = clamp((sx + sz) / 2, 0.5, 1.5), S = new Float32Array([sx, 0, 0, 0, 0, sy, 0, 0, 0, 0, sz, 0, 0, 0, 0, 1]); NPCFS.set(n.L * 100 + n.B + (LEISM[n.type] ? 0.5 : 0), S); return S; })(); n.M = chain(n.M, k); }
+      if (n.K) (n.kv ? kvl : n.K.geo && n.K.geo.ship ? shl : kit).push(n); else drawLit(NPCM[n.type] || (SHIPTY[n.type] ? NPCM.ferry : NPCM.sjark), n.M);
     }
     npcWarm(eye);
-    if (!kit.length && !kvl.length) return;
+    if (!kit.length && !kvl.length && !shl.length) return;
     const P = people(); nSetup(VP);
     for (const n of kvl) kvDraw(n, eye, t);
+    for (const n of shl) drawN(n.K.hull, chain(n.M, n.K.S));   // a ship: her hull and house (the windows are in it, no crew drawn)
     for (const n of kit){ const K = n.K, G = K.geo, at = (p, r) => chain(n.M, M4.T(p[0] * K.sv[0], p[1] * K.sv[1], p[2] * K.sv[2]), M4.RY(r || 0));
       const lf = lifeOn(n.id, n.M, K.sv, K.t, npcAge(n), false, n.st === 'fishing' || n.st === 'port' ? 0 : 4, G); drawN(K.hull, chain(n.M, K.S)); if (lf) lifeOff(); drawSail(K.t, chain(n.M, K.S), n.st !== 'port'); drawHatch(K.t, G, chain(n.M, K.S), 0); drawShipCrane(K.t, G, chain(n.M, K.S), null);
       // an ocean trawler towing (05d-hav.js): her trawl out astern as yours is when towing
@@ -430,7 +557,7 @@
       if (n.st !== 'port') drawN(npcPerson('skip', n), at(G.skipperAt));
       if (n.st === 'fishing') for (let i = 0; i < 2 && i < G.crewSpots.length; i++) drawN(npcPerson('crew', {id:String(n.id) + i, player:n.player, lk:n.lk, ck:n.ck}, i), at(G.crewSpots[i], G.crewSpots[i][3]));
     }
-    drawNPCNames(kit, VP);
+    drawNPCNames(kit, VP); drawPeerFlags(kit, VP, t, H);
     gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
   }
   // the agents of another boat within the near LOD (deckcrew.js crewSim, one per boat, dropped when she has been out of sight a
@@ -438,17 +565,18 @@
   const NCREW = new Map();
   function npcCrewDraw(n, K, eye, t){
     if (typeof crewSim !== 'function' || !K.geo || K.geo.hand) return false;
-    const type = K.t; let E = NCREW.get(n.id);
-    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(n.id, E); }
+    const type = K.t, nk = n.coast ? n.id + '|' + n.L : n.id; let E = NCREW.get(nk);   // (two of the coast's boats can share an id: hers by her length too)
+    if (!E || E.type !== type){ const st = {n}; E = {type, st, t:0, sim:crewSim({type:() => type, ctx:G => npcCrewCtx(st.n, G), seed:1 + (lookHash(String(n.id)) % 1000)})}; NCREW.set(nk, E); }
     E.st.n = n; const gap = t - E.t; E.t = t; const sim = E.sim; if (!sim.on()) return false;
     if (gap > 5) sim._st.lastSim = null;   // out of sight a while: everyone straight to their place
     sim.tick(Math.min(0.1, Math.max(0, gap)));
-    const G = K.geo, sv = K.sv, h0 = n.hd; let idx = 40 + (lookHash(String(n.id)) % 50);
+    const G = K.geo, sv = K.sv, h0 = n.hd, DN = deckN(n.M); let idx = 40 + (lookHash(String(n.id)) % 50);
     for (const a of sim.visible()){
       const lp = a.mode === 'helm' && G.skipperAt ? G.skipperAt : [a.x, a.y, a.z], wl = xf(n.M, [lp[0] * sv[0], lp[1] * sv[1], lp[2] * sv[2]]), wy = wl[1] + eye[1];
       const look = npcLook(a.me ? 'skip' : 'crew', n, a.c ? (a.c.id.endsWith('1') ? 1 : 0) : 0);
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look};
-      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:h0 + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0}, eye, t, idx++); }
+      // (her people have the sea legs too where she rolls in the drawing, FB4: n.M is her frame with her roll and pitch)
+      drawWorker(P, {x:wl[0] + eye[0], z:wl[2] + eye[2], h:h0 + (a.mode === 'helm' ? 0 : a.h), task:a.task, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0, dn:DN, sea:n.st === 'port' ? null : seaSet(sim, a, n.M)}, eye, t, idx++); }
     if (NCREW.size > 24) for (const [id, e] of NCREW) if (t - e.t > 60) NCREW.delete(id);
     return true;
   }

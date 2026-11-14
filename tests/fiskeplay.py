@@ -239,7 +239,7 @@ async def jig(pl):
     await pl.shot('jukse-kar', 'later: %d min (status %s)' % (p['n'], p['to']))
     if await pl.js("S.boat.status === 'fishing'"):
         p = await pl.play(400, until="S.boat.status !== 'fishing'"); await pl.shot('jukse-ferdig', 'the jig is done (%d min more)' % p['n'])
-    await pl.dock('beh'); await pl.drw('Lasterom'); await pl.shot('lasterom', 'the hold after the day', drawer=True)
+    await pl.dock('beh'); await pl.drw('Last'); await pl.shot('lasterom', 'the hold after the day', drawer=True)
     await pl.js("DOCK.close()")
     await land(pl, 'husoy')
 
@@ -732,8 +732,20 @@ FELT_JS = """async ([lat, lon, sp, m]) => { const c = P(lat, lon); await mapNeed
         try { if (lokOfCell(q).l !== l || feltAt(q) || isLand(q)) continue; const d = depthF(q); if (Math.abs(d - dd) > 0.3 * dd + 5) continue; pin = p; pout = q; d0 = dd; } catch (e){} } }
     if (!pout) continue;
     let off = 0; for (let k = 1; k < 12; k++){ const mm = (m - 1 + k) % 12; if (!((g.sm[sp] >> mm) & 1)){ off = mm + 1; break; } }
-    out.push({n:g.f.nf || g.f.n || ('#' + g.f.i), months:g.sm[sp].toString(2).padStart(12, '0').split('').reverse().join(''), pin, pout, din:Math.round(d0), dout:Math.round(depthF(pout)), off}); }
+    out.push({i:g.f.i, n:g.f.nf || g.f.n || ('#' + g.f.i), months:g.sm[sp].toString(2).padStart(12, '0').split('').reverse().join(''), pin, pout, din:Math.round(d0), dout:Math.round(depthF(pout)), off}); }
   return out; }"""
+# the same grounds and the same two points from run to run (tests/fiskeplay_felt.json; 12.11.2026: when Repparfjord's shape changed,
+# the search above picked another point away, its ratio went from 1.67 to 0.97 and the median over the 15 grounds from 1.56 to 1.25
+# with no fish moved). A point that no longer holds (the point in is not inside the ground, the point away is on land or on a ground)
+# is said aloud and left out; KYST_FP_FELT_NEW=1 searches again and writes the file.
+FELT_FIX = """async ([L, sp, m]) => { const G = feltGeo(), out = [];
+  for (const f of L){ const g = G.find(g => g.f.i === f.i && (g.f.nf || g.f.n || ('#' + g.f.i)) === f.n) || G.filter(g => (g.f.nf || g.f.n) === f.n).sort((a, b) => Math.hypot(a.cx - f.pin.x, a.cy - f.pin.y) - Math.hypot(b.cx - f.pin.x, b.cy - f.pin.y))[0];
+    let ok = !!g; try { await mapNeed(f.pin, 7); await mapNeed(f.pout, 7); ok = ok && feltSd(g, f.pin.x, f.pin.y) >= 0.2 && !isLand(f.pin) && !isLand(f.pout) && !feltAt(f.pout) && !!g.sm[sp]; } catch (e){ ok = false; }
+    if (!ok){ out.push({n:f.n, bad:true}); continue; }
+    let off = 0; for (let k = 1; k < 12; k++){ const mm = (m - 1 + k) % 12; if (!((g.sm[sp] >> mm) & 1)){ off = mm + 1; break; } }
+    out.push({i:g.f.i, n:f.n, months:g.sm[sp].toString(2).padStart(12, '0').split('').reverse().join(''), pin:f.pin, pout:f.pout, din:Math.round(depthF(f.pin)), dout:Math.round(depthF(f.pout)), off}); }
+  return out; }"""
+FELT_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fiskeplay_felt.json')
 FELT_DAYS = """([pin, pout, sp, y, m, days, on]) => { const res = []; FELTW.on = on !== false;
   for (let d = 0; d < days; d++){ let a = 0, b = 0; for (let k = 0; k < 18; k++){ const H = (Date.UTC(y, m - 1, 5 + d, 8) - EPOCH) / 3.6e6 + k / 6;
       a += 30 * density(sp, pin, H) * 2 / 6; b += 30 * density(sp, pout, H) * 2 / 6; } res.push([+a.toFixed(1), +b.toFixed(1)]); }
@@ -742,9 +754,14 @@ FELT_DAYS = """([pin, pout, sp, y, m, days, on]) => { const res = []; FELTW.on =
 @scenario
 async def felt(pl):
     """Ø14 F2: the hand jig three hours a day for ten days on fishing grounds in season and 4-6 km away (see FELT_JS above)."""
-    rows = []
+    rows = []; new = os.environ.get('KYST_FP_FELT_NEW') == '1' or not os.path.exists(FELT_FILE); FIX = {} if new else json.load(open(FELT_FILE, encoding='utf-8'))
     for nm, lat, lon, m in [('Henningsvær', 68.15, 14.2, 3), ('Bodø', 67.28, 14.38, 3), ('Bergen', 60.45, 5.05, 3), ('Hammerfest', 70.66, 23.68, 1), ('Båtsfjord', 70.63, 29.72, 4)]:
-        F = await pl.js(FELT_JS, [lat, lon, 'torsk', m])
+        if new: F = await pl.js(FELT_JS, [lat, lon, 'torsk', m]); FIX[nm] = [{'i': f['i'], 'n': f['n'], 'pin': f['pin'], 'pout': f['pout']} for f in F]
+        else:
+            F = await pl.js(FELT_FIX, [FIX.get(nm, []), 'torsk', m])
+            for f in F:
+                if f.get('bad'): pl.note('felt', 'FEIL %s: the fixed points of %s no longer hold (the ground or the sea there has changed); left out. KYST_FP_FELT_NEW=1 searches again' % (nm, f['n']))
+            F = [f for f in F if not f.get('bad')]
         if not F: pl.note('felt', '%s: no ground with cod in month %d within 35 km with a point 0.4-1.5 km inside and one 4-6 km away' % (nm, m)); continue
         for f in F:
             on = await pl.js(FELT_DAYS, [f['pin'], f['pout'], 'torsk', 2027, m, 10])
@@ -757,6 +774,7 @@ async def felt(pl):
                 of = await pl.js(FELT_DAYS, [f['pin'], f['pout'], 'torsk', 2027, f['off'], 10]); oa = sum(x[0] for x in of); ob = sum(x[1] for x in of)
                 r.update({'offMonth': f['off'], 'offX': round(oa / max(0.1, ob), 2)})
             rows.append(r); pl.note('felt', json.dumps(r, ensure_ascii=False))
+    if new: json.dump(FIX, open(FELT_FILE, 'w', encoding='utf-8'), ensure_ascii=False, indent=1); pl.note('felt', 'the grounds and their points written to tests/fiskeplay_felt.json')
     if rows:
         xs = [r['x'] for r in rows]; bs = [r['best'] for r in rows]; ox = [r['offX'] for r in rows if 'offX' in r]; x0 = [r['x0'] for r in rows]; lf = [r['lift'] for r in rows]
         md = lambda v: sorted(v)[len(v) // 2] if v else float('nan')

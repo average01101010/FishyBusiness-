@@ -1,14 +1,13 @@
 // ---------- other vessels (deterministic, so every player sees the same traffic) ----------
-const NPC_ROUTES = {"coastal":[[35.025,82.275],[41.875,68.925],[43.025,67.925],[56.525,59.825],[57.425,58.775],[56.275,55.625],[55.575,54.775],[55.725,54.525],[55.625,52.775],[56.275,45.125],[60.325,40.925],[60.725,39.775],[60.475,37.425],[62.125,28.775],[63.025,28.025],[78.375,19.375]],"coastalStop":7,"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
-for (const k of ['coastal', 'ferry']) NPC_ROUTES[k] = NPC_ROUTES[k].map(LGa); NPC_ROUTES.sjark = NPC_ROUTES.sjark.map(r => r.map(LGa));   // legacy km into the game's frame
+const NPC_ROUTES = {"ferry":[[53.208,23.505],[53.225,23.475],[53.875,22.425],[57.575,12.575],[57.725,12.475],[58.425,12.425],[58.925,12.625],[59.025,12.775]],"sjark":[[[43.811,19.839],[43.825,19.875],[43.825,19.925],[43.825,19.975],[43.825,20.025],[43.725,20.075],[43.575,20.025],[43.175,19.275],[42.125,13.525],[42.925,9.425],[44.05,8.35]],[[36.662,25.316],[37.125,24.975],[37.025,23.075],[32.35,18.65]],[[19.851,39.709],[19.875,39.675],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[9.475,39.425],[9.15,39.15]],[[53.208,23.505],[53.275,23.475],[53.325,23.475],[53.375,23.475],[55.325,22.025],[59.65,19.35]]]};
+NPC_ROUTES.ferry = NPC_ROUTES.ferry.map(LGa); NPC_ROUTES.sjark = NPC_ROUTES.sjark.map(r => r.map(LGa));   // legacy km into the game's frame
 function prepRoute(r){ const pts = r.map(q => ({x:q[0], y:q[1]})), cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + dist(pts[i - 1], pts[i])); return {pts, cum, len:cum[cum.length - 1]}; }
 function atRoute(R, s){
   s = clamp(s, 0, R.len); let i = 1; while (i < R.pts.length - 1 && R.cum[i] < s) i++;
   const a = R.pts[i - 1], b = R.pts[i], seg = (R.cum[i] - R.cum[i - 1]) || 1, u = clamp((s - R.cum[i - 1]) / seg, 0, 1);
   return {p:{x:a.x + (b.x - a.x) * u, y:a.y + (b.y - a.y) * u}, hd:Math.atan2(b.x - a.x, -(b.y - a.y))};
 }
-const NPCR = {coastal:prepRoute(NPC_ROUTES.coastal), coastalRev:prepRoute(NPC_ROUTES.coastal.slice().reverse()), ferry:prepRoute(NPC_ROUTES.ferry), ferryRev:prepRoute(NPC_ROUTES.ferry.slice().reverse()), sjark:NPC_ROUTES.sjark.map(prepRoute), sjarkRev:NPC_ROUTES.sjark.map(r => prepRoute(r.slice().reverse()))};
-NPCR.stopS = NPCR.coastal.cum[NPC_ROUTES.coastalStop]; NPCR.stopSRev = NPCR.coastal.len - NPCR.stopS;
+const NPCR = {ferry:prepRoute(NPC_ROUTES.ferry), ferryRev:prepRoute(NPC_ROUTES.ferry.slice().reverse()), sjark:NPC_ROUTES.sjark.map(prepRoute), sjarkRev:NPC_ROUTES.sjark.map(r => prepRoute(r.slice().reverse()))};
 const FLEET = [{"n":"Havørn","home":"husoy","hp":[43.838,19.863],"L":10.99,"B":4.2,"T":1.8,"cs":"LK4417","reg":"T-54-BG","own":"Havørn Fiskeri AS","rt":[[[43.838,19.863],[43.825,19.925],[43.825,19.975],[43.812,20.013],[43.788,20.038],[43.763,20.038],[43.738,20.038],[43.713,20.038],[43.675,20.075],[43.475,19.875],[42.071,17.429]],[[43.838,19.863],[43.825,19.925],[43.825,19.975],[43.812,20.013],[43.788,20.038],[43.763,20.038],[43.738,20.038],[43.713,20.038],[43.675,20.075],[43.475,19.875],[43.175,19.275],[42.125,13.525],[42.125,13.375],[42.225,13.325],[44.688,13.463],[44.775,13.525],[45.725,15.175],[47.853,19.464]]]},{"n":"Mefjordingen","home":"senjahopen","hp":[36.662,25.316],"L":14.9,"B":6.0,"T":2.6,"cs":"LM2291","reg":"T-21-BG","own":"Mefjord Kystfiske AS","rt":[[[36.662,25.316],[37.125,24.975],[37.025,23.075],[36.425,22.525],[34.675,21.475],[32.775,20.475],[31.075,20.025],[29.925,19.775],[29.725,19.825],[25.375,24.475],[25.275,24.875],[26.325,28.475],[28.375,30.425],[29.225,30.875],[32.675,31.875],[34.125,31.775],[34.155,31.715]],[[36.662,25.316],[37.125,24.975],[36.875,20.325],[35.657,19.103]]]},{"n":"Grylle","home":"gryllefjord","hp":[19.888,39.688],"L":10.7,"B":3.9,"T":1.6,"cs":"LJ6604","reg":"T-8-TK","own":"Grylle Fiskeri AS","rt":[[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.875,39.575],[18.575,39.925],[17.362,41.742]],[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[17.875,39.625],[17.325,40.125],[14.462,41.561]]]},{"n":"Botnværing","home":"botnhamn","hp":[53.208,23.505],"L":12.2,"B":4.6,"T":2.0,"cs":"LG3308","reg":"T-112-LK","own":"Botnværing AS","rt":[[[53.208,23.505],[53.275,23.475],[53.338,23.463],[53.338,23.438],[53.363,23.413],[53.388,23.438],[53.388,23.488],[53.363,23.513],[53.375,23.475],[53.525,23.625],[51.681,26.334]],[[53.208,23.505],[53.225,23.475],[55.54,21.199]]]},{"n":"Senjaværing","home":"finnsnes","hp":[55.838,54.288],"L":10.99,"B":4.4,"T":1.9,"cs":"LK9052","reg":"T-37-LK","own":"Gisund Sjark AS","rt":[[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[55.975,56.625],[57.215,57.878]],[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[56.075,57.075],[57.275,58.325],[57.375,58.725],[57.589,60.492]]]},{"n":"Nordstjerna","home":"Torsken","hp":[21.338,42.788],"L":14.5,"B":5.8,"T":2.4,"cs":"LM5170","reg":"T-15-TK","own":"Nordstjerna Fiskeri AS","rt":[[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[17.738,43.138]],[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[20.025,42.625],[17.919,40.182]]]},{"n":"Kvitholmen","home":"Torsken","hp":[21.338,42.788],"L":9.9,"B":3.6,"T":1.5,"cs":"LJ2788","reg":"T-40-TK","own":"Kvitholmen Fiske AS","rt":[[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[17.562,42.972]],[[21.338,42.788],[21.263,42.788],[21.263,42.788],[21.225,42.825],[21.175,42.825],[21.075,42.875],[20.025,42.625],[17.88,40.107]]]},{"n":"Bergsfjord","home":"Skaland","hp":[29.263,30.763],"L":10.4,"B":3.8,"T":1.7,"cs":"LG7741","reg":"T-66-BG","own":"Bergsfjord Sjark AS","rt":[[[29.263,30.763],[29.312,30.763],[29.312,30.788],[29.338,30.812],[29.363,30.788],[29.363,30.763],[29.375,30.775],[29.413,30.763],[29.438,30.788],[29.475,30.825],[32.019,32.066]],[[29.263,30.763],[29.263,30.788],[29.225,30.825],[29.175,30.825],[25.648,29.782]]]},{"n":"Tindvær","home":"Mefjordvær","hp":[34.988,22.288],"L":20.9,"B":7.2,"T":3.4,"cs":"LNQE","reg":"T-3-BG","own":"Tindvær Havfiske AS","rt":[[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[36.023,19.454]],[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[35.025,21.775],[34.675,21.475],[32.104,19.56]]]},{"n":"Sølvtind","home":"Mefjordvær","hp":[34.988,22.288],"L":10.99,"B":4.3,"T":1.8,"cs":"LK1360","reg":"T-88-BG","own":"Sølvtind Fiskeri AS","rt":[[[34.988,22.288],[34.988,22.263],[35.013,22.288],[35.038,22.263],[35.062,22.288],[35.087,22.263],[36.575,22.575],[38.003,24.042]],[[34.988,22.288],[35.013,22.288],[35.062,22.238],[35.038,22.213],[35.013,22.213],[35.013,22.213],[35.025,22.175],[35.776,19.329]]]},{"n":"Hamnvær","home":"Hamn","hp":[24.213,33.788],"L":9.5,"B":3.5,"T":1.4,"cs":"LJ4029","reg":"T-19-BG","own":"Hamnvær Fiske AS","rt":[[[24.213,33.788],[24.175,33.775],[24.125,33.775],[24.075,33.775],[24.013,33.812],[24.038,33.812],[24.062,33.837],[24.062,33.863],[24.013,33.913],[23.975,33.875],[23.925,33.875],[23.875,33.875],[23.825,33.875],[21.225,33.325],[21.179,33.267]],[[24.213,33.788],[24.175,33.775],[24.125,33.775],[24.075,33.775],[24.013,33.812],[24.038,33.812],[24.062,33.837],[24.062,33.863],[24.013,33.913],[23.975,33.875],[23.925,33.875],[23.875,33.875],[23.825,33.825],[23.825,33.775],[23.825,33.225],[23.838,33.163],[23.838,33.163],[23.875,33.125],[23.913,33.163],[23.938,33.163],[23.963,33.138],[23.963,33.113],[23.925,33.075],[23.963,33.038],[23.925,33.025],[23.925,32.825],[23.925,32.775],[23.975,32.725],[23.975,32.675],[23.975,32.525],[24.025,32.475],[24.038,32.438],[24.075,32.425],[24.138,32.413],[24.163,32.388],[24.138,32.363],[24.138,32.363],[24.125,32.325],[24.163,31.963],[24.163,31.938],[24.138,31.913],[24.113,31.913],[24.075,31.875],[24.025,31.825],[24.025,31.775],[24.025,31.175],[23.975,31.125],[23.925,31.075],[23.925,31.025],[23.925,30.975],[23.975,30.925],[23.975,30.875],[23.975,30.825],[23.975,30.775],[23.975,30.725],[23.975,30.575],[23.975,30.525],[23.975,30.475],[23.975,30.425],[23.975,30.375],[23.975,30.325],[23.975,30.275],[23.975,30.225],[23.229,28.647]]]},{"n":"Vesterfjord","home":"Skrolsvik","hp":[19.662,71.888],"L":12.8,"B":5.0,"T":2.1,"cs":"LM8453","reg":"T-27-TN","own":"Vesterfjord Kystfiske AS","rt":[[[19.662,71.888],[19.675,71.925],[19.525,72.325],[18.988,72.463],[18.825,72.625],[18.312,72.663],[18.288,72.688],[18.225,72.675],[16.363,72.232]],[[19.662,71.888],[19.675,71.925],[19.125,73.325],[18.175,74.625],[18.109,75.476]]]},{"n":"Laukvik","home":"gryllefjord","hp":[19.888,39.688],"L":14.9,"B":6.2,"T":2.7,"cs":"LG5519","reg":"T-61-TK","own":"Laukvik Havfiske AS","rt":[[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.425,39.575],[16.997,41.025]],[[19.888,39.688],[19.888,39.663],[19.863,39.638],[19.825,39.625],[19.775,39.625],[19.625,39.575],[18.875,39.575],[18.575,39.925],[18.425,40.475],[18.725,41.325],[19.975,42.525],[20.575,42.775],[21.791,43.013]]]},{"n":"Solbris","home":"finnsnes","hp":[55.838,54.288],"L":8.9,"B":3.2,"T":1.3,"cs":"LJ9964","reg":"T-97-LK","own":"Solbris Sjark AS","rt":[[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[55.925,56.375],[57.491,57.903]],[[55.838,54.288],[55.825,54.325],[55.825,54.375],[55.825,54.425],[55.825,54.475],[55.625,54.725],[56.075,57.075],[57.275,58.325],[57.375,58.725],[57.401,60.545]]]}];
 for (const f of FLEET){ f.hp = LGa(f.hp); f.rt = f.rt.map(r => r.map(LGa)); }   // legacy km into the game's frame
 const HOMES = {"finnsnes":[55.838,54.288],"botnhamn":[53.208,23.505],"husoy":[43.838,19.863],"senjahopen":[36.662,25.316],"gryllefjord":[19.888,39.688],"Torsken":[21.338,42.788],"Skaland":[29.263,30.763],"Mefjordv\u00e6r":[34.988,22.288],"Hamn":[24.213,33.788],"Skrolsvik":[19.662,71.888]};
@@ -107,9 +106,10 @@ function fleetState0(i, H){
 // goes. They take no fish from the simulation's stock (only FLEET's do, which every player has).
 const AIS_KM = 15;
 // what the AIS shows (the chart, the 3D plotter): the coast's boats are already only those within AIS_KM (coastNear); Senja's own fleet,
-// the coastal ship and the ferry are sailed everywhere (their fishing takes from the stock, 03-simulation.js), but shown only within
-// AIS_KM of the boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»)
-const aisShown = n => !(n.fleet || n.id === 'ferje' || n.id === 'kystn' || n.id === 'kysts') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
+// Senja's ferry are sailed everywhere (the fleet's fishing takes from the stock, 03-simulation.js), but shown only within AIS_KM of the
+// boat you follow too (Jonas 09.10.2026: «Jeg er langt oppe i Finnmarka, men kan enda se NPC-båtene som er på Senja»); the coastal
+// route's ships are only those within AIS_KM already (ferjeNear, 05b-ferje.js)
+const aisShown = n => !(n.fleet || n.id === 'ferje') || !S.boat || dist(n.p, S.boat.pos) <= AIS_KM;
 const hodOf = H => { const g = gDate(H); return g.getUTCHours() + g.getUTCMinutes() / 60 + g.getUTCSeconds() / 3600; };
 // the way from a coast boat's berth out to the harbour mouth m0 (and back): straight where that leg is clear of the piers, docks, marks
 // (obsSegHit, 3 m) and land, else straight out from the face first, 25 or 60 m, and on to m0; as before when neither is clear. Kept per
@@ -305,6 +305,20 @@ function moorFree(p, hd, L, B, others){
     if (o.buoy || al < (L + o.L) / 2 + 1 && ac < (B + o.B) / 2 + 1) return false; }
   return true;
 }
+// whether the quay built out from the face f at a (m along it) to out m from the face (face.out: as the 3D view draws it, drawDocks
+// quayMod, from 3 m in on the land out to her side, her length and 2 m more at each end) keeps clear of every boat placed already
+// (others' items with q are quays, not boats). Jonas 13.11.2026: «vi kan ikke ha det sånn at det er kaier på innsiden av andre kaier. Da
+// må heller den innerste kaien fjernes slik at båtene ligger … realistisk fortøyd … i den kaien som faktisk vises»: a boat whose quay
+// would stand over a boat lying there already does not get that place (moorHarbour tries the next, then a dock or a buoy)
+function quayClear(f, a, L, out, others){
+  if (!(out > 0.3)) return true;
+  const fx = f.x + f.ux * a, fz = f.z + f.uz * a, hl = L / 2 + 2;
+  for (const o of others){ if (o.q) continue; const dx0 = o.p.x * 1000 - fx, dz0 = o.p.y * 1000 - fz; if (Math.hypot(dx0, dz0) > hl + out + o.L + 10) continue;
+    const s = Math.sin(o.hd), c = Math.cos(o.hd), ohl = o.L / 2, ohb = o.B / 2;
+    for (const fa of [-1, -0.5, 0, 0.5, 1]) for (const ab of [-1, 0, 1]){ const x = dx0 + s * fa * ohl + c * ab * ohb, z = dz0 - c * fa * ohl + s * ab * ohb, al = x * f.ux + z * f.uz, ac = x * f.nx + z * f.nz;
+      if (Math.abs(al) < hl && ac > -3 && ac < out) return false; } }
+  return true;
+}
 // the floating docks (tools/harbour/brygge.py): where a harbour's quays hold too few of its boats, a dock of the common kind is laid
 // out from a straight bit of shore near it: the abutment on the shoreline, the 10 m gangway down to a row of 12 m pontoons running
 // out to sea, and the boats alongside it on both sides, bow out. The dock is laid only where all of it is on water (the pontoons, and
@@ -335,7 +349,8 @@ function moorAround(h, p){ const out = []; for (const t of vecTilesIn(p.x * 1000
   for (const b of g.boats) if (b.moored && !b.moored.none && dist(b.moored.p, p) < 0.6){ const q = b.moored.buoy, D = b.L * 2 + 2 * MOOR.PEN;
     out.push(q ? {p:q, hd:b.moored.hd, L:D, B:D, buoy:true} : {p:b.moored.p, hd:b.moored.hd, L:b.L, B:b.B}); } }
   // Senja's named boats (FLEET) at their berths: the square's coast boats (senja.py) keep off them
-  if (h.senja) FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, p) > 1.2) return; const m = fleetBerth(i); if (m) out.push({p:m.p, hd:m.hd, L:f.L, B:f.B}); });
+  if (h.senja) FLEET.forEach((f, i) => { if (dist({x:f.hp[0], y:f.hp[1]}, p) > 1.2) return; const m = fleetBerth(i); if (!m) return; out.push({p:m.p, hd:m.hd, L:f.L, B:f.B});
+    const F = m.face; if (F && F.out > 0.3){ const c = (F.out - 3) / 2; out.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:f.L + 4, B:F.out + 3, q:true}); } });   // (and the quay built out to her)
   return out; }
 function moorHarbour(h){
   // fixed again: its own docks and buoys out of the obstacles first (they would push its boats about)
@@ -358,13 +373,13 @@ function moorHarbour(h){
         if (Math.abs(a) > lim || resHit(res, a, b.L / 2 + 1)) continue;
         // (out from the face as far as the quay must be built out over the 3D shore, quayOut in 07-harbours.js)
         const g0 = quayOut(f, a, b.L); if (g0 < 0) continue;
-        for (let off = b.B / 2 + 0.4 + g0; off <= b.B / 2 + 8.5 + g0 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L, off - b.B / 2 - 0.4)}; }
+        for (let off = b.B / 2 + 0.4 + g0; off <= b.B / 2 + 8.5 + g0 && !m; off += 1){ const p = {x:(f.x + f.ux * a + f.nx * off) / 1000, y:(f.z + f.uz * a + f.nz * off) / 1000}; if (moorFree(p, hd0, b.L, b.B, placed) && quayClear(f, a, b.L, off - b.B / 2 - 0.4, placed)) m = {p, hd:hd0 + (hash(hashStr(b.id)) < 0.5 ? Math.PI : 0), face:faceAt(f, a, b.L, off - b.B / 2 - 0.4)}; }
         if (m) break; }
       if (m) break;
     }
     if (m){ b.moored = {p:m.p, hd:m.hd, st:'port', face:m.face}; placed.push({p:m.p, hd:m.hd, L:b.L, B:b.B});
       // the quay built out to her (from 3 m in on the shore to her side) is in the way of the boats placed after her
-      const F = m.face; if (F.out > 0.3){ const c = (F.out - 3) / 2; placed.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:b.L + 4, B:F.out + 3}); }
+      const F = m.face; if (F.out > 0.3){ const c = (F.out - 3) / 2; placed.push({p:{x:(F.x + F.nx * c) / 1000, y:(F.z + F.nz * c) / 1000}, hd:m.hd, L:b.L + 4, B:F.out + 3, q:true}); }
     } else need.push(b);
   }
   // a floating dock inside the harbour for the boats under 11 m the quays did not take (L1, choice 2: a bigger boat lies at a quay or
@@ -497,30 +512,18 @@ function coastNear(H, only){
       if (!only && A.set && A.set.a !== A.set.b && Math.min(dist(A.set.a, b.pos), dist(A.set.b, b.pos)) <= R) gear.push({k:A.set.k, a:A.set.a, b:A.set.b, id:bt.id, name:bt.name});
       if (A.hidden || dist(A.p, b.pos) > R) continue;
       const P = A.st === 'port' ? A : coastState(bt, H - 1 / 60, hod1), dx = A.p.x - P.p.x, dy = A.p.y - P.p.y, sog = Math.hypot(dx, dy) / gridScale(A.p) / NM * 60;
-      out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv});
+      out.push({id:bt.id, name:bt.name, type:bt.L >= 14 ? 'kyst' : 'sjark', p:A.p, hd:A.hd, cog:sog > 0.15 ? Math.atan2(dx, -dy) : A.hd, v:Math.round(sog * 10) / 10, st:A.st, coast:true, L:bt.L, B:bt.B, T:bt.T, liv:bt.liv, mainGear:bt.gear});   // (the register's main gear: the 3D view draws her by it, view3d npcGearT; not «gear», which colregCls reads as her set being in the sea)
     }
   }
   if (!only){ COASTM.k = k; COASTM.v = out; COASTM.g = gear; }
   return out;
 }
 function npcStates(H, only){
-  const out = [], d = gDate(H), hod = d.getUTCHours() + d.getUTCMinutes() / 60 + d.getUTCSeconds() / 3600, mon = d.getUTCMonth();
-  const ago = start => ((hod - start) % 24 + 24) % 24;
-  // coastal ship: northbound in the evening, southbound at night, 15 kn, 30 min at the Finnsnes quay
-  const v = 15 * NM;
-  for (const [R, start, stop, dir] of [[NPCR.coastal, 17.5, NPCR.stopS, 'n'], [NPCR.coastalRev, 2.5, NPCR.stopSRev, 's']]){
-    if (only && only !== 'kyst' + dir) continue;
-    const e = ago(start), t1 = stop / v; let s;
-    if (e < t1) s = e * v; else if (e < t1 + 0.5) s = stop; else s = stop + (e - t1 - 0.5) * v;
-    if (s < R.len){ const a = atRoute(R, s); out.push({id:'kyst' + dir, name:'MS Kystpilen', type:'coastal', p:berthShift(a.p, 'kyst', true), hd:a.hd, v:(e >= t1 && e < t1 + 0.5) ? 0 : 15}); }
-  }
-  // ferry Botnhamn - Brensholmen, summer season only, every 90 min 07-21
-  if (mon >= 4 && mon <= 8 && (!only || only === 'ferje')){
-    const vf = 12 * NM, tc = NPCR.ferry.len / vf; let a = null, sp = 0;
-    if (hod >= 7 && hod < 21.5){ const e = (hod - 7) % 1.5; if (e < tc){ a = atRoute(NPCR.ferry, e * vf); sp = 12; } else if (e < 0.75){ a = atRoute(NPCR.ferry, NPCR.ferry.len); } else if (e < 0.75 + tc){ a = atRoute(NPCR.ferryRev, (e - 0.75) * vf); sp = 12; } }
-    if (!a) a = atRoute(NPCR.ferry, 0);
-    out.push({id:'ferje', name:'MF Senjasund', type:'ferry', p:berthShift(a.p, 'ferje', true), hd:a.hd, v:sp});
-  }
+  const out = [];
+  // the coastal route's ships (Bergen - Kirkenes, one each way every day, by Entur's timetable; Senja's «MS Kystpilen» is one of them),
+  // the car ferries, express boats and passenger ferries: Senja's own ferry (Botnhamn - Brensholmen, the summer season) and the coast's
+  // within AIS range, by the timetable (05b-ferje.js)
+  for (const n of ferjeNear(H, only)) out.push(n);
   // the local fleet: out early, fish on their banks, home in the afternoon; bigger boats go out in worse weather
   const fb = !only && S && S.boat && S.boat.pos;
   FLEET.forEach((f, i) => {
@@ -696,24 +699,28 @@ function step(){
   if (S.t % 60 === 0){ seasonDay(H); pressDay(H); bkNews(H); lbNews(H); }   // ... and the Greenland halibut's opening and stop (03d-quota.js)   // the seasons' news and the skrei festival (09c-seasons.js), a record price (09h-press.js)
   folkPort(H);                        // Edvard on the quay in the home harbour (09d-folk.js)
   eachVessel(() => vesselStep(H));
+  lopTick();                          // the race Lindesnes–Nordkapp: the finish, the penalties, a tow (09o-kapplop.js)
   achMinute();                        // the badges: rough weather, night fishing, players met (09f-merker.js)
   fsMinute();                         // sea time with you aboard (09e-fartstid.js)
+}
+// the catch's minute aboard: the fish keeps (KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen; live
+// crab by its own rates), the ice maker makes ice, and the hands on deck gut and ice. vesselStep each minute, and the hop over the rest
+// of a route (06j-hopp.js) for each minute she would have sailed, with H and p where she would have been
+function holdMinute(H, p){
+  const kar = S.equip && S.equip.krabbekar; let rrs = null;
+  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) / 60); continue; }
+    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
+    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, p);
+    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) / 1440)); }
+  iceMinute(); deckMinute();
 }
 // one vessel's minute: the catch keeps, the yard works, plans start, and the boat sails or fishes
 function vesselStep(H){
   const b = S.boat;
   // a trim that has run its time (core BOOSTS): the speed goes back
   if (b.trim && !trimOn(b)){ const T = BOOSTS[b.trim.k]; trimEnd(); if (T) log(T.no + ' er gått ut. Toppfarten er tilbake på ' + fmt(BOAT.vmax, 1) + ' knop.', 'The ' + T.en.toLowerCase() + ' has run out. Top speed is back at ' + fmt(BOAT.vmax, 1) + ' knots.'); }
-  const clean = 1;
   const WA = workMinute();
-  const kar = S.equip && S.equip.krabbekar;
-  // (live crab by its own rates; the fish as KEEP: a day in ice a day when iced, faster on deck in the warmth, not at all frozen)
-  let rrs = null;
-  for (const x of S.hold){ if (SPECIES[x.sp].live){ x.fresh = Math.max(0, x.fresh - (kar ? 0.4 : 2.5) * clean / 60); continue; }
-    // (the snow crab in the tanks lives or dies there: snoTankHour, H3b)
-    if (x.frozen || x.tank) continue; if (!x.iced && rrs === null) rrs = keepRRS(H, b.pos);
-    x.fresh = Math.max(0, keepF(keepDay(x.fresh) + keepK(x, rrs) * clean / 1440)); }
-  iceMinute(); deckMinute();
+  holdMinute(H, b.pos);
   if (S.t % 60 === 0 && BOAT.tank) snoTankHour(H);   // the live snow crab in the tanks (10e-krabbefabrikk.js, H3b)
   // a leak, the bilge pump, the water aboard (Fysikk 3, 16c-hull.js): every minute, also under tow and in port
   if (typeof hullMinute === 'function') hullMinute();
@@ -721,7 +728,7 @@ function vesselStep(H){
   // (the crew's own jobs go at the pace of the hands on them this minute, core/13-work.js jobMinute: two or three baiting together are done
   // sooner, and nobody on it, it waits)
   // «Ferdig nå» kept (S.yardCredit, 10i-shop.js): the yard jobs running now are done at once, and the credit is used
-  if (S.yardCredit > 0 && S.jobs && S.jobs.some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t)){ for (const j of S.jobs) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t) j.until = S.t; S.yardCredit--;
+  if (S.yardCredit > 0 && S.jobs && S.jobs.some(j => YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t)){ for (const j of S.jobs) if (YARD_KINDS.includes(j.kind) && j.until != null && j.until > S.t) j.until = S.t; S.yardCredit--; if (typeof yardUsed === 'function') yardUsed();   // (HS4: the credit is a grant on the server, told that it is used, ui/10i-shop.js)
     log('«Ferdig nå»: verftet gjør jobbene på «' + S.boatName + '» ferdig med én gang.', '«Done now»: the yard finishes the jobs on the «' + S.boatName + '» at once.'); }
   if (S.jobs && S.jobs.length && b.status === 'port'){ let done = null; for (const j of S.jobs){ jobOk(j); if (crewJob(j) ? jobMinute(j, WA) : ((j.until == null && (j.until = S.t + j.h * 60)), S.t >= j.until)) (done = done || []).push(j); }
     if (done){ S.jobs = S.jobs.filter(j => !done.includes(j)); done.forEach(finishJob); } }   // all side by side (06-services.js queueJob)
@@ -736,12 +743,12 @@ function vesselStep(H){
   else if (typeof careTick === 'function' && S.pgear) careTick();   // the crew's upkeep and gear talk at sea (10b-gearcare.js seaWork)
   provMinute();   // an ocean vessel's provisions (04-crew.js, H2b)
   if (S.t % 60 === 0 && b.status !== 'port'){ autoFixHour(); tripHour(); }   // the autoline's hooks changed aboard (10b-gearcare.js) and the trip's limits (04-crew.js), H2b
-  opsStep(H);
+  plan2Step(H);
   // planned departure
   if (S.plan && S.plan.depAt && S.t >= S.plan.depAt && (b.status === 'port' || b.status === 'idle')){
     const W0 = windAt(H);
     if (portBusy(b)){ S.plan.depAt = portBusy(b) + 1; log('Avgangen venter til arbeidet på kaia er ferdig.', 'Departure waits until the work at the quay is done.'); }
-    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log(jobsCrewOnly() ? 'Avgangen venter til mannskapet er ferdig.' : 'Avgangen venter til verkstedet er ferdig.', jobsCrewOnly() ? 'Departure waits until the crew is done.' : 'Departure waits until the yard is done.'); }
+    else if (S.jobs && S.jobs.length && b.status === 'port'){ S.plan.depAt = (jobsDone() || S.t) + 1; log(jobsFreight() ? 'Avgangen venter til lasta er på plass.' : jobsCrewOnly() ? 'Avgangen venter til mannskapet er ferdig.' : 'Avgangen venter til verkstedet er ferdig.', jobsFreight() ? 'Departure waits until the freight is in place.' : jobsCrewOnly() ? 'Departure waits until the crew is done.' : 'Departure waits until the yard is done.'); }
     else if (S.settings.autoOn && W0 > windLim() && (S.plan.delays || 0) < 12){ S.plan.depAt += 60; S.plan.delays = (S.plan.delays || 0) + 1; log('Avgangen er utsatt en time. Vinden er ' + W0.toFixed(0) + ' m/s.', 'Departure postponed an hour. The wind is ' + W0.toFixed(0) + ' m/s.'); }
     else depart();
   }
@@ -752,9 +759,12 @@ function vesselStep(H){
       if (bp){ b.pos = {x:bp.x, y:bp.y}; b.heading = bp.hd; DYN.dep = {bp, pid, naust:kind === 'naust'}; DYN.line = null; }
       b.castT = S.t;   // (the fenders and the lines are taken in and coiled on her way out, moorPhase 'stow')
       helmCastDone(pid, kind); } return; }
-  if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; opsLanded(pid); } return; }
+  if (b.status === 'port'){ if (b.landWait && b.port === b.landWait && mottakOpen(H)){ const pid = b.landWait; b.landWait = null; plan2Landed(pid); } return; }
   if (b.status === 'ptow'){ if (typeof ptowStep === 'function') ptowStep(); return; }   // towed by another player (ui/10o-ptow.js)
   if (b.status === 'tow'){ towStep(H); return; }        // the rescue boat comes and tows (rescue)
+  // held for a hop (core/06j-hopp.js hopHeld; Jonas 12.11.2026: «stopper båten momentant som om den var fryst i tiden»): she stays where
+  // she is, with no way, no diesel and no weather turning her, until the hop or the end of the hold
+  if (hopHeld(b)){ b.v = 0; return; }
   const W = windAt(H), hs = hsAt(b.pos, H);
   // lying to (lieTo): the player taking her (a route, the helm) ends it; else she holds on till it eases
   if (b.hove){ if (b.status !== 'idle' || S.plan || helmOn()) b.hove = null; else lieToStep(W, hs); }
@@ -770,10 +780,10 @@ function vesselStep(H){
   // turning back by itself only when the wind rises over the limit while she is out (b.windArm: it has been under the limit since she
   // left); not when she casts off in a wind already over it, nor again after the skipper stopped the turn back, until it has dropped
   // (Vannareid 08.10.2026: in a steady gale every start, Stopp and «Sitter båten fast?» was turned straight back to the plant)
-  // (a trip on the operations plan has the plan's own limits for wind and sea, 06d-drift.js)
+  // (a trip on the operations plan has the plan's own limits for wind and sea, plan2Wx in 06h-plan2-engine.js)
   // (an ocean vessel on her own trip works to her own limits, windLim and seaLim, and over them lies to at sea, as does any boat whose
   // nearest quay is far: lieTo)
-  const wl = driftWx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
+  const wl = plan2Wx(), limW = wl ? wl.wind : windLim(), seaOver = wl ? hs > wl.hs : hs > seaLim();
   if (W <= limW && !seaOver) b.windArm = true;
   // (an ocean vessel on the operations plan, on a trip or waiting at sea, lies to over her own limits too, whatever the coast setting:
   // the plan's limits are for the gear, 06h-plan2-engine.js plan2Wx, H2c)
@@ -812,8 +822,12 @@ function sailV(H, hs){
   // brake before the next stop (a harbour or a fishing spot) or the route's end along the route, not when leaving
   let rem = 0, p0 = b.pos, stop = false; for (let i = pl.idx; i < pl.wps.length; i++){ const w = pl.wps[i]; rem += dist(p0, w); p0 = w; if (wpStop(w) || i === pl.wps.length - 1){ stop = true; break; } if (rem > 3) break; }
   if (near < 0.25 || (stop && rem < 0.25 + (b.v || 0) * NM / 60 * 1.1)) tgt = Math.min(tgt, 5);
+  // the speed limit where she is and along the minute ahead at the speed she has (Ø11.8, 05e-sjovei.js fartAt): she is down to it
+  // when she comes in, not a minute after, and a belt narrower than a minute's way is not crossed at speed
+  // (inside the limit she is at it at once: a boat at these speeds stops her way in seconds, the minute's braking is for the harbour)
+  const lim = fartLegKn(pl, b.pos, Math.max(b.v || 0, tgt) * NM / 60 * gridScale(b.pos), H), limHere = fartKn(b.pos, H); if (lim < tgt) tgt = lim;
   const acc = BOAT.accel || 3, prev = b.status === 'sailing' ? (b.v || 0) : 0;
-  return tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5);
+  return Math.min(limHere, tgt > prev ? Math.min(tgt, prev + acc) : Math.max(tgt, prev - acc * 1.5));
 }
 function sail(H, W, hs){
   const b = S.boat, pl = S.plan;
@@ -901,7 +915,7 @@ function arrive(w){
   S.trail.push({x:w.x, y:w.y, port:w.port || null});
   if (w.port){ dock(w.port, w.berth); return true; }
   pl.idx++;
-  if (w.anchor){ S.plan = null; b.status = 'idle'; b.v = 0; if (!dropAnchor(true)) log('Fant ikke grunn å ankre på her.', 'Found no ground to anchor on here.'); return true; }   // a rest at anchor (06d-drift.js)
+  if (w.anchor){ S.plan = null; b.status = 'idle'; b.v = 0; if (!dropAnchor(true)) log('Fant ikke grunn å ankre på her.', 'Found no ground to anchor on here.'); return true; }   // a rest at anchor, or home at an anchorage (06h-plan2-engine.js)
   if (!(w.fish > 0) && pl.idx < pl.wps.length){ const nw = pl.wps[pl.idx], c = Math.round(trueDeg(Math.atan2(nw.x - w.x, -(nw.y - w.y)), w)) % 360; log('WP' + pl.idx + ' passert. Ny kurs ' + String(c).padStart(3, '0') + '°.', 'WP' + pl.idx + ' passed. New course ' + String(c).padStart(3, '0') + '°.', 'nav'); }
   // work with passive gear at this waypoint: set or haul, then any fishing hours with the jig
   if (w.act){ b.status = 'idle'; const why = w.act.op === 'cycle' ? gearCycle(w, w.fish) : w.act.op === 'haul' ? startHaul(w.act.sid, w.act.reset, w.fish) : startSet(w.act.kind, w.act.spec, w.fish); if (!why) return true; log(why[0], why[0]); if (S.plan && S.plan.p2 && typeof plan2ActWhy === 'function') plan2ActWhy(w, why); if (!(w.fish > 0)) b.status = 'sailing'; }
@@ -970,7 +984,7 @@ function dock(pid, berth){
   if (port.rorbu) rorbuSite(port);   // its berth is found before the boat is put there (07d-rorbu.js)
   if (isBerth(pid)){ havnHold(pid); b.hvDay = null; }   // a berth in a harbour: hers while she lies there, the day's due paid (07e-havn.js)
   b.anch = null; b.status = 'port'; b.port = pid; b.v = 0; b.fishUntil = null; b.pos = {x:port.p.x, y:port.p.y}; b.moorT = S.t; b.castT = null; b.shift = b.fueling = b.after = null;
-  b.berth = berth === 'naust' && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
+  b.berth = berth === 'naust' && siteFits(b.type) && quayFace(pid, 'naust') ? 'naust' : 'main';   // a route can end at Father's naust (07c-naust.js)
   if (typeof achVisitPort === 'function') achVisitPort(pid);
   if (typeof PTOW !== 'undefined') PTOW.docked(pid);   // moored with another player's boat in tow: the tow is done (ui/10o-ptow.js)   // «Havner besøkt» and the rest (09f-merker.js)
   const wasOps = S.plan && S.plan.ops, opsK = S.plan && S.plan.opsK;
@@ -984,10 +998,11 @@ function dock(pid, berth){
     const why = restStart(); if (why && typeof toast === 'function') toast(S.lang === 'no' ? why[0] : why[1]); }
   tatTripEnd(pid);
   turDock(pid);   // freight picked up or delivered (09g-turer.js)
+  lopDock(pid);   // a checkpoint of the race (09o-kapplop.js)
   // the skipper starts landing and restocks straight away, on this vessel (a deferred call would act on whichever vessel is bound then)
   // (Driftsplan 2 is told at a rorbu too: a rorbu is often the plan's home, and a call it was not told of made the day again at once,
-  // out again every quarter of an hour all night (GUI review F2, 05.11.2026); the old plan never landed at a rorbu)
-  if (wasOps && (!port.rorbu || DRIFT2)){ opsLanded(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
+  // out again every quarter of an hour all night (GUI review F2, 05.11.2026))
+  if (wasOps){ plan2Landed(pid, opsK); if (typeof refreshAll === 'function') setTimeout(refreshAll, 0); }
 }
 // What the boat makes of the fish where it is, besides the fish itself: effort (people, jigs, machines, the team), weather and
 // sea, cold, hands busy on deck, and your own share while you play the jig game. fish() uses it, and so does the heat map's «Her nå» line.
@@ -1040,7 +1055,7 @@ function fish(H, W, hs){
     if (rb){ if ((S.fjordWarn || -1e9) < S.t - 720){ S.fjordWarn = S.t; log(rb + ' Båten venter.', rb + ' The boat waits.'); } return; } }
   const {eff, keff, wpen, pen, jig, cold, jq} = catchFactors(H, W, hs);
   if (!S.fsess || dist(S.fsess, b.pos) > 0.3) S.fsess = {x:b.pos.x, y:b.pos.y, t0:S.t, kg:0};
-  let got = 0;
+  let got = 0; S.fcod = 0;   // (the minute's cod, for the bycatch share below)
   if (jig && meAboard()) S.deckMe = (S.deckMe || 0) + 1;   // jigging by hand counts as your own work on deck
   let room = capHold() - tot, dsum = 0, tsum = 0, gotTop = 0, m0 = 0, mS = 0, mL = 0;
   const dv0 = stockDev(b.pos), Eu = S.target === 'kveite' && b.kgear ? keff : eff;   // (the common stock's share is the same for every species: once a minute)
@@ -1059,7 +1074,7 @@ function fish(H, W, hs){
     while (S.facc[sp] >= S.fnext[sp] && room > 0){
       const w = S.fnext[sp]; S.facc[sp] -= w; S.fnext[sp] = sampleFish(sp, b.pos, H);
       if (letGo(sp, w, b.pos, H)){ S.stats.released = (S.stats.released || 0) + 1; if (sp === 'kveite' && w >= SPECIES.kveite.minKg && (S.kvRel || -1e9) < S.t - 720){ S.kvRel = S.t; log('Slapp en kveite på ' + fmt(w, 0) + ' kg' + (kveiteClosed(H) ? ' (fredningstid).' : ' (over 200 cm).'), 'Released a ' + fmt(w, 0) + ' kg halibut' + (kveiteClosed(H) ? ' (closed season).' : ' (over 200 cm).')); } continue; }
-      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg;
+      const kg = Math.min(w, room); room -= kg; addCatch(sp, kg, clsOf(sp, w), true, {how:'juksa'}); got += kg; if (sp === 'torsk') S.fcod += kg;
       if (typeof window !== 'undefined'){ const cq = window.CATCHQ || (window.CATCHQ = []); if (cq.length < 30) cq.push({sp, kg, t:performance.now()}); }
     }
   }
@@ -1091,6 +1106,17 @@ function fish(H, W, hs){
       J.p0 += m0 / q; J.pS += mS / q; J.pW += mS / q * wpen; J.pC += mS / q * ws; J.pJ += mS * ws; J.pL += mL * ws; } }
   // only the stock's own share of the catch is taken from it: not the guide's skrei patch, nor what the guarantee tops up
   takeStock(b.pos, (got - gotTop) * (dsum > 0 ? Math.max(0, (dsum - tsum) / dsum) : 1)); S.fsess.kg += got; if (got > 0) (b.tripGear = b.tripGear || {}).juksa = S.t;
+  // Ø10b: the cod where it may only be a bycatch (the Skagerrak outside the baseline, § 5: 5 % «i de enkelte fangster»). Over the share
+  // in this spell on the place (S.fsess, from 20 kg), the game says so once for the spell, with the reason and the paragraph, and asks
+  // the player to move; the boat is not stopped (the soft crab's way, sk5). The landing takes what is over (landConf)
+  { const fs = S.fsess, k = got > 0 ? bycHere('juksa') : null;
+    if (k){ fs.zk = (fs.zk || 0) + got; fs.zc = (fs.zc || 0) + (S.fcod || 0);
+      // (Ø10c: the word and the share are the zone's, 03e-rules.js ruBycWarn: the Skagerrak 5 %, the North Sea 15 % once its 3 tonnes are
+      // fished; nothing where the cod goes on a cap)
+      const pc = Math.round(fs.zc / fs.zk * 100), R = !fs.zTold && fs.zk >= 20 ? ruBycWarn(k, pc) : null;
+      if (R && fs.zc > R.share * fs.zk){ fs.zTold = 1;
+        log(R.no, R.en); msg('Regler', R.no + ' (' + R.ref + '; høstingsforskriften § 51)', R.en + ' (' + R.ref + '; høstingsforskriften § 51)');
+        if (typeof toast === 'function' && !VTAG) toast(S.lang === 'no' ? R.tNo : R.tEn, 8000); } } }
   // a plan's jig places in turn (06f-plan.js, wp.jc; feedback #57): each hour's catch is weighed against the first hour's here, and when it
   // has fallen to half the crew move on to the next place, taking the hours left with them
   { const pl = S.plan, w = pl && pl.ops && pl.wps[pl.idx - 1], fs = S.fsess;
@@ -1100,7 +1126,9 @@ function fish(H, W, hs){
       else if (r < 0.5 * fs.r1){ const nx = pl.wps.slice(pl.idx).find(q => q.jc && q.fish > 0);
         if (nx){ nx.fish = Math.round((nx.fish + Math.max(0, (b.fishUntil - S.t) / 60)) * 10) / 10; log('Fangsten faller. Flytter til neste juksplass.', 'The catch is falling. Moving on to the next jig place.'); endFishing('move'); return; } } } }
   // cod quota: warn once a day when the cod on board already fills what is left
-  const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0);
+  // (Ø10c: the cod taken south of 62° N is not on this quota, 03d-quota.js sorCodAboard; the North Sea's 3 tonnes say so themselves, once a day)
+  const q = quotaState(), codHold = S.hold.filter(x => x.sp === 'torsk').reduce((a, x) => a + x.kg, 0) - sorCodAboard();
+  if (bycHere('juksa') === 'nsjo' && sorAcc() !== 'none' && sorLeft('nsjo') <= 0 && (S.sorWarn || -1e9) < S.t - 1440){ S.sorWarn = S.t; log('Maksimalkvoten på 3 tonn torsk i Nordsjøen er full. Torsk kan bare være bifangst nå, høyst 15 % av fangsten.', 'The maximum quota of 3 tonnes of cod in the North Sea is full. Cod may only be a bycatch now, at most 15% of the catch.'); }
   if (codHold > 0 && access() !== 'none' && q.torsk + codHold >= codLimitNow(H) && !ffPct(H) && (S.codWarn || -1e9) < S.t - 1440){ S.codWarn = S.t; log('Torskekvoten er full. Torsk du lander nå blir inndratt.', 'The cod quota is full. Cod you land now will be confiscated.'); }
 }
 function endFishing(why){
@@ -1119,11 +1147,28 @@ function endFishing(why){
 }
 // the fish is bled as it comes over the rail (a cut and into the bleeding tub, no time lost) and lies in the tub, round and not iced,
 // until someone guts and ices it
+// Ø10b (11.11.2026): the hold knows what was taken where cod may only be a bycatch (03e-rules.js ruByc: the Skagerrak outside the
+// baseline): b.byc = {skag:{kg, cod}}, all the fish taken there this trip and the cod in it, the boat's own (S.boat is a vessel's). It
+// starts afresh with an empty hold, so every way the hold is emptied (the landing, a rescue) ends it. The place is asked once in ten
+// game minutes and 50 m. how: the gear ('juksa', 'line', 'garn'; your own bites in the jig game come without)
+let BYC_AT = null;
+function bycHere(how){ const b = S.boat, gear = how || 'juksa';
+  if (BYC_AT && BYC_AT.g === gear && BYC_AT.v === S.cur && Math.abs(BYC_AT.t - S.t) < 10 && dist(BYC_AT.p, b.pos) < 0.05) return BYC_AT.k;
+  let k = null; try { k = ruByc({p:b.pos, len:BOAT.len, gear}); } catch (e){}
+  BYC_AT = {g:gear, v:S.cur, t:S.t, p:{x:b.pos.x, y:b.pos.y}, k}; return k; }
+function bycAdd(sp, kg, how){ const b = S.boat; if (!S.hold.length) delete b.byc;
+  if (SPECIES[sp].shell || how === 'teine' || how === 'teiner') return; const k = bycHere(how); if (!k) return;
+  const c = (b.byc = b.byc || {})[k] = (b.byc || {})[k] || {kg:0, cod:0}; c.kg += kg; if (sp === 'torsk') c.cod += kg; }
+// the cod aboard over the bycatch share of what was taken there: {kg, by:{skag:kg}}, never more than the cod in the hold
+function bycConf(){ const b = S.boat, by = {}; let kg = 0, left = S.hold.reduce((a, x) => a + (x.sp === 'torsk' ? x.kg : 0), 0);
+  for (const k in (b.byc || {})){ const o = Math.min(left, bycOver(k, b.byc[k])); if (o > 0.01){ by[k] = o; kg += o; left -= o; } }
+  return {kg, by}; }
 function addCatch(sp, kg, cls, hook, opt){
   if (cls == null) cls = SPECIES[sp].ref;
   // the jig's catch for the trip's line (Ø8b S2): fish()'s, and your own bites in the jig game (ui/10-rod-acts.js, no opt) only in a minute
   // fish() counted (J.tl), so bites while the boat waits on the deck or a rule add no kilos to hours not counted; not the gear's
   if (hook !== false){ const how = opt && opt.how; if (how === 'juksa') tripJ(tripOf(S.boat)).kg += kg; else if (!how){ const J = tripJ(tripOf(S.boat)); if (J.tl != null && J.tl >= S.t - 1) J.kg += kg; } }
+  bycAdd(sp, kg, opt && opt.how);   // where cod is only a bycatch: the catch taken there, with its cod (Ø10b)
   festCatch(sp, kg);   // the skrei festival's biggest cod (09c-seasons.js)
   achCatch(sp, cls);   // «Storfisken» (09f-merker.js)
   recCatch(sp, kg, opt && opt.how);   // the personal records (09b-records.js)
@@ -1223,7 +1268,7 @@ function deckMinute(){
 //    Iceland to Fosnavåg 675 nm, 68 h)
 // Lying to she keeps her head to the sea at steerage way: she holds her place (no drift), burns the fuel of RIDE.kn knots, the sea's
 // danger is a step lower (risk), and she goes on with her route when it has been under the limits (the wind RIDE.ease m/s under)
-// for RIDE.calm minutes. A trip on the operations plan keeps the plan's own limits and shelter (06d-drift.js, 06h-plan2-engine.js).
+// for RIDE.calm minutes. A trip on the operations plan keeps the plan's own limits and shelter (06h-plan2-engine.js).
 const RIDE = {h:8, kn:4, calm:60, ease:2};
 const oceanBoat = () => BOAT.cls === 'hav';
 const windLim = () => oceanBoat() ? Math.max(S.settings.autoW, BOAT.risk[2]) : S.settings.autoW;
@@ -1329,6 +1374,7 @@ function rescueAis(H){
 }
 function rescue(keepCatch){
   if (S.boat.gop) gopAbort('return');
+  if (lopOn() && S.lop.run.st === 'run') lopEnd('slep');   // a tow ends the race (09o-kapplop.js), also from the quay, where no 'tow' is seen
   // the first is free, with the catch kept (core/09f-merker.js freeFirst; Jonas 07.10.2026: learn without the consequences)
   const first = !S.member && freeFirst('tow'); if (first) keepCatch = true;
   // the tow goes to the nearest yard, where the hull is mended (Jonas 08.10.2026: a tow to a plant left a player stuck there, #48);

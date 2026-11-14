@@ -72,7 +72,36 @@ const ICPIC = {
     '<path d="M14 12l32 12M16 16l30 10" stroke="' + IC_C.mid + '" stroke-width=".9"/><path d="M46 24c5 2 9 6 12 10" stroke="' + IC_C.ink + '"/>' +
     [20, 30, 40].map(x => '<ellipse cx="' + x + '" cy="' + (11 + (x - 12) * 0.35) + '" rx="2.6" ry="1.8" fill="' + IC_C.org + '"/>').join('') + '<path d="M40 36c5-2 10-2 15 0s6 1 8 0" stroke="' + IC_C.blu + '"/>')
 };
-const icPic = k => ICPIC[k] || ICPIC.box;
+// ---- the painted pictures (13.11.2026, Jonas: «skikkelige bilder til alt som selges», gouache, everything but the boats): one atlas,
+// pic-items (src/data/items.b64, made by tools/ui/butikkbilder.py, whose ORDER this is), fetched after the start with the other late data
+// (ui/11-boot.js); until it is in, and in a page without it, the cards draw the SVGs above
+const IC_ATLAS = ['jig', 'kgear', 'jigset', 'hooks', 'net', 'line', 'pot', 'kit', 'heavy',
+  'jukse', 'linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'krabbekar', 'kniv', 'hott',
+  'vhf', 'ais', 'plotter', 'chirp', 'sonar', 'radar', 'radarA', 'brovakt', 'olje',
+  'varme', 'ice', 'bait', 'antigro', 'motor90', 'motor', 'prop', 'hold', 'tank',
+  'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno',
+  'haill', 'luksus', 'pump', 'ic', 'turbo', 'sk_light', 'sk_std', 'sk_max'];   // (Kaiboden, 14.11.2026: the luck, the tunings (BOOSTS) and Skippertak (SKIP))
+const IC_COLS = 8, IC_ROWS = Math.ceil(IC_ATLAS.length / IC_COLS);
+let IC_URL = null;
+// the atlas as a blob URL once its bytes are in (the element's base64, as the letter's pictures), set on the page's root once
+function icAtlas(){
+  if (IC_URL) return IC_URL;
+  const el = typeof document !== 'undefined' && document.getElementById('pic-items'), d = el && !el.dataset.src && el.textContent.trim(); if (!d) return null;
+  try { const bin = atob(d), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    IC_URL = URL.createObjectURL(new Blob([u], {type:'image/webp'})); document.documentElement.style.setProperty('--ic-atlas', 'url(' + IC_URL + ')'); el.textContent = ''; }
+  catch (e){ return null; }
+  return IC_URL;
+}
+const icHas = k => IC_ATLAS.includes(k) && !!icAtlas();
+function icPic(k){
+  const a = IC_ATLAS.includes(k) ? k : ICPIC[k] ? null : 'box';
+  if (a && icAtlas()){ const i = IC_ATLAS.indexOf(a), x = i % IC_COLS, y = Math.floor(i / IC_COLS);
+    return '<span class="ic-img" aria-hidden="true" style="background-size:' + IC_COLS * 100 + '% ' + IC_ROWS * 100 + '%;background-position:' + fmtPct(x / (IC_COLS - 1)) + ' ' + fmtPct(y / (IC_ROWS - 1)) + '"></span>'; }
+  return ICPIC[k] || ICPIC.box;
+}
+// the picture at the top of a card in Kaiboden (14.11.2026): only from the atlas, nothing until it is in (no line drawing for these)
+const kbPic = k => icHas(k) ? '<div class="kb-pic">' + icPic(k) + '</div>' : '';
+const fmtPct = v => (Math.round(v * 10000) / 100) + '%';
 // ---- what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
 const ICFX = {
   jig:() => ['Fisker for hånd: torsk, sei og hyse', 'Fishes by hand: cod, saithe and haddock'],
@@ -142,10 +171,10 @@ const ICMORE = {jig:'juksa', kgear:'kveiteutstyr', jukse:'juksa', jigset:'kroker
 // the card. o: {k (picture, line, anchor, «Mer»), name, sub (small after the name), fx (instead of the line), price (kr or text), anchor,
 // cond (0–1 with its label), have (a line in green, «Om bord»), note, btns (html), body (html after the price), id}
 function itemCard(o){
-  const k = o.k, fx = o.fx != null ? o.fx : icFx(k), an = o.anchor != null ? o.anchor : ICANCHOR[k] ? ICANCHOR[k]() : '', hb = ICMORE[k] && typeof hbById === 'function' ? hbById('lex_' + ICMORE[k]) : null;
+  const k = o.k, fx = o.fx != null ? o.fx : icFx(k), an = o.anchor != null ? o.anchor : ICANCHOR[k] ? ICANCHOR[k]() : '', hb = o.hb === false || typeof hbById !== 'function' ? null : o.hb ? hbById(o.hb) : ICMORE[k] ? hbById('lex_' + ICMORE[k]) : null;   // (o.hb: another entry, or false for none; o.cls and o.attr: the yard's upgrade cards, D3)
   const pr = o.price == null ? '' : '<div class="ic-pr"><b>' + (typeof o.price === 'number' ? kr(o.price) : o.price) + '</b>' + (an ? '<span class="ic-an">' + an + '</span>' : '') + '</div>';
   const cond = o.cond == null ? '' : '<div class="ic-cond"><span>' + (o.condL || icL('Stand', 'Condition')) + '</span><span>' + Math.round(o.cond * 100) + ' %</span></div><div class="ph-bar"><i style="width:' + Math.round(Math.max(0, Math.min(1, o.cond)) * 100) + '%"></i></div>';
-  return '<div class="ph-card ic" id="' + (o.id || 'ic-' + k) + '" data-ic="' + k + '"><div class="ic-pic">' + icPic(o.pic || k) + '</div><div class="ic-b"><h4>' + o.name + (o.sub ? ' <small>' + o.sub + '</small>' : '') + '</h4>' +
+  return '<div class="ph-card ic' + (o.cls ? ' ' + o.cls : '') + '" id="' + (o.id || 'ic-' + k) + '" data-ic="' + (o.ic || k) + '"' + (o.attr || '') + '><div class="ic-pic">' + icPic(o.pic || k) + '</div><div class="ic-b"><h4>' + o.name + (o.sub ? ' <small>' + o.sub + '</small>' : '') + '</h4>' +
     (fx ? '<p class="ic-fx">' + fx + '</p>' : '') + pr + cond + (o.body || '') + (o.have ? '<p class="ic-have">' + o.have + '</p>' : '') + (o.note ? '<p class="ph-note">' + o.note + '</p>' : '') +
     (o.btns ? '<div class="ic-btns">' + o.btns + '</div>' : '') +
     (hb ? '<button type="button" class="ic-more" data-pa="open" data-a="handbok" data-hbid="' + hb.id + '">' + icL('Mer om ', 'More on ') + icL(hb.t[0], hb.t[1]).toLowerCase() + ' ›</button>' : '') + '</div></div>';

@@ -4,7 +4,9 @@ function estimate(){
   let km = 0, fishH = 0, bad = -1, a = quayPos(b);   // from where she lies (at Father's naust its berth, not the plant's harbour point)
   S.draft.forEach((w, i) => { km += kmTrue(a, w); if (bad < 0 && !legClearMemo(a, w)) bad = i; fishH += w.fish || 0; a = w; });
   const v = Math.min(S.draftSpeed, speedCap(hsAt(b.pos, H)));
-  const nm = km / NM, hours = nm / v, fuel = fuelLph(v, W) * hours;
+  // (the hours with the stream along the way at the time she is there, Ø9 F8b: curLegH, 16b-dyn.js; nm / v where none runs)
+  let hours = 0; { let q = quayPos(b); const H0 = (S.draftDep && S.draftDep > S.t ? S.draftDep : S.t) / 60; for (const w of S.draft){ hours += curLegH(q, w, Math.max(1, v), H0 + hours) + (w.fish || 0); q = w; } hours -= fishH; }
+  const nm = km / NM, fuel = fuelLph(v, W) * hours;
   return {nm, hours, fishH, fuel, bad, v};
 }
 
@@ -40,7 +42,7 @@ function nextEvent(){
   if (b.fueling) add(b.fueling.until, L('Bunkringen er ferdig', 'Fuelling done'));
   if (b.shift) add(b.shift.until, L('Forhalingen er ferdig', 'Shifting done'));
   if (b.status === 'fishing' && b.fishUntil != null && !b.deckEnd && !gopAfter(b)) add(b.fishUntil, L('Fisket er ferdig', 'Fishing done'));
-  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));
+  if (b.status === 'port' && jobsDone()) add(jobsDone(), jobsFreight() ? (S.jobs.every(j => j.out) ? L('Lasta er i land', 'Freight ashore') : S.jobs.some(j => j.out) ? L('Lasta er på plass', 'Freight in place') : L('Lasta er om bord', 'Freight aboard')) : jobsCrewOnly() ? L('Mannskapet er ferdig', 'The crew is done') : L('Verkstedet er ferdig', 'The yard is done'));   // (freight alone says so: «Mannskapet er ferdig» said nothing of what they did, feedback #2 from the test edition)
   if (b.status === 'sailing' && S.plan && S.plan.idx < S.plan.wps.length){
     const wps = S.plan.wps; let a = b.pos, km = 0, stop = null;
     for (let i = S.plan.idx; i < wps.length; i++){ km += kmTrue(a, wps[i]); a = wps[i]; if (wpStop(wps[i]) || i === wps.length - 1){ stop = wps[i]; break; } }
@@ -57,8 +59,14 @@ let hudV = '', hudT = 0, hudCard = false;   // hudCard: the whole box open as a 
 // to (S.settings.hudMin). The little chart has a fixed place under either (styles.css), whatever the box holds
 // the phone's layout: upright, and a phone on its side too (no higher than 520 px; Jonas 07.11.2026: «Telefon liggende må jo ha minikartet på
 // samme måte som stående … Og det skal være likt i alle formater»): the chart on top, the strip under it, a tap gives the card
-const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait), (max-height: 520px)') : null;
+// D6 (designombyggingen, 13.11.2026: «HUD-en er lik i begge formater»): a tablet upright has the whole box as a tablet on its side has
+// (the gauges and «Regler ✓ Lov her» stood only behind a tap there); only a phone (upright up to 560 px wide, or on its side) keeps the
+// strip. While the drawer's sheet is open upright, and in the chart plotter upright, the strip stands as before (the sheet starts under
+// the strip's fixed height, and the plotter's layout is made for it: U2-8)
+const HUDMQ = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait) and (max-width: 560px), (max-height: 520px)') : null;
+const HUDUP = typeof matchMedia === 'function' ? matchMedia('(orientation: portrait)') : null;
 const hudPortrait = () => !!(HUDMQ && HUDMQ.matches);
+const hudSheet = () => !!(HUDUP && HUDUP.matches) && (document.body.classList.contains('dk-open') || !document.body.classList.contains('v3d'));
 // the strip's second line: diesel, hold, energy and sea as an icon (the dock's stroke icons' kin) and a figure
 const HICON = {fuel:'<svg viewBox="0 0 24 24"><path d="M5 20V5.5A1.5 1.5 0 0 1 6.5 4h6A1.5 1.5 0 0 1 14 5.5V20"/><path d="M4 20h11"/><path d="M7 7.5h5V12H7z"/><path d="M14 11h2a2 2 0 0 1 2 2v3.5a1.5 1.5 0 0 0 3 0V9l-2.5-2.5"/></svg>',
   // the hold: a fish (Jonas 07.11.2026: «gjør ikonet som står for last i statusboksen om til en fisk. Det er mye mer forståelig»; the box
@@ -104,6 +112,8 @@ function hudLine3(how){
   // the hull (core/16c-hull.js, Fysikk 3; Jonas 07.11.2026 after Tony's test: «viste ikke om det var noe å være bekymret for»): red while
   // the water rises, with the minutes to a full engine room and «Verft ›» (the nearest yard by Autonav); yellow while the pump keeps up
   if (!h && atSea){ const hw = hullWarn(b); if (hw){ cls = hw.cls; go = 'yard'; h = hw.short; } }
+  // the fairway (Ø11.8, core/05e-sjovei.js): over the speed limit, or on the wrong side of a cardinal mark, when she steers herself (after the hull: water in the boat comes first)
+  if (!h && atSea){ const fw = farvWarn(); if (fw){ cls = 'r1'; h = farvSay(fw, strip ? 'tiny' : 'strip'); } }
   if (strip && atSea){
     if (!h && RU.ok){ const r = ruNow(); if (r.v !== 'ok'){ const it = r.items.find(i => i.v === r.v); cls = r.v === 'no' ? 'r2' : 'r1'; h = (r.v === 'no' ? '✕ ' : '! ') + (it ? ruShort(it) : L('Regler', 'Rules')); } }
     if (!h){ const M = motionHere(H, b), z = M.state; if (z.lvl){ cls = 'r' + z.lvl; h = {gm:L('Rank båt', 'Tender boat'), res:stabStill(b) ? L('Synkronrulling · rull ', 'Synchronous roll · rolls ') + Math.round((M.M.roll + M.M.heel) * 180 / Math.PI) + '°' : L('Synkronrulling · endre kurs eller fart', 'Synchronous roll · change course or speed'), roll:L('Kraftig rulling · ta det rolig', 'Heavy rolling · ease off')}[z.why] || ''; } }
@@ -149,7 +159,7 @@ function renderHud(){
   const b = S.boat, H = S.t / 60, no = S.lang === 'no', L = (a, c) => no ? a : c, F = hudFigures(), {W, hs, lvl, atSea, HF} = F;
   const dot = b.status === 'adrift' || b.status === 'engine' ? 'bad' : (b.status === 'sailing' || b.status === 'fishing') ? 'go' : '';
   document.body.classList.toggle('sailing', b.status === 'sailing');
-  const v3 = document.body.classList.contains('v3d'), up = hudPortrait(), strip = up || !!S.settings.hudMin;
+  const v3 = document.body.classList.contains('v3d'), up = hudPortrait(), strip = up || hudSheet() || !!S.settings.hudMin;
   if (hudCard && !(strip && v3)) hudCard = false;   // the card belongs to the strip in 3D; the plotter and the whole box have none
   const card = strip && hudCard;
   hudClasses(strip && !card, card);
@@ -225,8 +235,9 @@ function livePose(frac){
   if (b.gop && b.gop.mv && b.gop.mv.t === S.t) return {p:{x:b.pos.x + b.gop.mv.x * frac, y:b.pos.y + b.gop.mv.y * frac}, hd:b.heading, frac, idx};
   // lying still, she drifts along the minute's drift (core/16b-dyn.js lieDrift)
   if (b.drv && b.drv.st === b.status && b.drv.t === S.t) return {p:{x:b.pos.x + b.drv.x * frac, y:b.pos.y + b.drv.y * frac}, hd:b.drv.up ? Math.atan2(b.drv.x, -b.drv.y) : b.heading, frac, idx};
-  if (b.status === 'sailing' && S.plan){
-    let left = sailV(S.t / 60) * NM / 60 * frac;
+  // (held for a hop, core/06j-hopp.js: she lies where she is, never crept on along the route between the minute steps)
+  if (b.status === 'sailing' && S.plan && !(b.hopHold && typeof hopHeld === 'function' && hopHeld(b))){
+    let left = sailV(S.t / 60) * NM / 60 * frac * sailSogF(b);   // (over the ground: the stream's share of the last minute, Ø9 F8b)
     while (left > 1e-9 && idx < S.plan.wps.length){
       const w = S.plan.wps[idx], d = dist(p, w);
       if (d > 1e-6) hd = Math.atan2(w.x - p.x, -(w.y - p.y));
@@ -272,20 +283,27 @@ const INSTR = (() => {
   // the box under the little chart in 3D (the user's wish 02.10.2026): the same width and look as the status box over it
   function render3d(pose, H, sog, ll, nv){
     const el = $('gps3d'), no = S.lang === 'no', on = S.boat.status !== 'port';
-    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null};   // the little chart's foot (03e-miniplot.js)
+    const cg = cogUi(pose, sog);   // (her course over the ground where a stream sets her off her heading, F8b)
+    // (the race clock while a leg is sailed, ui/05l-kapplop.js lopClock, KL2)
+    const lc = typeof lopClock === 'function' ? lopClock() : null, lop = lc ? {t:lopHmS(lc.min), leg:lc.leg + '/' + lc.n} : null;
+    GPS3D = {kn:fmt(sog, 1) + ' kn', crs:deg3(pose.hd), ll, nv, ukc:on ? keelUi() : null, cog:cg, lop};   // the little chart's foot (03e-miniplot.js)
     if (!el) return;
     if (S.settings.plotMin){ if (el.hidden) el.hidden = false; const pm = $('plotMin'); if (pm.textContent !== '+'){ pm.textContent = '+'; pm.setAttribute('aria-label', no ? 'Vis kartplotteren' : 'Show the chart plotter'); }
-      setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b><span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
+      setHtml(el, '<div class="gstrip"><b>' + fmt(sog, 1) + ' kn</b><b>' + deg3(pose.hd) + '</b>' + (lop ? '<b class="glop">⏱ ' + lop.t + '</b>' : '') + '<span>' + ll[0] + ' ' + ll[1] + '</span></div>'); return; }
     { const pm = $('plotMin'); if (pm.textContent !== '–'){ pm.textContent = '–'; pm.setAttribute('aria-label', no ? 'Minimer kartplotteren' : 'Minimise the chart plotter'); } }
     if (el.hidden === on) el.hidden = !on; if (!on) return;
     const row = (k, v) => '<div class="row"><span>' + k + '</span><b>' + v + '</b></div>';
-    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
-      (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : ''));
+    setHtml(el, row(no ? 'Fart' : 'Speed', fmt(sog, 1) + ' kn') + row(no ? 'Kurs' : 'Course', deg3(pose.hd)) + (cg ? row('COG', cg) : '') + (GPS3D.ukc == null ? '' : row(no ? 'Under kjølen' : 'Under the keel', fmt(GPS3D.ukc, 1) + ' m')) + row('POS', ll[0]) + row('', ll[1]) +
+      (nv ? row('WPT ' + nv.n, nv.wpt) + row(no ? 'Neste' : 'Next', nv.at) + row('ETA ' + nv.dest, nv.eta) : '') + (lop ? row((no ? 'Kappløp ' : 'Race ') + lop.leg, lop.t) : ''));
   }
+  // the course over the ground (COG) when it is 3 degrees or more off the heading at half a knot or more over the ground (a stream
+  // across her, or a drift): else null, and the heading says it all (COG was taken off the bar 2026 when it only ever repeated it)
+  let COGNOW = null;
+  function cogUi(pose, sog){ const g = COGNOW; if (!g || !(sog >= 0.5)) return null; let d = (g.cog - pose.hd) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return Math.abs(d) >= 3 * Math.PI / 180 ? deg3(g.cog) : null; }
   const GPSC = {k:'', nx:null, st:null};
   function renderGPS(){
     const v3 = document.body.classList.contains('v3d'); if (!v3 && !document.body.classList.contains('vplot')) return;
-    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, sog = b.status === 'sailing' || (b.status === 'tow' && b.tow && b.tow.ph === 'tow') ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, sog);
+    const pose = livePose(), b = S.boat, H = (S.t + pose.frac) / 60, g0 = COGNOW = b.status === 'tow' || b.status === 'port' ? null : dynSog(b), sog = g0 ? g0.kn : b.status === 'tow' && b.tow && b.tow.ph === 'tow' ? b.v : 0, ll = gpsLL(pose.p), no = S.lang === 'no', nv = navOf(pose, H, b.status === 'sailing' ? Math.max(sog, 1) : 0);   // (the route's times from her way over the ground under way, never from a drift)
     if (v3){ render3d(pose, H, sog, ll, nv); return; }
     const nav = !!nv;
     if (document.body.classList.contains('navon') !== nav) document.body.classList.toggle('navon', nav);
@@ -293,7 +311,7 @@ const INSTR = (() => {
       $('ecWptL').textContent = 'WPT ' + nv.n + ' · ' + nv.at; $('ecWpt').textContent = nv.wpt;
       $('ecEtaL').textContent = 'ETA · ' + nv.dest.toUpperCase(); $('ecEta').textContent = nv.eta;
     }
-    $('ecHdg').textContent = deg3(pose.hd); $('ecSog').textContent = fmt(sog, 1) + ' kn'; $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH';
+    $('ecHdg').textContent = deg3(pose.hd); { const cg = cogUi(pose, sog); setHtml($('ecSog'), fmt(sog, 1) + ' kn' + (cg ? '<br><small>COG ' + cg + '</small>' : '')); } $('ecPos').innerHTML = ll[0] + '<br>' + ll[1]; $('ecDepL').textContent = no ? 'DYBDE' : 'DEPTH';
     // (and the water under her keel in shallow water, with her squat at the way she has: Ø9 F5, 16b-dyn.js keelClear)
     { const ukc = b.status === 'port' ? null : keelUi(); setHtml($('ecDep'), b.status === 'port' ? '–' : fmt(depthF(pose.p) + tideCD(H), 1) + ' m' + (ukc == null ? '' : '<br><small' + (ukc < 1 ? ' class="warn"' : '') + '>' + fmt(ukc, 1) + (no ? ' m u. kjølen' : ' m under keel') + '</small>')); }
     // the next tide and the sun's day change slowly: worked out again every 10 game minutes or km
@@ -318,7 +336,7 @@ hud.addEventListener('click', e => {
   if (e.target.closest('[data-hfull]')){ e.stopPropagation(); S.settings.hudFull = !S.settings.hudFull; save(); renderHud(); return; }
   if (e.target.closest('.rlink')){ PHONE.open('regler'); return; }
   if (document.body.classList.contains('hudcard')){ e.stopPropagation(); hudCardOpen(false); return; }   // a tap on the card itself closes it, as the ✕ does
-  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
+  if (document.body.classList.contains('hudstrip')){ e.stopPropagation(); if (!hudPortrait() && !hudSheet() && S.settings.hudMin) hudFold('hud'); else hudCardOpen(true); return; }
   if (!hudPortrait() && document.body.classList.contains('v3d') && !tutOn() && !e.target.closest('button,a,input,select,label')){ e.stopPropagation(); hudFold('hud'); }
 });
 // the card over the chart: a tap outside or on the card closes it (as the dock's fans close), so do Escape and a turn of the screen,
@@ -327,6 +345,8 @@ function hudCardOpen(on){ on = !!on; if (hudCard === on) return; hudCard = on; r
 document.addEventListener('pointerdown', e => { if (hudCard && !hud.contains(e.target)) hudCardOpen(false); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && hudCard) hudCardOpen(false); });
 window.addEventListener('resize', () => { if (hudCard) hudCardOpen(false); });
+// (D6: the box or the strip follows the way the screen stands, at once and not on the next tick: the sheet upright starts under the strip)
+if (HUDUP && HUDUP.addEventListener) HUDUP.addEventListener('change', () => { if (S && S.boat) renderHud(); });
 // the status box and the little chart each fold to a strip (S.settings.hudMin, plotMin), and «Vis HUD» in the settings takes them all
 // away (hudOff): the status box, the little chart, its GPS strip and the compass. hudstrip and hudcard say what the box is right now
 // (renderHud: upright it is always the strip); without them the classes stand as they are

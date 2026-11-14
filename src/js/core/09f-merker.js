@@ -40,7 +40,7 @@ const ACH = [
   {id:'equip', ch:1, n:['Første utstyrskjøp', 'First equipment bought'], p:() => !!achC('equip') || achFleet(v => Object.values(vget(v, 'equip') || {}).some(Boolean))},
   {id:'l20', ch:1, n:['Én levering over 20 000 kr', 'A landing over NOK 20,000'], p:() => [achBest(), 20000]},
   {id:'t1', ch:1, n:['Ett tonn levert', 'A tonne landed'], p:() => [achKg(), 1000]},
-  {id:'yard', ch:1, n:['Første oppgradering på verftet', 'First upgrade at the yard'], p:() => achFleet(v => ((vget(v, 'boat').holdLv || 0) + (vget(v, 'boat').engLv || 0) + Object.keys(vget(v, 'boat').upg || {}).length) > 0)},
+  {id:'yard', ch:1, n:['Første oppgradering på verftet', 'First upgrade at the yard'], p:() => achFleet(v => ((vget(v, 'boat').holdLv || 0) + (vget(v, 'boat').engLv || 0) + (vget(v, 'boat').propLv || 0) + Object.keys(vget(v, 'boat').upg || {}).length) > 0)},
   {id:'crew', ch:1, n:['Første mann hyret', 'First hand hired'], p:() => !!achC('crew') || achFleet(v => (vget(v, 'crew') || []).length > 0)},
   {id:'plant2', ch:1, n:['Levert til et nytt mottak', 'Landed at a new plant'], p:() => [achPorts(), 2]},
   {id:'storm', ch:1, hid:true, n:['Første uvær', 'First rough weather'], h:['Ute i kuling og hjem uten slep.', 'Out in a gale and home without a tow.'], p:() => !!achC('storm')},
@@ -88,6 +88,8 @@ const ACHL = [
   // the pub (ui/09c-pubsoc.js): the week's quiz with every answer right, and the weeks the fiskarlag reached its goal
   {id:'quiz', n:['Quizmester på puben', 'Pub quiz master'], tiers:[1, 5, 20], unit:'', v:() => achC('quiz')},
   {id:'lag', n:['Fiskarlagets ukemål', 'The fishing club\'s weekly goals'], tiers:[1, 5, 20], unit:'', v:() => achC('lag')},
+  // «Læremester» (core/14-crewlife.js laerDone, docs/planer/oppdrag-2.md punkt 8, steg 45b): apprentices who went from your deck to a boat of their own
+  {id:'laer', n:['Læremester: lærlinger med egen båt', 'Master of the trade: apprentices with a boat of their own'], tiers:[1, 3, 10], unit:'', v:() => achC('laer')},
   {id:'lagw', n:['Fiskarlaget: uker med levering', 'The fishing club: weeks with a landing'], tiers:[1, 4, 12, 26, 52], unit:'', v:() => Object.keys((S.pubSoc || {}).lagWk || {}).length}   // (ui/09c-pubsoc.js lagWeek, docs/planer/oppdrag-2.md F2)
 ];
 const achOf = id => ACH.find(a => a.id === id);
@@ -119,7 +121,7 @@ function achMinute(){
   const A = achState(), H = S.t / 60;
   if (!A.stormT && beaufort(windAt(H)) >= 6) A.stormT = 1;
   const hr = ((H % 24) + 24) % 24; if (b.status === 'fishing' && (hr >= 23 || hr < 4) && A.nightD !== Math.floor((H + 1) / 24)){ A.nightD = Math.floor((H + 1) / 24); achAdd('night'); }
-  if (typeof PEERS !== 'undefined') for (const q of PEERS) if (q && q.id && !A.peers[q.id] && dist(b.pos, {x:q.x, y:q.y}) < 3.7) A.peers[q.id] = Math.max(1, S.t);
+  if (typeof PEERS !== 'undefined') for (const q of PEERS) if (q && q.id && !q.bench && !A.peers[q.id] && dist(b.pos, {x:q.x, y:q.y}) < 3.7) A.peers[q.id] = Math.max(1, S.t);   // (not the measuring run's stand-ins, view3d/25-controls.js benchPeers)
 }
 // the end of a trip with you aboard: a gale weathered without a tow counts
 function achTripEnd(bad){ const A = achState(); if (A.stormT && !bad) achAdd('storm'); A.stormT = 0;
@@ -203,7 +205,9 @@ function achCheck(quiet){
 function achChapter(ch){
   const A = achState(); A.pen = Math.max(A.pen || 0, ch + 1);
   if (ch === 0) book('annet', ACH_CH1_KR, 'Kapittelet «' + ACH_CH[0][0] + '» fullført', 'The chapter «' + ACH_CH[0][1] + '» complete');
-  if (ch === 1 && typeof giveHaill === 'function') giveHaill('haill', 'gift');
+  // (HS4 11.11.2026: with the cloud the haill is a grant, once per account, asked for from the server, ui/10i-shop.js achHaillAsk;
+  // without it, the artifact and the tests, into the game's own numbers as before)
+  if (ch === 1 && typeof giveHaill === 'function' && !(typeof achHaillAsk === 'function' && achHaillAsk())) giveHaill('haill', 'gift');
   if (ch === 2){ A.colour = 1; }
   const what = [achKr() + ' er satt inn på kontoen din.', 'En haill ligger om bord.', 'Skrogfargen «Kystfisker» er din i Malerverkstedet.'][ch],
     whatEn = [achKr(true) + ' has been paid into your account.', 'A luck is aboard.', 'The hull colour «Kystfisker» is yours in the paint shop.'][ch];

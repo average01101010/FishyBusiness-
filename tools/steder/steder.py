@@ -131,7 +131,21 @@ def main():
     res.sort(key=lambda o: (o[0], o[1]))
     meta = dict(made=time.strftime('%Y-%m-%d'), src='Overture Maps places (points only), the game\'s vector packs; made-up places where the plants are far from one',
                 shops=sum(1 for o in res if o[5] == 0), yards=sum(1 for o in res if o[5] == 1), real=sum(o[7] for o in out))
-    json.dump(dict(meta=meta, r=res), open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
+    # the ids saves hold (move_sted): kept for the places still at the same face; a place made again elsewhere gets a new id, so a rerun
+    # that moves places away from where the movers put them loses theirs (the boat in such a harbour starts at the nearest, ui/11-boot.js)
+    try: was0 = json.load(open(OUT)).get('was') or {}
+    except Exception: was0 = {}
+    keys = {sted_key(o) for o in res}; was = {k: v for k, v in was0.items() if k in keys}
+    json.dump(dict(meta=meta, r=res, **({'was': was} if was else {})), open(OUT, 'w'), ensure_ascii=False, separators=(',', ':'))
     print(json.dumps(meta, ensure_ascii=False), 'no town for', sum(1 for o in res if not o[6]))
+
+# A shop's or yard's id in the game is made of its face (06c-steder.js: «sb» or «sv», then x and y in m), and saves hold it (the boat's
+# port, home, the plan's waypoints). A place moved to another face (bruflytt.py, landflytt.py, havflytt.py, lukkflytt.py) keeps the id it
+# had first through steder.json's «was» (its new id to that one): move_sted does the move and keeps it (13.11.2026).
+def sted_key(r): return ('sv' if r[5] else 'sb') + '%d_%d' % (round(r[0] * 1000), round(r[1] * 1000))
+def sted_id(r, S): return (S.get('was') or {}).get(sted_key(r)) or sted_key(r)
+def move_sted(S, i, new):
+    r = S['r'][i]; was = sted_id(r, S); S.setdefault('was', {}).pop(sted_key(r), None); r[:5] = list(new[:5])
+    if sted_key(r) != was: S['was'][sted_key(r)] = was
 
 if __name__ == '__main__': main()

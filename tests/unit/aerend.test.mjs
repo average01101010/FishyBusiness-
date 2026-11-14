@@ -1,0 +1,106 @@
+// The small errands (Oppdrag 2, punkt 2; steg 45a; core/14-crewlife.js ERR, docs/systemer/folk-om-bord.md 5.6 «Ærendene»). Jonas
+// 30.10.2026: «de må være kontekstualiserte slik at han ikke spør om å dra hjem til feks botnhamn hvis båten ligger i kirkenes». Home only
+// within 40 nm of the boat, a call only at a harbour within 20 minutes at her cruising speed, a day off only in a harbour or on the way in;
+// «Ikke nå» costs nothing; done, a line in the story and a week of learning a little faster.
+export default function (t){
+  const K = t.K; K.set('S', K.newState());
+  const S = K.get('S'), NM = K.NM, D = 1440, ERR = K.ERRAND;
+  const b = S.boat; b.type = 'sjark'; K.applyVessel(); S.boatName = 'Havgull';
+  K.set('crewRand', Math.random);   // (the picks below are drawn many times, so every branch is seen)
+  const port = re => K.get('PORTS').find(p => re.test(p.name) && p.mottak);
+  const put = (pt, st, dx = 0) => { b.pos = {x:pt.p.x + dx, y:pt.p.y}; b.status = st; b.port = st === 'port' ? pt.id : null; S.plan = null; };
+  const mk = home => { const c = K.genCrew(); c.homePort = home; c.hiredT = S.t - 30 * D; c.off = false; c.bi = false; c.morale = 60; K.crewLife(c); return c; };
+  const picks = (c, n = 300) => Array.from({length:n}, () => K.errandPick(c)).filter(Boolean);
+
+  // ---- Kirkenes, and a man from Botnhamn: never «home», only what fits where the boat is ----
+  // (Kirkenes has no harbour of its own in the game: the boat lies off the town, 69.727 N 30.045 E, and in harbour at Bugøynes, 40 km west)
+  const kirk = {id:null, p:K.P(69.727, 30.045)}, bug = port(/^Bugøynes/), botn = K.portById('botnhamn');
+  t.ok(bug && botn, 'Bugøynes og Botnhamn finnes');
+  const A = mk('botnhamn'); S.crew = [A];
+  put(kirk, 'fishing', 3);
+  const atKirk = picks(A);
+  t.ok(atKirk.every(p => p.k !== 'home'), 'båten ved Kirkenes: ingen «hjem til Botnhamn»', atKirk.slice(0, 3));
+  t.ok(atKirk.every(p => !p.port || K.dist(K.portById(p.port).p, b.pos) <= ERR.nm * NM), 'alt ærendet peker på, er innen 40 nm av båten');
+  t.ok(atKirk.filter(p => p.k === 'stop').every(p => K.dist(K.portById(p.port).p, b.pos) <= K.errKmMin() * ERR.min + 1e-9), 'et anløp er innen 20 minutter med båtens fart');
+  put(bug, 'port'); const offK = picks(A);
+  t.ok(offK.length && offK.every(p => p.k === 'off'), 'i havn i Bugøynes: bare fridagen', offK[0]);
+  t.ok(offK.every(p => !K.ERRAND_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Bugøynes er ikke «hjem en dag» (hjemme er langt unna)', offK[0] && offK[0].why);
+  put(botn, 'port'); const offB = picks(A);
+  t.ok(offB.length && offB.every(p => K.ERRAND_WHY.offHome.some(w => w[0] === p.why[0])), 'fridagen i Botnhamn er hjemme', offB[0] && offB[0].why);
+
+  // off Bugøynes (the nearest plant to Kirkenes, 1.8 km out): a call there, never home to Botnhamn
+  put(bug, 'fishing', 1.8); b.errFrom = null; const atBug = picks(A);
+  t.ok(atBug.length && atBug.every(p => p.k === 'stop' && K.portById(p.port).mottak), 'utenfor Bugøynes: et anløp ved et mottak, ikke hjem', atBug.slice(0, 2));
+
+  // ---- near home: «home» is asked ----
+  put(botn, 'fishing', 8);
+  const nearHome = picks(A);
+  t.ok(nearHome.some(p => p.k === 'home' && p.port === 'botnhamn'), 'innen 40 nm av Botnhamn: «Kan vi gå innom Botnhamn?»', nearHome[0]);
+
+  // ---- the coast (stikkprøven): Bergen, Bodø, Båtsfjord with the man from Botnhamn ----
+  // (Bergen has only its yard in the game: the plant nearest to it is the place)
+  const near1 = re => { const y = K.get('PORTS').find(p => re.test(p.name)); return y && K.get('PORTS').filter(p => p.mottak).sort((a, c) => K.dist(a.p, y.p) - K.dist(c.p, y.p))[0]; };
+  for (const re of [/^Bergen/, /^Bodø/, /^Båtsfjord/]){ const pt = port(re) || near1(re); if (!pt){ t.ok(false, 'fant ikke ' + re); continue; }
+    put(pt, 'fishing', 2); const P = picks(A, 150);
+    t.ok(P.length && P.every(p => p.k !== 'home' && (!p.port || K.dist(K.portById(p.port).p, b.pos) <= ERR.nm * NM)), pt.name + ': ingen hjem til Botnhamn, bare noe som passer der båten er', P.slice(0, 2).map(p => p.k + ' ' + p.port)); }
+
+  // ---- a call is at a harbour or a plant, never a shop or a yard («Ålesund utstyrsbutikk»): the whole coast, 1.8 km off each shop and yard ----
+  { let n = 0, bad = []; for (const pt of K.get('PORTS').filter(q => q.sted && q.coastal && !q.mottak)){ put(pt, 'fishing', 1.8); b.errFrom = null; for (const p of picks(A, 20)) if (p.k === 'stop'){ n++; const q = K.portById(p.port); if (q.sted && q.coastal && !q.mottak) bad.push(q.name); } }
+    t.ok(!bad.length, 'ingen anløp i en butikk eller et verft (' + n + ' anløp prøvd langs kysten)', bad.slice(0, 4)); }
+
+  // ---- the reason fits the person: the school show only with children, Mum's birthday not at 70, the hills only in a harbour ----
+  { put(botn, 'port'); const C = mk('botnhamn'); C.age = 70; C.life.fam = 'single'; const w = picks(C, 300).map(p => p.why[0]);
+    t.ok(w.length && !w.some(x => /avslutning|fyller år|hjelpe far/.test(x)), 'en enslig på 70: ikke ungen, ikke mor, ikke far', [...new Set(w)]);
+    put(kirk, 'fishing', 3); S.plan = {returning:true, wps:[]}; const w2 = picks(C, 300).map(p => p.why[0]); S.plan = null;
+    t.ok(w2.length && !w2.some(x => /fjellet/.test(x)), 'på vei inn: ikke «tur i fjellet mens vi ligger her»', [...new Set(w2)]); }
+
+  // ---- the ask through crewTick's hour: by day, fair weather, aboard; one open, then none for a week from the same person ----
+  put(botn, 'fishing', 8); K.set('meAboard', () => true); K.set('windAt', () => 5); S.tut = null; S.msgs = [];
+  const H = Math.floor(S.t / 60 / 24) * 24 + 10; S.t = H * 60; A.hiredT = S.t - 30 * D; A.life.errT = null;
+  ERR.p = 1; K.errandHour(H);
+  t.ok(A.err && A.err.k, 'han spør', A.err);
+  t.ok(S.msgs.some(m => m.from === A.name && /Mannskap/.test(m.no)), 'meldingen sier hvor spørsmålet besvares');
+  const m0 = A.morale, sk0 = JSON.stringify(A.gear);
+  t.ok(K.errandAnswer(A.id, false) && !A.err, '«Ikke nå»: ærendet er borte');
+  t.eq(A.morale, m0, 'nei koster ingen trivsel'); t.eq(JSON.stringify(A.gear), sk0, 'og ingenting annet');
+  S.t += 2 * D; K.errandHour(S.t / 60 | 0); t.ok(!A.err, 'han spør ikke igjen samme uke');
+  S.t += 6 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!!A.err, 'etter en uke kan han spørre igjen', A.err);
+
+  // ---- yes, and the boat calls in: the line in the story and a week of learning a little faster ----
+  A.err = {k:'home', port:'botnhamn', why:['x', 'x'], t0:S.t, ok:false}; const n0 = A.life.story.length;
+  t.ok(K.errandAnswer(A.id, true) && A.err.ok, '«Ja»');
+  put(botn, 'port'); K.errandHour(S.t / 60 | 0);
+  t.ok(!A.err && A.life.story.length === n0 + 1 && /Botnhamn/.test(A.life.story[A.life.story.length - 1][1]), 'lagt til i Botnhamn: linja står i historien hans', A.life.story.slice(-1));
+  t.near(K.errandLearn(A), ERR.learn, 1e-9, 'han lærer litt raskere');
+  { const c1 = mk('husoy'), c2 = mk('husoy'); for (const c of [c1, c2]){ c.age = 30; c.morale = 60; c.traits = []; c.gear.juksa = 2; c.wk = {fiske:60}; } c1.life.errUp = S.t + D; delete c2.life.errUp;
+    K.learnHour(c1); K.learnHour(c2); t.near((c1.gear.juksa - 2) / (c2.gear.juksa - 2), ERR.learn, 1e-6, 'learnHour: det han lærer på en time er 5 % mer uka etter ærendet'); }
+  S.t += 7 * D + 1; t.eq(K.errandLearn(A), 1, 'i sju døgn, ikke lenger');
+
+  // ---- never the harbour she just left; done only with the skipper and him aboard; a yes that comes to nothing is said ----
+  b.errFrom = 'botnhamn'; put(botn, 'fishing', 8); t.ok(picks(A).every(p => p.port !== 'botnhamn'), 'ikke havna båten nettopp gikk fra (b.errFrom)');
+  b.errFrom = null; S.plan = {returning:true, opsK:'ly', wps:[]}; t.ok(picks(A).every(p => p.k !== 'off'), 'ingen fridag mens båten søker ly (Driftsplan 2s «ly»)');
+  S.plan = {returning:true, wps:[]}; t.ok(picks(A).some(p => p.k === 'off'), 'men på vei inn til havn: fridagen kan bes om'); S.plan = null;
+  A.err = {k:'home', port:'botnhamn', why:['x', 'x'], t0:S.t, ok:true}; K.set('meAboard', () => false); put(botn, 'port'); const n1 = A.life.story.length; K.errandHour(S.t / 60 | 0);
+  t.ok(A.err && A.life.story.length === n1, 'båten legger til uten deg om bord: ikke gjort');
+  K.set('meAboard', () => true); A.bi = true; A.biDays = [0, 0, 0, 0, 0, 0, 0]; K.errandHour(S.t / 60 | 0); t.ok(A.err && A.life.story.length === n1, 'han er ikke om bord i dag (biyrke): ikke gjort'); A.bi = false; A.biDays = null;
+  S.msgs = []; put(kirk, 'fishing', 3); S.t += D; K.errandHour(S.t / 60 | 0);
+  t.ok(!A.err && S.msgs.some(m => m.from === A.name && /ikke noe av/.test(m.no)), 'et ja som ikke blir noe av: han sier det, og det er borte', S.msgs.map(m => m.no));
+  b.errFrom = null;
+
+  // ---- not answered and nothing done: it runs out after a day, with no harm ----
+  put(kirk, 'fishing', 3); A.err = {k:'stop', port:bug.id, why:['x', 'x'], t0:S.t, ok:false}; const m1 = A.morale;
+  S.t += D; K.errandHour(S.t / 60 | 0); t.ok(!A.err && A.morale === m1, 'etter ett døgn løper det ut uten følge');
+
+  // ---- the day off in a harbour: ashore one day ----
+  put(bug, 'port'); A.err = {k:'off', port:null, why:['x', 'x'], t0:S.t, ok:false};
+  t.ok(K.errandAnswer(A.id, true) && A.off && A.offUntil === S.t + D && !A.err, 'fridagen: i land ett døgn med en gang', {off:A.off, u:A.offUntil - S.t});
+
+  // ---- never in a gale, never on the first trip, never in their first week aboard ----
+  const B = mk('botnhamn'); S.crew = [B]; put(botn, 'fishing', 8); b.errFrom = null;
+  K.set('windAt', () => 15); K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke i kuling');
+  K.set('windAt', () => 5); S.tut = {v:2}; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke på første tur'); S.tut = null;
+  B.hiredT = S.t - 2 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke den første uka om bord');
+  B.hiredT = S.t - 30 * D; K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 22); t.ok(!B.err, 'ikke om kvelden (22)');
+  K.set('FS_AWAY', true); K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!B.err, 'ikke mens tida du var borte spilles av (catchUp)'); K.set('FS_AWAY', false);
+  K.errandHour(Math.floor(S.t / 60 / 24) * 24 + 10); t.ok(!!B.err, 'om dagen, i godt vær, etter første uka: ja');
+}

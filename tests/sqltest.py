@@ -28,6 +28,9 @@ create schema vault; create table vault.decrypted_secrets (id uuid primary key d
 """
 
 
+WHO_USED = 'haill_import,haill_on,haill_use,hop_use,hop_void,shop_pending,shop_refund,shop_state,yard_use'   # the functions that read grants.used_at (HS2–HS4, HO3)
+
+
 def main():
     tmp = tempfile.mkdtemp(prefix='dsbpg'); data = os.path.join(tmp, 'data'); sock = tmp
     user = 'postgres'
@@ -433,7 +436,7 @@ def main():
         print(ok(HS['refund'] == 'cs_h1:false:true,cs_h2:true:false,cs_h3:false:false' and HS['gone'] == 'f' and HS['pend3'] == [('reg_luksus', True), ('trim_turbo', True), ('haill', None)]),
               'HS2: a refund takes back a haill that is delivered and not used, and it can no longer be switched on; a used haill and a delivered trim stay', {k: HS[k] for k in ('refund', 'gone', 'pend3')})
         print(ok(HS['early'] == 't/true/true' and HS['pend4'] == [('reg_luksus', True), ('trim_turbo', True)]), 'HS2: a haill switched on before the game said shop_done (no network) is used and delivered in one', {k: HS[k] for k in ('early', 'pend4')})
-        print(ok(HS['who'] == 'haill_use,shop_pending,shop_refund' and HS['share'] == '0'), 'HS2: only shop_pending, haill_use and shop_refund read used_at, and nothing that shares with other players reads the grants', {k: HS[k] for k in ('who', 'share')})
+        print(ok(HS['who'] == WHO_USED and HS['share'] == '0'), 'HS2: only shop_pending, haill_use, shop_refund and HS4\'s own (haill_import, haill_on, shop_state, yard_use) read used_at, and nothing that shares with other players reads the grants', {k: HS[k] for k in ('who', 'share')})
         print(ok(HS['run'] == 0 and HS['moved'].split('/')[1:] == ['0', '0'] and int(HS['moved'].split('/')[0]) >= 4 and HS['pend5'] == [('fb_haill', None, 1)] and HS['run2'] == 0 and HS['pend6'] == [('fb_haill', True)]),
               'HS2, the migration: every haill delivered when it runs counts as used (used_at = done_at), an open one and a trim do not, and a second run takes nothing from a haill delivered after the first', {k: HS[k] for k in ('run', 'moved', 'pend5', 'run2', 'pend6')})
         # trim, Skippertak and the yard done now given again to a save without them (HS3, 20261111120000_shop_back.sql): shop_pending
@@ -470,15 +473,122 @@ def main():
         print(ok(BK['week'] == [('trim_turbo', True), ('skip', True), ('verft_na', True), ('skip_max', None)] and BK['old'] == [167]),
               'HS3: one delivered just under 7 days ago still comes, with its own done_at; one delivered over 7 days ago does not', {k: BK[k] for k in ('week', 'old')})
         print(ok(BK['yard23'] == ['verft_na'] and BK['yard25'] == []), 'HS3: the yard done now comes again only the first day after it was delivered (23 hours: yes, 25 hours: no)', {k: BK[k] for k in ('yard23', 'yard25')})
-        print(ok(BK['other'] == [] and BK['anon'] and BK['gone'] == [('trim_turbo', True), ('skip_max', None)] and BK['who'] == 'haill_use,shop_pending,shop_refund'),
+        print(ok(BK['other'] == [] and BK['anon'] and BK['gone'] == [('trim_turbo', True), ('skip_max', None)] and BK['who'] == WHO_USED),
               'HS3: never another player\'s, not without a sign-in, and not one that is taken back; shop_pending still keeps the haill that is not used', {k: BK[k] for k in ('other', 'anon', 'gone', 'who')})
+        # The server is the truth for haill and everything bought (HS4, 20261111140000_haill_srv.sql): the pub drawn on the server, the
+        # chapter's haill once, the save's own numbers made into grants once within a cap, the minute a haill was switched on, the
+        # yard credit as a grant, and shop_state with all the game writes over its copy from. The server's game minute is set by
+        # the test (game_min reads a setting), and the file is run again at the end, which puts the real one back
+        H4 = {'sub': 'user_01HS4', 'role': 'authenticated'}; H4b = {'sub': 'user_01HS4b', 'role': 'authenticated'}; Q = {}
+        h4Mig = os.path.join(ROOT, 'supabase', 'migrations', '20261111140000_haill_srv.sql')
+        Q['run0'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', h4Mig).returncode   # (HS2's and HS3's files, run again above, put their own shop_pending back: this one last, as in the real order)
+        # (and the import as 20261112210000_haill_tak.sql has it, after it in the real order; Jonas 12.11.2026, valg 36: «La alle spillere
+        # som har haill beholde det.» A missing file, SQL_TAK=0, shows the checks below red against the cap of HS4's own file)
+        takMig = os.path.join(ROOT, 'supabase', 'migrations', '20261112210000_haill_tak.sql')
+        Q['runTak'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', takMig).returncode if os.environ.get('SQL_TAK') != '0' else 0
+        for w in (H4, H4b): sql("select public.tm_hello('{}')", w, 'authenticated')
+        sql("create or replace function public.game_min() returns double precision language sql stable as $$ select current_setting('test.gm')::double precision $$")
+        gm = lambda m, q, who=H4, role='authenticated', **k: sql("select set_config('test.gm', '%s', false); " % m + q, who, role, **k)
+        js = lambda m, q, who=H4: json.loads(gm(m, "select public.%s" % q, who))
+        # (game hour 0 is 06:00: minute 0 is closed, hour 10 is 16:00 and hour 20 is 02:00 the same evening, hour 34 the next)
+        Q['closed'] = js(0, 'pub_spin()'); Q['r1'] = js(600, 'pub_spin()'); Q['r2'] = js(1200, 'pub_spin()'); Q['r3'] = js(34 * 60, 'pub_spin()'); Q['r4'] = js(1200, 'pub_spin()', H4b)
+        Q['anon'] = [gm(600, "select public.%s" % f, {}, 'anon', expect_err=True)[0] for f in ('pub_spin()', 'ach_haill(1)', "haill_import('{}')", 'haill_on(1, 0)', 'yard_use(1)', 'shop_state()')]
+        sql("delete from public.pub_rounds where player_id = 'user_01HS4'"); sql("delete from public.grants where player_id = 'user_01HS4' and product_id like 'pub\\_%'")
+        Q['wheel'] = dict((r.split(':')[0], int(r.split(':')[1])) for r in sql("select setseed(0.5); select set_config('request.jwt.claims', '%s', false); create temp table tw (k text); do $$ begin for i in 0..399 loop perform set_config('test.gm', (600 + i * 1440)::text, false); insert into tw select public.pub_spin() ->> 'k'; end loop; end $$; select string_agg(k || ':' || n, ',' order by k) from (select k, count(*) n from tw group by k) q" % json.dumps(H4)).split(','))
+        Q['pubg'] = sql("select count(*) filter (where product_id = 'pub_haill') || '/' || count(*) filter (where product_id = 'pub_luksus') || '/' || count(*) filter (where done_at is null or used_at is not null) from public.grants where player_id = 'user_01HS4' and product_id like 'pub\\_%'")
+        Q['pubr'] = sql("select count(*) || '/' || count(grant_id) from public.pub_rounds where player_id = 'user_01HS4'")
+        sql("delete from public.pub_rounds where player_id = 'user_01HS4' and e > 3"); sql("delete from public.grants where player_id = 'user_01HS4'")
+        Q['ach'] = [js(600, 'ach_haill(1)').get('ok'), js(600, 'ach_haill(1)').get('ok'), js(600, 'ach_haill(2)').get('ok'), js(600, 'ach_haill(null)').get('ok')]
+        Q['achg'] = sql("select count(*) || '/' || count(done_at) || '/' || count(used_at) from public.grants where player_id = 'user_01HS4' and product_id = 'ach_haill'")
+        # the import: every haill, luksus and thank-you haill the save has, up to 1 000 of a kind (valg 36, Jonas 12.11.2026); the yard
+        # credit only within what the server delivered into the save before it kept them (used_at = done_at); the haill aboard as used,
+        # never later than the server's minute; once
+        sql("insert into public.grants (player_id, product_id, data, done_at, used_at) select 'user_01HS4', x.p, x.d::jsonb, t.t, t.t from (select now() - interval '8 days' t) t, (values ('fb_haill', '{\"give\":\"haill\",\"type\":\"takk\",\"reward\":true}'), ('haill', '{\"give\":\"haill\",\"type\":\"haill\"}'), ('verft_na', '{\"give\":\"yard\"}')) x(p, d)")
+        Q['imp'] = js(5000, "haill_import('{\"haill\":50,\"luksus\":50,\"takk\":50,\"yard\":5,\"on\":{\"type\":\"luksus\",\"t0\":999999999}}')")
+        Q['imp2'] = js(5000, "haill_import('{\"haill\":50,\"luksus\":50,\"takk\":50,\"yard\":5,\"on\":{\"type\":\"luksus\",\"t0\":1}}')")
+        Q['impg'] = sql("select string_agg(product_id || ':' || n, ',' order by product_id) from (select product_id, count(*) n from public.grants where player_id = 'user_01HS4' and product_id like 'imp\\_%' and used_at is null group by 1) q")
+        Q['impon'] = sql("select product_id || '/' || t0 || '/' || (used_at is not null) from public.grants where player_id = 'user_01HS4' and product_id like 'imp\\_%' and used_at is not null")
+        Q['impbad'] = js(5000, "haill_import('{\"haill\":\"mange\",\"luksus\":-4,\"takk\":1.9,\"yard\":null,\"on\":{\"type\":\"takk\"}}')", H4b)
+        Q['impb'] = sql("select count(*) from public.grants where player_id = 'user_01HS4b' and product_id like 'imp\\_%'")
+        Q['impbig'] = js(5000, "haill_import('{\"haill\":5000,\"luksus\":2}')", {'sub': 'user_01HS4f', 'role': 'authenticated'})
+        # haill_on: the player's own unused haill once, with the minute it was switched on; a minute after the server's own is the server's
+        hq = lambda t: [int(x) for x in sql("select string_agg(id::text, ',' order by id) from public.grants where player_id = 'user_01HS4' and data ->> 'type' = '%s' and used_at is null" % t).split(',')]
+        hh = hq('haill'); tk = hq('takk')
+        Q['on1'] = js(5000, 'haill_on(%d, 4900)' % hh[0]); Q['on1b'] = js(5000, 'haill_on(%d, 4950)' % hh[0]); Q['on2'] = js(5000, 'haill_on(%d, 99999)' % hh[1]); Q['on3'] = js(5000, 'haill_on(%d, null)' % hh[2])
+        Q['ont'] = sql("select string_agg(t0::text, ',' order by id) from public.grants where id in (%d, %d, %d)" % tuple(hh[:3]))
+        Q['onother'] = js(5000, 'haill_on(%d, 4900)' % tk[0], H4b); sql("update public.grants set revoked_at = now() where id = %d" % tk[0]); Q['ongone'] = js(5000, 'haill_on(%d, 4900)' % tk[0]); Q['onnone'] = js(5000, 'haill_on(999999, 4900)')
+        # shop_state: the open grants of the kinds the server is the truth for are delivered by the call (new the first time), a paint
+        # design stays open; the trim and Skippertak of the last 7 days, the yard grants not used, the haill not used; the haill on last
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_q1', 'user_01HS4', 'trim_turbo', 49, 'open', '{\"boat\":\"v1\"}'), ('cs_q2', 'user_01HS4', 'skip', 39, 'open', '{}'), ('cs_q3', 'user_01HS4', 'verft_na', 19, 'open', '{\"boat\":\"v1\"}'), ('cs_q4', 'user_01HS4', 'des_ripe', 29, 'open', '{}'), ('cs_q5', 'user_01HS4', 'trim_pump', 19, 'open', '{\"boat\":\"v1\"}')")
+        for i in range(1, 6): sql("select public.shop_paid('cs_q%d', 'pi_q%d')" % (i, i))
+        sql("insert into public.grants (player_id, product_id, data, done_at) values ('user_01HS4', 'des_lakk', '{\"give\":\"cos\",\"k\":\"lakk\",\"comp\":true}', now())")   # (a design given by the admin as a correction: a grant and no entitlement)
+        qid = {r.split('=')[0]: int(r.split('=')[1]) for r in sql("select string_agg(purchase_id || '=' || id, ',') from public.grants where player_id = 'user_01HS4' and purchase_id is not null").split(',')}
+        st = lambda who=H4: js(5000, 'shop_state()', who); row = lambda S_: sorted((g['product'], bool(g.get('held')), bool(g.get('new')), 'done_at' in g) for g in S_['list'] if g['id'] in qid.values())
+        S1 = st(); S2 = st(); Q['st1'] = row(S1); Q['st2'] = row(S2); Q['stmeta'] = [S1.get('v'), S1.get('t'), S1.get('imp'), S1.get('pub'), S1.get('on'), S1.get('owned')]
+        Q['sthaill'] = sorted(g['product'] for g in S2['list'] if g['data'].get('give') == 'haill')
+        Q['yard'] = [gm(5000, "select public.yard_use(%d)" % qid['cs_q3']) for _ in (0, 1)] + [gm(5000, "select public.yard_use(%d)" % qid['cs_q1']), gm(5000, "select public.yard_use(%d)" % qid['cs_q3'], H4b)]
+        sql("update public.grants set done_at = now() - interval '8 days' where id = %d" % qid['cs_q5']); Q['st8'] = row(st())
+        sql("update public.grants set done_at = now() - interval '91 days' where id = %d" % qid['cs_q5'])
+        Q['st3'] = row(st()); Q['stb'] = [[g for g in st(H4b)['list'] if g['id'] in qid.values()], st(H4b)['on'], st(H4b)['imp']]
+        Q['pend'] = sorted((g['product'], bool(g.get('held'))) for g in json.loads(sql("select public.shop_pending()", H4, 'authenticated')) if g['id'] in qid.values())   # (a page from before HS4)
+        # a guest's grants moved to an account (guest_merge's update of player_id): never past «once per account». Guest c has the
+        # chapter's haill, imported haill and pub haill from two evenings (7 and 8); the account b has had its own chapter haill and
+        # import and a round on evening 7: only the pub haill of evening 8 stays. A new account d gets all of c2's, once
+        for w in ('user_01HS4c', 'user_01HS4c2', 'user_01HS4d'): sql("insert into public.players (id) values ('%s')" % w)
+        js(600, 'ach_haill(1)', H4b); sql("insert into public.pub_rounds (player_id, e, k) values ('user_01HS4b', 7, 'tom')")
+        for w in ('user_01HS4c', 'user_01HS4c2'):
+            sql("insert into public.haill_once (player_id, what) values ('%s', 'ach1'), ('%s', 'import')" % (w, w))
+            sql("insert into public.grants (player_id, product_id, data, done_at) select '%s', pr.id, pr.data, now() from public.products pr where pr.id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % w)
+            sql("insert into public.pub_rounds (player_id, e, k, grant_id) select '%s', case g.product_id when 'pub_haill' then 7 else 8 end, g.data ->> 'type', g.id from public.grants g where g.player_id = '%s' and g.product_id like 'pub\\_%%'" % (w, w))
+        # (only the grants that were moved are read: the account's own pub round earlier in the test is drawn with random() and may be
+        # a luxury haill of its own, which made the line red now and then, steg 44 12.11.2026)
+        mv = lambda a, b: (ids := sql("select coalesce(string_agg(id::text, ','), '0') from public.grants where player_id = '%s'" % a), sql("update public.grants set player_id = '%s' where player_id = '%s'" % (b, a)), sql("select string_agg(product_id || ':' || (revoked_at is null), ',' order by product_id) from public.grants where player_id = '%s' and id in (%s) and product_id in ('ach_haill', 'imp_haill', 'imp_luksus', 'pub_haill', 'pub_luksus', 'fb_haill')" % (b, ids)))[2]
+        Q['mvb'] = mv('user_01HS4c', 'user_01HS4b'); Q['mvd'] = mv('user_01HS4c2', 'user_01HS4d')
+        Q['mvonce'] = sql("select string_agg(what, ',' order by what) from public.haill_once where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4d'") + '/' + sql("select string_agg(e::text, ',' order by e) from public.pub_rounds where player_id = 'user_01HS4b' and e in (7, 8)")
+        Q['mvd2'] = js(5000, 'ach_haill(1)', {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok'), js(5000, "haill_import('{\"haill\":2}')", {'sub': 'user_01HS4d', 'role': 'authenticated'}).get('ok')
+        for w in ('user_01HS4c', 'user_01HS4c2', 'user_01HS4d'): sql("delete from public.players where id = '%s'" % w)
+        Q['share'] = sql("select count(*) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.prosrc ~ '\\m(grants|pub_rounds|haill_once)\\M' and p.proname ~ '^(pos_|land_|lb_|board|top|news|paper|week|season|world_|bygde_)'")
+        # the file itself: the yard grants delivered when it first runs count as used, and a second run takes nothing
+        sql("alter table public.grants drop column t0")
+        sql("insert into public.grants (player_id, product_id, data, done_at) values ('user_01HS4', 'verft_na', '{\"give\":\"yard\",\"mig\":1}', now() - interval '1 hour')")
+        Q['run'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', h4Mig).returncode
+        Q['mig1'] = sql("select count(*) filter (where used_at = done_at) || '/' || count(*) from public.grants where data ->> 'mig' = '1'")
+        sql("insert into public.grants (player_id, product_id, data, done_at) values ('user_01HS4', 'verft_na', '{\"give\":\"yard\",\"mig\":2}', now())")
+        Q['run2'] = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', h4Mig).returncode
+        Q['mig2'] = sql("select count(*) filter (where used_at is null) || '/' || count(*) from public.grants where data ->> 'mig' = '2'")
+        Q['real'] = float(sql("select public.game_min()")) - (datetime.datetime.now(datetime.timezone.utc) - datetime.datetime(2026, 10, 5, 15, tzinfo=datetime.timezone.utc)).total_seconds() / 10
+        for w in ('user_01HS4', 'user_01HS4b'): sql("delete from public.entitlements where player_id = '%s'" % w); sql("delete from public.purchases where player_id = '%s'" % w); sql("delete from public.players where id = '%s'" % w)
+        W = Q['wheel']
+        print(ok(Q['run0'] == 0 and Q['closed'] == {'ok': False, 'why': 'closed', 'e': -1} and Q['r1'].get('ok') is True and Q['r1'].get('e') == 0 and Q['r1'].get('k') in ('tom', 'rykte', 'haill', 'luksus') and Q['r2'] == {'ok': False, 'why': 'had', 'e': 0, 'k': Q['r1']['k']} and Q['r3'].get('ok') is True and Q['r3'].get('e') == 1 and Q['r4'].get('ok') is True and all(Q['anon'])),
+              'HS4: pub_spin gives one round per evening by the server\'s clock (16:00 yes, 02:00 the same evening no and the same answer, the next evening yes, another player yes), none while the pub is closed (06:00), and nothing here without a sign-in', {k: Q[k] for k in ('closed', 'r1', 'r2', 'r3', 'r4', 'anon')})
+        print(ok(sum(W.values()) == 400 and 205 <= W.get('tom', 0) <= 275 and 70 <= W.get('rykte', 0) <= 130 and 28 <= W.get('haill', 0) <= 70 and 2 <= W.get('luksus', 0) <= 26 and Q['pubg'] == '%d/%d/0' % (W.get('haill', 0), W.get('luksus', 0)) and Q['pubr'] == '400/%d' % (W.get('haill', 0) + W.get('luksus', 0))),
+              'HS4: 400 evenings at the pub give the wheel\'s shares (empty 60 %, rumour 25 %, haill 12 %, luksus 3 %), and every haill won is a grant, delivered and not used', {k: Q[k] for k in ('wheel', 'pubg', 'pubr')})
+        print(ok(Q['ach'] == [True, False, False, False] and Q['achg'] == '1/1/0'), 'HS4: ach_haill gives the haill of chapter 2 once per account (true, then false), and nothing for another chapter', {k: Q[k] for k in ('ach', 'achg')})
+        print(ok(Q['runTak'] == 0 and Q['imp'] == {'ok': True, 'haill': 50, 'luksus': 50, 'takk': 50, 'yard': 1, 'on': 'luksus'} and Q['imp2'] == {'ok': False} and Q['impg'] == 'imp_haill:50,imp_luksus:50,imp_takk:50,imp_yard:1' and Q['impon'] == 'imp_luksus/5000/true'
+                 and Q['impbig'] == {'ok': True, 'haill': 1000, 'luksus': 2, 'takk': 0, 'yard': 0}),
+              'HS4 (valg 36): haill_import keeps every haill, luksus and thank-you haill the save has (50 of each, and the luksus aboard as used, never later than the server\'s minute), up to 1 000 of a kind; the yard credit only within what the server delivered (one); only once', {k: Q[k] for k in ('runTak', 'imp', 'imp2', 'impg', 'impon', 'impbig')})
+        print(ok(Q['impbad'] == {'ok': True, 'haill': 0, 'luksus': 0, 'takk': 1, 'yard': 0, 'on': 'takk'} and Q['impb'] == '2'), 'HS4 (valg 36): haill_import with words and a negative number gives nothing of those; a fraction is cut to the whole (1.9: 1) and the thank-you haill aboard is kept, as every haill the save has', {k: Q[k] for k in ('impbad', 'impb')})
+        print(ok(Q['on1'] == {'ok': True} and Q['on1b'] == {'ok': False, 'why': 'used'} and Q['on2'] == {'ok': True} and Q['on3'] == {'ok': True} and Q['ont'] == '4900,5000,5000' and Q['onother'] == {'ok': False, 'why': 'gone'} and Q['ongone'] == {'ok': False, 'why': 'gone'} and Q['onnone'] == {'ok': False, 'why': 'gone'}),
+              'HS4: haill_on takes the player\'s own haill once and keeps the minute it was switched on (4900), never one after the server\'s own (99999 and none: 5000); used before says so, and another player\'s, one taken back and one not there are gone', {k: Q[k] for k in ('on1', 'on1b', 'on2', 'on3', 'ont', 'onother', 'ongone', 'onnone')})
+        print(ok(Q['st1'] == [('des_ripe', False, False, False), ('skip', True, True, True), ('trim_pump', True, True, True), ('trim_turbo', True, True, True), ('verft_na', True, True, True)] and Q['st2'] == [('des_ripe', False, False, False), ('skip', True, False, True), ('trim_pump', True, False, True), ('trim_turbo', True, False, True), ('verft_na', True, False, True)]),
+              'HS4: shop_state delivers the open trim, Skippertak and yard grants itself (new the first time, not the second), and a paint design stays open for shop_done', {k: Q[k] for k in ('st1', 'st2')})
+        print(ok(Q['stmeta'][0] == 4 and Q['stmeta'][1] == 5000 and Q['stmeta'][2] is True and Q['stmeta'][3] == {'e': 3, 'k': Q['stmeta'][3]['k']} and Q['stmeta'][4] == {'id': Q['stmeta'][4]['id'], 'type': 'luksus', 't0': 5000} and Q['stmeta'][5] == ['des_lakk', 'des_ripe'] and {k: Q['sthaill'].count(k) for k in set(Q['sthaill'])} == {'imp_haill': 48, 'imp_luksus': 50, 'imp_takk': 49}),
+              'HS4: shop_state answers the server\'s minute, that the import is done, the last round at the pub, the haill switched on last with its minute, the paint designs the account owns (one bought, one given by a grant alone), and the haill that is not used (never one used or taken back)', {'stmeta': Q['stmeta'], 'sthaill': {k: Q['sthaill'].count(k) for k in set(Q['sthaill'])}})
+        print(ok(Q['yard'] == ['t', 'f', 'f', 'f'] and ('trim_pump', True, False, True) in Q['st8'] and Q['st3'] == [('des_ripe', False, False, False), ('skip', True, False, True), ('trim_turbo', True, False, True)] and Q['stb'][0] == [] and (Q['stb'][1] or {}).get('type') == 'takk' and Q['stb'][2] is True),
+              'HS4: yard_use takes the player\'s own yard grant once (never a trim, never another player\'s), a used one and a trim delivered over 90 days ago are gone from shop_state (one delivered 8 days ago is still there: a long row keeps its end), and another player gets nothing of it', {k: Q[k] for k in ('yard', 'st3', 'stb')})
+        print(ok(Q['mvb'].replace('ach_haill:true,ach_haill:false', 'ach_haill:false,ach_haill:true') in ('ach_haill:false,ach_haill:true,fb_haill:true,imp_haill:false,imp_luksus:false,pub_haill:false,pub_luksus:true', 'ach_haill:false,fb_haill:true,imp_haill:false,imp_luksus:false,pub_haill:false,pub_luksus:true')
+                 and Q['mvd'] == 'ach_haill:true,fb_haill:true,imp_haill:true,imp_luksus:true,pub_haill:true,pub_luksus:true' and Q['mvonce'] == 'ach1,import/7,8/7,8' and Q['mvd2'] == (False, False)),
+              'HS4: a guest\'s grants moved to an account that has had its own are taken back (the chapter\'s haill, the imported ones, a pub haill from an evening the account had a round), the rest stay (a thank-you, a pub haill from another evening); a new account keeps them all, and has then had its once', {k: Q[k] for k in ('mvb', 'mvd', 'mvonce', 'mvd2')})
+        print(ok(Q['pend'] == [('des_ripe', False), ('skip', True), ('trim_turbo', True)] and Q['share'] == '0'), 'HS4: shop_pending answers a page from before HS4 as after HS3, and nothing that shares with other players reads the grants, the pub rounds or the imports', {k: Q[k] for k in ('pend', 'share')})
+        print(ok(Q['run'] == 0 and Q['mig1'] == '1/1' and Q['run2'] == 0 and Q['mig2'] == '1/1' and abs(Q['real']) < 5),
+              'HS4, the migration: a yard grant delivered when it first runs counts as used, a second run takes nothing from one delivered after, and game_min is the world\'s minute (seconds since 05.10.2026 15:00 UTC / 10)', {k: Q[k] for k in ('run', 'mig1', 'run2', 'mig2', 'real')})
         # a paint design (20261007100000_designs.sql): the account owns it after paying (tm_hello's owned), and a refund takes it away
         sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_d1', 'user_01AAA', 'des_ripe', 29, 'open', '{}')")
         sql("select public.shop_paid('cs_d1', 'pi_d1')"); R['dOwn'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['dGive'] = [g['data'].get('give') for g in json.loads(sql("select public.shop_pending()", A, 'authenticated')) if g['product'] == 'des_ripe']
         # Ø6 funn 5 (20261105140000_liv_owned.sql): the others see a paid design on the boat only when the account owns it; the colours,
         # the registration mark and the pennants are free
-        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
+        livA = lambda: (sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul;r:raud;t:blaa;f:SE.rekt;f:LOGO.vimpel;l:abc;m:T.1.LK;p:2;x:-9')", A, 'authenticated'), sql("select liv from public.presence where player_id = 'user_01AAA'"))[1]
         R['livOwn'] = livA()
         sql("select public.shop_refund('pi_d1')"); R['dGone'] = json.loads(sql("select public.tm_hello('{}')", A, 'authenticated')).get('owned')
         R['livGone'] = livA(); sql("select public.pos_put(850, 350, 90, 7, 'sailing', 'Havbris', 'trebat', 'h:gul')", A, 'authenticated')
@@ -499,6 +609,10 @@ def main():
         R['spNow'] = json.loads(sql("select public.sp_now()", {'role': 'anon'}, 'anon'))
         sql("select public.sp_admin_on('p', %s, false)" % plid, AD2, 'authenticated'); R['spOff'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
         sql("select public.sp_admin_on('p', %s, true)" % plid, AD2, 'authenticated'); sql("select public.sp_admin_on('s', %s, false)" % spid, AD2, 'authenticated'); R['spOffS'] = json.loads(sql("select public.sp_now()", A, 'authenticated'))
+        # steg 44 (20261112020000_sp_paint.sql): a paint design's colours, active or not, to anyone; no sponsor, no logo; never another kind
+        pdid = sql("select public.sp_admin_place(%s, 'look', 'paint', '{\"name\": \"Drakt\", \"hull\": \"petrol\", \"ripe\": \"gul\", \"sym\": \"stjerne\", \"site\": \"x\"}')" % spid, AD2, 'authenticated')
+        R['spPaint'] = json.loads(sql("select public.sp_paint(array[%s, %s, 999999]::bigint[])" % (pdid, plid), {'role': 'anon'}, 'anon'))
+        R['spPaintPid'] = pdid
         R['spList'] = json.loads(sql("select public.sp_admin_list()", AD2, 'authenticated')); R['spListPl'] = sql("select public.sp_admin_list()", A, 'authenticated', expect_err=True)
         sql("insert into public.events (player_id, kind, data) values ('user_01AAA', 'sp_view', '{\"pl\": %s, \"imp\": 3, \"sec\": 40}'), ('user_01BBB', 'sp_view', '{\"pl\": %s, \"imp\": 1, \"sec\": 9000}'), ('user_01AAA', 'sp_click', '{\"pl\": %s}')" % (plid, plid, plid))
         R['spRep'] = json.loads(sql("select public.admin_sp_report(30)", AD2, 'authenticated')); R['spRepPl'] = sql("select public.admin_sp_report(30)", A, 'authenticated', expect_err=True)
@@ -666,10 +780,12 @@ def main():
               {'quote': q, 'paid': (R['sPaid1'], R['sPaid2']), 'pending': pd, 'after': R['sAfter'], 'end': R['sEnd']})
         sn = R['spNow']
         print(ok(R['spPl'][0] and R['spAd1'][0] and R['spNoAgr'][0] and R['spBadUrl'][0] and len(sn) == 1 and sn[0]['target'] == 'garnhaler' and sn[0]['sponsor']['name'] == 'Testmerke' and sn[0]['data'].get('model') == 'GH-200'
-                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 1 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
+                 and R['spOff'] == [] and R['spOffS'] == [] and len(R['spList']) == 1 and len(R['spList'][0]['placements']) == 2 and R['spListPl'][0] and R['spRead'][0] and R['spReadAnon'][0] and R['spRepPl'][0] and len(R['spRep']) == 1 and R['spRep'][0]['imp'] == 2 and R['spRep'][0]['sec'] == 640 and R['spRep'][0]['clicks'] == 1 and R['spRep'][0]['sponsor'] == 'Testmerke'),
               'sponsors: only the admin with the second factor adds one, and only with an agreement and an https site; sp_now gives anyone what is active and nothing switched off; no player reads the tables; the report per placement and week (views, seconds capped at 600 a send, clicks) only for the admin',
               {k: R[k] for k in ('spPl', 'spAd1', 'spNoAgr', 'spBadUrl', 'spOff', 'spOffS', 'spListPl', 'spRead', 'spReadAnon')})
         si = (R['spIab'] or [{}])[0]
+        print(ok(R['spPaint'] == {str(R['spPaintPid']): {'name': 'Drakt', 'hull': 'petrol', 'ripe': 'gul'}}),
+              "a partner's paint design: sp_paint gives anyone its colours and name, also when the sponsor is switched off (steg 44: «Fargene blir»), never the mark, the link or another kind", R['spPaint'])
         print(ok(len(R['spIab']) == 1 and si.get('imp') == 2 and si.get('nonview') == 1 and si.get('undet') == 1 and si.get('rendered') == 4 and si.get('measured') == 0.75
                  and abs((si.get('viewable') or 0) - 0.667) < 0.001 and si.get('re') == 3 and si.get('sec') == 14.8 and si.get('med') == 7.0 and si.get('mean') == 7.0 and si.get('players') == 2),
               'the sponsors\' report after IAB 2.0: one viewable impression per session and placement, the three buckets (viewable, not viewable, undetermined), the measured and viewable shares, re-views, and the median and mean seconds of a viewable session', si)
@@ -679,8 +795,8 @@ def main():
               "the logo: put up only once owned, a bad picture refused, the others get it by the world's id; only the admin lists and takes it away, then nobody gets it, the player is told why and may put up another",
               {k: R[k] for k in ('lgV', 'lgRm', 'lgGone', 'lgMine', 'lgAgain', 'lgMine2')})
         print(ok(R['rgA'] == 't' and R['rgB'] == 'f' and R['rgA2'] == 't' and R['rgBad'][0] and R['rgRead'][0]), "one's own registration number: the first player's, refused to another, kept for the first; a bad mark and reading the claims are refused", {k: R[k] for k in ('rgA', 'rgB', 'rgA2')})
-        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2' and R['livGone'] == 'h:gul;m:T.1.LK;p:2'),
-              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark and the pennants always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
+        print(ok(R['livOwn'] == 'h:gul;r:raud;m:T.1.LK;p:2;x:-9' and R['livGone'] == 'h:gul;m:T.1.LK;p:2;x:-9'),
+              "the others see a paid paint design only while the account owns it (bought, not refunded); colours, the registration mark, the pennants and a partner's design (x:<id>, steg 44) always (Ø6 funn 5)", {'own': R['livOwn'], 'gone': R['livGone']})
         print(ok(R['dOwn'] == ['des_ripe'] and R['dGive'] == ['cos'] and R['dGone'] == []), 'a paint design: paid, it is the account\'s on every device (owned) and a grant for the game; a refund takes it away', {'own': R['dOwn'], 'give': R['dGive'], 'gone': R['dGone']})
         print(ok(R['deleted'] == '0/0/0/anon'), 'deleting the account takes the player, the events and the save; the purchase stays without a name for the books', R['deleted'])
         print(ok(R['del2'] == 'user_01DDD/0' and R['del2Anon'] is not None), 'delete_me2 deletes the account and names it (for the sign-in at WorkOS); signed out it is refused', {'del2': R['del2'], 'anon': str(R['del2Anon'])[:60]})
@@ -1353,6 +1469,32 @@ def main():
         print(ok(all(KMP)),
               "Kvotemarkedet: a right and a structure quota in the same auction house as the boats, the value in the band around the takst (quota_ref), the item without who, three listings shared with the boats, a boat not out with her right, bids and buy-now with no delivery fee, not on your own, the settlement (the right's place in the register moved, the structure quota's not), the quota rows only for a game that asks (km), listings_get per kind, the wish told once, the admin's line (KM2)",
               '' if all(KMP) else {'parts': KMP, **KM})
+        # KM5 (20261112130000_km5.sql): the band rommer the highest kmTakst (4.41 times the 2026 takst: the unit 3.153 times × 1.4), Kystposten's
+        # week of quota sales (numbers, never who), the measuring events arriving through tm_batch, and the admin's card
+        K5 = {}; KS5 = {'sub': 'user_01KS5', 'role': 'authenticated'}; sql("select public.tm_hello('{}')", KS5, 'authenticated')
+        t20 = 10.254 * 6.9986 * 260000; R20 = dict(RI, id='h20', st=[])
+        K5['band'] = [err(kput(KS5, 'b1', R20, round(t20 * 4.42), round(t20 * 4.42 * 0.5))), err(kput(KS5, 'b2', R20, round(t20 * 4.6), round(t20 * 4.6 * 0.5))), err(kput(KS5, 'b3', R20, round(t20 * 0.29), round(t20 * 0.29 * 0.5)))]
+        wk = int(sql("select floor(public.world_gh() / 168)::int"))
+        K5['week'] = json.loads(sql("select public.km_week(%d)" % wk, KB1, 'authenticated'))
+        K5['weekOld'] = json.loads(sql("select public.km_week(%d)" % (wk - 3), KB1, 'authenticated'))
+        K5['weekBad'] = [err(sqle("select public.km_week(%d)" % (wk + 1), KB1, 'authenticated')), err(sqle("select public.km_week(%d)" % (wk - 61), KB1, 'authenticated'))]
+        K5['weekAnon'] = sql("select has_function_privilege('anon', 'public.km_week(int)', 'execute')")
+        sql("select public.tm_consent(true, 1990)", KS5, 'authenticated')
+        evs = [{'k': 'km_reg', 't': int(time.time() * 1000), 'd': {'kind': 'right', 'id': 'h14'}}, {'k': 'km_reg', 't': int(time.time() * 1000), 'd': {'kind': 'struct', 'id': 'h20'}},
+               {'k': 'km_put', 't': int(time.time() * 1000), 'd': {'kind': 'right', 'id': 'h14', 'hours': 24, 'pc': 90, 'bn': 0}}, {'k': 'km_move', 't': int(time.time() * 1000), 'd': {'id': 'h9', 'to': 'free', 'from': 'boat'}},
+               {'k': 'mb_put', 't': int(time.time() * 1000), 'd': {'type': 'sjark', 'hours': 24, 'pc': 80, 'bn': 0, 'lic': 'moved'}}]
+        sql("select public.tm_batch('55555555-5555-4555-8555-555555555555', '{}', 10, %s, false, null)" % J(evs), KS5, 'authenticated')
+        A5 = json.loads(sql("select public.admin_km5(8)", AD2, 'authenticated'))
+        K5['ev'] = sorted((e['k'], e['sub'], e['n']) for e in A5['ev']); K5['grp'] = {g['grp']: (g['players'], g['register']) for g in A5['grp']}
+        K5['bid'] = [(b['kind'], b['n'], b['none'], b['h'] is not None) for b in A5['bid']]
+        K5['adminNo'] = sql("select public.admin_km5(8)", KS5, 'authenticated', expect_err=True)[0]
+        K5['who'] = any(k in json.dumps(A5) + json.dumps(K5['week']) for k in ('user_01', 'seller', 'player_id', 'Kvoterederi'))
+        k5 = [K5['band'] == ['ok', 'bad value', 'bad value'], K5['week'].get('n', 0) >= 2 and K5['week'].get('right', 0) >= 1 and K5['week'].get('struct', 0) >= 1 and K5['week'].get('med') is not None,
+              K5['weekOld'] == {'wk': wk - 3, 'n': 0, 'right': 0, 'struct': 0, 'med': None}, K5['weekBad'] == ['bad week', 'bad week'], K5['weekAnon'] == 'f',
+              ('km_reg', 'right', 1) in K5['ev'] and ('km_reg', 'struct', 1) in K5['ev'] and ('km_put', 'right', 1) in K5['ev'] and ('km_move', 'free', 1) in K5['ev'] and ('mb_put', 'moved', 1) in K5['ev'],
+              K5['grp'].get('g11', (0, 0))[1] >= 1 and K5['grp'].get('g15', (0, 0))[1] >= 1 and K5['grp'].get('g11', (0, 0))[0] >= 1, any(b[0] == 'right' and b[3] for b in K5['bid']), K5['adminNo'], not K5['who']]
+        print(ok(all(k5)), 'KM5: the band holds 4.42 × the 2026 takst and not 4.6 or 0.29, km_week gives the week\'s quota sales and the median against the takst (numbers, never who), the events km_reg, km_put, km_move and mb_put arrive and admin_km5 counts them per week and group, the hours to the first bid',
+              '' if all(k5) else {'parts': k5, **K5})
         # the right itself, not only that the call fails (the functions refuse anon by themselves too); and the player's rights stay
         RY['anonNo'] = [sql("select has_function_privilege('anon', 'public.%s', 'execute')" % f) == 'f' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)', 'saves_cash_check()')]
         RY['authYes'] = [sql("select has_function_privilege('authenticated', 'public.%s', 'execute')" % f) == 't' for f in ('guest_claim()', 'guest_merge(text)', 'push_plan(jsonb)', 'admin_cash_flags(int)', 'admin_tur_share(int)')]
@@ -1360,8 +1502,8 @@ def main():
         RY['anonTab'] = [sql("select count(*) from public.%s" % tb, {}, 'anon', expect_err=True)[0] for tb in ('berths', 'cash_flags', 'sponsors', 'sponsor_placements')]
         RY['anonYes'] = sql("select jsonb_typeof(public.sp_now())", {}, 'anon')
         print(ok(RY['err'][0] == RY['err'][1] and RY['err'][0] < 400 and RY['perf'][0] == RY['perf'][1] and RY['perf'][0] < NP and RY['ev'] == 'big={} small={"x": 1}'
-                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
-              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf and sp_now (Ø6 funn 9, 10, 12)", RY)
+                 and RY['bSeen'] == [1, 0] and RY['bTake'] == 'ok' and RY['bBack'] == 'taken' and all(RY['anonNo']) and all(RY['authYes']) and RY['anonList'] == 'sp_now,sp_paint,tm_error,tm_perf' and all(RY['anonTab']) and RY['anonYes'] == 'array'),
+              "without a sign-in the errors and the frame rate stop at a ceiling that grows with the active players; an event's data has a size; a guest's berth gives way to an account and is not shown to it; anon runs only tm_error, tm_perf, sp_now and sp_paint (a paint design's colours, steg 44) (Ø6 funn 9, 10, 12)", RY)
         # Ø16 (20261105160000_rt_ticket.sql): the real-time relay's ticket. Without the secret in Vault it refuses; with it, a ticket of
         # «1.<id>.<guest>.<expiry>.<nonce>.<hmac>» signed with the secret (checked here as the relay checks it), the public id pos_world
         # gives, the guest flag for a guest, 60 s, a new nonce each time; anon cannot ask, nor a player who is not there
@@ -1511,6 +1653,47 @@ def main():
         print(ok(SG['rerun'] == 0 and SG['open0'] is True and SG['get0'] == {'from': None, 'n': 0} and all(SG['deny']) and SG['set']['from'] and SG['new'] is False and SG['newQ'][0] and 'closed' in SG['newQ'][1]
                  and SG['old'] is True and SG['oldQ'] is False and SG['gift'] == '1' and SG['n'] == 1 and SG['adm'] is True and SG['unset'] == {'from': None, 'n': 0} and SG['again'] is True and SG['againQ'] is False),
               'P5: with the switch on an account made after it gets shop:false and no quote, an older one buys as before, the welcome gift is still given; only the admin (aal2) turns it, and off, all buy', SG)
+        # HO3 (20261112200000_hopp.sql): the hop over the rest of a route, bought for the whole real minutes it saves at the ladder's price
+        # (core/06j-hopp.js hopPrice; the same numbers in tests/unit/hopp.test.mjs); the grant has the minutes, the stop and the price (the
+        # purchase's data, as shop-checkout keeps it), shop_state delivers it and answers it while unused, and hop_use takes the player's own
+        # once. (HS4's file ran again above, with its own shop_state: this file again, as in the real order)
+        hoRun = run('psql', '-h', sock, '-U', user, '-d', 'postgres', '-v', 'ON_ERROR_STOP=1', '-q', '-f', os.path.join(ROOT, 'supabase', 'migrations', '20261112200000_hopp.sql'))
+        HO = {'run': hoRun.returncode}; P1 = {'sub': 'user_01HO3', 'role': 'authenticated'}; P2 = {'sub': 'user_01HO3b', 'role': 'authenticated'}
+        GH = {'sub': '9a1c2a3e-0000-4000-8000-0000000000cc', 'role': 'authenticated', 'is_anonymous': True}
+        for w in (P1, P2, GH): sql("select public.tm_hello('{}')", w, 'authenticated')
+        HO['price'] = sql("select string_agg(public.hop_price(m)::text, ',' order by m) from unnest(array[1,6,7,10,59,60,61,80,239,241,286,520,1857,3360]) m")
+        hq = json.loads(sql("select public.shop_quote_hop(27)", P1, 'authenticated')); HO['quote'] = [hq.get('id'), hq.get('price_nok'), hq.get('data')]
+        HO['bad'] = [sql("select public.shop_quote_hop(%s)" % m, P1, 'authenticated', expect_err=True)[0] for m in ('0', '3361', 'null')]
+        hg = sql("select public.shop_quote_hop(27)", GH, 'authenticated', expect_err=True); HO['guest'] = [hg[0], 'guest' in str(hg[1])]
+        HO['anon'] = sql("select public.shop_quote_hop(27)", {}, 'anon', expect_err=True)[0]
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_h1', 'user_01HO3', 'hopp', 20, 'open', '{\"boat\":\"v1\",\"min\":27,\"to\":{\"x\":867.8,\"y\":366.1,\"port\":\"vangshamn\"},\"kr\":20}')")
+        sql("select public.shop_paid('cs_h1', 'pi_h1')"); hid = int(sql("select id from public.grants where purchase_id = 'cs_h1'"))
+        hst = lambda who=P1: [g for g in json.loads(sql("select public.shop_state()", who, 'authenticated'))['list'] if g['id'] == hid]
+        h1 = hst(); h2 = hst(); HO['st'] = [len(h1), h1 and h1[0].get('new'), h1 and h1[0]['data'], len(h2), h2 and h2[0].get('new'), h2 and h2[0].get('held'), hst(P2)]
+        HO['use'] = [sql("select public.hop_use(%d)" % hid, P2, 'authenticated'), sql("select public.hop_use(%d)" % hid, P1, 'authenticated'), sql("select public.hop_use(%d)" % hid, P1, 'authenticated')]
+        HO['after'] = hst(); HO['anonUse'] = sql("select public.hop_use(%d)" % hid, {}, 'anon', expect_err=True)[0]
+        # (the kontroll of HO3: a refund takes back a hop and a «Ferdig nå» delivered and not used, as it does a haill; one used stays)
+        sql("insert into public.purchases (id, player_id, product_id, amount_nok, status, data) values ('cs_h2', 'user_01HO3', 'hopp', 8, 'open', '{\"boat\":\"v1\",\"min\":10,\"to\":{\"x\":1,\"y\":1,\"port\":\"hs:ab12\"},\"kr\":8}'), ('cs_h3', 'user_01HO3', 'verft_na', 19, 'open', '{\"boat\":\"v1\"}')")
+        sql("select public.shop_paid('cs_h2', 'pi_h2')"); sql("select public.shop_paid('cs_h3', 'pi_h3')")
+        rid = {k: int(sql("select id from public.grants where purchase_id = '%s'" % k)) for k in ('cs_h2', 'cs_h3')}
+        # (a hop the game could not make: marked void by the player alone, once; never used after it; listed for the admin only)
+        hv = rid['cs_h2']
+        HO['void'] = [sql("select public.hop_void(%d, 'held no more')" % hv, P2, 'authenticated'), sql("select public.hop_void(%d, 'held no more')" % hv, P1, 'authenticated'),
+                      sql("select public.hop_void(%d, 'again')" % hv, P1, 'authenticated'), sql("select public.hop_use(%d)" % hv, P1, 'authenticated'),
+                      sql("select data ->> 'void' from public.grants where id = %d" % hv)]
+        HO['voidAdm'] = [g.get('session') for g in json.loads(sql("select public.admin_hop_void()", AD2, 'authenticated'))], sql("select public.admin_hop_void()", P1, 'authenticated', expect_err=True)[0]
+        HO['refundHad'] = sorted(g['id'] for g in json.loads(sql("select public.shop_state()", P1, 'authenticated'))['list'] if g['id'] in rid.values() and g.get('held'))
+        for pi in ('pi_h1', 'pi_h2', 'pi_h3'): sql("select public.shop_refund('%s')" % pi)
+        HO['refund'] = [sorted(g['id'] for g in json.loads(sql("select public.shop_state()", P1, 'authenticated'))['list'] if g['id'] in rid.values()),
+                        sql("select count(*) from public.grants where id in (%d, %d) and revoked_at is not null" % (rid['cs_h2'], rid['cs_h3'])),
+                        sql("select (used_at is not null)::text || ',' || (revoked_at is null)::text from public.grants where id = %d" % hid)]
+        for t_ in ('grants', 'purchases', 'players'): sql("delete from public.%s where %s in ('user_01HO3', 'user_01HO3b', '9a1c2a3e-0000-4000-8000-0000000000cc')" % (t_, 'id' if t_ == 'players' else 'player_id'))
+        print(ok(HO['run'] == 0 and HO['price'] == '5,5,5,8,44,45,46,55,135,135,147,205,539,915' and HO['quote'] == ['hopp', 20, {'give': 'hopp', 'min': 27}] and all(HO['bad'])
+                 and HO['guest'] == [True, True] and HO['anon'] and HO['st'][:2] == [1, True] and HO['st'][2] == {'give': 'hopp', 'boat': 'v1', 'min': 27, 'to': {'x': 867.8, 'y': 366.1, 'port': 'vangshamn'}, 'kr': 20}
+                 and HO['st'][3:] == [1, None, True, []] and HO['use'] == ['f', 't', 'f'] and HO['after'] == [] and HO['anonUse']
+                 and HO['refundHad'] == sorted(rid.values()) and HO['refund'] == [[], '2', 'true,true']
+                 and HO['void'] == ['f', 't', 'f', 'f', 'held no more'] and HO['voidAdm'][0] == ['cs_h2'] and HO['voidAdm'][1]),
+              'HO3: hop_price is the ladder (5 kr at least, 75/50/25 øre a minute), shop_quote_hop prices 27 min at 20 kr and refuses 0, 3 361 and no minutes, a guest and anon; the paid grant has the minutes, the stop and the price, shop_state delivers it (new the first time) and answers it while unused, never to another player; hop_use takes the player\'s own once; a refund takes back a hop and a «Ferdig nå» delivered and not used, and leaves a hop used; hop_void marks the player\'s own unused hop once, hop_use refuses it after, and admin_hop_void lists it for the admin only', HO)
         # the load of 5 000 players (plan 5b; KYST_LAST=5000): landings and catches for that many players, then what world_get costs
         NL = int(os.environ.get('KYST_LAST') or 0)
         if NL:

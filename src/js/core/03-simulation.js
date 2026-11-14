@@ -55,6 +55,27 @@ const upPrice = (pc, min) => Math.max(min || 5000, Math.round(VESSELS[S.boat.typ
 // a bigger engine (Jonas 08.10.2026): +10 % and +20 % power, so a tenth or a fifth of the speed at most; it drinks more and the engine
 // service costs more (svc), so it saves nothing the Trim boosts (+50 to +100 %) do. What it gives is a lasting, modest gain.
 const ENGUP = [{p:0.1, pc:0.06, h:12, svc:1.2}, {p:0.2, pc:0.11, h:24, svc:1.5}];
+// the propeller (OPP3 of docs/planer/oppgraderinger.md; Jonas 07.11.2026: «propellene må også gi en reell økning i farten på båten, men
+// ikke så mye at det blir uattraktivt å kjøpe trim-boost for ekte penger», «nivåene burde være fra 10-30% økning», and on the hull speed
+// «Ja, skill på dem som du foreslo»): a better propeller from the yard in three steps, per boat (b.propLv; a save without the field has
+// none), not on an outboard (the skiff has the 90 hp outboard) and not on the ocean vessels. Each step is its whole gain over the boat's
+// own (principle 1): top and cruising speed (pl planing, dp displacement), the burn (fuel, off) and the acceleration (acc); the price a
+// share of the boat's price with a floor (pc, min)
+const PROPUP = [{pl:0.10, dp:0.05, fuel:0.05, acc:0.05, pc:0.02, min:2500, no:'Polert propell med justert stigning', en:'Polished propeller, pitch adjusted'},
+  {pl:0.20, dp:0.10, fuel:0.10, acc:0.10, pc:0.04, min:4000, no:'Ny propell tilpasset båten', en:'A new propeller matched to the boat'},
+  {pl:0.30, dp:0.15, fuel:0.15, acc:0.15, pc:0.07, min:6500, no:'Skreddersydd propell for skrog og motor', en:'A propeller made for her hull and engine'}];
+const propFits = V => !!V && !V.outboard && V.cls !== 'hav';
+const propLvOf = b => b && propFits(VESSELS[b.type || 'skiff']) ? clamp(Math.round(+b.propLv || 0), 0, PROPUP.length) : 0;
+const propSpeed = (st, planing) => st ? (planing ? st.pl : st.dp) : 0;
+// the speed as a sum, never a product (Jonas 07.11.2026, point 7: «Om det står 10% økning feks, så betyr det at økningen er 10% opp fra
+// grunnnivået båten eller utstyret hadde»): the propeller, the yard's engine (speedOfPower − 1) and a trim (T.x − 1) each add their share
+// of the boat's own top speed, so a trim gives the same knots with or without a propeller and «dobbel fart» is double the boat's own.
+// sp: top and cruising speed, acc: acceleration, fuel: the burn's share (+0.4 per share of power, less the propeller's). V: the boat as
+// she is before them (VESSELS with the equipment's boosts), T: the trim on (BOOSTS) or null
+function speedSum(b, V, T){
+  const lv = propLvOf(b), st = lv ? PROPUP[lv - 1] : null, P = powerX(b), eng = b.engLv && !V.outboard ? ENGUP[b.engLv - 1].p : 0, t = T ? T.x - 1 : 0;
+  return {sp:propSpeed(st, V.planing) + (speedOfPower(P, V.planing) - 1) + t, acc:(st ? st.acc : 0) + 0.3 * eng + t, fuel:0.4 * (P - 1) - (st ? st.fuel : 0)};
+}
 const svcCostOf = b => { const V = VESSELS[b.type || 'skiff']; return Math.round(V.svcCost * (b.engLv && !V.outboard ? ENGUP[b.engLv - 1].svc : 1)); };
 // the rest of the yard's upgrades, all about the boat itself (never the fishing gear), each in steps, priced as a share of the boat's
 // price (upPrice) and fitted by what the boat has: cabins, galley and drying room only where there are bunks (berths), the hold and
@@ -172,9 +193,9 @@ function applyVessel(){
   const fx = {}; for (const k in UPGS){ const lv = upgLv(b, k); if (lv && UPGS[k].fit(VESSELS[b.type || 'skiff'])) Object.assign(fx, UPGS[k].steps[lv - 1]); }
   BOAT.fx = fx; if (fx.x) BOAT.fuelCap = Math.round(BOAT.fuelCap * fx.x); if (fx.sea) BOAT.sea *= fx.sea; BOAT.svcCost = svcCostOf(b);
   const V0 = VESSELS[b.type || 'skiff']; BOAT.gutMachine = V0.gutMachine || fx.gut || 0; BOAT.iceMaker = V0.iceMaker || fx.maker || 0;   // the machines: the boat's own, or the yard's (UPGS gut, ice)
-  const P = powerX(b); if (P > 1){ const sx = speedOfPower(P, BOAT.planing);
-    BOAT.vmax *= sx; BOAT.vcruise *= sx; BOAT.fuelK *= 1 + 0.4 * (P - 1); BOAT.accel *= 1 + (b.engLv ? 0.3 * ENGUP[b.engLv - 1].p : 0); BOAT.hp = Math.round(BOAT.hp * P); }
-  const T = canBoost(BOAT) && trimOn(b); if (T){ BOAT.vmax *= T.x; BOAT.vcruise *= T.x; BOAT.accel *= T.x; }
+  // the propeller, the engine and a trim as one sum of the boat's own numbers (speedSum), worked out once
+  const P = powerX(b), T = canBoost(BOAT) && trimOn(b), X = speedSum(b, BOAT, T);
+  BOAT.vmax *= 1 + X.sp; BOAT.vcruise *= 1 + X.sp; BOAT.accel *= 1 + X.acc; BOAT.fuelK *= 1 + X.fuel; if (P > 1) BOAT.hp = Math.round(BOAT.hp * P);
   b.fuel = Math.min(b.fuel, BOAT.fuelCap); b.ice = Math.min(b.ice, BOAT.iceCap);
   speedPin();
 }
@@ -201,7 +222,7 @@ function effortOf(people, jk, hand, per = jigPer()){ return Math.max(0, people -
 function fishEffort(){
   // the people at the rail: those whose chain has them fishing (as if the boat were jigging where it lies)
   const hand = S.boat && S.boat.gear ? JIG.hand : 0, F = workTeam('fiske', 'juksa', 'fishing'), people = F.n, jk = Math.min(S.equip ? S.equip.jukse : 0, people * jigPer());
-  if (S.plan && S.plan.ops && !meAboard()){ const sk = opsSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
+  if (S.plan && S.plan.ops && !meAboard()){ const sk = actingSkipper(); return effortOf(people, jk, hand) * (sk ? sk.skill : 0.8) * 0.9; }
   return effortOf(people, jk, hand) * F.eff;
 }
 // your own share of the effort when you jig by hand at the rail (the jig game takes it over, ui/10-rod-acts.js): 0 when you are not
@@ -504,6 +525,21 @@ const foulSpeed = () => 1 - 0.15 * ((S.boat && S.boat.foul) || 0), foulFuel = ()
 // litres put in at a price keep the tank's average price per litre (b.fuelKrL), which the trip's fuel is priced at
 function fuelUse(b, l){ const u = Math.min(b.fuel, Math.max(0, l)); b.fuel -= u; if (u > 0 && typeof tripOf === 'function') tripOf(b).fuelL += u; return u; }
 function fuelAdd(b, l, kr0){ const f0 = Math.max(0, b.fuel || 0), p0 = b.fuelKrL || fuelPrice(); b.fuel = f0 + l; if (l > 0) b.fuelKrL = (p0 * f0 + (kr0 || 0)) / (f0 + l); }
+// the boat you follow with another step from the yard laid over her (o: {propLv} or {engLv}): her top and cruising speed, and the litres
+// an hour at speed v (knots; her cruising speed now when none is given) in calm water, by the same sum as applyVessel. The yard's cards
+// and «Båten og utstyret» show now and the next step with it; the litres at the same speed are what the propeller saves
+function boatWith(o, v){
+  const b = S.boat, T = canBoost(BOAT) && trimOn(b), X0 = speedSum(b, BOAT, T), X1 = speedSum(Object.assign({}, b, o), BOAT, T), at = v != null ? v : BOAT.vcruise;
+  const vmax = BOAT.vmax / (1 + X0.sp) * (1 + X1.sp), vcruise = BOAT.vcruise / (1 + X0.sp) * (1 + X1.sp), fk = BOAT.fuelK / (1 + X0.fuel) * (1 + X1.fuel);
+  const now = fuelLph(at, 0), lph = now / (fuelBase(at, BOAT.vmax, BOAT.planing) * BOAT.fuelK) * fuelBase(at, vmax, BOAT.planing) * fk;
+  return {vmax, vcruise, lph, at};
+}
+// the top speed with trim k on the boat you follow, instead of the one on (or none): her own speed times one plus the sum with that trim
+// (speedSum). The Trim app's «Toppfart med den» (ui/phone/06-render.js trim) asks this, so what it promises is what the trim gives
+function trimVmax(k){
+  const b = S.boat, T0 = canBoost(BOAT) && trimOn(b), X0 = speedSum(b, BOAT, T0), X1 = speedSum(b, BOAT, BOOSTS[k] || null);
+  return BOAT.vmax / (1 + X0.sp) * (1 + X1.sp);
+}
 function fuelLph(v, W){ const base = fuelBase(v, BOAT.vmax, BOAT.planing); return base * BOAT.fuelK * (1 + 0.015 * W) * Math.pow(boatTons() / boatTons0(), 2 / 3) * foulFuel() * ((typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? 1.5 : 1); }
 function speedCap(hs, cb = 1){ const v = BOAT.vmax * clamp(1 - (hs - 0.3) * BOAT.sea * cb, 0.2, 1) * loadF() * foulSpeed() * (typeof hullSpeed === 'function' ? hullSpeed() : 1); return (typeof turTowing === 'function' && turTowing()) || (typeof ptowTowing === 'function' && ptowTowing()) ? Math.min(v, TUR_TOWV) : v; }   // with a boat in tow (09g-turer.js)
 
@@ -703,8 +739,14 @@ function stockAt(p, sp, H){
   if (!S || !S.stock) return b; let v = 0; for (const [k, w] of stockW(p)) v += stkGet(S.stock, k) * w; return b * v;
 }
 // npc: the local fleet's take (stockHour), which every game works out for itself; what the player's own boats take is also kept for
-// the other players (the shared world V2)
+// the other players (the shared world V2).
+// The haill's extra fish is not the sea's (step 103, Jonas 12.11.2026, «Bare bestanden»: «Haill-fisken trekkes ikke fra ruta, slik den
+// garanterte første fangsten gjør i dag. Kjøperen får det samme som før»): every player's catch that comes here was multiplied by
+// luck(sp) where it was taken (fish() in 05-vessels.js, the jig game's bites in ui/10-rod-acts.js, soakHour in 10-gear.js with the
+// fish in the crab pots, snoSoak in 10d-snokrabbe.js, all in the same minute or hour as this, so luck reads the same), and the stock, the layers of their own and the cells that go to the others (wq().c) give only
+// the catch without it. A new caller whose catch has no luck in it passes npc or divides by nothing; tests/unit/haillbestand.test.mjs
 function takeStock(p, kg, sp, npc){
+  if (!npc) kg /= luck(sp);
   // (a species with a layer of its own first: the Greenland halibut, and the snow crab with stkK, H3a)
   if (sp && SPECIES[sp].stk){ const n = SPECIES[sp].stk; if (!S[n]) S[n] = {}; const k = stockIdx(p); stkSet(S[n], k, Math.max(0.1, stkGet(S[n], k) - kg / (STK.K * (SPECIES[sp].stkK || 0.4)))); return; }
   if (sp && SPECIES[sp].shell){ if (!S.cstk) S.cstk = {}; const k = stockIdx(p); stkSet(S.cstk, k, Math.max(0.1, stkGet(S.cstk, k) - kg / (STK.K * 0.25))); return; }
@@ -762,7 +804,7 @@ const SST = [3.6,3.1,3.2,3.9,5.6,8.2,10.8,11.4,9.8,7.8,6.0,4.6];
 // where a harbour unit stands (07-harbours.js) its quay is dry and its basin dredged
 // the depth below chart datum (m): the tiles' depth where they have it, else the sea floor offshore from the core, else the model
 // (openness and the distance to the shore)
-function depthF(p){ return unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) && depthHas(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p)); }
+function depthF(p){ return siteDredge(p, unitDredge(p, isLand(p) ? 0 : DEPTH && mapSimAt(p) && depthHas(p) ? Math.max(0.8, tileDepth(p, depthWater(p))) : offDepth(p))); }   // (the rorbuer's and the naust's berths: siteDredge, 07-harbours.js)
 // whether the four cells depthWater reads at p all lie in blocks some pack has: at a tile's seaward edge the next cell's block can be
 // one no pack covers (open sea), and that is the model's water, not an error (Autonav over open sea threw «depth block has no
 // pack», 08.10.2026). A block a pack has but is not loaded yet still throws, as it should.
@@ -856,8 +898,9 @@ function yearH(H){ return gDate(H).getUTCFullYear(); }
 function quotaState(){ const y = yearH(S.t / 60); if (!S.quota || S.quota.y !== y){ if (S.quota) snoFlexNewYear(S.quota, y); S.quota = {y, torsk:0, hyse:0, sei:0, snokrabbe:0, snoTq:0, ffW:-1, ffTot:0, ffCod:0, conf:0, confKr:0, byCod:0}; } if (S.quota.snokrabbe == null) S.quota.snokrabbe = 0; if (S.quota.snoTq == null) S.quota.snoTq = 0; return S.quota; }
 // Vessels for sale with a closed-group right (deltakeradgang), by quota length (hjemmelslengde). The quotas are the year's (licQ in
 // 03d-quota.js): cod as a fixed vessel quota, haddock and saithe as [maximum, guaranteed] kg for the boat's largest length. The price
-// is the boat plus the cod quota at KPK kr a kg. KPK is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in
-// 2025, about 270 kr/kg; no source publishes quota prices.
+// is the boat plus the cod quota at the quota price now (kpkAt in 03d-quota.js, KM5: it lives with the cod price and the quota outlook,
+// 0.7–1.4 times KPK). KPK, the 2026 price, is an estimate: Hepsøfjord (10.98 m, two quota sets) sold for 17.5 million in 2025, about
+// 270 kr/kg; no source publishes quota prices.
 const KPK = 260;
 const LIC_OFFERS = [
   {id:'u7', ves:'trebat', no:'Gammel tresnekke med hjemmel under 7 m', en:'Old wooden snekke with a right under 7 m'},
@@ -871,7 +914,8 @@ const LIC_OFFERS = [
   {id:'h14', ves:'kyst15', no:'Kystbåt 14,99 m med hjemmel 14–14,9 m', en:'14.99 m coastal vessel with a right of 14–14.9 m'},
   {id:'h20', ves:'kyst21', no:'Eldre kystbåt 21 m med hjemmel 20–20,9 m', en:'Older 21 m coastal vessel with a right of 20–20.9 m'}
 ];
-function licValue(l){ return l ? Math.round(licQ(l).torsk * KPK) : 0; }
+// a right's value at H (now by default): its quota at the quota price then; what it was bought at stays in l.kpk
+function licValue(l, H){ return l ? Math.round(licQ(l, H).torsk * kpkAt(H)) : 0; }
 // blad B in the fishermen's register, simplified. Deltakerloven § 6 asks the buyer of a closed-group vessel to have fished commercially
 // in at least three of the last five years, and blad B (fishing as the main occupation) is the usual proof. Here: 10 landing days with
 // you aboard and 1 G of first-hand value (G from 1 May 2026: 136 549 kr, nav.no/grunnbelopet)
@@ -1247,7 +1291,24 @@ function haillCap(){ return 1 + haillBoost(); }
 // went into S.haillInv (a page from before HS2, or a server from before it), which must never be counted again from the server.
 function haillInit(){ if (!S.haillInv) S.haillInv = {haill:0, luksus:0};
   if (!S.haillSrv){ S.haillSrv = []; S.haillOld = (S.shopGiven || []).slice(); }
-  if (!S.haillUsed) S.haillUsed = []; if (!S.haillQ) S.haillQ = []; if (!S.haillOld) S.haillOld = []; }
+  if (!S.haillUsed) S.haillUsed = []; if (!S.haillQ) S.haillQ = []; if (!S.haillOld) S.haillOld = []; if (!S.haillT) S.haillT = {}; }
+// The haill aboard when the server has answered (HS4, 11.11.2026, docs/planer/haill-saldo.md: the server is the truth, the save only a
+// copy; ui/10i-shop.js srvApply). loc: the one in the save; srv: the haill the server has as switched on last ({id, type, t0}, t0 in
+// the game's own minutes) or null; wait: the server is not told of loc yet (switched on with no network, V1 A), so loc stands until
+// it has answered. Else it is the server's, whatever the save says: one the server does not know is gone, and so is one whose
+// minute was moved. (One that has run out is kept as it is: it gives nothing, haillBoost)
+function haillFromSrv(loc, srv, wait){
+  if (wait && loc) return loc;
+  if (srv && HAILL[srv.type] && typeof srv.t0 === 'number' && isFinite(srv.t0)) return {type:srv.type, t0:srv.t0, how:'srv', id:srv.id};
+  return null;
+}
+// A minute on the server's clock as the game's own, and back (srvNow: the server's minute in the same answer). On the one clock they
+// are the same minute; without it (a local test server, its own clock from 0) only the age is kept
+function srvToT(m, srvNow, t, world){ return world ? m : t - (srvNow - m); }
+function tToSrv(m, srvNow, t, world){ return world ? m : srvNow - (t - m); }
+// The trim on one boat, or the Skippertak, as the server's grants say (HS4): every one delivered, in that order, as if each came on
+// when it was delivered (boostBack from nothing), and null when the end has passed. What the save says does not count
+function boostSrv(list, stack, now){ const c = boostBack(null, (list || []).slice().sort((a, b) => a.at - b.at), stack); return c && c.until > now ? c : null; }
 // the server's unused haill as the copy: the grants that are haill of a kind the game knows, none of the used ids, each once, oldest first
 function haillMirror(list, used){ const seen = new Set(used || []), out = [];
   for (const g of list || []){ const d = (g && g.data) || {}; if (!g || g.id == null || seen.has(g.id) || d.give !== 'haill' || !HAILL[d.type]) continue; seen.add(g.id); out.push({id:g.id, type:d.type}); }
@@ -1263,11 +1324,13 @@ function giveHaill(type, how, id){
   else { const inv = S.haillInv || (S.haillInv = {haill:0, luksus:0}); inv[type] = (inv[type] || 0) + 1; }
   log('Ny ' + HAILL[type].no.toLowerCase() + ' i beholdningen. Aktiver den i Haill-appen når du vil.', 'New ' + HAILL[type].en.toLowerCase() + ' in store. Switch it on in the Luck app when you like.'); }
 // the game's own first (it can be lost with the save, the server's cannot), else the oldest from the server: on at once, and the server told
-function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv';
+function useHaill(type){ const inv = S.haillInv || {}; let how = 'inv', hid = null;
   if (inv[type] > 0) inv[type]--;
   else { const srv = S.haillSrv || [], u = S.haillUsed || (S.haillUsed = []), i = srv.findIndex(x => x.type === type && !u.includes(x.id)); if (i < 0) return false;
-    const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; }
-  S.haill = {type, t0:boostT(), how}; log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
+    const id = srv.splice(i, 1)[0].id; u.push(id); if (u.length > 200) u.splice(0, u.length - 200); (S.haillQ || (S.haillQ = [])).push(id); how = 'srv'; hid = id; }
+  // (the minute goes to the server with the id, HS4 haill_on)
+  S.haill = {type, t0:boostT(), how}; if (hid != null){ S.haill.id = hid; (S.haillT || (S.haillT = {}))[hid] = S.haill.t0; }
+  log(HAILL[type].no + ' er aktivert.', HAILL[type].en + ' is switched on.');
   if (how === 'srv' && typeof haillTell === 'function') haillTell(true);
   return true; }
 // the pub: one round per evening between 15:00 and 03:00, NOK 1000

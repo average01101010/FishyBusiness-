@@ -18,9 +18,14 @@ const HIND = {C:250, idx:null, key:'', list:[], stamp:0, ctx:null, br:new WeakMa
 // how high the boat stands over the water (m; an estimate from her length: a 7 m snekke 2.5 m, a 15 m sjark 5 m, a 28 m ocean boat
 // 10 m), and 1 m for the tide and the sea
 const obsAir = () => Math.min(16, Math.max(2, (BOAT.len || 8) * 0.35)) + 1;
-// how near a leg may pass (m): half the boat's beam and a margin
-const obsClr = () => (BOAT.beam || 3) / 2 + 6;
-const obsMarkR = {M:3, m:1, P:1, D:0.5, L:0.5, B:1, C:1, S:0.5, K:1.5};
+// how near a leg may pass (m): half the boat's beam and a margin, which grows with her length (13.11.2026, tests/allesteder.py: the 21 m
+// coastal vessel on Autonav cut the turn under the bridge at Reine and by a mark at Bøvågen and struck them at 3-5 knots with 6 m; a long
+// boat swings wider off the line in a turn)
+const obsClr = () => HIND.clrMin ? (BOAT.beam || 3) / 2 + 2 : (BOAT.beam || 3) / 2 + Math.max(6, (BOAT.len || 8) * 0.5);
+// a way round with the full margin first, and where there is none (a narrow lead with marks on both sides: Bøvågen, 13.11.2026, where the
+// leg was left passing 4 m from a mark and she struck it), one with two metres beside her half beam; null when neither is found
+function obsDetourAny(a, b){ let d = obsDetour(a, b); if (d) return d; HIND.clrMin = true; try { d = obsDetour(a, b); } finally { HIND.clrMin = false; } return d; }
+const obsMarkR = {M:3, m:1, P:1, D:0.5, L:0.5, B:1, C:1, S:0.5, K:1.5, I:1, i:0.5, A:1, a:0.5, Y:1, y:0.5};   // (I, A, Y and their beacons: Ø13 K3, 01e-marks.js)
 // a bridge's piers and deck pieces (as bridgeInto builds them), worked out once per bridge
 function obsBridge(br){
   let o = HIND.br.get(br); if (o) return o;
@@ -43,6 +48,22 @@ function obsBridge(br){
   }
   HIND.br.set(br, o); return o;
 }
+// A fixed sea mark on a bridge: a bridge's own lights and the signs of the passage under it (Puddefjordsbroen in Bergen has a red, a
+// white and a green light on each side, ten metres apart across the passage). OpenStreetMap has them on the deck's edge, 1.5 to 3.5 m
+// outside the deck as bridgeInto draws it, so they stood as posts in the water across the passage, and a boat on Autonav ran into them
+// (tilbakemelding #6 fra testutgaven, 13.11.2026). One within 4 m of a deck's edge hangs on the bridge: no post in the water, nothing
+// to steer round or run into (the bridge's piers and deck are), and its light hangs under the deck (06-buildings-lights.js lightY). The
+// lighthouses and cairns stand on land and the buoys float; they stay. The marks stay for the fairway's sides (05e-sjovei.js
+// farvWrongSide) and the chart
+const MK_HUNG = new Set(['m', 'L', 'D', 'S', 'i', 'a', 'y']);   // (not P: a pile stands in the sea, by a bridge's pier too)
+const markCell = mk => Math.floor(mk[0] * 1000 / HIND.C) * 1048576 + Math.floor(mk[1] * 1000 / HIND.C);
+// the deck piece among L (a cell of the index; obsBridge's pieces have r = half the deck and 0.4 m) within 4 m of whose edge the point
+// x, z (m) is, the highest where two are; or null
+function deckAt(L, x, z){ let b = null; if (L) for (const o of L) if (o.t === 2 && obsDist(o, x, z, x, z) < 3.6 && (!b || o.under > b.under)) b = o; return b; }
+const markOnDeck = (L, mk) => MK_HUNG.has(mk[2]) && !!deckAt(L, mk[0] * 1000, mk[1] * 1000);
+const markOnBridge = mk => markOnDeck(obsIndex().get(markCell(mk)), mk);
+// the deck piece a light at x, y (km) hangs on, or null where it is on no bridge
+const bridgeDeckAt = (x, y) => deckAt(obsIndex().get(markCell([x, y])), x * 1000, y * 1000);
 // everything there is now, in a grid of 250 m cells (each thing in every cell within 40 m of it)
 function obsIndex(){
   const nk = S.naust && S.naust.o ? S.naust.o.join(',') : '', key = VEC.ver + '|' + MARKS.ver + '|' + nk + '|' + (RORBU.ver || 0) + '|' + FDOCK.ver;
@@ -71,7 +92,7 @@ function obsIndex(){
       put({t:1, x:d.o[0] + d.n[0] * d.s0 / 2, z:d.o[1] + d.n[1] * d.s0 / 2, l:d.s0 / 2, w:0.8, ux:d.n[0], uz:d.n[1], why:'dock'}); }
     if (h.moorVer === MOOR.ver) for (const b of h.boats) if (b.moored && b.moored.buoy) put({t:0, x:b.moored.buoy.x * 1000, z:b.moored.buoy.y * 1000, r:b.L + MOOR.PEN, why:'buoy'});
   }
-  const mark = mk => { const r = obsMarkR[mk[2]]; if (r) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
+  const mark = mk => { const r = obsMarkR[mk[2]]; if (r && !markOnDeck(idx.get(markCell(mk)), mk)) put({t:0, x:mk[0] * 1000, z:mk[1] * 1000, r, why:'mark'}); };
   SEAMARKS.marks.forEach(mark); for (const t of MARKS.tiles.values()) if (t) t.marks.forEach(mark);   // and the coast's (01e-marks.js)
   // the wind turbines that stand in the sea (the floating ones off Karmøy, a few on skerries; tools/vind/vind.py): the tower and its
   // foundation (view3d/17d-vind.js draws it 0.045 x the hub across at the foot, the ring 0.11)
@@ -133,6 +154,9 @@ function obsRock(a, b){
 }
 function obsSafe(a, b, ref){
   const sd = safeDepth(), h = legHazardMemo(a, b, sd);
+  // (the second try round a thing, obsDetourAny: a leg deep enough for the boat and 8 m from rocks will do, where none as good as the
+  // drawn leg goes round it; that leg ran over the mark)
+  if (HIND.clrMin) return h.minD >= Math.min(sd, leiaLim()) - 0.2 && (h.rocks === 0 || obsRock(a, b) >= 0.008);
   if (h.minD < Math.min(sd, ref ? ref.minD : sd) - 0.2) return false;
   if (h.rocks === 0) return true;
   if (!ref || !ref.rocks) return false;
@@ -149,7 +173,16 @@ function obsWays(o, a, b){
     let s0 = null; const cut = [];
     for (const d of B.deck){ if (d.under >= air){ if (s0 === null) s0 = d.s0; } else if (s0 !== null){ cut.push([s0, d.s0]); s0 = null; } }
     if (s0 !== null) cut.push([s0, B.tot]);
-    for (const [c0, c1] of cut){ let p = c0; const ps = B.piers.filter(q => q.s > c0 && q.s < c1).map(q => q.s).sort((x, y) => x - y);
+    // and the piers of a bridge beside it, put onto this one's length: a road's two carriageways are often two bridges side by side,
+    // each with its piers every 70 m from its own end (bridgeInto), so the middle of a gap in one stood behind a pier of the other, and
+    // the way under was never clear (Puddefjordsbroen in Bergen, 13 m apart: Autonav sailed on straight at a pier and a light,
+    // tilbakemelding #6 fra testutgaven)
+    const side = [], idx = obsIndex(), C = HIND.C, ox = o.t === 2 ? (o.ax + o.bx) / 2 : o.x, oz = o.t === 2 ? (o.az + o.bz) / 2 : o.z, seen = new Set();
+    for (let i = Math.floor(ox / C) - 1; i <= Math.floor(ox / C) + 1; i++) for (let j = Math.floor(oz / C) - 1; j <= Math.floor(oz / C) + 1; j++) for (const q of idx.get(i * 1048576 + j) || []){
+      if (q.t !== 0 || !q.B || q.B === B || seen.has(q)) continue; seen.add(q); let bd = Infinity, bs = 0, bp = 0;
+      for (const d of B.deck){ const L = Math.hypot(d.bx - d.ax, d.bz - d.az) || 1, u = clamp(((q.x - d.ax) * d.ux + (q.z - d.az) * d.uz) / L, 0, 1), dd = Math.hypot(q.x - d.ax - (d.bx - d.ax) * u, q.z - d.az - (d.bz - d.az) * u); if (dd < bd){ bd = dd; bs = d.s0 + (d.s1 - d.s0) * u; bp = Math.abs(q.ux * d.ux + q.uz * d.uz); } }
+      if (bd < 30 && bp > 0.94) side.push(bs); }   // (alongside: within 30 m of it and no more than 20° off its line)
+    for (const [c0, c1] of cut){ let p = c0; const ps = B.piers.map(q => q.s).concat(side).filter(s => s > c0 && s < c1).sort((x, y) => x - y);
       for (const s of ps.concat([c1])){ const e0 = p + (p === c0 ? need : 1.5 + need), e1 = s - (s === c1 ? need : 1.5 + need); if (e1 > e0) gaps.push((e0 + e1) / 2); p = s; } }
     const lx = bx - ax, lz = bz - az, LL = Math.hypot(lx, lz) || 1;
     for (const s of gaps){
@@ -157,8 +190,12 @@ function obsWays(o, a, b){
       const u = (s - d.s0) / Math.max(0.01, d.s1 - d.s0), mx = d.ax + (d.bx - d.ax) * u, mz = d.az + (d.bz - d.az) * u, nx = -d.uz, nz = d.ux, sd = (ax - mx) * nx + (az - mz) * nz >= 0 ? 1 : -1;
       const p1 = km(mx + nx * D * sd, mz + nz * D * sd), p2 = km(mx - nx * D * sd, mz - nz * D * sd);
       out.push([p1, p2]);
-      // and back onto the leg itself a little beyond the bridge (and off it a little before), so the way on is the leg's own
-      const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25) / LL, on = t => km(ax + lx * t, az + lz * t);
+      // and back onto the leg itself beyond the bridge (and off it before), so the way on is the leg's own: as far along as the gap's
+      // middle is off the leg two and a half times, so she steps over to it at 20 degrees or less (Karmsundbrua, 14.11.2026, steg 126:
+      // the 21 m coastal vessel was given a way out 24 m to the side and back over 25 m along, turned at right angles, and backed and
+      // filled before the bridge for good)
+      const off = Math.abs((mx - ax) * lz - (mz - az) * lx) / LL;
+      const u0 = ((mx - ax) * lx + (mz - az) * lz) / (LL * LL), du = (D + 25 + 2.5 * off) / LL, on = t => km(ax + lx * t, az + lz * t);
       if (u0 + du < 0.97) out.push([p1, p2, on(u0 + du)]);
       if (u0 + du < 0.97 && u0 - du > 0.03) out.push([on(u0 - du), p1, p2, on(u0 + du)]);
     }
@@ -172,7 +209,20 @@ function obsWays(o, a, b){
     for (let i = 0; i < 4; i++){ out.push([km(K[i][0], K[i][1])]); out.push([km(K[i][0], K[i][1]), km(K[(i + 1) % 4][0], K[(i + 1) % 4][1])]); out.push([km(K[(i + 1) % 4][0], K[(i + 1) % 4][1]), km(K[i][0], K[i][1])]); }
   }
   const len = w => { let s = dist(a, w[0]); for (let i = 1; i < w.length; i++) s += dist(w[i - 1], w[i]); return s + dist(w[w.length - 1], b); };
-  return out.filter(w => w.every(p => !isLand(p))).sort((x, y) => len(x) - len(y)).slice(0, 9);
+  // a way she cannot turn through comes last: a corner needs her radius times tan(half the turn) of each leg beside it, and a leg
+  // between two corners both their shares (obsTurnable; a sharper way is still better than none)
+  return out.filter(w => w.every(p => !isLand(p))).map(w => [w, len(w) + (obsTurnable(a, w, b) ? 0 : 1e3)]).sort((x, y) => x[1] - y[1]).slice(0, 9).map(x => x[0]);
+}
+// can she turn through a, the points w, b (and pre, the point she comes to a from, when there is one): a corner needs of each leg beside
+// it her radius times tan(half the turn) and half her length for the wheel to go over, and a leg between two corners both their shares
+// (her radius taken as two and a half times her length: the 21 m coastal vessel turns on 47-54 m, dynCal)
+function obsTurnable(a, w, b, pre){
+  const Lk = (BOAT.len || 8) / 1000, R = 2.5 * Lk, q = (pre ? [pre] : []).concat([a], w, [b]); let prev = 0;
+  for (let i = 1; i < q.length; i++){ const l = dist(q[i - 1], q[i]); let nxt = 0;
+    if (i < q.length - 1){ const ux = q[i].x - q[i - 1].x, uy = q[i].y - q[i - 1].y, vx = q[i + 1].x - q[i].x, vy = q[i + 1].y - q[i].y, n = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+      const th = n > 0 ? Math.min(2.6, Math.acos(clamp((ux * vx + uy * vy) / n, -1, 1))) : 0; nxt = th > 0.15 ? R * Math.tan(th / 2) + 0.5 * Lk : 0; }
+    if (prev + nxt > l + 1e-6 && !(pre && i === 1)) return false; prev = nxt; }
+  return true;
 }
 // the points to put between a and b so every leg keeps clear of land and of the things (depth: how many things in a row it goes
 // round); [] when a-b is clear already, null when no way was found
@@ -190,9 +240,27 @@ function obsDetour(a, b, depth = 3, ref){
   return null;
 }
 // a route's waypoints (after a) with the detours put in; a leg with no way round is left as it was
+// (a way round she cannot turn through, obsTurnable, where the route's own points stand close by the thing: the way round from the point
+// before to the one after instead, skipping up to two plain points (not a stop), and no worse than the legs it stands in for, as deep
+// and as far from rocks as the worst of them. Bokn and Kopervik, 14.11.2026, tests/allesteder.py, steg 126: the route's points 100 m
+// apart with a mark or a bridge's pier between them, and the way round a zigzag of 35-40 m legs that the 21 m coastal vessel ran
+// through wide, onto the mark)
 function obsRoute(a, wps){
   const out = []; let p = a;
-  for (const q of wps){ const d = obsClear(p, q) ? [] : obsDetour(p, q); if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true})); out.push(q); p = q; }
+  for (let i = 0; i < wps.length; i++){ const q = wps[i];
+    if (obsClear(p, q)){ out.push(q); p = q; continue; }
+    const pre = out.length > 1 ? out[out.length - 2] : out.length ? a : null;
+    let d = obsDetourAny(p, q), k = i;
+    if (!d || !obsTurnable(p, d, q, pre)) for (let j = i + 1; j <= Math.min(i + 2, wps.length - 1) && !wpStop(wps[j - 1]); j++){
+      const sd = safeDepth(), legs = [[p, wps[i]]]; for (let m = i + 1; m <= j; m++) legs.push([wps[m - 1], wps[m]]);
+      const ref = {minD:Infinity, rocks:0, rock:Infinity, a:p, b:wps[j]};
+      for (const [u, v] of legs){ const h = legHazardMemo(u, v, sd); ref.minD = Math.min(ref.minD, h.minD); if (h.rocks){ ref.rocks = Math.max(ref.rocks, h.rocks); ref.rock = Math.min(ref.rock, obsRock(u, v)); } }
+      if (!ref.rocks) ref.rock = undefined;
+      let d2 = null; try { d2 = obsDetour(p, wps[j], 3, ref); if (!d2){ HIND.clrMin = true; try { d2 = obsDetour(p, wps[j], 3, ref); } finally { HIND.clrMin = false; } } } catch (e){ d2 = null; }
+      if (d2 && obsTurnable(p, d2, wps[j], pre)){ d = d2; k = j; break; } }
+    if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true}));
+    out.push(wps[k]); p = wps[k]; i = k;
+  }
   return out;
 }
 // the coast's packs along a way (km points), and the tiles decoded: a route is checked against what is there, so the packs come
@@ -219,7 +287,7 @@ function obsSail(pl, b){
   const w = pl.wps[pl.idx], ctx = HIND.ctx; HIND.ctx = {free:[[b.pos.x * 1000, b.pos.y * 1000]].concat(w.port ? [[w.x * 1000, w.y * 1000]] : []), freeR:40};
   try {
     if (obsClear(b.pos, w)) return;
-    const d = obsDetour(b.pos, w); if (!d || !d.length) return;
+    const d = obsDetourAny(b.pos, w); if (!d || !d.length) return;
     pl.wps.splice(pl.idx, 0, ...d.map(p => ({x:p.x, y:p.y, port:null, fish:0, obs:true}))); if (pl.unsafe) pl.unsafe.splice(pl.idx, 0, ...d.map(() => false)); pl.obsK = key();
   } finally { HIND.ctx = ctx; }
 }

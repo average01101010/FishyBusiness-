@@ -2,7 +2,7 @@
 // the app, a word in the game when one comes, and the stories to and from the cloud (supabase/migrations/20261007170000_news.sql) ----------
 const PRESS_KIND = {boat:['Båtkjøp', 'Boats'], name:['Båtdåp', 'Christening'], aground:['Ulykke', 'Accident'], rescue:['Redning', 'Rescue'], salv:['Berging', 'Salvage'],
   foto:['Fyr', 'Lighthouses'], fish:['Fangst', 'Catch'], fs:['Folk', 'People'], ach:['Folk', 'People'], as:['Næring', 'Business'], tur:['Fiske', 'Fishing'], kvote:['Næring', 'Business'], top:['Toppliste', 'Leaderboard'], land:['Landing', 'Landings'], pris:['Marked', 'Market'], skrei:['Fangst', 'Catch'], gen:['Nyheter', 'News'], annonse:['Annonse', 'Advertisement'],
-  bygde:['Bygdekamp', 'Village contest'], lag:['Fiskarlag', 'Fishing club'], kv:['Kystvakt', 'Coast guard']};
+  bygde:['Bygdekamp', 'Village contest'], lag:['Fiskarlag', 'Fishing club'], kv:['Kystvakt', 'Coast guard'], kvotepris:['Marked', 'Market']};
 // a kind or field the table does not have falls back to the news label, so one unknown story never stops the paper
 const pressL = (s, k) => (s[k] || PRESS_KIND.gen)[S.lang === 'en' ? 1 : 0];
 function pressImg(s, small){
@@ -60,6 +60,7 @@ async function pressFetch(force){
       const L0 = PRESS.land[0]; if (L0 && L0.me && !PRESS.told['l' + L0.gh]){ PRESS.told['l' + L0.gh] = 1; const s = pressLand(false)[0]; if (s){ s.me = true; pressNotify(s); } }
       if (!first) for (const it of PRESS.remote){ if (old.has(it.id) || it.me) continue; const s = pressStory(it); if (s && (s.big || (s.x != null && dist({x:s.x, y:s.y}, hp) <= PRESS.R))){ pressNotify(s); break; } }
       await pressSkreiFetch();
+      await pressKvoteFetch();
       if (typeof PHONE !== 'undefined' && PHONE.isOpen() && PHONE.app === 'post') PHONE.render(); } }
   catch (e){ if (/ 404$/.test(e.message)) PRESS.off = true; }
   finally { PRESS.busy = false; }
@@ -73,5 +74,12 @@ async function pressSkreiFetch(){
     const P = pressState(); P.told = P.told || {};
     if (first && !P.told['s' + y]){ const s = pressSkrei()[0]; if (s){ P.told['s' + y] = 1; pressNotify(s); } } }
   catch (e){ if (/ 404$/.test(e.message)) PRESS.skreiOff = true; }
+}
+// last week's quota sales for «Kvoteprisen denne uka» (core/09h-press.js pressKvote; km_week in 20261112130000_km5.sql): once a game
+// week, and again while it came back empty in the week's first game day (a sale settled a few minutes late)
+async function pressKvoteFetch(){
+  const wk = weekOf(S.t / 60) - 1, K = PRESS.kq; if (PRESS.kqOff || wk < 0 || (K && K.wk === wk && (K.r.n > 0 || S.t / 60 - (wk + 1) * 168 > 24))) return;
+  try { const r = await cloudRpc('km_week', {wk}); PRESS.kq = {wk, r:r || {wk, n:0, right:0, struct:0, med:null}}; }
+  catch (e){ if (/ 404$/.test(e.message)) PRESS.kqOff = true; }
 }
 function pressStart(){ setTimeout(() => { pressFetch(true); pressFlush(); }, 8000); setInterval(() => pressFetch(false), 180000); setInterval(pressFlush, 120000); }

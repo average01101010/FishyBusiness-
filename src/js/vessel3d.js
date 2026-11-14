@@ -394,8 +394,29 @@ function glbParse(b64){
       o.n[k3] = N[i3]; o.n[k3 + 1] = N[i3 + 1]; o.n[k3 + 2] = N[i3 + 2];
       o.c[k4] = Cc[i4]; o.c[k4 + 1] = Cc[i4 + 1]; o.c[k4 + 2] = Cc[i4 + 2]; o.c[k4 + 3] = Cc[i4 + 3];
       if (Q){ o.zone[k] = Q[i4]; o.ao[k] = Q[i4 + 1] / 255; } }
+    // a skinned part (the new people, folk2.b64; FB6, 13.11.2026): the four bones of each corner and their weights as bytes (255 = all),
+    // the positions in the rest pose (float32 in the file, no scale on the node). A part that is a piece of another's vertices (its
+    // own range of the same indices) comes out as its own corners here, as every part does.
+    const aj = pr.attributes.JOINTS_0, aw = pr.attributes.WEIGHTS_0;
+    if (aj != null && aw != null){ const Jn = acc(aj), W = acc(aw); o.j = new Uint8Array(nI * 4); o.w = new Uint8Array(nI * 4); o.skin = nd.skin == null ? 0 : nd.skin;
+      for (let k = 0; k < nI; k++){ const i4 = I[k] * 4, k4 = k * 4; for (let c = 0; c < 4; c++){ o.j[k4 + c] = Jn[i4 + c]; o.w[k4 + c] = Math.round(W[i4 + c] * 255); } } }
     return o;
   };
+  // the skeletons of a file that has them (skins): the bones by name in the first skin's order, each bone's parent (an index, -1 at the
+  // root) from the nodes' children, where each joint rests (the nodes' translations added up from the root: the file's nodes hold the
+  // man's places, the woman's are in the extras' rest.f), each skin's inverse bind matrices (16 floats a bone, column by column), and
+  // for a part that hangs on a bone, the bone's name (the hair, the beards and the hats on the head). Null for a file without skins.
+  const skel = () => {
+    if (!J.skins || !J.skins.length) return null;
+    const par = new Map(); J.nodes.forEach((nd, i) => { for (const c of nd.children || []) par.set(c, i); });
+    const jn = J.skins[0].joints, at = new Map(jn.map((ni, b) => [ni, b])), bones = jn.map(ni => J.nodes[ni].name), parent = jn.map(ni => par.has(ni) && at.has(par.get(ni)) ? at.get(par.get(ni)) : -1);
+    const rest = jn.map(() => [0, 0, 0]); const place = b => { const t = J.nodes[jn[b]].translation || [0, 0, 0], p = parent[b] < 0 ? [0, 0, 0] : place(parent[b]); return [p[0] + t[0], p[1] + t[1], p[2] + t[2]]; };
+    for (let b = 0; b < jn.length; b++) rest[b] = place(b);
+    const on = {}; J.nodes.forEach((nd, i) => { if (nd.mesh != null && par.has(i) && at.has(par.get(i))) on[nd.name] = bones[at.get(par.get(i))]; });
+    return {bones, parent, rest, on, skins:J.skins.map(sk => ({name:sk.name, ibm:sk.inverseBindMatrices != null ? accRaw(sk.inverseBindMatrices) : null}))};
+  };
+  const accRaw = i => { const A = J.accessors[i], BV = J.bufferViews[A.bufferView], off = bo + (BV.byteOffset || 0) + (A.byteOffset || 0), out = new Float32Array(A.count * 16); for (let k = 0; k < out.length; k++) out[k] = dv.getFloat32(off + k * 4, true); return out; };
+  const sk = skel();
   // Each part is read out the first time it is asked for (05.11.2026, the lag on 04.11: the JS heap was 390 MB after the start against
   // 240 MB on 30.10 and grew towards 650-820 MB, when Android ended the page). A part read out was then plain arrays of 8 bytes a number, a
   // corner per triangle: a revised boat was 27-47 MB so, its near model (lod0) the most, 17-33 MB (typed arrays since Ø3d, about half). The fleet and the other players' boats
@@ -412,7 +433,7 @@ function glbParse(b64){
     return v; };
   for (const nm of node.keys()) Object.defineProperty(parts, nm, {enumerable:true, configurable:true, get:() => take(nm, true)});
   Object.defineProperty(parts, 'peek', {value:nm => node.has(nm) ? take(nm, false) : undefined});
-  return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}};
+  return {parts, ex:(J.scenes[0] && J.scenes[0].extras) || {}, sk};
 }
 function glbLoad(type){
   if (!(type in GLBM)){ const src = glbData('glb', type); if (!src) return null; try { GLBM[type] = glbParse(src); } catch (e){ GLBM[type] = null; }
@@ -531,9 +552,9 @@ const SETTERS = {
   sjark:[-0.85, 1.78, 5.10, 0, 1],          // (on the guard rail over the low bulwark: its panels lean in from the bulwark's top)
   hurtigsjark:[-0.75, 1.93, 5.50, 0, 1],
   sjarkny:[-0.75, 2.36, 5.50, 0, 1],
-  breisjark:[0.05, 1.62, 5.58, 0, 1],        // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
-  // (the 15 m boat has none: her stern is the shelter deck's closed wall. She gets the place with the opening in the stern, OB12)
-  kyst21:[0.86, 2.27, 10.30, 0.4, 1]};      // (the round stern, to starboard of the staff)
+  // (the 15 m boat carries the place herself, kyst15.py kit.setter: the sill of the setting port in her stern, OB12 11.11.2026; and
+  // the 21 m one, kyst21.py kit.setter: the roller in her round stern's bulwark, OB13 11.11.2026)
+  breisjark:[0.05, 1.62, 5.58, 0, 1]};       // (the low middle of her stern bulwark, OB11 valg 32, between the high corners)
 for (const k in SETTERS){ (KITADD[k] = KITADD[k] || {}).setter = SETTERS[k]; }
 // the old rescue boat in each hull (the game's frame: [x0, x1, y0, y1, z0, z1]): the triangles wholly inside are left out of your own
 // boat (the boat, her cradle or platform and the old davit; tests/unit/vessel3d.test.mjs counts them and checks that no deck goes)
@@ -635,7 +656,9 @@ function modelLiv(L){
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (!v) continue; if (k === 'lakk'){ o.lakk = true; any = true; } else { const c = palRGB(v); if (c){ o[k] = c; any = true; } } }
   return any ? o : null;
 }
-function hullLiv(b){ return modelLiv(PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv); }
+// (a partner's design worn over her own paint, core/09l-sponsor.js spWorn: the paint is the design's while its agreement is active)
+// (a design that gives this type nothing leaves her in her own paint)
+function hullLiv(b){ const L = PAINTPRE && typeof S !== 'undefined' && b === S.boat ? PAINTPRE : b && b.liv, W = typeof spWorn === 'function' ? spWorn(L) : null; return (W && modelLiv(spPaintLiv(W, b.type))) || modelLiv(L); }
 function livKey(liv){ return liv ? ['hull', 'house', 'deck', ...DESIGNS].map(k => liv[k] ? (liv[k] === true ? 1 : liv[k].join(',')) : '').join('|') : ''; }
 // the designs that cut the hull's triangles (a change of these is a new shape; the others are only colours)
 function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]).join(',') : ''; }
@@ -644,20 +667,37 @@ function livGeo(liv){ return liv ? ['ripe', 'totone', 'vann'].filter(k => liv[k]
 const LIVS = {hull:'h', house:'o', deck:'d', ripe:'r', totone:'t', vann:'v', stripe:'s', lakk:'g', flag:'f', mark:'m', logo:'l'};
 const MARKENC = s => String(s).replace(/Æ/g, '1').replace(/Ø/g, '2').replace(/Å/g, '3'), MARKDEC = s => String(s).replace(/1/g, 'Æ').replace(/2/g, 'Ø').replace(/3/g, 'Å');
 function livStr(b){
-  const L = (b && b.liv) || {}, out = [];
+  const L0 = (b && b.liv) || {}, W0 = typeof spWorn === 'function' ? spWorn(L0) : null, W = W0 && modelLiv(spPaintLiv(W0, b.type)) ? W0 : null, L = W ? Object.assign(spPaintLiv(W, b.type), {flag:L0.flag}) : L0, out = [];   // (a partner's design: its colours for a game from before it, and 'x:<id>' for the rest)
   if (L.hull && L.hull !== 'orig' && palRGB(L.hull)) out.push('h:' + L.hull);
   for (const k of ['house', 'deck']) if (L[k] && L[k] !== 'orig' && palRGB(L[k])) out.push(LIVS[k] + ':' + L[k]);
   for (const k of DESIGNS){ const v = L.d && L.d[k]; if (k === 'lakk' ? v : v && palRGB(v)) out.push(LIVS[k] + ':' + (k === 'lakk' ? 1 : v)); }
   if (L.flag && /^[A-Z]{2,4}$/.test(L.flag.c || '') && /^[a-z]+$/.test(L.flag.s || '')) out.push('f:' + L.flag.c + '.' + L.flag.s);
   const r = typeof regOf === 'function' && b === S.boat ? regOf(b) : b.reg; if (r && r.f) out.push('m:' + MARKENC(r.f) + '.' + r.n + '.' + MARKENC(r.k));   // the registration mark (core/06b-coastports.js)
-  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);   // the company's logo (all its boats)
+  if (W) out.push('x:' + W.id);
+  // the company's logo (all its boats), also under a partner's design with a mark of its own: the others draw the design's mark on her
+  // hull (view3d/13-instruments.js drawNPCNames) and her logo in her house flag (drawPeerFlags, TP1). After 'x:', so a code cut at 160
+  // loses the logo before the design
+  const lg = typeof S !== 'undefined' && b === S.boat && S.logo && COSOWN('logo') ? logoStr(S.logo) : ''; if (lg) out.push('l:' + lg);
   return out.join(';');
 }
 // another player's pennants from her paint code ('p:2', from before 09.11.2026): read, no longer drawn (Jonas 09.11.2026: no pennants)
 function livPen(s){ const m = /(?:^|;)p:([1-3])(?:;|$)/.exec(String(s || '')); return m ? +m[1] : 0; }
 // another player's registration mark from her paint code ('m:T.112.LK'), as text
 function livMark(s){ const m = /(?:^|;)m:([A-Z0-9]{1,3})\.(\d{1,4})\.([A-Z0-9]{1,3})(?:;|$)/.exec(String(s || '')); return m ? MARKDEC(m[1]) + '-' + m[2] + '-' + MARKDEC(m[3]) : ''; }
-function livParse(s){
+// the part of another player's paint code that changes her model (TP1, steg 108): the colours, the designs and a partner's design
+// (h o d r t v s g from LIVS, and x), in that order; the flag, the registration mark and the logo are drawn over the model, so boats painted alike
+// share one model and its buffers (view3d/20-trawl-seine.js npcKB). '' when nothing in it changes the model
+const LIVPAINT = Object.keys(LIVS).filter(k => !['flag', 'mark', 'logo'].includes(k)).map(k => LIVS[k]).concat('x');
+function livPaint(s){
+  if (typeof s !== 'string') return s; const by = {};
+  for (const part of s.split(';')){ const i = part.indexOf(':'), k = i > 0 ? part.slice(0, i) : ''; if (LIVPAINT.includes(k) && i < part.length - 1) by[k] = part; }   // (the last of a key twice, as livParse reads it)
+  return LIVPAINT.filter(k => k in by).map(k => by[k]).join(';');
+}
+// another player's ensign from her paint code ('f:SE.vimpel'; 'f:LOGO.rekt' is her house flag): what she bought, else Norway in a
+// rectangle as the own boat flies (flagOf)
+function livFlag(s){ const m = /(?:^|;)f:([A-Z]{2,4})\.([a-z]+)(?:;|$)/.exec(String(s || '')); return flagOf(m ? {flag:{c:m[1], s:m[2]}} : null); }
+function livParse(s, type){
+  const W = typeof spPaintIn === 'function' ? spPaintIn(s) : null, WL = W && modelLiv(spPaintLiv(W, type)); if (WL) return WL;   // a partner's design, from the list of the active ones, as her type wears it
   const L = {d:{}}; for (const part of String(s || '').split(';')){ const [a, v] = part.split(':'), k = Object.keys(LIVS).find(q => LIVS[q] === a); if (!k || !v) continue;
     if (k === 'hull') L.hull = v; else if (k === 'house' || k === 'deck') L[k] = v; else if (k === 'flag'){ const [c, sh] = v.split('.'); L.flag = {c, s:sh}; } else if (k === 'mark' || k === 'logo') continue; else L.d[k] = k === 'lakk' ? 1 : v; }
   return modelLiv(L);
@@ -994,17 +1034,17 @@ function stripProud(type, st){
 function stripPaint(type, st){
   const G = glbHas(type) ? glbLoad(type) : null, P = G && G.parts.lod0; if (!P || !P.zone || !P.c) return null;
   const port = st[0][0][0] < 0, [B, T] = port ? st.map(r => r.map(p => [-p[0], p[1], p[2]])) : st, N = B.length - 1, za = B[0][2], zb = B[N][2], z0 = Math.min(za, zb), z1 = Math.max(za, zb);
-  const L = [], a = [0, 0, 0]; let z1n = 0;
+  const L = [], a = [0, 0, 0]; let z1n = 0, z3n = 0;
   for (let v = 0; v * 3 + 9 <= P.p.length; v += 3){
     const q = v * 3, sx = port ? -1 : 1, x = sx * (P.p[q] + P.p[q + 3] + P.p[q + 6]) / 3, nx = sx * (P.n[q] + P.n[q + 3] + P.n[q + 6]) / 3; if (x <= 0 || nx < 0.4) continue;
     const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; if (z < z0 || z > z1) continue;
     const i = Math.round((z - za) / (zb - za) * N), b = B[i], t = T[i]; if (y < b[1] || y > t[1] || x < b[0] - 0.2) continue;
     const ao = Math.max(0.05, P.ao[v]), c = [0, 1, 2].map(k => P.c[v * 4 + k] / ao), lum = 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2];
-    for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); if (P.zone[v] === 1) z1n++;
+    for (let k = 0; k < 3; k++) a[k] += c[k]; L.push(lum); if (P.zone[v] === 1) z1n++; else if (P.zone[v] === 3) z3n++;
   }
   if (L.length < 3) return null;
   const rgb = a.map(v => v / L.length), m = 0.3 * rgb[0] + 0.59 * rgb[1] + 0.11 * rgb[2], even = L.filter(l => (l < 0.5) === (m < 0.5)).length / L.length;
-  return {rgb, zone1:z1n / L.length, even, n:L.length};
+  return {rgb, zone1:z1n / L.length, zone3:z3n / L.length, even, n:L.length};
 }
 // the registration mark's strip near the stem: the letters as tall as § 23 asks by the boat's length (45 cm from 15 m, 25 cm from 9 m,
 // else 15 cm), the strip a little taller round them; a tenth of the length from the stem, ahead of the name. It finds a place of its own
@@ -1014,6 +1054,11 @@ function stripPaint(type, st){
 const MARKSTRIP = {}, MARKPAINT = {};
 function markStrips(type){
   if (type in MARKSTRIP) return MARKSTRIP[type];
+  // (a model that says where its mark stands, geo.marks: [[bottom row, top row] starboard, the same to port], as sideStrip's. The
+  // breisjark, Jonas 11.11.2026: «Det andre nummeret kan gjøres mindre og plasseres høyere opp på det hvite»: the search below only
+  // knows the hull's own paint and never finds the white bulwark over the strake)
+  { const m = vesselModel(type), own = m && m.geo && m.geo.marks;
+    if (own && own.length === 2){ MARKPAINT[type] = own.map(s => stripPaint(type, s)); return MARKSTRIP[type] = own; } }
   const V = VESSELS[type] || {len:10}, lh = V.len >= 15 ? 0.45 : V.len >= 9 ? 0.25 : 0.15;
   return MARKSTRIP[type] = stripSearch(type, lh, [0.11, 0.14], [0.11, 0.13, 0.09, 0.15, 0.17, 0.07, 0.19], MARKPAINT);
 }
@@ -1060,6 +1105,7 @@ function anchorLen(bw){ const kg = bw.kg || 10; return bw.kind === 'hall' ? 1.49
 function markRGB(type, liv){
   markStrips(type); const P = MARKPAINT[type], p = P && (P[0] || P[1]);
   if (!p || p.zone1 >= 0.6) return hullRGB(type, liv);
+  if (p.zone3 >= 0.6 && liv && liv.house) return liv.house.slice(0, 3);   // (a mark on the superstructure's paint, the breisjark's white bulwark: as the player has painted it, like placeRGB)
   return p.rgb;
 }
 // the hull's colour as it is painted (liv) or as she came (a detailed model's paint zone 1 on average, a kit's hull colour): the name
@@ -1156,6 +1202,13 @@ function houseFront(type, P, Gl, V){
   if (!isFinite(gy1) || gw < 0.3) return null;
   // the band over the windows: what faces forward near the windows' front, up from their top as long as the rays at the middle meet it
   const T = facingTris(P, -1, (v, q) => { const y = (P.p[q + 1] + P.p[q + 4] + P.p[q + 7]) / 3, z = (P.p[q + 2] + P.p[q + 5] + P.p[q + 8]) / 3; return y > gy1 - 0.3 && y < gy1 + 2 && Math.abs(z - gz) < 1.5; });
+  // (a model that says where the name stands on its house, geo.nameHouse: [bottom row, top row] from the reader's left. The breisjark,
+  // Jonas 11.11.2026: «Navnet på båten skal bare være over styrhusvinduet på bremen og på akterspeilet»: the search below took the thin
+  // white band under her roof's brim, in its shadow)
+  { const own = m.geo.nameHouse;
+    const B = own && own[0], Tp = own && own[1], n = B ? B.length - 1 : 0, sh = B && Tp && n > 0 && Tp.length === B.length ? Math.hypot(Tp[0][1] - B[0][1], Tp[0][2] - B[0][2]) : 0;
+    if (sh >= 0.08){ const zs = B.concat(Tp).map(p => p[2]);   // (a strip too low for letters of 6 cm is not used: the search below)
+      return [{kind:'house', line:'name', B, T:Tp, aspect:Math.abs(B[0][0] - B[n][0]) / sh, paint:crossPaint(T, B[0][0], B[n][0], B[0][1], Tp[0][1], -1, Math.min(...zs) - 0.15, Math.max(...zs) + 0.15)}]; } }
   // the band over the windows: heights where rays across the front (nine, out to six tenths of the windows' breadth) meet one surface near
   // the windows' front, without a step; the lowest such band at least 10 cm tall (or the tallest of 7), up from the windows' top
   const runs = []; let run = null;
@@ -1249,9 +1302,15 @@ function nameInkLight(rgb){
 function npcKit(L, B){ let best = null, bd = 1e9; for (const t in SPEC3D){ const V = VESSELS[t], sp = SPEC3D[t]; if (!V || sp.hand || sp.open || V.cls === 'hav') continue; const d = Math.abs(Math.log(V.len / L)) + 0.7 * Math.abs(Math.log(V.beam / B)); if (d < bd){ bd = d; best = t; } } return best; }
 const NPCMOD = {};
 // liv: one of LIVERY for the local fleet, or another player's paint as it came with her position (livStr)
-function npcModel(type, lod, liv){ const k = type + '|' + lod + '|' + liv; if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, typeof liv === 'string' ? livParse(liv) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+// (a paint code with a partner's design, 'x:<id>', is read against the list of active agreements, so the model is kept apart by whether it was found: a list that comes later, or an agreement that ends, gives a new model)
+// (a player's code by its paint only, livPaint: her flag, mark and logo are drawn over the model; view3d/20-trawl-seine.js npcKB lets the
+// painted ones go again past its cap, npcModelDrop)
+function npcModelKey(type, lod, liv){ const str = typeof liv === 'string', lp = str ? livPaint(liv) : liv; return type + '|' + lod + '|' + lp + (str && typeof spPaintIn === 'function' && spPaintIn(lp) ? '|x' : ''); }
+function npcModel(type, lod, liv){ const str = typeof liv === 'string', k = npcModelKey(type, lod, liv); if (!(k in NPCMOD)) NPCMOD[k] = buildVesselModel(type, lod, str ? livParse(livPaint(liv), type) : LIVERY[liv % LIVERY.length]); return NPCMOD[k]; }
+function npcModelDrop(k){ delete NPCMOD[k]; }
 // a person in oilskins, built facing -z (as the skiff's crew): standing or seated, hands where given (or down by the sides)
 function personVB(B, x, y, z, seated, hands, suit, kit){
+  if (kit && hands !== false && figBake(B, x, y, z, seated, hands, kit)) return;      // the new people, behind #folk2 (FB7)
   if (kit && glbHas('worker')) return figureVB(B, x, y, z, seated, hands, kit);       // the detailed figure (tools/harbour/arbeider.py)
   const JAC = suit || [0.95, 0.62, 0.1, 0.3], VEST = [0.86, 0.16, 0.12, 0.35], TRS = [0.1, 0.12, 0.17, 0.2], SKN = [0.93, 0.74, 0.6, 0.25], HAT = [0.12, 0.16, 0.3, 0.15], BOOT = [0.06, 0.06, 0.07, 0.3];
   const hip = y + (seated ? 0.46 : 0.82);
@@ -1344,6 +1403,94 @@ function figureVB(B, x, y, z, seated, hands, kit){
     wkLimb(B, P('hand_lo') || P('hand'), hd, [hd[0] + d[0] / l * S, hd[1] + d[1] / l * S, hd[2] + d[2] / l * S], S);   // (the one-piece glove: these figures are seen from a distance)
   }
 }
+// ---------- the new people (Folk 2, FB6, steg 124): one skinned figure per look, from src/data/folk2.b64 ----------
+// The file has a body for the man and one for the woman on a skeleton of 58 bones, and every part of worker.b64 anew under the same
+// name (tools/harbour/kropp_bygg.py; docs/systemer/folk-om-bord.md 5.33b). A figure is one mesh in the rest pose with four bones and
+// weights a corner; the shader bends it by the bones' matrices (figpose.js figPose, figGL). Shown only behind #folk2 in the address,
+// and only in the wardrobe yet: on deck and on the quay the figure is the old one (worker.b64) until Jonas has seen this one (FB7).
+const FOLK2 = typeof location !== 'undefined' && !!location && /folk2/.test(location.hash || '');
+const FIGSK = {}, FIGPC = {};
+function figSkelOf(sex){ const k = sex === 'f' ? 'f' : 'm'; if (FIGSK[k]) return FIGSK[k]; const G = glbLoad('folk2'); return G && G.sk ? FIGSK[k] = figSkel(G.ex, k) : null; }
+// a part of the new file painted by the kit's zones as wkPart paints the old (1 jacket, 3 trousers, 4 skin, 5 hair, beard and
+// eyebrows, 6 hat, 7 shoes; zone 0 keeps its own colour: the eyes, the gloves, the soles), with its bones and weights. A part that
+// hangs on a bone (the hair, the beards and the hats on the head) is measured from that bone's joint and is shared by both bodies:
+// it gets the joint's place for this sex (the woman's from the extras' rest.f, never from the file's nodes, which are the man's)
+// and all its weight on that bone.
+function figPart(name, kit, sex){
+  const K = wkKitOf(kit); if (!K) return null; sex = sex === 'f' ? 'f' : 'm';
+  const k = name + '|' + sex + '|' + wkKeyOf(kit); if (k in FIGPC) return FIGPC[k];
+  if (Object.keys(FIGPC).length > 400) for (const q in FIGPC) delete FIGPC[q];
+  const G = glbLoad('folk2'), o = G && G.parts[name]; if (!o) return FIGPC[k] = null;
+  const c = o.c.slice(), zc = {1:K.top, 3:K.legs, 4:K.skin || null, 5:K.hair || null, 6:K.hatc || null, 7:K.shoec || null}, nC = o.p.length / 3;
+  for (let i = 0; i < o.zone.length; i++){ const col = zc[o.zone[i]]; if (col){ const a = o.ao[i]; c[i * 4] = col[0] * a; c[i * 4 + 1] = col[1] * a; c[i * 4 + 2] = col[2] * a; } }
+  if (o.j) return FIGPC[k] = {p:o.p, n:o.n, c, j:o.j, w:o.w};
+  const bone = G.sk.on[name], sk = figSkelOf(sex), bi = bone != null ? sk.ix[bone] : null; if (bi == null) return FIGPC[k] = null;
+  const at = sk.rest[bi], p = new Float32Array(nC * 3), j = new Uint8Array(nC * 4), w = new Uint8Array(nC * 4);
+  for (let i = 0; i < nC; i++){ p[i * 3] = o.p[i * 3] + at[0]; p[i * 3 + 1] = o.p[i * 3 + 1] + at[1]; p[i * 3 + 2] = o.p[i * 3 + 2] + at[2]; j[i * 4] = bi; w[i * 4] = 255; }
+  return FIGPC[k] = {p, n:o.n, c, j, w};
+}
+// The parts of a look on the new body: [name, range], range the corners [first, count] of the part that are drawn (nothing: all of it).
+// Under the clothes only what the file's extras cover say is drawn of the skin: the head with the neck, and the hands when the figure
+// wears no gloves (opt.bare); the arms, the torso, the legs and the feet of the skin are never drawn under clothes.
+function figParts(kit, opt){
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, K = wkKitOf(kit); if (!G || !G.sk || !K) return null;
+  const X = G.ex, F = K.f ? 'F' : '', body = 'body' + F, cov = (X.cover || {})[body] || {}, L = [[K.torso]];
+  for (const n of ['uarm', 'farm', 'thigh', 'shin']) L.push([n + F]);
+  L.push([(K.shoe || 'boot') + F]);
+  if (K.vest && (X.vest || {})[K.torso]) L.push([X.vest[K.torso]]);
+  if (cov.head) L.push([body, cov.head]);
+  if (opt && opt.bare){ if (cov.hands) L.push([body, cov.hands]); } else L.push(['glove' + F]);
+  for (const n of [K.hat, K.hairP, K.beard]) if (n) L.push([n]);
+  return L;
+}
+// the whole figure of a look in the rest pose: {p, n, c (Float32Array), j, w (Uint8Array, 4 a corner), cnt corners, sex, parts
+// [[name, first corner, corners]], miss: the names the file did not have}
+function figMesh(kit, opt){
+  const L = figParts(kit, opt); if (!L) return null; const K = wkKitOf(kit), sex = K.f ? 'f' : 'm', got = [], miss = []; let n = 0;
+  for (const [name, range] of L){ const o = figPart(name, kit, sex); if (!o){ miss.push(name); continue; }
+    const a = range ? range[0] : 0, cnt = range ? range[1] : o.p.length / 3; got.push([name, o, a, cnt]); n += cnt; }
+  const M = {p:new Float32Array(n * 3), n:new Float32Array(n * 3), c:new Float32Array(n * 4), j:new Uint8Array(n * 4), w:new Uint8Array(n * 4), cnt:n, sex, parts:[], miss}; let at = 0;
+  for (const [name, o, a, cnt] of got){
+    M.p.set(o.p.subarray(a * 3, (a + cnt) * 3), at * 3); M.n.set(o.n.subarray(a * 3, (a + cnt) * 3), at * 3); M.c.set(o.c.subarray(a * 4, (a + cnt) * 4), at * 4);
+    M.j.set(o.j.subarray(a * 4, (a + cnt) * 4), at * 4); M.w.set(o.w.subarray(a * 4, (a + cnt) * 4), at * 4); M.parts.push([name, at, cnt]); at += cnt; }
+  return M;
+}
+// the trunk's profile of a body in what it wears (figpose.js figProfile): the body's garment over the trunk (torso: the part's
+// name), the trousers' top under its hem, and the life jacket over it when one is worn (vest: its part's name). Measured once for
+// each. And the head's measures for a body (figHead).
+const FIGPROF = {}, FIGHEAD = {};
+function figProfOf(sex, torso, vest){
+  const k = (sex === 'f' ? 'f' : 'm') + '|' + torso + '|' + (vest || ''); if (k in FIGPROF) return FIGPROF[k];
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, sk = G && G.sk ? figSkelOf(sex) : null; if (!sk) return null;
+  return FIGPROF[k] = figProfile([glbPeek(G, sex === 'f' ? 'thighF' : 'thigh'), glbPeek(G, torso), vest ? glbPeek(G, vest) : null], sk);
+}
+function figHeadOf(sex){
+  const k = sex === 'f' ? 'f' : 'm'; if (k in FIGHEAD) return FIGHEAD[k];
+  const G = glbHas('folk2') ? glbLoad('folk2') : null, sk = G && G.sk ? figSkelOf(sex) : null, o = sk ? glbPeek(G, k === 'f' ? 'headF' : 'head') : null; if (!o) return FIGHEAD[k] = null;
+  const H = figHead(o, sk); H.P = figProfile([o], sk, FIG_HEADP); return FIGHEAD[k] = H;   // (P: the head's own profile, the face's front by height and side)
+}
+// The new figure built once into a mesh (FB7: the people in the skiff and on boats seen from outside): posed standing or seated on
+// the processor (figpose.js figStand, figFromJoints, figSkin) and added to the builder B with its feet at (x, y, z), facing -z, at
+// the size people have on board (WK_S). hands as figureVB's: [left, right] where given. False when the new people are not on.
+function figBake(B, x, y, z, seated, hands, kit){
+  if (!FOLK2 || !glbHas('folk2')) return false; const M = figMesh(kit, {}); if (!M || !M.cnt) return false;
+  const sk = figSkelOf(M.sex), S = WK_S, ex = glbLoad('folk2').ex, o = figFromJoints(sk, figStand(sk, seated, hands ? hands.map(h => [(h[0] - x) / S, (h[1] - y) / S, (h[2] - z) / S]) : null, S));
+  figGrip(ex, M.sex, 'relax', o.local); const Q = figSkin(M.p, M.n, M.j, M.w, figPose(sk, o.local, o.root).M);
+  for (let i = 0; i < M.cnt; i++) B.v([x + Q.p[i * 3] * S, y + Q.p[i * 3 + 1] * S, z + Q.p[i * 3 + 2] * S], [Q.n[i * 3], Q.n[i * 3 + 1], Q.n[i * 3 + 2]], [M.c[i * 4], M.c[i * 4 + 1], M.c[i * 4 + 2], M.c[i * 4 + 3]]);
+  return true;
+}
+// a figure's mesh as draw calls of at most maxB bones each (figpose.js figSplit): [{p, n, c, j, w, cnt, bones}], j counted in the draw
+// call's own palette (bones: which of the skeleton's bones it holds, in order). One draw call, the mesh itself, when maxB holds all.
+function figDraws(M, maxB){
+  const G = figSplit(M.j, M.w, maxB, FIG_BONES); if (G.length === 1 && !G[0].tris) return [Object.assign({bones:G[0].bones}, M)];
+  return G.map(g => { const n = g.tris.length * 3, D = {p:new Float32Array(n * 3), n:new Float32Array(n * 3), c:new Float32Array(n * 4), j:new Uint8Array(n * 4), w:new Uint8Array(n * 4), cnt:n, bones:g.bones}, slot = {};
+    g.bones.forEach((b, i) => { slot[b] = i; });
+    g.tris.forEach((t, q) => { const a = t * 3, b = q * 3; D.p.set(M.p.subarray(a * 3, a * 3 + 9), b * 3); D.n.set(M.n.subarray(a * 3, a * 3 + 9), b * 3); D.c.set(M.c.subarray(a * 4, a * 4 + 12), b * 4); D.w.set(M.w.subarray(a * 4, a * 4 + 12), b * 4);
+      for (let k = 0; k < 12; k++) D.j[b * 4 + k] = M.w[a * 4 + k] > 0 ? slot[M.j[a * 4 + k]] : 0; });
+    return D; });
+}
+// the bones of a draw call out of a pose's matrices (figPose's M): what goes to the shader's uB
+function figPal(M, bones){ if (bones.length * 12 === M.length) return M; const o = new Float32Array(bones.length * 12); bones.forEach((b, i) => { o.set(M.subarray(b * 12, b * 12 + 12), i * 12); }); return o; }
 // a side view of a type as SVG (bow to the right), from the same spec as the 3D model: the market draws it on every card, with or
 // without WebGL. Colours from the spec; the hull below the waterline in bottom paint.
 function vesselSVG(type, w, h){
@@ -1612,9 +1759,14 @@ function lanterns(G, V, st){
   // lights one over the other at least 2 m apart from 20 m, 1 m under (FOR-1975-12-01-5 vedlegg I 2(i), read on Lovdata 30.10.2026;
   // it was 1 m on every boat)
   const sp = len >= 20 ? 2.0 : 1.0, moving = (st.v || 0) > 0.5, sideStern = () => { for (const s of sides) push(s[0], s[1], 'side'); if (stern) push(stern[0], 'w', 'stern'); };
+  // a model that carries its fishing lights on their own ('fishR' over 'fishW') has all-round lamps one over the other on the mast;
+  // the two reds of rule 27 (and of the aground) hang there, not a spacing and two over the masthead in the air (OB10 round 3: the new
+  // speed sjark adrift showed them floating over her mast). Without them, a spacing and two over the masthead's place as before
+  const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null, twoReds = k => {
+    if (fR && fW && Math.abs(fR[0][1] - fW[0][1]) >= sp){ push(fW[0], 'r', k); push(fR[0], 'r', k); } else { push(up(mt, sp), 'r', k); push(up(mt, 2 * sp), 'r', k); } };
   if (st.aground || (st.anch && !st.fishing)){
     push(mt, 'w', 'anchor'); if (len >= 50 && stern) push(stern[0], 'w', 'anchor2');
-    if (st.aground && len >= 12){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); }
+    if (st.aground && len >= 12) twoReds('nuc');
     return out; }
   // a bare boat shows no fishing lights (Jonas 09.11.2026, VESSELS.trebat.bare): she jigs and draws her few nets and pots by hand,
   // and a boat fishing with what does not restrict her manoeuvrability is no vessel engaged in fishing (rule 3 d), as the NPC jiggers
@@ -1624,13 +1776,12 @@ function lanterns(G, V, st){
   if (st.fishing){
     // a model that carries its fishing lights on their own ('fishR' over 'fishW', the havsjark's red over white on arms forward of the
     // mast) lights them where they are; else the white at the masthead's place and the red (the green) a spacing over it
-    const fR = typed ? T('fishR')[0] : null, fW = typed ? T('fishW')[0] : null;
     if (fR && fW && !st.trawl){ push(fW[0], 'w', 'fishW'); push(fR[0], 'r', 'fishR'); }
     else { push(mt, 'w', 'fishW'); push(up(mt, sp), st.trawl ? 'g' : 'r', st.trawl ? 'trawlG' : 'fishR'); }
     if (st.trawl && len >= 50) push(extra.length && extra[0][0][1] > mt[1] + sp ? extra[0][0] : up(mt, 2 * sp), 'w', 'masthead2');
     if (moving) sideStern();
     return out; }
-  if (st.nuc){ push(up(mt, sp), 'r', 'nuc'); push(up(mt, 2 * sp), 'r', 'nuc'); if (moving) sideStern(); return out; }
+  if (st.nuc){ twoReds('nuc'); if (moving) sideStern(); return out; }
   push(mt, 'w', len < 12 ? 'allround' : 'masthead');
   if (len < 7 && (V && V.vmax || 99) <= 7) return out;
   sideStern();
@@ -1674,7 +1825,9 @@ function deckPoints(type){
       lean.push({k, h:hd}); break; } }
   // on the working deck where she has room there (not on the house's roof or a locker's top: the wide sjark's roof edge), else where the
   // map has her rail (the shelter-deckers, whose working deck under the shelter the map does not hold)
-  const low = lean.filter(l => Math.abs(M.at(l.k)[1] - d.y) < 0.6), rail = low.length >= 4 ? low : lean;
+  // (OB12: a model whose working deck lies under a deck says which deck her rail is on, anchors.leanY: the kyst15's working deck runs aft to
+  // the transom now, and the cells along the transom's inside counted as a rail, so the idle hands stood facing the wall under the shelter deck)
+  const ly = typeof G.leanY === 'number' ? G.leanY : d.y, low = lean.filter(l => Math.abs(M.at(l.k)[1] - ly) < 0.6), rail = low.length >= 4 ? low : lean;
   rail.sort((a, b) => M.at(a.k)[2] - M.at(b.k)[2]); const step = Math.max(1, Math.floor(rail.length / 10)); pt.lean = rail.filter((_, i) => i % step === 0).slice(0, 10);
   DECKPTS[type] = pt; return pt;
 }

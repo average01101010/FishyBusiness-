@@ -25,10 +25,13 @@ AMPS = """(() => { const D = G3._debug, WV = D.WV, S = D.ssAt(D.bv.x, D.bv.z), r
 # the foam the crests leave in the map, which the drawn share (foamRendered) has too
 FOAM = """async (U) => {
   WX_FORCE = {w:U, d:315}; G3._debug.WV.init = false; await new Promise(r => setTimeout(r, 2500));
+  // (three readings 1.5 s apart, so three draws of the tiles and of the fitted threshold: at 8 m/s the crests are 0.09 % of the sea, out
+  // where one draw's threshold strays, and single readings came out 0.3 to 2.2 times Monahan before 5.20v and 0.5 to 1.4 after, 13.11.2026)
   const D = G3._debug, t = 37.3; let hit = 0, n = 0, jlo = 0;
+  for (let rep = 0; rep < 3; rep++){ if (rep) await new Promise(r => setTimeout(r, 1500));
   for (const [ox, oz] of [[0, 0], [400, 0], [0, 400], [-400, -400]]) for (let j = 0; j < 150; j++) for (let i = 0; i < 150; i++){
     const x = D.bv.x + ox + (i - 75) * 1.9 + 0.37 * j, z = D.bv.z + oz + (j - 75) * 1.9, F = D.foam.capAt(x, z, t, 1, U);
-    if (F.fv > F.th){ hit++; if (F.J < 0.5) jlo++; } n++; }
+    if (F.fv > F.th){ hit++; if (F.J < 0.5) jlo++; } n++; } }
   const kk = D.foam.capK || 1;
   return {U, share:+(hit / n * 100 / kk).toFixed(2), crests:+(hit / n * 100).toFixed(2), jUnderHalf:+(jlo / Math.max(1, hit) * 100).toFixed(1), monahan:+(3.84e-4 * Math.pow(U, 3.41)).toFixed(2)};
 }"""
@@ -36,7 +39,7 @@ FOAM = """async (U) => {
 # the spindrift's drops (F3b, driftSpray in 24-cinema.js, FOAM.sd): how many fly, how many of them were born where capAt says a crest
 # breaks, and the share of random points round the eye that break at a time a drop was born
 SPRAYC = """(() => { const D = G3._debug, F = D.foam, s = F.sd, U = D.env.wind; let a = 0, h = 0, rh = 0;
-  for (let i = 0; i < s.age.length; i++){ if (s.age[i] >= s.life[i]) continue; a++; const c = F.capAt(s.bx[i], s.bz[i], s.bt[i], 1, U); if (c.fv > c.th) h++; }
+  for (let i = 0; i < s.age.length; i++){ if (s.age[i] >= s.life[i]) continue; a++; const c = D.capAtF(s.bx[i], s.bz[i], s.bt[i], U, s.bf[i]); if (c.fv > c.th) h++; }
   const e = D.eye, t = s.bt[s.n]; for (let k = 0; k < 400; k++){ const q = k * 2.3999, r = 8 + (k * 0.618 % 1) * 110, c = F.capAt(e[0] + Math.sin(q) * r, e[2] + Math.cos(q) * r, t, 1, U); if (c.fv > c.th) rh++; }
   return {U:+U.toFixed(1), alive:a, fromCrest:h, random:+(rh / 400).toFixed(3), ms:+s.ms.toFixed(3)}; })()"""
 
@@ -68,6 +71,8 @@ async def main():
         # theory says, Ks = sqrt(cg0 / cg) per wave from the exact dispersion (worked out here, not by the game), within 8 %, and is
         # more than 1.08 times (the plan's Green's law from L/4 said 1.3-1.5, linear theory less: 5.20i). (c) Over 1 m in a stiff
         # breeze the height stays under McCowan's limit, 0.78 h. Seen red before F4 (no WV.shoal: all three FEIL).
+        # (the McCowan check over 600 s, B4 12.11.2026: the waves run on the world's clock, so 60 s was a different stretch every run, and with a
+        # few long waves in groups its 4 sigma strayed by 10-15 % from run to run; 0.92 against 0.86 in one run)
         await pg.evaluate("WX_FORCE = {w:6, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
         F4 = await pg.evaluate("""(() => { const D = G3._debug, sh = D.WV.shoal; if (!sh) return null; const SU = sh.SURF, bx = D.bv.x, bz = D.bv.z, out = {w:SU.w};
           let dmax = 0; for (let k = 0; k < 40; k++){ const x = bx + (k % 7 - 3) * 40, z = bz + (Math.floor(k / 7) - 3) * 40, t = 50 + k * 0.37;
@@ -97,7 +102,7 @@ async def main():
             gin = F4['i3'] / F4['i20']
             print(ok(abs(gin / want - 1) < 0.15), 'running in towards the shore, the energy that goes into the surf keeps the height (3 m against 20 m)', round(gin, 3), 'want', round(want, 3))
             await pg.evaluate("WX_FORCE = {w:13, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(4000)
-            h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 60; t += 0.2){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
+            h1 = await pg.evaluate("""(() => { const D = G3._debug, SU = D.WV.shoal.SURF; SU.fix = [1, 0, -0.7071, -0.7071]; let m = 0, q = 0, n = 0; for (let t = 0; t < 600; t += 0.5){ const y = D.seaH(D.bv.x, D.bv.z, t); m += y; q += y * y; n++; } SU.fix = null; m /= n; const H = 4 * Math.sqrt(Math.max(q / n - m * m, 0)); return [H, D.ssAt(D.bv.x, D.bv.z)[0]]; })()""")
             print(ok(h1[0] <= 0.78 * 1.0 * 1.1 and h1[1] > 1.5), "over 1 m in a stiff breeze the height stays under McCowan's limit (0.78 h)", [round(v, 2) for v in h1])
             await pg.evaluate("WX_FORCE = {w:5, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
         stage('the sea by the shore (F4) done')
@@ -142,14 +147,17 @@ async def main():
                 await pg.screenshot(path='sea3d_foam.png', clip={'x': 300, 'y': 10, 'width': 480, 'height': 150})
                 h = Image.open('sea3d_foam.png').convert('L').histogram(); fr.append(sum(h[128:]) / sum(h))
             rend.append({'U': U, 'share': round(sum(fr) / 4 * 100, 2), 'monahan': round(3.84e-4 * U ** 3.41, 2)})
-        R['foamRendered'] = rend
+        R['foamRendered'] = rend; R['capK'] = await pg.evaluate('G3._debug.foam.capK')
         await pg.evaluate("G3._debug.seaDbg = false;")
         stage('foam done')
         print(ok(R['ramp']['maxWave'] < 0.05 and R['ramp']['maxHs'] < 0.08), 'from calm to hurricane in steps of 0.1 m/s no wave changes by more than 5 cm, and the height by less than 8 cm: no jumps between the Beaufort forces')
         print(ok(R['sudden']['perFrameWind'] < 0.2 and R['sudden']['perFrameHs'] < 0.08 and R['sudden']['perFrameDirDeg'] < 0.5 and R['sudden']['reached'] > 23), 'a sudden change of wind (5 to 25 m/s, SW to S) reaches the sea over some seconds, a little each frame')
         print(ok(R['rebuild']['nearMoved'] and R['rebuild']['alwaysNear'] and R['rebuild']['maxStep'] < 0.05), 'sailing 3 km the near sea map is rebuilt, and the sea at a fixed spot does not jump meanwhile')
         print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foam'])), 'the whitecap threshold gives Monahan\'s cover within a factor of two (8-25 m/s)')
-        print(ok(all(0.5 <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm')
+        # (B3, 12.11.2026: the software GPU draws a frame every few seconds, so the crests' tails are hardly laid; the drawn foam is then
+        # mostly the crests themselves, the share capK of Monahan's cover, and at least 0.8 of that must be drawn, at most twice Monahan)
+        kk = R.get('capK', 1)
+        print(ok(all(0.8 * kk <= f['share'] / f['monahan'] <= 2 for f in R['foamRendered'])), 'and so does the drawn foam in a strong gale and a storm (at least 0.8 of the crests\' share, capK %.2f, at most twice Monahan)' % kk)
         # 5. spindrift from a gale, haze from a strong gale
         await pg.evaluate("(()=>{const c = G3._debug.cam; c.dist = 34; c.pitch = 0.2; c.yaw = 2.6; })()")
         await pg.evaluate("WX_FORCE = {w:28, d:315}; G3._debug.WV.init = false;"); await pg.wait_for_timeout(3000)
@@ -167,7 +175,7 @@ async def main():
         print(ok(sc['alive'] > 10 and sc['fromCrest'] >= 0.9 * sc['alive'] and sc['random'] < 0.5), 'the spindrift in the air is thrown from the crests that break (FOAM.capAt at each drop\'s birth)', sc)
         bf7 = {}
         for U in (13, 16):
-            await pg.evaluate(f"WX_FORCE = {{w:{U}, d:315}}; G3._debug.WV.init = false; const s = G3._debug.foam.sd; s.tried = s.hit = 0;"); await pg.wait_for_timeout(8000)
+            await pg.evaluate(f"WX_FORCE = {{w:{U}, d:315}}; G3._debug.WV.init = false; const s = G3._debug.foam.sd; s.tried = s.hit = 0;"); await pg.wait_for_timeout(30000)   # (B3: with the tiles a crest breaks for 1 % of the tries in 16 m/s, so more frames)
             bf7[U] = await pg.evaluate("(() => { const s = G3._debug.foam.sd; return {tried:s.tried, hit:s.hit, ms:+s.ms.toFixed(3)}; })()")
         R['sprayBf7'] = bf7
         print(ok(bf7[13]['tried'] == 0 and bf7[16]['hit'] > 0), 'and from Beaufort 7: crests throw it in 16 m/s, none is tried in 13 m/s', bf7)

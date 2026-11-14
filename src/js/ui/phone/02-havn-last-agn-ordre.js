@@ -32,20 +32,28 @@
     const shore = pg.shore.filter(j => j.ready && j.kind === 'egn'); if (shore.length) h.push('<div class="ph-card"><h4>' + L('I egnebua', 'At the baiting shed') + '</h4>' + shore.map(j => kv(j.n + ' ' + L('stamper', 'tubs'), portById(j.port).name + ', ' + L('klar ', 'ready ') + (S.t >= j.ready ? L('nå', 'now') : hm(j.ready / 60)))).join('') + '</div>');
     return h.join('') + '</div>';
   }
-  function oppdrag(){ return salg('best'); }
-  function ordl(){
-    const tab = sub.ordl || 'turer', tabs = subs('ordl', [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders']]);
-    if (tab === 'turer') return '<div class="ph-c">' + tabs + turPage() + '</div>';
-    return ordlBest(tabs);
+  // D4 (Jonas 13.11.2026, punkt 4 «Enig», omdømmet «A: Under Bestillinger»): Oppdrag is one page with the tabs Turer, Bestillinger and
+  // Kappløp, whichever door it is opened by: the dock's Oppdrag (it opens on Bestillinger, where the orders are taken) and the phone's
+  // app (on Turer). Bestillinger has your orders, the new ones, the reputation and, last, the earlier ones; before, the dock's page had
+  // the new orders and the reputation and the phone's tab the active and the earlier, two pages for one thing
+  function ordPage(key, first){
+    // the race's tab (ui/05l-kapplop.js, KL2), opened from its card at a checkpoint or in the Sesong app (LOP_TAB)
+    if (typeof LOP_TAB !== 'undefined' && LOP_TAB){ LOP_TAB = false; sub[key] = 'lop'; }
+    if (!sub[key]) sub[key] = first;
+    const tab = sub[key], tabs = subs(key, [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders'], ['lop', 'Kappløp', 'Race']]);
+    if (tab === 'turer') return tabs + '<div class="ph-c">' + turPage() + '</div>';
+    if (tab === 'lop') return tabs + '<div class="ph-c">' + lopPage() + '</div>';
+    // (the reputation stands last, Jonas' «A: Under Bestillinger»: the earlier orders go in before its card; and an order is taken in
+    // port, as when the new orders stood only in Bygd: at sea the button says so)
+    let bs = salg('best'); const i = bs.lastIndexOf('<div class="ph-card"><h4>' + L('Omdømme', 'Reputation')), old = ordEarlier();
+    if (S.boat.status !== 'port') bs = bs.replace(/<button([^>]*?)data-pa="ordtake"/g, '<button$1data-why="' + L('Tas i havn', 'Taken in port') + '" disabled data-pa="ordtake"');
+    return tabs + (i >= 0 ? bs.slice(0, i) + old + bs.slice(i) : bs + old);
   }
-  function ordlBest(tabs){
-    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, H = S.t / 60, h = ['<div class="ph-c">' + (tabs || '')];
-    if (!O.active.length) h.push('<div class="ph-card"><p class="ph-note">' + L('Ingen aktive oppdrag. Nye oppdrag tar du under Bygd, Oppdrag, når båten ligger i havn.', 'No active orders. You take new ones under Village, Orders, when the boat is in port.') + '</p></div>');
-    for (const o of O.active){ const got = o.kg - o.left, late = o.due - S.t < 360;
-      h.push('<div class="ph-card ordq"><h4>' + cn(o.cust) + '</h4><p>' + L('Lever ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase() + ' i ' + portById(o.port).name, 'Deliver ' + fmt(o.kg, 0) + ' kg of ' + SPECIES[o.sp].en.toLowerCase() + ' at ' + portById(o.port).name) + '</p>' +
-        '<div class="qbar"><i style="width:' + Math.round(got / o.kg * 100) + '%"></i></div>' + kv(L('Levert', 'Delivered'), fmt(got, 0) + ' / ' + fmt(o.kg, 0) + ' kg') + kv(L('Kvalitet', 'Quality'), QN[o.q][S.lang]) +
-        kv(L('Frist', 'Deadline'), '<span class="' + (late ? 'r2' : '') + '">' + dayStr(o.due / 60) + ' ' + hm(o.due / 60) + ' · ' + inReal(o.due - S.t) + '</span>') + kv(L('Tillegg og bonus', 'Premium and bonus'), '+' + Math.round(o.prem * 100) + ' % · ' + kr(o.bonus)) + '</div>'); }
+  function oppdrag(){ return ordPage('oppdrag', 'best'); }
+  function ordl(){ return ordPage('ordl', 'turer'); }
+  function ordEarlier(){
+    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, h = [];
     const old = (O.done || []).slice(0, 12);
     if (old.length) h.push('<h4 style="margin:10px 2px 4px">' + L('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(o => kv(cn(o.cust) + ' · ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase(), (o.ok === false ? '<span class="r2">' + L('Ikke levert', 'Not delivered') + '</span>' : '<span class="r0">' + L('Levert', 'Delivered') + '</span>') + ' · ' + dayStr(o.t / 60).replace(/^\S+ /, ''))).join('') + '</div>');
-    return h.join('') + '</div>';
+    return h.join('');
   }

@@ -45,3 +45,39 @@ målingen ved foten ga falske treff i den høye akterskansen. `tests/ma36shot.py
 
 61 259 trekanter nær, `lodm` 39 999, fjern 3 918, glass 194, GLB 3,6 MB (før: 25 133 / 2 815, 0,84 MB). Deplasementet er 21,9 t ved
 tegningens vannlinje (før 29,5). Dypgangen er 2,00 m med skoen. Lengden i båndet til `vessel3d` er 11,12 m og bredden 4,11 m.
+
+## 6. Runde 2 (OB11, 11.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.9. Det som gjelder neste båt:
+
+- **En endring i skrogets bredde flytter spillets plasser, også når alt i skriptet stemmer.** Dekkskartet har ruter på 0,2 m, og `deckcrew.js` velger karenes losseplass (`landSlots`) og plassene ved ripa etter rutene. 4 cm mer dørk i en låring ga en ny losseplass og tok plassen til han som gir tegn. `check()` i skriptet ser det ikke; `crewclip` gjør. Kjør `crewclip` rett etter en eksport som endrer skrogets eller dørkens omriss, før bildene tas.
+- **Bilder på skjermer og mønster på dørk uten teksturer:** et rutenett av små flater (11 mm på skjermene, 10 cm på dørken) med et eget materiale, farget i hjørnene av `wear()` etter punktets plass. Spillet og rendringen viser det samme, og fjernmodellen er uten.
+- **Sklisikring som et lag 4 mm over dørken**, bare der ingenting står (`grip_free`): rennene langs skansene og rundt luka, casingen og føttene leser som glatt gelcoat fordi feltene stopper før dem.
+- **En modell kan si hvor navnet og merket står** (`anchors.nameHouse`, `anchors.marks`), når spillets søk ikke finner plassen eieren vil ha. Merkets stripe trenger tette stasjoner i baugen (49 på 1,08 m): `stripProud` leser nærmeste stasjon, og bredden endrer seg 0,66 m per meter der. `regmarktest` var rød med ni.
+- **En liten flis ved et boolsk kutt** (lensporten som slutter 3 cm fra en stasjon) ga den ene flata `flatnorm` fant i runde 1. Flytt åpningen så stasjonen går gjennom den.
+- **Tekst i rendringene** lages med Blenders egen skrift gjort om til flater og lagt på skroget punkt for punkt (`render_only()`, aldri eksportert).
+- **En plass for en teinestabel må prøves mot `potshot` før bildene tas, ikke etter.** `check()` regner mot skansen, masta og pullertene; `potshot` regner mot dekkskartets ruter på 0,2 m, der den ytterste ruta ved skansen ikke er gulv og unntaket for den gjelder fra `beam`/2 − 0,45. I runde 2 ble etter-bildene tatt og karakteren satt med stabelen på en plass testen siden felte.
+
+## 7. Runde 3 (OB11, 12.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.10. Det som gjelder neste båt:
+
+- **Flagget henger der spillet setter det, fra toppen av `anchors.pole`, og blåser med den tilsynelatende vinden** (`24-cinema.js`). En flaggstang på ripa ved hekken gir et flagg i hodehøyde over den som setter. På en båt med galge: sett stanga på galgen, og regn i `check()` at et flagg på 1,2 m ikke henger lavere enn 2,0 m over dekket.
+- **To bokser med toppen i samme plan der de krysser hverandre gir svarte firkanter** i rendringen (tverrbjelkene gjennom sidebjelkene på galgen). La tverrbjelkene gå mellom sidebjelkenes innsider og være noen millimeter lavere.
+- **Et stag som ender midt på toppen av en bjelke** har halve endeflata i lufta; la det gå inn i bjelken og stå i et øre.
+- **Detaljer på 1–2 cm synes ikke i spillets bilder** (dørhåndtaket og hengslene var der i runde 2, sensoren så dem ikke). Et håndtak på 17 cm, et mørkt låsskilt og en mørk tetningslist rundt dørbladet leser.
+- **Lister i skjøtene og beslag i stål** passer `clip_malo36` (stål er tillatt ved veggene); `alu` ble talt som gjennom siden.
+- **Slitasje per hjørne** synes bare der flatene har mange hjørner (skansene, skroget). På store hvite bokser blir den en myk overgang mot foten; det er det som er mulig uten teksturer.
+
+
+## 8. Runde 4 (OB11, 12.11.2026): det som er lært
+
+Hva som ble gjort, står i `breisjark-grunnlag.md` 10.11. Det som gjelder neste båt:
+
+- **Spør spillet hvor folkene står, ikke koden.** En sonde som kjører scenene fra `tests/ombord.py` og skriver ut `CREW3D.visible()` (de med `mode` `at`) i modellens ramme, ga plassene på noen minutter. To av sensorens funn var ikke det de så ut som: mannen «i stolpen» i `spill_teiner` var en som tok kaffe ved ripa, og mannen «i en stolpe» i `teiner_trekk` sto 0,8 m fra veggen og ble dekket av den sett fra kameraet. Plassene i pausen velges av `deckcrew.js` blant de ledige rutene ved ripa, så en stolpe på ripa der folk står, blir alltid funnet av noen.
+- **En stolpe på ripa i den åpne sida er i veien for alle.** Ta den bort og bær taket med veggen og et kne, eller sett den der ingen kan stå (over en kasse).
+- **Et svart viskerarm forsvinner mot mørkt glass.** Rustfrie armer med svart gummi leser.
+- **Rustrenner på mørk maling** trenger hele åpningens bredde (`run_under` fra `hs11.py`). En lys rust (0,50, 0,25, 0,09 med 0,80) leste som lys om natta for sensoren; dempet (0,30, 0,18, 0,11 med 0,55) synes den fortsatt i dagslys.
+- **Store hvite kasser** trenger rutenett for at slitasjen per hjørne skal synes: maskinkassa er bygd som rutenett (`gbox`). På styrhuset, der skallet får `solidify` og vinduskutt, ga et rutenett hakk ned akterhjørnet; det ble tatt bort. Legg heller ringer på innsida etter kuttene.
+- **Spillets eget utstyr mangler i rendringene** (ankeret i rulla): legg det i `render_only()` så rendringen viser det spilleren ser.
+- **Før-opptaket kan hentes fra forrige runde** når modellen ikke er endret siden: to opptak samtidig tok over to timer per format.

@@ -1,0 +1,270 @@
+  // ---------- the short sea from FFT tiles (Bølgene B1, docs/planer/bolgene.md, 12.11.2026) ----------
+  // A worker turns the wind sea shorter than the long waves' cut (some 32 m) into two tiles of real waves (core/03k-hav-fft.js: JONSWAP
+  // spread over the directions, thousands of waves each at its own speed), every frame, and they go up as two float textures with their
+  // mip levels (units 8 and 9). In B1 only the sea's light reads them: the normals, the glitter and the glow through the crests come from
+  // the tiles where waves 4-9 gave them (SEA_FS), so the crests are short and staggered and the stripes and the grid in the glitter go;
+  // the sea's shape, the boat in it and the whitecaps are still the Gerstner waves (B2 and B3). The tiles ride in the near field's frame
+  // as the short waves do (P - NF.D), so the water passes the hull at her real speed, and run on the waves' clock (t, real seconds), so
+  // they never race with the game's 6x. The worker gets the time the frame after next will show (FFT.lat ahead), and its result goes up
+  // when it comes; it is never asked again before it has answered, so it never queues. WebGL 2 only (RGBA16F with the levels from the
+  // worker, no extension needed); elsewhere, with «#fft0» in the address, or if the worker fails, the sea is as before.
+  const FFT = {on:!/fft0/.test(location.hash), ok:false, w:null, busy:false, tex:[null, null, null], have:false, cpu:null, cpuL:-1, st:[[0, 0, 0], [0, 0, 0]], key:'', keyT:-1e9, sentT:0, sentAt:0, lat:0.02, ms:0, up:0, n:0, why:'', bufs:null, A0:1, aniso:null, bl:/fftbl1/.test(location.hash), src:null, si:[0, 1, 2], tA:0, tB:0, tC:0, got:0, pend:false, fb:null, prog:null, f:-1, hold:0, fdt:0.017, lt:null};
+  const FFTT = HFFT.tiles;
+  function fftWorker(){
+    const src = [hfftHash, hfftLgam, hfftPlan, hfft1, hfft2, hfftSpec, hfftFrame, hfftMips, hfftCapFit].map(f => f.toString()).join('\n') + '\n' +
+      'const len = N => { let s = 0; for (let n = N; n >= 1; n >>= 1) s += n * n * 4; return s; };\n' +
+      'let T = null, W = null;\n' +
+      'onmessage = e => { const D = e.data; try {\n' +
+      '  if (D.tiles){ T = D.tiles.map(t => Object.assign({}, t)); W = T.map((t, k) => { const n2 = t.N * t.N; return {plan:hfftPlan(t.N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:k ? null : new Float64Array(n2), im3:k ? null : new Float64Array(n2)}; }); }\n' +
+      '  if (D.P) for (const t of T) hfftSpec(t, D.P);\n' +
+      '  if (!T || !T[0].S){ postMessage({t:D.t, none:1}); return; }\n' +
+      '  const t0 = performance.now(), bufs = D.bufs || T.map(t => new Float32Array(len(t.N)).buffer).concat([new Float32Array(len(T[0].N)).buffer]), st = [];\n' +
+      '  for (let k = 0; k < T.length; k++) st.push(hfftFrame(T[k], D.t, new Float32Array(bufs[k]), W[k], k ? null : new Float32Array(bufs[T.length])));\n' +
+      '  const cq = hfftCapFit(new Float32Array(bufs[0]), T[0].N, st[0][1], new Float32Array(bufs[1]), T[1].N, st[1][1], 0, 8192, ' + HFFT.mix.w2 + ', true);\n' +
+      '  postMessage({t:D.t, st, cq, bufs, ms:performance.now() - t0}, bufs);\n' +
+      '} catch (err){ postMessage({err:String(err && err.message || err)}); } };\n';
+    const w = new Worker(URL.createObjectURL(new Blob([src], {type:'text/javascript'})));
+    w.onmessage = e => fftGot(e.data);
+    w.onerror = e => { e.preventDefault && e.preventDefault(); fftOff('arbeider: ' + (e.message || e)); };
+    w.postMessage({tiles:FFTT.map(t => ({N:t.N, L:t.L, lo:t.lo, hi:t.hi, seed:t.seed}))});
+    return w;
+  }
+  function fftOff(why){
+    FFT.why = why; FFT.on = false; FFT.ok = false; FFT.have = false; try { FFT.w && FFT.w.terminate(); } catch (e){} FFT.w = null;
+    for (let k = 0; k < 3; k++) if (FFT.tex[k]){ gl.deleteTexture(FFT.tex[k]); FFT.tex[k] = null; }
+    if (FFT.src){ for (const S of FFT.src) for (const tx of S) gl.deleteTexture(tx); FFT.src = null; }
+    if (typeof cloudErr === 'function') cloudErr('3D FFT-sjø av: ' + why + ' · ' + GPU, 'view3d fft', '');
+  }
+  function fftInit(){
+    if (FFT.ok || !FFT.on) return FFT.ok;
+    if (!GL2){ FFT.on = false; FFT.why = 'WebGL 1'; return false; }
+    try {
+      FFT.aniso = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+      for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, lv = Math.log2(N) + 1, tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, tx);
+        gl.texStorage2D(gl.TEXTURE_2D, lv, gl.RGBA16F, N, N);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        if (FFT.aniso) gl.texParameterf(gl.TEXTURE_2D, FFT.aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(4, gl.getParameter(FFT.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT) || 1));
+        FFT.tex[k] = tx; }
+      gl.activeTexture(gl.TEXTURE0);
+      fftBlInit();
+      FFT.w = fftWorker(); FFT.ok = true;
+    } catch (e){ fftOff(String(e && e.message || e)); }
+    return FFT.ok;
+  }
+  // The spectrum's parameters at the boat, sent again when they have moved enough to see (at most twice a second). One JONSWAP with
+  // its peak at the boat's own fetch (WV.Tb), not the Gerstner bands' blend of a young sea (1 km of fetch) and the grown one: weighted
+  // by height, the young one's peak at 2-3 m put a third of the sea's energy into waves under 7.5 m, twice Cox and Munk's slopes and a
+  // grey, washed-out glitter (first pictures, 12.11.2026). The shader scales the tiles to the local sea's height (fe2 / A0) as before.
+  function fftParams(t){
+    if (!WV.Tb) return null;
+    const dx = Math.sin(WV.dir), dz = -Math.cos(WV.dir), L0 = 9.81 * WV.Tb * WV.Tb / (2 * Math.PI);
+    const key = [Math.round(WV.ia * 50), Math.round(WV.Tb * 40), Math.round(WV.dir * 120)].join(',');
+    if (key === FFT.key || t - FFT.keyT < 0.5) return null;
+    FFT.key = key; FFT.keyT = t; const sp = hfftSp(L0);
+    return {dx, dz, so:sp, sy:sp, dv:1, ren:1, ia:WV.ia, wpB:2 * Math.PI / WV.Tb, lc:Math.sqrt(WL[3] * WL[4])};
+  }
+  // 5.20v (13.11.2026, Jonas' video: «det ser ut som at det nesten vibrerer litt»): the worker answers when it answers, a frame late as
+  // often as not, so the tiles stood still for a frame and then leapt two while everything else moved evenly (measured with the tiles
+  // every second frame: the fine pattern's likeness from frame to frame went 0.98, 0.89, 0.98, 0.89; even, 0.97). So the tiles drawn
+  // (FFT.tex) are no longer the worker's own: each frame they are blended on the GPU, level by level, between two of its answers (A at
+  // tA, B at tB) at the frame's own time. A third set (C) takes the next answer and waits until the time has reached tB; then A <- B,
+  // B <- C, and the blend goes on from where it was, so nothing ever jumps. The worker is asked fftLead ahead, 2.4 round trips: the
+  // answers come lead / 2 apart, and the frame's time lies between the two. Needs a float framebuffer (EXT_color_buffer_float or
+  // _half_float). OFF unless the address has «#fftbl1» (13.11.2026): the test with fixed steps still showed an uneven step where one pair of
+  // answers hands over to the next (0.99, 0.99, 0.92), not proven better than the worker's own tiles; Jonas compares on the tablet. The copies on the CPU (the boat, the spray) are
+  // the newest answer's, up to a lead ahead.
+  const FFT_BL_FS = 'precision highp float;varying vec2 vUV;uniform sampler2D uA;uniform sampler2D uB;uniform float uL;uniform float uF;void main(){gl_FragColor=mix(texture2DLod(uA,vUV,uL),texture2DLod(uB,vUV,uL),uF);}';
+  // (two round trips and two frames ahead: an answer is used a frame after it comes at the earliest, and with less the frame's time ran
+  // past B before the next answer was in, and the sea stood a frame, FFT.hold)
+  const fftLead = () => FFT.src ? clamp(2.4 * FFT.lat + 2.2 * FFT.fdt, 0.03, 0.5) : FFT.lat;
+  function fftBlInit(){
+    if (!FFT.bl) return;
+    try {
+      if (!gl.getExtension('EXT_color_buffer_float') && !gl.getExtension('EXT_color_buffer_half_float')) return;
+      if (!FFT.prog) FFT.prog = program(FOAM_VS, FFT_BL_FS, ['aXZ'], 'fftblanding');
+      if (!FFT.fb) FFT.fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, FFT.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, FFT.tex[0], 0);
+      const st = gl.checkFramebufferStatus(gl.FRAMEBUFFER); gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      if (st !== gl.FRAMEBUFFER_COMPLETE) return;
+      gl.activeTexture(gl.TEXTURE7);
+      FFT.src = [0, 1, 2].map(() => [0, 1, 2].map(k => { const N = FFTT[k % 2].N, tx = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tx); gl.texStorage2D(gl.TEXTURE_2D, Math.log2(N) + 1, gl.RGBA16F, N, N);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT); return tx; }));
+      gl.bindTexture(gl.TEXTURE_2D, null); gl.activeTexture(gl.TEXTURE0); FFT.si = [0, 1, 2]; FFT.got = 0; FFT.pend = false; FFT.f = -1;
+    } catch (e){ FFT.src = null; }
+  }
+  // an answer has gone up into the waiting set (C). The first, or one out of order (the clock set back, a long pause): it is the sea at once
+  function fftBlGot(tC){
+    const I = FFT.si;
+    // (nor is it blended when the worker is slow, a round trip over 90 ms: two answers a quarter of a second apart are a third of the
+    // shortest waves' period, and their mean would pulse; such a device has the worker's own tiles as before)
+    if (FFT.got < 1 || !(tC > FFT.tB) || tC - FFT.tB > 2 || FFT.lat > 0.09){ FFT.si = [I[2], I[2], I[0]]; FFT.tA = tC - 1e-3; FFT.tB = tC; FFT.got = 1; FFT.pend = false; FFT.f = -1; FFT.keep = I[1]; return; }
+    FFT.tC = tC; FFT.pend = true;
+  }
+  function fftBlend(now){
+    if (!FFT.got) return;
+    // (the waiting set's turn: the time has reached B. After the first answer A and B were the same set: the spare one is the third)
+    // (after an answer taken at once, got 1, the next one's turn comes straight away, and the glide to it starts from now: the tile
+    // drawn was asked a lead ahead, and waiting for the time to reach it the short sea stood still for up to half a second)
+    if (FFT.pend && (now >= FFT.tB || FFT.got === 1)){ const I = FFT.si, spare = I[0] === I[1] ? FFT.keep : I[0]; FFT.si = [I[1], I[2], spare]; FFT.tA = FFT.got === 1 ? Math.min(FFT.tB, now - 1e-3) : FFT.tB; FFT.tB = FFT.tC; FFT.pend = false; FFT.got = 2; }
+    const f = clamp((now - FFT.tA) / Math.max(FFT.tB - FFT.tA, 1e-4), 0, 1);
+    if (f >= 1 && now > FFT.tB + 0.004) FFT.hold++;   // (frames the sea stood waiting for the worker, for the tests and #fps)
+    if (f === FFT.f) return; FFT.f = f; FFT.tT2 = FFT.tA + f * (FFT.tB - FFT.tA);
+    const A = FFT.src[FFT.si[0]], B = FFT.src[FFT.si[1]], u = FFT.prog.u;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, FFT.fb); gl.disable(gl.DEPTH_TEST); gl.disable(gl.BLEND); gl.disable(gl.CULL_FACE); gl.useProgram(FFT.prog.p);
+    gl.uniform1i(u.uA, 6); gl.uniform1i(u.uB, 7); gl.uniform1f(u.uF, f); attr(0, SKYQ, 2);
+    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N;
+      gl.activeTexture(gl.TEXTURE6); gl.bindTexture(gl.TEXTURE_2D, A[k]); gl.activeTexture(gl.TEXTURE7); gl.bindTexture(gl.TEXTURE_2D, B[k]);
+      for (let n = N, lv = 0; n >= 1; n >>= 1, lv++){ gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, FFT.tex[k], lv); gl.viewport(0, 0, n, n); gl.uniform1f(u.uL, lv); gl.drawArrays(gl.TRIANGLES, 0, 6); } }
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, null, 0); gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.activeTexture(gl.TEXTURE0);
+  }
+  function fftGot(D){
+    FFT.busy = false;
+    if (D.err){ fftOff('arbeider: ' + D.err); return; }
+    if (D.none || !FFT.ok) return;
+    const now = performance.now(), t1 = performance.now();
+    const C = FFT.src ? FFT.src[FFT.si[2]] : FFT.tex;   // (5.20v: into the set that waits, fftBlend glides to it; without it, straight to the tiles drawn)
+    for (let k = 0; k < 3; k++){ const N = FFTT[k % 2].N, a = new Float32Array(D.bufs[k]); gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, C[k]);
+      let o = 0, lv = 0; for (let n = N; n >= 1; n >>= 1, lv++){ gl.texSubImage2D(gl.TEXTURE_2D, lv, 0, 0, n, n, gl.RGBA, gl.FLOAT, a, o); o += n * n * 4; }
+      gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]); }
+    gl.activeTexture(gl.TEXTURE0);
+    if (FFT.src) fftBlGot(D.t);
+    fftKeep(new Float32Array(D.bufs[2])); fftKeepS(D.bufs);
+    FFT.bufs = D.bufs; FFT.st = D.st; FFT.have = true; FFT.n++; FFT.tT = D.t;
+    // (the crests' threshold fitted to these tiles, eased over a few frames so its sampling noise never flickers the whitecaps)
+    if (D.cq){ if (!FFT.cq) FFT.cq = D.cq.slice(); else for (let k = 0; k < 3; k++) FFT.cq[k] = FFT.cq[k] * 0.85 + D.cq[k] * 0.15; }   // (tT: the world time the tiles on the GPU and in the copies are for)
+    FFT.ms = FFT.ms ? FFT.ms * 0.9 + D.ms * 0.1 : D.ms; FFT.up = FFT.up ? FFT.up * 0.9 + (performance.now() - t1) * 0.1 : performance.now() - t1;
+    // how far ahead to ask: the time a request takes to come back, as the waves' clock counts it
+    FFT.lat = clamp(FFT.lat * 0.9 + ((now - FFT.sentAt) / 1000) * 0.1, 0.005, 0.25);
+  }
+  // B2, the sea's shape (12.11.2026): the first tile's displacement and height (unit 10) lift the wave patch in the vertex shader where it
+  // can read textures there (SST_VS; the phone keeps waves 4-9's Gerstner shape), at the mip level whose texel is a grid cell (fvLod), so
+  // what the grid cannot hold is filtered out, as the Gerstner waves fade under 2.5 cells; seaDisp reads the same two levels from a copy
+  // here, so the boat, the buoys and the gear lie in the waves that are drawn. The second tile (7.5-0.8 m) is below the grid: light only.
+  const fvLod = () => Math.max(0, Math.log2((2 * HALF / NP) / (FFTT[0].L / FFTT[0].N)));
+  // (from level 0, since the fine patch round the boat reads the tile at its own cell's level, 0, and blends to the grid's: FFT.cpuL is
+  // the last level kept, the grid's and the one over it)
+  function fftKeep(a){
+    const N = FFTT[0].N, l1 = Math.min(Math.floor(fvLod()) + 1, Math.log2(N)); let len = 0, n = N;
+    for (let l = 0; l <= l1; l++){ len += n * n * 4; n >>= 1; }
+    if (!FFT.cpu || FFT.cpu.length !== len) FFT.cpu = new Float32Array(len);
+    FFT.cpu.set(a.subarray(0, len)); FFT.cpuL = l1;
+  }
+  // B3: the two tiles' trace and height at level 0 (tr, h per cell), for FOAM.capAt (the spray from the crests that break, sea3d)
+  function fftKeepS(bufs){
+    if (!FFT.cs) FFT.cs = FFTT.map(T => new Float32Array(T.N * T.N * 2));
+    for (let k = 0; k < 2; k++){ const a = new Float32Array(bufs[k]), c = FFT.cs[k], n2 = FFTT[k].N * FFTT[k].N; for (let i = 0; i < n2; i++){ c[i * 2] = a[i * 4 + 2]; c[i * 2 + 1] = a[i * 4 + 3]; } }
+  }
+  const fftFoam = () => FFT.on && FFT.ok && FFT.have && !!FFT.cs;
+  // the sum of both tiles' (tr, h) at a world point, bilinear at level 0 as the shaders read them up close
+  const FFT_S = [0, 0];
+  // (B6: the short tile read twice, turned +-HFFT.mix.rot and the second shifted, over sqrt 2, as the shaders read it (fftT2); in the trace,
+  // the crests' measure, it counts HFFT.mix.w2, so [0] is tr1 + w2 tr2 and [1] the height, both tiles in full)
+  function fftTrH(x, z, only2){
+    FFT_S[0] = FFT_S[1] = 0; const M = HFFT.mix;   // (only2: the short tile's two reads alone, for monster)
+    const rd = (k, px, pz, w0, w1) => { const n = FFTT[k].N, L = FFTT[k].L, A = FFT.cs[k];
+      let u = ((px / L) * n - 0.5) % n, v = ((pz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
+      const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
+      for (let q = 0; q < 2; q++){ const a = A[(j0 * n + i0) * 2 + q], b = A[(j0 * n + i1) * 2 + q], c = A[(j1 * n + i0) * 2 + q], d = A[(j1 * n + i1) * 2 + q];
+        FFT_S[q] += (q ? w1 : w0) * ((a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv); } };
+    if (!only2) rd(0, x - NF.O[0], z - NF.O[1], 1, 1);
+    const r = hfftRot(x, z, M), L2 = FFTT[1].L, h = Math.SQRT1_2;   // (each read's own offset in its own frame, NF.OA and NF.OB: nfShift)
+    rd(1, r[0] - NF.OA[0], r[1] - NF.OA[1], M.w2 * h, h); rd(1, r[2] - NF.OB[0] + M.dB[0] * L2, r[3] - NF.OB[1] + M.dB[1] * L2, M.w2 * h, h);
+    return FFT_S;
+  }
+  // the crests' measure's spread for Hs = 1 (the long tile's trace and w2 of the short one's)
+  const fftCapSd = () => Math.max(Math.hypot(FFT.st[0][1], HFFT.mix.w2 * FFT.st[1][1]), 1e-6);
+  // is the shape from the tile on (the vertex shader takes it only with textures there, the full sea, and data)
+  const fftShape = () => FFT.on && FFT.ok && FFT.have && FFT.cpu && SST_VS && PS && !PS.lite && !PS.basic && !PS.far;
+  // the tile's (Dx, Dz, h) at a world point, trilinear between the two kept levels as the GPU samples them (FFT_D)
+  const FFT_D = [0, 0, 0];
+  function fftAt(x, z, lod){
+    const N = FFTT[0].N, L = FFTT[0].L, lv = clamp(lod === undefined ? fvLod() : lod, 0, FFT.cpuL), l0 = Math.min(Math.floor(lv), FFT.cpuL - 1), f = clamp(lv - l0, 0, 1), qx = x - NF.O[0], qz = z - NF.O[1], A = FFT.cpu;
+    FFT_D[0] = FFT_D[1] = FFT_D[2] = 0; let b0 = 0; for (let l = 0; l < l0; l++) b0 += (N >> l) * (N >> l) * 4;
+    for (let q = 0; q < 2; q++){ const n = N >> (l0 + q), base = b0 + (q ? (N >> l0) * (N >> l0) * 4 : 0), w = q ? f : 1 - f; if (w <= 0) continue;
+      // (texel centres at (i + 0.5) L / n, as the GPU has them; the tile wraps)
+      let u = ((qx / L) * n - 0.5) % n, v = ((qz / L) * n - 0.5) % n; if (u < 0) u += n; if (v < 0) v += n;
+      const i0 = Math.floor(u), j0 = Math.floor(v), fu = u - i0, fv = v - j0, i1 = (i0 + 1) % n, j1 = (j0 + 1) % n;
+      for (let k = 0; k < 3; k++){ const a = A[base + (j0 * n + i0) * 4 + k], b = A[base + (j0 * n + i1) * 4 + k], c = A[base + (j1 * n + i0) * 4 + k], d = A[base + (j1 * n + i1) * 4 + k];
+        FFT_D[k] += w * ((a * (1 - fu) + b * fu) * (1 - fv) + (c * (1 - fu) + d * fu) * fv); } }
+    return FFT_D;
+  }
+  // the tiles' amplitude at the boat (A0: the squared Gerstner amplitudes of waves 4-9 for Hs = 1, as the shaders and seaDisp sum them)
+  function fftA0(){ let A0 = 0; const dv = WV.loc[2], ren = 1 / Math.sqrt(Math.max(1 - 2 * dv * (1 - dv) * (1 - WV.dot), 0.05));
+    for (let i = 4; i < 10; i++){ const c = WV.list[i]; if (!c) continue; const a = (dv * c.wo + (1 - dv) * c.wy) * ren; A0 += a * a; } return Math.max(A0, 1e-8); }
+  // (tests only, B4: the tiles at a given world time on this thread, from the last spectrum sent, so two pages can be compared at one instant)
+  function fftSyncAt(tw){
+    if (!FFT.P) return false; if (FFT.syncT === tw) return true;   // (the same instant again: the tiles are already that)
+    const T = FFTT.map(t => Object.assign({}, t)), outs = [];
+    for (let k = 0; k < 2; k++){ const n2 = T[k].N * T[k].N, W = {plan:hfftPlan(T[k].N), re1:new Float64Array(n2), im1:new Float64Array(n2), re2:new Float64Array(n2), im2:new Float64Array(n2), re3:new Float64Array(n2), im3:new Float64Array(n2)};
+      hfftSpec(T[k], FFT.P); const o = new Float32Array(hfftLen(T[k].N)), d = k ? null : new Float32Array(hfftLen(T[k].N)); FFT.st[k] = hfftFrame(T[k], tw, o, W, d); outs.push(o); if (d) outs.push(d); }
+    fftKeep(outs[1]); fftKeepS([outs[0].buffer, outs[2].buffer]); FFT.syncT = FFT.tT = tw; return true;   // (the threshold FFT.cq stays the eased one the live sea uses)
+  }
+  // every frame (24-cinema.js, after the waves): ask for the tiles at the time they will be shown, if the worker is free
+  function fftStep(t){
+    if (!FFT.on || !PS || PS.basic || PS.far) return;
+    if (!fftInit() || !FFT.w) return;
+    if (FFT.lt != null && t > FFT.lt) FFT.fdt += (clamp(t - FFT.lt, 0.004, 0.1) - FFT.fdt) * 0.1; FFT.lt = t;   // (the frame's length, eased)
+    if (FFT.src) fftBlend(t + WV.dT);
+    if (FFT.busy){ if (performance.now() - FFT.sentAt > 3000) FFT.busy = false; else return; }   // (a lost answer does not stop it)
+    if (FFT.pend) return;   // (the set that waits is not yet due: nowhere to put another)
+    // (each answer later than the last: the lead follows the round trip and shrinks when the worker quickens, and a time before B's
+    // would be out of order, taken at once, a jump; the test with fixed steps saw one every few frames)
+    let tq = t + WV.dT + fftLead(); if (FFT.src){ if (FFT.tq != null && Math.abs(FFT.tq - tq) < 2) tq = Math.max(tq, FFT.tq + 0.9 * FFT.fdt); FFT.tq = tq; }
+    const P = fftParams(t), msg = {t:tq, P};   // (B4: the world's clock in real seconds, the same for everyone)
+    if (P) FFT.P = P;
+    if (FFT.bufs){ msg.bufs = FFT.bufs; FFT.bufs = null; }
+    FFT.busy = true; FFT.sentAt = performance.now(); FFT.sentT = t;
+    FFT.w.postMessage(msg, msg.bufs || []);
+  }
+  // the sea program's uniforms: the tiles on units 8 and 9, where each one's lookup starts near the camera (a whole number of tiles, so
+  // the coordinates stay small and the mip level never jumps at a seam), the tiles' sizes, on/off and the tiles' amplitude at the boat
+  // (A0: the sum of the squared Gerstner amplitudes of waves 4-9 for Hs = 1, as the shader sums them at every pixel, so the tiles scale
+  // to the local sea, its height, how grown it is, the shoaling and the stream), and the tiles' statistics for the roughness they lose
+  // to the pixel and for the crests' sharpening
+  function fftBind(u, eye){
+    if (u.uFftP == null) return;
+    const on = FFT.on && FFT.ok && FFT.have;
+    if (u.uFvP != null) gl.uniform4f(u.uFvP, 0, 0, 0, 1);
+    if (!on){ gl.uniform4f(u.uFftP, 0, 0, 0, 1);
+      // (the samplers on their own units with a stand-in, 12.11.2026, sea3d: left at unit 0 while the tiles were not up, the foam map's pass
+      // drew into the texture bound there, «Feedback loop formed between Framebuffer and active Texture», GL error 1282, on the lighter seas)
+      if (GL2) for (const [nm, k] of [['uFft1', 8], ['uFft2', 9], ['uFftD', 10]]) if (u[nm] != null){ gl.activeTexture(gl.TEXTURE0 + k); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u[nm], k); }
+      gl.activeTexture(gl.TEXTURE0); return; }
+    const A0 = fftA0();
+    // (B4: each tile lies in the world, less the boat's own offset for it, NF.O; the shader looks it up at P - uNFD - o, so o is that
+    // offset in the shader's frame, moved by whole tiles to near the camera)
+    const qx = eye[0] - RO.x - NF.D[0], qz = eye[2] - RO.z - NF.D[1], o = FFTT.map((T, k) => { const bx = NF.O[k * 2] - RO.x - NF.D[0], bz = NF.O[k * 2 + 1] - RO.z - NF.D[1];
+      return [bx + T.L * Math.round((qx - bx) / T.L), bz + T.L * Math.round((qz - bz) / T.L)]; });
+    for (let k = 0; k < 2; k++){ gl.activeTexture(gl.TEXTURE8 + k); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[k]); gl.uniform1i(k ? u.uFft2 : u.uFft1, 8 + k); }
+    gl.activeTexture(gl.TEXTURE0);
+    gl.uniform4f(u.uFftO, o[0][0], o[0][1], o[1][0], o[1][1]);
+    gl.uniform4f(u.uFftP, 1 / FFTT[0].L, 1 / FFTT[1].L, 1, A0);
+    if (GL2 && u.uFftD != null && !fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, SSDUMMY); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0); }
+    if (u.uFvP != null && fftShape()){ gl.activeTexture(gl.TEXTURE10); gl.bindTexture(gl.TEXTURE_2D, FFT.tex[2]); gl.uniform1i(u.uFftD, 10); gl.activeTexture(gl.TEXTURE0);
+      gl.uniform4f(u.uFvO, o[0][0], o[0][1], fvLod(), 0); gl.uniform4f(u.uFvP, 1 / FFTT[0].L, 0, 1, A0); gl.uniform4f(u.uFvQ, 0, 0, Math.hypot(FFT.st[0][1], FFT.st[1][1]), 0); }
+    const s = FFT.st; gl.uniform4f(u.uFftQ, s[0][0], s[1][0], Math.hypot(s[0][1], s[1][1]), s[0][2] + s[1][2]);
+    if (u.uFftQ2 != null){ const c = FFT.cq || [0, 1, 0]; gl.uniform4f(u.uFftQ2, c[0], c[1], c[2], fftCapSd()); }
+    // B6: the short tile's two reads (fftT2 in 01-shaders.js): uv = R(+-rot) P / L + c, P the shader's place from the render origin (small
+    // numbers: not P - uNFD, which runs to tens of kilometres, the kontroll 12.11.2026); c = (R RO - the read's own offset) / L, worked
+    // out here in doubles and folded to the tile, as fftTrH reads it
+    if (u.uF2r != null){ const M = HFFT.mix, L = FFTT[1].L, b = hfftRot(RO.x, RO.z, M), f = v => v - Math.floor(v);
+      gl.uniform4f(u.uF2r, f((b[0] - NF.OA[0]) / L), f((b[1] - NF.OA[1]) / L), f((b[2] - NF.OB[0]) / L + M.dB[0]), f((b[3] - NF.OB[1]) / L + M.dB[1])); }
+  }
+  // B4: the rest of the near sea's light in the shared sea's place and time (01-shaders.js): the gusts' four slow fields drifting downwind
+  // at 1.2 m/s, the cat's paws (nsP, folded modulo its 256-cell lattice) and the eight ripples (RIP), which ride with her under way as
+  // the short tile does (NF.O[2..3]) and glide back with it. Worked out here in doubles from the world's clock (t + WV.dT) and the world's
+  // place (P + RO), so the shaders get small numbers. Before, they ran on the view's clock in the frame of the render origin.
+  const GSTA = [[0.0021, 0.0013, 0], [-0.0009, 0.0024, 1.3], [0.0047, -0.0031, 2.1], [0.0019, 0.0067, 4.0]];
+  function seaShared(u, t){
+    brvSet(u);   // (the breaking sea, Ø9 F7, 14-sea.js)
+    if (u.uGst == null && u.uRp0 == null && u.uPaw == null) return;
+    const TAU = 2 * Math.PI, md = (v, P) => ((v % P) + P) % P, tw = t + WV.dT, w = env.windDir || [0, 1], wp = [-w[1], w[0]];
+    if (u.uGst != null){ const gx = RO.x - w[0] * 1.2 * tw, gz = RO.z - w[1] * 1.2 * tw; gl.uniform4f(u.uGst, ...GSTA.map(([a, b, c]) => md(a * gx + b * gz + c, TAU))); }
+    if (u.uPaw != null) gl.uniform2f(u.uPaw, md(RO.x * 0.013 - w[0] * 0.026 * tw, 256), md(RO.z * 0.013 - w[1] * 0.026 * tw, 256));
+    if (u.uRp0 != null){ const r = RIP.map((q, j) => { const dx = w[0] * Math.cos(q.ang) + wp[0] * Math.sin(q.ang), dz = w[1] * Math.cos(q.ang) + wp[1] * Math.sin(q.ang);
+        return md(q.k * (dx * RO.x + dz * RO.z) - NF.rp[j] - q.om * tw + 1.9 * j, TAU); });   // (her own phases, NF.rp, nfShift)
+      gl.uniform4f(u.uRp0, r[0], r[1], r[2], r[3]); gl.uniform4f(u.uRp1, r[4], r[5], r[6], r[7]); }
+  }
+

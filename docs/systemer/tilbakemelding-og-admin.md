@@ -8,6 +8,7 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 
 - **Rutinen** er en Claude Code-rutine (Routine) som starter en ny økt kl. 05.58, 11.58, 17.58 og 23.58 Oslo-tid, to minutter før hver hel time Jonas ba om. Den følger `tools/feedback/RUTINE.md` på arbeidsgrenen. Instruksene kan altså endres med en push, uten å røre rutinen. Rutinen er `trig_01U6Q88HroVFLRYZJiYm9ko5` og varsler med push. Den nye økta har ikke repoet fra start og kloner arbeidsgrenen selv, fordi repoet er offentlig. For å pushe og åpne PR-er kobler den repoet til seg selv med `add_repo`.
 - **Veien inn** er Edge-funksjonen `feedback-agent`, med egen nøkkel `FEEDBACK_AGENT_TOKEN`. Jonas lager nøkkelen og legger den inn som hemmelighet i Supabase og som API-legitimasjon i Claude Code-miljøet (ikke som miljøvariabel, for den er synlig for alle som bruker miljøet). Funksjonen kaller bare `agent_*`-funksjonene i `20261006120000_feedback_agent.sql`, så nøkkelen gir ingen tilgang til spillere, lagringer eller kjøp. Rutinen bruker ikke Supabase-koblingen.
+- **Fra testadressen** (12.11.2026, Jonas: «viktig at denne funksjonen fungerer da det gir claude mye informasjon til å rette eventuelle feil jeg oppdager»): det som sendes fra test.detstorebla.no, lagres i testprosjektet (`xlrjbqdhdymcdjkqkulx`; innsendingen virker der, sett 12.11.2026). `agent.py --test …` går mot `feedback-agent` der i stedet for i produksjonen, og rutinen leser begge. Det krever tre ting i testprosjektet, som bare Jonas kan gjøre: (1) migreringene for agenten er kjørt (`20261006120000_feedback_agent.sql` og de senere som endrer `agent_*`), (2) funksjonen `feedback-agent` er deployet der med `_shared/`, med en egen hemmelighet `FEEDBACK_AGENT_TOKEN` (32 tegn eller mer, ikke den samme som i produksjonen), og (3) den samme nøkkelen er lagt inn i Claude Code-miljøet som nettverkshemmelighet for verten `xlrjbqdhdymcdjkqkulx.supabase.co` (`Authorization: Bearer`). Til det er gjort, svarer `--test` med 403 (verten er ikke tillatt), 404 (funksjonen mangler) eller 401 (nøkkelen stemmer ikke). Satt opp av Jonas 12.11.2026 og prøvd samme dag (begge tilbakemeldingene hans lest, notert og svart). **Øktene og rutinen har alltid lov** til å lese og notere med `agent.py`, i begge prosjektene (Jonas 12.11.2026: «du har lov, alltid»); tillatelsen står i `.claude/settings.json`.
 - **Hva agenten ser** (`agent_feedback`):
   - Den ser teksten, emnet, karakteren og bildene. Videoene ser den ikke, bare hvor mange det er.
   - Den ser også en fast liste med nøkler fra `meta`: versjon, enhet, skjerm, 3D-nivå, bildetakt, båt, status, havn, posisjon, spilltid og veiledningssteg.
@@ -107,6 +108,12 @@ Jonas ba om det slik: «koble deg opp mot detstorebla.no/admin slik at du kan he
 - Alt fra spillerne går gjennom `esc()`. Tabellen har seks kolonner og tallene på egen linje, så den får plass i 800×1280 uten å rulle sidelengs.
 - Under «Økonomi i spillet» står det øverst at tallene er meldt av spillet, og median og 90-persentil kasse er merket «meldt av spillet».
 - Hva et merke er, står i `docs/systemer/skyen-og-felles-verden.md`, «Kronene og landingene sjekket på serveren». Testen er `tests/admintest.py`.
+
+## Admin: Kvotemarkedet under «Økonomi i spillet» (KM5, 12.11.2026)
+
+- Fire kort fra `admin_km` (KM2) og `admin_km5` (`supabase/migrations/20261112130000_km5.sql`): salg per uke, slag og hjemmelslengde med medianprisen og medianen mot taksten; kjøpt fra spillere mot registeret per gruppe med spillernes andel av hjemlene (fra `admin_share`); timene fra oppføring til første bud; og målingen (hendelsene med median prosent av taksten).
+- Bare summer, aldri hvem. Kjøp fra registeret (`km_reg`) kommer bare fra spillere som har sagt ja til målingen; salgene mellom spillere er alle.
+- Leses av to ekte uker etter at KM5 er hos spillerne, før noe justeres (`docs/BACKLOG.md` 10.5). Testen er `tests/admintest.py` (demoen, `admin_kvotemarkedet.png`).
 
 ## 5.25c Admin: åpningen på nytt (05.10.2026)
 

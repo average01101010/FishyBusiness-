@@ -2,8 +2,8 @@
 // kmBuyWhy, the sum of the quota factors before and after a sale, the same tonnes for the same right in two saves with WORLD_SEED, the free
 // right's two years, and the quota cap after kvoteforskriften § 12 (5 and 6 times).
 export default function (t){
-  const K = t.K, {newState, ensureFleet, newVesselObj, vget, HJ, STRUCT, KM, KPK, MB, licQ, licExtra, yearQuota, yearH, kmTakst, kmBounds, kmQuick, kmWhy, kmBuyWhy,
-    kmPack, kmOut, kmApply, kmFree, kmFreeList, kmCod, kmKf, structRoom, structFits, structIn, npcReg, EPOCH, WORLD_SEED, PORTS, portServices} = K;
+  const K = t.K, {newState, ensureFleet, newVesselObj, vget, HJ, STRUCT, KM, kpkAt, MB, licQ, licExtra, yearQuota, yearH, kmTakst, kmBounds, kmQuick, kmWhy, kmBuyWhy,
+    kmPack, kmOut, kmApply, kmFree, kmFreeList, kmCod, kmKf, structRoom, structFits, structIn, npcReg, EPOCH, PORTS, portServices} = K, WORLD_SEED = K.get('WORLD_SEED');
   const mk = qseed => { const S = newState(); S.qseed = qseed; K.set('S', S); ensureFleet(); S.me = S.cur; S.cash = 5e7; S.boat.status = 'port'; S.fm = {n:0, last:-1, kr:0, b:true}; return S; };
   let S = mk(WORLD_SEED);
   const port = PORTS.find(p => portServices(p).verft).id, H = S.t / 60, y = yearH(H), Y = yearQuota(y);
@@ -20,10 +20,10 @@ export default function (t){
   t.ok(!structRoom(L('h9'), 'h9') && !structRoom(L('h14'), 'h20'), 'under 11 m og mellom gruppene: ingen strukturkvote');
   { const r0 = npcReg().h14; structIn(L('h14'), 'h14', H); t.eq(npcReg().h14, r0, 'structIn tar ingen eier ut av registeret selv (kjøpet gjør det én gang)'); }
 
-  // ---- the takst: the year's cod quota at KPK; a structure quota the same for its factor, times the years left over 20
+  // ---- the takst: the year's cod quota at the quota price (kpkAt, KM5); a structure quota the same for its factor, times the years left over 20
   const r14 = {kind:'right', id:'h14'};
-  t.eq(kmTakst(r14, H), Math.round(HJ.h14.kf * Y.unit.g11 * 1000) * KPK, 'taksten for en hjemmel er årets torskekvote × KPK');
-  t.eq(kmTakst(r14, H), Math.round(licQ({id:'h14'}, H).torsk * KPK), 'det samme som licQ gir (rundt ' + Math.round(kmTakst(r14, H) / 1e6) + ' MNOK)');
+  t.eq(kmTakst(r14, H), Math.round(HJ.h14.kf * Y.unit.g11 * 1000) * kpkAt(H), 'taksten for en hjemmel er årets torskekvote × kpkAt');
+  t.eq(kmTakst(r14, H), Math.round(licQ({id:'h14'}, H).torsk * kpkAt(H)), 'det samme som licQ gir (rundt ' + Math.round(kmTakst(r14, H) / 1e6) + ' MNOK)');
   const s20 = {kind:'struct', id:'h14', kf:HJ.h14.kf * 0.9, from:y, until:y + 20}, s5 = {...s20, until:y + 5};
   t.near(kmTakst(s20, H), kmTakst(r14, H) * 0.9 * (y + 20 - (y + K.doyH(H) / 365)) / 20, 20, 'en strukturkvote med 20 år: faktoren × år igjen / 20');
   t.ok(kmTakst(s5, H) < kmTakst(s20, H) / 3.5, 'med fem år igjen er den rundt en firedel så mye verdt');

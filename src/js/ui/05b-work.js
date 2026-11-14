@@ -88,7 +88,7 @@ const WORK = (() => {
     const tl = on.size ? teamLine() : null;
     return '<div class="ph-card"><h4>' + L('Mannskapet', 'The crew') + '</h4>' + (tl ? '<p class="wk-team t' + tl.lvl + '">' + tl.text + '</p>' : '') +
       '<p class="ph-note">' + (on.size ? L(on.size === 1 ? '1 mønstret på ' : on.size + ' mønstret på ', on.size + ' signed on ') + bn + ' · ' : '') + where + (meAboard() ? '' : ' · ' + L('du er ikke om bord', 'you are not aboard')) + '</p>' +
-      (S.crew.length || lagOf() ? '' : '<p class="ph-note">' + L('Ingen mannskap ennå. Finn folk under Bygd, Ansatte.', 'No crew yet. Find people under Village, Employees.') + '</p>') + '</div>';
+      (S.crew.length || lagOf() ? '' : '<p class="ph-note">' + L('Ingen mannskap ennå. Ansett folk under Bygd, Ansett.', 'No crew yet. Hire hands under Village, Hire.') + '</p>') + '</div>';
   }
   function offLines(){
     const on = new Set(crewAboard().map(c => c.id)), off = S.crew.filter(c => !on.has(c.id)); if (!off.length) return '';

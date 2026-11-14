@@ -33,7 +33,10 @@ const CORE = coreFiles.map(f => `// ---- ${f}\n` + expand(f)).join('\n');
 
 // the names a test may ask for: every top-level function, const and let in the core (one shared script scope, so `let S` and the
 // functions are reachable by name from a later script in the same context, which is how the game's own files see them)
-const NAMES = [...new Set([...CORE.matchAll(/^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let)\s+([A-Za-z_$][\w$]*))/gm)].map(m => m[1] || m[2]))];
+// (and the upper-case names after a comma in such a line: «const WORLD_T0 = …, WORLD_SEED = …» in 01-world.js; before 12.11.2026 a test
+// that asked for WORLD_SEED got undefined, and «the same in two saves with WORLD_SEED» compared two saves with no seed)
+const multiNames = src => [...src.matchAll(/^(?:const|let)\s[^\n;]*?,\s*([A-Z][A-Z0-9_]*)\s*=[^=>]/gm)].map(m => m[1]);
+const NAMES = [...new Set([...CORE.matchAll(/^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let)\s+([A-Za-z_$][\w$]*))/gm)].map(m => m[1] || m[2]).concat(multiNames(CORE)))];
 
 // the browser, as little of it as the core needs to run its top level: no location (so WCLOCK is off), an empty document, a
 // localStorage that keeps nothing, timers that never fire, and a Worker that does nothing (the vec and coast workers are made on demand)
@@ -76,7 +79,7 @@ function fresh(stubs, scripts, data){
   const key = (scripts || []).join('|');
   if (!FNS[key]){ const extra = (scripts || []).map(f => `// ---- ${f}\n` + expand(f)).join('\n'), src = CORE + '\n' + extra;
     const names = [...new Set([...src.matchAll(/^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let)\s+([A-Za-z_$][\w$]*))/gm)].map(m => m[1] || m[2])
-      .concat([...src.matchAll(/^(?:const|let)\s[^\n]*?;\s*function\s+([A-Za-z_$][\w$]*)/gm)].map(m => m[1])))];   // (vessel3d.js puts a function after a const on one line: glbHas)
+      .concat([...src.matchAll(/^(?:const|let)\s[^\n]*?;\s*function\s+([A-Za-z_$][\w$]*)/gm)].map(m => m[1])).concat(multiNames(src)))];   // (vessel3d.js puts a function after a const on one line: glbHas)
     FNS[key] = new Function(...PARAMS, src + EXPORTER.replace(JSON.stringify(NAMES), JSON.stringify(names))); }
   const w = Object.assign(browserStubs(), stubs || {}); w.Math = Object.create(Math);
   if (data){ const gid = w.document.getElementById; w.document.getElementById = id => dataEl(id) || gid(id); }

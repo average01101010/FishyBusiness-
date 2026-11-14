@@ -27,7 +27,19 @@ function txt(p, s, cls, size, extra = ''){ return '<text x="' + p.x.toFixed(3) +
 
 let CONT_D = null;
 // the chart's zoom: from the whole country (the frame is 1 720 km tall) to a harbour (half a kilometre)
-const ZMIN = MAP_H / 1800, ZMAX = 160;
+// (ZMAX 320, Jonas 11.11.2026: «Gjør gjerne også sånn at man kan zoome inn litt»: twice as close as before, 160)
+const ZMIN = MAP_H / 1800, ZMAX = 320;
+// the places (the fish receivers, the yards, the shops, the rorbuer and the naust) stand on the chart only from PLACE_Z (Jonas
+// 11.11.2026: «når man zoomer langt ut så vises ikke fiskemottak, verft, utstyrbutikker, rorbuer og naust på kartet, slik at disse bare
+// vises når man starter å zoome litt nærmere inn»); further out only the player's own: where the boats of the fleet lie, the home
+// harbour, and the harbours of the routes and the plan (placeOwnIds; drawn in the static layer, so one that becomes the player's own
+// far out gets its icon at the next pan or zoom). The view the game opens with (view.z 0.8 at least, 11-boot.js) has them.
+const PLACE_Z = 0.75;
+function placeOwnIds(){ const ids = new Set(), add = id => { if (id) ids.add(id); }, wps = L => { for (const w of L || []) add(w.port); };
+  // (the boat and the rest of the fleet, each with its route, a route laid by while hove to and its plan's home and plant; and the draft)
+  add(S.home); wps(S.draft); for (const v of [S.boat].concat(Array.isArray(S.fleet) ? S.fleet : [])){ if (!v) continue; add(v.port); if (v.hove) wps(v.hove.plan && v.hove.plan.wps); if (v.ops){ add(v.ops.home); add(v.ops.M); } }
+  wps(S.plan && S.plan.wps); if (S.ops){ add(S.ops.home); add(S.ops.M); } return ids; }
+function placeOwn(p, ids){ return !!p && (ids || placeOwnIds()).has(p.id); }
 const PLOT_STOPS = [[0,[230,60,40]],[5,[245,140,40]],[15,[250,215,60]],[30,[120,210,80]],[60,[60,200,190]],[120,[40,140,230]],[250,[30,70,200]],[500,[60,30,150]],[1000,[30,10,70]]];
 function plotCol(d){ for (let i = 1; i < PLOT_STOPS.length; i++){ const [b, cb] = PLOT_STOPS[i]; if (d < b){ const [a, ca] = PLOT_STOPS[i - 1], u = (d - a) / (b - a); return [ca[0] + (cb[0] - ca[0]) * u, ca[1] + (cb[1] - ca[1]) * u, ca[2] + (cb[2] - ca[2]) * u]; } } return PLOT_STOPS[PLOT_STOPS.length - 1][1]; }
 function cssRGB(name){ const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim().replace('#', ''); return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)]; }
@@ -420,14 +432,15 @@ let markEnd = Infinity;
 // a tap on an icon whose name the chart left out (E2): its name for a moment; the tap goes on to do what it did (the route). Else a tap
 // on a ground's name, or by a ground whose name was left out (F4): the whole name and what kind of place it is, with the source; never
 // its species, months or fish (Jonas 07.11.2026, V4 C)
-const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground']};
+const FELT_KIND = {f:['Fiskeplass', 'Fishing ground'], g:['Gyteområde', 'Spawning ground'], o:['Oppvekst- og beiteområde', 'Nursery and feeding ground'],
+  s:['Stedsnavn i sjøen', 'Place name in the sea']};   // (s: Kartverket's names, Ø14 F5; CC BY 4.0, so the source is named)
 function tapName(mp, rr){ let best = null, bd = rr; for (const q of LBLHID){ const d = dist(q, mp); if (d < bd){ bd = d; best = q; } }
   // (the drawn name under the finger, the nearest of them when two padded boxes meet; else a left-out ground within 0.6 of the radius,
   // so a tap on open sea where the grounds lie thick seldom gives a bubble)
   if (!best){ const pad = 4 / view.px; for (const e of LBLFELT){ const b = e.box; if (!b || mp.x < b[0] - pad || mp.x > b[2] + pad || mp.y < b[1] - pad || mp.y > b[3] + pad) continue;
       const d = Math.hypot(Math.max(b[0] - mp.x, 0, mp.x - b[2]), Math.max(b[1] - mp.y, 0, mp.y - b[3])) + dist(e, mp) * 1e-3; if (d < bd){ bd = d; best = e; } }
     if (!best){ bd = rr * 0.6; for (const e of LBLFELT){ if (e.box) continue; const d = dist(e, mp); if (d < bd){ bd = d; best = e; } } }
-    if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
+    if (best){ const f = best.f, en = S.lang === 'en' ? 1 : 0; best = {x:best.x, y:best.y, n:f.nf || f.n, s:(FELT_KIND[f.k] || FELT_KIND.f)[en] + ' · ' + (f.k === 's' ? (en ? 'Norwegian Mapping Authority' : 'Kartverket') : en ? 'Directorate of Fisheries' : 'Fiskeridirektoratet')}; } }
   if (!best) return false; TAPNAME = {x:best.x, y:best.y, n:best.n, s:best.s, until:performance.now() + 2500}; renderDyn(); setTimeout(() => { if (TAPNAME && performance.now() >= TAPNAME.until) renderDyn(); }, 2600); return true; }
 // the labels the static layer placed (boxes, map km) and the icons it left without a name (E2 of docs/planer/kart-etiketter.md); the
 // ground names in the view, with their boxes where drawn (F4)
@@ -435,6 +448,10 @@ const LBLBOX = [], LBLHID = [], LBLFELT = [];
 // the ground names' cells (pixels: one name per cell) and how many at most: one per FELT_PX square pixels of the chart, never more than
 // FELT_MAX (Ø14 F4, set after tests/etikett.py: with one per cell alone a phone at view.z 2 by Bodø had 35 names over 6 % of the screen)
 const FELT_CW = 110, FELT_CH = 22, FELT_PX = 13000, FELT_MAX = 80;
+// Kartverket's names in the sea (the kind s, Ø14 F5) only far in (Jonas 11.11.2026: «Om kartplotteren blir rotete må det være sånn at
+// navnene først kommer opp om man zoomer svært langt inn»; by Hammerfest at view.z 2 they were 36 of 74 names): from view.z 6, about
+// 17 km of the coast in the height of the chart
+const FELT_S_Z = 6;
 let TAPNAME = null;
 function renderStatic(){
   if (document.body.classList.contains('vplot')) scheduleChart();
@@ -450,7 +467,7 @@ function renderStatic(){
   if (view.z > 2.5) for (const br of BRIDGES.concat(bridgesIn(vx0 * 1000, vy0 * 1000, vx1 * 1000, vy1 * 1000))){ const n = (br.length - 4) / 2; let d = ''; for (let k = 0; k < n; k++) d += (k ? 'L' : 'M') + (br[4 + k * 2] / 1000).toFixed(3) + ',' + (br[5 + k * 2] / 1000).toFixed(3); g.push('<path d="' + d + '" class="bridge" stroke-width="' + (2.6 * u) + '"/>'); }
   if (view.z > 5){ const pr = []; for (const q of rocksIn(vx0, vy0, vx1, vy1)) if (inV(q[0], q[1])) pr.push('M' + (q[0] - 2.2 * u).toFixed(3) + ',' + q[1].toFixed(3) + 'h' + (4.4 * u).toFixed(3) + 'M' + q[0].toFixed(3) + ',' + (q[1] - 2.2 * u).toFixed(3) + 'v' + (4.4 * u).toFixed(3)); if (pr.length) g.push('<path d="' + pr.join('') + '" class="rock" stroke-width="' + (1 * u) + '"/>'); }
   const mR = Math.max(vx1 - vx0, vy1 - vy0) / 2 + 1, mX = (vx0 + vx1) / 2, mY = (vy0 + vy1) / 2;   // the coast's marks too (01e-marks.js)
-  if (view.z > 3.5) for (const mk of marksNear('marks', mX, mY, mR)){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; const c = mk[2] === 'L' || mk[2] === 'B' ? (mk[3] === 'starb' ? '#1f8a3c' : '#c8231c') : mk[2] === 'C' || mk[2] === 'S' ? '#d6a800' : '#333'; g.push('<circle cx="' + mk[0] + '" cy="' + mk[1] + '" r="' + (2 * u) + '" fill="' + c + '" stroke="#fff" stroke-width="' + (0.6 * u) + '"/>'); }
+  const mkU = u * Math.min(3, Math.max(1, view.z / 60)); if (view.z > 3.5) for (const mk of marksNear('marks', mX, mY, mR)){ if (!inV(mk[0], mk[1]) || mk[2] === 'M' || mk[2] === 'm') continue; g.push(markSvg(mk, mkU)); }   // the colours and the topmark after IALA region A (01e-marks.js, Ø13 K3), larger far in so the cones read
   if (view.z > 2) for (const L of marksNear('lights', mX, mY, mR)){ if (!inV(L[0], L[1])) continue; const s0 = (L[6] === 'M' ? 9 : 6.5) * u; g.push('<path d="M' + L[0] + ',' + L[1] + 'q' + (s0 * 0.35) + ',' + (-s0 * 0.5) + ' ' + (s0 * 0.12) + ',' + (-s0) + 'q' + (-s0 * 0.5) + ',' + (s0 * 0.3) + ' ' + (-s0 * 0.12) + ',' + s0 + 'z" class="lightsym"/><circle cx="' + L[0] + '" cy="' + L[1] + '" r="' + (1.3 * u) + '" class="lightdot" stroke-width="' + (0.8 * u) + '"/>'); }
   // the power lines over the sea as the chart's dashed magenta overhead line, the wind turbines as its three-armed symbol (G7)
   if (VIND && view.z > 2.5){ let d = ''; for (const q of VIND.s){ const x1 = q[0] / 1000, y1 = q[1] / 1000, x2 = q[2] / 1000, y2 = q[3] / 1000; if (!inV(x1, y1) && !inV(x2, y2) && !inV((x1 + x2) / 2, (y1 + y2) / 2)) continue; d += 'M' + x1.toFixed(3) + ',' + y1.toFixed(3) + 'L' + x2.toFixed(3) + ',' + y2.toFixed(3); }
@@ -476,20 +493,21 @@ function renderStatic(){
   if (typeof srchSvg === 'function') g.push(srchSvg(u));   // the place found by search (ui/03f-search.js)
   // Father's naust (ui/06c-notebook.js)
   g.push(NOTEBOOK.svg(u, inV));
-  g.push(turSvg(u, inV));   // where the missions go (ui/05f-turer.js)
+  if (typeof lopSvg === 'function') g.push(lopSvg(u, inV));   // the race's course while she is registered (ui/05l-kapplop.js, KL2)
+  g.push(turSvg(u, inV));   // where the missions go and the race's tasks (ui/05f-turer.js)
   if (typeof kkSvg === 'function') g.push(kkSvg(u, inV));   // Kystkartet, when it is laid over the chart (ui/05h-kystkart.js)
   // the rank-0 place names first (the big towns, fjords and islands: always shown, 03a-chart.js), then the ports, their names when the
   // view is closer than the whole region, each label kept only where it does not cover a rank-0 name (the icon stands anyway); the other
   // place names keep clear of the labels
-  const taken = [], pl = view.z >= 0.5, over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
+  const taken = [], pl = view.z >= PLACE_Z, own = pl ? null : placeOwnIds(), over = b => taken.some(t => b[0] < t[2] && b[2] > t[0] && b[1] < t[3] && b[3] > t[1]);
   for (const p of PORTS){
     // (Jonas 02.11.2026: «Kan du gjøre iconer litt større slik at de er lettere å se»: half as big again, 19 px across close in)
-    const s = (pl ? 9.5 : 5) * u; if (!inV(p.p.x, p.p.y)) continue;
+    const s = (pl ? 9.5 : 5) * u; if (!inV(p.p.x, p.p.y) || (!pl && !own.has(p.id))) continue;
     g.push(portIcon(p, s, u));
     if (pl) lbl(2, {x:p.p.x + s + 5 * u, y:p.p.y + 4.5 * u}, portLabel(p), 'lbl-port', 13 * u, 'stroke-width="' + (3 * u) + '"', {x:p.p.x, y:p.p.y, n:portLabel(p)}, s);
   }
   // the rorbuer (07d-rorbu.js): a little red house, the name when near
-  if (view.z >= 0.5) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
+  if (pl) for (const R of rorbuIn(vx0 - 1, vy0 - 1, vx1 + 1, vy1 + 1)){
     if (R.site === null) continue;   // no straight shore there: no rorbu
     const q = R.site ? R.p : R.cand, s = (view.z >= 2 ? 8 : 5.5) * u;
     // a red cabin on its piles over the water (the rorbu's own shape: gable, door, the piles under)
@@ -520,10 +538,11 @@ function renderStatic(){
   // name only, no circle (Jonas 28.10.2026), Fiskeridirektoratet's fishing grounds along the whole coast (01e-marks.js feltIn) with
   // Senja's as all the others (Jonas 08.11.2026: GROUNDS no longer drawn for themselves), the largest first, then the spawning and
   // nursery grounds in the same type; only from view.z 2, none where a name already stands (cells of FELT_CW × FELT_CH pixels), at most
-  // FELT_MAX, and nothing after the season or the fish. A tap on one, or where one was left out, gives the whole name and its kind (tapName)
+  // FELT_MAX, and nothing after the season or the fish. A tap on one, or where one was left out, gives the whole name and its kind (tapName);
+  // Kartverket's sea names (k = s) neither drawn nor tapped under FELT_S_Z
   LBLFELT.length = 0;
   if (view.z >= 2){ const cells = new Set(), cw = FELT_CW * u, ch = FELT_CH * u, nMax = Math.min(FELT_MAX, Math.round(vr.width * vr.height / FELT_PX)); let n = 0;
-    for (const f of feltIn(vx0, vy0, vx1, vy1, true)){
+    for (const f of feltIn(vx0, vy0, vx1, vy1, true)){ if (f.k === 's' && view.z < FELT_S_Z) continue;
       if (n < nMax){ const k = Math.floor(f.x / cw) + ':' + Math.floor(f.y / ch), k2 = Math.floor((f.x + cw / 2) / cw) + ':' + Math.floor(f.y / ch);
         // (the box from 8 px over the point: the names over it hang their descenders under their own boxes, Knappskog over Kolltveitosen)
         const fw = f.n.length * 5.6 * u, fb = [f.x - fw / 2, f.y - 8 * u, f.x + fw / 2, f.y + 6 * u];
@@ -609,13 +628,13 @@ function aisInfo(n){
       [L('Båttype', 'Boat type'), String(L(VP.name.no, VP.name.en)).split(' (')[0]], [L('Størrelse', 'Size'), fmt(VP.len, 1) + ' × ' + fmt(VP.beam || VP.len / 3, 1) + ' m']] : f ? [[L('Kallesignal', 'Call sign'), f.cs], [L('Fiskerimerke', 'Registration'), f.reg], [L('Rederi', 'Owner'), f.own], [L('Størrelse', 'Size'), fmt(f.L, 2) + ' × ' + fmt(f.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(f.T, 1) + ' m'], [L('Hjemmehavn', 'Home port'), f.homeName]]
     : n.hav ? [[L('Båttype', 'Boat type'), String(L(VESSELS[n.vtype].name.no, VESSELS[n.vtype].name.en)).split(' (')[0]], [L('Redskap', 'Gear'), L(HAVGN[n.hav][0], HAVGN[n.hav][1])], [L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
     : n.coast ? [[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]
-    : n.type === 'coastal' ? [[L('Kallesignal', 'Call sign'), 'LAKY'], [L('Rederi', 'Owner'), 'Kystruta AS'], [L('Størrelse', 'Size'), '121,8 × 21,0 m'], [L('Dypgående', 'Draught'), '4,9 m']] : [[L('Kallesignal', 'Call sign'), 'LMSB'], [L('Rederi', 'Owner'), 'Senja Ferjedrift AS'], [L('Størrelse', 'Size'), '49,9 × 12,4 m'], [L('Dypgående', 'Draught'), '3,1 m']];
+    : (n.cs ? [[L('Kallesignal', 'Call sign'), n.cs], [L('Rederi', 'Owner'), n.own]] : []).concat([[L('Størrelse', 'Size'), fmt(n.L, 1) + ' × ' + fmt(n.B, 1) + ' m'], [L('Dypgående', 'Draught'), fmt(n.T, 1) + ' m']]);   // a coastal route's ship, a ferry, an express boat: her own made-up call sign and owner where she has them, and her size (05b-ferje.js)
   const dg = r => String(Math.round(((r * 180 / Math.PI) % 360 + 360) % 360) % 360).padStart(3, '0') + '°';
   // the navigational status as the AIS has it (N8, core/05e-sjovei.js colregAisSt), and who gives way when she is the one warned for (Ø11.1)
   const sw = typeof sjvWarn === 'function' ? sjvWarn() : null;
   if (sw && sw.id === n.id) rows.push([L('Vikeplikt', 'Right of way'), sjvSay(sw, 'strip') + ' · CPA ' + sw.cpa + ' m ' + sjvWhen(sw)]);
   rows.push([L('Status', 'Status'), st], [L('Navigasjonsstatus', 'Navigational status'), L(...colregAisSt(n))], [L('Fart (SOG)', 'Speed (SOG)'), fmt(n.v, 1) + ' kn'], [L('Kurs (COG)', 'Course (COG)'), n.v > 0.15 ? dg(n.cog !== undefined ? n.cog : n.hd) : '–'], [L('Styrekurs (HDG)', 'Heading (HDG)'), dg(n.hd)]);
-  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast || n.hav ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player && typeof HAIL !== 'undefined' ? HAIL.card(n) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
+  return '<div class="ai-h"><b>' + n.name + '</b><button type="button" id="aisX" aria-label="Lukk">✕</button></div><div class="ai-t">' + (n.player ? L('Spiller', 'Player') : n.rs ? L('Redningsfartøy', 'Rescue vessel') : n.fleet || n.coast || n.hav ? L('Fiskefartøy', 'Fishing vessel') : n.type === 'coastal' ? L('Passasjerskip', 'Passenger ship') : n.ex === 1 ? L('Hurtigbåt', 'Express boat') : n.ex === 2 ? L('Passasjerbåt', 'Passenger ferry') : L('Ferje', 'Ferry')) + '</div>' + rows.map(r => '<div class="ai-r"><span>' + r[0] + '</span><span>' + r[1] + '</span></div>').join('') + (n.player && typeof FRIENDS !== 'undefined' ? FRIENDS.chip(String(n.id).slice(1)) : '') + (n.player && typeof HAIL !== 'undefined' ? HAIL.card(n) : '') + (n.player ? '' : '<div class="ai-n">' + L('Stiplet linje: sporet siste 24 timer', 'Dashed line: track over the last 24 hours') + '</div>');
 }
 // the warning of the rules of the road on the chart (Ø11.1, core/05e-sjovei.js): a ring round the other vessel, her vector and yours on to
 // the CPA, the line between the two there, and the CPA with the time to it; red when you give way, yellow when you hold on
@@ -848,10 +867,10 @@ function unzoom(){ const vv = window.visualViewport, m = document.querySelector(
 window.addEventListener('orientationchange', () => { unzoom(); setTimeout(() => window.dispatchEvent(new Event('resize')), 350); });
 if (window.visualViewport) visualViewport.addEventListener('resize', () => { if (visualViewport.scale > 1.01) unzoom(); });
 
-// a port tapped on its name in the chart (drawn right of the point from view.z 0.5, as renderStatic places it), when no place nearer took
+// a port tapped on its name in the chart (drawn right of the point from PLACE_Z, as renderStatic places it), when no place nearer took
 // the tap (spilltest 2: a tap on the name of the harbour you set out from gave «Det er land»)
 function portByLabel(pt){
-  if (view.z < 0.5) return null; const u = 1 / view.px;
+  if (view.z < PLACE_Z) return null; const u = 1 / view.px;
   for (const p of PORTS){ const nm = portLabel(p); if (pt.x >= p.p.x + 8 * u && pt.x <= p.p.x + 10 * u + nm.length * 7.5 * u && pt.y >= p.p.y - 9 * u && pt.y <= p.p.y + 6 * u) return p; }
   return null;
 }
@@ -862,10 +881,11 @@ function addWaypoint(pt){
   if (!['port', 'idle'].includes(b.status)){ toast(t('cant_plan')); return; }
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
-  for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
+  const ownT = view.z < PLACE_Z ? placeOwnIds() : null;
+  for (const p of PORTS){ if (ownT && !ownT.has(p.id)) continue; const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }   // (only the places the chart shows)
   // a rorbu's quay (07d-rorbu.js), when the chart is close enough to show its name and not in «Første tur» (a tap in the field's ring
   // went to a rorbu by it)
-  if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
+  if (view.z >= 2 && !tutOn() && siteFits(S.boat.type)) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // a harbour of the coast's packs: the route ends at a free berth there (07e-havn.js), when no place of the game is nearer
   if (view.z >= 2 && !tutOn() && !near){ const B = havnTapNear(pt, r); if (B) near = B; }
   // Father's naust: a route can end there (you sail to it; 07c-naust.js naustTarget)

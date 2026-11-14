@@ -15,7 +15,8 @@ function draftTimeline(){
   const b = S.boat, e = estimate(), v = Math.max(1, e.v), out = [];
   let a = draftOrigin(), T = S.draftDep && S.draftDep > S.t ? S.draftDep : S.t;
   const T0 = T;
-  S.draft.forEach(w => { const km = kmTrue(a, w); T += km / (v * NM) * 60; const arrive = T; T += (w.fish || 0) * 60; out.push({nm:km / NM, crs:courseDeg(a, w), arrive, leave:T}); a = w; });
+  // (each leg's time with the stream along it at the time she is there, Ø9 F8b: curLegH, 16b-dyn.js)
+  S.draft.forEach(w => { const km = kmTrue(a, w); T += curLegH(a, w, v, T / 60) * 60; const arrive = T; T += (w.fish || 0) * 60; out.push({nm:km / NM, crs:courseDeg(a, w), arrive, leave:T}); a = w; });
   return {dep:T0, legs:out, end:T};
 }
 
@@ -138,10 +139,11 @@ async function leiaTo(pt, buoy, act){   // buoy: to a set's buoy, to haul it (th
   if (!canEditDraft() || LEIA_BUSY) return;
   if (S.draft.length && S.draft[S.draft.length - 1].port){ toast(t('ends_port')); return; }
   const r = 22 / view.px; let near = null, bd = 1e9;
-  for (const p of PORTS){ const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
+  const ownT = view.z < PLACE_Z ? placeOwnIds() : null;   // (far out only the places the chart shows, 03-map.js PLACE_Z)
+  for (const p of PORTS){ if (ownT && !ownT.has(p.id)) continue; const d = dist(p.p, pt); if (d < r && d < bd){ bd = d; near = p; } }
   // a rorbu's quay (07d-rorbu.js), when the chart is close enough to show its name and not in «Første tur» (a tap in the field's ring
   // went to a rorbu by it)
-  if (view.z >= 2 && !tutOn()) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
+  if (view.z >= 2 && !tutOn() && siteFits(S.boat.type)) for (const R of rorbuSites(pt, r + 0.05)){ const d = dist(R.p, pt); if (d < r && d < bd){ bd = d; near = R; } }
   // a harbour of the coast's packs: Autonav goes to a free berth there (07e-havn.js), when no place of the game is nearer
   if (view.z >= 2 && !tutOn() && !near && !buoy){ const B = havnTapNear(pt, r); if (B) near = B; }
   if (!near && !buoy) near = portByLabel(pt);
@@ -249,7 +251,13 @@ function draftSea(tl){
     let hs = 0;
     for (let k = i === 0 ? 0 : 1; k <= n; k++){ const f = k / n, p = {x:a.x + (w.x - a.x) * f, y:a.y + (w.y - a.y) * f}, T = T0 + (lg.arrive - T0) * f;
       try { hs = Math.max(hs, hsAtFc(p, T / 60, now)); } catch (e){} }   // (a block of the sea not loaded yet: the leg shows what the rest gives)
-    out.push({hs, lvl:hs >= r[1] ? 2 : hs >= r[0] ? 1 : 0});
+    // (the stream on the leg, Ø9 F8b: the strongest she meets where a sound's stream may reach, how much of it is against her, and
+    // whether the wind sea runs against it there: «krapp sjø i strømmen»)
+    let cur = null; try { const hd = Math.atan2(w.x - a.x, -(w.y - a.y)), dd = dist(a, w);
+      for (let s = 0, n = 0; s <= dd && n < 3000; n++){ const f = dd > 0 ? s / dd : 0, p = {x:a.x + (w.x - a.x) * f, y:a.y + (w.y - a.y) * f}; if (!stromNear(p).length){ s += 1; continue; } s += 0.25;   // (every 250 m where a sound's stream may reach, as curLegH)
+        const Hh = (T0 + (lg.arrive - T0) * f) / 60, C = curEff(curAt(p, Hh)); if (!(C.m >= CURW.krapp) || (cur && C.m <= cur.m)) continue;
+        const sc = seaCur(p, Hh, hsParts(p, Hh)); cur = {m:C.m, kn:C.m * 3600 / 1852, ag:-(C.x * Math.sin(hd) - C.y * Math.cos(hd)) * 3600 / 1852, krapp:!!(sc && sc.krapp)}; } } catch (e){}
+    out.push({hs, lvl:hs >= r[1] ? 2 : hs >= r[0] ? 1 : 0, cur});
     a = w; T0 = lg.leave;
   });
   return out;
@@ -263,14 +271,18 @@ function routeSeaWatch(){
 function routeSeaDraw(){
   const el = document.getElementById('panel'); if (!el || el.querySelector('.wsea')) return;   // (drawn already: our own nodes wake the observer too)
   const ul = el.querySelector('ul.wpcards'); if (!ul || !S.draft.length) return;
-  const L = (no, en) => S.lang === 'no' ? no : en, sea = draftSea(draftTimeline()), over = [];
+  const L = (no, en) => S.lang === 'no' ? no : en, sea = draftSea(draftTimeline()), over = [], strom = [];
   ul.querySelectorAll('li.wpc[data-i]').forEach(li => {
     const i = +li.dataset.i, q = sea[i], wg = li.querySelector('.wg'); if (!q || !wg) return;
     const sp = document.createElement('span'); sp.className = 'wsea';
     // (inline: «.wpc .wg b» sets the ink colour with more weight than «.bad», and styles.css is another session's)
     sp.innerHTML = L('Sjø ', 'Sea ') + '<b' + (q.lvl ? ' style="color:var(--bad)"' : '') + '>' + fmt(q.hs, 1) + ' m' + (q.lvl > 1 ? L(' farlig', ' dangerous') : '') + '</b>';
     wg.appendChild(sp); if (q.lvl) over.push([i, q]);
+    // (the stream on the leg: its speed, with or against her, and the steep sea where the wind stands against it)
+    if (q.cur){ const c = q.cur, s2 = document.createElement('span'); s2.className = 'wsea'; const way = c.ag > 0.5 * c.kn ? L(' imot', ' against') : c.ag < -0.5 * c.kn ? L(' med', ' with you') : L(' på tvers', ' across');
+      s2.innerHTML = L('Strøm ', 'Stream ') + '<b' + (c.krapp ? ' style="color:var(--bad)"' : '') + '>' + fmt(c.kn, 1) + ' kn' + way + '</b>'; wg.appendChild(s2); if (c.krapp) strom.push(i); }
   });
+  if (strom.length){ const p = document.createElement('p'); p.className = 'bad wsea'; p.textContent = '✕ ' + L('Krapp sjø i strømmen på etappe ', 'A short, steep sea in the stream on leg ') + strom.slice(0, 4).map(legName).join(', ') + L(': vinden står mot strømmen når båten er der.', ': the wind stands against the stream when the boat is there.'); ul.after(p); }
   if (!over.length) return;
   const r = BOAT.risk, p = document.createElement('p'); p.className = 'bad wsea';
   p.textContent = '✕ ' + L('Varselet gir sjø over båtens grense på ', 'The forecast gives a sea over the boat\'s limit of ') + fmt(r[0], 1) + ' m ' + L('på etappe ', 'on leg ') +

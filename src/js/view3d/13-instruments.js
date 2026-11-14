@@ -4,7 +4,9 @@
     RX:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]); },
     RY:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]); },
     RZ:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]); },
-    S:k => new Float32Array([k,0,0,0, 0,k,0,0, 0,0,k,0, 0,0,0,1])
+    // (one number: the same every way; three: along x, y and z. Until 14.11.2026 the second and third were dropped without a word, so the
+    // ice over the fish in a box, M4.S(14, 1.2, 7), was a cube half a metre high, and the net heap in the tub never sank)
+    S:(k, y, z) => new Float32Array([k,0,0,0, 0,y == null ? k : y,0,0, 0,0,z == null ? k : z,0, 0,0,0,1])
   };
   const chain = (...ms) => ms.reduce((a, b) => mul(a, b));
   let plotSmall = null, aisCache = {t:-1, v:[]};
@@ -55,7 +57,7 @@
     } else { g.fillStyle = '#5f7d8c'; g.font = '700 16px system-ui, sans-serif'; g.textAlign = 'center'; g.fillText(L('EKKOLODD AV', 'SOUNDER OFF'), ex + ew / 2, top + ch / 2); g.textAlign = 'left'; }
     // data bars
     g.fillStyle = '#152029'; g.fillRect(0, 0, W, top); g.fillRect(0, Hc - 18, W, 18);
-    g.fillStyle = '#9fe3c6'; g.font = '600 15px ui-monospace, monospace'; const sog = b.status === 'port' ? 0 : b.v;
+    g.fillStyle = '#9fe3c6'; g.font = '600 15px ui-monospace, monospace'; const sog = b.status === 'port' ? 0 : typeof dynSog === 'function' ? dynSog(b).kn : b.v;   // (over the ground, with the stream: F8b)
     g.fillText('SOG ' + fmt(sog, 1) + ' kn', 10, 18);
     g.textAlign = 'right'; g.fillText(hm(Hn), W - 10, 18); g.textAlign = 'left';
     g.fillStyle = '#7fa5b6'; g.font = '12px ui-monospace, monospace'; const ll = LL(p); g.fillText(ll.lat.toFixed(4) + '°N  ' + Math.abs(ll.lon).toFixed(4) + (ll.lon < 0 ? '°W' : '°E'), 10, Hc - 5);
@@ -101,11 +103,30 @@
   // port under it, or along the bows on an open boat; in block capitals, white or black by the paint under each line (nameInkLight)
   const PLACEQ = {};
   function placeQ(t){ if (!(t in PLACEQ)){ const pl = namePlaces(t); PLACEQ[t] = pl.map(p => ({q:texStrip(p.B, p.T), p})); } return PLACEQ[t]; }
-  function drawNames(t, M, VP, liv, nm, port){
+  // (other: a boat that is not yours, whose name is never being painted on)
+  function drawNames(t, M, VP, liv, nm, port, other){
     const Q = nm ? placeQ(t) : null; if (!Q || !Q.length) return; gl.disableVertexAttribArray(2);
+    const R = !other && BUYR && BUYR.nm === nm ? buyAt() : null; if (R) BUYR.drawn = 0;
     for (const {q, p} of Q){ const txt = p.line === 'port' ? port : nm; if (!txt) continue;
-      drawTexQuad(q, nameTex(txt, nameInkLight(placeRGB(t, p, liv)), p.aspect), M, VP, true, [0, 0.2, 0]); }
+      const light = nameInkLight(placeRGB(t, p, liv)), rv = R ? (p.line === 'port' ? R.p : R.n) : null, nl = rv != null ? [...String(txt).toUpperCase()].length : 0;
+      if (rv != null && rv <= 0) continue;   // not yet begun
+      if (R && p.line !== 'port') BUYR.drawn = Math.max(BUYR.drawn, Math.min(nl, rv));
+      drawTexQuad(q, rv != null && rv < nl ? revealTex(txt, light, p.aspect, rv) : nameTex(txt, light, p.aspect), M, VP, true, [0, 0.2, 0]); }
   }
+  // the moment a boat is bought (ui/10q-buymoment.js, M5; steg 28): on the boat you are on, the name is painted onto the hull letter by
+  // letter where she carries it (from 0.6 s, 0.22 s a letter, as the card over the view did before), the home port under it on the
+  // transom after it (0.15 s a letter), and the ensign goes up its pole once the name is on (3 s from 0.5 m below the top: the poles stand
+  // 1-1.5 m over the rail, so the cloth stays clear of it), while the
+  // camera turns round her (paintView). In the real time of the page, not the game's. BUYR: {nm, t0}; G3.buyShow sets it, and
+  // G3.buyFix(s) holds it at s seconds (the tests: SwiftShader draws a frame in seconds, so the real 15 s would be gone before they look)
+  let BUYR = null;
+  const BUY = {n0:0.6, nl:0.22, pl:0.15, f0:0.4, ft:3.0, fd:0.5, end:16};   // (end: a second after the card's own 15 s, in case it never says)
+  function buyAt(){
+    if (!BUYR) return null; const s = BUYR.fix != null ? BUYR.fix : (performance.now() - BUYR.t0) / 1000; if (s > BUY.end && BUYR.fix == null){ buyShow(null); return null; }
+    const ne = BUY.n0 + [...BUYR.nm.toUpperCase()].length * BUY.nl;
+    return {s, n:(s - BUY.n0) / BUY.nl, p:(s - ne) / BUY.pl, f:sstep(0, 1, (s - ne - BUY.f0) / BUY.ft)};
+  }
+  function buyShow(nm){ BUYR = nm ? {nm:String(nm), t0:performance.now(), drawn:0, fy:null} : null; if (!nm){ for (const [, e] of RTX) gl.deleteTexture(e.tex); RTX.clear(); } }
   // the home port the stern carries: the player's own, a boat of the local fleet's (core/05-vessels.js FLEET), else none
   const ownPort = () => { const hp = portById(S.home || HOME0); return hp ? hp.name : ''; };
   const npcPort = n => { const f = n.fleet && FLEET[n.fi], h = f && f.home; if (!h) return ''; const q = portById(h); return q ? q.name : h; };
@@ -129,7 +150,7 @@
   function curLogo(){ return PAINTPRE && PAINTPRE.logo !== undefined ? PAINTPRE.logo : COSOWN('logo') ? S.logo : null; }
   function logoTexOf(L, img){
     if (!L) return null; const ready = L.kind !== 'u' || (img && img.complete && img.naturalWidth); if (!ready) return null;
-    const k = L.kind === 'u' ? 'u:' + img.src.length + ':' + img.src.slice(-24) : logoStr(L); let e = LTX.get(k);
+    const k = L.kind === 'u' ? (L.url ? 'x:' + L.url : 'u:' + img.src.length + ':' + img.src.slice(-24)) : logoStr(L); let e = LTX.get(k);   // (a partner's picture by its whole address)
     if (!e){ if (LTX.size >= 8){ let old = null; for (const [kk, v] of LTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); LTX.delete(old[0]); }
       if (!LCV){ LCV = document.createElement('canvas'); LCV.width = LCV.height = 256; } logoCanvas(LCV, L, img); e = {tex:mkTex(), cv:null}; upTex(e.tex, LCV); LTX.set(k, e); }
     e.used = performance.now(); return e.tex;
@@ -138,6 +159,12 @@
   function logoQ(t){ if (!(t in LOGOQ)){ const st = logoStrips(t); LOGOQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return LOGOQ[t]; }
   function drawLogo(t, M, VP, L, img){ const q = L && logoQ(t), tex = q && logoTexOf(L, img); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   const ownLogo = () => { const L = curLogo(); return [L, L && L.kind === 'u' ? imgOf(L.img) : null]; };
+  // a partner's design (core/09l-sponsor.js, steg 44) has its own mark on the hull: the sponsor's picture (fetched with CORS, so it
+  // can go into a texture; one that does not load is not drawn) or the made one. On the own boat it takes the company logo's place
+  // on the hull while the design is worn (the house flag is still the company's)
+  function imgCors(src){ let im = LOGOIMG['c:' + src]; if (!im){ im = LOGOIMG['c:' + src] = new Image(); im.crossOrigin = 'anonymous'; im.src = src; } return im; }
+  const spLogo = W => { const L = W && typeof spPaintLogo === 'function' ? spPaintLogo(W) : null; return L ? [L, L.kind === 'u' ? imgCors(L.url) : null] : null; };
+  const hullLogo = () => { const W0 = typeof spWorn === 'function' ? spWorn(PAINTPRE || S.boat.liv) : null, W = W0 && modelLiv(spPaintLiv(W0, S.boat.type)) ? W0 : null; return (W && spLogo(W)) || ownLogo(); };   // (a design without a mark leaves the company's logo)
   const MARKQ = {};
   function markQ(t){ if (!(t in MARKQ)){ const st = markStrips(t); MARKQ[t] = st ? st.map(([B, T]) => texStrip(B, T)) : null; } return MARKQ[t]; }
   function drawMark(t, M, VP, liv){ const q = markQ(t), tex = q && markTex(t, liv); if (!tex) return; gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
@@ -149,13 +176,18 @@
     gl.disableVertexAttribArray(2); for (const s of q) drawTexQuad(s, tex, M, VP, true, [0, 0.2, 0]); }
   // the name in block capitals (the game's own Archivo, bold and a little narrow, in the page so it is the same on every device), as tall
   // as the strip allows (caps at 0.74 of it, room for the ring over Å) and narrower where the name is long, centred
-  function nameCanvas(cv, nm, light){
+  // (rv: while it is being painted on, how many letters are on; the one being painted shows as far as the brush has come)
+  function nameCanvas(cv, nm, light, rv){
     const g = cv.getContext('2d'), W = cv.width, H = cv.height, txt = String(nm).toUpperCase(); g.clearRect(0, 0, W, H);
     g.fillStyle = light ? '#f7f7f4' : '#111214'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; if ('fontStretch' in g) g.fontStretch = 'semi-condensed';
     if ('letterSpacing' in g) g.letterSpacing = Math.round(H * 0.03) + 'px';
     let fs = Math.round(H * 0.74 / 0.72); const f = () => { g.font = '700 ' + fs + 'px Archivo, "Arial Narrow", Arial, sans-serif'; }; f();
     const sc = Math.min(1, W * 0.97 / Math.max(1, g.measureText(txt).width));
-    g.save(); g.translate(W / 2, H * 0.5 + H * 0.37); g.scale(sc, 1); g.fillText(txt, 0, 0); g.restore();
+    g.save(); g.translate(W / 2, H * 0.5 + H * 0.37); g.scale(sc, 1);
+    if (rv != null){ const ch = [...txt], k = Math.max(0, Math.min(ch.length, Math.floor(rv))); if (k < ch.length){
+      const x0 = -g.measureText(txt).width / 2, w = (k ? g.measureText(ch.slice(0, k).join('')).width : 0) + (rv - k) * g.measureText(ch[k]).width;
+      g.beginPath(); g.rect(-1e5, -2 * H, 1e5 + x0 + Math.max(0, w), 4 * H); g.clip(); } }
+    g.fillText(txt, 0, 0); g.restore();
   }
   // the font is in the page as data, but may not be decoded the first time a name is painted: then the names are painted again once it is
   let FONTOK = typeof document === 'undefined' || !document.fonts || document.fonts.check('700 20px Archivo');
@@ -163,23 +195,32 @@
   const isLight = c => 0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2] < 0.5;
   // the names: a small pool of textures by text, shade and the strip's shape (the own boat's two or three and those of the boats near you,
   // which change seldom), the oldest let go
-  const NTX = new Map(), NCV = {};
+  const NTX = new Map(), NCV = {}, nameH = aspect => Math.max(32, Math.min(256, Math.round(1024 / (aspect || 4) / 16) * 16));
   function nameTex(nm, light, aspect, mark){
-    const H = mark ? 128 : Math.max(32, Math.min(256, Math.round(1024 / (aspect || 4) / 16) * 16)), k = (mark ? 'M:' : H + ':') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
+    const H = mark ? 128 : nameH(aspect), k = (mark ? 'M:' : H + ':') + nm + (light ? '|l' : '|d'); let e = NTX.get(k);
     if (!e){ if (NTX.size >= 28){ let old = null; for (const [kk, v] of NTX) if (!old || v.used < old[1].used) old = [kk, v]; gl.deleteTexture(old[1].tex); NTX.delete(old[0]); }
       const W = mark ? 512 : 1024, cv = NCV[W + 'x' + H] || (NCV[W + 'x' + H] = document.createElement('canvas')); cv.width = W; cv.height = H;
       (mark ? markCanvas : nameCanvas)(cv, nm, light); e = {tex:mkTex()}; upTex(e.tex, cv); NTX.set(k, e); }
     e.used = performance.now(); return e.tex;
+  }
+  // the name being painted on (buyAt): a texture of its own per strip, drawn again each sixth of a letter, let go when the moment ends
+  const RTX = new Map();
+  function revealTex(nm, light, aspect, rv){
+    const H = nameH(aspect), k = H + ':' + nm + (light ? '|l' : '|d'), q = Math.floor(rv * 6) / 6; let e = RTX.get(k);
+    if (!e){ e = {tex:mkTex(), cv:document.createElement('canvas'), q:null}; e.cv.width = 1024; e.cv.height = H; RTX.set(k, e); }
+    if (e.q !== q){ e.q = q; nameCanvas(e.cv, nm, light, q); upTex(e.tex, e.cv); }
+    return e.tex;
   }
   // the six nearest boats within 250 m that are drawn near (their glass is in) carry their names on the hull, light or dark by her paint
   function drawNPCNames(kit, VP){
     const near = []; for (const n of kit){ if (!n.name || !n.K || !n.K.glass) continue; n.dd = Math.hypot(n.M[12], n.M[14]); if (n.dd < 250) near.push(n); }
     if (!near.length) return; near.sort((a, b) => a.dd - b.dd); gl.disableVertexAttribArray(2);
     for (const n of near.slice(0, 6)){
-      const t = npcType(n), lv = n.player ? livParse(n.liv) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
-      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n));
+      const t = npcType(n), lv = n.player ? livParse(n.liv, t) : LIVERY[(n.liv || 0) % LIVERY.length], M = chain(n.M, n.K.S);
+      drawNames(t, M, VP, lv, String(n.name).slice(0, 24), npcPort(n), true);
       const mk = n.player && livMark(n.liv), mq = mk && markQ(t); if (mq){ const mt = nameTex(mk, isLight(markRGB(t, lv)), 4, true); for (const s of mq) drawTexQuad(s, mt, M, VP, true, [0, 0.2, 0]); }
-      const lg = n.player && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
+      const sl = n.player && typeof spPaintIn === 'function' ? spPaintIn(n.liv) : null, sq = sl && spLogo(sl); if (sq) drawLogo(t, M, VP, sq[0], sq[1]);
+      const lg = n.player && !sq && logoParse(n.liv); if (lg) drawLogo(t, M, VP, lg, lg.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), lg.ver) : null);
     }
   }
   // the hand-steered boat's paint (vessel3d.js hullLiv): the hull's colours uploaded again when it changes
@@ -198,9 +239,21 @@
   // an arm from the shoulder Sw to the hand Hw (boat frame) with the elbow bent down and out, in the arm meshes W (the worker's sleeves in
   // the look of the one it belongs to: SK.wk the skipper's, SK.wkC the first hand's); sd 1 the right arm, -1 the left; sp the hand's grip.
   // Returns where the hand holds
-  function armTo(BMrel, W, Sw, Hw, sd, sp){ const d = [Hw[0] - Sw[0], Hw[1] - Sw[1], Hw[2] - Sw[2]], Lh = Math.hypot(d[0], d[1], d[2]) || 1e-6, u = d.map(v => v / Lh), seg = 0.31, Lc = Math.min(Lh, 2 * seg * 0.995);
-    let bv = [0, -1, sd * 0.5]; const kk = bv[0] * u[0] + bv[1] * u[1] + bv[2] * u[2]; bv = [bv[0] - kk * u[0], bv[1] - kk * u[1], bv[2] - kk * u[2]]; const bl = Math.hypot(bv[0], bv[1], bv[2]) || 1, h = Math.sqrt(Math.max(0, seg * seg - (Lc / 2) ** 2));
-    const Hc = [Sw[0] + u[0] * Lc, Sw[1] + u[1] * Lc, Sw[2] + u[2] * Lc], E = [(Sw[0] + Hc[0]) / 2 + bv[0] / bl * h, (Sw[1] + Hc[1]) / 2 + bv[1] / bl * h, (Sw[2] + Hc[2]) / 2 + bv[2] / bl * h];
+  // (FB2, steg 123: the one solver for every limb, deckcrew.js ik2; his own segment, 0.31 m, and his elbow's own way, as before)
+  // (FB7, the new people: the one whose arms are drawn live is drawn whole and skinned, once both arms are known (the left comes
+  // last everywhere): standing or seated where drawN was given his place (FIGLV), the wrists and the elbows from here, in his own frame)
+  function figLive(BMrel, fg){
+    const L = FIGLV, M = L.M, S = WK_S; FIGLV = null;
+    const vv = v => { const e = [BMrel[0] * v[0] + BMrel[4] * v[1] + BMrel[8] * v[2], BMrel[1] * v[0] + BMrel[5] * v[1] + BMrel[9] * v[2], BMrel[2] * v[0] + BMrel[6] * v[1] + BMrel[10] * v[2]]; return [e[0] * M[0] + e[1] * M[1] + e[2] * M[2], e[0] * M[4] + e[1] * M[5] + e[2] * M[6], e[0] * M[8] + e[1] * M[9] + e[2] * M[10]]; };
+    const pp = p => { const q = xf(BMrel, p), d = [q[0] - M[12], q[1] - M[13], q[2] - M[14]]; return [(d[0] * M[0] + d[1] * M[1] + d[2] * M[2]) / S, (d[0] * M[4] + d[1] * M[5] + d[2] * M[6]) / S, (d[0] * M[8] + d[1] * M[9] + d[2] * M[10]) / S]; };
+    const J = figStand(fg.sk, L.seated, null, S);
+    ['R', 'L'].forEach((sd, i) => { const a = L.arms[sd]; if (a) J.arms[sd] = {el:pp(a.E), wr:pp(a.Hc), hand:figHandTurn(fg.H0[i], vv(a.Fr[0]), vv(a.Fr[1]), vv(a.Fr[2]))}; });
+    const o = figFromJoints(fg.sk, J); ['R', 'L'].forEach(sd => figGrip(fg.ex, fg.sex, (L.arms[sd] || {}).g || 'relax', o.local, sd));
+    drawFig(fg, figPose(fg.sk, o.local, o.root).M, chain(M, M4.S(S)));
+  }
+  function armTo(BMrel, W, Sw, Hw, sd, sp){ const seg = 0.31, o = ik2(Sw, Hw, seg, seg, [0, -1, sd * 0.5]), Hc = o.e, E = o.j;
+    if (W && FIGLV){ const fg = figOf(W); if (fg){ const f = nrm3([Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]]), s2 = sp || {g:'relax', n:[-sd * 0.9, -0.4, 0]}, Fr = handFrame(f, s2, sd), gd = (fg.grip[s2.g] || fg.grip.relax)[sd > 0 ? 'R' : 'L'];
+      FIGLV.arms[sd > 0 ? 'R' : 'L'] = {E, Hc, Fr, g:s2.g}; if (sd < 0) figLive(BMrel, fg); return add3(Hc, mul3(inFrame(Fr, gd.at), WK_S)); } }
     if (W){ const f = [Hc[0] - E[0], Hc[1] - E[1], Hc[2] - E[2]], fl = Math.hypot(f[0], f[1], f[2]) || 1, HT = [Hc[0] + f[0] / fl * WK_S, Hc[1] + f[1] / fl * WK_S, Hc[2] + f[2] / fl * WK_S];
       drawN(W.uarm, chain(BMrel, limbM(Sw, E, WK_S))); drawN(W.farm, chain(BMrel, limbM(E, Hc, WK_S)));
       // the hands in their grips (hender.py): relaxed, the palm in and down; round the knife's handle when it bleeds a fish
@@ -259,11 +312,13 @@
     if (S.haill && haillF() > 0){ const CM = chain(BMrel, M4.T(CHARM_AT[0], CHARM_AT[1], CHARM_AT[2]), M4.RZ(Math.sin(T * 1.3) * 0.18), M4.RX(Math.sin(T * 0.9) * 0.12)); drawN(SK.cstr, CM);
       if (S.haill.type === 'luksus') drawN(SK.shoe, CM); else drawN(SK.fishM.torsk, chain(CM, M4.T(0, -0.17, 0), M4.RX(Math.PI / 2), M4.S(0.16))); }
     const L2R = q => xf(BMrel, q), fsc = kg => clamp(0.42 * Math.cbrt(kg), 0.28, 1.2);
-    const hang = (sp, kg, P, w) => drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + w) * 0.45), M4.S(fsc(kg))));
+    // (k: the life left in it, flap in 09-landing-deck.js: it kicks on the line and in the hand until it is bled, and lies still in the toss)
+    const hang = (sp, kg, P, w, k) => { const Fl = flap(T, w, k, sp, kg); bendOn(Fl); drawN(fishOf(sp), chain(BMrel, M4.T(P[0], P[1] - fsc(kg) * 0.45, P[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(fsc(kg)))); bendOff(); };
+    const fw = f => ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283;   // (each fish its own phase)
     const WT = karB && GEO(vtype()).work ? GEO(vtype()).work.tub : null, TUB = WT ? [WT[0], WT[1] + 0.42, WT[2]] : [SKA.tub[0], SKA.tub[1] + 0.42, SKA.tub[2] - 0.05], F = SKA.fisher;   // (an open boat with tubs: into the bleeding tub, where the one who guts takes them)
     // fish swung from the rail into the tub
     for (let i = A.fly.length - 1; i >= 0; i--){ const f = A.fly[i]; f.u += dt / 0.75; if (f.u >= 1){ A.fly.splice(i, 1); continue; }
-      const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i); }
+      const u = f.u; hang(f.sp, f.kg, [f.a[0] + (TUB[0] - f.a[0]) * u, f.a[1] + (TUB[1] - f.a[1]) * u + Math.sin(Math.PI * u) * 0.45, f.a[2] + (TUB[2] - f.a[2]) * u], i, 0); }
     if (mode && atRail){
       const FP = chain(M4.T(F[0], F[1], F[2]), M4.RY(-Math.PI / 2)); drawN(SK.fisher, chain(BMrel, FP));
       const shY = SK.wk ? WK_SH : 1.3, shR = xf(FP, [0.2, shY, 0]), shL = xf(FP, [-0.2, shY, 0]); let hR, hL;
@@ -303,7 +358,9 @@
           let low = null;
           for (let i = A.fish.length - 1; i >= 0; i--){ const f = A.fish[i], y = end + i * 0.55;       // pilk at the end, fly hooks above it
             if (y >= RL[1] - 0.1){ A.bq.push({...f, a:[WX - 0.05, RL[1], C[2]], u:0}); A.fish.splice(i, 1); continue; }
-            const P = [WX + 0.04 * Math.sin(T * 3 + i), y, C[2]]; if (y > -0.2) hang(f.sp, f.kg, P, i + 1); low = low || P; }
+            // (the fish pulls the line to the sides on its way up, the most deep down, and splashes as it breaks the surface)
+            const w = fw(f), tg = tug(T, w, 0.14 * clamp((RL[1] - y) / 1.5, 0.15, 1)), P = [WX + tg[0], y, C[2] + tg[1]]; fishSurf(f, y, L2R(P), f.kg, T, w);
+            if (y > -0.2) hang(f.sp, f.kg, P, w); low = low || P; }
           SK.lines.push([L2R(top), L2R(low || [WX, Math.min(RL[1], end), C[2]])]);
           if (!A.fish.length && A.t > 0.8){ A.st = 'jig'; A.t = 0; }
         }
@@ -325,7 +382,8 @@
           else { const end = m.d0 + m.t * 1.3; let low = null;
             for (let i = m.fish.length - 1; i >= 0; i--){ const f = m.fish[i], y = end + i * 0.5;
               if (y >= tip[1] - 0.35){ A.bq.push({...f, a:[tip[0] - 0.2, tip[1] - 0.35, tip[2]], u:0}); m.fish.splice(i, 1); busy = tip; continue; }
-              const Pf = [tip[0], y, tip[2]]; if (y > -0.2) hang(f.sp, f.kg, Pf, i + k * 3); low = low || Pf; if (y > tip[1] - 1.0) busy = tip; }
+              const w = fw(f), tg = tug(T, w, 0.12 * clamp((tip[1] - y) / 1.5, 0.15, 1)), Pf = [tip[0] + tg[0], y, tip[2] + tg[1]]; fishSurf(f, y, L2R(Pf), f.kg, T, w);
+              if (y > -0.2) hang(f.sp, f.kg, Pf, w); low = low || Pf; if (y > tip[1] - 1.0) busy = tip; }
             SK.lines.push([L2R(tip), L2R(low || [tip[0], Math.min(tip[1], end), tip[2]])]);
             if (!m.fish.length && m.t > 0.6){ m.st = 'jig'; m.t = 0; } } }
         hR = busy ? [busy[0] - 0.35, busy[1] - 0.45, busy[2] + 0.08] : [F[0] + 0.43, F[1] + 0.92, F[2] + 0.12]; hL = busy ? [busy[0] - 0.4, busy[1] - 0.5, busy[2] - 0.08] : [F[0] + 0.43, F[1] + 0.92, F[2] - 0.12];
@@ -334,8 +392,9 @@
       // throat and the blood running, and tosses it in the tub; the machines and the line wait meanwhile (one at a time, the next one queued)
       let kDir = null; if (!A.bl && A.bq.length) A.bl = {f:A.bq.shift(), t:0};
       if (A.bl){ const B = A.bl, f = B.f, c = (B.t += dt), ch = [F[0] + 0.36, F[1] + shY - 0.18, F[2] - 0.08], kU = [F[0] + 0.3, F[1] + shY - 0.05, F[2] + 0.2], kD = [F[0] + 0.42, F[1] + shY - 0.24, F[2] - 0.02], ease = u => u * u * (3 - 2 * u), L3 = (P, Q2, u) => [P[0] + (Q2[0] - P[0]) * u, P[1] + (Q2[1] - P[1]) * u, P[2] + (Q2[2] - P[2]) * u];
-        if (c < 0.4){ hL = L3(f.a, ch, ease(c / 0.4)); hang(f.sp, f.kg, hL, 2); }
-        else if (c < 1.45){ hL = ch; hang(f.sp, f.kg, hL, 2 + Math.sin(c * 7) * 0.1); hR = L3(kU, kD, ease(clamp((c - 0.45) / 0.35, 0, 1)));
+        // (alive in his hand until the cut, the last kicks fading after it)
+        if (c < 0.4){ hL = L3(f.a, ch, ease(c / 0.4)); hang(f.sp, f.kg, hL, fw(f)); }
+        else if (c < 1.45){ hL = ch; hang(f.sp, f.kg, hL, fw(f), clamp(1 - (c - 0.75) / 0.55, 0, 1)); hR = L3(kU, kD, ease(clamp((c - 0.45) / 0.35, 0, 1)));
           kDir = [0.6, -0.6, -0.4];   // (the knife is drawn in the right hand's grip, below with the arms)
           if (c > 0.75){ const sc = fsc(f.kg), th = xf(BMrel, [ch[0], ch[1] - sc * 0.12, ch[2]]), U = xf(BMrel, TUB); for (let i = 0; i < 10; i++){ const u = ((c - 0.75) * 1.6 + hash(i * 5) * 0.6) % 1; DKBLOOD.push([th[0] + (U[0] - th[0]) * 0.2 * u + (hash(i) - 0.5) * 0.03, th[1] - 0.9 * u * u, th[2] + (U[2] - th[2]) * 0.2 * u + (hash(i + 3) - 0.5) * 0.03]); } } }
         else { A.fly.push({sp:f.sp, kg:f.kg, a:ch, u:0}); A.bl = null; A.nb = (A.nb || 0) + 1; } }   // (nb: bled, for the tests)
@@ -390,7 +449,7 @@
     // screens and name boards up close
     const near = Math.hypot(BMrel[12], BMrel[13], BMrel[14]) < 45, now = performance.now();
     if (!S.unnamed) drawNames(SK.hullT || vtype(), BMrel, VP, hullLiv(S.boat), S.boatName, ownPort());   // an unnamed boat has her mark only
-    drawMark(SK.hullT || vtype(), BMrel, VP); drawCall(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...ownLogo());
+    drawMark(SK.hullT || vtype(), BMrel, VP); drawCall(SK.hullT || vtype(), BMrel, VP); drawLogo(SK.hullT || vtype(), BMrel, VP, ...hullLogo());
     if (near && SK.live !== false){
       if (now - SK.tP > 500){ SK.tP = now; paintPlotter(); if (S.equip.vhf) paintVhf(); }
       if (now - SK.tG > 90){ paintGauges((now - SK.tG) / 1000); SK.tG = now; }
@@ -404,9 +463,9 @@
   // the places along a model's rails where the side is no rail to bolt a machine to (a shelter's wall, a casing, a table): per side, 1 starboard
   // and -1 port, in the game's z. The breisjark (malo36.py, 02.11.2026, Jonas: the shelter open to starboard for the work): starboard in the
   // open side under the shelter aft of the bleeding tub and on the aft deck clear of the ladder; port aft of the casing
-  // The 15 m shelter-decker (kyst15.py, 02.11.2026): only the hauling station's sill to starboard is a rail at the working deck, aft of the
-  // hauler (the rest of her side is the shelter's closed wall, whose own points jigRail took for a rail)
-  const JIGR = {}, JIG_Z = {breisjark:{1:[1.33, 2.03, 3.43, 4.13], '-1':[4.63]}, kyst15:{1:[1.145, 1.845, 2.545], '-1':[]}};
+  // The 15 m shelter-decker (kyst15.py, OB12 11.11.2026): her places are the model's own, anchors.jigZ: two on the hauling station's sill
+  // aft of the bleeding tub and two in the after hatch (the rest of her side is the shelter's closed wall)
+  const JIGR = {};   // (the table JIG_Z for the breisjark and the kyst15 went with OB12: both models carry anchors.jigZ)
   function jigRail(t, G){
     if (t in JIGR) return JIGR[t];
     const m = vesselModel(t), P = m && m.o && m.o.p, out = [];
@@ -419,19 +478,20 @@
         return ym < dy + 0.35 ? null : [sd * (xm - 0.05), ym, z, sd]; };
       // the model's own places, in the order the machines are bolted on (anchors.jigZ, [side, z]: the snekke, OB6 09.11.2026, where
       // the search put place 2 in the corner by the dashboard with the hard top's post through the one standing there)
-      if (Array.isArray(G.jigZ)){ for (const [sd, z] of G.jigZ){ const q = railPt(sd, z); if (q) out.push(q); } return (JIGR[t] = out); }
+      // (OB12: [side, z, x, y] is the point on the rail itself, for a side that flares out over the rail: the kyst15's sills, where the
+      // outermost point of the slice is the shelter deck's cap and railPt found the strake under the sill)
+      if (Array.isArray(G.jigZ)){ for (const J of G.jigZ){ const q = J.length >= 4 ? [J[2], J[3], J[1], J[0]] : railPt(J[0], J[1]); if (q) out.push(q); } return (JIGR[t] = out); }
       // the places to try: out from the middle of the working deck both ways, clear of the hauler and the ends
-      const zs0 = JIG_Z[t] || [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
+      const zs = [...Array(24).keys()].map(k => G.deck.z + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.35).filter(z => Math.abs(z - hz) > 0.6 && z < st - 0.9 && z > bw + 1.5);
       // as many as she may carry (jukseMax; Jonas' survey 30.10.2026, D2: only three were drawn of up to eight): the starboard rail
       // first, then the port one, each place's fourth number the side (1 starboard, -1 port: the machine turned round to face out)
       const max = Math.max(1, (VESSELS[t] || {}).jukseMax || 3), sides = [];
-      for (const sd of [1, -1]){ const side = [], zs = Array.isArray(zs0) ? zs0 : zs0[sd] || [];
+      for (const sd of [1, -1]){ const side = [];
         // (F21, OB3: an arm's length between two machines, so the lines do not foul each other, and as many to port as to starboard;
-        // before 0.7 m apart and one more to starboard. The models' own places are as they were: anchors.jigZ and JIG_Z)
-        const gap = Array.isArray(zs0) ? 1.0 : 0.7;
-        for (const z of zs){ if (!Array.isArray(zs0) && (out.length + side.length >= max || side.length >= Math.ceil(max / 2) + (sd > 0 ? 1 : 0))) break; if (side.length >= max) break; if (side.some(q => Math.abs(q[2] - z) < gap)) continue;
+        // before 0.7 m apart and one more to starboard. The models' own places are as they were: anchors.jigZ)
+        for (const z of zs){ if (side.length >= max) break; if (side.some(q => Math.abs(q[2] - z) < 1.0)) continue;
           const q = railPt(sd, z); if (q) side.push(q); }
-        side.sort((a, b) => a[2] - b[2]); if (Array.isArray(zs0)) sides.push(side); else out.push(...side); }
+        side.sort((a, b) => a[2] - b[2]); sides.push(side); }
       // (searched places, F21: the machines are bolted on a side in turn, starboard first, so two machines stand one to each side, each
       // side from the middle of the working deck outwards)
       // (a side with fewer places than the other: the rest on the side that has them, as many as she may carry)
@@ -466,8 +526,10 @@
         // the fish come up on the line and are taken in over the rail at the top (onto the deck, where the catch is shown)
         for (let i = m.fish.length - 1; i >= 0; i--){ const f = m.fish[i], y = end + i * 0.5;
           if (y >= tip[1] - 0.35){ m.fish.splice(i, 1); dkEvent('bleed', tip, f.sp, f.kg); continue; }
-          const sc = clamp(0.42 * Math.cbrt(f.kg), 0.28, 1.2), Pf = [tip[0], y, tip[2]];
-          if (y > -0.2) drawN(SK.fishM[f.sp] || SK.fishM.torsk, chain(BMrel, M4.T(Pf[0], Pf[1] - sc * 0.45, Pf[2]), M4.RX(Math.PI / 2), M4.RZ(Math.sin(T * 9 + i + k * 3) * 0.45), M4.S(sc)));
+          // (alive on the line: it kicks, bends, pulls the line about and splashes as it comes out; flap, tug, fishSurf in 09-landing-deck.js)
+          const sc = clamp(0.42 * Math.cbrt(f.kg), 0.28, 1.2), w = ((f.t || 0) * 0.0013 + (f.kg || 0) * 2.7) % 6.283, tg = tug(T, w, 0.12 * clamp((tip[1] - y) / 1.5, 0.15, 1)), Pf = [tip[0] + tg[0], y, tip[2] + tg[1]], Fl = flap(T, w, 1, f.sp, f.kg);
+          fishSurf(f, y, L2R(Pf), f.kg, T, w);
+          if (y > -0.2){ bendOn(Fl); drawN(SK.fishM[f.sp] || SK.fishM.torsk, chain(BMrel, M4.T(Pf[0], Pf[1] - sc * 0.45, Pf[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(sc))); bendOff(); }
           low = low || Pf; }
         SK.lines.push([L2R(tip), L2R(low || [tip[0], Math.min(tip[1], end), tip[2]])]);
         if (!m.fish.length && m.t > 0.6){ m.st = 'jig'; m.t = 0; } } }
@@ -557,15 +619,66 @@
     for (const L of G.lights || []) if (L && L[0] && L[2] !== 'stern' && L[2] !== 'work' && (!top || L[0][1] > top[1])) top = L[0];
     if (!top || (G.pole && (top[1] <= G.pole[1] || Math.hypot(top[0] - G.pole[0], top[2] - G.pole[2]) < 1.0))) return null;
     return [top[0], top[1] + 0.3, top[2]]; }
-  function updateFlag(t, appW){
-    const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW), om = 4 + appW * 1.1;
-    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - t * om + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
-    const a = FLAGM.pos; let k = 0;
+  // the cloth for an apparent wind of appW m/s at the wave's phase ph, into a (the own boat's, FLAGM, and the others', drawPeerFlags)
+  function clothInto(a, ph, appW){
+    const droop = (1 - sstep(1.5, 8, appW)) * 1.25, amp = 0.03 + 0.09 * sstep(2, 16, appW);
+    const P3 = (u, v) => { const z = amp * (u / FLAG_W) * Math.sin(u * 11 - ph + v * 3); return [u * Math.cos(droop), v - FLAG_H - u * Math.sin(droop), z]; };
+    let k = 0;
     for (let j = 0; j < FH; j++) for (let i = 0; i < FW; i++){
       const u0 = i / FW * FLAG_W, u1 = (i + 1) / FW * FLAG_W, v0 = j / FH * FLAG_H, v1 = (j + 1) / FH * FLAG_H;
       const p00 = P3(u0, v0), p10 = P3(u1, v0), p11 = P3(u1, v1), p01 = P3(u0, v1);
       for (const q of [p00, p10, p11, p00, p11, p01]){ a[k++] = q[0]; a[k++] = q[1]; a[k++] = q[2]; }
     }
-    gl.bindBuffer(gl.ARRAY_BUFFER, FLAGM.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, a);
+  }
+  // the wave's phase adds up frame by frame (steg 44: t * om jumped with every small change of the wind once t was large, so the cloth
+  // snapped to a new shape when the apparent wind moved)
+  function clothStep(C, t, appW){ C.ph = (C.ph || 0) + (4 + appW * 1.1) * (C.t0 == null ? 0 : Math.min(0.5, Math.max(0, t - C.t0))); C.t0 = t; clothInto(C.pos, C.ph, appW); gl.bindBuffer(gl.ARRAY_BUFFER, C.pb); gl.bufferSubData(gl.ARRAY_BUFFER, 0, C.pos); }
+  function updateFlag(t, appW){ clothStep(FLAGM, t, appW); }
+  // the other players' ensigns (TP1, steg 108; flagged by Jonas 12.11.2026, V1 A: what is sold is seen by the others): on the six nearest
+  // player boats within 250 m (the names, drawNPCNames, only where her glass is in), at her ensign's pole while her flag's hours are where she
+  // is (core/03-simulation.js flagUp, asked once a game minute). Her flag from her paint code (vessel3d.js livFlag): the one she bought,
+  // her house flag with her logo (made, or her picture by her id, ui/10h-world.js peerLogo; Norway until the picture is in, as on the own
+  // boat), else Norway in a rectangle. The pictures in a pool by flag, shape and logo (at most 8, the oldest let go, as the logos), and
+  // each boat's cloth its own, waved once a frame in the apparent wind of her course and speed. No flag on the local fleet in this step.
+  // PFLAG counts for the tests (G3._debug.peerFlags)
+  const PFT = new Map(), PFC = new Map(), PFLAG = {drawn:0, codes:[], made:0, near:0, out:0, at:[]};
+  const lruDrop = (M, max, del) => { if (M.size < max) return; let old = null; for (const [kk, v] of M) if (!old || v.used < old[1].used) old = [kk, v]; del(old[1]); M.delete(old[0]); };
+  let PFCV = null, PFLC = null;
+  const VIMPEL = new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);   // (the pennant's stretch, as the own boat's in 24-cinema.js)
+  const PFP = new Map();   // (her code read once: the flag and the logo, by the code)
+  function peerFlagTex(n){
+    let q = PFP.get(n.liv); if (!q){ if (PFP.size > 64) PFP.clear(); const f0 = livFlag(n.liv); q = {f0, L:f0.code === 'LOGO' ? logoParse(n.liv) : null}; PFP.set(n.liv, q); }
+    const f = Object.assign({}, q.f0); let L = null, img = null, lk = '';
+    if (f.code === 'LOGO'){ L = q.L; img = L && L.kind === 'u' && typeof peerLogo === 'function' ? peerLogo(String(n.id).slice(1), L.ver) : null;
+      if (L && (L.kind !== 'u' || (img && img.complete && img.naturalWidth))) lk = L.kind === 'u' ? 'u:' + n.id + '.' + L.ver : logoStr(L); else f.code = 'NO'; }
+    const k = f.code + '|' + f.shape + '|' + lk; let e = PFT.get(k);
+    if (!e){ lruDrop(PFT, 8, v => gl.deleteTexture(v.tex));
+      if (!PFCV){ PFCV = document.createElement('canvas'); PFCV.width = 256; PFCV.height = 188; }
+      if (lk && !PFLC){ PFLC = document.createElement('canvas'); PFLC.width = PFLC.height = 256; } if (lk) logoCanvas(PFLC, L, img);
+      flagCanvas(PFCV, f.code, f.shape, lk ? PFLC : null); e = {tex:mkTex()}; upTex(e.tex, PFCV); PFT.set(k, e); PFLAG.made++; }
+    e.used = performance.now(); return {tex:e.tex, shape:f.shape, k};
+  }
+  function drawPeerFlags(kit, VP, t, H){
+    PFLAG.drawn = PFLAG.near = PFLAG.out = 0; PFLAG.codes = []; PFLAG.at = []; if (!FLAGM) return;
+    // (any level of her model: the glass, and so the names, comes only within the near level's 150 m for a detailed model, npcNear)
+    const near = []; for (const n of kit){ if (!n.player || !n.K) continue; const d = Math.hypot(n.M[12], n.M[14]); if (d < 250) near.push([d, n]); }
+    if (!near.length) return; near.sort((a, b) => a[0] - b[0]); gl.disableVertexAttribArray(2); const now = performance.now(), mn = Math.floor(S.t); PFLAG.near = Math.min(6, near.length);
+    for (const [, n] of near.slice(0, 6)){
+      const G = GEO(n.K.t), pole = G && G.pole; if (!pole) continue;
+      let C = PFC.get(n.id);
+      if (!C){ lruDrop(PFC, 8, v => gl.deleteBuffer(v.pb));
+        C = {pos:new Float32Array(FW * FH * 18), pb:buf(new Float32Array(FW * FH * 18), gl.ARRAY_BUFFER, gl.DYNAMIC_DRAW), mn:null, up:false}; PFC.set(n.id, C); }
+      C.used = now; if (C.mn !== mn){ C.mn = mn; C.up = flagUp(S.t / 60, n.p); } if (!C.up) continue;
+      // not waved or drawn when her pole is out of the picture (behind the camera or well off its sides)
+      const P = xf(chain(n.M, n.K.S), pole), cw = VP[3] * P[0] + VP[7] * P[1] + VP[11] * P[2] + VP[15];
+      if (cw <= 0.1 || Math.abs((VP[0] * P[0] + VP[4] * P[1] + VP[8] * P[2] + VP[12]) / cw) > 1.3 || Math.abs((VP[1] * P[0] + VP[5] * P[1] + VP[9] * P[2] + VP[13]) / cw) > 1.3){ PFLAG.out++; continue; }
+      // the apparent wind where she is, against her course and speed (as the own boat's, 24-cinema.js)
+      const p = n.p, wdir = (windDir(H, p) - gridGamma(p) + 180) * DEG, wv = env.wind || windAt(H, p), bms = (n.v || 0) * 0.514 * 2;
+      const ax = Math.sin(wdir) * wv - Math.sin(n.hd) * bms, az = -Math.cos(wdir) * wv + Math.cos(n.hd) * bms;
+      clothStep(C, t, Math.hypot(ax, az));
+      const fl = peerFlagTex(n), FM = model(P[0], P[1], P[2], Math.PI / 2 - Math.atan2(ax, -az), 0, 0);
+      drawTexQuad({pb:C.pb, ub:FLAGM.ub, n:FLAGM.n}, fl.tex, fl.shape === 'vimpel' ? chain(FM, VIMPEL) : FM, VP, true, [0, 0.6, 0]);
+      PFLAG.drawn++; PFLAG.codes.push(fl.k); PFLAG.at.push([+((VP[0] * P[0] + VP[4] * P[1] + VP[8] * P[2] + VP[12]) / cw).toFixed(3), +((VP[1] * P[0] + VP[5] * P[1] + VP[9] * P[2] + VP[13]) / cw).toFixed(3), +cw.toFixed(1)]);   // (where in the picture, for the tests)
+    }
   }
 

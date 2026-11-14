@@ -55,6 +55,55 @@ async def main():
         print(ok(m['mach'] == [600, 1500] and m['price'][0] >= 350000 and m['price'][1] >= 300000), 'fitted, they give 600 kg an hour and 1,500 kg of ice a day, from 350 000 and 300 000 kr', [m['mach'], m['price']])
         print(ok(m['gutMach'] - m['gutHand'] > 9 and abs(m['iceH'] - 62.5) < 1), 'the machine guts 10 kg a minute more than the hands alone, and the ice machine makes 62.5 kg an hour', [m['gutMach'], m['gutHand'], m['iceH']])
         print(ok(m['room0'] == 1300 and m['cap1'] == 1000 and m['cap2'] == 800 and m['room2'] == 800 and m['min'] == [9, 25]), 'freight goes on deck first and takes hold room only beyond it; loading by hand takes a minute per 60 kg, with the crane per 200 kg a tonne', [m['room0'], m['cap1'], m['cap2'], m['room2'], m['min']])
+        # OPP3, the propeller (core PROPUP, b.propLv): offered where it fits, priced at 2, 4 and 7 % of the boat's price with the floors
+        # 2 500, 4 000 and 6 500 kr, the yard's job of 30 real minutes sets the step, the price comes back when it is cancelled or the
+        # boat is traded in while it waits, and a trim gives the same knots with and without it
+        pr = await pg.evaluate("""(()=>{ const b = S.boat, t0 = b.type, R = {}, q = PORTS.find(q => q.sted === 'verft');
+          R.fits = Object.keys(VESSELS).filter(k => propFits(VESSELS[k])); R.nofit = Object.keys(VESSELS).filter(k => !propFits(VESSELS[k]));
+          const price = t => { b.type = t; applyVessel(); return PROPUP.map(st => upPrice(st.pc, st.min)); };
+          R.trebat = price('trebat'); R.snekke = price('snekke'); R.hurtig = price('hurtigsjark');
+          // the job: ordered by the action at the yard, done 30 real minutes later (YARD_H game hours)
+          b.type = 'sjark'; delete b.propLv; S.jobs = []; b.status = 'port'; b.port = q.id; b.pos = {x:q.p.x, y:q.p.y}; applyVessel(); S.cash = 1e7; const v0 = BOAT.vmax, c0 = S.cash;
+          const ev = [], ce = window.cloudEv; window.cloudEv = (k, d) => ev.push([k, d]); const buy = () => { PHONE.dact('utstyr', 'propup', {}); PHONE.dact('utstyr', 'propup', {}); };   // (from 10 000 kr the first tap asks)
+          buy(); window.cloudEv = ce; const j = (S.jobs || []).find(x => x.kind === 'prop'); R.job = j ? {lv:j.lv, kr:j.kr, ty:j.ty, h:j.h, min:(j.until - S.t)} : null; R.paid = c0 - S.cash; R.yardH = YARD_H; R.ev = ev.filter(e => e[0] === 'upg').map(e => e[1]);
+          for (let i = 0; i < 400 && (S.jobs || []).some(x => x.kind === 'prop'); i++) step(); R.lv = b.propLv; R.v = [v0, BOAT.vmax];
+          // cancelled before it starts: the price paid comes back (j.kr)
+          const c1 = S.cash; buy(); const i2 = S.jobs.findIndex(x => x.kind === 'prop'); if (i2 >= 0) S.jobs[i2].until = null; R.wait = i2 >= 0;   // (a job that has not started: the cancel button)
+          R.paid2 = c1 - S.cash; if (i2 >= 0) PHONE.dact('utstyr', 'jobx', {i:i2}); R.back = [c1, S.cash];
+          // a boat traded in while it waited: the yard pays it back, nothing is fitted
+          b.status = 'port'; b.propLv = 1; applyVessel(); const c2 = S.cash; buy(); const j3 = S.jobs.find(x => x.kind === 'prop'); b.type = 'snekke'; delete b.propLv; applyVessel();
+          if (j3) finishJob(j3); S.jobs = S.jobs.filter(x => x !== j3); R.trade = {paid:c2 - (j3 ? j3.kr : 0), cash:S.cash, c2, lv:b.propLv || 0};
+          // the engine ordered and the boat traded in while it waited (the kontroll 12.11.2026: the new boat got step 2 for nothing)
+          b.type = 'sjark'; delete b.engLv; delete b.propLv; applyVessel(); S.jobs = []; const c3 = S.cash; PHONE.dact('utstyr', 'engup', {}); const j4 = S.jobs.find(x => x.kind === 'eng'); const paid4 = c3 - S.cash;
+          b.type = 'snekke'; applyVessel(); if (j4) finishJob(j4); S.jobs = []; R.engTrade = {paid:paid4, kr:j4 && j4.kr, back:S.cash - (c3 - paid4), lv:b.engLv || 0};
+          // the trade-in itself (switchVessel): the old hull's yard jobs, also one from before OPP3 without j.kr, are paid back and taken off
+          // the queue, so the new boat can order her own (the code review 12.11.2026)
+          b.type = 'sjark'; delete b.engLv; delete b.propLv; delete b.holdLv; applyVessel(); S.jobs = []; const c5 = S.cash; buy(); S.jobs.push({kind:'hold', lv:1, h:YARD_H, no:'Ombygging av lasterommet', en:'Rebuilding the hold'});
+          const paid5 = c5 - S.cash, holdKr = upPrice(HOLDUP[0].pc, HOLDUP[0].min); PHONE.switchVessel('snekke'); if (typeof BUYM !== 'undefined' && BUYM.close) setTimeout(() => BUYM.close(), 100);
+          R.swap = {paid:paid5, back:S.cash - (c5 - paid5), holdKr, jobs:(S.jobs || []).filter(x => ['eng', 'hold', 'upg', 'prop'].includes(x.kind)).length, type:b.type, lv:b.propLv || 0};
+          // the trim on top: the same knots with and without the propeller
+          const add = lv => { b.type = 'hurtigsjark'; b.propLv = lv; delete b.trim; applyVessel(); const v = BOAT.vmax; trimSet('turbo'); const d = BOAT.vmax - v; trimEnd(); return d; };
+          R.trim = [add(0), add(3)];
+          // the Trim app's «Toppfart med den» (ui/phone/06-render.js) is what the trim gives, with propeller 3 and engine 2 (the kontroll
+          // 12.11.2026: it took the product, 57,2 kn promised for 50,6)
+          b.type = 'hurtigsjark'; b.propLv = 3; b.engLv = 2; delete b.trim; applyVessel(); const html = PHONE.page('trim') || '', nb = x => x.replace(/\u00a0|\u202f/g, ' ');
+          R.promise = [...nb(html).matchAll(/Toppfart med den<\/span><span><b>([\d ,]+) kn/g)].map(m => +m[1].replace(/ /g, '').replace(',', '.'));
+          R.gives = Object.keys(BOOSTS).map(k => { delete b.trim; applyVessel(); trimSet(k); const v = +BOAT.vmax.toFixed(1); return v; }); delete b.trim; delete b.engLv;
+          delete b.propLv; delete b.trim; b.type = t0; S.jobs = []; applyVessel(); return R; })()""")
+        print(json.dumps(pr, ensure_ascii=False))
+        print(ok('skiff' in pr['nofit'] and all(k in pr['fits'] for k in ('trebat', 'snekke', 'sjark', 'hurtigsjark', 'sjarkny', 'kyst15', 'kyst21')) and not [k for k in pr['fits'] if k in ('autoliner',)]), 'the propeller fits every boat without an outboard outside the ocean fleet', pr['nofit'])
+        print(ok(pr['trebat'] == [2500, 4000, 6500] and pr['snekke'] == [5000, 10000, 17000] and pr['hurtig'] == [98000, 196000, 343000]), 'the price: 2, 4 and 7 % of the boat\'s price with the floors 2 500, 4 000 and 6 500 kr', [pr['trebat'], pr['snekke'], pr['hurtig']])
+        jb = pr['job'] or {}
+        print(ok(jb.get('lv') == 1 and jb.get('kr') == 23000 and pr['paid'] == 23000 and jb.get('ty') == 'sjark' and abs(jb.get('min', 0) - pr['yardH'] * 60) < 1e-6 and pr['ev'] == [{'k': 'prop', 'lv': 1}]),
+              'the havsjark orders step 1 at the yard: 23 000 kr paid, 30 real minutes, and upg {k:prop, lv:1} for the funnel', [jb, pr['paid'], pr['ev']])
+        print(ok(pr['lv'] == 1 and abs(pr['v'][1] - pr['v'][0] * 1.05) < 1e-9), 'the job finishes and sets step 1: the havsjark goes 5 % faster', [pr['lv'], pr['v']])
+        print(ok(pr['wait'] and pr['paid2'] == 46000 and pr['back'][0] == pr['back'][1]), 'step 2 (46 000 kr) cancelled before it starts: the price comes back', [pr['wait'], pr['back']])
+        print(ok(pr['trade']['cash'] == pr['trade']['c2'] and pr['trade']['paid'] < pr['trade']['c2'] and pr['trade']['lv'] == 0), 'a boat traded in while the job waited: the yard pays it back and fits nothing', pr['trade'])
+        print(ok(pr['engTrade']['paid'] > 0 and pr['engTrade']['kr'] == pr['engTrade']['paid'] and pr['engTrade']['back'] == pr['engTrade']['paid'] and pr['engTrade']['lv'] == 0), 'a bigger engine ordered and the boat traded in while it waited: the yard pays it back, the new boat keeps her own engine', pr['engTrade'])
+        sw = pr['swap']
+        print(ok(sw['paid'] == 23000 and sw['back'] == 23000 + sw['holdKr'] and sw['jobs'] == 0 and sw['type'] == 'snekke' and sw['lv'] == 0), 'the trade-in pays back the old hull\'s propeller job (23 000 kr) and an old hold job without a price (priced on the old boat), and takes them off the queue', sw)
+        print(ok(len(pr['promise']) == 3 and pr['promise'] == pr['gives']), 'the Trim app promises the top speed each trim gives, on the speed sjark with propeller 3 and engine 2', [pr['promise'], pr['gives']])
+        print(ok(abs(pr['trim'][0] - pr['trim'][1]) < 1e-9 and pr['trim'][0] > 21.9), 'turbo trim gives as many knots with propeller 3 as without (22 kn, the boat\'s own)', pr['trim'])
         print(ok(not errs), 'no page errors', errs[:2])
         await b.close()
 asyncio.run(main())

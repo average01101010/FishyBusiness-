@@ -3,7 +3,7 @@
 // hour to try again, never «three failures and stop». A trip is the steps from where she lies to the next port call, sailed on the legs
 // kept when the plan was made (plan2Make: the plant, the anchorages, every leg between home, the plant, the places and each place's
 // shelter port, found with leiaRoute and checked with the sailing's own groundCheck). Nothing here searches while the plan runs, so the
-// day plays the same with the game closed (catchUp) as open. The gates are in 06d-plan-felles.js (opsStep, opsLanded, driftWx) and 04-crew.js, 07-harbours.js.
+// day plays the same with the game closed (catchUp) as open. The gates are in 05-vessels.js (plan2Step, plan2Landed, plan2Wx) and 04-crew.js, 07-harbours.js.
 const P2_PORTCALL = {lever:1, agn:1, hjem:1, hvile:1};
 function plan2Key(o){ return JSON.stringify([o.home, !!o.anchor, o.rig, o.places.map(q => [q.k, +q.x.toFixed(3), +q.y.toFixed(3)]), o.rhythm, o.land ? [o.land.mode, o.land.port] : null, S.boat.type]); }
 const plan2Made = o => !!(o && o.made && o.made.key === plan2Key(o));
@@ -33,6 +33,7 @@ async function plan2Make(o, cb){
   try {
     const C = plan2Check(o); if (!C.ok) throw C.errors[0];
     const P = o.places, mid = {x:P.reduce((a, q) => a + q.x, 0) / P.length, y:P.reduce((a, q) => a + q.y, 0) / P.length}, home = portById(o.home), big = (BOAT.len || 0) >= DRP.bigLen;
+    if (home && home.rorbu && !siteFits(S.boat.type)) throw gL('Rorbua i ' + home.name + ' tar bare båter opp til ' + SITE_MAXLEN + ' m. Velg mottaket eller en havneplass som hjem.', 'The rorbu at ' + home.name + ' only takes boats up to ' + SITE_MAXLEN + ' m. Choose the plant or a harbour berth as home.');   // (SITE_MAXLEN, 07-harbours.js)
     try { await mapNeed(mid, 14); await mapNeed(home.p, 6); for (const q of P) await mapNeed(q, p2Sno(o) ? 6 + DRP2.sno.row * Math.ceil(q.n / DRP2.sno.cols) + DRP2.sno.cols * DRP2.sno.col / 2 : 2); } catch (e){}
     // (the snow crab's strings, H3c: their room checked again now the map round them is in)
     if (p2Sno(o)){ P2SNO_FIT.clear(); const C2 = plan2Check(o); if (!C2.ok) throw C2.errors[0]; }
@@ -114,7 +115,10 @@ function plan2Start(o){
 }
 function plan2Resume(o){ o.held = null; o.hold = 0; if (o.run){ o.run.wait = null; o.run.trip = null; o.run.replan = true; } }
 // who sails her: null when she can go; {wait} when she waits; else what is missing. The watch asleep in the bunks counts as aboard
-function plan2CrewWhy(o){
+function plan2CrewWhy(o, work){
+  // nets need two aboard (GEAR.garn.crewMin, 10-gear.js): you alone, the plan waits rather than go out and not haul (Ø12 D); only while
+  // the day still has nets to set or haul (work), so a trip on her way home or to the plant goes on when the other is gone on the way
+  if (work !== false && meAboard() && p2Kind(o) === 'garn' && handsAboard() < GEAR.garn.crewMin) return {wait:true, k:'nets', no:'Garn krever minst to om bord: deg og én til. Planen venter til det er to om bord.', en:'Nets need at least two aboard: you and one more. The plan waits until there are two aboard.'};
   if (meAboard() || p2Lag()) return null;   // (the ocean vessel's teams have a skipper and a mate on the bridge, a watch each, H2b)
   const V = VESSELS[S.boat.type];
   if ((V.crewMax || 0) < 2) return {wait:true, k:'one', no:'Båten har plass til bare én i mannskapet, så planen går bare når du er om bord. Mens du er i land, venter den.', en:'The boat has room for only one crew, so the plan runs only when you are aboard. While you are ashore, it waits.'};
@@ -192,7 +196,7 @@ function plan2RulesWhy(o, H, placesOnly){
   return null;
 }
 function plan2RulesOpenAt(o, H){ for (let k = 1; k <= 31; k++) if (!plan2RulesWhy(o, H + 24 * k, true)) return H + 24 * k; return null; }
-// ---- the engine: each minute, on each vessel (06d-plan-felles.js opsStep hands over)
+// ---- the engine: each minute, on each vessel (05-vessels.js calls it)
 let P2_DEPTH = 0;
 function plan2Step(H){
   const o = plan2Ops(), b = S.boat; if (!o || !o.on) return;
@@ -366,8 +370,9 @@ function plan2Trip(o, D, i0){
 // she is free and the step is a trip: the crew, the yard, the rules, the rig, the way and the weather, then off
 function plan2Go(o, H, i0){
   const r = o.run, D = r.day, b = S.boat;
-  const cw = plan2CrewWhy(o); if (cw){ if (cw.wait) plan2Wait(o, cw.k, cw.no, cw.en, H + 1); else plan2Stop(o, cw.k, cw.no, cw.en, cw.fix); return; }
-  if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet på kaia. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsCrewOnly() ? 'The crew finish the work at the quay. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
+  const cw = plan2CrewWhy(o, D.steps.slice(i0).some(s => s.k === 'sett' || s.k === 'trekk')); if (cw){ if (cw.wait) plan2Wait(o, cw.k, cw.no, cw.en, H + 1); else plan2Stop(o, cw.k, cw.no, cw.en, cw.fix); return; }
+  // (the crew's own jobs at anchor too: a string of nets mended while she rests is back aboard before she sets, 10b-gearcare.js)
+  if (S.jobs && S.jobs.length){ const until = Math.max(H + 5 / 60, (jobsDone() || S.t) / 60 + 1 / 60); plan2Wait(o, 'jobs', jobsFreight() ? 'Lasta tas om bord eller i land. Går kl. ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'Mannskapet gjør ferdig arbeidet ' + (S.boat.status === 'port' ? 'på kaia' : 'om bord') + '. Går kl. ' + driftClock(driftHod(until)) + '.' : 'Verkstedet jobber på båten, så den venter.', jobsFreight() ? 'The freight goes aboard or ashore. Leaving at ' + driftClock(driftHod(until)) + '.' : jobsCrewOnly() ? 'The crew finish the work ' + (S.boat.status === 'port' ? 'at the quay' : 'aboard') + '. Leaving at ' + driftClock(driftHod(until)) + '.' : 'The yard is working on the boat, so she waits.', until); return; }
   if (!p2Sno(o)){ const st = plan2RulesWhy(o, H); if (st){   // (the snow crab's day keeps the season and the rules itself: a string held by the ice must still come in, H3c)
       if (st.k === 'closed'){ const at = plan2RulesOpenAt(o, H); if (at != null){ const d = gDate(at); plan2Wait(o, 'closed', st.no + ' Planen venter til ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', st.en + ' The plan waits until ' + d.getUTCDate() + '.' + (d.getUTCMonth() + 1) + '.', Math.min(at, H + 24), at); return; } }
       plan2Stop(o, st.k, st.no, st.en, st.fix); return; } }
@@ -479,7 +484,7 @@ function plan2WorkWait(o, H, wx, pts, port){
   plan2Wait(o, 'wx', (port ? 'Venter i havn på været: ' : 'Venter ved redskapet på været: ') + why[0] + '. ' + (at != null ? 'Går igjen kl. ' : 'Ser på det igjen kl. ') + c + more[0] + '.', (port ? 'Waiting in port for the weather: ' : 'Waiting by the gear for the weather: ') + why[1] + '. ' + (at != null ? 'Going again at ' : 'Looking again at ') + c + more[1] + '.', until);
   if (o.run) o.run.replan = true;
 }
-// she has come in (05-vessels.js dock, through opsLanded): the port call's own step runs next, and a port that is not the step's means the day is made again from here
+// she has come in (05-vessels.js dock): the port call's own step runs next, and a port that is not the step's means the day is made again from here
 function plan2Landed(pid, k){
   const o = plan2Ops(); if (!o || !o.run) return; const r = o.run, tr = r.trip; r.trip = null;
   if (tr) r.i = tr.to;

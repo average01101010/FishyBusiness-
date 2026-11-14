@@ -1,4 +1,4 @@
-  const tradeIn = () => vesselValue(curVessel());
+  const tradeIn = () => mbValue(curVessel()) - (tiKeepOn() ? mbLicKr(curVessel()) : 0);   // (KM4: without the second quota, and without the right when it is kept; 13c-megler.js)
   // what a purchase costs (deal() in core/03-simulation.js): the trade-in pays off the loans first, then the bank and Innovasjon Norge
   const whyText = x => x.why === 'notes' ? L('Banken vil se tre sluttsedler først.', 'The bank wants to see three landing notes first.') : x.why === 'eq' ? L('For lite egenkapital.', 'Too little equity.') : x.why === 'cap' ? L('Banken låner ikke mer: all gjeld skal ligge innenfor 80 % av verdien på flåten.', 'The bank lends no more: all debt has to stay within 80% of the fleet\'s value.') : '';
   const payNote = (x, no, en, loanNo, loanEn) => '<p class="ph-note">' + L(no, en) + kr(x.cost) + (x.payoff ? ' · ' + L('innbyttet innfrir først ', 'the trade-in first pays off ') + kr(x.payoff) + L(' av gjelda', ' of the debt') : '') +
@@ -15,7 +15,7 @@
     const steps = [], F = S.fm || {n:0, kr:0}, cls = v => VESSELS[vget(v, 'boat').type].cls;
     const hav = S.fleet.some(v => cls(v) === 'hav'), past = S.fleet.length > 1 || S.fleet.some(v => cls(v) !== 'open' || vget(v, 'lic'));
     if (!past && !S.boat.gear) steps.push({n:L('Håndjuksa med pilk og markkroker', 'Hand jig with pilk and fly hooks'), need:PRICE.gear, a:'fiske'});
-    if (!past && (BOAT.jukseMax || 0) > 0 && (S.equip.jukse || 0) < 1) steps.push({n:L('Første juksamaskin', 'First jigging machine'), need:EQUIP.jukse.price, a:'utstyrb'});
+    if (!past && (BOAT.jukseMax || 0) > 0 && (S.equip.jukse || 0) < 1) steps.push({n:L('Første juksamaskin', 'First jigging machine'), need:equipKr('jukse'), a:'utstyrb'});   // (what the shop takes for a reel at the boat's tier, OPP2)
     if (!hav && !bladB()) steps.push({n:L('Blad B i fiskermanntallet', 'Blad B of the fishermen\'s register'), pc:Math.min(F.n / BLADB.days, F.kr / BLADB.kr, 1), a:'papers',
       txt:fmt(Math.min(F.n, BLADB.days), 0) + ' / ' + BLADB.days + L(' landingsdager med deg om bord · ', ' landing days with you aboard · ') + kr(Math.min(F.kr, BLADB.kr)) + ' / ' + kr(BLADB.kr)});
     const ids = LIC_OFFERS.map(O => O.id).filter((x, i, a) => a.indexOf(x) === i);   // the rights in order (several boats share h10)
@@ -29,7 +29,7 @@
     if (!hav){ const H = S.t / 60, c = Object.keys(VESSELS).filter(k => VESSELS[k].cls === 'hav' && !VESSELS[k].lock).map(k => [k, typeof havPrice === 'function' ? havPrice(k, H) : VESSELS[k].price]).sort((a, b) => a[1] - b[1])[0];
       if (c){ const x = deal(c[1], 0); steps.push({n:VESSELS[c[0]].name[S.lang], need:x.eqNeed + 5000, bank:true, a:'fartoy', price:c[1]}); } }
     // one tier between the boats (OPP4 of docs/planer/oppgraderinger.md): with one boat in the fleet, the cheapest tier not bought (the
-    // knives and the gaff, later the propeller and the deck gear's tiers: the ladders marked tier) that costs under a tenth of the next
+    // knives and the gaff, the deck gear's tiers and the propeller: the ladders marked tier) that costs under a tenth of the next
     // boat in the ladder comes before her. The yard's rebuilds and the jigging machines are not tiers here
     if (S.fleet.length === 1){ const nb = steps.findIndex(x => x.price > 0), lim = nb >= 0 ? steps[nb].price / 10 : 0;
       const c = nb >= 0 && ladders().filter(x => x.tier && x.nx && !x.nx.busy && x.nx.kr < lim).sort((a, b) => a.nx.kr - b.nx.kr)[0];
@@ -92,7 +92,7 @@
     () => { const V = VESSELS[S.boat.type], mx = V.jukseMax || 0; if (!mx || !vesselJigs()) return null; const gear = !!S.boat.gear, n = Math.min(S.equip.jukse || 0, mx);
       const cur = n ? n + ' ' + L(n === 1 ? 'juksamaskin' : 'juksamaskiner', n === 1 ? 'jigging reel' : 'jigging reels') : gear ? L('Håndjuksa', 'Hand jig') : L('Ingen juksa', 'No jig');
       const nx = !gear ? {n:L('Håndjuksa', 'Hand jig'), lv:1, kr:PRICE.gear, fx:L('fisk for hånd', 'fish by hand')} : n >= mx ? null : busyOf('fit', 'jukse') ? {busy:true}
-        : {n:L('Juksamaskin nr. ' + (n + 1), 'Jigging reel no. ' + (n + 1)), lv:n + 2, kr:EQUIP.jukse.price, fx:L('maskin ' + (n + 1) + ' av ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× håndjuksa', 'reel ' + (n + 1) + ' of ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× a hand jig')};
+        : {n:L('Juksamaskin nr. ' + (n + 1), 'Jigging reel no. ' + (n + 1)), lv:n + 2, kr:equipKr('jukse'), fx:L('maskin ' + (n + 1) + ' av ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× håndjuksa', 'reel ' + (n + 1) + ' of ' + mx + ', ' + fmt(JIG.machine / JIG.hand, 0) + '× a hand jig')};
       return {k:'jukse', ic:n ? 'jukse' : 'jig', n:L('Juksa', 'Jigging'), lv:(gear ? 1 : 0) + n, max:1 + mx, cur, at:'butikk', pg:!gear ? 'fiske' : 'utstyrb', nx}; },
     // the haulers that suit her: by hand as the first dot (pots cannot be hauled by hand), the minutes a unit takes now and with it
     ...['linehaler', 'garnhaler', 'teinehaler'].map(h => () => { const V = VESSELS[S.boat.type], kind = {linehaler:'line', garnhaler:'garn', teinehaler:'teine'}[h];
@@ -100,12 +100,22 @@
       return oneLad(h, kind === 'teine' ? L('Ingen haler', 'No hauler') : L('For hånd', 'By hand'), 'utstyrb', () => { const now = haulNow(kind).m, H = S.t / 60;
         const with1 = isFinite(now) ? now / GEAR[kind].hand : GEAR[kind].haul * (1 + coldPen(H, hsWork(S.boat.pos, H)));   // (pots: one at the hauler at full strength)
         return (isFinite(now) ? fx1(now) + ' → ' : L('trekker teiner, ', 'hauls pots, ')) + unitTxt(kind, with1); }); }),
+    // the deck gear's tiers (OPP2): items of their own (linehalerLv … with `of`, the item they are tiers of), a line each where that item
+    // is aboard and the tiers suit her, the gain as the card in Fiskeutstyr says it (icTierLine, without its «Trinn n:»)
+    ...['linehalerLv', 'garnhalerLv', 'teinehalerLv', 'linesetterLv', 'jukseLv', 'juksesett'].map(k => () => { const E = EQUIP[k]; if (!E || !E.tiers || (E.of && !S.equip[E.of])) return null;
+      const x = tierLad(k, 'fiske', (T, N) => String(icTierLine(k, E.tiers.indexOf(N) + 1)[S.lang === 'no' ? 0 : 1]).replace(/^(Trinn|Tier) \d+: /, '')); if (x && !ICPIC[k] && E.of) x.ic = E.of; return x; }),   // (the picture: the item's own)
     // the engine: the yard's two steps (ENGUP), the top speed without trim; an outboard has the 90 hp outboard instead
     () => { const b = S.boat, V = VESSELS[b.type];
       if (V.outboard) return oneLad('motor90', V.engine[S.lang], 'utstyr', () => fmt(V.vmax, 1) + ' → ' + fmt(EQUIP.motor90.boost.vmax, 0) + ' kn, +' + pct(EQUIP.motor90.boost.lph / V.lph - 1) + ' diesel', L('Motor', 'Engine'));
-      const vAt = P => V.vmax * speedOfPower(P, V.planing), lv = b.engLv || 0, st = ENGUP[lv], P0 = powerX(b), P1 = st ? 1 + st.p : P0;
+      const lv = b.engLv || 0, st = ENGUP[lv], P0 = powerX(b), P1 = st ? 1 + st.p : P0;
       return {k:'motor', n:L('Motor', 'Engine'), lv:1 + lv, max:1 + ENGUP.length, cur:Math.round(V.hp * P0) + ' hk', at:'verft', pg:'utstyr',
-        nx:!st ? null : busyOf('eng') ? {busy:true} : {n:Math.round(V.hp * P1) + ' hk', lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(vAt(P0), 1) + ' → ' + fmt(vAt(P1), 1) + ' kn, +' + pct(0.4 * (P1 - P0)) + ' diesel'}}; },   // (fuelK × (1 + 0,4·(P − 1)), applyVessel)
+        nx:!st ? null : busyOf('eng') ? {busy:true} : {n:Math.round(V.hp * P1) + ' hk', lv:lv + 2, kr:upPrice(st.pc, st.min), fx:fmt(BOAT.vmax, 1) + ' → ' + fmt(boatWith({engLv:lv + 1}).vmax, 1) + ' kn, +' + pct(0.4 * (P1 - P0)) + ' diesel'}}; },   // (fuelK × (1 + 0,4·(P − 1)), applyVessel)
+    // the propeller (OPP3, PROPUP): the one she came with as the first dot and the yard's three steps; a tier, so «Neste mål» takes it
+    // (nx.lv: the yard's step, 1–3, as its card and the receipt say). The gain: the top speed and the litres an hour at her cruising speed
+    () => { const b = S.boat, V = VESSELS[b.type]; if (!propFits(V)) return null; const lv = propLvOf(b), st = PROPUP[lv];
+      return {k:'prop', n:L('Propell', 'Propeller'), lv:1 + lv, max:1 + PROPUP.length, cur:lv ? PROPUP[lv - 1][S.lang] : L('Som levert', 'As delivered'), at:'verft', pg:'utstyr', tier:true,
+        nx:!st ? null : busyOf('prop') ? {busy:true} : {n:st[S.lang], lv:lv + 1, kr:upPrice(st.pc, st.min), get fx(){ const N = boatWith({propLv:lv + 1}), l0 = fuelLph(N.at, 0), d = x => fmt(x, x < 10 ? 1 : 0);
+          return fmt(BOAT.vmax, 1) + ' → ' + fmt(N.vmax, 1) + ' kn, ' + d(l0) + ' → ' + d(N.lph) + L(' l/t ved ', ' l/h at ') + fmt(N.at, 1) + ' kn'; }}}; },
     // the hold (HOLDUP), or an open boat's tubs (core/07f-kar.js); not the ocean fleet's tanks
     () => { const b = S.boat, V = VESSELS[b.type]; if (V.cls === 'hav') return null; const lv = b.holdLv || 0, steps = karSteps(b.type), st = lv < steps ? HOLDUP[lv] : null, kar = !!V.kar;
       const kg = l => kar ? karN(b.type, l) * TUB_KG : Math.round(V.holdCap * (l ? HOLDUP[l - 1].x : 1));
@@ -133,6 +143,7 @@
   // the pictures: the item cards' (ui/05a-itemcard.js ICPIC) where there is one, and a few small ones here for the yard's rebuilds
   const BU_IC = {
     motor:'<rect x="16" y="12" width="30" height="18" rx="3" fill="' + IC_C.mid + '"/><path d="M20 12V7h6v5M30 12V7h6v5M46 18h6v6h-6" fill="' + IC_C.soft + '"/><circle cx="24" cy="21" r="3" fill="#fff"/><circle cx="36" cy="21" r="3" fill="#fff"/>' + IC_DECK,
+    prop:'<path d="M6 22h20" stroke="' + IC_C.mid + '"/><path d="M32 18c-3-7 0-12 5-11s2 8-5 11zM35 25c7 1 10 6 7 9s-8 0-7-9zM29 24c-5 6-11 6-12 2s5-6 12-2z" fill="' + IC_C.yel + '"/><circle cx="32" cy="22" r="4" fill="#fff"/>',
     hold:'<path d="M10 14h44v18H10z" fill="#fff"/><path d="M10 14l6-6h32l6 6"/><path d="M20 23c4-4 10-4 14 0-4 4-10 4-14 0zM34 23l5-3v6z" fill="' + IC_C.blu + '"/>' + IC_DECK,
     cabin:'<path d="M10 16h44v6H10zM10 28h44v6H10z" fill="' + IC_C.soft + '"/><path d="M10 10v26M54 10v26"/><rect x="12" y="13" width="10" height="3" rx="1.5" fill="#fff"/>',
     galley:'<path d="M18 18h28v12a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6z" fill="' + IC_C.mid + '"/><path d="M14 18h36M26 8c-2 3 2 4 0 7M34 8c-2 3 2 4 0 7" stroke="' + IC_C.soft + '"/>',
@@ -142,7 +153,7 @@
     stab:'<path d="M8 28c6-6 12-6 18 0s12 6 18 0 8-4 12-2" stroke="' + IC_C.blu + '"/><path d="M16 22h32l-4-10H20z" fill="#fff"/><path d="M32 22v8M28 30h8" />',
     gut:'<rect x="12" y="14" width="40" height="16" rx="3" fill="' + IC_C.soft + '"/><circle cx="22" cy="22" r="4" fill="#fff"/><circle cx="42" cy="22" r="4" fill="#fff"/><path d="M26 22h12" stroke="' + IC_C.red + '"/>' + IC_DECK,
     ice:'<path d="M14 20h36v14H14z" fill="' + IC_C.ice + '"/><path d="M32 6v10M27 8l5 4 5-4M24 26l4-3 4 3 4-3 4 3" stroke="' + IC_C.blu + '"/>'};
-  const buPic = x => { const k = x.ic || x.k; return BU_IC[k] ? icSvg(BU_IC[k]) : ICPIC[k] ? ICPIC[k] : ICPIC.box; };
+  const buPic = x => { const k = x.ic || x.k, a = k === 'ice' ? 'icemaker' : k; if (icHas(a)) return icPic(a); return BU_IC[k] ? icSvg(BU_IC[k]) : ICPIC[k] ? ICPIC[k] : ICPIC.box; };
   const AT = {butikk:['Utstyrsbutikken', 'The tackle shop'], verft:['Verftet', 'The yard']};
   const dots = x => '<span class="bu-d" role="img" aria-label="' + L('trinn ' + x.lv + ' av ' + x.max, 'step ' + x.lv + ' of ' + x.max) + '">' + '●'.repeat(Math.max(0, x.lv)) + '<i>' + '○'.repeat(Math.max(0, x.max - x.lv)) + '</i></span>';
   function kitCard(){ HN = {}; try { return kitCard0(); } finally { HN = null; } }
@@ -186,21 +197,25 @@
   const tn = n => n >= 10000 ? fmt(n / 1000, n >= 100000 ? 0 : 1) + ' t' : fmt(n, 0) + ' kg';
   function mkCard(k, O){
     const V = VESSELS[k], price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, mine = S.boat.type === k && !O, tag = V.lock ? L('kommer', 'coming') : O ? O.hl : V.isNew ? L('nybygg', 'new build') : L('brukt', 'used');
-    return '<button class="ph-card vcard' + (mine ? ' mine' : '') + '" data-pa="mksel" data-k="' + k + '"' + (O ? ' data-o="' + O.k + '"' : '') + '><span class="vpic">' + vesselSVG(k) + '</span><span class="vtx"><b>' + (O ? O[S.lang] : V.name[S.lang]) + '</b><small>' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' × ' + fmt(V.draft, 1) + ' m · ' + tn(V.holdCap) + '</small><span class="vpr">' + kr(price) + ' <i>' + tag + '</i></span></span></button>';
+    return '<button class="ph-card vcard' + (mine ? ' mine' : '') + '" data-pa="mksel" data-k="' + k + '"' + (O ? ' data-o="' + O.k + '"' : '') + '><span class="vpic">' + vesselSVG(k) + '</span><span class="vtx">' + (mine ? '<em class="v-mine">' + L('Din båt', 'Your boat') + '</em>' : '') + '<b>' + (O ? O[S.lang] : V.name[S.lang]) + '</b><small>' + fmt(V.len, 2) + ' × ' + fmt(V.beam, 1) + ' × ' + fmt(V.draft, 1) + ' m · ' + tn(V.holdCap) + '</small><span class="vpr">' + kr(price) + ' <i>' + tag + '</i></span></span></button>';
   }
   function market(){
     const tab = sub.marked || 'open', h = [];
     if (mkSel) return sheet(mkSel.k, mkSel.o ? LIC_OFFERS.find(x => x.k === mkSel.o) : null);
     if (mbPutSel){ const v = vesselById(mbPutSel); if (v) return mbForm(v).replace(/^<div class="ph-c">/, '<div>'); mbPutSel = null; }   // «Legg ut til salgs» from the yard (B1)
     if (mgSel){ const Lx = MBC.byId(mgSel); if (Lx) return mgSheet(Lx).replace(/^<div class="ph-c">/, '<div>'); }   // a used boat opened from «Båter til salgs her» (M4, B)
-    h.push(mgHere());
+    // (D3: the boats first. Used boats lying at this quay are boats too and stay on top; with none, «Båter til salgs her» and its way
+    // to Kystmegleren come after the list, and so does «Neste mål», fartoy())
+    // (the card always stands after the list, so nothing jumps when the broker's list comes in; the line on top says how many lie here)
+    const mgh = mgHere(), usedN = atKind('verft') ? MBC.list().filter(x => x.port === S.boat.port).length : 0;
+    if (atKind('verft')) h.push('<p class="ph-note st-fit">' + (usedN ? L('Brukte båter ved denne kaia: ' + usedN + ' (nederst på siden). Flere hos', 'Used boats at this quay: ' + usedN + ' (at the bottom of the page). More at') : L('Brukte båter fra andre spillere:', 'Used boats from other players:')) + ' <button type="button" class="ic-more" data-pa="open" data-a="nett" data-s="megler">' + L('Kystmegleren ›', 'Kystmegleren ›') + '</button></p>');   // (the way to the broker stays within reach above the list)
     h.push('<div class="ph-sub mk">' + [['open', 'Åpen gruppe', 'Open group'], ['lic', 'Med hjemmel', 'With a right'], ['kyst', 'Kystflåten', 'Coastal fleet'], ['hav', 'Havfiske', 'Ocean']].map(([k, no, en]) => '<button class="' + (tab === k ? 'on' : '') + '" data-pa="mktab" data-s="' + k + '">' + L(no, en) + '</button>').join('') + '</div>');
     const bn = '«' + S.boatName + '»', ti = tradeIn();
     if (tab === 'open'){
       h.push('<p class="ph-note">' + L('Båter under 11 m. Rederiet kan ha én båt i åpen gruppe, så du bytter opp ved å gi ' + bn + ' i bytte (' + kr(ti) + '). Neste båt du kjøper til flåten, er en båt med hjemmel i lukket gruppe.', 'Boats under 11 m. The company can have one boat in the open group, so you trade up by trading in ' + bn + ' (' + kr(ti) + '). The next boat you buy for the fleet is one with a closed-group right.') + '</p>');
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'open') h.push(mkCard(k));
     } else if (tab === 'lic'){
-      h.push('<p class="ph-note">' + L('Båter med deltakeradgang i lukket gruppe og fast torskekvote. Prisen er båten pluss kvoten (anslått ' + KPK + ' kr/kg torsk). Krever registrering på blad B i fiskermanntallet.', 'Boats with a closed-group right and a fixed cod quota. The price is the boat plus the quota (an estimated ' + KPK + ' kr/kg of cod). Needs registration on blad B of the fishermen\'s register.') + '</p>');
+      h.push('<p class="ph-note">' + L('Båter med deltakeradgang i lukket gruppe og fast torskekvote. Prisen er båten pluss kvoten til kvoteprisen nå, ' + kpkAt(S.t / 60) + ' kr/kg torsk (den følger torskeprisen og kvoteutsiktene). Krever registrering på blad B i fiskermanntallet.', 'Boats with a closed-group right and a fixed cod quota. The price is the boat plus the quota at the quota price now, ' + kpkAt(S.t / 60) + ' kr/kg of cod (it follows the cod price and the quota outlook). Needs registration on blad B of the fishermen\'s register.') + '</p>');
       for (const O of LIC_OFFERS) h.push(mkCard(O.ves, O));
     } else if (tab === 'kyst'){
       h.push('<p class="ph-note">' + L('Kystbåter fra 11 m. De kan bare fiske torsk, hyse og sei med hjemmel i lukket gruppe. Hjemlene for 11–21 m kommer senere, så nå selges de uten.', 'Coastal vessels from 11 m. They can only fish cod, haddock and saithe with a closed-group right. Rights for 11–21 m come later, so for now they are sold without.') + '</p>');
@@ -210,6 +225,7 @@
       for (const [k, V] of Object.entries(VESSELS)) if (V.cls === 'hav') h.push(mkCard(k));
     }
     if (!atKind('verft')) h.push('<p class="ph-note">' + L('Båter kjøpes og selges på verftet.', 'Vessels are bought and sold at the yard.') + '</p>' + nearHint('verft'));
+    h.push(mgh);
     return h.join('');
   }
   // the spec sheet: eight sections with the same rows for every boat (Jonas 17.10.2026, docs/batplan.md del 5). A row that does not
@@ -237,7 +253,7 @@
         kv(L('Autoline', 'Autoline'), V.autoHooks ? fmt(V.autoHooks, 0) + L(' kroker', ' hooks') : no), kv(L('Teiner', 'Pots'), upto(V.gearMax.teine)), kv(L('Halere som passer', 'Haulers that fit'), V.haulers.length ? V.haulers.map(nm).join(', ') : no),
         kv(L('Ved sløyebordet', 'At the gutting table'), V.stations.table), kv(L('Ved haleren', 'At the hauler'), V.stations.hauler), kv(L('Kran', 'Crane'), V.crane ? fmt(V.crane, 0) + ' t' : no), kv(L('Sløyemaskin', 'Gutting machine'), V.gutMachine ? fmt(V.gutMachine, 0) + ' kg/t' : no)]],
       [L('Elektronikk', 'Electronics'), [kv(L('Følger med', 'Comes with'), stdE.length ? stdE.map(nm).join(', ') : no), kv(L('Kan monteres', 'Can be fitted'), fitE.length ? fitE.map(nm).join(', ') : no)]],
-      [L('Oppgraderinger på verftet', 'Upgrades at the yard'), upRows.concat([kv(L('Større lasterom', 'A larger hold'), V.cls !== 'hav' ? ja : NOTHERE()), kv(L('Større motor', 'A bigger engine'), !V.outboard ? ja : NOTHERE())])]];
+      [L('Oppgraderinger på verftet', 'Upgrades at the yard'), upRows.concat([kv(L('Større lasterom', 'A larger hold'), V.cls !== 'hav' ? ja : NOTHERE()), kv(L('Større motor', 'A bigger engine'), !V.outboard ? ja : NOTHERE()), kv(L('Bedre propell', 'A better propeller'), propFits(V) ? L('ja, tre trinn', 'yes, three steps') : NOTHERE())])]];
   }
   function sheet(k, O){
     const V = VESSELS[k], bn = '«' + S.boatName + '»', ti = tradeIn(), free = atKind('verft') && !S.order, price = O ? V.price + licValue(O) : V.cls === 'hav' && typeof havPrice === 'function' ? havPrice(k, S.t / 60) : V.price, mine = S.boat.type === k && !O, h = [];
@@ -261,6 +277,7 @@
         kv(L('Ledige i registeret', 'Left in the register'), fmt(npcReg()[hid] || 0, 0) + ' ' + L('av', 'of') + ' ' + HREG[hid]), kv(L('Kilde', 'Source'), P.src)])); }
     for (const [t, rows] of secs.slice(1)) h.push(sec(t, rows));
     // buying
+    if (!V.lock && !mine && free) h.push(tiLicRow());   // (KM4: the right follows the boat traded in, or is kept as a free right; 13c-megler.js)
     if (V.lock) h.push('<p class="ph-note">' + (hid ? L('Kan ikke kjøpes ennå. Prisen er skroget og kvotene: ' + HAVLIC[hid].no.toLowerCase() + ' med kvotefaktorene til selgeren følger med båten. Det krever blad B.', 'Cannot be bought yet. The price is the hull and the quotas: the ' + HAVLIC[hid].en.toLowerCase() + ' with the seller\'s quota factors comes with her. It needs blad B.') : L('Kan ikke kjøpes ennå.', 'Cannot be bought yet.')) + '</p>');
     else if (hid && !mine && havLicWhy(k)) h.push('<p class="ph-note"><b>' + L(havLicWhy(k)[0], havLicWhy(k)[1]) + '</b></p>');
     else if (mine) h.push('<p class="ph-note">' + L(bn + ' er en slik båt.', bn + ' is one of these.') + '</p>');
@@ -279,6 +296,9 @@
       { const lv = swapLeaves(k); if (lv.length) h.push('<p class="ph-note">' + L('Ved innbytte passer ikke dette utstyret den nye båten. Det følger med ' + bn + ' og betales ikke: ', 'With the trade-in this equipment does not suit the new vessel. It goes with ' + bn + ' and is not paid for: ') + lv.map(q => L(EQUIP[q].name.no, EQUIP[q].name.en)).join(', ') + '.</p>'); }
       // (the tiers bought are the boat's and go with her; the new one has tier 1, OPP4)
       { const tl = swapTiers(); if (tl.length) h.push('<p class="ph-note" data-swaptier="' + tl.join(',') + '">' + L('Trinnene er båtens og følger med ' + bn + ' ved innbytte: ', 'The tiers are the boat\'s and go with ' + bn + ' at the trade-in: ') + tl.map(q => L(EQUIP[q].name.no + ' trinn ' + equipLv(q), EQUIP[q].name.en + ' tier ' + equipLv(q))).join(', ') + L('. De regnes ikke i innbytteprisen, og den nye har trinn 1.', '. They are not counted in the trade-in price, and the new one has tier 1.') + '</p>'); }
+      // (the yard's work is the hull's and goes with her too: the propeller, the engine, the hold and the rebuilds, OPP3; switchVessel)
+      { const ob = S.boat, yw = [propLvOf(ob) ? L('propell trinn ' + propLvOf(ob), 'propeller step ' + propLvOf(ob)) : '', ob.engLv ? L('større motor', 'a bigger engine') : '', ob.holdLv ? L('lasterommet', 'the hold') : '', ob.upg && Object.keys(ob.upg).length ? L('ombyggingene', 'the rebuilds') : ''].filter(Boolean);
+        if (yw.length) h.push('<p class="ph-note" data-swapyard="1">' + L('Verftets arbeid er skrogets og følger med ' + bn + ': ', 'The yard\'s work is the hull\'s and goes with ' + bn + ': ') + yw.join(', ') + L('. Det regnes ikke i innbytteprisen, og den nye er som levert.', '. It is not counted in the trade-in price, and the new one is as delivered.') + '</p>'); }
       if (openOnly) h.push('<p class="ph-note">' + L('Til flåten: et rederi kan bare ha én båt i åpen gruppe. Kjøp heller en båt med hjemmel, eller bytt inn ' + bn + '.', 'For the fleet: a company can only have one boat in the open group. Buy a boat with a right instead, or trade in ' + bn + '.') + '</p>');
       else h.push(payNote(B, 'Til flåten, uten innbytte: ', 'For the fleet, no trade-in: ') + '<button class="ph-btn" data-pa="buy" data-ti="0" data-k="' + k + '"' + (B.ok && free ? '' : ' disabled') + '>' + verb + L(' til flåten', ' for the fleet') + '</button>' + (hid ? '<p class="ph-note">' + L('Prisen er skroget og kvotene: ' + HAVLIC[hid].no.toLowerCase() + ' med kvotefaktorene til selgeren følger med båten, og hun fisker på fartøykvoten.', 'The price is the hull and the quotas: the ' + HAVLIC[hid].en.toLowerCase() + ' with the seller\'s quota factors comes with her, and she fishes on the vessel quota.') + '</p>' : V.len >= 11 || hasLic() ? '<p class="ph-note">' + L('Uten hjemmel kan hun bare ta torsk, hyse og sei som bifangst.', 'Without a right she can only take cod, haddock and saithe as bycatch.') + '</p>' : '')); }
     // the admin can take any vessel into the fleet for free, the locked ocean fleet too, anywhere, to test her (Jonas 30.10.2026)
@@ -288,7 +308,7 @@
   }
   // tab0: one tab without the tab row (the boat market in the yard, the boat in the inventory)
   function fartoy(tab0){
-    const b = S.boat, V = VESSELS[b.type], s0 = tab0 || sub.fartoy || 'min', h = [tab0 ? '' : subs('fartoy', [['min', 'Min båt', 'My vessel'], ['marked', 'Marked', 'Market']]), '<div class="ph-c">' + (tab0 === 'min' ? '' : goalsCard())];
+    const b = S.boat, V = VESSELS[b.type], s0 = tab0 || sub.fartoy || 'min', h = [tab0 ? '' : subs('fartoy', [['min', 'Min båt', 'My vessel'], ['marked', 'Marked', 'Market']]), '<div class="ph-c">' + (tab0 === 'min' || s0 !== 'min' ? '' : goalsCard())];   // (D3: in the market the goals stand after the boats)
     if (s0 === 'min'){
       h.push(kitCard());   // «Båten og utstyret» first (OPP4)
       h.push('<div class="ph-card"><h4>«' + S.boatName + '»' + (meAboard() ? ' ⚓' : '') + '</h4><p class="ph-note">' + L('Adgang: ', 'Access: ') + accessText(curVessel()) + '</p>' + (S.fleet.length > 1 ? '<button class="ph-btn alt" data-pa="open" data-a="rederi">' + L('Hele flåten i Rederi-appen', 'The whole fleet in the Company app') + '</button>' : '') + '</div>');
@@ -319,7 +339,7 @@
       const eq = Object.keys(EQUIP).filter(k => EQUIP[k].multi ? S.equip[k] > 0 : S.equip[k]).map(k => EQUIP[k].name[S.lang] + (EQUIP[k].multi ? ' × ' + S.equip[k] : EQUIP[k].tiers ? ' (' + L('trinn ', 'tier ') + equipLv(k) + ')' : '') + off(k));
       h.push('<div class="ph-card"><h4>' + L('Utstyr om bord', 'Equipment on board') + '</h4><p>' + ['GPS'].concat(S.equip.chirp ? [] : [L('Enkelt ekkolodd', 'Basic sounder') + (S.settings.echo === false ? L(' (av)', ' (off)') : '')]).concat(eq).join(', ') + '</p><h4 style="margin-top:8px">' + L('Mannskap', 'Crew') + '</h4><p>' + (lagOf() ? (meAboard() ? L('Deg (skipper) og ', 'You (skipper) and ') : '') + L('skift ', 'crew ') + lagShName(lagOf().on) + ' · ' + lagN() + L(' mann', ' men') : [L('Deg (skipper)', 'You (skipper)')].concat(S.crew.map(c => c.name)).join(', ') + ' · ' + L('plass til ', 'room for ') + (V.crewMax + 1)) + '</p></div>');
       if (S.order) h.push('<div class="ph-card"><h4>' + L('Bestilt', 'On order') + '</h4><p>' + VESSELS[S.order.type].name[S.lang] + '</p>' + '<p class="ph-note">' + L('Byttes så snart båten den skal erstatte, ligger i havn.', 'Swapped as soon as the vessel it replaces lies in port.') + '</p></div>');
-    } else h.push(market());
+    } else { h.push(market()); h.push(goalsCard()); }
     h.push('</div>'); return h.join('');
   }
   // --- the company: the fleet at a glance and what needs you. The vessel apps work on the vessel picked at the top (default: the one you follow)

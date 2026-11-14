@@ -46,10 +46,11 @@ async def main():
         y0, y1 = int(E['H'] * 0.08), int(E['H'] * 0.68)   # (the sea between the top bar and the buttons)
         col, st = steps(f, y0, y1)
         W = len(col); near = lambda x, c: abs(x - c) <= 30
-        inL = 40 < E['L'] < W - 40; inR = 40 < E['R'] < W - 40
+        # (an edge under the chart and the status box on the left, x < 300, is the panel's edge, not the map's: 12.11.2026, it was red on that)
+        inL = 300 < E['L'] < W - 40; inR = 300 < E['R'] < W - 40
         eL = max((abs(st[x]) for x in range(W) if near(x, E['L'])), default=0) if inL else None
         eR = max((abs(st[x]) for x in range(W) if near(x, E['R'])), default=0) if inR else None
-        rest = sorted(abs(st[x]) for x in range(40, W - 40) if not near(x, E['L']) and not near(x, E['R']))
+        rest = sorted(abs(st[x]) for x in range(300, W - 40) if not near(x, E['L']) and not near(x, E['R']))
         q95 = rest[int(len(rest) * 0.95)] if rest else 0
         mean = sum(col) / W
         print('frames of the foam map meanwhile:', f1 - f0, '· map', E['M'], 'm, edges', round(E['x0']), round(E['x1']), 'm from the boat, on the screen at x =', round(E['L']), round(E['R']), '· white', round(mean * 100, 2), '%')

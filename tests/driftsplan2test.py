@@ -190,10 +190,14 @@ async def main():
             print('  gearLog:', L['gearLog']); print('  stats:', json.dumps(L['stats'], ensure_ascii=False)[:800]); print('  ops:', json.dumps(L['ops'], ensure_ascii=False)[:300]); print('  fin:', L['fin'])
             o_ = outs(L); hauls = [g for g in L['gearLog'] if g['haul']]
             print(ok(not L['err'] and len(o_) >= 3 and all(x.endswith('05:00') or x.endswith('05:01') or x.endswith('05:02') or x.endswith('05:03') or x.endswith('05:04') or x.endswith('05:05') for x in o_[:3])), 'S1 out at 05:00 (within 5 min) three days running', o_)
-            print(ok(len([g for g in L['gearLog']]) >= 6 and len(hauls) >= 6 and all(6.0 - 0.05 <= g['soak'] <= 7.5 for g in hauls)), 'S1 the line is set on both fields and hauled after 6-7.5 h each day', [(g['set'], g['soak']) for g in hauls])
+            # (a line lost in the weather is the sea's own chance, gearHour: its tubs are gone for the rest of the run, so the field after it
+            # is left and fewer tubs come home to be baited; one of three open runs lost one, 07.11 and 08.11.2026. Forced at 08:00 on day 1
+            # 12.11.2026: out and home each day as before, 3 hauls and 3 baitings instead of 6)
+            lost = [g for g in L['gearLog'] if g.get('lost') and not g['haul']]; days = {g['set'][:2] for g in L['gearLog']}
+            print(ok(len(lost) <= 1 and len(days) >= 3 and len(hauls) >= (6 if not lost else 3) and all(6.0 - 0.05 <= g['soak'] <= 7.5 for g in hauls)), 'S1 the line is set on both fields and hauled after 6-7.5 h each day (a line lost in the weather is not hauled, and its field is left after)', [(g['set'], g['soak']) for g in hauls], 'tapt', [(g['set'], g['lost']) for g in lost])
             print(ok(len(logs(L, 'Ferdig med fisket')) >= 3), 'S1 the jig fishes each day', len(logs(L, 'Ferdig med fisket')))
             print(ok(len(L['stats']['days']) >= 3 and all(d['trips'] >= 1 and d['kg'] > 0 for d in L['stats']['days'][:3])), 'S1 landed each day: the statistics have three days with kg and kr', [(d['d'], d['trips'], d['kg'], d['kr']) for d in L['stats']['days']])
-            print(ok(len(logs(L, 'Fortøyd i Finnsnes')) >= 3 and len(logs(L, 'stamper er egnet')) >= 4), 'S1 home at Finnsnes each day, and the crew bait the tubs again (at sea on the way home, or at the quay)', [len(logs(L, 'Fortøyd i Finnsnes')), len(logs(L, 'stamper er egnet'))])
+            print(ok(len(logs(L, 'Fortøyd i Finnsnes')) >= 3 and len(logs(L, 'stamper er egnet')) >= max(1, len(hauls) - 2)), 'S1 home at Finnsnes each day, and the crew bait the tubs again (at sea on the way home, or at the quay)', [len(logs(L, 'Fortøyd i Finnsnes')), len(logs(L, 'stamper er egnet'))])
             print(ok(L['ops']['on'] and not L['ops']['stop']), 'S1 the plan is still on after three days', L['ops'])
             S1L = L
         print('== S2 med motoren: garn 6 + 6 + 6 ved 24 t, mannskapet alene, tre døgn')
@@ -290,8 +294,8 @@ async def main():
             o_ = outs(L); waits = [m for m in L['msgs'] if 'Du må hvile til' in m[1]]; enAt = [e for e in L['ev'] if 'unmooring' in e[1]]
             print(ok(waits and o_ and not o_[0].startswith('D1 05:0') and enAt and enAt[0][2] >= 50), 'S5 with 0 % energy the plan waits, says until when, and goes out rested', [waits[:1], o_[:1], enAt[:1]])
             cut = logs(L, 'Mannskapet er slitne'); hauls = [g for g in L['gearLog'] if g['haul']]
-            d1h = [g for g in hauls if g['set'].startswith('D1')]
-            print(ok(cut and len(d1h) == 2 and all(5.9 <= g['soak'] <= 7 for g in d1h) and logs(L, 'Fortøyd i Finnsnes')), 'S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in', [cut[:1], [(g['set'], g['soak']) for g in d1h]])
+            d1h = [g for g in hauls if g['set'].startswith('D1')]; d1l = [g for g in L['gearLog'] if g['set'].startswith('D1') and g.get('lost') and not g['haul']]   # (a line lost in the weather, as in S1)
+            print(ok(cut and len(d1h) >= 1 and len(d1h) + len(d1l) == 2 and all(5.9 <= g['soak'] <= 7 for g in d1h) and logs(L, 'Fortøyd i Finnsnes')), 'S5 the tired crew end the day: no more jigging, the line is still hauled when due (within 3 h), then in', [cut[:1], [(g['set'], g['soak']) for g in d1h]])
         print('== S6: døgndrift med fire på kyst15, 48 timer')
         L = await pg.evaluate("""(async () => { D2.reset(26); const home = D2.boat('kyst15', 4, false); await mapNeed(portById(home).p, 14);
           const J = D2.spots(2, 4, 12);
@@ -496,7 +500,11 @@ async def main():
             print(ok(len(A['stats']['days']) == 3 and len(B['stats']['days']) == 3 and abs(kgA - kgB) <= 0.02 * max(1, kgA) and abs(krA - krB) <= 0.03 * max(1, krA)), 'S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little between two runs)', [(kgA, krA), (kgB, krB)])
             # the kg a set gives differs a little between the runs (the density reads the sim tiles as they come in between the frames of an open run), so the minutes are compared, not the kg
             gA = [g[:2] for g in A['gearLogAll']]; gB = [g[:2] for g in B['gearLogAll']]
-            print(ok(same_ev and gA == gB and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps in the same order within five minutes, the same gear set and hauled at the same minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', gA == gB, A['fin'], B['fin']])
+            # (the gear within five minutes too, as the steps: two open runs from the same state set a minute apart now and then, before
+            # anything is closed, D1 05:32 and 05:33 on 12.11.2026 on the working branch's build as well; the open run's frames are not seeded)
+            near = lambda x, y: (x is None) == (y is None) and (x is None or abs(tm(x) - tm(y)) <= 5)
+            same_g = len(gA) == len(gB) and all(near(a[0], c[0]) and near(a[1], c[1]) for a, c in zip(gA, gB))
+            print(ok(same_ev and same_g and A['fin']['port'] == B['fin']['port'] and A['fin']['en'] == B['fin']['en'] and A['fin']['sets'] == B['fin']['sets']), 'S9 the same steps in the same order within five minutes, the same gear set and hauled within five minutes, the same place and rest at the end', ['likt' if same_ev else 'ulikt', same_g, A['fin'], B['fin']])
             print('  ni døgn lukket:', C)
             print(ok(C['wall_s'] < 20 and C['trips'] >= 8 and C['on'] and not C['stop'] and C['days'] >= 9), 'S9 nine days closed: played in under 20 s (8 s alone, more with other tests beside it), with a landing every day and the plan still on', [C['wall_s'], C['trips'], C['days']])
             print('  borte:', L['away'])

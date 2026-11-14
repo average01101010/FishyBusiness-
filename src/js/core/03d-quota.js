@@ -82,8 +82,9 @@ function licQ(l, H, len){
 // grows through the year, different for each boat and year
 function sellerCod(id, H){ const d = doyH(H), u = h2(yearH(H) * 31 + (S.qseed || 0) % 9973, 700 + id.length * 7 + id.charCodeAt(1)); return clamp(d / 365 * (0.6 + 0.9 * u), 0, 0.85); }
 // the offers in Båthandel (LIC_OFFERS in 03-simulation.js) show this year's quotas for the boat they come with
-for (const O of LIC_OFFERS){ O.k = O.k || O.id; O.hl = HJ[O.id].hl; O.kpk = KPK; const f = () => licQ(O, S.t / 60, VESSELS[O.ves].len);
-  Object.defineProperties(O, {cod:{get:() => f().torsk}, hyse:{get:() => f().hyse}, sei:{get:() => f().sei}}); }
+// and the quota price now (kpkAt, KM5): a right bought keeps it as l.kpk (ui/phone/14-act.js buylic)
+for (const O of LIC_OFFERS){ O.k = O.k || O.id; O.hl = HJ[O.id].hl; const f = () => licQ(O, S.t / 60, VESSELS[O.ves].len);
+  Object.defineProperties(O, {cod:{get:() => f().torsk}, hyse:{get:() => f().hyse}, sei:{get:() => f().sei}, kpk:{get:() => kpkAt(S.t / 60), enumerable:true}}); }
 // § 29: what the owner has landed this year with a boat in the open group follows the owner to the next boat there (the new boat's
 // quota is reduced by it); a boat that takes over a closed-group right starts the year with what the seller fished on it
 function openUsedSave(q){ const y = yearH(S.t / 60); if (!q || q.y !== y) return; const O = S.openUsed && S.openUsed.y === y ? S.openUsed : (S.openUsed = {y, torsk:0, hyse:0, sei:0});
@@ -141,16 +142,17 @@ function kystF(lat, H){
   return n * wn + s * ws + (1 - wn - ws);
 }
 const STKY = {};
-function stockYear(sp, y){
+// (sd: the seed to use instead of the save's, S.qseed; kpkAt asks for WORLD_SEED's)
+function stockYear(sp, y, sd){
   // the server's stock when the admin has turned it on (B4, world_cfg.stock_server; WSH.stock comes with the world)
   if (typeof WSH !== 'undefined' && WSH.stock){ const r = WSH.stock.find(q => q[0] === sp && q[1] === y); if (r) return {ssb:r[2], tac:r[3], adv:r[4]}; }
-  const key = sp + ':' + y + ':' + (S && S.qseed || 0); if (STKY[key]) return STKY[key];
-  const P = STOCK[sp], seed = (S && S.qseed || 0) % 100003, u = k => h2(y * 977 + seed, 4000 + k + ALLSP.indexOf(sp) * 31);
+  const sd0 = sd != null ? sd : (S && S.qseed || 0), key = sp + ':' + y + ':' + sd0; if (STKY[key]) return STKY[key];
+  const P = STOCK[sp], seed = sd0 % 100003, u = k => h2(y * 977 + seed, 4000 + k + ALLSP.indexOf(sp) * 31);
   const curve = b => Math.pow(b, 0.55) * Math.sqrt(Math.min(1, b / P.Bpa)), A = P.adv27 / curve(P.ssb[2027]);
   let r;
   if (y <= 2026) r = {ssb:P.ssb[y] || P.ssb[2026], tac:P.tac[y] || P.tac[2026], adv:P.tac[y] || P.tac[2026]};
   else if (y === 2027) r = {ssb:P.ssb[2027], adv:P.adv27, tac:Math.round(P.adv27 * (1 + P.slack * u(1)) / 100) * 100};
-  else { const p = stockYear(sp, y - 1), over = Math.max(0, p.tac / p.adv - 1);
+  else { const p = stockYear(sp, y - 1, sd), over = Math.max(0, p.tac / p.adv - 1);
     const s1 = p.ssb * Math.exp(P.a * Math.log(P.Bm / p.ssb) + P.sd * gauss(u(2), u(3)) - 0.5 * over), ssb = P.idx ? Math.round(s1 * 1000) / 1000 : Math.round(s1);   // (an index, the snow crab's B/BMSY: not whole tonnes)
     let adv = A * curve(ssb); if (ssb >= P.Bpa) adv = clamp(adv, p.tac * (1 - P.cap), p.tac * (1 + P.cap));
     adv = Math.round(adv / 100) * 100; r = {ssb, adv, tac:Math.round(adv * (1 + P.slack * u(4)) / 100) * 100}; }
@@ -261,7 +263,7 @@ const STRUCT = {cut:0.1, years:20, cap:{g11:5, g15:6, g21:6}};
 // whether a boat's right l has room for add more quota factors under the cap
 function structFits(l, add){ const A = l && HJ[l.id]; return !!(A && STRUCT.cap[A.grp]) && A.kf + (l.extra || 0) + add <= A.kf * STRUCT.cap[A.grp] + 1e-9; }
 function structRoom(l, id){ const A = l && HJ[l.id], B = HJ[id]; if (!A || !B || A.grp === 'u11' || A.grp !== B.grp) return false; return structFits(l, B.kf * (1 - STRUCT.cut)); }
-function structPrice(id, H){ return Math.round(licQ({id}, H).torsk * KPK); }   // the right's quota; its boat is struck off the register
+function structPrice(id, H){ return Math.round(licQ({id}, H).torsk * kpkAt(H)); }   // the right's quota at the quota price now; its boat is struck off the register
 // (the NPC owner leaves the register with regTake where the purchase is made, ui/phone/14-act.js; structIn took one more until KM1)
 function structIn(l, id, H){ const k = HJ[id].kf * (1 - STRUCT.cut), y = yearH(H); l.st = (l.st || []).concat([{id, kf:k, from:y, until:y + STRUCT.years}]); licExtra(l); return k; }
 function licExtra(l){ l.extra = (l.st || []).reduce((a, s) => a + s.kf, 0) + (l.two ? HJ[l.two].kf : 0); }
@@ -337,12 +339,55 @@ function snoYear(y){
 }
 // the mean quota factors a vessel of the group holds (the group's factors in 2026 over its permits)
 const HAVKF = {tral:31785 / 372 / 36, konv:10717 / 118 / 26, rnot:1, krab:1};
-// the quota price, kr per kg of the vessel quota (V2 B): cod at KPK as for the coast (260 kr/kg, Hepsøfjord 2025; no source publishes
+// the quota price, kr per kg of the vessel quota (V2 B): cod at KPK as for the coast (260 kr/kg in 2026, Hepsøfjord 2025; no source publishes
 // quota prices), the other species in proportion to their first-hand price against cod (Råfisklaget's minimum prices 2026: haddock and
 // saithe about 20 against 42 kr; herring 12 and snow crab 115 kr from the landing notes 2025). Estimates: an average conventional permit
 // (3.49 factors) comes to about 155 MNOK, an average trawl permit (2.37) to about 450 MNOK; the herring and the snow crab are the least
 // certain (a structure quota in the purse seine fleet is said to go for well over 100 MNOK per 100 basistonn)
+// (the 2026 prices: havValue moves them with the coast's index, kpkAt / KPK, KM5)
 const HPK = {torsk:KPK, hyse:Math.round(KPK * 20 / 42), sei:Math.round(KPK * 20 / 42), sild:Math.round(KPK * 12 / 42), snokrabbe:Math.round(KPK * 115 / 42)};
+// ---- the quota price that lives (KM5 of docs/planer/kvotemarkedet.md, steg 64; Jonas 07.11.2026, V4 B: «V4, anbefalt») ----
+// The takst per kg of cod quota is KPK (260 kr/kg, 2026) times two things the whole coast sees alike, held within 0.7–1.4 times:
+//  - the cod price against the normal for the time of year (marketPrice over seasonal, that is the week's deviation, weekDev in
+//    03-simulation.js), against its mean for 2026, smoothed over four game weeks (the mean of the last 28 days, at noon). The season
+//    itself is left out (Jonas 12.11.2026: «Uten årstiden»): it comes back every year, and the register sells at the takst and buys back
+//    at 90 % with no limit (V3 A), so a takst that swung ±13 % with the season (cod 52.6 kr in January, 39.9 in July) would pay anyone
+//    who bought every summer and sold every winter;
+//  - the quota outlook, the day it is known (Jonas 12.11.2026: «Trinnet med en gang»; smoothed over four weeks, the price could be seen
+//    coming, and in 2027 it rose 22 % in the four weeks after the advice, a sure 10 % against the register's buy-back): from 26 June the
+//    advice for next year (the quota advice the Institute of Marine Research publishes then), from 17 October next year's agreed total
+//    quota (the Norwegian-Russian commission), against this year's, as the closed group's cod in the quota chain (codChain), so the price
+//    leads the quota by the half year the market knows it. On 1 January the year's quota takes the new figure and the outlook goes back
+//    to 1, so a right's value (its quota × the price) hardly moves at the new year.
+// A pure function of the clock: WORLD_SEED's stock (or the server's, WSH.stock, B4), never anything from the save. The same every hour of a
+// calendar day (UTC), in whole kroner. The index is an assumption (no source publishes quota prices; docs/planer/kvotemarkedet.md kap. 7)
+// The start (Jonas 12.11.2026: «Glid inn over fire uker»): the price stood at 260 until KM5, and the living one was 303 kr/kg at the
+// time it came (October 2027 in the game, the total quota for 2028 above the year's). So it stays 260 up to 15 November 2027 on the shared
+// clock (about 18 November 2026 in real time), whenever the release comes before that, and glides from 260 to the living price over four
+// game weeks from there. A release after that date gives a part of the jump at once; then move start.
+const KPKL = {lo:0.7, hi:1.4, days:28, adv:[6, 26], tac:[10, 17], start:Date.UTC(2027, 10, 15), glide:28};
+const kpkLukket = tac => codChain(norQuota('torsk', tac)).lukket;
+// the outlook for year y's quota as known at H: 1 before 26 June, and for a day of the year before (the new year's quota is known then)
+function kpkOut(H, y){
+  if (yearH(H) < y) return 1; const d = doyH(H); if (d < doyOf(y, KPKL.adv[0], KPKL.adv[1])) return 1;
+  const N = stockYear('torsk', y + 1, WORLD_SEED);
+  return kpkLukket(d < doyOf(y, KPKL.tac[0], KPKL.tac[1]) ? N.adv : N.tac) / kpkLukket(stockYear('torsk', y, WORLD_SEED).tac);
+}
+const kpkCod = H => 1 + weekDev('torsk', H);   // the cod price against the normal for the time of year
+let KPK26 = 0;
+// the cod price index of a day against 2026's mean
+function kpkCodIx(H){ if (!KPK26){ let s = 0; for (let d = 0; d < 365; d++) s += kpkCod(hOfDoy(2026, d) + 12); KPK26 = s / 365; } return kpkCod(H) / KPK26; }
+const KPKC = {st:undefined, v:{}, n:0};
+// the quota price at H, kr per kg of cod quota
+function kpkAt(H){
+  H = H == null ? S.t / 60 : H; const W = typeof WSH !== 'undefined' ? WSH.stock : null;
+  if (KPKC.st !== W || KPKC.n > 4000){ KPKC.st = W; KPKC.v = {}; KPKC.n = 0; }   // (a stock from the server changes the outlook)
+  const D = Math.floor((EPOCH + H * 36e5) / 864e5); if (KPKC.v[D] != null) return KPKC.v[D];
+  const H0 = (D * 864e5 - EPOCH) / 36e5 + 12; let s = 0;
+  for (let k = 0; k < KPKL.days; k++) s += kpkCodIx(H0 - 24 * k);
+  const m = clamp(s / KPKL.days * kpkOut(H0, yearH(H0)), KPKL.lo, KPKL.hi), w = clamp((D * 864e5 - KPKL.start) / 864e5 / KPKL.glide, 0, 1);
+  KPKC.n++; return KPKC.v[D] = Math.round(KPK * (1 - w + w * m));
+}
 // the permit an ocean vessel type needs (null for a coast boat)
 function havLicFor(type){ for (const id in HAVLIC) if (HAVLIC[id].ves.includes(type)) return id; return null; }
 // the factor a group's 2026 figures are scaled by in year y, per species
@@ -377,9 +422,9 @@ function havLicWhy(type){
 // the permit for sale this week with an ocean vessel: its NPC owner and the quota factors he has (0.6-1.4 times the group's mean)
 function havOffer(id, H){ const sl = regSeller(id, H), u = h2(weekOfH(H) * 37 + id.charCodeAt(0) * 11 + id.length, 8400);
   return {id, kf:HAVLIC[id].flat ? 1 : Math.round(HAVKF[id] * (0.6 + 0.8 * u) * 100) / 100, from:sl.name + ', ' + sl.home}; }   // (a flat permit, the snow crab's: every vessel the same quota, J-237-2025 § 3)
-// what the permit's quotas are worth this year (HPK), kr
+// what the permit's quotas are worth this year (HPK, moved with the quota price index as the coast's, kpkAt), kr
 function havValue(l, H){ if (l.id === 'krab') return snoLicValue(yearH(H == null ? S.t / 60 : H)).v;
-  const Q = havQ(l, H); let v = 0; for (const sp in HPK){ const q = Q[sp], kg = Array.isArray(q) ? q[1] : q; if (kg && kg !== Infinity) v += kg * HPK[sp]; } return Math.round(v / 1e5) * 1e5; }
+  const Q = havQ(l, H), f = kpkAt(H) / KPK; let v = 0; for (const sp in HPK){ const q = Q[sp], kg = Array.isArray(q) ? q[1] : q; if (kg && kg !== Infinity) v += kg * HPK[sp] * f; } return Math.round(v / 1e5) * 1e5; }
 // The snow crab permit at what the fishery bears (V6 B, Jonas 06.11.2026): no price for a permit is found (they were given out by catch
 // history, konsesjonsforskriften § 6-2, and follow the vessel when she is sold for further fishing), so it is the earnings before
 // depreciation of a mean vessel with the year's quota, times SNOV.yrs. Read (kap. 2b of the plan): the profitability survey 2024, group 014
@@ -459,3 +504,63 @@ function bkNews(H){
   if (!(B.told & 2) && H >= s.notice && H < s.stop){ B.told |= 2; msg('Fiskeridirektoratet', 'Direktefisket etter blåkveite stoppes ' + dayStr(s.stop) + '. Redskapen skal være på land innen da.', 'The direct fishery for Greenland halibut stops ' + dayStr(s.stop) + '. The gear must be ashore by then.'); }
 }
 
+// ---- cod south of 62° N (Ø10c, steg 68, 11.11.2026; docs/systemer/kvoter-og-regler.md 5.28e). Forskrift 19. desember 2025 nr. 2805 om
+// regulering av fisket etter torsk i Nordsjøen og Skagerrak i 2026, read word for word in J-160-2026 at fiskeridir.no («Forskriften lyder
+// etter dette», in force from 1 October 2026). § 1: «Det er forbudt for norske fartøy å fiske og lande torsk» in the North Sea («Norges
+// territorialfarvann og økonomiske sone sør for 62° N avgrenset mot øst av en rett linje gjennom Hanstholmen fyr og Lindesnes fyr») and
+// in the Skagerrak outside the baseline. § 4 second paragraph: «Fartøy med adgang til å delta i åpen gruppe i fisket etter torsk for
+// fartøy med mindre enn 500m³ lasteromvolum som fisker med konvensjonelle redskap i Nordsjøen, kan maksimalt fiske og lande følgende
+// kvanta torsk i Nordsjøen»: 2 tonnes guaranteed and 3 tonnes maximum, the same for all three lengths. § 4 last paragraph: the jig
+// under 11 m on blad B in the Skagerrak, 1 April – 30 June, «maksimalt fiske og lande 3 tonn torsk». § 5: «inntil 15 % bifangst av torsk
+// i de enkelte fangster og ved landing» with conventional gear other than seine in the North Sea, 5 % in the Skagerrak, and «Når det
+// direkte fisket etter torsk er stoppet eller når det enkelte fartøy har fisket sin maksimalkvote, kan fartøy med adgang til å delta i et
+// direkte fiske etter torsk i Nordsjøen ha bifangst av torsk i fisket etter andre arter etter bestemmelsene i § 5». § 2: «Alle kvanta i
+// forskriften angis i rund vekt.»
+// The game has no closed group south of 62° N, so the player is counted in the open group there (a right north of 62° N is not one in
+// the North Sea). Who is in it is deltakerforskriften's (J-66-2026, read at fiskeridir.no 11.11.2026) § 16: «Når vilkårene for deltakelse
+// i lukket gruppe ikke er oppfylt, kan fartøy som oppfyller følgende vilkår delta i åpen gruppe»: registered and under 500 m³ (no length
+// limit, unlike north of 62° N), «eier av fartøyet og høvedsmann må være ført i fiskermanntallet» (the player is, as in the open group
+// north of 62° N), and «under utøvelse av fangst må eier selv være høvedsmann om bord i fartøyet» (S.tripOwner); and § 6: «Hvis eier av
+// fartøy som deltar i åpen gruppe eier 50 % eller mer i annet fartøy, kan ikke sistnevnte fartøy delta i åpen gruppe i samme fiskeri»,
+// so one vessel an owner: the first of the fleet to land cod on the cap in a year has it for that year (sorAcc). A vessel outside it
+// has the bycatch only. The caps are counted where the quotas north of 62° N are (quotaState(): q.nsjo and q.skag4, kg round weight landed on the cap
+// this year), from what the hold knows was taken in each zone (S.boat.byc, 05-vessels.js bycAdd, by 03e-rules.js ruByc).
+// The open group's fishing is not stopped in the game, because it was not in 2026: the group quota was not taken, and Fiskeridirektoratet
+// raised the closed group's maximum quotas three times instead (6 tonnes for the smallest in J-113-2026 of 26 June, 10 in J-135-2026 of
+// 27 August, 12.5 in J-160-2026 of 1 October), and no J-melding stops the fishery (the list for south of 62° N read 11.11.2026). So the
+// 3 tonnes hold all year, and the guaranteed 2 are said and never the limit. The bycatch share is taken of what was caught in the
+// zone, as in the Skagerrak (5.28d).
+// 'sorfri' is the cod taken inside the baseline east of the line (the coast of Sørlandet outside the Oslo fjord): § 1 names the North
+// Sea and the Skagerrak «utenfor den norske grunnlinjen» only, and the quotas of J-187-2026 are for north of 62° N, so no quota holds
+// there. It is counted so the landing keeps it off the quota north of 62° N, and nothing of it is taken
+const SORQ = {
+  nsjo:{max:3000, guar:2000, by:0.15, open:true, ref:'FOR-2025-12-19-2805 §§ 4 og 5', url:'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-160-2026'},
+  skag4:{max:3000, by:0.05, ref:'FOR-2025-12-19-2805 §§ 4 og 5', url:'https://www.fiskeridir.no/yrkesfiske/j-meldinger/j-160-2026'},
+  sorfri:{max:Infinity, by:1}};
+// the vessel's place in the open group in the North Sea (deltakerforskriften § 16 d and § 6, above): 'open' or 'none'
+function sorOpenId(){ const y = yearH(S.t / 60); for (const v of S.fleet || []){ const q = vget(v, 'quota'); if (q && q.y === y && q.nsjo > 0) return v.id; } return null; }
+function sorAcc(){ if (S.tripOwner === false) return 'none'; const id = sorOpenId(); return id == null || id === S.cur ? 'open' : 'none'; }
+// the cod aboard that was taken south of 62° N where it is counted (the caps, the free cod, the Skagerrak bycatch): not on the quota
+// north of 62° N. Never more than the cod in the hold
+function sorCodAboard(){ const c = (S.boat && S.boat.byc) || {}; let n = 0; for (const k in c) n += c[k].cod || 0;
+  return Math.min(n, (S.hold || []).reduce((a, x) => a + (x.sp === 'torsk' ? x.kg : 0), 0)); }
+// what is left of a cap for the vessel, kg round weight: q the year's count (quotaState()), acc her place in the open group (sorAcc())
+function sorRoom(k, q, acc){ const Q = SORQ[k]; if (!Q || (Q.open && acc === 'none')) return 0; return Math.max(0, Q.max - ((q && q[k]) || 0)); }
+// … and with the cod aboard from the zone taken off (the vessel now: what she may still catch on the cap)
+function sorLeft(k){ let q = null, acc = 'open'; try { q = quotaState(); acc = sorAcc(); } catch (e){}
+  const c = S.boat && S.boat.byc && S.boat.byc[k]; return Math.max(0, sorRoom(k, q, acc) - ((c && c.cod) || 0)); }
+// what a landing does with the cod counted in the zones with a cap. byc: the hold's count ({nsjo:{kg, cod}, skag4:{kg, cod}}, round
+// weight as caught), codHold: the cod aboard that is not already taken as bycatch elsewhere (kg as it lies, so gutted cod weighs less
+// than it was counted). Per zone: the cod goes on the cap while there is room, what is over may be a bycatch of the catch from the
+// zone (15 % or 5 %), and the rest is confiscated. Returns cod (the hold's kg these zones answer for), ok (round kg onto each cap),
+// by (hold kg confiscated per zone) and kg (their sum). Pure
+function sorConf(byc, codHold, q, acc){
+  const out = {cod:0, kg:0, ok:{}, by:{}}; if (!byc) return out;
+  const ks = Object.keys(SORQ).filter(k => byc[k] && byc[k].cod > 0), round = ks.reduce((a, k) => a + byc[k].cod, 0); if (!(round > 0)) return out;
+  const s = Math.min(1, Math.max(0, codHold) / round);   // hold kg per counted kg
+  for (const k of ks){ const c = byc[k], ok = Math.min(c.cod, sorRoom(k, q, acc)), conf = Math.max(0, c.cod - ok - SORQ[k].by * (c.kg || 0));
+    out.cod += c.cod * s; if (ok > 0) out.ok[k] = ok; if (conf > 0.001){ out.by[k] = conf * s; out.kg += conf * s; } }
+  return out;
+}
+// the landing is done: the cod that went on the caps is counted for the year
+function sorLanded(q, ok){ for (const k in (ok || {})) q[k] = (q[k] || 0) + ok[k]; }

@@ -53,9 +53,9 @@
       <div id="labels" hidden></div>
       <button id="view3d" class="viewbtn" type="button">3D</button>
       <button id="camBtn" class="ov cam" type="button" aria-label="Kamera"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.6-2.2h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.3" r="3.6"/></svg></button>
-      <button id="kinoBtn" class="ov kino" type="button" aria-label="Kino"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="13" height="11" rx="2"/><path d="M16 10.5l5-3v9l-5-3z"/></svg></button><button id="kinoHud" class="ov kino2" type="button" hidden>Skjul</button><button id="fotoBtn" class="ov foto" type="button" hidden aria-label="Ta bilde"><i></i></button><div id="fotoFlash"></div>
+      <button id="kinoBtn" class="ov kino" type="button" aria-label="Kino"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="13" height="11" rx="2"/><path d="M16 10.5l5-3v9l-5-3z"/></svg></button><button id="kinoHud" class="ov kino2" type="button" hidden>Skjul</button><button id="hopBtn" class="ov hop" type="button" hidden aria-label="Hopp over resten av ruta"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6.5v11l7.5-5.5zM12.5 6.5v11l7.5-5.5z"/></svg></button><button id="fotoBtn" class="ov foto" type="button" hidden aria-label="Ta bilde"><i></i></button><div id="fotoFlash"></div><div id="hopFade"></div>
       <div id="aisCard" hidden></div>
-      <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f ec-nav ec-wpt"><small id="ecWptL">WPT</small><b id="ecWpt"></b></div><div class="ec-f ec-nav"><small id="ecEtaL">ETA</small><b id="ecEta"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x ec-tide"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x ec-sun"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-f ec-echo" id="heatBox" hidden></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecSet" type="button">Innstillinger</button><button id="ecClose" type="button" title="Tilbake til 3D">Lukk</button></div></div><div id="plotSet" hidden></div>
+      <div id="ecdisTop"><div class="ec-f"><small>HDG</small><b id="ecHdg"></b></div><div class="ec-f"><small>SOG</small><b id="ecSog"></b></div><div class="ec-f ec-pos"><small>POS</small><b id="ecPos"></b></div><div class="ec-f ec-nav ec-wpt"><small id="ecWptL">WPT</small><b id="ecWpt"></b></div><div class="ec-f ec-nav"><small id="ecEtaL">ETA</small><b id="ecEta"></b></div><div class="ec-f ec-lop"><small id="ecLopL">KAPPLØP</small><b id="ecLop"></b></div><div class="ec-f"><small id="ecDepL">DYBDE</small><b id="ecDep"></b></div><div class="ec-f ec-x ec-tide"><small id="ecTideL">TIDEVANN</small><b id="ecTide"></b></div><div class="ec-f ec-x ec-sun"><small id="ecSunL">SOL</small><b id="ecSun"></b></div><div class="ec-f ec-echo" id="heatBox" hidden></div><div class="ec-b"><button id="ecRoute" type="button"></button><button id="ecSet" type="button">Innstillinger</button><button id="ecClose" type="button" title="Tilbake til 3D">Lukk</button></div></div><div id="plotSet" hidden></div>
       <div id="plotTop"><span class="pt-title"></span><button id="plotStyle" type="button"></button><button id="plotClose" type="button" aria-label="3D">3D</button></div>
       <div id="setBar" hidden><div class="sb-t"></div><div class="sb-d"></div><div class="sb-w"></div><div class="sb-b"><span class="sb-n"><button type="button" data-sb="-" aria-label="−">−</button><b></b><button type="button" data-sb="+" aria-label="+">+</button></span><button type="button" data-sb="x" class="alt"></button><button type="button" data-sb="go" class="go"></button></div></div>
       <div id="dockInfo" hidden></div><div id="dockFan" hidden></div><div id="dock"></div>
@@ -126,6 +126,7 @@
 <script id="glb-trebat" type="application/octet-stream">@include(data/boat-snekke23.b64)</script>
 <script id="pic-trebat" type="application/octet-stream">@include(data/boat-snekke23-side.b64)</script>
 <script id="glb-worker" type="application/octet-stream">@include(data/worker.b64)</script>
+<script id="glb-folk2" type="application/octet-stream">@include(data/folk2.b64)</script>
 <script id="glb-harbour" type="application/octet-stream">@include(data/harbour-unit.b64)</script>
 <script id="glb-harbour-b" type="application/octet-stream">@include(data/harbour-unit-b.b64)</script>
 <script id="glb-harbour-c" type="application/octet-stream">@include(data/harbour-unit-c.b64)</script>
@@ -160,6 +161,17 @@
 <script id="glb-redning" type="application/octet-stream">@include(data/boat-redning.b64)</script>
 <script id="glb-kv47" type="application/octet-stream">@include(data/boat-kv47.b64)</script>
 <script id="glb-kv90" type="application/octet-stream">@include(data/boat-kv90.b64)</script>
+<script id="glb-ship-ferje34" type="application/octet-stream">@include(data/ship-ferje34.b64)</script>
+<script id="glb-ship-ferje64" type="application/octet-stream">@include(data/ship-ferje64.b64)</script>
+<script id="glb-ship-ferje112" type="application/octet-stream">@include(data/ship-ferje112.b64)</script>
+<script id="glb-ship-hurtig" type="application/octet-stream">@include(data/ship-hurtig.b64)</script>
+<script id="glb-ship-passasjer" type="application/octet-stream">@include(data/ship-passasjer.b64)</script>
+<script id="glb-ship-kystrute" type="application/octet-stream">@include(data/ship-kystrute.b64)</script>
+<script id="glb-ship-snurrevad" type="application/octet-stream">@include(data/ship-snurrevad.b64)</script>
+<script id="glb-ship-not" type="application/octet-stream">@include(data/ship-not.b64)</script>
+<script id="glb-ship-tral" type="application/octet-stream">@include(data/ship-tral.b64)</script>
+<script id="glb-ship-teine" type="application/octet-stream">@include(data/ship-teine.b64)</script>
+<script id="glb-ship-autoline" type="application/octet-stream">@include(data/ship-autoline.b64)</script>
 <script id="glb-haul-garn" type="application/octet-stream">@include(data/haul-garn.b64)</script>
 <script id="glb-haul-line" type="application/octet-stream">@include(data/haul-line.b64)</script>
 <script id="glb-gear-autoline" type="application/octet-stream">@include(data/gear-autoline.b64)</script>
@@ -169,8 +181,11 @@
 <script id="pic-letter-env-inside" type="application/octet-stream">@include(data/letter-env-inside.b64)</script>
 <script id="pic-letter-env-flap" type="application/octet-stream">@include(data/letter-env-flap.b64)</script>
 <script id="pic-letter-paper" type="application/octet-stream">@include(data/letter-paper.b64)</script>
+<script id="pic-items" type="application/octet-stream">@include(data/items.b64)</script>
+<script id="pic-tat" type="application/octet-stream">@include(data/tat.b64)</script>
 <!-- the shapes of the fishing grounds (tools/npc/felt.py, Ø14 F1; core/01e-marks.js feltShape) -->
 <script id="felt-s" type="application/octet-stream">@include(data/felt-s.b64)</script>
+<script id="fart-r" type="application/octet-stream">@include(data/fart-r.b64)</script>
 <script>
 @include(js/lib/fflate.js)
 </script>
@@ -195,8 +210,10 @@
 @include(js/core/03j-felt.js)
 @include(js/core/03h-is.js)
 @include(js/core/03i-kvotemarked.js)
+@include(js/core/03k-hav-fft.js)
 @include(js/core/04-crew.js)
 @include(js/core/05-vessels.js)
+@include(js/core/05b-ferje.js)
 @include(js/core/05c-air.js)
 @include(js/core/05d-hav.js)
 @include(js/core/05e-sjovei.js)
@@ -207,6 +224,7 @@
 @include(js/core/06g-plan2.js)
 @include(js/core/06h-plan2-engine.js)
 @include(js/core/06i-plan2-sno.js)
+@include(js/core/06j-hopp.js)
 @include(js/core/06e-anchor.js)
 @include(js/core/07f-kar.js)
 @include(js/core/07-harbours.js)
@@ -233,6 +251,7 @@
 @include(js/core/09l-sponsor.js)
 @include(js/core/09m-kystkart.js)
 @include(js/core/09n-ukas.js)
+@include(js/core/09o-kapplop.js)
 @include(js/core/11-route.js)
 @include(js/core/11b-obstacles.js)
 @include(js/core/11c-leinett.js)
@@ -284,6 +303,7 @@
 @include(js/ui/05i-ukas.js)
 @include(js/ui/05j-catchfeed.js)
 @include(js/ui/05k-ordbok.js)
+@include(js/ui/05l-kapplop.js)
 @include(js/ui/06-logbook.js)
 @include(js/ui/06b-book-tabs.js)
 @include(js/ui/06c-notebook.js)
@@ -322,8 +342,12 @@
 @include(js/ui/10n-hail.js)
 @include(js/ui/10o-ptow.js)
 @include(js/ui/10p-install.js)
+@include(js/ui/10u-hopp.js)
 @include(js/ui/11-boot.js)
 @include(js/ui/11b-watchdog.js)
+</script>
+<script>
+@include(js/figpose.js)
 </script>
 <script>
 @include(js/vessel3d.js)
@@ -347,6 +371,7 @@
 @include(js/view3d/12-skiff.js)
 @include(js/view3d/13-instruments.js)
 @include(js/view3d/14-sea.js)
+@include(js/view3d/14b-fft.js)
 @include(js/view3d/15-env-mooring.js)
 @include(js/view3d/16-motion.js)
 @include(js/view3d/17-draw.js)
@@ -357,6 +382,7 @@
 @include(js/view3d/17f-near.js)
 @include(js/view3d/17g-marina.js)
 @include(js/view3d/17h-shore.js)
+@include(js/view3d/17i-rocks.js)
 @include(js/view3d/18-setup.js)
 @include(js/view3d/19-wildlife-npc.js)
 @include(js/view3d/20-trawl-seine.js)

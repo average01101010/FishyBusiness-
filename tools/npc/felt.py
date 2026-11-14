@@ -7,6 +7,10 @@
 # fishermen gave (fiskeart_N, redskap_N, fra_N, til_N), its shape (the polygons, simplified) for F2, and the names are washed (2.6).
 # The spawning grounds (gyteomraader) and the nursery and feeding grounds (oppvekst_beiteomraade) of the same interviews come in as
 # kinds of their own (V3, Jonas: «Ta det mest realistiske»): a name, a point, the species and the months; never weight or pressure.
+# Ø14 F5 (11.11.2026): where Fiskeridirektoratet has little (first Finnmark, KV_FYLKER), Kartverket's place names in the sea come in
+# as a kind of their own (k = s): the fishing places, banks, shoals, edges and deeps of Sentralt stedsnavnregister (the open API
+# api.kartverket.no/stedsnavn/v1, CC BY 4.0), a name and a point only. Never weight, never pressure, no lines and no shape. A name
+# that already stands among the grounds within KV_FELT_KM, or among the sea names within KV_DUP_KM, is not taken twice.
 #
 #   python3 tools/npc/felt.py            (the layers are fetched into tools/npc/cache/; KYST_FELT=<file> writes there instead)
 #
@@ -25,7 +29,9 @@
 #   g     a string with one letter per ground: a active gear (seine, trawl, Danish seine), p passive (nets, line, jig, pots), b both,
 #         - for the spawning and nursery grounds (no gear)
 #   k     a string with one letter per ground: f a fishing ground (fiskeplass), g a spawning ground (gyteområde), o a nursery and
-#         feeding ground (oppvekst- og beiteområde). Only f is ever weight or pressure in the game.
+#         feeding ground (oppvekst- og beiteområde), s a place name in the sea from Kartverket (g is -, r is 0, no lines, no rings;
+#         they stand last, after all the grounds, which are sorted by y and x among themselves).
+#         Only f is ever weight or pressure in the game.
 #   l     [[[sp, gear, months], ...], ...] per ground: the species (index in meta.sp), the gear as bits (1 << index in meta.gear; 0 for
 #         the spawning and nursery grounds, or a line without gear) and the months as 12 bits (1 << 0 is January). A ground with no
 #         species the game knows has no lines (V2 A: it counts for the jig species all year).
@@ -36,7 +42,18 @@
 # then per ground in felt.json's order the number of rings, and per ring the number of points and the points as (dx, dy) in steps of
 # unit, the first relative to the ground's label point and the rest delta-coded; simplified to SIMPLIFY_KM (Douglas-Peucker). Only the
 # fishing grounds (k = f) have rings; the spawning and nursery grounds need only their point. meta.sb is the file's length in bytes.
+# Ø14 F3-rest (steg 31f, 12.11.2026): the rings of a ground are one surface. A ground mapped for both kinds of gear, or as several
+# polygons, used to carry all their rings as a list, and the game reads the rings by the even-odd rule (feltSd in core/03j-felt.js):
+# the same ring twice was «outside» all over (179 grounds had it, 156 of them with nothing inside at all), and two polygons that
+# overlap had a hole where they do. Now the polygons of a ground are joined (the union, union_rings; needs shapely) before they are
+# simplified and written: the outer rings of the union and its holes (the source's own holes, and water no polygon covers; at
+# least HOLE_KM2), and
+# no written ring crosses itself or another, so the even-odd rule reads exactly the union. r is the square root of the union's
+# area, for the spawning and nursery grounds too.
 import os, re, sys, json, time, math, urllib.request, urllib.parse
+from shapely.geometry import Polygon, LinearRing     # (pip install shapely; for the union of a ground's polygons, F3-rest)
+from shapely.ops import unary_union
+from shapely.validation import make_valid
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 CACHE = os.path.join(HERE, 'cache')
 WFS = 'https://gis.fiskeridir.no/server/services/FiskeridirWFS_fiskeri/MapServer/WFSServer'
@@ -44,6 +61,16 @@ LAYERS = {'fiskeplasser_aktive_redskap': ('f', 'a'), 'fiskeplasser_passive_redsk
 UNIT = 0.05            # km: 50 m is finer than any label needs
 MERGE_KM = 3.0         # the same name within 3 km is one ground (a ground is often mapped for both kinds of gear)
 SIMPLIFY_KM = 0.1      # the shapes: Douglas-Peucker to 100 m (F1 measured this against 500 m cells, docs/planer/fangstfelt.md)
+HOLE_KM2 = 0.05        # a hole in the union smaller than this is a sliver between two drawings of the same edge, not open water
+# Kartverket's place names in the sea (F5): the kinds taken (the API's codes; not båeISjø and skjærISjø, which are dangers to
+# shipping and no fishing places), the counties they are fetched for, and how near a ground of the same name makes it a double
+KV = 'https://api.kartverket.no/stedsnavn/v1/sted'
+KV_TYPES = ['fiskeplassISjø', 'bankeISjø', 'grunneISjø', 'eggISjø', 'havdyp']
+KV_FYLKER = ['56', '55']   # Finnmark (the thinnest in the table of docs/planer/fangstfelt.md 2.5) and Troms (Jonas 11.11.2026: «Legg til troms også»)
+KV_DUP_KM = 1.0        # the same sea name again within this is one place (a shoal is often registered as several points)
+KV_FELT_KM = 3.0       # a ground of the same name within this has the name already (MERGE_KM: the same name within 3 km is one ground,
+                       # and a ground's point is the middle of its polygon, often more than 1 km from Kartverket's point)
+KV_SPOT_KM = 0.15      # another name on the same spot
 SHORT = 28             # a name longer than this is cut at a word for the chart (the whole name in nf)
 # the species the game knows (SPECIES in core/02-species-gear.js), by the name in Fiskeridirektoratet's lines («1022 TORSK»)
 SP = {'TORSK': 'torsk', 'HYSE': 'hyse', 'SEI': 'sei', 'LYR': 'lyr', 'LANGE': 'lange', 'BROSME': 'brosme', 'UER': 'uer', 'KVEITE': 'kveite',
@@ -66,13 +93,94 @@ def fetch(layer):
             print('  WFS retry', layer, str(e)[:80]); time.sleep(5 * (i + 1))
     raise SystemExit('the WFS did not answer for ' + layer)
 
+def fetch_kv(fnr, typ):
+    """the places of one kind in one county from Kartverket's place-name API, all pages (the type filter works on /sted with the
+    type's code; the API gives at most 5000 per question, far above any kind in a county). Nothing is cached, and the run stops,
+    unless every place the API counts has come"""
+    os.makedirs(CACHE, exist_ok=True); f = os.path.join(CACHE, f'kv-{fnr}-{typ}.json')
+    if os.path.exists(f) and time.time() - os.path.getmtime(f) < 20 * 86400: return json.load(open(f, encoding='utf-8'))
+    out = []; side = 1
+    while True:
+        q = urllib.parse.urlencode(dict(fnr=fnr, navneobjekttype=typ, treffPerSide=500, side=side, utkoordsys=25833))
+        for i in range(4):
+            try:
+                with urllib.request.urlopen(KV + '?' + q, timeout=120) as r: d = json.loads(r.read().decode('utf-8'))
+                tot = d['metadata']['totaltAntallTreff']; page = d['navn']
+                break
+            except Exception as e:
+                print('  Kartverket retry', fnr, typ, str(e)[:80]); time.sleep(5 * (i + 1))
+        else: raise SystemExit(f'Kartverket did not answer for {fnr} {typ}')
+        if tot > 5000: raise SystemExit(f'{fnr} {typ}: {tot} places, over the API\'s 5000; fetch per municipality')
+        out += page
+        if len(out) >= tot: break
+        if not page: raise SystemExit(f'{fnr} {typ}: {len(out)} of {tot} places came, page {side} was empty; nothing written')
+        side += 1
+    json.dump(out, open(f, 'w', encoding='utf-8'), ensure_ascii=False); return out
+
+def kv_name(st):
+    """the name of a place: an approved main name, the Norwegian one first (a place can have a Sami and a Kven name beside it);
+    None when the place has no approved name (only a historical or a proposed one). The statuses that count: godkjent, vedtatt and
+    privat, with or without «og prioritert», and «vedtatt navneledd» (the spelling follows from a part of the name that is decided)"""
+    ok = [n for n in st.get('stedsnavn', []) if n.get('navnestatus') == 'hovednavn' and (n.get('skrivemåtestatus') or '').split(' ')[0] in ('godkjent', 'vedtatt', 'privat') and n.get('skrivemåte')]
+    ok.sort(key=lambda n: (n.get('språk') != 'Norsk', n.get('skrivemåtestatus') != 'godkjent og prioritert'))
+    return (ok[0]['skrivemåte'].strip(), ok[0].get('språk') == 'Norsk') if ok else (None, False)
+
+def name_key(n):
+    """a name for comparing: small letters, only the letters, and without the definite ending («Ytre Stabbegrunnen» and «Ytre
+    Stabbegrunn», «Peder Hansa-skallen» and «Peder Hansaskallen» are one name)"""
+    k = re.sub(r'[^a-zæøåáčđŋšŧžäö]', '', n.lower())
+    return re.sub(r'(ene|ane|en|an|et|a)$', '', k) if len(k) > 5 else k
+
+def name_keys(g):
+    """the keys a ground is known by: its whole name, the chart's name, and each part of a name with a slash"""
+    return {name_key(x) for x in [g[0], g[8].rstrip('…')] + re.split(r'\s*/\s*', g[0]) if x and name_key(x)}
+
+def kv_places(G):
+    """Kartverket's names in the sea as grounds of the kind s. Left out: a name a ground already has (its whole name, the chart's
+    name or a part of a slash name, by name_key) within KV_FELT_KM, the same sea name again within KV_DUP_KM, and another name on
+    the same spot (KV_SPOT_KM: a bank registered once with its Norwegian and once with its Sami name; the Norwegian ones are taken first)"""
+    # (2 × UNIT over: the points are written in steps of UNIT, and the game measures between the written points)
+    out = []; seen = {}; st = {'places': 0, 'noname': 0, 'nopoint': 0, 'dup_felt': 0, 'dup_self': 0, 'dup_spot': 0}
+    have = {}
+    for g in G:
+        for k in name_keys(g): have.setdefault(k, []).append((g[1], g[2]))
+    C = []
+    for fnr in KV_FYLKER:
+        for typ in KV_TYPES:
+            for s in fetch_kv(fnr, typ):
+                if s.get('stedstatus') != 'aktiv': continue
+                st['places'] += 1; n, no = kv_name(s); rp = s.get('representasjonspunkt') or {}
+                if not n: st['noname'] += 1; continue
+                if rp.get('koordsys') != 25833 or 'øst' not in rp or 'nord' not in rp: st['nopoint'] += 1; continue
+                C.append((not no, n, (rp['øst'] + 250000) / 1000, (8050000 - rp['nord']) / 1000, typ))
+    if st['nopoint'] > 0.05 * max(1, st['places']): raise SystemExit(f'{st["nopoint"]} of {st["places"]} places came without a point in EPSG:25833; nothing written')
+    C.sort(key=lambda c: c[0])            # (stable: the Norwegian names first, else the API's order)
+    wash0 = dict(WASH); spot = {}
+    for _, n, x, y, typ in C:
+        n, short = wash(n)
+        if not n: st['noname'] += 1; continue
+        k = name_key(n); near = lambda L, km: any(math.hypot(x - a, y - b) < km + 2 * UNIT for a, b in L)
+        if near(have.get(k, []), KV_FELT_KM): st['dup_felt'] += 1; continue
+        if near(seen.get(k, []), KV_DUP_KM): st['dup_self'] += 1; continue
+        ck = (round(x / KV_SPOT_KM), round(y / KV_SPOT_KM))
+        if any(math.hypot(x - a, y - b) < KV_SPOT_KM for dx in (-1, 0, 1) for dy in (-1, 0, 1) for a, b in spot.get((ck[0] + dx, ck[1] + dy), [])): st['dup_spot'] += 1; continue
+        seen.setdefault(k, []).append((x, y)); spot.setdefault(ck, []).append((x, y)); out.append([n, x, y, 0.0, '-', 's', [], [], short, typ])
+    WASH.clear(); WASH.update(wash0)      # (meta.wash counts Fiskeridirektoratet's names only)
+    return out, st
+
 def rings(member):
-    """the exterior rings of the feature's polygons, in the game's frame (km)"""
+    """the feature's polygons in the game's frame (km): [[exterior, hole, hole, ...], ...]. The holes are the source's own (an
+    island, or water the fishermen left out of the ground); read from F3-rest, 12.11.2026, before only the exteriors were"""
     out = []
-    for m in re.finditer(r'<gml:exterior>.*?<gml:posList[^>]*>([^<]+)</gml:posList>', member, re.S):
-        v = [float(t) for t in m.group(1).split()]
-        # EPSG:25833 in the WFS's axis order: easting, northing
-        out.append([((v[i] + 250000) / 1000, (8050000 - v[i + 1]) / 1000) for i in range(0, len(v) - 1, 2)])
+    for pm in re.finditer(r'<gml:Polygon[ >].*?</gml:Polygon>', member, re.S):
+        P = []
+        for m in re.finditer(r'<gml:(exterior|interior)>.*?<gml:posList[^>]*>([^<]+)</gml:posList>', pm.group(0), re.S):
+            v = [float(t) for t in m.group(2).split()]
+            # EPSG:25833 in the WFS's axis order: easting, northing
+            r = [((v[i] + 250000) / 1000, (8050000 - v[i + 1]) / 1000) for i in range(0, len(v) - 1, 2)]
+            if m.group(1) == 'exterior': P.insert(0, r)
+            elif len(r) >= 3: P.append(r)
+        if P and len(P[0]) >= 3: out.append(P)
     return out
 
 def area_centroid(r):
@@ -212,6 +320,58 @@ def simplify(r, tol):
     far = max(range(len(pts)), key=lambda i: (pts[i][0] - pts[0][0]) ** 2 + (pts[i][1] - pts[0][1]) ** 2)
     return dp(pts[:far + 1], tol)[:-1] + dp(pts[far:] + [pts[0]], tol)[:-1]
 
+def grid_ring(r, simp=True):
+    """a ring simplified to SIMPLIFY_KM (not with simp false) and in whole steps of UNIT, without repeated points; None when under
+    three points are left"""
+    v = []
+    for (x, y) in (simplify(r, SIMPLIFY_KM) if simp else r):
+        q = (round(x / UNIT), round(y / UNIT))
+        if not v or q != v[-1]: v.append(q)
+    while len(v) > 1 and v[0] == v[-1]: v.pop()
+    return v if len(v) >= 3 else None
+
+def union_rings(rs):
+    """the polygons of one ground ([[exterior, hole, ...], ...]) as one surface (F3-rest): the rings to write, in steps of UNIT,
+    and the union's area in km².
+    The union is taken of the source's polygons, its outer rings and its own holes are simplified and put on the grid as every
+    ring is, and because simplifying and rounding can make a ring cross itself or another again, the written rings are joined once
+    more until every part is a valid polygon and no two parts overlap: then the even-odd rule over the rings (feltSd) is the union,
+    and a hole is only water no polygon covers. The rings start at their smallest point and the parts stand in the order of theirs,
+    so the file does not follow the library's order of points"""
+    def polys(g):
+        return [q for q in getattr(g, 'geoms', [g]) if q.geom_type == 'Polygon' and q.area > 0]
+    def solid(P):                         # (a polygon with its holes; a ring that crosses itself: the pieces it encloses)
+        try: g = Polygon(P[0], P[1:])
+        except Exception: return []
+        return polys(g if g.is_valid else make_valid(g))
+    def canon(c):                         # (the ring from its smallest point, counter-clockwise, closed)
+        c = list(c)[:-1]
+        if not LinearRing(c).is_ccw: c.reverse()
+        k = c.index(min(c)); c = c[k:] + c[:k]
+        return c + c[:1]
+    U = unary_union([q for r in rs for q in solid(r)]); area = U.area
+    garea = lambda v: Polygon(v).area * UNIT * UNIT
+    for n in range(12):
+        # (simplified once: a ring joined again is on the grid already, and only the new crossing points are rounded to it, so the
+        # rounds come to rest)
+        parts = []; ok = True
+        for q in polys(U):
+            e = grid_ring(canon(q.exterior.coords), n == 0)
+            if not e: continue
+            H = sorted(h for h in (grid_ring(canon(i.coords), n == 0) for i in q.interiors if Polygon(i).area >= HOLE_KM2) if h and garea(h) >= HOLE_KM2)
+            g = Polygon([(x * UNIT, y * UNIT) for x, y in e], [[(x * UNIT, y * UNIT) for x, y in h] for h in H])
+            ok = ok and g.is_valid; parts.append((e, H, g))
+        parts.sort(key=lambda t: t[0])
+        V = unary_union([q for _, _, g in parts for q in polys(g if g.is_valid else make_valid(g))])
+        # (valid parts that do not overlap: their areas add up to the union's)
+        if not parts or (ok and abs(sum(g.area for _, _, g in parts) - V.area) < 1e-6): return [r for e, H, _ in parts for r in [e] + H], area
+        U = V
+    raise SystemExit('the rings of a ground still cross after twelve rounds of joining; nothing written')
+
+def ring_ok(v):
+    """a written ring that does not cross itself (a ground of one polygon is written as it always was when this holds)"""
+    return Polygon([(x * UNIT, y * UNIT) for x, y in v]).is_valid
+
 def cells_of(rings, c):
     """the cells of c km whose middle lies in a ring (for the measurement against the polygons), at least the cell of each ring's middle"""
     out = set()
@@ -234,17 +394,24 @@ def zz(v): return (v << 1) if v >= 0 else ((-v << 1) - 1)
 def main():
     G = []                         # [name, x, y, area, gear kinds, kind, lines, rings, short name]
     for layer, (kind, gk) in LAYERS.items():
-        s = fetch(layer); n0 = len(G); nl = 0
+        s = fetch(layer); n0 = len(G); nl = 0; nmoved = 0
         for m in s.split('<wfs:member>')[1:]:
             nm = re.search(r':stedsnavn>([^<]*)<', m)
             n, short = wash(nm.group(1) if nm else None)
             if n is None: continue
-            rs = [r for r in rings(m) if len(r) >= 3]
+            rs = rings(m)
             if not rs: continue
-            parts = [label_point(r) for r in rs]; a = sum(p[0] for p in parts); big = max(parts, key=lambda p: p[0])
+            parts = [label_point(P[0]) for P in rs]; a = sum(p[0] for p in parts); big = max(parts, key=lambda p: p[0])
+            # (the point is found from the outer ring; where it falls in a hole of the polygon's own, it is moved to a point inside
+            # the surface. The ground keeps its place in the order, and so its index, by the point as it was: key)
+            key = (big[1], big[2]); P = rs[parts.index(big)]
+            if any(inside(h, big[1], big[2]) for h in P[1:]):
+                g = Polygon(P[0], P[1:]); g = g if g.is_valid else make_valid(g)
+                q = max((x for x in getattr(g, 'geoms', [g]) if x.geom_type == 'Polygon'), key=lambda x: x.area, default=None)
+                if q is not None: rp = q.representative_point(); big = (big[0], rp.x, rp.y); nmoved += 1
             L = species_lines(m, kind); nl += len(L) > 0
-            G.append([n, big[1], big[2], a, gk, kind, L, rs if kind == 'f' else [], short])
-        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows')
+            G.append([n, big[1], big[2], a, gk, kind, L, rs, short, key])
+        print(f'{layer}: {len(G) - n0} named, {nl} with species the game knows, {nmoved} with the point moved out of a hole')
     print('the washing (names changed per rule):', json.dumps(WASH, ensure_ascii=False))
     # one ground per name and kind within MERGE_KM: the largest polygon keeps its point; the gear kinds, the lines and the shapes are
     # joined. A ground without a name (a position for a name) is never joined.
@@ -253,34 +420,52 @@ def main():
         key = (g[5], g[0].lower()); hit = None
         if g[0]:
             for o in byname.get(key, []):
-                if math.hypot(o[1] - g[1], o[2] - g[2]) < MERGE_KM: hit = o; break
+                if math.hypot(o[9][0] - g[9][0], o[9][1] - g[9][1]) < MERGE_KM: hit = o; break
         if hit:
             if g[4] not in hit[4]: hit[4] += g[4]
             hit[3] += g[3]; hit[6] = hit[6] + g[6]; hit[7] = hit[7] + g[7]; continue
         g = list(g); out.append(g); byname.setdefault(key, []).append(g)
-    out.sort(key=lambda g: (g[2], g[1]))
+    # Kartverket's names in the sea (F5), after the joining: never joined with a ground, only left out where one has the name
+    kv, kvst = kv_places(out)
+    print(f'Kartverket: {len(kv)} names in the sea taken of {kvst["places"]} places ({json.dumps({t: sum(1 for g in kv if g[9] == t) for t in KV_TYPES}, ensure_ascii=False)}); '
+          f'{kvst["dup_felt"]} left out for a ground of the same name within {KV_FELT_KM} km, {kvst["dup_self"]} doubles among themselves within {KV_DUP_KM} km, '
+          f'{kvst["dup_spot"]} for another name on the same spot, {kvst["noname"]} without an approved name, {kvst["nopoint"]} without a point')
+    # the sea names stand after all the grounds, so a ground's index (which the game draws its pull from, 03j-felt.js feltGeo) is
+    # the same with and without them
+    out.sort(key=lambda g: (g[9][1], g[9][0])); kv.sort(key=lambda g: (g[2], g[1])); out += kv
     p = []; px = py = 0
     for g in out:
         x, y = round(g[1] / UNIT), round(g[2] / UNIT); p += [x - px, y - py]; px, py = x, y
     # the shapes: Douglas-Peucker to SIMPLIFY_KM, in steps of unit relative to the label point
-    shp = []; npt = 0; ncell = 0; B = bytearray(); varint(len(out), B)
+    shp = []; npt = 0; ncell = 0; nun = 0; nself = 0; nhole = 0; B = bytearray(); varint(len(out), B)
     for g in out:
         R = []; lx, ly = round(g[1] / UNIT), round(g[2] / UNIT)
-        for r in g[7]:
-            q = simplify(r, SIMPLIFY_KM); v = []; ox, oy = lx, ly; last = None
-            for (x, y) in q:
-                ix, iy = round(x / UNIT), round(y / UNIT)
-                if (ix, iy) == last: continue
-                v += [ix - ox, iy - oy]; ox, oy = ix, iy; last = (ix, iy)
-            if len(v) >= 6: R.append(v); npt += len(v) // 2
+        # (a ground of one polygon is written as before; of several, their union, F3-rest)
+        # (and a ground of one polygon whose ring crosses itself, in the source or after the simplifying: the pieces it encloses.
+        # The spawning and nursery grounds have no rings in the file, but their size is the union's too)
+        if len(g[7]) > 1:
+            Q, g[3] = union_rings(g[7]); nun += 1
+        elif g[7]:
+            # (a hole of the source's own that is large enough to write: through the union too, which takes the hole with it)
+            if any(area_centroid(h)[0] >= HOLE_KM2 for h in g[7][0][1:]): Q, g[3] = union_rings(g[7]); nhole += 1
+            else:
+                Q = [q for q in [grid_ring(g[7][0][0])] if q]
+                if Q and not ring_ok(Q[0]): Q, _ = union_rings(g[7]); nself += 1
+        else: Q = []
+        if g[5] != 'f': Q = []
+        for q in Q:
+            v = []; ox, oy = lx, ly
+            for (ix, iy) in q: v += [ix - ox, iy - oy]; ox, oy = ix, iy
+            R.append(v); npt += len(v) // 2
         shp.append(R); varint(len(R), B)
         for v in R:
             varint(len(v) // 2, B)
             for c in v: varint(zz(c), B)
-        if g[7]: ncell += len(cells_of(g[7], 0.5))
-    kinds = {k: sum(1 for g in out if g[5] == k) for k in 'fgo'}
+        if g[7] and g[5] == 'f': ncell += len(cells_of([P[0] for P in g[7]], 0.5))
+    kinds = {k: sum(1 for g in out if g[5] == k) for k in 'fgos'}
     D = {'meta': {'made': time.strftime('%Y-%m-%d'),
-                  'src': 'Fiskeridirektoratet, «Fiskeplasser – redskap» (aktive og passive redskap), «Gyteområder» og «Oppvekst- og beiteområder», WFS FiskeridirWFS_fiskeri, NLOD',
+                  'src': 'Fiskeridirektoratet, «Fiskeplasser – redskap» (aktive og passive redskap), «Gyteområder» og «Oppvekst- og beiteområder», WFS FiskeridirWFS_fiskeri, NLOD; Kartverket, Sentralt stedsnavnregister (stedsnavn i sjøen, slaget s), api.kartverket.no/stedsnavn/v1, CC BY 4.0',
+                  'kv': {'fylker': KV_FYLKER, 'types': KV_TYPES},
                   'n': len(out), 'unit': UNIT, 'sp': SPL, 'gear': GEAR, 'kinds': kinds, 'wash': WASH, 'simplify': SIMPLIFY_KM, 'sb': len(B)},
          'p': p, 'n': [g[8] for g in out], 'nf': [[i, g[0]] for i, g in enumerate(out) if g[8] != g[0]],
          'r': [round(math.sqrt(g[3]) * 10) for g in out],
@@ -297,6 +482,7 @@ def main():
     print(f'  of it: the lines {sz(D["l"]) / 1000:.0f} kB, the names {sz(D["n"]) / 1000 + sz(D["nf"]) / 1000:.0f} kB, the points {sz(D["p"]) / 1000:.0f} kB')
     print(f'  the shapes: {len(B) / 1000:.0f} kB binary ({os.path.getsize(fs) / 1000:.0f} kB base64) -> {fs}; {npt} points at {SIMPLIFY_KM * 1000:.0f} m, '
           f'{sz(shp) / 1000:.0f} kB as JSON; as 500 m cells the same grounds would be {ncell} cells')
+    print(f'  joined to one surface (the union of a ground\'s polygons): {nun} grounds, {sum(1 for R in shp if len(R) > 1)} of the fishing grounds still with more than one ring (separate parts or a hole); {nself} of one polygon whose ring crossed itself, {nhole} of one polygon with a hole of its own; {sum(len(R) - 1 for R in shp if len(R) > 1)} rings beyond the first in all')
     print(f'  with species: {sum(1 for g in out if g[6])} of {len(out)}; f with a season (a line not all year): {sum(1 for i, g in enumerate(out) if g[5] == "f" and any(l[2] != 4095 for l in D["l"][i]))}')
 
 if __name__ == '__main__': main()

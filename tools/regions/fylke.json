@@ -1,0 +1,2962 @@
+{
+"botnhamn": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.50894,
+"lon": 17.90738,
+"nr": "55",
+"off": 0
+},
+"brensholmen": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.60656,
+"lon": 18.04241,
+"nr": "55",
+"off": 0
+},
+"finnsnes": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.23841,
+"lon": 17.97735,
+"nr": "55",
+"off": 0
+},
+"frovag": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.07392,
+"lon": 17.05056,
+"nr": "55",
+"off": 0
+},
+"gryllefjord": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.36215,
+"lon": 17.06758,
+"nr": "55",
+"off": 0
+},
+"husoy": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.54325,
+"lon": 17.66577,
+"nr": "55",
+"off": 0
+},
+"m100191": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.33328,
+"lon": 5.29174,
+"nr": "11",
+"off": 0
+},
+"mAA61": {
+"fylke": "Agder",
+"kommune": "Grimstad",
+"lat": 58.3395,
+"lon": 8.59493,
+"nr": "42",
+"off": 0
+},
+"mAA74": {
+"fylke": "Agder",
+"kommune": "Arendal",
+"lat": 58.46193,
+"lon": 8.77804,
+"nr": "42",
+"off": 0
+},
+"mAG20": {
+"fylke": "Agder",
+"kommune": "Risør",
+"lat": 58.72177,
+"lon": 9.24091,
+"nr": "42",
+"off": 0
+},
+"mF104": {
+"fylke": "Finnmark",
+"kommune": "Vardø",
+"lat": 70.37647,
+"lon": 31.11132,
+"nr": "56",
+"off": 0
+},
+"mF161": {
+"fylke": "Finnmark",
+"kommune": "Båtsfjord",
+"lat": 70.629,
+"lon": 29.71967,
+"nr": "56",
+"off": 0
+},
+"mF201": {
+"fylke": "Finnmark",
+"kommune": "Berlevåg",
+"lat": 70.85757,
+"lon": 29.11533,
+"nr": "56",
+"off": 0
+},
+"mF226": {
+"fylke": "Finnmark",
+"kommune": "Gamvik",
+"lat": 70.80163,
+"lon": 28.10079,
+"nr": "56",
+"off": 0
+},
+"mF260": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.95095,
+"lon": 27.34476,
+"nr": "56",
+"off": 0
+},
+"mF261": {
+"fylke": "Finnmark",
+"kommune": "Gamvik",
+"lat": 71.03627,
+"lon": 27.83945,
+"nr": "56",
+"off": 0
+},
+"mF293": {
+"fylke": "Finnmark",
+"kommune": "Porsanger",
+"lat": 70.53232,
+"lon": 25.10085,
+"nr": "56",
+"off": 0
+},
+"mF295": {
+"fylke": "Finnmark",
+"kommune": "Gamvik",
+"lat": 71.06228,
+"lon": 28.26147,
+"nr": "56",
+"off": 0
+},
+"mF313": {
+"fylke": "Finnmark",
+"kommune": "Berlevåg",
+"lat": 70.71796,
+"lon": 29.31737,
+"nr": "56",
+"off": 0
+},
+"mF343": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 71.09756,
+"lon": 25.3984,
+"nr": "56",
+"off": 0
+},
+"mF357": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 71.11309,
+"lon": 25.83227,
+"nr": "56",
+"off": 0
+},
+"mF377": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 71.00458,
+"lon": 23.90348,
+"nr": "56",
+"off": 0
+},
+"mF412": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.63403,
+"lon": 23.67111,
+"nr": "56",
+"off": 0
+},
+"mF421": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.79364,
+"lon": 23.40826,
+"nr": "56",
+"off": 0
+},
+"mF433": {
+"fylke": "Finnmark",
+"kommune": "Hasvik",
+"lat": 70.48306,
+"lon": 22.16568,
+"nr": "56",
+"off": 0
+},
+"mF440": {
+"fylke": "Finnmark",
+"kommune": "Hasvik",
+"lat": 70.58952,
+"lon": 22.28355,
+"nr": "56",
+"off": 0
+},
+"mF447": {
+"fylke": "Finnmark",
+"kommune": "Hasvik",
+"lat": 70.63082,
+"lon": 21.98043,
+"nr": "56",
+"off": 0
+},
+"mF69": {
+"fylke": "Finnmark",
+"kommune": "Sør-Varanger",
+"lat": 69.97241,
+"lon": 29.64322,
+"nr": "56",
+"off": 0
+},
+"mF707": {
+"fylke": "Finnmark",
+"kommune": "Vardø",
+"lat": 70.28442,
+"lon": 30.99779,
+"nr": "56",
+"off": 0
+},
+"mF720": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 70.74705,
+"lon": 25.67007,
+"nr": "56",
+"off": 0
+},
+"mF771": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.72182,
+"lon": 23.81447,
+"nr": "56",
+"off": 0
+},
+"mF804": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.67016,
+"lon": 26.60732,
+"nr": "56",
+"off": 0
+},
+"mF805": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.48934,
+"lon": 27.05693,
+"nr": "56",
+"off": 0
+},
+"mF807": {
+"fylke": "Finnmark",
+"kommune": "Porsanger",
+"lat": 70.32363,
+"lon": 25.06532,
+"nr": "56",
+"off": 0
+},
+"mF819": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 70.9983,
+"lon": 24.69982,
+"nr": "56",
+"off": 0
+},
+"mF827": {
+"fylke": "Finnmark",
+"kommune": "Unjárga",
+"lat": 70.14407,
+"lon": 28.88092,
+"nr": "56",
+"off": 0
+},
+"mF836": {
+"fylke": "Finnmark",
+"kommune": "Vardø",
+"lat": 70.36288,
+"lon": 31.02777,
+"nr": "56",
+"off": 0
+},
+"mF845": {
+"fylke": "Finnmark",
+"kommune": "Båtsfjord",
+"lat": 70.62194,
+"lon": 29.69316,
+"nr": "56",
+"off": 0
+},
+"mF861": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.89868,
+"lon": 27.2274,
+"nr": "56",
+"off": 0
+},
+"mH131": {
+"fylke": "Vestland",
+"kommune": "Etne",
+"lat": 59.73404,
+"lon": 5.93569,
+"nr": "46",
+"off": 0
+},
+"mH81": {
+"fylke": "Vestland",
+"kommune": "Bømlo",
+"lat": 59.89193,
+"lon": 5.09441,
+"nr": "46",
+"off": 0
+},
+"mH85": {
+"fylke": "Vestland",
+"kommune": "Alver",
+"lat": 60.7009,
+"lon": 4.92157,
+"nr": "46",
+"off": 0
+},
+"mH88": {
+"fylke": "Vestland",
+"kommune": "Bømlo",
+"lat": 59.78069,
+"lon": 5.11464,
+"nr": "46",
+"off": 0
+},
+"mM155": {
+"fylke": "Møre og Romsdal",
+"kommune": "Averøy",
+"lat": 63.06842,
+"lon": 7.49162,
+"nr": "15",
+"off": 0
+},
+"mM162": {
+"fylke": "Møre og Romsdal",
+"kommune": "Aure",
+"lat": 63.15427,
+"lon": 7.94525,
+"nr": "15",
+"off": 0
+},
+"mM2047": {
+"fylke": "Møre og Romsdal",
+"kommune": "Herøy",
+"lat": 62.34319,
+"lon": 5.63946,
+"nr": "15",
+"off": 0
+},
+"mM212": {
+"fylke": "Møre og Romsdal",
+"kommune": "Hustadvika",
+"lat": 62.89331,
+"lon": 6.95718,
+"nr": "15",
+"off": 0
+},
+"mM2186": {
+"fylke": "Møre og Romsdal",
+"kommune": "Molde",
+"lat": 62.69656,
+"lon": 6.64268,
+"nr": "15",
+"off": 0
+},
+"mM2187": {
+"fylke": "Møre og Romsdal",
+"kommune": "Giske",
+"lat": 62.46614,
+"lon": 6.01602,
+"nr": "15",
+"off": 0
+},
+"mM2258": {
+"fylke": "Møre og Romsdal",
+"kommune": "Smøla",
+"lat": 63.3673,
+"lon": 7.78079,
+"nr": "15",
+"off": 0
+},
+"mM294": {
+"fylke": "Møre og Romsdal",
+"kommune": "Giske",
+"lat": 62.52828,
+"lon": 6.12369,
+"nr": "15",
+"off": 0
+},
+"mM314": {
+"fylke": "Møre og Romsdal",
+"kommune": "Hareid",
+"lat": 62.35136,
+"lon": 6.08108,
+"nr": "15",
+"off": 0
+},
+"mM317": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.46945,
+"lon": 6.14405,
+"nr": "15",
+"off": 0
+},
+"mM341": {
+"fylke": "Møre og Romsdal",
+"kommune": "Sula",
+"lat": 62.44031,
+"lon": 6.25001,
+"nr": "15",
+"off": 0
+},
+"mM359": {
+"fylke": "Møre og Romsdal",
+"kommune": "Sula",
+"lat": 62.43794,
+"lon": 6.281,
+"nr": "15",
+"off": 0
+},
+"mM360": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.4965,
+"lon": 6.36168,
+"nr": "15",
+"off": 0
+},
+"mM373": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.492,
+"lon": 6.30847,
+"nr": "15",
+"off": 0
+},
+"mM395": {
+"fylke": "Møre og Romsdal",
+"kommune": "Haram",
+"lat": 62.68133,
+"lon": 6.23571,
+"nr": "15",
+"off": 0
+},
+"mM416": {
+"fylke": "Møre og Romsdal",
+"kommune": "Sande",
+"lat": 62.25216,
+"lon": 5.48529,
+"nr": "15",
+"off": 0
+},
+"mM75": {
+"fylke": "Møre og Romsdal",
+"kommune": "Smøla",
+"lat": 63.50629,
+"lon": 7.97262,
+"nr": "15",
+"off": 0
+},
+"mM89": {
+"fylke": "Møre og Romsdal",
+"kommune": "Smøla",
+"lat": 63.37608,
+"lon": 8.20589,
+"nr": "15",
+"off": 0
+},
+"mM96": {
+"fylke": "Møre og Romsdal",
+"kommune": "Smøla",
+"lat": 63.30724,
+"lon": 8.10384,
+"nr": "15",
+"off": 0
+},
+"mN1001": {
+"fylke": "Nordland",
+"kommune": "Træna",
+"lat": 66.58588,
+"lon": 12.22671,
+"nr": "18",
+"off": 0
+},
+"mN1003": {
+"fylke": "Nordland",
+"kommune": "Rødøy",
+"lat": 66.59443,
+"lon": 12.65991,
+"nr": "18",
+"off": 0
+},
+"mN1008": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.39885,
+"lon": 13.13399,
+"nr": "18",
+"off": 0
+},
+"mN1009": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.48921,
+"lon": 12.96444,
+"nr": "18",
+"off": 0
+},
+"mN1084": {
+"fylke": "Nordland",
+"kommune": "Dønna",
+"lat": 66.08481,
+"lon": 12.44884,
+"nr": "18",
+"off": 0
+},
+"mN1098": {
+"fylke": "Nordland",
+"kommune": "Herøy",
+"lat": 66.02591,
+"lon": 12.24449,
+"nr": "18",
+"off": 0
+},
+"mN1113": {
+"fylke": "Nordland",
+"kommune": "Meløy",
+"lat": 66.8016,
+"lon": 13.23374,
+"nr": "18",
+"off": 0
+},
+"mN112": {
+"fylke": "Nordland",
+"kommune": "Andøy",
+"lat": 69.14133,
+"lon": 15.68063,
+"nr": "18",
+"off": 0
+},
+"mN119": {
+"fylke": "Nordland",
+"kommune": "Øksnes",
+"lat": 69.02172,
+"lon": 15.12552,
+"nr": "18",
+"off": 0
+},
+"mN141": {
+"fylke": "Nordland",
+"kommune": "Øksnes",
+"lat": 68.91112,
+"lon": 15.06512,
+"nr": "18",
+"off": 0
+},
+"mN161": {
+"fylke": "Nordland",
+"kommune": "Hadsel",
+"lat": 68.49851,
+"lon": 14.80212,
+"nr": "18",
+"off": 0
+},
+"mN2166": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.39857,
+"lon": 12.85111,
+"nr": "18",
+"off": 0
+},
+"mN217": {
+"fylke": "Nordland",
+"kommune": "Bø",
+"lat": 68.67998,
+"lon": 14.41091,
+"nr": "18",
+"off": 0
+},
+"mN2186": {
+"fylke": "Nordland",
+"kommune": "Brønnøy",
+"lat": 65.46326,
+"lon": 12.19209,
+"nr": "18",
+"off": 0
+},
+"mN220": {
+"fylke": "Nordland",
+"kommune": "Bø",
+"lat": 68.69527,
+"lon": 14.46013,
+"nr": "18",
+"off": 0
+},
+"mN2228": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.2835,
+"lon": 14.26855,
+"nr": "18",
+"off": 0
+},
+"mN2285": {
+"fylke": "Nordland",
+"kommune": "Gildeskål",
+"lat": 67.13581,
+"lon": 13.9757,
+"nr": "18",
+"off": 0
+},
+"mN2309": {
+"fylke": "Nordland",
+"kommune": "Vega",
+"lat": 65.67956,
+"lon": 12.13112,
+"nr": "18",
+"off": 0
+},
+"mN2320": {
+"fylke": "Nordland",
+"kommune": "Moskenes",
+"lat": 67.89809,
+"lon": 13.0442,
+"nr": "18",
+"off": 0
+},
+"mN2347": {
+"fylke": "Nordland",
+"kommune": "Meløy",
+"lat": 66.90821,
+"lon": 13.60485,
+"nr": "18",
+"off": 0
+},
+"mN235": {
+"fylke": "Nordland",
+"kommune": "Bø",
+"lat": 68.81651,
+"lon": 14.55253,
+"nr": "18",
+"off": 0
+},
+"mN2350": {
+"fylke": "Nordland",
+"kommune": "Flakstad",
+"lat": 68.08648,
+"lon": 13.2275,
+"nr": "18",
+"off": 0
+},
+"mN2384": {
+"fylke": "Nordland",
+"kommune": "Træna",
+"lat": 66.49548,
+"lon": 12.08691,
+"nr": "18",
+"off": 0
+},
+"mN278": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.23765,
+"lon": 13.62598,
+"nr": "18",
+"off": 0
+},
+"mN289": {
+"fylke": "Nordland",
+"kommune": "Flakstad",
+"lat": 68.13216,
+"lon": 13.43159,
+"nr": "18",
+"off": 0
+},
+"mN304": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.29885,
+"lon": 13.71387,
+"nr": "18",
+"off": 0
+},
+"mN322": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.07604,
+"lon": 13.53097,
+"nr": "18",
+"off": 0
+},
+"mN411": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.12307,
+"lon": 13.84853,
+"nr": "18",
+"off": 0
+},
+"mN439": {
+"fylke": "Nordland",
+"kommune": "Flakstad",
+"lat": 68.08196,
+"lon": 13.16975,
+"nr": "18",
+"off": 0
+},
+"mN458": {
+"fylke": "Nordland",
+"kommune": "Flakstad",
+"lat": 68.00896,
+"lon": 13.21261,
+"nr": "18",
+"off": 0
+},
+"mN484": {
+"fylke": "Nordland",
+"kommune": "Moskenes",
+"lat": 67.93595,
+"lon": 13.08743,
+"nr": "18",
+"off": 0
+},
+"mN51": {
+"fylke": "Nordland",
+"kommune": "Andøy",
+"lat": 69.27377,
+"lon": 15.94731,
+"nr": "18",
+"off": 0
+},
+"mN522": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.15444,
+"lon": 14.20436,
+"nr": "18",
+"off": 0
+},
+"mN541": {
+"fylke": "Nordland",
+"kommune": "Værøy",
+"lat": 67.65525,
+"lon": 12.71975,
+"nr": "18",
+"off": 0
+},
+"mN555": {
+"fylke": "Nordland",
+"kommune": "Røst",
+"lat": 67.50609,
+"lon": 12.07201,
+"nr": "18",
+"off": 0
+},
+"mN581": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.38725,
+"lon": 14.40722,
+"nr": "18",
+"off": 0
+},
+"mN645": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.1934,
+"lon": 14.34157,
+"nr": "18",
+"off": 0
+},
+"mN69": {
+"fylke": "Nordland",
+"kommune": "Andøy",
+"lat": 69.32396,
+"lon": 16.13651,
+"nr": "18",
+"off": 0
+},
+"mN717": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.2399,
+"lon": 14.57606,
+"nr": "18",
+"off": 0
+},
+"mN830": {
+"fylke": "Nordland",
+"kommune": "Lødingen",
+"lat": 68.4174,
+"lon": 15.99508,
+"nr": "18",
+"off": 0
+},
+"mN879": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.76498,
+"lon": 15.24758,
+"nr": "18",
+"off": 0
+},
+"mN880": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.72956,
+"lon": 14.76844,
+"nr": "18",
+"off": 0
+},
+"mN891": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.91729,
+"lon": 15.33878,
+"nr": "18",
+"off": 0
+},
+"mN893": {
+"fylke": "Nordland",
+"kommune": "Bodø",
+"lat": 67.40585,
+"lon": 13.89617,
+"nr": "18",
+"off": 0
+},
+"mN905": {
+"fylke": "Nordland",
+"kommune": "Bodø",
+"lat": 67.28179,
+"lon": 14.37111,
+"nr": "18",
+"off": 0
+},
+"mN918": {
+"fylke": "Nordland",
+"kommune": "Sørfold",
+"lat": 67.51172,
+"lon": 15.51797,
+"nr": "18",
+"off": 0
+},
+"mN991": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.36058,
+"lon": 12.60833,
+"nr": "18",
+"off": 0
+},
+"mN994": {
+"fylke": "Nordland",
+"kommune": "Rødøy",
+"lat": 66.66203,
+"lon": 13.06937,
+"nr": "18",
+"off": 0
+},
+"mNT169": {
+"fylke": "Trøndelag",
+"kommune": "Nærøysund",
+"lat": 64.86196,
+"lon": 11.24257,
+"nr": "50",
+"off": 0
+},
+"mNT92": {
+"fylke": "Trøndelag",
+"kommune": "Leka",
+"lat": 65.08463,
+"lon": 11.82967,
+"nr": "50",
+"off": 0
+},
+"mR129": {
+"fylke": "Rogaland",
+"kommune": "Hå",
+"lat": 58.5041,
+"lon": 5.79662,
+"nr": "11",
+"off": 0
+},
+"mR40": {
+"fylke": "Rogaland",
+"kommune": "Eigersund",
+"lat": 58.45279,
+"lon": 5.98843,
+"nr": "11",
+"off": 0
+},
+"mR57": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.26976,
+"lon": 5.19127,
+"nr": "11",
+"off": 0
+},
+"mR88": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.14604,
+"lon": 5.26724,
+"nr": "11",
+"off": 0
+},
+"mR92": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.09685,
+"lon": 5.70214,
+"nr": "11",
+"off": 0
+},
+"mR946": {
+"fylke": "Rogaland",
+"kommune": "Eigersund",
+"lat": 58.43958,
+"lon": 5.9786,
+"nr": "11",
+"off": 0
+},
+"mR950": {
+"fylke": "Rogaland",
+"kommune": "Bokn",
+"lat": 59.1761,
+"lon": 5.38948,
+"nr": "11",
+"off": 0
+},
+"mR960": {
+"fylke": "Rogaland",
+"kommune": "Kvitsøy",
+"lat": 59.05922,
+"lon": 5.41789,
+"nr": "11",
+"off": 0
+},
+"mR962": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.27386,
+"lon": 6.09854,
+"nr": "11",
+"off": 0
+},
+"mSF122": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 61.93003,
+"lon": 5.11412,
+"nr": "46",
+"off": 0
+},
+"mSF225": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 61.58964,
+"lon": 4.99629,
+"nr": "46",
+"off": 0
+},
+"mSF320": {
+"fylke": "Vestland",
+"kommune": "Askvoll",
+"lat": 61.28548,
+"lon": 4.63356,
+"nr": "46",
+"off": 0
+},
+"mSF72": {
+"fylke": "Vestland",
+"kommune": "Stad",
+"lat": 62.02529,
+"lon": 5.36992,
+"nr": "46",
+"off": 0
+},
+"mSF98": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 61.98537,
+"lon": 5.1426,
+"nr": "46",
+"off": 0
+},
+"mST135": {
+"fylke": "Trøndelag",
+"kommune": "Ørland",
+"lat": 63.85689,
+"lon": 9.72992,
+"nr": "50",
+"off": 0
+},
+"mST137": {
+"fylke": "Trøndelag",
+"kommune": "Ørland",
+"lat": 63.85137,
+"lon": 9.75534,
+"nr": "50",
+"off": 0
+},
+"mST150": {
+"fylke": "Trøndelag",
+"kommune": "Ørland",
+"lat": 63.7247,
+"lon": 9.58532,
+"nr": "50",
+"off": 0
+},
+"mST343": {
+"fylke": "Trøndelag",
+"kommune": "Hitra",
+"lat": 63.65053,
+"lon": 9.02811,
+"nr": "50",
+"off": 0
+},
+"mST460": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.7998,
+"lon": 8.67906,
+"nr": "50",
+"off": 0
+},
+"mST479": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.86877,
+"lon": 8.66545,
+"nr": "50",
+"off": 0
+},
+"mST490": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.97905,
+"lon": 9.08816,
+"nr": "50",
+"off": 0
+},
+"mST72": {
+"fylke": "Trøndelag",
+"kommune": "Åfjord",
+"lat": 64.17773,
+"lon": 10.35492,
+"nr": "50",
+"off": 0
+},
+"mST845": {
+"fylke": "Trøndelag",
+"kommune": "Trondheim",
+"lat": 63.43268,
+"lon": 10.36814,
+"nr": "50",
+"off": 0
+},
+"mST874": {
+"fylke": "Trøndelag",
+"kommune": "Osen",
+"lat": 64.32117,
+"lon": 10.45085,
+"nr": "50",
+"off": 0
+},
+"mT105": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 70.19639,
+"lon": 20.51603,
+"nr": "55",
+"off": 0
+},
+"mT1073": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.67545,
+"lon": 18.7501,
+"nr": "55",
+"off": 0
+},
+"mT1079": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.72894,
+"lon": 19.09699,
+"nr": "55",
+"off": 0
+},
+"mT1094": {
+"fylke": "Troms",
+"kommune": "Karlsøy",
+"lat": 70.13114,
+"lon": 19.9923,
+"nr": "55",
+"off": 0
+},
+"mT119": {
+"fylke": "Troms",
+"kommune": "Nordreisa",
+"lat": 69.78753,
+"lon": 20.56955,
+"nr": "55",
+"off": 0
+},
+"mT125": {
+"fylke": "Troms",
+"kommune": "Gáivuotna",
+"lat": 69.5452,
+"lon": 20.54611,
+"nr": "55",
+"off": 0
+},
+"mT1260": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 70.05177,
+"lon": 20.63366,
+"nr": "55",
+"off": 0
+},
+"mT127": {
+"fylke": "Troms",
+"kommune": "Gáivuotna",
+"lat": 69.74903,
+"lon": 20.48324,
+"nr": "55",
+"off": 0
+},
+"mT1289": {
+"fylke": "Troms",
+"kommune": "Nordreisa",
+"lat": 69.79421,
+"lon": 20.93862,
+"nr": "55",
+"off": 0
+},
+"mT155": {
+"fylke": "Troms",
+"kommune": "Karlsøy",
+"lat": 70.24294,
+"lon": 19.49939,
+"nr": "55",
+"off": 0
+},
+"mT212": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.6279,
+"lon": 18.94749,
+"nr": "55",
+"off": 0
+},
+"mT221": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.75499,
+"lon": 19.67706,
+"nr": "55",
+"off": 0
+},
+"mT247": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.8359,
+"lon": 18.58777,
+"nr": "55",
+"off": 0
+},
+"mT251": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.8511,
+"lon": 18.82034,
+"nr": "55",
+"off": 0
+},
+"mT369": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.30097,
+"lon": 16.98083,
+"nr": "55",
+"off": 0
+},
+"mT63": {
+"fylke": "Troms",
+"kommune": "Kvænangen",
+"lat": 69.94093,
+"lon": 22.04344,
+"nr": "55",
+"off": 0
+},
+"mT82": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 70.02966,
+"lon": 20.9747,
+"nr": "55",
+"off": 0
+},
+"mTF107": {
+"fylke": "Finnmark",
+"kommune": "Loppa",
+"lat": 70.25082,
+"lon": 21.7823,
+"nr": "56",
+"off": 0
+},
+"mTF14": {
+"fylke": "Troms",
+"kommune": "Ibestad",
+"lat": 68.92538,
+"lon": 17.1236,
+"nr": "55",
+"off": 0
+},
+"mTF23": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 70.99594,
+"lon": 25.96404,
+"nr": "56",
+"off": 0
+},
+"mTF4": {
+"fylke": "Finnmark",
+"kommune": "Loppa",
+"lat": 70.24099,
+"lon": 22.3486,
+"nr": "56",
+"off": 0
+},
+"mTF57": {
+"fylke": "Finnmark",
+"kommune": "Vadsø",
+"lat": 70.0711,
+"lon": 29.74621,
+"nr": "56",
+"off": 0
+},
+"mTF66": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.77589,
+"lon": 18.40002,
+"nr": "55",
+"off": 0
+},
+"mTF70": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 70.99502,
+"lon": 24.66597,
+"nr": "56",
+"off": 0
+},
+"mTF76": {
+"fylke": "Finnmark",
+"kommune": "Deatnu",
+"lat": 70.48466,
+"lon": 27.98659,
+"nr": "56",
+"off": 0
+},
+"mTF9": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 71.04248,
+"lon": 25.89381,
+"nr": "56",
+"off": 0
+},
+"mTL25": {
+"fylke": "Trøndelag",
+"kommune": "Åfjord",
+"lat": 64.17798,
+"lon": 10.21317,
+"nr": "50",
+"off": 0
+},
+"mTL41": {
+"fylke": "Trøndelag",
+"kommune": "Åfjord",
+"lat": 64.04005,
+"lon": 10.06406,
+"nr": "50",
+"off": 0
+},
+"mTL55": {
+"fylke": "Trøndelag",
+"kommune": "Flatanger",
+"lat": 64.47573,
+"lon": 10.69648,
+"nr": "50",
+"off": 0
+},
+"mTL7": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.77019,
+"lon": 8.81926,
+"nr": "50",
+"off": 0
+},
+"mVA2": {
+"fylke": "Agder",
+"kommune": "Lindesnes",
+"lat": 58.04125,
+"lon": 7.1531,
+"nr": "42",
+"off": 0
+},
+"mVA204": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.08798,
+"lon": 8.01056,
+"nr": "42",
+"off": 0
+},
+"mVA69": {
+"fylke": "Agder",
+"kommune": "Flekkefjord",
+"lat": 58.22962,
+"lon": 6.5299,
+"nr": "42",
+"off": 0
+},
+"mVA90": {
+"fylke": "Agder",
+"kommune": "Lindesnes",
+"lat": 58.0215,
+"lon": 7.47676,
+"nr": "42",
+"off": 0
+},
+"mVA94": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.13387,
+"lon": 7.99848,
+"nr": "42",
+"off": 0
+},
+"mVL187": {
+"fylke": "Vestland",
+"kommune": "Bremanger",
+"lat": 61.76531,
+"lon": 4.87715,
+"nr": "46",
+"off": 0
+},
+"sb1003342_245254": {
+"fylke": "Finnmark",
+"kommune": "Loppa",
+"lat": 70.22298,
+"lon": 21.721,
+"nr": "56",
+"off": 0
+},
+"sb1017438_265548": {
+"fylke": "Troms",
+"kommune": "Kvænangen",
+"lat": 70.02809,
+"lon": 22.02887,
+"nr": "55",
+"off": 0
+},
+"sb1031448_193732": {
+"fylke": "Finnmark",
+"kommune": "Hasvik",
+"lat": 70.65166,
+"lon": 22.62879,
+"nr": "56",
+"off": 0
+},
+"sb1045172_229490": {
+"fylke": "Finnmark",
+"kommune": "Alta",
+"lat": 70.31827,
+"lon": 22.87201,
+"nr": "56",
+"off": 0
+},
+"sb1067558_264585": {
+"fylke": "Finnmark",
+"kommune": "Alta",
+"lat": 69.98029,
+"lon": 23.3336,
+"nr": "56",
+"off": 0
+},
+"sb1069407_186603": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.66961,
+"lon": 23.67133,
+"nr": "56",
+"off": 0
+},
+"sb1069485_191974": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.62188,
+"lon": 23.65274,
+"nr": "56",
+"off": 0
+},
+"sb1079588_138476": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 71.08236,
+"lon": 24.1389,
+"nr": "56",
+"off": 0
+},
+"sb1111959_156917": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 70.87379,
+"lon": 24.93733,
+"nr": "56",
+"off": 0
+},
+"sb1193142_176489": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.57074,
+"lon": 27.00522,
+"nr": "56",
+"off": 0
+},
+"sb1197292_132829": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.94607,
+"lon": 27.35208,
+"nr": "56",
+"off": 0
+},
+"sb1219017_144547": {
+"fylke": "Finnmark",
+"kommune": "Gamvik",
+"lat": 70.80351,
+"lon": 27.86531,
+"nr": "56",
+"off": 0
+},
+"sb1232526_177284": {
+"fylke": "Finnmark",
+"kommune": "Deatnu",
+"lat": 70.49162,
+"lon": 28.03386,
+"nr": "56",
+"off": 0
+},
+"sb1274565_141010": {
+"fylke": "Finnmark",
+"kommune": "Berlevåg",
+"lat": 70.72341,
+"lon": 29.35482,
+"nr": "56",
+"off": 0
+},
+"sb1305262_208062": {
+"fylke": "Finnmark",
+"kommune": "Vadsø",
+"lat": 70.07633,
+"lon": 29.72494,
+"nr": "56",
+"off": 0
+},
+"sb192187_1279128": {
+"fylke": "Vestland",
+"kommune": "Øygarden",
+"lat": 60.68098,
+"lon": 4.7603,
+"nr": "46",
+"off": 0
+},
+"sb193458_1435753": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.29775,
+"lon": 5.20544,
+"nr": "11",
+"off": 0
+},
+"sb198221_1375848": {
+"fylke": "Vestland",
+"kommune": "Bømlo",
+"lat": 59.83401,
+"lon": 5.13276,
+"nr": "46",
+"off": 0
+},
+"sb219148_1463882": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.08124,
+"lon": 5.71881,
+"nr": "11",
+"off": 0
+},
+"sb221185_1159358": {
+"fylke": "Vestland",
+"kommune": "Bremanger",
+"lat": 61.77939,
+"lon": 4.94766,
+"nr": "46",
+"off": 0
+},
+"sb235478_1387245": {
+"fylke": "Vestland",
+"kommune": "Kvinnherad",
+"lat": 59.78101,
+"lon": 5.81649,
+"nr": "46",
+"off": 0
+},
+"sb238313_1135618": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 62.01264,
+"lon": 5.19968,
+"nr": "46",
+"off": 0
+},
+"sb245017_1444088": {
+"fylke": "Rogaland",
+"kommune": "Hjelmeland",
+"lat": 59.28834,
+"lon": 6.11881,
+"nr": "11",
+"off": 0
+},
+"sb262723_1571672": {
+"fylke": "Agder",
+"kommune": "Farsund",
+"lat": 58.1791,
+"lon": 6.62397,
+"nr": "42",
+"off": 0
+},
+"sb270855_1101121": {
+"fylke": "Møre og Romsdal",
+"kommune": "Herøy",
+"lat": 62.36109,
+"lon": 5.71905,
+"nr": "15",
+"off": 0
+},
+"sb296282_1092449": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.46979,
+"lon": 6.18173,
+"nr": "15",
+"off": 0
+},
+"sb309606_1596130": {
+"fylke": "Agder",
+"kommune": "Lindesnes",
+"lat": 58.00527,
+"lon": 7.54556,
+"nr": "42",
+"off": 0
+},
+"sb340163_1583892": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.1454,
+"lon": 8.03082,
+"nr": "42",
+"off": 0
+},
+"sb340594_1049543": {
+"fylke": "Møre og Romsdal",
+"kommune": "Hustadvika",
+"lat": 62.90248,
+"lon": 6.92826,
+"nr": "15",
+"off": 0
+},
+"sb376100_1564046": {
+"fylke": "Agder",
+"kommune": "Grimstad",
+"lat": 58.35427,
+"lon": 8.6054,
+"nr": "42",
+"off": 0
+},
+"sb377503_1036100": {
+"fylke": "Møre og Romsdal",
+"kommune": "Averøy",
+"lat": 63.0618,
+"lon": 7.61864,
+"nr": "15",
+"off": 0
+},
+"sb408273_1006910": {
+"fylke": "Møre og Romsdal",
+"kommune": "Smøla",
+"lat": 63.35207,
+"lon": 8.16135,
+"nr": "15",
+"off": 0
+},
+"sb418023_1523092": {
+"fylke": "Agder",
+"kommune": "Risør",
+"lat": 58.74357,
+"lon": 9.24481,
+"nr": "42",
+"off": 0
+},
+"sb445075_959755": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.80688,
+"lon": 8.80248,
+"nr": "50",
+"off": 0
+},
+"sb457085_976958": {
+"fylke": "Trøndelag",
+"kommune": "Hitra",
+"lat": 63.66327,
+"lon": 9.06954,
+"nr": "50",
+"off": 0
+},
+"sb502670_940161": {
+"fylke": "Trøndelag",
+"kommune": "Åfjord",
+"lat": 64.02691,
+"lon": 9.93426,
+"nr": "50",
+"off": 0
+},
+"sb511051_1005125": {
+"fylke": "Trøndelag",
+"kommune": "Trondheim",
+"lat": 63.45169,
+"lon": 10.2053,
+"nr": "50",
+"off": 0
+},
+"sb565668_892303": {
+"fylke": "Trøndelag",
+"kommune": "Namsos",
+"lat": 64.4944,
+"lon": 11.16144,
+"nr": "50",
+"off": 0
+},
+"sb573961_851995": {
+"fylke": "Trøndelag",
+"kommune": "Nærøysund",
+"lat": 64.85973,
+"lon": 11.28456,
+"nr": "50",
+"off": 0
+},
+"sb596858_827809": {
+"fylke": "Trøndelag",
+"kommune": "Leka",
+"lat": 65.08785,
+"lon": 11.74094,
+"nr": "50",
+"off": 0
+},
+"sb623865_666688": {
+"fylke": "Nordland",
+"kommune": "Træna",
+"lat": 66.54339,
+"lon": 12.15854,
+"nr": "18",
+"off": 0
+},
+"sb626335_785538": {
+"fylke": "Nordland",
+"kommune": "Brønnøy",
+"lat": 65.47903,
+"lon": 12.32872,
+"nr": "18",
+"off": 0
+},
+"sb632661_686863": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.36569,
+"lon": 12.37611,
+"nr": "18",
+"off": 0
+},
+"sb636333_715642": {
+"fylke": "Nordland",
+"kommune": "Dønna",
+"lat": 66.10907,
+"lon": 12.484,
+"nr": "18",
+"off": 0
+},
+"sb663111_680146": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.43594,
+"lon": 13.05236,
+"nr": "18",
+"off": 0
+},
+"sb666383_510661": {
+"fylke": "Nordland",
+"kommune": "Moskenes",
+"lat": 67.95622,
+"lon": 13.00364,
+"nr": "18",
+"off": 0
+},
+"sb668837_645099": {
+"fylke": "Nordland",
+"kommune": "Rødøy",
+"lat": 66.75169,
+"lon": 13.15678,
+"nr": "18",
+"off": 0
+},
+"sb695082_584007": {
+"fylke": "Nordland",
+"kommune": "Bodø",
+"lat": 67.30555,
+"lon": 13.7245,
+"nr": "18",
+"off": 0
+},
+"sb702399_491400": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.13731,
+"lon": 13.8545,
+"nr": "18",
+"off": 0
+},
+"sb740929_417362": {
+"fylke": "Nordland",
+"kommune": "Øksnes",
+"lat": 68.8049,
+"lon": 14.77498,
+"nr": "18",
+"off": 0
+},
+"sb742645_481328": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.23143,
+"lon": 14.82195,
+"nr": "18",
+"off": 0
+},
+"sb742826_459050": {
+"fylke": "Nordland",
+"kommune": "Hadsel",
+"lat": 68.43109,
+"lon": 14.82535,
+"nr": "18",
+"off": 0
+},
+"sb748969_409304": {
+"fylke": "Nordland",
+"kommune": "Øksnes",
+"lat": 68.8773,
+"lon": 14.97446,
+"nr": "18",
+"off": 0
+},
+"sb760152_542087": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.68646,
+"lon": 15.23956,
+"nr": "18",
+"off": 0
+},
+"sb764446_-633615": {
+"fylke": "Svalbard",
+"kommune": "Svalbard",
+"lat": 78.22564,
+"lon": 15.63404,
+"nr": "",
+"off": 0
+},
+"sb774984_399309": {
+"fylke": "Nordland",
+"kommune": "Andøy",
+"lat": 68.96598,
+"lon": 15.62339,
+"nr": "18",
+"off": 0
+},
+"sb836864_384622": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.08491,
+"lon": 17.18034,
+"nr": "55",
+"off": 0
+},
+"sb837804_414368": {
+"fylke": "Troms",
+"kommune": "Ibestad",
+"lat": 68.81803,
+"lon": 17.17744,
+"nr": "55",
+"off": 0
+},
+"sb841763_342211": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.46346,
+"lon": 17.34404,
+"nr": "55",
+"off": 0
+},
+"sb871789_320357": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.64693,
+"lon": 18.13866,
+"nr": "55",
+"off": 0
+},
+"sb903610_318095": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.65074,
+"lon": 18.96085,
+"nr": "55",
+"off": 0
+},
+"sb934635_270801": {
+"fylke": "Troms",
+"kommune": "Karlsøy",
+"lat": 70.05364,
+"lon": 19.85407,
+"nr": "55",
+"off": 0
+},
+"sb953125_322722": {
+"fylke": "Troms",
+"kommune": "Lyngen",
+"lat": 69.57618,
+"lon": 20.22126,
+"nr": "55",
+"off": 0
+},
+"sb968646_290023": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 69.85565,
+"lon": 20.69607,
+"nr": "55",
+"off": 0
+},
+"sb970163_264504": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 70.08187,
+"lon": 20.79844,
+"nr": "55",
+"off": 0
+},
+"senjahopen": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.49435,
+"lon": 17.48757,
+"nr": "55",
+"off": 0
+},
+"sommaroy": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.63426,
+"lon": 17.99585,
+"nr": "55",
+"off": 0
+},
+"sv1013122_202113": {
+"fylke": "Finnmark",
+"kommune": "Hasvik",
+"lat": 70.59723,
+"lon": 22.11095,
+"nr": "56",
+"off": 0
+},
+"sv1022748_242941": {
+"fylke": "Finnmark",
+"kommune": "Loppa",
+"lat": 70.22374,
+"lon": 22.23809,
+"nr": "56",
+"off": 0
+},
+"sv1057144_175807": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.78072,
+"lon": 23.38363,
+"nr": "56",
+"off": 0
+},
+"sv1081559_147434": {
+"fylke": "Finnmark",
+"kommune": "Måsøy",
+"lat": 71.00046,
+"lon": 24.15606,
+"nr": "56",
+"off": 0
+},
+"sv1105444_187427": {
+"fylke": "Finnmark",
+"kommune": "Hammerfest",
+"lat": 70.61361,
+"lon": 24.63019,
+"nr": "56",
+"off": 0
+},
+"sv1123557_129168": {
+"fylke": "Finnmark",
+"kommune": "Nordkapp",
+"lat": 71.10138,
+"lon": 25.37878,
+"nr": "56",
+"off": 0
+},
+"sv1140762_209475": {
+"fylke": "Finnmark",
+"kommune": "Porsanger",
+"lat": 70.36704,
+"lon": 25.46531,
+"nr": "56",
+"off": 0
+},
+"sv1147500_174505": {
+"fylke": "Finnmark",
+"kommune": "Porsanger",
+"lat": 70.6646,
+"lon": 25.8066,
+"nr": "56",
+"off": 0
+},
+"sv1192293_188320": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 70.46854,
+"lon": 26.92093,
+"nr": "56",
+"off": 0
+},
+"sv1196366_124639": {
+"fylke": "Finnmark",
+"kommune": "Lebesby",
+"lat": 71.01958,
+"lon": 27.37271,
+"nr": "56",
+"off": 0
+},
+"sv1248477_151462": {
+"fylke": "Finnmark",
+"kommune": "Berlevåg",
+"lat": 70.6859,
+"lon": 28.60431,
+"nr": "56",
+"off": 0
+},
+"sv1305146_156500": {
+"fylke": "Finnmark",
+"kommune": "Båtsfjord",
+"lat": 70.52358,
+"lon": 30.05402,
+"nr": "56",
+"off": 0
+},
+"sv1307392_207983": {
+"fylke": "Finnmark",
+"kommune": "Vadsø",
+"lat": 70.07263,
+"lon": 29.77935,
+"nr": "56",
+"off": 0
+},
+"sv197762_1424036": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.40708,
+"lon": 5.25012,
+"nr": "11",
+"off": 0
+},
+"sv198840_1429275": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.3619,
+"lon": 5.28232,
+"nr": "11",
+"off": 0
+},
+"sv198880_1437223": {
+"fylke": "Rogaland",
+"kommune": "Karmøy",
+"lat": 59.29183,
+"lon": 5.30308,
+"nr": "11",
+"off": 0
+},
+"sv203585_1283290": {
+"fylke": "Vestland",
+"kommune": "Alver",
+"lat": 60.65964,
+"lon": 4.97737,
+"nr": "46",
+"off": 0
+},
+"sv206639_1447501": {
+"fylke": "Rogaland",
+"kommune": "Bokn",
+"lat": 59.21073,
+"lon": 5.46336,
+"nr": "11",
+"off": 0
+},
+"sv208897_1480655": {
+"fylke": "Rogaland",
+"kommune": "Sola",
+"lat": 58.92002,
+"lon": 5.58359,
+"nr": "11",
+"off": 0
+},
+"sv208981_1367934": {
+"fylke": "Vestland",
+"kommune": "Fitjar",
+"lat": 59.91827,
+"lon": 5.30134,
+"nr": "46",
+"off": 0
+},
+"sv209586_1319621": {
+"fylke": "Vestland",
+"kommune": "Bergen",
+"lat": 60.34652,
+"lon": 5.18432,
+"nr": "46",
+"off": 0
+},
+"sv211695_1362585": {
+"fylke": "Vestland",
+"kommune": "Fitjar",
+"lat": 59.96905,
+"lon": 5.33533,
+"nr": "46",
+"off": 0
+},
+"sv213764_1312742": {
+"fylke": "Vestland",
+"kommune": "Askøy",
+"lat": 60.41306,
+"lon": 5.24028,
+"nr": "46",
+"off": 0
+},
+"sv216830_1340454": {
+"fylke": "Vestland",
+"kommune": "Bjørnafjorden",
+"lat": 60.17173,
+"lon": 5.36802,
+"nr": "46",
+"off": 0
+},
+"sv216839_1489401": {
+"fylke": "Rogaland",
+"kommune": "Sandnes",
+"lat": 58.85224,
+"lon": 5.74087,
+"nr": "11",
+"off": 0
+},
+"sv217535_1468134": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.04166,
+"lon": 5.70177,
+"nr": "11",
+"off": 0
+},
+"sv217683_1316727": {
+"fylke": "Vestland",
+"kommune": "Bergen",
+"lat": 60.38272,
+"lon": 5.32082,
+"nr": "46",
+"off": 0
+},
+"sv217707_1482183": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 58.91748,
+"lon": 5.73818,
+"nr": "11",
+"off": 0
+},
+"sv218372_1335482": {
+"fylke": "Vestland",
+"kommune": "Bjørnafjorden",
+"lat": 60.21782,
+"lon": 5.38257,
+"nr": "46",
+"off": 0
+},
+"sv220101_1473964": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 58.99328,
+"lon": 5.75953,
+"nr": "11",
+"off": 0
+},
+"sv221002_1532990": {
+"fylke": "Rogaland",
+"kommune": "Eigersund",
+"lat": 58.47091,
+"lon": 5.91402,
+"nr": "11",
+"off": 0
+},
+"sv222369_1179688": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 61.60124,
+"lon": 5.02822,
+"nr": "46",
+"off": 0
+},
+"sv222736_1463203": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.09183,
+"lon": 5.77941,
+"nr": "11",
+"off": 0
+},
+"sv224198_1481619": {
+"fylke": "Rogaland",
+"kommune": "Sandnes",
+"lat": 58.9304,
+"lon": 5.8484,
+"nr": "11",
+"off": 0
+},
+"sv229576_1455294": {
+"fylke": "Rogaland",
+"kommune": "Stavanger",
+"lat": 59.17019,
+"lon": 5.8783,
+"nr": "11",
+"off": 0
+},
+"sv229896_1467381": {
+"fylke": "Rogaland",
+"kommune": "Strand",
+"lat": 59.06347,
+"lon": 5.91219,
+"nr": "11",
+"off": 0
+},
+"sv232105_1406520": {
+"fylke": "Rogaland",
+"kommune": "Vindafjord",
+"lat": 59.60595,
+"lon": 5.80472,
+"nr": "11",
+"off": 0
+},
+"sv234348_1140404": {
+"fylke": "Vestland",
+"kommune": "Kinn",
+"lat": 61.9652,
+"lon": 5.13896,
+"nr": "46",
+"off": 0
+},
+"sv236579_1473454": {
+"fylke": "Rogaland",
+"kommune": "Strand",
+"lat": 59.01761,
+"lon": 6.04167,
+"nr": "11",
+"off": 0
+},
+"sv256224_1113043": {
+"fylke": "Møre og Romsdal",
+"kommune": "Sande",
+"lat": 62.23627,
+"lon": 5.47391,
+"nr": "15",
+"off": 0
+},
+"sv262760_1324276": {
+"fylke": "Vestland",
+"kommune": "Kvam",
+"lat": 60.37271,
+"lon": 6.14691,
+"nr": "46",
+"off": 0
+},
+"sv267275_1582086": {
+"fylke": "Agder",
+"kommune": "Farsund",
+"lat": 58.08799,
+"lon": 6.80063,
+"nr": "42",
+"off": 0
+},
+"sv281983_1580393": {
+"fylke": "Agder",
+"kommune": "Lyngdal",
+"lat": 58.11885,
+"lon": 7.04471,
+"nr": "42",
+"off": 0
+},
+"sv284568_1589866": {
+"fylke": "Agder",
+"kommune": "Lindesnes",
+"lat": 58.03741,
+"lon": 7.10689,
+"nr": "42",
+"off": 0
+},
+"sv292732_1091800": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.47097,
+"lon": 6.11179,
+"nr": "15",
+"off": 0
+},
+"sv301334_1094351": {
+"fylke": "Møre og Romsdal",
+"kommune": "Ålesund",
+"lat": 62.4588,
+"lon": 6.28371,
+"nr": "15",
+"off": 0
+},
+"sv304428_1592512": {
+"fylke": "Agder",
+"kommune": "Lindesnes",
+"lat": 58.01918,
+"lon": 7.46514,
+"nr": "42",
+"off": 0
+},
+"sv315609_1103293": {
+"fylke": "Møre og Romsdal",
+"kommune": "Sykkylven",
+"lat": 62.39633,
+"lon": 6.57973,
+"nr": "15",
+"off": 0
+},
+"sv327002_1590622": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.07292,
+"lon": 7.82069,
+"nr": "42",
+"off": 0
+},
+"sv336455_1585944": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.1235,
+"lon": 7.9717,
+"nr": "42",
+"off": 0
+},
+"sv336810_1591224": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.07691,
+"lon": 7.9872,
+"nr": "42",
+"off": 0
+},
+"sv341098_1582097": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.16213,
+"lon": 8.04335,
+"nr": "42",
+"off": 0
+},
+"sv344681_1587667": {
+"fylke": "Agder",
+"kommune": "Kristiansand",
+"lat": 58.11574,
+"lon": 8.11325,
+"nr": "42",
+"off": 0
+},
+"sv349968_1069411": {
+"fylke": "Møre og Romsdal",
+"kommune": "Molde",
+"lat": 62.73612,
+"lon": 7.15857,
+"nr": "15",
+"off": 0
+},
+"sv375206_1566241": {
+"fylke": "Agder",
+"kommune": "Grimstad",
+"lat": 58.33387,
+"lon": 8.59368,
+"nr": "42",
+"off": 0
+},
+"sv380431_1562494": {
+"fylke": "Agder",
+"kommune": "Grimstad",
+"lat": 58.37189,
+"lon": 8.67601,
+"nr": "42",
+"off": 0
+},
+"sv383942_1029479": {
+"fylke": "Møre og Romsdal",
+"kommune": "Kristiansund",
+"lat": 63.12726,
+"lon": 7.73028,
+"nr": "15",
+"off": 0
+},
+"sv384041_1555088": {
+"fylke": "Agder",
+"kommune": "Arendal",
+"lat": 58.42588,
+"lon": 8.755,
+"nr": "42",
+"off": 0
+},
+"sv389797_1552209": {
+"fylke": "Agder",
+"kommune": "Arendal",
+"lat": 58.47139,
+"lon": 8.81947,
+"nr": "42",
+"off": 0
+},
+"sv399239_1536012": {
+"fylke": "Agder",
+"kommune": "Tvedestrand",
+"lat": 58.62388,
+"lon": 8.95509,
+"nr": "42",
+"off": 0
+},
+"sv407723_1521514": {
+"fylke": "Agder",
+"kommune": "Risør",
+"lat": 58.73106,
+"lon": 9.06221,
+"nr": "42",
+"off": 0
+},
+"sv416472_1527255": {
+"fylke": "Agder",
+"kommune": "Risør",
+"lat": 58.71555,
+"lon": 9.23753,
+"nr": "42",
+"off": 0
+},
+"sv419232_972796": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.66647,
+"lon": 8.30773,
+"nr": "50",
+"off": 0
+},
+"sv422503_1010231": {
+"fylke": "Møre og Romsdal",
+"kommune": "Aure",
+"lat": 63.33579,
+"lon": 8.45075,
+"nr": "15",
+"off": 0
+},
+"sv426087_1511994": {
+"fylke": "Telemark",
+"kommune": "Kragerø",
+"lat": 58.85925,
+"lon": 9.38074,
+"nr": "40",
+"off": 0
+},
+"sv439132_1485554": {
+"fylke": "Telemark",
+"kommune": "Bamble",
+"lat": 59.10552,
+"lon": 9.56873,
+"nr": "40",
+"off": 0
+},
+"sv443667_978429": {
+"fylke": "Trøndelag",
+"kommune": "Hitra",
+"lat": 63.64224,
+"lon": 8.81305,
+"nr": "50",
+"off": 0
+},
+"sv445873_1492613": {
+"fylke": "Telemark",
+"kommune": "Bamble",
+"lat": 59.0472,
+"lon": 9.69586,
+"nr": "40",
+"off": 0
+},
+"sv446078_967789": {
+"fylke": "Trøndelag",
+"kommune": "Frøya",
+"lat": 63.73531,
+"lon": 8.83719,
+"nr": "50",
+"off": 0
+},
+"sv446201_1487118": {
+"fylke": "Telemark",
+"kommune": "Porsgrunn",
+"lat": 59.09661,
+"lon": 9.69388,
+"nr": "40",
+"off": 0
+},
+"sv455456_1501427": {
+"fylke": "Vestfold",
+"kommune": "Larvik",
+"lat": 58.97488,
+"lon": 9.87378,
+"nr": "39",
+"off": 0
+},
+"sv465699_1494836": {
+"fylke": "Vestfold",
+"kommune": "Larvik",
+"lat": 59.04103,
+"lon": 10.04262,
+"nr": "39",
+"off": 0
+},
+"sv476606_1487424": {
+"fylke": "Vestfold",
+"kommune": "Sandefjord",
+"lat": 59.11423,
+"lon": 10.22293,
+"nr": "39",
+"off": 0
+},
+"sv482709_1437925": {
+"fylke": "Vestfold",
+"kommune": "Holmestrand",
+"lat": 59.56119,
+"lon": 10.26754,
+"nr": "39",
+"off": 0
+},
+"sv483434_1483544": {
+"fylke": "Vestfold",
+"kommune": "Færder",
+"lat": 59.15328,
+"lon": 10.33705,
+"nr": "39",
+"off": 0
+},
+"sv483542_1417431": {
+"fylke": "Buskerud",
+"kommune": "Lier",
+"lat": 59.74525,
+"lon": 10.25684,
+"nr": "33",
+"off": 0
+},
+"sv485695_1447372": {
+"fylke": "Vestfold",
+"kommune": "Holmestrand",
+"lat": 59.47873,
+"lon": 10.33219,
+"nr": "39",
+"off": 0
+},
+"sv486145_962295": {
+"fylke": "Trøndelag",
+"kommune": "Ørland",
+"lat": 63.81694,
+"lon": 9.63606,
+"nr": "50",
+"off": 0
+},
+"sv486249_1472574": {
+"fylke": "Vestfold",
+"kommune": "Tønsberg",
+"lat": 59.25349,
+"lon": 10.37292,
+"nr": "39",
+"off": 0
+},
+"sv487712_1488978": {
+"fylke": "Vestfold",
+"kommune": "Færder",
+"lat": 59.08811,
+"lon": 10.4172,
+"nr": "39",
+"off": 0
+},
+"sv488547_1482509": {
+"fylke": "Vestfold",
+"kommune": "Færder",
+"lat": 59.16577,
+"lon": 10.4247,
+"nr": "39",
+"off": 0
+},
+"sv492340_1432970": {
+"fylke": "Akershus",
+"kommune": "Asker",
+"lat": 59.61152,
+"lon": 10.43172,
+"nr": "32",
+"off": 0
+},
+"sv492895_1453545": {
+"fylke": "Vestfold",
+"kommune": "Horten",
+"lat": 59.42788,
+"lon": 10.46605,
+"nr": "39",
+"off": 0
+},
+"sv497615_1416732": {
+"fylke": "Akershus",
+"kommune": "Asker",
+"lat": 59.76012,
+"lon": 10.50519,
+"nr": "32",
+"off": 0
+},
+"sv497780_1406590": {
+"fylke": "Akershus",
+"kommune": "Asker",
+"lat": 59.85124,
+"lon": 10.49614,
+"nr": "32",
+"off": 0
+},
+"sv501300_1402404": {
+"fylke": "Akershus",
+"kommune": "Bærum",
+"lat": 59.89083,
+"lon": 10.55348,
+"nr": "32",
+"off": 0
+},
+"sv502613_1426268": {
+"fylke": "Akershus",
+"kommune": "Frogn",
+"lat": 59.67789,
+"lon": 10.60503,
+"nr": "32",
+"off": 0
+},
+"sv504217_1452809": {
+"fylke": "Østfold",
+"kommune": "Moss",
+"lat": 59.44104,
+"lon": 10.66428,
+"nr": "31",
+"off": 0
+},
+"sv505679_1444506": {
+"fylke": "Akershus",
+"kommune": "Vestby",
+"lat": 59.51635,
+"lon": 10.68034,
+"nr": "32",
+"off": 0
+},
+"sv506190_1400884": {
+"fylke": "Akershus",
+"kommune": "Bærum",
+"lat": 59.9072,
+"lon": 10.63924,
+"nr": "32",
+"off": 0
+},
+"sv507351_938129": {
+"fylke": "Trøndelag",
+"kommune": "Åfjord",
+"lat": 64.04814,
+"lon": 10.02672,
+"nr": "50",
+"off": 0
+},
+"sv511200_1400891": {
+"fylke": "Oslo",
+"kommune": "Oslo",
+"lat": 59.91002,
+"lon": 10.7285,
+"nr": "03",
+"off": 0
+},
+"sv512738_1405836": {
+"fylke": "Oslo",
+"kommune": "Oslo",
+"lat": 59.86672,
+"lon": 10.76167,
+"nr": "03",
+"off": 0
+},
+"sv513443_1483244": {
+"fylke": "Østfold",
+"kommune": "Fredrikstad",
+"lat": 59.17395,
+"lon": 10.85975,
+"nr": "31",
+"off": 0
+},
+"sv518604_1497508": {
+"fylke": "Østfold",
+"kommune": "Hvaler",
+"lat": 59.049,
+"lon": 10.96531,
+"nr": "31",
+"off": 0
+},
+"sv520573_1007674": {
+"fylke": "Trøndelag",
+"kommune": "Trondheim",
+"lat": 63.43534,
+"lon": 10.39898,
+"nr": "50",
+"off": 0
+},
+"sv528708_907049": {
+"fylke": "Trøndelag",
+"kommune": "Osen",
+"lat": 64.34071,
+"lon": 10.41699,
+"nr": "50",
+"off": 0
+},
+"sv532088_1482291": {
+"fylke": "Østfold",
+"kommune": "Sarpsborg",
+"lat": 59.1925,
+"lon": 11.18452,
+"nr": "31",
+"off": 0
+},
+"sv532964_1490970": {
+"fylke": "Østfold",
+"kommune": "Halden",
+"lat": 59.11515,
+"lon": 11.20855,
+"nr": "31",
+"off": 0
+},
+"sv538400_1491817": {
+"fylke": "Østfold",
+"kommune": "Halden",
+"lat": 59.11642,
+"lon": 11.32272,
+"nr": "31",
+"off": 0
+},
+"sv574819_849387": {
+"fylke": "Trøndelag",
+"kommune": "Nærøysund",
+"lat": 64.88355,
+"lon": 11.29977,
+"nr": "50",
+"off": 0
+},
+"sv581274_896576": {
+"fylke": "Trøndelag",
+"kommune": "Namsos",
+"lat": 64.46423,
+"lon": 11.49084,
+"nr": "50",
+"off": 0
+},
+"sv617514_786026": {
+"fylke": "Nordland",
+"kommune": "Brønnøy",
+"lat": 65.47127,
+"lon": 12.13912,
+"nr": "18",
+"off": 0
+},
+"sv623225_669159": {
+"fylke": "Nordland",
+"kommune": "Træna",
+"lat": 66.52072,
+"lon": 12.14742,
+"nr": "18",
+"off": 0
+},
+"sv626660_729626": {
+"fylke": "Nordland",
+"kommune": "Herøy",
+"lat": 65.98012,
+"lon": 12.28415,
+"nr": "18",
+"off": 0
+},
+"sv642429_725635": {
+"fylke": "Nordland",
+"kommune": "Alstahaug",
+"lat": 66.02167,
+"lon": 12.62712,
+"nr": "18",
+"off": 0
+},
+"sv652844_684586": {
+"fylke": "Nordland",
+"kommune": "Lurøy",
+"lat": 66.39321,
+"lon": 12.8254,
+"nr": "18",
+"off": 0
+},
+"sv653261_540239": {
+"fylke": "Nordland",
+"kommune": "Værøy",
+"lat": 67.68694,
+"lon": 12.7163,
+"nr": "18",
+"off": 0
+},
+"sv677226_637447": {
+"fylke": "Nordland",
+"kommune": "Meløy",
+"lat": 66.82249,
+"lon": 13.34258,
+"nr": "18",
+"off": 0
+},
+"sv688953_498869": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.06752,
+"lon": 13.53528,
+"nr": "18",
+"off": 0
+},
+"sv692336_491476": {
+"fylke": "Nordland",
+"kommune": "Vestvågøy",
+"lat": 68.13474,
+"lon": 13.6122,
+"nr": "18",
+"off": 0
+},
+"sv723702_585543": {
+"fylke": "Nordland",
+"kommune": "Bodø",
+"lat": 67.29548,
+"lon": 14.38974,
+"nr": "18",
+"off": 0
+},
+"sv730915_481079": {
+"fylke": "Nordland",
+"kommune": "Vågan",
+"lat": 68.2331,
+"lon": 14.53916,
+"nr": "18",
+"off": 0
+},
+"sv739680_544219": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.66731,
+"lon": 14.75642,
+"nr": "18",
+"off": 0
+},
+"sv749933_407344": {
+"fylke": "Nordland",
+"kommune": "Øksnes",
+"lat": 68.89488,
+"lon": 14.99823,
+"nr": "18",
+"off": 0
+},
+"sv757611_517436": {
+"fylke": "Nordland",
+"kommune": "Steigen",
+"lat": 67.9076,
+"lon": 15.1816,
+"nr": "18",
+"off": 0
+},
+"sv762463_-634964": {
+"fylke": "Svalbard",
+"kommune": "Svalbard",
+"lat": 78.23788,
+"lon": 15.54812,
+"nr": "",
+"off": 0
+},
+"sv767658_550802": {
+"fylke": "Nordland",
+"kommune": "Sørfold",
+"lat": 67.60767,
+"lon": 15.41528,
+"nr": "18",
+"off": 0
+},
+"sv775988_398185": {
+"fylke": "Nordland",
+"kommune": "Andøy",
+"lat": 68.97606,
+"lon": 15.6492,
+"nr": "18",
+"off": 0
+},
+"sv812487_418897": {
+"fylke": "Troms",
+"kommune": "Harstad",
+"lat": 68.78445,
+"lon": 16.54762,
+"nr": "55",
+"off": 0
+},
+"sv831286_363086": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.27954,
+"lon": 17.05899,
+"nr": "55",
+"off": 0
+},
+"sv836112_402897": {
+"fylke": "Troms",
+"kommune": "Ibestad",
+"lat": 68.92153,
+"lon": 17.14594,
+"nr": "55",
+"off": 0
+},
+"sv848971_456929": {
+"fylke": "Nordland",
+"kommune": "Narvik",
+"lat": 68.43296,
+"lon": 17.41347,
+"nr": "18",
+"off": 0
+},
+"sv852662_336515": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.51029,
+"lon": 17.62872,
+"nr": "55",
+"off": 0
+},
+"sv891000_297728": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.83995,
+"lon": 18.66803,
+"nr": "55",
+"off": 0
+},
+"sv930228_314081": {
+"fylke": "Troms",
+"kommune": "Tromsø",
+"lat": 69.66996,
+"lon": 19.65201,
+"nr": "55",
+"off": 0
+},
+"sv939598_268150": {
+"fylke": "Troms",
+"kommune": "Karlsøy",
+"lat": 70.07373,
+"lon": 19.98923,
+"nr": "55",
+"off": 0
+},
+"sv964928_318793": {
+"fylke": "Troms",
+"kommune": "Gáivuotna",
+"lat": 69.60173,
+"lon": 20.53165,
+"nr": "55",
+"off": 0
+},
+"sv976778_272362": {
+"fylke": "Troms",
+"kommune": "Skjervøy",
+"lat": 70.00601,
+"lon": 20.95114,
+"nr": "55",
+"off": 0
+},
+"torsken": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.3375,
+"lon": 17.10673,
+"nr": "55",
+"off": 0
+},
+"vangshamn": {
+"fylke": "Troms",
+"kommune": "Senja",
+"lat": 69.4724,
+"lon": 18.012,
+"nr": "55",
+"off": 0
+}
+}

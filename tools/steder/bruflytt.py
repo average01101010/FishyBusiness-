@@ -17,7 +17,7 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(ROOT, 'tools', 'mottak
 import numpy as np
 import fotavtrykk as F
 import mottak
-from steder import good, SPACE, YARDS, NEAR
+from steder import good, SPACE, YARDS, NEAR, move_sted
 
 STEDER = os.path.join(ROOT, 'src', 'data', 'steder.json'); MOTTAK = os.path.join(ROOT, 'src', 'data', 'mottak.json'); RORBU = os.path.join(ROOT, 'src', 'data', 'rorbuer.json')
 REACHES = (0.5, 1.0, 1.5)
@@ -71,7 +71,7 @@ def main():
             x = next(e for e in M['m'] if e['id'] == ref[1]); old = x['q']; p = x['p']
             x['q'] = new + [round(math.hypot(new[0] - p[0], new[1] - p[1]) * 1000)]
         else:
-            S['r'][ref[1]][:5] = new[:5]
+            move_sted(S, ref[1], new)
     for r in report: print('UNSOLVED', r)
     for ref, kind, name, m, new, c0, c1 in moved: print('moved %-7s %-14s %-22s %5d m  -> (%.3f, %.3f)  cost %.0f -> %.0f' % (kind, ref[1], name, m, new[0], new[1], c0, c1))
     if moved and '--dry' not in sys.argv:

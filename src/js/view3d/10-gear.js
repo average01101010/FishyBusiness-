@@ -226,6 +226,10 @@
   // The haulers from Blender (tools/gear/haler.py, the user's drawings 03.10.2026): the net hauler and the line hauler on a post inside
   // the starboard rail with the arm out over the side. Parts from their own origins: the frame from the post's foot, the sheave and the
   // stripper from their axles (along the boat, so they turn about z); in the extras the path the gear takes over them.
+  // the foot of the hauler's post (and the pot davit's) on deck: where the model says (anchors.haulerFoot, OB12: on a hull that flares out
+  // to the rail, 0.2 m inside her greatest beam is outside her side at the working deck, and the kyst15's post came down outside the
+  // hull), else 0.2 m inside her half beam abreast the hauler
+  const haulFootP = (G, d, sx, hz) => G.haulerFoot ? [G.haulerFoot[0], G.haulerFoot[1], G.haulerFoot[2]] : [sx - 0.2, d.y, hz];
   const HAULM = {}; let HAULA = 0, HAULT = 0, GAFFH = null;   // GAFFH: where the line was at the last frame (the gaff events)
   // setting nets or lines (plan E2): the gear runs from the stack over the stern into the sea astern at the setting speed, the net with
   // its floats and lead line, the line with baited hooks on their snoods; the grapnel goes over first and sinks
@@ -401,7 +405,7 @@
       POTA.g = g; POTA.done = g.done; POTA.t0 = t; }
     const u = POTA.fix != null ? POTA.fix : clamp((t - POTA.t0) / POTA.dur, 0, 1), sm = v => v * v * (3 - 2 * v), ph01 = (a, b) => sm(clamp((u - a) / (b - a), 0, 1)), lerp = (A, B, k) => [A[0] + (B[0] - A[0]) * k, A[1] + (B[1] - A[1]) * k, A[2] + (B[2] - A[2]) * k];
     if (G.snok && GB.snoHaul && G.kit && G.kit.pots){ snoWork(BMrel, t, u, g, s, G, d, base, KP, XP, seg, PS); return; }   // (the snow crab vessel's own work, H3d2)
-    const DV = potDavit(skiff) && !G.snok, P0 = [sx - 0.2, d.y, HP[2]], blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
+    const DV = potDavit(skiff) && !G.snok, P0 = skiff ? [sx - 0.2, d.y, HP[2]] : haulFootP(G, d, sx, HP[2]), blk = DV && X.davit ? [P0[0] + X.davit.block[0], P0[1] + X.davit.block[1], P0[2] + X.davit.block[2]] : [sx + 0.05, gw + 0.05, HP[2]];
     const potM = (p, rz, rx) => chain(BMrel, M4.T(p[0], p[1], p[2]), M4.RZ(rz || 0), M4.RX(rx || 0), M4.S(ps));
     // tipped over its inboard edge of the bottom ring by tip (rad) to be emptied through its laced bottom
     const tipM = (p, tip) => chain(BMrel, M4.T(p[0] - pw, p[1], p[2]), M4.RZ(tip), M4.T(pw, 0, 0), M4.S(ps));
@@ -488,7 +492,7 @@
     if (G.hand && SKA && SKA.haulFoot && pick === 'linehaler'){ const HM = haulModel('line'); if (HM){ const F = SKA.haulFoot, at = q => chain(BMrel, M4.T(F[0] + q[0], F[1] + up + q[1], F[2] + q[2]));
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, at(HM.ax)); drawLit(HM.stripper, at(HM.st)); KST.haul = pick; return; } }
     if (G.hand){ if (pick === 'garnhaler' || !SKA || !SKA.haul) return; nSetup(VP); drawN(GB.haul, chain(BMrel, M4.T(SKA.haul[0], SKA.haul[1] + up, SKA.haul[2]))); KST.haul = pick; return; }
-    if (!G.hauler) return; const P0 = [G.beam / 2 - 0.2, d.y + up, G.hauler[2]], X = GB.px || {};
+    if (!G.hauler) return; const F0 = haulFootP(G, d, G.beam / 2, G.hauler[2]), P0 = [F0[0], F0[1] + up, F0[2]], X = GB.px || {};
     if (G.kit && G.kit.pots && G.snok && GB.snoHaul){ snoHauler(BMrel, G, VP, 0); KST.haul = 'snokrabbe'; return; }
     if (pick === 'teinehaler'){ if (!GB.davit || G.snok) return; nSetup(VP); drawN(GB.davit, chain(BMrel, M4.T(P0[0], P0[1], P0[2])));
       if (GB.davitSh && X.davit) drawN(GB.davitSh, chain(BMrel, M4.T(P0[0] + X.davit.sheave[0], P0[1] + X.davit.sheave[1], P0[2] + X.davit.sheave[2]))); KST.haul = pick; return; }
@@ -704,7 +708,7 @@
       // the hauler on its post inside the rail (its foot on deck), the gear from the water up its path, over the sheave and down the
       // tray; the sheave turns with the gear (0.6 m/s while hauling), the stripper the other way; floats on the net, snoods on the line
       // (the autoline's sheave turns at the line's speed, about 2 500 hooks an hour at 1.3 m: 0.9 m/s, on the groove's radius)
-      const P0 = auto ? G.aline.foot : postH ? SKA.haulFoot : [sx - 0.2, d.y, HP[2]], v = turning ? (auto ? 0.9 : 0.6) : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
+      const P0 = auto ? G.aline.foot : postH ? SKA.haulFoot : skiff ? [sx - 0.2, d.y, HP[2]] : haulFootP(G, d, sx, HP[2]), v = turning ? (auto ? 0.9 : 0.6) : 0, at = q => chain(BMrel, M4.T(P0[0] + q[0], P0[1] + q[1], P0[2] + q[2]));
       HAULA += v * clamp(t - HAULT, 0, 0.1) / (auto ? HM.rg : HM.r); HAULT = t;
       litSetup(VP); drawLit(HM.frame, at([0, 0, 0])); drawLit(HM.sheave, chain(at(HM.ax), M4.RZ(HAULA))); drawLit(HM.stripper, chain(at(HM.st), M4.RZ(-HAULA * HM.r / (g.kind === 'garn' ? 0.06 : 0.08))));
       nSetup(VP);
@@ -716,6 +720,10 @@
       const L = []; let tot = 0; for (let i = 1; i < path.length; i++){ const l = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1], path[i][2] - path[i - 1][2]); L.push(l); tot += l; }
       const pos = s => { let i = 0; while (i < L.length - 1 && s > L[i]){ s -= L[i]; i++; } const u = clamp(s / L[i], 0, 1), A = path[i], B = path[i + 1]; return [A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u, A[2] + (B[2] - A[2]) * u]; };
       const off = (HAULA * HM.r) % 1, HF = haulFish(g), id0 = Math.floor(HAULA * HM.r);
+      // (a fish on the hook or in the meshes kicks, pulls its snood about, the most down at the water, and splashes as it comes out: flap,
+      // tug and fishSurf in 09-landing-deck.js; m how far it pulls, the nets' fish held tighter in the meshes)
+      const liveFish = (sp, id, P, sc, m) => { const w = id * 1.7, k = clamp(1 - (P[1] - FS_Y) / 1.6, 0.25, 1), tg = tug(t, w, m * k), Q = [P[0] + tg[0], P[1], P[2] + tg[1]], Fl = flap(t, w, 1, sp);
+        fishSurf('g' + id, Q[1], xf(BMrel, Q), 3, t, w); bendOn(Fl); drawN(fishOf(sp), chain(BMrel, M4.T(Q[0], Q[1], Q[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(sc))); bendOff(); };
       // on a longline each fish is taken in with the gaff as the line comes to the rail (sR along the path): an event for the hand at the
       // hauler as it gets there, and no fish drawn on the line past it (the nets' fish are picked out at the tray, as before)
       // With the people walking the deck (deckcrew.js) the fish gaffed and picked are the real catch as the haul brings it aboard (CATCHQ): one
@@ -737,12 +745,12 @@
       // (H2d2: up to the hook cleaner some hooks still carry what is left of the bait; the cleaner's brush takes it off, and the line goes on
       // clean to the magazine, the crumbs falling from the cleaner's box)
       if (auto && GB.aTom){ const sp = 1.3, o2 = (HAULA * HM.rg) % sp, id2 = Math.floor(HAULA * HM.rg / sp), sCl = aCleanS(HM, L), old = GB.aEgB || GB.aTom;
-        for (let s = o2, k = 0; s < tot; s += sp, k++){ const p = pos(s), j = k - id2; if (HF && s < sR && hash(j * 7 + 13) < HF.p * 1.3) drawN(fishOf(HF.sp(hash(j * 3 + 1))), chain(BMrel, M4.T(p[0], p[1] - 0.55, p[2]), M4.RX(Math.PI / 2), M4.RZ(hash(j) - 0.5), M4.S(0.5)));
+        for (let s = o2, k = 0; s < tot; s += sp, k++){ const p = pos(s), j = k - id2; if (HF && s < sR && hash(j * 7 + 13) < HF.p * 1.3) liveFish(HF.sp(hash(j * 3 + 1)), j, [p[0], p[1] - 0.55, p[2]], 0.5, 0.1);
           drawN(s < sCl && hash(j * 11 + 5) < 0.3 ? old : GB.aTom, chain(BMrel, M4.T(p[0], p[1], p[2]))); }
         if (turning && GB.bait){ const c = [P0[0] + HM.st[0], P0[1] + HM.st[1] - 0.12, P0[2] + HM.st[2]];
           for (let i = 0; i < 4; i++){ const q = (t * 1.3 + i / 4) % 1; drawN(GB.bait, chain(BMrel, M4.T(c[0] + (hash(i * 3 + Math.floor(t * 1.3)) - 0.5) * 0.3, c[1] - q * q * 1.1, c[2] + (hash(i * 5 + 1) - 0.5) * 0.25), M4.S(0.6))); } } }
       else for (let s = off, k = 0; s < tot; s += 1, k++){ const p = pos(s), q = pos(Math.min(tot, s + (garn ? 0.12 : 0.05)));
-        if (HF && s < sR && hash((k - id0) * 7 + 13) < HF.p) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(p[0], p[1] - (garn ? 0.3 : 0.4), p[2]), M4.RX(Math.PI / 2), M4.RZ(hash(k - id0) - 0.5), M4.S(garn ? 0.5 : 0.45)));
+        if (HF && s < sR && hash((k - id0) * 7 + 13) < HF.p) liveFish(HF.sp(hash((k - id0) * 3 + 1)), k - id0, [p[0], p[1] - (garn ? 0.3 : 0.4), p[2]], garn ? 0.5 : 0.45, garn ? 0.04 : 0.1);
         if (garn){ drawN(GB.float, chain(BMrel, limbM([p[0], p[1] + 0.05, p[2]], [q[0], q[1] + 0.05, q[2]], 0.035))); if (s < L[0] && Math.floor(s + HAULA * HM.r) % 3 === 0) drawN(GB.net, chain(BMrel, limbM(p, [p[0], p[1] - 0.45, p[2]], 0.01))); }
         else drawN(GB.float, chain(BMrel, limbM(p, [p[0], p[1] - 0.25, p[2] + 0.02], 0.004))); }
       }
@@ -755,7 +763,9 @@
       seg([NP[0], NP[1] + 0.12, NP[2]], [W0[0], W0[1] + 0.3, W0[2]], 0.012, GB.float, 0.15); seg([NP[0], NP[1] - 0.12, NP[2]], W0, 0.01, GB.net, 0.25);
       const ph = (t * (turning ? 0.5 : 0.15)) % 0.125, HF = haulFish(g), id0 = Math.floor(t * (turning ? 0.5 : 0.15) / 0.125);
       for (let u = ph, k = 0; u < 1; u += 0.125, k++){ const A = [NP[0] + (W0[0] - NP[0]) * u, NP[1] + 0.12 + (W0[1] + 0.3 - NP[1] - 0.12) * u - 0.15 * 4 * u * (1 - u), NP[2] + (W0[2] - NP[2]) * u], B2 = [A[0], A[1] - 0.24 - 0.1 * u, A[2]]; drawN(GB.net, chain(BMrel, limbM(A, B2, 0.004)));
-        if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3) drawN(fishOf(HF.sp(hash((k - id0) * 3 + 1))), chain(BMrel, M4.T(B2[0], B2[1] - 0.1, B2[2]), M4.RX(Math.PI / 2), M4.S(0.45))); }
+        // (the fish in the meshes kick and splash as the net comes out, flap and fishSurf in 09-landing-deck.js)
+        if (HF && u < 0.85 && hash((k - id0) * 7 + 13) < HF.p * 3){ const w = (k - id0) * 1.7, nsp = HF.sp(hash((k - id0) * 3 + 1)), Fl = flap(t, w, 1, nsp), Fp = [B2[0], B2[1] - 0.1, B2[2]]; fishSurf('n' + (k - id0), Fp[1], xf(BMrel, Fp), 3, t, w);
+          bendOn(Fl); drawN(fishOf(nsp), chain(BMrel, M4.T(Fp[0], Fp[1], Fp[2]), M4.RX(Math.PI / 2 + Fl[1]), M4.RZ(Fl[0]), M4.S(0.45))); bendOff(); } }
       }
       drawNetsOp(BMrel, G, d, g);
     } else if (g.kind === 'line'){

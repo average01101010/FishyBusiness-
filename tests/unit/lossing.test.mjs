@@ -5,7 +5,7 @@
 // of the landing's time changed. The view's part, on each boat's own model without a browser (deckcrew.js over vessel3d.js deckMap):
 // the plant's tubs on clear deck open to the sky, the one who hooks on beside the tub and not on the quay's side of it, the one who
 // gives the signs at the rail to the quay, the one at the ice box, the crane driver by the crane, and no limb through anything.
-export const scripts = ['js/vessel3d.js', 'js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/vessel3d.js', 'js/deckcrew.js'];
 export const data = true;
 
 export default function (t){
@@ -44,7 +44,10 @@ export default function (t){
   t.eq(rolesOf(workAssign()), '', 'ved kai uten lossing og is: ingen roller');
   land(false, 3); const until = b.land.until; let A = workAssign();
   t.eq(rolesOf(A), 'c:pause:hekt c:pause:luke', 'under lossing: én av mannskapet hekter på, én gir tegn (du er den siste som tas)');
-  t.eq(A.map(p => p.st + ':' + (p.idle || '')).join(' '), A0, 'ingen bytter stasjon, og pausen de hadde, står i tallene som før');
+  // (one who was chatting with the one now given a role looks out over the sea instead, quayRoles: the only change allowed; which of
+  // them chat depends on the crew's ids, so before 12.11.2026 this check was red now and then, about one full run in three)
+  { const a0 = A0.split(' '), a1 = A.map((p, i) => { const s = p.st + ':' + (p.idle || ''); return s === 'pause:look' && a0[i] === 'pause:chat' && !p.with ? a0[i] : s; });
+    t.eq(a1.join(' '), A0, 'ingen bytter stasjon, og pausen de hadde, står i tallene som før (den som pratet med en som fikk en oppgave, ser utover sjøen)'); }
   t.eq(b.land.until, until, 'lossingen tar den tida kjernen sa');
   t.eq([K.workDoing({st:'pause', role:'hekt', idle:'coffee'}), K.workDoing({st:'pause', role:'luke'}), K.workDoing({st:'pause', role:'isrom'}), K.workDoing({st:'last', role:'kran'})], ['Hekter på karene', 'Gir tegn til kranføreren', 'Tar imot isen', 'Kjører kranen'], 'Mannskap-siden sier hva de gjør');
   b.iceUntil = S.t + 5; t.eq(rolesOf(workAssign()), 'c:pause:hekt c:pause:isrom c:pause:luke', 'kommer det is samtidig, tar den tredje imot den');

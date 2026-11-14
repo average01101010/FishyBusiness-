@@ -38,6 +38,10 @@ GAME = GAME_TUT + '#notut'
 # which is most of the time a test takes with SwiftShader
 if os.environ.get('KYST_LITE') == '1':
     GAME = GAME_TUT + '#notut,no3d'
+# KYST_MERKE=folk2 (steg 125): one more flag in the address of every test that opens GAME, so a test written without the new
+# people can be run with them (crewclip, workshot); several with a comma
+if os.environ.get('KYST_MERKE'):
+    GAME = GAME + ',' + os.environ['KYST_MERKE']
 # the hand-drawn routes, in the national frame (km, UTM 33: x = (E + 250 km) / 1000, y = (8050 km - N) / 1000)
 ROUTES = os.path.join(HERE, 'routes.json')
 OUT = os.path.join(HERE, 'out')

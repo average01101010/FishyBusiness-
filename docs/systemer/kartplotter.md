@@ -4,7 +4,7 @@
 
 ## 4.10 Sjøkartet i 2D (kystplanen, fase K7, 02.10.2026)
 
-- **Zoom:** fra hele landet (`ZMIN = MAP_H / 1800`, utsnittet 1 800 km høyt) til en havn (`ZMAX = 160`, en halv kilometer). `view.z` er fortsatt målt mot `MAP_H` (Senja-boksen).
+- **Zoom:** fra hele landet (`ZMIN = MAP_H / 1800`, utsnittet 1 800 km høyt) til en havn (`ZMAX = 320` fra 11.11.2026, før 160, en halv kilometer). `view.z` er fortsatt målt mot `MAP_H` (Senja-boksen).
 - **Kartpakkene får vektorer** (`tools/map/chart.py`, som `region.py` legger ved):
 
   | Oppføring | Hvor | Innhold |
@@ -63,6 +63,15 @@
   - Kystlinja forenkles etter pikselstørrelsen (`pathStep`) og strekes som tre hårstreker under fyllet. En bred strek kostet 0,7 s rundt hele landet med CPU strupet 4×.
   - Dybden nær inne regnes med B-spline i hver 4. piksel og interpoleres imellom.
   - **Tidene med CPU strupet 4× (`charttest`):** første bilde 0,06–0,36 s og alt fint innen 1,6 s, mot 1,5–2,6 s før.
+
+## Zoom og steder, 11.11.2026
+
+Jonas 11.11.2026: «Gjør gjerne også sånn at man kan zoome inn litt. Gjør gjerne også sånn at når man zoomer langt ut så vises ikke fiskemottak, verft, utstyrbutikker, rorbuer og naust på kartet, slik at disse bare vises når man starter å zoome litt nærmere inn og det blir aktuelt å se sånt.»
+
+- **Zoomtaket** er `ZMAX = 320` (før 160): utsnittet kan bli halvparten så høyt som før.
+- **Stedene først fra `PLACE_Z = 0,75`** (`ui/03-map.js`): mottakene, verftene, butikkene, naustet (alt i `PORTS`) og rorbuene tegnes med ikon og navn fra `view.z` 0,75. Før sto ikonene, små og uten navn, helt ut til hele landet, og navnene fra 0,5. Lenger ute står bare spillerens egne steder (`placeOwnIds`: der båtene i flåten ligger, hjemmehavna, havnene i rutene og driftsplanens hjem og mottak), små og uten navn. Kartet spillet åpner med, har `view.z` minst 0,8, så det viser stedene. Et trykk langt ute går ikke til et sted som ikke vises (`addWaypoint`, `portByLabel`, og Autonav i `leiaTo`, `03b-route.js`), og bynavnet står når havnas navn ikke gjør det (`chartNamesSvg` i `03a-chart.js` bruker samme terskel).
+- **Kartverkets sjønavn først fra `FELT_S_Z = 6`** (Ø14 F5, `docs/planer/fangstfelt.md`): feltnavnene ellers fra `view.z` 2.
+- **Målt** (800×1280 og 1280×800, Tromsø, Hammerfest, Båtsfjord, Bodø, Bergen): ved `view.z` 0,6 ingen steder (ved Tromsø ett: hjemmehavna Finnsnes), ved 0,75 6–18 steder stående og 12–38 liggende. `charttest` har sjekkene. Tallet 0,75 er satt etter skjermbildene, ikke på nettbrettet.
 
 ## 5.43 Kartplotteren laster raskere (tilbakemelding #55, 09.10.2026)
 
@@ -207,3 +216,5 @@ Jonas 07.11.2026 (V4 C i `docs/planer/fangstfelt.md`): «navnet på feltet kan s
 ## 5.48 Vikeplikten i kartplotteren og det lille kartet (Ø11.1, 06.11.2026)
 
 Ved fare for sammenstøt (CPA under grensa, TCPA under 6 spillminutter) tegner kartplotteren en ring rundt den andre båten, hennes vektor og din fram til CPA, en stiplet linje mellom de to punktene der, og «CPA 80 m · om 40 s» ved ringen (`sjvChartSvg` i `renderDyn`, med farger i SVG-en selv, rødt når du viker og gult når den andre viker). Det lille kartet tegner det samme (`miniSjv`), med ringen på kanten når båten er utenfor kartet, over GPS-feltet nederst. AIS-kortet har raden «Navigasjonsstatus» (underveis med motor, driver fiske, til ankers, fortøyd, ikke under kommando) og «Vikeplikt» øverst for den båten som er varslet. Reglene står i `docs/systemer/sjofart-og-lover.md`.
+
+- **Kysten for hele rammen sier fra når den kommer (12.11.2026).** `chart0` hentes fire sekunder etter oppstart (`chart0Load` i `ui/11-boot.js`). Et kart som ble malt mens den hentingen gikk, ba ikke om noen egen (`chartPath0`), så ingenting malte det på nytt da pakka kom, og hele landet sto uten land til kartet ble flyttet. `chart0Load` kaller nå `chartCame`. `charttest` har sjekken («hele rammens kyst (chart0) som kommer mens kartet står oppe, males inn av seg selv»).

@@ -22,7 +22,9 @@
   const mgLeft = Q => mbLeftTxt(MBC.left(Q.until));
   const mbHrs = h => h === 1 ? L('1 time', '1 hour') : h === 6 ? L('6 timer', '6 hours') : h === 24 ? L('1 døgn', '1 day') : L('3 døgn', '3 days');
   const mgLic = Q => { const l = mgP(Q).lic; return l && l.id ? l : null; };
-  const mgLicTag = Q => mgLic(Q) ? '<small class="mb-lic"><span class="ic-sp-tag">' + L('Hjemmel', 'Right') + '</span> ' + L('hjemmelslengde ' + mgEsc(mgLic(Q).hl || mgLic(Q).id) + ' følger båten', 'quota length ' + mgEsc(mgLic(Q).hl || mgLic(Q).id) + ' goes with the boat') + '</small>' : '';
+  // (KM4: every card says which it is, «Hjemmel følger med» or «Uten hjemmel»; the seller chose, V2 A)
+  const mgLicTag = Q => mgLic(Q) ? '<small class="mb-lic"><span class="ic-sp-tag">' + L('Hjemmel følger med', 'Right comes with her') + '</span> ' + L('hjemmelslengde ' + mgEsc(mgLic(Q).hl || mgLic(Q).id), 'quota length ' + mgEsc(mgLic(Q).hl || mgLic(Q).id)) + '</small>'
+    : '<small class="mb-nolic" style="display:block;margin:2px 0"><span class="ic-sp-tag">' + L('Uten hjemmel', 'No right') + '</span></small>';
   // the yard near you: where she is delivered for 2 % (the yard nearest the boat you are aboard)
   function mgNear(Q){ const me = vesselById(S.me) || curVessel(), y = mbYardNear(vget(me, 'boat').pos); return y && y.id !== Q.port ? y : null; }
   const mgTo = Q => sub.mbto === 'near' && mgNear(Q) ? mgNear(Q).id : null;
@@ -42,6 +44,21 @@
     buynow:['«Kjøp nå» må være over startprisen og høyst 160 % av verdien.', 'Buy now must be above the start price and at most 160 % of the value.'], hours:['Velg hvor lenge hun skal ligge ute.', 'Choose how long she is to be out.'],
     yard:['Ingen verft i nærheten.', 'No yard nearby.'], own:['Det er din egen båt.', 'That is your own boat.'], bladb:['En båt med hjemmel krever blad B i fiskermanntallet. Se Papirer.', 'A boat with a right needs blad B of the fishermen\'s register. See Papers.'],
     open:['Et rederi uten hjemmel kan bare ha én båt i åpen gruppe.', 'A company without a right can only have one boat in the open group.'], cash:['Du har ikke nok penger.', 'You do not have the money.'], gone:['Salget er over.', 'The sale is over.']};
+  // KM4: why the right cannot be moved (core/09k-market.js mbMoveWhy); len: the limit of the length rule
+  const MV_WHY = {gone:['Hjemmelen finnes ikke lenger.', 'The right is no longer there.'], none:['Hun har ingen hjemmel.', 'She has no right.'], hav:['Havflåtens tillatelser følger fartøyet.', 'The ocean fleet\'s permits follow the vessel.'],
+    listed:['Ligger til salgs. Vent til salget er over.', 'For sale. Wait until the sale is over.'], sea:['Båten må ligge i havn.', 'The boat must lie in port.'], busy:['Hun losser ved mottaket.', 'She is landing at the plant.'],
+    coop:['Hjemmelen er i kvotesamarbeid i år.', 'The right is in a quota cooperation this year.'], hold:['Lasten må leveres først.', 'The catch must be landed first.'], ops:['Slå av driftsplanen hennes først.', 'Turn her plan off first.'],
+    drift:['Ingenting er landet på hjemmelen i år eller de to årene før.', 'Nothing has been landed on the right this year or the two before.'], order:['Hun går i innbytte på verftet.', 'She is being traded in at the yard.'], same:['Hjemmelen er der alt.', 'The right is there already.'],
+    boat:['Båten finnes ikke.', 'No such boat.'], type:['En havbåt kan ikke ta en kysthjemmel.', 'An ocean vessel cannot take a coastal right.'], tolisted:['Båten ligger til salgs.', 'The boat is for sale.'], haslic:['Båten har alt en hjemmel.', 'The boat has a right already.']};
+  const mvWhyTxt = (w, len) => w === 'len' ? L('Lengderegelen: en hjemmel under ' + len + ' m fra en båt under ' + len + ' m kan ikke flyttes til en båt på ' + len + ' m eller mer.', 'The length rule: a right under ' + len + ' m from a boat under ' + len + ' m cannot be moved to a boat of ' + len + ' m or more.')
+    : MV_WHY[w] ? L(MV_WHY[w][0], MV_WHY[w][1]) : L('Det går ikke nå.', 'Not now.');
+  // the second quota from the special scheme under 11 m, said before a sale, a move or a trade-in is confirmed (kap. 2 § 6)
+  const mbTwoTxt = l => l && l.two && HJ[l.two] ? L('Den andre kvoten fra den særlige ordningen (hjemmel ' + HJ[l.two].hl + ') faller bort når båten selges eller hjemmelen flyttes (kvoteforskriften kap. 2 § 6). Den er ikke med i verdien.', 'The second quota from the special scheme (quota length ' + HJ[l.two].hl + ') falls away when the boat is sold or the right is moved (kvoteforskriften kap. 2 § 6). It is not in the value.') : '';
+  // where the right can go when it stays in the company: each other boat of yours with why not, and the free right
+  const mbKeepList = src => S.fleet.filter(x => x !== src.v).map(x => ({v:x, why:mbMoveWhy(src, {v:x}), len:mbMoveLen(src, {v:x})})).filter(o => o.why !== 'type');
+  // the seller's choice in «Legg ut til salgs»: null (the right follows her), or where it stays: {v} or {free:true}
+  function mbKeepOf(v){ if (sub.mblic !== 'keep' || !vget(v, 'lic') || mbMoveWhy({v}, {free:true})) return null;
+    const o = mbKeepList({v}).find(o => o.v.id === sub.mbkeep && !o.why); return o ? {v:o.v} : {free:true}; }
   const mbWhyTxt = (w, r) => (r && r.text) || (MB_WHY[w] ? L(MB_WHY[w][0], MB_WHY[w][1]) : L('Det går ikke nå.', 'Not now.'));
   // your own boats: for sale (the bids, the time left, «Trekk fra salg» while nobody has bid), or the buttons to put her out and to sell her
   // now, and delivery to where you are or home (Rederi and the broker's page; quick: with «Selg nå», which Rederi has behind «⋯»)
@@ -50,7 +67,7 @@
     if (D) return '<p class="ph-note">' + L('Seiles til ' + portById(D.to).name + ', framme om ' + Math.max(1, Math.round(D.H1 - H)) + ' timer.', 'Being sailed to ' + portById(D.to).name + ', there in ' + Math.max(1, Math.round(D.H1 - H)) + ' hours.') + '</p>';
     if (s && s.km) return kxBoatRow(v);   // (KM3: it is her right or a structure quota that is out, in the quota market; phone/04b-kvotemarked.js)
     if (s){ const m = MBC.mineOf(v.id) || {}, pt = portById(s.port);
-      h.push('<p class="ph-note mb-own">' + L('Til salgs hos Kystmegleren: ', 'For sale at Kystmegleren: ') + (m.top ? L('høyeste bud ' + kr(m.top) + ' (' + m.bids + ' bud)', 'highest bid ' + kr(m.top) + ' (' + m.bids + (m.bids === 1 ? ' bid)' : ' bids)')) : L('ingen bud ennå, fra ' + kr(s.start), 'no bids yet, from ' + kr(s.start))) +
+      h.push('<p class="ph-note mb-own">' + (s.kept ? L('Til salgs hos Kystmegleren uten hjemmel: ', 'For sale at Kystmegleren without a right: ') : L('Til salgs hos Kystmegleren: ', 'For sale at Kystmegleren: ')) + (m.top ? L('høyeste bud ' + kr(m.top) + ' (' + m.bids + ' bud)', 'highest bid ' + kr(m.top) + ' (' + m.bids + (m.bids === 1 ? ' bid)' : ' bids)')) : L('ingen bud ennå, fra ' + kr(s.start), 'no bids yet, from ' + kr(s.start))) +
         (s.buynow ? L(', «Kjøp nå» ' + kr(s.buynow), ', buy now ' + kr(s.buynow)) : '') + '. ' + L('Slutter om ', 'Ends in ') + mbLeftTxt(MBC.left(s.until)) + '. ' + L('Hun ligger ved verftet i ' + (pt ? mbPlace(pt) : '') + ' til salget er over.', 'She lies at the yard in ' + (pt ? mbPlace(pt) : '') + ' until the sale is over.') + '</p>');
       if (!(m.bids > 0) && s.lid != null) h.push('<button class="ph-btn alt" data-pa="mbcancel" data-id="' + s.lid + '">' + L('Trekk fra salg', 'Withdraw') + '</button>');
       return '<div class="ph-btncol mg-own">' + h.join('') + '</div>'; }
@@ -65,15 +82,25 @@
   }
   // «Legg ut til salgs» (B1): the start price and buy-now within the limits, the time, where she will lie, the commission; or sell now
   function mbForm(v){
-    const b = vget(v, 'boat'), V = VESSELS[b.type], val = vesselValue(v), B = mbBounds(val), yard = mbYardNear(b.pos), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
+    const lic = vget(v, 'lic'), keepWhy = lic ? mbMoveWhy({v}, {free:true}) : 'none', keep = mbKeepOf(v);   // (KM4: with or without the right)
+    const b = vget(v, 'boat'), V = VESSELS[b.type], val = mbValue(v) - (keep ? mbLicKr(v) : 0), B = mbBounds(val), yard = mbYardNear(b.pos), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
     const w = mbWhy(v) || (!MBC.on() ? 'cloud' : MBC.guest() ? 'guest' : null), q = mbQuickWhy(v), st0 = Math.min(B.max, Math.max(B.min, mktRound(val))), bn0 = Math.min(B.max, mktRound(val * 1.3));
     const h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="mbput0">‹ ' + L('Tilbake', 'Back') + '</button><div class="ph-card vsheet mb-form"><h4>' + L('Legg ut til salgs', 'Put out for sale') + ': «' + mgEsc(vget(v, 'boatName')) + '»</h4><p class="ph-note">' + V.name[S.lang] + '</p><div class="vbig">' + vesselSVG(b.type) + '</div>'];
-    h.push('<div class="vsec"><h5>' + L('Verdi', 'Value') + '</h5>' + kv(L('Verdien hennes', 'Her value'), kr(val)) + (vget(v, 'lic') ? kv(L('Av det er hjemmelen', 'Of which the right'), kr(mbLicKr(v))) : '') + '<p class="ph-note">' + L('Det verftet gir i innbytte. Startprisen kan være fra ' + kr(B.min) + ' (40 %), og «Kjøp nå» høyst ' + kr(B.max) + ' (160 %).', 'What the yard gives as a trade-in. The start price can be from ' + kr(B.min) + ' (40 %), and buy now at most ' + kr(B.max) + ' (160 %).') + '</p></div>');
+    // the choice (V2 A): the right follows her (taking over for continued fishing; its structure quotas follow it), or it stays in the
+    // company: on another boat of yours that the length rule lets take it (replacement), or as a free right for two game years
+    if (lic && HJ[lic.id]){ const KL = mbKeepList({v}), toId = keep ? (keep.free ? 'free' : keep.v.id) : null;
+      h.push('<div class="vsec mb-licsel"><h5>' + L('Hjemmelen', 'The right') + ' · ' + mgEsc(lic.hl || HJ[lic.id].hl) + '</h5><div class="net-shops mb-lich"><button class="chip-b' + (keep ? '' : ' on') + '" data-pa="mblic" data-s="with">' + L('Hjemmelen følger med', 'The right comes with her') + '<br><small>' + L('kjøperen overtar for fortsatt drift', 'the buyer takes over for continued fishing') + '</small></button>' +
+        '<button class="chip-b' + (keep ? ' on' : '') + '" data-pa="mblic" data-s="keep"' + (keepWhy ? ' disabled' : '') + '>' + L('Uten hjemmel', 'Without the right') + '<br><small>' + (keepWhy ? mvWhyTxt(keepWhy) : L('hjemmelen blir i rederiet', 'the right stays in the company')) + '</small></button></div>' +
+        (keep ? '<p class="ph-note">' + L('Hvor skal hjemmelen' + ((lic.st || []).length ? ' og strukturkvotene' : '') + '? Den flyttes når båten legges ut.', 'Where is the right' + ((lic.st || []).length ? ' and its structure quotas' : '') + ' to go? It is moved when the boat is put out.') + '</p><div class="net-shops mb-keep"><button class="chip-b' + (toId === 'free' ? ' on' : '') + '" data-pa="mbkeep" data-s="free">' + L('Ledig hjemmel', 'A free right') + '<br><small>' + L('uten båt i høyst to spillår', 'without a boat for at most two game years') + '</small></button>' +
+          KL.map(o => '<button class="chip-b' + (toId === o.v.id ? ' on' : '') + '" data-pa="mbkeep" data-s="' + o.v.id + '"' + (o.why ? ' disabled' : '') + '>' + L('Flytt til ', 'Move to ') + '«' + mgEsc(vget(o.v, 'boatName')) + '»<br><small>' + (o.why ? mvWhyTxt(o.why, o.len) : L('utskiftning: hun blir båten i lukket gruppe', 'replacement: she becomes the boat in the closed group')) + '</small></button>').join('') + '</div>' : '') +
+        (mbTwoTxt(lic) ? '<p class="ph-note mb-two"><b>' + mbTwoTxt(lic) + '</b></p>' : '') + (lic.coop && lic.coop.y === yearH(S.t / 60) ? '<p class="ph-note">' + L('Kvotesamarbeidet i år er din avtale og følger ikke med båten.', 'This year\'s quota cooperation is your agreement and does not go with the boat.') + '</p>' : '') + '</div>'); }
+    h.push('<div class="vsec"><h5>' + L('Verdi', 'Value') + '</h5>' + kv(keep ? L('Verdien hennes uten hjemmel', 'Her value without the right') : L('Verdien hennes', 'Her value'), kr(val)) + (lic && !keep ? kv(L('Av det er hjemmelen', 'Of which the right'), kr(mbLicKr(v))) : '') + '<p class="ph-note">' + L('Det verftet gir i innbytte. Startprisen kan være fra ' + kr(B.min) + ' (40 %), og «Kjøp nå» høyst ' + kr(B.max) + ' (160 %).', 'What the yard gives as a trade-in. The start price can be from ' + kr(B.min) + ' (40 %), and buy now at most ' + kr(B.max) + ' (160 %).') + '</p></div>');
     h.push('<label class="ph-kv"><span>' + L('Startpris', 'Start price') + '</span><input id="mbStart" type="number" inputmode="numeric" step="1000" min="' + B.min + '" max="' + B.max + '" value="' + st0 + '"></label>');
     h.push('<label class="ph-kv"><span>' + L('«Kjøp nå» (tom: ingen)', 'Buy now (empty: none)') + '</span><input id="mbBuy" type="number" inputmode="numeric" step="1000" max="' + B.max + '" value="' + bn0 + '"></label>');
     h.push('<div class="vsec"><h5>' + L('Hvor lenge', 'How long') + '</h5><div class="net-shops mb-hrs">' + MB.hours.map(x => '<button class="chip-b' + (x === hrs ? ' on' : '') + '" data-pa="mbhrs" data-h="' + x + '">' + mbHrs(x) + '</button>').join('') + '</div><p class="ph-note">' + L('Ekte tid, også når spillet er lukket.', 'Real time, also when the game is closed.') + '</p></div>');
     h.push('<p class="ph-note">' + L('Hun legges ved verftet i ' + (yard ? mbPlace(yard) : '–') + ' og kan ikke seiles før salget er over. Andre spillere byr eller kjøper henne for «Kjøp nå». Megleren tar 5 % når hun er solgt, og lånene innfris først. Får hun ingen bud, er hun din igjen.', 'She is laid at the yard in ' + (yard ? mbPlace(yard) : '–') + ' and cannot be sailed until the sale is over. Other players bid, or buy her at the buy-now price. The broker takes 5 % when she is sold, and the loans are paid off first. With no bid, she is yours again.') +
-      (vget(v, 'lic') ? ' <b>' + L('Hjemmelen følger med båten, og det står på kortet hennes.', 'The right goes with the boat, and her card says so.') + '</b>' : '') + '</p>');
+      (!lic ? '' : keep ? ' <b>' + L('Hun selges uten hjemmel, og det står på kortet hennes. Trekker du henne fra salg, kan hjemmelen settes tilbake med «Flytt hjemmelen til …» i Rederi.', 'She is sold without a right, and her card says so. If you withdraw her, the right can be put back with «Move the right to …» in the Company app.')
+        : ' <b>' + L('Hjemmelen følger med båten, og det står på kortet hennes.', 'The right goes with the boat, and her card says so.')) + (lic ? '</b>' : '') + '</p>');
     if (mgMsg['put' + v.id]) h.push('<p><b>' + mgMsg['put' + v.id] + '</b></p>');
     h.push('<button class="ph-btn p" data-pa="mbputgo" data-id="' + v.id + '"' + (w ? ' disabled data-why="' + mgEsc(mbWhyTxt(w)) + '"' : '') + '>' + L('Legg ut', 'Put out') + '</button>');
     h.push('<div class="vsec"><h5>' + L('Eller selg henne nå', 'Or sell her now') + '</h5><p class="ph-note">' + L('Megleren kjøper henne med en gang for 90 % av verdien, og hun er borte.', 'The broker buys her at once for 90 % of the value, and she is gone.') + '</p><button class="ph-btn alt" data-pa="vsell" data-id="' + v.id + '"' + (q ? ' disabled data-why="' + mgEsc(mbWhyTxt(q)) + '"' : '') + '>' + L('Selg nå · ', 'Sell now · ') + kr(mbQuick(v)) + '</button></div>');
@@ -136,6 +163,8 @@
     h.push('<div class="ph-card mg-seller"><h4>' + (Q.seller ? mgEsc(Q.seller) : L('En fisker', 'A fisherman')) + ' <small>' + L('selger', 'sells') + '</small></h4><p class="ph-note">' + L('Kystmegleren formidler mellom spillere og tar 5 % av prisen fra selgeren. Det som står her, er det båten har.', 'Kystmegleren brokers between players and takes 5 % of the price from the seller. What stands here is what the boat has.') + '</p></div>');
     if (lic) h.push(sec(L('Hjemmel', 'Right'), [kv(L('Hjemmelslengde', 'Quota length'), mgEsc(lic.hl || lic.id)), kv(L('Følger med', 'Comes with her'), L('ja, med årets fangst på den', 'yes, with this year\'s catch on it')),
       '<p class="ph-note">' + L('I virkeligheten følger ikke deltakeradgangen automatisk med båten (deltakerloven § 4); i spillet gjør den det, og kjøperen må stå på blad B.', 'In life the right does not follow the boat by itself (deltakerloven § 4); in the game it does, and the buyer must be on blad B.') + '</p>']));
+    else h.push(sec(L('Hjemmel', 'Right'), [kv(L('Følger med', 'Comes with her'), L('nei, hun selges uten hjemmel', 'no, she is sold without a right')),
+      '<p class="ph-note">' + (V.len < 11 ? L('Uten hjemmel fisker hun i åpen gruppe, eller du setter en hjemmel på henne fra Kvotemarkedet.', 'Without a right she fishes in the open group, or you put a right on her from the quota market.') : L('Uten hjemmel kan hun bare ta torsk, hyse og sei som bifangst. En hjemmel kan kjøpes i Kvotemarkedet og settes på henne.', 'Without a right she can only take cod, haddock and saithe as bycatch. A right can be bought in the quota market and put on her.')) + '</p>']));
     h.push(sec(L('Tilstand', 'Condition'), [kv(L('Skrog', 'Hull'), mgPct(c.hull)), mgBar(c.hull), kv(L('Motor', 'Engine'), mgPct(c.motor)), mgBar(c.motor), kv(L('Motortimer', 'Engine hours'), fmt(P.engH || 0, 0)), kv(L('Siste service', 'Last service'), L('ved ', 'at ') + fmt(P.svcAt || 0, 0) + L(' timer', ' hours'))]));
     const std = (V.std || []).map(q => EQUIP[q] ? EQUIP[q].name[S.lang] : q), ex = Object.entries(P.equip || {}).filter(([q, n]) => EQUIP[q] && n && !(V.std || []).includes(q)).map(([q, n]) => EQUIP[q].name[S.lang] + (EQUIP[q].multi ? ' × ' + n : ''));
     h.push(sec(L('Følger med', 'Comes with'), [kv(L('Utstyr', 'Equipment'), std.concat(ex).join(', ') || L('ingenting utover båten', 'nothing besides the boat')), P.gear ? kv(L('Håndjuksa', 'Hand jig'), L('om bord', 'aboard')) : '']));
@@ -144,11 +173,44 @@
     const secs = specSecs(Q.type); h.push('<details class="mg-spec"><summary>' + L('Hele databladet', 'The whole spec sheet') + '</summary>' + secs.map(([t, rows]) => sec(t, t === secs[0][0] ? rows.slice(1) : rows)).join('') + '</details>');
     return h.join('') + '</div></div>';
   }
+  // ---- KM4: «Flytt hjemmelen til …» (Rederi «⋯», and the free rights under the fleet). mlSel = {vid} a boat's right or {key} a free right ----
+  let mlSel = null;
+  function mlSrc(){ if (!mlSel) return null; if (mlSel.vid){ const v = vesselById(mlSel.vid); return v && vget(v, 'lic') ? {v} : null; } return kmSrcOf(mlSel.key); }
+  function mbLicSheet(){
+    const src = mlSrc(); if (!src){ mlSel = null; return ''; }
+    const H = S.t / 60, it = kmPack(mbSrc(src), H); if (!it){ mlSel = null; return ''; }
+    const lic = src.v ? vget(src.v, 'lic') : null, f = src.free != null ? kmFreeList()[src.free] : null, w0 = mbMoveWhy(src, src.v ? {free:true} : {v:null}), srcWhy = w0 && w0 !== 'boat' ? w0 : null;
+    const h = ['<div class="ph-c"><button class="ph-btn alt mkback" data-pa="mbmv0">‹ ' + L('Tilbake til flåten', 'Back to the fleet') + '</button><div class="ph-card vsheet mb-move"><h4>' + L('Flytt hjemmelen', 'Move the right') + ' · ' + mgEsc(HJ[it.id].hl) + '</h4>'];
+    h.push('<p class="ph-note">' + (src.v ? L('Står på «' + mgEsc(vget(src.v, 'boatName')) + '».', 'Stands on the «' + mgEsc(vget(src.v, 'boatName')) + '».') : L('Ledig hjemmel, uten båt. Tilsagnet gjelder til ' + doyStr(yearH(f.until), doyH(f.until)) + ' ' + yearH(f.until) + '.', 'A free right, without a boat. The promise holds until ' + doyStr(yearH(f.until), doyH(f.until)) + ' ' + yearH(f.until) + '.')) + '</p>');
+    h.push(kv(L('Kvotefaktor', 'Quota factor'), fmt(kmKf(it), 4)) + ((it.st || []).length ? kv(L('Strukturkvoter som følger den', 'Structure quotas that follow it'), it.st.length) : '') + kv(L('Torsk i år', 'Cod this year'), fmt(kmCod(it, H) / 1000, 2) + ' t') + kv(L('Landet på den i år', 'Landed on it this year'), fmt((it.used.torsk || 0) / 1000, 2) + ' t'));
+    h.push('<p class="ph-note">' + L('Hjemmelen flyttes med strukturkvotene og det som er fisket på den i år. Det koster ingenting, og Fiskeridirektoratet sier fra når det er gjort.', 'The right moves with its structure quotas and what is fished on it this year. It costs nothing, and the Directorate of Fisheries sends word when it is done.') + '</p>');
+    if (mbTwoTxt(lic)) h.push('<p class="ph-note mb-two"><b>' + mbTwoTxt(lic) + '</b></p>');
+    if (srcWhy) h.push('<p><b>' + mvWhyTxt(srcWhy) + '</b></p>');
+    h.push('<div class="vsec"><h5>' + L('Til', 'To') + '</h5><div class="ph-btncol mb-mvto">');
+    for (const o of mbKeepList(src)){ const V = VESSELS[vget(o.v, 'boat').type];
+      h.push('<button class="ph-btn" data-pa="mbmvgo" data-to="' + o.v.id + '"' + (o.why ? ' disabled data-why="' + mgEsc(mvWhyTxt(o.why, o.len)) + '"' : '') + '>«' + mgEsc(vget(o.v, 'boatName')) + '» · ' + V.name[S.lang] + ' · ' + fmt(V.len, 2) + ' m</button>'); }
+    if (src.v) h.push('<button class="ph-btn alt" data-pa="mbmvgo" data-to="free"' + (srcWhy ? ' disabled data-why="' + mgEsc(mvWhyTxt(srcWhy)) + '"' : '') + '>' + L('Ledig hjemmel · uten båt i høyst to spillår', 'A free right · without a boat for at most two game years') + '</button>');
+    h.push('</div><p class="ph-note">' + L('Lengderegelen avgjør hvilke båter som kan ta den: en hjemmel under 11, 15 eller 21 m fra en båt under den lengden kan ikke flyttes til en båt på den lengden eller mer. En ledig hjemmel som ikke er satt på en båt, lagt ut eller solgt til registeret innen to spillår, går tilbake til registeret.', 'The length rule decides which boats can take it: a right under 11, 15 or 21 m from a boat under that length cannot be moved to a boat of that length or more. A free right not put on a boat, put out or sold to the register within two game years goes back to the register.') + '</p></div>');
+    return h.join('') + '</div></div>';
+  }
+  // Rederi: the «⋯» button on a boat with a right, and the free rights under the fleet
+  function mbMoveBtn(v){ const l = vget(v, 'lic'); if (!l || !HJ[l.id]) return ''; const w = mbMoveWhy({v}, {free:true});
+    return '<button class="ph-btn alt" data-pa="mbmv" data-id="' + v.id + '"' + (w ? ' disabled data-why="' + mgEsc(mvWhyTxt(w)) + '"' : '') + '>' + L('Flytt hjemmelen til …', 'Move the right to …') + '</button>'; }
+  function mbFreeCard(){ const H = S.t / 60, F = kmFree(H); if (!F.length) return '';
+    return '<div class="ph-card fl-free"><h4>' + L('Ledige hjemler', 'Free rights') + '</h4>' + F.map((f, i) => { const key = kmKey({free:i}), out = !!kmState().out[key];
+      return '<div class="fl-al"><span>' + L('Hjemmel ', 'Right ') + mgEsc(HJ[f.id].hl) + ' · ' + L('til ', 'until ') + doyStr(yearH(f.until), doyH(f.until)) + ' ' + yearH(f.until) + (out ? ' · ' + L('til salgs', 'for sale') : '') + '</span><button class="ph-btn sm" data-pa="mbmv" data-k="' + key + '"' + (out ? ' disabled' : '') + '>' + L('Flytt til …', 'Move to …') + '</button></div>'; }).join('') +
+      '<p class="ph-note">' + L('En hjemmel uten båt. Den kan også legges ut eller selges til registeret i Kvotemarkedet.', 'A right without a boat. It can also be put out or sold to the register in the quota market.') + '</p></div>'; }
+  // the yard's trade-in (phone/10-fartoy.js asks, one line): the right follows the boat traded in, or stays as a free right for two game years
+  const tiKeepOn = () => sub.tikeep === 'keep' && !!S.lic && !mbMoveWhy({v:curVessel()}, {free:true});
+  function tiLicRow(){ const l = S.lic; if (!l || !HJ[l.id] || !atKind('verft')) return ''; const v = curVessel(), w = mbMoveWhy({v}, {free:true}), on = tiKeepOn(), full = mbValue(v), kl = mbLicKr(v);
+    return '<div class="vsec ti-lic"><h5>' + L('Hjemmelen ved innbytte', 'The right at a trade-in') + ' · ' + mgEsc(l.hl || HJ[l.id].hl) + '</h5><div class="net-shops"><button class="chip-b' + (on ? '' : ' on') + '" data-pa="mbti" data-s="with">' + L('Følger innbyttebåten', 'Goes with the boat traded in') + '<br><small>' + L('innbytte ', 'trade-in ') + kr(full) + '</small></button>' +
+      '<button class="chip-b' + (on ? ' on' : '') + '" data-pa="mbti" data-s="keep"' + (w ? ' disabled' : '') + '>' + L('Behold som ledig hjemmel', 'Keep it as a free right') + '<br><small>' + (w ? mvWhyTxt(w) : L('to spillår · innbytte ', 'two game years · trade-in ') + kr(full - kl)) + '</small></button></div>' +
+      (mbTwoTxt(l) ? '<p class="ph-note mb-two"><b>' + mbTwoTxt(l) + '</b></p>' : '') + '</div>'; }
   // the yard's Båthandel: the boats that lie at this quay, and your own to put out
   function mgHere(){
     if (!atKind('verft')) return ''; MBC.load();
     const A = MBC.list().filter(x => x.port === S.boat.port), mine = S.fleet.filter(v => v.id !== S.me || mbSale(v));
-    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå. Verftet selger nye til full pris under.', 'No used boats at this quay now. The yard sells new ones at full price below.') + '</p>') +
+    return '<div class="ph-card mg-here"><h4>' + L('Båter til salgs her', 'Boats for sale here') + '</h4>' + (A.length ? A.map(mgCard).join('') : '<p class="ph-note">' + L('Ingen brukte båter ved denne kaia nå. Verftet selger nye til full pris.', 'No used boats at this quay now. The yard sells new ones at full price.') + '</p>') +
       (mine.length ? '<h5>' + L('Selg en båt', 'Sell a boat') + '</h5>' + mine.map(v => '<p><b>«' + mgEsc(vget(v, 'boatName')) + '»</b></p>' + mgOwnRow(v, true)).join('') : '') +
       '<button class="ph-btn alt" data-pa="open" data-a="nett" data-s="megler">' + L('Alle båter hos Kystmegleren ›', 'All boats at Kystmegleren ›') + '</button></div>';
   }
@@ -168,11 +230,23 @@
     if (a === 'mbput0'){ mbPutSel = null; return true; }
     if (a === 'mbhrs'){ sub.mbhrs = +d.h; return true; }
     if (a === 'mbto'){ sub.mbto = d.s; return true; }
-    if (a === 'mbputgo'){ const v = vesselById(d.id); if (!v) return true; const st = Math.round(+(document.getElementById('mbStart') || {}).value || 0), bv = (document.getElementById('mbBuy') || {}).value, bn = bv === '' || bv == null || +bv <= 0 ? null : Math.round(+bv), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
+    // KM4: the choice in «Legg ut til salgs», the move sheet and the trade-in's choice
+    if (a === 'mblic'){ sub.mblic = d.s === 'keep' ? 'keep' : 'with'; return true; }
+    if (a === 'mbkeep'){ sub.mbkeep = d.s; return true; }
+    if (a === 'mbti'){ sub.tikeep = d.s === 'keep' ? 'keep' : 'with'; return true; }
+    if (a === 'mbmv'){ mlSel = d.k ? {key:d.k} : {vid:d.id}; return true; }
+    if (a === 'mbmv0'){ mlSel = null; return true; }
+    if (a === 'mbmvgo'){ const src = mlSrc(); if (!src){ mlSel = null; return true; } const to = d.to === 'free' ? {free:true} : {v:vesselById(d.to)}, w = mbMoveWhy(src, to); if (w){ toast(mvWhyTxt(w, mbMoveLen(src, to))); return true; }
+      const two = mbTwoTxt(src.v ? vget(src.v, 'lic') : null); if (two && !confirm(two + ' ' + L('Flytte hjemmelen likevel?', 'Move the right all the same?'))) return true;
+      const r = mbMove(src, to); if (!r.ok){ toast(mvWhyTxt(r.err)); return true; }
+      mlSel = null; toast(to.free ? L('Hjemmelen står nå uten båt i rederiet, i høyst to spillår.', 'The right now stands without a boat in the company, for at most two game years.') : L('Hjemmelen er flyttet til «' + vget(to.v, 'boatName') + '».', 'The right is moved to the «' + vget(to.v, 'boatName') + '».'), 6000);
+      if (typeof cloudEv === 'function') cloudEv('km_move', {id:r.item.id, to:to.free ? 'free' : 'boat', from:src.v ? 'boat' : 'free'}); if (typeof refreshAll === 'function') refreshAll(); return true; }
+    if (a === 'mbputgo'){ const v = vesselById(d.id); if (!v) return true; const keep = mbKeepOf(v), st = Math.round(+(document.getElementById('mbStart') || {}).value || 0), bv = (document.getElementById('mbBuy') || {}).value, bn = bv === '' || bv == null || +bv <= 0 ? null : Math.round(+bv), hrs = MB.hours.includes(+sub.mbhrs) ? +sub.mbhrs : 24;
       mgMsg['put' + v.id] = L('Sender …', 'Sending …');
-      MBC.put(v.id, st, bn, hrs).then(r => { if (r && r.ok){ delete mgMsg['put' + v.id]; mbPutSel = null; toast(L('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren.', 'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren.')); } else mgMsg['put' + v.id] = mbWhyTxt(r && r.err, r); MBC.redraw(); });
+      MBC.put(v.id, st, bn, hrs, keep).then(r => { if (r && r.ok){ delete mgMsg['put' + v.id]; mbPutSel = null; sub.mblic = null; toast(keep ? L('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren uten hjemmel.', 'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren without a right.') : L('«' + vget(v, 'boatName') + '» er lagt ut hos Kystmegleren.', 'The «' + vget(v, 'boatName') + '» is put out at Kystmegleren.')); } else mgMsg['put' + v.id] = r && r.mv ? mvWhyTxt(r.mv, r.len) : mbWhyTxt(r && r.err, r); MBC.redraw(); });
       return true; }
-    if (a === 'mbcancel'){ const id = d.id; MBC.cancel(id).then(r => { if (!(r && r.ok)) toast(mbWhyTxt(r && r.err, r)); else toast(L('Trukket fra salg. Hun er din igjen.', 'Withdrawn. She is yours again.')); MBC.redraw(); }); return true; }
+    if (a === 'mbcancel'){ const id = d.id, kept = S.fleet.some(v => { const s0 = mbSale(v); return s0 && String(s0.lid) === String(id) && s0.kept && !vget(v, 'lic'); });
+      MBC.cancel(id).then(r => { if (!(r && r.ok)) toast(mbWhyTxt(r && r.err, r)); else toast(L('Trukket fra salg. Hun er din igjen.', 'Withdrawn. She is yours again.') + (kept ? ' ' + L('Hjemmelen kan settes tilbake med «Flytt hjemmelen til …» i Rederi.', 'The right can be put back with «Move the right to …» in the Company app.') : ''), kept ? 7000 : undefined); MBC.redraw(); }); return true; }
     if (a === 'mbbid'){ const Q = MBC.byId(d.id); if (!Q) return true; const k = Math.round(+(document.getElementById('mbBid') || {}).value || 0);
       mgMsg[Q.id] = L('Sender budet …', 'Sending the bid …'); MBC.bid(Q.id, k, mgTo(Q)).then(mgAfter(Q.id, 'Budet ditt på ' + kr(k) + ' er det høyeste.', 'Your bid of ' + kr(k) + ' is the highest.')); return true; }
     if (a === 'mbbuy'){ const Q = MBC.byId(d.id); if (!Q || !Q.buynow) return true;

@@ -15,12 +15,16 @@ def check(ok, what, extra=''):
 # set the view (centre in km, height in km) and wait for the packs it needs; then paint with the CPU slowed and give the time
 SETV = """([cx, cy, hh]) => { view.cx = cx; view.cy = cy; view.z = MAP_H / hh; applyView(); scheduleStatic(); return 1; }"""
 READY = """() => { const r = svg.getBoundingClientRect(), hh = MAP_H / view.z, ww = hh * r.width / r.height, x0 = view.cx - ww / 2, y0 = view.cy - hh / 2;
-  return chartLevel(hh) === 0 || ['sim', 'chart'].every(k => mapPacksIn(k, x0, y0, x0 + ww, y0 + hh).every(pk => pk.buf)); }"""
+  return (chartLevel(hh) === 0 && (!MAPD.chart0 || !!MAPD.chart0.buf)) || chartLevel(hh) !== 0 && ['sim', 'chart'].every(k => mapPacksIn(k, x0, y0, x0 + ww, y0 + hh).every(pk => pk.buf)); }"""
 # the first picture (the tiles kept, the rest coarse) and the whole chart fine (chartFlush paints the queued tiles at once)
 PAINT = """() => { clearTimeout(chartTimer); const t0 = performance.now(); paintChart(1); const t1 = performance.now(); chartFlush(); const ms = performance.now() - t0; renderStatic(); return [t1 - t0, ms]; }"""
 # a canvas pixel's colour at a point of the map (km), and the names drawn
 PIX = """(pts) => { const r = svg.getBoundingClientRect(), W = chartCv.width, H = chartCv.height, hh = MAP_H / view.z, ww = hh * r.width / r.height, x0 = view.cx - ww / 2, y0 = view.cy - hh / 2, c = chartCv.getContext('2d');
   return pts.map(p => { const i = Math.floor((p.x - x0) / ww * W), j = Math.floor((p.y - y0) / hh * H); if (i < 0 || j < 0 || i >= W || j >= H) return null; return Array.from(c.getImageData(i, j, 1, 1).data.slice(0, 3)); }); }"""
+# the start's load of chart0 once more, slowed by 600 ms, as it is under way when the chart is painted
+C0AGAIN = """() => { const pk = MAPD.chart0; pk.buf = null; pk.load = null; pk.idx = null; pk.vec = {}; for (const k of [...CHARTV.paths.keys()]) if (k.startsWith('p0:')) CHARTV.paths.delete(k);
+  const f = mapFetch; mapFetch = q => q === pk ? new Promise(r => setTimeout(r, 600)).then(() => f(q)) : f(q);
+  window.__c0 = (typeof chart0Load === 'function' ? chart0Load() : mapLoad(pk)).then(() => { mapFetch = f; }); CT.key = ''; }"""
 NAMES = "[...document.querySelectorAll('#gStatic text')].map(t => t.textContent)"
 LANDC = [(232, 215, 166), (204, 214, 172), (224, 206, 150)]
 SEAC = [(249, 251, 252), (167, 203, 235), (134, 180, 223), (59, 106, 165)]
@@ -40,6 +44,16 @@ async def run(p, w, h, tag, full):
     home = await pg.evaluate("PORTS[0].p")
     levels = [('hele landet', 725, 900, 1800, 0), ('regionen', 850, 355, 100, 1), ('fjorden', home['x'], home['y'], 20, 1), ('havna', home['x'], home['y'], 2.2, 2)]
     times = {}; firsts = {}
+    # the whole frame's coast (chart0) comes after the start (ui/11-boot.js chart0Load): a chart painted while that load is under way
+    # is painted again by itself when it comes, without the view being moved. Seen red 12.11.2026 with the load as it was (no
+    # chartCame after it): the three land points stayed sea ([167, 203, 235]) until the next paint.
+    await pg.wait_for_function("!MAPD.chart0 || !!MAPD.chart0.buf", timeout=60000)
+    if await pg.evaluate("!!MAPD.chart0"):
+        await pg.evaluate(C0AGAIN)
+        await pg.evaluate(SETV, [725, 900, 1800]); await pg.evaluate("() => { clearTimeout(chartTimer); paintChart(1); }")
+        pts0 = [await P(60.2, 7.6), await P(64.0, 13.5), await P(69.3, 20.3)]
+        c0 = await pg.evaluate(PIX, pts0); await pg.evaluate("window.__c0"); await pg.wait_for_timeout(1500); c1 = await pg.evaluate(PIX, pts0)
+        check(all(x is not None and near(x, LANDC) for x in c1), 'hele rammens kyst (chart0) som kommer mens kartet står oppe, males inn av seg selv', [c0, c1])
     for name, cx, cy, hh, lv in levels:
         await pg.evaluate(SETV, [cx, cy, hh]); await pg.wait_for_function(READY, timeout=30000)
         await pg.evaluate(PAINT)   # the first paint unpacks the blocks and builds the paths; the second is the one a moving chart repaints
@@ -140,6 +154,21 @@ async def run(p, w, h, tag, full):
         check(z < 0.8 and abs(z / want - 1) < 0.1, 'berøring: to fingre knipser kartet ut forbi den gamle grensen', (round(z, 3), round(want, 3)))
         await pg.wait_for_timeout(600)
         await pg.screenshot(path='chart_pinch.png')
+    # the places only from PLACE_Z, Kartverket's sea names only from FELT_S_Z, and the zoom to ZMAX 320 (Jonas 11.11.2026)
+    Z = await pg.evaluate("""(() => { const at = (x, y, z) => { view.cx = x; view.cy = y; view.z = z; applyView(); renderStatic(); renderDyn(); };
+      const n = q => document.querySelectorAll('#map ' + q).length, hp = portById(S.home).p, out = {};
+      at(hp.x, hp.y, PLACE_Z * 0.8); out.far = [n('.pi'), n('.rorbu'), n('.lbl-port')];
+      at(hp.x, hp.y, PLACE_Z); out.near = [n('.pi'), n('.rorbu'), n('.lbl-port')];
+      const far = PORTS.find(p => !placeOwn(p) && dist(p.p, hp) > 20); const tap = z => { at(far.p.x, far.p.y, z); S.draft = []; addWaypoint({x:far.p.x, y:far.p.y}); const hit = S.draft.some(w => w.port === far.id); S.draft = []; return hit; };
+      out.tapNear = tap(PLACE_Z); out.tapFar = tap(PLACE_Z * 0.8);
+      const h = P(70.66, 23.68), ks = () => [...document.querySelectorAll('#map .lbl-felt')].filter(e => e.getAttribute('data-k') === 's').length, kf = () => document.querySelectorAll('#map .lbl-felt').length;
+      at(h.x, h.y, 2); out.z2 = [ks(), kf()]; at(h.x, h.y, FELT_S_Z * 0.9); out.zb = [ks(), kf()]; at(h.x, h.y, FELT_S_Z); out.z6 = [ks(), kf()];
+      out.zmax = clamp(1e9, ZMIN, ZMAX); out.pz = PLACE_Z; out.sz = FELT_S_Z; return out; })()""")
+    check(Z['far'][0] >= 1 and Z['far'][0] <= 2 and Z['far'][1] == 0 and Z['far'][2] == 0, f'langt ute (view.z {Z["pz"] * 0.8:.2f}): bare spillerens egne steder står i kartet, ingen rorbuer og ingen stedsnavn', Z['far'])
+    check(Z['near'][0] > 4 and Z['near'][2] > 4, f'fra view.z {Z["pz"]}: mottakene, verftene og butikkene står med navn', Z['near'])
+    check(Z['tapNear'] is True and Z['tapFar'] is False, 'et trykk på et sted går dit når stedet vises, og ikke langt ute der det er skjult', [Z['tapNear'], Z['tapFar']])
+    check(Z['z2'][0] == 0 and Z['z2'][1] > 5 and Z['zb'][0] == 0 and Z['z6'][0] > 0, f'Hammerfest: Kartverkets sjønavn står først fra view.z {Z["sz"]} (feltnavnene fra 2)', [Z['z2'], Z['zb'], Z['z6']])
+    check(Z['zmax'] == 320, 'kartet kan zoomes inn til view.z 320', Z['zmax'])
     check(not errs, 'ingen sidefeil', errs[:3])
     await b.close()
 

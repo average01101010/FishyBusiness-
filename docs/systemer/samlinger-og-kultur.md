@@ -233,3 +233,8 @@ Gaver av utstyr (`09f-merker.js`) monteres nå med en gang uten verftskø («gav
 
 - En ny rekord (15 % over den gamle) står i dagboka og på fangstkortet («Ny rekord · 7,1 kg», `catchRec` i `ui/05j-catchfeed.js`), ikke som melding. Fars torsk slått er fortsatt en melding fra Trofeveggen.
 - Fartstiden står i dagboka; de fem første årene kommer fort og får ingen toast, årene etter gjør (`fsYear` i `core/09e-fartstid.js`). Årene står som før (V6c A).
+
+
+## Tatoveringene som malt flash (Jonas 14.11.2026)
+
+Jonas: «Du kan også la gemini lage bildene til tatoveringene i milepæler.» De tolv tatoveringene er tegnet som klassisk sjømannsflash (kraftig svart kontur, rødt, grønt, gult og blått på kremfarget papir) med `generate_game_asset`: ett ark på 4 × 3, og hulajenta tegnet på nytt alene, påkledd med bluse og langt skjørt (den første hadde bar mage; 13-årsgrensen). `python3 tools/ui/tatoveringer.py` skjærer dem ut til `src/data/tat.b64` (768 × 576, 65 KB), som bygget legger ut som `data/pic-tat-<hash>.bin` og som hentes med de sene dataene. `TATART.icon` i `ui/05-tattoo-art.js` gir bildet fra arket (`.tat-img`, 64 px) når det er lastet, ellers strektegningen som før; en tatovering som ikke er fått, er grå og svak (`.tat-img.off`). `tattest` teller begge.

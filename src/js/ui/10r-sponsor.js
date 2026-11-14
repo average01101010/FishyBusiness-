@@ -22,6 +22,16 @@ var SPUI = (() => {
       log('Gave fra ' + r.sponsor.name + ': ' + C.no.toLowerCase() + '.', 'A gift from ' + r.sponsor.name + ': ' + C.en.toLowerCase() + '.');
       if (typeof cloudEv === 'function') cloudEv('sp_gift', {pl:r.id}); }
   }
+  // the colours of ended paint designs worn by boats near (core/09l-sponsor.js spPaintIn asks; steg 44, «Fargene blir»): at most 20 at a
+  // time, every ten seconds while some are wanted; an id the cloud does not know is not asked again (false)
+  let wantBusy = false;
+  function paintsWanted(){
+    if (wantBusy || !SPN.want.size || typeof cloudRpc !== 'function' || typeof CLOUD_CFG === 'undefined' || !CLOUD_CFG || !CLOUD_CFG.supabaseUrl) return;
+    const ids = [...SPN.want].slice(0, 20); ids.forEach(id => SPN.want.delete(id)); wantBusy = true;
+    cloudRpc('sp_paint', {ids}, {anon:true}).then(r => { for (const id of ids){ const D = r && r[id]; SPN.old[id] = D && typeof D === 'object' ? spPaintData(D) : false; } })
+      .catch(() => { for (const id of ids) SPN.old[id] = false; }).then(() => { wantBusy = false; });   // (a cloud without the function yet: her own colours, as before)
+  }
+  setInterval(paintsWanted, 10000);
   function start(){ load(); clearInterval(tm); tm = setInterval(load, 3600 * 1000); }
   // the brand bought on a vessel's item: S.brand['v1:garnhaler'] = {n, m}
   const brandOf = k => (S.brand || {})[S.cur + ':' + k] || null;
@@ -30,7 +40,7 @@ var SPUI = (() => {
   function card(k, btn, extra){
     const sp = spOf('item', k); if (!sp) return ''; const E = EQUIP[k], url = spUrl(sp.sponsor.site);
     return itemCard(Object.assign({k, id:'ic-' + k + '-sp', name:esc(sp.data.model || E.name[S.lang]), sub:'<span class="ic-sp-tag">' + L('Samarbeid', 'Partnership') + '</span> ' + L('levert av ', 'supplied by ') + esc(sp.sponsor.name),
-      price:E.price, note:(sp.data.line ? esc(sp.data.line) + '. ' : '') + L('Samme pris og virkning som ' + E.name.no.toLowerCase() + ' over.', 'The same price and effect as the ' + E.name.en.toLowerCase() + ' above.'),
+      price:equipKr(k), note:(sp.data.line ? esc(sp.data.line) + '. ' : '') + L('Samme pris og virkning som ' + E.name.no.toLowerCase() + ' over.', 'The same price and effect as the ' + E.name.en.toLowerCase() + ' above.'),
       body:url ? '<p class="ic-sp-out"><a class="ic-sp-link" href="' + esc(url) + '" target="_blank" rel="noopener sponsored" data-pl="' + sp.id + '">' + L('Se hos ' + esc(sp.sponsor.name) + ' ↗', 'See at ' + esc(sp.sponsor.name) + ' ↗') + '</a> <small>' + L('åpner utenfor spillet', 'opens outside the game') + '</small></p>' : '',
       btns:btn}, extra || {}));
   }

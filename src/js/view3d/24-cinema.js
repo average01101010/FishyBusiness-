@@ -277,6 +277,10 @@
   // the trailer's camera (trailer/tools/film.py, G3.film): null in the game. {fov} alone sets the chase camera's field of view (degrees);
   // {eye, tgt, fov} puts the eye at a point in the world (metres) looking at tgt, or at the boat's middle when tgt is 'boat' or missing
   let FILM = null;
+  let STUDIO = typeof location !== 'undefined' && /[#,]studio/.test(location.hash || '');
+  // (and nothing of the land, the sea, the trees or the other boats is drawn behind it: the frame is the people's alone, a tenth of the work)
+  const studioSkip = () => { const k = PROF.skip; for (const q of ['terr', 'sea', 'trees']){   /* (not «boats»: that leaves out her own crew too) */ if (STUDIO){ if (!k[q]) k['st_' + q] = k[q] = true; } else if (k['st_' + q]){ k[q] = false; delete k['st_' + q]; } } };
+  if (STUDIO) studioSkip();
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE;
     FRAMEP = /rawclock/.test(location.hash) ? j0 : frameClock(j0); WALLF = /rawclock/.test(location.hash) ? 0 : FRAMEP + FCLK.off;
     try { frame0(); } finally { S.equip = EQ0; WALLF = 0; FRAMEP = 0; }
@@ -294,7 +298,7 @@
     const now = FRAMEP || performance.now(), dt = Math.max(0, Math.min(0.1, (now - lastF) / 1000)), rdt = Math.max(1e-3, (now - lastF) / 1000); lastF = now;
     FPS.v = FPS.v ? FPS.v * 0.95 + 0.05 / rdt : 1 / rdt; FRAMEMS = FRAMEMS * 0.8 + Math.min(500, rdt * 1000) * 0.2; if (PROF.on) profBegin(rdt, j0F); if (BENCH.on){ if (BENCH.rec){ BENCH.sum += rdt; BENCH.cnt++; if (rdt > 1 / 50) BENCH.slow++; } } else if (!PROF.on) qualTick(dt, FPS.v, now); qmFrame(rdt, now); if (now - FPS.at > 500){ FPS.at = now; const fe = fpsEl(); if (fe) fe.textContent = Math.round(FPS.v) + ' bilder/s · ' + (1000 / FPS.v).toFixed(1) + ' ms · ' + ['Lav', 'Middels', 'Høy', 'Ultra'][QUAL.lvl]; }
     const t = (now - T0) / 1000, frac = currentFrac(), H = (S.t + frac) / 60;
-    computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
+    computeEnv(H); updateBoat(dt, t, frac, rdt); updateWaves(dt, H); nfStep(); updateWake(); foamStep(dt, t); fftStep(t); updateNear(); ssStep(rdt); updateShadows(); updateChunks(CH.size ? 2 : 999);
     gfxNaN(null);
     // camera
     let eye, V, kfov = 0;
@@ -322,6 +326,12 @@
     } else {
       if ((SHOW || PAINTV) && !drag) cam.yaw += dt * 0.12;   // the showroom and the paint shop turn slowly round the boat
       // (cam.at: a point on the deck in the boat's frame to look at instead of her middle, for the tests' close shots of the crew)
+      // (cam.who: the eye on one of the people on deck, to turn round him close in (Jonas 14.11.2026: «en kamera-funksjon som sentrerer
+      // kamera på en valgfri person slik at du kan rotere rundt vedkommede»): his number among those on deck, his id or his task. With
+      // cam.face the camera stands before him, that many rad to his side. In the address: «#se=2», «#se=coffee». G3._debug.camOn)
+      if (cam.who != null && !SHOW && typeof CREW3D !== 'undefined'){ const L = CREW3D.visible(), a = typeof cam.who === 'number' ? L[((cam.who % L.length) + L.length) % L.length] : L.find(q => q.id === cam.who || q.task === cam.who || (q.goal && q.goal.task === cam.who)) || null;
+        cam.whoId = a ? a.id : null;
+        if (a){ cam.at = [a.x, (a.y || 0) + (cam.atY == null ? 0.25 : cam.atY), a.z]; if (cam.face != null && a.h != null) cam.yaw = a.h + Math.PI + cam.face; } }
       const AT = cam.at && !SHOW ? xf(model(0, 0, 0, -bv.head, bv.pitch, bv.roll), cam.at) : null;
       const C = SIGNV.look ? SIGNV.look.slice() : SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : AT ? [bv.x + AT[0], bv.y + AT[1] + 1.0, bv.z + AT[2]] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
       if (PAINTV && !SHOW) paintAim(C, yawW);
@@ -386,7 +396,7 @@
     // near pass
     PMK('nearT'); gl.clear(gl.DEPTH_BUFFER_BIT);
     const VT = vtype(), VG = GEO(VT), ncrew = Math.min(crewAboard().length, (VG.crewSpots || []).length); if (VG.hand) useHand(VT);
-    if (!SKP.terr) drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); updateShore(eye); drawShore(VPn); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); glChk('nearT'); if (!SKP.trees){ drawTrees(VPn, eye); drawNear(VPn, eye, t); } glChk('trees'); drawVind(VPn, eye, dt, false); glChk('vind'); litSetup(VPn);
+    if (!SKP.terr) drawTerrain(TM, eye, VPn, true); updateWater(eye); drawWater(VPn, eye); updateShore(eye); drawShore(VPn); drawRocks(VPn, eye); litSetup(VPn); drawLit(STAT, TM); drawTileStatics(TM, eye); drawBuildings(TM); glChk('nearT'); if (!SKP.trees){ drawTrees(VPn, eye); drawNear(VPn, eye, t); } glChk('trees'); drawVind(VPn, eye, dt, false); glChk('vind'); litSetup(VPn);
     // whoever works the deck leaves their place: alone, the skipper leaves the wheel
     // resting ashore in the naust or a rorbu (15-energy.js; Jonas 05.10.2026: «Ved hvile forsvinner skipperen fra båten») he is not aboard
     // never more people aboard than the crew list (tilbakemelding #24): the crew at the hauler and the one at the table leave their
@@ -404,14 +414,26 @@
     const deckCrew = (underway && !VG.open) || ashore ? 0 : Math.max(0, ncrew - awayCr - Math.max(0, gHaul) - helmCr - inBunks);
     // the people aboard walk the deck (deckcrew.js): the boat is drawn without her fixed figures, and the agents are drawn after her
     const DKON = !VG.hand && typeof CREW3D !== 'undefined' && CREW3D.on();
-    if (DKON){ CREW3D.setJig(jigRail(VT, VG)); CREW3D.setRoll(bv.roll); CREW3D.setHelm(!!cam.helm); CREW3D.tick(dt); }
+    if (DKON){ CREW3D.setJig(jigRail(VT, VG)); CREW3D.setSea(bv.roll, bv.pitch, bv.y, Math.hypot(WV.hs || 0, WV.swHs || 0)); CREW3D.setHelm(!!cam.helm); CREW3D.tick(dt); }
     if (SKP.boats){}
     else if (VG.hand){ drawSkiff(BMrel, VPn, dt, !cam.helm && !awaySk, deckCrew > 0); gl.useProgram(PL.p); }
     // jigging from a boat with a wheelhouse, the skipper leaves the wheel for the rail (the hand-worked boats do the same in drawSkiff),
     // also with crew aboard: he tends the jig while they gut (tilbakemelding #62: on a sjark with two hands he stood in the wheelhouse
     // while one hand looked on); he stays at the wheel only when the crew fill every deck place
     else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop;
-      drawVessel(VT, VG, BMrel, VPn, !DKON && !cam.helm && !awaySk, DKON ? 0 : deckCrew, !DKON && jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+      if (!(DKON && STUDIO)){ drawVessel(VT, VG, BMrel, VPn, !DKON && !cam.helm && !awaySk, DKON ? 0 : deckCrew, !DKON && jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); }   // (the white room draws no boat)
+      gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+      // (the white room, Jonas 14.11.2026: «et helt hvit rom uten noen hindringer … der du har godt lys»: «#studio» in the address, or
+      // G3._debug.studio(true). The frame is wiped white here and only the people on deck are drawn, with what they hold, in an even
+      // light; nothing of the boat, the sea or the land stands in the way. With cam.who the eye turns round one of them. The frame ends
+      // here: a tool for the session and the tests, not for the game)
+      if (DKON && STUDIO){ const E0 = {lightDir:env.lightDir, sunCol:env.sunCol, amb:env.amb, gnd:env.gnd, fog:env.fog, fogD:env.fogD};
+        gl.clearColor(1, 1, 1, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // (the light from over the eye's shoulder, so the side that is looked at is lit wherever the eye stands)
+        { const dx = -eye[0] + (bv.x), dz = -eye[2] + (bv.z), l = Math.hypot(dx, dz) || 1, v = [-dx / l * 0.55 + dz / l * 0.3, 0.75, -dz / l * 0.55 - dx / l * 0.3], n = Math.hypot(v[0], v[1], v[2]); env.lightDir = [v[0] / n, v[1] / n, v[2] / n]; }
+        env.sunCol = [0.82, 0.82, 0.8]; env.amb = [0.62, 0.63, 0.66]; env.gnd = [0.5, 0.5, 0.5]; env.fog = [1, 1, 1]; env.fogD = 0;
+        try { nSetup(VPn); drawDeckCrew(BMrel, eye, VPn, t, VG); } finally { Object.assign(env, E0); }
+        return; }
       if (DKON) drawDeckCrew(BMrel, eye, VPn, t, VG); }
     SAY.a = null;
     if (SAY.c && performance.now() - SAY.t0 < SAYMS){
@@ -433,7 +455,9 @@
     PMK('nearSea');
     // the ensign in its hours (core/03-simulation.js flagUp; always while the paint shop tries one on). No pennant at the masthead (Jonas 09.11.2026)
     gl.disableVertexAttribArray(2);
-    if (PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1], pole[2], Math.PI / 2 - appB, 0, 0);
+    // (and while a boat just bought has her name painted on: it goes up the pole once the name is on, 13-instruments.js buyAt)
+    const BQ = buyAt(), fy = BQ ? -(1 - BQ.f) * BUY.fd : 0; if (BQ) BUYR.fy = fy;
+    if (BQ || PAINTPRE || flagUp(S.t / 60, S.boat.pos)){ const pole = xf(BMrel, VG.pole), fl = flagTex(), FM = model(pole[0], pole[1] + fy, pole[2], Math.PI / 2 - appB, 0, 0);
       drawTexQuad(FLAGM, FLAGM.tex, fl.shape === 'vimpel' ? chain(FM, new Float32Array([1.7, 0, 0, 0, 0, 0.8, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])) : FM, VPn, true, [0, 0.6, 0]); }
     gl.useProgram(PL.p);
     if (SHOW && SHOW.M && GEO(SHOW.t).open && pvm(SHOW.t).cap){ gl.colorMask(false, false, false, false); drawLit(pvm(SHOW.t).cap, SHOW.M); gl.colorMask(true, true, true, true); }
@@ -503,7 +527,7 @@
   // SD.b*: where and when each drop was born (sea3d checks capAt there); SD.ms: the candidates' time, ms a frame.
   const SDN = 400, SDC = 48, SDR = 260 / (WCAP.k * 3.84e-6 * Math.pow(28.5, 3.41));
   const SD = {x:new Float64Array(SDN), y:new Float32Array(SDN), z:new Float64Array(SDN), vx:new Float32Array(SDN), vy:new Float32Array(SDN), vz:new Float32Array(SDN), age:new Float32Array(SDN).fill(99), life:new Float32Array(SDN).fill(1),
-    bx:new Float64Array(SDN), bz:new Float64Array(SDN), bt:new Float64Array(SDN), n:0, acc:0, cand:0, tried:0, hit:0, ms:0};
+    bx:new Float64Array(SDN), bz:new Float64Array(SDN), bt:new Float64Array(SDN), bf:new Float64Array(SDN), n:0, acc:0, cand:0, tried:0, hit:0, ms:0};
   FOAM.sd = SD;
   function driftSpray(VP, eye, dt, t, col){
     const U = env.wind || 0, wd = env.windDir, ramp = sstep(13.9, 17.2, U);
@@ -517,7 +541,7 @@
         while (SD.acc >= 1 && made < 60){ SD.acc -= 1; made++;
           const i = SD.n = (SD.n + 1) % SDN, j = (Math.random() - 0.5) * 1.6, x = x0 + wd[1] * j, z = z0 - wd[0] * j, sp = U * (0.45 + Math.random() * 0.35);   // (along the crest, across the wind)
           SD.x[i] = x; SD.z[i] = z; SD.y[i] = seaHFast(x, z, t) + 0.2; SD.vx[i] = wd[0] * sp; SD.vz[i] = wd[1] * sp; SD.vy[i] = 0.6 + Math.random() * 1.6; SD.age[i] = 0; SD.life[i] = 0.8 + Math.random() * 1.2;
-          SD.bx[i] = x0; SD.bz[i] = z0; SD.bt[i] = t; }
+          SD.bx[i] = x0; SD.bz[i] = z0; SD.bt[i] = t; SD.bf[i] = FFT.tT || 0; }   // (bf: the world time of the FFT tiles the crest was read from, B3; for sea3d)
         SD.acc = Math.min(SD.acc, 60); }
       SD.ms = SD.ms * 0.95 + (performance.now() - t1) * 0.05;
     }
@@ -624,7 +648,7 @@
       // the waterline a little aft of the stem, as a fine mist, and keeps most of the boat's way: it fans out beside the bow and falls
       // astern of it (Jonas 21.10.2026, #90: the spray did not look real. Thrown from a point at the stem with no way on, it hung in the
       // air as a trail of round blobs behind the boat)
-      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3); wk.imm = imm;
+      const bowP = xf(BM, [0, 0.15, VG.bow]), bowSea = wk.bowSea = seaH(bowP[0], bowP[2], t), imm = bowP[1] - bowSea, sink = wk.imm == null ? 0 : (imm - wk.imm) / Math.max(dt, 1e-3) / (NF.on ? 1 : Math.max(1, simRate())); wk.imm = imm;   // (5.20x: the sea stands in the world and passes her bow at the game's rate, six times a real boat's; unscaled, every crest that passed threw a burst of spray, Jonas' video 13.11.2026)
       const wv = (env.wind || 0) * 0.35, wx = env.windDir[0] * wv, wz = env.windDir[1] * wv, Lb = VG.stern - VG.bow, fx = Math.sin(bv.head), fz = -Math.cos(bv.head), way = (bv.spd || 0) * 0.9;
       if (v > 3 && sink < -0.5 && imm < 0.6) wk.sacc += Math.min(100, -sink * v * 1.25);
       if (WK.Fr > 0.9) wk.sacc += dt * v * WV.hs * 2;
@@ -637,6 +661,11 @@
           spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.4 + Math.random() * 0.9, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.35, 9.8); WKS[wk.n] = 0; } }
       while (wk.sacc >= 1){ wk.sacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.08 + Math.random() * 0.22, p = xf(BM, [side * VG.side * (0.45 + a * 1.6), 0.1, VG.bow + a * Lb]), up = 0.9 + Math.random() * (1.4 + Math.min(4, -sink)), out = 1.6 + Math.random() * 2.6;
         spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, up, Math.sin(bv.head) * side * out + fz * way + wz, 0.6 + Math.random() * 0.7, 9.8); WKS[wk.n] = 1; }
+      // 5.20x: the bow's steady spray at the speed the water passes her on the screen (WK.bowG, with bowFoam in the foam map): a low, fine
+      // spray off both sides from where the hull meets the water, all the time, so the bow is not dry between the seas (Jonas 13.11.2026)
+      if ((WK.bowG || 0) > 0.02){ wk.bacc = (wk.bacc || 0) + dt * 70 * WK.bowG;
+        while (wk.bacc >= 1){ wk.bacc -= 1; const side = Math.random() < 0.5 ? -1 : 1, a = 0.3 * (WK.pf || 0) + 0.02 + Math.random() * 0.14, p = xf(BM, [side * VG.side * (0.25 + a * 2.2), 0.05, VG.bow + a * Lb]), out = 1.2 + Math.random() * 2.2;
+          spawn(p[0], p[1], p[2], Math.cos(bv.head) * side * out + fx * way + wx, 0.5 + Math.random() * 1.1, Math.sin(bv.head) * side * out + fz * way + wz, 0.35 + Math.random() * 0.4, 9.8); WKS[wk.n] = 0; } }
       // the rooster tail: a planing outboard throws a plume of water up behind the leg
       if (BOAT.outboard && WK.Fr > 1){ wk.racc = (wk.racc || 0) + dt * 70 * sstep(1, 1.6, WK.Fr);
         while (wk.racc >= 1){ wk.racc -= 1; const p = xf(BM, [(Math.random() - 0.5) * 0.3, 0.1, VG.stern + 0.4]), bk = 2 + Math.random() * 3;
@@ -647,7 +676,7 @@
     // particles (SLP, drawn below), larger and denser than the spray's mist: the first try put 160 into the mist and the picture showed
     // a fleck at the stem
     if (HSEA.slam.t > (wk.slamSeen || 0)){ wk.slamSeen = HSEA.slam.t;
-      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(Math.min(SLN - 1, 140 + 80 * s)), way = (bv.spd || 0) * 0.6, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
+      const VG = GEO(vtype()), Lb = VG.stern - VG.bow, s = Math.min(3, HSEA.slam.s), N = Math.round(Math.min(SLN - 1, 140 + 80 * s)), way = (bv.spd || 0) * 0.9, fx = Math.sin(bv.head), fz = -Math.cos(bv.head);
       const wv = (env.wind || 0) * 0.35, wd = env.windDir || [0, -1], wx = wd[0] * wv, wz = wd[1] * wv;
       for (let i = 0; i < N; i++){ const side = Math.random() < 0.5 ? -1 : 1, a = 0.02 + Math.random() * 0.25, p = xf(BM, [side * VG.side * (0.3 + a * 1.5), -0.1 + Math.random() * 0.3, VG.bow + a * Lb]);
         const up = (2 + Math.random() * 4) * Math.sqrt(s), out = (1.5 + Math.random() * 3.5) * Math.sqrt(s), k = SLP.n = (SLP.n + 1) % SLN;
@@ -663,7 +692,7 @@
     while (TRAIL.length && TRAIL[TRAIL.length - 1].age > 11) TRAIL.pop();
     if (TRAIL.length > 1 && WKB && !foamLive()){   // (the foam map draws the trail when it is on: 14-sea.js)
       const step = 2 * HALF / NP, ox = Math.round(bv.x / step) * step, oz = Math.round(bv.z / step) * step, tide = env.tide || 0;
-      const seaY = (x, z) => seaHFast(x, z, t) + wakeHFast(x, z) + 0.07;
+      const seaY = (x, z) => { SEA_OUTER = true; try { return seaHFast(x, z, t) + wakeHFast(x, z) + 0.07; } finally { SEA_OUTER = false; } };   // (the strips' corners are far apart: the grid's surface)
       const st = xf(BM, [0, 0, (GEO(vtype())).stern]), pts = (v > 1 ? [{x:st[0], z:st[2], age:0, v, u:wk.odo || 0, hx:Math.sin(bv.head), hz:-Math.cos(bv.head)}] : []).concat(TRAIL);
       let m = 0; const P = WKB.p, W = WKB.w, Sg = WKB.s, cap = 8900;
       const put = (x, z, y, u, vv, age, kind, str) => { if (m >= cap) return; P[m * 3] = x - eye[0]; P[m * 3 + 1] = y - eye[1]; P[m * 3 + 2] = z - eye[2]; W[m * 4] = u; W[m * 4 + 1] = vv; W[m * 4 + 2] = age; W[m * 4 + 3] = kind; Sg[m] = str; m++; };
@@ -738,7 +767,7 @@
       }
       const pc = [Math.min(1, env.amb[0] * 2 + env.sunCol[0] * 0.6 + 0.25), Math.min(1, env.amb[1] * 2 + env.sunCol[1] * 0.6 + 0.27), Math.min(1, env.amb[2] * 2 + env.sunCol[2] * 0.6 + 0.3)];
       if (m) drawPts(m, gl.LINES, VP, pc, 95, true);
-      if (mf){ PB.set(fl.subarray(0, mf * 3)); for (let i = 0; i < mf; i++) PA[i] = sleet ? 0.7 : 0.85; drawPts(mf, gl.POINTS, VP, pc, sleet ? 80 : 95, true); }
+      if (mf){ PB.set(fl.subarray(0, mf * 3)); for (let i = 0; i < mf; i++) PA[i] = sleet ? 0.7 : 0.85; drawPts(mf, gl.POINTS, VP, pc, sleet ? 80 : 95, 2, null, 20); }   // (soft and at most 20 px: a flake near the eye was a hard grey disc of 48 px on the sea, Jonas' video 13.11.2026)
     }
     gl.depthMask(true); gl.disable(gl.BLEND);
   }

@@ -34,6 +34,7 @@ svg text{fill:var(--dim);font-size:10px}
 .sprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.sptw{overflow-x:auto}.sptw table{min-width:980px}.spbk{display:flex;height:10px;border-radius:5px;overflow:hidden;min-width:90px;background:var(--line)}.spbk i{display:block}.sprow input,.sprow select{min-width:140px}
 @media print{header,nav,#mkPrint,.demo{display:none!important}.mk .card{break-inside:avoid}}
 .mk-l{margin:4px 0 0 18px;padding:0}.mk-l li{margin:3px 0}
+.mk-img{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.mk-img figure{margin:0}.mk-img img{width:100%;height:auto;border-radius:8px;display:block}.mk-img figcaption{font-size:12px;opacity:.8;margin-top:4px}
 </style>
 </head>
 <body>
@@ -138,8 +139,8 @@ const VIEW = {
   bruk: D => card('Appene og knappene som brukes', bars(D.features)) + card('Redskap', bars(D.gear)) + card('Båtene spillerne har nå', bars(D.boats)) +
     card('Grunnstøtinger', '<p>I perioden: <b>' + nf(D.groundings.count, 0) + '</b></p>' + bars(D.groundings.by_boat) + table((D.groundings.where || []).slice(0, 20), [['x', 'x'], ['y', 'y'], ['v', 'Fart (kn)']])) +
     card('Turene', '<div class="grid">' + kpi('Leveringer', nf(D.trips.count, 0)) + kpi('Snitt kast loss → levering', nf(D.trips.avg_trip_min, 0) + ' min spilltid') + kpi('Snitt per levering', nf(D.trips.avg_kr, 0) + ' kr') + '</div><h3>Mottak</h3>' + bars(D.trips.ports) + '<h3>Fangstfelt</h3>' + bars(D.trips.fields)),
-  okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards(),
-  penger: D => { const m = D.money; return sgCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
+  okonomi: D => '<p class="note" id="okMeldt">Meldt av spillet: kassa, flåten og flåtens verdi regnes i hvert spill og sendes hit, så tallene her er det spillene sier. Lagringer og landinger som ikke kan være ekte, står under Juks.</p>' + '<div class="grid">' + kpi('Gini for kassa', nf(D.economy.gini_cash, 3), '0 er likt, 1 er alt hos én') + kpi('Gini for flåten', nf(D.economy.gini_fleet, 3)) + kpi('Median kasse', nf(D.economy.cash_p50, 0) + ' kr', 'meldt av spillet') + kpi('90-persentil kasse', nf(D.economy.cash_p90, 0) + ' kr', 'meldt av spillet') + '</div>' + turCards() + havCards() + kmCards(),
+  penger: D => { const m = D.money; return sgCard() + hvCard() + '<div class="grid">' + kpi('Inntekt i perioden', nf(m.revenue_nok, 0) + ' kr') + kpi('Betalende', nf(m.payers, 0)) + kpi('ARPU', nf(m.arpu, 2) + ' kr') + kpi('Konvertering', pct(m.conversion)) +
     kpi('Gjenkjøp', pct(m.repurchase)) + kpi('Tid til første kjøp', nf(m.ttfp_days) + ' dager') + kpi('Refusjoner', pct(m.refund_rate)) + kpi('Forlatt kasse', pct(m.abandon_rate)) + '</div>' +
     card('Boostere', bars(m.boosters)) + card('Transaksjonslogg (Stripe)', table(m.log, [['at', 'Tid', v => esc(new Date(v).toLocaleString('nb-NO'))], ['player', 'Spiller'], ['product', 'Produkt'], ['nok', 'Kr'], ['status', 'Status'], ['id', 'Stripe-økt']]), 'Fylles når Stripe-webhooken er koblet på.'); },
   teknikk: D => card('Feil og krasj', table(D.tech.errors, [['msg', 'Melding'], ['n', 'Antall'], ['last', 'Sist', v => esc(new Date(v).toLocaleString('nb-NO'))], ['versions', 'Versjoner', v => esc((v || []).join(', '))]])) +
@@ -160,6 +161,18 @@ function sgCard(){
   return card('Butikken for nye spillere', '<p>' + (SG.from ? 'Stengt for kontoer laget etter <b>' + esc(new Date(SG.from).toLocaleString('nb-NO')) + '</b>. Kontoer som holdes ute: <b>' + nf(SG.n, 0) + '</b>. De ser «Snart i salg».'
     : 'Åpen for alle kontoer.') + '</p><button id="sgSw"' + (SG.from ? ' class="p"' : '') + '>' + (SG.from ? 'Åpne butikken for alle' : 'Steng butikken for nye kontoer fra nå') + '</button>',
     'Kontoene som fantes da bryteren ble slått på, beholder butikken og alt de har kjøpt. Velkomstgaven gis som før.');
+}
+// ---- hops paid for and not made (HO3, 12.11.2026, supabase/migrations/20261112200000_hopp.sql admin_hop_void): the game marked them for
+// a refund (hop_void), the player was told the money comes back; refunded at Stripe, shop_refund takes the grant back and it leaves the list
+let HV = null;
+async function hvLoad(){ await null; try { HV = DEMO ? [] : await rpc('admin_hop_void', {}); } catch (e){ HV = {err:e.message}; } if (TAB === 'penger') render(); }
+function hvCard(){
+  const t = 'Hopp som ikke ble gjort (refunderes i Stripe)';
+  if (!HV){ hvLoad(); return card(t, '<p class="note">Henter …</p>'); }
+  if (HV.err) return card(t, '<p class="note">' + esc(HV.err) + '</p>');
+  if (!HV.length) return card(t, '<p class="note">Ingen. Et betalt hopp som spillet ikke kunne gjøre, står her til det er refundert.</p>');
+  return card(t, table(HV, [['at', 'Merket', v => esc(v ? new Date(v).toLocaleString('nb-NO') : '')], ['kr', 'Kr'], ['min', 'Min'], ['why', 'Hvorfor'], ['session', 'Stripe-økt'], ['pi', 'Betaling']]),
+    'Spilleren har fått beskjed om at pengene betales tilbake. Refunder betalingen i Stripe; da tar webhooken tilbake hoppet, og raden forsvinner.');
 }
 function sgWire(){
   const sw = $('#sgSw'); if (sw) sw.onclick = async () => { const close = !SG.from;
@@ -201,6 +214,40 @@ function havCards(){
       '<p><select id="havSp"><option>torsk</option><option>hyse</option><option>sei</option><option>blakveite</option></select> <input id="havY" type="number" value="' + (HAVY + 1) + '" style="width:5em"> ' +
       '<input id="havSsb" type="number" placeholder="gytebestand t" style="width:9em"> <input id="havTac" type="number" placeholder="totalkvote t" style="width:9em"> <input id="havAdv" type="number" placeholder="råd t" style="width:8em"> <button id="havSet">Lagre år</button></p>',
       'Når bryteren er på, bruker alle spill denne bestanden og totalkvoten for årene som står her, i stedet for hver lagrings egen modell. Legg inn årene før den slås på.');
+}
+// ---------- Kvotemarkedet (KM5, steg 64; supabase/migrations/20261108230000_kvotemarked.sql admin_km and 20261112130000_km5.sql
+// admin_km5): the sales a week against the takst, what players bought from players against from the register per group, the hours to
+// the first bid, the players' share of the register per group (admin_share above), and the measuring events. Sums only, never who.
+// Read it after two real weeks before anything is adjusted (docs/planer/kvotemarkedet.md, KM5)
+let KMA = null;
+const KM_GRP = {u7:'u11', h7:'u11', h8:'u11', h9:'u11', h10:'u11', h14:'g11', h20:'g15'}, KM_GN = {u11:'under 11 m', g11:'11–14,99 m', g15:'15–20,99 m', g21:'21 m og over'};
+const KM_HL = {u7:'under 7 m', h7:'7–7,9 m', h8:'8–8,9 m', h9:'9–9,9 m', h10:'10–10,9 m', h14:'14–14,9 m', h20:'20–20,9 m'};
+async function kmaLoad(){ await null; try { KMA = DEMO ? kmaDemo() : {sales:await rpc('admin_km', {weeks:8}), more:await rpc('admin_km5', {weeks:8})}; } catch (e){ KMA = {err:e.message}; } if (TAB === 'okonomi') render(); }
+function kmCards(){
+  if (!KMA){ KMA = {loading:true}; kmaLoad(); return card('Kvotemarkedet', '<p class="note">Henter …</p>'); }
+  if (KMA.loading) return card('Kvotemarkedet', '<p class="note">Henter …</p>');
+  if (KMA.err) return card('Kvotemarkedet', '<p class="warn">' + esc(KMA.err) + '</p>', 'Er migreringen supabase/migrations/20261112130000_km5.sql kjørt?');
+  const sales = (KMA.sales || []).filter(r => r.kind !== 'boat'), M = KMA.more || {}, wk = v => esc(new Date(v).toLocaleDateString('nb-NO', {day:'numeric', month:'short'}));
+  const held = {}; for (const id in (HAV && HAV.reg_total) || {}){ const g = KM_GRP[id]; if (!g) continue; const h = held[g] || (held[g] = {grp:g, total:0, players:0}); h.total += HAV.reg_total[id]; h.players += HAV.reg_total[id] - ((HAV.reg || {})[id] || 0); }
+  const grp = (M.grp || []).map(g => Object.assign({held:held[g.grp] ? held[g.grp].players / Math.max(1, held[g.grp].total) : null, mkt:g.players + g.register ? g.players / (g.players + g.register) : null}, g));
+  const EVN = {km_put:'Lagt ut', km_bid:'Bud', km_buy:'Kjøp nå', km_quick:'Solgt til registeret', km_view:'Sett på', km_wish:'Ønsket hjemmel', km_move:'Hjemmel flyttet', km_reg:'Kjøpt fra registeret', mb_put:'Båt lagt ut (hjemmelen)'};
+  const SUB = {right:'hjemmel', struct:'strukturkvote', free:'til ledig', boat:'til båt', with:'følger med', moved:'flyttet', none:'uten'};
+  return card('Kvotemarkedet: salg per uke', table(sales, [['wk', 'Uke', wk], ['kind', 'Vare', v => SUB[v] || esc(v)], ['id', 'Hjemmelslengde', v => KM_HL[v] || esc(v)], ['put', 'Lagt ut'], ['sold', 'Solgt'], ['unsold', 'Ikke solgt'], ['cancelled', 'Trukket'],
+      ['median', 'Medianpris', v => nf(v, 0) + ' kr'], ['vs_takst', 'Median mot taksten', v => pct(v)]]),
+      'Taksten er spillets (kmTakst med kvoteprisen den dagen). Registeret selger til taksten og kjøper tilbake til 90 %, så hjemlene havner mellom 90 og 100 %; strukturkvotene er ikke bundet av det.') +
+    card('Kjøpt fra spillere mot registeret (8 uker)', table(grp, [['grp', 'Gruppe', v => KM_GN[v] || esc(v)], ['players', 'Fra spillere'], ['register', 'Fra registeret'], ['mkt', 'Andel fra spillere', v => pct(v)], ['held', 'Spillernes andel av hjemlene', v => pct(v)]]),
+      'Fra registeret er hendelsen km_reg (struktur og båt med hjemmel på verftet), sendt bare fra spillere som har sagt ja til målingen; salgene mellom spillere er alle. Andelen av hjemlene er registeret over (hos spillere mot alle).') +
+    card('Tid til første bud', table(M.bid || [], [['wk', 'Uke', wk], ['kind', 'Vare', v => SUB[v] || esc(v)], ['n', 'Avsluttet'], ['none', 'Uten bud'], ['h', 'Median timer til første bud', v => nf(v, 1)]]), 'Fra oppføringen ble lagt ut til første bud eller «Kjøp nå», for oppføringer som er avsluttet.') +
+    card('Målingen', table(M.ev || [], [['wk', 'Uke', wk], ['k', 'Hendelse', v => EVN[v] || esc(v)], ['sub', 'Slag', v => SUB[v] || esc(v)], ['n', 'Antall'], ['pc', 'Median % av taksten', v => v == null ? '–' : nf(v, 0) + ' %']]),
+      'Hendelsene spillet sender (cloudEv), i prosent av taksten og aldri hvem. Les av etter to ekte uker før noe justeres: volumet, andelen kjøpt av spillere og prisene mot taksten.');
+}
+function kmaDemo(){
+  const w = new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10), w2 = new Date().toISOString().slice(0, 10);
+  return {sales:[{wk:w2, kind:'right', id:'h10', put:3, sold:2, unsold:1, cancelled:0, median:6950000, vs_takst:0.962}, {wk:w2, kind:'struct', id:'h14', put:1, sold:1, unsold:0, cancelled:0, median:3100000, vs_takst:1.05},
+      {wk:w, kind:'right', id:'h14', put:2, sold:1, unsold:0, cancelled:1, median:11800000, vs_takst:0.94}],
+    more:{grp:[{grp:'g11', players:2, register:5}, {grp:'g15', players:0, register:1}, {grp:'u11', players:2, register:9}],
+      bid:[{wk:w2, kind:'right', n:3, none:1, h:5.5}, {wk:w2, kind:'struct', n:1, none:0, h:20}],
+      ev:[{wk:w2, k:'km_view', sub:'', n:41, pc:null}, {wk:w2, k:'km_put', sub:'right', n:3, pc:80}, {wk:w2, k:'km_bid', sub:'right', n:6, pc:91}, {wk:w2, k:'km_reg', sub:'right', n:9, pc:null}, {wk:w2, k:'km_quick', sub:'', n:2, pc:90}, {wk:w2, k:'mb_put', sub:'with', n:4, pc:85}]}};
 }
 function havWire(){
   const sw = $('#havSw'); if (sw) sw.onclick = async () => { sw.disabled = true; try { if (!DEMO) await rpc('admin_cfg_set', {ck:'stock_server', cv:!(HAV.cfg && HAV.cfg.stock_server)}); else HAV.cfg.stock_server = !HAV.cfg.stock_server; HAV = DEMO ? HAV : null; } catch (e){ alert(e.message); } render(); };
@@ -341,27 +388,33 @@ function lgDemo(){
 }
 // ---------- the media card (M9, docs/planer/butikker-og-sponsorer.md 4.6 and docs/sponsor/mediekort.md): one page with what a
 // prospective partner asks for, from the dashboard's own numbers (the chosen period at the top), the funnel and the sponsors' report;
-// printed or saved as PDF from the browser. The home ports by part of the coast come from src/data/port-regions.json (build.mjs)
+// printed or saved as PDF from the browser. The home ports by county and part of the coast come from src/data/port-regions.json
+// ({id: [name, landsdel, fylke]}; the counties from Kartverket by tools/regions/fylke.py, steg 28), put in by build.mjs, and so do the
+// pictures of the formats (docs/sponsor/format-*.jpg, taken from the demo build by tests/mediekortshot.py), as data: addresses
 const REGIONS = /*@regions*/null;
+const MKIMG = /*@mkimg*/null;
 const LDN = {nord:'Nord-Norge', midt:'Midt-Norge', vest:'Vestlandet', sor:'Sørlandet og Oslofjorden'};
 VIEW.mediekort = D => {
   if (!FN){ fnLoad(); } if (!SPR){ sprLoad(); }
   const o = D.overview || {}, daily = D.daily || [], days = daily.length || 1, sess = daily.reduce((a, d) => a + (d.sessions || 0), 0) / days, hrs = daily.reduce((a, d) => a + (d.hours || 0), 0) / days;
-  const homes = (D.geo && D.geo.homes) || {}, reg = {}; let homeN = 0;
-  for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; homeN += n; }
+  const homes = (D.geo && D.geo.homes) || {}, reg = {}, fyl = {}; let homeN = 0;
+  for (const [id, n] of Object.entries(homes)){ const r = REGIONS && REGIONS[id]; const k = r ? LDN[r[1]] : 'Ukjent', f = r && r[2] ? r[2] : 'Ukjent'; reg[k] = (reg[k] || 0) + n; fyl[f] = (fyl[f] || 0) + n; homeN += n; }
+  const regTxt = Object.entries(reg).sort((a, b) => b[1] - a[1]).map(([k, n]) => esc(k) + ' ' + nf(n, 0)).join(', ');
   const top = Object.entries(homes).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([id, n]) => [(REGIONS && REGIONS[id] ? REGIONS[id][0] : id), n]);
   const fa = FN && !FN.err && FN.all, land = fa && fa.start ? fa.land1 / fa.start : null, reg3 = fa && fa.start ? fa.land3 / fa.start : null;
   const sp = Array.isArray(SPR) ? SPR : [], spImp = sp.reduce((a, r) => a + (+r.imp || 0), 0), spSec = sp.reduce((a, r) => a + (+r.sec || 0), 0), spCl = sp.reduce((a, r) => a + (+r.clicks || 0), 0), spMeas = sp.reduce((a, r) => a + (+r.imp || 0) + (+r.nonview || 0), 0);
   const pct = v => v == null ? '–' : nf(v * 100, 0) + ' %';
   return '<div class="mk"><div class="card mk-head"><h2>Det Store Blå · mediekort</h2><p class="note">Et kystfiskespill langs hele norskekysten, med én felles verden og én felles klokke. Tallene gjelder ' + (DAYS === 1 ? 'siste døgn' : 'siste ' + DAYS + ' dager') + ', hentet ' + new Date().toLocaleDateString('nb-NO') + '. Bare spillere som deler statistikk, telles.</p><button id="mkPrint">Skriv ut eller lagre som PDF</button></div>' +
     '<div class="grid">' + kpi('Spillere i alt', nf(o.players, 0)) + kpi('Aktive siste 30 dager', nf(o.mau, 0)) + kpi('Aktive per dag (snitt)', nf(o.dau, 0)) + kpi('Økter per dag', nf(sess, 0)) + kpi('Snitt økt', nf(o.avg_min, 0) + ' min') + kpi('Spilletimer per dag', nf(hrs, 0) + ' t') + '</div>' +
-    card('Hjemhavn etter landsdel', bars(reg), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '.' : 'Ingen hjemhavner ennå.') +
+    card('Hjemhavn etter fylke', bars(fyl), homeN ? nf(homeN, 0) + ' spillere med hjemhavn. Etter landsdel: ' + regTxt + '. Mest brukte: ' + top.map(([n, k]) => esc(n) + ' (' + nf(k, 0) + ')').join(', ') + '. Fylkene: Kartverket (CC BY 4.0).' : 'Ingen hjemhavner ennå.') +
     card('Flåten i spillet', bars(D.boats || {}), 'Båter per type blant spillerne.') +
     card('Hva spillerne gjør', '<div class="grid">' + kpi('Har levert fisk', pct(land)) + kpi('Har levert tre ganger', pct(reg3)) + kpi('Turer i perioden', nf((D.trips || {}).count, 0)) + '</div>', 'Andelen av dem som åpnet spillet de siste åtte ukene (trakten).') +
     card('Sponsede plasseringer', sp.length ? '<div class="grid">' + kpi('Synlige visninger', nf(spImp, 0)) + kpi('Synlig andel', pct(spMeas ? spImp / spMeas : null), 'av de målte') + kpi('Sekunder sett', nf(spSec, 0)) + kpi('Klikk ut', nf(spCl, 0)) + '</div>' : '<p class="note">Ingen sponsede plasseringer ennå. Formatene kan vises i demobygget (KYST_DEMO=1).</p>',
       'En synlig visning: minst 1,5 % av skjermen, under 55°, minst halvparten synlig og ikke skjult av spillets vinduer, i sikt og ikke om natta, i ett sekund i strekk, høyst én per banner og økt (IAB/MRC Intrinsic In-Game Advertising Measurement Guidelines 2.0, utkastet fra juni 2022). Ubestemte visninger (WebGL 1) er ikke med i andelen.') +
     card('Formatene', '<ul class="mk-l"><li>Merkevare på utstyr i butikken: samme pris og virkning som det usponsede, merket «Samarbeid».</li><li>Banner og flagg ved butikker, mottak og verft langs hele kysten.</li><li>Annonse i Kystposten, høyst én per utgave, merket «Annonse».</li><li>Ekstra premie på sesonghendelser som Lofotfisket.</li><li>Arbeidsklær i Garderoben, gratis for spillerne.</li><li>Meglerens egne båter i bruktmarkedet, med lenke til den ekte båten.</li><li>Gave til nye spillere.</li></ul>',
-      'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') + '</div>';
+      'Aldri noe sponset på sjøen, i kartplotteren, i HUD eller i varsler. Ingen reklame for belønning, ingen annonsenettverk, ingen sporing fra andre.') +
+    (Array.isArray(MKIMG) && MKIMG.length ? card('Slik ser det ut', '<div class="mk-img">' + MKIMG.map(m => '<figure><img src="' + m.src + '" alt="' + esc(m.cap) + '"><figcaption>' + esc(m.cap) + '</figcaption></figure>').join('') + '</div>',
+      'Fra demobygget med en oppdiktet partner, «Nordlys Utstyr».') : '') + '</div>';
 };
 // ---------- sponsors (M6, supabase/migrations/20261102130000_sponsors.sql; docs/planer/butikker-og-sponsorer.md) ----------
 // A partner comes in only with a written agreement (CLAUDE.md): the reference to it is required. A placement says where it shows: kind
@@ -378,13 +431,13 @@ VIEW.sponsorer = () => {
   const row = s => '<div class="card"><h3>' + esc(s.name) + ' <span class="note">' + esc(s.kind) + (s.active ? '' : ' · av') + '</span></h3>' +
     '<p class="note">Avtale: ' + esc(s.agreement) + (s.site ? ' · <a href="' + esc(s.site) + '" target="_blank" rel="noopener">' + esc(s.site) + '</a>' : '') + (s.to ? ' · til ' + new Date(s.to).toLocaleDateString('nb-NO') : '') + '</p>' +
     (s.placements.length ? '<table><tr><th>Plassering</th><th>Mål</th><th>Data</th><th></th></tr>' + s.placements.map(p => '<tr><td>' + esc(p.kind) + '</td><td>' + esc(p.target) + '</td><td>' + esc(JSON.stringify(p.data)) + '</td><td><button data-spon="p" data-id="' + p.id + '" data-v="' + (p.active ? 0 : 1) + '">' + (p.active ? 'Slå av' : 'Slå på') + '</button></td></tr>').join('') + '</table>' : '<p class="note">Ingen plasseringer.</p>') +
-    '<div class="sprow"><select data-spk><option value="item">Utstyr (item)</option><option value="sign">Skilt (sign)</option><option value="event">Hendelse (event)</option><option value="press">Kystposten (press)</option><option value="look">Klær (look)</option><option value="broker">Megler (broker)</option><option value="gift">Gave (gift)</option><option value="link">Lenke (link)</option></select>' +
-    '<input data-spt placeholder="mål, f.eks. garnhaler" maxlength="40"><input data-spm placeholder="modellnavn" maxlength="60"><button data-spadd="' + s.id + '">Legg til plassering</button></div>' +
+    '<div class="sprow"><select data-spk><option value="item">Utstyr (item)</option><option value="sign">Skilt (sign)</option><option value="event">Hendelse (event)</option><option value="press">Kystposten (press)</option><option value="look">Klær og maling (look)</option><option value="broker">Megler (broker)</option><option value="gift">Gave (gift)</option><option value="link">Lenke (link)</option></select>' +
+    '<input data-spt placeholder="mål, f.eks. garnhaler" maxlength="40"><input data-spm placeholder="modellnavn, eller data som JSON" maxlength="400"><button data-spadd="' + s.id + '">Legg til plassering</button></div>' +
     '<button data-spon="s" data-id="' + s.id + '" data-v="' + (s.active ? 0 : 1) + '">' + (s.active ? 'Slå av sponsoren' : 'Slå på sponsoren') + '</button></div>';
   return '<div class="grid">' + kpi('Aktive sponsorer', nf(on.length, 0)) + kpi('Aktive plasseringer', nf(pl, 0)) + '</div>' +
-    '<div class="card"><h3>Ny sponsor</h3><p class="note">Bare med skriftlig avtale. Navnet vises i spillet merket «Samarbeid». Forhåndsvis i spillet med #sptest (testsponsoren) før en ekte legges inn.</p>' +
+    '<div class="card"><h3>Ny sponsor</h3><p class="note">Bare med skriftlig avtale. Navnet vises i spillet merket «Samarbeid». Logoen (valgfri) hentes av spillet med CORS og sjekkes her før den lagres. Forhåndsvis i spillet med #sptest (testsponsoren) før en ekte legges inn. Et malingsdesign i Malerverkstedet er plasseringen «Klær og maling» med målet <code>paint</code> og data som JSON: <code>{"name":"…","hull":"petrol","house":"hvit","ripe":"gul","vann":"hvit"}</code> (fargene er nøklene i Malerverkstedets palett; merket på skroget er sponsorens logo).</p>' +
     '<div class="sprow"><input id="spN" placeholder="Navn" maxlength="60"><select id="spK"><option value="founding">Founding partner</option><option value="vare">Vare</option><option value="sted">Sted</option><option value="sesong">Sesong</option><option value="megler">Megler</option></select>' +
-    '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
+    '<input id="spS" placeholder="https://… (nettsiden)" maxlength="200"><input id="spL" placeholder="https://… (logoen, valgfri)" maxlength="300"><input id="spA" placeholder="Avtalen (hvor den ligger)" maxlength="200"><button id="spNew">Legg til</button></div></div>' +
     (SPN.length ? SPN.map(row).join('') : '<p class="note">Ingen sponsorer ennå.</p>') + spReport() + '<p class="note"><a href="../#sptest" target="_blank" rel="noopener">Forhåndsvis spillet med testsponsoren ›</a></p>';
 };
 // the report per placement and week (4.4, after IAB/MRC 2.0, steg 66; 20261108231000_sp_view_iab.sql): per session and placement one
@@ -415,10 +468,20 @@ function spWire(){
     a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], {type:'text/csv'})); a.download = 'sponsorer-rekkevidde.csv'; a.click(); };
   const go = async (fn, args) => { try { if (!DEMO) await rpc(fn, args); SPN = null; render(); } catch (e){ alert(e.message); } };
   if ($('#spNew')) $('#spNew').onclick = () => { const n = $('#spN').value.trim(), a = $('#spA').value.trim(); if (!n || a.length < 3){ alert('Navn og avtale må fylles inn.'); return; }
-    go('sp_admin_put', {id:null, name:n, kind:$('#spK').value, logo:null, site:$('#spS').value.trim() || null, agreement:a}); };
+    // the logo (on the banner, the flag and a paint design's hull): the game fetches it with CORS, so it is tried the same way here first; one that cannot be fetched so would never show
+    const lg = $('#spL').value.trim(), put = () => go('sp_admin_put', {id:null, name:n, kind:$('#spK').value, logo:lg || null, site:$('#spS').value.trim() || null, agreement:a});
+    if (!lg){ put(); return; } if (!/^https:\/\//.test(lg)){ alert('Logoen må ha en adresse som begynner med https://.'); return; }
+    const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = put; im.onerror = () => alert('Logoen kan ikke hentes slik spillet henter den (med CORS). Serveren den ligger på, må sende Access-Control-Allow-Origin; ellers vises navnet i stedet på banneret, og ingenting på skroget. Legg den et annet sted og prøv igjen.'); im.src = lg; };
   document.querySelectorAll('[data-spon]').forEach(b => b.onclick = () => go('sp_admin_on', {what:b.dataset.spon, id:+b.dataset.id, on_:b.dataset.v === '1'}));
   document.querySelectorAll('[data-spadd]').forEach(b => b.onclick = () => { const r = b.closest('.sprow'), t = r.querySelector('[data-spt]').value.trim(), m = r.querySelector('[data-spm]').value.trim();
-    if (!/^[A-Za-z0-9_:-]{1,40}$/.test(t)){ alert('Målet må være en nøkkel som garnhaler eller jukse.'); return; } go('sp_admin_place', {sponsor:+b.dataset.spadd, kind:r.querySelector('[data-spk]').value, target:t, data:m ? {model:m} : {}}); });
+    if (!/^[A-Za-z0-9_:-]{1,40}$/.test(t)){ alert('Målet må være en nøkkel som garnhaler eller jukse.'); return; } // (the third field: a model's name, or the placement's data as JSON, as a paint design's: look, paint, {"name":"…","hull":"petrol","ripe":"gul"})
+    let data = m ? {model:m} : {}; if (m[0] === '{'){ try { data = JSON.parse(m); } catch (e){ alert('Dataene er ikke gyldig JSON.'); return; } if (!data || typeof data !== 'object' || Array.isArray(data)){ alert('Dataene må være et objekt.'); return; } }
+    // a paint design (look on paint): only the paint shop's own colours (the keys of HULLPAL in src/js/vessel3d.js, without the earned one), and at least one of them
+    const kind = r.querySelector('[data-spk]').value;
+    if (kind === 'look' && t === 'paint'){ const PAL = ['hvit', 'krem', 'lysgra', 'antrasitt', 'sort', 'marine', 'kobolt', 'himmel', 'petrol', 'flaske', 'mose', 'oksblod', 'rod', 'oransje', 'gul', 'oker'], CK = ['hull', 'house', 'deck', 'ripe', 'totone', 'vann', 'stripe'];
+      const bad = CK.filter(k => k in data && !PAL.includes(data[k])); if (bad.length){ alert('Ukjent farge i ' + bad.join(', ') + '. Fargene er: ' + PAL.join(', ') + '.'); return; }
+      if (!CK.some(k => k in data)){ alert('Et malingsdesign trenger minst én farge (hull, house, deck, ripe, totone, vann eller stripe).'); return; } }
+    go('sp_admin_place', {sponsor:+b.dataset.spadd, kind, target:t, data}); });
 }
 // ---------- the players' names (supabase/migrations/20261007120000_names.sql): shown to others beside the boat ----------
 // Taken away with a reason the player reads; that name cannot be had again, and choosing a new one costs nothing.
@@ -648,7 +711,7 @@ function demo(){
     economy:{gini_cash:0.62, gini_fleet:0.55, cash_p50:84000, cash_p90:1450000},
     money:{revenue_nok:18450, payers:61, arpu:98.1, conversion:0.032, repurchase:0.28, ttfp_days:4.5, refund_rate:0.01, abandon_rate:0.22, boosters:{}, log:[{at:new Date().toISOString(), player:'user_01H1004', product:'skin-rodt-skrog', nok:49, status:'paid', id:'cs_test_a1'}]},
     tech:{errors:[{msg:'TypeError: Cannot read properties of null', n:12, last:new Date().toISOString(), versions:['p15']}], fps:[{platform:'android', quality:'auto', fps:41.2, low:18, drops:3.1, n:220}, {platform:'windows', quality:'high', fps:58.9, low:44, drops:0.2, n:140}], browsers:{chrome:1100, samsung:450, safari:250, firefox:40}, platforms:{android:1200, windows:380, ios:220, mac:40}},
-    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80}}};
+    geo:{countries:{NO:380, SE:14, DE:9}, timezones:{'Europe/Oslo':388, 'Europe/Stockholm':14}, homes:{husoy:160, senjahopen:120, finnsnes:80, mN69:42, mF201:21, mM317:18, mSF98:9, mR40:6}}};
 }
 render(); setInterval(() => { if (DATA && (DEMO || SES) && TAB !== 'tilbake' && TAB !== 'agent') { DATA = null; load(); } }, 60000);
 </script>

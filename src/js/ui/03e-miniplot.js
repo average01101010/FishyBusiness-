@@ -3,6 +3,9 @@
 // mile either way without one), north up, with the fish the sounder sees (03c-heat.js heatDrawInto), the route and the boat. A tap
 // opens the chart plotter (it replaces the GPS button and the dock's «Planlegg»). Painted once a second while the 3D view shows (as a GPS
 // gives its fix), over a background kept until the boat has moved.
+// D6 (designombyggingen, 13.11.2026): the little chart has one palette, the dark one, day and night. It is an instrument in the dark
+// glass of the HUD, and it changed between dark, beige and the light fish chart with the hour (the big chart keeps its day and night)
+const MINI_NIGHT = true;
 const MINIP = {el:$('miniPlot'), n:64, img:null, off:document.createElement('canvas'), bg:document.createElement('canvas'), bg2:document.createElement('canvas'), key:'', c:null, at:0, job:null, raf:0, ft:0, scr:{}, n2:0};   // bg2, job, scr: miniBg
 // the GPS in the little chart's foot (Jonas 05.10.2026, on the phone: «kan gps-data legges inn i den lille kartplotteren for å spare
 // plass?»): speed, course and position, and the next waypoint on a route; INSTR.render3d (04-panels-instruments.js) keeps them here.
@@ -16,7 +19,7 @@ function miniRadius(){ const tier = typeof heatTier === 'function' ? heatTier() 
 // when it is done; the old one is drawn shifted after the boat till then (it is twice the box, so it covers the box till she is a
 // radius off). Only the first one, one after a new box, radius or night, or one after a jump is painted at once, as before.
 function miniBg(c, R, k, W, H, dpr){
-  const night = chartNight(), now = performance.now(), key = [R, W, H, dpr, night].join('|'), C = MINIP.c;
+  const night = MINI_NIGHT, now = performance.now(), key = [R, W, H, dpr, night].join('|'), C = MINIP.c;
   let J = MINIP.job; if (J && J.key !== key) MINIP.job = J = null;
   if (J){ if (dist(C, c) > R) miniStep(Infinity); return; }   // falling behind the boat (the old one no longer covers the box): done now
   if (key === MINIP.key && C && dist(C, c) < R / 5 && now - MINIP.at < 20000) return;
@@ -107,7 +110,7 @@ function miniPaint(){
   ctx.beginPath(); ctx.moveTo(0, -s * 1.3); ctx.lineTo(s * 0.7, s); ctx.lineTo(0, s * 0.55); ctx.lineTo(-s * 0.7, s); ctx.closePath();
   ctx.fillStyle = '#d02878'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5 * dpr; ctx.fill(); ctx.stroke(); ctx.restore();
   // north
-  ctx.fillStyle = chartNight() ? 'rgba(200,215,225,.85)' : 'rgba(20,40,55,.8)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
+  ctx.fillStyle = 'rgba(200,215,225,.85)'; ctx.font = '600 ' + Math.round(10 * dpr) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.fillText('N ↑', W - 6 * dpr, 13 * dpr);
   // what the fish colours mean (UI-redesign U4): the big chart's legend, small, under «N ↑», while the sounder paints fish here
   if (typeof heatTier === 'function' && heatTier() && typeof HEAT_STEPS !== 'undefined'){
     const n = HEAT_STEPS.length + 1, sw = Math.round(9 * dpr), sh = Math.round(6 * dpr), bx = W - 6 * dpr - n * sw, by = 18 * dpr;
@@ -124,6 +127,7 @@ function miniPaint(){
     const pos = G.ll[0] + ' ' + G.ll[1]; if (ctx.measureText(pos).width <= W - 2 * pad) L.push([pos]); else L.push([G.ll[0]], [G.ll[1]]);
     if (G.ukc != null) L.push([(S.lang === 'en' ? 'Under the keel ' : 'Under kjølen ') + fmt(G.ukc, 1) + ' m', '', G.ukc < 1]);   // (shallow water, Ø9 F5: the depth with the tide less her draught and squat)
     if (G.nv){ const a = 'WPT ' + G.nv.n + ' ' + G.nv.wpt, b = 'ETA ' + G.nv.eta; if (ctx.measureText(a + '  ' + b).width <= W - 2 * pad) L.push([a, b]); else L.push([a], [b]); }
+    if (G.lop) L.push([(S.lang === 'en' ? 'Race ' : 'Kappløp ') + G.lop.t, G.lop.leg]);   // (the race clock while a leg is sailed, KL2)
   } else L.push(['', fmt(2 * R / NM, 1) + ' nm']);
   const h = L.length * lh + pad; ctx.fillStyle = 'rgba(6,16,24,.66)'; ctx.fillRect(0, H - h, W, h);
   ctx.fillStyle = '#eef4f7';

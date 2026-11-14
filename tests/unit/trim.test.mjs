@@ -107,4 +107,39 @@ export default function (t){
       pots:[T.pots, [P.reduce((a, q) => a + q[0], 0) / P.length, P.reduce((a, q) => a + q[2], 0) / P.length]]};
     for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
       t.ok(d < 0.02, 'breisjark: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); } }
+  // ---- and for the kyst15 (OB12, 11.11.2026; valg 19): the net tub and the line tubs stand on the working deck aft, inside the setting
+  // port in the stern (they stood on the shelter deck, a storey over the hauler); fish is the middle of her four jigging places on the
+  // sills. The model weighs 75.1 t at the drawn waterline, so the game's waterline is the drawing's ----
+  { const A = anchorsOf('boat-kyst15.b64'), T = K.STAB_AT.kyst15, xz = p => [p[0], p[2]], J = A.jigZ;
+    const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
+      haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern],
+      fish:[T.fish || [0, 0], [A.haulerFoot[0], J.reduce((a, q) => a + q[1], 0) / J.length]]};
+    for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
+      t.ok(d < 0.02, 'kyst15: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); }
+    // (the gear stands on the working deck, not a storey up: within 5 cm of the deck's height)
+    t.ok(Math.abs(A.kit.garn.at[1] - A.deck.y) < 0.05 && Math.abs(A.kit.stamps.at[1] - A.deck.y) < 0.05, 'kyst15: garnkaret og stampene står på arbeidsdekket (' + A.kit.garn.at[1] + ' og ' + A.kit.stamps.at[1] + ' mot dekket ' + A.deck.y + ')');
+    // (the setting place is the port's sill in the stern, under the shelter deck and over the working deck)
+    t.ok(Array.isArray(A.kit.setter) && Math.abs(A.kit.setter[2] - A.stern) < 0.02 && A.kit.setter[1] > A.deck.y + 0.4 && A.kit.setter[1] < A.gw, 'kyst15: setteplassen er terskelen i porten i hekken (' + JSON.stringify(A.kit.setter) + ')'); }
+  // ---- and for the kyst21 (OB13, 11.11.2026; kyst21.py rebuilt after the pilot's way of working): the nets stand on the after deck
+  // behind the deckhouse, inside the roller in the stern's bulwark (they stood on the hatch, and the gear went out through the house,
+  // F20); the hauler, the tub and her own table along the starboard rail of the working deck, the line tubs to port of the hatch, the
+  // pots' stacks forward of it; fish is the first of her eight jigging places (to port: the machines are bolted on a side in turn).
+  // The model weighs 190.1 t at the drawn waterline, so the game's waterline is the drawing's ----
+  { const A = anchorsOf('boat-kyst21.b64'), T = K.STAB_AT.kyst21, xz = p => [p[0], p[2]], J = A.jigZ || [[0, 0, 0, 0]], P = A.kit.pots.at;
+    const pairs = {dy:[T.dy, A.deck.y], table:[T.table, xz(A.work.table)], deck:[T.deck, xz(A.work.tub)], tub:[T.tub, xz(A.kit.stamps.at)], net:[T.net, xz(A.kit.garn.at)],
+      haul:[T.haul, xz(A.hauler)], helm:[T.helm, xz(A.skipperAt)], hatch:[T.hatch, A.hatch[2]], stern:[T.stern, A.stern], bow:[T.bow, A.bow],
+      fish:[T.fish || [0, 0], [J[0][2], J[0][1]]],
+      pots:[T.pots, [P.reduce((a, q) => a + q[0], 0) / P.length, P.reduce((a, q) => a + q[2], 0) / P.length]]};
+    for (const k in pairs){ const [a, b] = pairs[k], d = Array.isArray(a) ? Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1])) : Math.abs(a - b);
+      t.ok(d < 0.02, 'kyst21: STAB_AT.' + k + ' er modellens (' + JSON.stringify(a) + ' mot ' + JSON.stringify(b) + ')'); }
+    // (the nets on the after deck, aft of the house and on the deck's height; the setting place the roller in the stern's bulwark, a
+    // rail's height over the after deck; and the table vessel3d.js SETTERS has no place for her: the model carries it, F20)
+    const door = A.doors[0].at;
+    t.ok(A.kit.garn.at[2] > door[2] + 4 && A.kit.garn.at[2] < A.stern - 1 && Math.abs(A.kit.garn.at[1] - A.deck.y) < 0.35, 'kyst21: garnkaret står på akterdekket bak huset (' + JSON.stringify(A.kit.garn.at) + ')');
+    t.ok(Array.isArray(A.kit.setter) && Math.abs(A.kit.setter[2] - A.stern) < 0.05 && A.kit.setter[1] > A.kit.garn.at[1] + 0.6 && A.kit.setter[1] < A.kit.garn.at[1] + 1.5 && Math.abs(A.kit.setter[0] - A.kit.garn.at[0]) < 0.05,
+      'kyst21: setteplassen er rullen i hekkens skansekledning, rett akter for garnkaret (' + JSON.stringify(A.kit.setter) + ')');
+    const ST = (readFileSync(join(ROOT, 'src', 'js', 'vessel3d.js'), 'utf8').match(/const SETTERS = \{[\s\S]*?\};/) || [''])[0];
+    t.ok(ST.length > 100 && !/^\s*kyst21:/m.test(ST), 'kyst21: ingen plass i tabellen SETTERS i vessel3d.js (modellen har kit.setter selv)');
+    // (her own gutting table is long enough for the three who gut to stand side by side, F19: kyst21.py TABLE, 2.0 m)
+    t.ok(A.work.own === true && Array.isArray(A.work.pack) && Math.abs(A.work.pack[0]) < Math.abs(A.work.table[0]) - 1, 'kyst21: den som iser, står ved luka innenfor dem som sløyer (work.pack ' + JSON.stringify(A.work.pack) + ')'); }
 }

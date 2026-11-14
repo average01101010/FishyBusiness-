@@ -27,7 +27,7 @@ Velg minst tre, alltid fra ulike deler, i tillegg til stedet feilen ble funnet:
 1. Bygget: `node build.mjs` for alt i kjernen og UI. `KYST_VEC=1 KYST_DIST=dist-vec node build.mjs` og `KYST_DIST=dist-vec` foran testskriptet når det gjelder vec-pakkene (bygg, veier, brygger, kaier, NPC-båter, havner).
 2. Ett Playwright-skript i scratchpad som starter spillet med `boot(pg)` fra `tests/_env.py`, flytter båten med `P(lat, lon)` og `await mapNeed(p, MAPD.simR)` (se `GO` i `tests/vectest.py`), og måler det samme på hvert sted. Skriv tallene ut, ikke bare OK.
 3. Når det gjelder 3D: vent på flisas statics (`READY` i `tests/vectest.py`), ta et skjermbilde per sted og se på det.
-4. Fantes feilen på et sted der den ikke var ventet, er det en ny sak: rett den, eller skriv den i `docs/BACKLOG.md`.
+4. Fantes feilen på et sted der den ikke var ventet, er det en ny sak: rett den i samme økt (lukkerunden i `CLAUDE.md`).
 
 ## Rapporten
 

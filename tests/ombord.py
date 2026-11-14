@@ -35,6 +35,12 @@ from playwright.async_api import async_playwright
 BOATS = ['trebat', 'skiff', 'snekke', 'plastsjark', 'sjark', 'hurtigsjark', 'sjarkny', 'breisjark', 'kyst15', 'kyst21']
 FISHERIES = ['juksa', 'line', 'garn', 'teiner']
 FORMATS = {'liggende': (640, 360), 'staaende': (360, 640)}
+# the ground she is set on at sea (GROUNDS' index; OB13 11.11.2026). Every ground of the Senja pack lies inside the baseline, where kyst21
+# (21 m) may not fish cod, haddock and saithe (J-187-2026 § 32): see NORULE
+GI = int(os.environ.get('KYST_OMBORD_GROUND', '0'))
+# KYST_OMBORD_NORULE=1 takes the gear's rules away for the recording (gearRules): the Senja pack has no ground outside the baseline, so
+# kyst21's setting of line and nets cannot be seen otherwise (in the game she sets outside it)
+NORULE = "window.gearRules = () => null;" if os.environ.get('KYST_OMBORD_NORULE') else ''
 
 # the slow clock for the whole page (see the docstring); __TK.set(k) changes the pace from now on
 TIMESCALE = """(() => {
@@ -65,8 +71,9 @@ BASE = """((a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type]; S
   const nn = Math.min(3, V.crewMax || 0);
   S.crew = Array.from({length:nn}, () => Object.assign(genCrew(), {bi:false, off:false, fatigue:5, morale:70, job:null, traits:[]}));
   if (window.OB_IDLE) { window.idleAssign = window.OB_IDLE; window.OB_IDLE = null; }
-  window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
-  window.SEA = (st) => { const g = GROUNDS[0].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
+  if (window.OB_COLD) { window.coldPen = window.OB_COLD; window.OB_COLD = null; }
+  window.OB_GO = null; window.CATCHQ = []; clearInterval(window.FEED); window.FEED = null; G3._debug.cam.at = null;
+  window.SEA = (st) => { const g = GROUNDS[__GI__].p; b.status = st || 'idle'; b.port = null; b.berth = null; b.pos = {x:g.x, y:g.y}; b.heading = 0.4; b.v = 0;
     b.fishUntil = st === 'fishing' ? S.t + 600 : null; G3.vesselChanged(); };
   window.FEEDON = (sp) => { clearInterval(window.FEED); window.FEED = setInterval(() => { const Q = window.CATCHQ || (window.CATCHQ = []);
     if (Q.length < 3) Q.push({sp:sp || (Math.random() < 0.75 ? 'torsk' : 'hyse'), kg:2 + Math.random() * 4, t:performance.now()}); }, 900); };
@@ -83,7 +90,9 @@ OPS = {
       await new Promise(r => setTimeout(r, 2500)); const q = portById('husoy');
       const r = await leiaRoute({x:q.p.x, y:q.p.y}, {x:g.x, y:g.y}, 'husoy', null); if (r.why) return 'SKIP: ' + r.why;
       S.plan = {wps:r.wps.map(w => ({x:w.x, y:w.y, port:null, fish:0, leia:true})), idx:0, speed:BOAT.vcruise || 6, full:false, returning:false};
-      depart();""", (0.9, 0.42, 1.6), 14],
+      /* (OB10 runde 4: she casts off when the pictures begin, OB_GO in record(): the lines take a game minute, 10 s, and the frames
+         waited for before the pictures took some 30 s under SwiftShader, so she was already off the quay in the first one) */
+      window.OB_GO = () => depart();""", (0.9, 0.42, 1.6), 14],
   # out to the ground: the skipper at the wheel, the crew inside or on the open deck
   'ut': ['*', 'til feltet: skipperen ved roret, mannskapet inne eller på det åpne dekket', """b.status = 'sailing'; b.port = null; b.pos = {x:g.x, y:g.y}; b.heading = 1.2; G3.vesselChanged();
       S.plan = {wps:[{x:b.pos.x + Math.sin(1.2) * 6, y:b.pos.y - Math.cos(1.2) * 6, port:null, fish:0}], idx:0, speed:BOAT.vcruise || 7, returning:false}; if (S.crew.length) CREW3D.reset();""",
@@ -131,8 +140,11 @@ OPS = {
       const why = startHaul('s0', false, 0); if (why) return 'SKIP: ' + (why[0] || why); if (S.crew.length) CREW3D.reset();""", (-0.8, 0.45, 0.9), 14],
   # clearing the deck: the hose and the broom after gutting (only pauses in the game; forced here as crewclip does)
   'rydd': ['*', 'rydde og spyle dekket etter sløyingen', """if (geoOf(type).hand || !S.crew.length) return 'SKIP: ingen agenter på håndbåtene (drawSkiff)'; SEA('idle'); b.deckT = S.t;
-      const orig = idleAssign; window.OB_IDLE = orig;
-      window.idleAssign = (P, ctx) => { orig(P, ctx); let i = 0; for (const p of P) if (p.st === 'pause' && p.c){ p.idle = ['hose', 'sweep'][i++ % 2]; p.with = null; } };
+      /* (OB14: the washing down is a role now, 13-work.js deckRoles, from two minutes after the deck work stopped; on a build from
+         before it, the breaks are forced as crewclip does) */
+      if (typeof deckRoles === 'function') b.deckT = S.t - WASH.after;
+      else { const orig = idleAssign; window.OB_IDLE = orig;
+        window.idleAssign = (P, ctx) => { orig(P, ctx); let i = 0; for (const p of P) if (p.st === 'pause' && p.c){ p.idle = ['hose', 'sweep'][i++ % 2]; p.with = null; } }; }
       CREW3D.reset(); CREW3D._st.ctxT = -1e9; CREW3D._st.lastSim = null;""", (0.3, 0.6, 0.9), 10],
   # in to the plant and mooring: 300 m out, then dock; the path in along the quay, the lines one by one
   'inn': ['*', 'inn til mottaket og fortøye: hun glir inn langs kaia, tauene på', """const q = portById('husoy'); b.status = 'idle'; b.port = null;
@@ -161,22 +173,38 @@ OPS = {
       S.jobs = [{kind:'last', crew:true, h:2, until:S.t + 120, no:'Lasting av proviant', en:'Loading the provisions'}]; if (S.crew.length) CREW3D.reset();""", (1.0, 0.45, 1.3), 12],
   # rest and food aboard: the meal is due (the cook) and the skipper turns in where she has bunks
   'hvile': ['*', 'mat og hvile om bord: kokken lager mat, skipperen går til køys der båten har køyer', """if (!S.crew.length) return 'SKIP: ingen mannskap (håndbåt)'; SEA('idle');
-      S.meal = {due:S.t + 10, cook:null, hist:[]}; S.crew.forEach(c => { c.fatigue = 60; }); if ((V.berths || 0) > 0) restStart();
+      b.deckT = null; S.meal = {due:S.t + 10, cook:null, hist:[]}; S.crew.forEach(c => { c.fatigue = 60; }); if ((V.berths || 0) > 0) restStart();
+      /* (OB14, F13: no galley, so the packed lunch is out now; the crew rested enough to eat it sitting up) */
+      if (((V.fac || {}).galley) === 'none'){ S.meal = {due:S.t + 300, cook:null, hist:[2], last:{t:S.t, q:2, by:null, nm:'middag'}}; S.crew.forEach(c => { c.fatigue = 20; }); }
       CREW3D.reset(); CREW3D._st.ctxT = -1e9;""", (0.2, 0.5, 0.95), 10],
+  # the cold (OB14, F14): lying still on a winter's day with the cold costing a third; those on a break beat their arms, the hoods are up
+  'kulde': ['*', 'kulda synes: de som har pause, slår floke og gnir hendene, hetta er oppe', """if (!S.crew.length) return 'SKIP: ingen mannskap (håndbåt)'; SEA('idle');
+      if (typeof deckRoles !== 'function') return 'SKIP: bygget har ikke kulda på folkene (før OB14)';
+      b.deckT = null; window.OB_COLD = coldPen; window.coldPen = () => 0.3; CREW3D.reset(); CREW3D._st.ctxT = -1e9;""", (0.3, 0.6, 0.9), 10],
 }
+# (OB14) the washing down from abeam and nearer, for the boats whose deck is hidden from ahead (the havsjark's gear house)
+OPS['ryddn'] = [OPS['rydd'][0], OPS['rydd'][1] + ' (fra siden, nært)', OPS['rydd'][2], (-1.35, 0.75, 0.75), 10]
 
 # (OB4 11.11.2026) the same at the quay from nearer and lower, so the hands at the tubs, the rail and the ice box can be seen: 'lossn' in
 # the first lift at the game's own pace (the hook comes down, the sling goes on, the tub goes up), 'isn' and 'krann' as 'is' and 'kran'
+# the camera for the work under a shelter deck (F18, OB12): abeam to starboard and low for the hauling station, astern and low for the
+# setting port; the fourth number is how far aft of her middle the camera looks, as a part of her length (cam.at)
+UNDER = {'jig': (-1.45, 0.10, 0.62, 0.20), 'maskin': (-1.45, 0.10, 0.62, 0.20), 'sloy': (-1.30, 0.10, 0.55, 0.14), 'trekk': (-1.25, 0.10, 0.60, 0.10),
+         'sett': (0.22, 0.10, 0.70, 0.42), 'settfull': (0.22, 0.10, 0.70, 0.42), 'riggfull': (-2.0, 0.14, 0.75, 0.30)}
 OPS['lossn'] = [OPS['loss'][0], OPS['loss'][1] + ' (nært: den som hekter på, og den som gir tegn)', OPS['loss'][2] + " S.mult = 1; b.land.t0 -= LANDING.prep * 0.05 + LANDING.lift * 0.2; b.land.until -= LANDING.prep * 0.05 + LANDING.lift * 0.2;", (0.55, 1.22, 0.95), 16]
 OPS['isn'] = [OPS['is'][0], OPS['is'][1] + ' (nært)', OPS['is'][2], (0.55, 1.22, 0.95), 12]
 OPS['krann'] = [OPS['kran'][0], OPS['kran'][1] + ' (nært)', OPS['kran'][2], (0.55, 1.22, 0.95), 14]
+# (OB10 runde 4) the operations whose pictures are taken on the slow clock (the game's time at k of real time) when only pictures are taken
+SLOWOPS = {'kast': 0.15}
 QUAYOPS = {'kast', 'inn', 'loss', 'lossn', 'is', 'isn', 'kran', 'krann'}
 
-# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck)
+# the crew against the model while the clip runs (crewclip's own checks: limbs in their pose, bodies on the way, agents off the deck;
+# and, OB10 runde 4, bodies standing in the kit on deck, kitHits)
 CLIP = """(() => { if (!CREW3D.on()) return null; const M = CREW3D._st.M;
   return {clip:(CREW3D.clipNow() || []).filter(x => x.n > 0).map(x => x.id + ':' + x.task + ':' + x.n + '[' + (x.segs || []).join('.') + ']'),
     walk:(CREW3D.bodyHits() || []).map(x => x.id + ':' + x.which + ':' + x.mode),
-    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : []}; })()"""
+    off:M ? CREW3D.visible().filter(a => a.mode !== 'in' && !M.ok(M.cellOf(a.x, a.z))).map(a => a.id) : [],
+    kit:CREW3D.kitHits ? (CREW3D.kitHits() || []).map(x => x.id + ':' + x.mode + ':' + x.task + ':' + x.n) : null}; })()"""
 
 STATE = """(() => ({st:CREW3D.agents().map(a => a.st + ':' + a.mode + ':' + (a.task || '')), n:JSON.parse(JSON.stringify(G3._debug.dk.n || {})),
   anim:(G3._debug.SK && G3._debug.SK.anim) ? G3._debug.SK.anim.st : null, gop:S.boat.gop ? S.boat.gop.op + ':' + S.boat.gop.kind : null, status:S.boat.status,
@@ -244,28 +272,48 @@ async def record(o, fmt, outdir):
             f = fish if fish != 'felles' else (rigs[0] if rigs else 'juksa')
             n0 = await pg.evaluate("G3._debug.kitStat.n")
             await pg.evaluate("__TK.set(1)")
-            await pg.evaluate(BASE, [o['boat'], f, op])
-            res = await pg.evaluate("(async (a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type], g = GROUNDS[0].p; " + js + " })", [o['boat'], f, op])
+            await pg.evaluate(BASE.replace('__GI__', str(GI)), [o['boat'], f, op])
+            if NORULE: await pg.evaluate(NORULE)
+            res = await pg.evaluate("(async (a) => { const [type, fish, op] = a, b = S.boat, V = VESSELS[type], g = GROUNDS[%d].p; " % GI + js + " })", [o['boat'], f, op])
             if isinstance(res, str) and res.startswith('SKIP'):
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 'skip': res}; log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue
             yaw, pitch, dist = cam
+            # (F18, OB12: on a boat whose work is under a shelter deck the camera stands low off the working side, or astern for the
+            # setting through the port in her stern, and looks in through the openings; from above only the shelter deck shows)
+            if op in UNDER and await pg.evaluate("(t) => { const V = VESSELS[t]; return !!(V.fac && V.fac.shelter === true && V.len >= 12 && V.len < 20); }", o['boat']):
+                yaw, pitch, dist, aft = UNDER[op]
+                await pg.evaluate("(z) => { G3._debug.cam.at = [0, 0.9, z]; }", aft * L)
             # (F22, OB4: at a quay the camera stands off the side away from it; a boat that lies port side to has it on the other side)
             if op in QUAYOPS: yaw *= await pg.evaluate("(t) => typeof berthSide === 'function' ? berthSide(t) : 1", o['boat'])
             await pg.evaluate("([y, p, d]) => { const c = G3._debug.cam; c.helm = false; c.yaw = y; c.pitch = p; c.dist = d; }", [yaw, pitch, dist * max(L, 4) * (1.35 if fmt == 'staaende' else 1)])
             try:
                 await pg.wait_for_function("([t, n0]) => { const K = G3._debug.kitStat; return K.vt === t && K.n >= n0 + 3; }", arg=[o['boat'], n0], timeout=120000)
             except Exception: pass
+            # (OB10 runde 4: her own crane moves at most 0.2 s of its motion a frame, drawCrane, and SwiftShader draws a frame in some
+            # seconds here, so the three pictures were all taken while it still stood folded; they wait now until it stands unfolded)
+            # (on the slow clock while it waits, so the freight job, a fixed game time, does not end first: found in the review)
+            if op in ('kran', 'krann') and await pg.evaluate("(t) => !!((geoOf(t).kit || {}).crane)", o['boat']):   # (a ship's crane, the ocean vessels', has no kit crane to wait for)
+                await pg.evaluate("__TK.set(0.1)")
+                try: await pg.wait_for_function("(() => { const C = G3._debug.kitStat.crane; return !!(C && C.unf); })()", timeout=900000, polling=2000)
+                except Exception: print(json.dumps({'clip': f'{fish}_{op}_{fmt}', 'note': 'kranen sto ikke utfoldet etter 15 min'}), flush=True)
+                await pg.evaluate("__TK.set(1)")
+            # (the casting off is a game minute, 10 s, under one frame in ten at the game's own pace under SwiftShader: the pictures of it
+            # on the slow clock, SLOWOPS, so the hands are seen walking to the cleats and taking the lines in)
+            kk = SLOWOPS.get(op, 1.0) if o['bilder'] else 1.0
+            if kk != 1.0: await pg.evaluate("(k) => __TK.set(k)", kk)
+            await pg.evaluate("(() => { if (window.OB_GO){ const f = window.OB_GO; window.OB_GO = null; f(); } })()")
             a = await pg.evaluate(STATE); fa = await pg.evaluate("G3._debug.kitStat.n")
             if o['bilder']:
                 # pictures only (--bilder): the game's own clock, a screenshot at 15, 50 and 85 % of the operation's seconds
                 t1 = time.time() - T0; c1 = None; ran = 0.0
                 for i, at in ((1, 0.15), (2, 0.5), (3, 0.85)):
                     left = sec * at - ran
-                    if left > 0: await pg.wait_for_timeout(int(left * 1000)); ran += left
-                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += time.time() - t0
+                    if left > 0: await pg.wait_for_timeout(int(left * 1000 / kk)); ran += left
+                    t0 = time.time(); await snap(pg, os.path.join(outdir, f'{fish}_{op}_{fmt}_{i}.jpg')); ran += (time.time() - t0) * kk   # (in the page's seconds)
                     if i == 2: c1 = await pg.evaluate(CLIP)
                 t2 = time.time() - T0
                 b = await pg.evaluate(STATE); c2 = await pg.evaluate(CLIP); fb = await pg.evaluate("G3._debug.kitStat.n")
+                if kk != 1.0: await pg.evaluate("__TK.set(1)")
                 d = {k: b['n'].get(k, 0) - a['n'].get(k, 0) for k in b['n'] if b['n'].get(k, 0) != a['n'].get(k, 0)}
                 rec = {'clip': f'{fish}_{op}_{fmt}', 'what': what, 't1': t1, 't2': t2, 'before': a['st'], 'after': b['st'], 'events': d, 'anim': b['anim'], 'gop': b['gop'], 'status': b['status'], 'hold': b['hold'], 'jobs': b['jobs'], 'kst': b.get('kst'), 'roles': b.get('roles'), 'dmg': b['dmg'], 'inc': b['inc'], 'clipcheck': [c1, c2], 'fps': round((fb - fa) / max(1e-3, t2 - t1), 1)}
                 log.append(rec); print(json.dumps(rec, ensure_ascii=False), flush=True); continue

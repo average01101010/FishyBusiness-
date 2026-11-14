@@ -113,7 +113,7 @@ async def main():
           Object.assign(b, {type:keep.type, engLv:keep.eng, trim:keep.trim, foul:keep.foul, fuel:keep.fuel}); S.hold = keep.hold; applyVessel(); return R; })()""")
         sk, sj = wt['skiff'], wt['sjark']
         print(ok(0.80 <= sk['full'] / sk['empty'] <= 0.95 and 0.85 <= sj['full'] / sj['empty'] <= 0.95), 'a full hold costs top speed, more on the planing skiff than on the sjark', {k: (v['empty'], v['full']) for k, v in wt.items()})
-        print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and abs(sj['boost'] - sj['spec'] * 2) < 0.02 and sj['gone'] == sj['spec'] and sk['eng'] == sk['spec'] and sk['boost'] == sk['spec']), 'a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone, the outboard skiff takes neither', {k: (v['spec'], v['eng'], v['boost'], v['gone']) for k, v in wt.items()})
+        print(ok(sj['eng'] <= sj['spec'] * 1.12 + 1e-6 and sj['eng'] > sj['spec'] and abs(sj['boost'] - sj['spec'] * 2) < 0.02 and sj['gone'] == sj['spec'] and sk['eng'] == sk['spec'] and abs(sk['boost'] - sk['spec'] * 2) < 0.02 and sk['gone'] == sk['spec']), 'a bigger engine helps the sjark (at most +12 %), turbo trim doubles her speed for 72 game hours and then it is gone; the outboard skiff takes no bigger engine, but the trim as every boat (Jonas 11.11.2026: «Trim-boost skal fungere på alle båter»)', {k: (v['spec'], v['eng'], v['boost'], v['gone']) for k, v in wt.items()})
         print(ok(all(abs(v['foul'][0] - 0.85) < 0.01 and abs(v['foul'][1] - 1.25) < 0.01 for v in wt.values())), 'a fully fouled hull costs 15 % speed and 25 % fuel', {k: v['foul'] for k, v in wt.items()})
         print(ok([x[0] for x in hd['out']] == [hd['spec'], round(hd['spec'] * 1.2), round(hd['spec'] * 1.4), round(hd['spec'] * 1.7)] and hd['out'][3][1] == round(hd['ice'] * 1.7) and all(x[0] == x[2] for x in hd['out']) and hd['job'] == 1 and hd['kar'] == [500, 500]), 'the hold rebuilt in three steps: +20 %, +40 %, +70 %, the ice room with it (a boat with a hold); an open boat\'s hold is her tubs, 500 kg each, no steps', hd)
         lens = [x[1] for x in r['ladder'] if x[2] != 'hav']
@@ -158,7 +158,8 @@ async def main():
           const Y = PORTS.find(q => q.sted === 'verft'); b.status = 'port'; b.port = Y.id; b.pos = {...Y.p}; b.gear = true; S.equip.jukse = 1; S.equip.motor90 = false; S.fm = {n:0, last:-1, kr:0, b:false}; S.msgs = [];
           const dr = () => document.getElementById('drawerBody'), tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
           // (the knives and the gaff at the top, so the ladder here is the boats': the tier between them has its own check below, OPP4)
-          const goalTxt = () => { S.equip.kniv = 3; S.equip.hott = 3; DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          // (OPP3: and the deck gear's tiers and the propeller, which are tiers on the page too)
+          const goalTxt = () => { S.equip.kniv = 3; S.equip.hott = 3; for (const k in EQUIP) if (EQUIP[k].tiers) S.equip[k] = EQUIP[k].tiers.length; S.boat.propLv = PROPUP.length; DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
           R.goals0 = goalTxt();
           // ten landing days with you aboard and 1 G
           const t0 = S.t; for (let d = 0; d < 9; d++){ S.t = t0 + d * 1440; fmLand(15000); } R.b9 = bladB(); S.t = t0 + 9 * 1440; fmLand(15000); R.b10 = bladB(); S.t = t0;
@@ -219,13 +220,16 @@ async def main():
         # or with two boats, the ladder is the boats' as before
         r = await pg.evaluate(r'''(()=>{ const R = {}, dr = () => document.getElementById('drawerBody');
           const goalTxt = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };
+          const goalTxt2 = () => { DOCK.open('fartoy'); const c = [...dr().querySelectorAll('.ph-card')].find(e => /Neste mål/.test(e.textContent)); const t = c ? [...c.querySelectorAll('b')].map(e => e.textContent) : []; DOCK.close(); return t; };   // (two boats: nothing set at the top)
           const home = () => { PHONE.open('home'); const e = document.querySelector('#phone .ph-goal'); const t = e ? e.textContent : ''; PHONE.show(false); return t; };
           S.fleet = [S.fleet[0]]; bindVessel(S.fleet[0]); const b = S.boat; b.type = 'trebat'; applyVessel(); S.lic = null; S.loan = null; S.loanIN = null; S.order = null; S.form = 'ENK';
+          // (the deck gear's tiers and the propeller at the top, OPP2 and OPP3: here the knives and the gaff are the tiers that are open)
+          for (const k in EQUIP) if (EQUIP[k].tiers) S.equip[k] = EQUIP[k].tiers.length; b.propLv = PROPUP.length;
           b.gear = true; S.equip.jukse = 1; S.equip.hott = 2; delete S.equip.kniv; S.fm = Object.assign(S.fm || {}, {b:true}); S.cash = 40000;
           R.kniv = goalTxt(); R.home = home();
           delete S.equip.hott; R.hott = goalTxt();
           S.equip.kniv = 3; S.equip.hott = 3; R.top = goalTxt();
-          delete S.equip.kniv; delete S.equip.hott; newVesselObj('snekke', 'husoy'); R.two = goalTxt();
+          delete S.equip.kniv; delete S.equip.hott; delete b.propLv; newVesselObj('snekke', 'husoy'); R.two = goalTxt();
           return R; })()''')
         print('goals, tier:', json.dumps(r, ensure_ascii=False))
         print(ok(len(r['kniv']) == 2 and 'sløyekniver' in r['kniv'][0].lower() and 'trinn 2' in r['kniv'][0] and 'under 7 m' in r['kniv'][1] and 'sløyekniver' in r['home'].lower()),

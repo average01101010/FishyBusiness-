@@ -40,16 +40,16 @@ Kildene (bildene fra valg 22, oppgitt og vist Jonas) og testene er ikke egne pun
 
 | Båt | Satt i grunnlaget | Etter OB0 | Kapittel |
 |---|---|---|---|
-| `kyst15` | 76 (godkjent) | **71**, under grensen; må også eksporteres på nytt (pchip-feilen, 10,6 cm mellom sidene ved stevnen) | 4.9 |
-| `breisjark` | 72 | **68**; etter OB11 **68** (egen evaluering, Jonas' skala) | 4.8 |
+| `kyst15` | 76 (godkjent) | **71**, under grensen; etter OB12 **68** (egen evaluering, Jonas' skala; eksportert på nytt) | 4.9 |
+| `breisjark` | 72 | **68**; etter OB11 **68**, etter runde 2 **71** (11.11.2026, uavhengig evaluering, Jonas' skala; under grensen) | 4.8 |
 | `snekke` | ingen | **67** (forslag) | 4.3 |
-| `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala) | 4.7 |
+| `sjarkny` | 70 | **66**; etter OB10 **71** (egen evaluering, Jonas' skala); etter runde 2 **67** (ny uavhengig sensor 11.11.2026, `sjarkny-grunnlag.md` 10.9); etter runde 3 **63** (ny uavhengig sensor 12.11.2026, `sjarkny-grunnlag.md` 10.12; det som mangler, ligger mest i felles kode); etter runde 4 **75** (ny uavhengig sensor 12.11.2026, `sjarkny-grunnlag.md` 10.14; ferdig) | 4.7 |
 | `plastsjark` | 66 | **63** | 4.4 |
 | `trebat` | ingen | **63** (forslag) | 4.1 |
 | `sjark` | 64 | **61** | 4.5 |
 | `hurtigsjark` | 62 | **59** | 4.6 |
 | `skiff` | ingen | **57** (forslag) | 4.2 |
-| `kyst21` | ingen (ikke revidert) | **48** (grovt anslag) | 4.10 |
+| `kyst21` | ingen (ikke revidert) | **48** (grovt anslag); etter OB13 **70** (egen evaluering, Jonas' skala; bygd på nytt); etter runde 2 **76** (12.11.2026, uavhengig sensor, Jonas' skala; ferdig) | 4.10 |
 
 Ingen av de ti er over 75 etter klippene. Det som trekker ned, er nesten bare K6 (arbeidsflyten og plassene): funnene med alvor A i arbeidet. De fleste av dem ligger i den felles koden (kapittel 3), ikke i modellene, så OB2–OB4 løfter alle båtene samtidig.
 
@@ -393,6 +393,8 @@ Opptakene: liggende, 2,8–3,6 bilder i sekundet, alle 16 klippene (kranen med).
 
 **Karakteren:** 76 i grunnlaget (K6 12). Klippene viser to funn med alvor A som er kyst15s egne (sløyingen usynlig; ingen ved haleren og blødekaret), i tillegg til F1–F3, og flere B (haleren gjennom skroget, juksa fra shelterdekket, redskapet på feil dekk, kranen). K6 går fra 12 til **7**. K1 6, K2 18, K3 13, K4 5, K5 9, **K6 7**, K7 9, K8 4 = **71**. Den eneste godkjente båten faller da under 75; med K6 9 (taket så lenge en A står åpen) ville hun fått 73. Begge A-funnene er regler i koden (1,2 m-grensen og kameraets plass), ikke modellen.
 
+**Etter OB12 (11.11.2026, arbeidsrutinen, grenen `plan/2026-11-11-90`, PR #64; `docs/skipsmodeller/kyst15-grunnlag.md` kap. 10):** arbeidsdekket går akterover under shelterdekket til speilet, med **setteport i hekken** (valg 19) og garnkaret og stampene på arbeidsdekket rett innenfor; garn og line settes ut gjennom porten. En **luke til i styrbord side** akter for haleporten gir fire juksaplasser med en armlengde imellom (`jukseMax` 8 → 4, valg 31 A), og ingen jukser fra shelterdekket. Halerens fot står innenfor skroget, taket har fått brem (valg 26), stripene på styrhusveggene er borte, og modellen er eksportert på nytt (sidene like). F18: `tests/ombord.py` har et lavt kamera fra siden og aktenfra for arbeid under shelterdekk, så bildene ser inn; spillerens eget kamera er ikke endret. Karakteren satt som egen evaluering av en uavhengig sensor: **68** (16 + 12 + 3 + 6 + 17 + 14), under 75. Det som mangler mest: de som sløyer, står i en klump (F19, felles), ryddingen skjer på shelterdekket (F12, OB14), porten og åpningene har ingen lemmer, og lanternene, roret og undervannsskroget er ikke vist i bilder. Bildene: `docs/okter/2026-11-11-ob12/`.
+
 **Til Jonas:** Kyst15 har plassene riktig under shelterdekket, men spilleren ser ingen av dem: sløyingen skjer der kameraet ikke ser, ingen står ved haleren, og garnet og stampene står en etasje over der redskapet hales.
 
 Bilder til Jonas:
@@ -448,6 +450,10 @@ Bilder til Jonas:
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_jig_liggende_2.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/juksa_sloy_liggende_3.jpg
 - /tmp/claude-0/-home-user-FishyBusiness-/07394754-f521-5fe7-add0-683e101280de/scratchpad/ombord/kyst21/felles_kran_liggende_2.jpg
+
+**Etter OB13 (11.11.2026, steg 91, Jonas' økt, grenen `claude/charming-faraday-my9nnq`): 70/100, ikke ferdig.** Båten er bygd på nytt etter pilotens arbeidsmåte (`docs/skipsmodeller/kyst21-grunnlag.md`): skroget som én flate på 190,1 t (249 før), bakken i full høyde, et akterdekk bak huset med garnkarene og en setterull i hekken (F20), haleren under galgen med blødekaret og et sløyebord på 2,0 m for tre side om side (F19), den som iser ved luka, åtte juksaplasser fordelt på begge sider (F21), teinestablene og lasteplassene regnet mot spillets bokser, lanternene etter vedlegg I for 20 m og over, brem på taket og åpne spygatt (valg 26). 141 982 trekanter nær (Jonas 11.11.2026: «Dette burde bli en vakker båt rett og slett»). Karakteren er satt av en uavhengig underagent: skrog 16, detaljer 14, lanterner 3, styrhus 7, arbeidsflyt 15, dekk 15. Det som trekker ned og ikke er rettet: klumpen ved galgen i teinetrekket, utsikten fra roret (bakken, masta og bommen), det flekkete dekket, det nakne akterdekket, lanternene ikke sett om natta til sjøs, og kranen (M16, spillets felles). Runde 2 står i `docs/planer/start/91.md`. Bildene: `docs/okter/2026-11-11-ob13/`.
+
+**Etter runde 2 (12.11.2026, steg 91, Jonas' økt, grenen `claude/ob13-kyst21-runde2`): 76/100, ferdig.** Teina tømmes på luka (eget `kit.pots.spot`; spillet tipper den 0,7 m innover, og på dekket langs styrbord sto den tippede teina i karmen), tre stabler på ti, lastebommen toppet opp, smalere stolper, styrhusdørken 0,30 m høyere og fronten skrådd 0,20 m, sveis, sklisikre felt og slitasje i dekket, garnbinge med beslag, ny lastevinsj og nytt sløyebord, topplanterna skjermet akterover, nattbildene fra spillet og nattrendringer med alle lysene. Første sensor ga 70, andre 76 (`kyst21-grunnlag.md` 12.3). Det som står igjen og er felles kode (de som sorterer, står på rad ved haleren uansett tømmested; teina svinges i skulderhøyde forbi dem; krabbekaret, settingen og krabbene uten kar i `drawPots`), står i backloggen.
 
 ### 4.11 Etter OB2 (09.11.2026): arbeidsflyten med fortøyningen, forslag
 
@@ -544,6 +550,30 @@ OB4 (steg 82, Jonas' økt, grenen `ccr-309f2cf5-w71mxh`) tok arbeidet ved kaia f
 Det evalueringen fant og OB4 ikke har rettet, står i backloggen under OB4: bildene av kyst21 er for høye til å bedømme arbeidet, og isslangen og kassa i kroken bør ses på nært hold av Jonas på nettbrettet (`docs/spill-dette/82.md`).
 
 Bildene før og etter står i `docs/okter/2026-11-11-ob4/`: innseilingen, lossingen (oversikt og nært), isen og kranen for havsjarken, den nye hurtigsjarken og kyst21, i begge formater.
+
+### 4.15 Etter OB14 (11.11.2026): rydde og spyle, matpakka og kulda
+
+OB14 (steg 92, Jonas' økt, grenen `claude/nice-edison-lxafdp`) tok F12, F13 og F14 for båtene med mannskap på dekk; systemet står i 5.19f i `docs/systemer/folk-om-bord.md`.
+
+| Funn | Hva som er gjort | Står igjen |
+|---|---|---|
+| **F12** rydde og spyle | Dekket spyles som en del av arbeidet: fra to minutter etter at sløyingen og isingen stoppet, og i 6–16 minutter etter båtens lengde, har én av de ledige slangen (rollen `spyl`), vendt mot sløyeplassen en strålelengde unna, og med tre eller flere ledige skrubber en til (`kost`) utenfor strålen. Strålen føres fra side til side, og vannet synes på dørken der den lander. | Slangen kommer fra en trommel ved den som spyler, ikke fra et uttak i modellen (båtfasene). Et trekk uten sløying om bord (krabbe) gir ingen spyling: `b.deckT` settes bare av sløying og ising. Under fart på en båt med hus spyler ingen (mannskapet er inne). Kyst15: sløyeplassen er under shelterdekket, så spylingen synes ikke. Håndbåtene (pøs og kost) har bare teksten på Mannskap-siden. |
+| **F13** mat | På båtene uten bysse (av dem med mannskap på dekk: snekka) tar de ledige fram matpakka når måltidet serveres, setter seg på en balje ved rekka nærmest roret og spiser, og tar kaffen etterpå på samme plass. | Skipperen ved roret spiser ikke synlig. Båtene med kokeplate eller bysse spiser inne som før (kokken og de andre går inn døra). Søvnen (F13s andre halvdel) er som før. |
+| **F14** kulde og vått | Når `coldPen` koster (over 0,05) på sjøen, slår noen av dem som står stille på pause, floke og gnir hendene; hetta er oppe på dem med oljehyre eller parka, og en barhodet får lue. | Hetta er bygd i visningen (en kappe rundt hodet), ikke modellert; figuren har ingen hette som del. Det våte (regn, sjøsprøyt) synes ikke for seg, bare gjennom `coldPen`. Ingen fryser midt i arbeidet eller under fart, med vilje. |
+
+**Arbeidsflyten i rydding, mat og kulde, egen evaluering (11.11.2026).** Satt av en egen underagent som bare fikk arkene med bildene (før og etter, begge formater) og Jonas' skala (arbeidsflyt 0–25), og bare for det bildene viser. Tallene er ikke hele K6 for båten og erstatter ikke karakterene i 4.1–4.10.
+
+| Båt | Før (av 25) | Etter (av 25) | Det som ser riktig ut | Det som trekker ned |
+|---|---|---|---|---|
+| `snekke` | 8 | 14 | Begge sitter i matpausen; skipperen med armene i kryss i kulda; strålen går ned i dørken, ikke tvers over mot skipperen som før | Ingen vannfilm å se på dørken; den som spyler, står halvt skjult under hardtopen; ingen kost |
+| `sjark` | 8 | 11 | Tre samlet om arbeidet ved sløyebordet, ikke én alene akter; hvitt vann ved bordet fra siden | De to ved bordet overlapper fra kameraet; matpausen som før (kokeplate: de spiser inne); kulda vises nesten ikke i den størrelsen |
+| `breisjark` | 8 | 10 | Strålen går ikke lenger mot folkene akter; to står sammen i kulda | Verken stråle, vann eller kost å se i bildene ovenfra; folkene «står bare»; matpausen uleselig |
+
+Evalueringen sa selv at bildene fra `tests/ombord.py` (640×360) er for små til å bedømme matpakka og koppen, hetta og lua, floken og hvor slangen peker på sjarkene (kameraet står bak redskapsrommet). Nærbildene i 1000×700 viser dem: `sjark_spyling_naert.jpg` (én spyler, vannet på dørken, én skrubber ved benken, to står i kulda ved rekka), `snekke_spyling_naert.jpg` (slangen fra trommelen, skipperen gnir hendene), `sjark_kulde_naert.jpg` (én gnir hendene; dette mannskapet har sydvest, hjelm og lue, så ingen hette) og `sjark_hette_naert.jpg` (hettene oppe på to i oljehyre; tatt underveis, før den som skrubber, ble flyttet ut av strålen). Jonas bør se dette på nettbrettet (`docs/spill-dette/92.md`). Det evalueringen fant og OB14 ikke har rettet, står i backloggen under OB14.
+
+**Forslag til K6 per båt etter OB14:** F12–F14 har alvor B og C, så taket på rundt 60 % for åpne A-funn flyttes ikke av dette steget. Forslaget er uendret K6 for alle åtte (ingen poeng opp på grunnlag av bilder evalueringen ikke kunne lese), og at rundene som setter karakteren per båt (OB10, OB11, OB13 og de neste), tar med rydding, mat og kulde i sine egne bilder på nært hold.
+
+Bildene før og etter står i `docs/okter/2026-11-11-ob14/`: rydding (ovenfra og fra siden), mat og hvile, og kulda for snekka, havsjarken og breisjarken, i begge formater, og fire nærbilder.
 
 ## 5. Båten i sjøen
 
@@ -664,7 +694,8 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 09.11.2026: **OB2 rullet ut** (Jonas' økt, gren `ccr-a9ccd5ec-it307t`, 7d2404bd, versjon e5e171f41fc3): F1, F2 og F3 rettet for alle båtene med mannskap; F22 flyttet til OB4. Forslagene til K6 i 4.11.
 - 09.11.2026: **OB15 ferdig** (Jonas' økt, gren `ccr-4660a71b-kidfna`, PR #52, rullet ut i ec54eb3, versjon 5b8c411a4cd9): trim etter hvor lasten står, slagside fra haleren, karene og folkene, mannskapets vekt (S1–S3). Tabellen og det antatte i 5.1; S4 og S5 står (C). Skjermbildene i `docs/okter/2026-11-09-ob15/`.
 - 11.11.2026: **OB3 rullet ut til testutgaven** (Jonas' økt, gren `ccr-13ec41bb-wikvwe`, d9f148f, versjon fc8e85de4868): F4, F8, F15, F19, F21 og F24 rettet for båtene med mannskap, F7 og F20 delvis; tabellen i 4.13. Neste: OB4 (steg 82, startmeldingen i `docs/planer/start/82.md`).
-- 11.11.2026: **OB4 rullet ut til testutgaven** (Jonas' økt, gren `ccr-309f2cf5-w71mxh`, versjon 6a98d456e2b8): F10, F11, F22 og F23 rettet for båtene med mannskap på dekk; tabellen i 4.14. Neste på sporet: OB14 (steg 92, `docs/planer/start/92.md`) og OB12 (steg 90).
+- 11.11.2026: **OB14 rullet ut til testutgaven** (Jonas' økt, gren `claude/nice-edison-lxafdp`, versjon 229d28a947cb): F12, F13 og F14 for båtene med mannskap på dekk; tabellen og evalueringen i 4.15. Alle fasene OB2–OB15 er da bygd; det som står på sporet, er rundene på båtene (OB1, OB10, OB11, OB13).
+- 11.11.2026: **OB4 rullet ut til testutgaven** (Jonas' økt, gren `ccr-309f2cf5-w71mxh`, versjon 756582fc0efa): F10, F11, F22 og F23 rettet for båtene med mannskap på dekk; tabellen i 4.14. Neste på sporet: OB14 (steg 92, `docs/planer/start/92.md`) og OB12 (steg 90).
 - 09.11.2026: **OB1 bygd** (Jonas' økt, gren `ccr-e474ac41-zlir5x`): 4.1 over. `tests/ombord.py --bilder` tar bare bildene (Jonas: «Du trenger ikke å ta videoklipp av båten, det holder med bilder»). Neste på sporet: OB5 (skiffen, `docs/planer/start/83.md`).
 - 09.11.2026: **OB5 bygd** (Jonas' økt, gren `ccr-b0ab5771-n45cmj`): 4.2 over, forslag 75 etter Jonas' skala. Neste på sporet: OB6 (snekka, `docs/planer/start/84.md`).
 - 10.11.2026: **OB8 bygd** (Jonas' økt, gren `ccr-869710d8-bo5iwu`): havsjarken med setteport i hekken (Jonas: «A Åpning i hekken»; F20), de to ved bordet side om side (F19), juksa fordelt (F21), pakkerens plass og iskassa, bremmen (valg 26), styrhusveggene uten striper, livbøya under vinduet, pyntefenderne ut og fenderen som felles modell; forslag 76 i `havsjark-grunnlag.md` 9.5. Funnene i 4.5 med alvor A er rettet, utenom F4 (OB3). Neste på sporet: OB9 (hurtigsjarken, `docs/planer/start/87.md`).
@@ -674,3 +705,4 @@ Jonas svarte på alle 09.11.2026 (også under «Valg som venter på Jonas» i `d
 - 10.11.2026: **OB9 bygd** (Jonas' økt, gren `claude/ob9-hurtigsjarken-75-jtun77`): den brukte hurtigsjarken med benken tvers av luka og stampene fri av den (F19), juksa fordelt på begge sider fritt for haleporten, døra og kranen (F21), bremmen (valg 26), styrhusveggene uten striper, den tomme båtens vannlinje (valg 18 A, `WLE`), `STAB_AT` sjekket mot modellens ankre. Settingen går fritt over hekken (ingen setteport). Teinestabelen fra OB16 står fri av blødekaret, stagene og kranen. Forslag 75 etter Jonas' skala (`hurtigsjark-grunnlag.md` 9.5); valg 31 (juksamaskinene) venter på Jonas. Bildene av typen kunne ikke hentes (Wikimedia sperret bildefilene for skyøkta); de er valgt etter beskrivelsen. Neste på sporet: OB10 (den nye hurtigsjarken, `docs/planer/start/88.md`).
 - 10.11.2026: **OB11 bygd** (Jonas' økt, gren `ccr-7c6616f1-m5zscg`): breisjarken, se avsnittet sist i 4.8 og `breisjark-grunnlag.md` kap. 10. Egen evaluering 68 etter Jonas' skala; ikke ferdig etter grensen på 75, rullet ut til testadressen 10.11.2026 (85a1396); Jonas' svar om juksa og akterskansen venter (valg 32, `jukseMax` 6 → 1). Startmeldingen for OB12 i `docs/planer/start/90.md`.
 - 10.11.2026: **OB10 bygd** (Jonas' økt, gren `ccr-e7277295-e9i00p`): den nye hurtigsjarken, se avsnittet sist i 4.7 og `sjarkny-grunnlag.md` kap. 10. Egen evaluering 71 etter Jonas' skala (69 etter første runde); ikke ferdig etter grensen på 75. Startmeldingen for OB11 i `docs/planer/start/89.md`.
+- 11.11.2026: **OB10 runde 2** (Jonas' økt, gren `claude/charming-knuth-ih6c5n`): kranen snudd, taket spart ut over haleporten for teinedaviten, instrumenter på skjermene, detaljer på vegger, speil og dørk, teineplassene i én kilde. Uavhengig karakter **67**, under 75: ikke ferdig. Se `sjarkny-grunnlag.md` 10.7–10.9 og backloggen «OB10 runde 2».

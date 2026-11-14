@@ -159,8 +159,9 @@ function dataEls(){ return [...document.querySelectorAll('script[type="applicati
 function dataEarly(){
   const ty = new Set(['trebat']);
   try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
-  // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js)
-  return el => /^pic-/.test(el.id) || el.id === 'glb-worker' || el.id === 'felt-s' || [...ty].some(t => el.id === 'glb-' + t);
+  // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js; and the speed
+  // limits' areas, Ø11.8: Autonav holds them in the time away played before the game opens, 05e-sjovei.js fartRuns)
+  return el => (/^pic-/.test(el.id) && el.id !== 'pic-items' && el.id !== 'pic-tat') || el.id === 'glb-worker' || el.id === 'felt-s' || el.id === 'fart-r' || [...ty].some(t => el.id === 'glb-' + t);
 }
 // The models' bytes as they came (04.11.2026, the memory: two crashes on Android that day with 462 and 647 MB of JS heap): kept here as
 // a Uint8Array per element id and read by glbData (vessel3d.js), the pub's and the naust's parse and the buildings' loader, instead of
@@ -185,7 +186,7 @@ async function bootData(){
   const early = dataEarly(), els = dataEls().filter(early);
   if (!dataEls().length){ MODELS.done = true; return; }   // (a one-file build: everything is in the page)
   // (the fishing grounds' shapes are not needed to play: a file that does not come is left out, and the grounds are circles, 03j-felt.js)
-  await Promise.all(els.map(el => el.id === 'felt-s' ? dataGet(el).catch(e => { MODELS.failed.push('felt-s'); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }) : dataGet(el)));
+  await Promise.all(els.map(el => el.id === 'felt-s' || el.id === 'fart-r' ? dataGet(el).catch(e => { MODELS.failed.push(el.id); try { if (typeof cloudErr === 'function') cloudErr('data: ' + (e && e.message || e), 'boot', '', 'slow'); } catch (e2){} }) : dataGet(el)));
 }
 // the rest, after the map's first packs: three at a time; a file that does not come in four tries is told to the error list and left
 // out (its readers draw what they drew without it), so a bad connection never keeps the 3D view from coming
@@ -237,8 +238,12 @@ async function bootMapLoad(){
   }
   DEPTH = true;
   // the chart's coast over the whole frame (H1b R2) comes after the start, so the start waits no longer for it
-  if (MAPD.chart0) setTimeout(() => mapLoad(MAPD.chart0).catch(e => console.error(e)), 4000);
+  if (MAPD.chart0) setTimeout(chart0Load, 4000);
 }
+// (the chart is told when it comes: a chart painted while this load was under way asked for no load of its own, chartPath0 in
+// 03a-chart.js, so nothing painted it again, and the whole country stood without land until the view was moved; charttest saw it as
+// «Hardangervidda er sjø», 12.11.2026)
+function chart0Load(){ return mapLoad(MAPD.chart0).then(() => { if (typeof chartCame === 'function') chartCame(null); }, e => console.error(e)); }
 function bootGame(){
 S = load(); tabMark();   // this page has the game now (an older page left open stops: tabMine, 02-format-state.js)
 // the fish plants' morning price messages (gone 13.10.2026) leave the phone's message list too
@@ -264,7 +269,9 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
       'The aluminium skiff can now only be bought at the yard. You have Father’s old wooden boat instead' + (back ? ', and ' + kr(back) + ' back for gear that does not fit her' : '') + '.');
   } }
 { const fixW = w => { if (w && w.port){ const q = portById(w.port); if (q){ w.x = q.p.x; w.y = q.p.y; } } };
-  if (S.boat.status === 'port'){ const q = portById(S.boat.port); S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
+  // (a harbour that is no longer there, a place moved before its id was kept, 13.11.2026: the nearest one, as for a boat on land)
+  if (S.home && !portById(S.home)) S.home = (nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p) || {}).id || null;
+  if (S.boat.status === 'port'){ let q = portById(S.boat.port); if (!q){ q = nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p); S.boat.port = q.id; } S.boat.pos = {x:q.p.x, y:q.p.y}; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}]; }
   (S.draft || []).forEach(fixW); if (S.plan) S.plan.wps.forEach(fixW); S.trail.forEach(fixW);
   // real coastline: anything that now sits on land is brought back to a harbour
   if ((S.draft || []).some(w => isLand(w))) S.draft = [];
@@ -272,11 +279,11 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
   if (onLand || badPlan){
     const q = PORTS.slice().sort((a, b) => dist(a.p, bb.pos) - dist(b.p, bb.pos))[0];
     S.plan = null; bb.status = 'port'; bb.port = q.id; bb.pos = {x:q.p.x, y:q.p.y}; bb.v = 0; S.trail = [{x:q.p.x, y:q.p.y, port:q.id}];
-    log('Kartet har fått ekte kystlinje. Båten er flyttet til ' + q.name + '.', 'The chart now has the real coastline. The boat was moved to ' + q.name + '.');
+    log('Kartet eller en kai er endret, og ruta gikk over land. Båten er flyttet til ' + q.name + '.', 'The chart or a quay has changed, and the route crossed land. The boat was moved to ' + q.name + '.');
   } }
 { const d = newState(); for (const k of ['equip', 'crew', 'loan', 'member', 'msgs', 'sales', 'order', 'owned', 'stock', 'marks', 'jobs', 'prep', 'tripBuff', 'draftDep', 'navrows', 'company', 'boatName', 'tut', 'incidents', 'lore', 'tattoos', 'tat', 'sets', 'gseq', 'ops', 'lic', 'qseed', 'haill', 'pubE', 'target', 'streak', 'clothes', 'orders', 'rep', 'bors', 'cevt', 'workLog']) if (S[k] === undefined || (k === 'stock' && !S[k])) S[k] = d[k];
   if (!S.fm) S.fm = fmInit();   // blad B from the landing notes kept, and at once for a company that already has a closed-group right
-  if (!adminOk()){ S.mult = 1; if (S.adm) S.adm.noEnergy = false; }
+  if (!adminOk()){ S.mult = 1; if (S.adm){ S.adm.noEnergy = false; S.adm.hopp = false; } }   // (the fast-forward test switch too, HO2)
   // one clock for everyone (core/01-world.js): no pace of one's own, and the world's seed for the quota years, stocks and sellers
   if (WCLOCK.on){ S.mult = 1; S.qseed = WORLD_SEED; }   // the Admin app's pace and energy are only Jonas's (cloud adminOk)
   if (!S.boat.type) S.boat.type = 'trebat'; if (S.boat.engH === undefined){ S.boat.engH = 0; S.boat.svcAt = 0; }
@@ -290,7 +297,14 @@ if (BOOTG.safe) bootgSafe();   // the starts before locked (BOOTG above): the ro
       log('Påbudt utstyr følger nå båten, og det som manglet, er montert gratis: ' + nm('no') + '.', 'Required equipment now comes with the boat, and what was missing has been fitted free: ' + nm('en') + '.'); } }
   karRefund(); applyVessel(); if (!S.settings.chart) S.settings.chart = S.settings.plotter && S.equip.plotter ? 'fish' : 'nav'; if (S.settings.heatSp && !HEAT.sp.includes(S.settings.heatSp)) delete S.settings.heatSp;
   if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; }
-  if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
+  // a boat over 15 m at a rorbu (from before SITE_MAXLEN, 13.11.2026: the 21 m coastal vessel lay there with too little water to get out):
+  // at the nearest harbour that takes her, told in the log
+  const siteOut = () => { const b = S.boat; if (b.status !== 'port' || siteFits(b.type) || !isRorbu(b.port)) return; const R = portById(b.port), at = R ? R.p : b.pos;
+    const q = PORTS.filter(p => !p.rorbu && portFits(p, b.type)).sort((x, y) => dist(x.p, at) - dist(y.p, at))[0]; if (!q) return;
+    b.port = q.id; b.berth = 'main'; b.pos = {x:q.p.x, y:q.p.y}; b.dyn = null; if (b === S.boat) S.trail = [{x:q.p.x, y:q.p.y, port:q.id}];
+    log('Rorbukaia tar bare båter opp til ' + SITE_MAXLEN + ' m. «' + (S.boatName || '') + '» er flyttet til ' + q.name + '.', 'The rorbu quay only takes boats up to ' + SITE_MAXLEN + ' m. «' + (S.boatName || '') + '» was moved to ' + q.name + '.'); };
+  if (!(S.fleet && S.fleet.length)) siteOut();
+  if (S.fleet && S.fleet.length){ ensureFleet(); for (const v of S.fleet) withVessel(v, () => { siteOut(); if (S.boat.status === 'port' && !portById(S.boat.port)) S.boat.port = nearestPort(S.boat.pos && isFinite(S.boat.pos.x) ? S.boat.pos : PORTS[0].p).id;   /* (the fleet's other vessels as the boat above, 13.11.2026) */ if (S.boat.status === 'port' && portById(S.boat.port)){ const pp = portById(S.boat.port).p; S.boat.pos = {x:pp.x, y:pp.y}; } }); } else ensureFleet(); }
 // every vessel gets its gear locker (saves from before passive gear have none, also on vessels that are not bound)
 for (const v of S.fleet) withVessel(v, () => { if (!S.pgear) S.pgear = newPGear(); });
 // 08.10.2026: one pot only, the big one («Krabbeteiner»); small pots aboard and in the sea become big ones
@@ -317,6 +331,11 @@ for (const v of S.fleet) withVessel(v, () => { const V = S.boat && VESSELS[S.boa
   if (lv > 1 && !equipFits('jukseLv', S.boat.type)){ let kr0 = 0; for (let i = 1; i < lv; i++) kr0 += EQUIP.jukseLv.tiers[i].kr * Math.max(0, S.equip.jukse || 0);
     delete S.equip.jukseLv; if (kr0 > 0){ book('redskap', kr0, 'Trinnet på juksamaskinene kjøpt tilbake', 'The reels\' tier bought back');
       log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner, og én person passer dem uten ' + lc1(EQUIP.jukseLv.tiers[lv - 1].no.replace(/^Juksamaskiner med /, '')) + '. Trinnet er kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' reels, and one person tends them without ' + EQUIP.jukseLv.tiers[lv - 1].en.replace(/^Reels with /, '') + '. The tier was bought back for ' + kr(kr0) + '.'); } }
+  // (OB12, the kyst15 from eight reels to four: a tier that gives nothing at the new count is paid back for every reel, and the tiers
+  // she keeps for the reels that go ashore, core/10-gear.js jigTierBack; before only a tier that did not fit the boat at all was)
+  { const n0 = S.equip.jukse || 0, lv1 = Math.round(+S.equip.jukseLv || 1), B = n0 > 0 && lv1 > 1 ? jigTierBack(S.boat.type, n0, lv1) : null;
+    if (B && B.kr > 0){ if (B.lv > 1) S.equip.jukseLv = B.lv; else delete S.equip.jukseLv; book('redskap', B.kr, 'Trinnet på juksamaskinene kjøpt tilbake', 'The reels\' tier bought back');
+      log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. Det du betalte for trinn på maskinene som ikke gir noe med så mange, er kjøpt tilbake for ' + kr(B.kr) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. What you paid for tiers on the reels that give nothing with that many was bought back for ' + kr(B.kr) + '.'); } }
   const over = (S.equip.jukse || 0) - (V.jukseMax || 0);
   if (over > 0){ const kr0 = equipKr('jukse') * over; S.equip.jukse -= over; book('redskap', kr0, 'Juksamaskiner tatt i land', 'Jigging reels taken ashore');
     log('«' + S.boatName + '» har plass til ' + V.jukseMax + ' juksamaskiner. ' + over + ' er tatt i land og kjøpt tilbake for ' + kr(kr0) + '.', 'The «' + S.boatName + '» has room for ' + V.jukseMax + ' jigging reels. ' + over + ' were taken ashore and bought back for ' + kr(kr0) + '.'); }

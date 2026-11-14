@@ -6,7 +6,7 @@
   function selRow(){ if (S.fleet.length < 2) return ''; const s0 = selVessel(); return '<div class="ph-sub">' + S.fleet.map(v => '<button class="' + (v === s0 ? 'on' : '') + '" data-pa="vsel" data-id="' + v.id + '">' + vget(v, 'boatName') + (v.id === S.me ? ' ⚓' : '') + '</button>').join('') + '</div>'; }
   // the bound vessel at a glance, with what needs attention
   function vSummary(){
-    const b = S.boat, H = S.t / 60, o = plan2Ops(), sk = opsSkipper(), day = gDate(H).toISOString().slice(0, 10), al = [];   // (Driftsplan 2: the v4 plan, an older one switched off with its message)
+    const b = S.boat, H = S.t / 60, o = plan2Ops(), sk = actingSkipper(), day = gDate(H).toISOString().slice(0, 10), al = [];   // (Driftsplan 2: the v4 plan, an older one switched off with its message)
     const inc = S.sales.filter(x => x.v === S.cur && gDate(x.t / 60).toISOString().slice(0, 10) === day).reduce((a, x) => a + x.total, 0);
     const A = (k, no, en, app) => al.push({id:S.cur, k, no, en, app});
     if (b.status === 'engine') A('eng', 'Motorstopp', 'Engine stopped', 'redning');
@@ -43,6 +43,7 @@
   // card, the year's accounts as one line with the way to the bank (the loans and the balance sheet are in the bank's Regnskap tab), and
   // Foretaket last as before
   function rederi(){
+    { const p = mbLicSheet(); if (p) return p; }   // (KM4: «Flytt hjemmelen til …», phone/13c-megler.js)
     const all = summaries(), H = S.t / 60, no = S.lang === 'no';
     const bar = (a, c, k) => '<div class="ph-bar"><i class="' + (k || '') + '" style="width:' + Math.round(clamp(a / Math.max(1, c), 0, 1) * 100) + '%"></i></div>';
     const meV = vesselById(S.me), meIn = !meV || vget(meV, 'boat').status === 'port', why = no ? 'Begge må ligge i havn' : 'Both must be in port';
@@ -64,6 +65,7 @@
       // the broker (Kystmegleren and delivery, M4; the sales between players, B): what is under way stands on the card, the offers sit behind «⋯»
       const mg = me && !mbSale(v) ? '' : mgOwnRow(v), mgOn = !!mbSale(v) || (mktState().del || []).some(d => d.vid === v.id);
       if (mg && !mgOn) more.push(mg);
+      { const mvb = mbMoveBtn(v); if (mvb) more.push(mvb); }   // (KM4: the right to another boat of yours, or kept as a free right)
       h.push('<div class="ph-card fl"><div class="fl-h"><h4>«' + vget(v, 'boatName') + '»' + (me ? ' ⚓' : '') + '</h4>' + tags + '</div><p class="ph-note fl-type">' + VESSELS[vb.type].name[S.lang] + '</p>' +
         '<div class="fl-st"><i class="fl-dot ' + dot + '"></i><span>' + sm.status + (inp ? '' : ' · ' + sm.pos) + '</span></div>' +
         (sm.nx ? '<div class="fl-nx">⏱ ' + sm.nx.txt + ' ' + hm(sm.nx.t / 60) + ' <small>· ' + inReal(sm.nx.t - S.t) + '</small></div>' : '') +
@@ -74,6 +76,7 @@
         (mgOn ? mg : '') +
         '<div class="fl-btns">' + (canBoard ? take + follow : follow + take) + '<details class="fl-more"><summary aria-label="' + L('Mer', 'More') + '">⋯</summary><div class="fl-menu">' + more.join('') + '</div></details></div></div>');
     }
+    h.push(mbFreeCard());   // (KM4: the rights the company keeps without a boat)
     h.push('<div class="ph-card"><h4>' + (S.company || L('Rederiet', 'The company')) + '</h4>' + kv(L('Båter', 'Vessels'), all.length) + kv(L('Konto', 'Account'), kr(S.cash)) + kv(L('Inntekt i dag', 'Income today'), kr(Math.round(all.reduce((a, x) => a + x.s.inc, 0)))) + '</div>');
     // the year's result from the books (tilbakemelding #9, Jonas 09.10.2026; Økonomi 2, Ø1): one line, the whole accounts, the loans and the balance sheet in the bank's Regnskap tab
     { const yR = bookResult(yearH(H)), dep = Math.round(depBase() * TAX.dep * yearFrac(H));

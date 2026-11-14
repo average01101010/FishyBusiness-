@@ -143,7 +143,7 @@ Longyearbyen er havn for spillerens båter, men ikke mottak (V4 B). Havneplassen
   - **Butikken ved naustet** (`shopNear`, `S.shopN`) står 45–130 m fra naustet (ellers opp til 160 m), på bakkens høyde (`lev`, medianen av 9 prøver). `siteTerr` planerer plassen der, og `drawSites` løfter modellen. I Finnsnes brukes butikken på kaia.
   - Naustet og butikken står minst 110 m fra midten av en havneenhet (`unitNear`). Enhetens blokk, fylling og terreng rundt rekker omtrent 100 m, og mottakene langs kysten har også enheter.
   - **Juksa og isen er gratis ved naustet**: far betalte for dem i fjor høst, og Solveig forteller det i en melding. Isen kommer i sekker.
-  - **Ingen hurtigreise** (Jonas: «Fast travel er ikke mulig i spillet, punktum.»): `startShift` flytter aldri båten til eller fra naustet. Levering og diesel avvises ved naustet (`NAUST_SAIL`), og spilleren må seile til mottakskaia selv.
+  - **Ingen hurtigreise** (Jonas: «Fast travel er ikke mulig i spillet, punktum.»; **snudd med vilkår 12.11.2026**: hopp over resten av ruta mot ekte penger, med pris etter spart tid, diesel, is og fisk som om båten seilte, nektet før kjøpet i hardt vær og i turoppdrag og løp; plan i `docs/planer/hopp.md`, ikke bygd). Det som står her, gjelder fortsatt: `startShift` flytter aldri båten til eller fra naustet. Levering og diesel avvises ved naustet (`NAUST_SAIL`), og spilleren må seile til mottakskaia selv.
   - **Til naustet** går det med en rute: `naustTarget(pt, r)` gjør et trykk ved naustet i kartplotteren (`03-map.js`) eller med Autonav (`03b-route.js`) til rutas siste punkt `{port:hjem, berth:'naust'}`. `arrive` kaller `dock(pid, w.berth)`, som legger båten ved naustet. Autonav finner veien til havna og ender ved naustet. Fra havna selv går ruta rett dit.
   - Testene er `sitetest.py` (start ved naustet, Solveig, ingen flytting, ruta som ender ved naustet) og `starttest.py` (kystundersøkelsen: naustet ≤ 400 m, butikken 40–170 m, feltet ≤ 6 km og dieselen for første tur ≤ 60 % av tanken).
 - **Ikke gjort ennå:** kameraet kan gå inn i husene, og lyktene i ankrene brukes ikke.
@@ -167,6 +167,16 @@ Jonas 05.10.2026: «Vi skal lage en blender-modell av en rorbu med kaiplass. Dis
 - **Hvilen** står i 5.19. Den koster 150 kr natta, betalt når du går inn og så for hvert døgn. Har du ikke råd til neste natt, går du om bord.
 - **Tester**: `tests/rorbutest.py` (plassene, fjæra ved Gryllefjord og på et le-sted, Autonav dit, knappene, natt og hvile på 6 timer, neste natt, åpen båt ved mottakskai, kartplotteren, lagring) og `coast3d.py` (rorbua i 3D ved Gryllefjord, `coast_rorbu.png`).
 - **Ikke gjort ennå:** kameraet kan gå inn i huset, og lykta ved døra lyser ikke.
+
+## 5.25j Rorbuer og naust tar båter opp til 15 m (13.11.2026)
+
+Jonas 13.11.2026, etter testen fra alle steder med den eldre kystbåten (21 m, 3,4 m dypgående), som lå ved rorbukaiene (14 m, 3,4 m) og naustkaia (16 m) med 2–2,5 m vann under seg og ikke fant noen vei ut. Han valgte «Grense ved 15 m»: «Rorbua og naustet tar båter opp til 15 m, uansett dybde ved kaia. Større båter avvises».
+
+- **Grensen** (`SITE_MAXLEN` og `siteFits` i `core/07-harbours.js`): en båt over 15 m får ikke tilbud om rorbua eller naustet. Det gjelder trykk i kartet (`03-map.js`, `03b-route.js`), Autonav-målet (`rorbuTarget`, `naustTarget`), «Fortøy» (`moorAll`), driftsplanens hjem (`05d-plan2.js`; en lagret plan med rorbua som hjem sier fra i `06h-plan2-engine.js`) og hviletipset (`rorbuTip`). Naustets liggeplass leses som mottakets for henne (`berthKind`, `dock`).
+- **Lagringene:** en båt over 15 m som alt ligger ved en rorbu, flyttes ved oppstart til nærmeste havn som tar henne, med en linje i loggen (`ui/11-boot.js`, `siteOut`; også flåtens andre båter).
+- **Dybden «uansett»:** liggeplassen ved rorbuene og naustet mudres i simuleringen til den dypeste båten under 15 m (`SITE_DRAFT`, kystbåten på 14,99 m med 3,0 m) og 0,5 m ved laveste lavvann (`siteDredge` i `depthF`; lomma er 12 m til hver side og 14 m ut, `SITE_POCK`, og bunnen stiger 1:2 utenfor). Gropen i 3D er like dyp (`view3d/03-berths-naust.js`).
+- **Veien ut:** en rorbu (`rorbuSite`) og naustet (`naustFind`, `naustWay`) legges bare der den båten kommer ut til åpent vann eller en havn. Lomma regnes som mudret under sjekken. Før gjaldt kravet til naustet bare båten spilleren hadde da naustet ble funnet, og rorbuene hadde ikke noe krav. Et naust sjekkes én gang mot kaia det ble funnet ved (`qk`), og de gamle naustene sjekkes én gang med det nye kravet.
+- `tests/unit/siteplass.test.mjs` og `tests/allesteder.py` (kystbåten på 14,99 m ved hver rorbu og hvert naust, og at den på 21 m avvises der).
 
 ## Havner, mottak og fortøyning (B1–B5, godkjent 29.09.2026)
 

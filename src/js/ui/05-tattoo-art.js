@@ -160,7 +160,22 @@ const TATART = (() => {
     return s + '</svg>';
   }
   // one tattoo on its own, for the list
+  // the painted flash (14.11.2026, tools/ui/tatoveringer.py, whose ORDER this is): one atlas, pic-tat, fetched with the late data;
+  // until it is in, the line art below. Earned in colour; the rest grey and faint, as the stencil was
+  const TAT_ATLAS = ['svale1', 'svale2', 'stjerne', 'tau', 'ankere', 'harpun', 'grishane', 'rose', 'anker', 'skilpadde', 'hula', 'neptun'];
+  let URL0 = null;
+  function atlas(){
+    if (URL0) return URL0;
+    const el = typeof document !== 'undefined' && document.getElementById('pic-tat'), d = el && !el.dataset.src && el.textContent.trim(); if (!d) return null;
+    try { const bin = atob(d), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+      URL0 = URL.createObjectURL(new Blob([u], {type:'image/webp'})); document.documentElement.style.setProperty('--tat-atlas', 'url(' + URL0 + ')'); el.textContent = ''; }
+    catch (e){ return null; }
+    return URL0;
+  }
   function icon(id, on){
+    const i = TAT_ATLAS.indexOf(id);
+    if (i >= 0 && atlas()){ const x = i % 4, y = Math.floor(i / 4), rows = Math.ceil(TAT_ATLAS.length / 4);
+      return '<span class="tat-img' + (on ? '' : ' off') + '" aria-hidden="true" style="background-size:400% ' + rows * 100 + '%;background-position:' + (x / 3 * 100).toFixed(2) + '% ' + (y / (rows - 1) * 100).toFixed(2) + '%"></span>'; }
     const body = id === 'grishane' ? '<g transform="translate(-11,0) scale(.72)">' + ART.rooster + '</g><g transform="translate(12,2) scale(.66)">' + ART.pig + '</g>' : ART[ICON[id]];
     return '<svg viewBox="-32 -32 64 64" style="width:52px;height:52px;flex:none;background:' + PAPER + ';border-radius:10px' + (on ? '' : ';opacity:.3') + '">' + body + '</svg>';
   }

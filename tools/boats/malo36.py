@@ -83,15 +83,24 @@ def keel_t(x): return pchip([(X_KA, 0.22), (1.6, 0.26), (5.0, 0.26), (X_KF, 0.20
 # aft (valg 32, Jonas 10.11.2026: «den burde ha 2 maskiner»): the low rail then runs from x 2.0 to the wheelhouse, and a second jigging
 # machine has a rail a man can jig over, aft of the shelter's corner. The port side (the casing against the bulwark) is the drawing's
 STEP_S = (2.0, 1.3)
+# the rise from the waist's rail to the forecastle's: over 6.10-6.95 as the drawing has it (CAPS). It stood over 6.40-6.68, a step of
+# 0.9 m in 0.28 m that read as a break in the sheer where the forecastle begins (round 2, 11.11.2026)
+RAMP = (6.10, 6.95)
 def z_bakkcap(x): return 3.86 + 0.09 * max(0.0, min(1.0, (x - 6.66) / 4.12))
 def z_cap(x, sg=1):
     aft = 3.76 - 0.027 * (x - XA)
     st = ss(3.0, 2.3, x) if sg > 0 else ss(STEP_S[0], STEP_S[1], x)
-    return 2.965 + (aft - 2.965) * st + (z_bakkcap(x) - 2.965) * ss(6.40, 6.68, x)
+    return 2.965 + (aft - 2.965) * st + (z_bakkcap(x) - 2.965) * ss(RAMP[0], RAMP[1], x)
 # the half-breadth at the bulwark top, moulded (the plan's outline less the strake) (G)
 HB = [(XA, 1.90), (0.0, 1.98), (0.5, 2.0), (1.0, 2.01), (2.0, 2.03), (3.0, 2.04), (6.0, 2.04), (7.0, 2.035), (7.5, 2.01), (8.0, 1.97),
       (8.5, 1.90), (9.0, 1.75), (9.5, 1.55), (10.0, 1.22), (10.3, 0.96), (10.5, 0.70), (10.6, 0.50), (10.7, 0.24), (XF, 0.0)]
-def hb(x): return max(0.0, pchip(HB, x))
+# (round 2, 11.11.2026: the table measured on the plan gives 4.12 m at the sheer against the data sheet's 4.20 moulded. Carried out to
+# 4.20 (BSC 1.029, the bilge a little less full to weigh the same) the 4 cm more deck on the starboard quarter moved the place the game
+# gives the tubs that are landed (deckcrew.js landSlots, on a 0.2 m grid) from the middle of the aft deck out to the quarter, and the one
+# who gives the signs lost his place at the rail when the jigging machines stand there (crewclip, OB4's check). The table stands: 2 %
+# narrow. The factors are kept for the day the deck map knows the stacks and the landing has a place of its own)
+BSC = 1.0; FSC = 1.0
+def hb(x): return max(0.0, pchip(HB, x)) * BSC
 # the body's curve runs to a smooth line over the sheer (z_ref), and is cut at the sheer: the sheer steps 0.9 m up at the forecastle and
 # 0.7 m down aft of the shelter, and a curve drawn to it changed the whole section there (a kink in the waterline at x 6.42); the
 # half-breadth at z_ref is the measured one at the sheer carried up along the flare from a smoothed sheer
@@ -103,8 +112,10 @@ DR = [(XA, 10), (2.0, 18), (5.0, 22), (7.0, 27), (8.0, 33), (9.0, 44), (9.8, 56)
 FL = [(XA, 3), (3.0, 4), (6.0, 5), (7.5, 8), (8.5, 13), (9.3, 18), (10.0, 24), (XF, 28)]
 FULL = [(XA, 0.86), (2.0, 0.91), (5.0, 0.94), (7.0, 0.90), (8.5, 0.76), (9.5, 0.64), (XF, 0.56)]
 # the fender strake (G), the bottom paint and the white boot top, rising 12 mm a metre forward (planliste kap. 29)
-RUB = [(XA, 2.70), (6.0, 2.70), (7.0, 2.78), (8.0, 2.92), (9.0, 3.04), (10.0, 3.14), (10.6, 3.20), (XF, 3.24)]
-def z_rub(x): return pchip(RUB, x)
+RUB = [(XA, 2.70), (6.0, 2.70), (7.0, 2.78), (8.0, 2.92), (9.0, 3.04), (10.0, 3.14), (10.6, 3.20), (XF, 3.24)]   # (G, as measured)
+# (round 2, 11.11.2026: read through those points the strake lay flat to x 6.0 and then rose fastest at 7-8, a break in the sheer where
+# the forecastle begins. One curve from x 4.0 to the stem with its slope growing all the way, within 4 cm of the measured points)
+def z_rub(x): return 2.70 + 0.54 * max(0.0, (x - 4.0) / (XF - 4.0)) ** 1.8
 RUBH, RUBW = 0.05, 0.05      # the strake: half its height, how far it stands out
 Z_AF = 1.31; Z_BT = 1.47; SLB = 0.012
 def paint_line(x, z0): return z0 + SLB * (x - XM)
@@ -134,7 +145,7 @@ def vline(x, sg=1):
     k_ = 0.08; s_ = k_ * math.log1p(math.exp(min(60.0, s_ / k_))) if s_ / k_ > -60 else 1e-12
     cap = (zs - zl) * 0.999 / max(1e-6, d1[1]); s_ = (max(s_, 1e-12) ** -4 + cap ** -4) ** -0.25   # a soft minimum
     C_ = (d1[0] * s_, zl + d1[1] * s_)
-    lb = math.hypot(h - C_[0], zs - C_[1]); a = pchip(FULL, x)
+    lb = math.hypot(h - C_[0], zs - C_[1]); a = pchip(FULL, x) * FSC
     P0 = (0.0, zl); P1 = (d1[0] * s_ * a, zl + d1[1] * s_ * a); P3 = (h, zs); P2 = (h + d2[0] * lb * a, zs + d2[1] * lb * a)
     P = []
     for k in range(n + 1):
@@ -266,6 +277,7 @@ def colours():
     w('rope', (0.85, 0.75, 0.25), 0.2); w('rope2', (0.20, 0.42, 0.62), 0.2); w('hose', (0.10, 0.36, 0.20), 0.4); w('fender', (0.08, 0.20, 0.42), 0.4)
     w('lampR', (0.90, 0.10, 0.08), 0.8, 0, 0, 0.5); w('lampG', (0.10, 0.80, 0.25), 0.8, 0, 0, 0.5); w('lampW', (1.0, 0.97, 0.88), 0.8, 0, 0, 0.5)
     w('lens', (0.95, 0.94, 0.85), 0.9)
+    w('pix_plot', (0.95, 0.95, 0.95), 0.9); w('pix_sound', (0.95, 0.95, 0.95), 0.9); w('grip', (0.385, 0.415, 0.405), 0.03, 4)
     C['glass'] = mat('glass', (0.05, 0.08, 0.11), 0.95)
 
 
@@ -276,17 +288,31 @@ def toward(m, rgb, k):
 
 EXH_W = (6.10, -1, 0.32)     # the engine's cooling water outlet (x, side, height over the water)
 BILGE = (4.20, -1, 0.40)     # the bilge pump's outlet
-FREE = [(0.15, 0.45), (3.25, 0.45), (4.95, 0.40)]            # the freeing ports in the bulwarks at the deck (x from, length; G: the old patches at 0.6 and 1.6)
+FREE = [(0.15, 0.45), (3.30, 0.45), (4.95, 0.40)]            # the freeing ports in the bulwarks at the deck (x from, length; G: the old patches at 0.6 and 1.6)
+def run_under(x, z, x0, l, ztop, ln, side):
+    """0-1: a run down the side under an opening x0..x0+l whose foot is at ztop, ln long, in streaks (hs11.py, OB10 round 3)"""
+    u = (x - x0) / l
+    if u < -0.2 or u > 1.2 or z > ztop + 0.03 or z < ztop - ln: return 0.0
+    return ss(-0.2, 0.05, u) * ss(1.2, 0.95, u) * (0.45 + 0.55 * ss(-0.35, 0.35, n3(x * 17.0, side * 3.1, 0.3))) * ss(ztop - ln, ztop - 0.02, z) ** 1.3
 def wear(p, m, n):
     x, y, z = p; nm = m.name; side = 1 if y > 0 else -1
     if nm == 'hull':
         g = 0.97 + 0.05 * n3(x * 4.0, z * 7.0, side * 1.3)
         g *= 1 - 0.12 * ss(0.30, 0.0, z - paint_line(x, Z_BT))                               # grime over the boot top
-        g *= 1 - 0.09 * ss(0.25, 0.65, n3(x * 9.0, side * 2.3, 0.4)) * ss(0.6, 0.0, z_rub(x) - z)   # streaks down from the strake
+        g *= 1 - 0.16 * ss(0.25, 0.65, n3(x * 9.0, side * 2.3, 0.4)) * ss(0.6, 0.0, z_rub(x) - z)   # streaks down from the strake
+        # (round 2) under the hauler to starboard the gear comes up the side every day: the gelcoat is scuffed pale in streaks from the
+        # strake down to the water; and the quay has rubbed her dull just under the strake on both sides amidships
+        if side < 0: g *= 1 + 0.30 * ss(0.50, 0.10, abs(x - HXX)) * ss(0.25, 0.60, n3(x * 26.0, 0.7, 1.9)) * ss(WL - 0.05, WL + 0.5, z)
+        g *= 1 + 0.10 * ss(0.22, 0.0, z_rub(x) - z) * ss(0.2, 0.6, n3(x * 3.0, z * 14.0, side * 3.1)) * ss(1.0, 2.5, x) * ss(9.0, 7.0, x)
         for (xo, so, ho), k in ((EXH_W, 0.25), (BILGE, 0.15)):
             if side == so and z < WL + ho:
                 g *= 1 - k * ss(0.02 + (WL + ho - z) * 0.04, 0.004, abs(x - xo)) * ss(WL, WL + 0.12, z)
-        return [g, g, g]
+        # (round 4; the sensor: «nesten ingen rennemerker») rust run down the topsides from the freeing ports and the hawse: brown,
+        # streaky, strongest just under the strake and fading toward the water
+        c = [g, g, g]; ru = 0.0
+        for x0, l in FREE: ru = max(ru, run_under(x, z, x0, l, z_deck(x) + 0.03, 0.95, side))
+        if ru > 0: c = toward(m, (0.30, 0.18, 0.11), min(1.0, 0.55 * ru)); c = [c[i] * g for i in range(3)]   # (dull: a bright rust read as a lamp at night, the sensor)
+        return c
     if nm == 'af':
         v = 0.86 + 0.14 * n3(x * 2.5, z * 6.0, y * 2.0)
         g = ss(WL - 0.10, WL - 0.02, z) * (0.5 + 0.5 * ss(-0.3, 0.4, n3(x * 3.0, side * 1.3, 4.1)))
@@ -296,19 +322,88 @@ def wear(p, m, n):
     if nm == 'bw' and abs(y) > 1.5:
         g = 1.0
         for x0, l in FREE:                                                                     # rust-brown streaks under the freeing ports
-            g *= 1 - 0.10 * ss(0.06, 0.0, abs(x - x0 - l / 2) - l / 2 + 0.05) * ss(z_deck(x) + 0.05, z_deck(x) - 0.40, z)
-        c = toward(m, (0.45, 0.25, 0.12), 0.30 * ss(0.5, 0.85, n3(x * 7.0, side * 4.0, 1.1)) * ss(0.9, 0.0, z_cap(x) - z))
+            g *= 1 - 0.30 * ss(0.06, 0.0, abs(x - x0 - l / 2) - l / 2 + 0.05) * ss(z_deck(x) + 0.05, z_deck(x) - 0.40, z) * (0.6 + 0.4 * ss(-0.3, 0.3, n3(x * 30.0, 1.0, side)))
+        c = toward(m, (0.45, 0.25, 0.12), 0.40 * ss(0.4, 0.85, n3(x * 7.0, side * 4.0, 1.1)) * ss(0.9, 0.0, z_cap(x) - z))
+        g *= 1 - 0.10 * ss(0.35, 0.0, z_cap(x) - z) * (0.5 + 0.5 * n3(x * 11.0, side * 2.0, 6.0))                  # (round 3) grey where hands and ropes run over the cap
         return [c[i] * g for i in range(3)]
     if nm in ('white', 'roof', 'inner', 'mast', 'cap'):
-        v = 0.95 + 0.05 * n3(x * 5.0, y * 5.0, z * 5.0)
-        if nm == 'inner': v -= 0.10 * ss(0.15, 0.0, z - dk(x))
-        c = toward(m, (0.55, 0.42, 0.28), 0.12 * ss(0.6, 0.9, n3(x * 7.0, y * 7.0, z * 7.0 + 0.5)))
+        # (round 3; the sensor: «slitasjen finnes, men er svak»): a stronger grey-brown grime in patches, darker at the feet of what
+        # stands on the decks or the caps (the splash and the boots), and grey just under the shelter roof's edge
+        v = 0.93 + 0.07 * n3(x * 5.0, y * 5.0, z * 5.0)
+        # (the foot: the deck, or the cap for what stands on it outboard of the bulwark's inside: the shelter's walls; the bulwarks'
+        # own inner faces keep the deck as their foot, so the splash zone runs up from the deck)
+        zd_ = dk(x); foot = zd_
+        if nm != 'inner' and z - zd_ > 0.30 and abs(y) > 1.2 and abs(y) > ycap(x, side) - 0.01: foot = z_cap(x, side)
+        v -= (0.20 if nm == 'inner' else 0.13) * ss(0.30, 0.0, z - foot) * (0.7 + 0.5 * n3(x * 8.0, y * 8.0, 4.0))
+        if nm == 'white' and SH_TOP - 0.10 < z < SH_TOP + 0.05 and x < SH_X1: v -= 0.06 * ss(0.3, 0.8, n3(x * 13.0, y * 3.0, 2.0))   # (grey under the roof's edge)
+        # (round 4) rain streaks down the walls from the roofs' edges and the windows' corners: narrow, grey, longer where they start high
+        if nm in ('white', 'inner') and z - foot > 0.3:
+            v -= 0.11 * ss(0.55, 0.85, n3(x * 22.0 + y * 22.0, 0.3, 5.0)) * ss(0.0, 0.8, n3(x * 3.0 + y * 3.0, z * 1.2, 7.5) + 0.4)
+        c = toward(m, (0.55, 0.42, 0.28), 0.30 * ss(0.40, 0.9, n3(x * 7.0, y * 7.0, z * 7.0 + 0.5)))
         return [c[i] * v for i in range(3)]
     if nm in ('deck', 'nonslip'):
         v = 0.92 + 0.10 * n3(x * 5.0, y * 5.0, 1.0)
         v *= 1 - 0.14 * ss(0.8, 0.0, math.hypot(x - 5.0, y + 1.2)) - 0.10 * ss(0.7, 0.0, math.hypot(x - 3.75, y + 1.0))   # worn where they work
+        if nm == 'deck' and x < X_BAKK:                                                        # the waterways: dark and a little green along the bulwarks' feet
+            e = ss(0.16, 0.0, ybw(x, side) - abs(y)); return [v * (1 - 0.22 * e), v * (1 - 0.14 * e), v * (1 - 0.22 * e)]
         return [v, v, v]
+    if nm == 'grip': return grip_wear(x, y)
+    if nm.startswith('pix_'):
+        ya, yb_, ta, tb = SCR[nm[4:]]; (dx0, dz0), (dx1, dz1) = DASH
+        u = (y - (ya + yb_) / 2) / ((yb_ - ya) * 0.86) + 0.5; t = (x - dx0) / (dx1 - dx0); v_ = (t - (ta + tb) / 2) / ((tb - ta) * 0.86) + 0.5
+        return (plot_pix if nm == 'pix_plot' else sound_pix)(1 - u, v_)                        # (u from the skipper's left: port is +y)
     return None
+
+# what wears the aft deck's non-slip (the same in the render and the game: colours at the corners): pale and scuffed where they stand and
+# walk day after day, a rust-brown bloom round the steel's feet, dark where the water stands
+# the bitts on the quarters (round 2: they stood at 1.45 and touched the deck map's cell 1.2-1.4 m out, which then was no floor under the
+# pots' stack on the starboard quarter, potshot; 7 cm further out, 13 cm from the bulwark's foot)
+BITT_Y = 1.52
+WORN = [(5.25, -1.38, 0.55, 0.20), (4.62, -0.86, 0.50, 0.16), (3.65, 1.03, 0.55, 0.18), (3.66, -1.45, 0.45, 0.14), (2.40, -1.42, 0.45, 0.14),
+        (5.80, -1.62, 0.50, 0.14), (1.90, 0.70, 0.55, 0.12), (0.35, -0.45, 0.60, 0.12), (3.0, -0.2, 0.9, 0.08)]
+RUSTY = [(0.35, BITT_Y, 0.30), (0.35, -BITT_Y, 0.30), (1.62, 0.0, 0.34), (3.25, 1.35, 0.16), (4.05, 1.35, 0.16), (0.90, 1.42, 0.22)]
+def grip_wear(x, y):
+    v = 0.90 + 0.16 * n3(x * 6.0, y * 6.0, 2.0) + 0.07 * n3(x * 23.0, y * 23.0, 5.0)
+    for wx, wy, wr, k in WORN: v += k * ss(wr, wr * 0.25, math.hypot(x - wx, y - wy)) * (0.75 + 0.5 * n3(x * 11.0, y * 11.0, 7.0))
+    v *= 1 - 0.10 * ss(0.30, 0.75, n3(x * 1.7, y * 1.7, 9.0))                                   # darker where it stays wet
+    c = [v, v, v]
+    for rx, ry, rr in RUSTY:
+        k = 0.55 * ss(rr, rr * 0.3, math.hypot(x - rx, y - ry)) * (0.6 + 0.6 * n3(x * 13.0, y * 13.0, 3.0))
+        if k > 0: c = [c[0] * (1 + 0.25 * k), c[1] * (1 - 0.18 * k), c[2] * (1 - 0.45 * k)]
+    return c
+
+def plot_pix(u, v):
+    """the plotter's picture at (u, v) in 0-1 from its lower left: a chart head-up, land to port and an island, the depths in three
+    blues, the track astern and the boat in the middle, a dark bar with the figures' places along the bottom"""
+    if v < 0.12: return [0.10, 0.11, 0.13] if abs((u * 7) % 1 - 0.5) > 0.3 or abs(v - 0.06) > 0.03 else [0.85, 0.85, 0.80]
+    h = n3(u * 2.2 + 3.1, v * 2.2 + 1.7, 0.3) + 0.55 * (0.36 - u) / 0.36 + 0.25 * n3(u * 6.0, v * 6.0, 2.2)
+    h = max(h, 0.5 - 6.0 * math.hypot(u - 0.80, v - 0.74))
+    if h > 0.42: c = [0.93, 0.84, 0.52] if h < 0.60 else [0.80, 0.76, 0.44]
+    elif h > 0.34: c = [0.20, 0.22, 0.22]                                                        # the shore line
+    elif h > 0.20: c = [0.55, 0.78, 0.93]
+    elif h > 0.02: c = [0.72, 0.87, 0.96]
+    else: c = [0.90, 0.95, 0.98]
+    tr = 0.52 + 0.05 * math.sin(v * 9.0) * (0.5 - v)
+    if v < 0.5 and v > 0.14 and abs(u - tr) < 0.012: c = [0.85, 0.12, 0.10]                    # the track
+    if abs(u - 0.52) < 0.035 * (0.58 - v) / 0.08 and 0.50 < v < 0.58: c = [0.05, 0.05, 0.06]   # the boat
+    if abs(math.hypot(u - 0.52, v - 0.50) - 0.30) < 0.006: c = [0.35, 0.40, 0.45]              # the range ring
+    return c
+
+def sound_pix(u, v):
+    """the sounder's picture: the bottom rising from left to right, red over yellow over its blue tail, a school over it, the
+    surface's clutter along the top, the scale down the right edge"""
+    if u > 0.93: return [0.92, 0.92, 0.90] if abs((v * 6) % 1 - 0.5) < 0.08 else [0.06, 0.07, 0.10]
+    b = 0.30 + 0.10 * math.sin(u * 5.0) + 0.05 * n3(u * 9.0, 0.3, 0.7) + 0.10 * u
+    d = b - v
+    if d > 0.10: return [0.25, 0.10, 0.06]
+    if d > 0.035: return [0.80, 0.10, 0.06]
+    if d > 0.0: return [0.95, 0.80, 0.15]
+    if d > -0.03: return [0.15, 0.55, 0.80]
+    f = n3(u * 7.0, v * 9.0, 1.3) + 0.9 * (0.16 - math.hypot((u - 0.55) * 0.6, v - 0.60)) / 0.16
+    if f > 0.75: return [0.90, 0.75, 0.15]
+    if f > 0.55: return [0.20, 0.75, 0.35]
+    if v > 0.94: return [0.75, 0.25, 0.10] if n3(u * 30.0, 0.1, 0.2) > -0.2 else [0.15, 0.55, 0.80]
+    return [0.03, 0.06, 0.20]
 
 def tint(o, f=wear):
     bm = bmesh.new(); bm.from_mesh(o.data); lay = bm.loops.layers.float_color.new('TINT'); mats = [s.material for s in o.material_slots]
@@ -416,16 +511,20 @@ def hull_shell(M, fine=True):
 
 # ---------- the openings: real holes, cut with a boolean and lined ----------
 HATCH_F = (8.95, 9.45, 0.70, 1.20)                             # the fore hatch on the forecastle, to port (G)
-HOLD = (3.92, 5.48, -0.72, 0.72)                               # the hold's coaming under the shelter (G)
+HOLD = (4.00, 5.48, -0.62, 0.62)                               # the hold's coaming under the shelter (G: 3.92 and +-0.72; round 2: 10 cm in on each side and 8 cm at its after end, so the one who bleeds has 0.4 m between the tub and the hatch and the line tubs stand clear of it)
 HOLD_H = 0.26
 EXH_R = 0.045; BILGE_R = 0.02
 # the setting port in the transom (OB11, F20 and the garn set in 4.8; havsjark35.py OB8): the game sets the nets and the line over the
 # stern 0.45 m to starboard of the middle at the waist's height + 0.10 (view3d/10-gear.js drawSetting), and the transom's bulwark stands
 # 1.5 m over the deck, so the gear went out through it. A gate between the gantry's posts under the net roller, its sill 0.58 m over the
 # deck with a roller in it: the nets come down from the net roller and out through it
-SPORT = (-0.60, 0.60, 2.84)  # y from, y to, the sill's height
+SPORT = (-0.78, 0.78, 2.84)  # y from, y to, the sill's height (round 3: 10 cm wider each side, from +-0.60; round 4 8 cm more, so the setter stands 0.10 m clear of the posts)
 SPORT_R = 0.04               # the roller's radius (its top at the sill + 0.10)
-GANT_Y = 0.67                # the gantry's posts and beams, each side of the gate (G: 0.62; 5 cm out for the gate's width)
+GANT_Y = 0.85                # the gantry's posts and beams, each side of the gate (G: 0.62; 5 cm out for the gate's width in round 1, 10 cm more in
+                             # round 3: the one who sets stands 0.45 m to starboard of the middle, his shoulders 0.25 m either side, and he
+                             # stood in the starboard post's inner face at 0.625; 0.725 in round 3 gave him 2.5 cm, which the sensor read as in
+                             # it; round 4 8 cm more: 0.805, 0.105 m clear)
+SETTER_Y = (-0.45, -0.05)    # where the setter stands athwartships: over the stern without a setter (deckcrew.js setOver), at the line setter (vessel3d.js SETTERS)
 def rr_pts(cx, cy, w, h, r, n=4): return rrect(cx, cy, w, h, max(0.004, min(r, w / 2 - 0.002, h / 2 - 0.002)), n=n)
 def circle(r, n=16): return [(r * math.cos(2 * math.pi * k / n), r * math.sin(2 * math.pi * k / n)) for k in range(n)]
 
@@ -539,6 +638,7 @@ def linings(A, G, fine=True):
 # ---------- the shelter (ly) amidships: its walls stand on the bulwarks' caps, two windows a side, the hauling port to starboard, the
 # roof over it reaching aft (G) ----------
 SH_X0 = 2.98; SH_X1 = 5.95; SH_TOP = 4.70; ROOF_SH = 4.84; SH_RX0 = 2.20
+KNEE = (2.45, 4.30)          # (round 4) the knee under the roof's starboard after corner: how far aft it reaches, its foot on the wall's end
 WIN_SH = [(3.78, 0.91, 0.29), (4.80, 0.90, 0.30)]           # (centre x, width, how far the top leans forward) (G)
 WIN_Z = (3.13, 4.53)
 HAUL = (3.10, 5.88, 4.45)                                    # the starboard side open for the work (Jonas 02.11.2026: «fjerne dette vinduet på styrbordsiden slik at
@@ -597,21 +697,38 @@ def shelter(fine=True):
     A.poly([(SH_RX0, -yr, zr0 + 0.02), (SH_X1 + 0.04, -yr, zr0 + 0.02), (SH_X1 + 0.04, yr, zr0 + 0.02), (SH_RX0, yr, zr0 + 0.02)], C['inner'], (0, 0, -1))
     for sg in (1, -1): abox(A, SH_RX0 - 0.01, SH_X1 + 0.05, sg * yr - 0.012, sg * yr + 0.012, zr0 - 0.02, zr1 + 0.01, C['cap'])
     abox(A, SH_RX0 - 0.012, SH_RX0 + 0.012, -yr, yr, zr0 - 0.02, zr1 + 0.01, C['cap'])
-    # the posts under the roof's after edge (it does not hang free: two stainless posts to the high aft bulwark's caps)
-    for sg in (1, -1):
+    # the post under the roof's after edge to port, on the high aft bulwark's cap over the casing (round 4: the one to starboard is gone.
+    # It stood at x 2.30 on the low rail where the crew stand at rest and jig, and the sensor saw a man in it in two pictures. The roof's
+    # starboard after corner is carried by the shelter's wall aft of the opening, with a knee under the roof's edge from it, 0.4 m deep,
+    # over the heads (2.0 m over the deck), and by the port wall and this post: it hangs 0.8 m aft of the wall, as a sjark's shelter does)
+    for sg in ROOF_POSTS:
         px = SH_RX0 + 0.10; py = sg * (ycap(px, sg) + CAP * 0.5)
         acyl(A, (px, py, z_cap(px, sg) + 0.005), (px, py, zr0 + 0.02), 0.03, lambda q: C['steel'], seg=10)
         acyl(A, (px, py, z_cap(px, sg) - 0.002), (px, py, z_cap(px, sg) + 0.012), 0.045, lambda q: C['steel'], seg=12)
+    yk = -(sh_y(SH_X0) - SHT / 2)
+    F.prism_side(A, [(SH_X0 + 0.002, zr0 + 0.019), (SH_X0 + 0.002, KNEE[1]), (SH_X0 - 0.06, KNEE[1]), (KNEE[0], zr0 - 0.05), (KNEE[0], zr0 + 0.019)], yk - 0.008, yk + 0.008, C['white'])
+    abox(A, KNEE[0] - 0.03, SH_X0 + 0.002, yk - 0.03, yk + 0.03, zr0 - 0.002, zr0 + 0.019, C['white'])                  # its flange under the roof
     if fine:
-        # the rail round the roof (the raft is the game's kit on it), the ladder up from the aft deck to starboard
-        posts = [(x, sy * (yr - 0.06)) for x in (2.32, 3.0, 3.7, 4.4, 5.1, 5.8) for sy in (1, -1)] + [(2.32, y) for y in (-0.88, 0.0, 1.0)] + [(2.32, -1.52)]
+        # the rail round the roof (the raft is the game's kit on it), open over the ladder at its after edge to port
+        lo, hi_ = LADDER[1] - LADDER[2] / 2 - 0.17, LADDER[1] + LADDER[2] / 2 + 0.15
+        posts = [(x, sy * (yr - 0.06)) for x in (2.32, 3.0, 3.7, 4.4, 5.1, 5.8) for sy in (1, -1)] + [(2.32, y) for y in (-1.0, 0.0, lo, hi_)]
         for x, y in posts:
             acyl(A, (x, y, zr1 - 0.004), (x, y, zr1 + 0.36), 0.016, lambda q: C['steel'], seg=8); acyl(A, (x, y, zr1 - 0.004), (x, y, zr1 + 0.01), 0.026, lambda q: C['steel'], seg=10)
         yy = yr - 0.06
-        # (the aft rail open over the ladder: it comes up just aft of the roof's edge, to starboard)
-        F.pipe(A, [(5.80, yy, zr1 + 0.36), (2.45, yy, zr1 + 0.36), (2.32, yy - 0.13, zr1 + 0.36), (2.32, -0.88, zr1 + 0.36)], 0.018, C['steel'], 8)
-        F.pipe(A, [(2.32, -1.52, zr1 + 0.36), (2.32, -yy + 0.13, zr1 + 0.36), (2.45, -yy, zr1 + 0.36), (5.80, -yy, zr1 + 0.36)], 0.018, C['steel'], 8)
-        F.ladder(A, (2.02, -1.20, z_deck(2.0) + camber(2.0, 1.2)), (2.12, -1.20, zr1 + 0.70), 0.48, C['steel'], side=(0, 1, 0), away=(-1, 0, 0))
+        F.pipe(A, [(5.80, yy, zr1 + 0.36), (2.45, yy, zr1 + 0.36), (2.32, yy - 0.13, zr1 + 0.36), (2.32, hi_, zr1 + 0.36)], 0.018, C['steel'], 8)
+        F.pipe(A, [(2.32, lo, zr1 + 0.36), (2.32, -yy + 0.13, zr1 + 0.36), (2.45, -yy, zr1 + 0.36), (5.80, -yy, zr1 + 0.36)], 0.018, C['steel'], 8)
+        # (round 3) the way up: it stood on the aft deck to starboard (x 2.0, y -1.2), in the way from the line tubs and the net tub to
+        # the setting port, 3-5 cm from them. Now to port over the casing, out of the way of the work: three steps on the casing's
+        # after face with a grab handle over its roof, and a short ladder from the casing's roof up past the shelter roof's after edge
+        lx, ly, lw = LADDER; zcr = CASING[4] + 0.04; zd0 = z_deck(CASING[0]) + camber(CASING[0], ly)
+        for k in range(1, 4):
+            zk = zd0 + (zcr - zd0) * k / 4
+            abox(A, CASING[0] - 0.13, CASING[0] - 0.004, ly - 0.20, ly + 0.20, zk - 0.02, zk + 0.008, C['steel'])
+            for e in (-0.18, 0.18): abox(A, CASING[0] - 0.13, CASING[0] - 0.004, ly + e - 0.008, ly + e + 0.008, zk - 0.09, zk, C['steel'])
+        for e in (-0.20, 0.20):
+            F.pipe(A, [(CASING[0] + 0.12, ly + e, zcr), (CASING[0] + 0.12, ly + e, zcr + 0.42), (CASING[0] - 0.02, ly + e, zcr + 0.42), (CASING[0] - 0.02, ly + e, zcr - 0.30)], 0.014, C['steel'], 8)
+            acyl(A, (CASING[0] - 0.008, ly + e, zcr - 0.30), (CASING[0] - 0.03, ly + e, zcr - 0.30), 0.026, lambda q: C['steel'], seg=10)
+        F.ladder(A, (lx - 0.06, ly, zcr - 0.004), (lx, ly, zr1 + 0.70), lw, C['steel'], side=(0, 1, 0), away=(-1, 0, 0))
         # the work lights under the roof's after edge, over the aft deck, and one over the hauling port
         for yy_ in (-0.9, 0.9):
             F.work_light(A, (SH_RX0 + 0.12, yy_, zr0 - 0.02), (-0.6, 0, -1), C['dark'], C['lens'])
@@ -633,20 +750,25 @@ def wh_inner(z, inset=WT):
     return [(WH_X0 + inset, WHY0 + inset), (7.97 + d, WHY0 + inset), (8.45 + d - inset, -1.00 + inset * 0.6), (8.45 + d - inset, 1.26 - inset * 0.6), (7.97 + d, WHY1 - inset), (WH_X0 + inset, WHY1 - inset)]
 def roof_z(x): return WH_TOP + 0.08 + 0.42 * max(0.0, min(1.0, (x - 5.83) / (9.09 - 5.83)))
 
+# (round 2, 11.11.2026: from the wheel the posts between the panes were broad: 8 cm of wall and frames between the three front panes and
+# 15-20 cm round each corner. The panes are 3-7 cm wider and their frames 2 cm, so a post is 5 cm in front and 5-6 cm at a corner pane)
+PANE_F = 0.69; PANE_C = 0.56; WFR = 0.02
 def wh_faces():
     """(name, origin, u, v, windows) for each wall carrying windows (G: three front panes, one in each corner, two in each side)"""
     vl = (LEAN, 0, 1.0); Fc = []
-    Fc.append(('front', (8.45, WH_YC, WH_SILL), (0, 1, 0), vl, [rrect(u, 0.56, 0.66, 0.98, 0.07, 3) for u in (-0.74, 0.0, 0.74)]))
+    Fc.append(('front', (8.45, WH_YC, WH_SILL), (0, 1, 0), vl, [rrect(u, 0.56, PANE_F, 0.98, 0.07, 3) for u in (-0.74, 0.0, 0.74)]))
     for nm, a, b in (('corner_p', (8.45, 1.26), (7.97, WHY1)), ('corner_s', (7.97, WHY0), (8.45, -1.00))):
         u = (b[0] - a[0], b[1] - a[1], 0); mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, WH_SILL)
-        Fc.append((nm, mid, u, vl, [rrect(0.0, 0.56, 0.50, 0.98, 0.07, 3)]))
-    side = lambda: [rrect(7.05, WH_SILL + 0.515, 0.60, 0.89, 0.07, 3), rrect(7.665, WH_SILL + 0.515, 0.42, 0.89, 0.07, 3)]
+        Fc.append((nm, mid, u, vl, [rrect(0.0, 0.56, PANE_C, 0.98, 0.07, 3)]))
+    side = lambda: [rrect(7.07, WH_SILL + 0.515, 0.64, 0.89, 0.07, 3), rrect(7.685, WH_SILL + 0.515, 0.49, 0.89, 0.07, 3)]
     Fc.append(('side_p', (0, WHY1, 0), (1, 0, 0), (0, 0, 1), side()))
     Fc.append(('side_s', (0, WHY0, 0), (1, 0, 0), (0, 0, 1), side()))
     return Fc
 
 def wheelhouse(fine=True):
     objs = []; glass = []; A = Acc('wh_fit')
+    # (round 4 tried the walls as a grid of 0.15 m for the wear: with the solidify and the windows' cuts it left a saw of dark notches
+    # down the after corner to port. The shell is the three rings again; the wear shows on the shelter's and the casing's grids)
     shell = loft_rings('wheelhouse', [wh_ring(WH_FLOOR - 0.01), wh_ring(WH_SILL), wh_ring(WH_TOP)], C['white'], cap0=False, cap1=False, angle=25)   # (open on top: the roof's underside closes it, so the ceiling is not WT lower)
     shell.data.materials.append(C['inner']); solidify(shell, WT, 1); apply_all(shell)
     cuts = []
@@ -660,7 +782,7 @@ def wheelhouse(fine=True):
         for k, poly in enumerate(wins):
             cuts.append(plate_cutter('wc_%s%d' % (nm, k), o, u, vv, poly, 0.35))
             cx = sum(p[0] for p in poly) / len(poly); cy = sum(p[1] for p in poly) / len(poly)
-            outer = [(p[0] + (0.03 if p[0] > cx else -0.03), p[1] + (0.03 if p[1] > cy else -0.03)) for p in poly]
+            outer = [(p[0] + (WFR if p[0] > cx else -WFR), p[1] + (WFR if p[1] > cy else -WFR)) for p in poly]
             objs.append(frame_ring('wf_%s%d' % (nm, k), V(o) + n * 0.004, u, vv, outer, poly, C['frame'], 0.0, 0.022, nrm=n))
             glass.append(plate('wg_%s%d' % (nm, k), V(o) - n * 0.03, u, vv, poly, C['glass'], nrm=n))
     if fine:
@@ -698,9 +820,17 @@ def wheelhouse(fine=True):
         lo = rr_pts((x0 + x1) / 2, (z0 + z1) / 2, x1 - x0 - 0.016, z1 - z0 - 0.016, 0.05, 3)
         A.poly([(p, y + 0.022, q) for p, q in lo], C['roof'], (0, -1, 0)); A.poly([(p, y + 0.045, q) for p, q in lo], C['roof'], (0, 1, 0))
         glass.append(plate('door_glass', (0, y + 0.020, 0), (1, 0, 0), (0, 0, 1), rr_pts((x0 + x1) / 2, z1 - 0.40, 0.36, 0.46, 0.06, 3), C['glass'], nrm=(0, -1, 0)))
-        acyl(A, (x0 + 0.07, y + 0.02, z0 + 0.95), (x0 + 0.07, y - 0.035, z0 + 0.95), 0.012, lambda q: C['steel'], seg=8)
-        abox(A, x0 + 0.04, x0 + 0.16, y - 0.05, y - 0.035, z0 + 0.935, z0 + 0.965, C['steel'])
-        for zz in (z0 + 0.25, z1 - 0.25): acyl(A, (x1 - 0.03, y - 0.004, zz - 0.06), (x1 - 0.03, y - 0.004, zz + 0.06), 0.013, lambda q: C['steel'], seg=8)
+        # (round 3: the handle and the hinges were 1-2 cm and did not read; the sensor: «ingen dørhåndtak»). The lock's plate, a lever
+        # handle, two hinges with their leaves on the frame, and the dark seal round the leaf
+        abox(A, x0 + 0.045, x0 + 0.105, y - 0.004, y + 0.022, z0 + 0.86, z0 + 1.06, C['black'])
+        acyl(A, (x0 + 0.075, y - 0.004, z0 + 0.98), (x0 + 0.075, y - 0.05, z0 + 0.98), 0.016, lambda q: C['steel'], seg=10)
+        abox(A, x0 + 0.06, x0 + 0.23, y - 0.068, y - 0.046, z0 + 0.965, z0 + 0.995, C['steel'])
+        acyl(A, (x0 + 0.075, y - 0.004, z0 + 0.92), (x0 + 0.075, y - 0.012, z0 + 0.92), 0.012, lambda q: C['black'], seg=8)
+        for zz in (z0 + 0.25, z1 - 0.25):
+            acyl(A, (x1 - 0.03, y - 0.018, zz - 0.08), (x1 - 0.03, y - 0.018, zz + 0.08), 0.017, lambda q: C['steel'], seg=10)
+            abox(A, x1 - 0.13, x1 - 0.03, y - 0.014, y - 0.002, zz - 0.06, zz + 0.06, C['steel']); abox(A, x1 - 0.03, x1 + 0.05, y - 0.024, y - 0.012, zz - 0.06, zz + 0.06, C['steel'])
+        for xa, xb, za, zb in ((x0 + 0.06, x1 - 0.06, z0 - 0.002, z0 + 0.012), (x0 + 0.06, x1 - 0.06, z1 - 0.012, z1 + 0.002), (x0 - 0.002, x0 + 0.012, z0 + 0.06, z1 - 0.06), (x1 - 0.012, x1 + 0.002, z0 + 0.06, z1 - 0.06)):
+            abox(A, xa, xb, y - 0.003, y + 0.024, za, zb, C['rubber'])
     # the roof (valg 26, Jonas 09.11.2026 on the plastsjark, then «Ja» for all the boats: «Gjør styrhustak mer realistisk som dette, med en
     # slags brem på kanten av taket som skrår», the lower edge out and the face sloping in, not the other way: «Bremen på styrhuset skrår
     # feil vei»): its underside where it was, a brim all round the outline BRIM_O out from the walls: a 3 cm lower edge with the drip
@@ -722,12 +852,21 @@ def wheelhouse(fine=True):
         A.poly([(a[0], a[1], zr_ - 0.001), (b[0], b[1], zr_ - 0.001), (b[0], b[1], zr_ - 0.025), (a[0], a[1], zr_ - 0.025)], C['frame'], nrm)   # the drip edge
     A.poly([(x, y, crown(x, y)) for x, y in ri], C['roof'], (0, 0, 1))
     if fine:
-        # the wipers on the three front panes, parked along the panes' foot (sulebas-bygging kap. 17)
+        # the wipers on the three front panes (round 4; the sensor saw none: a blade of 6 mm along the panes' foot). Pendulum wipers as on
+        # a sjark's wheelhouse: the spindle in the wall over each pane, the arm hanging down the glass a little off the vertical, the
+        # blade along it, stainless with a black rubber, 2-3 cm across, so they read against the dark glass from the bow and the wheel
+        nn = V((1.0, 0.0, -LEAN)).normalized()
+        P_ = lambda u, v, o: V((8.45 + LEAN * v, WH_YC + u, WH_SILL + v)) + nn * o
         for u in (-0.74, 0.0, 0.74):
-            zt_ = WH_SILL + 0.97; xt_ = 8.45 + LEAN * (zt_ - WH_SILL) + 0.03; yc = WH_YC + u
-            acyl(A, (xt_ - 0.04, yc, zt_), (xt_ + 0.01, yc, zt_), 0.02, lambda q: C['frame'], seg=8)
-            zb2 = WH_SILL + 0.10; xb2 = 8.45 + LEAN * (zb2 - WH_SILL) + 0.025
-            acyl(A, (xb2, yc - 0.20, zb2), (xb2, yc + 0.20, zb2), 0.006, lambda q: C['rubber'], seg=5)
+            # (the pane sits 0.03 m in from the wall's face inside its frame, 0.026 proud: the arm leaves the wall over the frame and
+            # runs down to the glass, the blade's rubber on it)
+            piv = P_(u, 1.09, 0.040); end = P_(u + 0.13, 0.30, -0.004); ax = (end - piv); L_ = ax.length; ax.normalize(); cr = nn.cross(ax).normalized()
+            acyl(A, piv - nn * 0.040, piv + nn * 0.012, 0.028, lambda q: C['black'], seg=10)                       # the spindle's boss
+            acyl(A, piv + nn * 0.004, piv + nn * 0.016, 0.014, lambda q: C['steel'], seg=8)                         # its nut
+            obox(A, piv + ax * (L_ * 0.5), ax * (L_ * 0.5), cr * 0.013, nn * 0.006, C['steel'])                    # the arm (stainless: a black one is lost against the dark glass)
+            bc = piv + ax * (L_ * 0.58) - nn * 0.012
+            obox(A, bc, ax * (L_ * 0.40), cr * 0.011, nn * 0.008, C['steel'])                                       # the blade's frame
+            obox(A, bc - nn * 0.013, ax * (L_ * 0.40), cr * 0.004, nn * 0.005, C['rubber'])                          # its rubber on the glass
     objs.append(A.done(35, tint=wear))
     return objs, glass, crown
 
@@ -761,7 +900,22 @@ def helm(A, G, fine=True):
         q = [dash_pt(ta, ya), dash_pt(ta, yb_), dash_pt(tb, yb_), dash_pt(tb, ya)]; c = sum(q, V()) / 4
         F.loft(A, [[p + n * 0.002 for p in q], [p + n * 0.014 for p in q]], lambda i: C['bezel'], cap0=False, cap1=False)
         A.poly([p + n * 0.014 for p in q], C['bezel'], n)
-        A.poly([c + (p - c) * 0.86 + n * 0.0145 for p in q], C['screen'], n)
+        # (round 2: the screens were blank dark plates. Each is a grid of small faces coloured at the corners by wear(): the plotter's
+        # chart with land, depths, the track and the boat, the sounder's bottom and marks; the engine's panel has its dials)
+        s4 = [c + (p - c) * 0.86 + n * 0.0145 for p in q]
+        if nm == 'eng':
+            A.poly(s4, C['screen'], n)
+            for k in range(3):
+                gc = s4[0] + (s4[1] - s4[0]) * (0.2 + 0.3 * k) + (s4[3] - s4[0]) * 0.5 + n * 0.001
+                F.atorus(A, gc, n, 0.036, 0.004, lambda a: C['chrome'], seg=14, rseg=4)
+                A.poly([gc + (V((0, 1, 0)) * math.cos(6.283 * j / 12) + (s4[3] - s4[0]).normalized() * math.sin(6.283 * j / 12)) * 0.031 for j in range(12)], C['board'], n)
+                a_ = (0.9, 2.4, 1.7)[k]; d_ = V((0, 1, 0)) * math.cos(a_) + (s4[3] - s4[0]).normalized() * math.sin(a_); e_ = n.cross(d_)
+                A.poly([gc + n * 0.0015 - d_ * 0.006 - e_ * 0.003, gc + n * 0.0015 + d_ * 0.028, gc + n * 0.0015 - d_ * 0.006 + e_ * 0.003], C['red'], n)
+            continue
+        NU = int(round((s4[1] - s4[0]).length / 0.011)); NV = int(round((s4[3] - s4[0]).length / 0.011)); mt = C['pix_' + nm]
+        gp = lambda i, j: s4[0] + (s4[1] - s4[0]) * (i / NU) + (s4[3] - s4[0]) * (j / NV)
+        for i in range(NU):
+            for j in range(NV): A.poly([gp(i, j), gp(i + 1, j), gp(i + 1, j + 1), gp(i, j + 1)], mt, n)
     for yg in (-0.62, -0.48):
         F.atorus(A, dash_pt(0.25, yg) + n * 0.004, n, 0.035, 0.004, lambda a: C['chrome'], seg=16, rseg=4)
     cb = dash_pt(0.93, -0.20) + V((0.0, 0, -0.005))
@@ -782,16 +936,66 @@ def helm(A, G, fine=True):
     abox(A, 6.15, 7.15, 1.05, yi - 0.004, z0, z0 + 0.42, C['inner']); abox(A, 6.17, 7.13, 1.07, yi - 0.006, z0 + 0.42, z0 + 0.50, C['cush'])
     abox(A, 6.17, 7.13, yi - 0.09, yi - 0.006, z0 + 0.50, z0 + 0.92, C['cush'])
     abox(A, 7.30, 7.95, 0.75, yi - 0.004, z0, z0 + 0.82, C['inner']); abox(A, 7.32, 7.93, 0.77, yi - 0.006, z0 + 0.82, z0 + 0.85, C['wood'])
+    # (round 3; the sensor: «innsiden er ellers glatt (ingen radio, brytere, listverk)») the VHF on the shelf between the dash and the
+    # windscreen over the engine's panel, its handset on the shelf beside it (the VHF comes with her, VESSELS std; an AIS is bought, so none is modelled in); a row of switches with their pilot
+    # lights along the dash's foot; a wooden list round the walls under the roof
+    xs0 = DASH[1][0] + 0.02; zs = DASH[1][1]
+    def unit(y0_, y1_, h, scr):
+        abox(A, xs0, xs0 + 0.17, y0_, y1_, zs, zs + h, C['dark'])
+        A.poly([(xs0 - 0.001, y1_ - 0.02, zs + h * 0.45), (xs0 - 0.001, y0_ + 0.07, zs + h * 0.45), (xs0 - 0.001, y0_ + 0.07, zs + h * 0.85), (xs0 - 0.001, y1_ - 0.02, zs + h * 0.85)], scr, (-1, 0, 0))
+        for k in range(2): acyl(A, (xs0, y0_ + 0.025 + 0.025 * k, zs + h * 0.5), (xs0 - 0.014, y0_ + 0.025 + 0.025 * k, zs + h * 0.5), 0.009, lambda q: C['black'], seg=8)
+        for k in range(4): abox(A, xs0 - 0.004, xs0, y1_ - 0.03 - 0.035 * k, y1_ - 0.008 - 0.035 * k, zs + h * 0.12, zs + h * 0.32, C['switch'])
+    unit(-0.72, -0.50, 0.08, C['lampG'])
+    abox(A, xs0 + 0.01, xs0 + 0.19, -0.465, -0.41, zs, zs + 0.045, C['black'])                                 # the handset
+    F.atorus(A, (xs0 + 0.04, -0.44, zs + 0.012), (0, 0, 1), 0.03, 0.006, lambda a_: C['black'], seg=12, rseg=4) # its cord
+    pa, pb = dash_pt(0.02, -0.76), dash_pt(0.14, -0.08); pc = (pa + pb) / 2
+    obox(A, pc + n * 0.004, V((0, (pb.y - pa.y) / 2, 0)), (dash_pt(1, 0) - dash_pt(0, 0)).normalized() * 0.036, n * 0.004, C['switch'])
+    for k in range(10):
+        q = dash_pt(0.06, -0.73 + 0.067 * k) + n * 0.008
+        acyl(A, q, q + n * 0.02 + V((0, 0, 0.006)), 0.004, lambda a_: C['chrome'], seg=6)
+        obox(A, dash_pt(0.115, -0.73 + 0.067 * k) + n * 0.009, V((0, 0.006, 0)), V((0.003, 0, 0.006)), n * 0.002, C['lampG'] if k % 4 else C['lampR'])
+    zl = WH_TOP - 0.05; ri, ro = wh_inner(zl, WT + 0.018), wh_inner(zl, WT)
+    for k in range(len(ri)):
+        a_, b_ = ri[k], ri[(k + 1) % len(ri)]; c_, d_ = ro[(k + 1) % len(ro)], ro[k]
+        if math.hypot(b_[0] - a_[0], b_[1] - a_[1]) < 0.05: continue
+        A.poly([(a_[0], a_[1], zl), (b_[0], b_[1], zl), (b_[0], b_[1], zl + 0.045), (a_[0], a_[1], zl + 0.045)], C['wood'], (7.2 - (a_[0] + b_[0]) / 2, WH_YC - (a_[1] + b_[1]) / 2, 0))
+        A.poly([(a_[0], a_[1], zl), (b_[0], b_[1], zl), (c_[0], c_[1], zl), (d_[0], d_[1], zl)], C['wood'], (0, 0, -1))
 
 
 # ---------- the forecastle: rails, the windlass and the bow roller, bitts and cleats, vents, the steps up from the walkway ----------
 def gunwale_y(x, sg=1): return ycap(x, sg) + CAP * 0.5
 def bitts(A, x, y, z, h=0.28):
-    abox(A, x - 0.12, x + 0.12, y - 0.06, y + 0.06, z - 0.004, z + 0.02, C['steel'])
+    """(round 4; the sensor: «grove pullerter») a pair of bitts as cast: a foot plate with its edge bevelled and four bolts, each post
+    flared into the plate with a weld, a little waisted, a heavy rounded cap with a lip the rope cannot jump, the cross pin through both"""
+    s_ = lambda q: C['steel']; r = 0.048
+    abox(A, x - 0.14, x + 0.14, y - 0.075, y + 0.075, z - 0.004, z + 0.014, C['steel'])
+    abox(A, x - 0.125, x + 0.125, y - 0.06, y + 0.06, z + 0.014, z + 0.024, C['steel'])
+    for bx in (-0.11, 0.11):
+        for by in (-0.05, 0.05): acyl(A, (x + bx, y + by, z + 0.022), (x + bx, y + by, z + 0.034), 0.010, s_, seg=6)
     for dx in (-0.065, 0.065):
-        acyl(A, (x + dx, y, z), (x + dx, y, z + h), 0.045, lambda q: C['steel'], seg=12)
-        acyl(A, (x + dx, y, z + h), (x + dx, y, z + h + 0.015), 0.055, lambda q: C['steel'], seg=12)
-    acyl(A, (x - 0.065, y, z + h * 0.7), (x + 0.065, y, z + h * 0.7), 0.012, lambda q: C['steel'], seg=8)
+        c = (x + dx, y)
+        acyl(A, (c[0], c[1], z + 0.02), (c[0], c[1], z + 0.05), r * 1.45, s_, seg=16, r1=r * 1.02)        # the flare and its weld
+        acyl(A, (c[0], c[1], z + 0.05), (c[0], c[1], z + h * 0.55), r * 1.02, s_, seg=16, r1=r * 0.92)     # the waist
+        acyl(A, (c[0], c[1], z + h * 0.55), (c[0], c[1], z + h - 0.01), r * 0.92, s_, seg=16, r1=r)
+        acyl(A, (c[0], c[1], z + h - 0.01), (c[0], c[1], z + h + 0.012), r * 1.38, s_, seg=16)            # the cap's lip
+        acyl(A, (c[0], c[1], z + h + 0.012), (c[0], c[1], z + h + 0.03), r * 1.38, s_, seg=16, r1=r * 0.9)  # its crown
+    acyl(A, (x - 0.115, y, z + h * 0.62), (x + 0.115, y, z + h * 0.62), 0.014, s_, seg=8)
+
+def vent(A, c, r=0.055, h=0.30):
+    """(round 4; the sensor: «grove sopplufter») a mushroom vent: a bolted foot flange, the stem with a band, the cap a dome turned
+    from rings with a skirt round it and the dark gap under it where the air goes in"""
+    x, y, z = c; w = lambda q: C['white']
+    acyl(A, (x, y, z - 0.004), (x, y, z + 0.012), r * 1.8, w, seg=16)
+    for k in range(6): a_ = math.pi * k / 3; acyl(A, (x + r * 1.5 * math.cos(a_), y + r * 1.5 * math.sin(a_), z + 0.010), (x + r * 1.5 * math.cos(a_), y + r * 1.5 * math.sin(a_), z + 0.020), 0.007, lambda q: C['steel'], seg=6)
+    acyl(A, (x, y, z + 0.012), (x, y, z + h), r, w, seg=16)
+    acyl(A, (x, y, z + h * 0.45), (x, y, z + h * 0.45 + 0.02), r * 1.12, w, seg=16)
+    acyl(A, (x, y, z + h - 0.005), (x, y, z + h + 0.004), r * 1.02, lambda q: C['dark'], seg=16)                 # the gap's shadow
+    R_ = r * 2.5; zs = z + h - 0.03
+    acyl(A, (x, y, zs), (x, y, zs + 0.05), R_, w, seg=24, r1=R_ * 1.01)                                          # the skirt
+    acyl(A, (x, y, zs + 0.002), (x, y, zs + 0.004), R_ * 0.985, lambda q: C['dark'], seg=24)                         # the dark mouth under it
+    for k in range(5):
+        a0, a1 = math.pi / 2 * k / 5, math.pi / 2 * (k + 1) / 5
+        acyl(A, (x, y, zs + 0.05 + 0.06 * math.sin(a0)), (x, y, zs + 0.05 + 0.06 * math.sin(a1)), R_ * math.cos(a0) + 0.002, w, seg=24, r1=R_ * math.cos(a1) + 0.002)
 
 STEPS = (6.02, 6.55, -1.78, -1.50)                            # the steps up from the walkway to the forecastle, to starboard (G)
 def forecastle(A, fine=True):
@@ -823,13 +1027,22 @@ def forecastle(A, fine=True):
     F.bow_roller(A, (10.30, 0, z_cap(10.30) + 0.004), (10.96, 0, zr_), C['steel'], C['rubber'], R=0.07, W=0.18, deck=lambda x: z_cap(min(x, XF)) + 0.004, x_end=XF - 0.02)
     if not fine: return
     # the capstan forward of the house (G), the bitts forward, the cleats on the caps, two mushroom vents
-    acyl(A, (9.2, -0.3, z_bk(9.2) + camber(9.2, 0.3) - 0.004), (9.2, -0.3, z_bk(9.2) + 0.40), 0.12, lambda q: C['red'], seg=14)
-    acyl(A, (9.2, -0.3, z_bk(9.2) + 0.40), (9.2, -0.3, z_bk(9.2) + 0.78), 0.19, lambda q: C['red'], seg=20, r1=0.16)
+    # (round 2: it was two red cylinders 0.78 m high, a placeholder. A warping capstan as on a sjark's forecastle: a bolted foot, the
+    # barrel waisted between its lips with six whelps, bare where the rope runs, a painted crown with the bar's sockets, 0.46 m high)
+    cz = z_bk(9.2) + camber(9.2, 0.3); cc = lambda z: (9.2, -0.3, cz + z); rd = lambda q: C['red']
+    acyl(A, cc(-0.004), cc(0.025), 0.175, lambda q: C['dark'], seg=20)
+    for k in range(6): a_ = math.pi * k / 3 + 0.3; acyl(A, (9.2 + 0.148 * math.cos(a_), -0.3 + 0.148 * math.sin(a_), cz + 0.025), (9.2 + 0.148 * math.cos(a_), -0.3 + 0.148 * math.sin(a_), cz + 0.04), 0.014, s, seg=6)
+    acyl(A, cc(0.025), cc(0.07), 0.150, rd, seg=20, r1=0.135); acyl(A, cc(0.07), cc(0.11), 0.135, s, seg=20, r1=0.100)
+    acyl(A, cc(0.11), cc(0.30), 0.100, s, seg=20, r1=0.094); acyl(A, cc(0.30), cc(0.36), 0.094, s, seg=20, r1=0.140)
+    acyl(A, cc(0.36), cc(0.40), 0.150, rd, seg=20); acyl(A, cc(0.40), cc(0.44), 0.150, rd, seg=20, r1=0.105); acyl(A, cc(0.44), cc(0.46), 0.105, rd, seg=16, r1=0.06)
+    for k in range(6):
+        a_ = math.pi * k / 3; u_ = V((math.cos(a_), math.sin(a_), 0)); t_ = V((-math.sin(a_), math.cos(a_), 0))
+        obox(A, V(cc(0.205)) + u_ * 0.098, u_ * 0.012, t_ * 0.012, V((0, 0, 0.10)), C['steel'])
+        if k % 3 == 0: obox(A, V(cc(0.38)) + u_ * 0.150, u_ * 0.004, t_ * 0.022, V((0, 0, 0.014)), C['black'])
     for x, y in ((9.75, 0.82), (9.75, -0.82)): bitts(A, x, y, z_bk(x) + camber(x, y))
     for x in (6.95, 8.75):
         for sg in (1, -1): F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.26, C['steel'])
-    for y in (0.25, -0.90):
-        F.mushroom_vent(A, (9.55, y, z_bk(9.55) + camber(9.55, y) + 0.004), C['white'])
+    for x, y in ((9.55, 0.25), (9.35, -0.90)): vent(A, (x, y, z_bk(x) + camber(x, y) + 0.004))   # (round 4: the starboard one 0.2 m aft, clear of the bitts' foot plate at 9.61)
     # the steps up from the walkway beside the wheelhouse to the forecastle, to starboard: three treads on brackets against the house
     x0, x1, y0, y1 = STEPS; zd0, zd1 = z_deck(6.0), z_bk(X_BAKK)
     for k in (1, 2, 3):
@@ -842,19 +1055,34 @@ def forecastle(A, fine=True):
 
 # ---------- the aft deck: the casing to port with its door and the dry exhaust, the gutting table, the bitts, the filler ----------
 CASING = (1.0, 2.85, 1.02, 1.82, 3.35)                         # (G)
+LADDER = (2.12, 1.42, 0.40)  # the ladder up to the shelter roof (round 3): its top at the roof's after edge to port over the casing (x, y, width)
 TABLE = (3.20, 4.10, 1.30, 1.88)                               # the gutting table under the shelter to port, across the hatch from the work at the open side (B6)
 TUB = (4.62, -1.45)                                            # the bleeding tub (the game's), just aft of the hauler
+def gbox(A, x0, x1, y0, y1, z0, z1, m, step):
+    """(round 4) a box's four walls and its top as grids of about step, so the wear per corner shows on them (an abox has eight)"""
+    nx, ny, nz = (max(1, round((b - a) / step)) for a, b in ((x0, x1), (y0, y1), (z0, z1)))
+    X = [x0 + (x1 - x0) * i / nx for i in range(nx + 1)]; Y = [y0 + (y1 - y0) * j / ny for j in range(ny + 1)]; Z = [z0 + (z1 - z0) * k / nz for k in range(nz + 1)]
+    for k in range(nz):
+        for i in range(nx):
+            for yy, nrm in ((y0, (0, -1, 0)), (y1, (0, 1, 0))): A.poly([(X[i], yy, Z[k]), (X[i + 1], yy, Z[k]), (X[i + 1], yy, Z[k + 1]), (X[i], yy, Z[k + 1])], m, nrm)
+        for j in range(ny):
+            for xx, nrm in ((x0, (-1, 0, 0)), (x1, (1, 0, 0))): A.poly([(xx, Y[j], Z[k]), (xx, Y[j + 1], Z[k]), (xx, Y[j + 1], Z[k + 1]), (xx, Y[j], Z[k + 1])], m, nrm)
+    for i in range(nx):
+        for j in range(ny): A.poly([(X[i], Y[j], z1), (X[i + 1], Y[j], z1), (X[i + 1], Y[j + 1], z1), (X[i], Y[j + 1], z1)], m, (0, 0, 1))
 def aft_deck(A, fine=True):
     s = lambda q: C['steel']
     x0, x1, y0, y1, zt = CASING; zd = z_deck(1.5) - 0.004
-    abox(A, x0, x1, y0, y1, zd, zt, C['white'], skip=('-z',)); abox(A, x0 - 0.03, x1 + 0.03, y0 - 0.03, y1 + 0.01, zt, zt + 0.04, C['roof'])
+    gbox(A, x0, x1, y0, y1, zd, zt, C['white'], 0.12 if fine else 9); abox(A, x0 - 0.03, x1 + 0.03, y0 - 0.03, y1 + 0.01, zt, zt + 0.04, C['roof'])
     if fine:
         # the casing's door in its inboard face, a frame and the leaf proud, its handle; a vent in its after face
         dx0, dx1, dz0, dz1 = 1.55, 2.25, zd + 0.10, zd + 0.98
         abox(A, dx0 - 0.04, dx1 + 0.04, y0 - 0.012, y0 - 0.001, dz0 - 0.04, dz1 + 0.04, C['white'])
         abox(A, dx0, dx1, y0 - 0.024, y0 - 0.012, dz0, dz1, C['roof'])
         acyl(A, (dx1 - 0.08, y0 - 0.024, (dz0 + dz1) / 2), (dx1 - 0.08, y0 - 0.06, (dz0 + dz1) / 2), 0.012, s, seg=8)
-        for k in range(5): abox(A, x0 - 0.012, x0 - 0.001, 1.30 + 0.07 * k, 1.34 + 0.07 * k, 2.95, 3.20, C['dark'])
+        # (the vent's louvres in its inboard face aft of the door; round 3: the steps up to the roof took its after face)
+        for k in range(5): abox(A, 1.08 + 0.07 * k, 1.12 + 0.07 * k, y0 - 0.012, y0 - 0.001, 2.95, 3.20, C['dark'])
+        # the door's hinges aft, big enough to read from the deck
+        for zz in (dz0 + 0.12, dz1 - 0.12): abox(A, dx0 - 0.03, dx0 + 0.06, y0 - 0.032, y0 - 0.012, zz - 0.06, zz + 0.06, C['steel'])
     # the dry exhaust up through the casing's roof, its rain cap, a bracket to the shelter roof's after edge
     ex, ey = 2.73, 1.45
     sx = 12 if fine else 5
@@ -871,7 +1099,7 @@ def aft_deck(A, fine=True):
     for x, y in ((x0 + 0.05, y0 + 0.05), (x1 - 0.05, y0 + 0.05), (x0 + 0.05, y1 - 0.05), (x1 - 0.05, y1 - 0.05)):
         acyl(A, (x, y, z_deck(x) + camber(x, y) - 0.004), (x, y, zt2 - 0.05), 0.02, s, seg=8)
     # the bitts on the quarters, the cleats amidships, the diesel filler by the shelter, a deck hose coiled, the fenders stowed
-    for y in (1.45, -1.45): bitts(A, 0.35, y, z_deck(0.35) + camber(0.35, y), 0.30)
+    for y in (BITT_Y, -BITT_Y): bitts(A, 0.35, y, z_deck(0.35) + camber(0.35, y), 0.30)
     for x in (2.55,):
         for sg in (1, -1): F.cleat(A, (x, sg * gunwale_y(x, sg), z_cap(x, sg) + 0.006), (0, 0, 1), (1, 0, 0), 0.26, C['steel'])
     fx, fy = FILL; fz = z_deck(fx) + camber(fx, fy)
@@ -879,11 +1107,33 @@ def aft_deck(A, fine=True):
     hx, hy = HOSE; hz = z_deck(hx) + camber(hx, hy)
     for k in range(3): F.atorus(A, (hx, hy, hz + 0.024 + 0.044 * k), (0, 0, 1), 0.24 - 0.02 * k, 0.022, lambda a: C['hose'], seg=20, rseg=6)
     for k in range(4): F.atorus(A, (9.05, 0.25, z_bk(9.05) + camber(9.05, 0.25) + 0.02 + 0.035 * k), (0, 0, 1), 0.20 - 0.015 * k, 0.018, lambda a: C['rope2'], seg=20, rseg=5)
-    # the flag staff in its socket on the transom's cap to port, raked aft
-    px, py = POLE; zp = z_cap(XA) + 0.012; xp = x_t(zp) + 0.04
-    acyl(A, (xp, py, zp - 0.004), (xp, py, zp + 0.14), 0.024, s, seg=10)
-    acyl(A, (xp, py, zp + 0.02), (xp - 0.16, py, zp + 1.17), 0.018, lambda q: C['wood'], seg=8)
-POLE = (-0.36, 1.55)
+
+# the non-slip on the aft deck (round 2, 11.11.2026: «sklisikring og slitasje som synes på dørken»): fields of a coarse, darker non-slip
+# 4 mm over the gelcoat, as they are moulded or rolled on a fibreglass deck, with smooth waterways along the bulwarks, round the hatch,
+# the casing, the masts' and the bitts' feet, and seams between the fields. Small faces coloured at the corners (grip_wear)
+GRIP_C = 0.10
+def grip_free(x, y):
+    """no non-slip here: the waterways, what stands on the deck, the seams"""
+    if abs(y) > ybw(x) - 0.13 or x < XA + TT + 0.10 or x > WH_X0 - 0.05: return False
+    hx0, hx1, hy0, hy1 = HOLD
+    if hx0 - 0.12 < x < hx1 + 0.12 and hy0 - 0.12 < y < hy1 + 0.12: return False
+    cx0, cx1, cy0, cy1, _ = CASING
+    if cx0 - 0.08 < x < cx1 + 0.08 and y > cy0 - 0.08: return False
+    if math.hypot(x - AM[0], y - AM[1]) < 0.20: return False
+    if x < 0.62 and abs(abs(y) - BITT_Y) < 0.22: return False                                    # the bitts
+    if x > STEPS[0] - 0.06 and y < STEPS[3] + 0.06: return False                                 # the steps to the forecastle
+    if math.hypot(x - FILL[0], y - FILL[1]) < 0.12: return False
+    if abs((x - 0.22) % 1.30) < 0.05 or abs(y) < 0.025 or abs(abs(y) - 0.98) < 0.025: return False   # the seams between the fields
+    return True
+def deck_fields(A):
+    n = 0; c = GRIP_C; zf = lambda x, y: z_deck(x) + camber(x, y) + 0.004
+    i0 = int(math.floor(XA / c)); i1 = int(math.ceil(WH_X0 / c)); j1 = int(math.ceil(2.1 / c))
+    ok = {(i, j): grip_free((i + 0.5) * c, (j + 0.5) * c) and all(grip_free((i + a) * c, (j + b) * c) for a in (0.05, 0.95) for b in (0.05, 0.95)) for i in range(i0, i1) for j in range(-j1, j1)}
+    for (i, j), o in ok.items():
+        if not o: continue
+        q = [(i * c, j * c), ((i + 1) * c, j * c), ((i + 1) * c, (j + 1) * c), (i * c, (j + 1) * c)]
+        A.poly([(x, y, zf(x, y)) for x, y in q], C['grip'], (0, 0, 1)); n += 1
+    return n
 HOSE = (5.62, 1.55)          # the deck hose coiled under the shelter forward to port (OB11: it lay where the line tubs stand now)
 FILL = (4.6, 1.80)
 
@@ -896,6 +1146,12 @@ LAMP_ARM = 0.30
 def white_z(): return FM_TOP + 0.12
 AM = (1.62, 0.0); AM_TOP = 8.85
 GZ = 5.0                     # the gantry's beams (G: 4.95-5.05)
+# the flag staff (round 3): it stood in a socket on the transom's cap to port, and the ensign hung in over the one who sets at the
+# port (the sensor: «flagget henger inn der setteren står»). Now up on the gantry, in a socket clamped to the outside of its port beam
+# at the after end: the flag flies over five metres up, over the stern light and clear of everyone on deck. Round 4: straight up (it
+# was raked aft, toward a camera above and astern, and in five pictures seemed to run down through the setter)
+POLE = (-0.58, GANT_Y + 0.075); POLE_Z = GZ + 0.03
+def pole_top(): return (POLE[0], POLE[1], POLE_Z + 1.12)
 STERN_L = (-0.66, 0.0, GZ + 0.12)
 RDM = (7.10, 1.0)            # the radome's foot on the wheelhouse roof, forward to port (kit.radar)
 SIDE = (8.70, 1.55, -1.29)   # the side lights on the roof's forward corners (G)
@@ -922,12 +1178,26 @@ def rig(A, crown, fine=True):
     acyl(A, (ax, ay, z_deck(ax) + camber(ax, 0) - 0.004), (ax, ay, AM_TOP), 0.08, lambda q: m, seg=seg)
     acyl(A, (ax, ay, AM_TOP), (ax, ay, AM_TOP + 0.05), 0.10, lambda q: m, seg=seg)
     for sy in (GANT_Y, -GANT_Y):
-        acyl(A, (ax, 0, 7.40), (0.28, sy, GZ + 0.05), 0.05, lambda q: m, seg=10 if fine else 5)
+        # (round 3: the stay ended on the beam's top with half its end in the air, a black gap where it met the beam. Now it runs into
+        # the beam and stands in a lug: two ears welded on the beam's top either side of it, a pin through)
+        acyl(A, (ax, 0, 7.40), (0.28, sy, GZ - 0.01), 0.05, lambda q: m, seg=10 if fine else 5)
         abox(A, -0.70, ax + 0.02, sy - 0.045, sy + 0.045, GZ - 0.05, GZ + 0.05, m)
+        if fine:
+            dv = V((ax - 0.28, -sy, 0)).normalized(); cr = V((-dv.y, dv.x, 0))
+            for e in (1, -1): obox(A, V((0.28, sy, GZ + 0.10)) + dv * 0.04 + cr * (e * 0.058), dv * 0.10, V((0, 0, 0.05)), cr * 0.006, C['steel'])
+            acyl(A, V((0.28, sy, GZ + 0.11)) + dv * 0.06 + cr * 0.075, V((0.28, sy, GZ + 0.11)) + dv * 0.06 - cr * 0.075, 0.014, s, seg=8)
         zc = z_cap(XA) + 0.012; xp = x_t(zc) + 0.035
         acyl(A, (xp, sy, zc - 0.004), (xp, sy, GZ - 0.05), 0.045, lambda q: m, seg=10 if fine else 5)
         abox(A, xp - 0.07, xp + 0.07, sy - 0.07, sy + 0.07, zc - 0.006, zc + 0.012, C['steel'])
-    for x in (-0.66, 0.28): abox(A, x - 0.045, x + 0.045, -GANT_Y - 0.04, GANT_Y + 0.04, GZ - 0.05, GZ + 0.05, m)
+    # the cross beams between the side beams' inner faces, a little shallower than them (round 3: they ran through the side beams with
+    # their tops in the same plane, which showed black squares at the corners), and one at the aft mast, which the side beams reach
+    for x in (-0.66, 0.28, ax - 0.02): abox(A, x - 0.042, x + 0.042, -GANT_Y + 0.044, GANT_Y - 0.044, GZ - 0.046, GZ + 0.046, m)
+    # the flag staff in its socket on the outside of the port beam (POLE; round 3, off the transom's cap; round 4 straight up), a truck on top
+    px, py = POLE; pt = pole_top()
+    abox(A, px - 0.05, px + 0.05, GANT_Y + 0.044, py - 0.028, GZ - 0.04, GZ + 0.04, C['steel'])
+    acyl(A, (px, py, GZ - 0.07), (px, py, GZ + 0.10), 0.03, s, seg=10 if fine else 5)
+    acyl(A, (px, py, POLE_Z), pt, 0.018, lambda q: C['wood'], seg=8 if fine else 4)
+    if fine: EXTRA.append(sphere('flag_truck', (pt[0], pt[1], pt[2] + 0.02), 0.03, C['wood']))
     acyl(A, (ax, 0, 7.05), (2.55, 0, ROOF_SH), 0.05, lambda q: m, seg=10 if fine else 5)
     # the net roller hanging under the gantry's after end (the ship's own, as the gantry), its motor
     for sy in (GANT_Y - 0.06, -GANT_Y + 0.06): abox(A, -0.50, -0.34, sy - 0.015, sy + 0.015, 4.40, GZ - 0.05, m)
@@ -959,7 +1229,29 @@ def rig(A, crown, fine=True):
     # the aft mast's boom aft over the gantry, its stay; the winch on the mast; the wire between the mastheads
     acyl(A, (ax, 0, 7.60), (0.38, 0, 8.30), 0.045, lambda q: m, seg=10)
     acyl(A, (0.40, 0, 8.30), (ax, 0, 8.62), 0.008, d, seg=4)
-    abox(A, ax - 0.27, ax + 0.27, -0.22, 0.22, 4.05, 4.75, C['red'])
+    # the winch on the aft mast for the boom's runner (round 2: it was a red box 0.54 x 0.44 x 0.70 round the mast): a foot plate
+    # clamped to the mast's after side with two bands, two cheeks, the drum between them with its flanges and the wire on it, the
+    # hydraulic motor to port and the brake's band and lever to starboard; the runner up the mast to a block under the boom's heel, out
+    # to the block at its end and down to the hook
+    wz = 4.50; wx = ax - 0.25; r_ = lambda q: C['red']
+    abox(A, ax - 0.12, ax - 0.075, -0.17, 0.17, wz - 0.22, wz + 0.22, C['red'])
+    for zz in (wz - 0.16, wz + 0.16): F.atorus(A, (ax, 0, zz), (0, 0, 1), 0.088, 0.012, lambda a: C['steel'], seg=16, rseg=4)
+    for sy in (-0.155, 0.155):
+        A.poly([(ax - 0.12, sy, wz - 0.20), (ax - 0.12, sy, wz + 0.20), (wx - 0.06, sy, wz + 0.11), (wx - 0.11, sy, wz), (wx - 0.06, sy, wz - 0.11)], C['red'], (0, sy, 0))
+        A.poly([(ax - 0.12, sy * 0.92, wz - 0.20), (ax - 0.12, sy * 0.92, wz + 0.20), (wx - 0.06, sy * 0.92, wz + 0.11), (wx - 0.11, sy * 0.92, wz), (wx - 0.06, sy * 0.92, wz - 0.11)], C['red'], (0, -sy, 0))
+        acyl(A, (wx, sy * 0.86, wz), (wx, sy * 0.92, wz), 0.155, lambda q: C['steel'], seg=18)              # the drum's flanges
+    acyl(A, (wx, -0.134, wz), (wx, 0.134, wz), 0.075, s, seg=14)                                             # the drum
+    acyl(A, (wx, -0.120, wz), (wx, 0.120, wz), 0.112, d, seg=16)                                             # the wire on it
+    acyl(A, (wx, 0.155, wz), (wx, 0.30, wz), 0.062, d, seg=12); acyl(A, (wx, 0.30, wz), (wx, 0.325, wz), 0.045, s, seg=10)   # the motor
+    for dz in (-0.03, 0.03): acyl(A, (wx + 0.03, 0.26, wz + dz), (ax - 0.06, 0.20, wz + dz - 0.30), 0.009, lambda q: C['rubber'], seg=5)   # its hoses down the mast
+    acyl(A, (wx, -0.155, wz), (wx, -0.20, wz), 0.10, s, seg=14)                                              # the brake's drum, its lever
+    acyl(A, (wx, -0.18, wz + 0.09), (wx - 0.16, -0.18, wz + 0.26), 0.010, s, seg=6); EXTRA.append(sphere('w_knob', (wx - 0.16, -0.18, wz + 0.26), 0.022, C['black']))
+    bz = 7.42; acyl(A, (wx + 0.05, 0.0, wz + 0.10), (ax - 0.13, 0, bz), 0.006, d, seg=4)
+    obox(A, (ax - 0.11, 0, bz + 0.02), (0.035, 0, 0), (0, 0.02, 0), (0, 0, 0.05), C['steel']); acyl(A, (ax - 0.13, -0.022, bz), (ax - 0.13, 0.022, bz), 0.045, d, seg=12)
+    tipb = (0.44, 0, 8.20); acyl(A, (ax - 0.15, 0, bz + 0.02), tipb, 0.006, d, seg=4)
+    acyl(A, (tipb[0], -0.022, tipb[2]), (tipb[0], 0.022, tipb[2]), 0.045, d, seg=12); acyl(A, (tipb[0], 0, tipb[2] + 0.04), (0.40, 0, 8.28), 0.008, s, seg=4)
+    acyl(A, (tipb[0] - 0.04, 0, tipb[2]), (tipb[0] - 0.04, 0, 6.35), 0.006, d, seg=4)
+    acyl(A, (tipb[0] - 0.04, 0, 6.35), (tipb[0] - 0.04, 0, 6.22), 0.028, s, seg=8); F.atorus(A, (tipb[0] - 0.04, 0, 6.16), (0, 1, 0), 0.05, 0.011, lambda a: C['steel'], seg=12, rseg=4, a0=0.6, a1=5.2)
     acyl(A, (ax, 0, 8.0), (fx, fy, 8.0), 0.007, d, seg=4)
     # on the wheelhouse roof: the searchlight, the horn, the GPS, the side lights on their boards with screens
     zr2 = crown(7.80, WH_YC + 0.4)
@@ -985,12 +1277,58 @@ def lanterns_side(A):
 # ---------- under water: the shoe, the rudder on its stock, the propeller on its shaft out of the deadwood, the anodes ----------
 RX_ = 0.0                    # the rudder's stock (G: the rudder from -0.31 to 0.27)
 PROP = (0.58, 0.0, 0.28); PR = 0.53                           # the propeller's centre and radius (G: 1.1 m across, four blades; 1.06 for its clearance)
+def profile_rudder(U, fine=True):
+    """(round 3; the sensor: «roret er en flat plate») a profile rudder hung at its heel: a NACA 0018 section (it was 11 %, and read
+    as a plate), the chord 0.60 m at the hull and 0.50 at the foot, the stock 27 cm aft of the leading edge at the top, the foot rounded;
+    the coupling where the stock meets the blade, and the heel's bearing on the shoe's after end with the pin in it"""
+    # (round 4; the sensor again: «roret leses som en flat plate, hælen som en plate»: the profile did not show from the side) the
+    # blade's outline rounded where the leading edge meets the top and the foot (a radius of 0.14 m), the blade's top 0.16 m under the
+    # hull so the stock shows over it, thick in its coupling and its boss where it goes into the hull; the heel on a shoe that is a
+    # tapered body faired into the keel's after end, not a plate
+    z0, z1 = -0.43, RUD_TOP; n = 14 if fine else 5; rows = 10 if fine else 2; RC = 0.14
+    def ring(z, sc):
+        f = (z - z0) / (z1 - z0); ch = 0.50 + 0.10 * f; le = RX_ + 0.22 + 0.05 * f
+        d = max(0.0, RC - min(z - z0, z1 - z)); cut = RC - math.sqrt(max(0.0, RC * RC - d * d))          # the corners rounded
+        le -= cut; ch -= cut + (cut * 0.6 if z - z0 < RC else 0.0)
+        us = [0.5 * (1 - math.cos(math.pi * k / n)) for k in range(n + 1)]
+        yt = lambda u: 5 * 0.18 * ch * sc * (0.2969 * math.sqrt(u) - 0.1260 * u - 0.3516 * u * u + 0.2843 * u ** 3 - 0.1036 * u ** 4)
+        return [(le - ch * u, yt(u), z) for u in us] + [(le - ch * u, -yt(u), z) for u in reversed(us[1:-1])]
+    zs_ = [z0, z0 + 0.01, z0 + 0.03, z0 + 0.06, z0 + 0.10] + [z0 + 0.14 + (z1 - z0 - 0.28) * k / rows for k in range(rows + 1)] + [z1 - 0.10, z1 - 0.06, z1 - 0.03, z1 - 0.01, z1]
+    sc = [0.50, 0.75, 0.88, 0.96, 1.0] + [1.0] * (rows + 1) + [1.0, 0.98, 0.94, 0.86, 0.70]
+    if not fine: zs_, sc = [z0, z0 + 0.14, z1 - 0.14, z1], [0.7, 1.0, 1.0, 0.8]
+    F.loft(U, [ring(z, k) for z, k in zip(zs_, sc)], lambda i: C['af'], cap0=True, cap1=True,
+           out=lambda mid, cc: V((0, mid.y, mid.z - cc.z)) if abs(mid.y) > 1e-4 else V((0, 0, mid.z - cc.z)))
+    if not fine: return
+    # the coupling on the blade's top (a flange, its bolts), the stock over it, the boss where it goes into the hull
+    zc = z1 + 0.012
+    acyl(U, (RX_, 0, z1 - 0.01), (RX_, 0, zc + 0.03), 0.095, lambda q: C['af'], seg=16)                                 # the coupling's flange
+    for a_ in range(4): acyl(U, (RX_ + 0.07 * math.cos(a_ * 1.571 + 0.785), 0.07 * math.sin(a_ * 1.571 + 0.785), zc + 0.03), (RX_ + 0.07 * math.cos(a_ * 1.571 + 0.785), 0.07 * math.sin(a_ * 1.571 + 0.785), zc + 0.055), 0.016, lambda q: C['steel'], seg=6)
+    zh = z_low(RX_)
+    acyl(U, (RX_, 0, zh - 0.07), (RX_, 0, zh + 0.03), 0.07, lambda q: C['af'], seg=16, r1=0.10)                         # the boss under the hull
+    acyl(U, (RX_ + 0.02, 0, -0.465), (RX_ + 0.02, 0, -0.425), 0.07, lambda q: C['af'], seg=14)                         # the heel's bearing on the shoe
+    acyl(U, (RX_ + 0.02, 0, -0.425), (RX_ + 0.02, 0, -0.415), 0.045, lambda q: C['steel'], seg=12)                     # the pintle's cap
+def shoe_top(x): return -0.455 + 0.13 * ss(0.66, X_KA, x)
+RUD_TOP = 0.86                # the blade's top (round 4: 0.97, a hand under the hull; the stock shows over it now)
+def shoe(U, fine=True):
+    """(round 4) the shoe as a body, 0.165 m deep (it was a plate of 9 cm): 0.20 m wide where it leaves the keel's after end (the
+    keel 0.22), 0.15 at the heel, its top rising in a fillet into the keel over the last 0.34 m (the aperture's foot, clear of the
+    propeller's tips), its bottom flat at the keel line, the heel's end rounded"""
+    xs = [-0.40, -0.37, -0.32, -0.20, 0.10, 0.45, 0.70, 0.82, 0.92, X_KA - 0.02, X_KA + 0.06] if fine else [-0.40, 0.70, X_KA + 0.06]
+    def ring(x):
+        f = ss(-0.40, X_KA, x); w = 0.075 + 0.025 * f
+        zt = shoe_top(x); zb = -0.62 + 0.06 * ss(-0.30, -0.40, x)
+        w *= 0.55 + 0.45 * ss(-0.42, -0.30, x)
+        r = min(0.04, w * 0.6, (zt - zb) * 0.4); pts = []
+        for k in range(5): a_ = math.pi / 2 * k / 4; pts.append((x, w - r + r * math.sin(a_), zb + r - r * math.cos(a_)))
+        pts += [(x, w, zt), (x, -w, zt)]
+        for k in range(5): a_ = math.pi / 2 * (4 - k) / 4; pts.append((x, -(w - r + r * math.sin(a_)), zb + r - r * math.cos(a_)))
+        return pts[::-1]
+    F.loft(U, [ring(x) for x in xs], lambda i: C['af'], cap0=True, cap1=True)
 def underwater(fine=True):
     U = Acc('under')
-    abox(U, -0.36, X_KA + 0.06, -0.06, 0.06, -0.62, -0.53, C['af'])                                 # the shoe, from the keel to the rudder's heel (G)
-    acyl(U, (RX_ + 0.02, 0, -0.53), (RX_ + 0.02, 0, -0.47), 0.03, lambda q: C['steel'], seg=10)
-    F.foil_rudder(U, (RX_ + 0.27, 0.0), -0.50, 0.97, 0.58, C['af'], thick=0.11, top=lambda x: z_low(max(x, XA)) - 0.04, n=12 if fine else 5, rows=6 if fine else 2)
-    acyl(U, (RX_, 0, 0.97), (RX_, 0, z_low(RX_) + 0.08), 0.045, lambda q: C['steel'], seg=10)
+    shoe(U, fine)                                                                                    # the shoe, from the keel to the rudder's heel (G)
+    profile_rudder(U, fine)
+    acyl(U, (RX_, 0, RUD_TOP + 0.04), (RX_, 0, z_low(RX_) + 0.08), 0.055, lambda q: C['steel'], seg=12)                # the stock
     px, py, pz = PROP
     if not fine: return U.done(35)
     acyl(U, (px + 0.07, 0, pz), (X_KA + 0.06, 0, pz), 0.04, lambda q: C['steel'], seg=10)
@@ -1007,6 +1345,80 @@ def underwater(fine=True):
     return U.done(35)
 
 
+def render_only():
+    """for the renders only (qa/shots.py; never exported): the name and the registration mark, so a render shows her lettered. Jonas
+    11.11.2026: «Navnet på båten skal bare være over styrhusvinduet på bremen og på akterspeilet. Det andre nummeret kan gjøres mindre
+    og plasseres høyere opp på det hvite»: the name on the roof brim's front face over the windscreen and across the transom, the mark
+    small on the white bulwark at the bow, over the strake. Letters from Blender's own font, laid on the surface point by point"""
+    out = []; wm = mat('r_letters', (0.93, 0.94, 0.93), 0.5); km = mat('r_letters_k', (0.05, 0.06, 0.08), 0.5)
+    def text(txt, h, place, nm, m):
+        cu = bpy.data.curves.new(nm, 'FONT'); cu.body = txt; cu.align_x = 'LEFT'; cu.resolution_u = 3
+        o = bpy.data.objects.new(nm, cu); bpy.context.scene.collection.objects.link(o)
+        bpy.context.view_layer.objects.active = o; o.select_set(True); bpy.ops.object.convert(target='MESH'); o.select_set(False)
+        me = o.data; us = [v.co.x for v in me.vertices]; vs = [v.co.y for v in me.vertices]; k = h / max(1e-6, max(vs) - min(vs)); u0, v0 = min(us), min(vs); wd = (max(us) - u0) * k
+        for v in me.vertices: v.co = V(place((v.co.x - u0) * k, (v.co.y - v0) * k, wd))
+        me.materials.clear(); me.materials.append(m); out.append(o)
+    for sg in (1, -1):
+        def side(xc, zc_):
+            def f(u, v, wd):
+                x = xc + (wd / 2 - u if sg > 0 else u - wd / 2); z = zc_(x) + v
+                return (x, sg * (y_at(x, z, sg) + 0.006), z)
+            return f
+        text('T-36-SA', 0.20, side((MARK_X[0] + MARK_X[1]) / 2, lambda x: z_rub(x) + MARK_UP + 0.035), 'r_mark%d' % sg, km)
+    r_ = brim_front(0)[2]; t0 = 0.5 - NAME_CAP / 2 / r_
+    text('HAVBRIS', NAME_CAP, lambda u, v, wd: (brim_front(t0 + v / r_)[0] + 0.006, WH_YC - wd / 2 + u, brim_front(t0 + v / r_)[1]), 'r_name_h', wm)
+    text('HAVBRIS', 0.22, lambda u, v, wd: (x_t(2.12 + v) - 0.006, wd / 2 - u, 2.12 + v), 'r_name_t', wm)
+    # (round 4; the sensor: «ikke noe anker i baugrulla») the ship's own anchor is the game's (anchors.bower: a 16 kg plough stowed in the
+    # roller, 21-rescue-anchor.js), and so it was missing from every render. Drawn here as the game stows it: the shank in the roller,
+    # the plough's head hanging over the stem, its chain back to the gypsy
+    A = Acc('r_anchor'); gm = mat('r_galv', (0.50, 0.52, 0.53), 0.45); zr = z_cap(10.62) + 0.05; xr = 10.96
+    sh0 = V((10.42, 0, zr + 0.07)); sh1 = V((xr + 0.06, 0, zr + 0.065)); d_ = (sh1 - sh0).normalized()
+    obox(A, (sh0 + sh1) / 2, d_ * ((sh1 - sh0).length / 2), V((0, 0.012, 0)), V((0, 0, 0.022)), gm)              # the shank
+    acyl(A, sh0 + V((0, -0.03, 0)), sh0 + V((0, 0.03, 0)), 0.03, lambda q: gm, seg=10)                              # its shackle eye
+    cr = V((xr + 0.10, 0, zr - 0.02)); tip = V((xr + 0.02, 0, zr - 0.40))
+    for sg in (1, -1):
+        w_ = V((0.02, sg * 0.15, -0.05))
+        A.poly([cr, cr + w_, tip + V((0.03, sg * 0.03, 0.02))], gm, (1, sg * 0.6, 0.3)); A.poly([cr, tip + V((0.03, sg * 0.03, 0.02)), cr + w_], gm, (-1, -sg * 0.6, -0.3))
+    acyl(A, sh1, cr, 0.02, lambda q: gm, seg=8)                                                                         # the hinge to the head
+    acyl(A, cr, tip, 0.016, lambda q: gm, seg=8)                                                                        # the head's keel
+    for k in range(9):                                                                                                  # the chain to the gypsy
+        p0 = V((10.40 - 0.04 * k, -0.025 * k, zr + 0.05 - 0.02 * k)); F.atorus(A, p0, (0, 1, 0) if k % 2 else (0, 0, 1), 0.025, 0.007, lambda a_: C['dark'], seg=10, rseg=4)
+    o = A.done(35)
+    if o: out.append(o)
+    return out
+
+
+# (round 3; the sensor: «rene, kantete flater på nært hold; ingen sveisesømmer, fenderfester») the lists in the joints between the hull
+# and what stands on it: round the wheelhouse's foot on the decks, and along the shelter's walls where they stand on the bulwark's cap;
+# and the fender eyes on the caps, two a side aft and two a side on the forecastle, clear of the jigging places, the hauler and the buoys
+FENDER_EYES = [0.70, 1.75, 7.35, 8.35]
+def joints(A):
+    m = C['steel']
+    ring = wh_ring(WH_FLOOR); ring = ring + [ring[0]]
+    for (xa, ya, _), (xb, yb, _) in zip(ring, ring[1:]):
+        ln = math.hypot(xb - xa, yb - ya); nx_, ny_ = (yb - ya) / ln, -(xb - xa) / ln
+        cx_, cy_ = (xa + xb) / 2, (ya + yb) / 2
+        if nx_ * (cx_ - 7.2) + ny_ * (cy_ - WH_YC) < 0: nx_, ny_ = -nx_, -ny_                     # (outward)
+        k = max(1, int(ln / 0.15))
+        for i in range(k):
+            p0 = (xa + (xb - xa) * i / k, ya + (yb - ya) * i / k); p1 = (xa + (xb - xa) * (i + 1) / k, ya + (yb - ya) * (i + 1) / k)
+            z0_, z1_ = dk(p0[0]) + camber(p0[0], p0[1]), dk(p1[0]) + camber(p1[0], p1[1])
+            if p0[0] < X_BAKK - 0.02 or p1[0] < X_BAKK - 0.02: continue                          # (aft of the forecastle the house stands in the shelter's end)
+            o0 = (p0[0] + nx_ * 0.016, p0[1] + ny_ * 0.016); o1 = (p1[0] + nx_ * 0.016, p1[1] + ny_ * 0.016)
+            A.poly([(o0[0], o0[1], z0_ - 0.004), (o1[0], o1[1], z1_ - 0.004), (o1[0], o1[1], z1_ + 0.035), (o0[0], o0[1], z0_ + 0.035)], m, (nx_, ny_, 0))
+            A.poly([(o0[0], o0[1], z0_ + 0.035), (o1[0], o1[1], z1_ + 0.035), (p1[0], p1[1], z1_ + 0.045), (p0[0], p0[1], z0_ + 0.045)], m, (nx_, ny_, 1))
+    for sg in (1, -1):
+        xs = [SH_X0 + (SH_X1 - SH_X0) * k / 24 for k in range(25)]
+        for xa, xb in zip(xs, xs[1:]):
+            if sg < 0 and HAUL[0] - 0.01 < (xa + xb) / 2 < HAUL[1] + 0.01: continue
+            ya, yb = sg * (sh_y(xa) + 0.014), sg * (sh_y(xb) + 0.014); za, zb = z_cap(xa, sg), z_cap(xb, sg)
+            A.poly([(xa, ya, za - 0.012), (xb, yb, zb - 0.012), (xb, yb, zb + 0.035), (xa, ya, za + 0.035)], m, (0, sg, 0))
+            A.poly([(xa, ya, za + 0.035), (xb, yb, zb + 0.035), (xb, yb - sg * 0.012, zb + 0.045), (xa, ya - sg * 0.012, za + 0.045)], m, (0, sg, 1))
+    for sg in (1, -1):
+        for x in FENDER_EYES:
+            y = sg * gunwale_y(x, sg); z = z_cap(x, sg) + 0.004
+            abox(A, x - 0.05, x + 0.05, y - 0.022, y + 0.022, z - 0.006, z + 0.006, C['steel'])
+            F.atorus(A, (x, y, z + 0.006), (0, 1, 0), 0.032, 0.008, lambda a_: C['steel'], seg=12, rseg=5, a0=0.0, a1=math.pi)
 def build(fine=True):
     HELM_EXTRA.clear(); EXTRA.clear()
     M = Mesh('hull'); hull_shell(M, fine)
@@ -1029,6 +1441,7 @@ def build(fine=True):
     wh, wg, crown = wheelhouse(fine)
     helm(A, G, fine)
     forecastle(A, fine); aft_deck(A, fine); rig(A, crown, fine); lanterns_side(A)
+    if fine: deck_fields(A); joints(A)
     if fine:            # the transom's fender across the stern at the strake (G)
         z = z_rub(XA); xt = x_t(z) - 0.02; yy = y_at(XA, z) + 0.01
         acyl(A, (xt, -yy, z), (xt, yy, z), RUBH, lambda q: C['rub'], seg=10)
@@ -1054,6 +1467,31 @@ def name_strips(G):
     out.append([[G(x_t(2.05) - 0.025, y, 2.05) for y in ys], [G(x_t(2.40) - 0.025, y, 2.40) for y in ys]])
     return out
 
+# ---- where the name and the registration mark are painted (Jonas 11.11.2026: «Navnet på båten skal bare være over styrhusvinduet på
+# bremen og på akterspeilet. Det andre nummeret kan gjøres mindre og plasseres høyere opp på det hvite»). The game looked for the places
+# itself and found the thin white band under the brim for the name (13 cm letters in the brim's shadow) and the blue topsides for the
+# mark (its search only knows the hull's own paint, never the white bulwark). The model says where instead (anchors.nameHouse and
+# anchors.marks, read by vessel3d.js houseFront and markStrips): the name on the brim's front face, the mark in 20 cm letters on the
+# white bulwark at the bow, 16 cm under the cap. Strips as the game's own: rows [bottom, top] of points, left to right as read
+MARK_H = 0.20 * 1.35; MARK_X = (8.95, 8.95 + 4 * 0.20 * 1.35); MARK_UP = 0.42      # the strip's height, its stretch, its foot over the strake
+NAME_CAP = 0.20
+def brim_front(t):
+    """a point's (x, z) on the brim's front face at t of its height (0 the lower edge, 1 the roof's edge)"""
+    xo = 8.45 + LEAN * (WH_TOP - WH_SILL) + BRIM_O; zl = WH_TOP + 0.03; rise = roof_z(xo - BRIM_I) - zl
+    return xo - BRIM_I * t, zl + rise * t, rise
+def mark_strips(G, off=0.024):   # (7 mm more than the game's own strips: the hull's faces between two stations stand up to 4 mm outside the curve here, regmarktest)
+    out = []
+    for sg in (-1, 1):
+        xs = [MARK_X[0] + (MARK_X[1] - MARK_X[0]) * k / 48 for k in range(49)]   # (close: stripProud reads the nearest station, and the bow's breadth changes 0.66 m a metre here)
+        if sg > 0: xs = xs[::-1]
+        row = lambda dz: [G(x, sg * (y_at(x, z_rub(x) + dz, sg) + off), z_rub(x) + dz) for x in xs]
+        out.append([row(MARK_UP), row(MARK_UP + MARK_H)])
+    return out
+def name_house(G, off=0.012):
+    sh = NAME_CAP / 0.74; r = brim_front(0)[2]; t0 = 0.5 - sh / 2 / r; t1 = 0.5 + sh / 2 / r; w = 1.0
+    row = lambda t: [G(brim_front(t)[0] + off, WH_YC - w + 2 * w * k / 12, brim_front(t)[1]) for k in range(13)]   # (from starboard: the reader stands ahead)
+    return [row(t0), row(t1)]
+
 def kit_places(G):
     """the places where the game sets the deck kit (nothing that can be bought is modelled in, 19.10.2026): the liferaft in its cradle on
     the shelter roof, athwartships; the ring buoys on the insides of the high aft bulwarks, one a side, clear of the casing, the ladder and
@@ -1078,7 +1516,7 @@ def crown_(x, y): return roof_z(x) + 0.04 * (1 - min(1.0, ((y - WH_YC) / 1.75) *
 # mast (4.8 in docs/planer/om-bord.md). Now they stand on the deck aft of the hatch under the roof's after end, between the hauler and
 # the stern: the gear runs straight aft from them to the setting port in the transom (SPORT), clear of the mast and the casing
 GARN = (2.75, -0.37)         # the net tub (kit.garn), 1.0 x 1.2 m
-STAMP0 = (3.54, -0.20)       # the line tubs' first row (kit.stamps): two across (the second 0.52 m to starboard) and up to four rows aft
+STAMP0 = (3.60, -0.20)       # the line tubs' first row (kit.stamps): two across (the second 0.52 m to starboard) and up to four rows aft
 def stamp_box(rows=4):
     """the line tubs' block as the game boxes it (deckcrew.js kitBoxes): (x0, x1, y0, y1), 6 cm round it"""
     cx = STAMP0[0] - (rows - 1) * 0.25; hl = (rows * 0.5 + 0.02) / 2 + 0.06; cy = STAMP0[1] - 0.26; hw = 0.78 / 2 + 0.06
@@ -1086,16 +1524,20 @@ def stamp_box(rows=4):
 # the stack of conical pots (kit.pots, OB16: a ring of 1.45 m, six high): on the open aft deck to port of the middle, aft of the casing
 # and the aft mast, clear of the transom, the bitts and the setting port's way; a hauled pot is laid, tipped and emptied on the free deck
 # in the open side aft of the bleeding tub (POT_SPOT; the game laid it 2 m aft of the hauler, on the hatch's corner)
-POTS = [(0.67, -0.40, 0.0)]   # (x, y, over the deck: the place OB16 found on the deck map; potshot: to port of the middle the cells within 0.6 m of the casing are no floor, the map joins the casing to the deck)
-POT_SPOT = (3.20, -1.12)
+# Round 2 (11.11.2026) tried the starboard quarter against the high aft bulwark (x 1.20, y -1.01), clear of the setting port. potshot
+# says no: the deck map's outermost cell (1.6-1.8 m out) is no floor and a ring may reach into it only from beam / 2 - 0.45 = 1.65 m,
+# and 15 cm further in the ring meets the aft mast's cell or the bitts' (no ring of 1.45 m fits between them, by 1.4 cm). So she
+# stands where OB16 found her, in front of the port; pots and nets or lines are never rigged together
+POTS = [(0.67, -0.40, 0.0)]   # (x, y, over the deck)
+POT_SPOT = (3.15, -1.11)
 def pot_kit(G):
     return {'pots': {'kind': 'kong', 'at': [G(x, y, z_deck(x) + camber(x, y) + dz) + [0.0, 6] for x, y, dz in POTS], 'spot': G(POT_SPOT[0], POT_SPOT[1], z_deck(POT_SPOT[0]) + camber(*POT_SPOT))}}
 # the jigging places (anchors.jigZ, F21): [side, x], side 1 starboard. Only the open starboard side under the shelter has a rail a man
 # can jig over (0.70 m; the aft bulwark stands 1.5 m over the deck, the port side is the shelter's wall, the forecastle's cap has its
 # rails), and the hauler and the bleeding tub stand in its forward two thirds: one place, aft in the opening; and since valg 32 (STEP_S) a second on the low rail aft of the shelter's corner, under the roof's after end. The game's table (JIG_Z in
 # view3d/13-instruments.js) had four to starboard, three of them at the high aft bulwark, where the machine stood in the plating
-JIG = [(1, 3.66), (1, 2.64)]
-JIG_CLEAR = {1: [(XA, SH_RX0 + 0.10 + 0.25, 'den høye akterskansen og takstolpen'), (SH_X0 - 0.25, HAUL[0] + 0.25, 'lyets hjørne'), (TUB[0] - 0.60 - 0.25, TUB[0] + 0.60 + 0.25, 'blødekaret'),
+JIG = [(1, 3.66), (1, 2.40)]   # (round 4: the second from 2.64, where he stood 0.19 m from the shelter wall's end and 0.02 from the post that is gone)
+JIG_CLEAR = {1: [(XA, STEP_S[0] + 0.30, 'den høye akterskansen'), (SH_X0 - 0.25, HAUL[0] + 0.25, 'lyets hjørne'), (TUB[0] - 0.60 - 0.25, TUB[0] + 0.60 + 0.25, 'blødekaret'),
                  (5.47 - 0.60, 5.47 + 0.60, 'haleren'), (HAUL[1] - 0.25, XF, 'åpningens forkant, styrhuset og bakken')],
              -1: [(XA, XF, 'babord: den høye akterskansen, lyets vegg og bakken')]}
 
@@ -1109,7 +1551,7 @@ HXX = 5.47                   # the hauler's station at the hauling port, on the 
 HAUL_UP = 0.30
 def anchors():
     G = lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))]
-    zd = z_deck(4.5); px, py = POLE; zcap = z_cap(XA) + 0.012; xp = x_t(zcap) + 0.04
+    zd = z_deck(4.5)
     fl = WH_FLOOR + camber(X_BAKK, 0.55)
     return {'bower': bower(G), 'eye': G(SKIP[0], SKIP[1], fl + EYE_H), 'skipperAt': G(SKIP[0], SKIP[1], fl), 'hp': HP, 'fov': FOV,
             # the hands (breisjark-grunnlag kap. 6): the fisher at the hauler forward in the open starboard side, the one who bleeds by the tub
@@ -1126,14 +1568,14 @@ def anchors():
             'doors': [{'at': G((DOOR[0] + DOOR[1]) / 2, WHY0 - 0.03, DOOR[2]), 'w': round(DOOR[1] - DOOR[0], 2), 'h': round(DOOR[3] - DOOR[2], 2),
                        'in': G((DOOR[0] + DOOR[1]) / 2, WHY0 + 0.6, fl), 'to': 'helm', 'hinge': 'fwd'},
                       {'at': G(1.90, CASING[2] - 0.03, z_deck(1.9)), 'w': 0.7, 'h': 0.88, 'in': G(1.90, 1.5, z_deck(1.9)), 'to': 'casing', 'hinge': 'aft'}],
-            'names': name_strips(G),
+            'names': name_strips(G), 'nameHouse': name_house(G), 'marks': mark_strips(G),
             # the work at sea: the fisher at the hauler forward in the open starboard side, the bleeding tub (the game's) on the deck just aft
             # of him, the gutting table (her own) across the hatch to port, the hold's hatch between them for the gutted fish on ice
             'work': {'table': G((TABLE[0] + TABLE[1]) / 2, (TABLE[2] + TABLE[3]) / 2, z_deck(3.7)), 'tub': G(TUB[0], TUB[1], z_deck(TUB[0])), 'own': True, 'top': round(z_deck(3.7) + 0.9 - WLE, 3)},
             'hatch': G(4.7, 0.0, z_deck(4.7) + HOLD_H + 0.09), 'bunk': G(8.6, 0.4, z_bk(8.6) - 0.7), 'exhaust': G(2.67, 1.45, 5.32),
             'deck': {'y': round(zd - WLE, 3), 'z': round(-(4.5 - XM), 3)}, 'gw': round(z_cap(4.5) - WLE, 3),
             'stern': round(-(XA - XM) + 0.1, 3), 'bow': round(-(10.3 - XM), 3), 'side': 1.89, 'beam': BEAM, 'pl': 4.4, 'rl': 1.6, 'open': False, 'hand': False,
-            'pole': G(xp - 0.16, py, zcap + 1.19), 'hauler': G(HXX, -(gunwale_y(HXX, -1) - 0.02), z_cap(HXX, -1) + HAUL_UP), 'filler': G(FILL[0], FILL[1], z_deck(FILL[0]) + 0.06),
+            'pole': G(*pole_top()), 'hauler': G(HXX, -(gunwale_y(HXX, -1) - 0.02), z_cap(HXX, -1) + HAUL_UP), 'filler': G(FILL[0], FILL[1], z_deck(FILL[0]) + 0.06),
             'jigZ': [[sd, round(XM - x, 3)] for sd, x in JIG],
             'kit': dict(kit_places(G), **pot_kit(G))}
 
@@ -1150,6 +1592,38 @@ def displacement(wl):
     A = [area(x) for x in xs]
     return sum((A[i] + A[i + 1]) / 2 * (xs[i + 1] - xs[i]) for i in range(400)) * 1.025, max(A)
 
+# ---- (round 4) the posts on deck and the places the crew stand, for the check that nobody stands in a post ----
+ROOF_POSTS = (1,)            # the sides with a post under the shelter roof's after edge (1 port; round 4: the starboard one is gone)
+def posts():
+    """the posts a man could stand in, as boxes on the deck plan (x0, x1, y0, y1): a round one as its square"""
+    out = []; zc = z_cap(XA) + 0.012; xp = x_t(zc) + 0.035
+    for sg in ROOF_POSTS:
+        px = SH_RX0 + 0.10; py = sg * (ycap(px, sg) + CAP * 0.5)
+        out.append(('lyets akterstolpe ' + ('bb' if sg > 0 else 'sb'), (px - 0.03, px + 0.03, py - 0.03, py + 0.03)))
+    out.append(('lyets vegg akter for åpningen sb', (SH_X0, HAUL[0], -sh_y(SH_X0), -sh_y(SH_X0) + SHT)))
+    out.append(('åpningens forkant sb', (HAUL[1], SH_X1, -sh_y(HAUL[1]), -sh_y(HAUL[1]) + SHT)))
+    for sy in (GANT_Y, -GANT_Y): out.append(('galgestolpe ' + ('bb' if sy > 0 else 'sb'), (xp - 0.07, xp + 0.07, sy - 0.07, sy + 0.07)))   # (with its foot plate on the cap)
+    out.append(('aktermasta', (AM[0] - 0.08, AM[0] + 0.08, AM[1] - 0.08, AM[1] + 0.08)))
+    return out
+# where the game set the crew in the scenes of tests/ombord.py (12.11.2026, CREW3D.visible() with mode 'at', on its 0.2 m grid; a
+# sonde over teiner sett/trekk, juksa jig/maskin/sløy, line and garn sett/trekk, rydd, hvile, ut). The work places (CREW_WORK: at the
+# hauler, the tub, the table, where the pot is emptied, the setter, the one who feeds the net) must have 0.25 m from the shoulder to
+# any post; those at rest or clearing the deck (CREW_REST: coffee, look, lean, the phone, the broom: deckcrew.js gives them a free cell
+# at a rail as it finds one) must stand clear of it. The places the model gives (the jigging, the hauler, the setter) are reckoned from
+# the script below, so they follow the model
+CREW_WORK = [('ved teina og blødekaret', 4.5, -0.9), ('ved teina, nummer to', 3.9, -1.3), ('plukker', 4.1, -0.9), ('pakker', 4.7, -0.9),
+             ('sløyer', 3.7, 0.9), ('sløyer, nummer to', 3.1, 0.9), ('setter (sett)', 0.3, 0.1), ('mater garnet', 3.5, -0.1)]
+CREW_REST = [('kaffe ved ripa sb', 2.5, -1.7), ('kaffe sb forut for lyets vegg', 3.3, -1.7), ('ser ut sb', 1.5, -1.5), ('ser ut bb akter', -0.1, 1.5),
+             ('ser ut akter', -0.1, 0.5), ('telefonen sb akter', 0.7, -1.5), ('lener bb under lyet', 4.7, 1.7), ('slangen bb', 5.3, 1.1),
+             ('kosten', 3.3, -0.1), ('kikkert sb', 2.48, -1.7), ('telefonen bb akter', -0.12, 1.3), ('lener akter', -0.12, 0.3)]   # (the last three from ma36shot's pots, 12.11.2026)
+def crew_places(rest=False):
+    if rest: return list(CREW_REST)
+    out = list(CREW_WORK)
+    for sd, x in JIG: out.append(('juksa x %.2f' % x, x, -sd * (ybw(x, -sd) - 0.15)))   # (the game stands him 0.15 m in from the bulwark's foot, as seen)
+    out.append(('haleren', HXX - 0.2, -(gunwale_y(HXX, -1) - 0.02) + 0.55))
+    for y in SETTER_Y: out.append(('setteren y %.2f' % y, XA + TT + 0.30, y))
+    return out
+
 def check():
     out = []
     v, amax = displacement(WL); wl1 = WL
@@ -1165,7 +1639,7 @@ def check():
     out.append(('sidene er like under ripa: største forskjell mellom styrbord og babord halvbredde %.4f m (pchip-feilen ga 0,1 m ved stevnen på kyst15; ripa om styrbord er lav en meter lenger akter, valg 32)' % dsy, dsy < 1e-6))
     xs = [XA + (XF - XA) * i / 400 for i in range(401)]
     loa = XF - (x_t(z_rub(XA)) - 0.02 - RUBH)
-    out.append(('AVVIK lengde over alt %.2f m (fenderlista over speilet til stevnens topp; baugrulla til %.2f) mot %.2f (registerlengden; tegningens skrog er målt slik)' % (loa, 10.96 + 0.07, L), True))
+    out.append(('AVVIK lengde over alt %.2f m (fenderlista over speilet til stevnens topp; skroget alene %.2f, baugrulla til %.2f) mot %.2f: 2 %% for lang, og det står (stasjonene er målt på tegningen med 1 m mellom, og hver plass om bord er regnet mot dem; spillet regner med lengden %.2f)' % (loa, XF - x_t(z_cap(XA)), 10.96 + 0.07, L, L), abs(loa - L) / L < 0.025))
     mb = max(ysh(x) for x in xs[::4]); mr = max(y_at(x, z_rub(x)) + RUBW for x in xs[::4]); mw = max(y_at(x, WL) for x in xs)
     out.append(('største bredde %.2f m ved ripa, %.2f over fenderlista, mot %.2f (vannlinja %.2f m, %.0f %%)' % (2 * mb, 2 * mr, BEAM, 2 * mw, 100 * mw / mb), abs(2 * mb - BEAM) / BEAM < 0.03))
     dr = WL - min(kb(x) for x in xs if X_KA <= x <= X_KF); dsh = WL + 0.62
@@ -1179,10 +1653,10 @@ def check():
     out.append(('fiskelysene rødt over hvitt %.2f m fra hverandre (vedlegg I 2(i), under 20 m: minst 1 m), det hvite %.2f m over sidelanternene (2(j): minst to ganger avstanden, %.2f)' % (sp, FISH_W - sz, 2 * sp),
                 sp >= 1.0 and FISH_W - sz >= 2 * sp))
     px, py = POLE
-    out.append(('masta med den hvite står %.1f m fra flaggstanga og over den: spillet gir vimpel (båten har mast)' % math.hypot(FM[0] - px, FM[1] - py), math.hypot(FM[0] - px, FM[1] - py) > 1.0 and wz > z_cap(XA) + 1.3))
+    out.append(('masta med den hvite står %.1f m fra flaggstanga og over den: spillet gir vimpel (båten har mast)' % math.hypot(FM[0] - px, FM[1] - py), math.hypot(FM[0] - px, FM[1] - py) > 1.0 and wz > pole_top()[2] + 0.3))
     tip = PROP[2] + PR; low = PROP[2] - PR
-    out.append(('propellen Ø %.2f: %.2f m klaring til skroget over, %.2f til skoen under, %.2f til akterstevnen forut, %.2f til roret akter' % (2 * PR, z_low(PROP[0] + 0.1) - tip, low + 0.53, X_KA - PROP[0] - 0.08, PROP[0] - 0.08 - (RX_ + 0.27)),
-                z_low(PROP[0] + 0.1) - tip > 0.05 and low + 0.53 > 0.05 and X_KA - PROP[0] - 0.08 > 0.1 and PROP[0] - 0.08 - (RX_ + 0.27) > 0.1))
+    out.append(('propellen Ø %.2f: %.2f m klaring til skroget over, %.2f til skoen under, %.2f til akterstevnen forut, %.2f til roret akter' % (2 * PR, z_low(PROP[0] + 0.1) - tip, low - max(shoe_top(PROP[0] + d_) for d_ in (-0.1, 0.0, 0.1)), X_KA - PROP[0] - 0.08, PROP[0] - 0.08 - (RX_ + 0.27)),
+                z_low(PROP[0] + 0.1) - tip > 0.05 and low - max(shoe_top(PROP[0] + d_) for d_ in (-0.1, 0.0, 0.1)) > 0.05 and X_KA - PROP[0] - 0.08 > 0.1 and PROP[0] - 0.08 - (RX_ + 0.27) > 0.1))
     fl = WH_FLOOR + camber(X_BAKK, 0.0)
     out.append(('styrehuset: %.2f m under taket over dørken (midt på, med dekkets bue; brotest 1.8 for den som står, dekkskartet 1.85)' % (WH_TOP - fl), WH_TOP - fl >= 1.86))
     ey = WH_FLOOR + camber(X_BAKK, 0.55) + EYE_H; wtop = WH_SILL + 1.05 * 0.98
@@ -1230,11 +1704,13 @@ def check():
     # the gear aft of the hatch: the line tubs' block and the net tub (never aboard together) clear of the hatch, the aft mast, the ladder,
     # the casing and the cargo place aft
     sx0, sx1, sy0, sy1 = stamp_box(); gb = (GARN[0] - 0.66, GARN[0] + 0.66, GARN[1] - 0.56, GARN[1] + 0.56)
-    lad = (2.02 - 0.03, 2.12 + 0.03, -1.20 - 0.24, -1.20 + 0.24); cg = (2.40 - 0.60, 2.40 + 0.60, 0.60 - 0.40, 0.60 + 0.40)
+    # (round 3: the ladder's foot on the deck is now the steps on the casing's after face, to port; it stood at x 2.0, y -1.2)
+    lad = (CASING[0] - 0.13, CASING[0], LADDER[1] - 0.22, LADDER[1] + 0.22); cg = (2.40 - 0.60, 2.40 + 0.60, 0.60 - 0.40, 0.60 + 0.40)
     def hits(b, c): return b[0] < c[1] and c[0] < b[1] and b[2] < c[3] and c[2] < b[3]
+    def bgap(b, c): return max(c[0] - b[1], b[0] - c[1], c[2] - b[3], b[2] - c[3])
     okg = lambda b: b[1] <= hx0 and b[0] + 0.06 >= AM[0] + 0.08 and not hits(b, lad) and b[3] <= CASING[2] and not hits((b[0] + 0.06, b[1] - 0.06, b[2] + 0.06, b[3] - 0.06), cg)
-    out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f akter for luka (%.2f) under takets akterkant (%.2f): %.2f m til aktermasta, %.2f m til stigen, %.2f til lasteplassen' % (sx0, sx1, sy0, sy1, hx0, SH_RX0, sx0 + 0.06 - AM[0] - 0.08, sy0 - lad[3], cg[2] - sy1 + 0.06), okg((sx0, sx1, sy0, sy1))))
-    out.append(('garnkaret x %.2f-%.2f, y %.2f til %.2f samme sted (aldri om bord samtidig med stampene): %.2f m til luka, %.2f til stigen' % (gb[0], gb[1], gb[2], gb[3], hx0 - gb[1], gb[2] - lad[3]), okg(gb)))
+    out.append(('stampeblokken med åtte x %.2f-%.2f, y %.2f til %.2f akter for luka (%.2f) under takets akterkant (%.2f): %.2f m til aktermasta, %.2f m til stigen, %.2f til lasteplassen' % (sx0, sx1, sy0, sy1, hx0, SH_RX0, sx0 + 0.06 - AM[0] - 0.08, bgap((sx0, sx1, sy0, sy1), lad), cg[2] - sy1 + 0.06), okg((sx0, sx1, sy0, sy1))))
+    out.append(('garnkaret x %.2f-%.2f, y %.2f til %.2f samme sted (aldri om bord samtidig med stampene): %.2f m til luka, %.2f til stigen' % (gb[0], gb[1], gb[2], gb[3], hx0 - gb[1], bgap(gb, lad)), okg(gb)))
     # the setting (drawSetting: from the tubs' place 0.35 over the deck to 0.45 m to starboard of the middle at the stern, the waist's
     # height + 0.10 just inside the transom and 0.05 under it just outside): through the setting port, over its roller, under the net
     # roller, clear of the aft mast and the casing on the way
@@ -1245,10 +1721,31 @@ def check():
     def way(a):   # the least distance from the gear's way (a to the port) to the aft mast, and whether it crosses the casing or the ladder
         pts = [(a[0] + (xin - a[0]) * u / 40, a[1] + (-0.45 - a[1]) * u / 40) for u in range(41)]
         return min(math.hypot(x - AM[0], y - AM[1]) for x, y in pts) - 0.08, any((CASING[0] < x < CASING[1] and y > CASING[2]) or (lad[0] < x < lad[1] and lad[2] < y < lad[3]) for x, y in pts)
+    # (round 3) the one who sets stands clear of the gantry's posts, at both his places (over the stern 0.45 m to starboard, and at the
+    # line setter); the ensign flies over the heads; the way up to the roof is out of the way from the gear to the port
+    pin = GANT_Y - 0.045; gp_ = min(pin - (abs(y) + R) for y in SETTER_Y)
+    out.append(('setteren står %.3f m fra galgestolpens innside (stolpene y ±%.2f, han står y %s med skuldrene %.2f ut; runde 3: 0,025, før det i stolpen; krever 0,10)' % (gp_, GANT_Y, ' og '.join('%.2f' % y for y in SETTER_Y), R), gp_ >= 0.10))
+    # (round 4) every place the crew stand at work or at rest, against every post on deck (the shelter's after posts, the wall's ends at
+    # the open side, the gantry's posts, the aft mast): the post at least 0.25 m outside the shoulder (the sensor in round 3: «mannen i
+    # blått står i den tynne stolpen under lyets akterkant», «mannen i rødt står i en stolpe»)
+    for rest, need, what in ((False, 0.25, 'arbeidsplasser'), (True, 0.05, 'plasser i pausen og ryddingen')):
+        worst = (9.0, '', ''); bad_ = []
+        for pn, b in posts():
+            for cn, cx, cy in crew_places(rest):
+                d = math.hypot(max(b[0] - cx, 0.0, cx - b[1]), max(b[2] - cy, 0.0, cy - b[3])) - R
+                if d < worst[0]: worst = (d, cn, pn)
+                if d < need: bad_.append((cn, pn))
+        out.append(('mannskapets %s mot stolpene: %d plasser, %d stolper (%s); nærmeste %.2f m fra skuldra til stolpen (%s ved %s; krever %.2f)%s'
+                    % (what, len(crew_places(rest)), len(posts()), ', '.join(pn for pn, _ in posts()), worst[0], worst[1], worst[2], need, '' if not bad_ else ': for nær ' + '; '.join('%s/%s' % q for q in bad_)), not bad_))
+    ptz = pole_top()[2]; hang = ptz - 1.20 - z_deck(XA + 0.3)
+    out.append(('flaggstanga på galgen (x %.2f, y %.2f), rett opp (toppen %.2f m akter for foten; runde 3: 0,16 skrått akterover), toppen %.2f m over dekket: et flagg på 1,2 m henger aldri lavere enn %.2f m over dekket (hodene 1,8; før 1,5 over setteren)'
+                % (POLE[0], POLE[1], POLE[0] - pole_top()[0], ptz - z_deck(0.0), hang), hang >= 2.0 and abs(pole_top()[0] - POLE[0]) < 0.005 and abs(pole_top()[1] - POLE[1]) < 0.005))
+    gl = min(bgap((sx0, sx1, sy0, sy1), lad), bgap(gb, lad))
+    out.append(('stigen til lyets tak om babord over casingen (trinnene på casingens akterside, x %.2f, y %.2f): %.2f m fra stampene og garnkaret (før 0,05 og 0,03), utenfor redskapets vei' % (lad[0], LADDER[1], gl), gl >= 0.25))
     wg, ws = way(GARN), way(STAMP0)
     out.append(('redskapets vei til setteporten: fra garnkaret %.2f m klar av aktermasta, fra stampene %.2f m; ikke gjennom casingen eller stigen (før: fra babord under lyet på skrå over hele akterdekket)' % (wg[0], ws[0]), wg[0] > 0.12 and ws[0] > 0.12 and not wg[1] and not ws[1]))
     # the pots' stack (a ring of 1.45 m) and the place where a pot is emptied
-    r = 0.725; bit = [(0.35, 1.45), (0.35, -1.45)]; pk = []
+    r = 0.725; bit = [(0.35, BITT_Y), (0.35, -BITT_Y)]; pk = []
     for i, (x, y, dz) in enumerate(POTS):
         okb = x - r > XA + TT and abs(y) + r < ybw(x) and all(math.hypot(x - bx, y - by) > r + 0.14 for bx, by in bit) and math.hypot(x - AM[0], y - AM[1]) > r + 0.08
         okc = math.hypot(max(0.0, CASING[0] - x), max(0.0, CASING[2] - y)) > r and x + r < SH_RX0
@@ -1257,6 +1754,9 @@ def check():
     oks = ybw(px, -1) + py - r > 0.0 and dh > r and tx[0] - 0.06 - (px + r) >= 0.0 and HAUL[0] < px + 0.3
     out.append(('teinestabelen (seks) %s på det åpne akterdekket: %.2f m fra speilet, fri for casingen, masta, pullertene og skansen, akter for takkanten; teina tømmes ved x %.2f, y %.2f i den åpne sida akter for blødekaret (%.2f m til karet, %.2f til skansen, %.2f til lukas hjørne)'
                 % (', '.join('x %.2f y %.2f' % (x, y) for x, y, _ in POTS), POTS[0][0] - r - XA - TT, px, py, tx[0] - 0.06 - (px + r), ybw(px, -1) + py - r, dh - r), all(pk) and oks))
+    # (round 2) how far the stack stands from the setting port's opening (a measure, not a demand: potshot has no other place for her)
+    dport = min(math.hypot(x - (XA + TT), y - max(SPORT[0], min(SPORT[1], y))) for x, y, _ in POTS) - r
+    out.append(('teinestabelen %.2f m fra setteportens åpning (styrbord låring, 0,76 m fra porten, er prøvd: potshot finner ikke gulv til ringen der)' % dport, True))
     try:
         pj = potplaces.table().get('malo36') or {}; mine = pot_kit(lambda x, y, z: [round(v, 3) for v in to_game((x, y, z))])['pots']
         same = pj.get('at') == mine['at'] and pj.get('spot') == mine['spot']
@@ -1267,7 +1767,7 @@ def check():
     gap = min([abs(a_[1] - b_[1]) for a_ in JIG for b_ in JIG if a_ is not b_ and a_[0] == b_[0]] or [9])
     rail = max(z_cap(x, -1) - z_deck(x) for _, x in JIG)
     out.append(('juksaplassene %s: %d (jukseMax i VESSELS er det, valg 32: to); ripa der %.2f m over dekket (akterskansen %.2f: for høy å jukse over), fri for %s' % (', '.join('%s %.2f' % ('sb' if sd > 0 else 'bb', x) for sd, x in JIG), len(JIG), rail, z_cap(1.0) - z_deck(1.0),
-                'akterskansen, takstolpen, lyets hjørne, blødekaret og haleren' if not bad else bad), not bad and gap > 1.0 and 0.5 <= rail <= 0.9 and len(JIG) == 2))
+                'akterskansen, lyets hjørne, blødekaret og haleren' if not bad else bad), not bad and gap > 1.0 and 0.5 <= rail <= 0.9 and len(JIG) == 2))
     # the roof's brim over the walkway beside the wheelhouse (deckMap: 1.85 m free over a floor)
     out.append(('taket med bremmen: dryppkanten %.2f m over gangen på bakken, bremmen %.2f m ut fra veggene og %.2f inn opp til takkanten' % (WH_TOP - 0.025 - z_bk(7.0), BRIM_O, BRIM_I), WH_TOP - 0.025 - z_bk(7.0) >= 1.85))
     for s, ok_ in out: print(('OK   ' if ok_ else 'FEIL ') + s)
@@ -1284,7 +1784,18 @@ CLOSE = [('c_helm', (6.85, -0.10, 5.10), (7.95, -0.60, 4.15), 30, False, False),
          ('c_aperture', (0.6, -3.6, 0.2), (0.6, 0, 0.1), 30, False, False), ('c_work', (1.4, -1.3, 4.1), (4.8, -0.6, 2.7), 30, False, False),
          ('c_shelter', (4.6, -7.5, 3.8), (4.4, -1.6, 3.6), 32, True, False), ('c_rig', (9.5, -7.0, 8.0), (4.5, 0.5, 7.0), 35, True, False),
          ('c_free', (3.0, -4.6, 2.6), (3.0, -1.9, 2.3), 30, True, False), ('c_steps', (5.0, -3.5, 4.8), (6.3, -1.7, 3.0), 32, True, False),
-         ('K6p', (5.2 + 31.0, 24.0, 4.4), (5.2, 0, 2.3), 100, True, True)]
+         ('K6p', (5.2 + 31.0, 24.0, 4.4), (5.2, 0, 2.3), 100, True, True),
+         # (round 2) what was reckoned but never shown: the underwater body (keel, shoe, propeller, rudder) from the quarter and the bow
+         # without the water, the lanterns lit near; and the new work: the aft deck from over the stern, the winch, the forecastle
+         ('c_under', (-4.6, -6.2, -1.1), (2.6, 0, 1.25), 35, False, False), ('c_under_f', (14.5, -8.5, -1.2), (5.5, 0, 0.9), 35, False, False),
+         ('c_night', (21.0, -14.0, 6.0), (5.0, 0, 5.3), 35, True, True), ('c_night_aft', (-14.0, 11.0, 6.0), (4.0, 0, 5.3), 35, True, True),
+         ('c_aftdeck', (-3.4, -1.6, 9.2), (2.4, -0.3, 2.3), 26, False, False), ('c_winch', (-0.5, -2.4, 5.5), (1.4, 0, 4.6), 40, True, False),
+         ('c_fore', (11.9, -2.4, 6.2), (9.3, -0.2, 3.6), 32, True, False),
+         # (round 4) the rudder and the heel from the side, the anchor in the roller, the wipers, the vents and the bitts, the knee
+         # under the shelter roof's starboard corner where the post stood, the stern light at night from right astern
+         ('c_rudder', (0.35, -4.6, 0.25), (0.35, 0, 0.25), 32, False, False), ('c_anchor', (12.9, -2.6, 4.5), (10.8, 0, 3.75), 28, True, False),
+         ('c_wipers', (12.2, -1.2, 5.6), (8.7, 0.1, 4.6), 30, True, False), ('c_vents', (10.9, -2.3, 4.9), (9.5, -0.2, 3.6), 30, True, False),
+         ('c_knee', (0.9, -3.6, 4.0), (2.7, -1.9, 4.2), 32, True, False), ('c_night_stern', (-19.0, 0.0, 5.2), (3.0, 0, 4.6), 35, True, True)]
 
 def main():
     os.makedirs(OUT, exist_ok=True)

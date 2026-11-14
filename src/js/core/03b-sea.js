@@ -132,12 +132,48 @@ function hsAtFc(p, H, now){
 }
 // the sea state number by the significant wave height (the Douglas scale, WMO code 3700: 0 glassy ... 9 phenomenal)
 const SEA_CODE = [0.05, 0.1, 0.5, 1.25, 2.5, 4, 6, 9, 14];
-function seaState(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return c; }
+// (called seaCode since 13.11.2026: deckcrew.js got a seaState() of its own for the crew's sea legs, FB4, and in the page's one scope the later one
+// took this one's place, so the Vær app said «0,1 m · undefined»)
+function seaCode(hs){ let c = 0; while (c < 9 && hs >= SEA_CODE[c]) c++; return c; }
 // the sea where you are, for the weather texts: wind sea and swell with where they come from, the state, and whether the wind sea is
 // krapp (short and steep, as a young sea in a fjord: its height over its peak wavelength above 1/25)
 function seaHere(p, H){
   const q = hsParts(p, H), hs = Math.max(0.05, Math.hypot(q.w, q.sw)), Lp = 1.56 * q.tp * q.tp;
-  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaState(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04};
+  let cur = null; try { cur = seaCur(p, H, q); } catch (e){}   // (the wind sea against the stream, F8b)
+  return {hs, w:q.w, sw:q.sw, dir:q.dir, swDir:q.swDir, swTp:q.swTp, code:seaCode(hs), krapp:q.w >= 0.4 && q.w >= q.sw && Lp > 0 && q.w / Lp > 0.04, cur};
+}
+// ---- waves on a current (Ø9 F8b, docs/planer/fysikk-4-sjo-og-skrog.md F8) ----
+// A wave that runs on to a current keeps its frequency as the ground sees it, om, and its wavenumber follows (om - k U)^2 = g k (deep
+// water; U the current along the way the wave travels, negative against it). The phase speed through the water is then
+// c = c0 (1 + sqrt(1 + 4 U / c0)) / 2 (c0 = g / om) and k = g / c^2: shorter against the stream, longer with it. The height follows the
+// wave action (Longuet-Higgins and Stewart 1961): H / H0 = sqrt(c0 cg0 / (c (cg + U))) = c0 / sqrt(c (c + 2 U)), so a sea against the
+// stream is shorter and higher (steep, breaking), with it longer and lower. At U = -c0 / 4 the wave is blocked (its energy cannot get
+// up against the stream) and the formula goes to infinity: held at CURW.max (2.5, the plan's cap), where the sea breaks instead.
+// The boat feels the stream without the wind's drift (curAt's sx, sy), and none of it under 0.2 knots (all of it from 0.3): the tide's
+// own stream along the open coast is under that, so nothing changes there (curEff).
+const CURW = {max:2.5, dead:0.2 * 1852 / 3600, full:0.3 * 1852 / 3600, krapp:1852 / 3600, w:0.2};
+function curWave(om, U){
+  const c0 = 9.81 / om; if (!(om > 0) || !(Math.abs(U) > 1e-3)) return {kf:1, af:1, c:c0, blocked:false};
+  const x = 1 + 4 * U / c0; if (x <= 0) return {kf:4, af:CURW.max, c:c0 / 2, blocked:true};
+  const c = c0 * 0.5 * (1 + Math.sqrt(x)); return {kf:(c0 / c) ** 2, af:Math.min(CURW.max, c0 / Math.sqrt(c * (c + 2 * U))), c, blocked:false};
+}
+// the stream a vessel and the waves feel, of what curAt gives: m/s east and south on the grid, and its speed (CURW.off: none, for the
+// tests' comparison with still water; the game never sets it)
+// (tx, ty: the part that turns with the tide, the sounds' stream and the tide's own, with the same dead band of its own: what carries a
+// boat lying still, lieDrift. The coastal current runs one way, and a boat left lying a week would be 100 km down the coast.)
+function curEff(c){
+  const band = m => CURW.off ? 0 : m > CURW.dead ? clamp((m - CURW.dead) / (CURW.full - CURW.dead), 0, 1) : 0;
+  const m = Math.hypot(c.sx, c.sy), f = band(m), tx0 = c.tx == null ? c.sx : c.tx, ty0 = c.ty == null ? c.sy : c.ty, ft = band(Math.hypot(tx0, ty0));
+  return {x:c.sx * f, y:c.sy * f, m:m * f, tx:tx0 * ft, ty:ty0 * ft};
+}
+// the stream along the way a sea travels that comes from the true bearing from (degrees) where the grid is turned g: + with it
+function curAlong(C, from, g){ const a = (from - g + 180) * Math.PI / 180; return C.x * Math.sin(a) - C.y * Math.cos(a); }
+// the stream at p for the weather's words: its speed (knots), where it sets (true degrees), how much higher the wind sea stands in
+// it, and krapp: the wind sea (at least CURW.w m of it) runs against a stream of over a knot
+function seaCur(p, H, q){
+  if (typeof curAt !== 'function') return null; const C = curEff(curAt(p, H)); if (!(C.m > 0)) return {kn:0, to:0, af:1, krapp:false};
+  const g = gridGamma(p), U = curAlong(C, q.dir, g), cw = q.tp > 0.3 ? curWave(2 * Math.PI / q.tp, U) : {af:1};
+  return {kn:C.m * 3600 / 1852, to:((Math.atan2(C.x, -C.y) * 180 / Math.PI + g) % 360 + 360) % 360, af:cw.af, against:-U * 3600 / 1852, krapp:q.w >= CURW.w && U <= -CURW.krapp};
 }
 // How much of the sea's speed loss she takes, by where the sea comes from (Fysikk 2, 19.10.2026): Kwon's direction factors for the
 // involuntary speed loss in wind and waves (Y. J. Kwon, «Speed loss due to added resistance in wind and waves», The Naval
@@ -158,4 +194,119 @@ function seaDirF(p, H, head){
   const q = seaPartsNear(p, H), g = gridGamma(p), e = q.w * q.w + q.sw * q.sw; if (!(e > 1e-4) || !isFinite(head)) return 1;
   const rel = from => { let d = ((from - g) * Math.PI / 180 - head) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
   return (q.w * q.w * seaDirOf(rel(q.dir)) + q.sw * q.sw * seaDirOf(rel(q.swDir))) / e;
+}
+// ---- The breaking sea, brottsjøen (Ø9 F7, docs/planer/fysikk-4-sjo-og-skrog.md F7; Jonas 27.10.2026 6A: «at båten skal fungere så ekte
+// som mulig», and 13.11.2026 on what it does: «Bare varsel og skrekk»: the crew warns, and they get a fright; the boat is not damaged and
+// nothing goes over the side) ----
+// A rare extreme wave in a rough sea: where the significant height is over BRT.hs (3 m) and either the wind sea and the swell cross at
+// more than BRT.cross (60 degrees, both at least BRT.sysMin high), or the wind sea runs against a stream of more than BRT.curKn knots
+// (F8b; its height as the stream raises it, seaCur's af). A group of waves about 2 Hs high (a crest to trough of twice the significant
+// height: the definition of a freak wave in a Rayleigh sea, where a single wave that high comes once in e^8, about 3 000 waves:
+// Longuet-Higgins 1952) builds, runs through at the group speed and dies away, and some of them break (BRT.B, the share that breaks as a
+// brottsjø, is assumed: no source gives it for a sea state).
+// The same for everyone (CLAUDE.md: one world, one clock): the coast is cut in BRT.cell km cells, and each cell and game minute has a
+// number from a fixed hash; where it falls under the rate the sea at the cell's point gives, a group is born there at that minute, at a
+// point in the cell the hash gives, running the way that sea runs. Nothing but the place, the time and the weather goes in, so two players
+// in the same place see the same group, and a boat out while the game is closed meets it in the minute step as she would have (catchUp).
+// The waves move in real seconds (as the shared sea in 3D does, B4: the world's clock in seconds), BRT.rs real seconds a game minute,
+// so the rate at a point is the share of the waves passing it in real time: 1 / Tz a second (Tz = Tp / 1.29 for JONSWAP, gamma 3.3).
+// A cell's rate is the point's times the cell's area over the area one group sweeps (its width, twice BRT.sw wavelengths, times the
+// way it runs while it is at least half its height, the width where it is at least half its height, 2 x BRT.half x BRT.sw
+// wavelengths): that is where a boat would meet it. BRT.rmax holds a cell's rate (a short sea's groups are small, so its cells' rates are
+// high: 0.07 a minute at Tp 4 s); the hash is read first, and the sea is asked only under it.
+const BRT = {cell:2, hs:3, cross:60, curKn:2, sysMin:1, B:0.25, life:14, sa:1.2, sw:2.5, half:Math.sqrt(Math.log(2)), lead:30, rs:60 / GAME_RATE, rmax:0.12, look:30, lee:0.5, seed:0x5eab7e};
+function brtHash(ix, iy, t, k){
+  let h = Math.imul(ix | 0, 0x27d4eb2d) ^ Math.imul(iy | 0, 0x165667b1) ^ Math.imul(t | 0, 0x9e3779b1) ^ Math.imul((k | 0) + 1, 0x85ebca6b) ^ BRT.seed;
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d); h = Math.imul(h ^ (h >>> 12), 0x297a2d39); h ^= h >>> 15; return (h >>> 0) / 4294967296;
+}
+// the sea at p at game hour H that can raise one: null, or the two systems, the height and why (kryss: crossing, strom: against the stream)
+// (the sea from the national layers only, fetchField and not fetchHere: the 25 m detail is in only where a boat has loaded it, and the
+// rule must give the same for every player whatever they have loaded; the kontroll 13.11.2026)
+function brottSea(p, H){
+  const U = weAt(H, p), d = wdAt(H, p), F = fetchField(p, d - gridGamma(p)), S = swellOpen(H, p);
+  return {w:hsWind(U, F), sw:S.hs * swellFactor(p), tp:tpWind(U, F), F, U, dir:d, swDir:S.dir, swTp:S.tp};
+}
+function brottCond(p, H){
+  if (isLandFar(p)) return null;
+  const q = brottSea(p, H); if (!(Math.hypot(q.w * CURW.max, q.sw) >= BRT.hs)) return null;   // (too low even with the most a stream lifts it)
+  let af = 1, against = 0;
+  try { const c = seaCur(p, H, q); if (c){ af = c.af || 1; against = c.against || 0; } } catch (e){}
+  const w = q.w * af, hs = Math.hypot(w, q.sw); if (!(hs >= BRT.hs)) return null;
+  const cross = Math.abs(((q.dir - q.swDir) % 360 + 540) % 360 - 180);
+  const crossing = w >= BRT.sysMin && q.sw >= BRT.sysMin && cross > BRT.cross, stream = w >= BRT.sysMin && against > BRT.curKn;
+  if (!crossing && !stream) return null;
+  return {hs, w, sw:q.sw, dir:q.dir, swDir:q.swDir, tp:q.tp, swTp:q.swTp, why:crossing ? 'kryss' : 'strom'};
+}
+// the group born in cell (ix, iy) at game minute t, or null. cond: the sea's rule (brottCond; a test gives its own)
+// (kept per cell and minute with the game's own rule: brottNear asks for each one every minute it may be on the water, and the minute
+// step and the view both ask)
+const BRT_MEMO = new Map();
+function brottEvent(ix, iy, t, cond){
+  const u = brtHash(ix, iy, t, 0); if (u >= BRT.rmax) return null;   // (most cells and minutes stop here, before the sea is asked)
+  if (cond) return brottMake(ix, iy, t, u, cond);
+  const k = ix + ',' + iy + ',' + t; if (BRT_MEMO.has(k) && !WX_FORCE) return BRT_MEMO.get(k);
+  const e = brottMake(ix, iy, t, u, brottCond); if (BRT_MEMO.size > 20000) BRT_MEMO.clear(); BRT_MEMO.set(k, e); return e;
+}
+function brottMake(ix, iy, t, u, cond){
+  const c = {x:(ix + brtHash(ix, iy, t, 1)) * BRT.cell, y:(iy + brtHash(ix, iy, t, 2)) * BRT.cell}, C = cond(c, t / 60); if (!C) return null;
+  const wind = C.why === 'strom' || brtHash(ix, iy, t, 3) < C.w * C.w / (C.w * C.w + C.sw * C.sw);   // (crossing: the system by its energy)
+  const tp = Math.max(3, wind ? C.tp : C.swTp), L = 9.81 * tp * tp / (2 * Math.PI), cg = 9.81 * tp / (4 * Math.PI), life = BRT.life * tp, sw = BRT.sw * L;
+  const area = 2 * BRT.half * sw * cg * life * 2 / 3 / 1e6, lam = BRT.rs / (tp / 1.29) * Math.exp(-8) * BRT.B, rate = Math.min(BRT.rmax, lam * BRT.cell * BRT.cell / area);
+  if (u >= rate) return null;
+  const from = wind ? C.dir : C.swDir, a = (from - gridGamma(c) + 180) * Math.PI / 180;   // (the way it runs, on the grid)
+  return {id:ix + ':' + iy + ':' + t, t, x:c.x, y:c.y, dx:Math.sin(a), dy:-Math.cos(a), from, hs:C.hs, tp, L, cg, life, sa:BRT.sa * L, sw, sys:wind ? 'w' : 'sw', why:C.why};
+}
+// the groups that may be on the water near p at game time T (minutes, with its fraction): the nine cells round p, born in the last BRT.look
+// game minutes (a group lives BRT.life periods, 14 x 16 s at the longest, 22 game minutes)
+function brottNear(p, T, cond){
+  const ix = Math.floor(p.x / BRT.cell), iy = Math.floor(p.y / BRT.cell), out = [], t1 = Math.floor(T);
+  for (let t = t1 - BRT.look; t <= t1; t++) for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++){
+    const e = brottEvent(ix + i, iy + j, t, cond); if (e && (T - t) * BRT.rs <= e.life) out.push(e); }
+  return out;
+}
+// where p stands to the group at game time T: d, metres ahead of the group's middle along its way (negative: it has passed), x across,
+// tau the real seconds since it was born, f its height (0 to 1, a sine over its life) now, and fp when its middle reaches p (or reached
+// it: the warning and the hit judge by the same height)
+function brottRel(e, p, T){
+  const ax = (p.x - e.x) * 1000, ay = (p.y - e.y) * 1000, tau = (T - e.t) * BRT.rs, s = -e.cg * e.life / 2 + e.cg * tau;
+  const d = ax * e.dx + ay * e.dy - s, fa = u => u >= 0 && u <= e.life ? Math.sin(Math.PI * u / e.life) : 0;
+  return {d, x:-ax * e.dy + ay * e.dx, tau, s, f:fa(tau), fp:fa(tau + d / e.cg)};
+}
+// where it comes from against her bow: forut (within 45 degrees of the bow), babord, styrbord or akter (abaft the beam's 135)
+function brottSide(e, head){
+  let r = (Math.atan2(-e.dx, e.dy) - head) % (2 * Math.PI); if (r > Math.PI) r -= 2 * Math.PI; if (r < -Math.PI) r += 2 * Math.PI;
+  // (atan2(-dx, dy): the bearing on the grid the group comes from, clockwise from north, as head is)
+  const a = Math.abs(r) * 180 / Math.PI; return a <= 45 ? 'forut' : a >= 135 ? 'akter' : r > 0 ? 'styrbord' : 'babord';
+}
+// one game minute of the vessel in the minute step (16c-hull.js hullMinute calls it, also while the time away is played in): the crew
+// warns when a group is coming at her within BRT.lead real seconds and will be at least half its height when it reaches her, and when its
+// middle passes her (within the width where it is half its height or more), it has hit her: the crew gets a fright by how she took it
+// (crewBrott, 14-crewlife.js). Nothing on the hull and nothing lost (Jonas 13.11.2026). Both are judged on her way through the minute,
+// from where she was to where she is (she moves in game time, the group in the sea's real seconds: six times as fast over the ground as
+// the waves), and only where the sea at her is at least BRT.lee of the group's (not in a lee). b.brt: the last groups warned of and that
+// hit, and where she was.
+function brottMinute(cond){
+  const b = S.boat; if (!b || !b.pos || b.status === 'port' || b.hopHold){ if (b && b.brt) b.brt.p = null; return null; }
+  const T = S.t, H = T / 60, B = b.brt || (b.brt = {w:[], h:[], p:null}); let hit = null;
+  if (!Array.isArray(B.w)) B.w = B.w ? [B.w] : []; if (!Array.isArray(B.h)) B.h = B.h ? [B.h] : [];
+  const p0 = B.p && Math.hypot(B.p.x - b.pos.x, B.p.y - b.pos.y) < 2 ? B.p : b.pos; B.p = {x:b.pos.x, y:b.pos.y};   // (where she was a minute ago: she moves too)
+  const G = brottNear(b.pos, T, cond); if (!G.length) return null;
+  // (in the lee, where the sea at her is under BRT.lee of the group's, it does not reach her: a bay, behind a holm)
+  let hsHere = null; const here = () => hsHere == null ? (hsHere = (() => { try { const q = brottSea(b.pos, H); return Math.hypot(q.w, q.sw); } catch (e){ return 0; } })()) : hsHere;
+  for (const e of G){
+    const r0 = brottRel(e, p0, T - 1), r1 = brottRel(e, b.pos, T); if (Math.abs(r1.x) > e.sw * 0.83 && Math.abs(r0.x) > e.sw * 0.83) continue;
+    // the closing speed: the group's way and hers along it this minute (at the least the group's own)
+    const dd = Math.max(r0.d - r1.d, e.cg * BRT.rs), fa = u => u >= 0 && u <= e.life ? Math.sin(Math.PI * u / e.life) : 0;
+    const head = boatHead(H, b).head, side = brottSide(e, head);
+    if (!B.w.includes(e.id) && !B.h.includes(e.id) && r1.d > 0 && r1.d <= dd * (BRT.lead / BRT.rs + 1) && Math.abs(r1.x) <= e.sw * 0.83 && fa(r1.tau + r1.d / dd * BRT.rs) >= 0.5 && here() >= BRT.lee * e.hs){
+      B.w.push(e.id); if (B.w.length > 6) B.w.shift(); if (typeof crewBrott === 'function') crewBrott('warn', side); }
+    if (!B.h.includes(e.id) && r0.d > 0 && r1.d <= 0){
+      const k = r0.d / (r0.d - r1.d), x = r0.x + (r1.x - r0.x) * k;   // (where and when its middle crossed her track)
+      if (Math.abs(x) > e.sw * 0.83 || fa(r0.tau + k * BRT.rs) < 0.5 || here() < BRT.lee * e.hs) continue;
+      B.h.push(e.id); if (B.h.length > 6) B.h.shift(); hit = {e, side};
+      S.incidents = S.incidents || []; S.incidents.push({t:T, k:'brott', boat:S.boatName || 'Havbris', side, hs:+e.hs.toFixed(1), why:e.why}); if (S.incidents.length > 60) S.incidents.shift();
+      if (typeof crewBrott === 'function') crewBrott('hit', side);
+    }
+  }
+  return hit;
 }
