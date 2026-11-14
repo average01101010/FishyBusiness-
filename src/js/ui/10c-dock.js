@@ -54,7 +54,7 @@ const DOCK = (() => {
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Utstyrsbutikken', 'The tackle shop'], fiske:['Utstyrsbutikken', 'The tackle shop'],   // (D3: one title for the shop; its two tabs say which counter)
     service:['Utstyrsbutikken', 'The tackle shop'],   // (D4, Jonas 13.11.2026 «A: Tredje fane i butikken»: Service is the shop's third tab, not a page of its own)
-    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Om bord', 'Aboard']};
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Last', 'Catch aboard'], beholdning:['Om bord', 'Aboard']};
   const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers'], ['service', 'Service', 'Service']], utstyrb:null, service:null};
   TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.service = TABS.fiske;
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
@@ -465,6 +465,11 @@ const DOCK = (() => {
   function open(a){
     let [pg, sb] = String(a).split(':');
     if (pg === 'arbeid'){ pg = 'beholdning'; sb = sb || 'crew'; }   // the crew page is Om bord's fifth tab (U2-2): the plan's «Til Mannskap-siden» and the tests land there
+    // (D4, Jonas 13.11.2026: one page a thing, many doors in. The rig, the gear, the hold and the operations plan are tabs of Om bord, and
+    // every older door lands there: the phone's Driftsplan app, the pub's and the tips' links. With another boat of the fleet chosen (the
+    // company's list, «goto»), the gear and the plan open as her own pages, for Om bord is the boat you follow)
+    { const TO = {rigg:'gear', last:'last', redskap:'gear', drift:'crew'}, own = PHONE.sel === S.cur;
+      if (TO[pg] && (own || pg === 'rigg' || pg === 'last')){ sb = TO[pg]; pg = 'beholdning'; } }
     if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
     // (a trade page opens on the boat that lies here: the choice of another boat hung on from the last time the page was open, and the

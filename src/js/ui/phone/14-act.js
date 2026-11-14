@@ -1,4 +1,4 @@
-  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'shopgear', 'salgW', 'salgG', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
+  const NAV = new Set(['open', 'home', 'back', 'close', 'lang', 'sub', 'shop0', 'salgW', 'salgG', 'vsel', 'goto', 'vfollow', 'vboard', 'vname', 'vsell']);
   function act(a, d){
     const was = app, done = SEL_APPS.includes(app) && !NAV.has(a) ? withSel(() => act0(a, d)) : act0(a, d);
     // a link to a page that lives in the drawer now (Neste mål, Rederi's «Åpne») closes the phone and opens the drawer
@@ -48,7 +48,6 @@
     else if (a === 'back'){ app = 'home'; }
     else if (a === 'shop'){ const k = d.k, kg = +d.kg || 0; if (!shopPend || shopPend.k !== k || shopPend.kg !== kg || Date.now() - shopPend.t > IC_CONFIRM_MS){ shopPend = {k, kg, t:Date.now()}; return true; } shopPend = null; const free = tutFree(k); buyMark(); const why = shopBuy(k, kg, free); if (why){ toast(L(why[0], why[1])); } else { if (free){ if (k === 'ice') S.iceFree = 0; tutMark('free_' + k); } if (k !== 'ice') shopBought(k === 'jig' ? 'Håndjuksa' : 'Kveiteutstyr', k === 'jig' ? 'Hand jig' : 'Halibut gear'); if (typeof cloudEv === 'function') cloudEv('shop_buy', {w:'shop', k}); receipt(k === 'ice' ? L(fmt(kg, 0) + ' kg is', fmt(kg, 0) + ' kg ice') : k === 'jig' ? L('Håndjuksa', 'Hand jig') : L('Kveiteutstyr', 'Halibut gear'), 'shop', k); } }
     else if (a === 'shop0'){ }
-    else if (a === 'shopgear'){ app = 'redskap'; sub.redskap = 'kjop'; }
     else if (a === 'close'){ show(false); return; }
     else if (/^gd[A-Z]/.test(a)){ if (!GUIDE.act(a, d)) return false; }   // the fish guide (ui/06f-fishguide.js)
     else if (/^fb[A-Z]/.test(a)){ if (!FEEDBACK.act(a, d)) return false; }

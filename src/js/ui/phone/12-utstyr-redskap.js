@@ -183,8 +183,9 @@
     return h.join('');
   }
   function redskap(tab0){
+    if (!tab0 && sub.redskap === 'kjop') sub.redskap = 'sjo';   // (D4: the gear is bought in the tackle shop and nowhere else; the page's «Kjøp» tab is gone)
     const tab = tab0 || sub.redskap || 'sjo', b = S.boat, pg = S.pgear, p = portById(b.port), inPortNow = b.status === 'port';
-    const h = ['<div class="ph-c">' + (tab0 ? '' : subs('redskap', [['sjo', 'I sjøen', 'In the sea'], ['bord', 'Om bord', 'Aboard'], ['kjop', 'Kjøp', 'Buy']]))];
+    const h = ['<div class="ph-c">' + (tab0 ? '' : subs('redskap', [['sjo', 'I sjøen', 'In the sea'], ['bord', 'Om bord', 'Aboard']]))];
     if (tab === 'sjo'){
       const all = (S.sets || []).filter(s => s.vid === S.cur);
       if (!all.length) h.push('<div class="ph-card"><p class="ph-note">' + L('Ingen redskap i sjøen. Trykk «Sett ut» når båten ligger stille på feltet, eller legg setting inn i ruta.', 'No gear in the sea. Tap «Set» when the boat lies still on the grounds, or put the setting into the route.') + '</p></div>');

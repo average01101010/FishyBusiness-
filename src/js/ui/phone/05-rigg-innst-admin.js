@@ -1,34 +1,39 @@
-  // the rig: one kind of fishing at a time, changed here aboard (under Beholdning) when none of the boat's gear is in the sea
+  // the rig: one kind of fishing at a time, chosen in Om bord › Redskap when none of the boat's gear is in the sea (D4, Jonas 13.11.2026:
+  // «"Redskap" og "rigg" kan slås sammen slik at man inne på redskap velger hvilket redskap som skal være aktivt»: one card with a row
+  // for each rig, where the page of its own had a card each and a wall of text over them)
   function rigg(){
-    const cur = rigOf(), h = ['<div class="ph-c"><p class="ph-note">' + L('Båten er rigget for ett redskap om gangen (line, garn eller teiner), og juksa er alltid med når båten ligger i ro, også mens redskapet står i sjøen. Haleren kjøpes og monteres i Butikk › Elektronikk og haler. Har du utstyret, bytter du rigg her om bord, gratis og med en gang, så lenge ingen garn, liner eller teiner står i sjøen.', 'The boat is rigged for one kind of gear at a time (line, nets or pots), and the jig is always there when the boat lies still, also while the gear stands in the sea. The hauler is bought and fitted at Shop › Electronics and haulers. Once the gear is aboard, you change the rig here, aboard, free and at once, as long as none of your nets, lines or pots are in the sea.') + '</p>'];
-    const need = {juksa:L('Håndjuksa eller juksamaskin.', 'A hand jig or jigging reels.'), line:L('Linehaler.', 'A line hauler.'), garn:handGear('garn') ? L('Ingen haler: garnet trekkes for hånd over ripa.', 'No hauler: the nets are drawn by hand over the rail.') : L('Garnhaler.', 'A net hauler.'), teiner:L('Teinehaler.', 'A pot hauler.')};
-    for (const r of Object.keys(RIGS)){
-      const why = r === cur ? null : rigBlock(r);
-      h.push('<div class="ph-card rig' + (r === cur ? ' on' : '') + '"><h4>' + L(RIGS[r].no, RIGS[r].en) + (r === cur ? ' · <span class="r0">' + L('rigget nå', 'rigged now') + '</span>' : '') + '</h4>' + kv(L('Krever', 'Needs'), need[r]) +
-        (r === cur ? '' : why ? '<p class="ph-note">' + why[0] + '</p>' : '<button class="ph-btn p" data-pa="rig" data-r="' + r + '">' + L('Rigg om (gratis)', 'Re-rig (free)') + '</button>') + '</div>');
-    }
-    return h.join('') + '</div>';
+    const cur = rigOf();
+    const need = {juksa:L('håndjuksa eller juksamaskin', 'a hand jig or jigging reels'), line:L('linehaler', 'a line hauler'), garn:handGear('garn') ? L('ingen haler: trekkes for hånd', 'no hauler: drawn by hand') : L('garnhaler', 'a net hauler'), teiner:L('teinehaler', 'a pot hauler')};
+    const rows = Object.keys(RIGS).map(r => { const why = r === cur ? null : rigBlock(r);
+      return '<div class="rig-r' + (r === cur ? ' on' : '') + '"><div class="rig-t"><b>' + L(RIGS[r].no, RIGS[r].en) + '</b><span>' + (r === cur ? L('rigget nå', 'rigged now') : why ? why[0] : L('krever ', 'needs ') + need[r]) + '</span></div>' +
+        (r === cur ? '<span class="rig-on">✓</span>' : why ? '' : '<button class="ph-btn p" data-pa="rig" data-r="' + r + '">' + L('Rigg om', 'Re-rig') + '</button>') + '</div>'; }).join('');
+    return '<div class="ph-c" style="padding-bottom:0"><div class="ph-card rigc"><h4>' + L('Rigg', 'Rig') + '</h4>' + rows +
+      '<p class="ph-note">' + L('Ett redskap om gangen; juksa er alltid med når båten ligger i ro. Å rigge om er gratis og skjer med en gang, så lenge ingen garn, liner eller teiner står i sjøen.', 'One kind of gear at a time; the jig is always with you when the boat lies still. Re-rigging is free and at once, as long as no nets, lines or pots stand in the sea.') + '</p></div></div>';
   }
   // «Om bord» (UI 2, U2-2, 06.11.2026; was Beholdning): what the boat has: gear aboard and in the sea, the hold, the boat herself, and
   // the crew as the fifth tab (the Mannskap page, ui/05b-work.js, as it was; the dock's Mannskap button went)
   function beholdning(){
-    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['rigg', 'Rigg', 'Rig'], ['last', 'Lasterom', 'Hold'], ['boat', 'Båten', 'The boat'], ['crew', 'Mannskap', 'Crew']]);
-    if (tab === 'rigg') return head + rigg();
+    // (D4: the tabs Redskap (with the rig), Last, Mannskap og drift, and the boat; «Lasterom» is «Last», for many boats carry the fish in
+    // tubs on deck, Jonas 13.11.2026. A link to the old tab «rigg» lands on Redskap)
+    if (sub.beholdning === 'rigg') sub.beholdning = 'gear';
+    const tab = sub.beholdning || 'gear', head = subs('beholdning', [['gear', 'Redskap', 'Gear'], ['last', 'Last', 'Catch'], ['crew', 'Mannskap og drift', 'Crew and plan'], ['boat', 'Båten', 'The boat']]);
     if (tab === 'last') return head + last();
     if (tab === 'boat') return head + fartoy('min');
     if (tab === 'crew') return head + crewTab();
     // the shop's service sits here now, beside the crew's own upkeep (M2): only at a tackle shop's quay
     // (D4: Service is the tackle shop's third tab; here it is a short cut there, and only when gear aboard is worn and the shop is here)
     const svc = atKind('butikk') && svcWorn() ? '<div class="ph-c" style="padding-bottom:0"><div class="ph-card svc-l"><h4>' + L('Slitt redskap om bord', 'Worn gear aboard') + '</h4><p class="ph-note">' + L('Butikken her reparerer og bytter på halve tiden mot et gebyr.', 'The shop here mends and changes in half the time for a fee.') + '</p><button class="ph-btn p" data-pa="open" data-a="service">' + L('Til Service i butikken', 'To Service at the shop') + '</button></div></div>' : '';
-    return head + svc + (S.pgear ? redskap('bord') + redskap('sjo') : '');
+    return head + svc + rigg() + (S.pgear ? redskap('bord') + redskap('sjo') : '');
   }
   // the crew tab: the Mannskap page with the plan's line (PAGES().arbeid), and the way to the Ansatte pages (who is signed on, with the
   // quarrel when one waits for an answer, and the crew exchange; ui/phone/13-mannskap-bank-meld.js), first with a quarrel aboard, else last
   function crewTab(){
     const q = !!S.cevt, card = '<div class="ph-c" style="padding-' + (q ? 'bottom' : 'top') + ':0"><div class="ph-card' + (q ? ' conflict' : '') + '"><h4>' + L('Ansatte', 'Employees') + '</h4><p class="ph-note">' +
       (q ? '<b>' + L('Uløst krangel om bord.', 'Unresolved quarrel aboard.') + '</b> ' + L('Svar under Ansatte.', 'Answer under Employees.') : L('Hvem som er mønstret på, lott og oppsigelse, og ledige folk i Mannskapsbørsen.', 'Who is signed on, shares and dismissal, and available hands in the crew exchange.')) + '</p>' +
-      '<div class="ph-row2"><button class="ph-btn' + (q ? ' p' : '') + '" data-pa="open" data-a="mannskap">' + L('Ansatte', 'Employees') + '</button><button class="ph-btn alt" data-pa="open" data-a="bors">' + L('Mannskapsbørs', 'Crew exchange') + '</button></div></div></div>';
-    const w = PAGES().arbeid();
+      '<div class="ph-row2"><button class="ph-btn' + (q ? ' p' : '') + '" data-pa="open" data-a="mannskap">' + L('Ansatte', 'Employees') + '</button></div></div></div>';
+    // (D4, Jonas 13.11.2026 «Enig»: those aboard and the operations plan on one tab; the Driftsplan app in the phone opens this same tab,
+    // where the Crew page had one line with «Åpne» to a page of its own)
+    const w = WORK.page() + PLAN2UI.page();
     return q ? card + w : w + card;
   }
   function logg(){ return '<div class="ph-panel">' + panelLog() + '</div>'; }
