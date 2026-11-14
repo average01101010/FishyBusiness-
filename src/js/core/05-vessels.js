@@ -857,7 +857,7 @@ function sail(H, W, hs){
 // back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
 // land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
 // Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
-const SAIL_RP = {n:0, at:'', wait:0, since:0};
+const SAIL_RP = {n:0, at:'', pl:null, wait:0, since:0};   // (the tries are counted per leg of this route: a new route with the same leg index and length begins at none)
 // a way round being found while the time away is played (ui/08-actions.js playMinutes): the minutes wait for it, as they wait for the
 // map, so a boat that meets shallow water with the game closed goes round and on instead of lying still for the rest of the time away
 // (tilbakemelding #97); a search that never answers holds them 20 s at most
@@ -867,7 +867,7 @@ function sailReplan(pl, b, gp){
   const w = pl.wps[pl.idx], d = dist(b.pos, gp);
   if (d > 0.03){ const f = (d - 0.025) / d, q = {x:b.pos.x + (gp.x - b.pos.x) * f, y:b.pos.y + (gp.y - b.pos.y) * f}; if (!groundCheck(b.pos, q)) b.pos = q; }
   b.v = 0;
-  const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key){ SAIL_RP.at = key; SAIL_RP.n = 0; }
+  const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key || SAIL_RP.pl !== pl){ SAIL_RP.at = key; SAIL_RP.pl = pl; SAIL_RP.n = 0; }
   const none = gp.ice ? iceWhy(gp, true) : ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
   if (++SAIL_RP.n > 3){ sailStop(pl, b, none); return true; }
   pl.replan = {t:S.t};
