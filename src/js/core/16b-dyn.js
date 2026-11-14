@@ -598,13 +598,28 @@ function dynLineBuild(pl, dep){
   const L = [0]; for (let i = 1; i < P.length; i++) L.push(L[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
   const stops = []; for (let i = pl.idx; i <= iEnd; i++) if (wpStop(pl.wps[i]) && wpAt[i] != null) stops.push({i, s:L[wpAt[i]]});
   // the corners: where the line turns, by how much
-  const corners = []; for (let i = 1; i < P.length - 1; i++){ const a = Math.atan2(P[i][0] - P[i - 1][0], -(P[i][1] - P[i - 1][1])), c = Math.atan2(P[i + 1][0] - P[i][0], -(P[i + 1][1] - P[i][1])), th = Math.abs(dynAng(a, c)); if (th > 0.2) corners.push({s:L[i], th}); }
+  const corners = []; for (let i = 1; i < P.length - 1; i++){ const a = Math.atan2(P[i][0] - P[i - 1][0], -(P[i][1] - P[i - 1][1])), c = Math.atan2(P[i + 1][0] - P[i][0], -(P[i + 1][1] - P[i][1])), th = Math.abs(dynAng(a, c)); if (th > 0.2) corners.push({s:L[i], th, i}); }
   // the hands take her round the sharp turns just past the harbour point too (13.11.2026, tests/allesteder.py, steg 126 AS1: the 21 m
   // coastal vessel at Vannvåg met a hairpin 15 m past it, crept into it at a knot and a half with no bite in her rudder and went round
   // in a circle 100 m wide, onto the marks of the lead; a turn of more than 60 degrees within three of her lengths of the last one)
   let sOut = L[iOut]; const Lb = (dep && dep.bp.Lb) || 8;
   if (dep) for (const c of corners){ if (c.s <= sOut) continue; if (c.s - sOut > 3 * Lb || c.th < Math.PI / 3) break; sOut = c.s; }
   return {plan:pl, n:pl.wps.length, sig:dynSig(pl), chk:0, P, L, end:L[L.length - 1], wpAt, stops, corners, iEnd, back, turnL:Math.max(10, Lb * 1.5), hd0, sOut, s:0, gchk:0, ghit:null};
+}
+// a sharp corner (over 60 degrees) with a mark, a pile or a bridge's pier near the legs she swings out over: within two of her lengths,
+// half her beam and 4 m of the first five lengths of the leg out of it or the last two of the leg into it (she swings out by about her
+// radius, 2.5 lengths: the marks the 21 m coastal vessel struck stood 40 m off the leg out, 84 m on, at Stamsund, and 25 m off, 90 m on,
+// at Sund in Lofoten). dynAuto's hands take her round those on the line (Jonas 14.11.2026, the last way out). Asked as she comes to it,
+// when the packs round it are in
+function dynTight(T, c){
+  const idx = obsIndex(), Lk = BOAT.len || 10, Rr = 2 * Lk + (BOAT.beam || 3) / 2 + 4, C = HIND.C, i = c.i, V = T.P[i];
+  const end = (j, far) => { const Q = T.P[j], l = Math.hypot(Q[0] - V[0], Q[1] - V[1]) || 1, f = Math.min(1, far / l); return [V[0] + (Q[0] - V[0]) * f, V[1] + (Q[1] - V[1]) * f]; };
+  const segs = [end(i + 1, 5 * Lk), end(i - 1, 2 * Lk)];
+  const dmin = (x, z) => Math.min(...segs.map(E => { const vx = E[0] - V[0], vz = E[1] - V[1], l2 = vx * vx + vz * vz || 1, u = clamp(((x - V[0]) * vx + (z - V[1]) * vz) / l2, 0, 1); return Math.hypot(x - V[0] - u * vx, z - V[1] - u * vz); }));
+  const ext = 5 * Lk + Rr;
+  for (let gi = Math.floor((V[0] - ext) / C); gi <= Math.floor((V[0] + ext) / C); gi++) for (let gj = Math.floor((V[1] - ext) / C); gj <= Math.floor((V[1] + ext) / C); gj++)
+    for (const o of idx.get(gi * 1048576 + gj) || []) if (o.t === 0 && dmin(o.x, o.z) - (o.r || 0) < Rr) return true;
+  return false;
 }
 function dynLineAt(T, s){
   const L = T.L, n = L.length; if (n < 2) return T.P[0]; s = clamp(s, 0, T.end);
@@ -698,7 +713,15 @@ function dynAuto(d, dtG){
     // a corner closer than she turns): the same hands take her on along the line for three of her lengths (60 m at least), as they do
     // out from the quay, and the model has her again after it. «Stuck»: knocks within the last two minutes and under 5 m along the line in three
     if (!T.prog || T.s > T.prog.s + 5) T.prog = {s:T.s, t:S.t};
-    else if (!(T.assist > T.s) && S.t - T.prog.t >= 3 && b.hits && b.hits.length && S.t - b.hits[b.hits.length - 1].t <= 2){ T.assist = Math.min(T.end - 1, T.s + Math.max(60, 3 * L)); T.prog = {s:T.s, t:S.t}; }
+    else if (!(T.assist > T.s) && S.t - T.prog.t >= 3 && b.hits && b.hits.length && S.t - b.hits[b.hits.length - 1].t <= 2){ T.assist = Math.min(T.end - 1, sStop - 0.5, T.s + Math.max(60, 3 * L)); T.prog = {s:T.s, t:S.t}; DYN.hands = (DYN.hands || 0) + 1; }
+    // (and the last way out, Jonas 14.11.2026: «båten kan få lov til å bryte fysikkens regler og lover i enkelte situasjoner slik at vi
+    // ikke ødelegger for oss selv mer enn vi må … men jeg ønsker jo helst at vi klarer å løse problemet på en annen måte»: no way on along
+    // the line for four game minutes with no knock, away from a stop, not waiting for a way round, against a stream or giving way: backing
+    // and filling before a bridge, held against the shallows the line runs into. The hands take her on as above)
+    else if (!(T.assist > T.s) && S.t - T.prog.t >= 4 && ds > 3 * L && !pl.replan && !(T.stem > 0) && !(SJV.own && SJV.own.t1 == null)){ T.assist = Math.min(T.end - 1, sStop - 0.5, T.s + Math.max(60, 3 * L)); T.prog = {s:T.s, t:S.t}; DYN.hands = (DYN.hands || 0) + 1; }
+    // (a sharp corner with a mark, a pile or a pier close by it, dynTight: the hands take her round on the line, which keeps the
+    // route's margin from it, where her own radius swings her onto it: Stamsund, Grimstad, Sund in Lofoten, 14.11.2026, tests/allesteder.py)
+    if (!(T.assist > T.s)){ const c = T.corners.find(q => q.s > T.s && q.s - T.s < Math.max(2 * L, 30)); if (c && !c.done && c.th >= Math.PI / 3 && (c.done = true) && dynTight(T, c)){ T.assist = Math.min(T.end - 1, sStop - 0.5, c.s + Math.max(30, 1.5 * L)); T.prog = {s:T.s, t:S.t}; DYN.hands = (DYN.hands || 0) + 1; } }
     if ((T.back > 0 && T.s < sScr) || T.assist > T.s){
       const sTo = Math.max(T.back > 0 ? sScr : 0, T.assist || 0), vS = T.back > 0 && T.s < T.back + T.turnL ? 0.8 : Math.min(1.5, 0.8 + Math.max(0, T.s - T.back - T.turnL) * 0.05), psi0 = d.psi; T.s = Math.min(T.s + vS * h, sTo + 0.01); const q = dynLineAt(T, T.s), hd = dynLineHd(T, T.s, 3);
       d.X = q[0]; d.Y = q[1]; if (hd !== null) d.psi = hd; d.u = T.s < T.back ? -vS : vS; d.v = 0; d.r = dynAng(psi0, d.psi) / h; d.dl = 0; continue;
@@ -806,8 +829,9 @@ function dynAuto(d, dtG){
   // what the model could not see: the last bit of land under her (a route the player drew through it, or a corner cut too fine)
   // (on a leg the route called safe she is held back where she was and the net under Autonav finds a way round from there, as for
   // the shallows seen on the line ahead (sailReplan, 05-vessels.js); only the player's own unsafe leg puts her aground. Before, a
-  // corner cut on her radius or a drift off the line at speed ran her aground on an Autonav route, tilbakemelding #96, 26.10.2026)
-  const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to, dynSquat(P, d.u, E.narrow)) : null; } catch (e){}
+  // corner cut on her radius or a drift off the line at speed ran her aground on an Autonav route, tilbakemelding #96, 26.10.2026;
+  // not while the hands take her along the line, the last way out, which may cross what the model would be held by)
+  const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 && !(T.assist > T.s - 1) ? groundCheck(a, to, dynSquat(P, d.u, E.narrow)) : null; } catch (e){}
   if (gp){ if (pl.unsafe && pl.unsafe[pl.idx] && !gp.ice){ dynWrite(b, d); runAground(gp); return; }
     const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
     // (held back slowly for half a game minute, her bow on the shallows the line runs into: a way round is found from there as at speed,
@@ -815,7 +839,11 @@ function dynAuto(d, dtG){
     // vessel in the sound south of Egersund, after a way round whose first 50 m crossed water the search lets a start point have,
     // 14.11.2026, tests/allesteder.py, steg 126)
     T.held = fast ? 0 : (T.held || 0) + dtG;
-    if ((fast || gp.ice || T.held > 30) && !pl.replan){ T.held = 0; d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
+    // (held so again within 20 game minutes of a way round on this route: the hands take her on along the line, the last way out, Jonas
+    // 14.11.2026; south of Egersund the way round led her back onto the same shallows, and the next search found none, so she stopped)
+    if (!fast && !gp.ice && T.held > 30 && pl.rpT != null && S.t - pl.rpT < 20 && !pl.replan){ T.held = 0; pl.rpT = null; const st = T.stops.find(q => q.i >= pl.idx);
+      T.assist = Math.min(T.end - 1, (st ? st.s : T.end) - 0.5, T.s + Math.max(60, 3 * L)); T.prog = {s:T.s, t:S.t}; DYN.hands = (DYN.hands || 0) + 1; dynWrite(b, d); return; }
+    if ((fast || gp.ice || T.held > 30) && !pl.replan){ pl.rpT = S.t; T.held = 0; d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
   else T.held = 0;
   DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / gridScale(a) / NM;
   dynWrite(b, d);

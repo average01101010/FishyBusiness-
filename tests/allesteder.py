@@ -68,7 +68,7 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
       if (!to.id) S.plan.wps[S.plan.wps.length - 1].leia = true;   // (open water: she stops there)
       // no leg over land (the route panel's check)
       let a = from, bad = 0; for (const w of S.plan.wps){ if (!legClear(a, w)) bad++; a = w; } R.overLand = bad;
-      const T0 = S.t, L0 = S.log.length; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
+      const T0 = S.t, L0 = S.log.length, H0 = DYN.hands || 0; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
       // the game's loop (ui/08-actions.js): the model each frame, the minute step on the clock; she must lie in port at the end in time
       const limit = 60 + Math.ceil(r.nm / Math.max(3, BOAT.vcruise) * 60 * 1.6); let acc = 0, k = 0, best = 1e9, lastBest = S.t, stuck = null, nh = (b.hits || []).length; const pl0 = S.plan;
       while (S.t - T0 < limit){
@@ -85,9 +85,9 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
         if (d < best - 0.03){ best = d; lastBest = S.t; } else if (S.t - lastBest > 40){ stuck = 'no headway for 40 min (' + b.status + ', at ' + JSON.stringify(natLL(b.pos)).slice(0, 60) + ', leg ' + (pl ? pl.idx + '/' + pl.wps.length : '-') + ')'; break; }
       }
       R.log = S.log.slice(L0).map(e => e.no || '').filter(t => /grunn|traff|kollisjon|Kollisjon|støtte|Vann i båten|Motorrommet|slep|Slep|fast|venter|Venter|ly\b/i.test(t)).slice(0, 4);
-      R.min = S.t - T0; R.end = b.status; R.at = b.port === to.id; R.left = +dist(b.pos, from).toFixed(2); R.km = +dist(b.pos, to.p).toFixed(2);
+      R.min = S.t - T0; R.end = b.status; R.hands = (DYN.hands || 0) - H0;   /* (the hands took her along the line: stuck, or a sharp corner by a mark, 16b-dyn.js) */ R.at = b.port === to.id; R.left = +dist(b.pos, from).toFixed(2); R.km = +dist(b.pos, to.p).toFixed(2);
       if (!to.id) R.at = R.km < 0.3;
-      R.dmg = typeof hullBad === 'function' && hullBad(b); if (R.dmg && !stuck){ R.log = S.log.slice(L0).map(e => e.no || '').filter(t => !/^Kl\.|klokka|Posisjon/.test(t)).slice(-6); stuck = 'hull damaged on the way (' + (R.hits ? 'struck ' + JSON.stringify(R.hits) + ' ' : '') + R.log.join(' | ').slice(0, 300) + ')'; }
+      R.dmg = typeof hullBad === 'function' && hullBad(b); if (R.dmg && !stuck){ const all = S.log.slice(L0).map(e => e.no || ''), why = all.filter(t => /støt|Støt|Smell|grunn|Grunn|Sammenstøt|skade|Skade|lekk/.test(t)); R.log = why.length ? why.slice(0, 6) : all.filter(t => !/^Kl\.|klokka|Posisjon/.test(t)).slice(-6); stuck = 'hull damaged on the way (' + (R.hits ? 'struck ' + JSON.stringify(R.hits) + ' ' : '') + R.log.join(' | ').slice(0, 300) + ')'; }
       if (typeof asleep === 'function' && asleep()) R.asleep = true;
       if (stuck) R.why = stuck + ' ' + R.left + ' km out'; else if (!R.at) R.why = 'not in ' + to.name + ' after ' + R.min + ' min (' + b.status + ', ' + R.km + ' km off)';
       S.plan = null; return R; },
@@ -165,7 +165,7 @@ async def main():
             else: r = await pg.evaluate(ONE, [kind, pid, TYPE if kind == 'port' else SMALL, None if kind == 'port' else TYPE])
             res.append(r)
             bad = r.get('why') or (r.get('lie', {}).get('land') if r.get('lie') else None)
-            if bad: print('allesteder:', kind, r.get('name'), r.get('ll'), json.dumps({k: r.get(k) for k in ('why', 'to', 'nm', 'min', 'end', 'log', 'hits', 'asleep', 'h')}, ensure_ascii=False), flush=True)
+            if bad: print('allesteder:', kind, r.get('name'), r.get('ll'), json.dumps({k: r.get(k) for k in ('why', 'to', 'nm', 'min', 'end', 'log', 'hits', 'asleep', 'h', 'hands')}, ensure_ascii=False), flush=True)
             if i % 25 == 0: print('   ', i, '/', len(todo), round(time.time() - t0), 's', flush=True)
         json.dump(res, open(os.path.join(ROOT, 'tests', 'out', 'allesteder%s.json' % ('_' + TYPE if TYPE != 'kyst21' else '')), 'w'), ensure_ascii=False, indent=0)
         done = [r for r in res if not r.get('skip')]
@@ -182,6 +182,8 @@ async def main():
         print(ok(not bigin), 'the older coastal vessel (21 m) is not offered a rorbu or the naust, and the naust reads as the plant for her (%d were)' % len(bigin), [(r['kind'], r.get('name')) for r in bigin[:6]])
         print(ok(not shallow), 'her draught under her at the lowest tide where she lies (kyst21 3.4 m at the harbours, kyst15 3.0 m at the rorbuer and the naust; %d with less)' % len(shallow), [(r['kind'], r.get('name'), r['lie']['dmin']) for r in shallow[:6]])
         print(ok(not any(r.get('overLand') for r in done)), 'no leg of a route over land')
+        hd = [r for r in done if r.get('hands')]
+        print('places where the hands took her along the line (the last way out, Jonas 14.11.2026; %d places, %d times):' % (len(hd), sum(r['hands'] for r in hd)), [(r['kind'], r.get('name'), r['hands']) for r in hd[:20]])
         tb = [r for r in done if r.get('tideBound')]
         print('places she leaves only nearer high water (not stuck; %d):' % len(tb), [(r['kind'], r.get('name'), r['tideBound']) for r in tb[:12]])
         print('errors:', errs[:4]); await br.close()
