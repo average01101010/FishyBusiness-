@@ -34,9 +34,10 @@ const SJV = {
   ms:0,             // the time the last look took (ms)
   // the warning's window (game minutes to the CPA; 6 game minutes is a minute of real time), the NPCs' and Autonav's reach (km),
   // the near miss (m clear), how long a manoeuvre lasts at most (game hours)
-  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,
-  // in a harbour: the way off her for a vessel under way closing within HARB m and HARBT game minutes of the CPA (sjvEval)
-  HARB:600, HARBT:3, harbNo:new Map(),   // (harbNo: a vessel she has waited a whole manoeuvre's time for, not waited for again within as long: id -> H)   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
+  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
+  // in a harbour: the way off her for a vessel under way closing within HARB m and HARBT game minutes of the CPA (sjvEval); harbNo: a
+  // vessel she has waited a whole manoeuvre's time for, not waited for again within as long (id -> H)
+  HARB:600, HARBT:3, harbNo:new Map(),
   // Ø11.2: restricted visibility under 2 nautical miles (km; the rules give no figure, 3 l names fog, snow and heavy rain), and for the
   // vessels not in sight in it (rule 19) the window, the warning's and the manoeuvres' reach and the time to the CPA they start at
   FOG:2 * NM, TWF:10, RWF:5, RNPCF:1.6, ROWNF:1.8, TSF:12,
@@ -419,7 +420,7 @@ function sjvCapV(){ return Math.min(sjvFogCapV(), fartCapMs()); }
 // ---- one look: the encounters round the boat you follow (at most once a game tenth of a minute, a real second) ----
 function sjvEval(H, list){
   const t0 = typeof performance !== 'undefined' ? performance.now() : 0, b = S.boat;
-  if (SJV.vid !== S.cur){ SJV.E.clear(); SJV.sits.clear(); SJV.own = null; SJV.ownOff = 0; SJV.warn = null; SJV.vid = S.cur; SJV.e19 = null; SJV.heard.clear(); SJV.fogT.clear(); SJV.trail.clear(); SJV.lp.clear(); SJV.clash.clear(); }
+  if (SJV.vid !== S.cur){ SJV.E.clear(); SJV.sits.clear(); SJV.own = null; SJV.ownOff = 0; SJV.warn = null; SJV.vid = S.cur; SJV.e19 = null; SJV.harbNo.clear(); SJV.heard.clear(); SJV.fogT.clear(); SJV.trail.clear(); SJV.lp.clear(); SJV.clash.clear(); }
   SJV.at = H;
   farvLook(H);   // (the speed limit and the cardinal marks, Ø11.8, at the end of the file)
   const A = sjvOwn(), harb = A.cls === 'moor' || A.cls === 'towed' || A.cls === 'anch' || inHarbour(A.p), gsA = gridScale(A.p);
@@ -531,6 +532,7 @@ function sjvEval(H, list){
   for (const [id, T] of SJV.trail) if (!seen.has(id) && (!T.length || H - T[T.length - 1].H > 0.1)) SJV.trail.delete(id);
   for (const [id, q] of SJV.lp) if (!seen.has(id) && H - q.H > 0.1) SJV.lp.delete(id);
   for (const [id, c] of SJV.clash) if (H - c.t > 0.25 || H < c.t - 0.01) SJV.clash.delete(id);
+  for (const [id, t] of SJV.harbNo) if (H - t > SJV.TMAX || H < t - 0.01) SJV.harbNo.delete(id);
   if (SJV.own && (!auto || (harb && !SJV.own.harb) || (!harb && SJV.own.harb) || (!seen.has(SJV.own.id) && SJV.own.t1 == null))) SJV.own.t1 = SJV.own.t1 == null ? H : SJV.own.t1;
   if (SJV.own && SJV.own.t1 != null && Math.abs(SJV.ownOff) < 1) SJV.own = null;   // (back on the line: the next may start)
   // (the one warned for stays while its CPA is not clearly open, so it does not blink, and while she or Autonav gives way for the other

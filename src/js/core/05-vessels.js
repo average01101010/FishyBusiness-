@@ -857,9 +857,10 @@ function sail(H, W, hs){
 // back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
 // land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
 // Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
-const SAIL_RP = {n:0, at:'', pl:null, wait:0, since:0, tgt:null, nT:0};   // (the tries are counted per leg of this route: a new route with the same leg index and length begins at none)
-// (and per point of the route she is bound for, past the ways round put in before it: each way round that is found puts points in and
-// begins the leg's count again, so one that leads back onto the same ground could go round for good. Eight ways round to one point at most)
+const SAIL_RP = {n:0, at:'', pl:null, wait:0, since:0, tgt:null, nT:0, gp:null};   // (the tries are counted per leg of this route: a new route with the same leg index and length begins at none)
+// (and per shallow on the way to a point of the route, past the ways round put in before it: each way round that is found puts points in
+// and begins the leg's count again, so one that leads back onto the same ground could go round for good. Eight ways round from within
+// 300 m of each other to one point at most; other shallows further on count anew)
 const SAIL_RPMAX = 8;
 const SAIL_NONE = ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
 // a way round being found while the time away is played (ui/08-actions.js playMinutes): the minutes wait for it, as they wait for the
@@ -874,7 +875,7 @@ function sailReplan(pl, b, gp){
   const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key || SAIL_RP.pl !== pl){ SAIL_RP.at = key; SAIL_RP.pl = pl; SAIL_RP.n = 0; }
   const none = gp.ice ? iceWhy(gp, true) : SAIL_NONE;
   let j = pl.idx; while (j < pl.wps.length - 1 && pl.wps[j].obs) j++; const tg = pl.wps[j];
-  if (SAIL_RP.tgt !== tg){ SAIL_RP.tgt = tg; SAIL_RP.nT = 0; }
+  if (SAIL_RP.tgt !== tg || !SAIL_RP.gp || dist(SAIL_RP.gp, gp) > 0.3){ SAIL_RP.tgt = tg; SAIL_RP.nT = 0; } SAIL_RP.gp = {x:gp.x, y:gp.y};
   // (the way round found on this leg was the leg itself, no point put in: the same search again gives the same. The hands take her on
   // past the shallows along the line instead, the last way out, 16b-dyn.js dynHandsOn; Træna utstyrsbutikk, 14.11.2026)
   if (!gp.ice && pl.rpNone && pl.rpNone.tg === tg && S.t - pl.rpNone.t < 20 && typeof dynHandsOn === 'function' && dynHandsOn(pl)){ pl.rpNone = null; return true; }

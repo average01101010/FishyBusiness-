@@ -343,6 +343,7 @@ function berthPose(pid, type, kind = 'main'){
   let best = null, nocache = false;
   // (out: the quay built out over the 3D shore to her, quayOut; a harbour unit is its own quay with its basin. A face that does not
   // carry it, the naust's, a rorbu's, a berth held before 03.11.2026, gets it here, and is not kept until the coast is in)
+  if (qf && qf.nocache) nocache = true;
   let qo = 0; if (qf && !qf.unit){ qo = qf.out; if (qo === undefined){ qo = quayOut(qf, 0, Lb); if (qo !== qo){ qo = 0; nocache = true; } else if (qo < 0) qo = QOUT.max; } }
   if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4 + qo), cz:qf.z + qf.nz * (Bb / 2 + 0.4 + qo), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit, out:qo, kind:qf.kind, tre:!!(qf.naust || qf.rorbu)};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }

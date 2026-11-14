@@ -692,7 +692,7 @@ function dynAvoid(d, P){
   // (and a vessel lying still near her way, a ferry waiting at her quay or a boat stopped: her hull as circles of half her beam along
   // her length, steered round as a pier is. Under way the rules have them (sjvEval), but not in a harbour, where a ferry lying still at
   // Sørarnøy stood 17 m off the way in to the plant and the coastal vessel ran into her, 14.11.2026, tests/allesteder.py, steg 126)
-  const T = typeof SJV !== 'undefined' && SJV.tl && SJV.tl.vid === S.cur ? SJV.tl : null;
+  const T = typeof SJV !== 'undefined' && SJV.tl && SJV.tl.vid === S.cur && Math.abs(S.t / 60 - SJV.tl.H) < 10 / 3600 && Math.hypot(SJV.tl.X - d.X, SJV.tl.Z - d.Y) < 200 ? SJV.tl : null;   // (fresh: the last ten game seconds, near her)
   if (T) for (const q of T.v){ if (Math.hypot(q.ve, q.vz) > 0.5 || Math.hypot(q.x - d.X, q.z - d.Y) > look + q.L) continue;
     const hx = Math.sin(q.hd), hz = -Math.cos(q.hd), r = q.B / 2, k = Math.max(0, Math.ceil((q.L - q.B) / q.B / 2));
     let best = null;   // (the circle of her hull that stands nearest across the way: one vessel, one push)
@@ -765,10 +765,10 @@ function dynAuto(d, dtG){
       if (stopW){ if (arrive(stopW) || S.plan !== pl) return; T.s = dynLineProj(T, d.X, d.Y, T.s); continue; }
       // (a way round already being looked for: she lies here till it answers. Before, the ground ahead was seen again each game second
       // while she lay stopped, each sight asked again and counted a try, and the fourth stopped her, «fant ingen trygg vei rundt», before
-      // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py). Half a minute of real time at most (as
-      // sailWaiting; three game minutes at the game's own pace): a search that has not answered by then stops her, «fant ingen trygg vei
-      // rundt», and no second one is started beside it
-      if (T.ghit && pl.replan){ T.ghit = null; if (Date.now() - (pl.replan.w || 0) < 30000) return; pl.replan = null; sailStop(pl, b, SAIL_NONE); return; }
+      // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py). Ten game minutes waited here with the model
+      // running (a tab asleep does not count: no frames) and a real minute at most: a search that has not answered by then stops her, «fant
+      // ingen trygg vei rundt», and no second one is started beside it
+      if (T.ghit && pl.replan){ T.ghit = null; pl.replan.k = (pl.replan.k || 0) + dtG; if (pl.replan.k < 600 || Date.now() - (pl.replan.w || 0) < 60000) return; pl.replan = null; sailStop(pl, b, SAIL_NONE); return; }
       if (T.ghit){ const gp = T.ghit.gp; T.ghit = null; if (!sailReplan(pl, b, gp)) runAground(gp); return; }
       if (T.s >= T.end - 1){ const w = pl.wps[pl.wps.length - 1];   // the end of the route (or «Stopp»): exactly on the point; arrive says so and clears the plan
         if (Math.hypot(w.x * 1000 - d.X, w.y * 1000 - d.Y) < 2){ d.X = w.x * 1000; d.Y = w.y * 1000; dynWrite(b, d); }
