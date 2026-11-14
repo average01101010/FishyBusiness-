@@ -643,7 +643,6 @@
         case 'phone': case 'binoc': case 'tally': case 'remote': { const d = lack(mid(), (H[st.task] || H.phone).r, 0.04); if (d > 0){ mv(hands[0], d); mv(hands[1], d); } break; }
       }
       // (and a hand's own point is never in the trunk: laid on it at the nearest)
-      if (LEMMER.log && LEMMER.dbgHc) LEMMER.log.push({task:'_hc', of:st.task, idx, v:hands.map(q => inT(q).concat([lack(q, H.HAND, 0, 0), beside(inT(q)) ? 1 : 0]).map(v => +v.toFixed(3))), b, t2});
       for (const q of hands){ const l = inT(q); if (beside(l)) continue;   // (a hand by his side is the elbow's and the wrist's own matter, armIk)
         const d = lack(q, H.HAND, 0, 0); if (d > 0) mv(q, d); }
       // (nor its wrist, which is a hand's length back from the point towards the shoulder: the hand is moved out until the wrist is
@@ -748,7 +747,7 @@
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
       if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = up3(W(0.2, 1.52, 0.02)); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
         DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
-    if (st.task === 'sit' || st.seated){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8))); }
+    if (st.task === 'sit' || st.seated){ const sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], y - eye[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, LEMMER.on ? HOLDT.seat : 0.98, 0.8))); }
     if (st.task === 'snus' && st.can && !st.gone){ const C = pz('snus'); if (C) drawN(C, atH([GP[1][0], GP[1][1] + 0.01, GP[1][2]])); }
     // the knife in the gutting hand, the gaff and the fish on it, the fish held up by the head and the toss into the tub (tools/deck/fisk.py)
     const kn = knifeKit(!!P.bare), fishAt = (P, sp, kg, rz, rx) => { const sc = clamp(0.42 * Math.cbrt(kg || 2), 0.28, 1.2); drawN(fishOf(sp || 'torsk'), chain(M4.T(P[0], P[1] - sc * 0.45, P[2]), M4.RX(Math.PI / 2 + (rx || 0)), M4.RZ(rz || 0), M4.S(sc))); };
@@ -806,7 +805,7 @@
         drawN(PM.fbox, CM); for (let i = 0; i < (fishy ? 9 : 0); i++) drawN(fishOf(st.csp ? st.csp(i) : 'torsk'), chain(CM, M4.T(-0.24 + (i % 3) * 0.24, 0.07 + Math.floor(i / 3) * 0.06, 0), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0)), M4.RZ(Math.PI / 2), M4.S(0.4)));
         drawN(PM.icebit, chain(CM, M4.T(0, 0.22, 0), M4.S(14, 1.2, 7))); } }
     // the bucket by the line tub: bait in it for baiting, the old bait going into it (and over the rail) when stripping; he sits on an upturned bin
-    if (st.task === 'egn' || st.task === 'strip'){ const BK = kit('fish', 'botte'), Bk = st.bucket || st.Bk, sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], sb[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8)));
+    if (st.task === 'egn' || st.task === 'strip'){ const BK = kit('fish', 'botte'), Bk = st.bucket || st.Bk, sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], sb[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, LEMMER.on ? HOLDT.seat : 0.98, 0.8)));
       if (LEMMER.on && st.Bk){ const Eg = HOLDT.egn; drawN(PM.icebin, chain(M4.T(st.Bk[0], st.Bk[1] - Eg.at[1] - 0.02, st.Bk[2]), M4.RY(-h), M4.S(Eg.box[0], Eg.box[1], Eg.box[0]))); }   // (the box the bucket stands on)
       if (Bk){ const BM = chain(M4.T(Bk[0], Bk[1], Bk[2]), M4.RY(-h)); if (BK) drawN(BK, BM); else drawN(PM.cup, chain(BM, M4.S(3)));
         if (GB && GB.bait) for (let i = 0; i < 6; i++) drawN(GB.bait, chain(BM, M4.T((hash(i * 3 + idx) - 0.5) * 0.14, 0.16 + hash(i * 7) * 0.03, (hash(i * 5 + idx) - 0.5) * 0.14), M4.RY(hash(i) * 6), M4.S(1.6))); }
