@@ -410,7 +410,7 @@
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
       // bucket at his right, on the hook, and the baited hook laid down in the tub; stripping takes the old bait off into the bucket and
       // now and then throws the bucket's bits over the rail (st.Tu the tub, st.Bk the bucket, st.Of over the rail)
-      case 'egn': case 'strip': { const Tu = st.Tu || W(0.55, 0.38, 0), Bk = st.Bk || W(0.25, 0.3, 0.42), egn = st.task === 'egn', cyc = egn ? 2.4 : 2.0, c = ((tW(T) + idx * 0.9) % cyc) / cyc;
+      case 'egn': case 'strip': { const Tu = st.Tu || W(0.55, 0.38, 0), Bk = st.Bk || (LEMMER.on ? W(...HOLDT.egn.at) : W(0.25, 0.3, 0.42)), egn = st.task === 'egn', cyc = egn ? 2.4 : 2.0, c = ((tW(T) + idx * 0.9) % cyc) / cyc;
         const rim = [Tu[0] - F[0] * 0.2 - R[0] * 0.08, Tu[1] + 0.02, Tu[2] - F[1] * 0.2 - R[1] * 0.08], mid = W(0.32, 0.72, 0.02), inT = [Tu[0], Tu[1] - 0.08, Tu[2]], bk = [Bk[0], Bk[1] + 0.26, Bk[2]];
         st.bait = null; st.old = null; st.hook = null; st.flick = null; st.bucket = null; st.spill = -1;
         // the bucket's bits over the rail, every 25 s or so while stripping (the gulls come for them)
@@ -606,7 +606,7 @@
       const mv = (q, d) => { q[0] += AH[0] * d; q[1] += AH[1] * d; q[2] += AH[2] * d; }, mid = () => [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2];
       // (a hand by his side, hanging at the hip or behind him, is the arm's own matter (armIk); one before him is moved out ahead. The new
       // people's trunk is 15 to 19 cm deep before the hip joints: a hand 12 cm off his middle is before his belly, not beside it)
-      const beside = l => LEMMER.on ? Math.abs(l[2]) > (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) - HOLDT.SIDE || l[0] < 0.02 : Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0);
+      const beside = l => LEMMER.on ? Math.abs(l[2]) > (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) - HOLDT.SIDE || l[0] < -HOLDT.SIDE : Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0);
       // (a hand at the face: where the face is with the back bent as it is now)
       for (const i of [0, 1]) if (FQ[i]){ const q = FQ[i], A = ofH(torsoPt(q.l, b, 0)); hands[i] = q.low ? lerp3([q.low[0], q.low[1] - drop, q.low[2]], A, q.k) : A; }
       switch (st.task){
@@ -643,6 +643,7 @@
         case 'phone': case 'binoc': case 'tally': case 'remote': { const d = lack(mid(), (H[st.task] || H.phone).r, 0.04); if (d > 0){ mv(hands[0], d); mv(hands[1], d); } break; }
       }
       // (and a hand's own point is never in the trunk: laid on it at the nearest)
+      if (LEMMER.log && LEMMER.dbgHc) LEMMER.log.push({task:'_hc', of:st.task, idx, v:hands.map(q => inT(q).concat([lack(q, H.HAND, 0, 0), beside(inT(q)) ? 1 : 0]).map(v => +v.toFixed(3))), b, t2});
       for (const q of hands){ const l = inT(q); if (beside(l)) continue;   // (a hand by his side is the elbow's and the wrist's own matter, armIk)
         const d = lack(q, H.HAND, 0, 0); if (d > 0) mv(q, d); }
       // (nor its wrist, which is a hand's length back from the point towards the shoulder: the hand is moved out until the wrist is
@@ -806,6 +807,7 @@
         drawN(PM.icebit, chain(CM, M4.T(0, 0.22, 0), M4.S(14, 1.2, 7))); } }
     // the bucket by the line tub: bait in it for baiting, the old bait going into it (and over the rail) when stripping; he sits on an upturned bin
     if (st.task === 'egn' || st.task === 'strip'){ const BK = kit('fish', 'botte'), Bk = st.bucket || st.Bk, sb = W(-0.06, 0, 0); drawN(PM.icebin, chain(M4.T(sb[0], sb[1] - 0.02, sb[2]), M4.RY(-h), M4.S(0.8, 0.98, 0.8)));
+      if (LEMMER.on && st.Bk){ const Eg = HOLDT.egn; drawN(PM.icebin, chain(M4.T(st.Bk[0], st.Bk[1] - Eg.at[1] - 0.02, st.Bk[2]), M4.RY(-h), M4.S(Eg.box[0], Eg.box[1], Eg.box[0]))); }   // (the box the bucket stands on)
       if (Bk){ const BM = chain(M4.T(Bk[0], Bk[1], Bk[2]), M4.RY(-h)); if (BK) drawN(BK, BM); else drawN(PM.cup, chain(BM, M4.S(3)));
         if (GB && GB.bait) for (let i = 0; i < 6; i++) drawN(GB.bait, chain(BM, M4.T((hash(i * 3 + idx) - 0.5) * 0.14, 0.16 + hash(i * 7) * 0.03, (hash(i * 5 + idx) - 0.5) * 0.14), M4.RY(hash(i) * 6), M4.S(1.6))); }
       if (GB && GB.bait){ for (const q of [st.bait, st.old]) if (q) drawN(GB.bait, chain(M4.T(q[0], q[1] - 0.02, q[2]), M4.S(1.6)));
