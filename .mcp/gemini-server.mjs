@@ -35,6 +35,11 @@ const SIZES = ['1K', '2K'];
 // Appended to every image prompt. Text in the game is drawn by the UI in two
 // languages, and no real company or organisation name may appear in the game.
 const IMAGE_RULES = 'No text, letters, numbers, logos, brand names, flags of organisations, signatures or watermarks anywhere in the image.';
+// The game's own fictional brands, which may stand as a word mark on the thing they are (Jonas 14.11.2026: «Du har lov med logo og skrift
+// … Skippertak er et fiktivt merke kun i dette spillet»). Only these words, only when the call names the brand; everything else keeps
+// IMAGE_RULES. A real company's name never goes here (CLAUDE.md: no real names without a written agreement).
+const GAME_BRANDS = ['SKIPPERTAK'];
+const brandRules = (brand) => `The only text allowed in the image is the word mark of ${brand}, a fictional brand invented for this game, plus the short variant words named in the prompt, spelled exactly as given. No other text, letters or numbers; no real brand names, real logos or anything resembling a real brand; no flags of organisations, signatures or watermarks.`;
 // Where a generated image may never be written: the game data is made by the
 // scripts in tools/ (never by hand), and the rest is not ours to fill.
 const NO_WRITE = ['src/data', 'src/legal', '.git', '.claude', '.mcp', 'node_modules', 'dist', 'supabase'];
@@ -250,7 +255,8 @@ function imageError(e) {
   return e instanceof Error ? e : new Error(m);
 }
 
-async function generateGameAsset({ prompt, outputPath, aspectRatio = '1:1', imageSize = '1K', referencePaths = [], overwrite = false }) {
+async function generateGameAsset({ prompt, outputPath, aspectRatio = '1:1', imageSize = '1K', referencePaths = [], overwrite = false, brand = null }) {
+  if (brand && !GAME_BRANDS.includes(String(brand).toUpperCase())) throw new Error(`brand must be one of the game's own brands: ${GAME_BRANDS.join(', ')} (got ${brand}).`);
   if (!prompt || !prompt.trim()) throw new Error('prompt is required.');
   if (!ASPECTS.includes(aspectRatio)) throw new Error(`aspectRatio must be one of ${ASPECTS.join(', ')} (got ${aspectRatio}).`);
   if (!SIZES.includes(imageSize)) throw new Error(`imageSize must be one of ${SIZES.join(', ')} (got ${imageSize}).`);
@@ -273,7 +279,7 @@ async function generateGameAsset({ prompt, outputPath, aspectRatio = '1:1', imag
   try {
     res = await withRateRetry(IMAGE_MODEL, () => client().models.generateContent({
       model: IMAGE_MODEL,
-      contents: [{ role: 'user', parts: [...refs, { text: `${prompt.trim()}\n\n${IMAGE_RULES}` }] }],
+      contents: [{ role: 'user', parts: [...refs, { text: `${prompt.trim()}\n\n${brand ? brandRules(String(brand).toUpperCase()) : IMAGE_RULES}` }] }],
       config: { responseModalities: ['IMAGE'], imageConfig: { aspectRatio, imageSize } },
     }));
   } catch (e) { throw imageError(e); }
@@ -308,10 +314,11 @@ if (im0 > 0) {
   const outputPath = opt('--out');
   const aspectRatio = opt('--aspect');
   const imageSize = opt('--size');
+  const brand = opt('--brand');
   const oi = rest.indexOf('--overwrite');
   const overwrite = oi >= 0 ? (rest.splice(oi, 1), true) : false;
   try {
-    console.log(await generateGameAsset({ prompt, outputPath, aspectRatio, imageSize, referencePaths: rest, overwrite }));
+    console.log(await generateGameAsset({ prompt, outputPath, aspectRatio, imageSize, referencePaths: rest, overwrite, brand }));
     process.exit(0);
   } catch (e) {
     log(e.message);
@@ -383,6 +390,7 @@ server.registerTool(
       referencePaths: z.array(z.string()).optional().describe(
         'Images that show the style to match: a screenshot of the game\'s UI as it is, or an earlier asset. Prefer this over style adjectives.'),
       overwrite: z.boolean().default(false).describe('Replace the file when it exists already.'),
+      brand: z.enum(GAME_BRANDS).optional().describe('Only for a fictional brand of the game itself (GAME_BRANDS): its word mark may then stand on the product; all other text stays forbidden.'),
     },
   },
   async (args) => {
