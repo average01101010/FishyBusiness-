@@ -2426,7 +2426,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (862 linjer)
+## `src/js/core/16b-dyn.js` (866 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -2489,18 +2489,18 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 561 `dynHelm(d, dtG)`
 - **582** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
   - 584 `dynLineBuild(pl, dep)`
-  - 615 `dynHands(T, k)`
+  - 610 `dynHands(T, k)`
   - 616 `dynTight(T, c)`
-  - 626 `dynLineAt(T, s)`
-  - 632 `dynSeg(T, s)`
-  - 633 `dynSegHd(T, i)`
-  - 634 `dynLineProj(T, x, z, s0, back = 30)`
-  - 644 `dynLineHd(T, s, r0)`
-  - 651 `dynGroundAhead(T, s, look)`
-  - 667 `dynAvoid(d, P)`
-- **679** the autopilot
-  - 680 `dynAuto(d, dtG)`
-  - 861 `dynTrackView()`
+  - 630 `dynLineAt(T, s)`
+  - 636 `dynSeg(T, s)`
+  - 637 `dynSegHd(T, i)`
+  - 638 `dynLineProj(T, x, z, s0, back = 30)`
+  - 648 `dynLineHd(T, s, r0)`
+  - 655 `dynGroundAhead(T, s, look)`
+  - 671 `dynAvoid(d, P)`
+- **683** the autopilot
+  - 684 `dynAuto(d, dtG)`
+  - 865 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (207 linjer)
 
@@ -4032,7 +4032,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 1750 `lanterns(G, V, st)`
   - 1793 `deckPoints(type)`
 
-## `src/js/deckcrew.js` (1397 linjer)
+## `src/js/deckcrew.js` (1406 linjer)
 
 - **2** CREW3D: the people aboard as agents who walk the deck (docs/mannskap-plan.md, del 1; Jonas 17.10.2026: no teleporting)
   - 14 `crewSim(src)`
@@ -4059,15 +4059,15 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 1147 `seaState()`
   - 1151 `seaKnee(dref, dnow)`
 - **1152** the limbs (FB2, steg 123, 13.11.2026; docs/planer/folk-2.md; Jonas: «Kjør på med FB2 i en ny økt»): the upper arm, the forearm,
-  - 1225 `limbLen(c)`
-  - 1237 `ik2(Rt, Tg, L1, L2, pole, o)`
-  - 1248 `torsoPt(q, b, tw)`
-  - 1250 `torsoInv(q, b, tw)`
-  - 1257 `reachBody(sh, tg, reach, b0, o)`
-  - 1273 `armIk(s, tg, sd, L, o, cl)`
-  - 1318 `armHand(s, hd, sd, L, o, cl)`
-  - 1324 `legDrop(hips, feet, L)`
-  - 1343 `seaLegs(s, inp)`
+  - 1234 `limbLen(c)`
+  - 1246 `ik2(Rt, Tg, L1, L2, pole, o)`
+  - 1257 `torsoPt(q, b, tw)`
+  - 1259 `torsoInv(q, b, tw)`
+  - 1266 `reachBody(sh, tg, reach, b0, o)`
+  - 1282 `armIk(s, tg, sd, L, o, cl)`
+  - 1327 `armHand(s, hd, sd, L, o, cl)`
+  - 1333 `legDrop(hips, feet, L)`
+  - 1352 `seaLegs(s, inp)`
 
 ## `src/js/view3d/00-head.js` (159 linjer)
 
@@ -4284,7 +4284,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 256 `signUi(ok, M, F, VP, now)`
   - 270 `signTake()`
 
-## `src/js/view3d/08-plants.js` (733 linjer)
+## `src/js/view3d/08-plants.js` (776 linjer)
 
 ---------- fish plants: the harbour unit's crane, forklift, door and chute at work, and the people on the quay ----------
 
@@ -4294,29 +4294,30 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 23 `buildPlantParts()`
   - 58 `roundAt(R, T)`
   - 69 `plantRounds(P)`
-  - 86 `workLow(st, T, idx)`
-  - 118 `workTurn(st, eye, T, idx)`
-  - 130 `drawShovel(G, B, tip, full, c, box, top)`
-- **139** the cold on the people on deck (OB14, F14): when the cold and the wet cost (13-work.js idleEnv().cold over CHILL), the hood of
-  - 144 `deckChill()`
-  - 145 `hoodOf(col)`
-  - 156 `coldLook(l)`
-- **157** the sea legs in the drawing (FB4, steg 120; deckcrew.js seaLegs and SJOBEIN): for someone on a deck at sea (st.sea: whose
-  - 165 `seaSet(sim, a, M)`
-  - 168 `deckN(M)`
-  - 169 `seaNow(st, h, y)`
-  - 180 `bootM(foot, h, n)`
-  - 185 `leanM(h, lr, lf)`
-  - 191 `drawWorker(P, st, eye, T, idx)`
-  - 196 `drawWorker0(P, st, eye, T, idx)`
-- **300** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
-- **407** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
-- **460** the legs, the torso, the head and the arms (FB2, steg 123; deckcrew.js LEMMER, ik2, armIk, reachBody, legDrop): the hands
-- **518** what he holds close is put clear of his own trunk before the hands are solved, and the hands are where the thing has its
-- **612** the new figure (FB7): the joints above in his own frame (x to his right, y up, z back, from where he stands), turned into
-- **679** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
+  - 88 `workLow(st, T, idx)`
+  - 122 `shovelPath(st, eye, T, idx, y)`
+  - 135 `workTurn(st, eye, T, idx)`
+  - 150 `drawShovel(G, B, tip, full, c, box, top)`
+- **161** the cold on the people on deck (OB14, F14): when the cold and the wet cost (13-work.js idleEnv().cold over CHILL), the hood of
+  - 166 `deckChill()`
+  - 167 `hoodOf(col)`
+  - 178 `coldLook(l)`
+- **179** the sea legs in the drawing (FB4, steg 120; deckcrew.js seaLegs and SJOBEIN): for someone on a deck at sea (st.sea: whose
+  - 187 `seaSet(sim, a, M)`
+  - 190 `deckN(M)`
+  - 191 `seaNow(st, h, y)`
+  - 202 `bootM(foot, h, n)`
+  - 207 `leanM(h, lr, lf)`
+  - 213 `drawWorker(P, st, eye, T, idx)`
+  - 218 `drawWorker0(P, st, eye, T, idx)`
+- **327** the work on deck, step by step (Jonas 20.10.2026: «Alle deler av arbeidsprosessene må ha egne animasjoner»); the places the
+- **429** the breaks (Jonas 23.10.2026: «Husk at vi må ha animasjoner for alle handlinger og aktiviteter»; core/13-work.js idleAssign)
+- **486** the legs, the torso, the head and the arms (FB2, steg 123; deckcrew.js LEMMER, ik2, armIk, reachBody, legDrop): the hands
+- **544** what he holds close is put clear of his own trunk before the hands are solved, and the hands are where the thing has its
+- **654** the new figure (FB7): the joints above in his own frame (x to his right, y up, z back, from where he stands), turned into
+- **722** the props of the deck work (the poses above): the fish in the hands and on the table, the guts over the rail, the crate and the
 
-## `src/js/view3d/09-landing-deck.js` (1016 linjer)
+## `src/js/view3d/09-landing-deck.js` (1018 linjer)
 
 ---------- landing the catch ----------
 
@@ -4357,60 +4358,60 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 503 `tug(T, w, m)`
   - 505 `fishSplash(E, kg, n)`
   - 513 `fishSurf(id, y, E, kg, T, w)`
-  - 520 `dkEvent(kind, at, sp, kg, o)`
-  - 526 `dkFor(who, p, task)`
-  - 534 `dkEv(e, BMrel, G)`
-  - 536 `catchQ()`
-  - 541 `dkTick()`
-  - 558 `dkWet(bp, hr)`
-  - 562 `dkWetDraw(VP)`
-  - 567 `dkBloodDraw(VP)`
-  - 578 `rigAt(G, kind, d)`
-  - 583 `drawNetTub(BMrel, at, fill, ry)`
-  - 591 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
-  - 601 `drawTub1(M, f, green, top)`
-  - 608 `magTubs(BMrel, G)`
-  - 612 `drawTubList(BMrel, G, d, F, at)`
-  - 621 `drawLineOp(BMrel, G, d, g)`
-- **627** the nets aboard (F8, OB3): NET_TUB to a tub, the tubs where the deck has room for them (deckcrew.js netTubs), the first ones
-  - 630 `netsAboard(g)`
-  - 632 `netTubsNow(G, d, n)`
-  - 636 `netFrom(G, d, g)`
-  - 637 `drawNets(BMrel, G, d, n)`
-  - 639 `drawNetsOp(BMrel, G, d, g)`
-  - 643 `jobTubs(j)`
-  - 647 `drawMendNet(BMrel, G, d, R)`
-  - 661 `drawRigRest(BMrel, G, d)`
-- **677** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
-  - 683 `boyeCanvas(txt)`
-  - 689 `boyeTex()`
-  - 696 `ladderMesh(L)`
-  - 704 `boyeQ()`
-  - 705 `drawSafety(BMrel, G, VP, t)`
-  - 746 `cargoUnits(G)`
-  - 747 `drawCargo(BMrel, G, hide)`
-  - 762 `crFrames(X, Q, BMrel, p)`
-  - 771 `crLink(X, a2)`
-  - 774 `drawCrane(BMrel, G, VP, t, d)`
-- **835** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
-  - 846 `karPlan(key, spec, kg, dims)`
-  - 854 `karSpec()`
-  - 856 `drawKarLoad(M, load, key, washed)`
-  - 875 `karPlaces(vt)`
-  - 879 `drawCatchTubs(BMrel, vt, skip, washed)`
-  - 885 `karTop(vt, i)`
-  - 888 `karFilling(vt)`
-- **889** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
-  - 892 `iceBoxAt(vt)`
-  - 897 `iceBoxTop(vt)`
-  - 901 `drawIceBox(BMrel, vt, shovelIn)`
-  - 912 `shaftM(A, B)`
-- **916** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
-  - 918 `drawSling(H, M, swing, k)`
-- **936** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
-  - 940 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
-  - 958 `dkTub(G)`
-  - 959 `drawDeck(BMrel, eye, VP, t, DK)`
+  - 522 `dkEvent(kind, at, sp, kg, o)`
+  - 528 `dkFor(who, p, task)`
+  - 536 `dkEv(e, BMrel, G)`
+  - 538 `catchQ()`
+  - 543 `dkTick()`
+  - 560 `dkWet(bp, hr)`
+  - 564 `dkWetDraw(VP)`
+  - 569 `dkBloodDraw(VP)`
+  - 580 `rigAt(G, kind, d)`
+  - 585 `drawNetTub(BMrel, at, fill, ry)`
+  - 593 `drawLineTubs(BMrel, at, n, baited, green, ry, fill)`
+  - 603 `drawTub1(M, f, green, top)`
+  - 610 `magTubs(BMrel, G)`
+  - 614 `drawTubList(BMrel, G, d, F, at)`
+  - 623 `drawLineOp(BMrel, G, d, g)`
+- **629** the nets aboard (F8, OB3): NET_TUB to a tub, the tubs where the deck has room for them (deckcrew.js netTubs), the first ones
+  - 632 `netsAboard(g)`
+  - 634 `netTubsNow(G, d, n)`
+  - 638 `netFrom(G, d, g)`
+  - 639 `drawNets(BMrel, G, d, n)`
+  - 641 `drawNetsOp(BMrel, G, d, g)`
+  - 645 `jobTubs(j)`
+  - 649 `drawMendNet(BMrel, G, d, R)`
+  - 663 `drawRigRest(BMrel, G, d)`
+- **679** the kit on the model's places (G.kit, from the boat's model; tools/deck): the life-saving gear the rules ask for (V.lsa,
+  - 685 `boyeCanvas(txt)`
+  - 691 `boyeTex()`
+  - 698 `ladderMesh(L)`
+  - 706 `boyeQ()`
+  - 707 `drawSafety(BMrel, G, VP, t)`
+  - 748 `cargoUnits(G)`
+  - 749 `drawCargo(BMrel, G, hide)`
+  - 764 `crFrames(X, Q, BMrel, p)`
+  - 773 `crLink(X, a2)`
+  - 776 `drawCrane(BMrel, G, VP, t, d)`
+- **837** the fish tubs on an open boat's deck (core/07f-kar.js, docs/planer/fiskekar-dekk.md, Jonas 04.11.2026)
+  - 848 `karPlan(key, spec, kg, dims)`
+  - 856 `karSpec()`
+  - 858 `drawKarLoad(M, load, key, washed)`
+  - 877 `karPlaces(vt)`
+  - 881 `drawCatchTubs(BMrel, vt, skip, washed)`
+  - 887 `karTop(vt, i)`
+  - 890 `karFilling(vt)`
+- **891** the ice box (tools/deck/fisk.py iskasse, the 300 l tub in blue): it stands on deck at its place (the model's kit.iskasse, under
+  - 894 `iceBoxAt(vt)`
+  - 899 `iceBoxTop(vt)`
+  - 903 `drawIceBox(BMrel, vt, shovelIn)`
+  - 914 `shaftM(A, B)`
+- **918** the sling (tools/deck/fisk.py slynge_*): the master link on the crane's hook at H (eye-relative, its top), a strap from the ring
+  - 920 `drawSling(H, M, swing, k)`
+- **938** the bleeding tub (Jonas 04.11.2026: «se at blodet og fisken fyller karet på en ordentlig måte»): the 300 l tub at the model's
+  - 942 `drawBleedTub(BMrel, W, d, ux, uz, KT, KW)`
+  - 960 `dkTub(G)`
+  - 961 `drawDeck(BMrel, eye, VP, t, DK)`
 
 ## `src/js/view3d/10-gear.js` (791 linjer)
 
@@ -4505,55 +4506,55 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 225 `handKit(t)`
   - 247 `buildSkiff()`
 
-## `src/js/view3d/13-instruments.js` (683 linjer)
+## `src/js/view3d/13-instruments.js` (685 linjer)
 
 ---------- the skiff's live instruments ----------
 
 - **1** the skiff's live instruments
-  - 11 `engineOn()`
-  - 12 `paintPlotter()`
-  - 64 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
-  - 75 `paintGauges(dt)`
-  - 91 `paintVhf()`
-  - 103 `placeQ(t)`
-  - 105 `drawNames(t, M, VP, liv, nm, port, other)`
-  - 122 `buyAt()`
-  - 127 `buyShow(nm)`
-  - 133 `markCanvas(cv, txt, light)`
-  - 139 `markTex(t, liv)`
-  - 147 `imgOf(src)`
-  - 148 `curLogo()`
-  - 149 `logoTexOf(L, img)`
-  - 157 `logoQ(t)`
-  - 158 `drawLogo(t, M, VP, L, img)`
-  - 163 `imgCors(src)`
-  - 167 `markQ(t)`
-  - 168 `drawMark(t, M, VP, liv)`
-  - 172 `callQ(t)`
-  - 173 `drawCall(t, M, VP, liv)`
-  - 178 `nameCanvas(cv, nm, light, rv)`
-  - 197 `nameTex(nm, light, aspect, mark)`
-  - 206 `revealTex(nm, light, aspect, rv)`
-  - 213 `drawNPCNames(kit, VP)`
-  - 225 `paintHand()`
-  - 234 `limbM(A, B, r)`
-  - 243 `figLive(BMrel, fg)`
-  - 252 `armTo(BMrel, W, Sw, Hw, sd, sp)`
-  - 262 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
-  - 457 `drawSkiffGlass(BMrel, VP)`
-  - 467 `jigRail(t, G)`
-  - 500 `drawJigRail(BMrel, VP, t, G, dt)`
-  - 535 `drawGlass(m, BMrel, VP)`
-  - 554 `drawDrops(m, BMrel, VP, t)`
-  - 565 `buildBoat()`
-  - 591 `buildFlag()`
-  - 603 `flagTex()`
-  - 616 `mastTop(G)`
-  - 621 `clothInto(a, ph, appW)`
-  - 633 `clothStep(C, t, appW)`
-  - 634 `updateFlag(t, appW)`
-  - 647 `peerFlagTex(n)`
-  - 659 `drawPeerFlags(kit, VP, t, H)`
+  - 13 `engineOn()`
+  - 14 `paintPlotter()`
+  - 66 `dial(g, cx, cy, r, v0, v1, v, a0, a1, ticks, labels, title, redFr…)`
+  - 77 `paintGauges(dt)`
+  - 93 `paintVhf()`
+  - 105 `placeQ(t)`
+  - 107 `drawNames(t, M, VP, liv, nm, port, other)`
+  - 124 `buyAt()`
+  - 129 `buyShow(nm)`
+  - 135 `markCanvas(cv, txt, light)`
+  - 141 `markTex(t, liv)`
+  - 149 `imgOf(src)`
+  - 150 `curLogo()`
+  - 151 `logoTexOf(L, img)`
+  - 159 `logoQ(t)`
+  - 160 `drawLogo(t, M, VP, L, img)`
+  - 165 `imgCors(src)`
+  - 169 `markQ(t)`
+  - 170 `drawMark(t, M, VP, liv)`
+  - 174 `callQ(t)`
+  - 175 `drawCall(t, M, VP, liv)`
+  - 180 `nameCanvas(cv, nm, light, rv)`
+  - 199 `nameTex(nm, light, aspect, mark)`
+  - 208 `revealTex(nm, light, aspect, rv)`
+  - 215 `drawNPCNames(kit, VP)`
+  - 227 `paintHand()`
+  - 236 `limbM(A, B, r)`
+  - 245 `figLive(BMrel, fg)`
+  - 254 `armTo(BMrel, W, Sw, Hw, sd, sp)`
+  - 264 `drawSkiff(BMrel, VP, dt, showSkipper, showCrew)`
+  - 459 `drawSkiffGlass(BMrel, VP)`
+  - 469 `jigRail(t, G)`
+  - 502 `drawJigRail(BMrel, VP, t, G, dt)`
+  - 537 `drawGlass(m, BMrel, VP)`
+  - 556 `drawDrops(m, BMrel, VP, t)`
+  - 567 `buildBoat()`
+  - 593 `buildFlag()`
+  - 605 `flagTex()`
+  - 618 `mastTop(G)`
+  - 623 `clothInto(a, ph, appW)`
+  - 635 `clothStep(C, t, appW)`
+  - 636 `updateFlag(t, appW)`
+  - 649 `peerFlagTex(n)`
+  - 661 `drawPeerFlags(kit, VP, t, H)`
 
 ## `src/js/view3d/14-sea.js` (729 linjer)
 
@@ -4836,7 +4837,7 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 184 `personMesh(kind, look, key)`
   - 196 `people()`
 
-## `src/js/view3d/20-trawl-seine.js` (558 linjer)
+## `src/js/view3d/20-trawl-seine.js` (561 linjer)
 
 ---------- the trawl (tools/boats/tral60.py; Jonas 06.10.2026: «en tråler har slike tråldører på hekken som senkes i havet ved
 
@@ -4850,33 +4851,33 @@ the new people's skeleton (Folk 2, FB6, steg 124): bone matrices from local turn
   - 69 `seineState(now)`
   - 79 `drawSeine(t, A, BMrel, VP, now, stO)`
   - 120 `drawDeckCrew(BMrel, eye, VP, t, G)`
-  - 200 `spHold(f)`
-  - 203 `deckWork(G)`
-  - 211 `drawHelmKit(BMrel, eye, G)`
-  - 223 `sailOf(t)`
-  - 224 `drawSail(t, M, set)`
-  - 228 `drawHatch(t, G, M, k)`
-  - 235 `shipCraneOf(t)`
-  - 236 `shipCraneAim(C, pose)`
-  - 243 `drawShipCrane(t, G, M, pose)`
-  - 253 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
-  - 298 `npcGear(n)`
-  - 310 `npcGearT(n)`
-  - 331 `npcKB(t, lod, liv)`
-  - 335 `nkbCap()`
-  - 343 `npcMesh(n, lod)`
-  - 357 `npcWarm(eye)`
-  - 374 `seineAnch(G)`
-  - 384 `npcClock(Hf)`
-  - 392 `npcHead(n, t)`
-  - 407 `npcFollow(n, t)`
-  - 426 `npcRev(n)`
-  - 435 `npcPhase(id)`
-  - 440 `kvDraw(n, eye, t)`
-  - 448 `kvRibDraw(n, R, G, M, eye, t)`
-  - 474 `npcFrame(H)`
-  - 475 `drawNPC(eye, t, H, VP)`
-  - 536 `npcCrewDraw(n, K, eye, t)`
+  - 203 `spHold(f)`
+  - 206 `deckWork(G)`
+  - 214 `drawHelmKit(BMrel, eye, G)`
+  - 226 `sailOf(t)`
+  - 227 `drawSail(t, M, set)`
+  - 231 `drawHatch(t, G, M, k)`
+  - 238 `shipCraneOf(t)`
+  - 239 `shipCraneAim(C, pose)`
+  - 246 `drawShipCrane(t, G, M, pose)`
+  - 256 `drawVessel(t, G, BMrel, VP, skipper, ncrew, onDeck, liv, named)`
+  - 301 `npcGear(n)`
+  - 313 `npcGearT(n)`
+  - 334 `npcKB(t, lod, liv)`
+  - 338 `nkbCap()`
+  - 346 `npcMesh(n, lod)`
+  - 360 `npcWarm(eye)`
+  - 377 `seineAnch(G)`
+  - 387 `npcClock(Hf)`
+  - 395 `npcHead(n, t)`
+  - 410 `npcFollow(n, t)`
+  - 429 `npcRev(n)`
+  - 438 `npcPhase(id)`
+  - 443 `kvDraw(n, eye, t)`
+  - 451 `kvRibDraw(n, R, G, M, eye, t)`
+  - 477 `npcFrame(H)`
+  - 478 `drawNPC(eye, t, H, VP)`
+  - 539 `npcCrewDraw(n, K, eye, t)`
 
 ## `src/js/view3d/21-rescue-anchor.js` (255 linjer)
 

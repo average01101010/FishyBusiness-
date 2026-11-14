@@ -6,6 +6,12 @@ a moment that is asked for, and numbers changed while it runs, then take seconds
   python3 tests/folk2live.py shot kaffe-slurk royk-trekk coffee:1.2 ...     pictures: a moment's name (MOMENT) or task:t
         [--who 0] [--face 0.5] [--dist 2.6] [--pitch 0.1] [--alle] [--scene pause|arbeid|garn]    and one sheet of them all
   python3 tests/folk2live.py js "HOLDT.cup.tip = 0.9"      a number changed in the running game (HOLDT, LEMMER, SJOBEIN are the page's own)
+  python3 tests/folk2live.py maal pack:0:2.6:27 gutw ...     a pose swept over its round (task[:t0:t1:n], 0 to 6 s in 25 steps when not
+        said), measured without a picture (seconds): how far each hand was moved from its point (the arm short of it or pushed out of the body; cm, [right, left],
+        and when), how far a hand that was not moved is from its grip (bom), and every thing more than 1 cm
+        inside a body (G3._debug.thingClip) with the moment it was worst. [--roll 8]: the deck heeled. [--hendelse]: task is an event's kind (gaff, bleed, pick, jigup), its last one played again. [--scene arbeid --spill]: nobody is put in the pose, the ones
+        who have that work are measured at their own places (the gutter at his table).
+  python3 tests/folk2live.py ledd pack:0.4 ...     the arms' joints at a moment, in his own frame [ahead, up, to his right] (m)
   python3 tests/folk2live.py reload           build again and load the page again (after a change in src/)
   python3 tests/folk2live.py quit
 
@@ -17,9 +23,24 @@ LIVE = os.path.join(HERE, 'out', 'live'); CMD = os.path.join(LIVE, 'cmd.json'); 
 MOMENT = {'kaffe-slurk': ['coffee', 3.14], 'kaffe-paa-vei': ['coffee', 2.5], 'kaffe-nede': ['coffee', 0.0], 'royk-trekk': ['smoke', 1.96], 'royk-nede': ['smoke', 0.0],
           'mat-bit': ['lunch', 2.86], 'snus-leppa': ['snus', 8.16], 'snus-boks': ['snus', 4.0], 'kulde-blaas': ['cold', 6.4], 'kulde-slaa': ['cold', 1.5], 'kulde-gni': ['cold', 4.5],
           'kost-fram': ['sweep', 0.714], 'kost-bak': ['sweep', 2.142], 'juksa-napp': ['jig', 0.604], 'juksa-nede': ['jig', 0.0], 'kasse-nede': ['stack', 3.366], 'kasse-oppe': ['stack', 1.122],
-          'spade-is': ['pack', 0.4], 'spade-sving': ['pack', 1.1], 'spade-tipp': ['pack', 1.7], 'is-sving': ['ice', 1.1], 'kikkert': ['binoc', 0.0], 'baering': ['carry', 0.0], 'senking': ['stow', 0.0],
+          'spade-is': ['pack', 0.4], 'spade-sving': ['pack', 1.1], 'spade-tipp': ['pack', 1.7], 'is-sving': ['ice', 1.1], 'kikkert': ['binoc', 0.0], 'baering': ['carry', 0.0], 'senking': ['stow', 0.8], 'senking-nede': ['stow', 1.6],
           'hotte': ['gaff', 0.0], 'mobil': ['phone', 0.0], 'lene': ['lean', 0.0], 'kors': ['back', 0.0], 'sitte': ['sit', 0.0], 'prat': ['chat', 1.4], 'bryne': ['knife', 0.3], 'boting': ['mend', 0.5],
           'kveil': ['coil', 0.5], 'egning': ['egn', 1.0], 'spyling': ['hose', 0.0], 'sloying-hent': ['gutw', 0.4], 'sloying-snitt': ['gutw', 2.2], 'sloying-slo': ['gutw', 3.2], 'sloying-kast': ['gutw', 4.6]}
+
+
+# a pose swept over its round and measured where it stands (LEMMER.redraw draws nothing): the hands from their grips, and things in bodies
+MAAL = """([SW, spill, roll, ev]) => { const out = {};
+  for (const [task, t0, t1, n] of SW){ const C = {}, d3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]); let ao = [0, 0], at = [0, 0], ms = 0, cnt = 0;
+    for (let k = 0; k < n; k++){ const t = t0 + (t1 - t0) * k / Math.max(1, n - 1); SJOBEIN.test = ev ? {roll, pitch:0, T:103.1, t, ev:task} : spill ? {roll, pitch:0, T:103.1, t} : {roll, pitch:0, T:103.1, task, t}; LEMMER.log = []; LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw();
+      for (const q of LEMMER.log) if (q.task === task && q.gp && (!ev || q.ev)){ cnt++; for (const i of [0, 1]){ if (q.ao[i] > ao[i]){ ao[i] = q.ao[i]; at[i] = +t.toFixed(2); } if (q.ao[i] <= 1e-4) ms = Math.max(ms, d3(q.gp[i], q.tg[i])); } }
+      for (const o of G3._debug.thingClip(0.01)){ if (o.task !== task && !ev) continue; const k3 = (ev ? o.task + '|' : '') + (o.own ? 'egen' : 'annens') + '|' + o.name + '|' + o.part, c = C[k3]; if (!c || o.cm > c[0]) C[k3] = [o.cm, +t.toFixed(2)]; } }
+    out[task] = {n:cnt, flyttet_cm:ao.map(v => +(v * 100).toFixed(1)), da:at, bom_cm:+(ms * 100).toFixed(1), ting:C}; }
+  SJOBEIN.test = null; LEMMER.log = null; LEMMER.things = null; LEMMER.bodies = null; return out; }"""
+LEDD = """(MOMS) => { const out = {};
+  for (const [task, t] of MOMS){ SJOBEIN.test = {roll:0, pitch:0, T:103.1, task, t}; LEMMER.log = []; LEMMER.redraw(); const q = LEMMER.log.filter(e => e.task === task && e.wr).pop(); LEMMER.log = null; if (!q){ out[task + ':' + t] = null; continue; }
+    const F = [Math.sin(q.h), -Math.cos(q.h)], R = [Math.cos(q.h), Math.sin(q.h)], b = p => { const x = p[0] - q.at[0], y = p[1] - q.at[1], z = p[2] - q.at[2]; return [x * F[0] + z * F[1], y, x * R[0] + z * R[1]].map(v => +v.toFixed(2)); };
+    out[task + ':' + t] = {hvem:q.idx, h:+q.h.toFixed(2), boy:+q.b.toFixed(2), vri:+q.t.toFixed(2), hand:[b(q.gp[0]), b(q.gp[1])], haandledd:[b(q.wr[0]), b(q.wr[1])], albue:[b(q.el[0]), b(q.el[1])], skulder:[b(q.sh[0]), b(q.sh[1])], flyttet_cm:q.ao.map(v => +(v * 100).toFixed(1)), hvorfor:q.ov.map(o => o ? o.slice(0, 3).map(v => +(v * 100).toFixed(1)) : null), maal:[b(q.tg[0]), b(q.tg[1])]}; }   // (hvorfor: [past the reach, nearer the shoulder than the arm folds, pushed out of the body] cm)
+  SJOBEIN.test = null; return out; }"""
 
 
 def build():
@@ -41,9 +62,11 @@ async def serve():
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         pg = await br.new_page(viewport={'width': 640, 'height': 480}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
+        await pg.add_init_script("if (window.name !== 'folk2live' && location.protocol !== 'about:') { try { localStorage.clear(); } catch (e) {} window.name = 'folk2live'; }")
         st = {'scene': None, 't': None}
         async def start(scene='pause'):
             await pg.goto('about:blank')   # (the same address again is no new page: the old game would go on)
+            await pg.evaluate("window.name = ''")   # (and the save the first start left is cleared, else there is no first screen to press: seen 14.11.2026)
             await boot(pg, GAME + ',folk2'); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(2000)
             st['t'] = (await pg.evaluate(BOATS))[1]; await scene_set(scene)
         async def scene_set(scene):
@@ -60,6 +83,10 @@ async def serve():
             try:
                 if c['op'] == 'quit': json.dump(out, open(RES, 'w')); break
                 elif c['op'] == 'js': out['value'] = await pg.evaluate(c['code'])
+                elif c['op'] in ('maal', 'ledd'):
+                    if c.get('scene') and c['scene'] != st['scene']: await scene_set(c['scene'])
+                    await pg.evaluate("LEMMER.log = []"); await frames(pg, st['t'], 1)   # (LEMMER.redraw is made by a frame drawn with the log on)
+                    out['value'] = await pg.evaluate(MAAL if c['op'] == 'maal' else LEDD, [c['arg'], bool(c.get('spill')), c.get('roll', 0) * 3.14159265 / 180, bool(c.get('hendelse'))] if c['op'] == 'maal' else c['arg'])
                 elif c['op'] == 'reload':
                     if not build(): out = {'ok': False, 'err': 'bygget feilet'}
                     else: await start(st['scene'] or 'pause')
@@ -68,7 +95,7 @@ async def serve():
                     await pg.evaluate("([w, d, p, f, s]) => G3._debug.camOn(w, d, p, f, s)", [c.get('who', 0), c.get('dist', 2.6), c.get('pitch', 0.1), c.get('face', 0.5), not c.get('alle')])
                     out['shots'] = []
                     for name, task, t in c['shots']:
-                        await pg.evaluate("([task, t]) => { SJOBEIN.test = {roll:0, pitch:0, T:103.1, task, t}; }", [task, t]); await frames(pg, st['t'], 2)
+                        await pg.evaluate("([task, t, ev]) => { SJOBEIN.test = ev ? {roll:0, pitch:0, T:103.1, t, ev:task} : {roll:0, pitch:0, T:103.1, task, t}; }", [task, t, bool(c.get('hendelse'))]); await frames(pg, st['t'], 2)
                         f = os.path.join(LIVE, name + '.png'); await pg.screenshot(path=f, timeout=400000); out['shots'].append(f)
                     await pg.evaluate("SJOBEIN.test = null")
                 out['gl'] = await pg.evaluate("G3._debug.glErr()"); out['feil'] = errs[:3]; del errs[:]
@@ -95,12 +122,29 @@ def main():
     if not a or a[0] == 'serve': asyncio.run(serve()); return
     if a[0] in ('quit', 'reload'): print(json.dumps(send({'op': a[0]}), ensure_ascii=False)); return
     if a[0] == 'js': print(json.dumps(send({'op': 'js', 'code': a[1]}), ensure_ascii=False)); return
+    if a[0] in ('maal', 'ledd'):
+        c = {'op': a[0], 'arg': []}; i = 1
+        while i < len(a):
+            if a[i] == '--scene': i += 1; c['scene'] = a[i]
+            elif a[i] == '--roll': i += 1; c['roll'] = float(a[i])   # (the deck heeled, degrees: the sea legs)
+            elif a[i] == '--hendelse': c['hendelse'] = True   # (the last event of that kind, gaff bleed pick jigup, played again by the one whose work it is; everyone's things are counted)
+            elif a[i] == '--spill': c['spill'] = True   # (nobody is put in the pose: those who have that work, at their own places)
+            else:
+                q = a[i].split(':')
+                if a[0] == 'maal': c['arg'].append([q[0], float(q[1]) if len(q) > 1 else 0, float(q[2]) if len(q) > 2 else 6, int(q[3]) if len(q) > 3 else 25])
+                else: c['arg'].append(MOMENT[a[i]] if a[i] in MOMENT else [q[0], float(q[1]) if len(q) > 1 else 0])
+            i += 1
+        r = send(c)
+        for k, v in (r.get('value') or {}).items(): print(k, json.dumps(v, ensure_ascii=False))
+        if not r.get('ok'): print(json.dumps(r, ensure_ascii=False))
+        return
     if a[0] == 'shot':
         c = {'op': 'shot', 'shots': []}; i = 1
         while i < len(a):
             x = a[i]
             if x == '--alle': c['alle'] = True
-            elif x in ('--who', '--face', '--dist', '--pitch', '--scene'): i += 1; c[x[2:]] = a[i] if x == '--scene' else float(a[i]) if x != '--who' else int(a[i])
+            elif x == '--hendelse': c['hendelse'] = True
+            elif x in ('--who', '--face', '--dist', '--pitch', '--scene'): i += 1; c[x[2:]] = a[i] if x == '--scene' else float(a[i]) if x != '--who' else int(a[i]) if a[i].isdigit() else a[i]   # (--who: his number, or his work: gutw)
             elif x in MOMENT: c['shots'].append([x] + MOMENT[x])
             elif ':' in x: task, t = x.split(':'); c['shots'].append(['%s-%s' % (task, t), task, float(t)])
             else: print('ukjent øyeblikk:', x, '(finnes:', ' '.join(sorted(MOMENT)), ')'); return

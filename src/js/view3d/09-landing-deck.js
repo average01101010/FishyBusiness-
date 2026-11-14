@@ -517,7 +517,9 @@
     else if (y > FS_Y - 0.25 && y < FS_Y + 0.2 && flapK(T, w) > 0.8 && now - FSURF.sl > 700){ FSURF.sl = now; fishSplash(E, kg, 4); } }
   const ASLIDE = [];   // the autoliner's gaffed fish sliding into the chute's mouth (e.chute, 10-gear.js drawAutoSlides; H2d2)
   // (o: the rest of it: D where it is let fall on the deck, for the one meant to take it, wait how long it may wait for him, t0 a later start)
-  function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); return e; }
+  // (DKLAST: the last event of each kind, which the tests play again at a moment of their own: SJOBEIN.test.ev with .t, drawDeckCrew)
+  const DKLAST = {};
+  function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); DKLAST[kind] = e; return e; }
   // which events a hand at his work plays (the agents' tasks, deckcrew.js): the hauler gaffs the fish in, the one at the net picks them out,
   // the jigger hauls them up by hand, the bleeder bleeds; each bleeds his own fish when nobody else is there to do it
   const DKPLAY = {jig:['bleed', 'jigup'], haul:['gaff', 'bleed'], pick:['pick', 'bleed'], bleedst:['bleed']};

@@ -4,7 +4,9 @@
     RX:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1,0,0,0, 0,c,s,0, 0,-s,c,0, 0,0,0,1]); },
     RY:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]); },
     RZ:a => { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c,s,0,0, -s,c,0,0, 0,0,1,0, 0,0,0,1]); },
-    S:k => new Float32Array([k,0,0,0, 0,k,0,0, 0,0,k,0, 0,0,0,1])
+    // (one number: the same every way; three: along x, y and z. Until 14.11.2026 the second and third were dropped without a word, so the
+    // ice over the fish in a box, M4.S(14, 1.2, 7), was a cube half a metre high, and the net heap in the tub never sank)
+    S:(k, y, z) => new Float32Array([k,0,0,0, 0,y == null ? k : y,0,0, 0,0,z == null ? k : z,0, 0,0,0,1])
   };
   const chain = (...ms) => ms.reduce((a, b) => mul(a, b));
   let plotSmall = null, aisCache = {t:-1, v:[]};
