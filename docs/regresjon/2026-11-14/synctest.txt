@@ -1,0 +1,40 @@
+OK   the tablet saves: revision 1, and it has the game 
+OK   the phone takes the game, waits for the tablet's last state and goes on from exactly there (the catch not saved yet came along) 
+OK   the tablet stops playing at once and says the game is on the iPhone 
+OK   the held card is inside the screen (liggende) 
+OK   the held card is inside the screen (stående) 
+OK   «Spill her i stedet» brings the game back to the tablet as the phone left it, and the phone stops in its turn 
+OK   a tablet that slept asks the account before it plays, and stays paused while the phone has the game open 
+FEIL with the phone silent (screen off), the tablet takes the game back by itself, without a card {"s": {"held": false, "wait": false, "gate": false, "ready": true, "reloaded": false}, "active": "iPhone"}
+Traceback (most recent call last):
+  File "/home/user/FishyBusiness-/tests/synctest.py", line 156, in <module>
+    asyncio.run(main())
+  File "/usr/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/home/user/FishyBusiness-/tests/synctest.py", line 143, in main
+    h = await A[1].evaluate("document.getElementById('cloudGate').innerText")
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/async_api/_generated.py", line 9421, in evaluate
+    await self._impl_obj.evaluate(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_page.py", line 474, in evaluate
+    return await self._main_frame.evaluate(expression, arg)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_frame.py", line 346, in evaluate
+    await self._channel.send(
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 76, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/dist-packages/playwright/_impl/_connection.py", line 632, in wrap_api_call
+    raise rewrite_error(error, f"{parsed_st['apiName']}: {error}") from None
+playwright._impl._errors.Error: Page.evaluate: TypeError: Cannot read properties of null (reading 'innerText')
+    at eval (eval at evaluate (:311:30), <anonymous>:1:37)
+    at eval (<anonymous>)
+    at UtilityScript.evaluate (<anonymous>:311:30)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)

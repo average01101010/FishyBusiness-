@@ -139,7 +139,9 @@
         const f = Q.shift(), F0 = [Math.sin(a.h), -Math.cos(a.h)], rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; DKF.jig[a.id] = now;
         dkEvent('jigup', rl, f.sp, f.kg, {for:a.id, wait:8, Wat:[rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]}); } }
     // the fish lying on the deck where they were shaken off the hook or let fall from the net, until the bleeder takes them up
-    if (SK && SK.fishM) for (const f of DKDECK) drawN(fishOf(f.sp), chain(BMrel, M4.T(f.at[0], f.at[1] + 0.05, f.at[2]), M4.RY(f.yaw), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2))));
+    // (not yet bled, it flaps on the deck: on its side the bend slaps the tail up and down, in bursts, flap in 09-landing-deck.js)
+    if (SK && SK.fishM){ const tf = performance.now() / 1000; for (const f of DKDECK){ const Fl = flap(tf, (f.kg || 2) * 2.7 + f.yaw * 3, 0.6, f.sp, f.kg); bendOn(Fl);
+      drawN(fishOf(f.sp), chain(BMrel, M4.T(f.at[0], f.at[1] + 0.05, f.at[2]), M4.RY(f.yaw + Fl[0] * 0.5), M4.RZ(Math.PI / 2), M4.S(clamp(0.42 * Math.cbrt(f.kg || 2), 0.28, 1.2)))); } bendOff(); }
     // where the gutted fish go: the packer's crate on his right (a hold boat), else the open boat's tub nearest him (kit.tubs)
     const pk = A.find(a => a.st === 'is' && a.mode === 'at'), tubs = V.kar ? karPlaces(vtype()) : null;
     // (an open boat: the tub being filled now, the fish landing on its heap, core/07f-kar.js)
@@ -185,6 +187,9 @@
         else if (a.task === 'mend') st.Nt = rel([a.x + F0[0] * 0.42, a.y + railH - 0.02, a.z + F0[1] * 0.42]);
         else if (a.task === 'jig' && !machines){ const rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; st.Rl = rel(rl); st.Wt = rel([rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]); } }
       if (a.sub && a.sub.carry === 'crate'){ st.crate = true; st.csp = i => packed(hash(i * 7 + 1)); if (a.mode === 'at') st.s = ST.clk - (a.sub.done - (a.sub.hold || 2)); }
+      // (alone in the white room: only the one the eye is on, the others out of the way; Jonas 14.11.2026: «Du har også lov å fjerne
+      // de andre fra mannskapet om de er i veien på bildene». The count goes on, so his beat is the same with and without them)
+      if (cam.solo && cam.whoId != null && a.id !== cam.whoId){ idx++; continue; }
       drawWorker(P, st, eye, ta, idx++); }
     if (sjp0){ SJT.prof.ms += performance.now() - sjp0; SJT.prof.n += A.length; SJT.prof.f++; }
     dkBloodDraw(VP);
