@@ -22,7 +22,8 @@ APART = 1.5
 APART2 = 0.8
 # KYST_RORBU_FAST=1: each point asks for the way to open water within 3 km and the nearest trade place only, open water first (a way
 # that is not found takes 45-50 s a search where the water is shut in, Langvasseid 14.11.2026: three places and five tides were over ten
-# minutes a point, and the rings over an hour). A point that holds this way holds the test's way too (it tries those and two more)
+# minutes a point, and the rings over an hour). A point that holds this way holds the test's way too (it tries those and two more); a point
+# turned down this way might have held by the two others, so a rorbu may be moved further than it had to be
 FAST = os.environ.get('KYST_RORBU_FAST') == '1'
 
 TRY = r"""async ([id, apart, FAST]) => { const R = RBID.get(id), b = S.boat, c0 = {x:R.cand.x, y:R.cand.y}; TAB.held = true; S.tut = 0;

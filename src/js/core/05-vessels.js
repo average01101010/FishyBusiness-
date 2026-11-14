@@ -857,7 +857,11 @@ function sail(H, W, hs){
 // back to the draft. Three tries a leg at most. (Tilbakemeldinger #47 and #48, 08.10.2026: a boat on Autonav must never end up on
 // land. The legs are checked when the route is made; this is the net under them, also after a drift, a pause or a tow.)
 // Returns true when she is held back here, false when the leg is the player's own unsafe one (then she grounds as before).
-const SAIL_RP = {n:0, at:'', pl:null, wait:0, since:0};   // (the tries are counted per leg of this route: a new route with the same leg index and length begins at none)
+const SAIL_RP = {n:0, at:'', pl:null, wait:0, since:0, tgt:null, nT:0};   // (the tries are counted per leg of this route: a new route with the same leg index and length begins at none)
+// (and per point of the route she is bound for, past the ways round put in before it: each way round that is found puts points in and
+// begins the leg's count again, so one that leads back onto the same ground could go round for good. Eight ways round to one point at most)
+const SAIL_RPMAX = 8;
+const SAIL_NONE = ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
 // a way round being found while the time away is played (ui/08-actions.js playMinutes): the minutes wait for it, as they wait for the
 // map, so a boat that meets shallow water with the game closed goes round and on instead of lying still for the rest of the time away
 // (tilbakemelding #97); a search that never answers holds them 20 s at most
@@ -868,9 +872,14 @@ function sailReplan(pl, b, gp){
   if (d > 0.03){ const f = (d - 0.025) / d, q = {x:b.pos.x + (gp.x - b.pos.x) * f, y:b.pos.y + (gp.y - b.pos.y) * f}; if (!groundCheck(b.pos, q)) b.pos = q; }
   b.v = 0;
   const key = pl.idx + '|' + pl.wps.length; if (SAIL_RP.at !== key || SAIL_RP.pl !== pl){ SAIL_RP.at = key; SAIL_RP.pl = pl; SAIL_RP.n = 0; }
-  const none = gp.ice ? iceWhy(gp, true) : ['Grunt vann forut, og Autonav fant ingen trygg vei rundt. Båten ligger stille. Legg en ny rute.', 'Shallow water ahead, and Autonav found no safe way round. The boat lies still. Set a new route.'];
-  if (++SAIL_RP.n > 3){ sailStop(pl, b, none); return true; }
-  pl.replan = {t:S.t};
+  const none = gp.ice ? iceWhy(gp, true) : SAIL_NONE;
+  let j = pl.idx; while (j < pl.wps.length - 1 && pl.wps[j].obs) j++; const tg = pl.wps[j];
+  if (SAIL_RP.tgt !== tg){ SAIL_RP.tgt = tg; SAIL_RP.nT = 0; }
+  // (the way round found on this leg was the leg itself, no point put in: the same search again gives the same. The hands take her on
+  // past the shallows along the line instead, the last way out, 16b-dyn.js dynHandsOn; Træna utstyrsbutikk, 14.11.2026)
+  if (!gp.ice && pl.rpNone && pl.rpNone.tg === tg && S.t - pl.rpNone.t < 20 && typeof dynHandsOn === 'function' && dynHandsOn(pl)){ pl.rpNone = null; return true; }
+  if (++SAIL_RP.n > 3 || ++SAIL_RP.nT > SAIL_RPMAX){ sailStop(pl, b, none); return true; }
+  pl.replan = {t:S.t, w:Date.now()};
   if (gp.ice){ const w = seaIceWords(gp); log(w.no + ' Autonav stopper og finner en vei rundt.', w.en + ' Autonav stops and finds a way round.', 'nav'); }
   else log('Grunt vann forut. Autonav stopper og finner en vei rundt.', 'Shallow water ahead. Autonav stops and finds a way round.', 'nav');
   const from = {x:b.pos.x, y:b.pos.y}, to = {x:w.x, y:w.y}, PL = pl, vid = S.cur;
@@ -884,6 +893,7 @@ function sailReplan(pl, b, gp){
     PL.replan = null;
     if (!res || res.why || !res.wps || !res.wps.length){ sailStop(PL, S.boat, none); return; }
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
+    PL.rpNone = ins.length ? null : {t:S.t, tg};
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
     log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
   })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });

@@ -36,7 +36,7 @@ const SJV = {
   // the near miss (m clear), how long a manoeuvre lasts at most (game hours)
   TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,
   // in a harbour: the way off her for a vessel under way closing within HARB m and HARBT game minutes of the CPA (sjvEval)
-  HARB:600, HARBT:3,   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
+  HARB:600, HARBT:3, harbNo:new Map(),   // (harbNo: a vessel she has waited a whole manoeuvre's time for, not waited for again within as long: id -> H)   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
   // Ø11.2: restricted visibility under 2 nautical miles (km; the rules give no figure, 3 l names fog, snow and heavy rain), and for the
   // vessels not in sight in it (rule 19) the window, the warning's and the manoeuvres' reach and the time to the CPA they start at
   FOG:2 * NM, TWF:10, RWF:5, RNPCF:1.6, ROWNF:1.8, TSF:12,
@@ -491,9 +491,12 @@ function sjvEval(H, list){
     // the way in to the plant; tests/allesteder.py, steg 126. Held till the CPA is past and open, the other lies still, or she is far)
     if (auto && harb && A.cls === 'pow' && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
       const O = SJV.own;
-      if (O){ O.stop = R.rng < 2 * R.lim; if (O.t1 == null && (!O.harb || (R.tcpa <= 0 && R.rng > R.lim) || (n.v || 0) < 1 || R.rng > SJV.HARB * 2 || H - O.t0 > SJV.TMAX)) O.t1 = H; }
-      else if (R.risk && (n.v || 0) >= 2 && R.tcpa > 0 && R.tcpa <= SJV.HARBT && R.rng <= SJV.HARB && R.cpa < R.lim)
-        SJV.own = {id:n0.id, side:1, nx:0, ny:0, tgt:0, rate:1, t0:H, t1:null, why:'harb', slow:true, harb:true, stop:R.rng < 2 * R.lim, v:A.v};
+      // (stopped only where lying still opens the CPA past the limit: where the other is bound for the very water she is in, she keeps her
+      // slow way on through it instead of lying in her way)
+      const stopOk = () => R.rng < 2 * R.lim && colregSit(Object.assign({}, A, {v:0}), n, o).cpa >= R.lim;
+      if (O){ O.stop = stopOk(); if (O.t1 == null && (!O.harb || (R.tcpa <= 0 && R.rng > R.lim) || (n.v || 0) < 1 || R.rng > SJV.HARB * 2 || H - O.t0 > SJV.TMAX)){ O.t1 = H; if (O.harb && H - O.t0 > SJV.TMAX) SJV.harbNo.set(n0.id, H); } }
+      else if (R.risk && (n.v || 0) >= 2 && R.tcpa > 0 && R.tcpa <= SJV.HARBT && R.rng <= SJV.HARB && R.cpa < R.lim && !(SJV.harbNo.has(n0.id) && H - SJV.harbNo.get(n0.id) < SJV.TMAX))
+        SJV.own = {id:n0.id, side:1, nx:0, ny:0, tgt:0, rate:1, t0:H, t1:null, why:'harb', slow:true, harb:true, stop:stopOk(), v:A.v};
     }
     if (auto && !harb && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
       const O = SJV.own;
@@ -607,6 +610,8 @@ function sjvSail(pl, b, left){
   sjvFresh(false);
   if (SJV.stopT != null && SJV.stopT === S.t && SJV.vid === S.cur){ b.v = 0; return true; }   // (a collision in the look just made, Ø11.3: she lies where it left her this minute)
   const O = SJV.own, cap = sjvFogCapV(), v0 = b.v || 0, f = cap < 1e8 && v0 > 0.1 ? Math.min(1, cap / KN_MS / v0) : 1;
+  // (in a harbour, sjvEval: the way off her, 1 m/s, or she lies still this minute)
+  if (O && O.harb && O.t1 == null && S.cur === SJV.vid && sjvLive()){ if (O.stop){ b.v = 0; return true; } const g = Math.min(f, 1 / KN_MS / Math.max(v0, 0.1)); return g < 0.999 ? sjvCreep(pl, b, left * g, v0 * g) : false; }
   if (!O || O.t1 != null || O.harb || S.cur !== SJV.vid || !sjvLive()) return f < 0.999 ? sjvCreep(pl, b, left * f, v0 * f) : false;
   const w = pl.wps[pl.idx]; if (!w) return false; const d = dist(b.pos, w); if (d < 3 * left || (wpStop(w) && d < 0.5)) return f < 0.999 ? sjvCreep(pl, b, left * f, v0 * f) : false;
   const hd0 = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y)), gs = gridScale(b.pos);

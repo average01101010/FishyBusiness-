@@ -20,5 +20,9 @@ export default function (t){
     t.eq(K.sailReplan(B, b, {x:300, y:1300}), true, 'sailReplan: en ny rute holder henne ved grunna');
     t.ok(S.plan === B && !!B.replan, 'sailReplan: en ny rute med samme legg og lengde begynner på null forsøk og leter etter en vei rundt');
     t.eq(SAIL_RP.n, 1, 'sailReplan: telleren for den nye ruta er 1 etter det første forsøket');
+    // ways round that are each found and put points in (the leg's count begins again) but lead back onto the ground: eight to one point
+    const C = route(); S.plan = C; b.status = 'sailing'; let stopped = -1;
+    for (let i = 0; i < 12 && stopped < 0; i++){ C.replan = null; K.sailReplan(C, b, {x:300, y:1300}); if (S.plan !== C){ stopped = i + 1; break; } C.wps.splice(C.idx, 0, {x:300.2, y:1300, port:null, leia:true, obs:true}); }
+    t.eq(stopped, 9, 'sailReplan: veier rundt som hver legger inn punkter, men fører henne tilbake på grunna: det niende forsøket mot samme punkt stopper henne');
   } finally { K.set('leiaRoute', keep); SAIL_RP.n = 0; SAIL_RP.at = ''; SAIL_RP.pl = null; SAIL_RP.wait = 0; }
 }

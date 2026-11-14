@@ -68,7 +68,7 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
       if (!to.id) S.plan.wps[S.plan.wps.length - 1].leia = true;   // (open water: she stops there)
       // no leg over land (the route panel's check)
       let a = from, bad = 0; for (const w of S.plan.wps){ if (!legClear(a, w)) bad++; a = w; } R.overLand = bad;
-      const T0 = S.t, L0 = S.log.length, C0 = (S.clashes || []).length, H0 = DYN.hands || 0, HK0 = {...(DYN.handsK || {})}; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
+      const T0 = S.t, L0 = S.log.length, C0 = SJV.nClash, H0 = DYN.hands || 0, HK0 = {...(DYN.handsK || {})}; if (depart() === false){ R.why = 'depart: ' + (S.msgs && S.msgs.length ? '' : '') + 'refused'; S.plan = null; return R; }
       // the game's loop (ui/08-actions.js): the model each frame, the minute step on the clock; she must lie in port at the end in time
       const limit = 60 + Math.ceil(r.nm / Math.max(3, BOAT.vcruise) * 60 * 1.6); let acc = 0, k = 0, best = 1e9, lastBest = S.t, stuck = null, lh = b.hits && b.hits.length ? b.hits[b.hits.length - 1] : null; const pl0 = S.plan;
       while (S.t - T0 < limit){
@@ -77,12 +77,12 @@ SETUP = r"""([type, hh]) => { TAB.held = true; const b = S.boat; S.tut = 0; S.ca
         // what she struck, and where: every knock the model counts (b.hits), with her position then (the log says only «støt»)
         if (b.hits && b.hits.length && b.hits[b.hits.length - 1] !== lh){ const i0 = lh ? b.hits.indexOf(lh) + 1 : 0; for (const hh of b.hits.slice(i0)){ const l = natLL(b.pos); R.hits = (R.hits || []).concat([[hh.k, hh.kn, +l.lat.toFixed(5), +l.lon.toFixed(5), pl0 ? pl0.idx : -1]]).slice(-8); } lh = b.hits[b.hits.length - 1]; }
         // a collision with a vessel (sjvBlow, S.clashes): where, at what speed, in a harbour or not, and what Autonav's giving way and the warning stood at then
-        if ((S.clashes || []).length > C0 + (R.clash || []).length){ const c = S.clashes[S.clashes.length - 1], l = natLL(b.pos), O = SJV.own, W = SJV.warn, pl2 = S.plan; let left = 0; if (pl2) for (let j = pl2.idx; j < pl2.wps.length; j++) left += dist(j === pl2.idx ? b.pos : pl2.wps[j - 1], pl2.wps[j]);
+        if (SJV.nClash > C0 + (R.clash || []).length){ const c = S.clashes[S.clashes.length - 1], l = natLL(b.pos), O = SJV.own, W = SJV.warn, pl2 = S.plan; let left = 0; if (pl2) for (let j = pl2.idx; j < pl2.wps.length; j++) left += dist(j === pl2.idx ? b.pos : pl2.wps[j - 1], pl2.wps[j]);
           R.clash = (R.clash || []).concat([{name:c.name, kn:c.kn, ll:[+l.lat.toFixed(5), +l.lon.toFixed(5)], harb:inHarbour(b.pos), sit:c.sit, law:c.law, own:O ? [O.why, O.slow, O.t1 != null] : null, warn:W ? [W.sit, W.give, W.cpa, +W.tcpa.toFixed(2)] : null, left:+left.toFixed(2), oth:(() => { try { const n = npcStates(S.t / 60).find(q => String(q.id) === c.id); return n ? [n.type, n.cls, +(n.v || 0).toFixed(1), n.st || null, Math.round(dist(n.p, b.pos) * 1000)] : null; } catch (e){ return String(e).slice(0, 40); } })()}]); }
-        // (the page's own time between: every 400 steps, and while a way round is being looked for (sailReplan) 20 ms a step, about the
-        // game's pace at its own speed, where a frame gives the search its slice; before 14.11.2026 the search had a slice every 100 game
-        // seconds here and did not answer in the minutes she waited, Hestnes)
-        if (S.plan && S.plan.replan) await new Promise(r2 => setTimeout(r2, 20));
+        // (the page's own time between: every 400 steps, and while a way round is being looked for (sailReplan) 40 ms a step of a quarter
+        // of a game second, the game's own pace (a game second is a sixth of a real one), where a frame gives the search its slice; before
+        // 14.11.2026 the search had a slice every 100 game seconds here and did not answer in the minutes she waited, Hestnes)
+        if (S.plan && S.plan.replan) await new Promise(r2 => setTimeout(r2, 40));
         else if (++k % 400 === 0) await new Promise(r2 => setTimeout(r2, 0));
         if (b.status === 'aground'){ stuck = 'aground'; break; }
         if (b.status === 'port' && !S.plan) break;

@@ -77,7 +77,7 @@
   // The shop's yard (anchors.apron, from the deck's back to 27.5 m in) is levelled 0.1 m under the deck and goes back within 12 m. The
   // map's houses on their ground go (onSite, in bldOnUnit) and so do the scattered trees. Drawn in full within 900 m, simply to 4 km.
   const SHOP_APRON = [-19, 19, 9.6, 27.5];
-  let SITES = null, SITEK = '';
+  let SITES = null, SITEK = '', SITENAN = 0, SITENANK = 0;   // (SITENAN: when a site's quay out, siteOut, was not known yet; SITENANK: the tries)
   // the rorbuer near the boat, looked up again when she has moved 500 m or one more has been found (at most one new one is worked out
   // in a frame: rorbuSoon)
   const RBNEAR = {x:NaN, z:NaN, ver:-1, l:[], key:''};
@@ -89,8 +89,10 @@
   }
   function sitesNow(){
     const n = typeof naustSite === 'function' ? naustSite() : null, key = (n ? n.o.join(',') + (siteReady(n.o) ? '' : 'w') : '-') + '|' + rorbuNow() + RBNEAR.l.map(R => siteReady(R.site.o) ? '' : 'w').join('') + '|' + S.boat.type;
-    if (SITES && SITEK === key) return SITES;
-    SITEK = key; SITES = [];
+    // (a site's quay out not known yet, the fine coast not in: made again every two seconds, twenty times at most)
+    if (SITES && SITEK === key && !(SITENAN && SITENANK < 20 && performance.now() - SITENAN > 2000)) return SITES;
+    if (SITEK !== key) SITENANK = 0; else if (SITENAN) SITENANK++;
+    SITEK = key; SITES = []; SITENAN = 0;
     const sh = shopSite(); if (sh && glbHas('shop')) SITES.push({k:'shop', o:sh.o, u:sh.u, n:[-sh.u[1], sh.u[0]], clear:[[SHOP_APRON[0], SHOP_APRON[2] - 2, SHOP_APRON[1], SHOP_APRON[3]]]});
     // the shop by the naust along the coast (07c-naust.js shopNear): its yard levelled at the ground's own height there (not the deck's),
     // and the model lifted to it; the ground's height is read before the site is in SITES (terrRaw goes through siteTerr)
@@ -104,7 +106,7 @@
     // 13.11.2026; a boat up to 15 m lies there whatever she draws)
     // (and out as far as the quay is built to her, siteOut, as the pocket is: the naust on Kvitsøy, 14.11.2026; not known till the fine
     // coast is in, and then the sites are made again)
-    const V = VESSELS[S.boat.type] || {}, pit = (a, o) => { const q = siteOut(o); if (q !== q) SITEK = ''; return {d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w) + (q === q ? q : 0), a}; };
+    const V = VESSELS[S.boat.type] || {}, pit = (a, o) => { const q = siteOut(o); if (q !== q) SITENAN = performance.now(); return {d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w) + (q === q ? q : 0), a}; };
     if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
       SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16, n), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the

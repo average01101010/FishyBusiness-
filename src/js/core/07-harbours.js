@@ -102,13 +102,15 @@ function sitePockE(s, x, z){
   return Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w - (out === out ? out : 0));
 }
 // how far (m) the quay is built out from a site's face to the water a boat up to 15 m lies in (quayOut with SITE_MAXLEN; QOUT.max when
-// the water is further off), the same for every boat that lies there, so the berth, the pocket and the 3D pit agree. NaN while the fine
-// coast round it is not in (not kept then)
-const SITE_OUT = new Map();
+// the water is further off). At the naust it is the same for every boat that lies there (naustFace), so the berth, the pocket and the 3D
+// pit agree; a rorbu's berth works its own out per boat as before (rorbuFace), inside the pocket this reaches. NaN while the fine coast
+// round it is not in (not kept then; asked again after a second, SITE_OUTN)
+const SITE_OUT = new Map(), SITE_OUTN = new Map();
 function siteOut(s){
-  if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) + ',' + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
-  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); } catch (e){ return NaN; }   // (no map in yet)
-  if (q !== q) return NaN; if (q < 0) q = QOUT.max;
+  if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) * 4e7 + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
+  const t = SITE_OUTN.get(k); if (t !== undefined && Date.now() - t < 1000) return NaN;
+  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); } catch (e){ q = NaN; }   // (no map in yet)
+  if (q !== q){ if (SITE_OUTN.size > 500) SITE_OUTN.clear(); SITE_OUTN.set(k, Date.now()); return NaN; } SITE_OUTN.delete(k); if (q < 0) q = QOUT.max;
   if (SITE_OUT.size > 500) SITE_OUT.clear(); SITE_OUT.set(k, q); return q;
 }
 function siteDredge(p, d){

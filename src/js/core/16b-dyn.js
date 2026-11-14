@@ -606,6 +606,17 @@ function dynLineBuild(pl, dep){
   if (dep) for (const c of corners){ if (c.s <= sOut) continue; if (c.s - sOut > 3 * Lb || c.th < Math.PI / 3) break; sOut = c.s; }
   return {plan:pl, n:pl.wps.length, sig:dynSig(pl), chk:0, P, L, end:L[L.length - 1], wpAt, stops, corners, iEnd, back, turnL:Math.max(10, Lb * 1.5), hd0, sOut, s:0, gchk:0, ghit:null};
 }
+// the hands take her on along the line past the shallows it runs into (500 m at most) and three of her lengths: south of Egersund the line
+// ran on over water too shallow for her at that tide for 70 m, and the ground ahead stopped her again 3 m past where the hands left her.
+// Counted as held
+function dynHandsPast(T, pl, L){
+  const st = T.stops.find(q => q.i >= pl.idx);
+  let sG = T.s; try { let clr = 0; for (let s = T.s; s < T.s + 500 && clr < 3 && s < T.end - 10; s += 10){ const p0 = dynLineAt(T, s), p1 = dynLineAt(T, s + 10); if (groundCheck({x:p0[0] / 1000, y:p0[1] / 1000}, {x:p1[0] / 1000, y:p1[1] / 1000})){ sG = s + 10; clr = 0; } else clr++; } } catch (e){}
+  T.assist = Math.min(T.end - 1, (st ? st.s : T.end) - 0.5, Math.max(T.s + Math.max(60, 3 * L), sG + 20)); T.prog = {s:T.s, t:S.t}; dynHands(T, 'held');
+}
+// the same from sailReplan (05-vessels.js): the way round found before on this leg was the leg itself, no point put in, so a search again
+// would give the same (Træna utstyrsbutikk, 14.11.2026). True when the model has her and the hands took her
+function dynHandsOn(pl){ const T = DYN.line; if (!dynLive() || !T || T.plan !== pl) return false; dynHandsPast(T, pl, BOAT.len || 10); return true; }
 // the hands start (T.assist set ahead of her): counted by kind for the tests (knock, stuck, held, tight)
 function dynHands(T, k){ if (!(T.assist > T.s)) return; DYN.hands = (DYN.hands || 0) + 1; DYN.handsK = DYN.handsK || {}; DYN.handsK[k] = (DYN.handsK[k] || 0) + 1; }
 // a sharp corner (over 60 degrees) with a mark, a pile or a bridge's pier on the outside of the turn, where she swings out by about her
@@ -669,7 +680,7 @@ function dynGroundAhead(T, s, look){
 // turns her course away by the angle that clears it there; on both sides they weigh against each other (a narrow lead between two
 // marks keeps her in the middle). {dh (rad, + to starboard), n} or null
 function dynAvoid(d, P){
-  const idx = obsIndex(); if (!idx.size) return null;
+  const idx = obsIndex();
   const C = HIND.C, sn = Math.sin(d.psi), c = Math.cos(d.psi), look = Math.max(2 * P.L, P.L + Math.max(0, d.u) * 12), need = P.B / 2 + 4;
   const i0 = Math.floor((d.X - look) / C), i1 = Math.floor((d.X + look) / C), j0 = Math.floor((d.Y - look) / C), j1 = Math.floor((d.Y + look) / C), seen = new Set();
   let dh = 0, n = 0;
@@ -754,9 +765,10 @@ function dynAuto(d, dtG){
       if (stopW){ if (arrive(stopW) || S.plan !== pl) return; T.s = dynLineProj(T, d.X, d.Y, T.s); continue; }
       // (a way round already being looked for: she lies here till it answers. Before, the ground ahead was seen again each game second
       // while she lay stopped, each sight asked again and counted a try, and the fourth stopped her, «fant ingen trygg vei rundt», before
-      // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py). Three game minutes at most: a search that
-      // does not answer by then is counted as before
-      if (T.ghit && pl.replan && S.t - pl.replan.t < 3){ T.ghit = null; return; }
+      // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py). Half a minute of real time at most (as
+      // sailWaiting; three game minutes at the game's own pace): a search that has not answered by then stops her, «fant ingen trygg vei
+      // rundt», and no second one is started beside it
+      if (T.ghit && pl.replan){ T.ghit = null; if (Date.now() - (pl.replan.w || 0) < 30000) return; pl.replan = null; sailStop(pl, b, SAIL_NONE); return; }
       if (T.ghit){ const gp = T.ghit.gp; T.ghit = null; if (!sailReplan(pl, b, gp)) runAground(gp); return; }
       if (T.s >= T.end - 1){ const w = pl.wps[pl.wps.length - 1];   // the end of the route (or «Stopp»): exactly on the point; arrive says so and clears the plan
         if (Math.hypot(w.x * 1000 - d.X, w.y * 1000 - d.Y) < 2){ d.X = w.x * 1000; d.Y = w.y * 1000; dynWrite(b, d); }
@@ -867,11 +879,7 @@ function dynAuto(d, dtG){
     if (fast || !T.heldAt || Math.hypot(X0 - T.heldAt[0], Y0 - T.heldAt[1]) > 3){ T.held = 0; T.heldAt = fast ? null : [X0, Y0]; } if (!fast) T.held += dtG;
     // (held so again within 20 game minutes and 300 m of a way round on this route: the hands take her on along the line, the last way out, Jonas
     // 14.11.2026; south of Egersund the way round led her back onto the same shallows, and the next search found none, so she stopped)
-    if (!fast && !gp.ice && T.held > 30 && pl.rp && S.t - pl.rp.t < 20 && Math.hypot(X0 - pl.rp.X, Y0 - pl.rp.Y) < 300 && !pl.replan){ T.held = 0; const st = T.stops.find(q => q.i >= pl.idx);
-      // (on past the shallows along the line, 500 m at most: south of Egersund the line ran on over water too shallow for her at that
-      // tide for 70 m, and the ground ahead stopped her again 3 m past where the hands left her)
-      let sG = T.s; try { let clr = 0; for (let s = T.s; s < T.s + 500 && clr < 3 && s < T.end - 10; s += 10){ const p0 = dynLineAt(T, s), p1 = dynLineAt(T, s + 10); if (groundCheck({x:p0[0] / 1000, y:p0[1] / 1000}, {x:p1[0] / 1000, y:p1[1] / 1000})){ sG = s + 10; clr = 0; } else clr++; } } catch (e){}
-      T.assist = Math.min(T.end - 1, (st ? st.s : T.end) - 0.5, Math.max(T.s + Math.max(60, 3 * L), sG + 20)); T.prog = {s:T.s, t:S.t}; dynHands(T, 'held'); dynWrite(b, d); return; }
+    if (!fast && !gp.ice && T.held > 30 && pl.rp && S.t - pl.rp.t < 20 && Math.hypot(X0 - pl.rp.X, Y0 - pl.rp.Y) < 300 && !pl.replan){ T.held = 0; dynHandsPast(T, pl, L); dynWrite(b, d); return; }
     if ((fast || gp.ice || T.held > 30) && !pl.replan){ pl.rp = {t:S.t, X:X0, Y:Y0}; T.held = 0; d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
   else if (T.heldAt){ if (Math.hypot(d.X - T.heldAt[0], d.Y - T.heldAt[1]) > 3){ T.heldAt = null; T.held = 0; } else T.held = (T.held || 0) + dtG; }
   DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / gridScale(a) / NM;
