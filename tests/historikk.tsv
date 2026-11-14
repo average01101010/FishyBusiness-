@@ -4034,3 +4034,5 @@
 2026-11-14 02:52	ccr-fn1-jobbstripe	643b5b34+	boottest	OK	31	lite	samtidig	
 2026-11-14 02:56	ccr-fn1-jobbstripe	643b5b34+	docktest	OK	62	lite	samtidig	
 2026-11-14 02:56	ccr-fn1-jobbstripe	643b5b34+	boottest	OK	31	lite	samtidig	
+2026-11-14 02:52	ccr-013bxxif-fb7dekk	f9870dd+	boottest	OK	25	lite	samtidig	
+2026-11-14 02:52	ccr-013bxxif-fb7dekk	f9870dd+	looktest	OK	12	lite	samtidig	
