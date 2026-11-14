@@ -619,7 +619,12 @@ def deckhouse(A, G, fine=True):
         for sg in (1, -1):
             for x in DPORTS: cuts.append(plate_cutter('dc%d%.1f' % (sg, x), (x, sg * DHY, zp), (1, 0, 0), (0, 0, 1), circle(DPORT_R, 20), 0.3))
         for y in FPORTS: cuts.append(plate_cutter('dcf%.1f' % y, (DH1, y, zp), (0, 1, 0), (0, 0, 1), circle(DPORT_R, 20), 0.3))
-        cut(shell, cuts); shade(shell, 5)
+        cut(shell, cuts)
+        # the fans of long triangles the cut leaves round each porthole, split so the shade baked under the boat deck's edge stays
+        # there and does not run down them to the rim as dark streaks (tilbakemelding #9 fra testutgaven, as #5 on the hurtigsjark)
+        bpyutil.ease_cut_fans(shell, [((x, sg * DHY, zp), (0, 1, 0), DPORT_R + 0.01, 0.31) for sg in (1, -1) for x in DPORTS] +
+                              [((DH1, y, zp), (1, 0, 0), DPORT_R + 0.01, 0.31) for y in FPORTS])
+        shade(shell, 5)
         for sg in (1, -1):
             for x in DPORTS:
                 G.poly([(x + p, sg * (DHY - 0.03), zp + q) for p, q in circle(DPORT_R, 20)], C['glass'], (0, sg, 0)); A.poly([(x + p, sg * (DHY - 0.07), zp + q) for p, q in circle(DPORT_R, 20)], C['cabin'], (0, sg, 0))
