@@ -26,6 +26,17 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - **Rorbuene uten vei ut:** `tools/rorbu/rorbuvei.py` flytter punktet til der kystbåten på 14,99 m ligger trygt og Autonav finner vei ut (ringer ut til 4,5 km, 1,5 km fra andre steder, 0,8 km der ingenting annet holder).
 - **Autopiloten** (`core/16b-dyn.js`): hendene tar henne rundt skarpe svinger like etter havnepunktet (Vannvåg), og `dynAvoid` styrer unna merker, pæler og pilarer i svingene. Bøvågen og Napp gikk rene etterpå; Vannvåg og Stamsund traff fortsatt.
 - `autonavtest` 9c skrevet om (veien langs ruta, ikke luftlinja).
+- **Rorbuene** (andre økt, 14.11.2026): 37 flyttet med `rorbuvei.py` (9b6ebb65); uløst der: Austgulen (ingen plass innen 4,5 km) og Langvasseid (søket hang).
+
+## Gjort 14.11.2026 (tredje del, arbeidsrutinen, grenen `ccr-as1-alle`, PR #87)
+
+- **Omveien under en bru** passer båtens svingradius (Karmsundbrua ved Kopervik: S-sving 24 m til siden over 25 m, båten rygget og gikk fram for godt).
+- **Omveien rundt et merke mellom to tette rutepunkter** (Bokn, Vannvåg, Mathopen, Revsnes): fra punktet før til punktet etter når sikksakken ikke kan svinges gjennom (`obsTurnable`, `obsRoute`).
+- **Back and fill** når hun snur fra land, og **ny vei rundt** når hun holdes sakte mot grunna (sundet sør for Egersund).
+- **Hendene som siste utvei** (Jonas 14.11.2026: «båten kan få lov til å bryte fysikkens regler og lover i enkelte situasjoner … men jeg ønsker jo helst at vi klarer å løse problemet på en annen måte»): står hun fast, holdes hun mot grunna igjen etter en vei rundt, eller kommer hun til et hjørne over 60 grader med et merke tett på leggene, fører hendene henne langs linja (`T.assist`, `dynTight`). Testen teller hvor ofte.
+- Målt på de 13 vanskeligste havnene fra kjøringene (Kopervik, Tananger, Hellvik, Brettesnes, Vannvåg, Stamsund, Sund i Lofoten, Grimstad, Bokn, Arendal, Mathopen, Revsnes, Norheimsund): før 10–12 røde, etter alle fram, hendene 9 ganger på 7 av dem.
+- Fylkene for de 15 flyttede handelsstedene slått opp på nytt (`fylke.py`; enhetstesten `regions` var rød).
+- Funnet underveis: resultatet ved et sted avhenger av klokka (tidevann og trafikk), og testen lar klokka gå videre fra sted til sted. Et sted som er grønt i én kjøring, kan være rødt i neste (Kopervik, Tananger, Sund). Hele kysten må derfor være grønn i én og samme kjøring.
 
 ## Funnene (hele kysten 13.11.2026 med testrettingene, før flyttingene og autopilotrettingene; `tests/out/allesteder.json`)
 
