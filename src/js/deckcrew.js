@@ -1204,9 +1204,11 @@ const HOLDT = {
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
   // what is left between it and his clothes
-  // squat: how far down the hips come for a box at the deck (the share of workLow's dip), lean: rad he leans back carrying it,
+  // squat: how far down the hips come for a box at the deck (the share of workLow's dip; 1.1: the hips half a metre down, the back
+  // straight: with 0.55 the back went 41 degrees over the box and the box 7 cm into him), lean: rad he leans back carrying it,
+  // stow: where the hands are when it is let down into the hatch [m ahead, over the deck], from where he carried it,
   // most: m it is moved out ahead of him at the most
-  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:0.55, lean:0.07, most:0.14},
+  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:1.1, lean:0.07, most:0.14, stow:[0.66, 0.5]},
   // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m). The shovel is stiff: len from
   // the D grip in the upper hand to the blade's socket (the model's metre drawn at this), low the lower hand's place down it; hip where
   // the upper hand would be, from his hips [ahead, up, to his right] (the shaft goes from the blade towards it), and turn the share of

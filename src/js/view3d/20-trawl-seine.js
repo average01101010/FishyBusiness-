@@ -154,10 +154,13 @@
       const go = CREW3D.walkOff(a);
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x + go[0], a.y, a.z + go[1]], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:seaLook(a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0), a.mode === 'helm')};
-      const ev = a.mode === 'at' ? dkFor(a.id, lp, a.task) : null;   // a fish to bleed or to gaff in at his place
+      // (the tests: the last event of a kind played again by the one whose work it is, at the moment asked for, SJOBEIN.test.ev and .t)
+      const evT = SJT && SJT.ev && DKLAST[SJT.ev] && a.mode === 'at' && (DKPLAY[a.task] || [])[0] === SJT.ev ? DKLAST[SJT.ev] : null;
+      const ev = evT || (a.mode === 'at' ? dkFor(a.id, lp, a.task) : null);   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
       const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h + (a.sqA || 0) * Math.PI / 2), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
+      if (evT && SJT.t != null) st.ev.k = SJT.t;
       const F0 = [Math.sin(a.h), -Math.cos(a.h)], R0 = [Math.cos(a.h), Math.sin(a.h)], sg = a.x >= 0 ? 1 : -1;
       const g0 = CREW3D.holds(a), ef = a.ef == null ? 1 : a.ef, ta = SJT && SJT.T != null ? SJT.T : a.tk != null ? a.tk : t;   // (the place still held; each one's own beat, deckcrew.js a.tk)
       st.age = a.c ? a.c.age : 45; st.deck = true; st.bp = lp; st.dn = DN; st.sea = b.status === 'port' && !SJT ? null : seaSet(CREW3D, a, BMrel); if (SJT && SJT.task && a.mode === 'at' && !ev) st.task = SJT.task; st.rail = a.mode === 'at' && g0 ? g0.rail || null : null; if (a.task === 'smoke' && b.status === 'sailing') st.lean = false;

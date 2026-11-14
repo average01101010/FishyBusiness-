@@ -83,6 +83,8 @@
   // where a man is in his work's round: the clock and his own number (each a little after the one before him). The tests ask for a
   // moment itself (SJOBEIN.test.t: the sip at its top, the broom at its end), so one picture shows it; tests/folk2poses.py MOMENT
   const tOf = (T, idx) => SJOBEIN.test && SJOBEIN.test.t != null ? SJOBEIN.test.t : T + idx * 1.7;
+  // (the seconds he has been lowering the box, st.s; the tests' moment when they ask for the pose)
+  const stowS = st => st.s || (SJOBEIN.test && SJOBEIN.test.task === 'stow' && SJOBEIN.test.t) || 0;
   function workLow(st, T, idx){
     const k = st.task, e = st.ev, c = e ? e.k : 99;
     if (st.seated) return [0, 0.2, 1];   // (the packed lunch on an upturned tub, OB14)
@@ -90,7 +92,7 @@
     // (the new people lift with the knees, Jonas 14.11.2026 with a picture of a box lifted from the floor: the hips come down for the
     // box low and up with it; lowering it into the hold the same; carrying it he leans a little back against its weight)
     if (LEMMER.on && k === 'stack') return [HOLDT.box.squat * (1 - (Math.sin((tOf(T, idx)) * 1.4) + 1) / 2), 0.1];
-    if (LEMMER.on && k === 'stow'){ const u = Math.min(1, Math.max(0, (st.s || 0) / 1.6)); return [HOLDT.box.squat * u * u * (3 - 2 * u), 0.1]; }
+    if (LEMMER.on && k === 'stow'){ const u = Math.min(1, Math.max(0, stowS(st) / 1.6)); return [HOLDT.box.squat * u * u * (3 - 2 * u), 0.1]; }
     if (LEMMER.on && k === 'carry' && st.crate !== false) return [0, -HOLDT.box.lean];
     if (k === 'hose' || k === 'coil' || k === 'stack' || k === 'gut' || k === 'haul') return [0, 0.12];
     if (k === 'ice') return [0, 0.22];
@@ -359,7 +361,8 @@
           hands = [[cr[0] + R[0] * 0.13 + F[0] * k, cr[1] + 0.06 + 0.2 * (1 - u), cr[2] + R[1] * 0.13 + F[1] * k], [cr[0] - R[0] * 0.13, cr[1] + 0.06 + 0.2 * (1 - u), cr[2] - R[1] * 0.13]]; break; }
         const p = shovelPath(st, eye, T, idx, y); st.blade = W0(p.a, p.up, p.r); st.tip = p.tip; st.full = p.full; st.c = p.c; hands = shovelHands(p.r); break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
-      case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.34 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
+      case 'stow': { const u = clamp(stowS(st) / 1.6, 0, 1); if (LEMMER.on){ const B = HOLDT.box, e = ease(u), a = 0.36 + (B.stow[0] - 0.36) * e, hy = 1.02 + (B.stow[1] - 1.02) * e; hands = [W(a, hy, B.grip[0]), W(a, hy, -B.grip[0])]; break; }   /* (the new people: from where he carried it, against his belly, down to the hatch) */
+        hands = [W(0.42, 0.95 - 0.5 * ease(u), 0.22), W(0.42, 0.95 - 0.5 * ease(u), -0.22)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
       // bucket at his right, on the hook, and the baited hook laid down in the tub; stripping takes the old bait off into the bucket and
       // now and then throws the bucket's bits over the rail (st.Tu the tub, st.Bk the bucket, st.Of over the rail)
@@ -559,7 +562,7 @@
           { const l = toH(B), Lg = H.blade.legs, v = (l[0] / Lg[0]) ** 2 + (l[2] / Lg[1]) ** 2; if (l[1] < 0.05 && l[0] > -0.1 && v < 1){ const k = 1 / Math.sqrt(Math.max(v, 0.04)) - 1, da = l[0] * k, ds = l[2] * k; B[0] += HA[0] * da + HR[0] * ds; B[1] += HA[1] * da + HR[1] * ds; B[2] += HA[2] * da + HR[2] * ds; } }
           // (the stiff shovel is turned about the blade: where its upper hand would be is moved out until the fists and the shaft are clear)
           const P0 = st.shP.slice(); let hs = shovelAt(B, P0);
-          for (let n = 0; n < 4; n++){ const G = hs[1], u = nrm3(sub3(B, G)); let d = Math.max(lack(G, H.FIST, 0.02), lack(hs[0], H.FIST, 0.02)), any = d > 0;
+          for (let n = 0; n < 7; n++){ const G = hs[1], u = nrm3(sub3(B, G)); let d = Math.max(lack(G, H.FIST, 0.02), lack(hs[0], H.FIST, 0.02)), any = d > 0;
             for (const s of S.at) d = Math.max(d, lack(add3(G, mul3(u, s)), S.r, 0.01)); if (d > 0){ any = true; mv(P0, d); }
             // (and off his thighs: the shaft is pushed the way out of the leg, by the lever from the blade)
             for (const s of [S.low, S.len * 0.5, S.len * 0.68, S.len * 0.85]){ const o = legOut(add3(G, mul3(u, s)), s === S.low ? H.FIST : S.r); if (!o) continue; any = true; const k = o[0] * Math.min(4, S.len / (S.len - s)); P0[0] += o[1][0] * k; P0[1] += o[1][1] * k; P0[2] += o[1][2] * k; }
@@ -737,7 +740,7 @@
         if (n > 0) drawN(PM.icebit, chain(CM, M4.T(0, 0.1 + Math.floor((n - 1) / 3) * 0.06, 0), M4.S(14, 1.2, 7))); }
       if (st.blade) drawShovel(hands[1], st.blade, st.tip, st.full, st.c, st.Cr || W0(0.15, 0, 0.62), st.crTub ? st.crTop : 0.3); }
     // the full box in his arms on the way to the hatch, and lowered into the hold there
-    if ((st.task === 'carry' && st.crate) || st.task === 'stow'){ const s2 = st.s || 0, down = st.task === 'stow' ? clamp((s2 - 1.3) / 0.8, 0, 1) : 0;
+    if ((st.task === 'carry' && st.crate) || st.task === 'stow'){ const s2 = stowS(st), down = st.task === 'stow' ? clamp((s2 - 1.3) / 0.8, 0, 1) : 0;
       if (s2 < 2.15 || st.task === 'carry'){ const bg = HOLDT.box.grip, bo = LEMMER.on ? [-F[0] * bg[1], bg[2], -F[1] * bg[1]] : [0, -0.12, 0], c = [(hands[0][0] + hands[1][0]) / 2 + bo[0], (hands[0][1] + hands[1][1]) / 2 + bo[1] - down * 0.8, (hands[0][2] + hands[1][2]) / 2 + bo[2]], CM = chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + (LEMMER.on ? 0 : Math.PI / 2)));
         drawN(PM.fbox, CM); for (let i = 0; i < (fishy ? 9 : 0); i++) drawN(fishOf(st.csp ? st.csp(i) : 'torsk'), chain(CM, M4.T(-0.24 + (i % 3) * 0.24, 0.07 + Math.floor(i / 3) * 0.06, 0), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0)), M4.RZ(Math.PI / 2), M4.S(0.4)));
         drawN(PM.icebit, chain(CM, M4.T(0, 0.22, 0), M4.S(14, 1.2, 7))); } }
