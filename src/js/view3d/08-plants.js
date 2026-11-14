@@ -101,7 +101,7 @@
     if (k === 'ice') return [0, 0.22];
     if (k === 'lean') return [0, 0.1];
     if (k === 'pick' || k === 'tend') return [0.05, 0.22];
-    if (k === 'bleed' && e && e.deck){ const u = c < 0.25 ? c / 0.25 : c < 0.6 ? 1 : c < 1.0 ? 1 - (c - 0.6) / 0.4 : 0; return [0.62 * u, 0.12 + 0.42 * u]; }   // down to the fish on the deck and up with it
+    if (k === 'bleed' && e && e.deck){ const u = c < 0.25 ? c / 0.25 : c < 0.6 ? 1 : c < 1.0 ? 1 - (c - 0.6) / 0.4 : 0; return [(LEMMER.on ? HOLDT.bleed.dip : 0.62) * u, 0.12 + 0.42 * u]; }   // down to the fish on the deck and up with it
     if (k === 'bleedst') return [0, 0.14];
     if (k === 'gutw'){ const s = (tOf(T, idx)) % 5.6, u = s < 0.9 ? Math.sin(s / 0.9 * Math.PI / 2) : s < 1.4 ? 1 - (s - 0.9) / 0.5 : 0; return [0.12 * u, 0.14 + 0.24 * u]; }
     if (k === 'pack'){ const L = st.lay; if (L != null && L >= 0 && L < 1.5){ const u = Math.sin(Math.min(1, L / 1.5) * Math.PI); return [0.4 * u, 0.22 + 0.3 * u]; } return [0, 0.22]; }
@@ -148,6 +148,8 @@
     const ez = u => u * u * (3 - 2 * u);
     if (st.task === 'hose' && st.deck && !st.walk) return 0.4 * Math.sin(T * 0.8 + idx);   // (the jet over the deck from side to side, deckcrew.js WASH_SW)
     if (st.task === 'gutw' && st.Ub){ const s = (tOf(T, idx)) % 5.6, w = s < 0.4 ? ez(s / 0.4) : s < 0.95 ? 1 : s < 1.4 ? 1 - ez((s - 0.95) / 0.45) : 0; return w ? to(st.Ub) * w : 0; }
+    // (the new people, steg 125: and to the fish on the deck first, while he goes down for it: it lay up to 0.9 m off to his side, and the hand was 27 cm short)
+    if (LEMMER.on && st.task === 'bleed' && st.ev && st.ev.deck && st.ev.k < 1.0){ const c = st.ev.k, w = c < 0.25 ? ez(c / 0.25) : c < 0.6 ? 1 : 1 - ez((c - 0.6) / 0.4); return to(st.ev.R) * w; }
     if (st.task === 'bleed' && st.ev && st.ev.deck){ const c = st.ev.k, w = c < 1.7 ? 0 : c < 2.05 ? ez((c - 1.7) / 0.35) : c < 2.5 ? 1 : c < 2.9 ? 1 - ez((c - 2.5) / 0.4) : 0; return w ? to(st.ev.U) * w : 0; }
     if (st.task === 'pack' && st.Cr && st.lay != null && st.lay >= 0 && st.lay < 1.5) return to(st.Cr) * 0.6 * Math.sin(st.lay / 1.5 * Math.PI);
     // (the new people: with the shovel he turns on his feet after the blade, so the stiff shovel is before him from the ice to the box)
@@ -354,7 +356,9 @@
         hands = [g, [g[0] - n[0] * 0.38, g[1] - n[1] * 0.38, g[2] - n[2] * 0.38]]; break; }
       // bleeding a jigged fish (the event st.ev): he takes it off at the rail, lifts it by the head, cuts the throat with the knife (the
       // blood runs), swings and tosses it into the bleeding tub, and goes back to the jig
-      case 'bleed': { const e = st.ev, c = e ? e.k : 99, jl = W(0.3, 0.9, -0.16), jr = W(0.34, 0.95, 0.16), chest = W(0.42, 1.08, -0.04), kUp = W(0.38, 1.2, 0.2), kDn = W(0.48, 1.0, -0.12);
+      // (the new people, steg 125: his own points go with his hips while he is down at the fish on the deck and on his way up, bx ahead and by
+      // down; written from his feet they were in his belly while he rose, and the hand that waits was pushed 8 cm out to his side)
+      case 'bleed': { const e = st.ev, c = e ? e.k : 99, bx = LEMMER.on ? bend0 * 0.4 : 0, by = LEMMER.on ? dy : 0, jl = W(0.3 + bx, 0.9 + by, -0.16), dk = LEMMER.on ? clamp(dip / HOLDT.bleed.dip, 0, 1) : 0, jr = dk ? lerp3(W(0.34, 0.95, 0.16), W(...HOLDT.bleed.knee), dk) : W(0.34, 0.95, 0.16) /* (the hand that waits is on his knee while he is down) */, chest = W(0.42 + bx, 1.08 + by, -0.04), kUp = W(0.38 + bx, 1.2 + by, 0.2), kDn = W(0.48 + bx, 1.0 + by, -0.12);
         let L = jl, Rh = jr; st.held = null; st.knife = false; st.toss = null; st.blood = -1;
         if (e && c < DKDUR.bleed){ const R = [e.R[0], e.R[1] + 0.1, e.R[2]], U = [e.U[0], e.U[1] + 0.3, e.U[2]], sw = [chest[0] + (U[0] - chest[0]) * 0.35, chest[1] + 0.15, chest[2] + (U[2] - chest[2]) * 0.35];
           if (c < 0.5){ L = lerp3(jl, R, ease(c / 0.5)); if (c > 0.3) st.held = L; }
