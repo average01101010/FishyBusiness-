@@ -1220,7 +1220,7 @@ const HOLDT = {
   // deck, right] the tip gets over the rail; lift: the tip over the rail on its way in [ahead, over where the fish comes aboard,
   // right]; turn: rad he turns on his feet towards where the fish is let go, at the most; out: m from where he stands the tip is
   // at the least there; dip: how far down on the knees the reach over the rail takes him (workLow)
-  gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, home:[0.35, 0.2, 0.06], chest:[0.2, 1.3, 0.1], reach:1.25, lift:[1.15, 0.45, 0.08], turn:1.9, out:0.5, dip:0.25},
+  gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, home:[0.385, 0.2, 0.06], chest:[0.2, 1.3, 0.1], reach:1.25, lift:[1.25, 0.45, 0.08], turn:1.9, out:0.5, dip:0.25},
   cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
   broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
   // the work he keeps his eyes on: he does not look up at the camera from it
