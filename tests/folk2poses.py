@@ -6,7 +6,7 @@ import asyncio, os, sys
 from playwright.async_api import async_playwright
 from _env import boot, GAME, OUT
 from lemmer import SET, BOATS, frames
-POSES = [('coffee', 103.1), ('coffee', 104.9), ('binoc', 103.1), ('carry', 103.1), ('stack', 103.6), ('pack', 103.1), ('ice', 103.9), ('gaff', 103.1), ('smoke', 101.5), ('lunch', 104.1), ('cold', 106.6), ('phone', 103.1)]
+POSES = [('coffee', 103.1), ('coffee', 104.9), ('binoc', 103.1), ('carry', 103.1), ('stack', 103.6), ('pack', 103.1), ('gaff', 103.1), ('smoke', 101.5), ('lunch', 104.1), ('cold', 106.6)]
 FMT = {'liggende': (1280, 800), 'staaende': (800, 1280)}
 async def main():
     fmts = [a for a in sys.argv[1:] if a in FMT] or ['liggende']; want = [a for a in sys.argv[1:] if a not in FMT]
@@ -16,7 +16,7 @@ async def main():
             w, h = FMT[fmt]; pg = await br.new_page(viewport={'width': w, 'height': h}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg, GAME + ',folk2'); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(3000)
             t = (await pg.evaluate(BOATS))[1]
-            await pg.evaluate(SET, [t, 'arbeid', 1, -0.9, 0.3, 3.6 * (1.3 if fmt == 'staaende' else 1)]); await frames(pg, t, 2)
+            await pg.evaluate(SET, [t, 'arbeid', 1, -0.9, 0.58, 6.6 * (1.35 if fmt == 'staaende' else 1)]); await frames(pg, t, 2)
             try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
             except Exception: pass
             seen = {}
