@@ -83,6 +83,7 @@
   // where a man is in his work's round: the clock and his own number (each a little after the one before him). The tests ask for a
   // moment itself (SJOBEIN.test.t: the sip at its top, the broom at its end), so one picture shows it; tests/folk2poses.py MOMENT
   const tOf = (T, idx) => SJOBEIN.test && SJOBEIN.test.t != null ? SJOBEIN.test.t : T + idx * 1.7;
+  const tW = T => SJOBEIN.test && SJOBEIN.test.t != null ? SJOBEIN.test.t : T;   // (the world's clock for the rounds that run on it, egn strip mend gut binoc: the moment asked for in a test, steg 125)
   // (the seconds he has been lowering the box, st.s; the tests' moment when they ask for the pose)
   const stowS = st => st.s || (SJOBEIN.test && SJOBEIN.test.task === 'stow' && SJOBEIN.test.t) || 0;
   function workLow(st, T, idx){
@@ -305,7 +306,7 @@
       case 'drive': hands = [W(0.56, sh + 0.26, 0.12), W(0.58, sh + 0.2, -0.1)]; break;
       case 'lean': { const r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.04, 0.2), W(r[0] + 0.02, r[1] + 0.04, -0.2)] : [W(0.4, 1.02, 0.2), W(0.4, 1.02, -0.2)]; break; }
       case 'jig': { const k = Math.pow(Math.max(0, Math.sin(t * 2.6)), 3), r = st.rail; hands = r ? [W(r[0] + 0.02, r[1] + 0.05 + k * 0.35, 0.16), W(r[0] - 0.02, r[1] + 0.01, -0.16)] : [W(0.34, 0.95 + k * 0.35, 0.16), W(0.3, 0.9, -0.16)]; break; }
-      case 'gut': { const c = (T % 3) / 3, thr = c > 0.7 && c < 0.85 ? Math.sin((c - 0.7) / 0.15 * Math.PI) : 0; hands = [W(0.42 + thr * 0.25, 0.95 + thr * 0.35, 0.16 + Math.sin(T * 7) * 0.07 * (1 - thr)), W(0.42, 0.9, -0.1)]; break; }
+      case 'gut': { const c = (tW(T) % 3) / 3, thr = c > 0.7 && c < 0.85 ? Math.sin((c - 0.7) / 0.15 * Math.PI) : 0; hands = [W(0.42 + thr * 0.25, 0.95 + thr * 0.35, 0.16 + Math.sin(T * 7) * 0.07 * (1 - thr)), W(0.42, 0.9, -0.1)]; break; }
       // the gaff (linehøtt) at the hauler (the event: dkFor, seconds st.ev.k): out over the rail and down to the fish on the line, a
       // jerk as it bites, up and in over the rail with the fish hanging on it, shaken off into the bleeding tub, back to the ready
       case 'gaff': { const e = st.ev, c = e ? e.k : 99, ready = W(0.55, 1.75, 0.18); let tip = ready; st.gaffFish = false; st.gaffDrop = -1;
@@ -402,12 +403,12 @@
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
       // bucket at his right, on the hook, and the baited hook laid down in the tub; stripping takes the old bait off into the bucket and
       // now and then throws the bucket's bits over the rail (st.Tu the tub, st.Bk the bucket, st.Of over the rail)
-      case 'egn': case 'strip': { const Tu = st.Tu || W(0.55, 0.38, 0), Bk = st.Bk || W(0.25, 0.3, 0.42), egn = st.task === 'egn', cyc = egn ? 2.4 : 2.0, c = ((T + idx * 0.9) % cyc) / cyc;
+      case 'egn': case 'strip': { const Tu = st.Tu || W(0.55, 0.38, 0), Bk = st.Bk || W(0.25, 0.3, 0.42), egn = st.task === 'egn', cyc = egn ? 2.4 : 2.0, c = ((tW(T) + idx * 0.9) % cyc) / cyc;
         const rim = [Tu[0] - F[0] * 0.2 - R[0] * 0.08, Tu[1] + 0.02, Tu[2] - F[1] * 0.2 - R[1] * 0.08], mid = W(0.32, 0.72, 0.02), inT = [Tu[0], Tu[1] - 0.08, Tu[2]], bk = [Bk[0], Bk[1] + 0.26, Bk[2]];
         st.bait = null; st.old = null; st.hook = null; st.flick = null; st.bucket = null; st.spill = -1;
         // the bucket's bits over the rail, every 25 s or so while stripping (the gulls come for them)
-        const dump = !egn && st.Of && ((T + idx * 3.1) % 25) < 2.2;
-        if (dump){ const u = ((T + idx * 3.1) % 25) / 2.2, sw1 = Math.sin(Math.min(1, u * 1.6) * Math.PI / 2), lift = [Bk[0] * (1 - sw1) + (st.Of[0] * 0.25 + Bk[0] * 0.75) * sw1, Bk[1] + 0.35 + 0.5 * sw1, Bk[2] * (1 - sw1) + (st.Of[2] * 0.25 + Bk[2] * 0.75) * sw1];
+        const dump = !egn && st.Of && ((tW(T) + idx * 3.1) % 25) < 2.2;
+        if (dump){ const u = ((tW(T) + idx * 3.1) % 25) / 2.2, sw1 = Math.sin(Math.min(1, u * 1.6) * Math.PI / 2), lift = [Bk[0] * (1 - sw1) + (st.Of[0] * 0.25 + Bk[0] * 0.75) * sw1, Bk[1] + 0.35 + 0.5 * sw1, Bk[2] * (1 - sw1) + (st.Of[2] * 0.25 + Bk[2] * 0.75) * sw1];
           hands = [[lift[0] + R[0] * 0.08, lift[1] + 0.1, lift[2] + R[1] * 0.08], [lift[0] - R[0] * 0.08, lift[1] - 0.05, lift[2] - R[1] * 0.08]]; st.bucket = lift; st.spill = u > 0.55 ? (u - 0.55) / 0.45 : -1; break; }
         if (c < 0.22){ const u = ease(c / 0.22); hands = [lerp3(mid, egn ? bk : mid, u * 0.2), lerp3(mid, rim, u)]; }
         else if (c < 0.45){ const u = ease((c - 0.22) / 0.23); hands = [lerp3(mid, egn ? bk : W(0.34, 0.75, 0.14), u), lerp3(rim, W(0.3, 0.74, -0.06), u)]; st.hook = hands[1]; if (egn && u > 0.8) st.bait = hands[0]; if (!egn) st.old = hands[1]; }
@@ -418,7 +419,7 @@
         break; }
       // mending the nets over the rail (Jonas 20.10.2026: «bøting av garn, det må også ha en animasjon»): the left hand holds the torn mesh,
       // the right ties the new knots with the netting needle, round and through, and pulls each one tight
-      case 'mend': { const Nt = st.Nt || W(0.42, 1.0, 0), k = (T * 1.2 + idx) % 1, pull = k > 0.8 ? Math.sin((k - 0.8) / 0.2 * Math.PI) : 0, a = k * Math.PI * 2 * 3;
+      case 'mend': { const Nt = st.Nt || W(0.42, 1.0, 0), k = (tW(T) * 1.2 + idx) % 1, pull = k > 0.8 ? Math.sin((k - 0.8) / 0.2 * Math.PI) : 0, a = k * Math.PI * 2 * 3;
         hands = [[Nt[0] + R[0] * (0.08 + Math.cos(a) * 0.04 * (1 - pull)) - F[0] * pull * 0.18, Nt[1] + Math.sin(a) * 0.04 * (1 - pull) + pull * 0.06, Nt[2] + R[1] * (0.08 + Math.cos(a) * 0.04 * (1 - pull)) - F[1] * pull * 0.18], [Nt[0] - R[0] * 0.1, Nt[1] + 0.02, Nt[2] - R[1] * 0.1]];
         st.needle = {at:hands[0], dir:[F[0] * 0.6 + R[0] * 0.3, 0.55, F[1] * 0.6 + R[1] * 0.3]}; break; }
       // gutting at the table as the trade does it (Jonas 23.10.2026, his video of a cod gutted slowly to show it): a fish out of the
@@ -479,7 +480,7 @@
       // the binoculars up at the eyes
       // (the new people: the binoculars own their frame, before the eyes as the head turns with them, and the hands are at their two
       // sides in it: the head's slow scan turns them and the hands together, about the head's joint. Before, they turned between hands that stood still)
-      case 'binoc': { const Kk = HOLDT.kikk, yw = FH ? Math.sin(T * Kk.scan[0] + idx) * Kk.scan[1] : 0, c = Math.cos(yw), s = Math.sin(yw), a0 = FH ? -FH.eye[2] + Kk.eye : 0; st.kyaw = yw;
+      case 'binoc': { const Kk = HOLDT.kikk, yw = FH ? Math.sin(tW(T) * Kk.scan[0] + idx) * Kk.scan[1] : 0, c = Math.cos(yw), s = Math.sin(yw), a0 = FH ? -FH.eye[2] + Kk.eye : 0; st.kyaw = yw;
         const o = i => { const lat = Kk.wide * (i ? -1 : 1), a = a0 * c - lat * s, l2 = a0 * s + lat * c; return [a - a0 + Kk.eye, -Kk.low, l2 * (i ? -1 : 1)]; };
         hands = [toFace(0, null, 'eye', o(0), 1, W(0.15, 1.56, 0.07)), toFace(1, null, 'eye', o(1), 1, W(0.15, 1.56, -0.07))]; break; }
       // the hands in the pockets, the head up at the sky
