@@ -187,7 +187,7 @@ def cut(o, cutters, keep=False):
     return o
 
 
-def ease_cut_fans(o, rims, step=0.2, reach=2.5):
+def ease_cut_fans(o, rims, step=0.2, reach=2.5, grid=False):
     """the faces round holes cut by a boolean, split so the shade baked at the hole does not run across the plate (tilbakemelding #5 fra
     testutgaven, 13.11.2026: dark streaks across the hurtigsjark's transom). The cut leaves a fan of long thin triangles from the hole's
     rim to the plate's far edges; the shade is baked per corner (bake_ao), dark at the rim, and the triangles spread it 1-4 m. Every face
@@ -195,7 +195,10 @@ def ease_cut_fans(o, rims, step=0.2, reach=2.5):
     within some step of the hole. The rest of the plate round the hole (faces in its plane within reach of it) is split the same way,
     since the shade of what stands on the plate (the ladder's brackets on the transom) ran across its long triangles too; only the faces
     in the paint of the hole's own faces (the yellow transom, not the white bulwark over it, whose shade is even). rims:
-    [(centre, normal, radius, depth)], a corner at a rim lies within radius of the centre in the plane and depth along the normal."""
+    [(centre, normal, radius, depth)], a corner at a rim lies within radius of the centre in the plane and depth along the normal.
+    grid: the faces in each hole's plane are cut instead along a regular grid step apart, with rows level from the plate's top edge down
+    (tilbakemelding #9 fra testutgaven, 14.11.2026: on kyst21's deckhouse the split edges joined the dark top edge under the boat deck to
+    points at uneven depths, so its shade hung down in scallops and blotches; a level row step under the edge gives an even gradient)."""
     rims = [(V(c), V(n).normalized(), r, d) for c, n, r, d in rims]
     def at(p, c, n, r, d):
         w = p - c; h = w.dot(n); return abs(h) <= d and (w - n * h).length <= r
@@ -206,7 +209,27 @@ def ease_cut_fans(o, rims, step=0.2, reach=2.5):
         fs.update(rf)
         fs.update(f for f in bm.faces if f.material_index in mats and abs(f.normal.dot(n)) > 0.98 and at(f.calc_center_median(), c, n, reach, max(d, reach * 0.1)))
     fs = list(fs)
-    if fs:
+    if fs and grid:
+        key = lambda v: (round(v.co.x, 5), round(v.co.y, 5), round(v.co.z, 5)); old = {key(v) for v in bm.verts}
+        done = set()
+        for c, n, r, d in rims:
+            ns = n if next(a for a in n if abs(a) > 1e-6) > 0 else -n; pk = tuple(round(a, 2) for a in ns) + (round(c.dot(ns), 2),)   # (one plane once: both sides' walls have the same normal up to sign)
+            if pk in done: continue
+            done.add(pk)
+            g = [f for f in fs if f.is_valid and abs(f.normal.dot(n)) > 0.98 and abs((f.calc_center_median() - c).dot(n)) <= max(d, reach * 0.1)]
+            u = n.cross(V((0, 0, 1)))
+            if u.length < 1e-4: u = n.cross(V((1, 0, 0)))
+            u.normalize(); v = u.cross(n).normalized()
+            if v.z < 0: v = -v
+            for ax in (v, u):
+                if not g: break
+                ks = [q.co.dot(ax) for f in g for q in f.verts]; lo, hi = min(ks), max(ks); t = hi - step
+                while t > lo + 0.25 * step:
+                    gv = list({q for f in g for q in f.verts}); ge = list({e for f in g for e in f.edges})
+                    res = bmesh.ops.bisect_plane(bm, geom=g + ge + gv, plane_co=ax * t, plane_no=ax, dist=1e-4)
+                    g = [x for x in res['geom'] if isinstance(x, bmesh.types.BMFace)]; t -= step
+        bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 3 and any(key(q) not in old for q in f.verts)])
+    elif fs:
         fs = bmesh.ops.triangulate(bm, faces=fs)['faces']
         by = {}
         for e in {e for f in fs for e in f.edges}:

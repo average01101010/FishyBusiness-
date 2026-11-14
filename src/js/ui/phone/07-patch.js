@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['kystbat-141126', '14.11.2026', 'Kystbåten på 21 m: dekkshuset uten mørke striper', 'The 21 m coastal vessel: the deckhouse without dark streaks', [
+       ['Skyggen under båtdekkets kant på den eldre kystbåten på 21 m rant ned som mørke striper mot koøyene i dekkshuset. Nå holder den seg under kanten.', 'The shade under the boat deck\'s edge on the older 21 m coastal vessel ran down as dark streaks towards the portholes in the deckhouse. Now it stays under the edge.']]],
     ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [
        ['Arbeidet på båten står øverst i utstyrsbutikken, på verftets sider og i Om bord så lenge en jobb går, med hver jobb og tida som er igjen, telt ned sekund for sekund.', 'The work on the boat stands at the top of the tackle shop, the yard\'s pages and Om bord while a job runs, with each job and the time left, counted down second by second.'],
        ['Mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy og butikkene i Vanse og Søndeled lå i lommer der båten ikke kom ut. De har fått nye kaier med fritt vann ut.', 'The plants in Ålesund, Fosnavåg, Laukvik and Vengsøy and the shops in Vanse and Søndeled lay in pockets the boat could not get out of. They have new quays with open water out.'],
