@@ -11,7 +11,7 @@ own), the rorbuer (src/data/rorbuer.json, where their shore is found) and Father
   - sail: «Kast loss», and she sails it with the boat model (dynTick, as the game's loop does when it is looked at, and the minute step)
     and lies in the harbour she was sent to, without running aground, within the time the route takes and a margin.
 Needs the whole coast (dist-vec). LITE. Prints a FEIL line per place that fails (allesteder: kind name lat lon what), then OK or FEIL per check.
-KYST_ALLE=ports,rorbu,naust,havn picks the kinds (havn: the coast's 3 300 harbours, the way out found from each, sailed from every
+KYST_ALLE=ports,rorbu,naust,havn picks the kinds (the first three without it; havn: the coast's 3 300 harbours, the way out found from each, sailed from every
 KYST_ALLE_SAIL-th, 10); KYST_ALLE_N=20 takes every n-th place only (a quick look); KYST_ALLE_ID=id,id those places; KYST_ALLE_H=hours starts the clock
 so many hours later."""
 import asyncio, json, os, time
@@ -21,7 +21,7 @@ from _env import GAME, boot
 from playwright.async_api import async_playwright
 
 ok = lambda c: 'OK  ' if c else 'FEIL'
-KINDS = [k for k in os.environ.get('KYST_ALLE', 'ports,rorbu,naust,havn').split(',') if k]
+KINDS = [k for k in os.environ.get('KYST_ALLE', 'ports,rorbu,naust').split(',') if k]   # (the coast's 3 300 harbours take hours: only with KYST_ALLE=havn)
 EVERY = int(os.environ.get('KYST_ALLE_N', '1'))
 IDS = [s for s in os.environ.get('KYST_ALLE_ID', '').split(',') if s]
 TYPE = os.environ.get('KYST_ALLE_TYPE', 'kyst21')
