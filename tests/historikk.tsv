@@ -4016,3 +4016,5 @@
 2026-11-14 01:44	ccr-013bxxif-fb7dekk	3da6529	looktest	OK	17	lite	samtidig	
 2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	boottest	OK	24	lite	samtidig	
 2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	looktest	OK	12	lite	samtidig	
+2026-11-14 03:04	ccr-2dc63e8b-wjwijq	c306a07	sprelltest	OK	1043	3d	alene	
+2026-11-14 03:04	ccr-2dc63e8b-wjwijq	c306a07	dbg23o	OK	47	3d	alene	
