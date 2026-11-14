@@ -36,7 +36,7 @@ SPILL = [
     ('vask', [['sweep', 's', 0, 6, 25], ['hose', 's', 0, 6, 25]]),
 ]
 # forced on the break places these say nothing of the real place (no rail, no table, no tub there): printed only
-ELSEWHERE = ('sett', 'pick', 'gutw')
+ELSEWHERE = ('sett', 'pick', 'gutw', 'unhook')   # (unhook: the ring hangs from the plant's crane; its man changes work by himself and cannot be put in the pose there)
 # the stop list of «Sjette økt» in docs/planer/start/125.md (Jonas 14.11.2026: not touched in steg 125; named there: the broom, the bait,
 # the shovel's upper hand with its shaft at his own thigh, the bleeding). (group, task, 'hand' or the thing's name) -> [cm it may be at
 # the most, why]. Printed with its number; past its ceiling it is red like the rest
@@ -45,16 +45,17 @@ STOPP = {
     ('tvunget', 'ice', 'hand'): [10, 'spadens øverste hånd'], ('arbeid', 'pack', 'hand'): [9, 'spadens øverste hånd'],
     ('tvunget', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('tvunget', 'ice', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('arbeid', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('juksa', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'], ('garn', 'pack', 'fish:spade_skaft'): [6, 'spadeskaftet ved eget lår'],
     ('tvunget', 'egn', '36 hjørner'): [9, 'agnbiten'], ('tvunget', 'strip', '36 hjørner'): [9, 'agnbiten'], ('egning', 'egn', '36 hjørner'): [9, 'agnbiten'],
-    ('arbeid', 'bleed', 'hand'): [7, 'bløggingen: hånda som venter mens fisken kastes'],
+    ('arbeid', 'bleed', 'hand'): [7, 'bløggingen: hånda som venter mens fisken kastes (2,5–3,2 i femte økt, 0,9–6,5 i sjette: etter hvor fisken falt)'],
+    ('juksa', 'jig', 'hand'): [9, 'målene som står tilfeldig: rekka er lenger unna enn armen når på noen av plassene (0–8,7 i fire kjøringer; arbeidscellene, 125b)'],
 }
 
 # one sweep in the page: the hands that were moved (m, [right, left], and when), and every thing more than 1 cm inside a body
-SWEEP = """([task, how, t0, t1, n]) => { const C = {}; let ao = [0, 0], at = [0, 0], cnt = 0; const ev = how === 'e';
+SWEEP = """([task, how, t0, t1, n, as]) => { const nm = as || task; const C = {}; let ao = [0, 0], at = [0, 0], cnt = 0; const ev = how === 'e';
   for (let k = 0; k < n; k++){ const t = t0 + (t1 - t0) * k / Math.max(1, n - 1), B = {roll:0, pitch:0, T:103.1};
     SJOBEIN.test = how === 'e' ? {...B, t, ev:task} : how === 'l' ? {...B, t:0, lay:t} : how === 's' ? {...B, t, lay:-1} : how === 'w' ? {...B, t, lay:-1, shW:1} : {...B, task, t, norail:true};
     LEMMER.log = []; LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw();
-    for (const q of LEMMER.log) if (q.task === task && q.gp && (!ev || q.ev)){ cnt++; for (const i of [0, 1]) if (q.ao[i] > ao[i]){ ao[i] = q.ao[i]; at[i] = +t.toFixed(2); } }
-    for (const o of G3._debug.thingClip(0.01)){ if (o.task !== task && !ev) continue; const k3 = (ev ? o.task + '|' : '') + (o.own ? 'egen' : 'annens') + '|' + o.name + '|' + o.part, c = C[k3]; if (!c || o.cm > c[0]) C[k3] = [o.cm, +t.toFixed(2)]; } }
+    for (const q of LEMMER.log) if (q.task === nm && q.gp && (!ev || q.ev)){ cnt++; for (const i of [0, 1]) if (q.ao[i] > ao[i]){ ao[i] = q.ao[i]; at[i] = +t.toFixed(2); } }
+    for (const o of G3._debug.thingClip(0.01)){ if (o.task !== nm && !ev) continue; const k3 = (ev ? o.task + '|' : '') + (o.own ? 'egen' : 'annens') + '|' + o.name + '|' + o.part, c = C[k3]; if (!c || o.cm > c[0]) C[k3] = [o.cm, +t.toFixed(2)]; } }
   SJOBEIN.test = null; LEMMER.log = null; LEMMER.things = null; LEMMER.bodies = null;
   return {n:cnt, cm:ao.map(v => +(v * 100).toFixed(1)), da:at, ting:C}; }"""
 
@@ -114,8 +115,8 @@ async def main():
         t = (await pg.evaluate(BOATS))[1]
         if not want or 'tvunget' in want:
             await scene_set(pg, t, 'pause'); rows = []; info = []
-            for task in [k for k in TASKS if k not in ('sitmat', 'sitkaffe')] + ['gutw']:   # (the two are 'lunch' and 'coffee' seated: drawn under those names)
-                r = await sweep(pg, t, [task, 'f', 0, 6, 25])
+            for task in TASKS + ['gutw']:
+                r = await sweep(pg, t, [task, 'f', 0, 6, 25, {'sitmat': 'lunch', 'sitkaffe': 'coffee'}.get(task)])   # (the two are 'lunch' and 'coffee' seated: drawn under those names)
                 if task in ELSEWHERE: info.append('%s %s' % (task, r['cm'])); r = dict(r, cm=[0, 0])   # (its things are still his own: held against the limit)
                 rows.append((task, 'f', r))
             verdict('tvunget', 'tvunget (alle stillingene, frittstående)', rows)

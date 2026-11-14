@@ -1252,7 +1252,7 @@ const HOLDT = {
   seat:0.9,      // the upturned box he sits on, its height's scale (0.98 with the old figure): its top is under the new thighs, which were 4 cm down in it
   egn:{at:[0.16, 0.3, 0.4], box:[0.6, 0.59]},   // the baiter's bucket from where he sits [ahead, up, to his right] (m): on an upturned box by his right knee; the box's scale (its width and its height: 0.3 m)
   bleed:{dip:0.95, knee:[0.62, 0.24, 0.25]},   // how far down in his knees the bleeder goes for a fish that lies on the deck (workLow's dip; 0.62 with the old figure, whose arm was longer: the hand was 12 cm short of the fish), and where the hand that waits hangs meanwhile, down by his right foot [ahead, up, to his right]
-  fish:{r:0.11, at:[0.25, 0.5, 0.8], swap:[0.08, 0.55], round:0.36},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length); swap: m nearer his right shoulder than his left the tub is for the right hand to take the fish out of it, and the share of the way to the table's edge where it changes hands; round: m from his own middle the gutted fish keeps on its way through the air to the crate (thrown round him when the crate is behind him)
+  fish:{r:0.11, at:[0.25, 0.5, 0.8], swap:[0.08, 0.55], round:0.36, thr:[0.1, 0.15, 0.85, 1.4]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length); swap: m nearer his right shoulder than his left the tub is for the right hand to take the fish out of it, and the share of the way to the table's edge where it changes hands; round: m from his own middle the gutted fish keeps on its way through the air to the crate (thrown round him when the crate is behind him), thr: his middle m ahead of his feet, the shares of the throw between which its nearest point to him is looked for, and how many times what it lacks the bow may be
   // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
@@ -1267,8 +1267,8 @@ const HOLDT = {
   // the upper hand would be, from his hips [ahead, up, to his right] (the shaft goes from the blade towards it), and turn the share of
   // the way round to the blade his body turns on its feet and the angle (rad) the blade is kept to the right of where he then faces
   // (the upper hand is his left: the shovel is before him and to his right, never across him or behind his own hand)
-  // back: s the shovel takes from over the crate, where he takes it up again after laying a fish straight, to where its round has it
-  shaft:{r:0.02, at:[0.12, 0.24, 0.36], len:0.72, low:0.38, hip:[0.1, -0.05, -0.3], turn:[0.85, 0.3], back:0.4},
+  // full: the share of the way back to its round from which there is ice on the blade again; back: s the shovel takes from over the crate, where he takes it up again after laying a fish straight, to where its round has it
+  shaft:{r:0.02, at:[0.12, 0.24, 0.36], len:0.72, low:0.38, hip:[0.1, -0.05, -0.3], turn:[0.85, 0.3], back:0.4, full:0.95},
   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle. home: where
   // the back hand would be, from his hips [ahead, up, to his right]; chest and reach: how far from his chest [ahead, up from the
   // deck, right] the tip gets over the rail; lift: the tip over the rail on its way in [ahead, over where the fish comes aboard,
@@ -1298,6 +1298,8 @@ const VENT = {
   pass:0.45,     // m from the way between a gutter and the tub another gutter stands in it
   table:[0.22, 0.2],   // where the fish is taken from the table instead: m along it towards the tub's side from his own part of it, and over its top
   shovel:0.6,    // m from the way between the packer and the ice somebody who walks or works a fish is in the shovel's way
+  own:0.6,       // m out from the packer towards the ice that way begins (nearer him the blade is not: one who stands by him is not in its way)
+  bin:0.4,       // m ahead of him the ice bin at his side is (view3d/08-plants.js shovelPath, aB)
   ease:0.35,     // s the wait comes on and goes over (the shovel to over the crate and back to its round)
   // m from p to the way from a to b, on the deck [x, z]
   seg(p, a, b){ const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz, u = l2 > 1e-12 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / l2)) : 0; return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); },

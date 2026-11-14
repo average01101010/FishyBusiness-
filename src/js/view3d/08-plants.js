@@ -132,10 +132,10 @@
     // (the new people, steg 125 sixth: after a fish is laid straight he takes the shovel up again over the crate, where his hands are, and it goes from there to
     // where its round has it in HOLDT.shaft.back s as he turns after it (workTurn): it came back wherever its round had it, with him not yet turned to it, up to
     // 10 cm past his reach and 5 cm into his thigh for a moment. kb: the share of the way back to the round)
-    const kb = (LEMMER.on && st.lay != null && st.lay >= 1.5 && st.lay < 1.5 + HOLDT.shaft.back ? ease((st.lay - 1.5) / HOLDT.shaft.back) : 1) * (1 - ease(LEMMER.on ? st.shW || 0 : 0)), sw = 1 + (sw0 - 1) * kb;   // (and held over the crate while he waits for somebody in the shovel's way, st.shW: the waiting rule, deckcrew.js VENT)
-    const r = rB + sw * (rT - rB), a = aB + sw * (aT - aB); if (y == null) return {a, r, up:0, tip:tip * kb, full:full && kb > 0.95, c};
+    const kb = (LEMMER.on && st.lay != null && st.lay >= 1.5 && st.lay < 1.5 + HOLDT.shaft.back ? ease((st.lay - 1.5) / HOLDT.shaft.back) : 1) * (1 - ease(LEMMER.on ? st.shW || 0 : 0)), sw = kb === 1 ? sw0 : 1 + (sw0 - 1) * kb;   // (and held over the crate while he waits for somebody in the shovel's way, st.shW: the waiting rule, deckcrew.js VENT)
+    const r = rB + sw * (rT - rB), a = aB + sw * (aT - aB); if (y == null) return {a, r, up:0, tip:tip * kb, full:full && kb > HOLDT.shaft.full, c};
     const hB = Bn ? Bn[1] + eye[1] - y : 0.5, hT = Math.max(0.62, (st.crTop || 0.28) + (Cr ? Cr[1] + eye[1] - y : 0) + 0.12);
-    return {a, r, up:(hB + 0.17) + sw * (hT - hB - 0.17) - lo * 0.15 * kb + Math.sin(sw * Math.PI) * 0.25, tip:tip * kb, full:full && kb > 0.95, c};
+    return {a, r, up:(hB + 0.17) + sw * (hT - hB - 0.17) - lo * 0.15 * kb + Math.sin(sw * Math.PI) * 0.25, tip:tip * kb, full:full && kb > HOLDT.shaft.full, c};
   }
   // he turns from his place towards what he reaches for: the gutter to the bleeding tub for the next fish, the bleeder to the tub as he
   // throws, the packer to the crate at his side (the place and its heading stay; the body turns on the feet)
@@ -802,10 +802,10 @@
       if (st.gt){ const u = st.gt.u, A0 = st.gt.A, B0 = st.gt.B; let ox = 0, oz = 0;
         // (the new people, steg 125 sixth: the crate may be behind him, and the fish flew straight through his own chest, 12 cm in. The throw goes round him: where its
         // line passes nearer his middle than HOLDT.fish.round, it is bowed out to the side it passes on by what it lacks)
-        if (LEMMER.on){ const cx = st.x - eye[0] + F[0] * 0.1, cz = st.z - eye[2] + F[1] * 0.1, dx = B0[0] - A0[0], dz = B0[2] - A0[2], u0 = clamp(((cx - A0[0]) * dx + (cz - A0[2]) * dz) / (dx * dx + dz * dz || 1e-9), 0.15, 0.85);
+        if (LEMMER.on){ const Th = HOLDT.fish.thr, cx = st.x - eye[0] + F[0] * Th[0], cz = st.z - eye[2] + F[1] * Th[0], dx = B0[0] - A0[0], dz = B0[2] - A0[2], u0 = clamp(((cx - A0[0]) * dx + (cz - A0[2]) * dz) / (dx * dx + dz * dz || 1e-9), Th[1], Th[2]);
           let nx = A0[0] + dx * u0 - cx, nz = A0[2] + dz * u0 - cz; const d0 = Math.hypot(nx, nz), need = HOLDT.fish.round - d0;
           if (need > 0){ if (d0 < 0.02){ const l = Math.hypot(dx, dz) || 1; nx = -dz / l; nz = dx / l; if (nx * R[0] + nz * R[1] < 0){ nx = -nx; nz = -nz; } } else { nx /= d0; nz /= d0; }
-            const w = Math.min(1.4, u * (1 - u) / (u0 * (1 - u0))) * need; ox = nx * w; oz = nz * w; } }
+            const w = Math.min(Th[3], u * (1 - u) / (u0 * (1 - u0))) * need; ox = nx * w; oz = nz * w; } }
         lieCut([A0[0] + (B0[0] - A0[0]) * u + ox, A0[1] + (B0[1] - A0[1]) * u + 0.3 * 4 * u * (1 - u), A0[2] + (B0[2] - A0[2]) * u + oz], yaw + u * 0.6); } }
     if (st.task === 'pack'){ if (!st.Bin){ const bin = W0(0.15, 0, (st.binR || -0.5) * (LEMMER.on ? 1.3 : 1.15));   /* (the new people turn towards it: it stands clear of the thigh) */ drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-st.h))); }
       // the crate on his right with the fish packed in it so far, in layers of three (st.fill); on an open boat the fish go in her tub

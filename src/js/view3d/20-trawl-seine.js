@@ -190,7 +190,7 @@
           // (the waiting rule, deckcrew.js VENT: another gutter stands between him and the tub: he takes his fish from the table on the tub's side of his own
           // part of it, not from the tub through the man beside him, whose body the fish went 6 to 13 cm into)
           if (LEMMER.on && st.task === 'gutw'){ const tb = dkTub(G), gs = A.filter(q => q !== a && q.task === 'gut' && q.mode === 'at').map(q => [q.x, q.z]);
-            if (VENT.inWay([a.x, a.z], [tb[0], tb[2]], gs, VENT.pass)){ const lat = clamp((DW.table[0] - a.x) * R0[0] + (DW.table[2] - a.z) * R0[1], -0.6, 0.6), sd = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, k = lat + sd * VENT.table[0], ah = (DW.table[0] - a.x) * F0[0] + (DW.table[2] - a.z) * F0[1];
+            if (VENT.inWay([a.x, a.z], [tb[0], tb[2]], gs, VENT.pass)){ const lat = (DW.table[0] - a.x) * R0[0] + (DW.table[2] - a.z) * R0[1], lim = (V.len || 0) >= 10 ? HOLDT.table.benk : HOLDT.table.bord, sd = (tb[0] - a.x) * R0[0] + (tb[2] - a.z) * R0[1] >= 0 ? 1 : -1, k = lat - clamp(lat, -lim, lim) + sd * VENT.table[0],   /* (lat less what the table reaches: his own part of it, straight before him while he stands within its length) */ ah = (DW.table[0] - a.x) * F0[0] + (DW.table[2] - a.z) * F0[1];
               st.Ub = rel([a.x + F0[0] * ah + R0[0] * k, DW.table[1] + VENT.table[1], a.z + F0[1] * ah + R0[1] * k]); } } const n = Math.floor((ta + idx * 1.7) / 5.6); st.gsp = held(hash(n * 3 + idx)); st.gkg = 2 + hash(n * 5) * 3;
           if (pkC){ st.Cr = rel(pkC.p); st.crTop = pkC.top; st.packId = pk.id; }
           // no packer on an open boat: he throws the gutted fish into the fish tub being filled himself (Jonas 04.11.2026)
@@ -202,9 +202,9 @@
           const IB = iceBoxTop(vtype()); st.Bin = IB && Math.hypot(IB[0] - a.x, IB[2] - a.z) < 1.35 ? rel(IB) : null;
           // (the waiting rule, deckcrew.js VENT: he holds the shovel over the crate while somebody walks past the ice or works a fish there, a.shW the wait's share;
           // those who stand at their own places are not waited for. The tests ask for the wait themselves, SJOBEIN.test.shW)
-          if (LEMMER.on){ const bin = st.Bin ? [IB[0], IB[2]] : [a.x + R0[0] * st.binR + F0[0] * 0.4, a.z + R0[1] * st.binR + F0[1] * 0.4];
+          if (LEMMER.on){ const bin = st.Bin ? [IB[0], IB[2]] : [a.x + R0[0] * st.binR + F0[0] * VENT.bin, a.z + R0[1] * st.binR + F0[1] * VENT.bin], bl = Math.hypot(bin[0] - a.x, bin[1] - a.z) || 1, o = Math.min(VENT.own, bl) / bl, from = [a.x + (bin[0] - a.x) * o, a.z + (bin[1] - a.z) * o];   /* (from: the way begins where the blade is clear of himself, so one who stands by him and not by the ice is not waited for) */
             const busy = A.filter(q => q !== a && (q.mode === 'walk' || DKEV.some(e => e.who === q.id && now >= e.t0 && now - e.t0 < DKDUR[e.kind]))).map(q => [q.x, q.z]);
-            if (SJT) a.shW = SJT.shW || 0; else if (!LEMMER.dry) a.shW = VENT.blend(a.shW || 0, VENT.inWay([a.x, a.z], bin, busy, VENT.shovel), now - (a.shT || now)); a.shT = now; st.shW = a.shW || 0; } }
+            if (SJT) a.shW = SJT.shW || 0; else if (!LEMMER.dry) a.shW = VENT.blend(a.shW || 0, VENT.inWay(from, bin, busy, VENT.shovel), now - (a.shT || now)); a.shT = now; st.shW = a.shW || 0; } }
         else if (a.task === 'egn' || a.task === 'strip'){ const PLs = CREW3D.places() || {tubs:[]}, T0 = PLs.tubs[(a.goal && a.goal.tub || 0) % 8]; if (T0) st.Tu = rel([T0[0], (PLs.tubY != null ? PLs.tubY : a.y) + 0.38, T0[1]]); { const Eg = LEMMER.on ? HOLDT.egn.at : [-0.12, 0, 0.38]; st.Bk = rel([a.x + R0[0] * Eg[2] + F0[0] * Eg[0], a.y + Eg[1], a.z + R0[1] * Eg[2] + F0[1] * Eg[0]]); }   /* (the new people: the bucket on an upturned box by his right knee, where his hand reaches it; on the deck behind his seat it was 31 cm out of his reach) */
           st.Of = rel([sg * ((G.beam || 3) / 2 + 1.4), -0.1, a.z]); if (a.task === 'strip' && ((t + idx * 3.1) % 25) < 2.2) DKGULL = [st.Of[0] + eye[0], (env.tide || 0), st.Of[2] + eye[2]]; }
         else if (a.task === 'mend') st.Nt = rel([a.x + F0[0] * 0.42, a.y + railH - 0.02, a.z + F0[1] * 0.42]);
