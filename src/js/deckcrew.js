@@ -1197,7 +1197,11 @@ const HOLDT = {
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
-  box:{depth:0.19, half:0.39, lo:-0.1, hi:0.2, grip:[0.41, 0.1]},   // the fish box carried across him: half its depth and its length, its bottom under and its ice over the grips; a grip from its middle [to either side, up from its bottom]
+  // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
+  // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
+  // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
+  // what is left between it and his clothes
+  box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005},
   shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
   gaff:{r:0.022, grip:[0.48, 0.82], butt:0.91, org:0.66},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle
   cup:{r:0.05, sip:[0.05, -0.04, 0.035]},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]

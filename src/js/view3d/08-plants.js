@@ -229,8 +229,8 @@
       case 'coil': { const a = t * 3; hands = [W(0.35 + Math.cos(a) * 0.12, 1.05 + Math.sin(a) * 0.15, 0.12), W(0.3, 1.0, -0.15)]; break; }
       // (FB7, Jonas 13.11.2026 «Sørg for at objekter ikke kan clippe inn i menneskene»: the fish box is 78 cm long and was carried end on,
       // 11 cm into his belly. With the new people it is carried across him by its ends, the hands 82 cm apart, 19 cm clear of him)
-      case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2, cw = LEMMER.on; hands = [W(cw ? 0.38 : 0.35, 0.7 + k * 0.6, cw ? 0.41 : 0.2), W(cw ? 0.38 : 0.35, 0.7 + k * 0.6, cw ? -0.41 : -0.2)]; break; }
-      case 'carry': hands = LEMMER.on ? [W(0.38, 1.05, 0.41), W(0.38, 1.05, -0.41)] : [W(0.3, 1.0, 0.2), W(0.3, 1.0, -0.2)]; break;
+      case 'stack': { const k = (Math.sin(t * 1.4) + 1) / 2, cw = LEMMER.on; const bg = HOLDT.box.grip; hands = cw ? [W(0.36, 0.8 + k * 0.28, bg[0]), W(0.36, 0.8 + k * 0.28, -bg[0])] :   /* (from the thighs to the chest: lower, and the knees must bend for it, FB8) */ [W(0.35, 0.7 + k * 0.6, 0.2), W(0.35, 0.7 + k * 0.6, -0.2)]; break; }
+      case 'carry': hands = LEMMER.on ? [W(0.36, 1.02, HOLDT.box.grip[0]), W(0.36, 1.02, -HOLDT.box.grip[0])] : [W(0.3, 1.0, 0.2), W(0.3, 1.0, -0.2)]; break;
       // icing: the shovel goes into the ice bin on his left, swings over to the box of fish on his right and tips the ice over the fish
       case 'ice': { const c = ((T + idx * 1.7) % 2.6) / 2.6, e = u => u * u * (3 - 2 * u), sw0 = c < 0.3 ? 0 : c < 0.55 ? e((c - 0.3) / 0.25) : c < 0.75 ? 1 : 1 - e((c - 0.75) / 0.25);
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
@@ -328,7 +328,7 @@
         st.blade = W(a, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
         const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, r * 0.35); hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
       // a full box of fish carried to the hatch and lowered into the hold (st.s: seconds there; 2.2 in all)
-      case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? 0.41 : 0.22; hands = [W(0.42, 0.95 - 0.5 * ease(u), hr), W(0.42, 0.95 - 0.5 * ease(u), -hr)]; break; }
+      case 'stow': { const u = clamp((st.s || 0) / 1.6, 0, 1); const hr = LEMMER.on ? HOLDT.box.grip[0] : 0.22, hy = LEMMER.on ? 0.87 : 0.95, hd = LEMMER.on ? 0.12 : 0.5; hands = [W(0.42, hy - hd * ease(u), hr), W(0.42, hy - hd * ease(u), -hr)]; break; }
       // baiting the line (Jonas 20.10.2026: «Egning av liner må også ha animasjoner»): a hook from the tub's rim, a bit of bait from the
       // bucket at his right, on the hook, and the baited hook laid down in the tub; stripping takes the old bait off into the bucket and
       // now and then throws the bucket's bits over the rail (st.Tu the tub, st.Bk the bucket, st.Of over the rail)
@@ -516,7 +516,7 @@
       switch (st.task){
         // (the fish box across him: its near side over its height and its length)
         case 'carry': case 'stack': case 'stow': { const c = mid(), B = H.box; let d = 0;
-          for (const u of [B.lo, (B.lo + B.hi) / 2, B.hi]) for (const r of [-1, -0.5, 0, 0.5, 1]) d = Math.max(d, lack([c[0] + HR[0] * r * B.half, c[1] + u, c[2] + HR[2] * r * B.half], B.depth, 0.03));
+          for (const u of [B.lo, (B.lo + B.hi) / 2, B.hi]) for (const r of [-1, -0.5, 0, 0.5, 1]) d = Math.max(d, lack([c[0] - HA[0] * B.grip[1] + HR[0] * r * B.half, c[1] + u, c[2] - HA[2] * B.grip[1] + HR[2] * r * B.half], B.depth, 0.03, B.gap));
           if (d > 0){ mv(hands[0], d); mv(hands[1], d); } break; }
         // (the shovel: the fist at the shaft's upper end and the shaft down from it; the blade is where the ice is)
         case 'pack': case 'ice': { if (!st.blade || hands[1] === undefined) break; const G = hands[1], B = st.blade; { const d = lack(B, H.blade.r, 0.08); if (d > 0) mv(B, d); }
@@ -677,7 +677,7 @@
       if (st.blade) drawShovel(hands[1], st.blade, st.tip, st.full, st.c, st.Cr || W(0.15, 0, 0.62), st.crTub ? st.crTop : 0.3); }
     // the full box in his arms on the way to the hatch, and lowered into the hold there
     if ((st.task === 'carry' && st.crate) || st.task === 'stow'){ const s2 = st.s || 0, down = st.task === 'stow' ? clamp((s2 - 1.3) / 0.8, 0, 1) : 0;
-      if (s2 < 2.15 || st.task === 'carry'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.12 - down * 0.8, (hands[0][2] + hands[1][2]) / 2], CM = chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + (LEMMER.on ? 0 : Math.PI / 2)));
+      if (s2 < 2.15 || st.task === 'carry'){ const bg = HOLDT.box.grip, bo = LEMMER.on ? [-F[0] * bg[1], bg[2], -F[1] * bg[1]] : [0, -0.12, 0], c = [(hands[0][0] + hands[1][0]) / 2 + bo[0], (hands[0][1] + hands[1][1]) / 2 + bo[1] - down * 0.8, (hands[0][2] + hands[1][2]) / 2 + bo[2]], CM = chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + (LEMMER.on ? 0 : Math.PI / 2)));
         drawN(PM.fbox, CM); for (let i = 0; i < (fishy ? 9 : 0); i++) drawN(fishOf(st.csp ? st.csp(i) : 'torsk'), chain(CM, M4.T(-0.24 + (i % 3) * 0.24, 0.07 + Math.floor(i / 3) * 0.06, 0), M4.RY(Math.PI / 2 + (i % 2 ? Math.PI : 0)), M4.RZ(Math.PI / 2), M4.S(0.4)));
         drawN(PM.icebit, chain(CM, M4.T(0, 0.22, 0), M4.S(14, 1.2, 7))); } }
     // the bucket by the line tub: bait in it for baiting, the old bait going into it (and over the rail) when stripping; he sits on an upturned bin
@@ -693,7 +693,7 @@
     if (st.task === 'tally' || st.task === 'remote'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2]; drawN(st.task === 'tally' ? PM.board : PM.remote, chain(M4.T(c[0], c[1] - 0.05, c[2]), M4.RY(-h), M4.RX(st.task === 'tally' ? -0.5 : 0))); }
     if (st.task === 'ice'){ const bin = W(0.15, 0, -0.62), box = W(0.15, 0, 0.62); drawN(PM.icebin, chain(M4.T(bin[0], bin[1], bin[2]), M4.RY(-h))); drawN(PM.icebox, chain(M4.T(box[0], box[1], box[2]), M4.RY(-h)));
       drawShovel(hands[1], st.blade, st.tip, st.full, st.c, box, 0.3); }
-    if (st.task === 'carry' || st.task === 'stack'){ const c = [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2 - 0.1, (hands[0][2] + hands[1][2]) / 2]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + (LEMMER.on ? 0 : Math.PI / 2)))); }
+    if (st.task === 'carry' || st.task === 'stack'){ const bg = HOLDT.box.grip, bo = LEMMER.on ? [-F[0] * bg[1], bg[2], -F[1] * bg[1]] : [0, -0.1, 0], c = [(hands[0][0] + hands[1][0]) / 2 + bo[0], (hands[0][1] + hands[1][1]) / 2 + bo[1], (hands[0][2] + hands[1][2]) / 2 + bo[2]]; drawN(PM.fbox, chain(M4.T(c[0], c[1], c[2]), M4.RY(-h + (LEMMER.on ? 0 : Math.PI / 2)))); }
     if (st.task === 'sweep'){ const top = hands[0], KH = pz('kosthode'), foot = [top[0] + F[0] * 0.55, y - eye[1] + (KH ? 0.108 : 0.02), top[2] + F[1] * 0.55]; drawN(PM.broom, limbM(top, foot, 0.02));
       if (KH) drawN(KH, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h))); else drawN(PM.fbox, chain(M4.T(foot[0], foot[1], foot[2]), M4.RY(-h), M4.S(0.5))); }
     if (st.task === 'hose'){ const nz = hands[0], RL = st.deck ? pz('spole') : null; if (RL){ const q = W(0.12, 0, 0.62); drawN(RL, atH([q[0], y - eye[1], q[2]], M4.RY(Math.PI / 2))); }

@@ -454,7 +454,7 @@
       case 'knife': return [knife(D(0, 0.15, -1)), {g:'grip', a:st.steel ? st.steel.dir : up, tool:true}];
       case 'sweep': case 'hose': case 'ice': { const a = across(); return [{g:'grip', a, n:IN(1)}, {g:'grip', a, n:IN(-1)}]; }
       case 'coil': return [{g:'hook', a:D(0, 0, 1), n:D(0, -0.5, -1)}, rel('hold', up)];
-      case 'stack': case 'carry': case 'stow': return [{g:'hook', a:D(1, 0, 0), n:IN(1)}, {g:'hook', a:D(1, 0, 0), n:IN(-1)}];
+      case 'stack': case 'carry': case 'stow': return LEMMER.on ? [rel('flat', up), rel('flat', up)] : [{g:'hook', a:D(1, 0, 0), n:IN(1)}, {g:'hook', a:D(1, 0, 0), n:IN(-1)}];   // (the new people: the palms up under the box's bottom)
       case 'gut': return [knife([F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]), rel('hook', dn)];
       case 'bleedst': return [knife([F[0] * 0.5 - R[0] * 0.2, -0.75, F[1] * 0.5 - R[1] * 0.2]), rel('relax', IN(-1))];
       case 'bleed': return [st.knife ? knife([F[0] * 0.7 - R[0] * 0.35, -0.55, F[1] * 0.7 - R[1] * 0.35]) : rel('hook', dn), rel('hook', D(0, -0.6, 1))];
