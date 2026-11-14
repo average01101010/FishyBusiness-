@@ -4467,3 +4467,13 @@
 2026-11-14 18:54	ccr-as1-alle	2cfb09e1	kystshot	FEIL	900	3d	alene	gikk ut på tid
 2026-11-14 19:01	ccr-as1-alle	0f8d4708	kystshot_st	OK	461	3d	alene	
 2026-11-14 19:06	ccr-as1-alle	b1f8e1d4	anchorlight3d	OK	273	3d	alene	
+2026-11-14 19:07	ccr-as1-alle	744f9a05	bunkertest	OK	72	3d	alene	
+2026-11-14 19:08	ccr-as1-alle	744f9a05	moortest	OK	42	3d	alene	
+2026-11-14 19:14	ccr-as1-alle	744f9a05	unittest	FEIL	386	3d	alene	avsluttet med kode 1
+2026-11-14 19:20	ccr-as1-alle	744f9a05	sitetest	FEIL	359	3d	alene	avsluttet med kode 1
+2026-11-14 19:21	ccr-as1-alle	744f9a05	dbg23o	OK	49	3d	alene	
+2026-11-14 19:36	ccr-as1-alle	744f9a05	enhetshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 19:51	ccr-as1-alle	744f9a05	npcshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 20:17	ccr-as1-alle	744f9a05	trackfollow	FEIL	1570	3d	alene	FEIL at the end of the route she stops exactly on the last waypoint, without running past and coming back  {"stop": 0.0, "d3d": 0.0, "d": 0.84, "rise": 0.54, "d
+2026-11-14 20:23	ccr-as1-alle	744f9a05	heattest	OK	330	3d	alene	
+2026-11-14 20:25	ccr-as1-alle	744f9a05	landtest	OK	103	3d	alene	
