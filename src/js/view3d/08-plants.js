@@ -514,7 +514,7 @@
     const holdClear = IK && FG && FG.prof && !st.gone ? (b, t2) => {
       const PF = FG.prof, H = HOLDT, inT = q => torsoInv(toH(q), b, t2), AH = sub3(ofH(torsoPt([1, 0, 0], b, t2)), ofH(torsoPt([0, 0, 0], b, t2)));
       // (m a point lacks of being clear: rad its thing's half depth there, sp how far to either side and up and down the thing reaches)
-      const lack = (q, rad, sp, gap) => { const l = inT(q); if (l[0] < -0.03) return 0; let f = 0; for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++){ const v = figProfAt(PF, l[1] + k * sp, l[2] + j * sp); if (v > f) f = v; } return f > 0 ? Math.max(0, f + (gap == null ? H.GAP : gap) + rad - l[0]) : 0; };
+      const lack = (q, rad, sp, gap) => { const l = inT(q); if (l[0] < -0.03 && l[0] < -figProfAt(PF, l[1], l[2], true)) return 0; let f = 0;   /* (behind his back: not his front's matter) */ for (let k = -1; k <= 1; k++) for (let j = -1; j <= 1; j++){ const v = figProfAt(PF, l[1] + k * sp, l[2] + j * sp); if (v > f) f = v; } return f > 0 ? Math.max(0, f + (gap == null ? H.GAP : gap) + rad - l[0]) : 0; };
       const mv = (q, d) => { q[0] += AH[0] * d; q[1] += AH[1] * d; q[2] += AH[2] * d; }, mid = () => [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2];
       // (a hand at the face: where the face is with the back bent as it is now)
       for (const i of [0, 1]) if (FQ[i]){ const q = FQ[i], A = ofH(torsoPt(q.l, b, 0)); hands[i] = q.low ? lerp3([q.low[0], q.low[1] - drop, q.low[2]], A, q.k) : A; }

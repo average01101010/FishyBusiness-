@@ -1283,7 +1283,7 @@ function armIk(s, tg, sd, L, o, cl){
   const PF = C0.prof;
   if (PF){ const y = tg[1], r = tg[2], f = figProfAt(PF, y, r), bk = figProfAt(PF, y, r, true), pm = figProfAt(PF, y, 0);
     // (only a wrist that is across him and before him: one that is out past his far side is clear of him, the elbow's matter)
-    const hw0 = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, xk = k01((-0.05 - r * sd) / 0.1) * k01((hw0 + C0.WRIST + 0.06 - Math.abs(r)) / 0.06), lx = pm > 0 && xk > 0 && tg[0] > -0.2 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * xk - tg[0] : 0;
+    const hw0 = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, xk = k01((-0.05 - r * sd) / 0.1) * k01((hw0 + C0.WRIST + 0.02 - Math.abs(r)) / 0.04), lx = pm > 0 && xk > 0 && tg[0] > -0.2 ? (pm + C0.WRIST + C0.FRONT - C0.CHEST) * xk - tg[0] : 0;
     if (f > 0 || bk > 0 || lx > 1e-4){ const W = C0.WRIST, hw = PF.half[Math.floor((y - PF.lo) / PF.dy)] || 0, la = f + W - tg[0], lb = tg[0] + bk + W, ls = hw + W - Math.abs(r);
       if ((la > 1e-4 && lb > 1e-4 && ls > 1e-4) || lx > 1e-4){ let da = 0, ds = 0;
         if (lx > 1e-4 && lx >= la) da = Math.min(0.4, lx);
