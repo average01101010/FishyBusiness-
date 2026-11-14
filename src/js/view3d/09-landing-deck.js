@@ -522,7 +522,7 @@
   function dkEvent(kind, at, sp, kg, o){ const now = performance.now() / 1000; while (DKEV.length && (DKEV.length > 12 || now - DKEV[0].t0 > (DKEV[0].wait || DKDUR[DKEV[0].kind]) + 4)) DKEV.shift(); const e = {kind, at:at.slice(), sp, kg, t0:now, who:null}; if (o) Object.assign(e, o); DKEV.push(e); DKLAST[kind] = e; return e; }
   // which events a hand at his work plays (the agents' tasks, deckcrew.js): the hauler gaffs the fish in, the one at the net picks them out,
   // the jigger hauls them up by hand, the bleeder bleeds; each bleeds his own fish when nobody else is there to do it
-  const DKPLAY = {jig:['bleed', 'jigup'], haul:['gaff', 'bleed'], pick:['pick', 'bleed'], bleedst:['bleed']};
+  const DKPLAY = {jig:['bleed', 'jigup'], haul:['gaff', 'bleed'], haul2:['bleed'], pick:['pick', 'bleed'], bleedst:['bleed']};   // (haul2: the second hauler with the new people, drawDeckCrew)
   // the event for a hand standing at boat-frame point p doing task (one given to him, else the nearest of its kinds within 3 m; once
   // taken it stays his, and one that waited for him starts when he takes it)
   function dkFor(who, p, task){ const now = performance.now() / 1000, kinds = DKPLAY[task]; if (!kinds) return null;

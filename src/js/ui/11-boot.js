@@ -161,7 +161,7 @@ function dataEarly(){
   try { const s = load(); for (const v of s && s.fleet && s.fleet.length ? s.fleet : s ? [s] : []) if (v.boat && v.boat.type) ty.add(v.boat.type); } catch (e){}
   // (and the fishing grounds' shapes, Ø14 F2: the fish on the grounds are the same from the first hour, 03j-felt.js; and the speed
   // limits' areas, Ø11.8: Autonav holds them in the time away played before the game opens, 05e-sjovei.js fartRuns)
-  return el => (/^pic-/.test(el.id) && el.id !== 'pic-items') || el.id === 'glb-worker' || el.id === 'felt-s' || el.id === 'fart-r' || [...ty].some(t => el.id === 'glb-' + t);
+  return el => (/^pic-/.test(el.id) && el.id !== 'pic-items' && el.id !== 'pic-tat') || el.id === 'glb-worker' || el.id === 'felt-s' || el.id === 'fart-r' || [...ty].some(t => el.id === 'glb-' + t);
 }
 // The models' bytes as they came (04.11.2026, the memory: two crashes on Android that day with 462 and 647 MB of JS heap): kept here as
 // a Uint8Array per element id and read by glbData (vessel3d.js), the pub's and the naust's parse and the buildings' loader, instead of

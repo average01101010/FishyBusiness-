@@ -12,6 +12,7 @@ a moment that is asked for, and numbers changed while it runs, then take seconds
         inside a body (G3._debug.thingClip) with the moment it was worst. [--roll 8]: the deck heeled. [--hendelse]: task is an event's kind (gaff, bleed, pick, jigup), its last one played again. [--scene arbeid --spill]: nobody is put in the pose, the ones
         who have that work are measured at their own places (the gutter at his table).
   python3 tests/folk2live.py ledd pack:0.4 ...     the arms' joints at a moment, in his own frame [ahead, up, to his right] (m)
+  python3 tests/folk2live.py type sjark       the same scene on another boat type (VESSELS' own names; the middle one of tests/lemmer.py BOATS at the start)
   python3 tests/folk2live.py reload           build again and load the page again (after a change in src/)
   python3 tests/folk2live.py quit
 
@@ -83,6 +84,7 @@ async def serve():
             try:
                 if c['op'] == 'quit': json.dump(out, open(RES, 'w')); break
                 elif c['op'] == 'js': out['value'] = await pg.evaluate(c['code'])
+                elif c['op'] == 'type': st['t'] = c['t']; await scene_set(st['scene'] or 'pause')   # (another boat type: the spot checks, no code chooses by its name)
                 elif c['op'] in ('maal', 'ledd'):
                     if c.get('scene') and c['scene'] != st['scene']: await scene_set(c['scene'])
                     await pg.evaluate("LEMMER.log = []"); await frames(pg, st['t'], 1)   # (LEMMER.redraw is made by a frame drawn with the log on)
@@ -122,6 +124,7 @@ def main():
     if not a or a[0] == 'serve': asyncio.run(serve()); return
     if a[0] in ('quit', 'reload'): print(json.dumps(send({'op': a[0]}), ensure_ascii=False)); return
     if a[0] == 'js': print(json.dumps(send({'op': 'js', 'code': a[1]}), ensure_ascii=False)); return
+    if a[0] == 'type': print(json.dumps(send({'op': 'type', 't': a[1]}), ensure_ascii=False)); return
     if a[0] in ('maal', 'ledd'):
         c = {'op': a[0], 'arg': []}; i = 1
         while i < len(a):

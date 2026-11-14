@@ -25,13 +25,18 @@ SHEETS = {
     'ark-c': (3, 3, ['vhf', 'ais', 'plotter', 'chirp', 'sonar', 'radar', 'radarA', 'brovakt', 'olje']),
     'ark-d': (3, 3, ['varme', 'ice', 'bait', 'antigro', None, 'motor', 'prop', 'hold', 'tank']),
     'ark-e': (3, 3, ['cabin', 'galley', 'dry', 'insul', None, 'gut', 'icemaker', 'box', 'potsno']),
-    'ark-f': (2, 2, ['linehaler', 'heavy', 'stab', 'motor90']),   # (drawn again: the line hauler was a drum, the dregg two-armed,
+    'ark-f': (2, 2, ['linehaler', 'heavy', 'stab', 'motor90']),
+    # Kaiboden (Jonas 14.11.2026): haill and luxury luck, the three tunings, and the three Skippertak cans with the brand's word mark (a
+    # fictional brand of the game: --brand SKIPPERTAK in .mcp/gemini-server.mjs); the plainest is the cheapest, the richest the dearest
+    'ark-kaiboden': (3, 3, ['haill', 'luksus', None, 'pump', 'ic', 'turbo', None, None, None]),
+    'skippertak': (3, 1, ['sk_light', 'sk_std', 'sk_max']),   # (drawn again: the line hauler was a drum, the dregg two-armed,
 }                                                                 # the bilge keels a sailing keel, the outboard had «90» on it)
 ORDER = ['jig', 'kgear', 'jigset', 'hooks', 'net', 'line', 'pot', 'kit', 'heavy',
          'jukse', 'linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'krabbekar', 'kniv', 'hott',
          'vhf', 'ais', 'plotter', 'chirp', 'sonar', 'radar', 'radarA', 'brovakt', 'olje',
          'varme', 'ice', 'bait', 'antigro', 'motor90', 'motor', 'prop', 'hold', 'tank',
-         'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno']
+         'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno',
+         'haill', 'luksus', 'pump', 'ic', 'turbo', 'sk_light', 'sk_std', 'sk_max']
 
 
 def cut(a, x0, y0, x1, y1):

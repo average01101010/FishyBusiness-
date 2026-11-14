@@ -3814,6 +3814,8 @@
 2026-11-13 13:40	ccr-061ea8a6-pt4l71	1599ad2+	itemcardtest	OK	26	lite	samtidig	
 2026-11-13 13:40	ccr-061ea8a6-pt4l71	1599ad2+	shoptest	OK	33	lite	samtidig	
 2026-11-13 13:42	ccr-061ea8a6-pt4l71	1599ad2+	docktest	OK	61	lite	alene	
+2026-11-14 10:22	kaiboden-bilder	0403f61+	itemcardtest	OK	28	lite	samtidig	
+2026-11-14 10:23	kaiboden-bilder	0403f61+	shoptest	OK	37	lite	samtidig	
 2026-11-13 14:10	ccr-061ea8a6-pt4l71	03c66e8	docktest	OK	60	lite	samtidig	
 2026-11-13 14:10	ccr-061ea8a6-pt4l71	03c66e8	dockrow	OK	39	lite	samtidig	
 2026-11-13 14:11	ccr-061ea8a6-pt4l71	03c66e8	uishots	OK	84	lite	samtidig	
@@ -4389,3 +4391,13 @@
 2026-11-14 10:15	ccr-as1-alle	8e7e4e07	unittest	FEIL	249	3d	alene	avsluttet med kode 1
 2026-11-14 10:18	ccr-as1-alle	8e7e4e07	sitetest	FEIL	165	3d	alene	avsluttet med kode 1
 2026-11-14 10:45	ccr-as1-alle	8e7e4e07	trackfollow	FEIL	1638	3d	alene	FEIL at the end of the route she stops exactly on the last waypoint, without running past and coming back  {"stop": 0.0, "d3d": 0.37, "d": 0.37, "rise": 0.0, "d
+2026-11-14 10:30	ccr-013bxxif-fb7dekk	e847bd8	crewclip	FEIL	22	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 10:31	ccr-013bxxif-fb7dekk	e847bd8+	crewclip	FEIL	27	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5148, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 10:36	ccr-013bxxif-fb7dekk	f597639	folk2deck	FEIL	318	3d	alene	FEIL gutw: hendene er innen 2 cm av det de holder (verst 101.6 mm; 32 figurer)  {'flyttet_cm': 10.2}
+2026-11-14 10:24	kaiboden-bilder	838d49a	itemcardtest	OK	25	lite	samtidig	
+2026-11-14 10:24	kaiboden-bilder	838d49a	shoptest	OK	36	lite	samtidig	
+2026-11-14 10:27	utrull	bfc9c63+	itemcardtest	OK	27	lite	samtidig	
+2026-11-14 10:28	utrull	bfc9c63+	shoptest	OK	37	lite	samtidig	
+2026-11-14 10:38	utrull	4f02206+	tattest	FEIL	16	lite	alene	FEIL the Milepæler app is the list only (no sailor, Jonas 05.10.2026): a drawing on each card, and how many you have
+2026-11-14 10:39	utrull	4f02206+	tattest	OK	15	lite	alene	
+2026-11-14 10:39	utrull	ec0459e	tattest	OK	15	lite	alene	
