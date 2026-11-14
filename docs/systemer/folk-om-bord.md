@@ -454,6 +454,73 @@ Fase FB7 i `docs/planer/folk-2.md`. **Uten `#folk2` i adressen er alt som før**
 - **Hendene som flyttes, slik de står 14.11.2026 kveld (`maal`, alle tvunget i stillingen på pauseplassene; cm [høyre, venstre]):** `sett` 12/12, `coil` 10/8, `strip` 10/10, `egn` 10/7, `snus` 10/11, `sweep` 9/8, `knife` 8/0, `ice` 0/7 (3 alene), `pack` 1/7 (4 alene), `pick` 6/0, `lunch` 0/5, `tally` 3/5, `door` 0/5, `jig` 4/0, `chat` 0/4, `look` 3/3, `mend` 2/0, `lean` 2/2, `remote` 2/2, `coffee` 1/0. **Null:** `haul`, `carry`, `stack`, `stow`, `gaff` (i hvile), `bleed`, `cold`, `binoc`, `phone`, `smoke`, `sit`, `back`, `tend`, `hose`. Det plassbundne (`gutw`, `egn`, `strip`, `pack`) er ikke til å stole på tvunget; sløyeren er målt på plassen sin. Agnbitene i `strip` er 6,7 cm i kroppen, kikkerten 2,1 cm mot ansiktet (innenfor `FACE`).
 - **Står igjen (samme steg fortsetter; lista over er nyere enn tallene her):** (1) **hendene som flyttes** (punkt 8): `gutw` 40 cm (venstre hånd over til karet på høyre side), `bleed` 35, `gaff` med fisk 28–34 (hånda på tvers av kroppen), `cold` 30 (armene som slås; årsaken er ikke funnet), `strip`/`egn` 13–24, `door` 21, `sweep` 20, `lean`/`snus`/`jig`/`sett`/`ice` 6–13 (utenfor rekkevidde: `LEMMER.BEND` tar ikke resten), `knife`/`sit`/`hose`/`coil`/`mend`/`phone`/`pack` 6–9. Den ærlige sperra flytter flere håndledd enn den gamle: punktene i `switch (st.task)` er skrevet for en kropp som var 13 cm dyp. (2) høtten med fisk på og agnbitene over. (3) Klippevakten kjenner ikke grepene (punkt 7). (4) `crewclip`, `sjobein`, `lemmer` og `folk2deck` er ikke kjørt etter endringene 14.11; `workshot` og `deckshot` uten merket heller ikke. (5) Stikkprøvene i tre havner, begge formater, og bildene til Gemini (ingen kall brukt). (6) `LG.head` i sjøbeintesten er løserens hode, ikke skjelettets. (7) Sjekken av ting i kropper inn i `tests/folk2deck.py`.
 
+- **Alle handlingene, målt og sett (femte økt, 14.11.2026; Jonas: «Vi må ha fokus på alle handlingene menneskene gjør, ikke bare noen få»).** Lista er `docs/planer/folk-handlinger.md`. Hver handling er feid gjennom runden sin med `python3 tests/folk2live.py maal` (tvunget på pauseplassene, fire mann, verste av dem) og **på den ekte plassen** der handlingen har en (`--scene <scene> --spill`, hendelsene med `--hendelse`). Scenene `setting`, `settgarn`, `teiner`, `kai`, `fortoy` og `vask` er nye i `SET` i `tests/lemmer.py` (i tillegg til `pause`, `arbeid`, `garn`, `juksa`, `egning`, `boting`); rundene som gikk på verdensklokka (`egn`, `strip`, `mend`, `gut`, kikkertens søk) følger nå øyeblikket testen ber om (`tW` i `view3d/08-plants.js`), før ble de målt i ett eneste øyeblikk. Tallene er cm hånda ble flyttet fra punktet sitt [høyre/venstre], før økta → etter. «Sett» er arkene i `docs/okter/2026-11-14-125/`: `ark5-<gruppe>.jpg` (før) og `ark5b-<gruppe>.jpg` (etter), det hvite rommet, sett av økta. I det hvite rommet tegnes ikke rekka, lina, bordet eller karet: at hånda er *på tingen*, sier tallene, ikke bildene.
+
+  | Handling | Navn | Tvunget (før → nå) | Ekte plass (før → nå) | Ting i kroppen nå | Sett |
+  |---|---|---|---|---|---|
+  | **1. Redskapet over rekka** | | | | | |
+  | Haler | `haul` | 4,3/0 → 0/0 | linetrekk 3,2/3,1 → 2,0/1,8; garn 1,8 → 1,4/1,8; teiner 1,9 → 0,4/1,5 | ingen | ja |
+  | Høtter | `gaff` + hendelse | 0 | 0/0,3 → 0/0,6 | ingen egen; i én hendelse halerens høtte 17 cm i bløggeren som bøyer seg etter forrige fisk (t 0,3) | ja, fire bilder |
+  | Tar fisk av garnet | `pick` + hendelse | 11/14 → 0/0 | 0/0 | ingen | ja (hendelsen ble ikke fanget av målingen, bare av bildene) |
+  | Jukser | `jig` | 10,1/0 → 0/0 | 6,2/0 → 0/0,3 (få bilder: fiskeren er ofte i hendelsen) | snøret 3,6 cm i kroppen i ett øyeblikk | ja |
+  | Drar opp juksafisken | `jigup` hendelse | 0 | 0/0 | ingen | ja |
+  | Setter | `sett` | 16,7 → 12,1 (uten rekke: ikke en ekte plass) | line 0/0, garn 0/0 | ingen | ja |
+  | Teinemannen | `tend` | 0 | 0/0 (teiner), 0,4 (kaia) | ingen | ja |
+  | Ser over redskapet | `gear` | 0,2 → 0 | 0/0 (langer garnet) | ingen | ja |
+  | Fisken som glipper | `slip` hendelse | 0 | ikke målt på ekte plass (hendelsen kan ikke spilles om igjen) | ingen | ja (tvunget) |
+  | **2. Fisken om bord** | | | | | |
+  | Bløgger | `bleed` hendelse | 0 | linetrekk 7,9/12,4 (én hendelse 27) → 2,8/0,2 og 2,5/3,2; juksa 0,8/0 | ingen | ja, fire bilder |
+  | Bløggeren mellom fiskene | `bleedst` | 0/3,2 → 0/0 | 0/2,2–2,6 | ingen | ja |
+  | Sløyer ved bordet | `gutw` | 10,8/22,5 → 8,7/22,5 (uten bord og kar: ikke en ekte plass) | linetrekk 5,8/9,1 → 0,9/0; garn 2,1/10,7 → 0,9/0; juksa med to sløyere 16,5/36,7 → 0,7/0,9 (`sjarkny`), 5,4/27,2 → 1,8/0,2 (`sjark`) | sidemannens fisk fra karet 6–13 cm gjennom den andre sløyeren ved t 1,0 (før: sloet 14, kniven 9,5, egen kniv 8,3 i brystet: borte) | ja |
+  | Sløyer uten bord | `gut` | 0 | (den som står forbi bordets ende) 0/0 | ingen | ja |
+  | Pakker og iser | `pack` | 0,4/4,2 → 0,4/3,8 | 3,9/0 til 6,6/3,7 (ikke rettet; siste: 1,9/7,9 og 9/0) | spadeskaftet 2,5–5,8 cm i eget lår (ikke rettet) | ja |
+  | Iser | `ice` | 6,9/6,2 → 0/7,5 | ingen ekte plass i scenene | ingen egen | ja |
+  | Bærer kassa | `carry` | 0 | 0 | ingen | ja |
+  | Senker kassa | `stow` | 0 | 0 | kassa 1,0 i brystet, 2,3 i låret | ja |
+  | Stabler | `stack` | 0 | (samme som tvunget) | kassa 1,2 | ja |
+  | Kutter seg | `cut` hendelse | 0,2 | ikke målt på ekte plass | ingen | ja (tvunget) |
+  | **3. Bruket mellom trekkene** | | | | | |
+  | Egner | `egn` | 9,8/7,4 → 0/0,3 | 28,7–31/9,8 → 1,9/0,4 | agnbiten 3,4–7,9 cm i kroppen i ett øyeblikk (før 8,8); setet 3,8 → borte | ja: hånda i bøtta |
+  | Tar av agn | `strip` | 10,2/10,4 → 3,9/0,3 | ingen scene (trenger brukt line om bord): bare tvunget | agnbiten 8 cm (ikke rettet) | ja |
+  | Bøter | `mend` | 2,4/0 → 0 | 0–0,2 | ingen | ja |
+  | Kveiler | `coil` | 10,3/8,1 → 0/0 | ved fortøyningen ikke fanget | ingen | ja |
+  | Bryner | `knife` | 8/0 → 0/0 | (pause) | ingen | ja |
+  | **4. Dekket og båten** | | | | | |
+  | Feier | `sweep` | 9,7/7,5 → 8,4/7,5 | 8,6/5 → 4,6/5,5 (ikke rettet: nederste hånd forbi rekkevidden ytterst i taket) | ingen | ja |
+  | Spyler | `hose` | 0 | 0/0 | (tvunget: sidemannens slangespole 2,3 i leggen) | ja |
+  | Bunkrer, tar is | `nozzle` | 0 | 0/0 (isen ved kaia) | ingen | ja |
+  | Ved rattet | `helm`, `helmsit` | 0 | 0 (fortøyningen) | ingen | ja |
+  | Hånda mot døra | `door` | 0/4,9 → 0/0 | (samme) | ingen | ja |
+  | Fortøyer | `haul` ved pullerten | | 2,0/1,8 | ingen | ja |
+  | Håndbåtens folk | `figBake`, `figLive` | | ikke målt (egen tegnevei uten logg); sett i andre økt | ikke målt | ja (andre økt) |
+  | Går; sjøbein | | | ikke målt i denne økta (`tests/sjobein.py` med merket er ikke kjørt) | | nei |
+  | **5. Ved kai** | | | | | |
+  | Gir tegn | `signal` | 0 | 0/0 | ingen | ja |
+  | Tar imot lasten | `guide` | 0 | 0/0 | ingen | nei: bildet av den ekte hekteren viste armene nede (stillingen lar seg ikke tvinge på en plass som bytter oppgave selv) |
+  | Hekter av | `unhook` | 0,9/0 | 7,5/0 (én måling, ikke rettet) | ingen | nei (som over) |
+  | Teller | `tally` | 3,3/5,2 → 0/0 | (kaifolkene) | ingen | ja |
+  | Fjernkontrollen | `remote` | 1,6/1,6 → 0/0 | ikke på ekte plass (trenger egen kran) | ingen | ja |
+  | Truckføreren | `drive` | 0 | (kaifolkene) | ingen | ja |
+  | **6. Pausene** | | | | | |
+  | Kaffe | `coffee`, `sitkaffe` | 1,3/0 → 0/0 | (pause) | ingen | ja, stående og sittende |
+  | Spiser | `lunch`, `sitmat` | 0/5,6 → 0/0 | | ingen | ja |
+  | Røyker | `smoke` | 0/0,5 → 0/0 | | ingen | ja |
+  | Snus | `snus` | 9,7/10,5 → 3,1/0 | | ingen | ja |
+  | Mobilen | `phone` | 0 | | ingen | ja |
+  | Kikkert | `binoc` | 0 | | kikkerten 2,2 mot ansiktet (innenfor `FACE`) | ja |
+  | Fryser | `cold` | 0 | | ingen | ja, tre bilder |
+  | Lener seg på rekka | `lean` | 2,3/2,3 | 0/0 (kaia) | ingen | ja |
+  | Armene i kors | `back` | 0 | | ingen | ja |
+  | Sitter | `sit` | 0 | | setet 4,3 → 1,1 i låret | ja |
+  | Prater | `chat` | 0/4 → 0/0–2,7 | | ingen | ja |
+  | Ser utover | `look` | 3,1/3,1 → 0/0 | 0/0 | ingen | ja |
+  | Nordlyset | `aurora` | 4,8/4,8 → 0,7/0,7 | | ingen | ja |
+  | Sjøsyk | `seasick` | 3,4/3,4 → 0/0 | | ingen | ja |
+  | Legger fra seg pausetingen | (`st.put`) | ikke målt: kan ikke bes om i verktøyet | | | nei |
+
+- **Det som ble rettet i femte økt, og hvorfor (alt bak `LEMMER.on`; tallene i `HOLDT`, `deckcrew.js`):** (1) **En hånd foran magen flyttes fram, ikke til siden.** Punktene i `switch (st.task)` er skrevet fra føttene; kroppen står 13–23 cm lenger fram enn de regner med, så en hånd 12 cm fra midten lå i magen, håndleddet enda lenger inn, og `armIk` skjøv håndleddet ut til siden: hånda forlot punktet 4–10 cm (snus, kveil, tavle, mat, bryne, juksa, prat). `holdClear` regner nå bare en hånd som selv er ute ved hoftas side eller bak ham (`beside`, `HOLDT.SIDE`) som armens sak; resten flyttes fram til hånda og håndleddet er klare. En hånd på selve ryggradens linje (egneren som sitter bøyd) er foran ham, ikke bak. (2) **En hånd som henger ved hofta, henger utenfor hofta** (`sideZ`: kroppens halve bredde der, håndleddets klaring og `HOLDT.HANG`; den gamle kroppens 19 cm lå 4–5 cm inne i den nye), og den som står eller går, har hendene 4 cm høyere (`HOLDT.HANGY`: armen er så mye kortere). (3) **Hver sløyer har sin del av bordet** etter bordets lengde (`HOLDT.table`: plastbordet 1,15 m, benken fra 10 m 1,60); den som står forbi bordets ende, sløyer stående fritt (`gut`). (4) **Hånda på karets side henter fisken**, og den bytter hånd på vei til bordkanten (`HOLDT.fish.swap`). (5) **Bløggeren snur seg mot fisken på dekket** (`workTurn`), går dypere i knærne (`HOLDT.bleed.dip`), punktene hans følger hofta mens han reiser seg, og hånda som venter, henger ved foten. (6) **Agnbøtta står på en kasse ved egnerens høyre kne** (`HOLDT.egn`), ikke på dekket bak setet. (7) **Setet er senket under lårene** (`HOLDT.seat`).
+- **Står igjen etter femte økt, verst først (samme steg fortsetter):** fisken fra karet gjennom sidemannen når to sløyer (6–13 cm, t 1,0); `pack` og `ice`: spadens øverste hånd 4–9 cm og skaftet 2,5–5,8 cm i eget lår; `unhook` 7,5 cm på den ekte plassen; `sweep` 5–8 cm (nederste hånd forbi rekkevidden); agnbiten i `egn` og `strip` (3–8 cm); `snus` 3,1; bløggingen 2,5–3,2; `bleedst` 2,6; `chat` 2,7; `lean` 2,3. Ikke målt: `st.put`, `slip` og `cut` på ekte plass, `strip` på ekte plass, håndbåten, gangen og sjøbeina. Ikke sett: `guide` og `unhook` på den ekte hekteren, kveilingen ved fortøyningen. De to trangeste dekkene (`sjark`, `breisjark`), `kyst15` og havbåtene er ikke målt i denne økta ut over sløyingen på `sjark`.
+
 ## 5.6d Navngitte folk på kysten: Tony Hjelmseth i Husøy (Jonas 06.11.2026)
 
 Jonas 06.11.2026 etter besøket: «Legg inn en NPC-fisker på Husøya som heter Tony Hjelmseth … spøkefugl født 10. mai 1998 … jobbet på en garnbåt med fast havn på Husøy noen år … tidligere kjøpmann på butikk før han startet som røkter på oppdrettsanlegg, men nå er han fisker på fulltid», og så: «Tony er ikke en båt, men en man skal kunne ansette som mannskap.»

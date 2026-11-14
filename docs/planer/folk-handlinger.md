@@ -11,6 +11,8 @@ Jonas 14.11.2026: «Lag så en liste over alle handlingene mannskapet gjør på 
 
 Ingen av dem er ferdige i den forstand at Jonas har sett dem og sagt ja.
 
+**Nyeste tall (femte økt, 14.11.2026):** «Står»-kolonnene under er fra fjerde økt. Hver handling er siden målt tvunget og på den ekte plassen sin og sett på bilde, og tallene står i én tabell: «Alle handlingene, målt og sett» i 5.33d i `docs/systemer/folk-om-bord.md` (`grep -n "Alle handlingene, målt"`), med det som står igjen verst først rett under. Arkene: `docs/okter/2026-11-14-125/ark5b-<gruppe>.jpg`. Handlingene som ikke hadde scene i verktøyet (settingen, teinene, kaia, fortøyningen, spylingen), har det nå (`--scene setting|settgarn|teiner|kai|fortoy|vask`).
+
 ## 1. Fisket: redskapet over rekka
 
 | Handling | Navn | Holder | Trenger | Står |
