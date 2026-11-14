@@ -4358,3 +4358,7 @@
 2026-11-14 10:38	utrull	4f02206+	tattest	FEIL	16	lite	alene	FEIL the Milepæler app is the list only (no sailor, Jonas 05.10.2026): a drawing on each card, and how many you have
 2026-11-14 10:39	utrull	4f02206+	tattest	OK	15	lite	alene	
 2026-11-14 10:39	utrull	ec0459e	tattest	OK	15	lite	alene	
+2026-11-14 13:48	ccr-013bxxif-fb7dekk	0faaedf	crewclip	FEIL	29	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 13:49	ccr-013bxxif-fb7dekk	0faaedf	crewclip	FEIL	34	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5148, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
+2026-11-14 13:55	ccr-013bxxif-fb7dekk	8ff8530	lemmer	FEIL	354	3d	alene	FEIL løseren er på bak #folk2 og av uten merket (og av med #ik0)  [True, True]
+2026-11-14 14:01	ccr-013bxxif-fb7dekk	8ff8530	folk2deck	FEIL	336	3d	alene	FEIL uten #folk2 finnes ikke skinnprogrammet, og ingen skinnet figur tegnes  {'nb': 58, 'prog': True, 'maxV': 4096, 'figs': 24, 'calls': 24, 'tris': 155292, 'fr
