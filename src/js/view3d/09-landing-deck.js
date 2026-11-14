@@ -539,7 +539,9 @@
   // the fish across the deck (deckcrew.js places): when a gaff or a pick lets it fall at the drop, it lies there until the bleeder takes it
   // up (else the one who brought it in, who is then the bleeder); a hand-jigged fish is bled by the one who jigged it
   // a fish still waiting to be taken in or bled (the next one comes when it has been; one nobody took in time is let go)
-  const dkWaits = () => { const now = performance.now() / 1000; return DKDECK.length > 0 || DKEV.some(e => e.who == null && (e.kind === 'gaff' || e.kind === 'pick' || (e.kind === 'bleed' && e.deckF)) && now - e.t0 <= (e.wait || DKDUR[e.kind])); };
+  const dkWaits = () => { const now = performance.now() / 1000; return DKDECK.length > 0 || DKEV.some(e => e.who == null && (e.kind === 'gaff' || e.kind === 'pick' || (e.kind === 'bleed' && e.deckF)) && now - e.t0 <= (e.wait || DKDUR[e.kind]))
+    // (the new people, the waiting rule, deckcrew.js VENT: nor while the bleeder is down at the last fish, where the gaff swings the next one in: the gaff was 17 cm in him)
+    || (LEMMER.on && DKEV.some(e => e.kind === 'bleed' && e.deckF && e.who != null && now - e.t0 < VENT.bleed)); };
   function dkTick(){
     const now = performance.now() / 1000;
     for (let i = DKEV.length - 1; i >= 0; i--){ const e = DKEV[i]; if (now - e.t0 > (e.who == null ? e.wait || DKDUR[e.kind] : DKDUR[e.kind]) + 4) DKEV.splice(i, 1); }

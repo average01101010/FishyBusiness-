@@ -1241,7 +1241,10 @@ const HOLDT = {
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
   table:{bord:0.32, benk:0.55, off:0.15},   // m along the gutting table from its middle a gutter's own part of it may be (the plastic table is 1.15 m long, the steel bench 1.60, the fish 0.4), and how far past that he may stand and still reach it; further along he guts standing free
   SIDE:0.03,     // m inside the trunk's half width a hand's point still counts as by his side (the arm's matter, not moved out ahead)
-  STRAIGHT:0.42, // rad his back may be bent and still count as straight: only then is a hand before his belly moved out ahead (bent over, «ahead» of the torso points down)
+  // rad his back may be bent (the pose's bend and what the reach adds) and still count as straight, for the poses named: only then is a hand before his belly
+  // moved out ahead (the packer bent 0.9 to 1.2 over his crate: «ahead» of the torso points down into it there). Not a rule for every pose: measured 14.11.2026
+  // with 0.3 and 0.42 for all, the gutter at the tub, the baiter on his seat and the one who unhooks got 6 to 13 cm back, which the rule had taken away
+  STRAIGHT:{pack:0.6},
   HANG:0.012,    // m a hand hanging by the hip keeps beyond the trunk's half width and the wrist's clearance
   HANGY:0.04,    // m higher the hanging hands of one who stands or walks are than the old body's (the new arm is that much shorter)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
@@ -1284,6 +1287,26 @@ const HOLDT = {
   blade:{r:0.15, legs:[0.3, 0.36]},           // the shovel's blade: its half width, and the room his legs have of it under the hips (m ahead of them and to either side: its socket keeps outside that)
   kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0, scan:[0.22, 0.25]}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line; scan: how fast and how far (rad) he turns his head with them, the hands going with them
 };
+// The waiting rule (FB7, steg 125 sixth session; Jonas 14.11.2026, «Valg A»): nobody starts a take while another stands in the way of
+// the thing. Between two people it is this, not geometry in the pose, that keeps one man's thing out of another: the hauler does not
+// gaff the next fish while the bleeder is down at the last one in the gaff's sweep (view3d/09-landing-deck.js dkWaits), the gutter
+// who has the man beside him between himself and the tub takes his fish from the table (view3d/20-trawl-seine.js drawDeckCrew), and
+// the packer holds his shovel over the crate while somebody walks past the ice or works a fish there. Only behind LEMMER.on.
+// Two who stand at their own places inside each other's reach all the time are the places' matter (docs/planer/arbeidsceller.md).
+const VENT = {
+  bleed:1.0,     // s of the bleeder's take (down to the fish on the deck and up with it) the hauler waits before the next fish is gaffed in
+  pass:0.45,     // m from the way between a gutter and the tub another gutter stands in it
+  table:[0.22, 0.2],   // where the fish is taken from the table instead: m along it towards the tub's side from his own part of it, and over its top
+  shovel:0.6,    // m from the way between the packer and the ice somebody who walks or works a fish is in the shovel's way
+  ease:0.35,     // s the wait comes on and goes over (the shovel to over the crate and back to its round)
+  // m from p to the way from a to b, on the deck [x, z]
+  seg(p, a, b){ const dx = b[0] - a[0], dz = b[1] - a[1], l2 = dx * dx + dz * dz, u = l2 > 1e-12 ? Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / l2)) : 0; return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u); },
+  // is one of the others within r of the way from a to b (and of b itself: the one who stands just past the ice is in the shovel's way too)
+  inWay(a, b, others, r){ for (const o of others) if (VENT.seg(o, a, b) < r) return true; return false; },
+  // the wait's share (0 at work, 1 waiting) dt s on, towards waiting or back; closed in the time, so a slow tablet waits as long
+  blend(w, wait, dt){ const d = Math.max(0, dt) / VENT.ease; return Math.max(0, Math.min(1, w + (wait ? d : -d))); }
+};
+
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
 // (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
 // c.sex; the man's when nothing says), and the shoulders' place over the hips is the skeleton's too; figpose.js figLens)

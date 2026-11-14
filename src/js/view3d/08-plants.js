@@ -132,10 +132,10 @@
     // (the new people, steg 125 sixth: after a fish is laid straight he takes the shovel up again over the crate, where his hands are, and it goes from there to
     // where its round has it in HOLDT.shaft.back s as he turns after it (workTurn): it came back wherever its round had it, with him not yet turned to it, up to
     // 10 cm past his reach and 5 cm into his thigh for a moment. kb: the share of the way back to the round)
-    const kb = LEMMER.on && st.lay != null && st.lay >= 1.5 && st.lay < 1.5 + HOLDT.shaft.back ? ease((st.lay - 1.5) / HOLDT.shaft.back) : 1, sw = 1 + (sw0 - 1) * kb;
-    const r = rB + sw * (rT - rB), a = aB + sw * (aT - aB); if (y == null) return {a, r, up:0, tip:tip * kb, full:full && kb === 1, c};
+    const kb = (LEMMER.on && st.lay != null && st.lay >= 1.5 && st.lay < 1.5 + HOLDT.shaft.back ? ease((st.lay - 1.5) / HOLDT.shaft.back) : 1) * (1 - ease(LEMMER.on ? st.shW || 0 : 0)), sw = 1 + (sw0 - 1) * kb;   // (and held over the crate while he waits for somebody in the shovel's way, st.shW: the waiting rule, deckcrew.js VENT)
+    const r = rB + sw * (rT - rB), a = aB + sw * (aT - aB); if (y == null) return {a, r, up:0, tip:tip * kb, full:full && kb > 0.95, c};
     const hB = Bn ? Bn[1] + eye[1] - y : 0.5, hT = Math.max(0.62, (st.crTop || 0.28) + (Cr ? Cr[1] + eye[1] - y : 0) + 0.12);
-    return {a, r, up:(hB + 0.17) + sw * (hT - hB - 0.17) - lo * 0.15 * kb + Math.sin(sw * Math.PI) * 0.25, tip:tip * kb, full:full && kb === 1, c};
+    return {a, r, up:(hB + 0.17) + sw * (hT - hB - 0.17) - lo * 0.15 * kb + Math.sin(sw * Math.PI) * 0.25, tip:tip * kb, full:full && kb > 0.95, c};
   }
   // he turns from his place towards what he reaches for: the gutter to the bleeding tub for the next fish, the bleeder to the tub as he
   // throws, the packer to the crate at his side (the place and its heading stay; the body turns on the feet)
@@ -453,7 +453,7 @@
         if (Gs < 0.8 && rightTub){ const u = ease(Gs / 0.8); hands = [lerp3(rest[0], lo, Math.sin(u * Math.PI / 2)), rest[1]]; if (Gs > 0.6) st.gf = {at:hands[0], hang:true}; }
         else if (Gs < 1.3 && rightTub){ const u = ease((Gs - 0.8) / 0.5), k = HOLDT.fish.swap[1], P = v => lerp3(lo, E, v);
           if (u < k){ hands = [P(u), lerp3(rest[1], P(k), ease(u / k))]; st.gf = {at:hands[0], hang:true}; }
-          else { hands = [lerp3(P(k), lerp3(rest[0], vent, 0.8), ease((u - k) / (1 - k))), P(u)]; st.gf = {at:hands[1], hang:true, both:true}; } }   /* (both: the hand that gave the fish over is still by it, and goes clear of his belly with it, holdClear) */
+          else { hands = [lerp3(P(k), lerp3(rest[0], vent, 0.8), ease((u - k) / (1 - k))), P(u)]; st.gf = {at:hands[1], hang:true, both:true}; } }   /* (both: the hand that gave the fish over is still by it, and goes clear of his belly with it, holdClear) */   /* (both: the hand that gave the fish over is still by it, and goes clear of his belly with it, holdClear) */
         else if (Gs < 0.8){ const u = ease(Gs / 0.8); hands = [rest[0], lerp3(rest[1], lo, Math.sin(u * Math.PI / 2))]; if (Gs > 0.6) st.gf = {at:hands[1], hang:true}; }
         else if (Gs < 1.3){ const u = ease((Gs - 0.8) / 0.5); hands = [lerp3(rest[0], vent, u * 0.8), lerp3(lo, E, u)]; st.gf = {at:hands[1], hang:true}; }
         // the belly opened from the vent up to the throat
@@ -611,9 +611,9 @@
       const mv = (q, d) => { q[0] += AH[0] * d; q[1] += AH[1] * d; q[2] += AH[2] * d; }, mid = () => [(hands[0][0] + hands[1][0]) / 2, (hands[0][1] + hands[1][1]) / 2, (hands[0][2] + hands[1][2]) / 2];
       // (a hand by his side, hanging at the hip or behind him, is the arm's own matter (armIk); one before him is moved out ahead. The new
       // people's trunk is 15 to 19 cm deep before the hip joints: a hand 12 cm off his middle is before his belly, not beside it)
-      // (steg 125, sixth: only while his back is about straight, HOLDT.STRAIGHT. Bent over his crate «ahead» in the torso's frame points
-      // down at the deck, and a hand moved «ahead» went down into the crate and the back after it: the packer's crate 9.6 cm in him. Bent, as before the fifth session)
-      const straight = Math.abs(b) < H.STRAIGHT, beside = l => LEMMER.on && straight ? Math.abs(l[2]) > (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) - HOLDT.SIDE || l[0] < -HOLDT.SIDE : Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0);
+      // (steg 125, sixth: for the packer only while his back is about straight, HOLDT.STRAIGHT. Bent over his crate «ahead» in the torso's frame points
+      // down at the deck, and a hand moved «ahead» goes down into the crate and the back after it. Bent, he does as before the fifth session)
+      const straight = H.STRAIGHT[st.task] == null || Math.abs(b) < H.STRAIGHT[st.task], beside = l => LEMMER.on && straight ? Math.abs(l[2]) > (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) - HOLDT.SIDE || l[0] < -HOLDT.SIDE : Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0);
       // (a hand at the face: where the face is with the back bent as it is now)
       for (const i of [0, 1]) if (FQ[i]){ const q = FQ[i], A = ofH(torsoPt(q.l, b, 0)); hands[i] = q.low ? lerp3([q.low[0], q.low[1] - drop, q.low[2]], A, q.k) : A; }
       switch (st.task){
