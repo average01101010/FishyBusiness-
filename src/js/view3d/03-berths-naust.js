@@ -77,7 +77,7 @@
   // The shop's yard (anchors.apron, from the deck's back to 27.5 m in) is levelled 0.1 m under the deck and goes back within 12 m. The
   // map's houses on their ground go (onSite, in bldOnUnit) and so do the scattered trees. Drawn in full within 900 m, simply to 4 km.
   const SHOP_APRON = [-19, 19, 9.6, 27.5];
-  let SITES = null, SITEK = '';
+  let SITES = null, SITEK = '', SITENAN = [];   // (SITENAN: the sites whose quay out, siteOut, was not known yet when they were made)
   // the rorbuer near the boat, looked up again when she has moved 500 m or one more has been found (at most one new one is worked out
   // in a frame: rorbuSoon)
   const RBNEAR = {x:NaN, z:NaN, ver:-1, l:[], key:''};
@@ -89,8 +89,10 @@
   }
   function sitesNow(){
     const n = typeof naustSite === 'function' ? naustSite() : null, key = (n ? n.o.join(',') + (siteReady(n.o) ? '' : 'w') : '-') + '|' + rorbuNow() + RBNEAR.l.map(R => siteReady(R.site.o) ? '' : 'w').join('') + '|' + S.boat.type;
-    if (SITES && SITEK === key) return SITES;
-    SITEK = key; SITES = [];
+    // (a site's quay out not known when they were made, the fine coast not in: made again once it is known, so the pit reaches as far as
+    // the simulation's pocket)
+    if (SITES && SITEK === key && !SITENAN.some(o => { const q = siteOut(o); return q === q; })) return SITES;
+    SITEK = key; SITES = []; SITENAN = [];
     const sh = shopSite(); if (sh && glbHas('shop')) SITES.push({k:'shop', o:sh.o, u:sh.u, n:[-sh.u[1], sh.u[0]], clear:[[SHOP_APRON[0], SHOP_APRON[2] - 2, SHOP_APRON[1], SHOP_APRON[3]]]});
     // the shop by the naust along the coast (07c-naust.js shopNear): its yard levelled at the ground's own height there (not the deck's),
     // and the model lifted to it; the ground's height is read before the site is in SITES (terrRaw goes through siteTerr)
@@ -102,13 +104,15 @@
     }
     // (the pit as deep as the simulation dredges the berth, SITE_DRAFT and half a metre at the lowest tide, below mean sea level: siteDredge,
     // 13.11.2026; a boat up to 15 m lies there whatever she draws)
-    const V = VESSELS[S.boat.type] || {}, pit = a => ({d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w), a});
+    // (and out as far as the quay is built to her, siteOut, as the pocket is: the naust on Kvitsøy, 14.11.2026; not known till the fine
+    // coast is in, and then the sites are made again)
+    const V = VESSELS[S.boat.type] || {}, pit = (a, o) => { const q = siteOut(o); if (q !== q) SITENAN.push(o); return {d:Math.max(3, (V.draft || 1.5) + 1, SITE_DRAFT + 0.5 + tideZC()), w:Math.max((V.beam || 3) + 8, SITE_POCK.w) + (q === q ? q : 0), a}; };
     if (n && glbHas('naust')){ const nn = [-n.u[1], n.u[0]];
-      SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16), clear:[[-14, -1, 14, 16]]}); }
+      SITES.push({k:'naust', o:n.o, u:n.u, n:nn, lift:siteLift(SFOOT.naust, n.o, n.u, nn), pit:pit(16, n), clear:[[-14, -1, 14, 16]]}); }
     // the rorbuer within 4 km of the boat (07d-rorbu.js; tools/harbour/rorbu.py), each in its colour; the model's 'clear' is where the
     // map's houses go
     if (glbHas('rorbu')) for (const R of RBNEAR.l){ const o = R.site.o, u = R.site.u, n = [-u[1], u[0]], M = siteModel('rorbu:' + R.v);
-      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, lift:siteLift(SFOOT.rorbu, o, u, n), pit:pit(14), clear:[[-15, -1, 15, 21]]});
+      SITES.push({k:'rorbu', v:R.v, id:R.id, o, u, n, lift:siteLift(SFOOT.rorbu, o, u, n), pit:pit(14, R.site), clear:[[-15, -1, 15, 21]]});
       // its bollards (the model's anchors, x along the face and z out to sea) take the mooring lines (drawMooring)
       if (M && M.A.bollards) QB[faceKey({x:o[0], z:o[1]})] = M.A.bollards.map(q => ({x:o[0] + u[0] * q[0] + n[0] * q[2], z:o[1] + u[1] * q[0] + n[1] * q[2], a:q[0]})); }
     // a site that came after the ground round it was built: those terrain chunks and the near mesh are made again with its ground

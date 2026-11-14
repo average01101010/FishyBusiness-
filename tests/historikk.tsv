@@ -4348,6 +4348,49 @@
 2026-11-14 05:54	ccr-as1-alle	b4ea2e77	routetest	OK	42	lite	alene	
 2026-11-14 06:18	ccr-as1-alle	13a3d337	trackfollow	OK	1426	3d	alene	
 2026-11-14 06:28	ccr-as1-alle	e1d06dfd	boottest	OK	30	lite	alene	
+2026-11-14 08:50	ccr-as1-alle	e6e05ee1	tutfull	OK	14	lite	samtidig	
+2026-11-14 08:51	ccr-as1-alle	e6e05ee1	krabbefabrikktest	OK	37	lite	samtidig	
+2026-11-14 09:02	ccr-as1-alle	2360f1c7	tutfull	OK	12	lite	samtidig	
+2026-11-14 09:02	ccr-as1-alle	2360f1c7	krabbefabrikktest	OK	30	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	colregtest	OK	736	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	keeptest	OK	21	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	autonavtest	OK	42	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	turtest	FEIL	30	lite	samtidig	FEIL the board offers survey fishing and lighthouse pictures now and then, never two of one kind; a tap on the measuring board reads the length there  {"kinds":
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	decktest	OK	22	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	trip2	OK	61	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	worktest	OK	37	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	npctest	OK	13	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	towtest	OK	24	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	tattest	OK	42	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	peergear	OK	9	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	mobtest	OK	218	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	turlinjetest	OK	9	lite	samtidig	
+2026-11-14 09:14	ccr-as1-alle	2360f1c7	kaiover	OK	150	lite	samtidig	
+2026-11-14 09:17	ccr-as1-alle	2360f1c7	hudtest	OK	197	lite	samtidig	
+2026-11-14 09:17	ccr-as1-alle	2360f1c7	havflaate	OK	19	lite	samtidig	
+2026-11-14 09:17	ccr-as1-alle	2360f1c7	hulltest	OK	88	lite	samtidig	
+2026-11-14 09:17	ccr-as1-alle	2360f1c7	lanterntest	OK	37	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	farttest	OK	399	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	fabrikktest	OK	27	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	kotest	OK	37	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	naustleia	OK	18	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	harbourtest	OK	32	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	rorbutest	OK	19	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	havntest	OK	33	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	havtur	FEIL	163	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	utfrakai	OK	104	lite	samtidig	
+2026-11-14 09:24	ccr-as1-alle	8e7e4e07	lukket	OK	29	lite	samtidig	
+2026-11-14 09:28	ccr-as1-alle	8e7e4e07	dyntest	FEIL	267	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 09:28	ccr-as1-alle	8e7e4e07	helmtest	OK	28	lite	samtidig	
+2026-11-14 09:28	ccr-as1-alle	8e7e4e07	docktest	OK	78	lite	samtidig	
+2026-11-14 09:52	ccr-as1-alle	8e7e4e07	vectest	OK	1421	3d	alene	
+2026-11-14 09:54	ccr-as1-alle	8e7e4e07	anchorlight3d	FEIL	109	3d	alene	avsluttet med kode 1
+2026-11-14 10:09	ccr-as1-alle	8e7e4e07	kaishot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 10:10	ccr-as1-alle	8e7e4e07	bunkertest	OK	88	3d	alene	
+2026-11-14 10:11	ccr-as1-alle	8e7e4e07	moortest	OK	45	3d	alene	
+2026-11-14 10:15	ccr-as1-alle	8e7e4e07	unittest	FEIL	249	3d	alene	avsluttet med kode 1
+2026-11-14 10:18	ccr-as1-alle	8e7e4e07	sitetest	FEIL	165	3d	alene	avsluttet med kode 1
+2026-11-14 10:45	ccr-as1-alle	8e7e4e07	trackfollow	FEIL	1638	3d	alene	FEIL at the end of the route she stops exactly on the last waypoint, without running past and coming back  {"stop": 0.0, "d3d": 0.37, "d": 0.37, "rise": 0.0, "d
 2026-11-14 10:30	ccr-013bxxif-fb7dekk	e847bd8	crewclip	FEIL	22	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
 2026-11-14 10:31	ccr-013bxxif-fb7dekk	e847bd8+	crewclip	FEIL	27	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5148, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
 2026-11-14 10:36	ccr-013bxxif-fb7dekk	f597639	folk2deck	FEIL	318	3d	alene	FEIL gutw: hendene er innen 2 cm av det de holder (verst 101.6 mm; 32 figurer)  {'flyttet_cm': 10.2}
@@ -4358,6 +4401,82 @@
 2026-11-14 10:38	utrull	4f02206+	tattest	FEIL	16	lite	alene	FEIL the Milepæler app is the list only (no sailor, Jonas 05.10.2026): a drawing on each card, and how many you have
 2026-11-14 10:39	utrull	4f02206+	tattest	OK	15	lite	alene	
 2026-11-14 10:39	utrull	ec0459e	tattest	OK	15	lite	alene	
+2026-11-14 12:28	ccr-as1-alle	6361dd60	heattest	FEIL	0	3d	alene	avsluttet med kode 1
+2026-11-14 12:28	ccr-as1-alle	6361dd60	landtest	FEIL	0	3d	alene	avsluttet med kode 1
+2026-11-14 12:33	ccr-as1-alle	6361dd60	heattest	FEIL	255	3d	alene	FEIL knappen viser monteringstida i ekte tid (verftsjobbene tar 30 minutter)  Kjøp og monter · 150 000 kr
+2026-11-14 12:34	ccr-as1-alle	6361dd60	landtest	OK	90	3d	alene	
+2026-11-14 12:48	ccr-as1-alle	6361dd60+	heattest	OK	256	3d	alene	
+2026-11-14 14:18	ccr-as1-alle	91e992a4	ferrytest	OK	18	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	colregtest	OK	730	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	hulltest	OK	72	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	npctest	OK	6	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	boottest	OK	25	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	autonavtest	OK	19	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	hudtest	OK	107	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	havflaate	OK	9	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	lanterntest	OK	12	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	farttest	OK	383	lite	samtidig	
+2026-11-14 14:44	ccr-as1-alle	91e992a4	kystshot	OK	889	3d	alene	
+2026-11-14 14:51	ccr-as1-alle	91e992a4	kystshot_st	OK	391	3d	alene	
+2026-11-14 14:54	ccr-as1-alle	91e992a4	anchorlight3d	OK	204	3d	alene	
+2026-11-14 15:04	ccr-as1-alle	91e992a4	vectest	OK	596	3d	alene	
+2026-11-14 15:05	ccr-as1-alle	91e992a4	dbg23o	OK	41	3d	alene	
+2026-11-14 15:20	ccr-as1-alle	91e992a4	kaishot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 15:35	ccr-as1-alle	91e992a4	npcshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 16:44	ccr-as1-alle	43a99c55	tutfull	OK	8	lite	samtidig	
+2026-11-14 16:45	ccr-as1-alle	43a99c55	krabbefabrikktest	OK	24	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	colregtest	OK	729	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	keeptest	OK	15	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	autonavtest	OK	26	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	turtest	OK	17	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	decktest	OK	14	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	trip2	OK	37	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	worktest	OK	26	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	npctest	OK	9	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	towtest	OK	15	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	tattest	OK	24	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	peergear	OK	5	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	mobtest	OK	203	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	turlinjetest	OK	9	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	kaiover	OK	141	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	ferrytest	OK	23	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	hulltest	OK	73	lite	samtidig	
+2026-11-14 16:56	ccr-as1-alle	fc0c2cc1	boottest	OK	38	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	hudtest	OK	152	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	havflaate	OK	18	lite	samtidig	
+2026-11-14 16:58	ccr-as1-alle	fc0c2cc1	lanterntest	OK	21	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	farttest	OK	391	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	fabrikktest	OK	19	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	kotest	OK	23	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	naustleia	OK	10	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	harbourtest	OK	22	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	rorbutest	OK	17	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	havntest	OK	24	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	havtur	FEIL	141	lite	samtidig	FEIL Båtsfjord: sovner du om bord, tar vakta på broa over og lagene arbeider videre (ikke «driver») [['Du sovnet av utmattelse. Båten ligger og driver.', 'Du so
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	utfrakai	OK	97	lite	samtidig	
+2026-11-14 17:04	ccr-as1-alle	fc0c2cc1	lukket	OK	21	lite	samtidig	
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	dyntest	FEIL	264	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	helmtest	FEIL	27	lite	samtidig	FEIL rattet til styrbord svinger henne til styrbord, og det går tilbake til midten når du slipper  {'rud': 1, 'deg': -173.3, 'after': 0}
+2026-11-14 17:08	ccr-as1-alle	fc0c2cc1	docktest	OK	69	lite	samtidig	
+2026-11-14 17:14	ccr-as1-alle	fc0c2cc1	dyntest	FEIL	263	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:14	ccr-as1-alle	fc0c2cc1	helmtest	OK	26	lite	samtidig	
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	dyntest	FEIL	265	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	helmtest	OK	26	lite	samtidig	
+2026-11-14 17:19	ccr-as1-alle	fc0c2cc1+	helmtest	OK	26	lite	alene	
+2026-11-14 18:39	ccr-as1-alle	e5d62591	vectest	OK	765	3d	alene	
+2026-11-14 18:54	ccr-as1-alle	2cfb09e1	kystshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 19:01	ccr-as1-alle	0f8d4708	kystshot_st	OK	461	3d	alene	
+2026-11-14 19:06	ccr-as1-alle	b1f8e1d4	anchorlight3d	OK	273	3d	alene	
+2026-11-14 19:07	ccr-as1-alle	744f9a05	bunkertest	OK	72	3d	alene	
+2026-11-14 19:08	ccr-as1-alle	744f9a05	moortest	OK	42	3d	alene	
+2026-11-14 19:14	ccr-as1-alle	744f9a05	unittest	FEIL	386	3d	alene	avsluttet med kode 1
+2026-11-14 19:20	ccr-as1-alle	744f9a05	sitetest	FEIL	359	3d	alene	avsluttet med kode 1
+2026-11-14 19:21	ccr-as1-alle	744f9a05	dbg23o	OK	49	3d	alene	
+2026-11-14 19:36	ccr-as1-alle	744f9a05	enhetshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 19:51	ccr-as1-alle	744f9a05	npcshot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 20:17	ccr-as1-alle	744f9a05	trackfollow	FEIL	1570	3d	alene	FEIL at the end of the route she stops exactly on the last waypoint, without running past and coming back  {"stop": 0.0, "d3d": 0.0, "d": 0.84, "rise": 0.54, "d
+2026-11-14 20:23	ccr-as1-alle	744f9a05	heattest	OK	330	3d	alene	
+2026-11-14 20:25	ccr-as1-alle	744f9a05	landtest	OK	103	3d	alene	
 2026-11-14 13:48	ccr-013bxxif-fb7dekk	0faaedf	crewclip	FEIL	29	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5142, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
 2026-11-14 13:49	ccr-013bxxif-fb7dekk	0faaedf	crewclip	FEIL	34	lite	alene	FEIL nor a body on the way between them (shoulders, chest and back, every tenth of a second) {'snokrabbe': [47, 5148, ['f:3.23:walk', 'rlf:3.12:walk', 'lfb:3.01
 2026-11-14 13:55	ccr-013bxxif-fb7dekk	8ff8530	lemmer	FEIL	354	3d	alene	FEIL løseren er på bak #folk2 og av uten merket (og av med #ik0)  [True, True]

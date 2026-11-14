@@ -20,8 +20,13 @@ APART = 1.5
 # where no point APART km from the others has a way out (a rorbu behind a low bridge, Svolvær: the open water by the town is all within
 # 1.5 km of its plant, shop and yard), a second round at APART2
 APART2 = 0.8
+# KYST_RORBU_FAST=1: each point asks for the way to open water within 3 km and the nearest trade place only, open water first (a way
+# that is not found takes 45-50 s a search where the water is shut in, Langvasseid 14.11.2026: three places and five tides were over ten
+# minutes a point, and the rings over an hour). A point that holds this way holds the test's way too (it tries those and two more); a point
+# turned down this way might have held by the two others, so a rorbu may be moved further than it had to be
+FAST = os.environ.get('KYST_RORBU_FAST') == '1'
 
-TRY = r"""async ([id, apart]) => { const R = RBID.get(id), b = S.boat, c0 = {x:R.cand.x, y:R.cand.y}; TAB.held = true; S.tut = 0;
+TRY = r"""async ([id, apart, FAST]) => { const R = RBID.get(id), b = S.boat, c0 = {x:R.cand.x, y:R.cand.y}; TAB.held = true; S.tut = 0;
   if (b.type !== 'kyst15'){ b.type = 'kyst15'; if (!S.owned.includes('kyst15')) S.owned.push('kyst15'); applyVessel(); }
   const V = VESSELS[b.type], tried = [];
   const others = PORTS.map(q => q.p).concat([...RBID.values()].filter(Q => Q.id !== id).map(Q => Q.cand));
@@ -36,9 +41,9 @@ TRY = r"""async ([id, apart]) => { const R = RBID.get(id), b = S.boat, c0 = {x:R
     if (pts.some(p => isLand(p))) return {ok:false, why:'hull on land'};
     const dmin = Math.min(...pts.map(p => depthF(p))); if (dmin < V.draft) return {ok:false, why:'shallow ' + dmin.toFixed(1)};
     const from = {...(quayPos(b) || b.pos)};
-    const cands = dests.filter(q => dist(q.p, from) > 2 && dist(q.p, from) < 200).sort((a, c) => dist(a.p, from) - dist(c.p, from)).slice(0, 3).map(q => ({p:q.p, id:q.id}));
+    const cands = dests.filter(q => dist(q.p, from) > 2 && dist(q.p, from) < 200).sort((a, c) => dist(a.p, from) - dist(c.p, from)).slice(0, FAST ? 1 : 3).map(q => ({p:q.p, id:q.id}));
     let open = null; for (let rr = 0.5; rr <= 3 && !open; rr += 0.25) for (let a = 0; a < 6.28; a += 0.26){ const c = {x:from.x + Math.cos(a) * rr, y:from.y + Math.sin(a) * rr}; try { if (!isLand(c) && depthF(c) > 15 && coastDist(c) > 0.3){ open = {p:c, id:null}; break; } } catch (e){} }
-    if (open) cands.push(open);
+    if (open) cands[FAST ? 'unshift' : 'push'](open);
     const T0 = S.t; let last = '';
     try { for (let h = 0; h <= 12; h += 3){ S.t = T0 + h * 60;
       for (const q of cands){ await mapPreload([q.p], [['sim', 3], ['chart', 3]]); let r = null; try { r = await leiaRoute(from, q.p, id, q.id); } catch (e){ r = {why:['error ' + String(e && e.message).slice(0, 60)]}; } if (r && r.wps) return {ok:true, h, nm:+r.nm.toFixed(1)}; last = r && r.why ? r.why[0] : 'none'; } } } finally { S.t = T0; }
@@ -85,8 +90,8 @@ def main():
             br = await p.chromium.launch(); pg = await (await br.new_context(viewport={'width': 1280, 'height': 800})).new_page()
             await boot(pg, GAME + ('' if 'no3d' in GAME else ',no3d')); out = {}
             for i in ids:
-                r = await pg.evaluate(TRY, [i, APART])
-                if not r.get('ok'): r = await pg.evaluate(TRY, [i, APART2]); r['apart'] = APART2
+                r = await pg.evaluate(TRY, [i, APART, FAST])
+                if not r.get('ok'): r = await pg.evaluate(TRY, [i, APART2, FAST]); r['apart'] = APART2
                 out[i] = r; print('  %-6s %-22s %s' % (i, D['r'][int(i[2:])][3], r), flush=True)
             await br.close(); return out
     res = asyncio.run(run())

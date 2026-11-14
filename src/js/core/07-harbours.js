@@ -93,10 +93,25 @@ const SITE_DRAFT = Math.max(...Object.values(VESSELS).filter(V => (V.len || 0) <
 // the pocket in front of the quay's face (m): SITE_POCK.a along it each way, w out from it, rising SITE_POCK.slope outside
 const SITE_POCK = {a:12, w:14, slope:0.5};
 // how far (m) x, z lies outside the pocket of a site {o (the face's middle), u (along it; out to sea [-u[1], u[0]])}: 0 in it, Infinity behind the face or far off
+// (the pocket reaches as far out as the quay is built to her, siteOut: at the naust on Kvitsøy and Smøla nord the fine coast lay 16 m
+// out from the naust's face, the berth 20 m out, and the pocket's 14 m left her on 2.0 m; steg 126, 14.11.2026, tests/allesteder.py)
 function sitePockE(s, x, z){
-  const R = SITE_POCK.a + SITE_POCK.w + (SITE_DRAFT + 0.5) / SITE_POCK.slope; if (!s || !s.o || !s.u || Math.abs(x - s.o[0]) > R || Math.abs(z - s.o[1]) > R) return Infinity;
+  const R = SITE_POCK.a + SITE_POCK.w + QOUT.max + (SITE_DRAFT + 0.5) / SITE_POCK.slope; if (!s || !s.o || !s.u || Math.abs(x - s.o[0]) > R || Math.abs(z - s.o[1]) > R) return Infinity;
   const dx = x - s.o[0], dz = z - s.o[1], a = Math.abs(dx * s.u[0] + dz * s.u[1]), n = -dx * s.u[1] + dz * s.u[0];
-  return n < 0 ? Infinity : Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w);
+  if (n < 0) return Infinity; const out = siteOut(s);
+  return Math.max(0, a - SITE_POCK.a, n - SITE_POCK.w - (out === out ? out : 0));
+}
+// how far (m) the quay is built out from a site's face to the water a boat up to 15 m lies in (quayOut with SITE_MAXLEN; QOUT.max when
+// the water is further off). At the naust it is the same for every boat that lies there (naustFace), so the berth, the pocket and the 3D
+// pit agree; a rorbu's berth works its own out per boat as before (rorbuFace), inside the pocket this reaches. NaN while the fine coast
+// round it is not in (not kept then; asked again after a second, SITE_OUTN)
+const SITE_OUT = new Map(), SITE_OUTN = new Map();
+function siteOut(s){
+  if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) * 4e7 + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
+  const t = SITE_OUTN.get(k); if (t !== undefined && Date.now() - t < 1000) return NaN;
+  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN, true); } catch (e){ q = NaN; }   // (no map in yet)
+  if (q !== q){ if (SITE_OUTN.size > 500) SITE_OUTN.clear(); SITE_OUTN.set(k, Date.now()); return NaN; } SITE_OUTN.delete(k); if (q < 0) q = QOUT.max;
+  if (SITE_OUT.size > 500) SITE_OUT.clear(); SITE_OUT.set(k, q); return q;
 }
 function siteDredge(p, d){
   const want = SITE_DRAFT + 0.5; if (!(d > 0) || d >= want) return d;
@@ -157,14 +172,15 @@ const faceAt = (f, a, L, out) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, 
 // NaN: the fine coast is not in there yet (taken as 0 where the berth is fixed again when it comes). The players' berths the same
 // (Jonas 03.11.2026: «Jeg vil ikke ha noe graving i landmasse for hverken npcer eller brukere»): berthPose, havnBerths.
 const QOUT = {top:2.0, g:3, gMole:1.5, clear:0.6, max:16};
-function quayOut(f, a, L){
+// (all: NaN unless every sample along the face has the fine coast in, for an answer that is kept, siteOut)
+function quayOut(f, a, L, all){
   if (typeof coastSdIf !== 'function') return 0;
   let g = 0, seen = false;
   for (let it = 0; it < 6; it++){
     let need = 0;
     for (const fa of [-0.5, -0.25, 0, 0.25, 0.5]){
       const s = a + fa * (L + 2), x = f.x + f.ux * s + f.nx * (g + 0.4), z = f.z + f.uz * s + f.nz * (g + 0.4);
-      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd) continue; seen = true;
+      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd){ if (all) return NaN; continue; } seen = true;
       need = Math.max(need, sd + (QOUT.top + QOUT.clear) * (COAST.mole ? QOUT.gMole : QOUT.g));
     }
     if (!seen) return NaN;   // the fine coast is not in here yet
@@ -328,6 +344,7 @@ function berthPose(pid, type, kind = 'main'){
   let best = null, nocache = false;
   // (out: the quay built out over the 3D shore to her, quayOut; a harbour unit is its own quay with its basin. A face that does not
   // carry it, the naust's, a rorbu's, a berth held before 03.11.2026, gets it here, and is not kept until the coast is in)
+  if (qf && qf.nocache) nocache = true;
   let qo = 0; if (qf && !qf.unit){ qo = qf.out; if (qo === undefined){ qo = quayOut(qf, 0, Lb); if (qo !== qo){ qo = 0; nocache = true; } else if (qo < 0) qo = QOUT.max; } }
   if (qf) best = {d:0, cx:qf.x + qf.nx * (Bb / 2 + 0.4 + qo), cz:qf.z + qf.nz * (Bb / 2 + 0.4 + qo), fx:qf.x, fz:qf.z, ux:qf.ux, uz:qf.uz, Nx:qf.nx, Nz:qf.nz, hl:qf.hl, a:0, depth:qf.depth, unit:qf.unit, out:qo, kind:qf.kind, tre:!!(qf.naust || qf.rorbu)};
   else if (kind !== 'main'){ BERTHPOSE[key] = null; return null; }

@@ -38,6 +38,48 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - Fylkene for de 15 flyttede handelsstedene slått opp på nytt (`fylke.py`; enhetstesten `regions` var rød).
 - Funnet underveis: resultatet ved et sted avhenger av klokka (tidevann og trafikk), og testen lar klokka gå videre fra sted til sted. Et sted som er grønt i én kjøring, kan være rødt i neste (Kopervik, Tananger, Sund). Hele kysten må derfor være grønn i én og samme kjøring.
 
+## Gjort 14.11.2026 (fjerde del, arbeidsrutinen, grenen `ccr-as1-alle`, PR #89)
+
+- **Forsøkene rundt grunna** telles per rute (`SAIL_RP.pl`): en ny rute med samme leggnummer og lengde som de siste forsøkene på ruta før, begynte på tre, og første grunne stoppet henne (testen kjører tusen turer etter hverandre; i spillet en spiller som legger en ny rute etter en som stoppet). Høyst åtte veier rundt fra samme grunne (innen 300 m) mot samme punkt, mot en ring av omveier som fører tilbake på grunna.
+- **Båten venter på svaret** når hun har stoppet foran grunna (`T.ghit`): før spurte hun igjen hvert spillsekund mens søket gikk, og det fjerde stoppet henne før det første hadde svart (Træna utstyrsbutikk, Sørvær). Taket: ti spillminutter med modellen i gang og minst ett sanntidsminutt.
+- **Hendene når søket ikke hjelper:** er veien rundt bare den samme leggen (ingen punkter lagt inn), eller finnes ingen vei rundt på en legg ruta selv kalte trygg, tar hendene henne forbi grunna langs linja (`dynHandsOn`, telles som «held»). Træna og Tvedestrand verft kommer fram.
+- **I havn** tar Autonav farten av for et fartøy i fart som nærmer seg (1 m/s; stopp innen to grenser der det å ligge stille lar det passere klart), og styrer rundt fartøy som ligger stille (`dynAvoid`). Givær utstyrsbutikk → Sørarnøy: ferja som la til ved fergekaia tvers over veien inn til mottaket, traff før; nå fortøyd.
+- **Lomma ved naustet** når ut dit kaia er bygd (`siteOut`): Kvitsøy og Smøla nord 3,5 m, før 2,0 m.
+- **Testen:** gir søket tid mens hun venter (før svarte det aldri, Hestnes), og skriver hvert sammenstøt med posisjon, havn, vikingen, varselet og hva den andre båten gjorde.
+- `rorbuvei.py` fikk `KYST_RORBU_FAST=1`, men kom ikke gjennom Langvasseid på 25 minutter: hvert søk som ikke finner noe der, tar 45–50 s. Rorbuene uten vei ut er ikke flyttet i denne delen.
+- Funnet underveis: hvilke NPC-båter som er ute, avhenger av kartflisene som er lastet fra stedene før. Leines og Ålesund verft traff en fiskebåt og et skip i hele kjøringen, men ikke alene.
+
+## Gjort 14.11.2026 (femte kjøring, arbeidsrutinen, grenen `ccr-as1-alle`, PR #89)
+
+- **Porten for fjerde del** gjort ferdig: `heattest` og `landtest` grønne (`heattest` var rød også på arbeidsgrenen: monteringstida står under knappen siden D3, testen leste bare knappen; rettet i testen), skjermbildene i `docs/okter/2026-11-14-126b/` (naustet på Kvitsøy med kystbåten på 14,99 m, mottaket i Sørarnøy og Træna verft med den på 21 m, i begge formater).
+- **Trekaia ut til båten er en T-brygge** (`quayMod`, `view3d/22-docks-air.js`): ved naustet på Kvitsøy ble det tegnet fire rader trekai i hele båtens lengde, et tredekk på 17 × 24 m. Jonas så bildet: «Hvorfor er det bygget 4 kaier utpå hverandre? det ser jo helt sykt ut». Nå én rad langs båten og én seksjon bred gangbru inn. Jonas spurte så hvorfor hun ikke kan ligge inntil naustet; valget (A inntil med sjøbunnen mudret, B T-brygga, C naustet flyttet) står i 5.25j i `docs/systemer/havner-og-mottak.md` og i køen.
+- **Ferja som legger til i veien hennes** (punkt 1 fra fjerde del, Fitjar verft nord): `colregSit` regner nå CPA-en med ferja liggende ved kaia når hun når den før CPA-en (`dock` fra `ferjeAt`), 4.12o i `docs/systemer/autonav.md`. Enhetstestene sett røde uten rettingen.
+
+## Gjort 14.11.2026 (sjette kjøring, arbeidsrutinen, grenen `ccr-as1-alle`, PR #89)
+
+- **Gjennomgangen og kontrollen** (`/code-review` medium og `/kontroll` på hele diffen mot arbeidsgrenen) fant at styringen rundt fartøy som ligger stille aldri så en ferje ved kaia (`sjvNear` utelater fartøy ved kaia og til ankers når Autonav styrer), og at blikket den leste, var ferskt bare de første ti spillsekundene i hvert minutt. Rettet: en egen liste (`SJV.tl.s`) og visningenes klokke. Det andre som ble rettet: ferja viker ikke for en passering hun ikke kan åpne når hun ligger ved kaia (`dk`), og Autonav gjør det; kaia regnes også når ferja går forbi i samme retning; hendene tar henne bare forbi grunt vann, aldri over land, molo, skjær eller is; et søk ved is som ikke svarer, sier at det er is; `siteOut` husker bare et svar der hele fronten har den fine kysten; `ferjeDock` regner punktet ved kaia én gang. Ny `tests/unit/stilleliggende.test.mjs`, sett rød før rettingene. `helmtest` summerer svingen (den leste 187° til styrbord som 173° til babord, rød også før).
+- **Hele kysten** (`tests/allesteder.py`, 1 045 steder, 100 min alene, bygget `a25f400ee20a`): **27 steder med funn, mot 38 etter tredje del** (den siste kjøringen over hele kysten, på det som er arbeidsgrenen nå). De som er prøvd alene på begge bygg ved samme klokkeslett: Træna utstyrsbutikk stopper likt på begge (ingen framdrift 0,65 km ute); Rørvik verft kommer fram alene på begge (sammenstøtet i hele kjøringen avhenger av hvilke NPC-båter som er ute); Laukvik (rorbua ved Alta) treffer ferja «MS Høgkrykkja» i havna på begge, i 8,4 knop på grenen og i 17,9 knop med full motorrom og slep på arbeidsgrenen.
+
+## Funnene etter sjette kjøring (14.11.2026, hele kysten, 1 045 steder; `tests/out/logs/allesteder-6.log`)
+
+- **Ingen rute** (8): rorbuene Langvasseid, Austein, Åsværgården, Austgulen; naustene Tufjord, Gjesvær, Sørarnøy, Hidrasund (som før: punkt 3 under).
+- **Sammenstøt med et fartøy** (4): Rørvik verft («Kvitbris», regel 15, ikke alene), rorbuene Båtsfjord («Ishavet» i havna), Laukvik («MS Høgkrykkja» ved fergekaia i Alta, i havna, også alene og på arbeidsgrenen), Sjølstad.
+- **Sjømerke eller kai** (8): rorbuene Røst (67.4996 N 12.0541 Ø, 6,3 knop), Hofset, Ylvisåker, Veo og Ytre Bruvik (samme merke ved 60.3841 N 5.3170 Ø, 4,2 knop), Buvika; naustene Kvaløya sør, Helligvær (kaia).
+- **Skadet ellers på veien** (4): rorbuene Årset, Buene, Eikemo; naustet Melbu.
+- **Ingen framdrift** (3): Træna utstyrsbutikk (også på arbeidsgrenen alene), rorbuene Rise og Otterskreda (slep).
+- **Etappe over land** (4, de samme som 13.11.2026: Selvær, Trondheim verft, Træna verft, naustet på Selvær).
+- **Hendene på 25 av 1 037 steder** (grensen er ett av hundre): Brønnøysund, Revsnes, Bremnes, Fitjar verft, Lysekloster verft, Hellvik verft, Averøy utstyrsbutikk, Tvedestrand verft, Harstad verft, rorbuene Stikkelvåg, Vardø, Hestnes og flere.
+
+## Funnene etter fjerde del (14.11.2026, bygget før de to siste rettingene; stoppet etter 450 av 1 045 steder fordi 3D-testene delte maskinen)
+
+Havnene (mottak, butikker og verft, 357) og de første 93 rorbuene: 5 funn, mot 10 på de samme stedene på arbeidsgrenen samme morgen (Leines, Ålesund verft, Bud utstyrsbutikk, Træna utstyrsbutikk, Givær utstyrsbutikk og Sørvær er borte).
+
+- **Fitjar verft nord** → Fitjar verft: ferja «MF Ytterflua» la til ved kaia si rett på linja hennes mens hun holdt av for den etter regel 15 (59.983 N 5.333 Ø, 4,4 knop).
+- **Molde verft** → Bud: sjømerke i 6,3 knop (62.888 N 6.954 Ø, etappe 10).
+- **Tvedestrand verft** → Søndeled verft: ingen vei rundt grunna 3 km ute. Rettet etterpå (hendene når søket ikke finner noe på en legg ruta kalte trygg); fortøyd alene på det endelige bygget.
+- **Rorbua Hestnes:** grunt 20 m fra kaia og ingen vei rundt (et ekte funn nå som søket får svare).
+- **Rorbua Langvasseid:** ingen rute (som før; hvert søk 45–50 s).
+
 ## Funnene etter tredje del (hele kysten 14.11.2026 07:00 UTC, 1 037 steder, bygget 8d1d8605fbbd; `tests/out/allesteder.json`)
 
 Første kjøring 13.11.2026 hadde 136 funn; nå 38, og havnene (mottak, butikker og verft) 7 av 357.
