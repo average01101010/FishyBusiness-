@@ -734,7 +734,7 @@ function dynAuto(d, dtG){
     // Once a second, when her heading is over 30 degrees off the leg's, the water ahead of her bow is checked as far as she needs to
     // stop, turn on her slowest calibrated radius and clear half her length. With ground there she turns at the speed that radius was
     // measured at (slower, the rudder has no bite and she lay still), and with too little room for the turn she first backs straight
-    // astern, the wheel amidships, until she has it and 20 m more (as long as the water behind her is clear, and at most four lengths)
+    // astern (the wheel over to turn her on the same way, below), until she has it and 20 m more (as long as the water behind her is clear, and at most four lengths)
     if (!(T.bchk-- > 0)){ T.bchk = Math.round(1 / h); const was = T.bow; T.bow = null; const err = Math.abs(dynAng(d.psi, dynSegHd(T, dynSeg(T, T.s))));
       if (err > 0.5){ const N0 = cal.nom[0], Rb = Math.max(N0.R, d.u * d.u / P.alat), need = Rb + L / 2 + 5, look = dynEaseDist(cal, Math.max(0, d.u)) + need + 10, fx = Math.sin(d.psi), fy = -Math.cos(d.psi), a0 = {x:d.X / 1000, y:d.Y / 1000};
         let gp = null; try { gp = groundCheck(a0, {x:a0.x + fx * look / 1000, y:a0.y + fy * look / 1000}); } catch (e){}
@@ -761,7 +761,7 @@ function dynAuto(d, dtG){
     // when she is slackening off (the resistance she has at this speed counted in, so she follows the curve and does not lag it)
     const aDes = (vCmd - d.u) / 3 + (vCmd < vBase - 0.05 && d.u > 0.1 ? -0.7 * cal.aC : 0), F = P.mx * aDes + dynRes(P, d.u, capF);
     const thrT = vCmd < 0.05 && d.u < 0.3 && !(cl && vCmd < -0.05) ? (d.u > 0.02 ? -0.15 : 0) : F >= 0 ? clamp(F / (E.kT * P.Tmax * (1 - 0.35 * Math.max(0, d.u) / P.umax)), 0, 1) : clamp(F / (0.6 * E.kT * P.Tmax), -0.6, 0);
-    const thrB = T.bow && T.bow.astern ? (d.u > -0.6 ? -0.35 : 0) : thrT;   // (backing out from the shore: slow astern, the wheel amidships)
+    const thrB = T.bow && T.bow.astern ? (d.u > -0.6 ? -0.35 : 0) : thrT;   // (backing out from the shore: slow astern)
     const thr = d.thr = d.thr == null ? thrB : d.thr + clamp(thrB - d.thr, -0.25 * h, 0.25 * h);
     // the rudder: line of sight on the leg she is on, or on the next one from where a turn on her own radius must begin to meet it
     // (so she cuts the corner by R(1/cos(th/2) - 1) and never swings outside); the course wanted is the leg's, bent towards it by
@@ -791,7 +791,11 @@ function dynAuto(d, dtG){
     if (cs){ const sp = Math.sin(d.psi), cp = Math.cos(d.psi), gE = d.u * sp + d.v * cp + E.cx * cs, gN = d.u * cp - d.v * sp - E.cy * cs, to = Math.hypot(gE, gN) > 0.3 ? clamp(dynAng(chi, Math.atan2(gE, gN)), -1.2, 1.2) : 0;
       d.crab = (d.crab || 0) + (to - (d.crab || 0)) * (1 - Math.exp(-h / 8)); chi += d.crab; } else if (d.crab) d.crab = 0;
     const chiD = hdP - Math.atan(ye / Math.max(1.5 * Rt, L)) + (T.av ? T.av.dh : 0);
-    const rud = T.bow ? (T.bow.astern ? 0 : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
+    // (turning off the shore: the wheel hard over to the side chosen ahead, and to the other side astern, where the water over the rudder
+    // runs the other way, so each stroke astern turns her on the same way: back and fill. With the wheel amidships astern the 21 m coastal
+    // vessel north of Karmsundbrua undid on each stroke astern the few degrees she had turned ahead, and lay there for good: 14.11.2026,
+    // tests/allesteder.py, steg 126)
+    const rud = T.bow ? (T.bow.astern ? -T.bow.side : T.bow.side) : clamp((Kp * dynAng(chi, chiD) - Kd * d.r) / DYN_RUD, -1, 1);
     dynBank(E, d, P); dynInt(P, d, thr, rud, h, capF, E); dynMove(d, h, E);
     // (a line drawn through a pier: she touches it on her fenders and is put off it; not in the last lengths into a harbour, which the
     // quay's lines take, 3D moorStep)
@@ -806,7 +810,13 @@ function dynAuto(d, dtG){
   const a = {x:X0 / 1000, y:Y0 / 1000}, to = {x:d.X / 1000, y:d.Y / 1000}; let gp = null; try { gp = Math.hypot(d.X - X0, d.Y - Y0) > 0.01 ? groundCheck(a, to, dynSquat(P, d.u, E.narrow)) : null; } catch (e){}
   if (gp){ if (pl.unsafe && pl.unsafe[pl.idx] && !gp.ice){ dynWrite(b, d); runAground(gp); return; }
     const fast = Math.abs(d.u) > 1.5; d.X = X0; d.Y = Y0; d.u = 0; d.v = 0;
-    if ((fast || gp.ice) && !pl.replan){ d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
+    // (held back slowly for half a game minute, her bow on the shallows the line runs into: a way round is found from there as at speed,
+    // at most three times, then she stops and says so. Before, she lay held against it with the throttle open for good: the 21 m coastal
+    // vessel in the sound south of Egersund, after a way round whose first 50 m crossed water the search lets a start point have,
+    // 14.11.2026, tests/allesteder.py, steg 126)
+    T.held = fast ? 0 : (T.held || 0) + dtG;
+    if ((fast || gp.ice || T.held > 30) && !pl.replan){ T.held = 0; d.r = 0; dynWrite(b, d); if (!sailReplan(pl, b, gp)){ if (gp.ice) sailStop(pl, b, iceWhy(gp)); else runAground(gp); } return; } }
+  else T.held = 0;
   DYN.nm += Math.hypot(d.X - X0, d.Y - Y0) / 1000 / gridScale(a) / NM;
   dynWrite(b, d);
 }
