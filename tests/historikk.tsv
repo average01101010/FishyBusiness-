@@ -4005,3 +4005,5 @@
 2026-11-13 23:48	ccr-fn1-jobbstripe	6b56e26c	navbarshot	OK	28	lite	samtidig	
 2026-11-13 23:49	ccr-fn1-jobbstripe	6b56e26c	hudtest	OK	116	lite	samtidig	
 2026-11-14 00:13	ccr-fn1-jobbstripe	6b56e26c	trytest	OK	1474	3d	alene	
+2026-11-14 00:26	ccr-fn1-jobbstripe	e4700504	teleport3d	OK	773	3d	alene	
+2026-11-14 00:39	ccr-fn1-jobbstripe	e4700504	kapplopshot	FEIL	769	3d	alene	avsluttet med kode 1
