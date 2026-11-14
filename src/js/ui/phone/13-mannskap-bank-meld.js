@@ -112,6 +112,9 @@
     const tax = cur ? taxOf(Math.max(0, pre), txForm(), S.tx.days.length).sum : Y._tax;
     const rows = s0 => Object.keys(ACCT).filter(k => ACCT[k].s === s0 && Y[k]).map(k => bkv(bookL(k), krS(s0 === 'out' ? Y[k] : Y[k]))).join('');
     const h = ['<div class="ph-c">'];
+    // (D4, Jonas 13.11.2026 «Enig»: three figures first, the account, the debt and the year's result; the rest under «Detaljer»)
+    h.push('<div class="ph-card acc3"><div><span>' + L('Konto', 'Account') + '</span><b>' + kr(S.cash) + '</b></div><div><span>' + L('Gjeld', 'Debt') + '</span><b>' + kr(debt()) + '</b></div><div><span>' + L('Resultat ', 'Result ') + y0 + '</span><b>' + krS(bookResult(y0).res - Math.round(depBase() * TAX.dep * yearFracNow())) + '</b></div></div>');
+    h.push('<details class="acc-more"' + (sub.accOpen ? ' open' : '') + '><summary data-pa="accOpen">' + L('Detaljer', 'Details') + '</summary>');
     if (ys.length > 1) h.push('<div class="ph-sub">' + ys.map(v => '<button class="' + (v === y ? 'on' : '') + '" data-pa="acy" data-y="' + v + '">' + v + '</button>').join('') + '</div>');
     h.push('<div class="ph-card ph-acc"><h4>' + L('Regnskap ', 'Accounts ') + y + (cur ? L(' så langt', ' so far') : '') + '</h4>' +
       '<h5>' + L('Inntekter', 'Income') + '</h5>' + (rows('in') || '<p class="ph-note">–</p>') + bkv(L('Sum inntekter', 'Total income'), kr(R.inc), 'tot') +
@@ -126,7 +129,7 @@
     { const fleetV = S.fleet.reduce((a, v) => a + vesselValue(v), 0), D = debt();
       h.push('<div class="ph-card ph-acc"><h4>' + L('Balanse nå', 'Balance sheet now') + '</h4>' + bkv(L('Flåten (verdi)', 'The fleet (value)'), kr(fleetV)) + bkv(L('Konto', 'Account'), krS(S.cash)) +
         bkv(L('Gjeld', 'Debt'), krS(-D)) + bkv(L('Egenkapital', 'Equity'), krS(fleetV + S.cash - D), 'tot') + '</div>'); }
-    h.push('</div>'); return h.join('');
+    h.push('</details></div>'); return h.join('');
   }
   function bank(){
     const tab = sub.bank || 'konto', h = [subs('bank', [['konto', 'Kontoer', 'Accounts'], ['regnskap', 'Regnskap', 'Books']])];

@@ -231,6 +231,7 @@
       log('Admin: tok ' + VESSELS[d.k].name.no + ' gratis til flåten. Hun heter «' + v.boatName + '» og ligger i ' + portById(pid).name + '.', 'Admin: took the ' + VESSELS[d.k].name.en + ' into the fleet for free. She is called «' + v.boatName + '» and lies at ' + portById(pid).name + '.');
       toast(L('«' + v.boatName + '» er din. Du følger henne nå.', '«' + v.boatName + '» is yours. You follow her now.')); refreshAll();
     }
+    else if (a === 'accOpen'){ sub.accOpen = !sub.accOpen; }   // (the bank's «Detaljer», kept open when the page is drawn anew)
     else if (a === 'vsel'){ selV = d.id; }
     else if (a === 'goto'){ const v = vesselById(d.id); if (!v) return; if (SEL_APPS.includes(d.a)) selV = v.id; else if (v.id !== S.cur){ storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); } app = d.a; }
     else if (a === 'vfollow'){ const v = vesselById(d.id); if (!v || v.id === S.cur) return; storeVessel(curVessel()); bindVessel(v); selV = null; if (typeof G3 !== 'undefined') G3.vesselChanged(); refreshAll(); }

@@ -4039,3 +4039,39 @@
 2026-11-14 02:57	ccr-fn1-jobbstripe	78e130ba	boottest	OK	30	lite	alene	
 2026-11-14 03:05	ccr-fn1-jobbstripe	e5d0cb26+	booktest	OK	22	lite	alene	
 2026-11-14 03:05	ccr-fn1-jobbstripe	e5d0cb26+	booktest	OK	22	lite	alene	
+2026-11-14 03:09	ccr-fn1-jobbstripe	f9defa6c+	docktest	FEIL	65	lite	samtidig	FEIL Om bord har fanene Redskap, Rigg, Lasterom, Båten og Mannskap  ['Redskap', 'Last', 'Mannskap og drift', 'Båten']
+2026-11-14 03:10	ccr-fn1-jobbstripe	f9defa6c+	tabtest	OK	129	lite	samtidig	
+2026-11-14 03:10	ccr-fn1-jobbstripe	f9defa6c+	uishots	OK	97	lite	samtidig	
+2026-11-14 03:13	ccr-fn1-jobbstripe	f9defa6c+	telefonflate	OK	195	lite	samtidig	
+2026-11-14 03:13	ccr-fn1-jobbstripe	f9defa6c+	hbtest	OK	19	lite	samtidig	
+2026-11-14 03:13	ccr-fn1-jobbstripe	f9defa6c+	worktest	FEIL	28	lite	samtidig	FEIL liggende: no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	driftsplan2gui	FEIL	615	lite	samtidig	FEIL s01-dagdrift: telefonen → Driftsplan-appen åpner siden med «Lag driftsplan»  {"trykk": 2, "sveip": 0, "sek": 6.9}
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	driftsplan2ui	OK	94	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	caretest	FEIL	13	lite	samtidig	avsluttet med kode 1
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	geartest	FEIL	15	lite	samtidig	avsluttet med kode 1
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	nettest	FEIL	28	lite	samtidig	FEIL butikken har fanene Redskap og Elektronikk og haler  ['Redskap', 'Elektronikk og haler', 'Service']
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	shoptest	OK	33	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	itemcardtest	OK	25	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	jobbstripe	OK	119	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	booktest	OK	23	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	dockrow	OK	41	lite	samtidig	
+2026-11-14 03:21	ccr-fn1-jobbstripe	f9defa6c+	opptest	OK	79	lite	samtidig	
+2026-11-14 03:23	ccr-fn1-jobbstripe	f9defa6c+	driftsplan2test	FEIL	109	lite	alene	FEIL S9 30 h closed in the middle gives the same landings as open (kg within 2 %, kr within 3 %: the price follows the species and sizes, which vary a little be
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	docktest	FEIL	64	lite	samtidig	FEIL viften for bygd  ['pub', 'gjestebok', 'bank', 'oppdrag', 'mannskap']
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	worktest	FEIL	25	lite	samtidig	FEIL liggende: no Mannskap button, the page is the Mannskap tab of Om bord; «På dekk nå» has a chip for each station of the rig, and one card each with energy (
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	caretest	OK	16	lite	samtidig	
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	geartest	OK	42	lite	samtidig	
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	nettest	OK	40	lite	samtidig	
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	autolinetest	OK	11	lite	samtidig	
+2026-11-14 03:26	ccr-fn1-jobbstripe	f9defa6c+	snokrabbetest	OK	12	lite	samtidig	
+2026-11-14 03:27	ccr-fn1-jobbstripe	f9defa6c+	krabbefabrikktest	OK	21	lite	samtidig	
+2026-11-14 03:29	ccr-fn1-jobbstripe	f9defa6c+	tabtest	OK	138	lite	samtidig	
+2026-11-14 03:29	ccr-fn1-jobbstripe	f9defa6c+	hbtest	OK	19	lite	samtidig	
+2026-11-14 03:29	ccr-fn1-jobbstripe	f9defa6c+	booktest	OK	27	lite	samtidig	
+2026-11-14 03:29	ccr-fn1-jobbstripe	f9defa6c+	uishots	OK	99	lite	samtidig	
+2026-11-14 03:32	ccr-fn1-jobbstripe	f9defa6c+	telefonflate	OK	196	lite	samtidig	
+2026-11-14 03:32	ccr-fn1-jobbstripe	f9defa6c+	driftsplan2ui	OK	95	lite	samtidig	
+2026-11-14 03:32	ccr-fn1-jobbstripe	f9defa6c+	shoptest	OK	46	lite	samtidig	
+2026-11-14 03:34	ccr-fn1-jobbstripe	f9defa6c+	docktest	OK	63	lite	samtidig	
+2026-11-14 03:34	ccr-fn1-jobbstripe	f9defa6c+	worktest	OK	28	lite	samtidig	
+2026-11-14 03:34	ccr-fn1-jobbstripe	f9defa6c+	dockrow	OK	43	lite	samtidig	

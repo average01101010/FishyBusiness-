@@ -28,12 +28,14 @@
   // the crew tab: the Mannskap page with the plan's line (PAGES().arbeid), and the way to the Ansatte pages (who is signed on, with the
   // quarrel when one waits for an answer, and the crew exchange; ui/phone/13-mannskap-bank-meld.js), first with a quarrel aboard, else last
   function crewTab(){
+    // (D4, Jonas 13.11.2026 «Enig»: the work aboard with the plan's line, and the way to those signed on (shares, dismissal, a quarrel
+    // to answer: the Ansatte page), first with a quarrel aboard, else last. Nobody is listed twice on the tab, so the list of those signed
+    // on is a page behind its button. The crew exchange is in Bygd, and only for hiring. The plan itself is still a page of its own: its
+    // wizard, the chart and the company's warnings go back to it; it moves in here in the rest of D4)
     const q = !!S.cevt, card = '<div class="ph-c" style="padding-' + (q ? 'bottom' : 'top') + ':0"><div class="ph-card' + (q ? ' conflict' : '') + '"><h4>' + L('Ansatte', 'Employees') + '</h4><p class="ph-note">' +
-      (q ? '<b>' + L('Uløst krangel om bord.', 'Unresolved quarrel aboard.') + '</b> ' + L('Svar under Ansatte.', 'Answer under Employees.') : L('Hvem som er mønstret på, lott og oppsigelse, og ledige folk i Mannskapsbørsen.', 'Who is signed on, shares and dismissal, and available hands in the crew exchange.')) + '</p>' +
-      '<div class="ph-row2"><button class="ph-btn' + (q ? ' p' : '') + '" data-pa="open" data-a="mannskap">' + L('Ansatte', 'Employees') + '</button></div></div></div>';
-    // (D4, Jonas 13.11.2026 «Enig»: those aboard and the operations plan on one tab; the Driftsplan app in the phone opens this same tab,
-    // where the Crew page had one line with «Åpne» to a page of its own)
-    const w = WORK.page() + PLAN2UI.page();
+      (q ? '<b>' + L('Uløst krangel om bord.', 'Unresolved quarrel aboard.') + '</b> ' + L('Svar under Ansatte.', 'Answer under Employees.') : L('Hvem som er mønstret på, lott og oppsigelse. Nye folk ansetter du i Mannskapsbørsen under Bygd.', 'Who is signed on, shares and dismissal. New hands are hired at the crew exchange under Village.')) + '</p>' +
+      '<button class="ph-btn' + (q ? ' p' : '') + '" data-pa="open" data-a="mannskap">' + L('Ansatte', 'Employees') + '</button></div></div>';
+    const w = PAGES().arbeid();
     return q ? card + w : w + card;
   }
   function logg(){ return '<div class="ph-panel">' + panelLog() + '</div>'; }
