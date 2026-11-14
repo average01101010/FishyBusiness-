@@ -1,5 +1,10 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['steder-141126', '14.11.2026', 'Vei ut fra alle steder', 'A way out from every place', [
+       ['Femten mottak, butikker og verft der den eldre kystbåten ikke kom ut ved noe tidevann, har fått nye kaier med vei ut, blant dem Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden og Træna.', 'Fifteen plants, shops and yards the older coastal vessel could not get out of at any tide have new quays with a way out, among them Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden and Træna.'],
+       ['Rorbuer som lå innestengt for båter opp til 15 m, er flyttet dit de kommer ut.', 'Rorbuer that were shut in for boats up to 15 m have moved to where they can get out.'],
+       ['Autonav tar båten rundt de skarpe svingene like ut fra kaia, og styrer unna sjømerker, påler og brupilarer i svingene.', 'Autonav takes the boat round the sharp turns just out from the quay, and steers clear of sea marks, piles and bridge piers in the turns.'],
+       ['Autonav legger veien under bruer og rundt sjømerker slik at store båter kan svinge gjennom den, rygger med roret over når båten må snu, og blir ikke lenger stående fast i trange sund.', 'Autonav lays the way under bridges and round sea marks so big boats can turn through it, backs with the wheel over when the boat must turn, and no longer gets stuck in narrow sounds.']]],
     ['sprell-131126', '13.11.2026', 'Levende fisk på vei opp', 'Live fish on the way up', [
        ['Fisken spreller nå på vei opp og i handa til den er bløgget, på juksa, juksamaskinene, lina og i garnet. Den drar snøret litt til sidene og plasker når den kommer opp av sjøen.', 'The fish now kicks on the way up and in the hand until it is bled, on the hand jig, the jigging machines, the line and in the nets. It pulls the line a little to the sides and splashes as it breaks the surface.']]],
     ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [

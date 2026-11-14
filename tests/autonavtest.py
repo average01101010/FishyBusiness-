@@ -177,10 +177,14 @@ async def main():
           R.nm1 = +r1.nm.toFixed(2); R.line1 = +(dist(A.p, Rb.p) / NM).toFixed(2); R.fine50 = r1.st.fine50 || 0; R.by1 = r1.st.by;
           let bad = 0, p0 = {...A.p}; for (const w of r1.wps){ await mapNeed(w, 0.5); if (groundCheck(p0, w)) bad++; p0 = w; } R.bad1 = bad;
           // 9c: the shallowest water on the way (outside the harbour) as the end, the draught set just over it: without the tide the end
-          // is refused («For grunt»), with the lowest water of the trip counted the way there is open
-          let zmin = Infinity, qm = null; p0 = {...A.p}; for (const w of r1.wps){ const L = dist(p0, w), n = Math.max(1, Math.ceil(L / 0.02)); for (let k = 1; k <= n; k++){ const q = {x:p0.x + (w.x - p0.x) * k / n, y:p0.y + (w.y - p0.y) * k / n}; if (!inHarbour(q) && !isLand(q) && dist(q, Rb.p) > 0.08){ const z = depthF(q); if (z < zmin){ zmin = z; qm = q; } } } p0 = w; }
+          // is refused («For grunt»), with the lowest water of the trip counted the way there is open, and not more than three and a half
+          // times the way along the route to it (alongq: with the draught just over the shallowest point, the way keeps off the other shoals
+          // that are now too shallow too; 1.6 nm against 0.51 on 13.11.2026). Before 13.11.2026 the measure was the straight line (lineq), which held for the rorbu's old
+          // place; there (AS1, steg 126) its berth is where a 15 m boat gets out, and the shallowest point on the way is another one
+          // (3.3 m against 1.4 m), whose way round the other shoals with the draught just over is 1.55 nm against 0.33 nm in a line
+          let zmin = Infinity, qm = null, run = 0, along = 0; p0 = {...A.p}; for (const w of r1.wps){ const L = dist(p0, w), n = Math.max(1, Math.ceil(L / 0.02)); for (let k = 1; k <= n; k++){ const q = {x:p0.x + (w.x - p0.x) * k / n, y:p0.y + (w.y - p0.y) * k / n}; if (!inHarbour(q) && !isLand(q) && dist(q, Rb.p) > 0.08){ const z = depthF(q); if (z < zmin){ zmin = z; qm = q; along = run + L * k / n; } } } run += L; p0 = w; }
           R.zmin = +zmin.toFixed(1); R.q = !!qm;
-          if (qm){ const d0 = BOAT.draft; BOAT.draft = Math.max(0.3, zmin - LEIA.minOver + 0.2); R.draftSet = +BOAT.draft.toFixed(2); R.lineq = +(dist(A.p, qm) / NM).toFixed(2);
+          if (qm){ const d0 = BOAT.draft; BOAT.draft = Math.max(0.3, zmin - LEIA.minOver + 0.2); R.draftSet = +BOAT.draft.toFixed(2); R.lineq = +(dist(A.p, qm) / NM).toFixed(2); R.alongq = +(along / NM).toFixed(2);
             const n1 = await leiaRoute({...A.p}, {...qm}, A.id, null, {noTide:true}), n2 = await leiaRoute({...A.p}, {...qm}, A.id, null);
             R.noTide = n1.why ? n1.why[0] : +n1.nm.toFixed(2); R.withTide = n2.why ? n2.why[0] : +n2.nm.toFixed(2); R.tide2 = n2.st && n2.st.tide; BOAT.draft = d0; }
           // 9d: a way by the net is pulled tight: fewer points than the net's way had
@@ -194,8 +198,8 @@ async def main():
             check(abs(r['credit'] - r['expect']) < 0.01 and r['idle'] == 0, '9a. tidevannets kreditt er laveste vannstand over turen minus marginen, og 0 utenfor en rute', r)
             check(r['nm1'] < r['line1'] * 2 and r['bad1'] == 0 and r['fine50'] >= 1, '9b. Havøysund → rorbua går gjennom sundet på 50 m-rutenettet, ingen etappe grunnstøter', {k: r[k] for k in ('nm1', 'line1', 'fine50', 'by1', 'bad1')})
             if r.get('q'):
-                ok = isinstance(r['withTide'], (int, float)) and r['withTide'] < 2 * r['lineq'] and isinstance(r['noTide'], str) and 'grunt' in r['noTide']
-                check(ok or (r['tide2'] or 0) < 0.4, '9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen', {k: r.get(k) for k in ('zmin', 'draftSet', 'lineq', 'noTide', 'withTide', 'tide2')})
+                ok = isinstance(r['withTide'], (int, float)) and r['withTide'] <= 3.5 * r['alongq'] and isinstance(r['noTide'], str) and 'grunt' in r['noTide']
+                check(ok or (r['tide2'] or 0) < 0.4, '9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen', {k: r.get(k) for k in ('zmin', 'draftSet', 'lineq', 'alongq', 'noTide', 'withTide', 'tide2')})
             check(r['pull'] and r['pull']['to'] < r['pull']['from'] and r['n2'] <= 24 and r['bad2'] == 0, '9d. Honningsvåg → Hammerfest: leinettets vei er rettet ut (færre punkter), ingen etappe grunnstøter', {k: r[k] for k in ('n2', 'nm2', 'pull', 'by2', 'bad2')})
         # 10. over the open sea (H1b R6): each started without returning its promise and polled (a long route outlives evaluate's wait)
         for an, la, lo, name in json.load(open(ROUTES))['hav']['routes']:

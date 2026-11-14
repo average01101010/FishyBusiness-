@@ -4206,6 +4206,51 @@
 2026-11-14 03:24	regresjon/2026-11-14	d5facb9	autonavtest	FEIL	21	lite	alene	FEIL 9c. det grunneste på veien som mål, med dypgangen like over: nektet uten tidevann, nådd med vannstanden over turen  {'zmin': 3.3, 'draftSet': 2.95, 'lineq'
 2026-11-14 01:44	ccr-013bxxif-fb7dekk	3da6529	boottest	OK	28	lite	samtidig	
 2026-11-14 01:44	ccr-013bxxif-fb7dekk	3da6529	looktest	OK	17	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	starttest	OK	157	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	lukket	FEIL	15	lite	samtidig	FEIL the moved shops in Vanse and Søndeled keep the ids saves hold, at their new quays
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	admintest	OK	10	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	stedertest	OK	7	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	placetest	OK	7	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	lybtest	OK	35	lite	samtidig	
+2026-11-14 03:37	ccr-as1-alle	4f4ba8f1	obstest	FEIL	9	lite	samtidig	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "aground", "det": 1,
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	colregtest	OK	731	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	dyntest	FEIL	260	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	helmtest	OK	26	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	trip2	FEIL	145	lite	samtidig	ender ikke i havn
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	autonavtest	OK	21	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	docktest	OK	61	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	rorbutest	OK	13	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	utfrakai	OK	85	lite	samtidig	
+2026-11-14 03:48	ccr-as1-alle	4f4ba8f1+	obstest	OK	9	lite	alene	
+2026-11-14 03:49	ccr-as1-alle	4f4ba8f1+	obstest	OK	8	lite	alene	
+2026-11-14 03:49	ccr-as1-alle	4f4ba8f1+	routetest	OK	48	lite	alene	
+2026-11-14 03:49	ccr-as1-alle	4f4ba8f1+	obstest	FEIL	8	lite	alene	FEIL a drawn route under Gisundbrua and back (trip2's): round the pier under the deck, no nearer the skerries, and back in Finnsnes  {"st": "sailing", "det": 2,
+2026-11-14 03:49	ccr-as1-alle	4f4ba8f1+	obstest	OK	7	lite	alene	
+2026-11-14 03:49	ccr-as1-alle	4f4ba8f1+	obstest	OK	6	lite	alene	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	starttest	OK	155	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	lukket	OK	16	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	admintest	OK	10	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	stedertest	OK	7	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	placetest	OK	6	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	lybtest	OK	35	lite	samtidig	
+2026-11-14 03:59	ccr-as1-alle	9a903f25+	obstest	OK	8	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	starttest	OK	159	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	lukket	OK	17	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	admintest	OK	10	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	stedertest	OK	7	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	placetest	OK	7	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	lybtest	OK	41	lite	samtidig	
+2026-11-14 04:07	ccr-as1-alle	642dd784	obstest	OK	10	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	colregtest	OK	736	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	dyntest	FEIL	259	lite	samtidig	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
+2026-11-14 04:18	ccr-as1-alle	642dd784	helmtest	OK	25	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	trip2	OK	34	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	autonavtest	OK	20	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	docktest	OK	61	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	rorbutest	OK	13	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	utfrakai	OK	86	lite	samtidig	
+2026-11-14 04:18	ccr-as1-alle	642dd784	routetest	OK	43	lite	alene	
+2026-11-14 04:23	ccr-as1-alle	642dd784	dyntest	FEIL	255	lite	alene	FEIL the tactical diameter is under 7.5 lengths and the advance under 7 (IMO asks 5 and 4.5 of ships over 100 m; the planing boats and the big ones run wide int
 2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	boottest	OK	24	lite	samtidig	
 2026-11-14 02:29	ccr-013bxxif-fb7dekk	1766c5b+	looktest	OK	12	lite	samtidig	
 2026-11-14 03:04	ccr-2dc63e8b-wjwijq	c306a07	sprelltest	OK	1043	3d	alene	
@@ -4291,3 +4336,13 @@
 2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	boottest	OK	37	lite	samtidig	
 2026-11-14 04:16	ccr-fn1-jobbstripe	0d57684d+	d4dorer	OK	38	lite	samtidig	
 2026-11-14 04:17	ccr-fn1-jobbstripe	0d57684d+	docktest	OK	60	lite	samtidig	
+2026-11-14 04:27	ccr-as1-alle	db5abbae	boottest	OK	27	lite	alene	
+2026-11-14 05:19	ccr-as1-alle	a7ba247f	trackfollow	OK	1819	3d	alene	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	colregtest	OK	733	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	helmtest	OK	26	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	trip2	OK	40	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	autonavtest	OK	23	lite	samtidig	
+2026-11-14 05:53	ccr-as1-alle	b4ea2e77	obstest	OK	7	lite	samtidig	
+2026-11-14 05:54	ccr-as1-alle	b4ea2e77	routetest	OK	42	lite	alene	
+2026-11-14 06:18	ccr-as1-alle	13a3d337	trackfollow	OK	1426	3d	alene	
+2026-11-14 06:28	ccr-as1-alle	e1d06dfd	boottest	OK	30	lite	alene	

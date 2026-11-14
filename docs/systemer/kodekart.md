@@ -2138,7 +2138,7 @@ Kappløpet Lindesnes–Nordkapp, the core (KL1, steg 116a; docs/planer/kapplop.m
   - 612 `leiaPocketOut(e, sd, st)`
   - 622 `leiaRoute0(a, b, aPort, bPort, pocket, opt0)`
 
-## `src/js/core/11b-obstacles.js` (259 linjer)
+## `src/js/core/11b-obstacles.js` (294 linjer)
 
 WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå gjennom 3d elementer eller landmasse», along
 
@@ -2153,10 +2153,11 @@ WHAT A ROUTE MUST NOT SAIL THROUGH (Jonas 05.10.2026: «autoruter aldri skal gå
   - 149 `obsRock(a, b)`
   - 155 `obsSafe(a, b, ref)`
   - 168 `obsWays(o, a, b)`
-  - 212 `obsDetour(a, b, depth = 3, ref)`
-  - 226 `obsRoute(a, wps)`
-  - 233 `obsLoad(pts, ms = 4000)`
-  - 248 `obsSail(pl, b)`
+  - 219 `obsTurnable(a, w, b, pre)`
+  - 229 `obsDetour(a, b, depth = 3, ref)`
+  - 248 `obsRoute(a, wps)`
+  - 268 `obsLoad(pts, ms = 4000)`
+  - 283 `obsSail(pl, b)`
 
 ## `src/js/core/11c-leinett.js` (155 linjer)
 
@@ -2425,7 +2426,7 @@ MANUAL HELM (the user's wish 03.10.2026)
   - 63 `helmCast()`
   - 69 `helmCastDone(pid, kind)`
 
-## `src/js/core/16b-dyn.js` (782 linjer)
+## `src/js/core/16b-dyn.js` (866 linjer)
 
 HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
 
@@ -2488,15 +2489,18 @@ HOW THE BOAT MOVES: a manoeuvring model (Fysikk 1; Jonas 18.10.2026)
   - 561 `dynHelm(d, dtG)`
 - **582** the line she follows: out from the quay, the route's waypoints as the chart plotter draws them, to the harbour she ends in
   - 584 `dynLineBuild(pl, dep)`
-  - 604 `dynLineAt(T, s)`
-  - 610 `dynSeg(T, s)`
-  - 611 `dynSegHd(T, i)`
-  - 612 `dynLineProj(T, x, z, s0, back = 30)`
-  - 622 `dynLineHd(T, s, r0)`
-  - 629 `dynGroundAhead(T, s, look)`
-- **638** the autopilot
-  - 639 `dynAuto(d, dtG)`
-  - 781 `dynTrackView()`
+  - 610 `dynHands(T, k)`
+  - 616 `dynTight(T, c)`
+  - 630 `dynLineAt(T, s)`
+  - 636 `dynSeg(T, s)`
+  - 637 `dynSegHd(T, i)`
+  - 638 `dynLineProj(T, x, z, s0, back = 30)`
+  - 648 `dynLineHd(T, s, r0)`
+  - 655 `dynGroundAhead(T, s, look)`
+  - 671 `dynAvoid(d, P)`
+- **683** the autopilot
+  - 684 `dynAuto(d, dtG)`
+  - 865 `dynTrackView()`
 
 ## `src/js/core/16c-hull.js` (207 linjer)
 
@@ -2914,12 +2918,12 @@ D5: where the big phone stands on a tablet, and how wide it is. It leaves the st
 - **98** Skippertak (core/15-energy.js SKIP): an energy drink for real money only, for you and the crews of the whole fleet
   - 102 `skipApp()`
 
-## `src/js/ui/phone/07-patch.js` (1667 linjer)
+## `src/js/ui/phone/07-patch.js` (1672 linjer)
 
 --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
 
 - **1** the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
-  - 1655 `patch()`
+  - 1660 `patch()`
 
 ## `src/js/ui/phone/08-home-papers-merker.js` (126 linjer)
 

@@ -72,7 +72,7 @@ async def main():
             # a moved place keeps its id (steder.json «was»): saves hold it as the boat's port, home and waypoints
             ids = await pg.evaluate("""() => ['sb262723_1571672', 'sb418023_1523092'].map(id => { const q = portById(id); return q ? [q.id, q.name, +q.p.x.toFixed(3), +q.p.y.toFixed(3)] : null; })""")
             print('kept ids:', ids)
-            print(ok(all(ids) and abs(ids[0][2] - 262.667) < 0.05 and abs(ids[1][2] - 417.142) < 0.05), 'the moved shops in Vanse and Søndeled keep the ids saves hold, at their new quays')
+            print(ok(all(ids) and abs(ids[0][2] - 258.152) < 0.05 and abs(ids[1][2] - 417.142) < 0.05), 'the moved shops in Vanse and Søndeled keep the ids saves hold, at their new quays')   # (Vanse moved again 4.6 km to a quay the 21 m coastal vessel gets out from, steg 126, d1c490c8)
             # a save whose harbour is gone (a place moved before its id was kept) starts at the nearest harbour, not with an error
             n0 = len(errs)
             await pg.evaluate("() => { TAB.held = false; const st = S.boat.status, pt = S.boat.port; S.boat.status = 'port'; S.boat.port = 'sb999999_999999'; save(); SAVE_OFF = true; S.boat.status = st; S.boat.port = pt; }")   # (only the save has the harbour that is gone: the page before the reload goes on drawing its own)
