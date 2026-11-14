@@ -741,6 +741,10 @@ function dynAuto(d, dtG){
     if (ds < 0.5 && (Math.abs(d.u + cl) < 0.08 || ds < 0.05)){
       if (stopW){ d.X = stopW.x * 1000; d.Y = stopW.y * 1000; } d.u = d.v = d.r = 0; dynWrite(b, d);
       if (stopW){ if (arrive(stopW) || S.plan !== pl) return; T.s = dynLineProj(T, d.X, d.Y, T.s); continue; }
+      // (a way round already being looked for: she lies here till it answers. Before, the ground ahead was seen again each game second
+      // while she lay stopped, each sight asked again and counted a try, and the fourth stopped her, «fant ingen trygg vei rundt», before
+      // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py)
+      if (T.ghit && pl.replan){ T.ghit = null; return; }
       if (T.ghit){ const gp = T.ghit.gp; T.ghit = null; if (!sailReplan(pl, b, gp)) runAground(gp); return; }
       if (T.s >= T.end - 1){ const w = pl.wps[pl.wps.length - 1];   // the end of the route (or «Stopp»): exactly on the point; arrive says so and clears the plan
         if (Math.hypot(w.x * 1000 - d.X, w.y * 1000 - d.Y) < 2){ d.X = w.x * 1000; d.Y = w.y * 1000; dynWrite(b, d); }
