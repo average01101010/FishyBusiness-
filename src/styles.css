@@ -432,7 +432,7 @@ body.vplot #logbook{display:none}
 .lg td{border-bottom:1px solid rgba(138,118,84,.35);border-right:1px solid rgba(138,118,84,.25);padding:2px 3px;vertical-align:top;font-family:'Caveat',cursive;color:var(--m-link,#1f2f6e);font-size:14px;line-height:18px}
 .lg td:last-child{border-right:0} .lg tr.ev td{color:var(--m-bad,#6e1f1f)} .lg td.pos{font-size:10px;line-height:14px}
 .dr p{border-left:2px solid rgba(190,60,60,.45);padding-left:8px}
-.dr b{font-family:var(--serif);font-weight:600;color:var(--m-ink,#4a3d28);font-size:11.5px;margin-right:6px}
+.dr b{font-family:var(--serif);font-weight:600;color:var(--m-ink,#4a3d28);font-size:12px;margin-right:6px}
 .pg-sum{margin-top:12px;border-top:1px solid #8a7654;padding-top:6px;font:12px var(--serif);color:var(--m-ink,#3b3020)}
 .pg-n{position:absolute;bottom:5px;left:0;right:0;text-align:center;font:italic 10px var(--serif);color:var(--m-muted,#7a6a4a)}
 .bk-ctrl{display:flex;gap:8px;align-items:center;background:rgba(6,16,24,.7);border-radius:14px;padding:5px 8px;color:#fff;font:600 13px var(--sans)}
@@ -2082,3 +2082,9 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
 /* another boat of the fleet is chosen and she does not lie here: one line that says so, and the way back to the boat at the quay */
 .pl-away{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 14px 0;padding:8px 12px;border:1px solid var(--m-warn,#b7791f);border-radius:var(--r-card);background:var(--m-tint-warn,#fdf3dc);color:var(--m-ink,#16323F);font:500 13px/1.35 var(--sans)}
 .pl-away span{flex:1 1 220px} .pl-away .ph-btn{flex:0 0 auto;width:auto;margin:0;min-height:40px}
+
+/* ===== D4 (14.11.2026): the deck log readable. Jonas 13.11.2026 kept the tabs Dagbok and Salg; the print in the book was 9.5–11.5 px
+   (the table's heads, the positions, the rows of the sales note), under what is read on a phone or a tablet held upright: 12 px least */
+.bk-gr,.bk-row,.pg-v,.bk-sub{font-size:12px} .bk-nw{font-size:11px}
+.lg th{font-size:12px;letter-spacing:.02em;padding:3px 2px} .lg td.pos{font-size:12px;line-height:15px}
+.pg-n{font-size:12px}

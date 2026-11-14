@@ -10,7 +10,8 @@ const BOOK = (() => {
   const el = $('book'), stage = $('bkStage'), dEl = $('bkDate'), tabsEl = $('bkTabs');
   let spread = true, idx = 0, drag = null, busy = false, tab = 'dag', list = [];
   // the tabs down the left edge, coloured as in a real log book; Dagbok is the day-by-day log as before
-  const TABS = [['dag', 'Dagbok', 'Log', '#cfc8b4'], ['ses', 'Sesonger', 'Seasons', '#f1a9b7'], ['hen', 'Hendelser', 'Events', '#ece08c'], ['uts', 'Utstyr', 'Gear', '#90dbe0'], ['salg', 'Salg', 'Sales', '#a3b6ee']];
+  // (D4, Jonas 13.11.2026: «fanene for utstyr, hendelser og sesonger kan fjernes fra dekksdagboka … Jeg bruker dessuten bare "dagbok" og "salg"-fanen selv»: the book keeps Dagbok and Salg)
+  const TABS = [['dag', 'Dagbok', 'Log', '#cfc8b4'], ['salg', 'Salg', 'Sales', '#a3b6ee']];
   const L = (no, en) => S.lang === 'no' ? no : en;
   const today = () => dayOf(S.t);
   function first(){ let t0 = S.t; if (S.log.length) t0 = Math.min(t0, S.log[0].t); if (S.navrows.length) t0 = Math.min(t0, S.navrows[0].t); return Math.max(dayOf(t0), today() - 59); }
