@@ -55,6 +55,20 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - **Trekaia ut til båten er en T-brygge** (`quayMod`, `view3d/22-docks-air.js`): ved naustet på Kvitsøy ble det tegnet fire rader trekai i hele båtens lengde, et tredekk på 17 × 24 m. Jonas så bildet: «Hvorfor er det bygget 4 kaier utpå hverandre? det ser jo helt sykt ut». Nå én rad langs båten og én seksjon bred gangbru inn. Jonas spurte så hvorfor hun ikke kan ligge inntil naustet; valget (A inntil med sjøbunnen mudret, B T-brygga, C naustet flyttet) står i 5.25j i `docs/systemer/havner-og-mottak.md` og i køen.
 - **Ferja som legger til i veien hennes** (punkt 1 fra fjerde del, Fitjar verft nord): `colregSit` regner nå CPA-en med ferja liggende ved kaia når hun når den før CPA-en (`dock` fra `ferjeAt`), 4.12o i `docs/systemer/autonav.md`. Enhetstestene sett røde uten rettingen.
 
+## Gjort 14.11.2026 (sjette kjøring, arbeidsrutinen, grenen `ccr-as1-alle`, PR #89)
+
+- **Gjennomgangen og kontrollen** (`/code-review` medium og `/kontroll` på hele diffen mot arbeidsgrenen) fant at styringen rundt fartøy som ligger stille aldri så en ferje ved kaia (`sjvNear` utelater fartøy ved kaia og til ankers når Autonav styrer), og at blikket den leste, var ferskt bare de første ti spillsekundene i hvert minutt. Rettet: en egen liste (`SJV.tl.s`) og visningenes klokke. Det andre som ble rettet: ferja viker ikke for en passering hun ikke kan åpne når hun ligger ved kaia (`dk`), og Autonav gjør det; kaia regnes også når ferja går forbi i samme retning; hendene tar henne bare forbi grunt vann, aldri over land, molo, skjær eller is; et søk ved is som ikke svarer, sier at det er is; `siteOut` husker bare et svar der hele fronten har den fine kysten; `ferjeDock` regner punktet ved kaia én gang. Ny `tests/unit/stilleliggende.test.mjs`, sett rød før rettingene. `helmtest` summerer svingen (den leste 187° til styrbord som 173° til babord, rød også før).
+- **Hele kysten** (`tests/allesteder.py`, 1 045 steder, 100 min alene, bygget `a25f400ee20a`): **27 steder med funn, mot 38 etter tredje del** (den siste kjøringen over hele kysten, på det som er arbeidsgrenen nå). De som er prøvd alene på begge bygg ved samme klokkeslett: Træna utstyrsbutikk stopper likt på begge (ingen framdrift 0,65 km ute); Rørvik verft kommer fram alene på begge (sammenstøtet i hele kjøringen avhenger av hvilke NPC-båter som er ute); Laukvik (rorbua ved Alta) treffer ferja «MS Høgkrykkja» i havna på begge, i 8,4 knop på grenen og i 17,9 knop med full motorrom og slep på arbeidsgrenen.
+
+## Funnene etter sjette kjøring (14.11.2026, hele kysten, 1 045 steder; `tests/out/logs/allesteder-6.log`)
+
+- **Ingen rute** (8): rorbuene Langvasseid, Austein, Åsværgården, Austgulen; naustene Tufjord, Gjesvær, Sørarnøy, Hidrasund (som før: punkt 3 under).
+- **Sammenstøt med et fartøy** (4): Rørvik verft («Kvitbris», regel 15, ikke alene), rorbuene Båtsfjord («Ishavet» i havna), Laukvik («MS Høgkrykkja» ved fergekaia i Alta, i havna, også alene og på arbeidsgrenen), Sjølstad.
+- **Sjømerke eller kai** (8): rorbuene Røst (67.4996 N 12.0541 Ø, 6,3 knop), Hofset, Ylvisåker, Veo og Ytre Bruvik (samme merke ved 60.3841 N 5.3170 Ø, 4,2 knop), Buvika; naustene Kvaløya sør, Helligvær (kaia).
+- **Skadet ellers på veien** (4): rorbuene Årset, Buene, Eikemo; naustet Melbu.
+- **Ingen framdrift** (3): Træna utstyrsbutikk (også på arbeidsgrenen alene), rorbuene Rise og Otterskreda (slep).
+- **Etappe over land** og **hendene på 25 av 1 037 steder** (grensen er ett av hundre): Brønnøysund, Revsnes, Bremnes, Fitjar verft, Lysekloster verft, Hellvik verft, Averøy utstyrsbutikk, Tvedestrand verft, Harstad verft, rorbuene Stikkelvåg, Vardø, Hestnes og flere.
+
 ## Funnene etter fjerde del (14.11.2026, bygget før de to siste rettingene; stoppet etter 450 av 1 045 steder fordi 3D-testene delte maskinen)
 
 Havnene (mottak, butikker og verft, 357) og de første 93 rorbuene: 5 funn, mot 10 på de samme stedene på arbeidsgrenen samme morgen (Leines, Ålesund verft, Bud utstyrsbutikk, Træna utstyrsbutikk, Givær utstyrsbutikk og Sørvær er borte).
