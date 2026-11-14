@@ -4401,3 +4401,25 @@
 2026-11-14 10:38	utrull	4f02206+	tattest	FEIL	16	lite	alene	FEIL the Milepæler app is the list only (no sailor, Jonas 05.10.2026): a drawing on each card, and how many you have
 2026-11-14 10:39	utrull	4f02206+	tattest	OK	15	lite	alene	
 2026-11-14 10:39	utrull	ec0459e	tattest	OK	15	lite	alene	
+2026-11-14 12:28	ccr-as1-alle	6361dd60	heattest	FEIL	0	3d	alene	avsluttet med kode 1
+2026-11-14 12:28	ccr-as1-alle	6361dd60	landtest	FEIL	0	3d	alene	avsluttet med kode 1
+2026-11-14 12:33	ccr-as1-alle	6361dd60	heattest	FEIL	255	3d	alene	FEIL knappen viser monteringstida i ekte tid (verftsjobbene tar 30 minutter)  Kjøp og monter · 150 000 kr
+2026-11-14 12:34	ccr-as1-alle	6361dd60	landtest	OK	90	3d	alene	
+2026-11-14 12:48	ccr-as1-alle	6361dd60+	heattest	OK	256	3d	alene	
+2026-11-14 14:18	ccr-as1-alle	91e992a4	ferrytest	OK	18	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	colregtest	OK	730	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	hulltest	OK	72	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	npctest	OK	6	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	boottest	OK	25	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	autonavtest	OK	19	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	hudtest	OK	107	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	havflaate	OK	9	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	lanterntest	OK	12	lite	samtidig	
+2026-11-14 14:30	ccr-as1-alle	91e992a4	farttest	OK	383	lite	samtidig	
+2026-11-14 14:44	ccr-as1-alle	91e992a4	kystshot	OK	889	3d	alene	
+2026-11-14 14:51	ccr-as1-alle	91e992a4	kystshot_st	OK	391	3d	alene	
+2026-11-14 14:54	ccr-as1-alle	91e992a4	anchorlight3d	OK	204	3d	alene	
+2026-11-14 15:04	ccr-as1-alle	91e992a4	vectest	OK	596	3d	alene	
+2026-11-14 15:05	ccr-as1-alle	91e992a4	dbg23o	OK	41	3d	alene	
+2026-11-14 15:20	ccr-as1-alle	91e992a4	kaishot	FEIL	900	3d	alene	gikk ut på tid
+2026-11-14 15:35	ccr-as1-alle	91e992a4	npcshot	FEIL	900	3d	alene	gikk ut på tid
