@@ -49,6 +49,12 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - `rorbuvei.py` fikk `KYST_RORBU_FAST=1`, men kom ikke gjennom Langvasseid på 25 minutter: hvert søk som ikke finner noe der, tar 45–50 s. Rorbuene uten vei ut er ikke flyttet i denne delen.
 - Funnet underveis: hvilke NPC-båter som er ute, avhenger av kartflisene som er lastet fra stedene før. Leines og Ålesund verft traff en fiskebåt og et skip i hele kjøringen, men ikke alene.
 
+## Gjort 14.11.2026 (femte kjøring, arbeidsrutinen, grenen `ccr-as1-alle`, PR #89)
+
+- **Porten for fjerde del** gjort ferdig: `heattest` og `landtest` grønne (`heattest` var rød også på arbeidsgrenen: monteringstida står under knappen siden D3, testen leste bare knappen; rettet i testen), skjermbildene i `docs/okter/2026-11-14-126b/` (naustet på Kvitsøy med kystbåten på 14,99 m, mottaket i Sørarnøy og Træna verft med den på 21 m, i begge formater).
+- **Trekaia ut til båten er en T-brygge** (`quayMod`, `view3d/22-docks-air.js`): ved naustet på Kvitsøy ble det tegnet fire rader trekai i hele båtens lengde, et tredekk på 17 × 24 m. Jonas så bildet: «Hvorfor er det bygget 4 kaier utpå hverandre? det ser jo helt sykt ut». Nå én rad langs båten og én seksjon bred gangbru inn. Jonas spurte så hvorfor hun ikke kan ligge inntil naustet; valget (A inntil med sjøbunnen mudret, B T-brygga, C naustet flyttet) står i 5.25j i `docs/systemer/havner-og-mottak.md` og i køen.
+- **Ferja som legger til i veien hennes** (punkt 1 fra fjerde del, Fitjar verft nord): `colregSit` regner nå CPA-en med ferja liggende ved kaia når hun når den før CPA-en (`dock` fra `ferjeAt`), 4.12o i `docs/systemer/autonav.md`. Enhetstestene sett røde uten rettingen.
+
 ## Funnene etter fjerde del (14.11.2026, bygget før de to siste rettingene; stoppet etter 450 av 1 045 steder fordi 3D-testene delte maskinen)
 
 Havnene (mottak, butikker og verft, 357) og de første 93 rorbuene: 5 funn, mot 10 på de samme stedene på arbeidsgrenen samme morgen (Leines, Ålesund verft, Bud utstyrsbutikk, Træna utstyrsbutikk, Givær utstyrsbutikk og Sørvær er borte).
