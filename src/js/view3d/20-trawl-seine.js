@@ -124,7 +124,9 @@
     const SJT = SJOBEIN.test, sjp0 = SJT && SJT.prof ? performance.now() : 0;
     // (the tests go through the people again with another pose or beat without a whole frame: LEMMER.redraw, tests/lemmer.py. Nothing
     // is drawn then, the joints are only reckoned and logged: thousands of figures a second were minutes of work for a software GPU)
-    LEMMER.fr++; if (LEMMER.log && !LEMMER.dry){ const B0 = BMrel; LEMMER.redraw = () => { const d0 = drawN; LEMMER.dry = true; drawN = () => {}; try { drawDeckCrew(B0, eye, VP, t, G); } finally { drawN = d0; LEMMER.dry = false; } }; }
+    LEMMER.fr++; if (LEMMER.log && !LEMMER.dry){ const B0 = BMrel; LEMMER.redraw = () => { const d0 = drawN; LEMMER.dry = true; drawN = () => {}; try { drawDeckCrew(B0, eye, VP, t, G); } finally { drawN = d0; LEMMER.dry = false; } };
+      // (and drawn for real n times with the driver made to finish, for the time a figure costs: tests/folk2deck.py. ms a figure)
+      LEMMER.bench = n => { const px = new Uint8Array(4), lg = LEMMER.log; LEMMER.log = null; gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); try { for (let i = 0; i < n; i++) drawDeckCrew(B0, eye, VP, t, G); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } finally { LEMMER.log = lg; } return (performance.now() - t0) / n / Math.max(1, CREW3D.visible().length); }; }
     if (SJT && SJT.roll != null) BMrel = model(BMrel[12], BMrel[13], BMrel[14], -bv.head, SJT.pitch || 0, SJT.roll || 0);
     const DN = deckN(BMrel);   // (the deck's normal in the world, for the sea legs: view3d/08-plants.js seaNow)
     const b = S.boat, d = G.deck || {y:G.gw, z:0}, gw = G.gw || d.y + 0.9, railH = clamp(gw - d.y, 0.6, 1.1), now = performance.now() / 1000, DW = deckWork(G), ST = CREW3D._st, V = VESSELS[vtype()] || {}, K = G.kit || {};

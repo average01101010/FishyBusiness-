@@ -3,7 +3,7 @@
 // hauling pose; hauling, the hauler has its hand on every boat (the 15 m and the 21 m boats hauled with nobody there: the hauler stands
 // 1.25 and 1.30 m over the deck, and the rule sent them in at 1.2); and the nets aboard stand in tubs on clear deck. The core's part
 // (the roles) and the places on each boat's own model (deckcrew.js over vessel3d.js deckMap), without a browser.
-export const scripts = ['js/vessel3d.js', 'js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/vessel3d.js', 'js/deckcrew.js'];
 export const data = true;
 
 export default function (t){

@@ -1,7 +1,7 @@
 // The limbs keep their length (FB2, steg 123, 13.11.2026; deckcrew.js ik2, armIk, reachBody, legDrop, LEMMER): the upper arm, the
 // forearm, the thigh and the shin are as long in every pose, the elbow and the knee are on the side they should be, a hand out of
 // reach takes the back and the torso with it within their limits, and a foot out of reach lowers the hips.
-export const scripts = ['js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/deckcrew.js'];
 export default function (t){
   const {ik2, armIk, armHand, reachBody, legDrop, torsoPt, torsoInv, limbLen, LEMMER:C} = t.K, L = limbLen(null);
   const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
@@ -65,4 +65,8 @@ export default function (t){
   { const hips = [[0, 0.92, -0.11], [0, 0.92, 0.11]], st = legDrop(hips, [[0, 0.08, -0.12], [0, 0.08, 0.12]], L), wk = legDrop(hips, [[0.28, 0.08, -0.12], [-0.28, 0.08, 0.12]], L), far = legDrop(hips, [[0.9, 0.08, -0.12], [0, 0.08, 0.12]], L);
     t.ok(st === 0, 'stående rekker beina dekket uten at hofta senkes'); t.ok(wk > 0.02 && wk <= C.DROP, 'i fullt steg (28 cm fram og bak) senkes hofta ' + (wk * 100).toFixed(1) + ' cm'); t.eq(far, C.DROP, 'aldri mer enn DROP');
     const o = ik2(hips[0], [0, 0.08, -0.12], L.th, L.sn, [C.KNEE[0], C.KNEE[1], 0]); t.ok(o.j[0] > 0.03 && o.over === 0, 'kneet peker fram (' + (o.j[0] * 100).toFixed(1) + ' cm foran linja hofte–ankel stående)'); }
+  // 7. with the new people (LEMMER.on) a limb is straightened to 98 % at most, the one number of figpose.js, and figIk holds the same
+  // (Jonas 13.11.2026; seen red against REACH 0.995 and figIk's 0.9995: 99.5 and 100.0 %)
+  { const was = C.on; C.on = true; const o = ik2([0, 1.4, 0], [3, 1.4, 0], 0.3, 0.26, [0, -1, 0]), k = t.K.figIk([0, 1.4, 0], [3, 1.4, 0], 0.3, 0.26, [0, 0, 0]), fk = dist([0, 1.4, 0], k[1]) / 0.56; C.on = was;
+    t.ok(Math.abs(o.d / 0.56 - 0.98) < 1e-9 && Math.abs(fk - 0.98) < 1e-9 && C.REACH === (was ? 0.98 : C.REACH0), 'med de nye folkene strekkes et lem til 98 %: løseren ' + (o.d / 0.56 * 100).toFixed(1) + ' %, figIk ' + (fk * 100).toFixed(1) + ' %'); }
 }

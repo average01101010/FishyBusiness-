@@ -5,7 +5,7 @@
 // each boat's own model without a browser (deckcrew.js over vessel3d.js deckMap): the one with the hose a jet's length from where the
 // fish were gutted and turned to it, the one with the brush on a place of his own, those eating seated or standing by the rail, the
 // lunch then the coffee on the same place, the cold where the break had them, and no limb through anything.
-export const scripts = ['js/vessel3d.js', 'js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/vessel3d.js', 'js/deckcrew.js'];
 export const data = true;
 
 export default function (t){

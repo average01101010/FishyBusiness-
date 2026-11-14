@@ -2,7 +2,7 @@
 // deckMap; Jonas 23.10.2026: «Sørg også for at mannskapet aldri "clipper" gjennom vegger, rekka eller andre ting»): with the deck 15°
 // either way and fore and aft, nobody at a break's place or at the work has a leg, the spine, a shoulder or the head through
 // anything that is clear on a level deck. Without a browser.
-export const scripts = ['js/vessel3d.js', 'js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/vessel3d.js', 'js/deckcrew.js'];
 export const data = true;
 
 export default function (t){

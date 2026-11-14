@@ -75,6 +75,7 @@ Dette er reglene, én linje hver. **Bakgrunnen (Jonas' ord, datoene, grunnene) s
 
 - `src/index.html` er malen: `@include(sti)` byttes med fila; JSON i JS som `/*@include(sti)*/null`. Alt i `src/js/core/` og `src/js/ui/` havner i samme `<script>` i malens rekkefølge og deler globalt skop. **En ny fil må inn i malen på riktig plass.** `core/00-proj.js` har `'use strict'` og kommer alltid først.
 - `vessel3d.js` og `view3d.js` (`G3`) er egne `<script>`. Delene i `src/js/view3d/` og `src/js/ui/phone/` er stykker av én funksjon: de kan ikke `node --check`-es alene, bare bygges.
+- **Folk og bevegelse:** den som rører figurene, løseren eller det de holder (`deckcrew.js`, `figpose.js`, `drawWorker`), leser «Arkitekturen for bevegelsen» i `docs/planer/folk-2.md` først: kinematisk skjelett, analytisk to-ledds IK, lukket fjærløsning, tingen eier grepet, ingenting inn i kroppen.
 - **Ingen kode velger etter båttypens navn** (`=== 'sjark'`). Bruk feltene i `VESSELS` (`vesseltest.py`).
 - Blender-modellene lages av skriptene i `tools/` (`/blender`, `pip install bpy==4.5.4`) til `src/data/*.b64`; bygget legger dem ut som `data/<id>-<hash>.bin`, og `bootData` henter dem. Referansetegninger legges ikke i repoet, bare målene.
 - `src/data/` redigeres ikke for hånd. Rasterkartene leses bare gjennom lasteren i `core/01b-mapdata.js` (`rcell`, `rbil`, `rbilM`); en blokk som ikke er lastet, gir en feil og ingen reserveverdi.
