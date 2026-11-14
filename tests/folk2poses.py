@@ -6,19 +6,27 @@ import asyncio, os, sys
 from playwright.async_api import async_playwright
 from _env import boot, GAME, OUT
 from lemmer import SET, BOATS, frames
-POSES = [('coffee', 103.67), ('coffee', 101.97), ('coffee', 100.27), ('coffee', 111.14), ('binoc', 103.1), ('carry', 103.1), ('stack', 103.6), ('stack', 105.8), ('stow', 103.1), ('pack', 103.1), ('gaff', 103.1), ('smoke', 101.5), ('smoke', 102.3), ('sweep', 103.1), ('sweep', 103.8), ('lunch', 104.1), ('cold', 106.6)]   # (coffee: the sip's top for the men 0 to 3, t = T + idx * 1.7)
-FMT = {'liggende': (1280, 800), 'staaende': (800, 1280)}
+# the poses and when: coffee over a whole sip's round (the cup is at the mouth for 1.7 s of 12.6)
+POSES = [('coffee', 100.0), ('coffee', 101.4), ('coffee', 102.8), ('coffee', 104.2), ('coffee', 105.6), ('coffee', 107.0), ('coffee', 108.4), ('coffee', 109.8), ('coffee', 111.2),
+         ('smoke', 100.0), ('smoke', 101.0), ('smoke', 102.0), ('smoke', 103.0), ('smoke', 104.0), ('smoke', 105.0), ('smoke', 106.0), ('smoke', 107.0),
+         ('sweep', 103.1), ('sweep', 103.8), ('jig', 103.1), ('jig', 103.4), ('binoc', 103.1), ('carry', 103.1), ('stack', 103.6), ('stack', 105.8), ('stow', 103.1), ('pack', 103.1), ('gaff', 103.1), ('lunch', 104.1), ('cold', 106.6), ('phone', 103.1)]
+FMT = {'liggende': (1280, 800), 'staaende': (800, 1280), 'liten': (640, 480)}
 async def main():
-    fmts = [a for a in sys.argv[1:] if a in FMT] or ['liggende']; want = [a for a in sys.argv[1:] if a not in FMT]
+    """The eye on one man (G3._debug.camOn: POSE_WHO his number on deck, 1; POSE_FACE rad to his side from straight before him, 0.5;
+    POSE_DIST m, 2.6; POSE_PITCH, 0.1), everyone put in the pose."""
+    fmts = [a for a in sys.argv[1:] if a in FMT] or ['liten']; want = [a for a in sys.argv[1:] if a not in FMT]
+    who = int(os.environ.get('POSE_WHO', '1')); face = float(os.environ.get('POSE_FACE', '0.5')); dist = float(os.environ.get('POSE_DIST', '2.6')); pitch = float(os.environ.get('POSE_PITCH', '0.1'))
     async with async_playwright() as p:
         br = await p.chromium.launch(args=['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'])
         for fmt in fmts:
             w, h = FMT[fmt]; pg = await br.new_page(viewport={'width': w, 'height': h}); errs = []; pg.on('pageerror', lambda e: errs.append(str(e)))
             await boot(pg, GAME + ',folk2'); await pg.wait_for_function("G3.isActive()", timeout=120000); await pg.wait_for_timeout(3000)
             t = (await pg.evaluate(BOATS))[1]
-            await pg.evaluate(SET, [t, 'arbeid', 1, float(os.environ.get('POSE_YAW', '-1.45')), float(os.environ.get('POSE_PITCH', '0.2')), float(os.environ.get('POSE_DIST', '5.4')) * (1.35 if fmt == 'staaende' else 1)]); await frames(pg, t, 2)
+            await pg.evaluate(SET, [t, os.environ.get('POSE_SCENE', 'pause'), 1, -0.9, 0.3, 6]); await frames(pg, t, 2)   # (in the break everyone takes the pose that is asked for)
             try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
             except Exception: pass
+            if os.environ.get('POSE_STUDIO', '1') != '0': await pg.evaluate("G3._debug.studio(true)")   # (the white room: only the people and what they hold)
+            await pg.evaluate("([w, d, p, f]) => G3._debug.camOn(w, d, p, f)", [who, dist * (1.3 if fmt == 'staaende' else 1), pitch, face])
             seen = {}
             for task, T in POSES:
                 if want and task not in want: continue
@@ -26,6 +34,6 @@ async def main():
                 seen[task] = seen.get(task, 0) + 1
                 await pg.screenshot(path=os.path.join(OUT, 'folk2pose_%s%s_%s.png' % (task, '' if seen[task] == 1 else str(seen[task]), fmt)), timeout=400000)
                 print(task, T, fmt, 'gl', await pg.evaluate("G3._debug.glErr()"), 'feil', errs[:2], flush=True)
-            await pg.evaluate("SJOBEIN.test = null"); await pg.close()
+            await pg.evaluate("SJOBEIN.test = null; G3._debug.camOn(null)"); await pg.close()
         await br.close()
 asyncio.run(main())
