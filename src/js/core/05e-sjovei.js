@@ -34,7 +34,9 @@ const SJV = {
   ms:0,             // the time the last look took (ms)
   // the warning's window (game minutes to the CPA; 6 game minutes is a minute of real time), the NPCs' and Autonav's reach (km),
   // the near miss (m clear), how long a manoeuvre lasts at most (game hours)
-  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
+  TW:6, RNPC:1.0, ROWN:1.2, RW:3, NEAR:50, TMAX:0.25, RLEAD:2.4,
+  // in a harbour: the way off her for a vessel under way closing within HARB m and HARBT game minutes of the CPA (sjvEval)
+  HARB:600, HARBT:3,   // (RLEAD: how far off a manoeuvre begins by sjvLead at most, under the 2.5 km a manoeuvre ends at)
   // Ø11.2: restricted visibility under 2 nautical miles (km; the rules give no figure, 3 l names fog, snow and heavy rain), and for the
   // vessels not in sight in it (rule 19) the window, the warning's and the manoeuvres' reach and the time to the CPA they start at
   FOG:2 * NM, TWF:10, RWF:5, RNPCF:1.6, ROWNF:1.8, TSF:12,
@@ -484,6 +486,15 @@ function sjvEval(H, list){
       if (M){ SJV.E.set(n0.id, M); if (sight) sjvSig(n0.id, sjvManPat(M.side, M.slow), n.p, n.L, false); }
     }
     // Autonav's part: the vessels the boat you follow gives way for (16), within 1.2 km (1.8 under rule 19), sounding it in sight (34 a)
+    // (in a harbour, where no one turns for another, the way off her instead for a vessel under way closing on her, rule 8 e «Om nødvendig
+    // … slakke farten eller stoppe»: a ferry on her way in to her quay ran into the coastal vessel at Sørarnøy, 14.11.2026, the quay across
+    // the way in to the plant; tests/allesteder.py, steg 126. Held till the CPA is past and open, the other lies still, or she is far)
+    if (auto && harb && A.cls === 'pow' && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
+      const O = SJV.own;
+      if (O){ O.stop = R.rng < 2 * R.lim; if (O.t1 == null && (!O.harb || (R.tcpa <= 0 && R.rng > R.lim) || (n.v || 0) < 1 || R.rng > SJV.HARB * 2 || H - O.t0 > SJV.TMAX)) O.t1 = H; }
+      else if (R.risk && (n.v || 0) >= 2 && R.tcpa > 0 && R.tcpa <= SJV.HARBT && R.rng <= SJV.HARB && R.cpa < R.lim)
+        SJV.own = {id:n0.id, side:1, nx:0, ny:0, tgt:0, rate:1, t0:H, t1:null, why:'harb', slow:true, harb:true, stop:R.rng < 2 * R.lim, v:A.v};
+    }
     if (auto && !harb && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
       const O = SJV.own;
       if (O){ if (O.t1 == null && ((R.tcpa <= 0 && R.rng > R.lim && sjvBackClear(sjvBackOwn(A, O), n, R.lim, gsA)) || R.rng > 2500 || H - O.t0 > SJV.TMAX)) O.t1 = H; }
@@ -497,7 +508,7 @@ function sjvEval(H, list){
       if ((heard || (R.rng < 1000 && R.cpa < 0.5 * R.lim)) && (!e19 || R.tcpa < e19.tcpa)) e19 = {id:n0.id, stop:R.rng < R.lim, tcpa:R.tcpa};
     }
     // the warning: the risk within the window and three kilometres (five under rule 19); the one closest in time
-    if (!harb && R.risk && R.tcpa <= TW && R.rng <= RW * 1000 && (R.give !== 'b' || R.rng <= (f19 ? 2500 : 1500)) && (!best || R.tcpa < best.R.tcpa)) best = {n, R};
+    if ((!harb || (SJV.own && SJV.own.harb && SJV.own.id === n0.id && SJV.own.t1 == null)) && R.risk && R.tcpa <= TW && R.rng <= RW * 1000 && (R.give !== 'b' || R.rng <= (f19 ? 2500 : 1500)) && (!best || R.tcpa < best.R.tcpa)) best = {n, R};
     // Ø11.3: did they touch since the last look (when the manoeuvring model has her, its steps look: sjvTouch)
     if (R.rng < 600) sjvSweep(n, A, H, gsA, sweep);
   }
@@ -517,7 +528,7 @@ function sjvEval(H, list){
   for (const [id, T] of SJV.trail) if (!seen.has(id) && (!T.length || H - T[T.length - 1].H > 0.1)) SJV.trail.delete(id);
   for (const [id, q] of SJV.lp) if (!seen.has(id) && H - q.H > 0.1) SJV.lp.delete(id);
   for (const [id, c] of SJV.clash) if (H - c.t > 0.25 || H < c.t - 0.01) SJV.clash.delete(id);
-  if (SJV.own && (!auto || harb || (!seen.has(SJV.own.id) && SJV.own.t1 == null))) SJV.own.t1 = SJV.own.t1 == null ? H : SJV.own.t1;
+  if (SJV.own && (!auto || (harb && !SJV.own.harb) || (!harb && SJV.own.harb) || (!seen.has(SJV.own.id) && SJV.own.t1 == null))) SJV.own.t1 = SJV.own.t1 == null ? H : SJV.own.t1;
   if (SJV.own && SJV.own.t1 != null && Math.abs(SJV.ownOff) < 1) SJV.own = null;   // (back on the line: the next may start)
   // (the one warned for stays while its CPA is not clearly open, so it does not blink, and while she or Autonav gives way for the other
   // till they are past: the player sees why the boat turns, or why the other does)
@@ -578,6 +589,8 @@ function sjvFresh(model){
 function sjvAuto(d, h, ds, T){
   sjvFresh(true); const O = SJV.own, cap = sjvCapV(); if (!O && Math.abs(SJV.ownOff) < 0.01 && cap >= 1e8) return null;
   const L = BOAT.len || 10, near = ds < Math.max(150, 6 * L) || (T && T.bow);
+  // (in a harbour: the way off her, near a stop too; stopped while the other is within two limits, sjvEval)
+  if (O && O.harb && O.t1 == null){ SJV.ownOff += clamp(-SJV.ownOff, -0.5 * h, 0.5 * h); return {off:SJV.ownOff, v:Math.min(O.stop ? 0 : 1, cap)}; }
   let tgt = O && O.t1 == null && !O.slow && !near ? O.side * O.tgt * 1000 : 0;
   if (tgt && (SJV.ownChk -= h) <= 0){ SJV.ownChk = 1;
     const look = Math.max(60, Math.abs(d.u) * 20) / 1000, a = {x:d.X / 1000, y:d.Y / 1000}, q = {x:a.x + Math.sin(d.psi) * look, y:a.y - Math.cos(d.psi) * look};
@@ -594,7 +607,7 @@ function sjvSail(pl, b, left){
   sjvFresh(false);
   if (SJV.stopT != null && SJV.stopT === S.t && SJV.vid === S.cur){ b.v = 0; return true; }   // (a collision in the look just made, Ø11.3: she lies where it left her this minute)
   const O = SJV.own, cap = sjvFogCapV(), v0 = b.v || 0, f = cap < 1e8 && v0 > 0.1 ? Math.min(1, cap / KN_MS / v0) : 1;
-  if (!O || O.t1 != null || S.cur !== SJV.vid || !sjvLive()) return f < 0.999 ? sjvCreep(pl, b, left * f, v0 * f) : false;
+  if (!O || O.t1 != null || O.harb || S.cur !== SJV.vid || !sjvLive()) return f < 0.999 ? sjvCreep(pl, b, left * f, v0 * f) : false;
   const w = pl.wps[pl.idx]; if (!w) return false; const d = dist(b.pos, w); if (d < 3 * left || (wpStop(w) && d < 0.5)) return f < 0.999 ? sjvCreep(pl, b, left * f, v0 * f) : false;
   const hd0 = Math.atan2(w.x - b.pos.x, -(w.y - b.pos.y)), gs = gridScale(b.pos);
   let hd = hd0, L = left * f;
