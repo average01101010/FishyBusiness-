@@ -274,10 +274,10 @@
           else if (c < 1.7) tip = [U[0], U[1] + Math.sin((c - 1.35) / 0.35 * Math.PI * 4) * 0.05, U[2]];
           else tip = lerp3(U, ready, ease(Math.min(1, (c - 1.7) / 0.7)));
           st.gaffFish = c >= 0.5 && c < 1.45; st.gaffDrop = c >= 1.45 && c < 1.75 ? (c - 1.45) / 0.3 : -1; }
-        // (the new people: the shaft passes by his right hip, the back hand there and the fore hand ahead of him, not through the
+        // (the new people: the shaft passes before his belly, the back hand there and the fore hand ahead of him, not through the
         // chest; holdClear puts the hands at the gaff's own grips, deckcrew.js HOLDT.gaff)
-        const ch = FH ? W(0.34, 1.0, 0.18) : W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
-        const gd = Math.hypot(g[0] - ch[0], g[1] - ch[1], g[2] - ch[2]); if (gd > 0.55) g = lerp3(ch, g, 0.55 / gd);
+        const ch = FH ? W(0.36, 1.0, 0.04) : W(0.15, 1.25, 0), n0 = norm3([tip[0] - ch[0], tip[1] - ch[1], tip[2] - ch[2]]); let g = [tip[0] - n0[0] * 0.66, tip[1] - n0[1] * 0.66, tip[2] - n0[2] * 0.66];
+        const gd = Math.hypot(g[0] - ch[0], g[1] - ch[1], g[2] - ch[2]); const gm = FH ? HOLDT.gaff.far : 0.55; if (gd > gm) g = lerp3(ch, g, gm / gd);
         const n = norm3([tip[0] - g[0], tip[1] - g[1], tip[2] - g[2]]); st.gaff = {g, n, tip:[g[0] + n[0] * 0.66, g[1] + n[1] * 0.66, g[2] + n[2] * 0.66]};
         hands = [g, [g[0] - n[0] * 0.38, g[1] - n[1] * 0.38, g[2] - n[2] * 0.38]]; break; }
       // bleeding a jigged fish (the event st.ev): he takes it off at the rail, lifts it by the head, cuts the throat with the knife (the
@@ -543,13 +543,16 @@
         const d = lack(q, H.HAND, 0, 0); if (d > 0) mv(q, d); }
       // (nor its wrist, which is a hand's length back from the point towards the shoulder: the hand is moved out until the wrist is
       // clear, so the arm is solved to a point it can hold and what the hand holds is where the hand is)
-      for (const i of [0, 1]) for (let n = 0; n < 2; n++){ const q = hands[i], s0 = ofH(torsoPt(SHL[i], b, t2)), w = wristFor(i, nrm3(sub3(q, s0)))[0], l = inT(w);
-        if (Math.abs(l[2]) > 0.65 * (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0)) break; const d = lack(w, LEMMER.WRIST, 0, 0.006); if (d <= 0) break; mv(q, d); }
+      for (const i of [0, 1]) for (let n = 0; n < 3; n++){ const q = hands[i], s0 = ofH(torsoPt(SHL[i], b, t2)), w = wristFor(i, nrm3(sub3(q, s0)))[0], l = inT(w);
+        const d = lack(w, LEMMER.WRIST, 0.02, 0.02); if (d <= 0 || (PF.half[Math.floor((l[1] - PF.lo) / PF.dy)] || 0) + LEMMER.WRIST - Math.abs(l[2]) < d) break; mv(q, d); }   // (nearer out to his side than ahead: the arm's own matter, armIk)
     } : null;
     let bT = bend, tw = 0, RB = null;
     if (IK) for (let ps = 0; ps < (holdClear ? 2 : 1); ps++){ if (holdClear) holdClear(bT, tw);
       const w0 = [0, 1].map(i => { const s0 = ofH(torsoPt(SHL[i], bend, 0)); return toH(wristFor(i, nrm3(sub3(hands[i], s0)))[0]); });
-      RB = reachBody(SHL, w0, reach, bend); bT = bend + RB.b; tw = RB.t; }
+      // (the new people: a hand that reaches across him turns the torso after it first, the shoulder ahead, and the reach is found from there)
+      let twX = 0; if (FG) for (const i of [0, 1]){ const x = -w0[i][2] * (i ? -1 : 1) - LEMMER.CROSS[0]; if (x > 0 && w0[i][0] > -0.25) twX += (i ? 1 : -1) * x * LEMMER.CROSS[1]; }
+      twX = clamp(twX, -LEMMER.TWIST, LEMMER.TWIST);
+      RB = reachBody(SHL, twX ? w0.map(q => torsoInv(q, 0, twX)) : w0, reach, bend); bT = bend + RB.b; tw = clamp(twX + RB.t, -LEMMER.TWIST, LEMMER.TWIST); }
     const TA = torsoPt([1, 0, 0], bT, tw), TU = torsoPt([0, 1, 0], bT, tw), TR = torsoPt([0, 0, 1], bT, tw), wv = l => [HA[0] * l[0] + HU[0] * l[1] + HR[0] * l[2], HA[1] * l[0] + HU[1] * l[1] + HR[1] * l[2], HA[2] * l[0] + HU[2] * l[1] + HR[2] * l[2]];
     const XA = wv(TA), XU = wv(TU), XR = wv(TR), toT = q => { const x = q[0] - pv[0], yy = q[1] - pv[1], z = q[2] - pv[2]; return [x * XA[0] + yy * XA[1] + z * XA[2], x * XU[0] + yy * XU[1] + z * XU[2], x * XR[0] + yy * XR[1] + z * XR[2]]; };
     const ofT = l => [pv[0] + XA[0] * l[0] + XU[0] * l[1] + XR[0] * l[2], pv[1] + XA[1] * l[0] + XU[1] * l[1] + XR[1] * l[2], pv[2] + XA[2] * l[0] + XU[2] * l[1] + XR[2] * l[2]];

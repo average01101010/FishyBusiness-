@@ -5,7 +5,7 @@ import asyncio, json, os, sys
 from playwright.async_api import async_playwright
 DIAG = """(([tasks, n]) => { const R = {}, own = (g, p) => { const F = [Math.sin(g.h), -Math.cos(g.h)], Rv = [Math.cos(g.h), Math.sin(g.h)]; return [(p[0] - g.at[0]) * F[0] + (p[2] - g.at[2]) * F[1], p[1] - g.at[1], (p[0] - g.at[0]) * Rv[0] + (p[2] - g.at[2]) * Rv[1]].map(v => +v.toFixed(2)); };
   const C = {}, BX = {}; LEMMER.log = [];
-  for (const task of tasks) for (let k = 0; k < n; k++){ const T = 100 + k * 0.37; SJOBEIN.test = {roll:0, pitch:0, T, task}; LEMMER.log.length = 0; LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw();
+  for (const task of tasks) for (let k = 0; k < n; k++){ const T = 100 + k * 0.37; SJOBEIN.test = task === 'spill' ? {roll:0, pitch:0, T} : {roll:0, pitch:0, T, task};   // ('spill': the game as it runs, each at his own work) LEMMER.log.length = 0; LEMMER.things = []; LEMMER.bodies = []; LEMMER.redraw();
     for (const g of LEMMER.log){ const key = (g.walk ? 'gå' : g.task || 'står') + (g.ev ? '*' : ''); for (const i of [0, 1]){ const k2 = key + (i ? ' V' : ' H'), r = R[k2] || (R[k2] = {n:0, nb:0, ao:0, fo:0}); r.n++; if (g.ao[i] > 0.02) r.nb++; if (g.fo && g.fo[i] > r.fo) r.fo = +g.fo[i].toFixed(3);
         if (g.ao[i] > r.ao){ r.ao = +g.ao[i].toFixed(3); r.ov = g.ov[i] && g.ov[i].map(v => +v.toFixed(2)); r.tg = own(g, g.tg[i]); r.idx = g.idx; r.T = +(g.T % 1000).toFixed(2); r.b = +(g.b * 57.3).toFixed(0); r.t = +(g.t * 57.3).toFixed(0); } } }
     Object.assign(BX, G3._debug.thingBox());
@@ -22,8 +22,22 @@ async def main():
         try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
         except Exception: pass
         await pg.evaluate("LEMMER.log = []"); await frames(pg, t, 1)
+        if os.environ.get('KYST_DIAG_TASKS') == 'spill':   # (the game as it runs: real frames, each at his own work)
+            R = {}
+            for sc in ('arbeid', 'garn'):
+                await pg.evaluate(SET, [t, sc, 1, -0.75, 0.6, 9]); await frames(pg, t, 2)
+                try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
+                except Exception: pass
+                for k in range(6):
+                    await pg.evaluate("(k) => { LEMMER.log = []; SJOBEIN.test = {T:100 + k * 1.3}; }", k); await frames(pg, t, 2)
+                    R = await pg.evaluate("""(R) => { for (const g of LEMMER.log){ const key = (g.walk ? 'gå' : g.task || 'står') + (g.ev ? '*' : ''); for (const i of [0, 1]){ const k2 = key + (i ? ' V' : ' H'), r = R[k2] || (R[k2] = {n:0, ao:0});
+                      r.n++; if (g.ao[i] > r.ao){ r.ao = +g.ao[i].toFixed(3); r.ov = g.ov[i] && g.ov[i].map(v => +v.toFixed(2)); const F = [Math.sin(g.h), -Math.cos(g.h)], Rv = [Math.cos(g.h), Math.sin(g.h)], p = g.tg[i];
+                        r.tg = [(p[0] - g.at[0]) * F[0] + (p[2] - g.at[2]) * F[1], p[1] - g.at[1], (p[0] - g.at[0]) * Rv[0] + (p[2] - g.at[2]) * Rv[1]].map(v => +v.toFixed(2)); r.b = +(g.b * 57.3).toFixed(0); r.t = +(g.t * 57.3).toFixed(0); r.T = +(g.T % 1000).toFixed(1); } } } LEMMER.log = null; return R; }""", R)
+            for k, r in sorted(R.items(), key=lambda q: -q[1]['ao']):
+                if r['ao'] > 0.005: print('%-12s' % k, json.dumps(r))
+            print('feil:', errs[:3]); await br.close(); return
         only = os.environ.get('KYST_DIAG_TASKS')   # (a few poses only: KYST_DIAG_TASKS=gaff,pack)
-        o = await pg.evaluate(DIAG, [only.split(',') if only else TASKS, 30])
+        o = await pg.evaluate(DIAG, [only.split(',') if only else TASKS, 80 if only == 'spill' else 30])
         print('--- hender (ao: m fra målet; ov: [utenfor rekkevidde, for nær, i egen kropp]; tg: målet [fram, opp, høyre]; fo: figurens håndledd mot løserens)')
         for k, r in sorted(o['R'].items(), key=lambda q: -q[1]['ao']):
             if r['ao'] > 0.005 or r['fo'] > 0.005: print('%-12s' % k, json.dumps(r))
