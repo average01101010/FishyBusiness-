@@ -241,8 +241,10 @@
         const lo = c < 0.3 ? Math.sin(c / 0.3 * Math.PI) : 0, r = -0.5 + sw0 * 1.0, up = 0.62 - lo * 0.12 + Math.sin(sw0 * Math.PI) * 0.3;
         st.blade = W(0.55, up, r); st.tip = c >= 0.55 && c < 0.75 ? Math.sin((c - 0.55) / 0.2 * Math.PI) : 0; st.full = c >= 0.22 && c < 0.62; st.c = c;
         const G = W(LEMMER.on ? 0.2 : 0.08, 1.02, LEMMER.on ? Math.min(r * 0.35, -0.03) : r * 0.35); /* (the new people: the upper hand, his left, stays on its own side of him) */ hands = [[G[0] + (st.blade[0] - G[0]) * 0.5, G[1] + (st.blade[1] - G[1]) * 0.5, G[2] + (st.blade[2] - G[2]) * 0.5], G]; break; }
-      case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)]; break; }
-      case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; hands = st.seated ? [toFace(0, W(0.3, sh + 0.22, 0.12), 'mouth', HOLDT.cup.sip, k, W(0.2, sh + 0.64, 0.04)), W(0.34, sh + 0.2, -0.1)] : [toFace(0, W(0.28, 1.05, 0.14), 'mouth', HOLDT.cup.sip, k, W(0.18, 1.5, 0.04)), W(0.05, 0.85, -0.25)]; break; }
+      case 'sweep': { const k = Math.sin(t * 2.2) * 0.25; hands = [W(0.25 + k * 0.3, 1.0, 0.1 + k), W(0.35 + k * 0.3, 0.8, -0.05 + k)];
+        // (the new people: the broom has its line from the upper hand to its head on the deck, and the lower hand holds on that line; Jonas' clips 14.11.2026, where the lower hand slid beside the shaft)
+        if (LEMMER.on) hands[1] = lerp3(hands[0], W(0.25 + k * 0.3 + 0.55, 0.108, 0.1 + k), HOLDT.broom.low); break; }
+      case 'coffee': { const k = Math.max(0, Math.sin(t * 0.5)) ** 8; st.sip = k; hands = st.seated ? [toFace(0, W(0.3, sh + 0.22, 0.12), 'mouth', HOLDT.cup.sip, k, W(0.2, sh + 0.64, 0.04)), W(0.34, sh + 0.2, -0.1)] : [toFace(0, W(0.28, 1.05, 0.14), 'mouth', HOLDT.cup.sip, k, W(0.18, 1.5, 0.04)), W(0.05, 0.85, -0.25)]; break; }
       // the cold (OB14, F14): the arms beaten round the chest and flung out again a few times, then the hands rubbed before the chest
       // and breathed into, over and over
       case 'cold': { const c = t % 8.4, beat = c < 3.4 ? ease(Math.min(1, c / 0.3)) * (1 - ease(clamp((c - 3.1) / 0.3, 0, 1))) : 0, sw2 = 0.5 + 0.5 * Math.sin(c * 6.6 - 1.2);
@@ -561,10 +563,11 @@
     if (!FG && K && K.vest) drawN(K.vest, TM);   // the life jacket over the jacket, on deck at sea (vessel3d.js vestKit, Ø11.5)
     // the head: looking about when idle, and at you when you bring the camera close in front of him (deckcrew agents, st.peek)
     let hy = st.task === 'look' ? Math.sin(T * 0.4 + idx) * 0.5 : 0;
-    if (st.peek){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
+    if (st.peek && !(LEMMER.on && (HOLDT.eyes[st.task] || (st.sip || 0) > 0.2 || (st.task === 'smoke' && st.puff > 0.2)))){ const ex = eye[0] - st.x, ez = eye[2] - st.z, d = Math.hypot(ex, ez); if (d < 7){ let dh = Math.atan2(ex, -ez) - h; while (dh > Math.PI) dh -= 2 * Math.PI; while (dh < -Math.PI) dh += 2 * Math.PI; if (Math.abs(dh) < 1.3) hy = -dh * 0.85 * Math.min(1, (7 - d) / 2); } }
     // the head's pitch by what he does (down at the phone, the knife, over the rail; up at the northern lights), and a slow turn talking or
     // scanning with the binoculars
-    const HP = {cold:-0.16, phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04, cut:-0.5, slip:-0.25};
+    if (st.task !== 'coffee') st.sip = 0;
+    const HP = {sweep:LEMMER.on ? -0.3 : 0, cold:-0.16, phone:-0.5, knife:-0.4, seasick:-0.6, lunch:-0.12, gear:-0.35, sit:-0.12, snus:-0.08, aurora:0.6, binoc:0.04, cut:-0.5, slip:-0.25};
     // (the tired look down, st.slump)
     const hp = (HP[st.task] || 0) - (st.slump || 0) * 0.5; if (st.task === 'chat') hy += Math.sin(T * 0.7 + idx) * 0.12; if (st.task === 'aurora') hy += Math.sin(T * 0.15 + idx) * 0.4; if (st.task === 'binoc') hy += Math.sin(T * 0.22 + idx) * 0.25;
     // (the head goes with the back when it bends further for a hand; it does not turn with the torso)
@@ -629,13 +632,14 @@
       LG.se = SE ? {sr:SE.sr, sf:SE.sf, k:SE.k, hipR:SE.hipR, hipF:SE.hipF, hipY:SE.hipY, leanR:SE.leanR, leanF:SE.leanF, grab:SE.grab, gh:SE.gh, step:SE.step, stFoot:SE.stFoot, fr:SE.fr.slice(), kneeDeg:SE.kneeDeg.slice()} : null; SJOBEIN.log.push(LG); }
     // the break's things in the hands (tools/deck/pause.py), where the page has them; the old cup otherwise
     const pz = nm => kit('pause', nm), atH = (q, ...m) => chain(M4.T(q[0], q[1], q[2]), M4.RY(-h), ...m);
-    if (st.task === 'coffee' && !st.gone){ const K = pz('krus'), FL = pz('termos'); if (K) drawN(K, atH([GP[0][0], GP[0][1] - 0.045, GP[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
+    if (st.task === 'coffee' && !st.gone){ const K = pz('krus'), FL = pz('termos'); if (K && FH){ const u = clamp(((st.sip || 0) - HOLDT.cup.from) / (1 - HOLDT.cup.from), 0, 1); drawN(K, atH(GP[0], M4.RX(HOLDT.cup.tip * u * u * (3 - 2 * u)), M4.T(0, -0.045, 0), M4.RY(-1.2))); }   // (tipped to the mouth with the sip, about the hand that holds it; Jonas 14.11.2026: «folkene roterer ikke objekter som feks kaffekoppen»)
+      else if (K) drawN(K, atH([GP[0][0], GP[0][1] - 0.045, GP[0][2]], M4.RY(-1.2))); else drawN(PM.cup, M4.T(hands[0][0], hands[0][1] + 0.02, hands[0][2]));
       if (FL){ const q = st.seated ? W(0.1, 0, -0.36) : W(0.12, 0, -0.32); drawN(FL, atH([q[0], y - eye[1] + 0.01, q[2]])); } }
     if (st.task === 'knife' && st.steel){ const B = pz('bryne'); if (B) drawN(B, toolM(GP[1], st.steel.dir)); }
     if (st.task === 'lunch' && !st.gone){ const M = pz('mat'); if (M) drawN(M, atH(GP[1], M4.RX(0.35), M4.S(0.75))); }
     if (st.task === 'phone' && !st.gone){ const P2 = pz((st.age || 40) >= 62 ? 'tlf2' : 'tlf'); if (P2){ const c = [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2]; drawN(P2, atH(c, M4.RX(0.95))); } }
     if (st.task === 'binoc' && !st.gone){ const B = pz('kikk'); if (B){ const c = st.put ? [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + 0.01, (GP[0][2] + GP[1][2]) / 2] : FH ? [(GP[0][0] + GP[1][0]) / 2, (GP[0][1] + GP[1][1]) / 2 + HOLDT.kikk.low, (GP[0][2] + GP[1][2]) / 2] : up3(W(0.13, 1.57, 0)); drawN(B, atH(c, M4.RY(-hy))); } }
-    if (st.task === 'smoke' && !st.gone){ const C = pz('sig'); if (C) drawN(C, atH(GP[0], M4.RY(0.6), M4.RX(0.25)));
+    if (st.task === 'smoke' && !st.gone){ const C = pz('sig'); if (C){ const u = FH ? st.puff || 0 : 0; drawN(C, atH(GP[0], M4.RY(0.6 - 0.5 * u), M4.RX(0.25 - 0.2 * u))); }   // (the new people: its end turned to the lips with the draw)
       // a breath of smoke after each draw, drifting off with the wind of the deck (DKSMOKE: the view's grey points)
       if (st.puff < 0.05){ const ph = (t * 0.8) % (Math.PI * 2) / (Math.PI * 2), m0 = up3(W(0.2, 1.52, 0.02)); if (ph > 0.55 && ph < 0.95) for (let i = 0; i < 14; i++){ const u = clamp((ph - 0.55) / 0.4 - hash(i + idx) * 0.3, 0, 1); if (u <= 0) continue;
         DKSMOKE.push([m0[0] + F[0] * u * 0.45 + (hash(i * 3) - 0.5) * 0.12 * u, m0[1] + u * 0.3 + (hash(i * 7) - 0.5) * 0.04, m0[2] + F[1] * u * 0.45 + (hash(i * 5) - 0.5) * 0.12 * u, 0.35 * (1 - u)]); } } }
