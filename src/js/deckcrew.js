@@ -402,9 +402,9 @@ function crewSim(src){
     if (LEMMER.on && ST.PT){ const M = ST.M, B = BLEED, pt = n => { const c = ST.PT[n]; return c && c.k != null && ST.M0.ok(c.k) ? [ST.M0.at(c.k)[0], ST.M0.at(c.k)[2], c.h || 0] : null; };
       // (the table and the ice under a shelter deck or below: nobody stands at those places on this deck, goalOf «below»)
       const wy = W ? W.table[1] : d.y, sq = ST.PT.sloy, under = wy != null && sq && sq.k != null && M.ok(sq.k) && Math.abs(M.at(sq.k)[1] - wy) > 0.5;
-      let ICE = null; const I = under ? null : pt('is'), Sl = under ? null : pt('sloy'), h0 = PL.haul[0], OB = [[h0[0], h0[1], B.room.haul], [PL.haul[1][0], PL.haul[1][1], B.room.haul2], [PL.pick[0], PL.pick[1], B.room.pick], [PL.pot[0], PL.pot[1], B.room.pick]], NEAR = [[PL.haul[1][0], PL.haul[1][1], B.drop2]];
-      if (Sl){ OB.push([Sl[0], Sl[1], B.room.is]); NEAR.push([Sl[0], Sl[1], B.drop]); }
-      if (I){ const ih = I[2] + (((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk' ? Math.PI : 0), cr = [I[0] + Math.sin(ih) * 0.58, I[1] - Math.cos(ih) * 0.58]; OB.push([I[0], I[1], B.room.is], [cr[0], cr[1], B.room.box]); NEAR.push([I[0], I[1], B.drop], [cr[0], cr[1], B.drop]); }
+      let ICE = null; const I = under ? null : pt('is'), Sl = under ? null : pt('sloy'), h0 = PL.haul[0], OB = [[h0[0], h0[1], B.room.haul], [PL.haul[1][0], PL.haul[1][1], B.room.haul2], [PL.pick[0], PL.pick[1], B.room.pick], [PL.pot[0], PL.pot[1], B.room.pick]], two = (((VESSELS[ST.type] || {}).stations || {}).hauler || 1) > 1, NEAR = [[PL.haul[1][0], PL.haul[1][1], B.drop2, two]];   /* (NEAR: [x, z, m clear, a person whose place it is]; the second hauler where the boat has two hauling) */
+      if (Sl){ OB.push([Sl[0], Sl[1], B.room.is]); NEAR.push([Sl[0], Sl[1], B.drop, true]); }
+      if (I){ const ih = I[2] + (((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk' ? Math.PI : 0), cr = [I[0] + Math.sin(ih) * 0.58, I[1] - Math.cos(ih) * 0.58]; OB.push([I[0], I[1], B.room.is], [cr[0], cr[1], B.room.box]); NEAR.push([I[0], I[1], B.drop, true], [cr[0], cr[1], B.drop]); }
       // (the ice box on deck, and the shovel's way from it to the packer's box: the fish is not let fall on it, and nobody stands in it)
       { const ib = I && !under ? iceBox() : null; if (ib){ const cr = NEAR[NEAR.length - 1]; OB.push([ib[0], ib[2], B.room.ice], [(ib[0] + cr[0]) / 2, (ib[2] + cr[1]) / 2, B.room.box]); NEAR.push([ib[0], ib[2], B.dropIce]); ICE = [ib[0], ib[2]]; } }
       const k0 = M.near(h0[0], h0[1], 0.6), y0 = k0 >= 0 ? M.at(k0)[1] : null, lay = (x, z) => { let m = 9; for (const q of NEAR) m = Math.min(m, Math.hypot(q[0] - x, q[1] - z) - q[2]); return m; };
@@ -412,7 +412,7 @@ function crewSim(src){
       // a point's angle about the hauler from straight inboard, + aft; swept: a place within the gaff's reach on the side he turns, from
       // the rail round to a)
       const ang = (x, z) => Math.atan2(z - h0[1], -sg * (x - h0[0])) * 180 / Math.PI, swept = (a, x, z, mg) => { const r = Math.hypot(x - h0[0], z - h0[1]), ap = ang(x, z); return r < B.sweep && r > 0.2 && ap * a > 0 && Math.abs(ap) > Math.abs(a) - mg; };
-      const PPL = NEAR.filter(q => q[2] === B.drop), okDrop = (x, z) => { const a = ang(x, z); return Math.abs(a) >= 10 && lay(x, z) >= 0 && !PPL.some(q => swept(a, q[0], q[1], 25)); };
+      const PPL = NEAR.filter(q => q[3]), okDrop = (x, z) => { const a = ang(x, z); return Math.abs(a) >= 10 && lay(x, z) >= 0 && !PPL.some(q => swept(a, q[0], q[1], 25)); };
       if (!okDrop(drop[0], drop[1])){ let best = null, bv = 1e9, wide = null, wv = -1, free2 = null, fv = 1e9;
         for (const r of B.dropR) for (let a = -80; a <= 80; a += 10){ if (!a) continue; const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
           const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (okDrop(x, z) && d < bv){ bv = d; best = [x, z]; } if (m >= 0 && d < fv){ fv = d; free2 = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }

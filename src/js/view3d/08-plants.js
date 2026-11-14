@@ -323,7 +323,7 @@
           const K0 = hold([0.55, 1.75, 0.18], 0.92); let Hd = K0;
           if (e && c < DKDUR.gaff){ const y0 = y - eye[1], lx = e.W[0] + eye[0] - st.x, lz = e.W[2] + eye[2] - st.z, O = Gf.chest;
             let wl = [lx * F0[0] + lz * F0[1], e.W[1] - y0, lx * R0[0] + lz * R0[1]]; { const v = [wl[0] - O[0], wl[1] - O[1], wl[2] - O[2]], l = Math.hypot(v[0], v[1], v[2]); if (l > Gf.reach) wl = [O[0] + v[0] * Gf.reach / l, O[1] + v[1] * Gf.reach / l, O[2] + v[2] * Gf.reach / l]; }
-            const ux = e.U[0] + eye[0] - st.x, uz = e.U[2] + eye[2] - st.z, aT = gaffTurn(st, eye); let aL = Math.atan2(ux, -uz) - st.h - aT; while (aL > Math.PI) aL -= 2 * Math.PI; while (aL < -Math.PI) aL += 2 * Math.PI; if (Math.abs(aL) > 1.6) aL = 0;   /* (a tub right behind him, reached the other way round) */
+            const ux = e.U[0] + eye[0] - st.x, uz = e.U[2] + eye[2] - st.z, aT = gaffTurn(st, eye); let aL = Math.atan2(ux, -uz) - st.h - aT; while (aL > Math.PI) aL -= 2 * Math.PI; while (aL < -Math.PI) aL += 2 * Math.PI;   /* (aL: what is left of the way round to it when he has turned all he turns) */
             const rU = Math.max(Gf.out, Math.hypot(ux, uz)), K1 = hold(wl, 0.92 - Gf.dip * 0.42), K2 = hold([Gf.lift[0], clamp(e.R[1] - y0 + Gf.lift[1], 1.3, 1.65), Gf.lift[2]], 0.92), K3 = hold([Math.cos(aL) * rU, e.U[1] - y0 + 0.55, Math.sin(aL) * rU], 0.92);
             const dn = (K, d) => ({b:[K.b[0], K.b[1] + d, K.b[2]], n:K.n});
             if (c < 0.5) Hd = mix(K0, K1, ease(c / 0.5));

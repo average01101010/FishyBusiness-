@@ -157,7 +157,7 @@
       // (the tests: the last event of a kind played again by the one whose work it is, at the moment asked for, SJOBEIN.test.ev and .t)
       // (the new people: the fish comes in at the first hauler's place, and the gaff's sweep and where the fish is let fall are laid
       // out from there, deckcrew.js places; the second hauler does not gaff across him)
-      const evK = LEMMER.on && a.task === 'haul' && a.slot > 0 ? 'haul2' : a.task;
+      const evK = LEMMER.on && a.task === 'haul' && a.slot > 0 && A.some(q => q !== a && q.task === 'haul' && q.slot === 0 && q.mode === 'at') ? 'haul2' : a.task;   /* (alone at the hauler, the second gaffs as before: else no fish came aboard) */
       const evT = SJT && SJT.ev && DKLAST[SJT.ev] && a.mode === 'at' && (DKPLAY[evK] || [])[0] === SJT.ev ? DKLAST[SJT.ev] : null;
       const ev = evT || (a.mode === 'at' ? dkFor(a.id, lp, evK) : null);   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
