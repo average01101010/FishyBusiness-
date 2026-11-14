@@ -116,13 +116,16 @@ function colregSit(a, b, o = {}){
   const ca = a.cog != null ? a.cog : a.hd, cb = b.cog != null ? b.cog : b.hd;
   const rx = b.p.x - a.p.x, ry = b.p.y - a.p.y, vx = Math.sin(cb) * kb - Math.sin(ca) * ka, vy = -Math.cos(cb) * kb + Math.cos(ca) * ka;
   const v2 = vx * vx + vy * vy, rv = rx * vx + ry * vy;
-  let t = v2 > 1e-9 ? -rv / v2 : 0, cx = rx + vx * t, cy = ry + vy * t, wx = vx, wy = vy;
+  let t = v2 > 1e-9 ? -rv / v2 : 0, cx = rx + vx * t, cy = ry + vy * t, wx = vx, wy = vy, dk = false;
   // b on her way to lie at a quay (b.dock: where, and in how many hours; a ferry or the coastal route's ship, ferjeAt): past that hour she
   // lies still there, so the closest point is with her at the quay and a going on (AS1 14.11.2026, Fitjar: one who passed astern of the ferry
   // by rule 15 met her lying at her quay right on the line)
-  const D = b.dock; if (D && kb > 0 && D.t >= 0 && t > D.t){
+  // (and also where the closest without the quay comes before that hour, or is behind them, when the closest with her lying there is
+  // nearer: a ferry passing her on the same way, faster, to lie at a quay on her line; the kontroll of steg 126)
+  const D = b.dock; if (D && kb > 0 && D.t >= 0){
     const ex = D.x - (a.p.x + Math.sin(ca) * ka * D.t), ey = D.y - (a.p.y - Math.cos(ca) * ka * D.t), ux = -Math.sin(ca) * ka, uy = Math.cos(ca) * ka, u2 = ux * ux + uy * uy;
-    const t2 = u2 > 1e-9 ? Math.max(0, -(ex * ux + ey * uy) / u2) : 0; t = D.t + t2; cx = ex + ux * t2; cy = ey + uy * t2; wx = ux; wy = uy; }
+    const t2 = u2 > 1e-9 ? Math.max(0, -(ex * ux + ey * uy) / u2) : 0, c2 = Math.hypot(ex + ux * t2, ey + uy * t2), t1 = clamp(t, 0, D.t), c1 = Math.hypot(rx + vx * t1, ry + vy * t1);
+    if (t > D.t || c2 < c1){ t = D.t + t2; cx = ex + ux * t2; cy = ey + uy * t2; wx = ux; wy = uy; dk = true; } }
   const rng = Math.hypot(rx, ry) / gs * 1000, cpa = Math.hypot(cx, cy) / gs * 1000;
   const brg = Math.atan2(rx, -ry), relA = sjvWrap(brg - (a.hd || 0)), relB = sjvWrap(brg + Math.PI - (b.hd || 0)), closing = rv < 0;
   const lim = o.lim || colregLim(a.L, b.L), still = (a.v || 0) < 1 && (b.v || 0) < 1, risk = t > 0 && cpa < lim && !still;   // (two lying still: nothing closes)
@@ -145,7 +148,8 @@ function colregSit(a, b, o = {}){
   }
   else if (clsA === 'fish'){ sit = '18c'; give = 'both'; }
   else { sit = '18'; give = 'none'; }
-  return {sit, give, cpa, rng, tcpa:t * 60, risk, lim, relA, relB, closing, cx, cy, vx:wx, vy:wy, clsA, clsB};
+  // (dk: the closest is with b lying at her quay, where nothing she does on her way opens it; the one under way does, sjvEval)
+  return {sit, give, cpa, rng, tcpa:t * 60, risk, lim, relA, relB, closing, cx, cy, vx:wx, vy:wy, clsA, clsB, dk};
 }
 // the smallest offset (km, true) to side sg (+1 starboard of heading hd) that opens the CPA of R (colregSit) to want (m), the mover being
 // 'b' (an NPC) or 'a' (the boat you follow): the parallel track moves the CPA by the offset's part across the relative motion
@@ -479,11 +483,11 @@ function sjvEval(H, list){
       // (still not enough, with her on the shared course at the full offset: more, as long as there is room)
       else if (E.t1 == null && !E.slow && E.tgt < SJV_OFFMAX - 0.01 && (R.give === 'b' || R.give === 'both')){
         const want = Math.max(1.5 * R.lim, R.lim + 60), Rf = colregSit(A, Object.assign({}, n0, {p:{x:n0.p.x + E.nx * E.tgt, y:n0.p.y + E.ny * E.tgt}}), o);
-        if (Rf.tcpa > 0 && Rf.cpa < want){ const k = sjvNeed(Rf, n0.hd, E.side, want, 'b', gsA), t = Math.min(SJV_OFFMAX, E.tgt + (k == null ? 0.15 : k));
+        if (Rf.tcpa > 0 && Rf.cpa < want && !Rf.dk){ const k = sjvNeed(Rf, n0.hd, E.side, want, 'b', gsA), t = Math.min(SJV_OFFMAX, E.tgt + (k == null ? 0.15 : k));
           if (t > E.tgt + 0.04 && sjvRoom(n0, E.nx / E.tgt * t, E.ny / E.tgt * t, t)) E.tgt = t; }
       }
       if (E.t1 != null && H > E.t1 && sjvOffAt(E, H) <= 1e-6 && sjvLagAt(E, H) <= 1e-6) SJV.E.delete(n0.id);   // (a stand-by after a collision has its end set when it begins)
-    } else if (!harb && sjvCan(n0) && !inHarbour(n0.p) && R.risk && sjvLive()){
+    } else if (!harb && sjvCan(n0) && !inHarbour(n0.p) && R.risk && !R.dk && sjvLive()){   // (dk: the closest is with her at her quay; she cannot open it)
       // (in sight she sounds her manoeuvre, 34 a: one short to starboard, two to port, three when she takes the way off)
       const closeK = (Math.hypot(R.vx, R.vy) / gsA) / 60;   // km a game minute between them
       let M = null;
@@ -509,7 +513,7 @@ function sjvEval(H, list){
     if (auto && !harb && sjvLive() && (!SJV.own || SJV.own.id === n0.id)){
       const O = SJV.own;
       if (O){ if (O.t1 == null && ((R.tcpa <= 0 && R.rng > R.lim && sjvBackClear(sjvBackOwn(A, O), n, R.lim, gsA)) || R.rng > 2500 || H - O.t0 > SJV.TMAX)) O.t1 = H; }
-      else if ((R.give === 'a' || R.give === 'both') && R.risk && (R.rng <= (f19 ? SJV.ROWNF : SJV.ROWN) * 1000 || (R.tcpa <= sjvLead(R, A.v) && R.rng <= SJV.RLEAD * 1000)) && R.tcpa <= TS){ SJV.own = sjvStart(A, R, H, 'a', R.sit, true, n0.id); if (sight) sjvSig('_own', sjvManPat(SJV.own.side, SJV.own.slow), A.p, A.L, true); }
+      else if ((R.give === 'a' || R.give === 'both' || R.dk) && R.risk && (R.rng <= (f19 ? SJV.ROWNF : SJV.ROWN) * 1000 || (R.tcpa <= sjvLead(R, A.v) && R.rng <= SJV.RLEAD * 1000)) && R.tcpa <= TS){ SJV.own = sjvStart(A, R, H, 'a', R.sit, true, n0.id); if (sight) sjvSig('_own', sjvManPat(SJV.own.side, SJV.own.slow), A.p, A.L, true); }
     }
     // 19 e: a fog signal heard apparently forward of her beam from a vessel not in sight, or one forward of the beam she cannot keep out
     // of close quarters with: down to the minimum steerage speed, stopped when she is as close as the limit, «inntil faren for sammenstøt
@@ -998,18 +1002,20 @@ function sjvClock(){
 function sjvNear(H, X, Z){
   const T = SJV.tl, b = S.boat;
   if (T && T.vid === S.cur && Math.abs(H - T.H) < 2 / 3600 && Math.hypot(X - T.X, Z - T.Z) < 100) return T;
-  const gs = gridScale(b.pos), list = npcStates(H), v = [], help = helmOn(), tow = [S.ptow && S.ptow.pid, S.ptowH && S.ptowH.pid];
+  const gs = gridScale(b.pos), list = npcStates(H), v = [], s = [], help = helmOn(), tow = [S.ptow && S.ptow.pid, S.ptowH && S.ptowH.pid];
   for (const n of list){
     if (!n.p || n.hidden || n.rs || n.kv || (n.tur && n.st === 'tow') || tow.includes(n.id)) continue;
-    const cls = n.cls || colregCls(n); if ((cls === 'moor' || cls === 'anch') && !help) continue;   // (at the quay only by hand: Autonav's way in is the harbour's)
+    const cls = n.cls || colregCls(n), lie = (cls === 'moor' || cls === 'anch') && !help;   // (at the quay only by hand: Autonav's way in is the harbour's)
     const x = n.p.x * 1000, z = n.p.y * 1000; if (Math.hypot(x - X, z - Z) > 300 + (n.L || 10)) continue;
     const c = n.cog != null ? n.cog : n.hd, ms = (n.v || 0) * KN_MS * gs;
-    v.push({n, x, z, ve:Math.sin(c) * ms, vz:-Math.cos(c) * ms, hd:n.hd || 0, L:n.L || 10, B:n.B || (n.L || 10) / 3, m:sjvMass(n)});
+    // (s: those lying at a quay or at anchor, which Autonav does not meet as vessels but steers round as it does a pier, 16b-dyn.js dynAvoid:
+    // the ferry lying at her quay across the way in at Sørarnøy, steg 126, 14.11.2026)
+    (lie ? s : v).push({n, x, z, ve:Math.sin(c) * ms, vz:-Math.cos(c) * ms, hd:n.hd || 0, L:n.L || 10, B:n.B || (n.L || 10) / 3, m:sjvMass(n)});
   }
   const f = []; try { if (typeof obsIndex === 'function'){ const idx = obsIndex(), C = HIND.C; for (let j = Math.floor((Z - 300) / C); j <= Math.floor((Z + 300) / C); j++) for (let i = Math.floor((X - 300) / C); i <= Math.floor((X + 300) / C); i++)
     for (const o of idx.get(i * 1048576 + j) || []) if (o.t === 0 && (o.why === 'mark' || o.why === 'turbine' || o.B) && !f.includes(o) && Math.hypot(o.x - X, o.z - Z) < 300) f.push(o); } } catch (e){}
   const g = []; for (const s of NPCGEAR) for (const [k, p] of [['a', s.a], ['b', s.b]]) if (p && Math.hypot(p.x * 1000 - X, p.y * 1000 - Z) < 300) g.push({key:s.id + ':' + k, x:p.x * 1000, z:p.y * 1000, name:s.name});
-  return SJV.tl = {vid:S.cur, H, X, Z, v, f, g};
+  return SJV.tl = {vid:S.cur, H, X, Z, v, s, f, g};
 }
 // the impulse from a hull (or a fixed thing: m2 0, no velocity) at the contact I (sjvSat) on the model's state d: put out of it, the speed
 // into it turned back with a fifth (fenders and rubbing strakes take the rest), as dynContact does for a quay. The blow's speed (knots)

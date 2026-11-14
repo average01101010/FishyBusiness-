@@ -112,6 +112,9 @@ function ferjeSailed(s, v, H0){
 // where a ferry is w minutes into the week: under way on a leg of the journey she is on, or at the quay. The legs are sailed at an
 // even speed between the timetable's departure and arrival, from half her length off the one quay to half her length off the other
 // (her middle is what is placed), where she lies with her bow in.
+// the point she lies at, o (km) short of the end of leg R: fixed per leg and length, so kept (npcStates asks each look for every one under way)
+const FERJE_DQ = new WeakMap();
+function ferjeDock(R, o){ let M = FERJE_DQ.get(R); if (!M) FERJE_DQ.set(R, M = new Map()); let q = M.get(o); if (!q){ q = atRoute(R, R.len - o).p; M.set(o, q); } return q; }
 function ferjeAt(s, v, w, ok){
   let lo = 0, hi = v.tr.length - 1, k = -1; while (lo <= hi){ const m = (lo + hi) >> 1; if (v.tr[m].t0 <= w){ k = m; lo = m + 1; } else hi = m - 1; }
   while (ok && k >= 0 && !ok[k]) k--;
@@ -125,7 +128,7 @@ function ferjeAt(s, v, w, ok){
     if (e < dep){ const R0 = P.R[j - 1], a = atRoute(R0, R0.len - off(R0)); return {p:a.p, hd:a.hd, v:0, q:P.q[j], R:R0, end:true, o:off(R0)}; }
     // (under way: where she will lie at the end of the leg, and in how many hours, so one who keeps clear of her knows she stops there:
     // colregSit's dock, AS1 14.11.2026, Fitjar, where she laid to at her quay right on the line of one who passed astern of her)
-    if (e < arr){ const run = R.len - 2 * o, a = atRoute(R, o + run * (e - dep) / (arr - dep)), q = atRoute(R, R.len - o).p;
+    if (e < arr){ const run = R.len - 2 * o, a = atRoute(R, o + run * (e - dep) / (arr - dep)), q = ferjeDock(R, o);
       return {p:a.p, hd:a.hd, v:Math.round(run / ((arr - dep) / 60) / NM / gridScale(a.p) * 10) / 10, dock:{x:q.x, y:q.y, t:(arr - e) / 60}}; }
   }
   return lie(P.R[n - 1], true);

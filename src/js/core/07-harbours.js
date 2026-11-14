@@ -109,7 +109,7 @@ const SITE_OUT = new Map(), SITE_OUTN = new Map();
 function siteOut(s){
   if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) * 4e7 + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
   const t = SITE_OUTN.get(k); if (t !== undefined && Date.now() - t < 1000) return NaN;
-  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); } catch (e){ q = NaN; }   // (no map in yet)
+  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN, true); } catch (e){ q = NaN; }   // (no map in yet)
   if (q !== q){ if (SITE_OUTN.size > 500) SITE_OUTN.clear(); SITE_OUTN.set(k, Date.now()); return NaN; } SITE_OUTN.delete(k); if (q < 0) q = QOUT.max;
   if (SITE_OUT.size > 500) SITE_OUT.clear(); SITE_OUT.set(k, q); return q;
 }
@@ -172,14 +172,15 @@ const faceAt = (f, a, L, out) => ({id:f.id, x:f.x + f.ux * a, z:f.z + f.uz * a, 
 // NaN: the fine coast is not in there yet (taken as 0 where the berth is fixed again when it comes). The players' berths the same
 // (Jonas 03.11.2026: «Jeg vil ikke ha noe graving i landmasse for hverken npcer eller brukere»): berthPose, havnBerths.
 const QOUT = {top:2.0, g:3, gMole:1.5, clear:0.6, max:16};
-function quayOut(f, a, L){
+// (all: NaN unless every sample along the face has the fine coast in, for an answer that is kept, siteOut)
+function quayOut(f, a, L, all){
   if (typeof coastSdIf !== 'function') return 0;
   let g = 0, seen = false;
   for (let it = 0; it < 6; it++){
     let need = 0;
     for (const fa of [-0.5, -0.25, 0, 0.25, 0.5]){
       const s = a + fa * (L + 2), x = f.x + f.ux * s + f.nx * (g + 0.4), z = f.z + f.uz * s + f.nz * (g + 0.4);
-      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd) continue; seen = true;
+      const sd = coastSdIf({x:x / 1000, y:z / 1000}, 30); if (sd !== sd){ if (all) return NaN; continue; } seen = true;
       need = Math.max(need, sd + (QOUT.top + QOUT.clear) * (COAST.mole ? QOUT.gMole : QOUT.g));
     }
     if (!seen) return NaN;   // the fine coast is not in here yet

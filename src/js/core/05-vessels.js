@@ -880,7 +880,7 @@ function sailReplan(pl, b, gp){
   // past the shallows along the line instead, the last way out, 16b-dyn.js dynHandsOn; Træna utstyrsbutikk, 14.11.2026)
   if (!gp.ice && pl.rpNone && pl.rpNone.tg === tg && S.t - pl.rpNone.t < 20 && typeof dynHandsOn === 'function' && dynHandsOn(pl)){ pl.rpNone = null; return true; }
   if (++SAIL_RP.n > 3 || ++SAIL_RP.nT > SAIL_RPMAX){ sailStop(pl, b, none); return true; }
-  pl.replan = {t:S.t, w:Date.now()};
+  pl.replan = {t:S.t, w:Date.now(), ice:gp.ice ? {x:gp.x, y:gp.y} : null};   // (ice: what she waits at is ice, for the words if the search never answers, 16b-dyn.js)
   if (gp.ice){ const w = seaIceWords(gp); log(w.no + ' Autonav stopper og finner en vei rundt.', w.en + ' Autonav stops and finds a way round.', 'nav'); }
   else log('Grunt vann forut. Autonav stopper og finner en vei rundt.', 'Shallow water ahead. Autonav stops and finds a way round.', 'nav');
   const from = {x:b.pos.x, y:b.pos.y}, to = {x:w.x, y:w.y}, PL = pl, vid = S.cur;
@@ -898,7 +898,8 @@ function sailReplan(pl, b, gp){
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
     PL.rpNone = ins.length ? null : {t:S.t, tg};
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
-    log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
+    // (the way round the leg itself, nothing put in: not said as found; the next sight of the shallows gives her to the hands, above)
+    if (ins.length) log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
   })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
   return true;
 }

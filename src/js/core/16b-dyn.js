@@ -611,12 +611,16 @@ function dynLineBuild(pl, dep){
 // Counted as held
 function dynHandsPast(T, pl, L){
   const st = T.stops.find(q => q.i >= pl.idx);
-  let sG = T.s; try { let clr = 0; for (let s = T.s; s < T.s + 500 && clr < 3 && s < T.end - 10; s += 10){ const p0 = dynLineAt(T, s), p1 = dynLineAt(T, s + 10); if (groundCheck({x:p0[0] / 1000, y:p0[1] / 1000}, {x:p1[0] / 1000, y:p1[1] / 1000})){ sG = s + 10; clr = 0; } else clr++; } } catch (e){}
-  T.assist = Math.min(T.end - 1, (st ? st.s : T.end) - 0.5, Math.max(T.s + Math.max(60, 3 * L), sG + 20)); T.prog = {s:T.s, t:S.t}; dynHands(T, 'held');
+  // (past shallow water only: land, a breakwater or a skerry thinner than the steps, or the ice, on the line ahead, and the hands do not
+  // take her, false; the kontroll of steg 126, 14.11.2026: a leg called safe when the route was made can cross an islet once she has been
+  // set off it)
+  let sG = T.s; try { const tl = tideCD(S.t / 60); let clr = 0; for (let s = T.s; s < T.s + 500 && clr < 3 && s < T.end - 10; s += 10){ const p0 = dynLineAt(T, s), p1 = dynLineAt(T, s + 10), q1 = {x:p1[0] / 1000, y:p1[1] / 1000}, g = groundCheck({x:p0[0] / 1000, y:p0[1] / 1000}, q1);
+    if (g){ if (g.ice || g === q1 || isLand(g) || !(depthF(g) + tl < BOAT.draft)) return false; sG = s + 10; clr = 0; } else clr++; } } catch (e){ return false; }
+  T.assist = Math.min(T.end - 1, (st ? st.s : T.end) - 0.5, Math.max(T.s + Math.max(60, 3 * L), sG + 20)); T.prog = {s:T.s, t:S.t}; dynHands(T, 'held'); return true;
 }
 // the same from sailReplan (05-vessels.js): the way round found before on this leg was the leg itself, no point put in, so a search again
 // would give the same (Træna utstyrsbutikk, 14.11.2026). True when the model has her and the hands took her
-function dynHandsOn(pl){ const T = DYN.line; if (!dynLive() || !T || T.plan !== pl) return false; dynHandsPast(T, pl, BOAT.len || 10); return true; }
+function dynHandsOn(pl){ const T = DYN.line; if (!dynLive() || !T || T.plan !== pl) return false; return dynHandsPast(T, pl, BOAT.len || 10); }
 // the hands start (T.assist set ahead of her): counted by kind for the tests (knock, stuck, held, tight)
 function dynHands(T, k){ if (!(T.assist > T.s)) return; DYN.hands = (DYN.hands || 0) + 1; DYN.handsK = DYN.handsK || {}; DYN.handsK[k] = (DYN.handsK[k] || 0) + 1; }
 // a sharp corner (over 60 degrees) with a mark, a pile or a bridge's pier on the outside of the turn, where she swings out by about her
@@ -692,8 +696,11 @@ function dynAvoid(d, P){
   // (and a vessel lying still near her way, a ferry waiting at her quay or a boat stopped: her hull as circles of half her beam along
   // her length, steered round as a pier is. Under way the rules have them (sjvEval), but not in a harbour, where a ferry lying still at
   // Sørarnøy stood 17 m off the way in to the plant and the coastal vessel ran into her, 14.11.2026, tests/allesteder.py, steg 126)
-  const T = typeof SJV !== 'undefined' && SJV.tl && SJV.tl.vid === S.cur && Math.abs(S.t / 60 - SJV.tl.H) < 10 / 3600 && Math.hypot(SJV.tl.X - d.X, SJV.tl.Z - d.Y) < 200 ? SJV.tl : null;   // (fresh: the last ten game seconds, near her)
-  if (T) for (const q of T.v){ if (Math.hypot(q.ve, q.vz) > 0.5 || Math.hypot(q.x - d.X, q.z - d.Y) > look + q.L) continue;
+  // (fresh: the last ten game seconds, near her; the look's clock is the views' one, the minute and the part of it gone, sjvClock: against
+  // the whole minute alone it was fresh only in the first ten seconds of each)
+  const Hn = (S.t + (typeof liveFrac === 'function' ? liveFrac() : 0)) / 60;
+  const T = typeof SJV !== 'undefined' && SJV.tl && SJV.tl.vid === S.cur && Math.abs(Hn - SJV.tl.H) < 10 / 3600 && Math.hypot(SJV.tl.X - d.X, SJV.tl.Z - d.Y) < 200 ? SJV.tl : null;
+  if (T) for (const q of T.s ? T.v.concat(T.s) : T.v){ if (Math.hypot(q.ve, q.vz) > 0.5 || Math.hypot(q.x - d.X, q.z - d.Y) > look + q.L) continue;
     const hx = Math.sin(q.hd), hz = -Math.cos(q.hd), r = q.B / 2, k = Math.max(0, Math.ceil((q.L - q.B) / q.B / 2));
     let best = null;   // (the circle of her hull that stands nearest across the way: one vessel, one push)
     for (let m = -k; m <= k; m++){ const t = k ? m / k * (q.L - q.B) / 2 : 0, ox = q.x + hx * t, oz = q.z + hz * t;
@@ -766,9 +773,9 @@ function dynAuto(d, dtG){
       // (a way round already being looked for: she lies here till it answers. Before, the ground ahead was seen again each game second
       // while she lay stopped, each sight asked again and counted a try, and the fourth stopped her, «fant ingen trygg vei rundt», before
       // the first search had answered: Træna utstyrsbutikk, 14.11.2026, tests/allesteder.py). Ten game minutes waited here with the model
-      // running (a tab asleep does not count: no frames) and a real minute at most: a search that has not answered by then stops her, «fant
+      // running (a tab asleep does not count: no frames) and a real minute at least: a search that has not answered by then stops her, «fant
       // ingen trygg vei rundt», and no second one is started beside it
-      if (T.ghit && pl.replan){ T.ghit = null; pl.replan.k = (pl.replan.k || 0) + dtG; if (pl.replan.k < 600 || Date.now() - (pl.replan.w || 0) < 60000) return; pl.replan = null; sailStop(pl, b, SAIL_NONE); return; }
+      if (T.ghit && pl.replan){ T.ghit = null; pl.replan.k = (pl.replan.k || 0) + dtG; if (pl.replan.k < 600 || Date.now() - (pl.replan.w || 0) < 60000) return; const ice = pl.replan.ice; pl.replan = null; sailStop(pl, b, ice ? iceWhy(ice, true) : SAIL_NONE); return; }
       if (T.ghit){ const gp = T.ghit.gp; T.ghit = null; if (!sailReplan(pl, b, gp)) runAground(gp); return; }
       if (T.s >= T.end - 1){ const w = pl.wps[pl.wps.length - 1];   // the end of the route (or «Stopp»): exactly on the point; arrive says so and clears the plan
         if (Math.hypot(w.x * 1000 - d.X, w.y * 1000 - d.Y) < 2){ d.X = w.x * 1000; d.Y = w.y * 1000; dynWrite(b, d); }
