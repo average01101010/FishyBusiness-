@@ -41,15 +41,19 @@
     if (typeof LOP_TAB !== 'undefined' && LOP_TAB){ LOP_TAB = false; sub[key] = 'lop'; }
     if (!sub[key]) sub[key] = first;
     const tab = sub[key], tabs = subs(key, [['turer', 'Turer', 'Trips'], ['best', 'Bestillinger', 'Orders'], ['lop', 'Kappløp', 'Race']]);
-    if (tab === 'turer') return '<div class="ph-c">' + tabs + turPage() + '</div>';
-    if (tab === 'lop') return '<div class="ph-c">' + tabs + lopPage() + '</div>';
-    return '<div class="ph-c" style="padding-bottom:0">' + tabs + '</div>' + salg('best') + ordEarlier();
+    if (tab === 'turer') return tabs + '<div class="ph-c">' + turPage() + '</div>';
+    if (tab === 'lop') return tabs + '<div class="ph-c">' + lopPage() + '</div>';
+    // (the reputation stands last, Jonas' «A: Under Bestillinger»: the earlier orders go in before its card; and an order is taken in
+    // port, as when the new orders stood only in Bygd: at sea the button says so)
+    let bs = salg('best'); const i = bs.lastIndexOf('<div class="ph-card"><h4>' + L('Omdømme', 'Reputation')), old = ordEarlier();
+    if (S.boat.status !== 'port') bs = bs.replace(/<button([^>]*?)data-pa="ordtake"/g, '<button$1data-why="' + L('Tas i havn', 'Taken in port') + '" disabled data-pa="ordtake"');
+    return tabs + (i >= 0 ? bs.slice(0, i) + old + bs.slice(i) : bs + old);
   }
   function oppdrag(){ return ordPage('oppdrag', 'best'); }
   function ordl(){ return ordPage('ordl', 'turer'); }
   function ordEarlier(){
-    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, h = ['<div class="ph-c" style="padding-top:0">'];
+    const O = ordState(), cn = id => (CUSTOMERS.find(c => c.id === id) || {no:id}).no, h = [];
     const old = (O.done || []).slice(0, 12);
     if (old.length) h.push('<h4 style="margin:10px 2px 4px">' + L('Tidligere', 'Earlier') + '</h4><div class="ph-card">' + old.map(o => kv(cn(o.cust) + ' · ' + fmt(o.kg, 0) + ' kg ' + SPECIES[o.sp].no.toLowerCase(), (o.ok === false ? '<span class="r2">' + L('Ikke levert', 'Not delivered') + '</span>' : '<span class="r0">' + L('Levert', 'Delivered') + '</span>') + ' · ' + dayStr(o.t / 60).replace(/^\S+ /, ''))).join('') + '</div>');
-    return h.join('') + '</div>';
+    return h.join('');
   }

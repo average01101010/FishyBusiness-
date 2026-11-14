@@ -166,7 +166,7 @@ Seks skisser på et designlerret (privat, Jonas' konto): https://claude.ai/artif
 - **Sett:** hjemskjermen og alle appene i begge formater uten 3D, og hjemskjermen, Salgslaget og til sjøs med 3D i begge formater (`docs/okter/2026-11-13-D5/`; 3D-bildene er tatt før kodegjennomgangens omlegging, som ikke flytter noe i de to formatene). **Ikke sett:** flata på et ekte nettbrett med fingre, og båtkortene hos Kystmegleren med båter til salgs → `docs/spill-dette/D5-telefonen.md`.
 - **Ikke rørt:** `ui/10i-shop.js`, `ui/10q-buymoment.js`, `src/legal/`. Kaiboden og Trim har fått spaltene gjennom stilarket.
 
-## D4: sammenslåingene (13.11.2026, bestemt, ikke bygd)
+## D4: sammenslåingene (13.11.2026, bestemt; første del bygd 14.11.2026)
 
 Jonas fikk forklaringen av D4 i D5-økta og svarte 13.11.2026, punkt for punkt (planens liste over det som står flere steder):
 
@@ -181,6 +181,21 @@ Jonas fikk forklaringen av D4 i D5-økta og svarte 13.11.2026, punkt for punkt (
 **Dekksdagboka** (Jonas 13.11.2026): «jeg mener fanene for utstyr, hendelser og sesonger kan fjernes fra dekksdagboka. Grunnen til det er at hele konseptet er stjålet fra fishing: barents sea spillet, så for å gjøre den til noe eget tenker jeg at vi kan fjerne 3 faner. Jeg bruker dessuten bare "dagbok" og "salg"-fanen selv.» → boka beholder fanene Dagbok og Salg. Lesbarheten i stående (håndskrift 8–9 px, runde to) tas i samme steg.
 
 **Ikke med:** knappelinja med fem faste knapper (valg 3 A står), «Kart»-knappen (avvist av Jonas), de tette skjermene Kvote og Regler › Sjekk (spurt i D5-økta, ikke besvart; tas når Jonas sier det). Startmeldingen: `docs/planer/start/D4-sammenslaaing.md`.
+
+## D4 bygd, første del (14.11.2026)
+
+Bygd i samme økt som steg 127, etter Jonas 14.11.2026: «Bare fortsett jobben med det nye designet i denne økten», og med telefon stående som første format («90 prosent av brukerne våre kommer til å spille på mobiltelefonen sin, så det er aller viktigst at alt fungerer i telefon-format stående»).
+
+- **Om bord** har fanene Redskap, Last, Mannskap og drift, Båten. Riggen velges i Redskap (`rigg()` i `ui/phone/05-rigg-innst-admin.js`: ett kort, en rad per rigg); «Lasterom» heter «Last». Redskap-siden har ikke «Kjøp», og ingen lenke fra Om bord › Redskap går til butikken. De gamle dørene (`rigg`, `last`, `redskap`) lander på fanen (`DOCK.open` i `ui/10c-dock.js`); med en annen båt i flåten valgt åpner redskapen som hennes egen side. **Båten-fanen er beholdt** (planen nevner den ikke; den er den eneste veien til «Neste mål» og båtens egne tall).
+- **Service** er utstyrsbutikkens tredje fane; snarveien i Om bord › Redskap vises bare når redskap er slitt (`svcWorn`).
+- **Oppdrag** er én side (`ordPage` i `ui/phone/02-havn-last-agn-ordre.js`) med Turer, Bestillinger og Kappløp, fra Bygd, mottaket (ny dør i Mottak-vifta) og telefonen. Bestillinger: dine oppdrag, de nye, omdømmet, og de tidligere til slutt.
+- **Mannskap:** Bygd har «Ansett» (Mannskapsbørsen uten faner). Om bord › Mannskap og drift har arbeidet om bord, driftsplanens linje og knappen til Ansatte (lott, oppsigelse, krangel). Lista over de ansatte står bak knappen fordi fanen ellers lister hver person to ganger (`worktest` vokter det).
+- **Regnskap:** Kystbanken › Regnskap har konto, gjeld og resultat i år først, resten under «Detaljer». Havn har prisene der du er, uten regnskap. Blad B sto alt i Kvote, og i båthandelen bare der det stopper et kjøp.
+- **Dekksdagboka** har Dagbok og Salg, og all tekst i boka er minst 12 px.
+- **Gjenstår i D4:** driftsplanen inn i fanen Mannskap og drift (Driftsplan-appen åpner fortsatt sin egen side). Den ble prøvd og tatt ut igjen: veiviseren, kartet («Ferdig» går tilbake til Driftsplan-siden) og Rederi-varslene peker på siden, og `driftsplan2gui` fikk 16 nye røde. Den testen er rød fra før (7 av 7 kjøringer: den trykker på en Mannskap-knapp i dokka som gikk bort 06.11.2026) og må rettes i samme omgang.
+- Testene: ny `tests/d4dorer.py` (tolv handlinger kan gjøres fra ett sted, de gamle dørene lander riktig; 390 × 844 og 1280 × 800), og `docktest`, `worktest`, `caretest`, `geartest`, `nettest`, `booktest` følger de nye stedene.
+
+**Samme økt, etter Jonas' bilder fra testutgaven 14.11.2026** («Mye rot her også. Forskjellig størrelse på bokser, merkelige plasseringer, ingen monterings-timer … får ikke til å montere utstyr på båten, menyer er i mange forskjellige størrelser»): en handelsside åpner på båten som ligger ved stedet, og en sperret knapp sier hvorfor; liggende er skuffen bred på alle sidene (Jonas' valg «Én bred for alle»; Malerverkstedet beholder den smale); kortene i samme rad er like høye; under 420 px har varekortet et lite bilde ved siden av navnet. Se «Båten siden gjelder, og skuffens bredde» i `docs/systemer/handel-og-steder.md`.
 
 ## D5 etter Jonas' bilder (13.11.2026)
 

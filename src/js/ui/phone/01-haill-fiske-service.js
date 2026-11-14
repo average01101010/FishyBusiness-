@@ -41,7 +41,7 @@
   }
   // the tackle shop's service (Jonas 08.10.2026): the shop mends and changes in half the time for a fee, and buys the gear back
   // true when the shop has something to mend or change on the gear aboard (the same quotes the Service tab's buttons ask for)
-  function svcWorn(){ const pg = careInit(S.pgear);
+  function svcWorn(){ if (!S.pgear) return false; const pg = careInit(S.pgear);
     return ['hyse', 'bank'].some(lk => pg.lines[lk].n && (careQuote('hooks', lk, true) || careQuote('line', lk, true))) || pg.nets.some(l => careQuote('net', l.id, true)) || !!(potsAboard(pg) && careQuote('pot', 0, true)); }
   function service(){
     const b = S.boat, pt = portById(b.port), here = atKind('butikk') && pt, pg = careInit(S.pgear), h = ['<div class="ph-c">'];
