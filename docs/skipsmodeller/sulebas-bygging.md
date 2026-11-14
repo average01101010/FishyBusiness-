@@ -639,7 +639,10 @@ egne `cut_holes` (havsjark35, hs11, krabbe50, kyst15, kyst21, malo36, plast31, s
 eksport.
 Det gjelder også kutt med `cut()` (`plate_cutter`) i flate vegger: kyst21s hvite dekkshus hadde vifter fra koøyene opp til veggens topp,
 der skyggen under båtdekkets kant er mørk (rundt 66 av 255), så den rant ned som striper mot koøyene (tilbakemelding #9 fra testutgaven,
-14.11.2026). `kyst21.py deckhouse` kaller nå `ease_cut_fans` etter kuttet; lod0 147 952 → 152 124 trekanter. Skrogets
+14.11.2026). `kyst21.py deckhouse` kaller nå `ease_cut_fans(..., grid=True)` etter kuttet; lod0 147 952 → 152 556 trekanter. Uten
+`grid` ble det verre på en vegg med mørk overkant: kantene som deles, knytter den mørke kanten til punkter i ulik dybde, så skyggen hang
+ned i buer og flekker (Gemini så det i før- og etterbildene, og det synes i veggen brettet ut flatt). `grid=True` skjærer platas flater i
+et jevnt rutenett med rader i vater fra overkanten og ned, `step` fra hverandre. Hurtigsjarken er eksportert uten det. Skrogets
 `cut_holes` er ikke endret: flatene ved hullene der er høyst 0,30 m (målt i GLB-en). Styrhusets vinduer er ikke målt.
 
 **Lanternenes «over skroget» er det øverste gjennomgående dekket.** På en båt med bakk og shelter som ikke går hele lengden, er det

@@ -623,7 +623,7 @@ def deckhouse(A, G, fine=True):
         # the fans of long triangles the cut leaves round each porthole, split so the shade baked under the boat deck's edge stays
         # there and does not run down them to the rim as dark streaks (tilbakemelding #9 fra testutgaven, as #5 on the hurtigsjark)
         bpyutil.ease_cut_fans(shell, [((x, sg * DHY, zp), (0, 1, 0), DPORT_R + 0.01, 0.31) for sg in (1, -1) for x in DPORTS] +
-                              [((DH1, y, zp), (1, 0, 0), DPORT_R + 0.01, 0.31) for y in FPORTS])
+                              [((DH1, y, zp), (1, 0, 0), DPORT_R + 0.01, 0.31) for y in FPORTS], grid=True)
         shade(shell, 5)
         for sg in (1, -1):
             for x in DPORTS:
