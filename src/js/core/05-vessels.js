@@ -892,7 +892,9 @@ function sailReplan(pl, b, gp){
   pr.then(res => bound(() => { done();
     if (S.plan !== PL || !PL.replan) return;   // the route was changed meanwhile
     PL.replan = null;
-    if (!res || res.why || !res.wps || !res.wps.length){ sailStop(PL, S.boat, none); return; }
+    // (no way round from here on a leg the route itself called safe: the hands take her on past the shallows along the line, the last way
+    // out (Jonas 14.11.2026), where the manoeuvring model has her; else she stops and says so. Tvedestrand verft, 14.11.2026)
+    if (!res || res.why || !res.wps || !res.wps.length){ if (!gp.ice && typeof dynHandsOn === 'function' && dynHandsOn(PL)) return; sailStop(PL, S.boat, none); return; }
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
     PL.rpNone = ins.length ? null : {t:S.t, tg};
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
