@@ -79,7 +79,8 @@ const IC_ATLAS = ['jig', 'kgear', 'jigset', 'hooks', 'net', 'line', 'pot', 'kit'
   'jukse', 'linehaler', 'garnhaler', 'teinehaler', 'linesetter', 'garnrenne', 'krabbekar', 'kniv', 'hott',
   'vhf', 'ais', 'plotter', 'chirp', 'sonar', 'radar', 'radarA', 'brovakt', 'olje',
   'varme', 'ice', 'bait', 'antigro', 'motor90', 'motor', 'prop', 'hold', 'tank',
-  'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno'];
+  'cabin', 'galley', 'dry', 'insul', 'stab', 'gut', 'icemaker', 'box', 'potsno',
+  'haill', 'luksus', 'pump', 'ic', 'turbo', 'sk_light', 'sk_std', 'sk_max'];   // (Kaiboden, 14.11.2026: the luck, the tunings (BOOSTS) and Skippertak (SKIP))
 const IC_COLS = 8, IC_ROWS = Math.ceil(IC_ATLAS.length / IC_COLS);
 let IC_URL = null;
 // the atlas as a blob URL once its bytes are in (the element's base64, as the letter's pictures), set on the page's root once
@@ -95,9 +96,11 @@ const icHas = k => IC_ATLAS.includes(k) && !!icAtlas();
 function icPic(k){
   const a = IC_ATLAS.includes(k) ? k : ICPIC[k] ? null : 'box';
   if (a && icAtlas()){ const i = IC_ATLAS.indexOf(a), x = i % IC_COLS, y = Math.floor(i / IC_COLS);
-    return '<span class="ic-img" aria-hidden="true" style="background-position:' + fmtPct(x / (IC_COLS - 1)) + ' ' + fmtPct(y / (IC_ROWS - 1)) + '"></span>'; }
+    return '<span class="ic-img" aria-hidden="true" style="background-size:' + IC_COLS * 100 + '% ' + IC_ROWS * 100 + '%;background-position:' + fmtPct(x / (IC_COLS - 1)) + ' ' + fmtPct(y / (IC_ROWS - 1)) + '"></span>'; }
   return ICPIC[k] || ICPIC.box;
 }
+// the picture at the top of a card in Kaiboden (14.11.2026): only from the atlas, nothing until it is in (no line drawing for these)
+const kbPic = k => icHas(k) ? '<div class="kb-pic">' + icPic(k) + '</div>' : '';
 const fmtPct = v => (Math.round(v * 10000) / 100) + '%';
 // ---- what each thing does, in numbers from the code ([no, en]); the long story is in the Håndboka (ITEM_HB)
 const ICFX = {

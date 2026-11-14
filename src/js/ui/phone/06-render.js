@@ -35,7 +35,7 @@
       (on ? kv(L('På nå', 'On now'), '<b>' + on[S.lang] + ' +' + Math.round((on.x - 1) * 100) + ' %</b>') + kv(L('Går ut om', 'Ends in'), hrs(trimLeft(b))) : '') + '</div>');
     // (on every boat, also one with an outboard: Jonas 11.11.2026, core canBoost)
     for (const [k, B] of Object.entries(BOOSTS)){ const v1 = trimVmax(k);   // (the sum with the propeller and the engine, OPP3: what the trim gives)
-      h.push('<div class="ph-card haillc"><h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + (k === 'turbo' ? kbBest() : '') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
+      h.push('<div class="ph-card haillc">' + kbPic(k) + '<h4>' + B[S.lang] + ' · +' + Math.round((B.x - 1) * 100) + ' % ' + L('fart', 'speed') + (k === 'turbo' ? kbBest() : '') + '</h4><p>' + TRIM_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' +
         kv(L('Toppfart med den', 'Top speed with it'), '<b>' + fmt(v1, 1) + ' kn</b>') + kv(L('Varer', 'Lasts'), hrs(B.h)) + (shopMode() !== 'live' ? kv(L('Pris', 'Price'), realKr(B.nok)) : '') +   // live, the buy button shows the price (tilbakemelding #17)
         // (the same kind adds its hours; another takes the place and the rest of the one on, asked first: trimPend, 14-act.js)
         (!on ? '' : on === B ? '<p class="ph-note">' + L('Legger ' + B.h + ' timer til den som er på: ' + hrs(trimLeft(b) + B.h) + ' i alt.', 'Adds ' + B.h + ' hours to the one on: ' + hrs(trimLeft(b) + B.h) + ' in all.') + '</p>'
@@ -57,7 +57,7 @@
     else h.push('<div class="ph-card"><h4>' + L('Skippertak', 'Skippertak') + '</h4>' + kv(L('Din energi', 'Your energy'), energyOff() ? L('av', 'off') : asleep() ? L('sover', 'asleep') : fmt(S.energy == null ? 100 : S.energy) + ' %') +
       '<p class="ph-note">' + L('Energidrikken som holder deg og mannskapet på hele flåten uthvilt. Ingen hvile på rorbua, og driftsplanen går uten å vente på at mannskapet blir uthvilt.', 'The energy drink that keeps you and the crews of the whole fleet rested. No rest at the rorbu, and the operations plan goes on without waiting for the crew to rest.') + '</p></div>');
     for (const [k, X] of Object.entries(SKIP)){
-      h.push('<div class="ph-card haillc"><h4>' + X[S.lang] + (X.best ? kbBest() : '') + '</h4><p>' + SKIP_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' + kv(L('Varer', 'Lasts'), hrs(X.h)) + (shopMode() !== 'live' ? kv(L('Pris', 'Price'), realKr(X.nok)) : '') +
+      h.push('<div class="ph-card haillc">' + kbPic('sk_' + k) + '<h4>' + X[S.lang] + (X.best ? kbBest() : '') + '</h4><p>' + SKIP_SELL[k][S.lang === 'en' ? 1 : 0] + '</p>' + kv(L('Varer', 'Lasts'), hrs(X.h)) + (shopMode() !== 'live' ? kv(L('Pris', 'Price'), realKr(X.nok)) : '') +
         (skipOn() ? '<p class="ph-note">' + L('Legges til tida du har igjen.', 'Added to the time you have left.') + '</p>' : '') +
         '<button class="ph-btn p" data-pa="skipbuy" data-k="' + k + '">' + shopLabel(X.nok) + '</button>' + shopFine() + '</div>'); }
     h.push('<p class="ph-note">' + L('Skippertak gjelder deg og mannskapet på alle båtene i flåten. Tida er spilltid, og den går også når spillet er lukket: 24 timer i spillet er ' + fmt(24 / GAME_RATE, 0) + ' timer i virkeligheten. Når den går ut, er alle uthvilt. Hvile i naustet og på rorbuene er gratis som før.',

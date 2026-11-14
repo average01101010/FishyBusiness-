@@ -1870,3 +1870,6 @@ body.booting #lopPop{visibility:hidden!important}
   body.dk-low #drawer,body.v3d.dk-open.dk-low:not(.hudoff) #drawer,body.vplot.dk-open.dk-low:not(.hudoff) #drawer{max-height:calc(56% - var(--drBot))}
 }
 #drawer > .dr-head,#drawerTabs{flex:none}
+/* Kaiboden's pictures (14.11.2026): the painted tile at the top of each card, the same light tile as the shop's */
+.kb-pic{display:flex;justify-content:center;margin:0 0 8px;--m-card:initial;--m-card2:initial;--m-tint-link:initial}
+.kb-pic .ic-img{max-width:260px;border-radius:10px}
