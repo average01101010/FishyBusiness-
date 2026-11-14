@@ -53,10 +53,10 @@ const DOCK = (() => {
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
     mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Utstyrsbutikken', 'The tackle shop'], fiske:['Utstyrsbutikken', 'The tackle shop'],   // (D3: one title for the shop; its two tabs say which counter)
-    service:['Service', 'Service'],
+    service:['Utstyrsbutikken', 'The tackle shop'],   // (D4, Jonas 13.11.2026 «A: Tredje fane i butikken»: Service is the shop's third tab, not a page of its own)
     redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Om bord', 'Aboard']};
-  const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
-  TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
+  const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers'], ['service', 'Service', 'Service']], utstyrb:null, service:null};
+  TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.service = TABS.fiske;
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
   // (in a standing screen every page is one sheet of 88 % with the strip over it, styles.css «UI 2, U2-7»; until then only the form
   // pages in TALL were, GUI review U1 A 05.11.2026, and the rest opened at 55 %)

@@ -18,7 +18,8 @@
     if (tab === 'boat') return head + fartoy('min');
     if (tab === 'crew') return head + crewTab();
     // the shop's service sits here now, beside the crew's own upkeep (M2): only at a tackle shop's quay
-    const svc = atKind('butikk') ? '<div class="ph-c" style="padding-bottom:0"><div class="ph-card svc-l"><h4>' + L('Service i butikken her', 'Service at this shop') + '</h4><p class="ph-note">' + L('Butikken reparerer og bytter på halve tiden mot et gebyr, og kjøper redskap tilbake.', 'The shop mends and changes in half the time for a fee, and buys gear back.') + '</p><button class="ph-btn p" data-pa="open" data-a="service">' + L('Til service', 'To the service') + '</button></div></div>' : '';
+    // (D4: Service is the tackle shop's third tab; here it is a short cut there, and only when gear aboard is worn and the shop is here)
+    const svc = atKind('butikk') && svcWorn() ? '<div class="ph-c" style="padding-bottom:0"><div class="ph-card svc-l"><h4>' + L('Slitt redskap om bord', 'Worn gear aboard') + '</h4><p class="ph-note">' + L('Butikken her reparerer og bytter på halve tiden mot et gebyr.', 'The shop here mends and changes in half the time for a fee.') + '</p><button class="ph-btn p" data-pa="open" data-a="service">' + L('Til Service i butikken', 'To Service at the shop') + '</button></div></div>' : '';
     return head + svc + (S.pgear ? redskap('bord') + redskap('sjo') : '');
   }
   // the crew tab: the Mannskap page with the plan's line (PAGES().arbeid), and the way to the Ansatte pages (who is signed on, with the
