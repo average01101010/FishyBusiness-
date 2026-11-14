@@ -3,7 +3,7 @@
 // spring), the feet wider in a sea, the hips moving less up and down than the deck, the hand to the rail and the foot put out.
 // The deck here is a plane through the point he stands on, tilted by a roll and a pitch as view3d/00-head.js model() tilts the boat;
 // his feet are level offsets from that point (to his right and ahead), as drawWorker places them.
-export const scripts = ['js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/deckcrew.js'];
 export default function (t){
   const {seaLegs, seaState, seaKnee, SJOBEIN:C} = t.K, deg = Math.PI / 180;
   // the deck's normal for a roll and a pitch (model()'s Y column with no yaw), and its slopes for one heading h aboard

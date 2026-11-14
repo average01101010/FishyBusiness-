@@ -64,7 +64,8 @@ AGG = """((L, R) => { const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a
   for (const g of L){ if (g.task === 'sitmat' || g.task === 'sitkaffe') continue; const k = (g.walk ? 'gå' : g.put ? 'legger bort' : g.task || 'står') + (g.ev ? '*' : ''), r = R[k] || (R[k] = {n:0, ua:[9, 0], fa:[9, 0], th:[9, 0], sn:[9, 0], ask:0, miss:0, over:0, nover:0, b:[0, 0], t:0, nbody:0, drop:0, lo:0, inT:0, kf:9, near:0, gl:[9, 0], oa:[0, 0]});
     r.n++; if (g.near) r.near++; if (g.ao[0] > r.oa[0]) r.oa[0] = g.ao[0]; if (g.ao[1] > r.oa[1]) r.oa[1] = g.ao[1]; for (const v of g.gl) if (v > 0){ r.gl[0] = Math.min(r.gl[0], v); r.gl[1] = Math.max(r.gl[1], v); }
     for (const i of [0, 1]){ const ua = d(g.sh[i], g.el[i]), fa = d(g.el[i], g.wr[i]), th = d(g.hip[i], g.knee[i]), sn = d(g.knee[i], g.foot[i]);
-      for (const [nm, v] of [['ua', ua], ['fa', fa], ['th', th], ['sn', sn]]){ r[nm][0] = Math.min(r[nm][0], v); r[nm][1] = Math.max(r[nm][1], v); }
+      const Lg = g.L || S0;   // (the lengths of the body that was drawn: the woman's upper arm is shorter than the man's; held against the man's here)
+      for (const [nm, v] of [['ua', ua - Lg.ua + S0.ua], ['fa', fa - Lg.fa + S0.fa], ['th', th - Lg.th + S0.th], ['sn', sn - Lg.sn + S0.sn]]){ r[nm][0] = Math.min(r[nm][0], v); r[nm][1] = Math.max(r[nm][1], v); }
       r.ask = Math.max(r.ask, d(g.sh[i], g.wr[i])); if (g.ao[i] > 1e-4){ r.over = Math.max(r.over, g.ao[i]); r.nover++; } else r.miss = Math.max(r.miss, d(g.gp[i], g.tg[i]));
       r.lo = Math.max(r.lo, g.lo[i]); r.kf = Math.min(r.kf, g.kf[i]);
       // (the elbow in the torso: between the hips and the shoulders, within its half width and its half depth)
@@ -249,4 +250,5 @@ async def main():
         check(not errs, 'ingen sidefeil', errs[:3])
         await br.close()
 
-asyncio.run(main())
+if __name__ == '__main__':
+    asyncio.run(main())

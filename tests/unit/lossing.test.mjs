@@ -5,7 +5,7 @@
 // of the landing's time changed. The view's part, on each boat's own model without a browser (deckcrew.js over vessel3d.js deckMap):
 // the plant's tubs on clear deck open to the sky, the one who hooks on beside the tub and not on the quay's side of it, the one who
 // gives the signs at the rail to the quay, the one at the ice box, the crane driver by the crane, and no limb through anything.
-export const scripts = ['js/vessel3d.js', 'js/deckcrew.js'];
+export const scripts = ['js/figpose.js', 'js/vessel3d.js', 'js/deckcrew.js'];
 export const data = true;
 
 export default function (t){

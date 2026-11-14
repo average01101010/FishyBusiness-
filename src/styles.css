@@ -1452,7 +1452,7 @@ body.pm #ecdisTop{visibility:hidden}
 .ic-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .ic-more{display:inline-block;margin-top:6px;padding:4px 0;border:0;background:none;color:var(--m-link,#1f6fa8);font:600 12px var(--sans);cursor:pointer;min-height:30px}
 .ic-rows{margin-top:4px}
-@media (max-width:420px){.ph-card.ic{grid-template-columns:1fr}.ic-pic{max-width:180px}}
+@media (max-width:420px){.ph-card.ic{grid-template-columns:76px 1fr;gap:10px}}   /* (Jonas 14.11.2026: most play on the phone upright. The picture stood alone over the card, 180 px wide, and one item filled the screen; it is a small picture beside the name now, as on the tablet) */
 .ph-c > .ph-c{padding:0}  /* the shop's gear inside the tackle page (fiske() wraps redskap('kjop')) */
 /* the shop on the quay and the Net (M2, ui/phone/13b-nettet.js): the keeper, what is ordered here, what the boat needs, the web shop */
 .ph-card.shop-k{display:flex;gap:10px;align-items:flex-start}
@@ -2075,3 +2075,10 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
 .js-b i{display:block;height:100%;width:0;background:var(--m-link,#28507f)}
 .js-now{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:8px 0 0;padding:8px 0 0;border-top:1px solid var(--m-line,#D3DCDD)}
 .js-now .ph-btn{flex:0 0 auto;width:auto;margin:0;min-height:44px} .js-now .js-k{flex:1 1 180px} .js-now .shop-fine{flex:1 0 100%;margin:0}
+
+/* ===== after Jonas saw the shop on the tablet (14.11.2026: «forskjellig størrelse på bokser») =====
+   the cards that share a row in the wide drawer are as tall as each other (the grid's align-items:start left each as tall as its text) */
+@media (orientation:landscape){body.dk-wide #drawerBody .ph-c > :is(.ph-card.ic,.ph-card.crewc,.ph-card.vcard){align-self:stretch}}
+/* another boat of the fleet is chosen and she does not lie here: one line that says so, and the way back to the boat at the quay */
+.pl-away{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:10px 14px 0;padding:8px 12px;border:1px solid var(--m-warn,#b7791f);border-radius:var(--r-card);background:var(--m-tint-warn,#fdf3dc);color:var(--m-ink,#16323F);font:500 13px/1.35 var(--sans)}
+.pl-away span{flex:1 1 220px} .pl-away .ph-btn{flex:0 0 auto;width:auto;margin:0;min-height:40px}
