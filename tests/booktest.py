@@ -68,32 +68,15 @@ async def run(p, w, h, tag):
     # open the book: five tabs, Dagbok first
     await tap_el('#logbook'); await pg.wait_for_timeout(500)
     tabs = await pg.evaluate("[...document.querySelectorAll('#bkTabs .bk-tab')].map(x => x.dataset.t)")
-    check(tabs == ['dag', 'ses', 'hen', 'uts', 'salg'] and await pg.evaluate("BOOK.tab") == 'dag', 'boka har fanene Dagbok, Sesonger, Hendelser, Utstyr og Salg, og åpner i Dagbok', tabs)
+    check(tabs == ['dag', 'salg'] and await pg.evaluate("BOOK.tab") == 'dag', 'boka har bare fanene Dagbok og Salg, og åpner i Dagbok', tabs)
     await pg.screenshot(path='book_dag_' + tag + '.png')
 
-    # Sesonger: this year, the halibut closure that ended in April crossed out
-    await tap_el('#bkTabs [data-t=ses]'); await pg.wait_for_timeout(400)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const all = bookTabPages('ses').join(''), d = document.createElement('div'); d.innerHTML = all;
-      const es = [...d.querySelectorAll('.bk-e')], k = es.find(e => /Kveita er fredet/.test(e.textContent)), skrei = es.find(e => /Skreisesongen/.test(e.textContent));
-      return {tab:BOOK.tab, n:es.length, kveiteX:!!k && k.classList.contains('over'), skreiX:!!skrei && skrei.classList.contains('over'), price:es.filter(e => /pris på/.test(e.textContent)).length}; })())"""))
-    check(r['tab'] == 'ses' and r['kveiteX'] and r['skreiX'] and r['price'] >= 3, 'Sesonger: kveitefredningen og skreisesongen er krysset ut i oktober, og prissesongene står der', r)
-    await pg.screenshot(path='book_ses_' + tag + '.png')
-
-    # Hendelser: one entry per week and species that moved 8 % or more, with the same percent as the price model
-    await tap_el('#bkTabs [data-t=hen]'); await pg.wait_for_timeout(400)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const H = S.t / 60, w0 = weekOfH(H); let n = 0, ex = null;
-      for (let w = w0 - 4; w <= w0; w++) for (const sp of SP){ const dv = weekDev(sp, w * 168 - 6 + 1) * 100; if (Math.abs(dv) >= 8){ n++; if (sp === 'torsk' || !ex) ex = {sp, pct:pctS(dv)}; } }
-      const ev = bookEvents(), wk = ev.filter(e => /etterspørsel/.test(e.t[0])), html = bookTabPages('hen').join('');
-      return {tab:BOOK.tab, want:n, got:wk.length, ex, shown:!!ex && html.includes(ex.pct)}; })())"""))
-    check(r['tab'] == 'hen' and r['want'] == r['got'] and (r['ex'] is None or r['shown']), 'Hendelser: én hendelse per uke og art som flyttet seg 8 % eller mer, med samme prosent som prismodellen', r)
-    await pg.screenshot(path='book_hen_' + tag + '.png')
-
-    # Utstyr: the hauled line with its hours as tally marks and its catch
-    await tap_el('#bkTabs [data-t=uts]'); await pg.wait_for_timeout(400)
-    r = json.loads(await pg.evaluate("""JSON.stringify((() => { const e = S.gearLog[S.gearLog.length - 1], html = document.getElementById('bkStage').innerHTML + document.getElementById('bkStage').textContent;
-      return {tab:BOOK.tab, tally:html.includes('bk-tl'), kg:html.includes(fmt(e.kg, 0) + ' kg'), hauled:html.includes(hm(e.tHaul / 60))}; })())"""))
-    check(r['tab'] == 'uts' and r['tally'] and r['kg'] and r['hauled'], 'Utstyr: lina står med ståtid som tellestreker, tid trukket og fangst i kg', r)
-    await pg.screenshot(path='book_uts_' + tag + '.png')
+    # (D4, Jonas 13.11.2026: the tabs Sesonger, Hendelser and Utstyr are gone from the book; it keeps Dagbok and Salg)
+    small = json.loads(await pg.evaluate("""JSON.stringify((() => { const m = []; for (const e of document.querySelectorAll('#book *')){ if (!e.getClientRects().length) continue; if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue; const f = parseFloat(getComputedStyle(e).fontSize); if (f < 12 && !e.matches('.bk-nw')) m.push(e.tagName + '.' + e.className + ' ' + f); } return [...new Set(m)]; })())"""))
+    check(not small, 'Dagbok: ingen tekst i boka under 12 px', small)
+    await tap_el('#bkTabs [data-t=salg]'); await pg.wait_for_timeout(400)
+    small = json.loads(await pg.evaluate("""JSON.stringify((() => { const m = []; for (const e of document.querySelectorAll('#book *')){ if (!e.getClientRects().length) continue; if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue; const f = parseFloat(getComputedStyle(e).fontSize); if (f < 12 && !e.matches('.bk-nw')) m.push(e.tagName + '.' + e.className + ' ' + f); } return [...new Set(m)]; })())"""))
+    check(not small, 'Salg: ingen tekst i boka under 12 px', small)
 
     # Salg: the newest landing note, its net, and the old landing without lines
     await tap_el('#bkTabs [data-t=salg]'); await pg.wait_for_timeout(400)

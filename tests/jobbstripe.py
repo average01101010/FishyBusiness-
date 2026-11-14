@@ -33,6 +33,7 @@ async def run(p, vw, vh):
     pg.on('pageerror', lambda e: errs.append(str(e)))
     await boot(pg)
     tag = await fmt(pg)
+    if vw < 500: tag = 'telefon'
     print('--- %s %dx%d' % (tag, vw, vh))
     J = lambda js: pg.evaluate("JSON.stringify(" + js + ")")
     await pg.evaluate("S.cash = 900000; S.boat.status = 'port'; S.jobs = []; renderActs()")
@@ -126,6 +127,18 @@ async def run(p, vw, vh):
     check(s and len(s['rows']) == 1 and s['rows'][0]['n'] == 'Skrogrens på slipp' and re.fullmatch(r'(\d+:)?\d\d:\d\d', s['rows'][0]['t']) and not s['now'], tag + ': flåten: den valgte båtens jobb med tid, uten «Ferdig nå»', s)
     await pg.evaluate("document.querySelector('#drawerBody [data-pa=vsel][data-id=' + S.cur + ']').click()"); await pg.wait_for_timeout(400)
     check(not await pg.evaluate("!!document.querySelector('#drawerBody .jstrip')"), tag + ': flåten: båten om bord uten jobber har ingen stripe')
+    # the boat chosen on the page does not lie here (Jonas 14.11.2026: every «Kjøp og monter» dashed, and nothing said why): the page says
+    # so and each button too; and opened anew, the shop stands on the boat at the quay with the buttons to press
+    await pg.evaluate("vesselById('vJs').boat.status = 'idle'; vesselById('vJs').jobs = []; DOCK.open('utstyrb')"); await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('#drawerBody [data-pa=vsel][data-id=vJs]').click()"); await pg.wait_for_timeout(600)
+    r = json.loads(await J("{away:!!document.querySelector('#drawerBody .pl-away'), back:!!document.querySelector('#drawerBody .pl-away [data-pa=vsel]'), dis:document.querySelectorAll('#drawerBody [data-pa=equip]:disabled').length, why:document.querySelectorAll('#drawerBody [data-pa=equip]:disabled[data-why]').length}"))
+    check(r['away'] and r['back'] and r['dis'] > 0 and r['why'] == r['dis'], tag + ': en annen båt valgt som ikke ligger her: siden og hver sperret knapp sier hvorfor', r)
+    await pg.evaluate("DOCK.open('fiske')"); await pg.wait_for_timeout(200); await pg.evaluate("DOCK.open('utstyrb')"); await pg.wait_for_timeout(500)
+    r = json.loads(await J("{away:!!document.querySelector('#drawerBody .pl-away'), sel:PHONE.sel === S.cur, buy:document.querySelectorAll('#drawerBody [data-pa=equip]:not(:disabled)').length}"))
+    check(not r['away'] and r['sel'] and r['buy'] > 0, tag + ': butikken åpner på båten ved kaia, og «Kjøp og monter» kan trykkes', r)
+    if tag == 'liggende':
+        rows = json.loads(await J("(() => { const m = {}; for (const c of document.querySelectorAll('#drawerBody .ph-c > .ph-card.ic')){ const q = c.getBoundingClientRect(); (m[Math.round(q.top)] = m[Math.round(q.top)] || []).push(Math.round(q.height)); } return Object.values(m).filter(a => a.length > 1); })()"))
+        check(rows and all(max(a) - min(a) <= 1 for a in rows), tag + ': kortene i samme rad er like høye', [a for a in rows if max(a) - min(a) > 1][:4])
     check(not errs, tag + ': sidefeil', errs)
     await b.close()
 
@@ -134,5 +147,7 @@ async def main():
     async with async_playwright() as p:
         if os.environ.get('KYST_TUT_ONE') != 'staaende': await run(p, 1280, int(os.environ.get('KYST_JS_H', '800')))
         if os.environ.get('KYST_TUT_ONE') != 'liggende': await run(p, 800, 1280)
+        # the phone upright, where most play (Jonas 14.11.2026: «90 prosent av brukerne våre kommer til å spille på mobiltelefonen sin»)
+        if os.environ.get('KYST_TUT_ONE') != 'liggende': await run(p, 390, 844)
 
 asyncio.run(main())

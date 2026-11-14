@@ -191,7 +191,7 @@ async def main():
             u = await pg.evaluate("""(()=>{ """ + seed(20261032) + """ const R = {}, b = S.boat; b.status = 'port'; b.port = 'husoy'; b.pos = {...portById('husoy').p}; b.gop = null; S.hold = []; S.plan = null; addCatch('torsk', 40, null, true);   // (fish to gut at the quay: someone at work)
               for (const c of S.crew){ delete c.mate; delete c.sk; } if (S.ops && S.ops.v === 2) S.ops.mate = null;   // (no posts, the plan's mate too: each pass starts with the mate's button as the main one aboard, U2-7)
               R.noCrew = !document.querySelector('#dock [data-dk=arbeid]');
-              R.btn = !!document.querySelector('#dock [data-dk=beh]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody'); R.tab = DOCK.page === 'beholdning' && (dr().querySelector('.ph-sub button.on') || {}).textContent === 'Mannskap';
+              R.btn = !!document.querySelector('#dock [data-dk=beh]'); DOCK.open('arbeid'); const dr = () => document.getElementById('drawerBody'); R.tab = DOCK.page === 'beholdning' && (dr().querySelector('.ph-sub button.on') || {}).textContent === 'Mannskap og drift';
               R.rows = dr().querySelectorAll('.wk-p').length; R.flow = [...dr().querySelectorAll('.wk-dks .wk-dk b')].map(e => e.textContent); R.meters = dr().querySelectorAll('.wk-p .wk-ms .wk-m').length; R.kv = dr().querySelectorAll('.ph-kv').length;
               const tap = sel => { const e = dr().querySelector(sel); if (e) e.click(); return !!e; };
               const B = S.crew[1]; R.noChains = !dr().querySelector('[data-pa=wk-edit], [data-pa=wk-pre], .wk-pick'); R.whyShown = [...dr().querySelectorAll('.wk-p .wk-now')].filter(e => e.textContent.includes(' – ')).length;

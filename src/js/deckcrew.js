@@ -1207,7 +1207,10 @@ const HOLDT = {
   box:{depth:0.19, half:0.39, lo:0, hi:0.3, grip:[0.3, 0.02, 0.015], gap:0.005, squat:0.55, lean:0.07, most:0.14},
   shaft:{r:0.02, at:[0.12, 0.24, 0.36]},      // a shovel's shaft: its half thickness, and the points down it from the upper hand that are tried (m)
   gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, far:0.28},   // the gaff (fish:hott, 90 cm): m from its tip to the fore hand, the back hand, its butt and its model's own middle; far: how far from before his belly its middle goes at the most
-  cup:{r:0.05, sip:[0.05, -0.04, 0.035]},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
+  cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
+  broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
+  // the work he keeps his eyes on: he does not look up at the camera from it
+  eyes:{sweep:1, gutw:1, gut:1, knife:1, cut:1, pack:1, ice:1, haul:1, pick:1, bleed:1, bleedst:1, egn:1, strip:1, mend:1, phone:1, stack:1, stow:1, carry:1, jig:1, jigup:1, gaff:1, sett:1, tend:1, unhook:1, coil:1},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
   food:{r:0.04, bite:[0.035, -0.015, 0.025]}, // the food in the hand, and its point from the mouth at a bite
   smoke:{r:0.015, at:[0.045, 0, 0.015]},      // the cigarette between the fingers, from the mouth at a draw
   snus:{at:[0.025, 0.015, 0.02]},             // the fingers at the upper lip

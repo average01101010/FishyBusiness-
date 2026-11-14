@@ -277,6 +277,10 @@
   // the trailer's camera (trailer/tools/film.py, G3.film): null in the game. {fov} alone sets the chase camera's field of view (degrees);
   // {eye, tgt, fov} puts the eye at a point in the world (metres) looking at tgt, or at the boat's middle when tgt is 'boat' or missing
   let FILM = null;
+  let STUDIO = typeof location !== 'undefined' && /[#,]studio/.test(location.hash || '');
+  // (and nothing of the land, the sea, the trees or the other boats is drawn behind it: the frame is the people's alone, a tenth of the work)
+  const studioSkip = () => { const k = PROF.skip; for (const q of ['terr', 'sea', 'trees']){   /* (not «boats»: that leaves out her own crew too) */ if (STUDIO){ if (!k[q]) k['st_' + q] = k[q] = true; } else if (k['st_' + q]){ k[q] = false; delete k['st_' + q]; } } };
+  if (STUDIO) studioSkip();
   function frame(){ const j0 = j0F = performance.now(), EQ0 = S.equip, TE = tryEq(); if (TE) S.equip = TE;
     FRAMEP = /rawclock/.test(location.hash) ? j0 : frameClock(j0); WALLF = /rawclock/.test(location.hash) ? 0 : FRAMEP + FCLK.off;
     try { frame0(); } finally { S.equip = EQ0; WALLF = 0; FRAMEP = 0; }
@@ -322,6 +326,12 @@
     } else {
       if ((SHOW || PAINTV) && !drag) cam.yaw += dt * 0.12;   // the showroom and the paint shop turn slowly round the boat
       // (cam.at: a point on the deck in the boat's frame to look at instead of her middle, for the tests' close shots of the crew)
+      // (cam.who: the eye on one of the people on deck, to turn round him close in (Jonas 14.11.2026: «en kamera-funksjon som sentrerer
+      // kamera på en valgfri person slik at du kan rotere rundt vedkommede»): his number among those on deck, his id or his task. With
+      // cam.face the camera stands before him, that many rad to his side. In the address: «#se=2», «#se=coffee». G3._debug.camOn)
+      if (cam.who != null && !SHOW && typeof CREW3D !== 'undefined'){ const L = CREW3D.visible(), a = typeof cam.who === 'number' ? L[((cam.who % L.length) + L.length) % L.length] : L.find(q => q.id === cam.who || q.task === cam.who || (q.goal && q.goal.task === cam.who)) || null;
+        cam.whoId = a ? a.id : null;
+        if (a){ cam.at = [a.x, (a.y || 0) + (cam.atY == null ? 0.25 : cam.atY), a.z]; if (cam.face != null && a.h != null) cam.yaw = a.h + Math.PI + cam.face; } }
       const AT = cam.at && !SHOW ? xf(model(0, 0, 0, -bv.head, bv.pitch, bv.roll), cam.at) : null;
       const C = SIGNV.look ? SIGNV.look.slice() : SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : AT ? [bv.x + AT[0], bv.y + AT[1] + 1.0, bv.z + AT[2]] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;
       if (PAINTV && !SHOW) paintAim(C, yawW);
@@ -411,7 +421,19 @@
     // also with crew aboard: he tends the jig while they gut (tilbakemelding #62: on a sjark with two hands he stood in the wheelhouse
     // while one hand looked on); he stays at the wheel only when the crew fill every deck place
     else { const jig = S.boat.status === 'fishing' && !S.boat.gop && !S.boat.deckStop;
-      drawVessel(VT, VG, BMrel, VPn, !DKON && !cam.helm && !awaySk, DKON ? 0 : deckCrew, !DKON && jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+      if (!(DKON && STUDIO)){ drawVessel(VT, VG, BMrel, VPn, !DKON && !cam.helm && !awaySk, DKON ? 0 : deckCrew, !DKON && jig, hullLiv(S.boat), true); drawJigRail(BMrel, VPn, VT, VG, dt); }   // (the white room draws no boat)
+      gl.disableVertexAttribArray(2); gl.useProgram(PL.p);
+      // (the white room, Jonas 14.11.2026: «et helt hvit rom uten noen hindringer … der du har godt lys»: «#studio» in the address, or
+      // G3._debug.studio(true). The frame is wiped white here and only the people on deck are drawn, with what they hold, in an even
+      // light; nothing of the boat, the sea or the land stands in the way. With cam.who the eye turns round one of them. The frame ends
+      // here: a tool for the session and the tests, not for the game)
+      if (DKON && STUDIO){ const E0 = {lightDir:env.lightDir, sunCol:env.sunCol, amb:env.amb, gnd:env.gnd, fog:env.fog, fogD:env.fogD};
+        gl.clearColor(1, 1, 1, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        // (the light from over the eye's shoulder, so the side that is looked at is lit wherever the eye stands)
+        { const dx = -eye[0] + (bv.x), dz = -eye[2] + (bv.z), l = Math.hypot(dx, dz) || 1, v = [-dx / l * 0.55 + dz / l * 0.3, 0.75, -dz / l * 0.55 - dx / l * 0.3], n = Math.hypot(v[0], v[1], v[2]); env.lightDir = [v[0] / n, v[1] / n, v[2] / n]; }
+        env.sunCol = [0.82, 0.82, 0.8]; env.amb = [0.62, 0.63, 0.66]; env.gnd = [0.5, 0.5, 0.5]; env.fog = [1, 1, 1]; env.fogD = 0;
+        try { nSetup(VPn); drawDeckCrew(BMrel, eye, VPn, t, VG); } finally { Object.assign(env, E0); }
+        return; }
       if (DKON) drawDeckCrew(BMrel, eye, VPn, t, VG); }
     SAY.a = null;
     if (SAY.c && performance.now() - SAY.t0 < SAYMS){

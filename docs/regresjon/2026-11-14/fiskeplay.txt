@@ -1,0 +1,461 @@
+== scenario jig liggende no3d
+   [boot] game started in 4 s
+  jig 01_start.png | the start: in port, before anything is done | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  jig 02_butikk-vifte.png | the shop fan | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  jig 03_fiskeutstyr.png | the tackle shop page | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  jig 04_beholdning.png | the inventory | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  jig 05_rigg.png | the rig tab | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [setup] out to 77 m deep near husoy (a cod spot north of Senja); the sail is skipped
+  jig 06_til-sjos.png | at sea, lying still | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [dock] rigged for the jig with no set gear: «Redskap» is not in the row, as planned (nothing to set or haul)
+  jig 07_redskap-uten.png | the row rigged for the jig with no set gear (no Redskap, no Auto-nav) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  jig 08_jukse-kort.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  jig 09_jukse-kort-timer.png | two taps on + for hours | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  jig 10_jukser.png | jigging has started | dock=['Jukse selv', 'Stopp', 'Om bord'] | info= | toasts=[]
+  jig 11_jukser-20min.png | 20 minutes on | dock=['Jukse selv', 'Stopp', 'Stopp og sløy', 'Om bord'] | info= | toasts=[]
+  jig 12_jukse-selv.png | the jig game is open | dock=['Stopp', 'Stopp og sløy', 'Slutt å jukse', 'Om bord'] | info= | toasts=[]
+   [jiggame] a bite after 25 s real time
+   [jiggame] tidlig strike (0.02 s after the bite, the middle is at 0.70): {'needle': '1.2%', 'after': 0.02, 'lat': 0.02, 'n': 1, 'm': 0.5, 'kg': 6}
+  jig 13_rykk-tidlig.png | after a strike: tidlig | dock=['Stopp', 'Stopp og sløy', 'Slutt å jukse', 'Om bord'] | info= | toasts=[]
+   [jiggame] a bite after 45 s real time
+   [jiggame] midt strike (0.70 s after the bite, the middle is at 0.70): {'needle': '50%', 'after': 0.7, 'lat': 0.02, 'n': 6, 'm': 2, 'kg': 19.490000000000002}
+  jig 14_rykk-midt.png | after a strike: midt | dock=['Stopp', 'Stopp og sløy', 'Slutt å jukse', 'Om bord'] | info= | toasts=[]
+   [jiggame] a bite after 34 s real time
+   [jiggame] midt strike (0.70 s after the bite, the middle is at 0.70): {'needle': '50%', 'after': 0.7, 'lat': 0.02, 'n': 6, 'm': 2, 'kg': 15.5}
+  jig 15_rykk-midt.png | after a strike: midt | dock=['Stopp', 'Stopp og sløy', 'Slutt å jukse', 'Om bord'] | info= | toasts=[]
+   [jiggame] no bite in 1 s (round 3)
+  jig 16_jukse-selv-slutt.png | after two bites without a strike | dock=['Fisk videre', 'Stopp', 'Om bord'] | info= | toasts=[]
+  jig 17_jukse-kar.png | later: 0 min (status fishing) | dock=['Fisk videre', 'Stopp', 'Om bord'] | info= | toasts=[]
+  jig 18_jukse-ferdig.png | the jig is done (286 min more) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=['Kystposten: Rekordpris på torsk: 58,86 kr/kg']
+  jig 19_lasterom.png | the hold after the day | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [setup] in at husoy (the sail in is skipped)
+  jig 20_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  jig 21_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  jig 22_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  jig 23_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  jig 24_levert.png | when the landing is done (10 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✉ Asbjørn på mottaket i Husøy: Velkommen til oss. Jeg er Asbjørn og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt.']
+  jig 25_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  jig 26_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 2000 -> 13514; {"kr":12017,"lines":[["torsk","E",9.5,656],["torsk","E",58.8,3924],["torsk","E",56.3,3604],["torsk","E",49.3,3037],["hyse","E",9.6,271],["hyse","E",2.9,71],["sei","E",8.4,205]]}
+== scenario butikker liggende no3d
+   [boot] game started in 4 s
+  butikker 01_fiskeutstyr.png | Butikk › Fiskeutstyr with 2 MNOK | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Redskap | Elektronikk og haler | Klær til alle om bord › | Kjøp · 2 490 kr | Mer om kveiteutstyr › | Kjøp trinn 2 · 1 500 kr | Mer om sløyekniver › | Kjøp trinn 2 · 900 kr | Mer om høtt › | Kjøp trinn 2 · 175 kr | Mer om kroker og juksasett › | Torskegarn 156 mm × 6 · 9 000 kr | Torskegarn 180 mm × 6 · 9 000 kr | Torskegarn 200 mm × 6 · 9 000 kr | Flytegarn 156 mm × 6 · 10 200 kr | Flytegarn 180 mm × 6 · 10 200 kr | Blåkveitegarn 360 mm × 6 · 14 400 kr | Mer om garn › | Mer om line › | Mer om teiner og kongekrabbe › | Mer om blåsesett: staur, blåse og dregg › | Markkroker og pilk (sett) · 350 kr | Mer om kroker og juksasett ›
+  butikker 02_elektronikk.png | Butikk › Elektronikk og haler | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Redskap | Elektronikk og haler | Klær til alle om bord › | Mer om montering › | Kjøp og monter · 68 000 kr | Se den på båten | Mer om halere › | Mer om line › | Kjøp og monter · 34 000 kr | Se den på båten | Mer om juksa › | Kjøp og monter · 7 900 kr | Mer om elektronikk › | Kjøp og monter · 6 500 kr | Mer om elektronikk › | Kjøp og monter · 4 900 kr | Mer om elektronikk › | Kjøp og monter · 24 900 kr | Mer om elektronikk › | Kjøp og monter · 13 900 kr | Mer om elektronikk › | Kjøp én | Mer om klær og kulde › | Kjøp én | Mer om klær og kulde ›
+  butikker 03_verft-vifte.png | the yard fan | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  butikker 04_oppgrader.png | Verft › Oppgrader | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Mer om montering › | Bytt motor · 5 000 kr | Bytt propell · 2 500 kr | Mer om propell › | Bygg om · 5 000 kr | Kjøp og monter · 18 000 kr | Mer om montering ›
+  butikker 05_ansatte.png | Bygd › Ansatte | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Om bord | Mannskapsbørs | Åpne Driftsplan | Åpne Mannskapsbørsen
+  butikker 06_bors.png | the crew exchange | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Om bord | Mannskapsbørs | Ansett · 1,1 lott | Forhandle ned | Ansett · 1,1 lott | Forhandle ned | Ansett · 1,1 lott | Forhandle ned
+  butikker 07_mottak-vifte.png | Botnhamn: the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  butikker 08_agn.png | Mottak › Agn | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Mer om agn ›
+  butikker 09_is.png | Mottak › Is | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | 50 kg · 75 kr | Fyll opp, 150 kg · 225 kr | Mer om is ›
+== scenario line liggende no3d
+   [boot] game started in 3 s
+   [setup] sjark {'len': 10.57, 'crewMax': 3, 'gearMax': {'garn': 40, 'stamp': 24}, 'cap': 6500}, 1.5 MNOK
+   [buy] «Kjøp og monter · 68 000 kr» on «Linehaler» asked to be confirmed, and was
+   [buy] Linehaler › «Kjøp og monter · 68 000 kr» → toasts ['✓ Kjøpt: Linehaler · −68\xa0000 kr · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 1432000
+  line 01_haler-kjopt.png | after buying Linehaler | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [jobs] [["fit","linehaler",3,"09:00","Montering av linehaler"]]
+   [fit] bought at 06:00 («»); the fitting was done after 179 game minutes, at 09:00
+  line 02_rigg-for.png | the rig tab before re-rigging for Line | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=['✉ Edvard: Så det er du som har tatt over båten til far din. Jeg heter Edvard. Vi fisket sammen i førti år, han og jeg. Kom innom når du er i havn.', '📻 Kystradio: Værmelding kl. 09: NØ 6 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra V rundt 21:00.', '✉ Verkstedet: Montering av linehaler er ferdig.', 'Kystposten: Rekordpris på torsk: 58,86 kr/kg']
+  line 03_rigget.png | after «Rigg om» on Line | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [rig] rigged: line
+  line 04_fiskeutstyr-line.png | the shop with a line hauler aboard | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Redskap | Elektronikk og haler | Klær til alle om bord › | Kjøp · 2 490 kr | Mer om kveiteutstyr › | Kjøp trinn 2 · 3 000 kr | Mer om sløyekniver › | Kjøp trinn 2 · 900 kr | Mer om høtt › | Mer om juksa › | Kjøp trinn 2 · 175 kr | Mer om kroker og juksasett › | Kjøp trinn 2 · 34 000 kr | Mer om halere › | Mer om garn › | 4 stamper hyseline · 8 400 kr | 4 stamper bankline · 6 800 kr | Mer om line › | Mer om teiner og kongekrabbe › | Mer om blåsesett: staur, blåse og dregg › | Markkroker og pilk (sett) · 350 kr | Mer om kroker og juksasett ›
+   [buy] Line › «4 stamper hyseline · 8 400 kr» → toasts ['✓ Kjøpt: 4 stamper hyseline · −8\xa0400 kr · 4 stamper hyseline om bord'], cash 1423600
+   [buy] Line › «4 stamper bankline · 6 800 kr» → toasts ['✓ Kjøpt: 4 stamper bankline · −6\xa0800 kr · 4 stamper bankline om bord'], cash 1416800
+   [missing] no «blåsesett» on the card «Blåser»
+   [missing] no «blåsesett» on the card «Blåser»
+  line 05_kjopt-line.png | four tubs of each line and two buoy sets bought | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  line 06_agn-line.png | bait with line aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | 20 kg · 360 kr | 100 kg · 1 800 kr | 20 kg · 200 kr | 100 kg · 1 000 kr | 20 kg · 560 kr | 100 kg · 2 800 kr | 20 kg · 240 kr | 100 kg · 1 200 kr | 20 kg · 440 kr | 100 kg · 2 200 kr | 20 kg · 280 kr | 100 kg · 1 400 kr | 20 kg · 680 kr | 100 kg · 3 400 kr | 20 kg · 480 kr | 100 kg · 2 400 kr | Mer om agn › | Egn 4 … | Egn 4 …
+  line 07_agn-kjopt.png | sild 100 kg and squid 20 kg bought | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✓ Kjøpt: bait · −1\xa0400 kr · 100 kg agn om bord', '✓ Kjøpt: bait · −680 kr · 120 kg agn om bord']
+  line 08_beh-line.png | the inventory with tubs not baited | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 09_egn-velger.png | the bait picker | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 10_egn-sild.png | sild chosen | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [bait] no baiting button (self)
+  line 11_egner.png | baiting the haddock line ourselves | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [bait] baiting 4 tubs ourselves: started 09:01, done after 259 game min, at 13:21
+  line 12_egnet.png | the haddock line baited | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: N 5 m/s, lett bris, bølger ute 1,2 m. Øker til frisk bris, 9 m/s fra V rundt 22:00.']
+  line 13_egn-blekksprut.png | squid for the bank line | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [bait] «Egnebua egner 4 med blekksprut · 1 608 kr» took on tap 1 ([0,0,4,0] → [1,0,4,0])
+  line 14_egnebu.png | the bank line left at the baiting shed | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [bait] the baiting shed: left 13:21, back after 259 game min, at 17:41
+   [setup] out to 101 m deep near botnhamn (a haddock spot off Senja); the sail is skipped
+  line 15_redskap-vifte-hyse.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 15: N 4 m/s, lett bris, bølger ute 1,1 m. Øker til frisk bris, 10 m/s fra SV rundt 03:00.']
+  line 16_settut-vifte-hyse.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  line 17_settut-kart-hyse.png | the line drawn on the chart | dock=[] | info= | toasts=['✉ Regler: Høyst 5 000 kroker per døgn på bunnline innenfor fjordlinjene. (Høstingsforskriften § 33) Regler-appen viser hva som gjelder der du er, og regellaget i kartplotteren viser det på kartet.', 'Ny regel her: Høyst 5 000 kroker. Se meldingen i telefonen.']
+   [setmode] turned towards land 0.65 km away: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  line 18_settut-land-hyse.png | the line turned towards land | dock=[] | info= | toasts=[]
+  line 19_settut-minus-hyse.png | 1 taps on − | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  line 20_settut-go-hyse.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] out to 288 m deep near botnhamn (deeper for tusk and ling); the sail is skipped
+  line 21_redskap-vifte-bank.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  line 22_settut-vifte-bank.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  line 23_settut-kart-bank.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  line 24_settut-go-bank.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] in at botnhamn (the sail in is skipped)
+  line 25_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 26_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 27_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 28_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 29_levert.png | when the landing is done (240 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 18: NV 7 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 10 m/s fra SV rundt 03:00.', '📻 Kystradio: Værmelding kl. 21: NV 9 m/s, frisk bris, bølger ute 1,6 m. Omtrent det samme de neste tolv timene.']
+  line 30_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  line 31_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 1410832 -> 1410832; null
+== scenario maskin liggende no3d
+   [boot] game started in 3 s
+   [buy] «Kjøp og monter · 34 000 kr» on «Juksamaskin» asked to be confirmed, and was
+   [buy] Juksamaskin › «Kjøp og monter · 34 000 kr» → toasts ['✓ Kjøpt: Juksamaskin · −34\xa0000 kr · 0 / 5 montert · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 766000
+   [buy] «Kjøp og monter · 34 000 kr» on «Juksamaskin» asked to be confirmed, and was
+   [buy] Juksamaskin › «Kjøp og monter · 34 000 kr» → toasts ['✓ Kjøpt: Juksamaskin · −34\xa0000 kr · 0 / 5 montert · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 732000
+  maskin 01_haler-kjopt.png | after buying Juksamaskin, Juksamaskin | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [jobs] [["fit","jukse",3,"09:00","Montering av juksamaskin"],["fit","jukse",3,"09:00","Montering av juksamaskin"]]
+   [fit] bought at 06:00 («»); the fitting was done after 179 game minutes, at 09:00
+   [equip] reels aboard: 2
+   [buy] «Kjøp · 2 490 kr» on «Kveiteutstyr» asked to be confirmed, and was
+   [buy] Kveiteutstyr › «Kjøp · 2 490 kr» → toasts ['✉ Edvard: Så det er du som har tatt over båten til far din. Jeg heter Edvard. Vi fisket sammen i førti år, han og jeg. Kom innom når du er i havn.', '📻 Kystradio: Værmelding kl. 09: NØ 6 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra V rundt 21:00.', '✉ Verkstedet: Montering av juksamaskin er ferdig.', '✉ Verkstedet: Montering av juksamaskin er ferdig.', 'Kystposten: Rekordpris på torsk: 58,86 kr/kg', '✓ Kjøpt: Kveiteutstyr · −2\xa0490 kr'], cash 729510
+  maskin 02_kveiteutstyr.png | the halibut gear bought | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [setup] out to 83 m deep near husoy (a cod spot north of Senja in March); the sail is skipped
+  maskin 03_kort-mars.png | the jig card in March with the halibut gear aboard | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [tackle] the halibut pilk in March: ('Kveitepilk Kveita er fredet til 21. april', True) []
+  maskin 04_jukse-kort-mars.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  maskin 05_jukser-mars.png | jigging started | dock=['Stopp', 'Om bord'] | info= | toasts=[]
+  maskin 06_jukset-mars.png | after the jig (179 min) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: N 5 m/s, lett bris, bølger ute 1,2 m. Øker til frisk bris, 9 m/s fra V rundt 22:00.']
+   [catch] mars: 545 kg in 3.0 h of jigging (181 kg/h); hold {"torsk":494.4,"hyse":37.8,"sei":12.7}
+   [setup] out to 134 m deep near husoy (a halibut spot in June); the sail is skipped
+   [setup] halibut density there 0.036
+  maskin 07_jukse-kort-juni-kveite.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [tackle] tapped kveite: Kveitepilk kveite, toasts [], target kveite
+  maskin 08_jukse-takkel-juni-kveite.png | the tackle chosen: kveite | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  maskin 09_jukser-juni-kveite.png | jigging started | dock=['Stopp', 'Om bord'] | info= | toasts=[]
+  maskin 10_jukset-juni-kveite.png | after the jig (247 min) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Seien står i strømmen ved nesene. Godt sommerfiske meldt.', '✉ Skreifestivalen: Kystbas fra Senjahopen vant med en torsk på 26,6 kg.', '✉ Fiskeridirektoratet: Direktefisket etter blåkveite er åpnet for fartøy under 28 m. Maksimalkvoten er 10,3 tonn for din båt. Fisket stoppes når gruppekvoten er tatt.', '📻 Kystradio: Værmelding kl. 09: Ø 7 m/s, laber bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.']
+   [catch] juni-kveite: 40 kg in 4.1 h of jigging (10 kg/h); hold {"torsk":498.1,"hyse":39.6,"sei":18.2,"kveite":27,"brosme":2.4}
+  maskin 11_jukse-kort-juni-mark.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [tackle] tapped mark: Markkroker og pilk torsk hyse sei lyr lange brosme uer kveit, toasts [], target mix
+  maskin 12_jukse-takkel-juni-mark.png | the tackle chosen: mark | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  maskin 13_jukser-juni-mark.png | jigging started | dock=['Stopp', 'Om bord'] | info= | toasts=[]
+  maskin 14_jukset-juni-mark.png | after the jig (183 min) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: Ø 6 m/s, laber bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.']
+   [catch] juni-mark: 361 kg in 3.1 h of jigging (118 kg/h); hold {"torsk":555.5,"hyse":99.8,"sei":186.1,"brosme":32.6,"kveite":43.5,"lange":17.3,"uer":12}
+   [setup] in at husoy (the sail in is skipped)
+  maskin 15_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  maskin 16_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  maskin 17_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  maskin 18_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  maskin 19_levert.png | when the landing is done (7 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✉ Asbjørn på mottaket i Husøy: Velkommen til oss. Jeg er Asbjørn og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt.']
+  maskin 20_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  maskin 21_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 729510 -> 764659; {"kr":36683,"lines":[["torsk","E",81.7,3887],["torsk","E",172.9,7928],["torsk","E",175.1,7724],["torsk","E",125.9,5330],["hyse","E",74.3,2074],["hyse","E",16.8,406],["hyse","E",8.6,43],["sei","E",89.8,1961],["sei","E",62.4,1315],["sei","E",34,660],["lange","E",17.3,254],["brosme","E",32.6,409],["uer","E",11.3,184],["uer","E",0.7,6],["kveite","E",27,2320],["kveite","E",16.5,1515]]}
+== scenario garn liggende no3d
+   [boot] game started in 3 s
+   [buy] «Kjøp og monter · 95 000 kr» on «Garnhaler» asked to be confirmed, and was
+   [buy] Garnhaler › «Kjøp og monter · 95 000 kr» → toasts ['✓ Kjøpt: Garnhaler · −95\xa0000 kr · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 1405000
+  garn 01_haler-kjopt.png | after buying Garnhaler | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [jobs] [["fit","garnhaler",3,"09:00","Montering av garnhaler"]]
+   [fit] bought at 06:00 («»); the fitting was done after 179 game minutes, at 09:00
+  garn 02_rigg-for.png | the rig tab before re-rigging for Garn | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=['✉ Edvard: Så det er du som har tatt over båten til far din. Jeg heter Edvard. Vi fisket sammen i førti år, han og jeg. Kom innom når du er i havn.', '📻 Kystradio: Værmelding kl. 09: NØ 6 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra V rundt 21:00.', '✉ Verkstedet: Montering av garnhaler er ferdig.', 'Kystposten: Rekordpris på torsk: 58,86 kr/kg']
+  garn 03_rigget.png | after «Rigg om» on Garn | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [rig] rigged: garn
+  garn 04_fiskeutstyr-garn.png | the shop with a net hauler aboard | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Redskap | Elektronikk og haler | Klær til alle om bord › | Kjøp · 2 490 kr | Mer om kveiteutstyr › | Kjøp trinn 2 · 3 000 kr | Mer om sløyekniver › | Kjøp trinn 2 · 900 kr | Mer om høtt › | Mer om juksa › | Kjøp trinn 2 · 175 kr | Mer om kroker og juksasett › | Kjøp trinn 2 · 47 500 kr | Mer om halere › | Torskegarn 156 mm × 10 · 15 000 kr | Torskegarn 180 mm × 10 · 15 000 kr | Torskegarn 200 mm × 10 · 15 000 kr | Flytegarn 156 mm × 10 · 17 000 kr | Flytegarn 180 mm × 10 · 17 000 kr | Blåkveitegarn 360 mm × 10 · 24 000 kr | Mer om garn › | Mer om line › | Mer om teiner og kongekrabbe › | Mer om blåsesett: staur, blåse og dregg › | Markkroker og pilk (sett) · 350 kr | Mer om kroker og juksasett ›
+   [buy] Garn › «Torskegarn 180 mm × 10 · 15 000 kr» → toasts ['✓ Kjøpt: 10 torskegarn 180 mm · −15\xa0000 kr · 10 garn om bord'], cash 1390000
+   [buy] Garn › «Flytegarn 156 mm × 10 · 17 000 kr» → toasts ['✓ Kjøpt: 10 flytegarn 156 mm · −17\xa0000 kr · 20 garn om bord'], cash 1373000
+   [buy] Garn › «Blåkveitegarn 360 mm × 10 · 24 000 kr» → toasts ['✓ Kjøpt: 10 blåkveitegarn 360 mm · −24\xa0000 kr · 30 garn om bord'], cash 1349000
+   [missing] no «blåsesett» on the card «Blåser»
+   [missing] no «blåsesett» on the card «Blåser»
+   [missing] no «blåsesett» on the card «Blåser»
+  garn 05_kjopt-garn.png | nets and buoy sets bought | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [nets] [["bunn",180,10],["flyt",156,10],["kveite",360,10]]
+   [setup] out to 62 m deep near gryllefjord (a cod spot off Gryllefjord in March); the sail is skipped
+  garn 06_settut-vifte-alene.png | the «Sett ut» fan, alone aboard | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [buttons] 10 torskegarn 180 mm | 10 flytegarn 156 mm | 10 blåkveitegarn 360 mm
+  garn 07_settut-alene.png | the chart line, alone aboard | dock=[] | info= | toasts=[]
+   [setmode] alone: Garn krever minst to om bord: deg og én til, eller to fra mannskapet.
+  garn 08_ansatt.png | after hiring | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [crew] hired: [["Magnus Strand","hovedyrke",null]]; aboard today: ["Magnus Strand"]
+   [setup] out to 62 m deep near gryllefjord (back out with a hand aboard); the sail is skipped
+  garn 09_redskap-vifte-torsk.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  garn 10_settut-vifte-torsk.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  garn 11_settut-kart-torsk.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  garn 12_settut-go-torsk.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] out to 50 m deep near gryllefjord (a saithe spot); the sail is skipped
+  garn 13_redskap-vifte-flyt.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  garn 14_settut-vifte-flyt.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  garn 15_settut-kart-flyt.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  garn 16_settut-go-flyt.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] out to 439 m deep near gryllefjord (the edge for Greenland halibut); the sail is skipped
+  garn 17_redskap-vifte-blakveite.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  garn 18_settut-vifte-blakveite.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=['✉ Regler: Direktefisket etter blåkveite er stengt (det åpner 25. mai). Blåkveite er bare lov som bifangst, høyst 7 % av ukas landinger. (J-241-2025 §§ 5, 7) Regler-appen viser hva som gjelder der du er, og regellaget i kartplotteren viser det på kartet.', 'Ny regel her: Blåkveite: bare bifangst. Se meldingen i telefonen.']
+  garn 19_settut-kart-blakveite.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  garn 20_settut-go-blakveite.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] in at gryllefjord (the sail in is skipped)
+  garn 21_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  garn 22_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  garn 23_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  garn 24_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  garn 25_levert.png | when the landing is done (240 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: N 5 m/s, lett bris, bølger ute 1,2 m. Øker til frisk bris, 9 m/s fra V rundt 21:00.']
+  garn 26_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  garn 27_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 1349000 -> 1349000; null
+== scenario teiner liggende no3d
+   [boot] game started in 3 s
+   [setup] at Måsøy utstyrsbutikk
+   [buy] «Kjøp og monter · 58 000 kr» on «Teinehaler» asked to be confirmed, and was
+   [buy] Teinehaler › «Kjøp og monter · 58 000 kr» → toasts ['✓ Kjøpt: Teinehaler · −58\xa0000 kr · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 1442000
+   [buy] «Kjøp og monter · 28 000 kr» on «Krabbekar» asked to be confirmed, and was
+   [buy] Krabbekar › «Kjøp og monter · 28 000 kr» → toasts ['✓ Kjøpt: Krabbekar med sjøvann · −28\xa0000 kr · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 1414000
+  teiner 01_haler-kjopt.png | after buying Teinehaler, Krabbekar | dock=['Butikk', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [jobs] [["fit","teinehaler",3,"09:00","Montering av teinehaler"],["fit","krabbekar",3,"09:00","Montering av krabbekar med sjøvann"]]
+   [fit] bought at 06:00 («»); the fitting was done after 179 game minutes, at 09:00
+  teiner 02_rigg-for.png | the rig tab before re-rigging for Teiner | dock=['Butikk', 'Bygd', 'Om bord'] | info= | toasts=['✉ Skreifestivalen: Kystbas fra Senjahopen vant med en torsk på 26,6 kg.', '📻 Kystradio: Værmelding kl. 09: NV 8 m/s, frisk bris, bølger ute 1,8 m. Avtar til 5 m/s fra V de neste tolv timene.', '✉ Verkstedet: Montering av teinehaler er ferdig.', '✉ Verkstedet: Montering av krabbekar med sjøvann er ferdig.']
+  teiner 03_rigget.png | after «Rigg om» on Teiner | dock=['Butikk', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [rig] rigged: teiner
+  teiner 04_fiskeutstyr-teiner.png | the shop with a pot hauler aboard | dock=['Butikk', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | Redskap | Elektronikk og haler | Klær til alle om bord › | Kjøp · 2 490 kr | Mer om kveiteutstyr › | Kjøp trinn 2 · 3 000 kr | Mer om sløyekniver › | Kjøp trinn 2 · 900 kr | Mer om høtt › | Mer om juksa › | Kjøp trinn 2 · 175 kr | Mer om kroker og juksasett › | Kjøp trinn 2 · 29 000 kr | Mer om halere › | Mer om garn › | Mer om line › | 12 krabbeteiner · 26 400 kr | Mer om teiner og kongekrabbe › | Mer om blåsesett: staur, blåse og dregg › | Markkroker og pilk (sett) · 350 kr | Mer om kroker og juksasett ›
+   [buy] Krabbeteiner › «12 krabbeteiner · 26 400 kr» → toasts ['✓ Kjøpt: 12 krabbeteiner · −26\xa0400 kr · 12 teiner om bord'], cash 1387600
+   [buy] «1 krabbeteine · 2 200 kr» on «Krabbeteiner» is greyed
+   [missing] no «blåsesett» on the card «Blåser»
+   [missing] no «blåsesett» on the card «Blåser»
+  teiner 05_kjopt-teiner.png | pots bought | dock=['Butikk', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [pots] aboard: 12
+  teiner 06_agn-teiner.png | bait for pots at Havøysund | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [buttons] ✕ | 20 kg · 360 kr | 100 kg · 1 800 kr | 20 kg · 200 kr | 100 kg · 1 000 kr | 20 kg · 560 kr | 100 kg · 2 800 kr | 20 kg · 240 kr | 100 kg · 1 200 kr | 20 kg · 440 kr | 100 kg · 2 200 kr | 20 kg · 280 kr | 100 kg · 1 400 kr | 20 kg · 680 kr | 100 kg · 3 400 kr | 20 kg · 480 kr | 100 kg · 2 400 kr | Mer om agn ›
+  teiner 07_agn-teiner-kjopt.png | saithe for bait | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✓ Kjøpt: bait · −1\xa0200 kr · 100 kg agn om bord']
+   [setup] out to 66 m deep near [71.0, 24.75] (a king crab ground off Havøysund); the sail is skipped
+  teiner 08_redskap-vifte-krabbe.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 09_settut-vifte-krabbe.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 10_settut-kart-krabbe.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  teiner 11_settut-go-krabbe.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [anchor] Kast anker: tapped ['For dypt til å ankre (over 40 m).']
+   [energy] the skipper was too tired 1 times while 1440 minutes went; energy set to 80 (scenario shortcut)
+   [soak] 24 h: the boat moved {"km":9.04,"depth":13,"land":false,"st":"idle","anch":false}
+  teiner 12_staar-krabbe.png | after 24 h of soak | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: NV 8 m/s, laber bris, bølger ute 1,8 m. Avtar til 5 m/s fra V de neste tolv timene.', '📻 Kystradio: Værmelding kl. 15: NV 7 m/s, laber bris, bølger ute 1,7 m. Avtar til 4 m/s fra V de neste tolv timene.', '📻 Kystradio: Værmelding kl. 18: V 6 m/s, laber bris, bølger ute 1,6 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 21: V 5 m/s, lett bris, bølger ute 1,5 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 09: SV 4 m/s, lett bris, bølger ute 1,2 m. Omtrent det samme de neste tolv timene.']
+   [missing] no visible #dock [data-dk="taopp"]
+  teiner 13_taopp-krabbe.png | tapped «Ta opp» | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 14_trekker-krabbe.png | hauling, a quarter of an hour in | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 15_trukket-krabbe.png | hauled (0 min) | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [catch] krabbe: hold 0 → 0 kg; {"hold":{}}
+   [anchor] Kast anker: tapped ['For nær land: ankeret trenger svingrom.']
+   [energy] the skipper was too tired 6 times while 3600 minutes went; energy set to 80 (scenario shortcut)
+   [soak] 60 h: the boat moved {"km":0,"depth":13,"land":false,"st":"idle","anch":false}
+  teiner 16_staar-krabbe60.png | after 60 h of soak | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=['📻 Kystradio: Værmelding kl. 12: SV 4 m/s, lett bris, bølger ute 1,2 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 15: SV 3 m/s, svak vind, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 18: SV 3 m/s, svak vind, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 21: SV 3 m/s, svak vind, bølger ute 1,0 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 09: SV 4 m/s, lett bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 12: SV 5 m/s, lett bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 15: SV 4 m/s, lett bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 18: SV 2 m/s, svak vind, bølger ute 1,0 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 21: SV 2 m/s, svak vind, bølger ute 1,0 m. Øker til lett bris, 5 m/s fra SV rundt 09:00.', 'Fartstid: 6 år fartstid', '📻 Kystradio: Værmelding kl. 09: SV 5 m/s, lett bris, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 12: SV 6 m/s, laber bris, bølger ute 1,2 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 15: SV 5 m/s, lett bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra SV rundt 03:00.', '📻 Kystradio: Værmelding kl. 18: SV 6 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra SV rundt 04:00.', '📻 Kystradio: Værmelding kl. 21: SV 6 m/s, laber bris, bølger ute 1,2 m. Omtrent det samme de neste tolv timene.']
+   [missing] no visible #dock [data-dk="taopp"]
+  teiner 17_taopp-krabbe60.png | tapped «Ta opp» | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 18_trekker-krabbe60.png | hauling, a quarter of an hour in | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  teiner 19_trukket-krabbe60.png | hauled (0 min) | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [catch] krabbe60: hold 0 → 0 kg; {"hold":{}}
+   [setup] in at mTF70 (the sail in is skipped)
+  teiner 20_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  teiner 21_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  teiner 22_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  teiner 23_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  teiner 24_levert.png | when the landing is done (240 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['📻 Kystradio: Hysa biter på bankene. Høstfisket er i gang.']
+  teiner 25_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  teiner 26_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 1386400 -> 1386400; null
+   [sale] the crab on the note: null
+== scenario senjateiner liggende no3d
+   [boot] game started in 3 s
+   [missing] no «Kjøp og monter» on the card «Teinehaler»
+  senjateiner 01_haler-kjopt.png | after buying Teinehaler | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [jobs] []
+   [fit] bought at 06:00 («»); the fitting was done after 0 game minutes, at 06:01
+  senjateiner 02_rigg-for.png | the rig tab before re-rigging for Teiner | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [missing] no «Rigg om» on the card «Teiner»
+  senjateiner 03_rigget.png | after «Rigg om» on Teiner | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [rig] rigged: juksa
+   [small] Mer om teiner og kongekrabbe › is 172x30 px (under 44 px for a finger)
+   [buy] Krabbeteiner › «Mer om teiner og kongekrabbe ›» → toasts [], cash 800000
+   [missing] no «blåsesett» on the card «Blåser»
+   [missing] no visible #dock [data-dk="marked"]
+   [missing] no visible «Agn» in #dockFan
+   [setup] out to 80 m deep near botnhamn (a pot spot off Senja); the sail is skipped
+   [missing] no visible #dock [data-dk="redskap"]
+  senjateiner 04_redskap-vifte-senja.png | the «Redskap» fan | dock=[] | info= | toasts=[]
+   [missing] no visible «Sett ut» in #dockFan
+  senjateiner 05_settut-vifte-senja.png | the «Sett ut» fan | dock=[] | info= | toasts=[]
+   [missing] no «teine» in the Sett ut fan: []
+   [anchor] Kast anker: not on the dock []
+   [energy] the skipper was too tired 1 times while 1440 minutes went; energy set to 80 (scenario shortcut)
+   [soak] 24 h: the boat moved {"km":0.74,"depth":22,"land":false,"st":"idle","anch":false}
+  senjateiner 06_staar-senja.png | after 24 h of soak | dock=[] | info= | toasts=['📻 Kystradio: Værmelding kl. 09: NV 7 m/s, laber bris, bølger ute 1,6 m. Avtar til 4 m/s fra V de neste tolv timene.', '📻 Kystradio: Værmelding kl. 12: V 5 m/s, lett bris, bølger ute 1,5 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 15: V 5 m/s, lett bris, bølger ute 1,4 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 18: V 4 m/s, lett bris, bølger ute 1,3 m. Omtrent det samme de neste tolv timene.', '📻 Kystradio: Værmelding kl. 21: V 4 m/s, lett bris, bølger ute 1,2 m. Omtrent det samme de neste tolv timene.']
+   [missing] no visible #dock [data-dk="taopp"]
+  senjateiner 07_taopp-senja.png | tapped «Ta opp» | dock=[] | info= | toasts=[]
+  senjateiner 08_trekker-senja.png | hauling, a quarter of an hour in | dock=[] | info= | toasts=[]
+  senjateiner 09_trukket-senja.png | hauled (0 min) | dock=[] | info= | toasts=[]
+   [catch] senja: hold 0 → 0 kg; {"hold":{}}
+   [setup] in at botnhamn (the sail in is skipped)
+  senjateiner 10_mottak.png | at the fish plant quay with the catch aboard | dock=[] | info= | toasts=[]
+   [missing] no visible #dock [data-dk="marked"]
+  senjateiner 11_mottak-vifte.png | the plant fan | dock=[] | info= | toasts=[]
+   [missing] no visible «Lever» in #dockFan
+  senjateiner 12_lever-side.png | the landing page | dock=[] | info= | toasts=[]
+  senjateiner 13_lever-trykket.png | right after the landing button | dock=[] | info= | toasts=[]
+  senjateiner 14_levert.png | when the landing is done (240 min) | dock=[] | info= | toasts=['📻 Kystradio: Værmelding kl. 09: SV 2 m/s, svak vind, bølger ute 1,1 m. Omtrent det samme de neste tolv timene.']
+  senjateiner 15_sluttseddel.png | the landing note printed out, 3 s later | dock=[] | info= | toasts=[]
+  senjateiner 16_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=[] | info= | toasts=[]
+   [sale] cash 800000 -> 800000; null
+== scenario kanter liggende no3d
+   [boot] game started in 3 s
+  kanter 01_rigg-trebat.png | the start boat's rig tab: what it can be rigged for | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+  kanter 02_haler-trebat.png | haulers for the start boat (does the net hauler fit?) | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [fit] Elektronikk og haler, the end of the page: ten ligger i havn imens. Du bekrefter før kjøpet. Mer om elektronikk › Klær til mannskapet Nå: effektiv temperatur -6 °C, fisket går 23 % tregere. Alle om bord trenger sine egne. Oljehyre 0 / 1 Holder deg tørr i regn og sjøsprøyt 1 290 kr Kjøp én Mer om klær og kulde › Varmedress 0 / 1 Holder varmen i kulda · fingrene fryser mindre 3 490 kr Kjøp én Mer om klær og kulde › Passer ikke «T-658-LK» (7)
+  kanter 03_bathandel.png | the boat market | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [market] ocean vessels in the market: 
+  kanter 04_bathandel-hav.png | the ocean vessels in the market | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [buy] «Kjøp og monter · 95 000 kr» on «Garnhaler» asked to be confirmed, and was
+   [buy] Garnhaler › «Kjøp og monter · 95 000 kr» → toasts ['✓ Kjøpt: Garnhaler · −95\xa0000 kr · ferdig kl. 09:00 (om 30 min i ekte tid)'], cash 4905000
+  kanter 05_haler-kjopt.png | after buying Garnhaler | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [jobs] [["fit","garnhaler",3,"09:00","Montering av garnhaler"]]
+   [fit] bought at 06:00 («»); the fitting was done after 179 game minutes, at 09:00
+  kanter 06_rigg-for.png | the rig tab before re-rigging for Garn | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=['✉ Edvard: Så det er du som har tatt over båten til far din. Jeg heter Edvard. Vi fisket sammen i førti år, han og jeg. Kom innom når du er i havn.', '📻 Kystradio: Værmelding kl. 09: NØ 6 m/s, laber bris, bølger ute 1,2 m. Øker til frisk bris, 8 m/s fra V rundt 21:00.', '✉ Verkstedet: Montering av garnhaler er ferdig.', 'Kystposten: Rekordpris på torsk: 58,86 kr/kg']
+  kanter 07_rigget.png | after «Rigg om» on Garn | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [rig] rigged: garn
+   [buy] Garn › «Torskegarn 156 mm × 10 · 15 000 kr» → toasts ['✓ Kjøpt: 10 torskegarn 156 mm · −15\xa0000 kr · 10 garn om bord'], cash 4890000
+   [missing] no «blåsesett» on the card «Blåser»
+   [crew] the exchange: [["Eirik",false,null],["Tone",false,null],["Ole Martin",false,null]]
+   [crew] a side-job hand not working today in the exchange: null
+  kanter 08_ansatt.png | after hiring | dock=['Butikk', 'Bygd', 'Verft', 'Om bord'] | info= | toasts=[]
+   [crew] hired: [["Magnus Mathisen","hovedyrke",null]]; aboard today: ["Magnus Mathisen"]
+   [setup] out to 83 m deep near husoy (nets before a gale); the sail is skipped
+  kanter 09_redskap-vifte-storm.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kanter 10_settut-vifte-storm.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kanter 11_settut-kart-storm.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  kanter 12_settut-go-storm.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [crew] the nets did not go out: ["Magnus Mathisen"]; one more hand hired
+  kanter 13_ansatt.png | after hiring | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [crew] hired: [["Magnus Mathisen","hovedyrke",null],["Tony Hjelmseth","hovedyrke",null]]; aboard today: ["Magnus Mathisen","Tony Hjelmseth"]
+   [setup] out to 82 m deep near husoy (nets before a gale, again); the sail is skipped
+  kanter 14_redskap-vifte-storm2.png | the «Redskap» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kanter 15_settut-vifte-storm2.png | the «Sett ut» fan | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kanter 16_settut-kart-storm2.png | the line drawn on the chart | dock=[] | info= | toasts=[]
+   [setmode] the line is red: Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.
+  kanter 17_settut-go-storm2.png | after «Sett ut» | dock=[] | info= | toasts=['Du trenger et blåsesett: staur med flagg, blåse, kulerekke og dregg til hver ende.']
+   [setmode] «Sett ut» was refused: []; «Avbryt»
+   [setup] out to 82 m deep near husoy (jig with the hold nearly full); the sail is skipped
+   [setup] the hold filled to 15 kg short with 4 kg cod (as if caught)
+  kanter 18_jukse-kort-full.png | the jig card | dock=['Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kanter 19_jukser-full.png | jigging started | dock=['Jukse selv', 'Stopp', 'Stopp og sløy', 'Om bord'] | info= | toasts=[]
+  kanter 20_jukset-full.png | after the jig (83 min) | dock=['Til mottaket Husøy 4,0 nm', '⊘ Jukse', 'Redskap', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [catch] full: 16 kg in 1.4 h of jigging (11 kg/h); hold {"torsk":500}
+   [full] hold 500/500 kg
+== scenario kysten liggende no3d
+   [boot] game started in 3 s
+   [setup] out to 64 m deep near mN522 (cod near lofoten); the sail is skipped
+  kysten 01_jukse-kort-lofoten.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kysten 02_jukser-lofoten.png | jigging started | dock=['Jukse selv', 'Stopp', 'Om bord'] | info= | toasts=[]
+  kysten 03_jukset-lofoten.png | after the jig (185 min) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+   [catch] lofoten: 75 kg in 3.1 h of jigging (24 kg/h); hold {"sei":41.1,"torsk":30,"hyse":3.9}
+   [setup] in at mN522 (the sail in is skipped)
+  kysten 04_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 05_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 06_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 07_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 08_levert.png | when the landing is done (10 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✉ Unni på mottaket i Henningsvær: Velkommen til oss. Jeg er Unni og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt.']
+  kysten 09_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['Per: «Ny skipper! Vi ska lære dæ rutinene. Kaffen står der.»']
+  kysten 10_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 2000 -> 4739; {"kr":2858,"lines":[["torsk","E",13.7,863],["torsk","E",5.5,323],["torsk","E",10.8,608],["hyse","E",3,76],["hyse","E",0.8,19],["sei","E",9.8,224],["sei","E",23.6,523],["sei","E",7.8,158],["sei","E",0.1,3]]}
+   [setup] out to 74 m deep near mH85 (cod near vestlandet); the sail is skipped
+  kysten 11_jukse-kort-vestlandet.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kysten 12_jukser-vestlandet.png | jigging started | dock=['Jukse selv', 'Stopp', 'Om bord'] | info= | toasts=[]
+  kysten 13_jukset-vestlandet.png | after the jig (190 min) | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=['✉ Hernar utstyrsbutikk: Har du plass til 40 kg post og pakker til Bøvågen? Det er 6 nautiske mil, og det haster ikke: ei uke har du. Oppdraget ligger klart på tavla i Oppdrag-appen, og det betaler 2\xa0600 kr.']
+   [catch] vestlandet: 101 kg in 3.2 h of jigging (32 kg/h); hold {"lyr":19.1,"hyse":5.8,"sei":36.9,"lange":19,"torsk":17.3,"brosme":3.4}
+   [setup] in at mH85 (the sail in is skipped)
+  kysten 14_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 15_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 16_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 17_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 18_levert.png | when the landing is done (10 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✉ Laila på mottaket i Bøvågen: Velkommen til oss. Jeg er Laila og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt.']
+  kysten 19_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['Kjell: «Skal vi ta dem inn, eller vil du ha dem med heim te middag?»']
+  kysten 20_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 4739 -> 7221; {"kr":2590,"lines":[["torsk","E",7.3,424],["torsk","E",5.2,277],["torsk","E",4.9,253],["hyse","E",4.8,122],["hyse","E",0.9,20],["sei","E",26.8,589],["sei","E",6.4,136],["sei","E",3.7,72],["lyr","E",8.4,198],["lyr","E",9.4,177],["lyr","E",1.3,10],["lange","E",12,171],["lange","E",6.9,62],["brosme","E",2.1,26],["brosme","E",1.3,5]]}
+   [setup] out to 74 m deep near mF343 (cod near finnmark); the sail is skipped
+  kysten 21_jukse-kort-finnmark.png | the jig card | dock=['Jukse', '⊘ Kast anker', 'Om bord'] | info= | toasts=[]
+  kysten 22_jukser-finnmark.png | jigging started | dock=['Jukse selv', 'Stopp', 'Om bord'] | info= | toasts=[]
+  kysten 23_jukset-finnmark.png | after the jig (13 min) | dock=['Hjelp', 'Om bord'] | info= | toasts=[]
+   [catch] finnmark: 2 kg in 0.2 h of jigging (9 kg/h); hold {"torsk":2.1}
+   [setup] in at mF343 (the sail in is skipped)
+  kysten 24_mottak.png | at the fish plant quay with the catch aboard | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 25_mottak-vifte.png | the plant fan | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 26_lever-side.png | the landing page | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 27_lever-trykket.png | right after the landing button | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+  kysten 28_levert.png | when the landing is done (10 min) | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['✉ Torbjørn på mottaket i Gjesvær: Velkommen til oss. Jeg er Torbjørn og har ansvaret for mottaket. Leverer du jevnt hos oss, skal vi behandle deg godt.']
+  kysten 29_sluttseddel.png | the landing note printed out, 3 s later | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=['Arne: «Æ tippe du har tomt for haill. Haill e halve fesket, vet du.»']
+  kysten 30_sluttseddel-bunn.png | the foot of the landing note: confiscation, fees and the sum | dock=['Mottak', 'Bygd', 'Om bord'] | info= | toasts=[]
+   [sale] cash 7221 -> 7334; {"kr":118,"lines":[["torsk","E",2.1,115]]}
+{
+ "jig": {
+  "s": 132,
+  "shots": 26,
+  "pageerrors": 0,
+  "notes": 12
+ },
+ "butikker": {
+  "s": 13,
+  "shots": 9,
+  "pageerrors": 0,
+  "notes": 8
+ },
+ "line": {
+  "s": 38,
+  "shots": 31,
+  "pageerrors": 0,
+  "notes": 26
+ },
+ "maskin": {
+  "s": 27,
+  "shots": 21,
+  "pageerrors": 0,
+  "notes": 21
+ },
+ "garn": {
+  "s": 38,
+  "shots": 27,
+  "pageerrors": 0,
+  "notes": 29
+ },
+ "teiner": {
+  "s": 32,
+  "shots": 26,
+  "pageerrors": 0,
+  "notes": 32
+ },
+ "senjateiner": {
+  "s": 18,
+  "shots": 16,
+  "pageerrors": 0,
+  "notes": 24
+ },
+ "kanter": {
+  "s": 30,
+  "shots": 20,
+  "pageerrors": 0,
+  "notes": 25
+ },
+ "kysten": {
+  "s": 33,
+  "shots": 30,
+  "pageerrors": 0,
+  "notes": 13
+ }
+}

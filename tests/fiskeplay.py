@@ -239,7 +239,7 @@ async def jig(pl):
     await pl.shot('jukse-kar', 'later: %d min (status %s)' % (p['n'], p['to']))
     if await pl.js("S.boat.status === 'fishing'"):
         p = await pl.play(400, until="S.boat.status !== 'fishing'"); await pl.shot('jukse-ferdig', 'the jig is done (%d min more)' % p['n'])
-    await pl.dock('beh'); await pl.drw('Lasterom'); await pl.shot('lasterom', 'the hold after the day', drawer=True)
+    await pl.dock('beh'); await pl.drw('Last'); await pl.shot('lasterom', 'the hold after the day', drawer=True)
     await pl.js("DOCK.close()")
     await land(pl, 'husoy')
 

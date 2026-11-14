@@ -52,11 +52,11 @@ const DOCK = (() => {
     bunker:SVG('<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16"/><path d="M3 21h14"/><path d="M7.5 8h5"/><path d="M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/>')};
   // the drawer's pages: title, and the pages that share a row of tabs
   const TITLE = {lever:['Lever fangst', 'Land the catch'], is:['Is', 'Ice'], agn:['Agn og egning', 'Bait and baiting'], bank:['Kystbanken', 'The bank'], oppdrag:['Oppdrag', 'Orders'],
-    mannskap:['Mannskap', 'Crew'], bors:['Mannskap', 'Crew'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Utstyrsbutikken', 'The tackle shop'], fiske:['Utstyrsbutikken', 'The tackle shop'],   // (D3: one title for the shop; its two tabs say which counter)
-    service:['Service', 'Service'],
-    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Lasterom', 'Hold'], beholdning:['Om bord', 'Aboard']};
-  const TABS = {mannskap:[['mannskap', 'Om bord', 'Aboard'], ['bors', 'Mannskapsbørs', 'Crew exchange']], bors:null, fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers']], utstyrb:null};
-  TABS.bors = TABS.mannskap; TABS.utstyrb = TABS.fiske;
+    mannskap:['Mannskap', 'Crew'], bors:['Mannskapsbørsen', 'The crew exchange'], fartoy:['Båthandel', 'Boat market'], maler:['Malerverksted', 'Paint shop'], utstyr:['Oppgraderinger', 'Upgrades'], utstyrb:['Utstyrsbutikken', 'The tackle shop'], fiske:['Utstyrsbutikken', 'The tackle shop'],   // (D3: one title for the shop; its two tabs say which counter)
+    service:['Utstyrsbutikken', 'The tackle shop'],   // (D4, Jonas 13.11.2026 «A: Tredje fane i butikken»: Service is the shop's third tab, not a page of its own)
+    redskap:['Redskap', 'Gear'], rigg:['Rigg', 'Rig'], arbeid:['Mannskap', 'Crew'], drift:['Driftsplan', 'Operations plan'], verksted:['Vedlikehold', 'Maintenance'], havn:['Havn', 'Harbour'], last:['Last', 'Catch aboard'], beholdning:['Om bord', 'Aboard']};
+  const TABS = {fiske:[['fiske', 'Redskap', 'Gear'], ['utstyrb', 'Elektronikk og haler', 'Electronics and haulers'], ['service', 'Service', 'Service']], utstyrb:null, service:null};
+  TABS.utstyrb = TABS.service = TABS.fiske;   // (D4: the crew exchange has no tabs; those signed on are in Om bord › Mannskap og drift)
   const SHOP_PAGES = ['fiske', 'utstyrb', 'service', 'is', 'agn'];
   // (in a standing screen every page is one sheet of 88 % with the strip over it, styles.css «UI 2, U2-7»; until then only the form
   // pages in TALL were, GUI review U1 A 05.11.2026, and the rest opened at 55 %)
@@ -113,6 +113,7 @@ const DOCK = (() => {
       I('lever', 'lever', 'Lever', 'Land', {page:'lever', off:!portServices(p, berthKind(b)).mottak && [L('Det er ikke noe fiskemottak i ' + p.name + '.', 'There is no fish plant in ' + p.name + '.')], why:L('Ikke noe mottak her', 'No plant here'), pri:portServices(p, berthKind(b)).mottak && holdTotal() > 0.5 && !b.land}),
       I('is', 'is', 'Is', 'Ice', {page:'is'}),
       I('agn', 'agn', 'Agn', 'Bait', {page:'agn'}),
+      I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),   // (D4: the same Oppdrag page as Bygd's and the phone's, a door at the plant too, where the orders are delivered)
       bunkerItem()];
     // the tackle shop: fishing gear, and the electronics and engines' small parts (the yard has the boat's own upgrades)
     if (m === 'butikk') return [
@@ -123,7 +124,8 @@ const DOCK = (() => {
       I('gjestebok', 'oppdrag', 'Gjestebok', 'Guestbook', {page:'gbook'}),
       I('bank', 'bank', 'Bank', 'Bank', {page:'bank'}),
       I('oppdrag', 'oppdrag', 'Oppdrag', 'Orders', {page:'oppdrag'}),
-      I('mannskap', 'mannskap', 'Ansatte', 'Employees', {page:'mannskap'}), restShow() ? null : restItem(),
+      // (D4: Bygd has the crew exchange, to hire; those aboard are in Om bord)
+      I('mannskap', 'mannskap', 'Ansett', 'Hire', {page:'bors'}), restShow() ? null : restItem(),
       // (Father's naust is set to rights from the dock when the boat lies at it, and only there: ui/06c-notebook.js)
       ].filter(Boolean);
     if (m === 'verft') return [
@@ -417,8 +419,7 @@ const DOCK = (() => {
   let shown = '';
   // (D2) the drawer by what it holds: wide lying down for the pages with cards to compare, low standing where the boat is to be seen
   // (the paint shop, gear being tried on); the stylesheet does the rest (body.dk-wide, body.dk-low)
-  const WIDE = ['fiske', 'utstyrb', 'fartoy', 'utstyr', 'bors', 'havn'];
-  function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && WIDE.includes(page)); b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
+  function shape(){ const b = document.body.classList, on = !!page && !dr.hidden; b.toggle('dk-wide', on && page !== 'maler');   /* (Jonas 14.11.2026, «menyer er i mange forskjellige størrelser», valg «Én bred for alle»: every page the wide drawer, so it never changes size from page to page; the paint shop keeps the narrow one, the boat is to be seen. Before, only the shops, the boats, the upgrades, the crew exchange and the harbour were wide) */ b.toggle('dk-low', on && (page === 'maler' || (typeof G3 !== 'undefined' && !!G3.trying))); }
   function draw(keep){
     if (PAINT) PAINT.live(page === 'maler' && !dr.hidden);   // the paint shop's camera and colour go with its page (ui/10j-paint.js)
     if (typeof G3 !== 'undefined' && G3.trying && !(TRYPAGES.includes(page) && !dr.hidden)) G3.tryView(null);   // gear tried on goes off with its page (M3)
@@ -439,9 +440,18 @@ const DOCK = (() => {
   const PLACEN = {mottak:['fiskemottaket', 'the fish plant', 'Mottak', 'Plant'], butikk:['utstyrsbutikken', 'the tackle shop', 'Butikk', 'Shop'], verft:['verftet', 'the yard', 'Verft', 'Yard']};
   const NEARCARD = /<div class="ph-card"><p class="ph-note">(?:Nærmeste|Nearest) [^<]*<b>[^<]*<\/b>[^<]*<\/p><button class="ph-btn" data-pa="goplace" data-id="[^"]*">[^<]*<\/button><\/div>/g;
   const OWNTOP = ['fiske', 'utstyrb'];
+  // the boat chosen on a fleet page (PHONE.sel) when she is another than the one followed and does not lie at this kind of place
+  const atPlace = (bt, k) => !!bt && bt.status === 'port' && !!portServices(portById(bt.port), berthKind(bt))[k];
+  function selAway(k){ if (!PHONE.SEL_APPS.includes(page) || PHONE.sel === S.cur) return null; const v = vesselById(PHONE.sel); return v && !atPlace(v.boat, k) ? v : null; }
   function dress(pg, h){
     const k = PLACE[pg]; if (!k || typeof portServices !== 'function') return h;
     const b = S.boat, here = b.status === 'port' && !!portServices(portById(b.port), berthKind(b))[k], N = PLACEN[k];
+    // (Jonas 14.11.2026: «får ikke til å montere utstyr på båten»: with another boat of the fleet chosen on the page, one that does not lie
+    // here, every buy button was dashed and nothing said why. The page says whose it is and that she is not here, and each button too)
+    { const sv = selAway(k); if (sv){ const nm = vget(sv, 'boatName'), why = L('«' + nm + '» ligger ikke her', '«' + nm + '» is not here');
+        h = '<div class="pl-away"><span>' + L('Du ser på «' + nm + '», som ikke ligger ved ' + N[0] + '. Det som kjøpes og monteres her, gjelder båten ved kaia.', 'You are looking at the «' + nm + '», which is not at ' + N[1] + '. What is bought and fitted here is for the boat at the quay.') + '</span>' +
+          (here ? '<button class="ph-btn" data-pa="vsel" data-id="' + S.cur + '">' + L('Vis «' + S.boatName + '»', 'Show the «' + S.boatName + '»') + '</button>' : '') + '</div>' +
+          h.replace(/<button((?:(?!data-why)[^>])*?)\sdisabled(?=[\s>=])/g, (m, a) => '<button' + a + ' data-why="' + why + '" disabled'); } }
     if (here && OWNTOP.includes(pg)) return h.replace(NEARCARD, '');   // (D3: the shop's own compact top says the place, phone/13b-nettet.js shopTop)
     if (here) return '<div class="pl-head here"><span>' + L('Du er her', 'You are here') + '</span><b>' + portById(b.port).name + '</b></div>' + h.replace(NEARCARD, '');
     const n = placesNear(b.pos, k, 1)[0];
@@ -457,8 +467,16 @@ const DOCK = (() => {
   function open(a){
     let [pg, sb] = String(a).split(':');
     if (pg === 'arbeid'){ pg = 'beholdning'; sb = sb || 'crew'; }   // the crew page is Om bord's fifth tab (U2-2): the plan's «Til Mannskap-siden» and the tests land there
+    // (D4, Jonas 13.11.2026: one page a thing, many doors in. The rig, the gear and the hold are tabs of Om bord, and
+    // every older door lands there: the pub's and the tips' links, the company's warnings. With another boat of the fleet chosen (the
+    // company's list, «goto»), the gear and the plan open as her own pages, for Om bord is the boat you follow)
+    { const TO = {rigg:'gear', last:'last', redskap:'gear'}, own = PHONE.sel === S.cur;
+      if (TO[pg] && (own || pg === 'rigg' || pg === 'last')){ sb = TO[pg]; pg = 'beholdning'; } }
     if (!PHONE.DRAWER.has(pg)) return;
     const was = page; page = pg; menu = null; html = '';
+    // (a trade page opens on the boat that lies here: the choice of another boat hung on from the last time the page was open, and the
+    // shop then stood with every button dashed, Jonas 14.11.2026)
+    if (was !== pg && PLACE[pg] && typeof portServices === 'function' && atPlace(S.boat, PLACE[pg]) && selAway(PLACE[pg])) PHONE.dact(pg, 'vsel', {id:S.cur});
     if (sb) PHONE.dact(pg, 'sub', {s:sb});
     dr.hidden = false; document.body.classList.add('dk-open'); shown = ''; draw(was === pg); render(); if (typeof renderHud === 'function') renderHud();   // (D6: upright the box folds to the strip over the sheet)
     if (was !== pg && SHOP_PAGES.includes(pg) && typeof cloudEv === 'function') cloudEv('shop_view', {pg});

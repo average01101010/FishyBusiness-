@@ -152,7 +152,7 @@ async def main():
             await pg.set_viewport_size(vp)
             u = await shots(pg, tag)
             print(ok('Turen' in u['turen'] and 'Fryste klør' in u['turen'] and 'Levende krabbe' in u['turen'] and 'Agn' in u['turen'] and 'Tankene' in u['turen']), 'Fartøy › Min båt: turen med valget levende eller fryst, agnet og tankene (%s)' % tag)
-            print(ok('klør, fryst' in u['last'] and 'Tankene' in u['last']), 'Om bord › Lasterom: snøkrabben som klør og tankene (%s)' % tag)
+            print(ok('klør, fryst' in u['last'] and 'Tankene' in u['last']), 'Om bord › Last: snøkrabben som klør og tankene (%s)' % tag)
             print(ok('Deling' in u['arbeid'] or 'Koking' in u['arbeid'] or 'Deler krabben' in u['arbeid'] or 'Koker' in u['arbeid']), 'Mannskap: fabrikken deler og koker (%s): %s' % (tag, u['arbeid'][:200].replace('\n', ' ')))
         await pg.set_viewport_size({'width':1280, 'height':800})
         l = await pg.evaluate(LAND)
