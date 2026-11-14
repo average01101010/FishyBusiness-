@@ -14,7 +14,7 @@
 function crewSim(src){
   const A = [];                          // the agents, one per person aboard who is up: {id, me, c, x, y, z, h, cell, goal, path, pi, mode, task, idle, blend}
   const ST = {type:null, M:null, M0:null, PT:null, PL:null, kitSig:'', jig:null, lastSim:null, ctxT:0, ctx:null, seed:(src && src.seed) || 1, clk:0, helmView:false, crates:-1, crateFill:0};
-  const WALK = 1.2, TURN = 4.5, SEP = 0.4, CRATE_KG = 40;   // m/s on a flat deck, rad/s turning on the spot, m between two people standing, kg of fish in a packed box
+  const WALK = 1.2, TURN = 4.5, SEP = 0.4, SEP2 = 0.55, CRATE_KG = 40;   // m/s on a flat deck, rad/s turning on the spot, m between two people standing, kg of fish in a packed box
   const rnd = () => { ST.seed = (ST.seed * 1664525 + 1013904223) >>> 0; return ST.seed / 4294967296; };
   const nowS = () => ST.clk;             // the agents' own clock, in seconds of ticks (real time in the game, the test's ticks in the test)
   function reset(){ A.length = 0; ST.type = null; ST.lastSim = null; }
@@ -393,6 +393,34 @@ function crewSim(src){
       haul:[[HP[0] - sg * 0.55, HP[2] + 0.2, sg * Math.PI / 2, 'haul'], [HP[0] - sg * 0.55, HP[2] - 0.55, sg * Math.PI / 2, 'haul']],
       pick:[HP[0] - sg * 0.62, HP[2] + 0.95, sg * Math.PI * 0.62, 'pick'], pot:[HP[0] - sg * 1.0, HP[2] + 0.9, sg * Math.PI * 0.5, 'tend'],
       bleed:[bl[0], bl[1], face(bl[0], bl[1], drop[0], drop[1]), 'bleedst']};
+    // (the new people, FB7, Jonas 13.11.2026 «Sørg for at objekter ikke kan clippe inn i menneskene»: the packer's place is the
+    // model's own, and on five of the eight boats it was 16 to 40 cm from where the bleeder was put and 30 to 43 cm from where the
+    // fish is let fall, so the bleeder stood inside the packer and the gaff swung the fish into him. The fish is let fall the
+    // nearest to the old spot that is BLEED.drop clear of the packer, his box and the gutter; the bleeder stands at the cell
+    // BLEED.from of it, on the hauler's deck, that is nearest BLEED.best from the fish and the old place, and clear of every other place of work by its own
+    // room (BLEED.room); where the deck has no such cell, the one with the most room)
+    if (LEMMER.on && ST.PT){ const M = ST.M, B = BLEED, pt = n => { const c = ST.PT[n]; return c && c.k != null && ST.M0.ok(c.k) ? [ST.M0.at(c.k)[0], ST.M0.at(c.k)[2], c.h || 0] : null; };
+      // (the table and the ice under a shelter deck or below: nobody stands at those places on this deck, goalOf «below»)
+      const wy = W ? W.table[1] : d.y, sq = ST.PT.sloy, under = wy != null && sq && sq.k != null && M.ok(sq.k) && Math.abs(M.at(sq.k)[1] - wy) > 0.5;
+      const I = under ? null : pt('is'), Sl = under ? null : pt('sloy'), h0 = PL.haul[0], OB = [[h0[0], h0[1], B.room.haul], [PL.haul[1][0], PL.haul[1][1], B.room.haul2], [PL.pick[0], PL.pick[1], B.room.pick], [PL.pot[0], PL.pot[1], B.room.pick]], NEAR = [[PL.haul[1][0], PL.haul[1][1], B.drop2]];
+      if (Sl){ OB.push([Sl[0], Sl[1], B.room.is]); NEAR.push([Sl[0], Sl[1], B.drop]); }
+      if (I){ const ih = I[2] + (((VESSELS[ST.type] || {}).hold || {}).kind !== 'dekk' ? Math.PI : 0), cr = [I[0] + Math.sin(ih) * 0.58, I[1] - Math.cos(ih) * 0.58]; OB.push([I[0], I[1], B.room.is], [cr[0], cr[1], B.room.box]); NEAR.push([I[0], I[1], B.drop], [cr[0], cr[1], B.drop]); }
+      // (the ice box on deck, and the shovel's way from it to the packer's box: the fish is not let fall on it, and nobody stands in it)
+      { const ib = I && !under ? iceBox() : null; if (ib){ const cr = NEAR[NEAR.length - 1]; OB.push([ib[0], ib[2], B.room.ice], [(ib[0] + cr[0]) / 2, (ib[2] + cr[1]) / 2, B.room.box]); NEAR.push([ib[0], ib[2], B.drop]); } }
+      const k0 = M.near(h0[0], h0[1], 0.6), y0 = k0 >= 0 ? M.at(k0)[1] : null, lay = (x, z) => { let m = 9; for (const q of NEAR) m = Math.min(m, Math.hypot(q[0] - x, q[1] - z) - q[2]); return m; };
+      if (lay(drop[0], drop[1]) < 0){ let best = null, bv = 1e9, wide = null, wv = -1;
+        for (const r of B.dropR) for (let a = -80; a <= 80; a += 10){ const x = h0[0] - sg * Math.cos(a * Math.PI / 180) * r, z = h0[1] + Math.sin(a * Math.PI / 180) * r; if (M.near(x, z, 0.2) < 0) continue;
+          const m = lay(x, z), d = Math.hypot(x - drop[0], z - drop[1]); if (m >= 0 && d < bv){ bv = d; best = [x, z]; } if (m > wv){ wv = m; wide = [x, z]; } }
+        const q = best || wide; if (q){ drop[0] = q[0]; drop[1] = q[1]; } }
+      let best = -1, bv = 1e9, wide = -1, wv = -1e9, any = -1, av = -1e9;
+      for (let k = 0; k < M.nx * M.nz; k++){ if (!M.ok(k)) continue; const c = M.at(k); if (y0 != null && Math.abs(c[1] - y0) > 0.25) continue; const dd = Math.hypot(c[0] - drop[0], c[2] - drop[1]); if (dd < B.from[0] || dd > B.from[1]) continue;
+        let m = 9; for (const o of OB) m = Math.min(m, Math.hypot(c[0] - o[0], c[2] - o[1]) - o[2]);
+        // (the bled fish is thrown from here into the tub: not through the hauler)
+        { const ax = tub[0] - c[0], az = tub[1] - c[2], u = clamp(((h0[0] - c[0]) * ax + (h0[1] - c[2]) * az) / (ax * ax + az * az || 1e-9), 0, 1); m = Math.min(m, Math.hypot(c[0] + ax * u - h0[0], c[2] + az * u - h0[1]) - B.room.throw); }
+        const d = Math.abs(dd - B.best) + 0.25 * Math.hypot(c[0] - bl[0], c[2] - bl[1]);
+        if (m > av){ av = m; any = k; } if ((m < 0 || d >= bv) && m <= wv) continue; if (poseHits('bleedst', k, face(c[0], c[2], drop[0], drop[1]))) continue;   /* (his pose clear of the boat there, so fitWork leaves him where he was put) */
+        if (m >= 0 && d < bv){ bv = d; best = k; } if (m > wv){ wv = m; wide = k; } }
+      const kb = best >= 0 ? best : wide >= 0 ? wide : any; if (kb >= 0){ const c = M.at(kb); PL.bleed = [c[0], c[2], face(c[0], c[2], drop[0], drop[1]), 'bleedst']; } }
     // the line tubs (rigAt: two across from the model's place, turned with it): one baiter or stripper to a tub, inboard of it, facing it
     const sp = K.stamps ? K.stamps : {at:[Bm / 2 * 0.25, d.y, d.z - 0.6], ry:0}, c = Math.cos(sp.ry || 0), s = Math.sin(sp.ry || 0);
     PL.tubY = sp.at[1]; PL.tubs = []; for (let i = 0; i < 8; i++){ const lx = (i % 2) * 0.52, lz = Math.floor(i / 2) * 0.5, x = sp.at[0] + lx * c + lz * s, z = sp.at[2] - lx * s + lz * c; PL.tubs.push([x, z]); }
@@ -787,9 +815,15 @@ function crewSim(src){
     C.sort((a, b) => a[0] - b[0]);
     for (const dh of [0, 0.25, -0.25]) for (const [, k] of C){ const h = h0 + dh; f = fit(k, h); if (!poseHits(g.task, k, h, f.rail, f.off)){ TAKEN.delete(g.k); g.k = k; g.h = h; g.rail = f.rail; g.off = f.off; TAKEN.set(k, id); return g; } }
     f = fit(g.k, h0); g.rail = f.rail; g.off = f.off; return g; }
+  // the bleeder's place with the new people (places): m the fish is let fall from the packer, his box, the ice box and the gutter at the least (drop2: from the second hauler), and
+  // from the hauler where it is tried (dropR); from: how far from the fish the bleeder stands, and best the distance he had before; room: m from each other place of work
+  // (the hauler, the second hauler, the net picker and the pot hand, the packer and the gutter, the packer's box and the shovel's way
+  // to it, the ice box; throw: the hauler from the line of the bleeder's throw to the tub)
+  const BLEED = {drop:0.6, drop2:0.4, dropR:[0.45, 0.55, 0.65, 0.8], from:[0.4, 0.9], best:0.6, room:{haul:0.95, haul2:0.7, pick:0.7, is:0.8, box:0.6, ice:0.75, throw:0.4}};
   // ---- a cell of one's own: the goals already given are taken, and a new one at least SEP from them (the nearest free cell within a metre) ----
   const TAKEN = new Map();
-  function free(k, id){ const p = ST.M.at(k); for (const [c, who] of TAKEN){ if (who === id) continue; const q = ST.M.at(c); if (Math.hypot(p[0] - q[0], p[2] - q[2]) < SEP) return false; } return true; }
+  // (the new people are as wide as people: 0.55 m between two places, as at the table and the tub, deckAt and beside)
+  function free(k, id){ const p = ST.M.at(k), sep = LEMMER.on ? SEP2 : SEP; for (const [c, who] of TAKEN){ if (who === id) continue; const q = ST.M.at(c); if (Math.hypot(p[0] - q[0], p[2] - q[2]) < sep) return false; } return true; }
   function claim(g, id){
     if (!g || g.inside) return g; const M = ST.M;
     if (!M.ok(g.k) || !free(g.k, id)){ const p = ST.M0.at(g.k); let best = -1, bd = 1.0;
@@ -1220,7 +1254,7 @@ const HOLDT = {
   // deck, right] the tip gets over the rail; lift: the tip over the rail on its way in [ahead, over where the fish comes aboard,
   // right]; turn: rad he turns on his feet towards where the fish is let go, at the most; out: m from where he stands the tip is
   // at the least there; dip: how far down on the knees the reach over the rail takes him (workLow)
-  gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, home:[0.385, 0.2, 0.06], chest:[0.2, 1.3, 0.1], reach:1.25, lift:[1.25, 0.45, 0.08], turn:1.9, out:0.5, dip:0.25},
+  gaff:{r:0.022, grip:[0.6, 0.86], butt:0.91, org:0.66, home:[0.385, 0.2, 0.06], chest:[0.2, 1.3, 0.1], reach:1.25, lift:[1.25, 0.45, 0.08], turn:2.3, out:0.5, dip:0.25},
   cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
   broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
   // the work he keeps his eyes on: he does not look up at the camera from it
