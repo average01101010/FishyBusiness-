@@ -678,6 +678,17 @@ function dynAvoid(d, P){
       const dx = o.x - d.X, dz = o.z - d.Y, a = dx * sn - dz * c, l = dx * c + dz * sn; if (a < -P.L / 2 || a > look) continue;
       const gap = Math.abs(l) - (o.r || 0); if (gap >= need) continue;
       dh -= (l >= 0 ? 1 : -1) * Math.atan2(need - gap, Math.max(a, P.L / 2)); n++; } }
+  // (and a vessel lying still near her way, a ferry waiting at her quay or a boat stopped: her hull as circles of half her beam along
+  // her length, steered round as a pier is. Under way the rules have them (sjvEval), but not in a harbour, where a ferry lying still at
+  // Sørarnøy stood 17 m off the way in to the plant and the coastal vessel ran into her, 14.11.2026, tests/allesteder.py, steg 126)
+  const T = typeof SJV !== 'undefined' && SJV.tl && SJV.tl.vid === S.cur ? SJV.tl : null;
+  if (T) for (const q of T.v){ if (Math.hypot(q.ve, q.vz) > 0.5 || Math.hypot(q.x - d.X, q.z - d.Y) > look + q.L) continue;
+    const hx = Math.sin(q.hd), hz = -Math.cos(q.hd), r = q.B / 2, k = Math.max(0, Math.ceil((q.L - q.B) / q.B / 2));
+    let best = null;   // (the circle of her hull that stands nearest across the way: one vessel, one push)
+    for (let m = -k; m <= k; m++){ const t = k ? m / k * (q.L - q.B) / 2 : 0, ox = q.x + hx * t, oz = q.z + hz * t;
+      const dx = ox - d.X, dz = oz - d.Y, a = dx * sn - dz * c, l = dx * c + dz * sn; if (a < -P.L / 2 || a > look) continue;
+      const gap = Math.abs(l) - r; if (gap < need && (!best || gap < best.gap)) best = {gap, a, l}; }
+    if (best){ dh -= (best.l >= 0 ? 1 : -1) * Math.atan2(need - best.gap, Math.max(best.a, P.L / 2)); n++; } }
   return n ? {dh:clamp(dh, -0.7, 0.7), n} : null;
 }
 // ---- the autopilot ----
