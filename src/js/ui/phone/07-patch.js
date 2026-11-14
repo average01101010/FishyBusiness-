@@ -1,5 +1,9 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['steder-141126', '14.11.2026', 'Vei ut fra alle steder', 'A way out from every place', [
+       ['Femten mottak, butikker og verft der den eldre kystbåten ikke kom ut ved noe tidevann, har fått nye kaier med vei ut, blant dem Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden og Træna.', 'Fifteen plants, shops and yards the older coastal vessel could not get out of at any tide have new quays with a way out, among them Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden and Træna.'],
+       ['Rorbuer som lå innestengt for båter opp til 15 m, er flyttet dit de kommer ut.', 'Rorbuer that were shut in for boats up to 15 m have moved to where they can get out.'],
+       ['Autonav tar båten rundt de skarpe svingene like ut fra kaia, og styrer unna sjømerker, påler og brupilarer i svingene.', 'Autonav takes the boat round the sharp turns just out from the quay, and steers clear of sea marks, piles and bridge piers in the turns.']]],
     ['kaier-131126', '13.11.2026', 'Kaiene ved mottak, butikker og verft', 'The quays at plants, shops and yards', [
        ['Arbeidet på båten står øverst i utstyrsbutikken, på verftets sider og i Om bord så lenge en jobb går, med hver jobb og tida som er igjen, telt ned sekund for sekund.', 'The work on the boat stands at the top of the tackle shop, the yard\'s pages and Om bord while a job runs, with each job and the time left, counted down second by second.'],
        ['Mottakene i Ålesund, Fosnavåg, Laukvik og Vengsøy og butikkene i Vanse og Søndeled lå i lommer der båten ikke kom ut. De har fått nye kaier med fritt vann ut.', 'The plants in Ålesund, Fosnavåg, Laukvik and Vengsøy and the shops in Vanse and Søndeled lay in pockets the boat could not get out of. They have new quays with open water out.'],

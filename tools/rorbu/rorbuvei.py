@@ -10,6 +10,7 @@
 # src/data/rorbuer.json (the order and so the ids rb<i> stay; a boat moored there moves with it, rorbuSite). A point keeps APART km
 # from the plants, the shops, the yards and the other rorbuer (rorbuer.py).
 #   KYST_VEC=1 KYST_DIST=dist-vec node build.mjs && python3 tools/rorbu/rorbuvei.py [--dry]
+# (in parallel: KYST_RORBU=<a share> ... --dry > log in each process, then python3 tools/rorbu/rorbuvei.py --apply log1 log2 ...)
 import os, sys, json, asyncio
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 os.environ['KYST_DIST'] = os.environ.get('KYST_DIST') or os.path.join(ROOT, 'dist-vec')
@@ -55,7 +56,22 @@ TRY = r"""async ([id, apart]) => { const R = RBID.get(id), b = S.boat, c0 = {x:R
   }
   setAt(c0); return {ok:false, n:tried.length, last:tried.slice(-4), all:tried}; }"""
 
+def apply(logs):
+    """--apply <log>...: the points from earlier --dry runs (their «  rbN  name  {...}» lines) written as one, so the rorbuer can be
+    tried in several processes at once"""
+    import ast
+    D = json.load(open(RORBU)); n = 0
+    for f in logs:
+        for line in open(f):
+            m = line.strip().split(None, 1)
+            if not m or not m[0].startswith('rb') or '{' not in line: continue
+            r = ast.literal_eval(line[line.index('{'):].strip())
+            if r.get('ok'): D['r'][int(m[0][2:])][0] = r['x']; D['r'][int(m[0][2:])][1] = r['y']; n += 1
+    D['rorbuvei'] = '%d rorbuer moved to a quay the boats up to 15 m have a way out from by Autonav, tools/rorbu/rorbuvei.py' % (n + int(str(D.get('rorbuvei', '0')).split(' ')[0] or 0))
+    json.dump(D, open(RORBU, 'w'), ensure_ascii=False, separators=(',', ':')); print(n, 'moved')
+
 def main():
+    if '--apply' in sys.argv: return apply([a for a in sys.argv[1:] if a != '--apply'])
     from _env import GAME, boot
     from playwright.async_api import async_playwright
     D = json.load(open(RORBU))
