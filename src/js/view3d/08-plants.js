@@ -438,7 +438,14 @@
         const E = [Tb[0] - F[0] * 0.16, Tb[1] + 0.9 * sc, Tb[2] - F[1] * 0.16], up = (P, d) => [P[0] - F[0] * 0.035, P[1] - d, P[2] - F[1] * 0.035], vent = up(E, 0.55 * sc), throat = up(E, 0.13 * sc);
         const cutAt = [mid[0] - R[0] * 0.35 * sc, mid[1], mid[2] - R[1] * 0.35 * sc];   // (behind the gill cover: 0.35 of the fish from its middle)
         st.gf = null; st.slo = null; st.gt = null; st.knife = Gs >= 1.2 && Gs < 5.0; st.kdir = null; st.cut = Gs >= 4.05; st.hd = null;
-        if (Gs < 0.8){ const u = ease(Gs / 0.8); hands = [rest[0], lerp3(rest[1], lo, Math.sin(u * Math.PI / 2))]; if (Gs > 0.6) st.gf = {at:hands[1], hang:true}; }
+        // (the new people, steg 125: the tub may be on his right once he has turned to it as far as he turns, and the left hand then reached
+        // across him, 17 to 27 cm short of the fish. The hand on the tub's side takes it, and it changes hands on its way to the table's edge)
+        const d3g = (A, B) => Math.hypot(A[0] - B[0], A[1] - B[1], A[2] - B[2]), rightTub = LEMMER.on && !!st.Ub && d3g(lo, W(0.1, 1.3 + dy, 0.19)) < d3g(lo, W(0.1, 1.3 + dy, -0.19)) - HOLDT.fish.swap[0];
+        if (Gs < 0.8 && rightTub){ const u = ease(Gs / 0.8); hands = [lerp3(rest[0], lo, Math.sin(u * Math.PI / 2)), rest[1]]; if (Gs > 0.6) st.gf = {at:hands[0], hang:true}; }
+        else if (Gs < 1.3 && rightTub){ const u = ease((Gs - 0.8) / 0.5), k = HOLDT.fish.swap[1], P = v => lerp3(lo, E, v);
+          if (u < k){ hands = [P(u), lerp3(rest[1], P(k), ease(u / k))]; st.gf = {at:hands[0], hang:true}; }
+          else { hands = [lerp3(P(k), lerp3(rest[0], vent, 0.8), ease((u - k) / (1 - k))), P(u)]; st.gf = {at:hands[1], hang:true}; } }
+        else if (Gs < 0.8){ const u = ease(Gs / 0.8); hands = [rest[0], lerp3(rest[1], lo, Math.sin(u * Math.PI / 2))]; if (Gs > 0.6) st.gf = {at:hands[1], hang:true}; }
         else if (Gs < 1.3){ const u = ease((Gs - 0.8) / 0.5); hands = [lerp3(rest[0], vent, u * 0.8), lerp3(lo, E, u)]; st.gf = {at:hands[1], hang:true}; }
         // the belly opened from the vent up to the throat
         else if (Gs < 2.0){ const u = ease((Gs - 1.3) / 0.7); hands = [lerp3(vent, throat, u), E]; st.gf = {at:E, hang:true}; st.kdir = [F[0] * 0.6, 0.55, F[1] * 0.6]; }

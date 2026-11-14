@@ -1239,12 +1239,13 @@ const HOLDT = {
   GAP:0.02,      // m between a thing and the body's clothes at the least
   FIST:0.045,    // m: half a fist round a handle (a hand's own point is its fist's middle)
   HAND:0.03,     // m a bare hand's point keeps ahead of the trunk (a hand laid on the chest, the arms crossed)
+  table:{bord:0.32, benk:0.55, off:0.15},   // m along the gutting table from its middle a gutter's own part of it may be (the plastic table is 1.15 m long, the steel bench 1.60, the fish 0.4), and how far past that he may stand and still reach it; further along he guts standing free
   SIDE:0.03,     // m inside the trunk's half width a hand's point still counts as by his side (the arm's matter, not moved out ahead)
   HANG:0.012,    // m a hand hanging by the hip keeps beyond the trunk's half width and the wrist's clearance
   HANGY:0.04,    // m higher the hanging hands of one who stands or walks are than the old body's (the new arm is that much shorter)
   FACE:0.03,     // m a thing held to the face may press into it at the most (the cup's rim at the lips, the binoculars' eyecups)
   LEG:[0.075, 0.055],   // m: half a thigh and half a shin with the trousers (what he holds keeps clear of his legs too)
-  fish:{r:0.11, at:[0.25, 0.5, 0.8]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length)
+  fish:{r:0.11, at:[0.25, 0.5, 0.8], swap:[0.08, 0.55]},   // a fish hanging from the hand at the gutting: its half thickness and the points down it that are tried (shares of its size and its length); swap: m nearer his right shoulder than his left the tub is for the right hand to take the fish out of it, and the share of the way to the table's edge where it changes hands
   // the fish box carried across him (Jonas 14.11.2026, with two pictures of boxes carried: «Tror også du må jobbe med grepet på
   // kasse-bæringen»): the hands are under its bottom, the palms up, and it rests against his belly. Half its depth and its length,
   // its bottom and its ice from the hands' height, a hand's point from its middle [to either side, ahead, under its bottom], and
