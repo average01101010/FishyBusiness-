@@ -53,10 +53,13 @@ async def main():
         # 4. the joystick held to starboard turns her to starboard; let go, it springs back
         jb = await pg.locator('#helmJoy').bounding_box()
         await pg.mouse.move(jb['x'] + jb['width'] * 0.92, jb['y'] + jb['height'] / 2); await pg.mouse.down()
-        h0 = await pg.evaluate("S.boat.heading"); await pg.wait_for_timeout(3000); h1 = await pg.evaluate("S.boat.heading"); rud = await pg.evaluate("S.helm.rud")
+        # (the turn summed in small steps: she can turn more than half a circle in the three seconds, and the difference of the two headings
+        # alone read a turn of 187 degrees to starboard as 173 to port, 14.11.2026)
+        turn = await pg.evaluate("""async () => { let h = S.boat.heading, sum = 0; const t0 = performance.now();
+          while (performance.now() - t0 < 3000){ await new Promise(r => setTimeout(r, 50)); const h2 = S.boat.heading; let d = h2 - h; d = ((d + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI; sum += d; h = h2; }
+          return sum * 180 / Math.PI; }""")
+        rud = await pg.evaluate("S.helm.rud")
         await pg.mouse.up(); await pg.wait_for_timeout(300); rud2 = await pg.evaluate("S.helm.rud")
-        import math
-        turn = math.degrees((h1 - h0 + math.pi) % (2 * math.pi) - math.pi)
         check(rud > 0.8 and turn > 5 and rud2 == 0, 'rattet til styrbord svinger henne til styrbord, og det går tilbake til midten når du slipper', {'rud': round(rud, 2), 'deg': round(turn, 1), 'after': rud2})
         # 5. neutral (the middle of the throttle): she loses way
         await pg.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2); await pg.mouse.down(); await pg.mouse.up()

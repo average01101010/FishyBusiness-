@@ -898,8 +898,7 @@ function sailReplan(pl, b, gp){
     const ins = res.wps.slice(0, -1).map(q => ({x:q.x, y:q.y, port:null, fish:0, leia:true, obs:true}));
     PL.rpNone = ins.length ? null : {t:S.t, tg};
     PL.wps.splice(PL.idx, 0, ...ins); if (PL.unsafe) PL.unsafe.splice(PL.idx, 0, ...ins.map(() => false)); PL.obsK = null;
-    // (the way round the leg itself, nothing put in: not said as found; the next sight of the shallows gives her to the hands, above)
-    if (ins.length) log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');
+    log('Autonav fant en vei rundt. Går videre.', 'Autonav found a way round. Going on.', 'nav');   // (also when the way is the leg itself: she goes on along it, tests/dyntest.py 2c)
   })).catch(e => { done(); console.error(e); bound(() => { if (S.plan === PL && PL.replan){ PL.replan = null; sailStop(PL, S.boat, none); } }); });
   return true;
 }
