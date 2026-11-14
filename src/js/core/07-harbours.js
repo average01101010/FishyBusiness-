@@ -107,7 +107,8 @@ function sitePockE(s, x, z){
 const SITE_OUT = new Map();
 function siteOut(s){
   if (!s || !s.o || !s.u) return 0; const k = Math.round(s.o[0] * 10) + ',' + Math.round(s.o[1] * 10); let q = SITE_OUT.get(k); if (q !== undefined) return q;
-  q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); if (q !== q) return NaN; if (q < 0) q = QOUT.max;
+  try { q = quayOut({x:s.o[0], z:s.o[1], ux:s.u[0], uz:s.u[1], nx:-s.u[1], nz:s.u[0]}, 0, SITE_MAXLEN); } catch (e){ return NaN; }   // (no map in yet)
+  if (q !== q) return NaN; if (q < 0) q = QOUT.max;
   if (SITE_OUT.size > 500) SITE_OUT.clear(); SITE_OUT.set(k, q); return q;
 }
 function siteDredge(p, d){
