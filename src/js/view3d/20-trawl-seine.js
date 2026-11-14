@@ -155,8 +155,11 @@
       const lp = a.mode === 'helm' && G.skipperAt ? [G.skipperAt[0], G.skipperAt[1], G.skipperAt[2]] : [a.x + go[0], a.y, a.z + go[1]], wl = xf(BMrel, lp), wy = wl[1] + eye[1];
       const P = {gy:() => wy, bare:true, spray:0, kit:a.me ? 'skipper' : null, look:seaLook(a.me ? lookMe() : a.c ? lookOf(a.c) : lookCrew(0), a.mode === 'helm')};
       // (the tests: the last event of a kind played again by the one whose work it is, at the moment asked for, SJOBEIN.test.ev and .t)
-      const evT = SJT && SJT.ev && DKLAST[SJT.ev] && a.mode === 'at' && (DKPLAY[a.task] || [])[0] === SJT.ev ? DKLAST[SJT.ev] : null;
-      const ev = evT || (a.mode === 'at' ? dkFor(a.id, lp, a.task) : null);   // a fish to bleed or to gaff in at his place
+      // (the new people: the fish comes in at the first hauler's place, and the gaff's sweep and where the fish is let fall are laid
+      // out from there, deckcrew.js places; the second hauler does not gaff across him)
+      const evK = LEMMER.on && a.task === 'haul' && a.slot > 0 ? 'haul2' : a.task;
+      const evT = SJT && SJT.ev && DKLAST[SJT.ev] && a.mode === 'at' && (DKPLAY[evK] || [])[0] === SJT.ev ? DKLAST[SJT.ev] : null;
+      const ev = evT || (a.mode === 'at' ? dkFor(a.id, lp, evK) : null);   // a fish to bleed or to gaff in at his place
       // a helm made for sitting (the model's eye low over the place, as under the snekke's hard top) is steered from the seat
       const sat = a.mode === 'helm' && G.eye && G.skipperAt && G.eye[1] - G.skipperAt[1] < 1.4;
       const st = {x:wl[0] + eye[0], z:wl[2] + eye[2], h:bv.head + (a.mode === 'helm' ? 0 : a.h + (a.sqA || 0) * Math.PI / 2), task:ev ? ev.kind : sat ? 'helmsit' : a.task, seat:sat ? Math.max(0.2, G.eye[1] - G.skipperAt[1] - 0.95) : 0, ev:ev ? dkEv(ev, BMrel, G) : null, walk:a.mode === 'walk', blend:a.mode === 'walk' ? 0 : a.blend, peek:true, s:0};
