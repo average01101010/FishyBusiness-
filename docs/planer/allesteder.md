@@ -38,7 +38,21 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 - Fylkene for de 15 flyttede handelsstedene slått opp på nytt (`fylke.py`; enhetstesten `regions` var rød).
 - Funnet underveis: resultatet ved et sted avhenger av klokka (tidevann og trafikk), og testen lar klokka gå videre fra sted til sted. Et sted som er grønt i én kjøring, kan være rødt i neste (Kopervik, Tananger, Sund). Hele kysten må derfor være grønn i én og samme kjøring.
 
-## Funnene (hele kysten 13.11.2026 med testrettingene, før flyttingene og autopilotrettingene; `tests/out/allesteder.json`)
+## Funnene etter tredje del (hele kysten 14.11.2026 07:00 UTC, 1 037 steder, bygget 8d1d8605fbbd; `tests/out/allesteder.json`)
+
+Første kjøring 13.11.2026 hadde 136 funn; nå 38, og havnene (mottak, butikker og verft) 7 av 357.
+
+- **ingen rute** (8): rorbuene Langvasseid, Åsværgården, Austgulen, Holskogen; naustene Tufjord, Gjesvær, Sørarnøy, Hidrasund.
+- **sammenstøt med ferje** (Bokn verft «MF Ytterdraget» 9,5 knop, Norheimsund verft «MF Breibåen» 9,8 knop).
+- **skade underveis** (merker, pilarer): Molde verft; rorbuene Kjøllefjord, Ytre Kåfjord, Røst, Buene, Veo, Ytre Bruvik, Røvær; naustene Brønnøysund, Midsund, Straumsjøen nord, Kvaløya sør.
+- **ingen framdrift på 40 min**: Lysekloster verft, Tvedestrand verft, Træna utstyrsbutikk, Kokelv verft; rorbuene Sørvær, Vatnfjorden, Moskenes, Djupholman, Torvika, Høyanger, Hjartnes, Nordhuglo; naustet Gamvik.
+- **ikke ute på åpent vann**: rorbua Hestnes.
+- **for grunt der hun ligger**: naustene Smøla nord og Kvitsøy (2,0 m).
+- **etappe over land** (4, som 13.11.2026): Selvær, Trondheim verft, Træna verft, naustet på Selvær.
+- **Hendene** 150 ganger på 124 steder: hjørnene 123 (bare merker på utsiden), fast 18, holdt 2, støt 7. Fast eller holdt på 18 steder (grensen er ett av hundre, 10): Træna, Brønnøysund, Revsnes, Bokn verft, Fitjar verft nord, Hellvik verft, Averøy utstyrsbutikk, Harstad verft, rorbuene Kjøllefjord, Stikkelvåg, Svolvær, Breivika og flere.
+- Resultatet for et sted avhenger av klokka (tidevann og trafikk), og testen lar klokka gå videre fra sted til sted: Kopervik, Tananger, Sund og Hellvik var grønne i én kjøring og røde i en annen.
+
+## Funnene før tredje del: (hele kysten 13.11.2026 med testrettingene, før flyttingene og autopilotrettingene; `tests/out/allesteder.json`)
 
 - **ingen rute** (60): port Helligvær (67.4069, 13.903); port Revsnes (64.0401, 10.0596); port Tustna (63.1587, 7.932); port Flekkerøy (58.0783, 8.0132); port Vanse utstyrsbutikk (58.1767, 6.7014); port Mandal verft (58.0342, 7.4451); port Mandal utstyrsbutikk (58.007, 7.5385); port Arendal verft (58.4409, 8.7257); port Søndeled verft (58.7601, 9.0784); port Melandsjø verft (63.6386, 8.8095); port Dyrvik utstyrsbutikk (63.8064, 8.8012); port Knarrlagsund utstyrsbutikk (63.6628, 9.0762); port Tjøme verft (59.1074, 10.4183); port Halden verft (59.1103, 11.3042); port Træna utstyrsbutikk (66.5432, 12.1594); rorbu Solbakken (70.5103, 25.0798); rorbu Sørvær (70.6503, 21.9975); rorbu Langvasseid (69.5963, 29.9371); rorbu Storvoll (69.8679, 20.1799); rorbu Sessøya (69.7652, 18.1131); rorbu Veidmannen (69.2843, 17.0047); rorbu Bogen (68.5214, 17.001); rorbu Bukta (68.4517, 15.8042); rorbu Vatnfjorden (68.3623, 14.4586); rorbu Svolvær (68.2554, 14.6276); rorbu Skår (67.7235, 14.8045); rorbu Evja (67.0831, 14.408); rorbu Innerkvarøy (66.4928, 12.8912); rorbu Åsværgården (66.2423, 12.246); rorbu Skibbåtsvær (66.1231, 12.0433); rorbu Sørstaulen (66.0283, 12.297); rorbu Muddværet (65.566, 11.7126); rorbu Brønnøysund (65.4832, 12.2283); rorbu Fjær (64.3769, 11.3883); rorbu Vika (64.3046, 10.491); rorbu Leset (63.8508, 9.8144); rorbu Sørskaget (63.7117, 8.5124); rorbu Vikstrøm (63.6346, 8.7584); rorbu Mastad (63.6358, 9.0563); rorbu Austgulen (60.9792, 5.2734); rorbu Tofta (60.2024, 5.0396); rorbu Tengesdal (59.5579, 6.5279); rorbu Grimsrud (59.6834, 10.4244); rorbu Lysebotn (59.0517, 6.6205); rorbu Skjærvika (59.2026, 11.0704); rorbu Slevik (59.1802, 10.8133); rorbu Sofienberg (59.0637, 11.4125); rorbu Valle (58.9029, 9.5619); rorbu Risør (58.7197, 9.1976); rorbu Hesnes (58.3392, 8.6282); rorbu Rasvåg (58.2134, 6.5645); rorbu Holmen (58.0889, 7.6775); rorbu Holskogen (58.1006, 7.9818); rorbu Mandal (58.0216, 7.4285); naust Tufjord (71.0046, 23.9035); naust Gjesvær (71.0976, 25.3984); naust Tustna (63.1587, 7.932); naust Sørarnøy (67.1358, 13.9757); naust Flekkerøy (58.0783, 8.0132); naust Hidrasund (58.2296, 6.5299)
 - **støt i sjømerke** (15): port Vannvåg (70.1311, 19.9923); port Stamsund (68.1231, 13.8485); port Sund i Lofoten (68.009, 13.2126); port Bøvågen (60.7009, 4.9216); port Grimstad (58.3395, 8.5949); port Bokn (59.1761, 5.3895); port Lyngdal verft (58.1189, 7.0447); port Molde verft (62.7361, 7.1586); port Leknes verft (68.1347, 13.6122); rorbu Østtun (64.7118, 11.4386); rorbu Veo (60.6307, 5.7192); rorbu Ytre Bruvik (60.4714, 5.6535); naust Revsnes (64.0401, 10.0596); naust Straumsjøen nord (68.8165, 14.5525); naust Smøla vest (63.3673, 7.7808)
@@ -53,6 +67,9 @@ Valg 13.11.2026 (andre del): handelsstedene der kystbåten (21 m, 3,4 m) ikke ko
 Funnet underveis: **Kopervik verft** står fast fordi omveien rundt pilarene under brua (`obsRoute`) er en S-sving på 30–100 m som en 21 m båt ikke kan ta; hun rygger og går fram om igjen (`T.bow`). Gjelder trolig også Tananger, Hellvik og Brettesnes (sjekkes).
 
 ## Neste
+
+Rekkefølgen for fjerde kjøring står i «Oppgaven (fjerde kjøring)» i `docs/planer/start/126.md` (ferger og hurtigbåter, stedene der hendene måtte ta henne, rorbuene og naustene uten vei ut, landleggene, tilstanden mellom stedene, NPC-havnene). Lista under er fra andre del.
+
 
 1. Kjør `tests/allesteder.py` på nytt med flyttingene og autopilotrettingene, og sorter det som står igjen.
 2. **Står fast underveis** (Kopervik, Tananger, Hellvik, Brettesnes, Skognes, Sør-Gutvika, Leines, Mandal-naustet): omveien rundt pilarer og merker (`obsWays`, `obsDetour`) må passe båtens svingradius, eller hendene tar henne gjennom.
