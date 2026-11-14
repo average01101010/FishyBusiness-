@@ -606,21 +606,25 @@ function dynLineBuild(pl, dep){
   if (dep) for (const c of corners){ if (c.s <= sOut) continue; if (c.s - sOut > 3 * Lb || c.th < Math.PI / 3) break; sOut = c.s; }
   return {plan:pl, n:pl.wps.length, sig:dynSig(pl), chk:0, P, L, end:L[L.length - 1], wpAt, stops, corners, iEnd, back, turnL:Math.max(10, Lb * 1.5), hd0, sOut, s:0, gchk:0, ghit:null};
 }
-// a sharp corner (over 60 degrees) with a mark, a pile or a bridge's pier near the legs she swings out over: within two of her lengths,
-// half her beam and 4 m of the first five lengths of the leg out of it or the last two of the leg into it (she swings out by about her
-// radius, 2.5 lengths: the marks the 21 m coastal vessel struck stood 40 m off the leg out, 84 m on, at Stamsund, and 25 m off, 90 m on,
-// at Sund in Lofoten). dynAuto's hands take her round those on the line (Jonas 14.11.2026, the last way out). Asked once, as she comes
-// within two lengths of it (the packs within a few hundred metres of her are in by then)
 // the hands start (T.assist set ahead of her): counted by kind for the tests (knock, stuck, held, tight)
 function dynHands(T, k){ if (!(T.assist > T.s)) return; DYN.hands = (DYN.hands || 0) + 1; DYN.handsK = DYN.handsK || {}; DYN.handsK[k] = (DYN.handsK[k] || 0) + 1; }
+// a sharp corner (over 60 degrees) with a mark, a pile or a bridge's pier on the outside of the turn, where she swings out by about her
+// radius (2.5 lengths): within two of her lengths, half her beam and 4 m of the first five lengths of the leg out of it, on its outside
+// (the marks the 21 m coastal vessel struck stood 40 m off the leg out, 84 m on, at Stamsund, and 25 m off, 90 m on, at Sund in Lofoten).
+// A mark on the inside is dynAvoid's (she holds the leg until it is abeam). dynAuto's hands take her round those on the line (Jonas
+// 14.11.2026, the last way out). Asked once, as she comes within two lengths of it (the packs within a few hundred metres of her are in)
 function dynTight(T, c){
-  const idx = obsIndex(), Lk = BOAT.len || 10, Rr = 2 * Lk + (BOAT.beam || 3) / 2 + 4, C = HIND.C, i = c.i, V = T.P[i];
-  const end = (j, far) => { const Q = T.P[j], l = Math.hypot(Q[0] - V[0], Q[1] - V[1]) || 1, f = Math.min(1, far / l); return [V[0] + (Q[0] - V[0]) * f, V[1] + (Q[1] - V[1]) * f]; };
-  const segs = [end(i + 1, 5 * Lk), end(i - 1, 2 * Lk)];
-  const dmin = (x, z) => Math.min(...segs.map(E => { const vx = E[0] - V[0], vz = E[1] - V[1], l2 = vx * vx + vz * vz || 1, u = clamp(((x - V[0]) * vx + (z - V[1]) * vz) / l2, 0, 1); return Math.hypot(x - V[0] - u * vx, z - V[1] - u * vz); }));
-  const ext = 5 * Lk + Rr;
+  const idx = obsIndex(), Lk = BOAT.len || 10, Rr = 2 * Lk + (BOAT.beam || 3) / 2 + 4, C = HIND.C, i = c.i, V = T.P[i], A = T.P[i - 1], Q = T.P[i + 1];
+  const lo = Math.hypot(Q[0] - V[0], Q[1] - V[1]) || 1, ox = (Q[0] - V[0]) / lo, oz = (Q[1] - V[1]) / lo, far = Math.min(lo, 5 * Lk);
+  // (the side she turns to, + to starboard; the outside of the leg out is the other: x east, z south, so starboard of (ox, oz) is (-oz, ox))
+  const turn = dynAng(Math.atan2(V[0] - A[0], -(V[1] - A[1])), Math.atan2(ox, -oz)), out = turn > 0 ? -1 : 1;
+  const ext = far + Rr;
   for (let gi = Math.floor((V[0] - ext) / C); gi <= Math.floor((V[0] + ext) / C); gi++) for (let gj = Math.floor((V[1] - ext) / C); gj <= Math.floor((V[1] + ext) / C); gj++)
-    for (const o of idx.get(gi * 1048576 + gj) || []) if (o.t === 0 && dmin(o.x, o.z) - (o.r || 0) < Rr) return true;
+    for (const o of idx.get(gi * 1048576 + gj) || []){ if (o.t !== 0) continue;
+      const dx = o.x - V[0], dz = o.z - V[1], along = dx * ox + dz * oz, side = (dx * -oz + dz * ox) * out;   // (side > 0: on the outside)
+      if (side <= 0 || along < -Rr || along > far + Rr) continue;
+      const u = clamp(along, 0, far), dd = Math.hypot(dx - ox * u, dz - oz * u);
+      if (dd - (o.r || 0) < Rr) return true; }
   return false;
 }
 function dynLineAt(T, s){
