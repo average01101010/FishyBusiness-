@@ -214,13 +214,18 @@ function obsWays(o, a, b){
   const len = w => { let s = dist(a, w[0]); for (let i = 1; i < w.length; i++) s += dist(w[i - 1], w[i]); return s + dist(w[w.length - 1], b); };
   // a way she cannot turn through comes last: a corner needs her radius times tan(half the turn) of each leg beside it, and a leg
   // between two corners both their shares (her radius taken as twice her length; a sharper way is still better than none)
-  const R = 2 * (BOAT.len || 8) / 1000, turnable = w => { const q = [a].concat(w, [b]); let prev = 0;
-    for (let i = 1; i < q.length; i++){ const l = dist(q[i - 1], q[i]); let nxt = 0;
-      if (i < q.length - 1){ const ux = q[i].x - q[i - 1].x, uy = q[i].y - q[i - 1].y, vx = q[i + 1].x - q[i].x, vy = q[i + 1].y - q[i].y, n = Math.hypot(ux, uy) * Math.hypot(vx, vy);
-        nxt = n > 0 ? R * Math.tan(Math.min(2.6, Math.acos(clamp((ux * vx + uy * vy) / n, -1, 1))) / 2) : 0; }
-      if (prev + nxt > l + 1e-6) return false; prev = nxt; }
-    return true; };
-  return out.filter(w => w.every(p => !isLand(p))).map(w => [w, len(w) + (turnable(w) ? 0 : 1e3)]).sort((x, y) => x[1] - y[1]).slice(0, 9).map(x => x[0]);
+  return out.filter(w => w.every(p => !isLand(p))).map(w => [w, len(w) + (obsTurnable(a, w, b) ? 0 : 1e3)]).sort((x, y) => x[1] - y[1]).slice(0, 9).map(x => x[0]);
+}
+// can she turn through a, the points w, b (and pre, the point she comes to a from, when there is one): a corner needs of each leg beside
+// it her radius times tan(half the turn) and half her length for the wheel to go over, and a leg between two corners both their shares
+// (her radius taken as two and a half times her length: the 21 m coastal vessel turns on 47-54 m, dynCal)
+function obsTurnable(a, w, b, pre){
+  const Lk = (BOAT.len || 8) / 1000, R = 2.5 * Lk, q = (pre ? [pre] : []).concat([a], w, [b]); let prev = 0;
+  for (let i = 1; i < q.length; i++){ const l = dist(q[i - 1], q[i]); let nxt = 0;
+    if (i < q.length - 1){ const ux = q[i].x - q[i - 1].x, uy = q[i].y - q[i - 1].y, vx = q[i + 1].x - q[i].x, vy = q[i + 1].y - q[i].y, n = Math.hypot(ux, uy) * Math.hypot(vx, vy);
+      const th = n > 0 ? Math.min(2.6, Math.acos(clamp((ux * vx + uy * vy) / n, -1, 1))) : 0; nxt = th > 0.15 ? R * Math.tan(th / 2) + 0.5 * Lk : 0; }
+    if (prev + nxt > l + 1e-6 && !(pre && i === 1)) return false; prev = nxt; }
+  return true;
 }
 // the points to put between a and b so every leg keeps clear of land and of the things (depth: how many things in a row it goes
 // round); [] when a-b is clear already, null when no way was found
@@ -238,9 +243,27 @@ function obsDetour(a, b, depth = 3, ref){
   return null;
 }
 // a route's waypoints (after a) with the detours put in; a leg with no way round is left as it was
+// (a way round she cannot turn through, obsTurnable, where the route's own points stand close by the thing: the way round from the point
+// before to the one after instead, skipping up to two plain points (not a stop), and no worse than the legs it stands in for, as deep
+// and as far from rocks as the worst of them. Bokn and Kopervik, 14.11.2026, tests/allesteder.py, steg 126: the route's points 100 m
+// apart with a mark or a bridge's pier between them, and the way round a zigzag of 35-40 m legs that the 21 m coastal vessel ran
+// through wide, onto the mark)
 function obsRoute(a, wps){
   const out = []; let p = a;
-  for (const q of wps){ const d = obsClear(p, q) ? [] : obsDetourAny(p, q); if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true})); out.push(q); p = q; }
+  for (let i = 0; i < wps.length; i++){ const q = wps[i];
+    if (obsClear(p, q)){ out.push(q); p = q; continue; }
+    const pre = out.length > 1 ? out[out.length - 2] : out.length ? a : null;
+    let d = obsDetourAny(p, q), k = i;
+    if (!d || !obsTurnable(p, d, q, pre)) for (let j = i + 1; j <= Math.min(i + 2, wps.length - 1) && !wpStop(wps[j - 1]); j++){
+      const sd = safeDepth(), legs = [[p, wps[i]]]; for (let m = i + 1; m <= j; m++) legs.push([wps[m - 1], wps[m]]);
+      const ref = {minD:Infinity, rocks:0, rock:Infinity, a:p, b:wps[j]};
+      for (const [u, v] of legs){ const h = legHazardMemo(u, v, sd); ref.minD = Math.min(ref.minD, h.minD); if (h.rocks){ ref.rocks = Math.max(ref.rocks, h.rocks); ref.rock = Math.min(ref.rock, obsRock(u, v)); } }
+      if (!ref.rocks) ref.rock = undefined;
+      let d2 = null; try { d2 = obsDetour(p, wps[j], 3, ref); } catch (e){ d2 = null; }
+      if (d2 && obsTurnable(p, d2, wps[j], pre)){ d = d2; k = j; break; } }
+    if (d) for (const x of d) out.push(Object.assign({}, x, {obs:true}));
+    out.push(wps[k]); p = wps[k]; i = k;
+  }
   return out;
 }
 // the coast's packs along a way (km points), and the tiles decoded: a route is checked against what is there, so the packs come
