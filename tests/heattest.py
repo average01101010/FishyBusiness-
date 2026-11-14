@@ -154,7 +154,7 @@ async def sonar(pg):
     # real minutes, and gives the 3 nm heat; a fitting that waits while the boat is traded for one it does not suit is paid back
     r = json.loads(await pg.evaluate("""JSON.stringify((() => { const b = S.boat, R = {}, p = portById('finnsnes');
       b.status = 'port'; b.port = 'finnsnes'; b.pos = {...p.p}; S.cash = 1e6; S.jobs = []; S.equip.sonar = false; S.settings.sonar = true; S.settings.echo = true;
-      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyrb'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? btn.textContent : null; }
+      for (const ty of ['skiff', 'snekke', 'sjark', 'sjarkny']){ b.type = ty; applyVessel(); PHONE.open('utstyrb'); const btn = document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]'); R[ty] = btn ? (btn.closest('.ic-btns') || btn).textContent : null; }   // (D3: the price on the button, the fitting's time under it)
       // buy it on the sjark and let the fitting finish
       b.type = 'sjark'; applyVessel(); PHONE.open('utstyrb'); const c0 = S.cash; document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click(); document.querySelector('#drawerBody [data-pa=equip][data-k=sonar]').click();
       R.paid = c0 - S.cash; R.queued = (S.jobs || []).some(j => j.kind === 'fit' && j.k === 'sonar'); const j = S.jobs.find(j => j.k === 'sonar'); finishJob(j); S.jobs = S.jobs.filter(q => q !== j);
