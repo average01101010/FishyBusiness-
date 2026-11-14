@@ -327,6 +327,7 @@
       // kamera på en valgfri person slik at du kan rotere rundt vedkommede»): his number among those on deck, his id or his task. With
       // cam.face the camera stands before him, that many rad to his side. In the address: «#se=2», «#se=coffee». G3._debug.camOn)
       if (cam.who != null && !SHOW && typeof CREW3D !== 'undefined'){ const L = CREW3D.visible(), a = typeof cam.who === 'number' ? L[((cam.who % L.length) + L.length) % L.length] : L.find(q => q.id === cam.who || q.task === cam.who || (q.goal && q.goal.task === cam.who)) || null;
+        cam.whoId = a ? a.id : null;
         if (a){ cam.at = [a.x, (a.y || 0) + (cam.atY == null ? 0.25 : cam.atY), a.z]; if (cam.face != null && a.h != null) cam.yaw = a.h + Math.PI + cam.face; } }
       const AT = cam.at && !SHOW ? xf(model(0, 0, 0, -bv.head, bv.pitch, bv.roll), cam.at) : null;
       const C = SIGNV.look ? SIGNV.look.slice() : SHOW ? [SHOW.x, (env.tide || 0) + 1.3 + Math.min(4, VESSELS[SHOW.t].len * 0.06), SHOW.z] : AT ? [bv.x + AT[0], bv.y + AT[1] + 1.0, bv.z + AT[2]] : [bv.x, bv.y + 1.3, bv.z], yawW = (SHOW ? SHOW.h : bv.head) + cam.yaw, tgt = C;

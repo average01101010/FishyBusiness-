@@ -185,6 +185,9 @@
         else if (a.task === 'mend') st.Nt = rel([a.x + F0[0] * 0.42, a.y + railH - 0.02, a.z + F0[1] * 0.42]);
         else if (a.task === 'jig' && !machines){ const rl = [a.x + F0[0] * 0.45, a.y + railH + 0.06, a.z + F0[1] * 0.45]; st.Rl = rel(rl); st.Wt = rel([rl[0] + F0[0] * 0.5, -0.8, rl[2] + F0[1] * 0.5]); } }
       if (a.sub && a.sub.carry === 'crate'){ st.crate = true; st.csp = i => packed(hash(i * 7 + 1)); if (a.mode === 'at') st.s = ST.clk - (a.sub.done - (a.sub.hold || 2)); }
+      // (alone in the white room: only the one the eye is on, the others out of the way; Jonas 14.11.2026: «Du har også lov å fjerne
+      // de andre fra mannskapet om de er i veien på bildene». The count goes on, so his beat is the same with and without them)
+      if (cam.solo && cam.whoId != null && a.id !== cam.whoId){ idx++; continue; }
       drawWorker(P, st, eye, ta, idx++); }
     if (sjp0){ SJT.prof.ms += performance.now() - sjp0; SJT.prof.n += A.length; SJT.prof.f++; }
     dkBloodDraw(VP);

@@ -26,7 +26,7 @@ async def main():
             try: await pg.wait_for_function("CREW3D.agents().filter(a => a.mode === 'at').length >= 3", timeout=240000)
             except Exception: pass
             if os.environ.get('POSE_STUDIO', '1') != '0': await pg.evaluate("G3._debug.studio(true)")   # (the white room: only the people and what they hold)
-            await pg.evaluate("([w, d, p, f]) => G3._debug.camOn(w, d, p, f)", [who, dist * (1.3 if fmt == 'staaende' else 1), pitch, face])
+            await pg.evaluate("([w, d, p, f, s]) => G3._debug.camOn(w, d, p, f, s)", [who, dist * (1.3 if fmt == 'staaende' else 1), pitch, face, os.environ.get('POSE_ALENE', '1') != '0'])   # (alone: the others are not drawn)
             seen = {}
             for task, T in POSES:
                 if want and task not in want: continue
