@@ -1219,14 +1219,14 @@ const HOLDT = {
   cup:{r:0.05, sip:[0.066, -0.015, 0.03], tip:0.7, from:0.45},   // … tip: rad it is tipped at the sip, from this share of the lift up (the rim is then 6 cm nearer him and 1 cm over the hand's point)
   broom:{low:0.25},                           // the lower hand's place down the broom's line from the upper hand to its head (the share of it)
   // the work he keeps his eyes on: he does not look up at the camera from it
-  eyes:{sweep:1, gutw:1, gut:1, knife:1, cut:1, pack:1, ice:1, haul:1, pick:1, bleed:1, bleedst:1, egn:1, strip:1, mend:1, phone:1, stack:1, stow:1, carry:1, jig:1, jigup:1, gaff:1, sett:1, tend:1, unhook:1, coil:1},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
-  food:{r:0.04, bite:[0.035, -0.015, 0.025]}, // the food in the hand, and its point from the mouth at a bite
+  eyes:{sweep:1, gutw:1, gut:1, knife:1, cut:1, pack:1, ice:1, haul:1, pick:1, bleed:1, bleedst:1, egn:1, strip:1, mend:1, phone:1, stack:1, stow:1, carry:1, jig:1, jigup:1, gaff:1, sett:1, tend:1, unhook:1, coil:1, binoc:1},    // the mug: its half width with the handle; the hand's point from the mouth at a sip [ahead, up, to its side]
+  food:{r:0.04, bite:[0.035, -0.015, 0.025], tip:0.7, from:0.4}, // the food in the hand that takes the bite, its point from the mouth at a bite, and the rad it is turned to the mouth, from this share of the lift up
   smoke:{r:0.015, at:[0.045, 0, 0.015]},      // the cigarette between the fingers, from the mouth at a draw
   snus:{at:[0.025, 0.015, 0.02]},             // the fingers at the upper lip
   blow:{at:[0.085, -0.05, 0.035]},            // the hands blown into, from the mouth
   phone:{r:0.04},
   blade:{r:0.15, legs:[0.3, 0.36]},           // the shovel's blade: its half width, and the room his legs have of it under the hips (m ahead of them and to either side: its socket keeps outside that)
-  kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line
+  kikk:{r:0.04, eye:0.072, wide:0.07, low:0.0, scan:[0.22, 0.25]}    // the binoculars: half their height, their middle ahead of the eyes, a hand to either side of it, and under the eyes' line; scan: how fast and how far (rad) he turns his head with them, the hands going with them
 };
 // one person's lengths (c: who; everyone the same until the builds, FB5b)
 // (FB7, steg 125: with the new people, «#folk2», the lengths are the skeleton's own for the body that is drawn, 'f' or 'm' (c, or
