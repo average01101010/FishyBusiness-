@@ -1,5 +1,7 @@
   // --- the patch notes: what the latest updates brought, newest first; a new id at the top shows a badge until the app is opened
   const PATCH = [
+    ['tatoveringer-141126', '14.11.2026', 'Tatoveringene i farger', 'The tattoos in colour', [
+       ['Tatoveringene under Milepæler er tegnet på nytt som ekte sjømannsflash i farger. De du ikke har fått ennå, står grå til du har gjort deg fortjent til dem.', 'The tattoos under Milestones are drawn anew as real sailor flash in colour. The ones you have not earned yet stand grey until you have.']]],
     ['steder-141126', '14.11.2026', 'Vei ut fra alle steder', 'A way out from every place', [
        ['Femten mottak, butikker og verft der den eldre kystbåten ikke kom ut ved noe tidevann, har fått nye kaier med vei ut, blant dem Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden og Træna.', 'Fifteen plants, shops and yards the older coastal vessel could not get out of at any tide have new quays with a way out, among them Helligvær, Flekkerøy, Tustna, Mandal, Arendal, Halden and Træna.'],
        ['Rorbuer som lå innestengt for båter opp til 15 m, er flyttet dit de kommer ut.', 'Rorbuer that were shut in for boats up to 15 m have moved to where they can get out.'],

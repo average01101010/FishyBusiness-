@@ -2104,3 +2104,6 @@ body.vplot #hud{background:rgba(11,23,32,.78)!important}
 /* Kaiboden's pictures (14.11.2026): the painted tile at the top of each card, the same light tile as the shop's */
 .kb-pic{display:flex;justify-content:center;margin:0 0 8px;--m-card:initial;--m-card2:initial;--m-tint-link:initial}
 .kb-pic .ic-img{max-width:260px;border-radius:10px}
+/* the tattoos as painted flash (14.11.2026, ui/05-tattoo-art.js): on the flash's own paper; one not earned yet is a grey stencil */
+.tat-img{flex:none;width:64px;height:64px;border-radius:10px;background:#fbf6ea var(--tat-atlas) no-repeat}
+.tat-img.off{filter:grayscale(1);opacity:.35}
